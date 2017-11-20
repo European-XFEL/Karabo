@@ -11,15 +11,12 @@ from traits.api import Instance, Str, on_trait_change
 from karabo.common.scenemodel.api import DoubleLineEditModel, IntLineEditModel
 from karabo_gui.binding.api import (
     BaseBindingController, register_binding_controller, get_min_max,
-    FloatBinding, Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding
+    FloatBinding, IntBinding
 )
 from karabo_gui.controllers.unitlabel import add_unit_label
 from karabo_gui.util import SignalBlocker
 
 MAX_FLOATING_PRECISION = 12
-INT_BINDINGS = (Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-                Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding)
 
 
 class NumberLineEdit(BaseBindingController):
@@ -171,8 +168,7 @@ class DoubleLineEdit(NumberLineEdit):
 
 
 # XXX: priority = 10
-@register_binding_controller(ui_name='Integer Field',
-                             binding_type=INT_BINDINGS)
+@register_binding_controller(ui_name='Integer Field', binding_type=IntBinding)
 class IntLineEdit(NumberLineEdit):
     # The scene model class used by this controller
     model = Instance(IntLineEditModel)

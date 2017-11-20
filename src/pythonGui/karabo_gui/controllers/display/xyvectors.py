@@ -5,25 +5,13 @@ from traits.api import Dict, Instance, on_trait_change
 
 from karabo.common.scenemodel.api import LinePlotModel
 from karabo_gui.binding.api import (
-    BaseBindingController, register_binding_controller,
-    VectorBoolBinding, VectorDoubleBinding, VectorComplexDoubleBinding,
-    VectorComplexFloatBinding, VectorFloatBinding, VectorInt8Binding,
-    VectorInt16Binding, VectorInt32Binding, VectorInt64Binding,
-    VectorUint8Binding, VectorUint16Binding, VectorUint32Binding,
-    VectorUint64Binding
+    BaseBindingController, VectorBinding, register_binding_controller
 )
 from karabo_gui.controllers.util import axis_label
 
-VECTOR_BINDINGS = (
-    VectorBoolBinding, VectorDoubleBinding, VectorComplexDoubleBinding,
-    VectorComplexFloatBinding, VectorFloatBinding, VectorInt8Binding,
-    VectorInt16Binding, VectorInt32Binding, VectorInt64Binding,
-    VectorUint8Binding, VectorUint16Binding, VectorUint32Binding,
-    VectorUint64Binding)
-
 
 @register_binding_controller(ui_name='XY-Plot', read_only=True,
-                             binding_type=VECTOR_BINDINGS)
+                             binding_type=VectorBinding)
 class XYVector(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(LinePlotModel)

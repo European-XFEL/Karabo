@@ -5,27 +5,14 @@ from traits.api import Instance, Int, on_trait_change
 from karabo.common.scenemodel.api import EditableListModel
 from karabo_gui import icons
 from karabo_gui.binding.api import (
-    BaseBindingController, VectorBoolBinding, VectorCharBinding,
-    VectorComplexDoubleBinding,
-    VectorComplexFloatBinding, VectorDoubleBinding, VectorFloatBinding,
-    VectorInt8Binding, VectorInt16Binding, VectorInt32Binding,
-    VectorInt64Binding, VectorStringBinding, VectorUint8Binding,
-    VectorUint16Binding, VectorUint32Binding, VectorUint64Binding,
-    register_binding_controller
+    BaseBindingController, VectorBinding, register_binding_controller
 )
 from karabo_gui.controllers.listedit import ListEdit
 from karabo_gui.util import SignalBlocker
 
-BINDING_TYPES = (
-    VectorBoolBinding, VectorCharBinding, VectorComplexDoubleBinding,
-    VectorComplexFloatBinding, VectorDoubleBinding, VectorFloatBinding,
-    VectorInt8Binding, VectorInt16Binding, VectorInt32Binding,
-    VectorInt64Binding, VectorStringBinding, VectorUint8Binding,
-    VectorUint16Binding, VectorUint32Binding, VectorUint64Binding)
-
 
 # XXX: priority = 10
-@register_binding_controller(ui_name='List', binding_type=BINDING_TYPES)
+@register_binding_controller(ui_name='List', binding_type=VectorBinding)
 class EditableList(BaseBindingController):
     model = Instance(EditableListModel)
     last_cursor_position = Int(0)

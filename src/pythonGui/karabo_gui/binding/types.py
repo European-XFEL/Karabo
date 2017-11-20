@@ -157,22 +157,26 @@ class HashBinding(BaseBinding):
     value = Instance(Hash)
 
 
-class Int8Binding(BaseBinding):
+class IntBinding(BaseBinding):
+    """The base class for all integer binding types"""
+
+
+class Int8Binding(IntBinding):
     value = Range(low=-(1 << 7), high=(1 << 7), value=0,
                   exclude_low=True, exclude_high=True)
 
 
-class Int16Binding(BaseBinding):
+class Int16Binding(IntBinding):
     value = Range(low=-(1 << 15), high=(1 << 15), value=0,
                   exclude_low=True, exclude_high=True)
 
 
-class Int32Binding(BaseBinding):
+class Int32Binding(IntBinding):
     value = Range(low=-(1 << 31), high=(1 << 31), value=0,
                   exclude_low=True, exclude_high=True)
 
 
-class Int64Binding(BaseBinding):
+class Int64Binding(IntBinding):
     value = Range(low=-(1 << 63), high=(1 << 63), value=0,
                   exclude_low=True, exclude_high=True)
 
@@ -207,87 +211,91 @@ class StringBinding(BaseBinding):
     value = String
 
 
-class Uint8Binding(BaseBinding):
+class Uint8Binding(IntBinding):
     value = Range(low=0, high=(1 << 8), value=0, exclude_high=True)
 
 
-class Uint16Binding(BaseBinding):
+class Uint16Binding(IntBinding):
     value = Range(low=0, high=(1 << 16), value=0, exclude_high=True)
 
 
-class Uint32Binding(BaseBinding):
+class Uint32Binding(IntBinding):
     value = Range(low=0, high=(1 << 32), value=0, exclude_high=True)
 
 
-class Uint64Binding(BaseBinding):
+class Uint64Binding(IntBinding):
     value = Range(low=0, high=(1 << 64), value=0, exclude_high=True)
 
 
-class VectorBoolBinding(BaseBinding):
+class VectorBinding(BaseBinding):
+    """The base class for all vector binding types"""
+
+
+class VectorBoolBinding(VectorBinding):
     value = Array(dtype='bool')
 
 
-class VectorCharBinding(BaseBinding):
+class VectorCharBinding(VectorBinding):
     value = Bytes
 
 
-class VectorComplexDoubleBinding(BaseBinding):
+class VectorComplexDoubleBinding(VectorBinding):
     value = Array(dtype='complex128', shape=(None,))
 
 
-class VectorComplexFloatBinding(BaseBinding):
+class VectorComplexFloatBinding(VectorBinding):
     value = Array(dtype='complex64', shape=(None,))
 
 
-class VectorDoubleBinding(BaseBinding):
+class VectorDoubleBinding(VectorBinding):
     value = Array(dtype='float64', shape=(None,))
 
 
-class VectorFloatBinding(BaseBinding):
+class VectorFloatBinding(VectorBinding):
     value = Array(dtype='float32', shape=(None,))
 
 
-class VectorHashBinding(BaseBinding):
+class VectorHashBinding(VectorBinding):
     value = List(Instance(Hash))
 
 
-class VectorInt8Binding(BaseBinding):
+class VectorInt8Binding(VectorBinding):
     value = Array(dtype='int8', shape=(None,))
 
 
-class VectorInt16Binding(BaseBinding):
+class VectorInt16Binding(VectorBinding):
     value = Array(dtype='int16', shape=(None,))
 
 
-class VectorInt32Binding(BaseBinding):
+class VectorInt32Binding(VectorBinding):
     value = Array(dtype='int32', shape=(None,))
 
 
-class VectorInt64Binding(BaseBinding):
+class VectorInt64Binding(VectorBinding):
     value = Array(dtype='int64', shape=(None,))
 
 
-class VectorNoneBinding(BaseBinding):
+class VectorNoneBinding(VectorBinding):
     value = List(Undefined)
 
 
-class VectorStringBinding(BaseBinding):
+class VectorStringBinding(VectorBinding):
     value = List(String)
 
 
-class VectorUint8Binding(BaseBinding):
+class VectorUint8Binding(VectorBinding):
     value = Array(dtype='uint8', shape=(None,))
 
 
-class VectorUint16Binding(BaseBinding):
+class VectorUint16Binding(VectorBinding):
     value = Array(dtype='uint16', shape=(None,))
 
 
-class VectorUint32Binding(BaseBinding):
+class VectorUint32Binding(VectorBinding):
     value = Array(dtype='uint32', shape=(None,))
 
 
-class VectorUint64Binding(BaseBinding):
+class VectorUint64Binding(VectorBinding):
     value = Array(dtype='uint64', shape=(None,))
 
 
