@@ -3,7 +3,7 @@ from unittest import main
 
 from karabo.middlelayer import Float, Hash
 from karabo.middlelayer_api.device import Device
-from karabo.middlelayer_api.pipeline import OutputChannel
+from karabo.middlelayer_api.pipeline import InputChannel, OutputChannel
 from karabo.middlelayer_api.schema import Configurable, Node
 
 from .eventloop import async_tst, DeviceTest, sync_tst
@@ -23,6 +23,10 @@ class MyDevice(Device):
     dataOutput = OutputChannel(Data)
 
     deep = Node(MyNode)
+
+    @InputChannel()
+    def input(self, data, meta):
+        pass
 
 
 class Tests(DeviceTest):
@@ -47,6 +51,10 @@ class Tests(DeviceTest):
     def test_displayType_output(self):
         self.assertEqual(self.myDevice.output.displayType, 'OutputChannel')
         self.assertEqual(self.myDevice.dataOutput.displayType, 'OutputChannel')
+
+    @sync_tst
+    def test_displayType_input(self):
+        self.assertEqual(self.myDevice.input.displayType, 'InputChannel')
 
     @async_tst
     def test_send_raw(self):
