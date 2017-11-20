@@ -4,7 +4,8 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 import numpy as np
-from guiqwt.plot import ImageDialog
+from guiqwt.plot import ImageDialog, ImageWidget
+from PyQt4.QtCore import Qt, pyqtSignal
 from PyQt4.QtGui import QImage
 from PyQt4.Qwt5.Qwt import QwtPlot
 
@@ -148,3 +149,36 @@ class KaraboImageDialog(_KaraboImageMixin, ImageDialog):
         * parent: parent widget
         * panels (optional): additionnal panels (list, tuple)
     """
+
+
+class KaraboImageWidget(_KaraboImageMixin, ImageWidget):
+    signal_mouse_event = pyqtSignal()
+
+    def __init__(self, **kwargs):
+        """ Possible key arguments:
+            * parent: parent widget
+            * title: plot title (string)
+            * xlabel, ylabel, zlabel: resp. bottom, left and right axis titles
+            (strings)
+            * xunit, yunit, zunit: resp. bottom, left and right axis units
+            (strings)
+            * yreverse: reversing Y-axis (bool)
+            * aspect_ratio: height to width ratio (float)
+            * lock_aspect_ratio: locking aspect ratio (bool)
+            * show_contrast: showing contrast adjustment tool (bool)
+            * show_xsection: showing x-axis cross section plot (bool)
+            * show_ysection: showing y-axis cross section plot (bool)
+            * xsection_pos: x-axis cross section plot position
+            (string: "top", "bottom")
+            * ysection_pos: y-axis cross section plot position
+            (string: "left", "right")
+            * panels (optional): additionnal panels (list, tuple)
+        """
+        super(KaraboImageWidget, self).__init__(**kwargs)
+
+    def mousePressEvent(self, event):
+        """ Overwrite method to forward middle button press event which
+        resets the image """
+        super(KaraboImageWidget, self).mousePressEvent(event)
+        if event.button() is Qt.MidButton:
+            self.signal_mouse_event.emit()
