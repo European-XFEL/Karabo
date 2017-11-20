@@ -231,3 +231,4 @@ class FutureDict(object):
         for future in futures:
             if not future.cancelled():
                 future.set_result(value)
+
