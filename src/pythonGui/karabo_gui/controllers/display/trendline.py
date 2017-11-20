@@ -23,10 +23,8 @@ from traits.api import (
 
 from karabo.middlelayer import Timestamp
 from karabo_gui.binding.api import (
-    BaseBindingController, PropertyProxy, register_binding_controller,
-    BoolBinding, FloatBinding,
-    Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding
+    BaseBindingController, BoolBinding, FloatBinding, IntBinding,
+    PropertyProxy, register_binding_controller
 )
 from karabo_gui.controllers.util import axis_label
 from karabo_gui import globals as krb_globals
@@ -53,11 +51,7 @@ CURVE_COLORS = ['b', 'orange', 'k', 'g', 'pink', 'brown']
 CURVE_STYLES = ['-', '--', ':', '-.']
 CURVE_ATTRS_GENERATOR = cycle(product(CURVE_STYLES, CURVE_COLORS))
 
-PLOTTABLE_TYPES = (
-    BoolBinding, FloatBinding,
-    Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding
-)
+PLOTTABLE_TYPES = (BoolBinding, FloatBinding, IntBinding)
 
 
 def get_start_end_date_time(selected_time_span):

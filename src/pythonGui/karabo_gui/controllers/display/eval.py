@@ -9,16 +9,13 @@ from karabo.common.scenemodel.api import EvaluatorModel
 from karabo_gui import messagebox
 from karabo_gui.binding.api import (
     BaseBindingController, register_binding_controller,
-    CharBinding, ComplexBinding, FloatBinding,
-    Int8Binding, Int16Binding, Int32Binding, Int64Binding, StringBinding,
-    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding
+    CharBinding, ComplexBinding, FloatBinding, IntBinding, StringBinding
 )
 from karabo_gui.const import WIDGET_MIN_HEIGHT
 from karabo_gui.controllers.unitlabel import add_unit_label
 
 BINDING_TYPES = (CharBinding, ComplexBinding, FloatBinding, StringBinding,
-                 Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-                 Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding)
+                 IntBinding)
 
 
 @register_binding_controller(ui_name='Evaluate Expression', read_only=True,

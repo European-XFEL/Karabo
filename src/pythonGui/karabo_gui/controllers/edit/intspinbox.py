@@ -9,20 +9,15 @@ from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import EditableSpinBoxModel
 from karabo_gui.binding.api import (
-    BaseBindingController, register_binding_controller, get_min_max,
-    Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding
+    BaseBindingController, IntBinding, register_binding_controller, get_min_max
 )
 from karabo_gui.controllers.unitlabel import add_unit_label
 from karabo_gui.const import WIDGET_MIN_HEIGHT
 from karabo_gui.util import MouseWheelEventBlocker
 
-INTEGER_BINDINGS = (Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-                    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding)
-
 
 @register_binding_controller(ui_name='Integer Spin Box',
-                             binding_type=INTEGER_BINDINGS)
+                             binding_type=IntBinding)
 class EditableSpinBox(BaseBindingController):
     # The scene model class for this controller
     model = Instance(EditableSpinBoxModel)
