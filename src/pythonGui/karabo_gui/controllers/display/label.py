@@ -14,9 +14,7 @@ from karabo.common.scenemodel.api import DisplayLabelModel
 from karabo_gui.alarms.api import ALARM_COLOR, WARN_COLOR
 from karabo_gui.binding.api import (
     BaseBindingController, register_binding_controller,
-    CharBinding, ComplexBinding, FloatBinding,
-    Int8Binding, Int16Binding, Int32Binding, Int64Binding, StringBinding,
-    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
+    CharBinding, ComplexBinding, FloatBinding, IntBinding, StringBinding,
     KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_WARN_HIGH, KARABO_WARN_LOW,
     KARABO_SCHEMA_ABSOLUTE_ERROR, KARABO_SCHEMA_DISPLAY_TYPE,
     KARABO_SCHEMA_RELATIVE_ERROR
@@ -28,8 +26,7 @@ from karabo_gui.util import generateObjectName
 # alpha layer to add to our global alarm and warn colors
 ALPHA = (64,)
 BINDING_TYPES = (CharBinding, ComplexBinding, FloatBinding, StringBinding,
-                 Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-                 Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding)
+                 IntBinding)
 
 
 # XXX: priority = 20
