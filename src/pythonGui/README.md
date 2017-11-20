@@ -50,7 +50,7 @@ Tasks
 - [ ] Misc. Small Tasks [SMALL]:
     - [X] Remove RunConfiguratorPanel
     - [X] Port DeviceScenesDialog (staged; refactor/scene-dialog branch)
-    - [ ] Port MacroPanel
+    - [X] Port MacroPanel
 
 Wrap-up
 -------
