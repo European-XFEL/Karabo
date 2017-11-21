@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) --><svg height="48px" id="svg7206" inkscape:output_extension="org.inkscape.output.svg.inkscape" inkscape:version="0.46" sodipodi:docname="list-add.svg" sodipodi:version="0.32" width="48px" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <metadata>
+    <rdf:RDF xmlns:cc="http://web.resource.org/cc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+      <cc:Work rdf:about="">
+        <dc:title></dc:title>
+        <dc:description></dc:description>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li>unsorted</rdf:li>
+          </rdf:Bag>
+        </dc:subject>
+        <dc:publisher>
+          <cc:Agent rdf:about="http://www.openclipart.org/">
+            <dc:title>Open Clip Art Library, Source: GNOME-Colors, Source: GNOME-Colors, Source: GNOME-Colors, Source: GNOME-Colors, Source: GNOME-Colors, Source: GNOME-Colors, Source: GNOME-Colors, Source: GNOME-Colors</dc:title>
+          </cc:Agent>
+        </dc:publisher>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title></dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:rights>
+          <cc:Agent>
+            <dc:title></dc:title>
+          </cc:Agent>
+        </dc:rights>
+        <dc:date></dc:date>
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+        <cc:license rdf:resource="http://creativecommons.org/licenses/GPL/2.0/"/>
+        <dc:language>en</dc:language>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs id="defs7208">
+    <linearGradient id="linearGradient4222" inkscape:collect="always">
+      <stop id="stop4224" offset="0" style="stop-color:#ffffff;stop-opacity:1;"/>
+      <stop id="stop4226" offset="1" style="stop-color:#ffffff;stop-opacity:0"/>
+    </linearGradient>
+    <linearGradient gradientTransform="matrix(1.0724657,0,0,1.0724657,-1.2644573,-1.32954)" gradientUnits="userSpaceOnUse" id="linearGradient2785" inkscape:collect="always" x1="15.25967" x2="38.399845" xlink:href="#linearGradient4222" y1="0.90033573" y2="42.305672"/>
+    <linearGradient id="linearGradient8002" inkscape:collect="always">
+      <stop id="stop8004" offset="0" style="stop-color:#789e2d;stop-opacity:1"/>
+      <stop id="stop8006" offset="1" style="stop-color:#42770c;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient gradientUnits="userSpaceOnUse" id="linearGradient8008" inkscape:collect="always" x1="22.142857" x2="22" xlink:href="#linearGradient8002" y1="5" y2="42.57143"/>
+    <linearGradient id="linearGradient2264">
+      <stop id="stop2266" offset="0" style="stop-color:#b8d67a;stop-opacity:1"/>
+      <stop id="stop7998" offset="0.25" style="stop-color:#a7cc5c;stop-opacity:1"/>
+      <stop id="stop8000" offset="0.68000001" style="stop-color:#789e2d;stop-opacity:1"/>
+      <stop id="stop2268" offset="1" style="stop-color:#42770c;stop-opacity:1"/>
+    </linearGradient>
+    <radialGradient cx="24" cy="5" fx="24" fy="5" gradientTransform="matrix(-1.3100728e-8,2.2593985,-4.0026986,0,44.013493,-49.225564)" gradientUnits="userSpaceOnUse" id="radialGradient7996" inkscape:collect="always" r="19" xlink:href="#linearGradient2264"/>
+    <linearGradient id="linearGradient7577">
+      <stop id="stop7579" offset="0" style="stop-color:#000000;stop-opacity:0.3137255;"/>
+      <stop id="stop7581" offset="1" style="stop-color:#000000;stop-opacity:0.31"/>
+    </linearGradient>
+    <linearGradient gradientTransform="matrix(1.1449541,0,0,1.8604651,-2.9788993,-40.500001)" gradientUnits="userSpaceOnUse" id="linearGradient7386" inkscape:collect="always" x1="23.563137" x2="23.563137" xlink:href="#linearGradient7577" y1="31.488117" y2="36.89304"/>
+  </defs>
+  <sodipodi:namedview bordercolor="#666666" borderopacity="1.0" id="base" inkscape:current-layer="layer1" inkscape:cx="24" inkscape:cy="24" inkscape:document-units="px" inkscape:grid-bbox="true" inkscape:pageopacity="0.0" inkscape:pageshadow="2" inkscape:window-height="690" inkscape:window-width="641" inkscape:window-x="0" inkscape:window-y="25" inkscape:zoom="7" pagecolor="#ffffff" showgrid="true"/>
+  <g id="layer1" inkscape:groupmode="layer" inkscape:label="Layer 1">
+    <path d="M 6,17 C 4.020574,17.022097 4.022097,17 4,19 L 4,29 C 4.066292,30.934502 4.064762,30.977903 6,31 L 17,31 L 17,42 C 16.95956,43.948298 17.051702,44 19,44 L 29,44 C 31.036686,44 31.04044,44 31,42 L 31,31 L 42,31 C 44,31 44,31.044987 44,29 L 44,19 C 44.044194,17.043401 44.045725,17.022097 42,17 L 31,17 L 31,6 C 31,4.145833 31,4 29,4 L 19,4 C 17.145833,4 17.041667,4 17,6 L 17,17 L 6,17 z" id="path7342" sodipodi:nodetypes="ccccccccccccccccccccc" style="opacity:0.3;fill:url(#linearGradient7386);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dashoffset:0;stroke-opacity:1;visibility:visible;display:block;overflow:visible;enable-background:accumulate"/>
+    <g id="layer6" inkscape:label="Shadow" transform="translate(-77.633592,-36.5046)"/>
+    <g id="g2170" inkscape:label="Base" style="display:inline" transform="translate(-77.633592,-36.5046)"/>
+    <g id="g5398" inkscape:label="Layer 1" transform="translate(-206.16377,-7.977602)"/>
+    <g id="layer5" inkscape:label="shadiw" transform="translate(-206.16377,-7.977602)"/>
+    <g id="layer4" inkscape:label="white" transform="translate(-206.16377,-7.977602)"/>
+    <g id="g3678" inkscape:label="Layer 1" style="display:inline" transform="translate(-285.16138,-16.332446)"/>
+    <g id="g3680" inkscape:label="bottom" transform="translate(-285.16138,-16.332446)"/>
+    <g id="layer2" inkscape:label="back" style="display:inline" transform="translate(-285.16138,-16.332446)"/>
+    <g id="g3698" inkscape:label="shadiw" transform="translate(-128.63708,-7.424841)"/>
+    <g id="g3760" inkscape:label="shadiw" transform="translate(39.691618,-2.164572)"/>
+    <g id="g5431" inkscape:label="Shadow" transform="translate(-314.49797,-42.377569)"/>
+    <g id="g4258" inkscape:label="Base" style="display:inline" transform="translate(-314.49797,-42.377569)"/>
+    <g id="g5440" inkscape:label="new" transform="translate(-314.49797,-42.377569)"/>
+    <g id="g3928" inkscape:label="Layer 1" style="display:inline" transform="translate(-283.06086,-28.136472)"/>
+    <g id="g3930" inkscape:label="bottom" transform="translate(-283.06086,-28.136472)"/>
+    <g id="g3932" inkscape:label="back" style="display:inline" transform="translate(-283.06086,-28.136472)"/>
+    <g id="g3934" inkscape:label="shadiw" transform="translate(-126.53656,-19.228866)"/>
+    <g id="g3936" inkscape:label="shadiw" transform="translate(41.792138,-13.968597)"/>
+    <g id="g3961" inkscape:label="Shadow" transform="translate(-312.39745,-54.181595)"/>
+    <g id="g3963" inkscape:label="Base" style="display:inline" transform="translate(-312.39745,-54.181595)"/>
+    <g id="layer7" inkscape:label="new" transform="translate(-312.39745,-54.181595)"/>
+    <path d="M 18.5,18.5 L 18.5,5.5 L 29.5,5.5 L 29.5,18.5 L 42.5,18.5 L 42.5,29.5 L 29.5,29.5 L 29.5,42.5 L 18.5,42.5 L 18.5,29.5 L 5.5,29.5 L 5.5,18.5 L 18.5,18.5 z" id="path2262" sodipodi:nodetypes="ccccccccccccc" style="fill:url(#radialGradient7996);fill-opacity:1;fill-rule:evenodd;stroke:url(#linearGradient8008);stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"/>
+    <path d="M 19.5,19.5 L 19.5,6.5 L 28.5,6.5 L 28.5,19.5 L 41.5,19.5 L 41.5,28.5 L 28.5,28.5 L 28.5,41.5 L 19.5,41.5 L 19.5,28.5 L 6.5,28.5 L 6.5,19.5 L 19.5,19.5 z" id="path2272" sodipodi:nodetypes="ccccccccccccc" style="opacity:0.5;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:url(#linearGradient2785);stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"/>
+  </g>
+</svg>
