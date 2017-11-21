@@ -108,6 +108,7 @@ runUnitTests() {
     safeRunCommand "nosetests -v karabo.project_db"
     safeRunCommand "nosetests -v karabo.tests"
     safeRunCommand "nosetests -v karabo_gui"
+    safeRunCommand "nosetests -v karabogui"
     safeRunCommand "nosetests -v karabo.interactive"
     safeRunCommand "nosetests -v karabo.usermacro_api"
     safeRunCommand "nosetests -v karabo.middlelayer_api"
