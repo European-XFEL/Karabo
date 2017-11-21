@@ -33,7 +33,7 @@ class MultiCurvePlot(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(MultiCurvePlotModel)
     # Internal traits
-    _mpl_widget = Instance(MplCurvePlot)
+    _mpl_widget = Instance(QWidget)
     _reset_proxy = Instance(PropertyProxy)
     _x_proxy = Instance(PropertyProxy)
     _y_proxies = List(Instance(PropertyProxy))
@@ -110,6 +110,10 @@ class MultiCurvePlot(BaseBindingController):
         if self._draw_start and None not in synchronizer.values():
             self._update_curve()
 
+    def destroy_widget(self):
+        """Ask MPL to clean up"""
+        self._mpl_widget.destroy()
+
     # -------------------------------------------------------------------
     # private functions
 
@@ -120,8 +124,7 @@ class MultiCurvePlot(BaseBindingController):
             # when adding a boolean as resetbox, it may send a False value
             return
 
-        sync = self._last_values
-        self._last_values = sync.fromkeys(sync.keys(), None)
+        self._last_values = {k: None for k in self._last_values.keys()}
         self._x_values.clear()
         for name, arr in self._y_values.items():
             arr.clear()
