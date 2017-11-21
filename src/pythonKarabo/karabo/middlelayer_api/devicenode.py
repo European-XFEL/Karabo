@@ -144,7 +144,8 @@ class DeviceNode(String):
 
         proxy = getattr(device, self.key, None)
         h = Hash()
-        if proxy is not None:
+        # test whether or not proxy is a NoneValue or None
+        if isSet(proxy):
             for name, rename in chain(self.properties.items(),
                                       self.commands.items()):
                 h[rename] = proxy._schema_hash[name]
