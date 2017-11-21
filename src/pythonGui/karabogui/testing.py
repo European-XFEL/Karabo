@@ -5,8 +5,8 @@ import unittest
 from PyQt4.QtCore import QEventLoop
 from PyQt4.QtGui import QApplication
 
-from karabo.common.api import DeviceStatus
-from karabogui import icons
+from karabo.common.api import Capabilities, DeviceStatus
+from karabo.middlelayer import AccessLevel, Hash
 from karabogui.binding.api import (
     build_binding, DeviceClassProxy, DeviceProxy, PropertyProxy)
 import karabogui.singletons.api as singletons_mod
@@ -22,6 +22,8 @@ class GuiTestCase(unittest.TestCase):
             app = QApplication(sys.argv)
         self.app = app
 
+        # AFTER the QApplication is created!
+        from karabogui import icons
         icons.init()
 
     def process_qt_events(self):
@@ -89,3 +91,78 @@ def singletons(**objects):
         for key in objects:
             if key not in replaced:
                 del singletons_dict[key]
+
+
+def system_hash():
+    """Generate a system hash which will be built into a system tree
+    """
+    h = Hash()
+
+    h['server.swerver'] = None
+    h['server.swerver', ...] = {
+        'host': 'BIG_IRON',
+        'visibility': AccessLevel.OBSERVER,
+        'deviceClasses': ['FooClass', 'BarClass'],
+        'visibilities': [AccessLevel.OBSERVER, AccessLevel.OBSERVER]
+    }
+    h['device.divvy'] = None
+    h['device.divvy', ...] = {
+        'host': 'BIG_IRON',
+        'visibility': AccessLevel.OBSERVER,
+        'capabilities': Capabilities.PROVIDES_SCENES,
+        'serverId': 'swerver',
+        'classId': 'FooClass',
+        'status': 'online'
+    }
+    h['macro.macdonald'] = None
+    h['macro.macdonald', ...] = {
+        'host': 'BIG_IRON',
+        'visibility': AccessLevel.OBSERVER,
+        'serverId': 'swerver',
+        'classId': 'BarClass',
+        'status': 'incompatible'
+    }
+
+    h['device.orphan'] = None
+    h['device.orphan', ...] = {
+        'visibility': AccessLevel.OBSERVER,
+        'serverId': '__none__',
+        'classId': 'Parentless',
+        'status': 'noserver'
+    }
+
+    return h
+
+
+def system_hash_server_and_plugins():
+    """Generate a system hash which will be built into a system tree
+    """
+    h = Hash()
+
+    h['server.myserver'] = None
+    h['server.myserver', ...] = {
+        'host': 'exflpxc_something',
+        'visibility': AccessLevel.OBSERVER,
+        'deviceClasses': ['FooClass', 'BarClass'],
+        'visibilities': [AccessLevel.OBSERVER, AccessLevel.OBSERVER,
+                         AccessLevel.OBSERVER]
+    }
+    h['server.samedeviceclasses'] = None
+    h['server.samedeviceclasses', ...] = {
+        'host': 'exflpxc_something',
+        'visibility': AccessLevel.EXPERT,
+        'deviceClasses': ['FooClass', 'BlahClass', 'HooClass_0'],
+        'visibilities': [AccessLevel.OBSERVER, AccessLevel.OBSERVER,
+                         AccessLevel.OBSERVER]
+    }
+
+    h['server.differentaccesslevel'] = None
+    h['server.differentaccesslevel', ...] = {
+        'host': 'exflpxc_something',
+        'visibility': AccessLevel.EXPERT,
+        'deviceClasses': ['FooClass', 'BarClass', 'HooClass_1'],
+        'visibilities': [AccessLevel.OBSERVER, AccessLevel.EXPERT,
+                         AccessLevel.OBSERVER]
+    }
+
+    return h
