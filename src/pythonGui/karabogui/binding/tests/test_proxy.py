@@ -171,7 +171,7 @@ def test_property_proxy_history():
 
         proxy.get_history('start_time', 'end_time', max_value_count=1)
         network.onGetPropertyHistory.assert_called_with(
-            'dev:foo', 'start_time', 'end_time', 1)
+            'dev', 'foo', 'start_time', 'end_time', 1)
 
 
 def test_property_proxy_pipeline():
