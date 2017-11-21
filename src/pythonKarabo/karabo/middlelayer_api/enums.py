@@ -129,8 +129,19 @@ class Unit(Enum):
     NOT_ASSIGNED = "N_A"
 
 
-class EncodingType:
-    # from karabo.xip.Encoding.EncodingType
+@unique
+class DimensionType(IntEnum):
+    """Dimension type used for image data
+    """
+    UNDEFINED = 0
+    STACK = -1
+    DATA = 1
+
+
+@unique
+class EncodingType(IntEnum):
+    """Encoding type used for image data
+    """
     UNDEFINED = -1
     GRAY = 0
     RGB = 1
@@ -142,3 +153,5 @@ class EncodingType:
     BAYER = 7
     JPEG = 8
     PNG = 9
+    BMP = 10
+    TIFF = 11
