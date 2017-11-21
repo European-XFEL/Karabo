@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   version="1.1"
+   width="34.719891"
+   height="26.562046"
+   id="svg4102">
+  <defs
+     id="defs4104" />
+  <metadata
+     id="metadata4107">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     id="layer1">
+    <g
+       transform="matrix(1.605006,0,0,1.605006,-86.526483,-229.41365)"
+       id="icon_pirani_inverted"
+       style="display:inline">
+      <desc
+         id="desc5173">Pirani inverted magnetron dual guage</desc>
+      <path
+         d="M 70.08,151.16923 L 75.08,151.16923"
+         id="path4689-7-2-1-4-6-7-3-0-9-1-4-5-9-9-5-39-4"
+         style="fill:none;stroke:#000000;stroke-width:0.70875001;stroke-linecap:square;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+      <path
+         d="M 200,214.09448 A 30,30 0 1 1 140,214.09448 A 30,30 0 1 1 200,214.09448 z"
+         transform="matrix(0.264,0,0,0.264,17.2,94.568295)"
+         id="path4672-9-4-6-4-0-0-0-8-29-1-7-5-2-27-9-3-7"
+         style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:2.69886374;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
+      <text
+         x="54.960861"
+         y="153.95251"
+         id="text24855-4-0"
+         xml:space="preserve"
+         style="font-size:8px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:129.99999523%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial"><tspan
+           x="54.960861"
+           y="153.95251"
+           id="tspan24857-89-9">PIM</tspan></text>
+    </g>
+  </g>
+</svg>
