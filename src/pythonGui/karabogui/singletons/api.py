@@ -28,7 +28,7 @@ def _build_getter(key, modulename, klassname):
     To create a getter function, we need three pieces of information:
     a key for the singletons dict, a module where the singleton's class can
     be imported, and the name of that class. The module is given relative to
-    the ``karabo_gui`` package. A getter function will also get a custom
+    the ``karabogui`` package. A getter function will also get a custom
     creator function which uses the above information to import and instantiate
     the singleton. This uses ``importlib.import_module`` and ``getattr`` to
     resolve the class object.
@@ -38,7 +38,7 @@ def _build_getter(key, modulename, klassname):
     always be the global ``QApplication`` instance.
     """
     def creator():
-        module = importlib.import_module(modulename, 'karabo_gui')
+        module = importlib.import_module(modulename, 'karabogui')
         klass = getattr(module, klassname)
 
         app = QApplication.instance()
@@ -56,6 +56,8 @@ def _build_getter(key, modulename, klassname):
 
 # This is where all the singletons are defined
 get_mediator = _build_getter('mediator', '.singletons.mediator', 'Mediator')
+get_network = _build_getter('network', '.singletons.network', 'Network')
+get_topology = _build_getter('topology', '.topology.api', 'SystemTopology')
 
 # Hide our implementation detail
 del _build_getter
