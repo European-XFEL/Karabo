@@ -3,8 +3,8 @@ from traits.api import push_exception_handler, pop_exception_handler
 from karabo.common.api import DeviceStatus
 from karabo.middlelayer import AccessLevel
 from karabogui.enums import NavigationItemTypes
+from karabogui.testing import system_hash, system_hash_server_and_plugins
 from ..tree import SystemTree, SystemTreeNode
-from .utils import system_hash, system_hash_server_and_plugins
 
 
 def setUp():

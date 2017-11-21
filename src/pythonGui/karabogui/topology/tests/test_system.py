@@ -3,9 +3,8 @@ from unittest.mock import Mock
 from traits.api import push_exception_handler, pop_exception_handler
 
 from karabo.common.api import DeviceStatus
-from karabogui.testing import GuiTestCase, singletons
+from karabogui.testing import GuiTestCase, singletons, system_hash
 from karabogui.topology.system import SystemTopology
-from .utils import system_hash
 
 
 def setUp():
