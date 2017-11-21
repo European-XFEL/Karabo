@@ -10,7 +10,7 @@ import karabogui
 
 GUI_MODULES = [op.join(r, name)
                for r, d, fs in os.walk(op.dirname(karabogui.__file__))
-               for name in fs if name.endswith('.py')]
+               for name in fs if name.endswith('.py') and name != 'api.py']
 PEP8_EXCEPTIONS = {
     'pathparser.py': 1,
 }
