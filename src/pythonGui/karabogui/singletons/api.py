@@ -59,10 +59,15 @@ get_db_conn = _build_getter('db_conn', '.singletons.db_connection',
                             'ProjectDatabaseConnection')
 get_manager = _build_getter('manager', '.singletons.manager', 'Manager')
 get_mediator = _build_getter('mediator', '.singletons.mediator', 'Mediator')
+get_navigation_model = _build_getter('navigation_model', '.navigation.model',
+                                     'NavigationTreeModel')
 get_network = _build_getter('network', '.singletons.network', 'Network')
 get_panel_wrangler = _build_getter('panel_wrangler',
                                    '.singletons.panel_wrangler',
                                    'PanelWrangler')
+get_selection_tracker = _build_getter('selection_tracker',
+                                      '.singletons.selection_tracker',
+                                      'SelectionTracker')
 get_topology = _build_getter('topology', '.topology.api', 'SystemTopology')
 
 # Hide our implementation detail
