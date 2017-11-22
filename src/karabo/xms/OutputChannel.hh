@@ -75,14 +75,13 @@ namespace karabo {
          */
         class OutputChannel : public boost::enable_shared_from_this<OutputChannel> {
 
-            typedef boost::shared_ptr<karabo::net::Channel> TcpChannelPointer;
 
             /*
              * InputChannelInfo (karabo::util::Hash)
              *
              *     instanceId (std::string)
              *     memoryLocation (std::string) [local/remote]
-             *     tcpChannel (TcpChannelPointer)
+             *     tcpChannel (karabo::net::Channel::Pointer)
              *     onSlowness (std::string) [queue/drop/wait/throw]
              *     queuedChunks (std::deque<int>)
              *
@@ -94,8 +93,6 @@ namespace karabo {
             typedef std::deque< std::string > InputChannelQueue;
 
             typedef std::map<unsigned int, int> CurrentWritersCount;
-
-            typedef std::map<TcpChannelPointer, unsigned int> TcpChannelPointer2ChunkId;
 
             // Callback on available input
             boost::function<void (const boost::shared_ptr<OutputChannel>&) > m_ioEventHandler;
@@ -109,7 +106,6 @@ namespace karabo {
             int m_compression;
 
             karabo::net::Connection::Pointer m_dataConnection;
-            std::set<TcpChannelPointer> m_dataChannels;
 
             std::string m_onNoSharedInputChannelAvailable;
             std::string m_distributionMode;
@@ -132,7 +128,6 @@ namespace karabo {
             // Async out
             CurrentWritersCount m_currentWritersCount;
             CurrentWritersCount m_maxWritersCount;
-            std::map<TcpChannelPointer, unsigned int> m_channel2ChunkId;
 
             unsigned int m_channelId;
             unsigned int m_chunkId;
@@ -205,22 +200,23 @@ namespace karabo {
 
         private:
 
-            void onTcpConnect(const karabo::net::ErrorCode& ec, const TcpChannelPointer& channel);
+            void initializeServerConnection();
 
+            void onTcpConnect(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel);
 
             // TODO Implement this !!!!
 
             //void onTcpConnectionError(const karabo::net::Connection::Pointer& conn, const karabo::net::ErrorCode& error);
 
-            void onTcpChannelError(const karabo::net::ErrorCode& ec, const TcpChannelPointer& channel);
+            void onTcpChannelError(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel);
 
-            void onTcpChannelRead(const karabo::net::ErrorCode& ec, const TcpChannelPointer& channel, const karabo::util::Hash& message);
+            void onTcpChannelRead(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel, const karabo::util::Hash& message);
 
             void onInputAvailable(const std::string& instanceId);
 
             void triggerIOEvent();
 
-            void onInputGone(const TcpChannelPointer& channel);
+            void onInputGone(const karabo::net::Channel::Pointer& channel);
 
             void distributeQueue(karabo::util::Hash& channelInfo);
 
