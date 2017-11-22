@@ -29,24 +29,25 @@ class TestDisplaySparkline(GuiTestCase):
         controller.create(None)
         assert controller.widget is not None
 
-        sym = 'karabo_gui.controllers.display.sparkline.QInputDialog'
-        with patch(sym) as QInputDialog:
-            for ac in controller.widget.actions():
-                ac_name = ac.text()
-                if ac_name == 'Set value format':
-                    QInputDialog.getText.return_value = '.3e', True
-                    ac.trigger()
-                    assert controller.model.show_format == '.3e'
-                elif ac_name == 'Show value':
-                    assert controller.model.show_value == ac.isChecked()
-                    ac.setChecked(not ac.isChecked())
-                    assert controller.model.show_value == ac.isChecked()
-                else:
-                    tb_val = TIMEBASES.get(ac_name[:3], None)
-                    if tb_val is None:
-                        continue
-                    ac.trigger()
-                    assert tb_val == controller.model.time_base
+        with patch.object(controller.line_edit, 'setVisible'):
+            sym = 'karabo_gui.controllers.display.sparkline.QInputDialog'
+            with patch(sym) as QInputDialog:
+                for ac in controller.widget.actions():
+                    ac_name = ac.text()
+                    if ac_name == 'Set value format':
+                        QInputDialog.getText.return_value = '.3e', True
+                        ac.trigger()
+                        assert controller.model.show_format == '.3e'
+                    elif ac_name == 'Show value':
+                        assert controller.model.show_value == ac.isChecked()
+                        ac.setChecked(not ac.isChecked())
+                        assert controller.model.show_value == ac.isChecked()
+                    else:
+                        tb_val = TIMEBASES.get(ac_name[:3], None)
+                        if tb_val is None:
+                            continue
+                        ac.trigger()
+                        assert tb_val == controller.model.time_base
 
         controller.destroy()
         assert controller.widget is None
