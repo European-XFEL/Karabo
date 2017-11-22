@@ -1,11 +1,15 @@
 import sys
 
+import numpy as np
+
+from karabo.middlelayer import Hash, Schema
 from ..api import (
     BoolBinding, FloatBinding, Int8Binding, Int16Binding, Int32Binding,
     Int64Binding, Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
     get_min_max, KARABO_SCHEMA_VALUE_TYPE, KARABO_SCHEMA_MAX_EXC,
     KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC
 )
+from ..util import fast_deepcopy  # not part of the API
 
 
 def test_simple_int_min_max():
@@ -37,3 +41,21 @@ def test_simple_float_min_max():
 
 def test_unsupported():
     assert get_min_max(BoolBinding()) == (None, None)
+
+
+def test_fast_deepcopy():
+    def _safe_compare(a, b):
+        # Use repr() to get around the lack of Schema comparison
+        return len(a) == len(b) and all(repr(a[k]) == repr(b[k]) for k in a)
+
+    d = {
+        'a': [1, 2, 3],
+        'b': {'sub': 42},
+        'c': 'Hi there!',
+        'd': np.zeros((10,)),
+        'e': (1, 2, 3),
+        'f': Hash('simple', 32),
+        'g': Schema()
+    }
+    copy = fast_deepcopy(d)
+    assert _safe_compare(copy, d)
