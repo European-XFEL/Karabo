@@ -87,6 +87,9 @@ required for karaboGUI, some of them are inter-dependent:
 In case your installed python distribution includes slightly different version
 of these packages, pythonGUI should nevertheless work.
 
+.. warning:
+Since Karabo 2.1.18.2, `matplotlib 1.5.3 <https://pypi.python.org/packages/5e/06/6a717e37f0bb331bf152bfeb7ded4060f1188b508631e988c1cdbef5a8ab/matplotlib-1.5.3-cp34-cp34m-win32.whl#md5=c0705c7d2278f557eac4c1c2e75245d5>`_ and `cycler 0.10.0 <https://pypi.python.org/packages/f7/d2/e07d3ebb2bd7af696440ce7e754c59dd546ffe1bbe732c8ab68b9c834e61/cycler-0.10.0-py2.py3-none-any.whl#md5=2820ec00c7dd68487bde1a7cdb165904>`_ are required by the GUI
+
 .. _install-winpython:
 
 Installation instructions
@@ -161,4 +164,12 @@ a shortcut on your *Desktop* and now you can easily start karaboGui via
 mouse-double-click. To remove karaboGui, you need to use WinPython package
 manager: Select karabo and karaboGui and press Uninstall packages.
 
+**UPGRADE KARABO**
 
+Make sure to remove the old karabo version before install new version of karabo.
+Otherwise you will encounter unpredicted behavior of the GUI, before installing
+the new version, you need to navigate to::
+
+ [WinPython_Installation_Dir]\python-3.4.3\Lib\site-packages
+
+Remove folder *karabo* and *karabo_gui*, also remove the file *KaraboGUI-\*.egg-info*
