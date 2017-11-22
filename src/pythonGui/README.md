@@ -9,12 +9,13 @@ Tasks
     - [X] SystemTopology
     - [X] SystemTree
 
-- [ ] Port Core Singletons [LARGE]:
-    - [ ] Port Manager (mostly done)
-    - [ ] Port Network (mostly done)
-    - [ ] Small fixups in NavigationModel
+- [X] Port Core Singletons [LARGE]:
+    - [X] Port Manager (mostly done)
+    - [X] Port Network (mostly done)
 
-- [ ] Port the Navigation Panel [SMALL]
+- [X] Port the Navigation Panel [SMALL]
+    - [X] Small fixups in NavigationModel
+
 - [ ] Port the Project View [SMALL]:
     - [ ] Port DeviceInstanceController
     - [ ] Port MacroController
