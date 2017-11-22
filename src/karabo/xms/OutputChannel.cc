@@ -158,7 +158,6 @@ namespace karabo {
                     break;
                 // "Retry" behavior because of following reasons
                 case bs::errc::resource_unavailable_try_again:  // temporary(?) problems with some resources   - retry
-                case bs::errc::operation_would_block:           // ... the same as above?
                 case bs::errc::interrupted:                     // The system call was interrupted by a signal  - retry
                 case bs::errc::protocol_error:                  
                 case bs::errc::host_unreachable:
