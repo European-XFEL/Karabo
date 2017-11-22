@@ -121,13 +121,11 @@ class DeviceProxy(BaseDeviceProxy):
     def connect_pipeline(self, path):
         """Ask the GUI server to subscribe to a pipeline output
         """
-        # XXX: onSubscribeToOutput() has a different signature than this!
         get_network().onSubscribeToOutput(self.device_id, path, True)
 
     def disconnect_pipeline(self, path):
         """Ask the GUI server to unsubscribe from a pipeline output
         """
-        # XXX: onSubscribeToOutput() has a different signature than this!
         get_network().onSubscribeToOutput(self.device_id, path, False)
 
     def publish_historic_data(self, path, data):
@@ -254,9 +252,8 @@ class PropertyProxy(HasStrictTraits):
                 not isinstance(self.root_proxy, DeviceProxy)):
             return
 
-        address = self.root_proxy.device_id + ':' + self.path
-        get_network().onGetPropertyHistory(address,
-                                           time_start, time_end,
+        get_network().onGetPropertyHistory(self.root_proxy.device_id,
+                                           self.path, time_start, time_end,
                                            max_value_count)
 
     def start_monitoring(self):
