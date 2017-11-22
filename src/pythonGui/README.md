@@ -4,19 +4,25 @@ GUI Refactor TODO:
 Tasks
 -----
 
-- [ ] Port the Configurator [LARGE]:
-    - [ ] Port ConfigurationTreeModel
-    - [ ] Port TableEditDialog
-    - [ ] Port EditWidgetWrapper
-    - [ ] Port SlotButtonDelegate
-    - [ ] Fix ConfigurationTreeView
+- [X] Port the Topology [LARGE]:
+    - [X] ProjectDevice
+    - [X] SystemTopology
+    - [X] SystemTree
 
+- [ ] Port Core Singletons [LARGE]:
+    - [ ] Port Manager (mostly done)
+    - [ ] Port Network (mostly done)
+    - [ ] Small fixups in NavigationModel
+
+- [ ] Port the Navigation Panel [SMALL]
 - [ ] Port the Project View [SMALL]:
     - [ ] Port DeviceInstanceController
     - [ ] Port MacroController
 
+- [ ] Move the Widget Controllers
+
 - [ ] Port the Scene [LARGE]:
-    - [ ] Port BaseWidgetContainer into WidgetContainer (refactor/scene-base branch)
+    - [ ] Port BaseWidgetContainer into WidgetContainer (started; refactor/scene-base branch)
     - [ ] Remove the widget wrappers!
     - [ ] Port scene building
         - [ ] Use the binding controller registry instead of boilerplate mappings
@@ -31,25 +37,21 @@ Tasks
         - [ ] Remove Monitor
         - [ ] Remove Knob
 
-- [ ] Port Singletons [LARGE]: (refactor/box-cutter branch)
-    - [ ] Port Manager (mostly done)
-    - [ ] Port Network (mostly done)
-    - [ ] Small fixups in NavigationModel
+- [ ] Port the Configurator [LARGE]: (started; refactor/configurator branch)
+    - [ ] Port ConfigurationTreeModel
+    - [ ] Port TableEditDialog
+    - [ ] Port EditWidgetWrapper
+    - [ ] Port SlotButtonDelegate
+    - [ ] Fix ConfigurationTreeView
 
-- [ ] Port the Topology [LARGE]: (refactor/box-cutter branch)
-    - [ ] ProjectDevice (mostly done)
-    - [ ] SystemTopology (mostly done)
-    - [ ] SystemTree (mostly done)
-
-- [ ] Misc. Small Conversions [SMALL]:
-    - [X] Port DeviceScenesDialog (refactor/scene-dialog branch)
+- [ ] Misc. Small Tasks [SMALL]:
     - [X] Remove RunConfiguratorPanel
+    - [X] Port DeviceScenesDialog (staged; refactor/scene-dialog branch)
     - [ ] Port MacroPanel
 
 Wrap-up
 -------
 
-- [ ] Delete Box/Configuration
 - [ ] Integrate and Test
 - [ ] Party!
 
