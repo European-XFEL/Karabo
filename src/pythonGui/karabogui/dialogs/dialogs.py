@@ -11,10 +11,9 @@ from PyQt4.QtGui import (QColorDialog, QComboBox, QDialog, QDialogButtonBox,
                          QDoubleValidator, QFormLayout, QIcon, QPainter, QPen,
                          QPixmap, QTableWidgetItem)
 
-from karabo.common.api import walk_traits_object
-from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
+from karabo.common.scenemodel.api import SceneTargetWindow
 from karabogui import icons
-from karabogui.singletons.api import get_project_model, get_network
+from karabogui.singletons.api import get_network
 
 
 class _PatternMatcher(object):
@@ -336,20 +335,23 @@ class SceneLinkDialog(QDialog):
             button.setChecked(True)
 
     def _get_scenelink_targets(self):
-        project = get_project_model().traits_data_model
-        if project is None:
-            return []
+        return []
 
-        collected = set()
+        # XXX: Disabled for now!
+        # project = get_project_model().traits_data_model
+        # if project is None:
+        #     return []
 
-        def visitor(obj):
-            nonlocal collected
-            if isinstance(obj, SceneModel):
-                target = "{}:{}".format(obj.simple_name, obj.uuid)
-                collected.add(target)
+        # collected = set()
 
-        walk_traits_object(project, visitor)
-        return sorted(collected)
+        # def visitor(obj):
+        #     nonlocal collected
+        #     if isinstance(obj, SceneModel):
+        #         target = "{}:{}".format(obj.simple_name, obj.uuid)
+        #         collected.add(target)
+
+        # walk_traits_object(project, visitor)
+        # return sorted(collected)
 
     def _select_item(self, text, flags):
         items = self.lwScenes.findItems(text, flags)

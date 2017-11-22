@@ -324,17 +324,17 @@ class Network(QObject):
 
     def onKillDevice(self, device_id):
         h = Hash("type", "killDevice")
-        h.set("deviceId", device_id)
+        h["deviceId"] = device_id
         self._tcpWriteHash(h)
 
     def onKillServer(self, server_id):
         h = Hash("type", "killServer")
-        h.set("serverId", server_id)
+        h["serverId"] = server_id
         self._tcpWriteHash(h)
 
     def onGetDeviceConfiguration(self, device_id):
         h = Hash("type", "getDeviceConfiguration")
-        h.set("deviceId", device_id)
+        h["deviceId"] = device_id
         self._tcpWriteHash(h)
 
     def onReconfigure(self, device_id, configuration):
@@ -348,56 +348,56 @@ class Network(QObject):
     def onInitDevice(self, server_id, class_id, device_id, config,
                      attrUpdates=None):
         h = Hash("type", "initDevice")
-        h.set("serverId", server_id)
-        h.set("classId", class_id)
-        h.set("deviceId", device_id)
-        h.set("configuration", config)
+        h["serverId"] = server_id
+        h["classId"] = class_id
+        h["deviceId"] = device_id
+        h["configuration"] = config
         if attrUpdates is not None:
-            h.set("schemaUpdates", attrUpdates)
+            h["schemaUpdates"] = attrUpdates
         self._tcpWriteHash(h)
 
     def onExecute(self, device_id, slot_name):
         h = Hash("type", "execute")
-        h.set("deviceId", device_id)
-        h.set("command", slot_name)
+        h["deviceId"] = device_id
+        h["command"] = slot_name
         self._tcpWriteHash(h)
 
     def onExecuteGeneric(self, token, device_id, slot_name, params):
         h = Hash("type", "requestFromSlot")
-        h.set("deviceId", device_id)
-        h.set("slot", slot_name)
-        h.set("args", params)
-        h.set("token", token)
+        h["deviceId"] = device_id
+        h["slot"] = slot_name
+        h["args"] = params
+        h["token"] = token
         self._tcpWriteHash(h)
 
     def onStartMonitoringDevice(self, device_id):
         h = Hash("type", "startMonitoringDevice")
-        h.set("deviceId", device_id)
+        h["deviceId"] = device_id
         self._tcpWriteHash(h)
 
     def onStopMonitoringDevice(self, device_id):
         h = Hash("type", "stopMonitoringDevice")
-        h.set("deviceId", device_id)
+        h["deviceId"] = device_id
         self._tcpWriteHash(h)
 
     def onGetClassSchema(self, server_id, class_id):
         h = Hash("type", "getClassSchema")
-        h.set("serverId", server_id)
-        h.set("classId", class_id)
+        h["serverId"] = server_id
+        h["classId"] = class_id
         self._tcpWriteHash(h)
 
     def onGetDeviceSchema(self, device_id):
         h = Hash("type", "getDeviceSchema")
-        h.set("deviceId", device_id)
+        h["deviceId"] = device_id
         self._tcpWriteHash(h)
 
     def onGetPropertyHistory(self, device_id, path, t0, t1, maxNumData):
         h = Hash("type", "getPropertyHistory")
-        h.set("deviceId", device_id)
-        h.set("property", path)
-        h.set("t0", t0)
-        h.set("t1", t1)
-        h.set("maxNumData", maxNumData)
+        h["deviceId"] = device_id
+        h["property"] = path
+        h["t0"] = t0
+        h["t1"] = t1
+        h["maxNumData"] = maxNumData
         self._tcpWriteHash(h)
 
     # ---------------------------------------------------------------------
@@ -405,75 +405,75 @@ class Network(QObject):
 
     def onProjectBeginSession(self, project_manager):
         h = Hash("type", "projectBeginUserSession")
-        h.set("projectManager", project_manager)
+        h["projectManager"] = project_manager
         # XXX: Don't leave token hardcoded!
-        h.set("token", "admin")
+        h["token"] = "admin"
         self._tcpWriteHash(h)
 
     def onProjectEndSession(self, project_manager):
         h = Hash("type", "projectEndUserSession")
-        h.set("projectManager", project_manager)
+        h["projectManager"] = project_manager
         # XXX: Don't leave token hardcoded!
-        h.set("token", "admin")
+        h["token"] = "admin"
         self._tcpWriteHash(h)
 
     def onListProjectDomains(self, project_manager):
         h = Hash("type", "projectListDomains")
-        h.set("projectManager", project_manager)
+        h["projectManager"] = project_manager
         # XXX: Don't leave token hardcoded!
-        h.set("token", "admin")
+        h["token"] = "admin"
         self._tcpWriteHash(h)
 
     def onListProjectManagers(self):
         h = Hash("type", "projectListProjectManagers")
         # XXX: Don't leave token hardcoded!
-        h.set("token", "admin")
+        h["token"] = "admin"
         self._tcpWriteHash(h)
 
     def onProjectListItems(self, project_manager, domain, item_type):
         h = Hash("type", "projectListItems")
-        h.set("projectManager", project_manager)
+        h["projectManager"] = project_manager
         # XXX: Don't leave token hardcoded!
-        h.set("token", "admin")
-        h.set("domain", domain)
-        h.set("item_types", [item_type])
+        h["token"] = "admin"
+        h["domain"] = domain
+        h["item_types"] = [item_type]
         self._tcpWriteHash(h)
 
     def onProjectLoadItems(self, project_manager, items):
         h = Hash("type", "projectLoadItems")
-        h.set("projectManager", project_manager)
+        h["projectManager"] = project_manager
         # XXX: Don't leave token hardcoded!
-        h.set("token", "admin")
-        h.set("items", items)
+        h["token"] = "admin"
+        h["items"] = items
         self._tcpWriteHash(h)
 
     def onProjectSaveItems(self, project_manager, items):
         h = Hash("type", "projectSaveItems")
-        h.set("projectManager", project_manager)
+        h["projectManager"] = project_manager
         # XXX: Don't leave token hardcoded!
-        h.set("token", "admin")
-        h.set("items", items)
+        h["token"] = "admin"
+        h["items"] = items
         self._tcpWriteHash(h)
 
     def onProjectUpdateAttribute(self, project_manager, items):
         h = Hash("type", "projectUpdateAttribute")
-        h.set("projectManager", project_manager)
+        h["projectManager"] = project_manager
         # XXX: Don't leave token hardcoded!
-        h.set("token", "admin")
-        h.set("items", items)
+        h["token"] = "admin"
+        h["items"] = items
         self._tcpWriteHash(h)
 
     # ---------------------------------------------------------------------
 
     def onAcknowledgeAlarm(self, instanceId, rowId):
         h = Hash("type", "acknowledgeAlarm")
-        h.set("alarmInstanceId", instanceId)
-        h.set("acknowledgedRows", Hash(rowId, True))
+        h["alarmInstanceId"] = instanceId
+        h["acknowledgedRows"] = Hash(rowId, True)
         self._tcpWriteHash(h)
 
     def onRequestAlarms(self, instanceId):
         h = Hash("type", "requestAlarms")
-        h.set("alarmInstanceId", instanceId)
+        h["alarmInstanceId"] = instanceId
         self._tcpWriteHash(h)
 
     def onSubscribeToOutput(self, device_id, path, subscribe):
@@ -507,13 +507,13 @@ class Network(QObject):
     def _sendLoginInformation(self, username, password, provider,
                               sessionToken):
         loginInfo = Hash("type", "login")
-        loginInfo.set("username", username)
-        loginInfo.set("password", password)
-        loginInfo.set("provider", provider)
-        loginInfo.set("sessionToken", sessionToken)
-        loginInfo.set("host", socket.gethostname())
-        loginInfo.set("pid", QCoreApplication.applicationPid())
-        loginInfo.set("version", krb_globals.GUI_VERSION)
+        loginInfo["username"] = username
+        loginInfo["password"] = password
+        loginInfo["provider"] = provider
+        loginInfo["sessionToken"] = sessionToken
+        loginInfo["host"] = socket.gethostname()
+        loginInfo["pid"] = QCoreApplication.applicationPid()
+        loginInfo["version"] = krb_globals.GUI_VERSION
         self._tcpWriteHash(loginInfo)
 
     def _handleBrokerInformation(self, host, port, topic):
