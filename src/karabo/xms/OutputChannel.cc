@@ -113,8 +113,7 @@ namespace karabo {
             // The following call can throw only in case you provide with configuration's Hash the none-zero port number
             // and this port number is already used in the system, for example,  by another application.
             try {
-                // Cannot yet use bind_weak - we are still in constructor :-(.
-                m_port = connection->startAsync(boost::bind(&karabo::xms::OutputChannel::onTcpConnect, this, _1, _2));
+                m_port = connection->startAsync(bind_weak(&karabo::xms::OutputChannel::onTcpConnect, this, _1, _2));
             } catch (const std::exception& ex) {
                 throw KARABO_NETWORK_EXCEPTION(std::string("Could not start TcpServer for output channel (\"")
                     + toString(m_channelId) + "\", port = " + toString(m_port) + ") : " + ex.what());
