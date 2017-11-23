@@ -32,6 +32,8 @@ private:
 
     void testGet();
 
+    void testGetSchema();
+
     void testMonitorChannel();
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
