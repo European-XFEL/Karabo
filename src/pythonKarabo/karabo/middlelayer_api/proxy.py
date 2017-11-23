@@ -246,22 +246,16 @@ class DeviceClientProxyFactory(ProxyFactory):
             # device holding the proxy, e.g. DeviceClient (CLI) or
             # a middlelayer device
             self._device = device
-
             # None queue is global
             self._queues = defaultdict(WeakSet)
-
             # the deviceId
             self._deviceId = deviceId
-
             # variable used for autodisconnect
             self._used = 0
-
             # Hash container used for bulksetting
             self._sethash = Hash()
-
             # indicates if we are in sync with the eventloop
             self._sync = sync
-
             # our indicator if the underlying device is alive
             self._alive = True
             self._running_tasks = set()
@@ -270,7 +264,6 @@ class DeviceClientProxyFactory(ProxyFactory):
             self._lock_count = 0
 
         def _notifyChanged(self, descriptor, value):
-            super()._notifyChanged(descriptor, value)
             for q in self._queues[descriptor.longkey]:
                 q.put_nowait(value)
 
@@ -287,7 +280,7 @@ class DeviceClientProxyFactory(ProxyFactory):
             assert isinstance(value, KaraboValue)
             if loop.sync_set:
                 # we are in a thread not running on Eventloop and
-                # immediatly send out our changes
+                # immediately send out our changes
                 h = Hash()
                 h[desc.longkey], _ = desc.toDataAndAttrs(value)
                 loop.sync(self._raise_on_death(self._device.call(
