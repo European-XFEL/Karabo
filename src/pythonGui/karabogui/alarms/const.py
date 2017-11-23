@@ -76,23 +76,6 @@ INTERLOCK = 'interlock'
 ALARM_NONE = 'none'
 
 # --------------------------------------------------------------------------
-# Mapping alarm types to icons
-
-ALARM_ICONS = {
-    WARN_GLOBAL: icons.warnGlobal,
-    WARN_LOW: icons.warnLow,
-    WARN_HIGH: icons.warnHigh,
-    WARN_VARIANCE_LOW: icons.warnVarianceLow,
-    WARN_VARIANCE_HIGH: icons.warnVarianceHigh,
-    ALARM_GLOBAL: icons.alarmGlobal,
-    ALARM_LOW: icons.alarmLow,
-    ALARM_HIGH: icons.alarmHigh,
-    ALARM_VARIANCE_LOW: icons.alarmVarianceLow,
-    ALARM_VARIANCE_HIGH: icons.alarmVarianceHigh,
-    INTERLOCK: icons.interlock,
-}
-
-# --------------------------------------------------------------------------
 # Mapping alarm types to colors
 
 ALARM_COLORS = {
@@ -120,6 +103,22 @@ def get_alarm_key_index(key):
 def get_alarm_icon(alarm_type):
     """A `QIcon` for the given `alarm_type` is returned.
     """
+    # NOTE: Declare the ALARM_ICONS dict here, because the icons module might
+    # not yet be initialized the first time we are imported!
+    ALARM_ICONS = {
+        WARN_GLOBAL: icons.warnGlobal,
+        WARN_LOW: icons.warnLow,
+        WARN_HIGH: icons.warnHigh,
+        WARN_VARIANCE_LOW: icons.warnVarianceLow,
+        WARN_VARIANCE_HIGH: icons.warnVarianceHigh,
+        ALARM_GLOBAL: icons.alarmGlobal,
+        ALARM_LOW: icons.alarmLow,
+        ALARM_HIGH: icons.alarmHigh,
+        ALARM_VARIANCE_LOW: icons.alarmVarianceLow,
+        ALARM_VARIANCE_HIGH: icons.alarmVarianceHigh,
+        INTERLOCK: icons.interlock,
+    }
+
     alarm_icon = ALARM_ICONS.get(alarm_type)
     if alarm_icon is not None:
         return alarm_icon
