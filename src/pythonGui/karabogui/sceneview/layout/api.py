@@ -1,2 +1,3 @@
-from .base import BaseLayout  # noqa
-from .layouts import BoxLayout, GridLayout, GroupLayout  # noqa
+# flake8: noqa
+from .base import BaseLayout
+from .layouts import BoxLayout, GridLayout, GroupLayout
