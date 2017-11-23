@@ -1,0 +1,29 @@
+from karabo.common.scenemodel.api import DisplayTextLogModel
+from karabo.middlelayer import Configurable, String
+from karabogui.testing import GuiTestCase, get_class_property_proxy
+from ..textlog import DisplayTextLog
+
+
+class Object(Configurable):
+    prop = String()
+
+
+class TestDisplayTextLog(GuiTestCase):
+    def setUp(self):
+        super(TestDisplayTextLog, self).setUp()
+        schema = Object.getClassSchema()
+        self.proxy = get_class_property_proxy(schema, 'prop')
+        self.controller = DisplayTextLog(proxy=self.proxy,
+                                         model=DisplayTextLogModel())
+        self.controller.create(None)
+        assert self.controller.widget is not None
+
+    def tearDown(self):
+        self.controller.destroy()
+        assert self.controller.widget is None
+
+    def test_set_value(self):
+        self.controller.log_widget.clear()
+
+        self.proxy.value = 'Line 1'
+        assert 'Line 1' in self.controller.log_widget.toPlainText()
