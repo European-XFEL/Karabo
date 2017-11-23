@@ -1,5 +1,6 @@
 import numpy as np
 
+from karabo.middlelayer import Schema
 from . import const
 from . import types
 
@@ -12,6 +13,12 @@ def fast_deepcopy(d):
     for k, v in d.items():
         try:
             out[k] = v.copy()  # dicts, sets, ndarrays
+        except TypeError:
+            # This is a Schema, which has a terrible API
+            assert isinstance(v, Schema)
+            cpy = Schema()
+            cpy.copy(v)
+            out[k] = cpy
         except AttributeError:
             try:
                 out[k] = v[:]  # lists, tuples, strings, unicode
