@@ -485,7 +485,10 @@ namespace karabo {
                 }
             }
 
-            // Not found, request and cache it
+
+            // Not found, request and cache it. Better ensure/establish connection _before_ requesting.
+            // Otherwise we might miss updates in between.
+            stayConnected(instanceId); // connect synchronously (if not yet connected...)
             // Request schema
             Schema schema;
             try {
@@ -521,15 +524,13 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "_slotSchemaUpdated";
             {
                 boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-                string path(findInstance(deviceId));
+                const string path(findInstance(deviceId));
                 if (path.empty()) {
                     KARABO_LOG_FRAMEWORK_WARN << "got schema for unknown instance '" << deviceId << "'.";
                     return;
                 }
                 m_runtimeSystemDescription.set(path + ".fullSchema", schema);
-
-                path += ".activeSchema";
-                if (m_runtimeSystemDescription.has(path)) m_runtimeSystemDescription.erase(path);
+                m_runtimeSystemDescription.erase(path + ".activeSchema");
             }
             if (m_schemaUpdatedHandler) m_schemaUpdatedHandler(deviceId, schema);
         }
@@ -1497,19 +1498,18 @@ if (nodeData) {\
                                 p->disconnect(instanceId, "signalStateChanged", "", "_slotChanged");
                                 p->disconnect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated");
 
-                                const std::string path("device." + instanceId + ".configuration");
-                                // Since we stopped listening, remove configuration from system description.
-                                this->eraseFromRuntimeSystemDescription(path);
+                                // Since we stopped listening, remove configuration and schema from system description.
+                                const std::string path("device." + instanceId);
+                                this->eraseFromRuntimeSystemDescription(path + ".configuration");
+                                this->eraseFromRuntimeSystemDescription(path + ".fullSchema");
+                                this->eraseFromRuntimeSystemDescription(path + ".activeSchema");
                             }
                         }
                     }
                     boost::this_thread::sleep(boost::posix_time::seconds(1));
-                } catch (const Exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Aging thread encountered an exception: " << e;
-                    // Aging is essential, so go on. Wait a little in case of repeating error conditions.
-                    boost::this_thread::sleep(boost::posix_time::seconds(5));
                 } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Aging thread encountered system exception: " << e.what();
+                    KARABO_LOG_FRAMEWORK_ERROR << "Aging thread encountered an exception: " << e.what();
+                    // Aging is essential, so go on. Wait a little in case of repeating error conditions.
                     boost::this_thread::sleep(boost::posix_time::seconds(5));
                 } catch (...) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception encountered in aging thread";
