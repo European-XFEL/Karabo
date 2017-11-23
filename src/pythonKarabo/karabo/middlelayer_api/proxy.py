@@ -243,12 +243,26 @@ class DeviceClientProxyFactory(ProxyFactory):
         """
         def __init__(self, device, deviceId, sync):
             super().__init__()
+            # device holding the proxy, e.g. DeviceClient (CLI) or
+            # a middlelayer device
             self._device = device
+
+            # None queue is global
             self._queues = defaultdict(WeakSet)
+
+            # the deviceId
             self._deviceId = deviceId
+
+            # variable used for autodisconnect
             self._used = 0
+
+            # Hash container used for bulksetting
             self._sethash = Hash()
+
+            # indicates if we are in sync with the eventloop
             self._sync = sync
+
+            # our indicator if the underlying device is alive
             self._alive = True
             self._running_tasks = set()
             self._last_update_task = None
@@ -256,6 +270,7 @@ class DeviceClientProxyFactory(ProxyFactory):
             self._lock_count = 0
 
         def _notifyChanged(self, descriptor, value):
+            super()._notifyChanged(descriptor, value)
             for q in self._queues[descriptor.longkey]:
                 q.put_nowait(value)
 
@@ -265,10 +280,14 @@ class DeviceClientProxyFactory(ProxyFactory):
                 q.put_nowait(change)
 
         def setValue(self, desc, value):
+            """Set a value belonging to a descriptor on a proxy
+            """
             self._use()
             loop = asyncio.get_event_loop()
             assert isinstance(value, KaraboValue)
             if loop.sync_set:
+                # we are in a thread not running on Eventloop and
+                # immediatly send out our changes
                 h = Hash()
                 h[desc.longkey], _ = desc.toDataAndAttrs(value)
                 loop.sync(self._raise_on_death(self._device.call(
@@ -281,6 +300,7 @@ class DeviceClientProxyFactory(ProxyFactory):
                 self._last_update_task = None
                 task.result()  # raise the exception
             else:
+                # we are on the Eventloop and can do bulksetting
                 update = not self._sethash
                 self._sethash[desc.longkey], _ = desc.toDataAndAttrs(value)
                 if update:
@@ -312,8 +332,10 @@ class DeviceClientProxyFactory(ProxyFactory):
                 task = self._last_update_task
                 self._last_update_task = None
             if task is not None:
+                # wait until task is finished
                 yield from task
             if self._sethash:
+                # reconfigure the proxy and empty the bulk hash
                 sethash, self._sethash = self._sethash, Hash()
                 yield from self._device._ss.request(
                     self._deviceId, "slotReconfigure", sethash)
@@ -380,7 +402,9 @@ class DeviceClientProxyFactory(ProxyFactory):
                                          self._device.slotChanged)
             return self
 
-        def __exit__(self, a, b, c):
+        def __exit__(self, exc_type, exc_value, traceback):
+            """Exit the proxy by disconnecting from the signals
+            """
             self._used -= 1
             if self._used == 0:
                 self._device._ss.disconnect(self._deviceId, "signalChanged",
@@ -399,10 +423,13 @@ class DeviceClientProxyFactory(ProxyFactory):
         def __del__(self):
             self._disconnectSchemaUpdated()
             if self._used > 0:
+                # set the used variable to 1 for a clean disconnect in exit
                 self._used = 1
                 self.__exit__(None, None, None)
 
         def __iter__(self):
+            """Send out cached changes and get current configuration
+            """
             yield from self._update()
             conf, _ = yield from self._device.call(self._deviceId,
                                                    "slotGetConfiguration")
