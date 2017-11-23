@@ -122,7 +122,7 @@ def get_alarm_icon(alarm_type):
     """
     alarm_icon = ALARM_ICONS.get(alarm_type)
     if alarm_icon is not None:
-        return alarm_icon.icon
+        return alarm_icon
 
 
 def get_alarm_pixmap(alarm_type, extent=16):
