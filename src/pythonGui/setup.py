@@ -85,8 +85,6 @@ if __name__ == '__main__':
         'package_data': {
             "karabo_gui.binding.tests": ["data/*.config", "data/*.schema"],
             "karabo_gui.configurator.dialog": ["*.ui"],
-            "karabo_gui.controllers": ["*.ui"],
-            "karabo_gui.controllers.display": ["*.svg", "*.ui"],
             "karabo_gui.dialogs": ["*.ui"],
             "karabo_gui.displaywidgets": ["*.svg", "*.ui"],
             "karabo_gui.icons": ["*.*", "statefulicons/iconset/*.svg"],
@@ -94,6 +92,8 @@ if __name__ == '__main__':
 
             # XXX: Refactored GUI package
             "karabogui.binding.tests": ["data/*.config", "data/*.schema"],
+            "karabogui.controllers": ["*.ui"],
+            "karabogui.controllers.display": ["*.svg", "*.ui"],
             "karabogui.dialogs": ["*.ui"],
             "karabogui.icons": ["*.*", "statefulicons/iconset/*.svg"],
         }
