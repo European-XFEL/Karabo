@@ -118,7 +118,7 @@ class CameraFsm(base.BaseFsm):
         knownStt=[
         # Source-State   Event             Target-State   Action              Guard
         (State.NORMAL,  'ErrorFoundEvent', State.ERROR,   'ErrorFoundAction', 'none'),
-        (State.ERROR,   'ResetEvent',      State.NORMAL,  'none',             'none')
+        (State.ERROR,   'ResetEvent',      State.NORMAL,  'ResetAction',      'none')
         ]
         #                         Name      Transition-Table  Initial-State
         KARABO_FSM_STATE_MACHINE(State.KNOWN, knownStt, State.NORMAL)
