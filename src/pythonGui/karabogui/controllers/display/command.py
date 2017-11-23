@@ -6,10 +6,9 @@ from traits.api import Instance, List, on_trait_change
 from karabo.common.api import State
 from karabo.common.scenemodel.api import DisplayCommandModel
 from karabogui import globals as krb_globals
-from karabogui.binding.api import (
-    BaseBindingController, SlotBinding, register_binding_controller,
-    KARABO_SCHEMA_DISPLAYED_NAME
-)
+from karabogui.binding.api import SlotBinding, KARABO_SCHEMA_DISPLAYED_NAME
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 
 
 # An item contains the slotbinding proxy and its connected qt action
@@ -18,8 +17,7 @@ Item = namedtuple('Item', ['proxy', 'action'])
 
 # XXX: Reactivate the ability to assign icon/image to the button and save it
 # to the widget's data model
-@register_binding_controller(ui_name='Command', read_only=True,
-                             binding_type=SlotBinding)
+@register_binding_controller(ui_name='Command', binding_type=SlotBinding)
 class DisplayCommand(BaseBindingController):
     # The scene model class for this controller
     model = Instance(DisplayCommandModel)
