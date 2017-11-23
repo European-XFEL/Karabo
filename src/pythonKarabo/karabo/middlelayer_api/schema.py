@@ -69,6 +69,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         super(Configurable, cls).register(name, dict)
         for k, v in dict.items():
             if isinstance(v, Descriptor):
+                # in python 3.6 replaced with __set_name__
                 v.key = k
             if isinstance(v, Overwrite):
                 setattr(cls, k, v.overwrite(getattr(super(cls, cls), k)))
