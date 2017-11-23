@@ -13,13 +13,14 @@ from PyQt4.QtGui import (QComboBox, QHBoxLayout, QImage, QLabel, QSlider,
 from traits.api import Dict, Instance, Int, on_trait_change
 
 from karabo.common.scenemodel.api import DisplayAlignedImageModel
-from karabogui.binding.api import (
-    BaseBindingController, ImageBinding, register_binding_controller)
+from karabogui.binding.api import ImageBinding
+from karabogui.controllers.base import BaseBindingController
 from karabogui.controllers.images import (
     _DIMENSIONS, get_dimensions_and_format, get_image_data, KaraboImageDialog)
+from karabogui.controllers.registry import register_binding_controller
 
 
-@register_binding_controller(ui_name='Aligned Image View', read_only=True,
+@register_binding_controller(ui_name='Aligned Image View',
                              binding_type=ImageBinding)
 class DisplayAlignedImage(BaseBindingController):
     model = Instance(DisplayAlignedImageModel)

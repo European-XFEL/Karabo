@@ -4,14 +4,13 @@ from PyQt4.Qwt5.Qwt import QwtPlot
 from traits.api import Dict, Instance, on_trait_change
 
 from karabo.common.scenemodel.api import LinePlotModel
-from karabogui.binding.api import (
-    BaseBindingController, VectorBinding, register_binding_controller
-)
+from karabogui.binding.api import VectorBinding
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 from karabogui.controllers.util import axis_label
 
 
-@register_binding_controller(ui_name='XY-Plot', read_only=True,
-                             binding_type=VectorBinding)
+@register_binding_controller(ui_name='XY-Plot', binding_type=VectorBinding)
 class XYVector(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(LinePlotModel)

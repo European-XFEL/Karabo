@@ -8,13 +8,13 @@ from PyQt4.QtGui import QComboBox
 from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import ChoiceElementModel
-from karabogui.binding.api import (
-    BaseBindingController, ChoiceOfNodesBinding, register_binding_controller
-)
+from karabogui.binding.api import ChoiceOfNodesBinding
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 from karabogui.util import MouseWheelEventBlocker
 
 
-@register_binding_controller(ui_name='Choice Element',
+@register_binding_controller(ui_name='Choice Element', can_edit=True,
                              binding_type=ChoiceOfNodesBinding)
 class EditableChoiceElement(BaseBindingController):
     # The scene model class used by this controller

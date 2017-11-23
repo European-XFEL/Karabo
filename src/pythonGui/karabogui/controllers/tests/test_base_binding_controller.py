@@ -1,14 +1,16 @@
 from PyQt4.QtGui import QLabel
-from traits.api import Dict, Int, Str, on_trait_change
+from traits.api import Dict, Instance, Int, Str, on_trait_change
 
 from karabo.common.api import DeviceStatus
+from karabo.common.scenemodel.api import BaseWidgetObjectData
 from karabo.middlelayer import Bool, Configurable, String, AccessMode
 from karabogui.binding.api import (
-    BaseBindingController, DeviceClassProxy, PropertyProxy, StringBinding,
-    build_binding, register_binding_controller,
+    DeviceClassProxy, PropertyProxy, StringBinding, build_binding,
     KARABO_SCHEMA_DISPLAYED_NAME
 )
 from karabogui.testing import GuiTestCase
+from ..base import BaseBindingController
+from ..registry import register_binding_controller
 
 
 class SampleObject(Configurable):
@@ -31,8 +33,13 @@ class Connected(Configurable):
     two = String(displayedName='Two:')
 
 
+class UniqueWidgetModel(BaseWidgetObjectData):
+    pass  # Satisfy the uniqueness check in register_binding_controller
+
+
 @register_binding_controller(binding_type=StringBinding)
 class SingleBindingController(BaseBindingController):
+    model = Instance(UniqueWidgetModel)
     disp_name = Str
     deferred = Int(0)
 
@@ -53,6 +60,8 @@ class SingleBindingController(BaseBindingController):
 
 @register_binding_controller(binding_type=StringBinding)
 class MultiBindingController(BaseBindingController):
+    model = Instance(UniqueWidgetModel)
+
     def add_proxy(self, proxy):
         return True
 
@@ -66,6 +75,7 @@ class MultiBindingController(BaseBindingController):
 
 @register_binding_controller(binding_type=StringBinding)
 class DeviceController(BaseBindingController):
+    model = Instance(UniqueWidgetModel)
     display_names = Dict
 
     def add_proxy(self, proxy):

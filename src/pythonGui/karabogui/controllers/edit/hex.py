@@ -9,14 +9,15 @@ from PyQt4.QtGui import QLineEdit
 from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import HexadecimalModel
-from karabogui.binding.api import (
-    BaseBindingController, IntBinding, register_binding_controller, get_min_max
-)
+from karabogui.binding.api import IntBinding, get_min_max
 from karabogui.const import WIDGET_MIN_HEIGHT
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 from karabogui.controllers.unitlabel import add_unit_label
 
 
-@register_binding_controller(ui_name='Hexadecimal', binding_type=IntBinding)
+@register_binding_controller(ui_name='Hexadecimal', can_edit=True,
+                             binding_type=IntBinding)
 class Hexadecimal(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(HexadecimalModel)

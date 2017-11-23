@@ -9,10 +9,9 @@ from PyQt4.QtGui import (QAction, QInputDialog, QLineEdit, QDoubleValidator,
 from traits.api import Instance, Str, on_trait_change
 
 from karabo.common.scenemodel.api import DoubleLineEditModel, IntLineEditModel
-from karabogui.binding.api import (
-    BaseBindingController, register_binding_controller, get_min_max,
-    FloatBinding, IntBinding
-)
+from karabogui.binding.api import get_min_max, FloatBinding, IntBinding
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 from karabogui.controllers.unitlabel import add_unit_label
 from karabogui.util import SignalBlocker
 
@@ -127,7 +126,8 @@ class IntValidator(QValidator):
 
 
 # XXX: priority = 10
-@register_binding_controller(ui_name='Float Field', binding_type=FloatBinding)
+@register_binding_controller(ui_name='Float Field', can_edit=True,
+                             binding_type=FloatBinding)
 class DoubleLineEdit(NumberLineEdit):
     # The scene model class used by this controller
     model = Instance(DoubleLineEditModel)
@@ -168,7 +168,8 @@ class DoubleLineEdit(NumberLineEdit):
 
 
 # XXX: priority = 10
-@register_binding_controller(ui_name='Integer Field', binding_type=IntBinding)
+@register_binding_controller(ui_name='Integer Field', can_edit=True,
+                             binding_type=IntBinding)
 class IntLineEdit(NumberLineEdit):
     # The scene model class used by this controller
     model = Instance(IntLineEditModel)

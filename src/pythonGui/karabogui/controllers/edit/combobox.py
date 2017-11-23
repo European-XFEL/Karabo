@@ -8,9 +8,9 @@ from PyQt4.QtGui import QComboBox
 from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import ComboBoxModel
-from karabogui.binding.api import (
-    BaseBindingController, BaseBinding, register_binding_controller
-)
+from karabogui.binding.api import BaseBinding
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 from karabogui.util import MouseWheelEventBlocker
 
 
@@ -19,7 +19,7 @@ def _is_compatible(binding):
 
 
 # XXX: priority = 20
-@register_binding_controller(ui_name='Selection Field',
+@register_binding_controller(ui_name='Selection Field', can_edit=True,
                              binding_type=BaseBinding,
                              is_compatible=_is_compatible)
 class EditableComboBox(BaseBindingController):
