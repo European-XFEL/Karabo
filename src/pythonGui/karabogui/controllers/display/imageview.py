@@ -10,16 +10,15 @@ from PyQt4.QtGui import (QCheckBox, QComboBox, QHBoxLayout, QImage, QLabel,
 from traits.api import Array, Instance, Int, on_trait_change
 
 from karabo.common.scenemodel.api import DisplayImageModel
-from karabogui.binding.api import (
-    BaseBindingController, ImageBinding, register_binding_controller
-)
+from karabogui.binding.api import ImageBinding
+from karabogui.controllers.base import BaseBindingController
 from karabogui.controllers.images import (
     _DIMENSIONS, get_dimensions_and_format, get_image_data, KaraboImageDialog)
+from karabogui.controllers.registry import register_binding_controller
 
 
 # XXX: priority = 10
-@register_binding_controller(ui_name='Image View', read_only=True,
-                             binding_type=ImageBinding)
+@register_binding_controller(ui_name='Image View', binding_type=ImageBinding)
 class DisplayImage(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(DisplayImageModel)

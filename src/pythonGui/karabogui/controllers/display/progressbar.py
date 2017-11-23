@@ -10,12 +10,12 @@ from traits.api import Float, Instance, Tuple, on_trait_change
 from karabo.common.scenemodel.api import DisplayProgressBarModel
 from karabogui import messagebox
 from karabogui.binding.api import (
-    BaseBindingController, FloatBinding, IntBinding,
-    register_binding_controller,
-    KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
+    FloatBinding, IntBinding, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
     KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC
 )
 from karabogui.const import WIDGET_MIN_HEIGHT
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 
 NULL_RANGE = (0, 0)
 PROGRESS_MAX = 200
@@ -30,7 +30,7 @@ def _scale(val, min_val, max_val):
     return int((clamped - min_val) / (max_val - min_val) * PROGRESS_MAX)
 
 
-@register_binding_controller(ui_name='Progress Bar', read_only=True,
+@register_binding_controller(ui_name='Progress Bar',
                              binding_type=(FloatBinding, IntBinding))
 class DisplayProgressBar(BaseBindingController):
     # The specific scene model class used by this widget

@@ -4,10 +4,11 @@ from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import BitfieldModel
 from karabogui.binding.api import (
-    BaseBindingController, register_binding_controller,
     IntBinding, Int8Binding, Int16Binding, Int32Binding, Int64Binding,
     Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding
 )
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 from karabogui.controllers.unitlabel import add_unit_label
 
 
