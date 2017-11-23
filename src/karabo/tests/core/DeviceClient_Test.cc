@@ -6,10 +6,12 @@
  */
 
 #include <string>
+#include <karabo/core/DeviceClient.hh>
 
 #include "DeviceClient_Test.hh"
 
 #include "karabo/util/Hash.hh"
+#include "karabo/util/Schema.hh"
 #include "karabo/util/NDArray.hh"
 #include "karabo/xms/InputChannel.hh"
 #include "karabo/xms/ImageData.hh"
@@ -57,6 +59,7 @@ void DeviceClient_Test::testAll() {
     // A single test to reduce setup/teardown time
     testGet();
     testMonitorChannel();
+    testGetSchema();
 }
 
 
@@ -200,5 +203,42 @@ void DeviceClient_Test::testMonitorChannel() {
 
     // Final clean-up
     success = m_deviceClient->killDevice("TestedDevice2", KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+}
+
+
+void DeviceClient_Test::testGetSchema() {
+
+    // NOTE:
+    // The deviceId needs to be another one than in the other tests, otherwise the test might succeed
+    // even if the DeviceClient does not trigger to connect to schema updates: The registration that is
+    // triggered by DeviceClient::get in 'testGet()' could still be valid.
+    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest",
+                                                                       Hash("deviceId", "TestedDevice3"),
+                                                                       KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    // Check initial maxSize of one exemplary vector
+    Schema schema(m_deviceClient->getDeviceSchema("TestedDevice3"));
+    CPPUNIT_ASSERT(schema.hasMaxSize("vectors.floatProperty"));
+    CPPUNIT_ASSERT_EQUAL(10u, schema.getMaxSize("vectors.floatProperty"));
+
+    // Now update maxSize - this should trigger the signaling of an updated Schema and the client
+    // should be informed since it should be "connected".
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice3", "slotUpdateSchema", KRB_TEST_MAX_TIMEOUT));
+
+    // Wait a bit until new schema arrived
+    unsigned int counter = 0;
+    while (counter++ < 100) {
+        schema = m_deviceClient->getDeviceSchema("TestedDevice3");
+        if (schema.getMaxSize("vectors.floatProperty") == 20u) {
+            break;
+        }
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    }
+    CPPUNIT_ASSERT_EQUAL(20u, schema.getMaxSize("vectors.floatProperty"));
+
+    // Final clean-up
+    success = m_deviceClient->killDevice("TestedDevice3", KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 }
