@@ -7,9 +7,9 @@ from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import PopUpModel
 from karabogui.binding.api import (
-    BaseBindingController, PropertyProxy, SlotBinding, StringBinding,
-    register_binding_controller, KARABO_SCHEMA_DISPLAYED_NAME
-)
+    PropertyProxy, SlotBinding, StringBinding, KARABO_SCHEMA_DISPLAYED_NAME)
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 
 
 def _is_compatible(binding):
@@ -17,7 +17,7 @@ def _is_compatible(binding):
     return isinstance(binding, StringBinding)
 
 
-@register_binding_controller(ui_name='PopUp', read_only=True,
+@register_binding_controller(ui_name='PopUp',
                              binding_type=(SlotBinding, StringBinding),
                              is_compatible=_is_compatible)
 class PopUp(BaseBindingController):

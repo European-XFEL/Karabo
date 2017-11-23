@@ -9,18 +9,18 @@ from PyQt4.QtGui import QColor, QImage, QLabel, QPixmap
 from traits.api import on_trait_change, Instance
 
 from karabo.common.scenemodel.api import DisplayImageElementModel
-from karabogui.binding.api import (
-    BaseBindingController, ImageBinding, register_binding_controller
-)
+from karabogui.binding.api import ImageBinding
+from karabogui.controllers.base import BaseBindingController
 from karabogui.controllers.images import (
     get_image_data, get_dimensions_and_format)
+from karabogui.controllers.registry import register_binding_controller
 
 
 COLOR_TABLE = [QColor(i, i, i).rgb() for i in range(256)]
 DEFAULT_SIZE = 125
 
 
-@register_binding_controller(ui_name='Image Element', read_only=True,
+@register_binding_controller(ui_name='Image Element',
                              binding_type=ImageBinding)
 class DisplayImageElement(BaseBindingController):
     # The scene model class used by this controller

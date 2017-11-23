@@ -12,17 +12,16 @@ from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import DisplayTextLogModel
 from karabogui import icons
-from karabogui.binding.api import (
-    BaseBindingController, StringBinding, register_binding_controller
-)
+from karabogui.binding.api import StringBinding
 from karabogui.const import FINE_COLOR
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 from karabogui.util import generateObjectName
 
 W_SIZE = 32
 
 
-@register_binding_controller(ui_name='Text Log', read_only=True,
-                             binding_type=StringBinding)
+@register_binding_controller(ui_name='Text Log', binding_type=StringBinding)
 class DisplayTextLog(BaseBindingController):
     # The scene model class for this controller
     model = Instance(DisplayTextLogModel)

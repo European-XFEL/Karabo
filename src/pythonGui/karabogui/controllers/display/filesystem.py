@@ -9,9 +9,9 @@ from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import (
     DirectoryModel, FileInModel, FileOutModel)
-from karabogui.binding.api import (
-    BaseBindingController, StringBinding, register_binding_controller
-)
+from karabogui.binding.api import StringBinding
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 from karabogui.controllers.util import with_display_type
 
 
@@ -27,22 +27,19 @@ class _FilesystemDisplay(BaseBindingController):
         self.widget.setText(value)
 
 
-@register_binding_controller(ui_name='Directory', read_only=True,
-                             binding_type=StringBinding,
+@register_binding_controller(ui_name='Directory', binding_type=StringBinding,
                              is_compatible=with_display_type('directory'))
 class DisplayDirectory(_FilesystemDisplay):
     model = Instance(DirectoryModel)
 
 
-@register_binding_controller(ui_name='File In', read_only=True,
-                             binding_type=StringBinding,
+@register_binding_controller(ui_name='File In', binding_type=StringBinding,
                              is_compatible=with_display_type('fileIn'))
 class DisplayFileIn(_FilesystemDisplay):
     model = Instance(FileInModel)
 
 
-@register_binding_controller(ui_name='File Out', read_only=True,
-                             binding_type=StringBinding,
+@register_binding_controller(ui_name='File Out', binding_type=StringBinding,
                              is_compatible=with_display_type('fileOut'))
 class DisplayFileOut(_FilesystemDisplay):
     model = Instance(FileOutModel)

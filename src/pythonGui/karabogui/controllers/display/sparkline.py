@@ -14,18 +14,11 @@ from karabo.middlelayer import Timestamp
 from karabogui.alarms.api import (
     ALARM_COLOR, ALARM_HIGH, ALARM_LOW, WARN_COLOR, WARN_GLOBAL, WARN_HIGH,
     WARN_LOW)
-from karabogui.binding.api import (
-    BaseBindingController, register_binding_controller,
-    FloatBinding, Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding
-)
+from karabogui.binding.api import FloatBinding, IntBinding
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 from karabogui.util import SignalBlocker
 
-
-NUMERICAL_TYPES = (
-    FloatBinding, Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding
-)
 # this widget will always have a fixed size in pixels
 # we do not want to tempt people to scale it and misuse it as a trendline
 WIDGET_HEIGHT = 50
@@ -339,8 +332,8 @@ class SparkRenderer(QWidget):
         self.time_base = time_base
 
 
-@register_binding_controller(ui_name='Sparkline', read_only=True,
-                             binding_type=NUMERICAL_TYPES)
+@register_binding_controller(ui_name='Sparkline',
+                             binding_type=(FloatBinding, IntBinding))
 class DisplaySparkline(BaseBindingController):
     """Displays a spark line with a fixed time basis and coarsing of data
 
