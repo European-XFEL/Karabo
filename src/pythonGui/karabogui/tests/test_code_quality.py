@@ -16,6 +16,7 @@ PEP8_EXCEPTIONS = {
 }
 FLAKES_EXCEPTIONS = {
     'globals.py': 2,
+    'test_sparkline.py': 1,
 }
 MAX_COMPLEXITY = 6
 
