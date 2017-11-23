@@ -360,6 +360,11 @@ namespace karabo {
                     .displayedName("Write to Output")
                     .description("Write once to output channel 'Output'")
                     .commit();
+
+            SLOT_ELEMENT(expected).key("slotUpdateSchema")
+                    .displayedName("Update Schema")
+                    .description("Duplicate maxSize of vectors in schema")
+                    .commit();
         }
 
 
@@ -367,6 +372,7 @@ namespace karabo {
             KARABO_INITIAL_FUNCTION(initialize);
 
             KARABO_SLOT(writeOutput);
+            KARABO_SLOT(slotUpdateSchema);
         }
 
 
@@ -397,6 +403,21 @@ namespace karabo {
                                         16)); // unsigned short is 16 bits
 
             writeChannel("output", data);
+        }
+
+
+        void PropertyTest::slotUpdateSchema() {
+            const Schema schema(getFullSchema());
+            const Hash vectors(get<Hash>("vectors"));
+            std::set<std::string> keys;
+            vectors.getKeys(keys);
+            size_t counter = 0;
+            for (const std::string& key : keys) {
+                const std::string path("vectors." + key);
+                // Only for last key send update:
+                const bool sendUpdate = (++counter >= keys.size());
+                appendSchemaMaxSize(path, schema.getMaxSize(path) * 2, sendUpdate);
+            }
         }
     }
 }
