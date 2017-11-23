@@ -278,8 +278,9 @@ class SystemTopology(HasStrictTraits):
             # Update system tree
             self.system_tree.remove_device(instance_id)
 
-            del self._device_schemas[instance_id]
-            del self._device_configurations[instance_id]
+            # Use pop() for removal in case there's nothing there
+            self._device_schemas.pop(instance_id, None)
+            self._device_configurations.pop(instance_id, None)
 
             # Note the details of what device is gone
             class_id = attributes.get('classId', 'unknown-class')
