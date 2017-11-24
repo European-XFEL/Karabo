@@ -13,6 +13,7 @@ from karabogui.controllers.registry import register_binding_controller
 
 
 @register_binding_controller(ui_name='Choice Element',
+                             klassname='DisplayChoiceElement',
                              binding_type=ChoiceOfNodesBinding)
 class DisplayChoiceElement(BaseBindingController):
     # The scene data model class for this controller

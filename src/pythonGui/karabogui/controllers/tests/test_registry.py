@@ -1,11 +1,10 @@
-import contextlib
-
-from traits.api import Instance
+from traits.api import Enum, Instance
 
 from karabo.common.scenemodel.api import BaseWidgetObjectData
 from karabo.middlelayer import (
     Configurable, Int8, Int16, UInt32, UInt64, String)
 from karabogui.binding.api import StringBinding, IntBinding, build_binding
+from karabogui.testing import flushed_registry
 from ..base import BaseBindingController
 from ..registry import (
     get_compatible_controllers, get_model_controller,
@@ -34,25 +33,16 @@ def _options_checker(binding):
     return len(binding.options) > 0
 
 
-@contextlib.contextmanager
-def _flushed_registry():
-    """Avoid polluting the global registry with test controller classes"""
-    from .. import registry as registrymod
-
-    saved_registry = registrymod._controller_registry.copy()
-    registrymod._controller_registry.clear()
-    yield
-    registrymod._controller_registry = saved_registry
-
-
 def test_registry():
-    with _flushed_registry():
+    with flushed_registry():
         @register_binding_controller(binding_type=StringBinding,
+                                     klassname='Displayer',
                                      is_compatible=_options_checker)
         class DisplayWidget(BaseBindingController):
             model = Instance(UniqueWidgetModel)
 
-        @register_binding_controller(binding_type=StringBinding)
+        @register_binding_controller(klassname='Editor',
+                                     binding_type=StringBinding)
         class EditWidget(BaseBindingController):
             model = Instance(UniqueWidgetModel)
 
@@ -74,8 +64,9 @@ def test_registry():
 
 
 def test_expanded_registry():
-    with _flushed_registry():
-        @register_binding_controller(binding_type=IntBinding)
+    with flushed_registry():
+        @register_binding_controller(klassname='Displayer',
+                                     binding_type=IntBinding)
         class DisplayWidget(BaseBindingController):
             model = Instance(UniqueWidgetModel)
 
@@ -95,17 +86,58 @@ def test_scene_model_registry():
         def _parent_component_default(self):
             return 'EditableApplyLaterComponent'
 
-    with _flushed_registry():
-        @register_binding_controller(binding_type=StringBinding)
+    class SharedModel(BaseWidgetObjectData):
+        klass = Enum('Foo', 'Bar')
+
+    with flushed_registry():
+        @register_binding_controller(klassname='Displayer',
+                                     binding_type=StringBinding)
         class DisplayWidget(BaseBindingController):
             model = Instance(DisplayModel)
 
-        @register_binding_controller(binding_type=StringBinding, can_edit=True)
+        @register_binding_controller(klassname='Editor',
+                                     binding_type=StringBinding, can_edit=True)
         class EditWidget(BaseBindingController):
             model = Instance(EditModel)
 
-        widget = get_model_controller(DisplayModel())
-        assert widget is DisplayWidget
+        @register_binding_controller(klassname='Bar',
+                                     binding_type=StringBinding)
+        class BarWidget(BaseBindingController):
+            model = Instance(SharedModel)
 
-        widget = get_model_controller(EditModel())
-        assert widget is EditWidget
+        @register_binding_controller(klassname='Foo',
+                                     binding_type=StringBinding)
+        class FooWidget(BaseBindingController):
+            model = Instance(SharedModel)
+
+        controller = get_model_controller(DisplayModel())
+        assert controller is DisplayWidget
+
+        controller = get_model_controller(EditModel())
+        assert controller is EditWidget
+
+        model = SharedModel(klass='Foo')
+        controller = get_model_controller(model)
+        assert controller is FooWidget
+
+        model.klass = 'Bar'
+        controller = get_model_controller(model)
+        assert controller is BarWidget
+
+
+def test_known_model_collision():
+    # DisplayTrendline and XYVector are known to share a scene model class
+    # in a way which is unique among all the binding controllers.
+    # Test that that is not a problem for the controller registry.
+
+    from karabo.common.scenemodel.api import LinePlotModel
+    from ..display.trendline import DisplayTrendline
+    from ..display.xyvectors import XYVector
+
+    model = LinePlotModel(klass='DisplayTrendline')
+    controller = get_model_controller(model)
+    assert controller is DisplayTrendline
+
+    model.klass = 'XYVector'
+    controller = get_model_controller(model)
+    assert controller is XYVector
