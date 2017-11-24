@@ -332,7 +332,7 @@ class SparkRenderer(QWidget):
         self.time_base = time_base
 
 
-@register_binding_controller(ui_name='Sparkline',
+@register_binding_controller(ui_name='Sparkline', klassname='DisplaySparkline',
                              binding_type=(FloatBinding, IntBinding))
 class DisplaySparkline(BaseBindingController):
     """Displays a spark line with a fixed time basis and coarsing of data

@@ -52,7 +52,7 @@ class _AnalogEditorWidget(BaseBindingController):
         self._binding_update(self.proxy.binding)
 
 
-@register_binding_controller(ui_name='Knob', can_edit=True,
+@register_binding_controller(ui_name='Knob', can_edit=True, klassname='Knob',
                              binding_type=(FloatBinding, IntBinding))
 class Knob(_AnalogEditorWidget):
     # The scene model class for this controller
@@ -67,6 +67,7 @@ class Knob(_AnalogEditorWidget):
 
 
 @register_binding_controller(ui_name='Slider', can_edit=True,
+                             klassname='Slider',
                              binding_type=(FloatBinding, IntBinding))
 class Slider(_AnalogEditorWidget):
     # The scene model class for this controller

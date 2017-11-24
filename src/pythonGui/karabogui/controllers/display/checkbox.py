@@ -19,8 +19,9 @@ CHECKED = op.join(ICONS, "checkbox-checked.svg")
 UNCHECKED = op.join(ICONS, "checkbox-unchecked.svg")
 
 
-# XXX: priority = 10
-@register_binding_controller(ui_name='Toggle Field', binding_type=BoolBinding)
+@register_binding_controller(ui_name='Toggle Field',
+                             klassname='DisplayCheckBox',
+                             binding_type=BoolBinding, priority=10)
 class DisplayCheckBox(BaseBindingController):
     # The scene data model class for this controller
     model = Instance(CheckBoxModel)

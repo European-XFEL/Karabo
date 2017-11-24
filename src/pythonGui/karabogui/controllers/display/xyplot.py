@@ -11,7 +11,7 @@ from karabogui.controllers.util import axis_label
 from karabogui.mplwidget.mplplotwidgets import MplCurvePlot
 
 
-@register_binding_controller(ui_name='XY-Plot',
+@register_binding_controller(ui_name='XY-Plot', klassname='XYPlot',
                              binding_type=(FloatBinding, IntBinding))
 class XYPlot(BaseBindingController):
     # The scene model class used by this controller

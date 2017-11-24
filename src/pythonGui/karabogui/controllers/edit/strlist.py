@@ -15,6 +15,7 @@ from karabogui.controllers.registry import register_binding_controller
 
 
 @register_binding_controller(ui_name='List Element Field', can_edit=True,
+                             klassname='EditableListElement',
                              binding_type=VectorStringBinding)
 class EditableListElement(BaseBindingController):
     # The scene model class used by this controller
