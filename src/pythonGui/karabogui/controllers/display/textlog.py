@@ -21,7 +21,8 @@ from karabogui.util import generateObjectName
 W_SIZE = 32
 
 
-@register_binding_controller(ui_name='Text Log', binding_type=StringBinding)
+@register_binding_controller(ui_name='Text Log', klassname='DisplayTextLog',
+                             binding_type=StringBinding)
 class DisplayTextLog(BaseBindingController):
     # The scene model class for this controller
     model = Instance(DisplayTextLogModel)

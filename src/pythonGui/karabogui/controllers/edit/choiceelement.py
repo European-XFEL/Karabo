@@ -15,6 +15,7 @@ from karabogui.util import MouseWheelEventBlocker
 
 
 @register_binding_controller(ui_name='Choice Element', can_edit=True,
+                             klassname='EditableChoiceElement',
                              binding_type=ChoiceOfNodesBinding)
 class EditableChoiceElement(BaseBindingController):
     # The scene model class used by this controller

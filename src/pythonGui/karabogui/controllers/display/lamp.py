@@ -26,7 +26,7 @@ STATE_LAMP_PATH = {
 }
 
 
-@register_binding_controller(ui_name='Generic Lamp',
+@register_binding_controller(ui_name='Generic Lamp', klassname='LampWidget',
                              binding_type=StringBinding,
                              is_compatible=with_display_type('State'))
 class LampWidget(BaseBindingController):

@@ -21,6 +21,7 @@ from karabogui.controllers.registry import register_binding_controller
 
 
 @register_binding_controller(ui_name='Aligned Image View',
+                             klassname='DisplayAlignedImage',
                              binding_type=ImageBinding)
 class DisplayAlignedImage(BaseBindingController):
     model = Instance(DisplayAlignedImageModel)

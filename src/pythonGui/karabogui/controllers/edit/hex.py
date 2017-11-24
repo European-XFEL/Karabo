@@ -17,7 +17,7 @@ from karabogui.controllers.unitlabel import add_unit_label
 
 
 @register_binding_controller(ui_name='Hexadecimal', can_edit=True,
-                             binding_type=IntBinding)
+                             klassname='Hexadecimal', binding_type=IntBinding)
 class Hexadecimal(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(HexadecimalModel)

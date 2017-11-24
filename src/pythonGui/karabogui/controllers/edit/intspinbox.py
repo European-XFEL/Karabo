@@ -17,6 +17,7 @@ from karabogui.util import MouseWheelEventBlocker
 
 
 @register_binding_controller(ui_name='Integer Spin Box', can_edit=True,
+                             klassname='EditableSpinBox',
                              binding_type=IntBinding)
 class EditableSpinBox(BaseBindingController):
     # The scene model class for this controller

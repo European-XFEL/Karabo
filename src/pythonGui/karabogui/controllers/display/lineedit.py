@@ -14,8 +14,8 @@ from karabogui.controllers.base import BaseBindingController
 from karabogui.controllers.registry import register_binding_controller
 
 
-# XXX: priority = 10
-@register_binding_controller(ui_name='Text Field', binding_type=StringBinding)
+@register_binding_controller(ui_name='Text Field', klassname='DisplayLineEdit',
+                             binding_type=StringBinding, priority=10)
 class DisplayLineEdit(BaseBindingController):
     # The scene data model class for this controller
     model = Instance(LineEditModel)

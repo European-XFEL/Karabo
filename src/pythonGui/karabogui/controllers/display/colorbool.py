@@ -21,7 +21,9 @@ from karabogui.icons.statefulicons.color_change_icon import (
 from karabogui.indicators import STATE_COLORS
 
 
-@register_binding_controller(ui_name='Switch Bool', binding_type=BoolBinding)
+@register_binding_controller(ui_name='Switch Bool',
+                             klassname='DisplayColorBool',
+                             binding_type=BoolBinding)
 class DisplayColorBool(BaseBindingController):
     # The scene data model class for this controller
     model = Instance(ColorBoolModel)

@@ -23,6 +23,7 @@ WHITE = '#ffffff'
 
 
 @register_binding_controller(ui_name='Standard Icon',
+                             klassname='StatefulIconWidget',
                              binding_type=StringBinding,
                              is_compatible=with_display_type('State'))
 class StatefulIconWidget(BaseBindingController):
