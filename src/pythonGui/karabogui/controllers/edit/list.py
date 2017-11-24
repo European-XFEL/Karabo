@@ -11,9 +11,9 @@ from karabogui.controllers.registry import register_binding_controller
 from karabogui.util import SignalBlocker
 
 
-# XXX: priority = 10
 @register_binding_controller(ui_name='List', can_edit=True,
-                             binding_type=VectorBinding)
+                             klassname='EditableList',
+                             binding_type=VectorBinding, priority=10)
 class EditableList(BaseBindingController):
     model = Instance(EditableListModel)
     last_cursor_position = Int(0)

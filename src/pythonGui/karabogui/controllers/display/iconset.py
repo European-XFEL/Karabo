@@ -51,7 +51,8 @@ def _read_xml_data(data):
     return ElementTree(parser.close())
 
 
-@register_binding_controller(ui_name='Iconset', binding_type=StringBinding)
+@register_binding_controller(ui_name='Iconset', klassname='DisplayIconset',
+                             binding_type=StringBinding)
 class DisplayIconset(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(DisplayIconsetModel)

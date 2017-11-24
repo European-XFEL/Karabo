@@ -17,7 +17,8 @@ Item = namedtuple('Item', ['proxy', 'action'])
 
 # XXX: Reactivate the ability to assign icon/image to the button and save it
 # to the widget's data model
-@register_binding_controller(ui_name='Command', binding_type=SlotBinding)
+@register_binding_controller(ui_name='Command', klassname='DisplayCommand',
+                             binding_type=SlotBinding)
 class DisplayCommand(BaseBindingController):
     # The scene model class for this controller
     model = Instance(DisplayCommandModel)

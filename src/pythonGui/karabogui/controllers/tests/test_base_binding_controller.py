@@ -8,7 +8,7 @@ from karabogui.binding.api import (
     DeviceClassProxy, PropertyProxy, StringBinding, build_binding,
     KARABO_SCHEMA_DISPLAYED_NAME
 )
-from karabogui.testing import GuiTestCase
+from karabogui.testing import GuiTestCase, flushed_registry
 from ..base import BaseBindingController
 from ..registry import register_binding_controller
 
@@ -37,71 +37,88 @@ class UniqueWidgetModel(BaseWidgetObjectData):
     pass  # Satisfy the uniqueness check in register_binding_controller
 
 
-@register_binding_controller(binding_type=StringBinding)
-class SingleBindingController(BaseBindingController):
-    model = Instance(UniqueWidgetModel)
-    disp_name = Str
-    deferred = Int(0)
+def _define_binding_classes():
+    """Do this in a function so that we can avoid polluting the registry
+    """
+    @register_binding_controller(klassname='Norm', binding_type=StringBinding)
+    class DeviceController(BaseBindingController):
+        model = Instance(UniqueWidgetModel)
+        display_names = Dict
 
-    def create_widget(self, parent):
-        return QLabel(parent)
+        def add_proxy(self, proxy):
+            return True
 
-    def deferred_update(self):
-        self.deferred += 1
+        def create_widget(self, parent):
+            return QLabel(parent)
 
-    @on_trait_change('proxy.binding')
-    def _binding_update(self, binding):
-        self.disp_name = binding.attributes.get(KARABO_SCHEMA_DISPLAYED_NAME)
+        @on_trait_change('proxies.binding')
+        def _binding_update(self, obj, name, new):
+            if name == 'proxies':
+                proxy = new[-1]
+            elif name == 'binding':
+                proxy = obj
 
-    @on_trait_change('proxy:value')
-    def _value_update(self, value):
-        self.widget.setText(self.disp_name + value)
+            binding = proxy.binding
+            if binding is not None:
+                name = binding.attributes.get(KARABO_SCHEMA_DISPLAYED_NAME, '')
+            else:
+                name = ''
+            self.display_names[proxy] = name
 
+    @register_binding_controller(klassname='Multi', binding_type=StringBinding)
+    class MultiBindingController(BaseBindingController):
+        model = Instance(UniqueWidgetModel)
 
-@register_binding_controller(binding_type=StringBinding)
-class MultiBindingController(BaseBindingController):
-    model = Instance(UniqueWidgetModel)
+        def add_proxy(self, proxy):
+            return True
 
-    def add_proxy(self, proxy):
-        return True
+        def create_widget(self, parent):
+            return QLabel(parent)
 
-    def create_widget(self, parent):
-        return QLabel(parent)
+        @on_trait_change('proxies:value')
+        def _value_update(self, value):
+            self.widget.setText(value)
 
-    @on_trait_change('proxies:value')
-    def _value_update(self, value):
-        self.widget.setText(value)
+    @register_binding_controller(klassname='Mono', binding_type=StringBinding)
+    class SingleBindingController(BaseBindingController):
+        model = Instance(UniqueWidgetModel)
+        disp_name = Str
+        deferred = Int(0)
 
+        def create_widget(self, parent):
+            return QLabel(parent)
 
-@register_binding_controller(binding_type=StringBinding)
-class DeviceController(BaseBindingController):
-    model = Instance(UniqueWidgetModel)
-    display_names = Dict
+        def deferred_update(self):
+            self.deferred += 1
 
-    def add_proxy(self, proxy):
-        return True
+        @on_trait_change('proxy.binding')
+        def _binding_update(self, binding):
+            attrs = binding.attributes
+            self.disp_name = attrs.get(KARABO_SCHEMA_DISPLAYED_NAME)
 
-    def create_widget(self, parent):
-        return QLabel(parent)
+        @on_trait_change('proxy:value')
+        def _value_update(self, value):
+            self.widget.setText(self.disp_name + value)
 
-    @on_trait_change('proxies.binding')
-    def _binding_update(self, obj, name, new):
-        if name == 'proxies':
-            proxy = new[-1]
-        elif name == 'binding':
-            proxy = obj
-
-        binding = proxy.binding
-        if binding is not None:
-            name = binding.attributes.get(KARABO_SCHEMA_DISPLAYED_NAME, '')
-        else:
-            name = ''
-        self.display_names[proxy] = name
+    return {
+        'DeviceController': DeviceController,
+        'MultiBindingController': MultiBindingController,
+        'SingleBindingController': SingleBindingController,
+    }
 
 
 class TestBaseBindingController(GuiTestCase):
     def setUp(self):
         super(TestBaseBindingController, self).setUp()
+
+        # Avoid polluting the controller registry!
+        with flushed_registry():
+            klasses = _define_binding_classes()
+
+        # Save the classes so they only need to be declared once
+        self.DeviceController = klasses['DeviceController']
+        self.MultiBindingController = klasses['MultiBindingController']
+        self.SingleBindingController = klasses['SingleBindingController']
 
         schema = SampleObject.getClassSchema()
         binding = build_binding(schema)
@@ -112,9 +129,9 @@ class TestBaseBindingController(GuiTestCase):
         self.unsupported = PropertyProxy(root_proxy=device, path='unsupported')
 
         # Create the controllers and initialize their widgets
-        self.single = SingleBindingController(proxy=self.first)
+        self.single = self.SingleBindingController(proxy=self.first)
         self.single.create(None)
-        self.multi = MultiBindingController(proxy=self.first)
+        self.multi = self.MultiBindingController(proxy=self.first)
         assert self.multi.visualize_additional_property(self.second)
         self.multi.create(None)
 
@@ -129,7 +146,7 @@ class TestBaseBindingController(GuiTestCase):
         assert not self.single.visualize_additional_property(self.second)
 
         # Use a temporary controller which won't affect other tests
-        controller = MultiBindingController(proxy=self.first)
+        controller = self.MultiBindingController(proxy=self.first)
         # Adding an already watched property doesn't work
         assert not controller.visualize_additional_property(self.first)
         assert controller.visualize_additional_property(self.second)
@@ -180,7 +197,7 @@ class TestBaseBindingController(GuiTestCase):
                                   status=DeviceStatus.OFFLINE)
         one = PropertyProxy(root_proxy=device, path='one')
         two = PropertyProxy(root_proxy=device, path='two')
-        controller = DeviceController(proxy=one)
+        controller = self.DeviceController(proxy=one)
         controller.create_widget(None)
 
         controller.visualize_additional_property(two)

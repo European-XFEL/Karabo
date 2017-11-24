@@ -17,7 +17,7 @@ def _is_compatible(binding):
     return isinstance(binding, StringBinding)
 
 
-@register_binding_controller(ui_name='PopUp',
+@register_binding_controller(ui_name='PopUp', klassname='PopUp',
                              binding_type=(SlotBinding, StringBinding),
                              is_compatible=_is_compatible)
 class PopUp(BaseBindingController):

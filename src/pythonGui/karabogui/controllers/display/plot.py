@@ -20,7 +20,8 @@ COLORS = ("red", "green", "blue", "gray", "violet", "orange", "lightgreen",
 COLOR_GEN = cycle(COLORS)
 
 
-@register_binding_controller(ui_name='Plot', binding_type=VectorBinding)
+@register_binding_controller(ui_name='Plot', klassname='DisplayPlot',
+                             binding_type=VectorBinding)
 class DisplayPlot(BaseBindingController):
     # The scene data model class for this controller
     model = Instance(DisplayPlotModel)

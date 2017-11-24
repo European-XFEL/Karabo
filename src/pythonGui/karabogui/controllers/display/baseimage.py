@@ -267,15 +267,16 @@ class _BaseImage(BaseBindingController):
 
 # XXX: WebcamImageDisplay and ScientificImageDisplay are identical on every
 # level, we should remove one of them!
-# XXX: priority = 10
-@register_binding_controller(ui_name='Webcam Image', binding_type=ImageBinding)
+@register_binding_controller(ui_name='Webcam Image',
+                             klassname='WebcamImageDisplay',
+                             binding_type=ImageBinding, priority=10)
 class WebcamImageDisplay(_BaseImage):
     model = Instance(WebcamImageModel)
 
 
-# XXX: priority = 10
 @register_binding_controller(ui_name='Scientific Image',
-                             binding_type=ImageBinding)
+                             klassname='ScientificImageDisplay',
+                             binding_type=ImageBinding, priority=10)
 class ScientificImageDisplay(_BaseImage):
     model = Instance(ScientificImageModel)
 

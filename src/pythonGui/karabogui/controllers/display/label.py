@@ -30,8 +30,9 @@ BINDING_TYPES = (CharBinding, ComplexBinding, FloatBinding, StringBinding,
                  IntBinding)
 
 
-# XXX: priority = 20
-@register_binding_controller(ui_name='Value Field', binding_type=BINDING_TYPES)
+@register_binding_controller(ui_name='Value Field',
+                             klassname='DisplayLabel',
+                             binding_type=BINDING_TYPES, priority=20)
 class DisplayLabel(BaseBindingController):
     # The scene data model class for this controller
     model = Instance(DisplayLabelModel)

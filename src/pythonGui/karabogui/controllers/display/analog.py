@@ -28,6 +28,7 @@ WIDGET_WIDTH = 26
 
 
 @register_binding_controller(ui_name='Analog Widget',
+                             klassname='DisplayAnalog',
                              binding_type=FloatBinding)
 class DisplayAnalog(BaseBindingController):
     # The scene data model class for this controller
