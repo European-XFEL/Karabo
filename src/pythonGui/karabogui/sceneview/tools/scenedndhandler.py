@@ -1,0 +1,98 @@
+#############################################################################
+# Author: <kerstin.weger@xfel.eu>
+# Created on June 30, 2016
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
+from abc import abstractmethod
+import json
+
+from PyQt4.QtCore import QPoint
+from PyQt4.QtGui import QBoxLayout, QFont
+from traits.api import ABCHasStrictTraits
+
+from karabo.common.scenemodel.api import BoxLayoutModel, LabelModel
+from karabogui.controllers.registry import (
+    get_compatible_controllers, _get_class_trait, _get_scene_model_class)
+from karabogui.sceneview.widget.utils import get_proxy
+
+_STACKED_WIDGET_OFFSET = 30
+
+
+class SceneDnDHandler(ABCHasStrictTraits):
+
+    @abstractmethod
+    def can_handle(self, event):
+        """Check whether the drag event can be handled."""
+
+    @abstractmethod
+    def handle(self, scene_view, event):
+        """Handle the drop event."""
+
+
+class ConfigurationDropHandler(SceneDnDHandler):
+    """Scene D&D handler for drops originating from the configuration view.
+    """
+    def can_handle(self, event):
+        source_type = event.mimeData().data('source_type')
+        if source_type == 'ParameterTreeWidget':
+            return True
+        return False
+
+    def handle(self, scene_view, event):
+        mime_data = event.mimeData()
+        items = []
+        if mime_data.data('tree_items'):
+            items_data = mime_data.data('tree_items').data()
+            items = json.loads(items_data.decode())
+
+        # Create the proxies first
+        proxies = [get_proxy(*item['key'].split('.', 1)) for item in items]
+
+        # Handle the case when dropped on an existing scene widget
+        pos = event.pos()
+        widget = scene_view.widget_at_position(pos)
+        if widget is not None:
+            if widget.add_proxies(proxies):
+                event.accept()
+                return
+
+        # Handle the case when dropped as new scene widgets
+        models = []
+        for item, proxy in zip(items, proxies):
+            if proxy.binding is None:
+                continue
+
+            model = self._create_model_from_parameter_item(item, proxy, pos)
+            models.append(model)
+            pos += QPoint(0, _STACKED_WIDGET_OFFSET)
+        scene_view.add_models(*models)
+        event.accept()
+
+    def _create_model_from_parameter_item(self, item, proxy, pos):
+        """Create the scene models for a single item
+        """
+        # Horizonal layout
+        layout_model = BoxLayoutModel(direction=QBoxLayout.LeftToRight,
+                                      x=pos.x(), y=pos.y())
+        # Add label to layout model
+        label_model = LabelModel(text=item['label'], font=QFont().toString(),
+                                 foreground='#000000')
+        layout_model.children.append(label_model)
+
+        def create_model(klass, key, layout_model):
+            model_klass = _get_scene_model_class(klass)
+            model = model_klass(keys=[key])
+            if hasattr(model, 'klass'):
+                model.klass = _get_class_trait(klass, '_klassname')
+            layout_model.children.append(model)
+
+        # Add the display and editable widgets, as needed
+        klasses = get_compatible_controllers(proxy.binding)
+        if klasses:
+            create_model(klasses[0], proxy.key, layout_model)
+
+        klasses = get_compatible_controllers(proxy.binding, can_edit=True)
+        if klasses:
+            create_model(klasses[0], proxy.key, layout_model)
+
+        return layout_model
