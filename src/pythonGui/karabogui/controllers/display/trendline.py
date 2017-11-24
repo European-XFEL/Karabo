@@ -21,12 +21,14 @@ from traits.api import (
     on_trait_change
 )
 
+from karabo.common.scenemodel.api import LinePlotModel
 from karabo.middlelayer import Timestamp
 from karabogui import globals as krb_globals
 from karabogui.binding.api import (
-    BaseBindingController, BoolBinding, FloatBinding, IntBinding,
-    PropertyProxy, register_binding_controller
+    BoolBinding, FloatBinding, IntBinding, PropertyProxy
 )
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 from karabogui.controllers.util import axis_label
 from karabogui.util import SignalBlocker
 
@@ -378,9 +380,11 @@ class _KaraboCurveWidget(CurveWidget):
         super(_KaraboCurveWidget, self).mousePressEvent(event)
 
 
-@register_binding_controller(ui_name='Trendline', read_only=True,
-                             binding_type=PLOTTABLE_TYPES)
+@register_binding_controller(ui_name='Trendline', binding_type=PLOTTABLE_TYPES)
 class DisplayTrendline(BaseBindingController):
+    # The scene model class used by this controller
+    model = Instance(LinePlotModel)
+
     _initial_start_time = Instance(QDateTime)
     _plot = Instance(object)  # some Qwt bullshit
     _curve_widget = Instance(_KaraboCurveWidget)

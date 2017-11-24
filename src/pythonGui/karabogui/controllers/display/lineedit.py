@@ -8,15 +8,14 @@ from PyQt4.QtGui import QLineEdit
 from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import LineEditModel
-from karabogui.binding.api import (
-    BaseBindingController, StringBinding, register_binding_controller
-)
+from karabogui.binding.api import StringBinding
 from karabogui.const import WIDGET_MIN_HEIGHT
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 
 
 # XXX: priority = 10
-@register_binding_controller(ui_name='Text Field', read_only=True,
-                             binding_type=StringBinding)
+@register_binding_controller(ui_name='Text Field', binding_type=StringBinding)
 class DisplayLineEdit(BaseBindingController):
     # The scene data model class for this controller
     model = Instance(LineEditModel)

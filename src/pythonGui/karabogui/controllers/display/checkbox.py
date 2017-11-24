@@ -10,8 +10,9 @@ from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import CheckBoxModel
 from karabogui import icons
-from karabogui.binding.api import (
-    BaseBindingController, BoolBinding, register_binding_controller)
+from karabogui.binding.api import BoolBinding
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 
 ICONS = op.dirname(icons.__file__)
 CHECKED = op.join(ICONS, "checkbox-checked.svg")
@@ -19,8 +20,7 @@ UNCHECKED = op.join(ICONS, "checkbox-unchecked.svg")
 
 
 # XXX: priority = 10
-@register_binding_controller(ui_name='Toggle Field', read_only=True,
-                             binding_type=BoolBinding)
+@register_binding_controller(ui_name='Toggle Field', binding_type=BoolBinding)
 class DisplayCheckBox(BaseBindingController):
     # The scene data model class for this controller
     model = Instance(CheckBoxModel)

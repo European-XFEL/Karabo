@@ -8,13 +8,13 @@ from PyQt4.QtGui import QDialog, QPushButton
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import EditableListElementModel
-from karabogui.binding.api import (
-    BaseBindingController, VectorStringBinding, register_binding_controller
-)
+from karabogui.binding.api import VectorStringBinding
+from karabogui.controllers.base import BaseBindingController
 from karabogui.controllers.listedit import ListEdit
+from karabogui.controllers.registry import register_binding_controller
 
 
-@register_binding_controller(ui_name='List Element Field',
+@register_binding_controller(ui_name='List Element Field', can_edit=True,
                              binding_type=VectorStringBinding)
 class EditableListElement(BaseBindingController):
     # The scene model class used by this controller

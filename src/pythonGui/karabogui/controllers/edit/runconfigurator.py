@@ -10,9 +10,9 @@ from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import RunConfiguratorModel
 from karabo.middlelayer import Hash
-from karabogui.binding.api import (
-    BaseBindingController, ListOfNodesBinding, register_binding_controller
-)
+from karabogui.binding.api import ListOfNodesBinding
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 from karabogui.controllers.util import with_display_type
 
 HEADER_LABELS = ['source', 'type', 'behavior', 'monitored', 'access']
@@ -22,7 +22,7 @@ _is_compatible = with_display_type('RunConfigurator')
 
 
 # XXX: priority = 10
-@register_binding_controller(ui_name='List Of Nodes',
+@register_binding_controller(ui_name='List Of Nodes', can_edit=True,
                              binding_type=ListOfNodesBinding,
                              is_compatible=_is_compatible)
 class RunConfiguratorEdit(BaseBindingController):

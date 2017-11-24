@@ -4,16 +4,16 @@ from traits.api import Instance, Str, on_trait_change
 
 from karabo.common.api import State
 from karabo.common.scenemodel.api import DisplayStateColorModel
-from karabogui.binding.api import (
-    BaseBindingController, StringBinding, register_binding_controller
-)
+from karabogui.binding.api import StringBinding
 from karabogui.const import WIDGET_MIN_HEIGHT
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 from karabogui.controllers.util import with_display_type
 from karabogui.indicators import STATE_COLORS
 from karabogui.util import generateObjectName
 
 
-@register_binding_controller(ui_name='State Color Field', read_only=True,
+@register_binding_controller(ui_name='State Color Field',
                              binding_type=StringBinding,
                              is_compatible=with_display_type('State'))
 class DisplayStateColor(BaseBindingController):
