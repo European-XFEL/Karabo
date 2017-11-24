@@ -7,16 +7,16 @@ from PyQt4.QtGui import QComboBox
 from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import ComboBoxModel
-from karabogui.binding.api import (
-    BaseBindingController, BaseBinding, register_binding_controller)
+from karabogui.binding.api import BaseBinding
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 
 
 def _widget_is_compatible(binding):
     return len(binding.options) > 0
 
 
-@register_binding_controller(ui_name='Combo Box', read_only=True,
-                             binding_type=BaseBinding,
+@register_binding_controller(ui_name='Combo Box', binding_type=BaseBinding,
                              is_compatible=_widget_is_compatible)
 class DisplayComboBox(BaseBindingController):
     # The scene data model class for this controller

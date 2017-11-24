@@ -7,12 +7,12 @@ from PyQt4.QtGui import QComboBox
 from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import ChoiceElementModel
-from karabogui.binding.api import (
-    BaseBindingController, ChoiceOfNodesBinding, register_binding_controller
-)
+from karabogui.binding.api import ChoiceOfNodesBinding
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 
 
-@register_binding_controller(ui_name='Choice Element', read_only=True,
+@register_binding_controller(ui_name='Choice Element',
                              binding_type=ChoiceOfNodesBinding)
 class DisplayChoiceElement(BaseBindingController):
     # The scene data model class for this controller

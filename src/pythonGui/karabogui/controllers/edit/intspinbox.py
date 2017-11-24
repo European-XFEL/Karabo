@@ -8,15 +8,15 @@ from PyQt4.QtGui import QSpinBox
 from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import EditableSpinBoxModel
-from karabogui.binding.api import (
-    BaseBindingController, IntBinding, register_binding_controller, get_min_max
-)
+from karabogui.binding.api import IntBinding, get_min_max
 from karabogui.const import WIDGET_MIN_HEIGHT
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 from karabogui.controllers.unitlabel import add_unit_label
 from karabogui.util import MouseWheelEventBlocker
 
 
-@register_binding_controller(ui_name='Integer Spin Box',
+@register_binding_controller(ui_name='Integer Spin Box', can_edit=True,
                              binding_type=IntBinding)
 class EditableSpinBox(BaseBindingController):
     # The scene model class for this controller

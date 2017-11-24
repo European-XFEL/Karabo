@@ -8,17 +8,18 @@ from traits.api import Callable, Dict, Instance, on_trait_change
 from karabo.common.scenemodel.api import EvaluatorModel
 from karabogui import messagebox
 from karabogui.binding.api import (
-    BaseBindingController, register_binding_controller,
     CharBinding, ComplexBinding, FloatBinding, IntBinding, StringBinding
 )
 from karabogui.const import WIDGET_MIN_HEIGHT
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 from karabogui.controllers.unitlabel import add_unit_label
 
 BINDING_TYPES = (CharBinding, ComplexBinding, FloatBinding, StringBinding,
                  IntBinding)
 
 
-@register_binding_controller(ui_name='Evaluate Expression', read_only=True,
+@register_binding_controller(ui_name='Evaluate Expression',
                              binding_type=BINDING_TYPES)
 class Evaluator(BaseBindingController):
     # The scene model class used by this controller

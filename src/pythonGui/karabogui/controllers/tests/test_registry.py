@@ -1,10 +1,15 @@
 import contextlib
 
+from traits.api import Instance
+
+from karabo.common.scenemodel.api import BaseWidgetObjectData
 from karabo.middlelayer import (
     Configurable, Int8, Int16, UInt32, UInt64, String)
-from ..api import (
-    BaseBindingController, StringBinding, IntBinding, build_binding,
-    register_binding_controller, get_compatible_controllers
+from karabogui.binding.api import StringBinding, IntBinding, build_binding
+from ..base import BaseBindingController
+from ..registry import (
+    get_compatible_controllers, get_model_controller,
+    register_binding_controller
 )
 
 
@@ -19,6 +24,10 @@ class Integers(Configurable):
     int16 = Int16()
     uint32 = UInt32()
     uint64 = UInt64()
+
+
+class UniqueWidgetModel(BaseWidgetObjectData):
+    pass  # Satisfy the uniqueness check in register_binding_controller
 
 
 def _options_checker(binding):
@@ -41,11 +50,11 @@ def test_registry():
         @register_binding_controller(binding_type=StringBinding,
                                      is_compatible=_options_checker)
         class DisplayWidget(BaseBindingController):
-            pass
+            model = Instance(UniqueWidgetModel)
 
         @register_binding_controller(binding_type=StringBinding)
         class EditWidget(BaseBindingController):
-            pass
+            model = Instance(UniqueWidgetModel)
 
         schema = SomeObject.getClassSchema()
         binding = build_binding(schema)
@@ -68,7 +77,7 @@ def test_expanded_registry():
     with _flushed_registry():
         @register_binding_controller(binding_type=IntBinding)
         class DisplayWidget(BaseBindingController):
-            pass
+            model = Instance(UniqueWidgetModel)
 
         schema = Integers.getClassSchema()
         binding = build_binding(schema)
@@ -76,3 +85,27 @@ def test_expanded_registry():
         for name in ('int8', 'int16', 'uint32', 'uint64'):
             bind = getattr(binding.value, name)
             assert DisplayWidget in get_compatible_controllers(bind)
+
+
+def test_scene_model_registry():
+    class DisplayModel(BaseWidgetObjectData):
+        pass
+
+    class EditModel(BaseWidgetObjectData):
+        def _parent_component_default(self):
+            return 'EditableApplyLaterComponent'
+
+    with _flushed_registry():
+        @register_binding_controller(binding_type=StringBinding)
+        class DisplayWidget(BaseBindingController):
+            model = Instance(DisplayModel)
+
+        @register_binding_controller(binding_type=StringBinding, can_edit=True)
+        class EditWidget(BaseBindingController):
+            model = Instance(EditModel)
+
+        widget = get_model_controller(DisplayModel())
+        assert widget is DisplayWidget
+
+        widget = get_model_controller(EditModel())
+        assert widget is EditWidget
