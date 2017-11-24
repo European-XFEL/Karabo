@@ -1,8 +1,32 @@
 from PyQt4.QtCore import Qt, QRect, QPoint
 from traits.api import HasStrictTraits, Any, Enum, Instance, String
 
+from karabogui.binding.api import DeviceProxy
+from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.sceneview.bases import BaseSceneTool
 from karabogui.sceneview.utils import save_painter_state
+
+
+class ProxySelectionTool(BaseSceneTool):
+    """A tool for the selection of widgets in the SceneView which are derived
+    from ``ControllerContainer`` and bound to proxies.
+    """
+    def mouse_down(self, scene_view, event):
+        # Only widgets might have proxies
+        widget = scene_view.widget_at_position(event.pos())
+        if widget is not None and hasattr(widget, 'widget_controller'):
+            # Use the main proxy of the controller
+            proxy = widget.widget_controller.proxy
+            device = proxy.root_proxy
+            if isinstance(device, DeviceProxy):  # ignore DeviceClassProxy
+                broadcast_event(KaraboEventSender.ShowConfiguration,
+                                {'configuration': device})
+
+    def mouse_move(self, scene_view, event):
+        pass
+
+    def mouse_up(self, scene_view, event):
+        pass
 
 
 class _SelectionRect(HasStrictTraits):
