@@ -5,14 +5,14 @@ from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import FloatSpinBoxModel
 from karabogui.binding.api import (
-    BaseBindingController, FloatBinding, register_binding_controller,
-    get_min_max, KARABO_SCHEMA_ABSOLUTE_ERROR
-)
+    FloatBinding, get_min_max, KARABO_SCHEMA_ABSOLUTE_ERROR)
 from karabogui.const import WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 from karabogui.controllers.unitlabel import add_unit_label
 
 
-@register_binding_controller(ui_name='SpinBox (real)',
+@register_binding_controller(ui_name='SpinBox (real)', can_edit=True,
                              binding_type=FloatBinding)
 class FloatSpinBox(BaseBindingController):
     # The scene model class for this controller

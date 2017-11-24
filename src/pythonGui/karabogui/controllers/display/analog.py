@@ -12,8 +12,10 @@ from karabo.common.scenemodel.api import AnalogModel
 from karabogui import messagebox
 from karabogui.alarms.api import ALARM_COLOR, NORM_COLOR, WARN_COLOR
 from karabogui.binding.api import (
-    BaseBindingController, FloatBinding, register_binding_controller,
-    KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_WARN_HIGH, KARABO_WARN_LOW)
+    FloatBinding, KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_WARN_HIGH,
+    KARABO_WARN_LOW)
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 
 B_ALOW, B_WLOW, B_WHIGH, B_AHIGH = (0.1, 0.3, 0.7, 0.9)
 DARKER_GREY = (64, 64, 64)
@@ -25,7 +27,7 @@ WIDGET_HEIGHT = 180
 WIDGET_WIDTH = 26
 
 
-@register_binding_controller(ui_name='Analog Widget', read_only=True,
+@register_binding_controller(ui_name='Analog Widget',
                              binding_type=FloatBinding)
 class DisplayAnalog(BaseBindingController):
     # The scene data model class for this controller

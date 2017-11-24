@@ -11,9 +11,9 @@ from PyQt4.QtSvg import QSvgWidget
 from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import DisplayIconsetModel
-from karabogui.binding.api import (
-    BaseBindingController, StringBinding, register_binding_controller
-)
+from karabogui.binding.api import StringBinding
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 from karabogui.util import getOpenFileName
 
 DEFAULT_ICON_PATH = op.join(op.dirname(__file__), 'empty.svg')
@@ -51,8 +51,7 @@ def _read_xml_data(data):
     return ElementTree(parser.close())
 
 
-@register_binding_controller(ui_name='Iconset', read_only=True,
-                             binding_type=StringBinding)
+@register_binding_controller(ui_name='Iconset', binding_type=StringBinding)
 class DisplayIconset(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(DisplayIconsetModel)

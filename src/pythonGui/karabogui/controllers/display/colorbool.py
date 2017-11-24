@@ -13,15 +13,15 @@ from traits.api import Instance, on_trait_change
 from karabo.common.api import State
 from karabo.common.scenemodel.api import ColorBoolModel
 from karabogui import icons
-from karabogui.binding.api import (
-    BaseBindingController, BoolBinding, register_binding_controller)
+from karabogui.binding.api import BoolBinding
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 from karabogui.icons.statefulicons.color_change_icon import (
     ColorChangeIcon, get_color_change_icon)
 from karabogui.indicators import STATE_COLORS
 
 
-@register_binding_controller(ui_name='Switch Bool', read_only=True,
-                             binding_type=BoolBinding)
+@register_binding_controller(ui_name='Switch Bool', binding_type=BoolBinding)
 class DisplayColorBool(BaseBindingController):
     # The scene data model class for this controller
     model = Instance(ColorBoolModel)

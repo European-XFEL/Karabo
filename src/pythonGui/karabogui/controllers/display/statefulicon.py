@@ -11,9 +11,9 @@ from traits.api import Instance, on_trait_change
 
 from karabo.common.api import State
 from karabo.common.scenemodel.api import StatefulIconWidgetModel
-from karabogui.binding.api import (
-    BaseBindingController, StringBinding, register_binding_controller
-)
+from karabogui.binding.api import StringBinding
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 from karabogui.controllers.util import with_display_type
 from karabogui.indicators import STATE_COLORS
 from karabogui.icons.statefulicons import ICONS
@@ -22,7 +22,7 @@ from karabogui.icons.statefulicons.color_change_icon import ColorChangeIcon
 WHITE = '#ffffff'
 
 
-@register_binding_controller(ui_name='Standard Icon', read_only=True,
+@register_binding_controller(ui_name='Standard Icon',
                              binding_type=StringBinding,
                              is_compatible=with_display_type('State'))
 class StatefulIconWidget(BaseBindingController):

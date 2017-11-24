@@ -3,22 +3,16 @@ from collections import deque
 from traits.api import Any, Instance, on_trait_change
 
 from karabo.common.scenemodel.api import XYPlotModel
-from karabogui.binding.api import (
-    BaseBindingController, PropertyProxy, register_binding_controller,
-    FloatBinding, Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding
-)
+from karabogui.binding.api import PropertyProxy, FloatBinding, IntBinding
 from karabogui.const import MAXNUMPOINTS
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 from karabogui.controllers.util import axis_label
 from karabogui.mplwidget.mplplotwidgets import MplCurvePlot
 
-NUMERICAL_BINDINGS = (
-    FloatBinding, Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding)
 
-
-@register_binding_controller(ui_name='XY-Plot', read_only=True,
-                             binding_type=NUMERICAL_BINDINGS)
+@register_binding_controller(ui_name='XY-Plot',
+                             binding_type=(FloatBinding, IntBinding))
 class XYPlot(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(XYPlotModel)

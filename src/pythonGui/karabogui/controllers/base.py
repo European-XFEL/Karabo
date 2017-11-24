@@ -3,7 +3,7 @@ from traits.api import HasStrictTraits, Bool, Instance, List, Property
 
 from karabo.common.scenemodel.api import BaseWidgetObjectData
 from karabogui import background
-from .proxy import PropertyProxy
+from karabogui.binding.api import PropertyProxy
 
 
 class BaseBindingController(HasStrictTraits):

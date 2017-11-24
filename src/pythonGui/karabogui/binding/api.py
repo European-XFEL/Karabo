@@ -29,12 +29,10 @@ from .const import (
     KARABO_ALARM_VARIANCE_LOW, KARABO_ALARM_VARIANCE_HIGH,
     KARABO_SCHEMA_ATTRIBUTES
 )
-from .controller import BaseBindingController
 from .proxy import (
     BaseDeviceProxy, DeviceProxy, DeviceClassProxy, PropertyProxy
 )
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
-from .registry import get_compatible_controllers, register_binding_controller
 from .types import (
     BaseBinding, BindingNamespace, BindingRoot,
     BoolBinding, ByteArrayBinding, CharBinding,
