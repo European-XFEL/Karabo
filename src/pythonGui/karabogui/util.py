@@ -9,10 +9,8 @@ from uuid import uuid4
 import weakref
 
 from dateutil.tz import tzlocal, tzutc
-from PyQt4.QtCore import QEvent, QObject, QPoint, QSize, Qt, QSettings
-from PyQt4.QtGui import (
-    QBrush, QDialog, QFileDialog, QHeaderView, QLabel, QMovie, QPainter, QPen,
-    QWidget)
+from PyQt4.QtCore import QEvent, QObject, QSize, QSettings
+from PyQt4.QtGui import QDialog, QFileDialog, QHeaderView, QLabel, QMovie
 
 from karabo.common.scenemodel.api import read_scene
 from karabo.middlelayer import decodeXML, Hash, writeXML
@@ -33,36 +31,6 @@ class MouseWheelEventBlocker(QObject):
     def eventFilter(self, obj, event):
         # Block wheel events
         return event.type() == QEvent.Wheel and obj is self.widget
-
-
-class PlaceholderWidget(QWidget):
-    """A widget which indicates to the user that something is missing or
-    unsupported.
-    """
-
-    def __init__(self, text, parent=None):
-        super(PlaceholderWidget, self).__init__(parent)
-        self._text = text
-
-    def paintEvent(self, event):
-        with QPainter(self) as painter:
-            rect = self.rect()
-            boundary = rect.adjusted(2, 2, -2, -2)
-
-            painter.fillRect(rect, QBrush(Qt.lightGray, Qt.FDiagPattern))
-
-            pen = QPen(Qt.lightGray)
-            pen.setJoinStyle(Qt.MiterJoin)
-            pen.setWidth(4)
-            painter.setPen(pen)
-            painter.drawRect(boundary)
-
-            metrics = painter.fontMetrics()
-            text_rect = metrics.boundingRect(self._text)
-            pos = rect.center() - QPoint(text_rect.width() / 2,
-                                         -text_rect.height() / 2)
-            painter.setPen(QPen())
-            painter.drawText(pos, self._text)
 
 
 class SignalBlocker(object):
