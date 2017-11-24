@@ -20,6 +20,7 @@ BINDING_TYPES = (CharBinding, ComplexBinding, FloatBinding, StringBinding,
 
 
 @register_binding_controller(ui_name='Evaluate Expression',
+                             klassname='Evaluator',
                              binding_type=BINDING_TYPES)
 class Evaluator(BaseBindingController):
     # The scene model class used by this controller
