@@ -27,9 +27,10 @@ Tasks
     - [X] Remove the widget wrappers!
     - [X] Port scene building
         - [X] Use the binding controller registry instead of boilerplate mappings
-    - [ ] Port ConfigurationDropHandler
+    - [X] Port ConfigurationDropHandler
     - [ ] Port BoxSelectionTool
     - [ ] Port WidgetSceneHandler (widget selection menu)
+    - [ ] Port NavigationDropHandler
     - [ ] Port the Workflow (pipeline connections)
         - [ ] Model
         - [ ] [dis]connect_channels
