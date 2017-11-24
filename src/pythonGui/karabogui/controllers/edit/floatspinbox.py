@@ -13,6 +13,7 @@ from karabogui.controllers.unitlabel import add_unit_label
 
 
 @register_binding_controller(ui_name='SpinBox (real)', can_edit=True,
+                             klassname='FloatSpinBox',
                              binding_type=FloatBinding)
 class FloatSpinBox(BaseBindingController):
     # The scene model class for this controller

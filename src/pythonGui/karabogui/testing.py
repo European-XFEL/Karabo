@@ -50,6 +50,24 @@ def assert_trait_change(obj, name):
             raise AssertionError(msg.format(name))
 
 
+@contextlib.contextmanager
+def flushed_registry():
+    """Avoid polluting the global binding controller registry with
+    test controller classes
+    """
+    from karabogui.controllers import registry as registrymod
+
+    controller_registry = registrymod._controller_registry.copy()
+    registrymod._controller_registry.clear()
+    model_registry = registrymod._controller_models.copy()
+    registrymod._controller_models.clear()
+
+    yield
+
+    registrymod._controller_registry = controller_registry
+    registrymod._controller_models = model_registry
+
+
 def get_property_proxy(schema, name, device_id='TestDevice'):
     """Given a device schema and a property name, return a complete
     PropertyProxy object with a `root_proxy` of type `DeviceProxy`.

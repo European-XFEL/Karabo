@@ -21,10 +21,10 @@ NODE_CLASS_NAME = '_RunConfiguratorGroup'
 _is_compatible = with_display_type('RunConfigurator')
 
 
-# XXX: priority = 10
 @register_binding_controller(ui_name='List Of Nodes', can_edit=True,
+                             klassname='RunConfiguratorEdit',
                              binding_type=ListOfNodesBinding,
-                             is_compatible=_is_compatible)
+                             is_compatible=_is_compatible, priority=10)
 class RunConfiguratorEdit(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(RunConfiguratorModel)

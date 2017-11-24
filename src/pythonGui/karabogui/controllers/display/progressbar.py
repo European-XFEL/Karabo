@@ -31,6 +31,7 @@ def _scale(val, min_val, max_val):
 
 
 @register_binding_controller(ui_name='Progress Bar',
+                             klassname='DisplayProgressBar',
                              binding_type=(FloatBinding, IntBinding))
 class DisplayProgressBar(BaseBindingController):
     # The specific scene model class used by this widget

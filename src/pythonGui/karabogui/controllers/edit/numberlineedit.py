@@ -125,9 +125,9 @@ class IntValidator(QValidator):
         self.max = max
 
 
-# XXX: priority = 10
 @register_binding_controller(ui_name='Float Field', can_edit=True,
-                             binding_type=FloatBinding)
+                             klassname='DoubleLineEdit',
+                             binding_type=FloatBinding, priority=10)
 class DoubleLineEdit(NumberLineEdit):
     # The scene model class used by this controller
     model = Instance(DoubleLineEditModel)
@@ -167,9 +167,9 @@ class DoubleLineEdit(NumberLineEdit):
         return float(super(DoubleLineEdit, self)._validate_value())
 
 
-# XXX: priority = 10
 @register_binding_controller(ui_name='Integer Field', can_edit=True,
-                             binding_type=IntBinding)
+                             klassname='IntLineEdit', binding_type=IntBinding,
+                             priority=10)
 class IntLineEdit(NumberLineEdit):
     # The scene model class used by this controller
     model = Instance(IntLineEditModel)

@@ -14,8 +14,8 @@ from karabogui.controllers.registry import register_binding_controller
 from karabogui.util import SignalBlocker
 
 
-# XXX: priority = 10
 @register_binding_controller(ui_name='Text Field', can_edit=True,
+                             klassname='EditableLineEdit', priority=10,
                              binding_type=(CharBinding, StringBinding))
 class EditableLineEdit(BaseBindingController):
     # The scene model class used by this controlelr

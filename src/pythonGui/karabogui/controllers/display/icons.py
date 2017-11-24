@@ -57,7 +57,7 @@ class _BaseIcons(BaseBindingController):
 
 
 @register_binding_controller(ui_name='Icons', binding_type=NUMERICAL_BINDINGS,
-                             is_compatible=has_options)
+                             klassname='DigitIcons', is_compatible=has_options)
 class DigitIcons(_BaseIcons):
     model = Instance(DigitIconsModel)
     dialog_klass = Type(DigitDialog)
@@ -72,7 +72,8 @@ class DigitIcons(_BaseIcons):
 
 
 @register_binding_controller(ui_name='Selection Icons',
-                             binding_type=BaseBinding.__subclasses__(),
+                             klassname='SelectionIcons',
+                             binding_type=BaseBinding,
                              is_compatible=has_options)
 class SelectionIcons(_BaseIcons):
     model = Instance(SelectionIconsModel)
@@ -100,6 +101,7 @@ class SelectionIcons(_BaseIcons):
 
 
 @register_binding_controller(ui_name='Icons', binding_type=StringBinding,
+                             klassname='TextIcons',
                              is_compatible=has_options)
 class TextIcons(_BaseIcons):
     model = Instance(TextIconsModel)
