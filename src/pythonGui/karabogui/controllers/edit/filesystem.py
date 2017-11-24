@@ -62,9 +62,9 @@ class _FileSystemPicker(BaseBindingController):
             self._path.setText(path)
 
 
-# XXX: priority = 20
 @register_binding_controller(ui_name='Directory', can_edit=True,
-                             binding_type=StringBinding,
+                             klassname='EditableDirectory',
+                             binding_type=StringBinding, priority=20,
                              is_compatible=with_display_type('directory'))
 class EditableDirectory(_FileSystemPicker):
     # The scene model for this controller
@@ -79,13 +79,14 @@ class EditableDirectory(_FileSystemPicker):
         return QFileDialog.getExistingDirectory(None, self.pickerText)
 
 
-# XXX: priority = 20
 @register_binding_controller(ui_name='File In', can_edit=True,
-                             binding_type=StringBinding,
+                             klassname='EditableFileIn',
+                             binding_type=StringBinding, priority=20,
                              is_compatible=with_display_type('fileIn'))
 class EditableFileIn(_FileSystemPicker):
     # The scene model for this controller
     model = Instance(FileInModel)
+    # Internal details
     pickerText = Constant('Select input file')
 
     def _button_icon_default(self):
@@ -95,9 +96,9 @@ class EditableFileIn(_FileSystemPicker):
         return getOpenFileName(caption=self.pickerText)
 
 
-# XXX: priority = 20
 @register_binding_controller(ui_name='File Out', can_edit=True,
-                             binding_type=StringBinding,
+                             klassname='EditableFileOut',
+                             binding_type=StringBinding, priority=20,
                              is_compatible=with_display_type('fileOut'))
 class EditableFileOut(_FileSystemPicker):
     # The scene model for this controller

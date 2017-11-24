@@ -18,10 +18,10 @@ def _is_compatible(binding):
     return len(binding.options) > 0
 
 
-# XXX: priority = 20
 @register_binding_controller(ui_name='Selection Field', can_edit=True,
+                             klassname='EditableComboBox',
                              binding_type=BaseBinding,
-                             is_compatible=_is_compatible)
+                             is_compatible=_is_compatible, priority=20)
 class EditableComboBox(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(ComboBoxModel)
