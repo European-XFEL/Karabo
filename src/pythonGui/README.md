@@ -29,7 +29,7 @@ Tasks
         - [X] Use the binding controller registry instead of boilerplate mappings
     - [X] Port ConfigurationDropHandler
     - [X] Port BoxSelectionTool
-    - [ ] Port WidgetSceneHandler (widget selection menu)
+    - [X] Port WidgetSceneHandler (widget selection menu)
     - [ ] Port NavigationDropHandler
     - [ ] Port the Workflow (pipeline connections)
         - [ ] Model
