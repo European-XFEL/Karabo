@@ -49,7 +49,8 @@ class BitfieldWidget(QWidget):
                            w - 1, h - 1, color)
 
 
-@register_binding_controller(ui_name='Bit Field', binding_type=IntBinding)
+@register_binding_controller(ui_name='Bit Field', klassname='Bitfield',
+                             binding_type=IntBinding)
 class Bitfield(BaseBindingController):
     # The scene data model class for this controller
     model = Instance(BitfieldModel)

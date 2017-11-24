@@ -19,7 +19,8 @@ from karabogui.indicators import STATE_COLORS
 from karabogui.util import generateObjectName
 
 
-@register_binding_controller(ui_name='Single Bit', binding_type=IntBinding)
+@register_binding_controller(ui_name='Single Bit', klassname='SingleBit',
+                             binding_type=IntBinding)
 class SingleBit(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(SingleBitModel)
