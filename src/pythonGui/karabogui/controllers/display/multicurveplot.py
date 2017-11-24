@@ -13,21 +13,18 @@ from traits.api import Bool, Callable, Dict, Instance, List, on_trait_change
 
 from karabo.common.scenemodel.api import MultiCurvePlotModel
 from karabogui.binding.api import (
-    BaseBindingController, PropertyProxy, register_binding_controller,
-    BoolBinding, FloatBinding, Int8Binding, Int16Binding, Int32Binding,
-    Int64Binding, Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding
-)
+    PropertyProxy, BoolBinding, FloatBinding, IntBinding)
 from karabogui.const import FINE_COLOR, MAXNUMPOINTS
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 from karabogui.controllers.util import axis_label
 from karabogui.mplwidget.mplplotwidgets import MplCurvePlot
 
 BUTTON_SIZE = (52, 32)
-NUMERICAL_BINDINGS = (
-    BoolBinding, FloatBinding, Int8Binding, Int16Binding, Int32Binding,
-    Int64Binding, Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding)
+NUMERICAL_BINDINGS = (BoolBinding, FloatBinding, IntBinding)
 
 
-@register_binding_controller(ui_name='Multi-Curve Plot', read_only=True,
+@register_binding_controller(ui_name='Multi-Curve Plot',
                              binding_type=NUMERICAL_BINDINGS)
 class MultiCurvePlot(BaseBindingController):
     # The scene model class used by this controller

@@ -4,15 +4,16 @@ from traits.api import Instance, Int, on_trait_change
 
 from karabo.common.scenemodel.api import EditableListModel
 from karabogui import icons
-from karabogui.binding.api import (
-    BaseBindingController, VectorBinding, register_binding_controller
-)
+from karabogui.binding.api import VectorBinding
+from karabogui.controllers.base import BaseBindingController
 from karabogui.controllers.listedit import ListEdit
+from karabogui.controllers.registry import register_binding_controller
 from karabogui.util import SignalBlocker
 
 
 # XXX: priority = 10
-@register_binding_controller(ui_name='List', binding_type=VectorBinding)
+@register_binding_controller(ui_name='List', can_edit=True,
+                             binding_type=VectorBinding)
 class EditableList(BaseBindingController):
     model = Instance(EditableListModel)
     last_cursor_position = Int(0)

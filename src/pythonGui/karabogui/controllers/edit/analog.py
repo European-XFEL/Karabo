@@ -9,10 +9,11 @@ from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import KnobModel, SliderModel
 from karabogui.binding.api import (
-    BaseBindingController, FloatBinding, IntBinding,
-    register_binding_controller, get_min_max, KARABO_SCHEMA_MAX_EXC,
+    FloatBinding, IntBinding, get_min_max, KARABO_SCHEMA_MAX_EXC,
     KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC
 )
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 
 
 class _AnalogEditorWidget(BaseBindingController):
@@ -51,7 +52,7 @@ class _AnalogEditorWidget(BaseBindingController):
         self._binding_update(self.proxy.binding)
 
 
-@register_binding_controller(ui_name='Knob',
+@register_binding_controller(ui_name='Knob', can_edit=True,
                              binding_type=(FloatBinding, IntBinding))
 class Knob(_AnalogEditorWidget):
     # The scene model class for this controller
@@ -65,7 +66,7 @@ class Knob(_AnalogEditorWidget):
         return dial
 
 
-@register_binding_controller(ui_name='Slider',
+@register_binding_controller(ui_name='Slider', can_edit=True,
                              binding_type=(FloatBinding, IntBinding))
 class Slider(_AnalogEditorWidget):
     # The scene model class for this controller

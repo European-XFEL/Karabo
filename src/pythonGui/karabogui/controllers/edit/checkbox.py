@@ -8,13 +8,14 @@ from PyQt4.QtGui import QCheckBox
 from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import CheckBoxModel
-from karabogui.binding.api import (
-    BaseBindingController, BoolBinding, register_binding_controller
-)
+from karabogui.binding.api import BoolBinding
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 
 
 # XXX: priority = 10
-@register_binding_controller(ui_name='Toggle Field', binding_type=BoolBinding)
+@register_binding_controller(ui_name='Toggle Field', can_edit=True,
+                             binding_type=BoolBinding)
 class EditableCheckBox(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(CheckBoxModel)

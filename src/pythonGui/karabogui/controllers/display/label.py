@@ -13,13 +13,14 @@ from traits.api import Instance, Str, Tuple, on_trait_change
 from karabo.common.scenemodel.api import DisplayLabelModel
 from karabogui.alarms.api import ALARM_COLOR, WARN_COLOR
 from karabogui.binding.api import (
-    BaseBindingController, register_binding_controller,
     CharBinding, ComplexBinding, FloatBinding, IntBinding, StringBinding,
     KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_WARN_HIGH, KARABO_WARN_LOW,
     KARABO_SCHEMA_ABSOLUTE_ERROR, KARABO_SCHEMA_DISPLAY_TYPE,
     KARABO_SCHEMA_RELATIVE_ERROR
 )
 from karabogui.const import FINE_COLOR, WIDGET_MIN_HEIGHT
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 from karabogui.controllers.unitlabel import add_unit_label
 from karabogui.util import generateObjectName
 
@@ -30,8 +31,7 @@ BINDING_TYPES = (CharBinding, ComplexBinding, FloatBinding, StringBinding,
 
 
 # XXX: priority = 20
-@register_binding_controller(ui_name='Value Field', read_only=True,
-                             binding_type=BINDING_TYPES)
+@register_binding_controller(ui_name='Value Field', binding_type=BINDING_TYPES)
 class DisplayLabel(BaseBindingController):
     # The scene data model class for this controller
     model = Instance(DisplayLabelModel)

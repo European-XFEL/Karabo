@@ -11,9 +11,9 @@ from traits.api import Constant, Instance, Int, on_trait_change
 from karabo.common.scenemodel.api import (
     DirectoryModel, FileInModel, FileOutModel)
 from karabogui import icons
-from karabogui.binding.api import (
-    BaseBindingController, StringBinding, register_binding_controller
-)
+from karabogui.binding.api import StringBinding
+from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.registry import register_binding_controller
 from karabogui.controllers.util import with_display_type
 from karabogui.util import getOpenFileName, getSaveFileName
 
@@ -63,7 +63,8 @@ class _FileSystemPicker(BaseBindingController):
 
 
 # XXX: priority = 20
-@register_binding_controller(ui_name='Directory', binding_type=StringBinding,
+@register_binding_controller(ui_name='Directory', can_edit=True,
+                             binding_type=StringBinding,
                              is_compatible=with_display_type('directory'))
 class EditableDirectory(_FileSystemPicker):
     # The scene model for this controller
@@ -79,7 +80,8 @@ class EditableDirectory(_FileSystemPicker):
 
 
 # XXX: priority = 20
-@register_binding_controller(ui_name='File In', binding_type=StringBinding,
+@register_binding_controller(ui_name='File In', can_edit=True,
+                             binding_type=StringBinding,
                              is_compatible=with_display_type('fileIn'))
 class EditableFileIn(_FileSystemPicker):
     # The scene model for this controller
@@ -94,7 +96,8 @@ class EditableFileIn(_FileSystemPicker):
 
 
 # XXX: priority = 20
-@register_binding_controller(ui_name='File Out', binding_type=StringBinding,
+@register_binding_controller(ui_name='File Out', can_edit=True,
+                             binding_type=StringBinding,
                              is_compatible=with_display_type('fileOut'))
 class EditableFileOut(_FileSystemPicker):
     # The scene model for this controller
