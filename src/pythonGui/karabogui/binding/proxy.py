@@ -4,6 +4,7 @@ from traits.api import (
 
 from karabo.common.api import DeviceStatus
 from karabogui.singletons.api import get_network, get_topology
+from . import const
 from .types import BaseBinding, BindingRoot, PipelineOutputBinding, SlotBinding
 
 _ONLINE_STATUSES = (
@@ -241,6 +242,25 @@ class PropertyProxy(HasStrictTraits):
         state = self.root_proxy.state_binding.value
         if self.binding.is_allowed(state):
             get_network().onExecute(self.root_proxy.device_id, self.path)
+
+    def get_device_value(self):
+        """Return the value stored in the device configuration, rather
+        than that which is stored in `binding`.
+
+        For a device class, return the defaul value, if one exists.
+        Returns None if there is no value.
+        """
+        if isinstance(self.root_proxy, DeviceClassProxy):
+            if self.binding is None:
+                return None
+            attrs = self.binding.attributes
+            return attrs.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
+        else:
+            topology = get_topology()
+            device_id = self.root_proxy.device_id
+            configuration = topology.get_configuration(device_id)
+            if configuration is not None and self.path in configuration:
+                return configuration[self.path]
 
     def get_history(self, time_start, time_end, max_value_count=-1):
         """Request the historical values of `binding` between `time_start` and
