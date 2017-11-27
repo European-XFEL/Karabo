@@ -61,7 +61,8 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     outputInfo.set("outputChannelString", outputChannelId);
     outputInfo.set("memoryLocation", "local");
     size_t n = 200;
-    for (size_t i = 1; i <= n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
+        calls = 0;
         input->connect(outputInfo);
         boost::this_thread::sleep(boost::posix_time::milliseconds(100)); // time for TCP setup
 
@@ -79,8 +80,6 @@ void InputOutputChannel_Test::testConnectDisconnect() {
 
         // Disconnect
         input->disconnect(outputChannelId);
-        if (i == n) break;
-        calls = 0;
     }
     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
 
