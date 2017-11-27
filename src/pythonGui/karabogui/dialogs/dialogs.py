@@ -338,7 +338,7 @@ class SceneLinkDialog(QDialog):
         return []
 
         # XXX: Disabled for now!
-        # project = get_project_model().traits_data_model
+        # project = get_project_model().root_model
         # if project is None:
         #     return []
 
