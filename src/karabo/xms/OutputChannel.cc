@@ -96,6 +96,7 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "Outputting data on channel " << m_channelId << " and chunk " << m_chunkId;
 
             // Initialize server connectivity:
+            // Cannot use bind_weak in constructor but ... in practice it is safe to use here boost::bind -- we don't wait too long
             karabo::net::EventLoop::getIOService().post(boost::bind(&OutputChannel::initializeServerConnection, this));
         }
 
@@ -117,8 +118,11 @@ namespace karabo {
             try {
                 m_port = connection->startAsync(bind_weak(&karabo::xms::OutputChannel::onTcpConnect, this, _1, _2));
             } catch (const std::exception& ex) {
-                throw KARABO_NETWORK_EXCEPTION(std::string("Could not start TcpServer for output channel (\"")
-                                               + toString(m_channelId) + "\", port = " + toString(m_port) + ") : " + ex.what());
+                std::ostringstream oss;
+                oss << "Could not start TcpServer for output channel (\"" << m_channelId
+                        <<  "\", port = " << m_port << ") : " << ex.what();
+                KARABO_LOG_FRAMEWORK_ERROR << oss.str();
+                throw KARABO_NETWORK_EXCEPTION(oss.str());
             }
             m_dataConnection = connection;
             KARABO_LOG_FRAMEWORK_DEBUG << "Started DeviceOutput-Server listening on port: " << m_port;
