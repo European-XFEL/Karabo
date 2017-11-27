@@ -369,7 +369,7 @@ class MainWindow(QMainWindow):
         """Asks for discard/save changes on modified project.
         """
         # XXX: Temporarily disabled!
-        # project = get_project_model().traits_data_model
+        # project = get_project_model().root_model
         # if project is None:
         #     return False
         # if project.modified or get_db_conn().is_writing():
