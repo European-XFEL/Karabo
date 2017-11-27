@@ -621,9 +621,12 @@ namespace karabo {
 
                 m_writtenBytes += boost::asio::write(m_socket, buf, transfer_all(), error);
 
-                if (!error) return;
-                else throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message());
-
+                if (!error) {
+                    return;
+                } else {
+                    try { m_socket.close(); } catch (...) {}  // close the socket because of error on the network
+                    throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message() + ". Channel is closed!");
+                }
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -738,7 +741,8 @@ namespace karabo {
                 buf.push_back(buffer(body, bodySize));
                 m_writtenBytes += boost::asio::write(m_socket, buf, transfer_all(), error);
                 if (error) {
-                    throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message());
+                    try { m_socket.close(); } catch (...) {}
+                    throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message() + ". Channel is closed!");
                 }
             } catch (...) {
                 KARABO_RETHROW
@@ -1201,26 +1205,27 @@ namespace karabo {
                     }
                 }
 
-                vector<const_buffer> buf;
+                if (m_socket.is_open()) {
+                    vector<const_buffer> buf;
 
-                if (mp->header()) {
-                    VectorCharPointer hdr = mp->header();
-                    m_headerSize = hdr->size();
-                    buf.push_back(buffer(&m_headerSize, sizeof (unsigned int)));
-                    buf.push_back(buffer(*hdr));
-                }
+                    if (mp->header()) {
+                        VectorCharPointer hdr = mp->header();
+                        m_headerSize = hdr->size();
+                        buf.push_back(buffer(&m_headerSize, sizeof (unsigned int)));
+                        buf.push_back(buffer(*hdr));
+                    }
 
-                const VectorCharPointer& data = mp->body();
-                m_bodySize = data->size();
+                    const VectorCharPointer& data = mp->body();
+                    m_bodySize = data->size();
 
-                buf.push_back(buffer(&m_bodySize, sizeof (unsigned int)));
-                buf.push_back(buffer(*data));
-
-                boost::asio::async_write(m_socket, buf,
+                    buf.push_back(buffer(&m_bodySize, sizeof (unsigned int)));
+                    buf.push_back(buffer(*data));
+                    boost::asio::async_write(m_socket, buf,
                                          util::bind_weak(&TcpChannel::doWriteHandler, this,
                                                          mp, boost::asio::placeholders::error,
                                                          boost::asio::placeholders::bytes_transferred(),
                                                          queueIndex));
+                }
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::doWrite exception : " << e.what();
                 m_writeInProgress = false;
@@ -1236,8 +1241,10 @@ namespace karabo {
             if (!ec) {
                 doWrite();
             } else {
-                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::doWriteHandler error : " << ec.value() << " -- " << ec.message();
+                KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::doWriteHandler error : " << ec.value() << " -- " << ec.message()
+                        << "  --  Channel is closed now!";
                 m_writeInProgress = false;
+                try { m_socket.close(); } catch (...) {}
             }
         }
 
