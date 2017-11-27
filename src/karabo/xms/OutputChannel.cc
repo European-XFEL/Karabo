@@ -313,52 +313,51 @@ namespace karabo {
             using namespace karabo::net;
             KARABO_LOG_FRAMEWORK_DEBUG << "*** OutputChannel::onInputGone ***";
             // SHARED Inputs
-            for (InputChannels::iterator it = m_registeredSharedInputs.begin(); it != m_registeredSharedInputs.end();) {
+            for (InputChannels::iterator it = m_registeredSharedInputs.begin(); it != m_registeredSharedInputs.end(); ++it) {
                 auto wptr = it->get<ChannelWeakPointer>("tcpChannel");
-                if (wptr.expired() || wptr.lock() == channel) {
-                    std::string instanceId = it->get<std::string>("instanceId");
+                if (!wptr.expired() && wptr.lock() != channel) continue;
 
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Connected (shared) input on instanceId " << instanceId << " disconnected";
-                    std::deque<int> tmp = it->get<std::deque<int> >("queuedChunks");
-                    // Delete from registry
-                    it = m_registeredSharedInputs.erase(it);
+                std::string instanceId = it->get<std::string>("instanceId");
 
-                    if (!m_registeredSharedInputs.empty()) { // There are other shared input channels available
-                        // Append queued chunks to other shared input
-                        unsigned int idx = getNextSharedInputIdx();
-                        std::deque<int>& src = m_registeredSharedInputs[idx].get<std::deque<int> >("queuedChunks");
-                        src.insert(src.end(), tmp.begin(), tmp.end());
-                    }
+                KARABO_LOG_FRAMEWORK_DEBUG << "Connected (shared) input on instanceId " << instanceId << " disconnected";
+                std::deque<int> tmp = it->get<std::deque<int> >("queuedChunks");
+                // Delete from registry
+                m_registeredSharedInputs.erase(it);  //iterator is not valid anymore
 
-                    // Delete from input queue
-                    InputChannelQueue::iterator jt = std::find(m_shareNext.begin(), m_shareNext.end(), instanceId);
-                    if (jt != m_shareNext.end()) {
-                        boost::mutex::scoped_lock lock(m_nextInputMutex);
-                        m_shareNext.erase(jt);
-                    }
-                    return;
-                } else {
-                    ++it;
+                if (!m_registeredSharedInputs.empty()) { // There are other shared input channels available
+                    // Append queued chunks to other shared input
+                    unsigned int idx = getNextSharedInputIdx();
+                    std::deque<int>& src = m_registeredSharedInputs[idx].get<std::deque<int> >("queuedChunks");
+                    src.insert(src.end(), tmp.begin(), tmp.end());
                 }
+
+                // Delete from input queue
+                InputChannelQueue::iterator jt = std::find(m_shareNext.begin(), m_shareNext.end(), instanceId);
+                if (jt != m_shareNext.end()) {
+                    boost::mutex::scoped_lock lock(m_nextInputMutex);
+                    m_shareNext.erase(jt);
+                }
+
+                return;
             }
 
             // COPY Inputs
             for (InputChannels::iterator it = m_registeredCopyInputs.begin(); it != m_registeredCopyInputs.end(); ++it) {
                 auto wptr = it->get<ChannelWeakPointer>("tcpChannel");
-                if (wptr.expired() || wptr.lock() == channel) {
-                    std::string instanceId = it->get<std::string>("instanceId");
-                    //boost::mutex::scoped_lock lock(m_)
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Connected (copy) input on instanceId " << instanceId << " disconnected";
-                    m_registeredCopyInputs.erase(it);
+                if (!wptr.expired() && wptr.lock() != channel) continue;
 
-                    // Delete from input queue
-                    InputChannelQueue::iterator jt = std::find(m_copyNext.begin(), m_copyNext.end(), instanceId);
-                    if (jt != m_copyNext.end()) {
-                        boost::mutex::scoped_lock lock(m_nextInputMutex);
-                        m_copyNext.erase(jt);
-                    }
-                    return;
+                std::string instanceId = it->get<std::string>("instanceId");
+
+                KARABO_LOG_FRAMEWORK_DEBUG << "Connected (copy) input on instanceId " << instanceId << " disconnected";
+                m_registeredCopyInputs.erase(it);
+
+                // Delete from input queue
+                InputChannelQueue::iterator jt = std::find(m_copyNext.begin(), m_copyNext.end(), instanceId);
+                if (jt != m_copyNext.end()) {
+                    boost::mutex::scoped_lock lock(m_nextInputMutex);
+                    m_copyNext.erase(jt);
                 }
+                return;
             }
             KARABO_LOG_FRAMEWORK_WARN << "OUTPUT An input channel wants to disconnect that was not registered before.";
         }
