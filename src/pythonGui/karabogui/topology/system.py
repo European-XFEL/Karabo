@@ -97,6 +97,15 @@ class SystemTopology(HasStrictTraits):
 
         return proxy
 
+    def get_configuration(self, device_id):
+        """Return the up-to-date remote configuration for a given `device_id`.
+
+        NOTE: This is not necessarily the same as the configuration which
+        the user sees, if they have made changes that are not yet applied to
+        the remote device.
+        """
+        return self._device_configurations.get(device_id)
+
     def get_device(self, device_id):
         """Return the proxy for a given device
         """

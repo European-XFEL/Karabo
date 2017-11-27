@@ -6,8 +6,10 @@ from karabo.middlelayer import Hash, Schema
 from ..api import (
     BoolBinding, FloatBinding, Int8Binding, Int16Binding, Int32Binding,
     Int64Binding, Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
-    get_min_max, KARABO_SCHEMA_VALUE_TYPE, KARABO_SCHEMA_MAX_EXC,
-    KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC
+    VectorInt32Binding, get_min_max, has_changes,
+    KARABO_SCHEMA_VALUE_TYPE, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
+    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_ABSOLUTE_ERROR,
+    KARABO_SCHEMA_RELATIVE_ERROR
 )
 from ..util import fast_deepcopy  # not part of the API
 
@@ -59,3 +61,30 @@ def test_fast_deepcopy():
     }
     copy = fast_deepcopy(d)
     assert _safe_compare(copy, d)
+
+
+def test_has_changes():
+    binding = Int8Binding()
+    assert has_changes(binding, None, 2)
+    assert not has_changes(binding, 2, 2)
+
+    binding = FloatBinding()
+    assert not has_changes(binding, 2.0, 2.00005)
+    assert has_changes(binding, 2.0, 2.0005)
+
+    binding = FloatBinding(attributes={KARABO_SCHEMA_ABSOLUTE_ERROR: 0.5})
+    assert not has_changes(binding, 2.0, 2.3)
+    assert has_changes(binding, 2.0, 2.7)
+
+    binding = FloatBinding(attributes={KARABO_SCHEMA_RELATIVE_ERROR: 0.25})
+    assert not has_changes(binding, 2.0, 2.4)
+    assert has_changes(binding, 2.0, 2.5)
+
+    binding = VectorInt32Binding()
+    assert has_changes(binding, [1, 2, 3], [1, 2])
+    assert has_changes(binding, [1, 2, 3], [1, 2, 4])
+    assert not has_changes(binding, [1, 2, 3], [1, 2, 3])
+
+    assert has_changes(binding, np.array([1, 2, 3]), np.array([1, 2]))
+    assert has_changes(binding, np.array([1, 2, 7]), np.array([1, 2, 3]))
+    assert not has_changes(binding, np.array([1, 2, 3]), np.array([1, 2, 3]))
