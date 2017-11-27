@@ -13,15 +13,20 @@
 #include "OutputChannel.hh"
 #include "karabo/net/TcpChannel.hh"
 #include "karabo/util/MetaTools.hh"
+#include "karabo/net/EventLoop.hh"
 
+namespace bs = boost::system;
 using namespace karabo::util;
 using namespace karabo::io;
+using namespace karabo::net;
+
 
 namespace karabo {
     namespace xms {
 
         KARABO_REGISTER_FOR_CONFIGURATION(OutputChannel);
 
+        typedef boost::weak_ptr<karabo::net::Channel> ChannelWeakPointer;
 
         void OutputChannel::expectedParameters(karabo::util::Schema& expected) {
             using namespace karabo::util;
@@ -58,7 +63,7 @@ namespace karabo {
                     .metricPrefix(MetricPrefix::MEGA)
                     .assignmentOptional().defaultValue(-1)
                     .commit();
-            
+
             UINT32_ELEMENT(expected).key("port")
                     .displayedName("Port")
                     .description("Port number for TCP connection")
@@ -90,36 +95,37 @@ namespace karabo {
 
             KARABO_LOG_FRAMEWORK_DEBUG << "Outputting data on channel " << m_channelId << " and chunk " << m_chunkId;
 
-            // Data networking
-            int tryAgain = 50; // Try maximum 50 times to start a server
-            while (tryAgain >= 0) {
-                try {
-                    karabo::util::Hash h("type", "server", "port", m_port, "compressionUsageThreshold", m_compression * 1E6);
-                    m_dataConnection = karabo::net::Connection::create("Tcp", h);
-                    // Cannot yet use bind_weak - we are still in constructor :-(.
-                    m_port = m_dataConnection->startAsync(boost::bind(&karabo::xms::OutputChannel::onTcpConnect, this, _1, _2));
-                } catch (const std::exception& ex) {
-                    if((tryAgain > 0) && (m_port == 0)) {
-                        tryAgain--;
-                        continue;
-                    }
-                    throw KARABO_NETWORK_EXCEPTION(std::string("Could not start TcpServer for output channel (\"")
-                        + toString(m_channelId) + "\", port = " + toString(m_port) + ") : " + ex.what());
-                }
-                KARABO_LOG_FRAMEWORK_DEBUG << "Started DeviceOutput-Server listening on port: " << m_port;
-                break;
-            }
+            // Initialize server connectivity:
+            // Cannot use bind_weak in constructor but ... in practice it is safe to use here boost::bind -- we don't wait too long
+            karabo::net::EventLoop::getIOService().post(boost::bind(&OutputChannel::initializeServerConnection, this));
         }
 
 
         OutputChannel::~OutputChannel() {
             //KARABO_LOG_FRAMEWORK_DEBUG << "*** OutputChannel::~OutputChannel() DTOR ***";
-            for (std::set<TcpChannelPointer>::iterator it = m_dataChannels.begin(); it != m_dataChannels.end(); ++it) {
-                if (*it) (*it)->close();
-            }
-            m_dataChannels.clear();
             if (m_dataConnection) m_dataConnection->stop();
             Memory::unregisterChannel(m_channelId);
+        }
+
+
+        void OutputChannel::initializeServerConnection() {
+            using namespace karabo::net;
+
+            karabo::util::Hash h("type", "server", "port", m_port, "compressionUsageThreshold", m_compression * 1E6);
+            Connection::Pointer connection = Connection::create("Tcp", h);
+            // The following call can throw only in case you provide with configuration's Hash the none-zero port number
+            // and this port number is already used in the system, for example,  by another application.
+            try {
+                m_port = connection->startAsync(bind_weak(&karabo::xms::OutputChannel::onTcpConnect, this, _1, _2));
+            } catch (const std::exception& ex) {
+                std::ostringstream oss;
+                oss << "Could not start TcpServer for output channel (\"" << m_channelId
+                        <<  "\", port = " << m_port << ") : " << ex.what();
+                KARABO_LOG_FRAMEWORK_ERROR << oss.str();
+                throw KARABO_NETWORK_EXCEPTION(oss.str());
+            }
+            m_dataConnection = connection;
+            KARABO_LOG_FRAMEWORK_DEBUG << "Started DeviceOutput-Server listening on port: " << m_port;
         }
 
 
@@ -144,24 +150,50 @@ namespace karabo {
         }
 
 
-        void OutputChannel::onTcpConnect(const karabo::net::ErrorCode& ec, const TcpChannelPointer& channel) {
+        void OutputChannel::onTcpConnect(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel) {
             using namespace karabo::net;
-            
-            if (ec) {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onTcpConnect received error code " << ec.value() << " (i.e. '"
-                        << ec.message() << "').";
-                return;
+
+            switch (ec.value()) {
+                    // Expected when io_service is stopped ... normal shutdown
+                case bs::errc::no_such_file_or_directory: // End-of-file, code 2
+                case bs::errc::operation_canceled: // code 125 because of io_service was stopped?
+                    return;
+                    // Accepting the new connection ...
+                case bs::errc::success:
+                    break;
+                    // "Retry" behavior because of following reasons
+                case bs::errc::resource_unavailable_try_again: // temporary(?) problems with some resources   - retry
+                case bs::errc::interrupted: // The system call was interrupted by a signal  - retry
+                case bs::errc::protocol_error:
+                case bs::errc::host_unreachable:
+                case bs::errc::network_unreachable:
+                case bs::errc::network_down:
+                {
+                    // The server should always wait for other connection attempts ...
+                    if (m_dataConnection) {
+                        m_dataConnection->startAsync(bind_weak(&karabo::xms::OutputChannel::onTcpConnect, this, _1, _2));
+                        KARABO_LOG_FRAMEWORK_WARN << "onTcpConnect received error code " << ec.value() << " (i.e. '"
+                                << ec.message() << "'). Wait for new connections ...";
+                    }
+                    return;
+                }
+                    // These error resulting in "dead" server.  They should be considered by developer.
+                default:
+                {
+                    KARABO_LOG_FRAMEWORK_ERROR << "onTcpConnect received error code " << ec.value() << " (i.e. '"
+                            << ec.message() << "'). Clients cannot connect anymore to this server! Developer's intervention is required!";
+                    return;
+                }
             }
-            
-            m_dataChannels.insert(channel);
+            // Prepare to accept more connections
+            if (m_dataConnection) m_dataConnection->startAsync(bind_weak(&karabo::xms::OutputChannel::onTcpConnect, this, _1, _2));
             TcpChannel::Pointer tch = boost::dynamic_pointer_cast<TcpChannel>(channel);
             KARABO_LOG_FRAMEWORK_DEBUG << "***** Connection established to socket " << tch->socket().native() << " *****";
             channel->readAsyncHash(bind_weak(&karabo::xms::OutputChannel::onTcpChannelRead, this, _1, channel, _2));
-            m_dataConnection->startAsync(bind_weak(&karabo::xms::OutputChannel::onTcpConnect, this, _1, _2));
         }
 
 
-        void OutputChannel::onTcpChannelError(const karabo::net::ErrorCode& error, const TcpChannelPointer& channel) {
+        void OutputChannel::onTcpChannelError(const karabo::net::ErrorCode& error, const karabo::net::Channel::Pointer& channel) {
             using namespace karabo::net;
             TcpChannel::Pointer tch = boost::dynamic_pointer_cast<TcpChannel>(channel);
             KARABO_LOG_FRAMEWORK_INFO << "Tcp channel (socket " << tch->socket().native()
@@ -169,17 +201,15 @@ namespace karabo {
                     << error.message() << "\".  Channel closed.";
             // Unregister channel
             onInputGone(channel);
-            m_dataChannels.erase(channel);
-            if (channel) channel->close();
         }
 
 
-        void OutputChannel::onTcpChannelRead(const karabo::net::ErrorCode& ec, const TcpChannelPointer& channel, const karabo::util::Hash& message) {
+        void OutputChannel::onTcpChannelRead(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel, const karabo::util::Hash& message) {
             if (ec) {
                 onTcpChannelError(ec, channel);
                 return;
             }
-            
+
             std::string reason;
             if (message.has("reason")) message.get<std::string > ("reason", reason);
 
@@ -200,7 +230,7 @@ namespace karabo {
                 karabo::util::Hash info;
                 info.set("instanceId", instanceId);
                 info.set("memoryLocation", memoryLocation);
-                info.set("tcpChannel", channel);
+                info.set("tcpChannel", boost::weak_ptr<Channel>(channel));
                 info.set("onSlowness", onSlowness);
                 info.set("queuedChunks", std::deque<int>());
 
@@ -214,7 +244,7 @@ namespace karabo {
                         if (channelInfo.get<std::string>("instanceId") == instanceId) {
                             KARABO_LOG_FRAMEWORK_DEBUG << "Registering copy-input channel of (used before) instance: " << instanceId;
                             channelInfo.set("memoryLocation", memoryLocation);
-                            channelInfo.set("tcpChannel", channel);
+                            channelInfo.set("tcpChannel", boost::weak_ptr<Channel>(channel));
                             channelInfo.set("onSlowness", onSlowness);
                             isNew = false;
                             break;
@@ -237,7 +267,11 @@ namespace karabo {
                 }
 
             }
-            channel->readAsyncHash(bind_weak(&karabo::xms::OutputChannel::onTcpChannelRead, this, _1, channel, _2));
+            if (channel->isOpen()) {
+                channel->readAsyncHash(bind_weak(&karabo::xms::OutputChannel::onTcpChannelRead, this, _1, channel, _2));
+            } else {
+                onInputGone(channel);
+            }
         }
 
 
@@ -275,17 +309,26 @@ namespace karabo {
         }
 
 
-        void OutputChannel::onInputGone(const TcpChannelPointer& channel) {
+        void OutputChannel::onInputGone(const karabo::net::Channel::Pointer& channel) {
+            using namespace karabo::net;
             KARABO_LOG_FRAMEWORK_DEBUG << "*** OutputChannel::onInputGone ***";
+
+            // Clean specific channel from bookkeeping structures and ... 
+            // ... clean expired entries as well (we are not expecting them but we want to be on the safe side!)
+
             // SHARED Inputs
-            for (InputChannels::iterator it = m_registeredSharedInputs.begin(); it != m_registeredSharedInputs.end(); ++it) {
-                if (it->get<TcpChannelPointer>("tcpChannel") == channel) {
+            for (InputChannels::iterator it = m_registeredSharedInputs.begin(); it != m_registeredSharedInputs.end(); ) {
+                auto tcpChannel = it->get<ChannelWeakPointer>("tcpChannel").lock();
+                
+                // Cleaning expired or specific channels only
+                if (!tcpChannel || tcpChannel == channel) {
+
                     std::string instanceId = it->get<std::string>("instanceId");
 
                     KARABO_LOG_FRAMEWORK_DEBUG << "Connected (shared) input on instanceId " << instanceId << " disconnected";
                     std::deque<int> tmp = it->get<std::deque<int> >("queuedChunks");
                     // Delete from registry
-                    m_registeredSharedInputs.erase(it);
+                    it = m_registeredSharedInputs.erase(it);
 
                     if (!m_registeredSharedInputs.empty()) { // There are other shared input channels available
                         // Append queued chunks to other shared input
@@ -300,17 +343,20 @@ namespace karabo {
                         boost::mutex::scoped_lock lock(m_nextInputMutex);
                         m_shareNext.erase(jt);
                     }
-                    return;
+                } else {
+                    ++it;
                 }
             }
 
             // COPY Inputs
-            for (InputChannels::iterator it = m_registeredCopyInputs.begin(); it != m_registeredCopyInputs.end(); ++it) {
-                if (it->get<TcpChannelPointer>("tcpChannel") == channel) {
+            for (InputChannels::iterator it = m_registeredCopyInputs.begin(); it != m_registeredCopyInputs.end();) {
+                auto tcpChannel = it->get<ChannelWeakPointer>("tcpChannel").lock();
+                if (!tcpChannel || tcpChannel == channel) {
+
                     std::string instanceId = it->get<std::string>("instanceId");
-                    //boost::mutex::scoped_lock lock(m_)
+
                     KARABO_LOG_FRAMEWORK_DEBUG << "Connected (copy) input on instanceId " << instanceId << " disconnected";
-                    m_registeredCopyInputs.erase(it);
+                    it = m_registeredCopyInputs.erase(it);
 
                     // Delete from input queue
                     InputChannelQueue::iterator jt = std::find(m_copyNext.begin(), m_copyNext.end(), instanceId);
@@ -318,7 +364,8 @@ namespace karabo {
                         boost::mutex::scoped_lock lock(m_nextInputMutex);
                         m_copyNext.erase(jt);
                     }
-                    return;
+                } else {
+                    ++it;
                 }
             }
             KARABO_LOG_FRAMEWORK_WARN << "OUTPUT An input channel wants to disconnect that was not registered before.";
@@ -326,6 +373,7 @@ namespace karabo {
 
 
         void OutputChannel::triggerIOEvent() {
+            using namespace karabo::net;
             try {
                 OutputChannel::Pointer self = shared_from_this();
                 if (m_ioEventHandler) m_ioEventHandler(self);
@@ -452,6 +500,7 @@ namespace karabo {
 
 
         void OutputChannel::signalEndOfStream() {
+            using namespace karabo::net;
 
             // If there is still some data in the pipe, put it out
             if (Memory::size(m_channelId, m_chunkId) > 0) update();
@@ -469,18 +518,33 @@ namespace karabo {
                 boost::this_thread::sleep(boost::posix_time::milliseconds(100));
             }
 
-
             for (size_t i = 0; i < m_registeredSharedInputs.size(); ++i) {
                 const karabo::util::Hash& channelInfo = m_registeredSharedInputs[i];
-                const TcpChannelPointer& tcpChannel = channelInfo.get<TcpChannelPointer > ("tcpChannel");
-                tcpChannel->write(karabo::util::Hash("endOfStream", true), std::vector<char>());
-            }
-            for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
-                const karabo::util::Hash& channelInfo = m_registeredCopyInputs[i];
-                const TcpChannelPointer& tcpChannel = channelInfo.get<TcpChannelPointer > ("tcpChannel");
-                tcpChannel->write(karabo::util::Hash("endOfStream", true), std::vector<char>());
+                Channel::Pointer tcpChannel = channelInfo.get<ChannelWeakPointer > ("tcpChannel").lock();
+                if (!tcpChannel) continue;
+
+                try {
+                    if (tcpChannel->isOpen()) {
+                        tcpChannel->write(karabo::util::Hash("endOfStream", true), std::vector<char>());
+                    }
+                } catch (const std::exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::signalEndOfStream (shared) :  " << e.what();
+                }
             }
 
+            for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
+                const karabo::util::Hash& channelInfo = m_registeredCopyInputs[i];
+                Channel::Pointer tcpChannel = channelInfo.get<ChannelWeakPointer > ("tcpChannel").lock();
+                if (!tcpChannel) continue;
+
+                try {
+                    if (tcpChannel->isOpen()) {
+                        tcpChannel->write(karabo::util::Hash("endOfStream", true), std::vector<char>());
+                    }
+                } catch (const std::exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::signalEndOfStream (copy) :  " << e.what();
+                }
+            }
         }
 
 
@@ -616,31 +680,46 @@ namespace karabo {
 
 
         void OutputChannel::distributeLocal(unsigned int chunkId, const InputChannelInfo& channelInfo) {
+            using namespace karabo::net;
 
-            const TcpChannelPointer& tcpChannel = channelInfo.get<TcpChannelPointer > ("tcpChannel");
-
+            Channel::Pointer tcpChannel = channelInfo.get<ChannelWeakPointer > ("tcpChannel").lock();
+            if (!tcpChannel) return;
+          
             // Synchronous write as it takes no time here
             KARABO_LOG_FRAMEWORK_TRACE << "OUTPUT Now distributing (local memory)";
-            tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), std::vector<char>());
-
+            try {
+                if (tcpChannel->isOpen()) {
+                    tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), std::vector<char>());
+                }
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::distributeLocal  :  " << e.what();
+            }
             // The input channel will decrement the chunkId usage, as he uses the same memory location
             // unregisterWriterFromChunk(chunkId);
         }
 
 
         void OutputChannel::distributeRemote(const unsigned int& chunkId, const InputChannelInfo& channelInfo) {
+            using namespace karabo::net;
 
-            const TcpChannelPointer& tcpChannel = channelInfo.get<TcpChannelPointer > ("tcpChannel");
+            Channel::Pointer tcpChannel = channelInfo.get<ChannelWeakPointer > ("tcpChannel").lock();
 
-            karabo::util::Hash header;
-            std::vector<char> data;
-            Memory::readAsContiguousBlock(data, header, m_channelId, chunkId);
+            if (tcpChannel) {
+                karabo::util::Hash header;
+                std::vector<char> data;
+                Memory::readAsContiguousBlock(data, header, m_channelId, chunkId);
 
-            tcpChannel->write(header, data); // Blocks whilst writing
+                try {
+                    if (tcpChannel->isOpen()) {
+                        tcpChannel->write(header, data); // Blocks whilst writing
+                    }
+                } catch (const std::exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::distributeRemote  :  " << e.what();
+                }
+            }
 
             unregisterWriterFromChunk(chunkId);
             //Memory::decrementChannelUsage(m_channelId, chunkId); // Later use this one!
-
         }
 
 
@@ -692,11 +771,20 @@ namespace karabo {
 
 
         void OutputChannel::copyLocal(const unsigned int& chunkId, const InputChannelInfo& channelInfo) {
-            const TcpChannelPointer& tcpChannel = channelInfo.get<TcpChannelPointer > ("tcpChannel");
+            using namespace karabo::net;
 
+            Channel::Pointer tcpChannel = channelInfo.get<ChannelWeakPointer > ("tcpChannel").lock();
+            if (!tcpChannel) return;
+            
             // Synchronous write as it takes no time here
             // Writing no data signals input to read from memory
-            tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), std::vector<char>());
+            try {
+                if (tcpChannel->isOpen()) {
+                    tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), std::vector<char>());
+                }
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::copyLocal  :  " << e.what();
+            }
 
             // NOTE: The input channel will decrement the chunkId usage, as he uses the same memory location
             // Having the next line commented is thus correct!!!
@@ -705,14 +793,23 @@ namespace karabo {
 
 
         void OutputChannel::copyRemote(const unsigned int& chunkId, const InputChannelInfo& channelInfo) {
+            using namespace karabo::net;
 
-            const TcpChannelPointer& tcpChannel = channelInfo.get<TcpChannelPointer > ("tcpChannel");
+            Channel::Pointer tcpChannel = channelInfo.get<ChannelWeakPointer > ("tcpChannel").lock();
 
-            karabo::util::Hash header;
-            std::vector<char> data;
-            Memory::readAsContiguousBlock(data, header, m_channelId, chunkId);
+            if (tcpChannel) {
+                karabo::util::Hash header;
+                std::vector<char> data;
+                Memory::readAsContiguousBlock(data, header, m_channelId, chunkId);
 
-            tcpChannel->write(header, data);
+                try {
+                    if (tcpChannel->isOpen()) {
+                        tcpChannel->write(header, data);
+                    }
+                } catch (const std::exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::copyRemote  :  " << e.what();
+                }
+            }
 
             unregisterWriterFromChunk(chunkId);
         }
@@ -723,18 +820,22 @@ namespace karabo {
             return std::string((("OUTPUT " + util::toString(m_channelId) += " of '") += this->getInstanceId()) += "'");
         }
 
-        void OutputChannel::write(const karabo::util::Hash& data,  const OutputChannel::MetaData& metaData) {
-             Memory::write(data, m_channelId, m_chunkId, metaData);
+
+        void OutputChannel::write(const karabo::util::Hash& data, const OutputChannel::MetaData& metaData) {
+            Memory::write(data, m_channelId, m_chunkId, metaData);
         }
 
+
         void OutputChannel::write(const karabo::util::Hash& data) {
-            OutputChannel::MetaData meta(/*source*/ m_instanceId+":"+m_channelName, /*timestamp*/ karabo::util::Timestamp());
+            OutputChannel::MetaData meta(/*source*/ m_instanceId + ":" + m_channelName, /*timestamp*/ karabo::util::Timestamp());
             Memory::write(data, m_channelId, m_chunkId, meta);
         }
 
-        void OutputChannel::write(const karabo::util::Hash::Pointer& data,  const OutputChannel::MetaData& metaData) {
+
+        void OutputChannel::write(const karabo::util::Hash::Pointer& data, const OutputChannel::MetaData& metaData) {
             write(*data, metaData);
         }
+
 
         void OutputChannel::write(const karabo::util::Hash::Pointer& data) {
             write(*data);
