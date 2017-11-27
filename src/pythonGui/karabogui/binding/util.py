@@ -1,3 +1,5 @@
+import numbers
+
 import numpy as np
 
 from karabo.middlelayer import Schema
@@ -45,8 +47,62 @@ def get_min_max(binding):
     return None, None
 
 
+def has_changes(binding, old_value, new_value):
+    """Compare old/new values assigned to a binding to determine if there is
+    a real difference.
+    """
+    # Check if changes were made
+    if old_value is None:
+        changes = True
+    elif (isinstance(old_value, (numbers.Complex, np.inexact))
+            and not isinstance(old_value, numbers.Integral)):
+        diff = abs(old_value - new_value)
+        abs_err = binding.attributes.get(const.KARABO_SCHEMA_ABSOLUTE_ERROR)
+        rel_err = binding.attributes.get(const.KARABO_SCHEMA_RELATIVE_ERROR)
+        if abs_err is not None:
+            changes = (diff >= abs_err)
+        elif rel_err is not None:
+            changes = (diff >= abs(old_value * rel_err))
+        else:
+            changes = (diff >= 1e-4)
+    elif isinstance(old_value, (list, np.ndarray)):
+        if len(old_value) != len(new_value):
+            changes = True
+        else:
+            changes = False
+            cmp = _cmp
+            if isinstance(old_value, np.ndarray):
+                cmp = _build_array_cmp(old_value.dtype)
+            for i in range(len(old_value)):
+                if not cmp(old_value[i], new_value[i]):
+                    changes = True
+                    break
+    else:
+        changes = (str(old_value) != str(new_value))
+    return changes
+
+
 # -----------------------------------------------------------------------------
 # Internal functions
+
+def _build_array_cmp(dtype):
+    """Builds a comparison function for numpy arrays"""
+    coerce = dtype.type
+    if coerce is np.bool_:
+        coerce = int
+
+    def _array_cmp(a, b):
+        try:
+            return coerce(a) == coerce(b)
+        except ValueError:
+            return False
+
+    return _array_cmp
+
+
+def _cmp(a, b):
+    return a == b
+
 
 def _float_min_max(binding):
     attrs = binding.attributes
