@@ -11,6 +11,7 @@
 #include "karabo/xms/OutputChannel.hh"
 #include "karabo/util/Configurator.hh"
 #include "karabo/util/Hash.hh"
+#include "karabo/net/EventLoop.hh"
 
 using namespace karabo;
 using xms::InputChannel;
@@ -59,23 +60,27 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     Hash outputInfo(output->getInformation());
     outputInfo.set("outputChannelString", outputChannelId);
     outputInfo.set("memoryLocation", "local");
-    input->connect(outputInfo);
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100)); // time for TCP setup
+    size_t n = 200;
+    for (size_t i = 0; i < n; ++i) {
+        calls = 0;
+        input->connect(outputInfo);
+        boost::this_thread::sleep(boost::posix_time::milliseconds(100)); // time for TCP setup
 
-    // Write data again (twice in one go...) - now input is connected.
-    output->write(Hash("key", 43));
-    output->write(Hash("key", -43));
-    output->update();
+        // Write data again (twice in one go...) - now input is connected.
+        output->write(Hash("key", 43));
+        output->write(Hash("key", -43));
+        output->update();
 
-    unsigned int trials = 20;
-    while (--trials >= 0) {
-        if (2u == calls) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(2)); // time for callback
+        int trials = 20;
+        while (--trials >= 0) {
+            if (2u == calls) break;
+            boost::this_thread::sleep(boost::posix_time::milliseconds(2)); // time for callback
+        }
+        CPPUNIT_ASSERT_EQUAL(2u, calls);
+
+        // Disconnect
+        input->disconnect(outputChannelId);
     }
-    CPPUNIT_ASSERT_EQUAL(2u, calls);
-
-    // Disconnect
-    input->disconnect(outputChannelId);
     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
 
     // Write data again - input does not anymore receive data.
