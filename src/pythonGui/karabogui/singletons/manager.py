@@ -111,7 +111,7 @@ class Manager(QObject):
     def callDeviceSlot(self, token, handler, device_id, slot_name, params):
         """Call a device slot using the `requestFromSlot` mechanism.
 
-        See karabo_gui.request for more details.
+        See karabogui.request for more details.
         """
         # Set the callback handler
         assert token not in self._request_handlers
