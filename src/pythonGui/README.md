@@ -31,8 +31,9 @@ Tasks
     - [ ] Port BoxSelectionTool
     - [ ] Port WidgetSceneHandler (widget selection menu)
     - [ ] Port NavigationDropHandler
-    - [ ] Port the Workflow (pipeline connections)
-        - [ ] Model
+    - [X] Port the Workflow (pipeline connections)
+        - [X] Models
+        - [X] Rendering
         - [ ] [dis]connect_channels
     - [ ] Small fixups in SceneView
     - [ ] EXTRA: Introduce a DeprecatedWidget
