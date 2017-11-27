@@ -692,7 +692,7 @@ namespace karabo {
                     tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), std::vector<char>());
                 }
             } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << e.what();
+                KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::distributeLocal  :  " << e.what();
             }
             // The input channel will decrement the chunkId usage, as he uses the same memory location
             // unregisterWriterFromChunk(chunkId);
@@ -714,7 +714,7 @@ namespace karabo {
                         tcpChannel->write(header, data); // Blocks whilst writing
                     }
                 } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << e.what();
+                    KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::distributeRemote  :  " << e.what();
                 }
             }
 
@@ -783,7 +783,7 @@ namespace karabo {
                     tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), std::vector<char>());
                 }
             } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << e.what();
+                KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::copyLocal  :  " << e.what();
             }
 
             // NOTE: The input channel will decrement the chunkId usage, as he uses the same memory location
@@ -807,7 +807,7 @@ namespace karabo {
                         tcpChannel->write(header, data);
                     }
                 } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << e.what();
+                    KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::copyRemote  :  " << e.what();
                 }
             }
 
