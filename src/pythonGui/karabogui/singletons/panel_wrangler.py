@@ -238,7 +238,7 @@ def _find_scene_model(uuid):
     #                 self.found = obj
     #                 return True
 
-    # project = get_project_model().traits_data_model
+    # project = get_project_model().root_model
     # if project is None:
     #     return None
 
