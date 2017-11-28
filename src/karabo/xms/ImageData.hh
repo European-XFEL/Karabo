@@ -62,6 +62,11 @@ namespace karabo {
 
             static void expectedParameters(karabo::util::Schema& s);
 
+            /**
+             * Constructor of an empty ImageData
+             *
+             * Take care to keep the object consistent if it is later filled with the set-methods.
+             */
             ImageData();
 
             /**
@@ -71,12 +76,14 @@ namespace karabo {
              * @param data NDArray
              * @param dims The dimensions of the image data
              * @param encoding The encoding of the bytes
-             * @param bitsPerPixel
+             * @param bitsPerPixel The number of bits used in the original data. Can be smaller than 8 times
+             *                     the size in bytes of the type used in the NDArray 'data'. If zero (default) or
+             *                     negative, a value matching the NDArray type will be calculated (8, 16, ...).
              */
             ImageData(const karabo::util::NDArray& data,
                       const karabo::util::Dims& dims = karabo::util::Dims(),
                       const EncodingType encoding = Encoding::GRAY,
-                      const int bitsPerPixel = 8);
+                      const int bitsPerPixel = 0);
 
             ImageData(const ImageData& other) = default;
 
@@ -131,7 +138,7 @@ namespace karabo {
 
             void setGeometry(const karabo::util::DetectorGeometry & geometry);
 
-            karabo::util::DetectorGeometry getGeometry();
+            karabo::util::DetectorGeometry getGeometry() const;
 
             const karabo::util::Hash& getHeader() const;
 

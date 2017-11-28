@@ -8,7 +8,8 @@
 #include <karabo/util/VectorElement.hh>
 
 #include "ImageData.hh"
-
+#include "karabo/util/ToSize.hh"
+#include "karabo/util/Types.hh"
 
 namespace karabo {
     namespace xms {
@@ -66,7 +67,7 @@ namespace karabo {
         }
 
 
-        ImageData::ImageData() {
+        ImageData::ImageData() : ImageData(karabo::util::NDArray(karabo::util::Dims())) {
         }
 
 
@@ -78,7 +79,12 @@ namespace karabo {
             setData(data);
             setDimensions(dims);
             setEncoding(encoding);
-            setBitsPerPixel(bitsPerPixel);
+            int bitsPerPixel_intern = bitsPerPixel;
+            if (bitsPerPixel_intern <= 0) {
+                const size_t numBytes = karabo::util::Types::to<karabo::util::ToSize>(data.getType());
+                bitsPerPixel_intern = numBytes * 8;
+            }
+            setBitsPerPixel(bitsPerPixel_intern);
 
             int rank = dims.rank();
             if (dims.size() == 0) {
@@ -86,6 +92,8 @@ namespace karabo {
             }
             std::vector<unsigned long long> offsets(rank, 0);
             setROIOffsets(karabo::util::Dims(offsets));
+
+            setDimensionScales(std::string());
         }
 
 
@@ -105,7 +113,8 @@ namespace karabo {
 
 
         void ImageData::setBitsPerPixel(const int bitsPerPixel) {
-            set<int>("bitsPerPixel", bitsPerPixel);
+            const size_t numBytes = karabo::util::Types::to<karabo::util::ToSize>(getData().getType());
+            set<int>("bitsPerPixel", std::min<int>(bitsPerPixel, numBytes * 8));
         }
 
 
@@ -125,17 +134,20 @@ namespace karabo {
 
 
         void ImageData::setDimensions(const karabo::util::Dims& dims) {
+            size_t rank = dims.rank();
             if (dims.size() == 0) {
                 // Will use the shape information of underlying NDArray as best guess
                 std::vector<unsigned long long> shape = get<NDArray>("pixels").getShape().toVector();
                 set("dims", shape);
+                rank = shape.size();
             } else {
-                // XXX: Make sure dimensions match the size of the data!
+                // Make sure dimensions match the size of the data
+                get<NDArray>("pixels").setShape(dims); // throws if size does not fit
                 set<std::vector<unsigned long long> >("dims", dims.toVector());
             }
             // In case the dimensionTypes were not yet set, inject a default here
             if (!has("dimTypes")) {
-                setDimensionTypes(std::vector<int>(dims.rank(), Dimension::UNDEFINED));
+                setDimensionTypes(std::vector<int>(rank, Dimension::UNDEFINED));
             }
         }
 
@@ -160,8 +172,10 @@ namespace karabo {
         }
 
 
-        karabo::util::DetectorGeometry ImageData::getGeometry() {
-            return karabo::util::DetectorGeometry(get<karabo::util::Hash>("detectorGeometry"));
+        karabo::util::DetectorGeometry ImageData::getGeometry() const {
+            boost::optional<const karabo::util::Hash::Node&> node = find("detectorGeometry");
+            return (node ? karabo::util::DetectorGeometry(node->getValue<karabo::util::Hash>())
+                    : karabo::util::DetectorGeometry());
         }
 
 
@@ -171,7 +185,13 @@ namespace karabo {
 
 
         const karabo::util::Hash& ImageData::getHeader() const {
-            return get<karabo::util::Hash>("header");
+            boost::optional<const karabo::util::Hash::Node&> node = find("header");
+            if (node) {
+                return node->getValue<karabo::util::Hash>();
+            } else {
+                static const karabo::util::Hash h;
+                return h;
+            }
         }
 
 
