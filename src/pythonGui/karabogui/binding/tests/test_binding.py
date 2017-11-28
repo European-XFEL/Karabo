@@ -25,7 +25,7 @@ from ..api import (
     KARABO_SCHEMA_METRIC_PREFIX_ENUM, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
     KARABO_SCHEMA_UNIT_ENUM, KARABO_SCHEMA_UNIT_SYMBOL
 )
-from .schema import get_all_props_schema
+from .schema import get_all_props_schema, get_vectorattr_schema
 
 TEST_DATA_DIR = op.join(op.dirname(__file__), 'data')
 
@@ -161,3 +161,19 @@ def test_property_attributes():
 
     assert binding.value.k1.is_allowed(State.INTERLOCKED)
     assert binding.value.k1.is_allowed(State.ACTIVE.value)
+
+
+def test_extract_attribute_modifications_vectorattr():
+    schema = get_vectorattr_schema()
+    binding = build_binding(schema)
+
+    apply_default_configuration(binding)
+    ret = extract_attribute_modifications(schema, binding)
+    assert ret is None
+
+    # Change defaultValue from [True, True] to [False, False]
+    newv = np.array([False, False])
+    binding.value.vec.attributes[KARABO_SCHEMA_DEFAULT_VALUE] = newv
+    ret = extract_attribute_modifications(schema, binding)
+    # XXX: middlelayer Hash can't compare np array either
+    assert all(ret[0]['value'] == newv)
