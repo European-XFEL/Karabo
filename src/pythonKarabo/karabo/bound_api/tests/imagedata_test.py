@@ -7,15 +7,24 @@ from karabo.testing.utils import compare_ndarray_data_ptrs
 
 
 def test_imagedata_from_ndarray():
-    arr = np.arange(20000, dtype='uint8').reshape(100, 200)
+    arr = np.arange(20000, dtype='uint16').reshape(100, 200)
     imageData = ImageData(arr)
     assert np.all(imageData.getData() == arr)
 
+    assert imageData.getBitsPerPixel() == 16
     assert imageData.getDimensionTypes() == (0, 0)
     assert imageData.getDimensions() == (100, 200)
     assert imageData.getEncoding() == Encoding.GRAY
     assert imageData.isIndexable()
     assert imageData.getROIOffsets() == (0, 0)
+
+    # Two additional tests on bitsPerPixel
+    # 1. set it in constructor
+    imageData = ImageData(arr, bitsPerPixel=12)
+    assert imageData.getBitsPerPixel() == 12
+    # 2. change it later
+    imageData.setBitsPerPixel(10);
+    assert imageData.getBitsPerPixel() == 10
 
     # Make sure conversion from Fortran order doesn't harm dimensions
     arr = np.asarray(np.arange(20000, dtype='uint8').reshape(100, 200),
