@@ -59,11 +59,18 @@ namespace karathon {
                 }
             }
 
-            // XXX: Bits per pixel?
             std::vector<unsigned long long> offsets(rank, 0);
             self->setDimensions(_dimensions);
             self->setROIOffsets(Dims(offsets));
             self->setEncoding(_encoding);
+
+            if (bitsPerPixel > 0) {
+                self->setBitsPerPixel(bitsPerPixel);
+            } else {
+                // No bpp info -> guess it from ndarray dtype
+                self->setBitsPerPixel(8 * ndarray.itemSize());
+            }
+
         } else {
             throw KARABO_PARAMETER_EXCEPTION("Object type expected to be ndarray");
         }
@@ -357,7 +364,7 @@ void exportPyXmsInputOutputChannel() {
                                                       (bp::arg("array"),
                                                        bp::arg("dims") = karabo::util::Dims(),
                                                        bp::arg("encoding") = karabo::xms::Encoding::UNDEFINED,
-                                                       bp::arg("bitsPerPixel") = 8)))
+                                                       bp::arg("bitsPerPixel") = 0)))
 
                 .def("getData", &karathon::ImageDataWrap::getDataPy)
 
@@ -374,6 +381,10 @@ void exportPyXmsInputOutputChannel() {
                 .def("getROIOffsets", &karathon::ImageDataWrap::getROIOffsetsPy)
 
                 .def("setROIOffsets", &karathon::ImageDataWrap::setROIOffsetsPy, (bp::arg("offsets")))
+
+                .def("getBitsPerPixel", &karabo::xms::ImageData::getBitsPerPixel)
+
+                .def("setBitsPerPixel", &karabo::xms::ImageData::setBitsPerPixel, (bp::arg("bitsPerPixel")))
 
                 .def("getEncoding", &karathon::ImageDataWrap::getEncodingPy)
 
