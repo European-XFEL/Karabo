@@ -32,7 +32,7 @@ namespace karathon {
         static boost::shared_ptr<karabo::xms::ImageData > make5(const bp::object& obj,
                                                                 const karabo::util::Dims& dimensions = karabo::util::Dims(),
                                                                 const karabo::xms::EncodingType encoding = karabo::xms::Encoding::UNDEFINED,
-                                                                const int bitsPerPixel = 8);
+                                                                const int bitsPerPixel = 0);
         static bp::object getDataPy(const boost::shared_ptr<karabo::xms::ImageData >& self);
         static void setDataPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj);
         static bp::object getDimensionsPy(const boost::shared_ptr<karabo::xms::ImageData >& self);
