@@ -107,7 +107,11 @@ def extract_attribute_modifications(schema, binding):
                 yield subname, subnode
 
     def _dictdiff(d0, d1):
-        return {k: v for k, v in d0.items() if d1.get(k) != v}
+        def _not_equal(v0, v1):
+            ret = v0 != v1
+            # comparison of numpy arrays result in an array
+            return ret if type(ret) is bool else all(ret)
+        return {k: v for k, v in d0.items() if _not_equal(d1.get(k), v)}
 
     def _remap_value(name, value):
         enum = _SYMBOL_MAP.get(name, None)

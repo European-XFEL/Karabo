@@ -1,3 +1,5 @@
+import numpy as np
+
 from karabo.middlelayer import (
     Bool, Char, ComplexDouble, ComplexFloat, Configurable,
     Double, Float, HashType, Int16, Int32, Int64, Int8,
@@ -28,6 +30,10 @@ def get_slotted_schema():
 
 def get_recursive_schema():
     return Recursive.getClassSchema()
+
+
+def get_vectorattr_schema():
+    return VectorAttr.getClassSchema()
 
 
 class Multi(Configurable):
@@ -124,3 +130,7 @@ class Recursive(Configurable):
     """
     con = ChoiceOfNodes(Multi, defaultValue='_NodeTwo')
     lon = ListOfNodes(Multi, defaultValue=['_NodeOne'])
+
+
+class VectorAttr(Configurable):
+    vec = VectorBool(defaultValue=np.array([True, True]))
