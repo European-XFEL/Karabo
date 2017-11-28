@@ -11,3 +11,4 @@ from .drawing import (LineSceneTool, RectangleSceneTool, SceneLinkTool,
 from .scenedndhandler import ConfigurationDropHandler
 from .selection import ProxySelectionTool, SceneSelectionTool
 from .widgethandler import WidgetSceneHandler
+from .workflow import WorkflowConnectionTool
