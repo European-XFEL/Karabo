@@ -30,7 +30,8 @@ from .const import (
     KARABO_SCHEMA_ATTRIBUTES
 )
 from .proxy import (
-    BaseDeviceProxy, DeviceProxy, DeviceClassProxy, PropertyProxy
+    BaseDeviceProxy, DeviceProxy, DeviceClassProxy, ProjectDeviceProxy,
+    PropertyProxy
 )
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .types import (
