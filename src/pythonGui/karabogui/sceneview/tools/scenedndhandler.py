@@ -10,9 +10,12 @@ from PyQt4.QtCore import QPoint
 from PyQt4.QtGui import QBoxLayout, QFont
 from traits.api import ABCHasStrictTraits
 
-from karabo.common.scenemodel.api import BoxLayoutModel, LabelModel
+from karabo.common.scenemodel.api import (
+    BoxLayoutModel, LabelModel, WorkflowItemModel)
 from karabogui.controllers.registry import (
     get_compatible_controllers, get_class_const_trait, get_scene_model_class)
+from karabogui.enums import NavigationItemTypes
+from karabogui.project.utils import add_device_to_server
 from karabogui.sceneview.widget.utils import get_proxy
 
 _STACKED_WIDGET_OFFSET = 30
@@ -96,3 +99,36 @@ class ConfigurationDropHandler(SceneDnDHandler):
             create_model(klasses[0], proxy.key, layout_model)
 
         return layout_model
+
+
+class NavigationDropHandler(SceneDnDHandler):
+    """Scene D&D handler for drops originating from the navigation view"""
+    def can_handle(self, event):
+        # We can handle a drop if it contains at least one device or class
+        return len(self._extract_items(event.mimeData())) > 0
+
+    def handle(self, scene_view, event):
+        dropped_items = self._extract_items(event.mimeData())
+        if len(dropped_items) == 0:
+            return
+
+        # We ONLY handle one dropped class at a time!
+        item = dropped_items[0]
+        device_id = add_device_to_server(item['serverId'],
+                                         class_id=item['classId'])
+        # Adding a device to the project can fail
+        if device_id != '':
+            position = event.pos()
+            model = WorkflowItemModel(device_id=device_id,
+                                      klass='WorkflowItem',
+                                      x=position.x(), y=position.y())
+            scene_view.add_models(model)
+            event.accept()
+
+    def _extract_items(self, mime_data):
+        known_types = (NavigationItemTypes.CLASS,)  # XXX: Devices. Soon.
+        items_data = mime_data.data('treeItems').data()
+        if items_data:
+            items = json.loads(items_data.decode())
+            return [it for it in items if it['type'] in known_types]
+        return []

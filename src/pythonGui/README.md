@@ -30,7 +30,7 @@ Tasks
     - [X] Port ConfigurationDropHandler
     - [X] Port BoxSelectionTool
     - [X] Port WidgetSceneHandler (widget selection menu)
-    - [ ] Port NavigationDropHandler
+    - [X] Port NavigationDropHandler
     - [X] Port the Workflow (pipeline connections)
         - [X] Models
         - [X] Rendering
