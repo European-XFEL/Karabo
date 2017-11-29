@@ -57,7 +57,7 @@ print("To start you need a DeviceClient object, e.g. type:\n")
 print("  d = DeviceClient()\n")
 print("Using this object you can remote control Karabo devices.")
 print("You may query servers and devices and set/get properties or execute commands on them.")
-print("Hint, use the TAB key for auto-completion.")
+print("Hint: use the TAB key for auto-completion.")
 
 
 # The global autocompleter
@@ -202,21 +202,18 @@ class DeviceClient(object):
     A Karabo installation comprises all distributed end-points (servers, devices and clients),
     which talk to the same central message-broker as defined by its host, port and topic.
     The DeviceClient establishes a direct connection to the broker.
-    You may specify which broker and topic should be used via those environmental variables
-      KARABO_BROKER_HOST
-      KARABO_BROKER_PORT
-      KARABO_BROKER_TOPIC
-    or by giving them to the constructor (taking precedence) like:
+    You may specify which broker and topic should be used via the environment variables
 
-    >>> c = DeviceClient(Hash('hostname', 'exlf-broker', 'port', 7676, 'destinationName', 'myTopic'))
+      KARABO_BROKER       (default: tcp://exfl-broker:7777)
+      KARABO_BROKER_TOPIC (default: $USER)
 
-    If you do not specify the broker connection, defaults will be used (IMPORTANT: default topic is your username).
-    
+    where defaults stated above are given if the environment variable is not
+    set.
     """
-    def __init__(self, config = Hash(), connectionType = "JmsConnection"):
+    def __init__(self):
         global cpp_client
         if cpp_client is None:
-            cpp_client = BoundDeviceClient(connectionType, config)
+            cpp_client = BoundDeviceClient()
         self.__client = cpp_client
 
         # Flags whether we tried to run Qapp

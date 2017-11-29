@@ -47,7 +47,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1423485062/DataLoggerManager.o \
 	${OBJECTDIR}/_ext/1423485062/GuiServerDevice.o \
 	${OBJECTDIR}/_ext/1423485062/PropertyTest.o \
-	${OBJECTDIR}/_ext/1423485062/RunConfigurator.o \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o \
 	${OBJECTDIR}/_ext/1072794519/CppInputHandler.o \
@@ -104,6 +103,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103112890/JmsConsumer.o \
 	${OBJECTDIR}/_ext/1103112890/JmsProducer.o \
 	${OBJECTDIR}/_ext/1103112890/PointToPoint.o \
+	${OBJECTDIR}/_ext/1103112890/Strand.o \
 	${OBJECTDIR}/_ext/1103112890/TcpChannel.o \
 	${OBJECTDIR}/_ext/1103112890/TcpConnection.o \
 	${OBJECTDIR}/_ext/1103112890/utils.o \
@@ -250,11 +250,6 @@ ${OBJECTDIR}/_ext/1423485062/PropertyTest.o: ../../../src/karabo/devices/Propert
 	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/PropertyTest.o ../../../src/karabo/devices/PropertyTest.cc
-
-${OBJECTDIR}/_ext/1423485062/RunConfigurator.o: ../../../src/karabo/devices/RunConfigurator.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/RunConfigurator.o ../../../src/karabo/devices/RunConfigurator.cc
 
 ${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o: ../../../src/karabo/io/BinaryFileInput.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
@@ -536,6 +531,11 @@ ${OBJECTDIR}/_ext/1103112890/PointToPoint.o: ../../../src/karabo/net/PointToPoin
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/PointToPoint.o ../../../src/karabo/net/PointToPoint.cc
 
+${OBJECTDIR}/_ext/1103112890/Strand.o: ../../../src/karabo/net/Strand.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/Strand.o ../../../src/karabo/net/Strand.cc
+
 ${OBJECTDIR}/_ext/1103112890/TcpChannel.o: ../../../src/karabo/net/TcpChannel.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} "$@.d"
@@ -798,7 +798,7 @@ ${TESTDIR}/TestFiles/f3: ${TESTDIR}/_ext/936496563/Logger_Test.o ${TESTDIR}/_ext
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f3 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
 
-${TESTDIR}/TestFiles/f4: ${TESTDIR}/_ext/936498188/EventLoop_Test.o ${TESTDIR}/_ext/936498188/JmsConnection_Test.o ${TESTDIR}/_ext/936498188/MQTcpNetworking.o ${TESTDIR}/_ext/936498188/TcpNetworking_Test.o ${TESTDIR}/_ext/936498188/netTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f4: ${TESTDIR}/_ext/936498188/EventLoop_Test.o ${TESTDIR}/_ext/936498188/JmsConnection_Test.o ${TESTDIR}/_ext/936498188/MQTcpNetworking.o ${TESTDIR}/_ext/936498188/Strand_Test.o ${TESTDIR}/_ext/936498188/TcpNetworking_Test.o ${TESTDIR}/_ext/936498188/netTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f4 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
 
@@ -909,6 +909,12 @@ ${TESTDIR}/_ext/936498188/MQTcpNetworking.o: ../../../src/karabo/tests/net/MQTcp
 	${MKDIR} -p ${TESTDIR}/_ext/936498188
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/MQTcpNetworking.o ../../../src/karabo/tests/net/MQTcpNetworking.cc
+
+
+${TESTDIR}/_ext/936498188/Strand_Test.o: ../../../src/karabo/tests/net/Strand_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/936498188
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/Strand_Test.o ../../../src/karabo/tests/net/Strand_Test.cc
 
 
 ${TESTDIR}/_ext/936498188/TcpNetworking_Test.o: ../../../src/karabo/tests/net/TcpNetworking_Test.cc 
@@ -1263,19 +1269,6 @@ ${OBJECTDIR}/_ext/1423485062/PropertyTest_nomain.o: ${OBJECTDIR}/_ext/1423485062
 	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/PropertyTest_nomain.o ../../../src/karabo/devices/PropertyTest.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1423485062/PropertyTest.o ${OBJECTDIR}/_ext/1423485062/PropertyTest_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1423485062/RunConfigurator_nomain.o: ${OBJECTDIR}/_ext/1423485062/RunConfigurator.o ../../../src/karabo/devices/RunConfigurator.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1423485062/RunConfigurator.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/RunConfigurator_nomain.o ../../../src/karabo/devices/RunConfigurator.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1423485062/RunConfigurator.o ${OBJECTDIR}/_ext/1423485062/RunConfigurator_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1072794519/BinaryFileInput_nomain.o: ${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o ../../../src/karabo/io/BinaryFileInput.cc 
@@ -2004,6 +1997,19 @@ ${OBJECTDIR}/_ext/1103112890/PointToPoint_nomain.o: ${OBJECTDIR}/_ext/1103112890
 	    $(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/PointToPoint_nomain.o ../../../src/karabo/net/PointToPoint.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/PointToPoint.o ${OBJECTDIR}/_ext/1103112890/PointToPoint_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103112890/Strand_nomain.o: ${OBJECTDIR}/_ext/1103112890/Strand.o ../../../src/karabo/net/Strand.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/Strand.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/Strand_nomain.o ../../../src/karabo/net/Strand.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103112890/Strand.o ${OBJECTDIR}/_ext/1103112890/Strand_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103112890/TcpChannel_nomain.o: ${OBJECTDIR}/_ext/1103112890/TcpChannel.o ../../../src/karabo/net/TcpChannel.cc 

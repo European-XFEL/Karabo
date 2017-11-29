@@ -6,10 +6,12 @@
  */
 
 #include <string>
+#include <karabo/core/DeviceClient.hh>
 
 #include "DeviceClient_Test.hh"
 
 #include "karabo/util/Hash.hh"
+#include "karabo/util/Schema.hh"
 #include "karabo/util/NDArray.hh"
 #include "karabo/xms/InputChannel.hh"
 #include "karabo/xms/ImageData.hh"
@@ -57,6 +59,8 @@ void DeviceClient_Test::testAll() {
     // A single test to reduce setup/teardown time
     testGet();
     testMonitorChannel();
+    testGetSchema();
+    testGetSchemaNoWait();
 }
 
 
@@ -201,4 +205,99 @@ void DeviceClient_Test::testMonitorChannel() {
     // Final clean-up
     success = m_deviceClient->killDevice("TestedDevice2", KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+}
+
+
+void DeviceClient_Test::testGetSchema() {
+
+    // NOTE:
+    // The deviceId needs to be another one than in the other tests, otherwise the test might succeed
+    // even if the DeviceClient does not trigger to connect to schema updates: The registration that is
+    // triggered by DeviceClient::get in 'testGet()' could still be valid.
+    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest",
+                                                                       Hash("deviceId", "TestedDevice3"),
+                                                                       KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    // Check initial maxSize of one exemplary vector
+    Schema schema(m_deviceClient->getDeviceSchema("TestedDevice3"));
+    CPPUNIT_ASSERT(schema.hasMaxSize("vectors.floatProperty"));
+    CPPUNIT_ASSERT_EQUAL(10u, schema.getMaxSize("vectors.floatProperty"));
+
+    // Now update maxSize - this should trigger the signaling of an updated Schema and the client
+    // should be informed since it should be "connected".
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice3", "slotUpdateSchema", KRB_TEST_MAX_TIMEOUT));
+
+    // Wait a bit until new schema arrived
+    unsigned int counter = 0;
+    while (counter++ < 100) {
+        schema = m_deviceClient->getDeviceSchema("TestedDevice3");
+        if (schema.has("vectors.floatProperty") && schema.getMaxSize("vectors.floatProperty") == 20u) {
+            break;
+        }
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    }
+    CPPUNIT_ASSERT(schema.hasMaxSize("vectors.floatProperty"));
+    CPPUNIT_ASSERT_EQUAL(20u, schema.getMaxSize("vectors.floatProperty"));
+
+    // Final clean-up
+    success = m_deviceClient->killDevice("TestedDevice3", KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+}
+
+
+void DeviceClient_Test::testGetSchemaNoWait() {
+    // NOTE: Better use new id, see comment in testGetSchema.
+    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest",
+                                                                       Hash("deviceId", "TestedDevice4"),
+                                                                       KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    Schema schema(m_deviceClient->getDeviceSchemaNoWait("TestedDevice4"));
+    // noWait and first request: nothing cached yet, so still empty
+    CPPUNIT_ASSERT(schema.empty());
+
+    // Wait a bit until schema arrived
+    unsigned int counter = 0;
+    while (counter++ < 100) {
+        schema = m_deviceClient->getDeviceSchemaNoWait("TestedDevice4");
+        if (!schema.empty()) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    }
+
+    // Check initial maxSize of one exemplary vector
+    CPPUNIT_ASSERT(schema.hasMaxSize("vectors.floatProperty"));
+    CPPUNIT_ASSERT_EQUAL(10u, schema.getMaxSize("vectors.floatProperty"));
+
+    // FIXME: The test below to check for receiving schema updates is fragile and needs some sleep here to be reliable.
+    //        The reason for the potential failure is a general ordering problem that we have in C++/bound Py:
+    //        Currently (Nov 27, 2017), each call to getDeviceSchemaNoWait above triggered a call to the DeviceClient's
+    //        "_slotSchemaUpdated". Also the following call to "slotUpdateSchema" will result in a call to
+    //        "_slotSchemaUpdated", now with the updated schema. Unfortunately, this new schema might overtake one
+    //        of the older ones. Then the correctly updated cache of the DeviceClient will be overwritten again by
+    //        the delayed outdated schema...
+    //        So this sleep here takes care that all schema requests that have been answered with the old schema
+    //        have arrived at their destination before the change of the schema is triggered. :-(
+    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+
+    // Now update maxSize - this should trigger the signaling of an updated Schema and the client
+    // should be informed since it should be "connected".
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice4", "slotUpdateSchema", KRB_TEST_MAX_TIMEOUT));
+
+    // Wait a bit until new schema arrived
+    counter = 0;
+    while (counter++ < 100) {
+        schema = m_deviceClient->getDeviceSchemaNoWait("TestedDevice4");
+        if (schema.has("vectors.floatProperty") && schema.getMaxSize("vectors.floatProperty") == 20u) {
+            break;
+        }
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    }
+    CPPUNIT_ASSERT(schema.hasMaxSize("vectors.floatProperty"));
+    CPPUNIT_ASSERT_EQUAL(20u, schema.getMaxSize("vectors.floatProperty"));
+
+    // Final clean-up
+    success = m_deviceClient->killDevice("TestedDevice4", KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
 }

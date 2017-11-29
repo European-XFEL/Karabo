@@ -24,6 +24,7 @@
 #include "karabo/net/JmsConsumer.hh"
 #include "karabo/net/JmsProducer.hh"
 #include "karabo/net/PointToPoint.hh"
+#include "karabo/net/Strand.hh"
 
 #include <queue>
 #include <map>
@@ -667,6 +668,9 @@ namespace karabo {
 
             typedef std::map<std::string, SlotInstancePointer> SlotInstances;
             SlotInstances m_slotInstances;
+            // Each slot instance has its strand where actual calls should be posted
+            // (probably later merge m_slotInstances and m_slotInstanceStrands to a single map).
+            std::unordered_map<std::string, boost::shared_ptr<karabo::net::Strand> > m_slotInstanceStrands;
 
             typedef std::map<std::string, std::pair<boost::shared_ptr<boost::asio::deadline_timer>,
             Requestor::AsyncErrorHandler> > ReceiveAsyncErrorHandles;
@@ -869,6 +873,9 @@ namespace karabo {
             void slotPing(const std::string& instanceId, int rand, bool trackPingedInstance);
 
             void slotPingAnswer(const std::string& instanceId, const karabo::util::Hash& hash);
+
+            void processSingleSlot(const std::string& slotFunction, bool globalCall, const std::string& signalInstanceId,
+                                   const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
             void replyException(const karabo::util::Hash& header, const std::string& message);
 

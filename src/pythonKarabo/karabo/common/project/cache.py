@@ -60,8 +60,8 @@ class ProjectDBCache(object):
         if not op.exists(domain_dir):
             os.mkdir(domain_dir)
 
-        with open(path, mode='w') as fp:
-            fp.write(data)
+        with open(path, mode='wb') as fp:
+            fp.write(data.encode('utf-8'))
 
     def retrieve(self, domain, uuid, existing=None):
         """ Read an object from the cache.
@@ -70,8 +70,8 @@ class ProjectDBCache(object):
         if not op.exists(path):
             return None
 
-        with open(path, mode='r') as fp:
-            return fp.read()
+        with open(path, mode='rb') as fp:
+            return fp.read().decode('utf-8')
 
     def get_available_domains(self):
         """ Return a list of strings including available domains
