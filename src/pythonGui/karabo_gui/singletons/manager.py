@@ -193,11 +193,8 @@ class Manager(QObject):
         self._topology.update(systemTopology)
 
         # Tell the GUI about various devices that are alive
-        instance_ids = self._collect_devices('AlarmService', 'RunConfigurator')
+        instance_ids = self._collect_devices('AlarmService')
         self._announce_alarm_services(instance_ids.get('AlarmService', []))
-        if 'RunConfigurator' in instance_ids:
-            broadcast_event(KaraboEventSender.AddRunConfigurator,
-                            {'instanceIds': instance_ids['RunConfigurator']})
 
         # Tell the world about new devices/servers
         devices, servers = _extract_topology_devices(systemTopology)
@@ -236,8 +233,6 @@ class Manager(QObject):
 
         # Tell the GUI about various devices or servers that are alive
         for instance_id, class_id, _ in devices:
-            self._broadcast_if_of_type('RunConfigurator', instance_id,
-                                       KaraboEventSender.AddRunConfigurator)
             if class_id == 'AlarmService':
                 self._announce_alarm_services([instance_id])
 
@@ -250,8 +245,6 @@ class Manager(QObject):
         # Tell the GUI about various devices that are now gone
         self._broadcast_if_of_type('AlarmService', instanceId,
                                    KaraboEventSender.RemoveAlarmServices)
-        self._broadcast_if_of_type('RunConfigurator', instanceId,
-                                   KaraboEventSender.RemoveRunConfigurator)
 
         # Update the system topology
         devices, servers = self._topology.instance_gone(instanceId,
@@ -410,7 +403,7 @@ class Manager(QObject):
             broadcast_event(KaraboEventSender.AlarmServiceUpdate, data)
 
     def handle_runConfigSourcesInGroup(self, reply):
-        broadcast_event(KaraboEventSender.RunConfigSourcesUpdate, reply)
+        """This method is deprecated/ignored."""
 
     # ------------------------------------------------------------------
     # Private methods

@@ -1,11 +1,13 @@
 import distutils.command.build
 import json
 import os.path as op
+import shutil
 import sys
 
 from setuptools import setup, find_packages
 
 VERSION_FILE_PATH = op.join('karabo_gui', '_version.py')
+REFACTOR_VERSION_FILE_PATH = op.join('karabogui', '_version.py')
 
 
 def _get_src_dist_version():
@@ -62,13 +64,16 @@ is_released = {is_released}
                 vcs_revision_count=vers_dict['revision_count'],
                 is_released=vers_dict['released']))
 
+    # XXX: Copy to the refactored package
+    if not op.exists(REFACTOR_VERSION_FILE_PATH):
+        shutil.copy(filename, REFACTOR_VERSION_FILE_PATH)
+
     return fullversion
 
 
 if __name__ == '__main__':
     version = _write_version_py()
 
-    PKG = 'karabo_gui'
     metadata = {
         'name': 'KaraboGUI',
         'version': version,
@@ -76,15 +81,21 @@ if __name__ == '__main__':
         'author_email': 'karabo@xfel.eu',
         'description': 'This is the Karabo GUI',
         'url': 'http://karabo.eu',
-        'packages': [PKG] + [PKG + '.' + pkg for pkg in find_packages(PKG)],
+        'packages': find_packages(),
         'package_data': {
             "karabo_gui.binding.tests": ["data/*.config", "data/*.schema"],
             "karabo_gui.configurator.dialog": ["*.ui"],
             "karabo_gui.dialogs": ["*.ui"],
-            "karabo_gui.displaywidgets": ["*.ui", "*.svg"],
+            "karabo_gui.displaywidgets": ["*.svg", "*.ui"],
             "karabo_gui.icons": ["*.*", "statefulicons/iconset/*.svg"],
             "karabo_gui.project.dialog": ["*.ui"],
 
+            # XXX: Refactored GUI package
+            "karabogui.binding.tests": ["data/*.config", "data/*.schema"],
+            "karabogui.controllers": ["*.ui"],
+            "karabogui.controllers.display": ["*.svg", "*.ui"],
+            "karabogui.dialogs": ["*.ui"],
+            "karabogui.icons": ["*.*", "statefulicons/iconset/*.svg"],
         }
     }
 
@@ -107,6 +118,7 @@ if __name__ == '__main__':
 
     setup(entry_points={'console_scripts': [
                 'karabo-gui=karabo_gui.programs.gui_runner:main',
+                'neo-runner=karabogui.programs.gui_runner:main',
                 'project-runner=karabo_gui.programs.project_runner:main',
                 'scene-runner=karabo_gui.programs.scene_runner:main',
                 'navigation-runner=karabo_gui.programs.navigation_runner:main',

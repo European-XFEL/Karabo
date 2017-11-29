@@ -9,6 +9,7 @@
 #define	KARABO_UTIL_METATOOLS_HH
 
 #include <boost/type_traits/is_virtual_base_of.hpp>
+#include <boost/bind/bind.hpp>
 
 namespace karabo {
     namespace util {

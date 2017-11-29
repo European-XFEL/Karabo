@@ -67,7 +67,6 @@ namespace karabo {
 
         void Slot::callRegisteredSlotFunctions(const Hash &header, const Hash &body) {
             try {
-                boost::mutex::scoped_lock lock(m_callRegisteredSlotFunctionsMutex);
                 extractSenderInformation(header);
                 doCallRegisteredSlotFunctions(body);
                 invalidateSenderInformation();

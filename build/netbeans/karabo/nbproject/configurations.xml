@@ -44,8 +44,6 @@
       <itemPath>../../../src/karabo/devices/GuiServerDevice.hh</itemPath>
       <itemPath>../../../src/karabo/devices/PropertyTest.cc</itemPath>
       <itemPath>../../../src/karabo/devices/PropertyTest.hh</itemPath>
-      <itemPath>../../../src/karabo/devices/RunConfigurator.cc</itemPath>
-      <itemPath>../../../src/karabo/devices/RunConfigurator.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="f2" displayName="io" projectFiles="true">
       <logicalFolder name="f1" displayName="h5" projectFiles="true">
@@ -194,6 +192,8 @@
       <itemPath>../../../src/karabo/net/EventLoop.cc</itemPath>
       <itemPath>../../../src/karabo/net/EventLoop.hh</itemPath>
       <itemPath>../../../src/karabo/net/Queues.hh</itemPath>
+      <itemPath>../../../src/karabo/net/Strand.cc</itemPath>
+      <itemPath>../../../src/karabo/net/Strand.hh</itemPath>
       <itemPath>../../../src/karabo/net.hpp</itemPath>
       <itemPath>../../../src/karabo/net/utils.cc</itemPath>
       <itemPath>../../../src/karabo/net/utils.hh</itemPath>
@@ -390,6 +390,8 @@
         <itemPath>../../../src/karabo/tests/net/JmsConnection_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/net/MQTcpNetworking.cc</itemPath>
         <itemPath>../../../src/karabo/tests/net/MQTcpNetworking.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/net/Strand_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/net/Strand_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/net/TcpNetworking_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/net/TcpNetworking_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/net/netTestRunner.cc</itemPath>
@@ -679,16 +681,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/devices/PropertyTest.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/devices/RunConfigurator.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/devices/RunConfigurator.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1237,6 +1229,10 @@
       </item>
       <item path="../../../src/karabo/net/Queues.hh" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../../../src/karabo/net/Strand.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/Strand.hh" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../../../src/karabo/net/TcpChannel.cc"
             ex="false"
             tool="1"
@@ -1422,6 +1418,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/net/MQTcpNetworking.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/Strand_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/Strand_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2626,16 +2632,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/devices/RunConfigurator.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/devices/RunConfigurator.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/io.hpp" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/AbstractInput.hh"
@@ -3177,6 +3173,10 @@
       </item>
       <item path="../../../src/karabo/net/Queues.hh" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../../../src/karabo/net/Strand.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/Strand.hh" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../../../src/karabo/net/TcpChannel.cc"
             ex="false"
             tool="1"
@@ -3362,6 +3362,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/net/MQTcpNetworking.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/Strand_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/Strand_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">

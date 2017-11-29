@@ -415,5 +415,15 @@ class Tests(TestCase):
         self.assertEqual(next(iter(v)), 2 * unit.m)
         self.assertIs(next(iter(v)).timestamp, self.t1)
 
+    def test_hash_equal(self):
+        a = Hash('v', numpy.array([1, 2, 3]))
+        b = Hash('v', numpy.array([1, 2, 3]))
+        self.assertEqual(a, b)
+
+        a = Hash('v', (4, 5, 6))
+        b = Hash('v', (4, 5, 6))
+        self.assertEqual(a, b)
+
+
 if __name__ == "__main__":
     main()

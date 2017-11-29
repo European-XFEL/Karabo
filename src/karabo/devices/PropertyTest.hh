@@ -55,6 +55,8 @@ namespace karabo {
 
             void writeOutput();
 
+            void slotUpdateSchema();
+
             long long m_outputCounter;
             
         };

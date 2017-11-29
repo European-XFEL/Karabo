@@ -1,16 +1,25 @@
 from collections import defaultdict
 from collections.abc import Iterable
+from itertools import chain
 
 from traits.api import Constant
 
-from karabo.middlelayer import AccessMode
 from .controller import BaseBindingController
 
 # Module global registry
 _controller_registry = defaultdict(set)
 
 
-def get_compatible_controllers(binding_instance):
+def _expand_binding(binding_klass):
+    """Given a binding class, generate all the classes descended from that
+    class.
+    """
+    yield binding_klass
+    for klass in binding_klass.__subclasses__():
+        yield from _expand_binding(klass)
+
+
+def get_compatible_controllers(binding_instance, read_only=False):
     """Returns a list of `BaseBindingController` subclasses which are capable
     of creating a view for the given `BaseBinding` object instance.
     """
@@ -19,7 +28,6 @@ def get_compatible_controllers(binding_instance):
         return trait.default
 
     def check_compatibility(klass):
-        read_only = binding_instance.access_mode is AccessMode.READONLY
         if read_only == _get_class_trait(klass, '_read_only'):
             return _get_class_trait(klass, '_is_compatible')(binding_instance)
         return False
@@ -38,8 +46,12 @@ class register_binding_controller(object):
     """
     def __init__(self, *, ui_name="", binding_type=(), read_only=False,
                  is_compatible=None):
+        # Expand all binding types into a set of all possible subclasses
         if not isinstance(binding_type, Iterable):
-            binding_type = (binding_type,)
+            binding_type = set(_expand_binding(binding_type))
+        else:
+            accum = [_expand_binding(t) for t in binding_type]
+            binding_type = set(chain(*accum))
 
         self.ui_name = str(ui_name)
         self.binding_type = tuple(binding_type)

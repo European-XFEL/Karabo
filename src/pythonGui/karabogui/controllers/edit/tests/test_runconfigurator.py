@@ -1,0 +1,92 @@
+from PyQt4.QtCore import Qt
+
+from karabo.middlelayer import Configurable, Bool, String, Hash, encodeXML
+from karabogui.binding.api import (
+    BindingNamespace, BindingRoot, BoolBinding, DeviceClassProxy,
+    ListOfNodesBinding, PropertyProxy, StringBinding, TableBinding,
+    KARABO_SCHEMA_DISPLAY_TYPE, KARABO_SCHEMA_ROW_SCHEMA
+)
+from karabogui.testing import GuiTestCase
+from ..runconfigurator import RunConfiguratorEdit, NODE_CLASS_NAME
+
+
+class _TableRow(Configurable):
+    """Sub-schema of the 'sources' table.
+
+    This is possibly useless, but it's here for completeness/documentation.
+    """
+    source = String(displayedName='Source', defaultValue='Source')
+    type = String(displayedName='Type', options=['control', 'instrument'],
+                  defaultValue='control')
+    behavior = String(displayedName='Behavior', defaultValue='record-all',
+                      options=['init', 'read-only', 'record-all'])
+    monitored = Bool(displayedName='Monitor out', defaultValue=False)
+    access = String(displayedName='Access', defaultValue='expert',
+                    options=['expert', 'user'])
+
+    @classmethod
+    def getClassSchema(cls):
+        schema = super(_TableRow, cls).getClassSchema()
+        return encodeXML(schema.hash)
+
+
+def _build_binding():
+    """Thanks to the middlelayer not implementing ListOfNodes correctly, we
+    have to build the binding by hand. Like an animal.
+    """
+    node_binding = BindingRoot(class_id=NODE_CLASS_NAME)
+    node_binding.value.groupId = StringBinding()
+    node_binding.value.use = BoolBinding()
+    attributes = {KARABO_SCHEMA_ROW_SCHEMA: _TableRow.getClassSchema()}
+    node_binding.value.sources = TableBinding(attributes=attributes)
+    prop_namespace = BindingNamespace(item_type=BindingRoot)
+    setattr(prop_namespace, NODE_CLASS_NAME, node_binding)
+
+    device_binding = BindingRoot(class_id='Test')
+    attributes = {KARABO_SCHEMA_DISPLAY_TYPE: 'RunConfigurator'}
+    device_binding.value.prop = ListOfNodesBinding(choices=prop_namespace,
+                                                   attributes=attributes)
+    return device_binding
+
+
+def _build_value():
+    def _source_hash(name):
+        return Hash('source', name, 'type', 'instrument',
+                    'behavior', 'read-only', 'monitored', True,
+                    'access', 'expert')
+
+    value = Hash('groupId', 'Grouper', 'use', True)
+    value['sources'] = [_source_hash('inst')]
+    return [Hash(NODE_CLASS_NAME, value)]
+
+
+class TestRunConfiguratorEdit(GuiTestCase):
+    def setUp(self):
+        super(TestRunConfiguratorEdit, self).setUp()
+        binding = _build_binding()
+        device = DeviceClassProxy(binding=binding)
+        self.proxy = PropertyProxy(root_proxy=device, path='prop')
+        self.controller = RunConfiguratorEdit(proxy=self.proxy)
+        self.controller.create(None)
+
+    def tearDown(self):
+        self.controller.destroy()
+        assert self.controller.widget is None
+
+    def test_set_value(self):
+        item_model = self.controller.widget.model()
+        assert item_model.rowCount() == 0
+        self.proxy.value = _build_value()
+        assert item_model.rowCount() == 1
+
+    def test_edit_value(self):
+        value = _build_value()
+        self.proxy.value = value
+        item_model = self.controller.widget.model()
+        root = item_model.invisibleRootItem()
+        child = root.child(0)
+        state = (Qt.Unchecked if child.checkState() == Qt.Checked
+                 else Qt.Checked)
+        child.setCheckState(state)
+
+        assert self.proxy.value != value
