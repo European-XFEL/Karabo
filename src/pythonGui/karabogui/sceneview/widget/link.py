@@ -55,7 +55,7 @@ class SceneLinkWidget(QPushButton):
     def add_proxies(self, proxies):
         """Satisfy the informal widget interface."""
 
-    def apply_changes(self):
+    def apply_changes(self, devices=None, send_immediately=False):
         """Satisfy the informal widget interface."""
 
     def decline_changes(self):
