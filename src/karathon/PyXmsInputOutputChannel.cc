@@ -23,58 +23,15 @@ namespace karathon {
         using namespace karabo::util;
         using namespace karabo::xms;
 
-        boost::shared_ptr<ImageData > self(new ImageData());
-
-        if (obj.is_none())
+        if (obj.is_none()) {
+            boost::shared_ptr<ImageData > self(new ImageData());
             return self;
-
-        if (PyArray_Check(obj.ptr())) {
+        } else {
             PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
             const NDArray ndarray = Wrapper::fromPyArrayToNDArray(arr);
-            Dims _dimensions = ndarray.getShape();
-            const int rank = _dimensions.rank();
-
-            // Data
-            self->setData(ndarray);
-
-            // Encoding
-            EncodingType _encoding = encoding;
-            if (encoding == Encoding::UNDEFINED) {
-                // No encoding info -> try to guess it from ndarray shape
-                if (rank == 2 || (rank == 3 && _dimensions.x3() == 1))
-                    _encoding = Encoding::GRAY;
-                else if (rank == 3 && _dimensions.x3() == 3)
-                    _encoding = Encoding::RGB;
-                else if (rank == 3 && _dimensions.x3() == 4)
-                    _encoding = Encoding::RGBA;
-            }
-
-            // Dimensions (shape)
-            if (_encoding == Encoding::JPEG || _encoding == Encoding::PNG ||
-                _encoding == Encoding::BMP || _encoding == Encoding::TIFF) {
-                // JPEG, PNG, BMP, TIFF -> cannot use ndarray dimensions, use therefore input parameter
-                _dimensions = dimensions;
-                if (dimensions.size() == 0) {
-                    throw KARABO_PYTHON_EXCEPTION("Dimensions must be supplied for encoded images");
-                }
-            }
-
-            std::vector<unsigned long long> offsets(rank, 0);
-            self->setDimensions(_dimensions);
-            self->setROIOffsets(Dims(offsets));
-            self->setEncoding(_encoding);
-
-            if (bitsPerPixel > 0) {
-                self->setBitsPerPixel(bitsPerPixel);
-            } else {
-                // No bpp info -> guess it from ndarray dtype
-                self->setBitsPerPixel(8 * ndarray.itemSize());
-            }
-
-        } else {
-            throw KARABO_PARAMETER_EXCEPTION("Object type expected to be ndarray");
+            boost::shared_ptr<ImageData > self(new ImageData(ndarray, dimensions, encoding, bitsPerPixel));
+            return self;
         }
-        return self;
     }
 
 
