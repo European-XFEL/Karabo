@@ -10,3 +10,4 @@ from .drawing import (LineSceneTool, RectangleSceneTool, SceneLinkTool,
                       TextSceneTool)
 from .scenedndhandler import ConfigurationDropHandler
 from .selection import ProxySelectionTool, SceneSelectionTool
+from .widgethandler import WidgetSceneHandler

@@ -12,19 +12,28 @@ _controller_registry = defaultdict(set)
 _controller_models = defaultdict(set)
 
 
+def get_class_const_trait(klass, name):
+    """Return the value of a `Constant` trait which has been added to a class
+    object by `register_binding_controller`.
+    """
+    trait = klass.class_traits()[name]
+    return trait.default
+
+
 def get_compatible_controllers(binding_instance, can_edit=False):
     """Returns a list of `BaseBindingController` subclasses which are capable
     of creating a view for the given `BaseBinding` object instance.
     """
     def check_compatibility(klass):
-        if can_edit == _get_class_trait(klass, '_can_edit'):
-            return _get_class_trait(klass, '_is_compatible')(binding_instance)
+        if can_edit == get_class_const_trait(klass, '_can_edit'):
+            checker = get_class_const_trait(klass, '_is_compatible')
+            return checker(binding_instance)
         return False
 
     key = type(binding_instance)
     # Sort based on priority
     klasses = sorted(_controller_registry[key],
-                     key=lambda x: _get_class_trait(x, '_priority'))
+                     key=lambda x: get_class_const_trait(x, '_priority'))
     # Give the classes a chance to reject
     klasses = [klass for klass in klasses if check_compatibility(klass)]
     return klasses
@@ -36,7 +45,7 @@ def get_model_controller(scene_model):
     """
     def _with_attribute(controllers, attr_name, attr_value):
         for klass in controllers:
-            if attr_value == _get_class_trait(klass, attr_name):
+            if attr_value == get_class_const_trait(klass, attr_name):
                 return klass
 
     will_edit = scene_model.parent_component != 'DisplayComponent'
@@ -50,6 +59,18 @@ def get_model_controller(scene_model):
         # Otherwise, use the editability
         # NOTE: It's very very likely that len(klasses) == 1 here
         return _with_attribute(klasses, '_can_edit', will_edit)
+
+
+def get_scene_model_class(klass):
+    """Return the scene model class for a given `BaseBindingController`
+    subclass which has been registered.
+    """
+    trait = klass.class_traits()['model']
+    instance_trait = trait.trait_type
+
+    # Controller classes MUST define their scene model class!
+    assert instance_trait.klass is not BaseWidgetObjectData
+    return instance_trait.klass
 
 
 class register_binding_controller(object):
@@ -86,7 +107,7 @@ class register_binding_controller(object):
         klass.add_class_trait('_priority', Constant(self.priority))
 
         # Register `klass` for building UIs
-        model_klass = _get_scene_model_class(klass)
+        model_klass = get_scene_model_class(klass)
         _controller_models[model_klass].add(klass)
         for t in self.binding_type:
             _controller_registry[t].add(klass)
@@ -103,17 +124,3 @@ def _expand_binding(binding_klass):
     yield binding_klass
     for klass in binding_klass.__subclasses__():
         yield from _expand_binding(klass)
-
-
-def _get_class_trait(klass, name):
-    trait = klass.class_traits()[name]
-    return trait.default
-
-
-def _get_scene_model_class(klass):
-    trait = klass.class_traits()['model']
-    instance_trait = trait.trait_type
-
-    # Controller classes MUST define their scene model class!
-    assert instance_trait.klass is not BaseWidgetObjectData
-    return instance_trait.klass
