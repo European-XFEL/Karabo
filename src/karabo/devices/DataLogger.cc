@@ -350,7 +350,7 @@ namespace karabo {
                 size_t position = m_configStream.tellp(); // get current file size
 
                 m_configStream << t.toIso8601Ext() << "|" << fixed << t.toTimestamp() << "|"
-                        << t.getTrainId() << "|" << path << "|" << type << "|"
+                        << t.getTrainId() << "|" << path << "|" << type << "|" << scientific
                         << value << "|" << m_user;
                 if (m_pendingLogin) m_configStream << "|LOGIN\n";
                 else m_configStream << "|VALID\n";
