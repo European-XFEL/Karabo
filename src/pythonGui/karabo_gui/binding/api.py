@@ -3,7 +3,7 @@ from .builder import build_binding
 from .config import (
     apply_configuration, apply_default_configuration,
     extract_attribute_modifications, extract_configuration,
-    extract_sparse_configurations
+    extract_sparse_configurations, has_modifications
 )
 from .const import (
     KARABO_SCHEMA_NODE_TYPE, KARABO_SCHEMA_LEAF_TYPE, KARABO_SCHEMA_VALUE_TYPE,
@@ -26,7 +26,8 @@ from .const import (
     KARABO_RUNTIME_SCHEMA_UPDATE, KARABO_SCHEMA_DAQ_DATA_TYPE,
     KARABO_WARN_LOW, KARABO_WARN_HIGH, KARABO_ALARM_LOW, KARABO_ALARM_HIGH,
     KARABO_WARN_VARIANCE_LOW, KARABO_WARN_VARIANCE_HIGH,
-    KARABO_ALARM_VARIANCE_LOW, KARABO_ALARM_VARIANCE_HIGH
+    KARABO_ALARM_VARIANCE_LOW, KARABO_ALARM_VARIANCE_HIGH,
+    KARABO_SCHEMA_ATTRIBUTES
 )
 from .controller import BaseBindingController
 from .proxy import (
@@ -38,15 +39,15 @@ from .types import (
     BaseBinding, BindingNamespace, BindingRoot,
     BoolBinding, ByteArrayBinding, CharBinding,
     ComplexBinding, FloatBinding, HashBinding, ImageBinding,
-    Int8Binding, Int16Binding, Int32Binding, Int64Binding,
+    IntBinding, Int8Binding, Int16Binding, Int32Binding, Int64Binding,
     NodeBinding, NoneBinding, PipelineOutputBinding,
     SchemaBinding, SlotBinding, StringBinding, TableBinding,
     Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
-    VectorBoolBinding, VectorCharBinding, VectorComplexDoubleBinding,
-    VectorComplexFloatBinding, VectorDoubleBinding, VectorFloatBinding,
-    VectorHashBinding, VectorInt8Binding, VectorInt16Binding,
-    VectorInt32Binding, VectorInt64Binding, VectorNoneBinding,
-    VectorStringBinding, VectorUint8Binding, VectorUint16Binding,
-    VectorUint32Binding, VectorUint64Binding
+    VectorBinding,VectorBoolBinding, VectorCharBinding,
+    VectorComplexDoubleBinding, VectorComplexFloatBinding, VectorDoubleBinding,
+    VectorFloatBinding, VectorHashBinding, VectorInt8Binding,
+    VectorInt16Binding, VectorInt32Binding, VectorInt64Binding,
+    VectorNoneBinding, VectorStringBinding, VectorUint8Binding,
+    VectorUint16Binding, VectorUint32Binding, VectorUint64Binding
 )
 from .util import get_min_max

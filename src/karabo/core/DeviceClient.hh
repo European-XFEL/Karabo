@@ -137,13 +137,14 @@ namespace karabo {
             KARABO_CLASSINFO(DeviceClient, "DeviceClient", "1.2");
 
             /**
-             * Constructor which establishes an own connection to the communication system (default JMS - OpenMQ)
-             * This constructor is intended for stand-alone C++ device clients (and thus needs authentication)
-             * @param connectionType The communication system transport layer implementation
-             * @param connectionParameters Additional connection configuration
+             * Constructor which establishes an own connection to the communication system.
+             * This constructor is intended for stand-alone C++ device clients. Once we care about authentication,
+             * this has to be added here.
+             * @param instanceId The id with which the client should participate in the system.
+             *                   If not unique or invalid, constructor will throw an exception.
+             *                   If empty (i.e. default), an id will be generated from host name and process id.
              */
-            DeviceClient(const std::string& connectionType = "JmsConnection",
-                         const karabo::util::Hash& connectionParameters = karabo::util::Hash());
+            DeviceClient(const std::string& instanceId = std::string());
 
             /**
              * Constructor using instantiated signalSlotable class (shared communication)
@@ -963,6 +964,8 @@ namespace karabo {
              * Otherwise:
              *  - if connections are already established, just call asyncSuccessHandler (if not empty)
              *  - else request connection asynchronously using given handlers as success and failure call backs
+             * Note that asyncFailureHandler works like an SignalSlotable::Requestor::AsyncErrorHandler, i.e. one
+             * can make use of the "try { throw;} catch(..) {..}" pattern to get details of the problems.
              */
             void stayConnected(const std::string& instanceId,
                                const boost::function<void ()>& asyncSuccessHandler = boost::function<void ()>(),
