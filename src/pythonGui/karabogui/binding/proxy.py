@@ -181,6 +181,12 @@ class DeviceClassProxy(BaseDeviceProxy):
             self.status = DeviceStatus.REQUESTED
 
 
+class ProjectDeviceProxy(DeviceClassProxy):
+    """A device class proxy used in ProjectDeviceInstance
+    """
+    device_id = String
+
+
 class PropertyProxy(HasStrictTraits):
     """A proxy for a single device property
     """

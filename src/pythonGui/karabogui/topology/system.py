@@ -11,7 +11,7 @@ from karabo.common.api import DeviceStatus
 from karabo.middlelayer import Hash
 from karabogui.alarms.api import ADD_ALARM_TYPES, REMOVE_ALARM_TYPES
 from karabogui.binding.api import (
-    BindingRoot, DeviceClassProxy, DeviceProxy,
+    BindingRoot, DeviceClassProxy, DeviceProxy, ProjectDeviceProxy,
     apply_configuration, apply_default_configuration, build_binding
 )
 from .project_device import ProjectDeviceInstance
@@ -50,6 +50,9 @@ class SystemTopology(HasStrictTraits):
     # Mapping of device_id -> ProjectDeviceInstance
     _project_devices = Dict
 
+    # Mapping of (server id, class id) -> {device_id: ProjectDeviceProxy}
+    _project_device_proxies = Dict
+
     # A Hash instance holding the entire current topology
     _system_hash = Instance(Hash, allow_none=True)
 
@@ -60,7 +63,7 @@ class SystemTopology(HasStrictTraits):
     def clear(self):
         """Clear all saved devices and classes
         """
-        self._project_devices.clear()
+        self.clear_project_devices()
         self.system_tree.clear_all()
 
         self._system_hash = None
@@ -69,6 +72,12 @@ class SystemTopology(HasStrictTraits):
         self._device_configurations.clear()
         self._device_proxies.clear()
         self._device_schemas.clear()
+
+    def clear_project_devices(self):
+        """Called by project model on closing project
+        """
+        self._project_devices.clear()
+        self._project_device_proxies.clear()
 
     def get_attributes(self, topology_path):
         """Return the attributes of a given node in the `_system_hash`.
@@ -128,7 +137,7 @@ class SystemTopology(HasStrictTraits):
 
         return proxy
 
-    def get_project_device(self, device_id, class_id='', server_id='',
+    def get_project_device(self, device_id, server_id='', class_id='',
                            init_config=None):
         """Return a ``ProjectDeviceInstance`` for a device on a specific
         server.
@@ -141,7 +150,7 @@ class SystemTopology(HasStrictTraits):
                        'project?')
                 raise RuntimeError(msg.format(device_id))
 
-            instance = ProjectDeviceInstance(device_id, class_id, server_id)
+            instance = ProjectDeviceInstance(device_id, server_id, class_id)
             instance.set_project_config_hash(init_config)
             self._project_devices[device_id] = instance
         else:
@@ -152,11 +161,44 @@ class SystemTopology(HasStrictTraits):
 
         return self._project_devices[device_id]
 
+    def get_project_device_proxy(self, device_id, server_id, class_id):
+        """Return the project device proxy for a given class on a given server
+        """
+        key = (server_id, class_id)
+        mapping = self._project_device_proxies.setdefault(key, {})
+        proxy = mapping.get(device_id)
+        if proxy is None:
+            schema = self._class_schemas.get(key)
+            binding = (BindingRoot(class_id=class_id) if schema is None
+                       else build_binding(schema))
+            proxy = ProjectDeviceProxy(device_id=device_id,
+                                       server_id=server_id,
+                                       binding=binding)
+            mapping[device_id] = proxy
+
+            # Only fetch the schema if it's not already cached and server
+            # exists
+            if schema is None:
+                attrs = self._get_device_attributes(server_id)
+                if attrs is not None:
+                    proxy.refresh_schema()
+
+        return proxy
+
     def get_schema(self, server_id, class_id):
         """Return the schema for a given device class on a server.
         """
         key = (server_id, class_id)
         return self._class_schemas.get(key)
+
+    def remove_project_device_proxy(self, device_id, server_id, class_id):
+        """Remove the project device proxy for a given instance.
+        """
+        key = (server_id, class_id)
+        mapping = self._project_device_proxies.get(key, {})
+        mapping.pop(device_id, None)
+        if not mapping:
+            self._project_device_proxies.pop(key, None)
 
     def visit_system_tree(self, visitor):
         """Walk every node in the system tree and run a `visitor` function on
@@ -195,30 +237,31 @@ class SystemTopology(HasStrictTraits):
 
     def class_schema_updated(self, server_id, class_id, schema):
         """Called when a `classSchema` message is received from the server.
-
-        Returns the ``DeviceClassProxy`` object associated with `schema`, if
-        one exists and is initialized.
         """
         key = (server_id, class_id)
-        if key not in self._class_proxies:
+        if (key not in self._class_proxies and
+                key not in self._project_device_proxies):
             # We used to print 'Unrequested schema for classId {} arrived' here
             return None
 
         self._class_schemas[key] = schema
+        if len(schema.hash) == 0:
+            return
 
-        proxy = self._class_proxies[key]
-        if len(proxy.binding.value) > 0:
+        proxies = []
+        if key in self._class_proxies:
+            proxies = [self._class_proxies[key]]
+        proxies.extend(self._project_device_proxies.get(key, {}).values())
+
+        for proxy in proxies:
             # If the class schema has already arrived in the past, then we
             # should take no further action. We don't expect the schema of a
             # class on a running server to change. Device _instances_, however,
             # will change, but anyhow don't arrive in this handler.
-            return None
-
-        if len(schema.hash) > 0:
+            if len(proxy.binding.value) > 0:
+                continue
             build_binding(schema, existing=proxy.binding)
             apply_default_configuration(proxy.binding)
-
-        return proxy
 
     def device_config_updated(self, device_id, config):
         """Called when a `deviceConfiguration` message is received from the
