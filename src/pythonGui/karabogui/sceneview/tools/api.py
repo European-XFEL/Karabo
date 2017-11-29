@@ -8,4 +8,5 @@ from .clipboard import (SceneCopyAction, SceneCutAction, SceneDeleteAction,
                         SceneSelectAllAction)
 from .drawing import (LineSceneTool, RectangleSceneTool, SceneLinkTool,
                       TextSceneTool)
+from .scenedndhandler import ConfigurationDropHandler
 from .selection import BoxSelectionTool, SceneSelectionTool
