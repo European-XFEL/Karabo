@@ -26,7 +26,7 @@ namespace karabo {
     namespace core {
 
 
-        DeviceClient::DeviceClient(const std::string& brokerType, const karabo::util::Hash& brokerConfiguration)
+        DeviceClient::DeviceClient(const std::string& instanceId)
             : m_internalSignalSlotable()
             , m_signalSlotable()
             , m_isShared(false)
@@ -37,7 +37,7 @@ namespace karabo {
             , m_signalsChangedInterval(-1)
             , m_loggerMapCached(false) {
 
-            std::string ownInstanceId = generateOwnInstanceId();
+            const std::string ownInstanceId(instanceId.empty() ? generateOwnInstanceId() : instanceId);
             Hash instanceInfo;
             instanceInfo.set("type", "client");
             instanceInfo.set("lang", "c++");
@@ -46,8 +46,7 @@ namespace karabo {
             instanceInfo.set("host", net::bareHostName());
             instanceInfo.set("status", "ok");
             m_internalSignalSlotable = karabo::xms::SignalSlotable::Pointer(new SignalSlotable(ownInstanceId,
-                                                                                               brokerType,
-                                                                                               brokerConfiguration,
+                                                                                               "JmsConnection", Hash(),
                                                                                                60, instanceInfo));
             m_internalSignalSlotable->start();
 
@@ -486,7 +485,10 @@ namespace karabo {
                 }
             }
 
-            // Not found, request and cache it
+
+            // Not found, request and cache it. Better ensure/establish connection _before_ requesting.
+            // Otherwise we might miss updates in between.
+            stayConnected(instanceId); // connect synchronously (if not yet connected...)
             // Request schema
             Schema schema;
             try {
@@ -513,7 +515,25 @@ namespace karabo {
                 }
             }
 
-            m_signalSlotable.lock()->requestNoWait(instanceId, "slotGetSchema", "", "_slotSchemaUpdated", false);
+            // We cannot just requestNoWait 'slotGetSchema', because '_slotSchemaUpdated' will cache the Schema in
+            // m_runtimeSystemDescription. But if we cache, we also have to connect for updates.
+            // Disadvantage is that 'stayConnected' also connects for 'signal[State]Changed' which could be noisy.
+            // But usually no-one needs just the schema without the properties as well...
+            auto weakSigSlotPtr = m_signalSlotable;
+            // Capturing the member variable would capture a bare 'this' - which we want to avoid and thus capture a copy.
+            auto successHandler = [weakSigSlotPtr, instanceId] () {
+                karabo::xms::SignalSlotable::Pointer p = weakSigSlotPtr.lock();
+                if (p) p->requestNoWait(instanceId, "slotGetSchema", "", "_slotSchemaUpdated", false);
+            };
+            auto failureHandler = [instanceId] () {
+                try {
+                    throw; // to get access to the original exception
+                } catch (const std::exception& e) {
+                    KARABO_LOG_FRAMEWORK_WARN << "getDeviceSchemaNoWait failed to connect to '" << instanceId << "': " << e.what();
+                }
+            };
+            stayConnected(instanceId, successHandler, failureHandler);
+
             return Schema();
         }
 
@@ -522,15 +542,13 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "_slotSchemaUpdated";
             {
                 boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-                string path(findInstance(deviceId));
+                const string path(findInstance(deviceId));
                 if (path.empty()) {
                     KARABO_LOG_FRAMEWORK_WARN << "got schema for unknown instance '" << deviceId << "'.";
                     return;
                 }
                 m_runtimeSystemDescription.set(path + ".fullSchema", schema);
-
-                path += ".activeSchema";
-                if (m_runtimeSystemDescription.has(path)) m_runtimeSystemDescription.erase(path);
+                m_runtimeSystemDescription.erase(path + ".activeSchema");
             }
             if (m_schemaUpdatedHandler) m_schemaUpdatedHandler(deviceId, schema);
         }
@@ -1498,19 +1516,18 @@ if (nodeData) {\
                                 p->disconnect(instanceId, "signalStateChanged", "", "_slotChanged");
                                 p->disconnect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated");
 
-                                const std::string path("device." + instanceId + ".configuration");
-                                // Since we stopped listening, remove configuration from system description.
-                                this->eraseFromRuntimeSystemDescription(path);
+                                // Since we stopped listening, remove configuration and schema from system description.
+                                const std::string path("device." + instanceId);
+                                this->eraseFromRuntimeSystemDescription(path + ".configuration");
+                                this->eraseFromRuntimeSystemDescription(path + ".fullSchema");
+                                this->eraseFromRuntimeSystemDescription(path + ".activeSchema");
                             }
                         }
                     }
                     boost::this_thread::sleep(boost::posix_time::seconds(1));
-                } catch (const Exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Aging thread encountered an exception: " << e;
-                    // Aging is essential, so go on. Wait a little in case of repeating error conditions.
-                    boost::this_thread::sleep(boost::posix_time::seconds(5));
                 } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Aging thread encountered system exception: " << e.what();
+                    KARABO_LOG_FRAMEWORK_ERROR << "Aging thread encountered an exception: " << e.what();
+                    // Aging is essential, so go on. Wait a little in case of repeating error conditions.
                     boost::this_thread::sleep(boost::posix_time::seconds(5));
                 } catch (...) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception encountered in aging thread";

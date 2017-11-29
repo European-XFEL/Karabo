@@ -8,13 +8,14 @@ import weakref
 from karabo.common.states import State
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
-    waitUntilNew, waitUntil, waitWhile, setWait, setNoWait, getDevice,
+    call, waitUntilNew, waitUntil, waitWhile, setWait, setNoWait, getDevice,
     executeNoWait, updateDevice, Queue, connectDevice, lock)
 from karabo.middlelayer_api.device_server import KaraboStream
 from karabo.middlelayer_api.exceptions import KaraboError
 from karabo.middlelayer_api.hash import Int32 as Int, Slot
 from karabo.middlelayer_api.macro import Macro
 from karabo.middlelayer_api.schema import Configurable, Node
+from karabo.middlelayer_api.signalslot import slot
 from karabo.middlelayer_api.synchronization import background, sleep
 
 from .eventloop import DeviceTest, sync_tst, async_tst
@@ -25,9 +26,11 @@ class Superslot(Slot):
     def method(self, device):
         device.value = 22
 
+
 class MyNode(Configurable):
     value = Int(defaultValue=7)
     counter = Int(defaultValue=-1)
+
 
 class Remote(Device):
     value = Int(defaultValue=7)
@@ -47,6 +50,21 @@ class Remote(Device):
     @coroutine
     def changeit(self):
         self.value -= 4
+
+    @Slot()
+    @coroutine
+    def start(self):
+        self.status = "Started"
+
+    @Slot()
+    @coroutine
+    def stop(self):
+        self.status = "Stopped"
+
+    @slot
+    def setStatus(self, token):
+        self.status = token
+        return token
 
     @Slot()
     @coroutine
@@ -300,6 +318,22 @@ class Tests(DeviceTest):
             sys.stdout = sys.stdout.base
 
     @sync_tst
+    def test_call(self):
+        """test calling a slot"""
+        with getDevice("remote") as d:
+            d.value = 0
+            self.assertEqual(d.value, 0)
+            call("remote", "changeit")
+            self.assertEqual(d.value, -4)
+
+    @sync_tst
+    def test_call_param(self):
+        """test calling a slot with a parameter"""
+        h = call("remote", "setStatus", "Token")
+        self.assertEqual(self.remote.status, "Token")
+        self.assertEqual(h, "Token")
+
+    @sync_tst
     def test_queue(self):
         """test change queues of properties"""
         with getDevice("remote") as d:
@@ -316,7 +350,7 @@ class Tests(DeviceTest):
         """test that errors are properly logged and error functions called"""
         self.remote.done = False
         with self.assertLogs(logger="local", level="ERROR"), \
-                (yield from getDevice("local")) as d,\
+                (yield from getDevice("local")) as d, \
                 self.assertRaises(KaraboError):
             yield from d.error()
         self.assertTrue(self.remote.done)
@@ -411,6 +445,7 @@ class Tests(DeviceTest):
             proxy = yield from getDevice("moriturus")
             yield from a.slotKillDevice()
             return proxy
+
         proxy = background(starter()).wait()
         with self.assertRaisesRegex(KaraboError, "died"):
             proxy.count()

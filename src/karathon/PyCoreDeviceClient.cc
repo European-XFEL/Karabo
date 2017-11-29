@@ -22,12 +22,12 @@ namespace bp = boost::python;
 void exportPyCoreDeviceClient() {
 
     bp::class_<DeviceClient, boost::noncopyable > ("DeviceClientBase")
-            .def(bp::init<const string&, const Hash&>())
+            .def(bp::init<const string&>())
             ;
 
     bp::class_<DeviceClientWrap, bp::bases<DeviceClient>, boost::noncopyable > ("DeviceClient")
 
-            .def(bp::init<const string&, const Hash&>())
+            .def(bp::init<const string&>())
             .def(bp::init<boost::shared_ptr<SignalSlotableWrap>& >())
 
             .def("login", &DeviceClient::login)

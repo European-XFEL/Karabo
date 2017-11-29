@@ -109,6 +109,12 @@ def _parse_date(date):
 
 
 @synchronize
+def call(device, target, *args):
+    """Call a target slot from a device"""
+    return (yield from get_instance().call(device, target, *args))
+
+
+@synchronize
 def _getLogReaderId(deviceId):
     instance = get_instance()
     did = "DataLogger-{}".format(deviceId)

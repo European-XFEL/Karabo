@@ -20,7 +20,7 @@ from ..api import (
     VectorUint8Binding, VectorUint16Binding, VectorUint32Binding,
     VectorUint64Binding,
     apply_configuration, apply_default_configuration, build_binding,
-    extract_attribute_modifications, extract_configuration,
+    extract_attribute_modifications, extract_configuration, has_modifications,
     KARABO_SCHEMA_DEFAULT_VALUE,
     KARABO_SCHEMA_METRIC_PREFIX_ENUM, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
     KARABO_SCHEMA_UNIT_ENUM, KARABO_SCHEMA_UNIT_SYMBOL
@@ -54,7 +54,9 @@ def test_data_files():
         with open(config_filename, 'rb') as fp:
             config = decodeBinary(fp.read())
 
+        assert not has_modifications(binding)
         apply_configuration(config, binding, remember_modification=True)
+        assert has_modifications(binding)
         extracted = extract_configuration(binding)
 
         # Check that the configuration was applied

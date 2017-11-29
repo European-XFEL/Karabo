@@ -184,6 +184,27 @@ def extract_sparse_configurations(proxies, devices=None):
     return devices
 
 
+def has_modifications(binding):
+    """Returns True if a binding contains any modified values."""
+    assert isinstance(binding, BindingRoot)
+
+    def _iter_binding(node, base=''):
+        _node_types = (ChoiceOfNodesBinding, NodeBinding)
+        namespace = node.value
+        base = base + '.' if base else ''
+        for name in namespace:
+            subnode = getattr(namespace, name)
+            if isinstance(subnode, _node_types):
+                yield from _iter_binding(subnode, base=base + name)
+            elif not isinstance(subnode, SlotBinding):
+                yield subnode
+
+    for node in _iter_binding(binding):
+        if node.modified:
+            return True
+    return False
+
+
 def _get_binding_value(binding):
     """Extract the value from a single binding instance."""
     if isinstance(binding, ListOfNodesBinding):
