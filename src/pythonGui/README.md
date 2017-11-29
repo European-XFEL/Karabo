@@ -25,8 +25,8 @@ Tasks
 - [ ] Port the Scene [LARGE]:
     - [X] Port BaseWidgetContainer into WidgetContainer (started; refactor/scene-base branch)
     - [X] Remove the widget wrappers!
-    - [ ] Port scene building
-        - [ ] Use the binding controller registry instead of boilerplate mappings
+    - [X] Port scene building
+        - [X] Use the binding controller registry instead of boilerplate mappings
     - [ ] Port ConfigurationDropHandler
     - [ ] Port BoxSelectionTool
     - [ ] Port WidgetSceneHandler (widget selection menu)
