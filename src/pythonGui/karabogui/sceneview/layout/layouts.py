@@ -3,7 +3,6 @@
 # Created on June 6, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
 from PyQt4.QtCore import QRect, QSize
 from PyQt4.QtGui import QBoxLayout, QGridLayout, QLayout, QWidgetItem
 
