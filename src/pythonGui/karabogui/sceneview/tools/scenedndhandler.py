@@ -12,7 +12,7 @@ from traits.api import ABCHasStrictTraits
 
 from karabo.common.scenemodel.api import BoxLayoutModel, LabelModel
 from karabogui.controllers.registry import (
-    get_compatible_controllers, _get_class_trait, _get_scene_model_class)
+    get_compatible_controllers, get_class_const_trait, get_scene_model_class)
 from karabogui.sceneview.widget.utils import get_proxy
 
 _STACKED_WIDGET_OFFSET = 30
@@ -80,10 +80,10 @@ class ConfigurationDropHandler(SceneDnDHandler):
         layout_model.children.append(label_model)
 
         def create_model(klass, key, layout_model):
-            model_klass = _get_scene_model_class(klass)
+            model_klass = get_scene_model_class(klass)
             model = model_klass(keys=[key])
             if hasattr(model, 'klass'):
-                model.klass = _get_class_trait(klass, '_klassname')
+                model.klass = get_class_const_trait(klass, '_klassname')
             layout_model.children.append(model)
 
         # Add the display and editable widgets, as needed
