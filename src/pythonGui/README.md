@@ -20,11 +20,11 @@ Tasks
     - [ ] Port DeviceInstanceController
     - [ ] Port MacroController
 
-- [ ] Move the Widget Controllers
+- [X] Move the Widget Controllers
 
 - [ ] Port the Scene [LARGE]:
-    - [ ] Port BaseWidgetContainer into WidgetContainer (started; refactor/scene-base branch)
-    - [ ] Remove the widget wrappers!
+    - [X] Port BaseWidgetContainer into WidgetContainer (started; refactor/scene-base branch)
+    - [X] Remove the widget wrappers!
     - [ ] Port scene building
         - [ ] Use the binding controller registry instead of boilerplate mappings
     - [ ] Port ConfigurationDropHandler
