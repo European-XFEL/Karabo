@@ -1,5 +1,5 @@
 from PyQt4.QtGui import QLabel
-from traits.api import Dict, Instance, Int, Str, on_trait_change
+from traits.api import Dict, Instance, Int, Str
 
 from karabo.common.api import DeviceStatus
 from karabo.common.scenemodel.api import BaseWidgetObjectData
@@ -46,18 +46,16 @@ def _define_binding_classes():
         display_names = Dict
 
         def add_proxy(self, proxy):
+            self._set_display_name(proxy)
             return True
+
+        def binding_update(self, proxy):
+            self._set_display_name(proxy)
 
         def create_widget(self, parent):
             return QLabel(parent)
 
-        @on_trait_change('proxies.binding')
-        def _binding_update(self, obj, name, new):
-            if name == 'proxies':
-                proxy = new[-1]
-            elif name == 'binding':
-                proxy = obj
-
+        def _set_display_name(self, proxy):
             binding = proxy.binding
             if binding is not None:
                 name = binding.attributes.get(KARABO_SCHEMA_DISPLAYED_NAME, '')
@@ -75,9 +73,8 @@ def _define_binding_classes():
         def create_widget(self, parent):
             return QLabel(parent)
 
-        @on_trait_change('proxies:value')
-        def _value_update(self, value):
-            self.widget.setText(value)
+        def value_update(self, proxy):
+            self.widget.setText(proxy.value)
 
     @register_binding_controller(klassname='Mono', binding_type=StringBinding)
     class SingleBindingController(BaseBindingController):
@@ -85,20 +82,18 @@ def _define_binding_classes():
         disp_name = Str
         deferred = Int(0)
 
+        def binding_update(self, proxy):
+            attrs = proxy.binding.attributes
+            self.disp_name = attrs.get(KARABO_SCHEMA_DISPLAYED_NAME)
+
         def create_widget(self, parent):
             return QLabel(parent)
 
         def deferred_update(self):
             self.deferred += 1
 
-        @on_trait_change('proxy.binding')
-        def _binding_update(self, binding):
-            attrs = binding.attributes
-            self.disp_name = attrs.get(KARABO_SCHEMA_DISPLAYED_NAME)
-
-        @on_trait_change('proxy:value')
-        def _value_update(self, value):
-            self.widget.setText(self.disp_name + value)
+        def value_update(self, proxy):
+            self.widget.setText(self.disp_name + proxy.value)
 
     return {
         'DeviceController': DeviceController,

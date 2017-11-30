@@ -1,5 +1,6 @@
 from PyQt4.QtGui import QWidget
-from traits.api import HasStrictTraits, Bool, Instance, List, Property
+from traits.api import (
+    HasStrictTraits, Bool, Instance, List, Property, on_trait_change)
 
 from karabo.common.scenemodel.api import BaseWidgetObjectData
 from karabogui import background
@@ -36,6 +37,13 @@ class BaseBindingController(HasStrictTraits):
         """
         raise NotImplementedError
 
+    def binding_update(self, proxy):
+        """Implemented by subclasses to receive notifications that the
+        `binding` trait of a proxy attached to the controller has been updated.
+
+        OPTIONAL: Not all widgets care when their bindings change.
+        """
+
     def create_widget(self, parent):
         """Implemented by subclasses to create the widget needed to visualize
         a binding.
@@ -60,7 +68,14 @@ class BaseBindingController(HasStrictTraits):
     def set_read_only(self, readonly):
         """Implemented by subclasses to notify a widget of its read-only status.
 
-        OPTIONAL: (if read_only=False passed to register_binding_controller)
+        OPTIONAL: (if can_edit=True passed to register_binding_controller)
+        """
+
+    def value_update(self, proxy):
+        """Implemented by subclasses to receive notifications that the
+        data value in a proxy attached to the controller has been updated.
+
+        "OPTIONAL": Not all widgets care when their values change, but most do.
         """
 
     # -------------------------------------------------------------------------
@@ -152,3 +167,33 @@ class BaseBindingController(HasStrictTraits):
 
     def _get_proxies(self):
         return (self.proxy,) + tuple(self._additional_proxies)
+
+    @on_trait_change('proxy:binding,_additional_proxies:binding',
+                     post_init=True)
+    def _proxy_binding_update(self, proxy, name, binding):
+        # One of the attached proxies got a new binding which is not None
+        if binding is not None:
+            self.binding_update(proxy)
+
+    @on_trait_change('proxies.binding.value')
+    def _proxy_value_update(self, obj, name, new):
+        if name != 'value':
+            return
+
+        try:
+            # One of the attached proxies got a new value on its binding
+            proxy = [p for p in self.proxies if p.binding is obj][0]
+            self.value_update(proxy)
+        except IndexError:
+            pass
+
+    def _widget_changed(self, new):
+        """Tell the controller about its proxies whenever it gets a new widget.
+        """
+        if new is None:
+            return
+
+        for proxy in self.proxies:
+            if proxy.binding is None:
+                continue
+            self.binding_update(proxy)
