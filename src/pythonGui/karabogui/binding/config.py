@@ -22,6 +22,8 @@ def apply_configuration(config, binding, remember_modification=False,
     assert isinstance(namespace, BindingNamespace)
 
     for key, value, attrs in config.iterall():
+        if key not in namespace:
+            continue
         node = getattr(namespace, key)
         if isinstance(value, Hash) and isinstance(node, _node_types):
             apply_configuration(value, node)

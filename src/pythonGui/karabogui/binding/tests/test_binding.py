@@ -110,6 +110,20 @@ def test_default_values():
     assert binding.value.b.value == 'c'
 
 
+def test_apply_configuration():
+    schema = get_all_props_schema()
+    binding = build_binding(schema)
+
+    config = Hash('a', False)
+    apply_configuration(config, binding)
+    assert not binding.value.a.value
+
+    config = Hash('not', 'exist')
+    apply_configuration(config, binding)
+    # Non exist property is ignored
+    assert 'not' not in binding.value
+
+
 def test_attribute_modification():
     schema = get_all_props_schema()
     binding = build_binding(schema)
