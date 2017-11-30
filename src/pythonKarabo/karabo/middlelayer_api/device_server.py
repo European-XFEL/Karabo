@@ -332,12 +332,14 @@ class MiddleLayerDeviceServer(DeviceServerBase):
     @coslot
     def slotKillServer(self):
         if self.deviceInstanceMap:
+            # first check if there are device instances to be removed
             done, pending = yield from wait(
                 [d.slotKillDevice() for d in self.deviceInstanceMap.values()],
                 timeout=10)
 
             if pending:
                 self.logger.warning("some devices could not be killed")
+        # then kill the server
         yield from super(MiddleLayerDeviceServer, self).slotKillServer()
 
     def addChild(self, deviceId, child):
