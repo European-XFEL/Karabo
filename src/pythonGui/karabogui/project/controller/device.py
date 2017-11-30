@@ -29,6 +29,9 @@ from karabogui.topology.api import ProjectDeviceInstance
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 from .server import DeviceServerController
 
+_NO_CONFIG_STATUS = (DeviceStatus.NOPLUGIN, DeviceStatus.NOSERVER,
+                     DeviceStatus.REQUESTED)
+
 
 class DeviceInstanceController(BaseProjectGroupController):
     """ A wrapper for DeviceInstanceModel objects
@@ -47,6 +50,7 @@ class DeviceInstanceController(BaseProjectGroupController):
                                                DeviceServerController)
         server_online = server_controller.online
         proj_device_online = self.project_device.online
+        proj_device_status = self.project_device.proxy.status
 
         edit_action = QAction('Edit', menu)
         edit_action.triggered.connect(partial(self._edit_device,
@@ -59,7 +63,9 @@ class DeviceInstanceController(BaseProjectGroupController):
         delete_action.triggered.connect(partial(self._delete_device,
                                                 project_controller))
         instantiate_action = QAction('Instantiate', menu)
-        instantiate_action.setEnabled(server_online and not proj_device_online)
+        can_instantiate = (server_online and not proj_device_online and
+                           proj_device_status not in _NO_CONFIG_STATUS)
+        instantiate_action.setEnabled(can_instantiate)
         instantiate_action.triggered.connect(partial(self._instantiate_device,
                                                      project_controller))
         shutdown_action = QAction('Shutdown', menu)
@@ -260,7 +266,7 @@ class DeviceInstanceController(BaseProjectGroupController):
 
         status = self.project_device.proxy.status
         online = self.project_device.online
-        if status in (DeviceStatus.NOPLUGIN, DeviceStatus.NOSERVER) or online:
+        if status in _NO_CONFIG_STATUS or online:
             config_menu.setEnabled(False)
 
         return config_menu
