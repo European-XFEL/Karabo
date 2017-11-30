@@ -69,8 +69,10 @@ class DisplayIconset(BaseBindingController):
         widget.addAction(qaction)
         return widget
 
-    @on_trait_change('proxy:value,xml', post_init=True)
-    def _update_widget(self):
+    def value_update(self, proxy):
+        self._xml_changed()
+
+    def _xml_changed(self):
         if self.widget is None:
             return
 

@@ -59,19 +59,19 @@ class SingleBit(BaseBindingController):
     def set_read_only(self, ro):
         self._internal_widget.setEnabled(not ro)
 
-    @on_trait_change('proxy:value,model.invert,model.bit', post_init=True)
-    def _value_update(self):
-        if self.proxy.binding is None:
-            return
-
-        value = (self.proxy.value >> self.model.bit) & 1 != 0
+    def value_update(self, proxy):
+        value = (proxy.value >> self.model.bit) & 1 != 0
         value = not value if self.model.invert else value
 
         color = (STATE_COLORS[State.ACTIVE] if value
                  else STATE_COLORS[State.PASSIVE])
         style = self._style_sheet.format(color)
         self._internal_widget.setStyleSheet(style)
-        self.widget.update_label(self.proxy)
+        self.widget.update_label(proxy)
+
+    @on_trait_change('model.invert,model.bit', post_init=True)
+    def _model_update(self):
+        self.value_update(self.proxy)
 
     @pyqtSlot()
     def _on_change_bit(self):
