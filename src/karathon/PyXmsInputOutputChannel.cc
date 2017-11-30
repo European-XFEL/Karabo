@@ -24,12 +24,12 @@ namespace karathon {
         using namespace karabo::xms;
 
         if (obj.is_none()) {
-            boost::shared_ptr<ImageData > self(new ImageData());
+            auto self = boost::make_shared<ImageData>();
             return self;
         } else {
             PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
             const NDArray ndarray = Wrapper::fromPyArrayToNDArray(arr);
-            boost::shared_ptr<ImageData > self(new ImageData(ndarray, dimensions, encoding, bitsPerPixel));
+            auto self = boost::make_shared<ImageData>(ndarray, dimensions, encoding, bitsPerPixel);
             return self;
         }
     }
