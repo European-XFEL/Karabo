@@ -50,7 +50,7 @@ def get_model_controller(scene_model):
 
     will_edit = scene_model.parent_component != 'DisplayComponent'
     controller_klass = getattr(scene_model, 'klass', '')
-    klasses = _controller_models.get(type(scene_model))
+    klasses = _controller_models.get(type(scene_model), [])
 
     if controller_klass != '':
         # If a class name is specified by the model, use that
