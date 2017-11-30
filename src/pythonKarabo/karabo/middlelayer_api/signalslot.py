@@ -241,11 +241,15 @@ class SignalSlotable(Configurable):
         return Hash("heartbeatInterval", self.heartbeatInterval.value)
 
     def _register_slots(self):
+        """Register all available slots on the broker
+        """
         for k in dir(self.__class__):
             value = getattr(self, k, None)
             desc = getattr(self.__class__, k, None)
+            # internal slots
             if callable(value) and hasattr(value, "slot"):
                 self._ss.register_slot(k, value)
+            # public slots
             elif isinstance(desc, Descriptor):
                 for name, slot in desc.allDescriptors():
                     if isinstance(slot, Slot):
@@ -259,6 +263,7 @@ class SignalSlotable(Configurable):
             yield from self._assert_name_unique()
             self._ss.notify_network(self._initInfo())
             if server is not None:
+                # add deviceId to the instance map of the server
                 server.addChild(self.deviceId, self)
             yield from super(SignalSlotable, self)._run(**kwargs)
             yield from get_event_loop().run_coroutine_or_thread(
@@ -286,6 +291,8 @@ class SignalSlotable(Configurable):
         return (yield from self._ss.request(device, target, *args))
 
     def stopEventLoop(self):
+        """Method called by the device server to stop the event loop
+        """
         get_event_loop().stop()
 
     @slot
@@ -317,6 +324,8 @@ class SignalSlotable(Configurable):
         self._ss.updateInstanceInfo(info)
 
     def update(self):
+        """Update via sending a bulk hash on the network
+        """
         if not self._sethash:
             return
         h = Hash()
