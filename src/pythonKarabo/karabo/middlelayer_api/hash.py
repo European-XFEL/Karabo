@@ -8,6 +8,7 @@ The C++ types are mostly implemented by using the corresponding numpy type.
 from asyncio import async, coroutine, get_event_loop
 import base64
 from collections import OrderedDict
+from collections.abc import Iterable
 from enum import Enum
 from functools import partial, wraps
 import logging
@@ -1443,7 +1444,7 @@ class HashElement(object):
         if isinstance(other, HashElement):
             def _equal(d0, d1):
                 ret = (d0 == d1)
-                return ret if type(ret) is bool else all(ret)
+                return all(ret) if isinstance(ret, Iterable) else ret
             return (_equal(self.data, other.data) and
                     _equal(self.attrs, other.attrs))
         return super().__eq__(other)
