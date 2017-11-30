@@ -6,6 +6,7 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QApplication, QMessageBox, QPixmap, QSplashScreen
 
 from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.controllers.util import populate_controller_registry
 from karabogui.singletons.api import (
     get_manager, get_network, get_panel_wrangler)
 
@@ -39,7 +40,11 @@ def init_gui(app, splash):
     import numpy
 
     numpy.set_printoptions(suppress=True, threshold=10)
+
+    # Load the icons
     icons.init()
+    # Load the sceneview widget controllers
+    populate_controller_registry()
 
     app.setStyleSheet("QPushButton { text-align: left; padding: 5px; }")
 
