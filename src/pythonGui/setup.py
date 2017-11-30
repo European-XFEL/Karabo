@@ -83,7 +83,6 @@ if __name__ == '__main__':
         'url': 'http://karabo.eu',
         'packages': find_packages(),
         'package_data': {
-            "karabo_gui.binding.tests": ["data/*.config", "data/*.schema"],
             "karabo_gui.configurator.dialog": ["*.ui"],
             "karabo_gui.dialogs": ["*.ui"],
             "karabo_gui.displaywidgets": ["*.svg", "*.ui"],
