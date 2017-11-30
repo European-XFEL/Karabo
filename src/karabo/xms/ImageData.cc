@@ -11,10 +11,37 @@
 #include "karabo/util/ToSize.hh"
 #include "karabo/util/Types.hh"
 
+#include <climits>
+
 namespace karabo {
     namespace xms {
 
         using namespace karabo::util;
+
+
+        bool Encoding::isIndexable(int encoding) {
+            switch (encoding) {
+                case Encoding::UNDEFINED:
+                    return false;
+                case Encoding::GRAY:
+                case Encoding::RGB:
+                case Encoding::RGBA:
+                case Encoding::BGR:
+                case Encoding::BGRA:
+                case Encoding::CMYK: // ?
+                case Encoding::YUV: // ?
+                case Encoding::BAYER:
+                    return true;
+                case Encoding::JPEG:
+                case Encoding::PNG:
+                case Encoding::BMP:
+                case Encoding::TIFF:
+                    return false;
+                default:
+                    throw KARABO_LOGIC_EXCEPTION("Encoding " + karabo::util::toString(encoding) + " invalid.");
+                    return false; // pleasing the compiler
+            }
+        }
 
 
         void ImageData::expectedParameters(karabo::util::Schema& s) {
@@ -77,20 +104,37 @@ namespace karabo {
                              const int bitsPerPixel) {
 
             setData(data);
-            setDimensions(dims);
-            setEncoding(encoding);
-            int bitsPerPixel_intern = bitsPerPixel;
-            if (bitsPerPixel_intern <= 0) {
-                const size_t numBytes = karabo::util::Types::to<karabo::util::ToSize>(data.getType());
-                bitsPerPixel_intern = numBytes * 8;
-            }
-            setBitsPerPixel(bitsPerPixel_intern);
 
-            int rank = dims.rank();
-            if (dims.size() == 0) {
-                rank = data.getShape().rank();
+            // Encoding might be deduced from data if not defined
+            Dims dataDims(data.getShape());
+            const int rank = dataDims.rank();
+            EncodingType finalEncoding = encoding;
+            if (encoding == Encoding::UNDEFINED) {
+                // No encoding info -> try to guess it from ndarray shape
+                if (rank == 2 || (rank == 3 && dataDims.x3() == 1)) {
+                    finalEncoding = Encoding::GRAY;
+                } else if (rank == 3 && dataDims.x3() == 3) {
+                    finalEncoding = Encoding::RGB;
+                } else if (rank == 3 && dataDims.x3() == 4) {
+                    finalEncoding = Encoding::RGBA;
+                }
             }
-            std::vector<unsigned long long> offsets(rank, 0);
+            setEncoding(finalEncoding);
+
+            // If Dims are not defined, they can be deduced from data as well in many cases
+            if (dims.size() == 0) {
+                if (Encoding::isIndexable(finalEncoding)) {
+                    dataDims = dims;
+                } else {
+                    throw KARABO_LOGIC_EXCEPTION("Dimensions must be supplied for encoded images");
+                }
+            }
+            setDimensions(dataDims);
+
+            // bits per pixel - may calculate default, depending on type
+            setBitsPerPixel((bitsPerPixel > 0 ? bitsPerPixel : defaultBitsPerPixel(finalEncoding, data)));
+
+            const std::vector<unsigned long long> offsets(dataDims.rank(), 0);
             setROIOffsets(karabo::util::Dims(offsets));
 
             setDimensionScales(std::string());
@@ -113,8 +157,9 @@ namespace karabo {
 
 
         void ImageData::setBitsPerPixel(const int bitsPerPixel) {
-            const size_t numBytes = karabo::util::Types::to<karabo::util::ToSize>(getData().getType());
-            set<int>("bitsPerPixel", std::min<int>(bitsPerPixel, numBytes * 8));
+            // maximum depends on type in data and on encoding
+            const int maxBitsPerPixel = defaultBitsPerPixel(getEncoding(), getData());
+            set<int>("bitsPerPixel", std::min<int>(bitsPerPixel, maxBitsPerPixel));
         }
 
 
@@ -142,7 +187,10 @@ namespace karabo {
                 rank = shape.size();
             } else {
                 // Make sure dimensions match the size of the data
-                get<NDArray>("pixels").setShape(dims); // throws if size does not fit
+                if (Encoding::isIndexable(getEncoding())) {
+                    // take care of consistency
+                    get<NDArray>("pixels").setShape(dims); // throws if size does not fit
+                }
                 set<std::vector<unsigned long long> >("dims", dims.toVector());
             }
             // In case the dimensionTypes were not yet set, inject a default here
@@ -209,5 +257,29 @@ namespace karabo {
             set<karabo::util::NDArray >("pixels", array);
         }
 
+
+        int ImageData::defaultBitsPerPixel(int encoding, const karabo::util::NDArray& data) {
+            const size_t numBytes = karabo::util::Types::to<karabo::util::ToSize>(data.getType());
+
+            int factor = 0;
+            switch (encoding) {
+                case Encoding::RGB:
+                case Encoding::BGR:
+                    // NDArray's Dims.x3 should be 3
+                    factor = 3;
+                    break;
+                case Encoding::RGBA:
+                case Encoding::BGRA:
+                    // NDArray's Dims.x3 should be 4
+                    factor = 4;
+                    break;
+                case Encoding::GRAY:
+                default:
+                    // FIXME: extend according to Andrea's comment
+                    // What about CMYK, YUV, BAYER, JPEG, ...?
+                    factor = 1;
+            }
+            return factor * numBytes * CHAR_BIT; // CHAR_BIT from <climits> - usually 8
+        }
     }
 }
