@@ -105,14 +105,16 @@ def test_choice_of_nodes_configuration():
     assert binding.value.con.value.one.value == "hello"
 
     # Pass a configuration containing a _NodeOne value
-    config = Hash("con", Hash("zero", "hello"))
-    with assert_raises(AttributeError):
-        apply_configuration(config, binding)
+    config = Hash("con", Hash("zero", "nope"))
+    apply_configuration(config, binding)
+    # Nothing happened here!
+    assert 'zero' not in binding.value.con.value
+    assert binding.value.con.value.one.value == "hello"
 
     # Choose _NodeOne, so it works this time.
     binding.value.con.value = '_NodeOne'
     apply_configuration(config, binding)
-    assert binding.value.con.value.zero.value == "hello"
+    assert binding.value.con.value.zero.value == "nope"
 
 
 def test_list_of_nodes_configuration():
