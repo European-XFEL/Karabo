@@ -550,14 +550,13 @@ class DisplayTrendline(BaseBindingController):
             self._plot.setAxisScale(QwtPlot.xBottom, start_secs, end_secs)
             self.update_later()
 
-    @on_trait_change('proxies.binding')
-    def _binding_update(self, obj, name, new):
+    def binding_update(self, proxy):
         # We only care about binding updates after the widget is initialized.
-        if self.widget is None or name != 'binding':
+        if self.widget is None:
             return
 
         # XXX: This is a bad idea with multiple curves!
-        self._plot.setAxisTitle(QwtPlot.yLeft, axis_label(obj))
+        self._plot.setAxisTitle(QwtPlot.yLeft, axis_label(proxy))
 
     def add_proxy(self, proxy):
         style, color = next(CURVE_ATTRS_GENERATOR)
@@ -572,20 +571,13 @@ class DisplayTrendline(BaseBindingController):
 
         return True
 
-    @on_trait_change('proxies.value')
-    def _value_update(self, obj, name, new):
+    def value_update(self, proxy):
         if self.widget is None:
             return
 
-        # We want to be called for `value` changes, but we also want the proxy
-        # object whose binding value changed
-        if name != 'value':
-            return
-
-        proxy = obj
-        timestamp = obj.binding.timestamp
+        timestamp = proxy.binding.timestamp
         t = timestamp.toTimestamp()
-        self._curves[proxy].add_point(new, t)
+        self._curves[proxy].add_point(proxy.value, t)
 
         t0 = self._plot.axisScaleDiv(QwtPlot.xBottom).lowerBound()
         t1 = self._plot.axisScaleDiv(QwtPlot.xBottom).upperBound()

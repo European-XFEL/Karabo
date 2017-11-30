@@ -1,7 +1,7 @@
 import os.path as op
 
 from PyQt4.QtGui import QLabel, QPixmap
-from traits.api import Instance, on_trait_change
+from traits.api import Instance
 
 from karabo.common.api import State
 from karabo.common.scenemodel.api import LampModel
@@ -35,11 +35,10 @@ class LampWidget(BaseBindingController):
     def create_widget(self, parent):
         widget = QLabel(parent)
         widget.setScaledContents(True)
-
         return widget
 
-    @on_trait_change('proxy:value')
-    def _value_update(self, value):
+    def value_update(self, proxy):
+        value = proxy.value
         if State(value).isDerivedFrom(State.CHANGING):
             self._set_lamp(STATE_LAMP_PATH[State.CHANGING])
         elif State(value).isDerivedFrom(State.ACTIVE):

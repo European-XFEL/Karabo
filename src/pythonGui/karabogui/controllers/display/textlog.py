@@ -8,7 +8,7 @@ from datetime import datetime
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (
     QFrame, QHBoxLayout, QPushButton, QVBoxLayout, QTextEdit)
-from traits.api import Instance, on_trait_change
+from traits.api import Instance
 
 from karabo.common.scenemodel.api import DisplayTextLogModel
 from karabogui import icons
@@ -64,11 +64,11 @@ class DisplayTextLog(BaseBindingController):
         self.log_widget.setStyleSheet(sheet)
         return widget
 
-    @on_trait_change('proxy:value')
-    def _value_update(self, value):
+    def value_update(self, proxy):
         # catch both None and empty strings
+        value = proxy.value
         if value:
-            self._write_log(value, self.proxy.binding.timestamp)
+            self._write_log(value, proxy.binding.timestamp)
 
     def _write_log(self, text, timestamp):
         dt = datetime.fromtimestamp(timestamp.toTimestamp())

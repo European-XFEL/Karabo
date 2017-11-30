@@ -3,7 +3,7 @@ import traceback
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QAction, QInputDialog, QLineEdit
-from traits.api import Callable, Dict, Instance, on_trait_change
+from traits.api import Callable, Dict, Instance
 
 from karabo.common.scenemodel.api import EvaluatorModel
 from karabogui import messagebox
@@ -53,12 +53,11 @@ class Evaluator(BaseBindingController):
         action.triggered.connect(self._change_expression)
         return widget
 
-    @on_trait_change('proxy:value')
-    def _value_update(self, value):
-        self.widget.update_label(self.proxy)
+    def value_update(self, proxy):
+        self.widget.update_label(proxy)
 
         try:
-            disp_value = "{}".format(self.function(value))
+            disp_value = "{}".format(self.function(proxy.value))
         except Exception as e:
             disp_value = traceback.format_exception_only(type(e), e)[0]
         self._internal_widget.setText(disp_value)
@@ -78,4 +77,4 @@ class Evaluator(BaseBindingController):
             return
 
         self.model.expression = text
-        self._value_update(self.proxy.value)
+        self.value_update(self.proxy)
