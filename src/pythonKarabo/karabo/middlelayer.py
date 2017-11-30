@@ -34,7 +34,7 @@ from .middlelayer_api.basetypes import (
 from .middlelayer_api.devicenode import DeviceNode
 from .middlelayer_api.exceptions import KaraboError
 from .middlelayer_api.hash import (
-    Attribute, Bool, Char, ComplexDouble, ComplexFloat, Descriptor,
+    Attribute, Bool, ByteArray, Char, ComplexDouble, ComplexFloat, Descriptor,
     Double, Enumable, Float, Hash, HashList,
     HashMergePolicy, HashType, Int16, Int32, Int64, Int8, Integer,
     Number, NumpyVector, Schema, SchemaHashType, Simple, Slot,

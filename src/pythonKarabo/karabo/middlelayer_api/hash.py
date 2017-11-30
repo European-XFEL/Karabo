@@ -897,6 +897,7 @@ class ByteArray(Vector):
 
     @classmethod
     def fromstring(cls, s):
+        # XXX: should return bytearray(base64.b64decode(s))
         return base64.b64decode(s)
 
     @classmethod
