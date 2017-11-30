@@ -137,6 +137,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         if isinstance(value, KaraboValue) and value.timestamp is None:
             value.timestamp = Timestamp()
         if isSet(value):
+            # calls the setChildValue of the signalslotable
             self.setChildValue(descriptor.key, value, descriptor)
         old = self.__dict__.get(descriptor.key)
         if isinstance(old, Configurable):
@@ -146,6 +147,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         self.__dict__[descriptor.key] = value
 
     def setChildValue(self, key, value, desc):
+        """Set all values in Nodes"""
         for parent, parentkey in self._parents.items():
             parent.setChildValue("{}.{}".format(parentkey, key), value, desc)
 
