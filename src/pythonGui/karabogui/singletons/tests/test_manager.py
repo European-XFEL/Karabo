@@ -448,5 +448,5 @@ class TestManager(GuiTestCase):
             manager = Manager()
 
             manager.handle_propertyHistory('bob', 'answer', [42])
-            expected_call = call.binding.publish_historic_data('answer', [42])
+            expected_call = call.publish_historic_data('answer', [42])
             assert device_proxy.method_calls[0] == expected_call

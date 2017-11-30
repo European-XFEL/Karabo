@@ -297,8 +297,7 @@ class Manager(QObject):
 
     def handle_propertyHistory(self, deviceId, property, data):
         device_proxy = self._topology.get_device(deviceId)
-        if device_proxy.binding:
-            device_proxy.binding.publish_historic_data(property, data)
+        device_proxy.publish_historic_data(property, data)
 
     # ---------------------------------------------------------------------
     # Current Project Interface

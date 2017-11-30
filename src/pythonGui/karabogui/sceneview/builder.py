@@ -16,10 +16,14 @@ _SCENE_OBJ_FACTORIES = {
     models.BoxLayoutModel: lambda m, p: BoxLayout(m, QT_BOX_LAYOUT_DIRECTION[m.direction]),  # noqa
     models.FixedLayoutModel: lambda m, p: GroupLayout(m),
     models.GridLayoutModel: lambda m, p: GridLayout(m),
+    models.LabelModel: LabelWidget,
     models.LineModel: lambda m, p: LineShape(model=m),
     models.PathModel: lambda m, p: PathShape(model=m),
     models.RectangleModel: lambda m, p: RectangleShape(model=m),
+    models.SceneLinkModel: SceneLinkWidget,
+    models.UnknownWidgetDataModel: UnknownWidget,
     models.UnknownXMLDataModel: lambda m, p: UnknownSvgWidget.create(m, parent=p),  # noqa
+    models.WorkflowItemModel: WorkflowItemWidget,
 }
 
 
