@@ -126,6 +126,8 @@ class PanelWrangler(QObject):
         if instance_id in self._instance_panels:
             return
         main_win = self.main_window
+        if main_win is None:
+            return
         panel = klass(instance_id)
         panel.signalPanelClosed.connect(self._on_tab_close)
         main_win.addPanel(panel, area_enum)
