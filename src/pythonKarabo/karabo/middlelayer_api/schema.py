@@ -147,7 +147,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         self.__dict__[descriptor.key] = value
 
     def setChildValue(self, key, value, desc):
-        """Noded setting of value"""
+        """Set all values in Nodes"""
         for parent, parentkey in self._parents.items():
             parent.setChildValue("{}.{}".format(parentkey, key), value, desc)
 
