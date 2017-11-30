@@ -8,7 +8,7 @@ from itertools import cycle
 from guiqwt.plot import CurveDialog
 from guiqwt.builder import make
 from numpy import arange
-from traits.api import Dict, Instance, on_trait_change
+from traits.api import Dict, Instance
 
 from karabo.common.scenemodel.api import DisplayPlotModel
 from karabogui.binding.api import VectorBinding, KARABO_SCHEMA_DISPLAYED_NAME
@@ -43,9 +43,9 @@ class DisplayPlot(BaseBindingController):
         self._plot.add_item(curve)
         return True
 
-    @on_trait_change('proxies:value')
-    def _replot(self, obj, name, new):
+    def value_update(self, proxy):
         if self._plot is None:
             return
-        self._curves[obj].set_data(arange(len(new)), new)
+        value = proxy.value
+        self._curves[proxy].set_data(arange(len(value)), value)
         self._plot.replot()
