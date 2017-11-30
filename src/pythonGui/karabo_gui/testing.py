@@ -5,10 +5,7 @@ import unittest
 from PyQt4.QtCore import QEventLoop
 from PyQt4.QtGui import QApplication
 
-from karabo.common.api import DeviceStatus
 from karabo_gui import icons
-from karabo_gui.binding.api import (
-    build_binding, DeviceClassProxy, DeviceProxy, PropertyProxy)
 import karabo_gui.singletons.api as singletons_mod
 
 
@@ -46,26 +43,6 @@ def assert_trait_change(obj, name):
         if len(events) == 0:
             msg = 'Expected change for trait "{}" was not observed!'
             raise AssertionError(msg.format(name))
-
-
-def get_property_proxy(schema, name, device_id='TestDevice'):
-    """Given a device schema and a property name, return a complete
-    PropertyProxy object with a `root_proxy` of type `DeviceProxy`.
-    """
-    binding = build_binding(schema)
-    root_proxy = DeviceProxy(binding=binding, device_id=device_id)
-    root_proxy.status = DeviceStatus.SCHEMA
-    return PropertyProxy(root_proxy=root_proxy, path=name)
-
-
-def get_class_property_proxy(schema, name):
-    """Given a device schema and a property name, return a complete
-    PropertyProxy object with a `root_proxy` of type `DeviceClassProxy`.
-    """
-    binding = build_binding(schema)
-    root = DeviceClassProxy(binding=binding, server_id='Test',
-                            status=DeviceStatus.OFFLINE)
-    return PropertyProxy(root_proxy=root, path=name)
 
 
 @contextlib.contextmanager
