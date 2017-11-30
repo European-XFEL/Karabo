@@ -8,8 +8,8 @@ from karabo.middlelayer import (
     Unit, decodeBinary
 )
 from ..api import (
-    BoolBinding, CharBinding, ChoiceOfNodesBinding, ComplexBinding,
-    FloatBinding, HashBinding,
+    BoolBinding, ByteArrayBinding, CharBinding, ChoiceOfNodesBinding,
+    ComplexBinding, FloatBinding, HashBinding,
     Int8Binding, Int16Binding, Int32Binding, Int64Binding,
     ListOfNodesBinding, NodeBinding, SchemaBinding, SlotBinding, StringBinding,
     Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
@@ -85,7 +85,7 @@ def test_complete_schema():
         'e1': VectorUint32Binding, 'f1': VectorUint64Binding,
         'g1': VectorUint8Binding, 'h1': NodeBinding,
         'i1': ChoiceOfNodesBinding, 'j1': ListOfNodesBinding,
-        'k1': SlotBinding,
+        'k1': SlotBinding, 'mm': ByteArrayBinding,
     }
 
     schema = get_all_props_schema()
@@ -122,6 +122,11 @@ def test_apply_configuration():
     apply_configuration(config, binding)
     # Non exist property is ignored
     assert 'not' not in binding.value
+
+    config = Hash('mm', b'foo')
+    # bytes type value is converted to bytearray by traits handler
+    apply_configuration(config, binding)
+    assert binding.value.mm.value == bytearray(b'foo')
 
 
 def test_attribute_modification():

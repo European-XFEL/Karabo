@@ -1,7 +1,7 @@
 import numpy as np
 
 from karabo.middlelayer import (
-    Bool, Char, ComplexDouble, ComplexFloat, Configurable,
+    Bool, ByteArray, Char, ComplexDouble, ComplexFloat, Configurable,
     Double, Float, HashType, Int16, Int32, Int64, Int8,
     SchemaHashType, Slot, String, UInt16, UInt32, UInt64, UInt8,
     VectorBool, VectorChar, VectorComplexDouble, VectorComplexFloat,
@@ -119,6 +119,7 @@ class AllProperties(Configurable):
     h1 = Node(_NodeOne)
     i1 = ChoiceOfNodes(Multi)
     j1 = ListOfNodes(Multi)
+    mm = ByteArray()
 
     @Slot(allowedStates=[State.INTERLOCKED, State.ACTIVE])
     def k1(self):
