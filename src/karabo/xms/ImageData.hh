@@ -50,6 +50,8 @@ namespace karabo {
                 BMP,
                 TIFF,
             };
+            /// True if encoding is such that one can index the underlying array
+            bool isIndexable(int encoding);
         }
 
         typedef Encoding::EncodingType EncodingType;
@@ -144,6 +146,8 @@ namespace karabo {
 
             void setHeader(const karabo::util::Hash & header);
 
+        private:
+            static int defaultBitsPerPixel(int encoding, const karabo::util::NDArray& data);
         };
 
         /**********************************************************************
