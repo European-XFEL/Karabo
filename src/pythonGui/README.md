@@ -35,7 +35,7 @@ Tasks
         - [X] Models
         - [X] Rendering
         - [X] [dis]connect_channels (WorkflowConnectionTool)
-    - [ ] Small fixups in SceneView
+    - [X] Small fixups in SceneView
     - [ ] EXTRA: Introduce a DeprecatedWidget
         - [ ] Remove Monitor
         - [ ] Remove Knob
