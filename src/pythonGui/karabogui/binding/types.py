@@ -1,6 +1,6 @@
 from traits.api import (
     HasStrictTraits, Array, Bool, Bytes, Complex, Dict, Event, Float, Instance,
-    List, Property, Range, String, Undefined
+    List, Property, Range, String, Trait, TraitHandler, Undefined
 )
 
 from karabo.middlelayer import (AccessLevel, AccessMode, Assignment, Hash,
@@ -137,8 +137,19 @@ class BoolBinding(BaseBinding):
     value = Bool
 
 
+class _ByteArrayHandler(TraitHandler):
+    """A trait handler to work around middlelater stupidity.
+    """
+    def validate(self, obj, name, value):
+        if isinstance(value, bytearray):
+            return value
+        elif isinstance(value, bytes):
+            return bytearray(value)
+        self.error(obj, name, value)
+
+
 class ByteArrayBinding(BaseBinding):
-    value = Instance(bytearray)
+    value = Trait(_ByteArrayHandler())
 
 
 class CharBinding(BaseBinding):
