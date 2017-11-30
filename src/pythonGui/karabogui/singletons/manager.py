@@ -11,7 +11,7 @@ from PyQt4.QtCore import QObject
 from PyQt4.QtGui import QMessageBox
 
 from karabo.common.api import State, DeviceStatus
-from karabo.middlelayer import Hash
+from karabo.middlelayer import AccessMode, Hash
 from karabogui.alarms.api import extract_alarms_data
 from karabogui.background import executeLater, Priority
 from karabogui.binding.api import (
@@ -91,12 +91,18 @@ class Manager(QObject):
                     yield subkey
 
         # XXX: Temporary fix - due to the state changes
-        # Old projects save all parameters, even the read only ones. This fix
+        # Old projects save all parameters, even invalid ones. This fix
         # removes them from the initial configuration to not stop the validator
         # from instantiating
         obsolete_paths = [pth for pth in _walk_config(config)
                           if pth not in schema.hash]
         for key in obsolete_paths:
+            config.erase(key)
+
+        readonly_paths = [pth for pth in _walk_config(config)
+                          if schema.hash[pth, "accessMode"] ==
+                          AccessMode.READONLY.value]
+        for key in readonly_paths:
             config.erase(key)
 
         # Compute a runtime schema from the configuration and an

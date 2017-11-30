@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import contextlib
 import sys
 import unittest
@@ -7,6 +8,10 @@ from PyQt4.QtGui import QApplication
 
 from karabo.common.api import Capabilities, DeviceStatus
 from karabo.middlelayer import AccessLevel, Hash
+from karabogui.alarms.api import (
+    ACKNOWLEDGEABLE, ALARM_HIGH, ALARM_ID, ALARM_NONE, ALARM_TYPE, DESCRIPTION,
+    DEVICE_ID, NEEDS_ACKNOWLEDGING, PROPERTY, TIME_OF_FIRST_OCCURENCE,
+    TIME_OF_OCCURENCE)
 from karabogui.binding.api import (
     build_binding, DeviceClassProxy, DeviceProxy, PropertyProxy)
 import karabogui.singletons.api as singletons_mod
@@ -29,6 +34,41 @@ class GuiTestCase(unittest.TestCase):
     def process_qt_events(self):
         # Give the event loop 10ms to process its events
         self.app.processEvents(QEventLoop.AllEvents, 10)
+
+
+def alarm_data():
+    data = OrderedDict()
+    data['entry1'] = {'uptype1': {
+            ALARM_ID: 0,
+            PROPERTY: 'choochability',
+            DESCRIPTION: 'choochability unsufficient',
+            ACKNOWLEDGEABLE: True,
+            ALARM_TYPE: ALARM_HIGH,
+            DEVICE_ID: 'Bobby',
+            NEEDS_ACKNOWLEDGING: True,
+            TIME_OF_OCCURENCE: '2017-04-20T10:32:22 UTC',
+            TIME_OF_FIRST_OCCURENCE: '2017-04-20T09:32:22 UTC'}}
+    data['entry2'] = {'uptype1': {
+            ALARM_ID: 1,
+            PROPERTY: 'choochness',
+            DESCRIPTION: 'choochness over 90000',
+            ACKNOWLEDGEABLE: False,
+            ALARM_TYPE: ALARM_HIGH,
+            DEVICE_ID: 'Jenny',
+            NEEDS_ACKNOWLEDGING: False,
+            TIME_OF_OCCURENCE: '2017-04-20T10:12:22 UTC',
+            TIME_OF_FIRST_OCCURENCE: '2017-04-20T09:12:22 UTC'}}
+    data['entry3'] = {'uptype1': {
+            ALARM_ID: 1,
+            PROPERTY: 'choochness',
+            DESCRIPTION: 'choochness over 90000',
+            ACKNOWLEDGEABLE: False,
+            ALARM_TYPE: ALARM_NONE,
+            DEVICE_ID: 'Frank',
+            NEEDS_ACKNOWLEDGING: False,
+            TIME_OF_OCCURENCE: '2017-04-20T10:12:22 UTC',
+            TIME_OF_FIRST_OCCURENCE: '2017-04-20T09:12:22 UTC'}}
+    return data
 
 
 @contextlib.contextmanager
