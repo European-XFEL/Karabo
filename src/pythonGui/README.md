@@ -34,7 +34,7 @@ Tasks
     - [X] Port the Workflow (pipeline connections)
         - [X] Models
         - [X] Rendering
-        - [ ] [dis]connect_channels
+        - [X] [dis]connect_channels (WorkflowConnectionTool)
     - [ ] Small fixups in SceneView
     - [ ] EXTRA: Introduce a DeprecatedWidget
         - [ ] Remove Monitor
