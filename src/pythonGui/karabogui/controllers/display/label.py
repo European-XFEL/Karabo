@@ -8,7 +8,7 @@ from numbers import Number
 from numpy import log10, number
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QFrame, QLabel
-from traits.api import Instance, Str, Tuple, on_trait_change
+from traits.api import Instance, Str, Tuple
 
 from karabo.common.scenemodel.api import DisplayLabelModel
 from karabogui.alarms.api import ALARM_COLOR, WARN_COLOR
@@ -56,11 +56,12 @@ class DisplayLabel(BaseBindingController):
         widget.setObjectName(objectName)
         return widget
 
-    @on_trait_change('proxy:value')
-    def _update_text(self, value):
-        self.widget.update_label(self.proxy)
+    def value_update(self, proxy):
+        self.widget.update_label(proxy)
 
-        binding = self.proxy.binding
+        binding = proxy.binding
+        value = binding.value
+
         self._check_alarms(binding, value)
 
         if isinstance(binding, StringBinding):

@@ -44,15 +44,14 @@ class DisplayColorBool(BaseBindingController):
         widget.addAction(logicAction)
         return widget
 
-    @on_trait_change('proxy:value,model.invert', post_init=True)
-    def _value_update(self):
-        binding = self.proxy.binding
+    def value_update(self, proxy):
+        binding = proxy.binding
         if None in (binding, self.widget):
             # We might get here when the scene model changes and the widget or
             # proxy is not yet ready.
             return
 
-        value = self.proxy.value
+        value = proxy.value
         if not self.model.invert:
             color_state = State.ACTIVE if value else State.PASSIVE
         else:
@@ -60,6 +59,11 @@ class DisplayColorBool(BaseBindingController):
 
         svg = self.icon.with_color(STATE_COLORS[color_state])
         self.widget.load(QByteArray(svg))
+
+    @on_trait_change('model.invert')
+    def _invert_update(self):
+        if self.proxy is not None:
+            self.value_update(self.proxy)
 
     @pyqtSlot()
     def logic_action(self):
