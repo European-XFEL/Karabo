@@ -10,8 +10,8 @@ import os.path
 
 from PyQt4.QtCore import Qt, pyqtSlot
 from PyQt4.QtGui import (
-    QAction, QActionGroup, QLabel, QMainWindow, QMenu, QSizePolicy, QSplitter,
-    QToolButton, QWidget, qApp
+    QAction, QActionGroup, QLabel, QMainWindow, QMenu, QMessageBox,
+    QSizePolicy, QSplitter, QToolButton, QWidget, qApp
 )
 
 from karabo.middlelayer import AccessLevel
@@ -23,7 +23,8 @@ from karabogui.events import (
 from karabogui.panels.api import (
     ConfigurationPanel, PanelContainer, LoggingPanel, NavigationPanel,
     ProjectPanel, ScriptingPanel)
-from karabogui.singletons.api import get_network
+from karabogui.singletons.api import (
+    get_db_conn, get_network, get_project_model)
 
 ACCESS_LEVELS = OrderedDict()
 ACCESS_LEVELS['Admin'] = AccessLevel.ADMIN
@@ -368,18 +369,17 @@ class MainWindow(QMainWindow):
     def _should_save_project_before_closing(self):
         """Asks for discard/save changes on modified project.
         """
-        # XXX: Temporarily disabled!
-        # project = get_project_model().root_model
-        # if project is None:
-        #     return False
-        # if project.modified or get_db_conn().is_writing():
-        #     ask = ('Unsaved changes on project \"<b>{}</b>\" will be '
-        #            'permanently lost.<br /> Continue action?'
-        #            .format(project.simple_name))
-        #     msg_box = QMessageBox(QMessageBox.Question, 'Unsaved project',
-        #                           ask, QMessageBox.Yes | QMessageBox.Cancel)
-        #     msg_box.setDefaultButton(QMessageBox.Cancel)
-        #     return msg_box.exec() != QMessageBox.Yes
+        project = get_project_model().root_model
+        if project is None:
+            return False
+        if project.modified or get_db_conn().is_writing():
+            ask = ('Unsaved changes on project \"<b>{}</b>\" will be '
+                   'permanently lost.<br /> Continue action?'
+                   .format(project.simple_name))
+            msg_box = QMessageBox(QMessageBox.Question, 'Unsaved project',
+                                  ask, QMessageBox.Yes | QMessageBox.Cancel)
+            msg_box.setDefaultButton(QMessageBox.Cancel)
+            return msg_box.exec() != QMessageBox.Yes
         return False
 
     # --------------------------------------
