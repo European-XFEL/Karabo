@@ -20,7 +20,7 @@ class BaseDeviceProxy(HasStrictTraits):
     # The root of the data binding
     binding = Instance(BindingRoot)
     # The root's `state` property, if existent
-    state_binding = Instance(BaseBinding, allow_none=True)
+    state_binding = Instance(BaseBinding)
     # ID of the server hosting this class
     server_id = String
     # True when the device is online
@@ -195,11 +195,11 @@ class PropertyProxy(HasStrictTraits):
     # Full 'key' of the property: <device ID>.<path>
     key = Property(String)
     # The binding for the property
-    binding = Instance(BaseBinding, allow_none=True)
+    binding = Instance(BaseBinding)
     # The value for the property (from the binding instance)
     value = Property(depends_on='binding.value')
     # Parent device or class proxy
-    root_proxy = Instance(BaseDeviceProxy)
+    root_proxy = Instance(BaseDeviceProxy, allow_none=False)
     # Potential parent path if `binding` is a child of a Pipeline Output
     pipeline_parent_path = String
     # Whether or not this property is currently visible in a scene
