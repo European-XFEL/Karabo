@@ -49,24 +49,13 @@ class FloatSpinBox(BaseBindingController):
         focus_policy = Qt.NoFocus if ro else Qt.StrongFocus
         self._internal_widget.setFocusPolicy(focus_policy)
 
-    def _widget_changed(self):
-        """Initialize the widget correctly for its binding"""
-        binding = self.proxy.binding
-        if binding is not None:
-            self._binding_update(binding)
-
-    @on_trait_change('proxy:binding')
-    def _binding_update(self, binding):
-        if self._internal_widget is None:
-            return
-
-        low, high = get_min_max(binding)
+    def binding_update(self, proxy):
+        low, high = get_min_max(proxy.binding)
         self._internal_widget.setRange(low, high)
 
-    @on_trait_change('proxy:value')
-    def _value_update(self, value):
-        self.widget.update_label(self.proxy)
-        self._internal_widget.setValue(value)
+    def value_update(self, proxy):
+        self.widget.update_label(proxy)
+        self._internal_widget.setValue(proxy.value)
 
     @on_trait_change('model:decimals')
     def _set_decimals(self, value):
