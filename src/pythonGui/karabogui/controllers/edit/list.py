@@ -1,6 +1,6 @@
 from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import QDialog, QHBoxLayout, QLineEdit, QToolButton, QWidget
-from traits.api import Instance, Int, on_trait_change
+from traits.api import Instance, Int
 
 from karabo.common.scenemodel.api import EditableListModel
 from karabogui import icons
@@ -48,8 +48,8 @@ class EditableList(BaseBindingController):
         tbEdit.clicked.connect(self._on_edit_clicked)
         self.layout.addWidget(tbEdit)
 
-    @on_trait_change('proxy:value')
-    def _value_update(self, value):
+    def value_update(self, proxy):
+        value = proxy.value
         with SignalBlocker(self._internal_widget):
             self._internal_widget.setText(','.join(str(v) for v in value))
         self._internal_widget.setCursorPosition(self.last_cursor_position)
