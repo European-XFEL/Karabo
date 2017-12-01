@@ -5,10 +5,13 @@
 #############################################################################
 from PyQt4.QtCore import QObject, pyqtSlot
 
+from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
+from karabogui import messagebox
 from karabogui.events import KaraboEventSender, register_for_broadcasts
 from karabogui.mainwindow import MainWindow, PanelAreaEnum
 from karabogui.panels.api import AlarmPanel, MacroPanel, ScenePanel
+from karabogui.singletons.api import get_project_model
 
 
 class PanelWrangler(QObject):
@@ -228,28 +231,25 @@ class PanelWrangler(QObject):
 def _find_scene_model(uuid):
     """Find a SceneModel which is already open in the project.
     """
-    return None
+    class _Visitor(object):
+        found = None
 
-    # XXX: Disabled for now!
-    # class _Visitor(object):
-    #     found = None
+        def __call__(self, obj):
+            if isinstance(obj, SceneModel):
+                if obj.uuid == uuid:
+                    self.found = obj
+                    return True
 
-    #     def __call__(self, obj):
-    #         if isinstance(obj, SceneModel):
-    #             if obj.uuid == uuid:
-    #                 self.found = obj
-    #                 return True
+    project = get_project_model().root_model
+    if project is None:
+        return None
 
-    # project = get_project_model().root_model
-    # if project is None:
-    #     return None
+    visitor = _Visitor()
+    walk_traits_object(project, visitor, fast_exit=True)
 
-    # visitor = _Visitor()
-    # walk_traits_object(project, visitor, fast_exit=True)
+    if visitor.found is None:
+        msg = 'Linked scene with UUID "{}" not found!'.format(uuid)
+        messagebox.show_error(msg)
+        return None
 
-    # if visitor.found is None:
-    #     msg = 'Linked scene with UUID "{}" not found!'.format(uuid)
-    #     messagebox.show_error(msg)
-    #     return None
-
-    # return visitor.found
+    return visitor.found
