@@ -79,10 +79,9 @@ class SelectionIcons(_BaseIcons):
     model = Instance(SelectionIconsModel)
     dialog_klass = Type(SelectionDialog)
 
-    @on_trait_change('proxy:binding')
-    def _binding_update(self, binding):
+    def binding_update(self, proxy):
         items = list(self.model.values)
-        for opt in binding.options:
+        for opt in proxy.binding.options:
             if not any(opt == item.value for item in self.model.values):
                 newItem = IconItem(value=opt)
                 items.append(newItem)

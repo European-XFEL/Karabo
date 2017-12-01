@@ -10,7 +10,7 @@ import numpy as np
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QComboBox, QHBoxLayout, QImage, QLabel, QSlider,
                          QSpinBox, QVBoxLayout, QWidget)
-from traits.api import Dict, Instance, Int, on_trait_change
+from traits.api import Dict, Instance, Int
 
 from karabo.common.scenemodel.api import DisplayAlignedImageModel
 from karabogui.binding.api import ImageBinding
@@ -91,106 +91,7 @@ class DisplayAlignedImage(BaseBindingController):
         self.add_proxy(self.proxy)
         return widget
 
-    # -------------------------------------------------------------------------
-
-    @pyqtSlot()
-    def _cellChanged(self, value):
-        self._selectedCell = int(value)
-        self._slider.setSliderPosition(int(value))
-
-    @pyqtSlot()
-    def _axisChanged(self, value):
-        self._axis = int(value)
-        array = next(iter(self._npys.values()))
-        self._setSlider(array.shape[self._axis])
-        self._sliderMoved(0)
-
-    @pyqtSlot()
-    def _sliderMoved(self, value):
-        self._selectedCell = value
-        self._currentCell.setValue(value)
-        npy = None
-        for proxy in self._npys:
-            if self._axis == _DIMENSIONS['X']:
-                npy = self._npys[proxy][:, self._selectedCell, :]
-            if self._axis == _DIMENSIONS['Y']:
-                npy = self._npys[proxy][self._selectedCell, :, :]
-            if self._axis == _DIMENSIONS['Z']:
-                npy = self._npys[proxy][:, :, self._selectedCell]
-
-            for i in range(len(self._images[proxy])):
-                pixelRegion = self._pixelRegions[proxy][i]
-                if pixelRegion is None:
-                    self._images[proxy][i].set_data(npy.astype('float'))
-                else:
-                    data = npy[pixelRegion[1]:pixelRegion[3],
-                               pixelRegion[0]:pixelRegion[2]].astype('float')
-                    self._images[proxy][i].set_data(data)
-            self._updateLutRange()
-            self._plot.replot()
-
-    def _setSlider(self, dimZ):
-        self._slider.setMaximum(dimZ)
-        self._currentCell.setMaximum(dimZ)
-        if not self._cellWidget.isVisible():
-            self._cellWidget.setVisible(True)
-
-    def _unsetSlider(self):
-        self._cellWidget.setVisible(False)
-
-    def _getAlignmentInformation(self, geometry, leafNodes, tO=None, tR=None,
-                                 pixelRegion=None):
-        tO = [0., 0., 0.] if tO is None else tO
-        tR = [0., 0., 0.] if tR is None else tR
-
-        if "pixelRegion" in geometry:
-            if pixelRegion is None:
-                pixelRegion = geometry.pixelRegion.value
-            else:
-                print("WARN: Only one pixel region may be defined per leaf")
-
-        if "alignment" in geometry:
-            aO = geometry.alignment.value.offsets.value
-            aR = geometry.alignment.value.rotations.value
-            tO = [tO[i] + aO[i] for i in range(3)]
-            tR = [tR[i] + aR[i] for i in range(3)]
-        pattern = re.compile("^(t[0-9]+)")
-        hasSub = False
-
-        # schema case
-        for att in geometry.alignment.value:
-            if pattern.match(att):
-                hasSub = True
-                binding = getattr(geometry.alignment.value, att)
-                self._getAlignmentInformation(binding.value, leafNodes, tO, tR,
-                                              pixelRegion)
-
-        if not hasSub:
-            leafNodes.append({"offsets": tO,
-                              "rotations": tR,
-                              "pixelRegion": pixelRegion})
-
-    def _updateLutRange(self):
-        minimum = np.min(np.array([k for k in iter(self._mins.values())]))
-        maximum = np.max(np.array([k for k in iter(self._maxs.values())]))
-        for stack in self._images.values():
-            if stack is not None:
-                for p in stack:
-                    p.set_lut_range([minimum, maximum])
-
-    @on_trait_change('proxies.binding.config_update')
-    def _update_value(self, obj, name, value):
-        if name != 'config_update':
-            return
-        if self.widget is None:
-            return
-
-        for proxy in self.proxies:
-            if proxy.binding is obj:
-                break
-        else:
-            return
-
+    def node_update(self, proxy):
         img_node = proxy.value
         if "stackAxis" in img_node:
             self._axis = img_node.stackAxis.value
@@ -283,3 +184,90 @@ class DisplayAlignedImage(BaseBindingController):
 
         self._updateLutRange()
         self._plot.replot()
+
+    # -------------------------------------------------------------------------
+
+    @pyqtSlot()
+    def _cellChanged(self, value):
+        self._selectedCell = int(value)
+        self._slider.setSliderPosition(int(value))
+
+    @pyqtSlot()
+    def _axisChanged(self, value):
+        self._axis = int(value)
+        array = next(iter(self._npys.values()))
+        self._setSlider(array.shape[self._axis])
+        self._sliderMoved(0)
+
+    @pyqtSlot()
+    def _sliderMoved(self, value):
+        self._selectedCell = value
+        self._currentCell.setValue(value)
+        npy = None
+        for proxy in self._npys:
+            if self._axis == _DIMENSIONS['X']:
+                npy = self._npys[proxy][:, self._selectedCell, :]
+            if self._axis == _DIMENSIONS['Y']:
+                npy = self._npys[proxy][self._selectedCell, :, :]
+            if self._axis == _DIMENSIONS['Z']:
+                npy = self._npys[proxy][:, :, self._selectedCell]
+
+            for i in range(len(self._images[proxy])):
+                pixelRegion = self._pixelRegions[proxy][i]
+                if pixelRegion is None:
+                    self._images[proxy][i].set_data(npy.astype('float'))
+                else:
+                    data = npy[pixelRegion[1]:pixelRegion[3],
+                               pixelRegion[0]:pixelRegion[2]].astype('float')
+                    self._images[proxy][i].set_data(data)
+            self._updateLutRange()
+            self._plot.replot()
+
+    def _setSlider(self, dimZ):
+        self._slider.setMaximum(dimZ)
+        self._currentCell.setMaximum(dimZ)
+        if not self._cellWidget.isVisible():
+            self._cellWidget.setVisible(True)
+
+    def _unsetSlider(self):
+        self._cellWidget.setVisible(False)
+
+    def _getAlignmentInformation(self, geometry, leafNodes, tO=None, tR=None,
+                                 pixelRegion=None):
+        tO = [0., 0., 0.] if tO is None else tO
+        tR = [0., 0., 0.] if tR is None else tR
+
+        if "pixelRegion" in geometry:
+            if pixelRegion is None:
+                pixelRegion = geometry.pixelRegion.value
+            else:
+                print("WARN: Only one pixel region may be defined per leaf")
+
+        if "alignment" in geometry:
+            aO = geometry.alignment.value.offsets.value
+            aR = geometry.alignment.value.rotations.value
+            tO = [tO[i] + aO[i] for i in range(3)]
+            tR = [tR[i] + aR[i] for i in range(3)]
+        pattern = re.compile("^(t[0-9]+)")
+        hasSub = False
+
+        # schema case
+        for att in geometry.alignment.value:
+            if pattern.match(att):
+                hasSub = True
+                binding = getattr(geometry.alignment.value, att)
+                self._getAlignmentInformation(binding.value, leafNodes, tO, tR,
+                                              pixelRegion)
+
+        if not hasSub:
+            leafNodes.append({"offsets": tO,
+                              "rotations": tR,
+                              "pixelRegion": pixelRegion})
+
+    def _updateLutRange(self):
+        minimum = np.min(np.array([k for k in iter(self._mins.values())]))
+        maximum = np.max(np.array([k for k in iter(self._maxs.values())]))
+        for stack in self._images.values():
+            if stack is not None:
+                for p in stack:
+                    p.set_lut_range([minimum, maximum])
