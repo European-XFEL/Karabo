@@ -7,7 +7,7 @@ from guiqwt.builder import make
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (QCheckBox, QComboBox, QHBoxLayout, QImage, QLabel,
                          QSlider, QSpinBox, QVBoxLayout, QWidget)
-from traits.api import Array, Instance, Int, on_trait_change
+from traits.api import Array, Instance, Int
 
 from karabo.common.scenemodel.api import DisplayImageModel
 from karabogui.binding.api import ImageBinding
@@ -91,6 +91,42 @@ class DisplayImage(BaseBindingController):
         toolLayout.addWidget(self._cellWidget)
         return widget
 
+    def node_update(self, proxy):
+        img_node = proxy.value
+        dimX, dimY, dimZ, format = get_dimensions_and_format(img_node)
+        if dimX is not None and dimY is not None and dimZ is None:
+            if self._cellWidget.isVisible():
+                self._unset_slider()
+        elif dimZ is not None:
+            if dimZ != 3:
+                if self._axis == _DIMENSIONS['Y']:
+                    self._set_slider(dimX)
+                if self._axis == _DIMENSIONS['X']:
+                    self._set_slider(dimY)
+                if self._axis == _DIMENSIONS['Z']:
+                    self._set_slider(dimZ)
+        else:
+            return
+
+        array = get_image_data(img_node, dimX, dimY, dimZ, format)
+        if array is None:
+            return
+
+        self._img_array = array
+        if format not in (QImage.Format_Indexed8, QImage.Format_RGB888):
+            if self._axis == _DIMENSIONS['Y']:
+                array = self._img_array[:, self._selectedCell, :]
+            elif self._axis == _DIMENSIONS['X']:
+                array = self._img_array[self._selectedCell, :, :]
+            elif self._axis == _DIMENSIONS['Z']:
+                array = self._img_array[:, :, self._selectedCell]
+
+        # Safety
+        if dimX < 1 or dimY < 1:
+            raise RuntimeError('Image has less than two dimensions')
+
+        self._set_image(array)
+
     # ---------------------------------------------------------------------
 
     @pyqtSlot()
@@ -126,48 +162,6 @@ class DisplayImage(BaseBindingController):
 
     def _unset_slider(self):
         self._cellWidget.setVisible(False)
-
-    @on_trait_change('proxies.binding.config_update')
-    def _update_image(self, obj, name, value):
-        if name != 'config_update':
-            return
-        if self.widget is None:
-            return
-
-        img_node = obj.value
-        dimX, dimY, dimZ, format = get_dimensions_and_format(img_node)
-        if dimX is not None and dimY is not None and dimZ is None:
-            if self._cellWidget.isVisible():
-                self._unset_slider()
-        elif dimZ is not None:
-            if dimZ != 3:
-                if self._axis == _DIMENSIONS['Y']:
-                    self._set_slider(dimX)
-                if self._axis == _DIMENSIONS['X']:
-                    self._set_slider(dimY)
-                if self._axis == _DIMENSIONS['Z']:
-                    self._set_slider(dimZ)
-        else:
-            return
-
-        array = get_image_data(img_node, dimX, dimY, dimZ, format)
-        if array is None:
-            return
-
-        self._img_array = array
-        if format not in (QImage.Format_Indexed8, QImage.Format_RGB888):
-            if self._axis == _DIMENSIONS['Y']:
-                array = self._img_array[:, self._selectedCell, :]
-            elif self._axis == _DIMENSIONS['X']:
-                array = self._img_array[self._selectedCell, :, :]
-            elif self._axis == _DIMENSIONS['Z']:
-                array = self._img_array[:, :, self._selectedCell]
-
-        # Safety
-        if dimX < 1 or dimY < 1:
-            raise RuntimeError('Image has less than two dimensions')
-
-        self._set_image(array)
 
     def _set_image(self, array):
         if self._image is None:
