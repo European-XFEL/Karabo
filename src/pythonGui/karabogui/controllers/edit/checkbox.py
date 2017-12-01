@@ -5,7 +5,7 @@
 #############################################################################
 from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import QCheckBox
-from traits.api import Instance, on_trait_change
+from traits.api import Instance
 
 from karabo.common.scenemodel.api import CheckBoxModel
 from karabogui.binding.api import BoolBinding
@@ -26,9 +26,8 @@ class EditableCheckBox(BaseBindingController):
         widget.stateChanged.connect(self._on_user_edit)
         return widget
 
-    @on_trait_change('proxy:value')
-    def _value_update(self, value):
-        checkState = Qt.Checked if value else Qt.Unchecked
+    def value_update(self, proxy):
+        checkState = Qt.Checked if proxy.value else Qt.Unchecked
         self.widget.setCheckState(checkState)
 
     @pyqtSlot(int)
