@@ -43,15 +43,8 @@ class NumberLineEdit(BaseBindingController):
         focus_policy = Qt.NoFocus if ro else Qt.StrongFocus
         self._internal_widget.setFocusPolicy(focus_policy)
 
-    def _widget_changed(self):
-        """Finish intialization of the widget"""
-        binding = self.proxy.binding
-        if binding is not None:
-            self._binding_update(binding)
-
-    @on_trait_change('proxy:binding')
-    def _binding_update(self, binding):
-        low, high = get_min_max(binding)
+    def binding_update(self, proxy):
+        low, high = get_min_max(proxy.binding)
         self._validator.setBottom(low)
         self._validator.setTop(high)
 
@@ -141,12 +134,9 @@ class DoubleLineEdit(NumberLineEdit):
         widget.addAction(decimal_action)
         return widget
 
-    @on_trait_change('proxy:value,model.decimals')
-    def _value_update(self, value):
-        if self.widget is None:
-            return
-
-        self.widget.update_label(self.proxy)
+    def value_update(self, proxy):
+        value = proxy.value
+        self.widget.update_label(proxy)
         self._internal_value = str(value)
 
         format_str = ('{}' if self.model.decimals == -1
@@ -154,6 +144,10 @@ class DoubleLineEdit(NumberLineEdit):
         with SignalBlocker(self._internal_widget):
             self._display_value = format_str.format(value)
             self._internal_widget.setText(self._display_value)
+
+    @on_trait_change('model.decimals', post_init=True)
+    def _decimals_update(self):
+        self.value_update(self.proxy)
 
     @pyqtSlot()
     def _pick_decimals(self):
@@ -178,9 +172,9 @@ class IntLineEdit(NumberLineEdit):
         self._validator = IntValidator()
         return super(IntLineEdit, self).create_widget(parent)
 
-    @on_trait_change('proxy:value')
-    def _value_update(self, value):
-        self.widget.update_label(self.proxy)
+    def value_update(self, proxy):
+        value = proxy.value
+        self.widget.update_label(proxy)
         self._internal_value = str(value)
         with SignalBlocker(self._internal_widget):
             self._display_value = "{}".format(value)
