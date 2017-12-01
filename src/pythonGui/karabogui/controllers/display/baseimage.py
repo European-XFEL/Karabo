@@ -13,8 +13,7 @@ from PyQt4.QtGui import (
     QAction, QActionGroup, QCursor, QHBoxLayout, QIcon, QMenu, QToolBar,
     QWidget)
 from PyQt4.Qwt5.Qwt import QwtPlot
-from traits.api import (
-    Bool, Callable, HasStrictTraits, Instance, on_trait_change, String)
+from traits.api import Bool, Callable, HasStrictTraits, Instance, String
 
 from karabo.common.scenemodel.api import ScientificImageModel, WebcamImageModel
 from karabogui import icons
@@ -58,15 +57,8 @@ class _BaseImage(BaseBindingController):
         hlayout.addWidget(self._toolbar)
         return widget
 
-    @on_trait_change('proxies.binding.config_update')
-    def _update_image(self, obj, name, value):
-        if name != 'config_update':
-            return
-        if self.widget is None:
-            return
-
-        img_node = obj.value
-
+    def node_update(self, proxy):
+        img_node = proxy.value
         dimX, dimY, dimZ, format = get_dimensions_and_format(img_node)
         if dimX is None and dimY is None:
             return
