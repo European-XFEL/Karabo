@@ -32,6 +32,14 @@ class TestEvaluator(GuiTestCase):
         self.proxy.value = 2.0
         assert controller._internal_widget.text() == '4.0'
 
+    def test_builtin_function(self):
+        model = EvaluatorModel(expression='round(x)')
+        controller = Evaluator(proxy=self.proxy, model=model)
+        controller.create(None)
+        self.proxy.value = 2.5
+        expected = str(round(self.proxy.value))
+        assert controller._internal_widget.text() == expected
+
     def test_change_expression(self):
         self.proxy.value = 21.0
         controller = Evaluator(proxy=self.proxy, model=EvaluatorModel())
