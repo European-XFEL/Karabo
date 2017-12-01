@@ -19,16 +19,15 @@ class DisplayChoiceElement(BaseBindingController):
     # The scene data model class for this controller
     model = Instance(ChoiceElementModel)
 
+    def binding_update(self, proxy):
+        if self.widget is not None:
+            self._fill_widget(self.widget, proxy.binding)
+
     def create_widget(self, parent):
         widget = QComboBox(parent)
         widget.setFrame(False)
         self._fill_widget(widget, self.proxy.binding)
         return widget
-
-    @on_trait_change('proxy.binding')
-    def _binding_update(self, binding):
-        if self.widget is not None:
-            self._fill_widget(self.widget, binding)
 
     @on_trait_change('proxy.binding.choice')
     def _value_update(self, obj, name, choice):

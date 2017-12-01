@@ -6,7 +6,7 @@
 
 from PyQt4.QtCore import Qt, QRectF
 from PyQt4.QtGui import QColor, QLabel, QPainter, QPainterPath, QPixmap, QPen
-from traits.api import Instance, on_trait_change
+from traits.api import Instance
 
 from karabo.common.scenemodel.api import AnalogModel
 from karabogui import messagebox
@@ -34,26 +34,24 @@ class DisplayAnalog(BaseBindingController):
     # The scene data model class for this controller
     model = Instance(AnalogModel)
 
+    def binding_update(self, proxy):
+        alarms, warnings = self._alarmsAndWarnings()
+        if None in alarms.values() and None in warnings.values():
+            msg = ('No proper configuration detected for property "{}".\n'
+                   'Please define alarm and warning thresholds.')
+            messagebox.show_warning(msg.format(proxy.path),
+                                    title='Wrong property configuration')
+
     def create_widget(self, parent):
         widget = QLabel(parent)
         widget.setAlignment(Qt.AlignCenter)
         widget.setFixedSize(WIDGET_WIDTH, WIDGET_HEIGHT)
         return widget
 
-    @on_trait_change('proxy:binding')
-    def _binding_update(self):
-        alarms, warnings = self._alarmsAndWarnings()
-        if None in alarms.values() and None in warnings.values():
-            msg = ('No proper configuration detected for property "{}".\n'
-                   'Please define alarm and warning thresholds.')
-            messagebox.show_warning(msg.format(self.proxy.path),
-                                    title='Wrong property configuration')
-
-    @on_trait_change('proxy:value')
-    def _value_update(self, value):
+    def value_update(self, proxy):
         alarms, warnings = self._alarmsAndWarnings()
         if alarms and warnings:
-            self._paintWidget(value, warnings, alarms)
+            self._paintWidget(proxy.value, warnings, alarms)
 
     # -------------------------------------------------------------------------
     # Private
