@@ -1,7 +1,7 @@
 from guiqwt.plot import CurveDialog
 from guiqwt.builder import make
 from PyQt4.Qwt5.Qwt import QwtPlot
-from traits.api import Dict, Instance, on_trait_change
+from traits.api import Dict, Instance
 
 from karabo.common.scenemodel.api import LinePlotModel
 from karabogui.binding.api import VectorBinding
@@ -32,21 +32,12 @@ class XYVector(BaseBindingController):
         self._plot.setAxisAutoScale(QwtPlot.xBottom)
         return widget
 
-    @on_trait_change('proxies.binding')
-    def _binding_update(self, proxy, name, binding):
-        if name != 'binding':
-            return
-
+    def binding_update(self, proxy):
         pos = QwtPlot.xBottom if proxy is self.proxy else QwtPlot.yLeft
         self._plot.setAxisTitle(pos, axis_label(proxy))
 
-    @on_trait_change('proxies.value')
-    def _value_update(self, proxy, name, value):
-        if name != 'value':
-            return
-        if self.proxy.binding is None:
-            return
-
+    def value_update(self, proxy):
+        value = proxy.value
         if proxy is self.proxy:
             for p, c in self._curves.items():
                 if len(value) == len(p.value):

@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from PyQt4.QtGui import QComboBox
-from traits.api import Instance, on_trait_change
+from traits.api import Instance
 
 from karabo.common.scenemodel.api import ComboBoxModel
 from karabogui.binding.api import BaseBinding
@@ -23,6 +23,10 @@ class DisplayComboBox(BaseBindingController):
     # The scene data model class for this controller
     model = Instance(ComboBoxModel)
 
+    def binding_update(self, proxy):
+        self.widget.clear()
+        _fill_widget(self.widget, proxy.binding)
+
     def create_widget(self, parent):
         widget = QComboBox(parent)
         widget.setFrame(False)
@@ -30,18 +34,8 @@ class DisplayComboBox(BaseBindingController):
         _fill_widget(widget, self.proxy.binding)
         return widget
 
-    @on_trait_change('proxy:binding')
-    def _binding_update(self):
-        binding = self.proxy.binding
-        if binding is None:
-            return
-
-        self.widget.clear()
-        _fill_widget(self.widget, binding)
-
-    @on_trait_change('proxy:value')
-    def _value_update(self, value):
-        index = self.widget.findText(str(value))
+    def value_update(self, proxy):
+        index = self.widget.findText(str(proxy.value))
         if index < 0:
             return
 

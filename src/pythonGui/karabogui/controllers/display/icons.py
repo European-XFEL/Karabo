@@ -41,7 +41,7 @@ class _BaseIcons(BaseBindingController):
 
         # Maybe update the widget
         if self.widget is not None:
-            self._value_update(self.proxy.value)
+            self.value_update(self.proxy)
 
     @pyqtSlot()
     def _on_change_icons(self):
@@ -62,8 +62,8 @@ class DigitIcons(_BaseIcons):
     model = Instance(DigitIconsModel)
     dialog_klass = Type(DigitDialog)
 
-    @on_trait_change('proxy:value')
-    def _value_update(self, value):
+    def value_update(self, proxy):
+        value = proxy.value
         for item in self.model.values:
             if (value < int(item.value) or
                     value == int(item.value) and item.equal):
@@ -88,8 +88,8 @@ class SelectionIcons(_BaseIcons):
                 items.append(newItem)
         self.model.values = items
 
-    @on_trait_change('proxy:value')
-    def _value_update(self, value):
+    def value_update(self, proxy):
+        value = proxy.value
         for item in self.model.values:
             if item.value == value:
                 self.set_pixmap(item.pixmap)
@@ -107,8 +107,8 @@ class TextIcons(_BaseIcons):
     model = Instance(TextIconsModel)
     dialog_klass = Type(TextDialog)
 
-    @on_trait_change('proxy:value')
-    def _value_update(self, value):
+    def value_update(self, proxy):
+        value = proxy.value
         for it in self.model.values:
             if it.value is None or value is not None and it.re.match(value):
                 self.set_pixmap(it.pixmap)

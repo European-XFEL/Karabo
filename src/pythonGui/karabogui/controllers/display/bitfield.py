@@ -1,6 +1,6 @@
 from PyQt4.QtCore import QSize, Qt, pyqtSignal, pyqtSlot
 from PyQt4.QtGui import QWidget, QPainter
-from traits.api import Instance, on_trait_change
+from traits.api import Instance
 
 from karabo.common.scenemodel.api import BitfieldModel
 from karabogui.binding.api import (
@@ -61,6 +61,12 @@ class Bitfield(BaseBindingController):
     def editWidget(self):
         return self._internal_widget
 
+    def binding_update(self, proxy):
+        if self.widget is None:
+            return
+        self._internal_widget.size = self._get_binding_bitcount()
+        self.widget.update()
+
     def create_widget(self, parent):
         self._internal_widget = BitfieldWidget(parent)
         self._internal_widget.size = self._get_binding_bitcount()
@@ -73,24 +79,16 @@ class Bitfield(BaseBindingController):
         focus_policy = Qt.NoFocus if ro else Qt.StrongFocus
         self._internal_widget.setFocusPolicy(focus_policy)
 
+    def value_update(self, proxy):
+        self._internal_widget.value = proxy.value
+        self.widget.update_label(proxy)
+        self.widget.update()
+
     @pyqtSlot(int)
     def _on_user_edit(self, value):
         binding = self.proxy.binding
         if binding is not None:
             binding.value = value
-
-    @on_trait_change('proxy.binding')
-    def _binding_update(self):
-        if self.widget is None:
-            return
-        self._internal_widget.size = self._get_binding_bitcount()
-        self.widget.update()
-
-    @on_trait_change('proxy:value')
-    def _value_update(self, value):
-        self._internal_widget.value = value
-        self.widget.update_label(self.proxy)
-        self.widget.update()
 
     def _get_binding_bitcount(self):
         bytecount_map = {

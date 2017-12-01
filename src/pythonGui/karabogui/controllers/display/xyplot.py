@@ -1,6 +1,6 @@
 from collections import deque
 
-from traits.api import Any, Instance, on_trait_change
+from traits.api import Any, Instance
 
 from karabo.common.scenemodel.api import XYPlotModel
 from karabogui.binding.api import PropertyProxy, FloatBinding, IntBinding
@@ -42,19 +42,12 @@ class XYPlot(BaseBindingController):
             return True
         return False
 
-    @on_trait_change('proxies.binding')
-    def _binding_update(self, proxy, name, value):
-        if name != 'binding':
-            return
-
+    def binding_update(self, proxy):
         fname = 'set_xlabel' if proxy is self._x_proxy else 'set_ylabel'
         self.widget.axes_call(fname, axis_label(proxy))
 
-    @on_trait_change('proxies.value')
-    def _value_update(self, proxy, name, value):
-        if name != 'value':
-            return
-
+    def value_update(self, proxy):
+        value = proxy.value
         if proxy is self._x_proxy:
             self._last_x_value = value
         elif proxy is self._y_proxy:

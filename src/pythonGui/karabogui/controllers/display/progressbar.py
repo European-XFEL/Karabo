@@ -5,7 +5,7 @@
 #############################################################################
 from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import QAction, QProgressBar
-from traits.api import Float, Instance, Tuple, on_trait_change
+from traits.api import Float, Instance, Tuple
 
 from karabo.common.scenemodel.api import DisplayProgressBarModel
 from karabogui import messagebox
@@ -50,23 +50,18 @@ class DisplayProgressBar(BaseBindingController):
         widget.setMaximum(PROGRESS_MAX)
         return widget
 
-    @on_trait_change('proxy.binding')
-    def _binding_update(self):
-        binding = self.proxy.binding
-        if binding is None:
-            return
-
+    def binding_update(self, proxy):
+        binding = proxy.binding
         self._eval_limits(binding)
         if self._value_factors == NULL_RANGE:
             msg = ('No proper configuration detected.\n'
                    'Please define min and max thresholds.')
             messagebox.show_warning(msg, title='Wrong property configuration')
 
-    @on_trait_change('proxy:value')
-    def _value_update(self, value):
+    def value_update(self, proxy):
         if self._value_factors == NULL_RANGE:
             return
-        value = _scale(value, *self._value_factors)
+        value = _scale(proxy.value, *self._value_factors)
         self.widget.setValue(value)
 
     def _eval_limits(self, binding):

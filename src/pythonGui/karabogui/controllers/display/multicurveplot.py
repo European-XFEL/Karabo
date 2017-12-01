@@ -9,7 +9,7 @@ from itertools import product
 import numpy as np
 from PyQt4.QtCore import Qt, pyqtSlot
 from PyQt4.QtGui import QPushButton, QHBoxLayout, QVBoxLayout, QWidget
-from traits.api import Bool, Callable, Dict, Instance, List, on_trait_change
+from traits.api import Bool, Callable, Dict, Instance, List
 
 from karabo.common.scenemodel.api import MultiCurvePlotModel
 from karabogui.binding.api import (
@@ -94,11 +94,8 @@ class MultiCurvePlot(BaseBindingController):
             self._draw_start = True
         return True
 
-    @on_trait_change('proxies.value')
-    def _value_update(self, proxy, name, value):
-        if name != 'value':
-            return
-
+    def value_update(self, proxy):
+        value = proxy.value
         if proxy is self._reset_proxy:
             self._reset_plot(reset=value)
             return

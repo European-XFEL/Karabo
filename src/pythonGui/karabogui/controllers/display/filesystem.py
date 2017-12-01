@@ -5,7 +5,7 @@
 #############################################################################
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QLineEdit
-from traits.api import Instance, on_trait_change
+from traits.api import Instance
 
 from karabo.common.scenemodel.api import (
     DirectoryModel, FileInModel, FileOutModel)
@@ -22,9 +22,8 @@ class _FilesystemDisplay(BaseBindingController):
         widget.setFocusPolicy(Qt.NoFocus)
         return widget
 
-    @on_trait_change('proxy:value')
-    def _value_update(self, value):
-        self.widget.setText(value)
+    def value_update(self, proxy):
+        self.widget.setText(proxy.value)
 
 
 @register_binding_controller(ui_name='Directory', binding_type=StringBinding,

@@ -6,7 +6,7 @@
 import os.path as op
 
 from PyQt4.QtSvg import QSvgWidget
-from traits.api import Instance, on_trait_change
+from traits.api import Instance
 
 from karabo.common.scenemodel.api import CheckBoxModel
 from karabogui import icons
@@ -31,7 +31,6 @@ class DisplayCheckBox(BaseBindingController):
         widget.setFixedSize(20, 20)
         return widget
 
-    @on_trait_change('proxy:value')
-    def _value_update(self, value):
-        svg = CHECKED if value else UNCHECKED
+    def value_update(self, proxy):
+        svg = CHECKED if proxy.value else UNCHECKED
         self.widget.load(svg)
