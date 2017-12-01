@@ -1,7 +1,7 @@
 from collections import namedtuple
 
 from PyQt4.QtGui import QAction, QStackedLayout, QToolButton, QWidget
-from traits.api import Instance, List, on_trait_change
+from traits.api import Instance, List
 
 from karabo.common.api import State
 from karabo.common.scenemodel.api import DisplayCommandModel
@@ -28,6 +28,7 @@ class DisplayCommand(BaseBindingController):
 
     def add_proxy(self, proxy):
         action = QAction('NO TEXT', self._button)
+        action.setEnabled(False)
         self._button.addAction(action)
 
         item = Item(proxy=proxy, action=action)
@@ -36,11 +37,6 @@ class DisplayCommand(BaseBindingController):
         if proxy.binding:
             # Only if the binding is already valid
             self._finalize_item_initialization(item)
-
-        state_binding = proxy.root_proxy.state_binding
-        if state_binding:
-            state_binding.on_trait_change(self._state_update, 'value')
-            self._state_update(state_binding, 'value', state_binding.value)
 
         return True
 
@@ -54,47 +50,16 @@ class DisplayCommand(BaseBindingController):
         self.add_proxy(self.proxy)
         return widget
 
-    def destroy_widget(self):
-        for proxy in self.proxies:
-            state_binding = proxy.root_proxy.state_binding
-            if state_binding:
-                state_binding.on_trait_change(self._state_update, 'value',
-                                              remove=True)
-
-    @on_trait_change('proxies:binding', post_init=True)
-    def _binding_update(self, obj, name, new):
-        """Handle the arrival of new proxy bindings.
-
-        `obj` is a PropertyProxy instance, `name` is 'binding', and `new` is
-        a BaseBindingType instance.
-        """
+    def binding_update(self, proxy):
         for item in self._actions:
-            if item.proxy is obj and item.action.text() == 'NO TEXT':
+            if item.proxy is proxy and item.action.text() == 'NO TEXT':
                 self._finalize_item_initialization(item)
                 break
 
-    def _finalize_item_initialization(self, item):
-        """When an item gets its binding, finish hooking things up."""
-        proxy = item.proxy
-        if proxy.binding is None:
-            return
-
-        attributes = proxy.binding.attributes
-        # if displayed name is not set, use path
-        display_name = attributes.get(KARABO_SCHEMA_DISPLAYED_NAME, proxy.path)
-        item.action.setText(display_name)
-        item.action.triggered.connect(item.proxy.execute)
-
-    def _state_update(self, obj, name, new):
-        """This is a trait change handler for a `state.value` trait, so `obj`
-        is the parent object of the trait which changed (`state`), `name` is
-        the name of the trait ('value') and `new` is the new value of the
-        trait (a state string).
-        """
-        state = State(new)
+    def state_update(self, proxy):
+        state = State(proxy.root_proxy.state_binding.value)
         for item in self._actions:
-            proxy = item.proxy
-            if proxy.root_proxy.state_binding is obj:
+            if item.proxy is proxy:
                 is_allowed = proxy.binding.is_allowed(state)
                 is_accessible = (krb_globals.GLOBAL_ACCESS_LEVEL >=
                                  proxy.binding.required_access_level)
@@ -106,3 +71,12 @@ class DisplayCommand(BaseBindingController):
                 break
         else:
             self._button.setDefaultAction(self._button.actions()[0])
+
+    def _finalize_item_initialization(self, item):
+        """When an item gets its binding, finish hooking things up."""
+        proxy = item.proxy
+        attributes = proxy.binding.attributes
+        # if displayed name is not set, use path
+        display_name = attributes.get(KARABO_SCHEMA_DISPLAYED_NAME, proxy.path)
+        item.action.setText(display_name)
+        item.action.triggered.connect(item.proxy.execute)
