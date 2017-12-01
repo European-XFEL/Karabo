@@ -87,15 +87,18 @@ def test_ndarry_refcounting():
 def test_imagedata_set_and_get():
     a = np.arange(20000, dtype='uint8').reshape(100, 200)
     imageData = ImageData()
-    # Set
+
     imageData.setData(a)  # Also set dataType
     imageData.setDimensionTypes((0, 1))
-    imageData.setDimensions((200, 100))
     imageData.setEncoding(Encoding.GRAY)
     imageData.setROIOffsets((20, 10))  # x, y
-
-    # Get
     assert np.all(imageData.getData() == a)
+    # Now we set dimensions which trickle down to getData.
+    # Before doing so, dimensions are undefined/empty (NOT taken from a!).
+    # Don't test for that since not sure whether this is really desired.
+    imageData.setDimensions((200, 100))
+
+    assert np.all(imageData.getData() == a.reshape(200, 100))
     assert imageData.getDimensionTypes() == (0, 1)
     assert imageData.getDimensions() == (200, 100)
     assert imageData.getEncoding() == Encoding.GRAY
