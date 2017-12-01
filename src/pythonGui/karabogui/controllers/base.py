@@ -65,6 +65,14 @@ class BaseBindingController(HasStrictTraits):
         `update_later` instead.
         """
 
+    def node_update(self, proxy):
+        """Implemented by subclasses to receive notifications that the
+        node value in a proxy attached to the controller has been updated.
+
+        OPTIONAL: Most widgets aren't bound to node properties.
+                  The main exception: images
+        """
+
     def set_read_only(self, readonly):
         """Implemented by subclasses to notify a widget of its read-only status.
 
@@ -181,6 +189,18 @@ class BaseBindingController(HasStrictTraits):
         # One of the attached proxies got a new binding which is not None
         if binding is not None:
             self.binding_update(proxy)
+
+    @on_trait_change('proxies.binding.config_update')
+    def _proxy_node_update(self, binding, name, new):
+        if self.widget is None or name != 'config_update':
+            return
+
+        try:
+            # One of the attached proxies got a new value on its binding
+            proxy = [p for p in self.proxies if p.binding is binding][0]
+            self.node_update(proxy)
+        except IndexError:
+            pass
 
     @on_trait_change('proxies.binding.value')
     def _proxy_value_update(self, obj, name, new):
