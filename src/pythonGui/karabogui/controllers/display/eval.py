@@ -1,4 +1,3 @@
-
 import traceback
 
 from PyQt4.QtCore import Qt
@@ -33,6 +32,7 @@ class Evaluator(BaseBindingController):
 
     def _globals_ns_default(self):
         ns = {}
+        exec('from builtins import *', ns)
         exec('from numpy import *', ns)
         return ns
 
