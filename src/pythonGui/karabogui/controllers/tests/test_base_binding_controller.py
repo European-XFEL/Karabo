@@ -3,11 +3,11 @@ from traits.api import Dict, Instance, Int, Str
 
 from karabo.common.api import DeviceStatus, State
 from karabo.common.scenemodel.api import BaseWidgetObjectData
-from karabo.middlelayer import Bool, Configurable, String, AccessMode
+from karabo.middlelayer import (
+    Bool, Configurable, Hash, Node, String, AccessMode)
 from karabogui.binding.api import (
-    DeviceClassProxy, PropertyProxy, StringBinding, build_binding,
-    KARABO_SCHEMA_DISPLAYED_NAME
-)
+    DeviceClassProxy, NodeBinding, PropertyProxy, StringBinding,
+    apply_configuration, build_binding, KARABO_SCHEMA_DISPLAYED_NAME)
 from karabogui.testing import GuiTestCase, flushed_registry
 from ..base import BaseBindingController
 from ..registry import register_binding_controller
@@ -22,6 +22,10 @@ class SampleObject(Configurable):
 
 class ChangeObject(Configurable):
     first = String(accessMode=AccessMode.READONLY, displayedName='Change:')
+
+
+class NodedObject(Configurable):
+    node = Node(SampleObject)
 
 
 class StateObject(Configurable):
@@ -82,6 +86,16 @@ def _define_binding_classes():
         def value_update(self, proxy):
             self.widget.setText(proxy.value)
 
+    @register_binding_controller(klassname='Node', binding_type=NodeBinding)
+    class NodeBindingController(BaseBindingController):
+        model = Instance(UniqueWidgetModel)
+
+        def create_widget(self, parent):
+            return QLabel(parent)
+
+        def node_update(self, proxy):
+            self.widget.setText(proxy.binding.value.second.value)
+
     @register_binding_controller(klassname='Mono', binding_type=StringBinding)
     class SingleBindingController(BaseBindingController):
         model = Instance(UniqueWidgetModel)
@@ -115,6 +129,7 @@ def _define_binding_classes():
     return {
         'DeviceController': DeviceController,
         'MultiBindingController': MultiBindingController,
+        'NodeBindingController': NodeBindingController,
         'SingleBindingController': SingleBindingController,
         'StateTrackingController': StateTrackingController,
     }
@@ -131,6 +146,7 @@ class TestBaseBindingController(GuiTestCase):
         # Save the classes so they only need to be declared once
         self.DeviceController = klasses['DeviceController']
         self.MultiBindingController = klasses['MultiBindingController']
+        self.NodeBindingController = klasses['NodeBindingController']
         self.SingleBindingController = klasses['SingleBindingController']
         self.StateTrackingController = klasses['StateTrackingController']
 
@@ -176,6 +192,18 @@ class TestBaseBindingController(GuiTestCase):
         assert self.multi.widget.text() == 'Bar'
         self.second.value = 'Qux'
         assert self.multi.widget.text() == 'Qux'
+
+    def test_node_value_update(self):
+        binding = build_binding(NodedObject.getClassSchema())
+        device = DeviceClassProxy(binding=binding, server_id='Test',
+                                  status=DeviceStatus.OFFLINE)
+        proxy = PropertyProxy(root_proxy=device, path='node')
+        controller = self.NodeBindingController(proxy=proxy)
+        controller.create(None)
+
+        config = Hash('node', Hash('first', 'foo', 'second', 'bar'))
+        apply_configuration(config, binding)
+        assert controller.widget.text() == 'bar'
 
     def test_deferred_update(self):
         deferred_before = self.single.deferred
