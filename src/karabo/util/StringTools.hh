@@ -26,6 +26,7 @@
 #include <complex>
 #include <cstdlib>
 #include <bitset>
+#include <cmath>      // std::abs
 
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
@@ -73,7 +74,12 @@ namespace karabo {
          */
         inline std::string toString(const float& value) {
             std::ostringstream s;
-            s << std::fixed << std::setprecision(7) << value;
+            
+            if (std::abs(value) < 1.0) {
+                s << std::scientific << std::setprecision(7) << value;
+            } else {
+                s << std::fixed << std::setprecision(7) << value;
+            }
             return s.str();
         }
 
@@ -84,7 +90,11 @@ namespace karabo {
          */
         inline std::string toString(const double& value) {
             std::ostringstream s;
-            s << std::fixed << std::setprecision(15) << value;
+            if (std::abs(value) < 1.0) {
+                s << std::setprecision(15) << value;
+            } else {
+                s << std::fixed << std::setprecision(15) << value;
+            }
             return s.str();
         }
 
@@ -95,7 +105,11 @@ namespace karabo {
          */
         inline std::string toString(const std::complex<float>& value) {
             std::ostringstream s;
-            s << std::fixed << std::setprecision(7) << value;
+            if ((std::abs(value.real()) < 1.0) || (std::abs(value.imag()) < 1.0)) {
+                s << std::setprecision(7) << value;
+            } else {
+                s << std::fixed << std::setprecision(7) << value;
+            }
             return s.str();
         }
 
@@ -106,7 +120,11 @@ namespace karabo {
          */
         inline std::string toString(const std::complex<double>& value) {
             std::ostringstream s;
-            s << std::fixed << std::setprecision(15) << value;
+            if ((std::abs(value.real()) < 1.0) || (std::abs(value.imag()) < 1.0)) {
+                s << std::setprecision(15) << value;
+            } else {
+                s << std::fixed << std::setprecision(15) << value;
+            }
             return s.str();
         }
 
