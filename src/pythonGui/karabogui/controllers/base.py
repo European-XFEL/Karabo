@@ -191,7 +191,7 @@ class BaseBindingController(HasStrictTraits):
             self.binding_update(proxy)
 
     @on_trait_change('proxies.binding.config_update')
-    def _proxy_node_update(self, binding, name, new):
+    def _proxy_node_update(self, binding, name, value):
         if self.widget is None or name != 'config_update':
             return
 
@@ -203,13 +203,13 @@ class BaseBindingController(HasStrictTraits):
             pass
 
     @on_trait_change('proxies.binding.value')
-    def _proxy_value_update(self, obj, name, new):
+    def _proxy_value_update(self, binding, name, value):
         if self.widget is None or name != 'value':
             return
 
         try:
             # One of the attached proxies got a new value on its binding
-            proxy = [p for p in self.proxies if p.binding is obj][0]
+            proxy = [p for p in self.proxies if p.binding is binding][0]
             self.value_update(proxy)
         except IndexError:
             pass
