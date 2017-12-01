@@ -125,7 +125,7 @@ class MacroController(BaseProjectGroupController):
         running_instances = self.model.instances
         for dev_id, class_id, status in devices:
             if dev_id.startswith(self.model.instance_id):
-                if (status is DeviceStatus.OFFLINE and
+                if (DeviceStatus(status) is DeviceStatus.OFFLINE and
                         dev_id in running_instances):
                     running_instances.remove(dev_id)
                 elif dev_id not in running_instances:
