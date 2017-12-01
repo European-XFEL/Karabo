@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from glob import glob
 import os.path as op
 
@@ -28,6 +29,25 @@ from ..api import (
 from .schema import get_all_props_schema, get_vectorattr_schema
 
 TEST_DATA_DIR = op.join(op.dirname(__file__), 'data')
+
+
+@contextmanager
+def watch_config_update_notification(binding, expected):
+    """Watch for binding.config_update notification, assert that trait event
+    should be fired/not fired according to `expected`
+    """
+    notified = False
+
+    def _event_fired():
+        nonlocal notified
+        notified = True
+
+    try:
+        binding.on_trait_event(_event_fired, 'config_update')
+        yield
+    finally:
+        binding.on_trait_event(_event_fired, 'config_update', remove=True)
+        assert notified == expected
 
 
 def _flatten_hash(h, base=''):
@@ -115,8 +135,15 @@ def test_apply_configuration():
     binding = build_binding(schema)
 
     config = Hash('a', False)
-    apply_configuration(config, binding)
+    with watch_config_update_notification(binding, expected=True):
+        apply_configuration(config, binding)
     assert not binding.value.a.value
+
+    config = Hash('a', True)
+    # configuration is applied but no notification fired
+    with watch_config_update_notification(binding, expected=False):
+        apply_configuration(config, binding, notify=False)
+    assert binding.value.a.value
 
     config = Hash('not', 'exist')
     apply_configuration(config, binding)
