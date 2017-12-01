@@ -5,7 +5,7 @@
 #############################################################################
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QLineEdit
-from traits.api import Instance, Int, on_trait_change
+from traits.api import Instance, Int
 
 from karabo.common.scenemodel.api import LineEditModel
 from karabogui.binding.api import CharBinding, StringBinding
@@ -28,8 +28,8 @@ class EditableLineEdit(BaseBindingController):
         widget.textChanged.connect(self._on_text_changed)
         return widget
 
-    @on_trait_change('proxy:value')
-    def _value_update(self, value):
+    def value_update(self, proxy):
+        value = proxy.value
         if not isinstance(value, str):
             value = value.decode()
 

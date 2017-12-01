@@ -5,7 +5,7 @@
 #############################################################################
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QComboBox
-from traits.api import Instance, on_trait_change
+from traits.api import Instance
 
 from karabo.common.scenemodel.api import ComboBoxModel
 from karabogui.binding.api import BaseBinding
@@ -37,23 +37,13 @@ class EditableComboBox(BaseBindingController):
         widget.currentIndexChanged[int].connect(self._on_user_edit)
         return widget
 
-    def _widget_changed(self):
-        """The widget was just initialized"""
-        binding = self.proxy.binding
-        if binding is not None:
-            self._binding_update(binding)
-
-    @on_trait_change('proxy:binding')
-    def _binding_update(self, binding):
-        if self.widget is None:
-            return
-
+    def binding_update(self, proxy):
         self.widget.clear()
-        self.widget.addItems([str(o) for o in binding.options])
+        self.widget.addItems([str(o) for o in proxy.binding.options])
 
-    @on_trait_change('proxy:value')
-    def _value_update(self, value):
-        options = self.proxy.binding.options
+    def value_update(self, proxy):
+        value = proxy.value
+        options = proxy.binding.options
         try:
             index = next(i for i, v in enumerate(options)
                          if v == value)

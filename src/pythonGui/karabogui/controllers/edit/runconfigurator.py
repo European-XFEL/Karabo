@@ -6,7 +6,7 @@
 from PyQt4.QtCore import pyqtSlot, QModelIndex, Qt
 from PyQt4.QtGui import (QAbstractItemView, QStandardItemModel, QTreeView,
                          QStandardItem)
-from traits.api import Instance, on_trait_change
+from traits.api import Instance
 
 from karabo.common.scenemodel.api import RunConfiguratorModel
 from karabo.middlelayer import Hash
@@ -38,13 +38,7 @@ class RunConfiguratorEdit(BaseBindingController):
         widget.setModel(item_model)
         return widget
 
-    @on_trait_change('proxy:value')
-    def _value_update(self, value):
-        """Update the item_model to the incoming `value`
-        """
-        if self.widget is None:
-            return
-
+    def value_update(self, proxy):
         def _build(group_node, parent_item):
             name = group_node.value.groupId.value or 'NONAME'
             group_item = QStandardItem(name)
@@ -66,7 +60,7 @@ class RunConfiguratorEdit(BaseBindingController):
         item_model.clear()
         item_model.setHorizontalHeaderLabels(HEADER_LABELS)
         root_item = item_model.invisibleRootItem()
-        for entry in value:
+        for entry in proxy.value:
             _build(entry, root_item)
 
     @pyqtSlot(object)
