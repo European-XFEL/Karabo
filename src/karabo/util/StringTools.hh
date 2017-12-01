@@ -75,7 +75,7 @@ namespace karabo {
         inline std::string toString(const float& value) {
             std::ostringstream s;
             
-            if (std::abs(value) < 1.0) {
+            if (std::abs(value) < 0.1) {
                 s << std::scientific << std::setprecision(7) << value;
             } else {
                 s << std::fixed << std::setprecision(7) << value;
@@ -90,8 +90,8 @@ namespace karabo {
          */
         inline std::string toString(const double& value) {
             std::ostringstream s;
-            if (std::abs(value) < 1.0) {
-                s << std::setprecision(15) << value;
+            if (std::abs(value) < 0.1) {
+                s << std::scientific << std::setprecision(15) << value;
             } else {
                 s << std::fixed << std::setprecision(15) << value;
             }
@@ -105,8 +105,8 @@ namespace karabo {
          */
         inline std::string toString(const std::complex<float>& value) {
             std::ostringstream s;
-            if ((std::abs(value.real()) < 1.0) || (std::abs(value.imag()) < 1.0)) {
-                s << std::setprecision(7) << value;
+            if ((std::abs(value.real()) < 0.1) || (std::abs(value.imag()) < 0.1)) {
+                s << std::scientific << std::setprecision(7) << value;
             } else {
                 s << std::fixed << std::setprecision(7) << value;
             }
@@ -120,8 +120,8 @@ namespace karabo {
          */
         inline std::string toString(const std::complex<double>& value) {
             std::ostringstream s;
-            if ((std::abs(value.real()) < 1.0) || (std::abs(value.imag()) < 1.0)) {
-                s << std::setprecision(15) << value;
+            if ((std::abs(value.real()) < 0.1) || (std::abs(value.imag()) < 0.1)) {
+                s << std::scientific << std::setprecision(15) << value;
             } else {
                 s << std::fixed << std::setprecision(15) << value;
             }
