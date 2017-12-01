@@ -98,6 +98,11 @@ namespace karabo {
         }
 
 
+        ImageData::ImageData(const karabo::util::NDArray& data, const EncodingType encoding, const int bitsPerPixel)
+            : ImageData(data, karabo::util::Dims(), encoding, bitsPerPixel) {
+        }
+
+
         ImageData::ImageData(const karabo::util::NDArray& data,
                              const karabo::util::Dims& dims,
                              const EncodingType encoding,
@@ -123,18 +128,20 @@ namespace karabo {
 
             // If Dims are not defined, they can be deduced from data as well in many cases
             if (dims.size() == 0) {
-                if (Encoding::isIndexable(finalEncoding)) {
-                    dataDims = dims;
-                } else {
+                if (!Encoding::isIndexable(finalEncoding)) {
                     throw KARABO_LOGIC_EXCEPTION("Dimensions must be supplied for encoded images");
                 }
+            } else {
+                dataDims = dims;
             }
+
+            // After setEncoding one can set dimensions
             setDimensions(dataDims);
 
             // bits per pixel - may calculate default, depending on type
             setBitsPerPixel((bitsPerPixel > 0 ? bitsPerPixel : defaultBitsPerPixel(finalEncoding, data)));
 
-            const std::vector<unsigned long long> offsets(dataDims.rank(), 0);
+            const std::vector<unsigned long long> offsets(dataDims.rank(), 0ull);
             setROIOffsets(karabo::util::Dims(offsets));
 
             setDimensionScales(std::string());
@@ -186,9 +193,8 @@ namespace karabo {
                 set("dims", shape);
                 rank = shape.size();
             } else {
-                // Make sure dimensions match the size of the data
                 if (Encoding::isIndexable(getEncoding())) {
-                    // take care of consistency
+                    // Make sure dimensions match the size of the data for indexable encodings
                     get<NDArray>("pixels").setShape(dims); // throws if size does not fit
                 }
                 set<std::vector<unsigned long long> >("dims", dims.toVector());
