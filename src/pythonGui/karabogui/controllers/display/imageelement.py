@@ -6,7 +6,7 @@
 import numpy as np
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QColor, QImage, QLabel, QPixmap
-from traits.api import on_trait_change, Instance
+from traits.api import Instance
 
 from karabo.common.scenemodel.api import DisplayImageElementModel
 from karabogui.binding.api import ImageBinding
@@ -36,15 +36,8 @@ class DisplayImageElement(BaseBindingController):
         widget.setWordWrap(True)
         return widget
 
-    @on_trait_change('proxies.binding.config_update')
-    def _update_image(self, obj, name, value):
-        if name != 'config_update':
-            return
-        if self.widget is None:
-            return
-
-        img_node = obj.value
-
+    def node_update(self, proxy):
+        img_node = proxy.value
         dimX, dimY, dimZ, format = get_dimensions_and_format(img_node)
         img_types = (QImage.Format_Indexed8, QImage.Format_RGB888)
         if not all((dimX, dimY, format in img_types)):
