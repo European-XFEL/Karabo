@@ -32,19 +32,9 @@ class EditableChoiceElement(BaseBindingController):
         widget.currentIndexChanged[int].connect(self._on_user_edit)
         return widget
 
-    def _widget_changed(self):
-        """Finish initialization of the widget if the binding exists"""
-        binding = self.proxy.binding
-        if binding is not None:
-            self._binding_update(binding)
-
-    @on_trait_change('proxy:binding')
-    def _binding_update(self, binding):
-        if self.widget is None:
-            return
-
+    def binding_update(self, proxy):
         self.widget.clear()
-        for name in binding.choices:
+        for name in proxy.binding.choices:
             self.widget.addItem(name)
 
     @on_trait_change('proxy.binding.choice')

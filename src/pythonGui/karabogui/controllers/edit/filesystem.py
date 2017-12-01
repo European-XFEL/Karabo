@@ -6,7 +6,7 @@
 from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import (
     QFileDialog, QHBoxLayout, QIcon, QLineEdit, QToolButton, QWidget)
-from traits.api import Constant, Instance, Int, on_trait_change
+from traits.api import Constant, Instance, Int
 
 from karabo.common.scenemodel.api import (
     DirectoryModel, FileInModel, FileOutModel)
@@ -44,11 +44,9 @@ class _FileSystemPicker(BaseBindingController):
         hLayout.addWidget(button)
         return widget
 
-    @on_trait_change('proxy:value')
-    def valueChanged(self, value):
-        if self.widget is not None:
-            self._path.setText(value)
-            self._path.setCursorPosition(self._last_cursor_pos)
+    def value_changed(self, proxy):
+        self._path.setText(proxy.value)
+        self._path.setCursorPosition(self._last_cursor_pos)
 
     @pyqtSlot(str)
     def _on_user_edit(self, value):
