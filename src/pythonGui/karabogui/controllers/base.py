@@ -71,6 +71,13 @@ class BaseBindingController(HasStrictTraits):
         OPTIONAL: (if can_edit=True passed to register_binding_controller)
         """
 
+    def state_update(self, proxy):
+        """Implemented by subclasses to receive notifications that the device
+        parent of `proxy` has updated its state.
+
+        OPTIONAL: Not all widgets care about device state
+        """
+
     def value_update(self, proxy):
         """Implemented by subclasses to receive notifications that the
         data value in a proxy attached to the controller has been updated.
@@ -177,13 +184,26 @@ class BaseBindingController(HasStrictTraits):
 
     @on_trait_change('proxies.binding.value')
     def _proxy_value_update(self, obj, name, new):
-        if name != 'value':
+        if self.widget is None or name != 'value':
             return
 
         try:
             # One of the attached proxies got a new value on its binding
             proxy = [p for p in self.proxies if p.binding is obj][0]
             self.value_update(proxy)
+        except IndexError:
+            pass
+
+    @on_trait_change('proxies.root_proxy.state_binding.value')
+    def _proxy_state_update(self, binding, name, value):
+        if self.widget is None or name != 'value':
+            return
+
+        try:
+            # One of the attached proxies got a new state on its device
+            proxy = [p for p in self.proxies
+                     if p.root_proxy.state_binding is binding][0]
+            self.state_update(proxy)
         except IndexError:
             pass
 
