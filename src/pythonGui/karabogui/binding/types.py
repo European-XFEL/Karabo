@@ -28,7 +28,7 @@ class BaseBinding(HasStrictTraits):
     # The data is contained in the new value passed to notification handlers
     historic_data = Event
     # When the value was last set
-    timestamp = Instance(Timestamp, allow_none=True)
+    timestamp = Instance(Timestamp)
 
     # Attribute shortcut properties
     access_mode = Property

@@ -1,7 +1,7 @@
 from PyQt4.QtGui import QLabel
 from traits.api import Dict, Instance, Int, Str
 
-from karabo.common.api import DeviceStatus
+from karabo.common.api import DeviceStatus, State
 from karabo.common.scenemodel.api import BaseWidgetObjectData
 from karabo.middlelayer import Bool, Configurable, String, AccessMode
 from karabogui.binding.api import (
@@ -11,6 +11,7 @@ from karabogui.binding.api import (
 from karabogui.testing import GuiTestCase, flushed_registry
 from ..base import BaseBindingController
 from ..registry import register_binding_controller
+from ..util import with_display_type
 
 
 class SampleObject(Configurable):
@@ -21,6 +22,11 @@ class SampleObject(Configurable):
 
 class ChangeObject(Configurable):
     first = String(accessMode=AccessMode.READONLY, displayedName='Change:')
+
+
+class StateObject(Configurable):
+    state = String(enum=State, displayType='State')
+    other = String()
 
 
 # Classes for testing late binding initialization
@@ -95,10 +101,22 @@ def _define_binding_classes():
         def value_update(self, proxy):
             self.widget.setText(self.disp_name + proxy.value)
 
+    @register_binding_controller(klassname='State', binding_type=StringBinding,
+                                 is_compatible=with_display_type('State'))
+    class StateTrackingController(BaseBindingController):
+        model = Instance(UniqueWidgetModel)
+
+        def create_widget(self, parent):
+            return QLabel(parent)
+
+        def state_update(self, proxy):
+            self.widget.setText(proxy.root_proxy.state_binding.value)
+
     return {
         'DeviceController': DeviceController,
         'MultiBindingController': MultiBindingController,
         'SingleBindingController': SingleBindingController,
+        'StateTrackingController': StateTrackingController,
     }
 
 
@@ -114,6 +132,7 @@ class TestBaseBindingController(GuiTestCase):
         self.DeviceController = klasses['DeviceController']
         self.MultiBindingController = klasses['MultiBindingController']
         self.SingleBindingController = klasses['SingleBindingController']
+        self.StateTrackingController = klasses['StateTrackingController']
 
         schema = SampleObject.getClassSchema()
         binding = build_binding(schema)
@@ -193,7 +212,7 @@ class TestBaseBindingController(GuiTestCase):
         one = PropertyProxy(root_proxy=device, path='one')
         two = PropertyProxy(root_proxy=device, path='two')
         controller = self.DeviceController(proxy=one)
-        controller.create_widget(None)
+        controller.create(None)
 
         controller.visualize_additional_property(two)
         assert two in controller.display_names
@@ -202,3 +221,15 @@ class TestBaseBindingController(GuiTestCase):
         build_binding(Connected.getClassSchema(), existing=device.binding)
         assert controller.display_names[one] == 'One:'
         assert controller.display_names[two] == 'Two:'
+
+    def test_device_state_tracking(self):
+        binding = build_binding(StateObject.getClassSchema())
+        device = DeviceClassProxy(binding=binding, server_id='Test',
+                                  status=DeviceStatus.OFFLINE)
+        # Make a proxy for something other than the 'state' property
+        proxy = PropertyProxy(root_proxy=device, path='other')
+        controller = self.StateTrackingController(proxy=proxy)
+        controller.create(None)
+
+        device.state_binding.value = 'ERROR'
+        assert controller.widget.text() == 'ERROR'
