@@ -43,8 +43,8 @@ class DisplayStateColor(BaseBindingController):
         widget.addAction(textAction)
         return widget
 
-    @on_trait_change('proxy:value')
-    def _value_update(self, value):
+    def value_update(self, proxy):
+        value = proxy.value
         if State(value).isDerivedFrom(State.CHANGING):
             color = STATE_COLORS[State.CHANGING]
         elif State(value).isDerivedFrom(State.ACTIVE):

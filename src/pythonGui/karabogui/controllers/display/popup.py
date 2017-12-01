@@ -3,7 +3,7 @@ import os.path as op
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QMessageBox
 from PyQt4.QtSvg import QSvgWidget
-from traits.api import Instance, on_trait_change
+from traits.api import Instance
 
 from karabo.common.scenemodel.api import PopUpModel
 from karabogui.binding.api import (
@@ -44,6 +44,11 @@ class PopUp(BaseBindingController):
 
         return False
 
+    def binding_update(self, proxy):
+        attrs = proxy.binding.attributes
+        name = attrs.get(KARABO_SCHEMA_DISPLAYED_NAME)
+        self._dialog.setWindowTitle(name)
+
     def create_widget(self, parent):
         background_svg = op.join(op.dirname(__file__), 'speech-balloon.svg')
         widget = QSvgWidget(background_svg, parent)
@@ -53,19 +58,8 @@ class PopUp(BaseBindingController):
         self._dialog.finished.connect(self._on_finished)
         return widget
 
-    def _widget_changed(self):
-        """Finish widget initialization when the binding is alive"""
-        binding = self.proxy.binding
-        if binding is not None:
-            self._binding_update(binding)
-
-    @on_trait_change('proxy:binding')
-    def _binding_update(self, binding):
-        name = binding.attributes.get(KARABO_SCHEMA_DISPLAYED_NAME)
-        self._dialog.setWindowTitle(name)
-
-    @on_trait_change('proxy:value')
-    def _value_update(self, value):
+    def value_update(self, proxy):
+        value = proxy.value
         self._dialog.setText(value)
         self._dialog.setVisible(value != '')
 

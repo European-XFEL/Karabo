@@ -7,7 +7,7 @@ from PyQt4.QtCore import pyqtSlot, QByteArray, Qt
 from PyQt4.QtGui import (QPixmap, QDialog, QListView, QStandardItemModel,
                          QStandardItem, QIcon)
 from PyQt4.QtSvg import QSvgWidget
-from traits.api import Instance, on_trait_change
+from traits.api import Instance
 
 from karabo.common.api import State
 from karabo.common.scenemodel.api import StatefulIconWidgetModel
@@ -41,8 +41,8 @@ class StatefulIconWidget(BaseBindingController):
             self._icon = icon
         return QSvgWidget(parent)
 
-    @on_trait_change('proxy:value')
-    def _value_update(self, value):
+    def value_update(self, proxy):
+        value = proxy.value
         if State(value).isDerivedFrom(State.CHANGING):
             color = STATE_COLORS[State.CHANGING]
         elif State(value).isDerivedFrom(State.ACTIVE):
