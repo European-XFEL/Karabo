@@ -80,7 +80,8 @@ class ProjectDeviceInstance(HasStrictTraits):
         # Make sure the offline proxy has schema first
         if len(self._offline_proxy.binding.value) > 0:
             apply_default_configuration(self._offline_proxy.binding)
-            apply_configuration(config, self._offline_proxy.binding)
+            apply_configuration(config, self._offline_proxy.binding,
+                                notify=False)
         else:
             self._deferred_update = True
             self._offline_config = config
@@ -100,7 +101,7 @@ class ProjectDeviceInstance(HasStrictTraits):
         if self._deferred_update:
             apply_default_configuration(self._offline_proxy.binding)
             apply_configuration(self._offline_config,
-                                self._offline_proxy.binding)
+                                self._offline_proxy.binding, notify=False)
             self._deferred_update = False
 
     # ---------------------------------------------------------------------

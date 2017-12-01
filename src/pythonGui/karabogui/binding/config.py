@@ -8,14 +8,15 @@ from .types import BindingNamespace, BindingRoot, NodeBinding, SlotBinding
 
 
 def apply_configuration(config, binding, remember_modification=False,
-                        skip_modified=False):
+                        skip_modified=False, notify=True):
     """Recursively set values from a configuration Hash object to a binding
     object.
 
     The value of `remember_modification` will be set to each `modified` trait
     only the binding nodes. If `skip_modified` is True, values from `config`
     will not be applied to parts of the binding which have been modified
-    previously.
+    previously. If `notify` is False, trait change notifications of binding
+    nodes won't be triggered.
     """
     _node_types = (ChoiceOfNodesBinding, NodeBinding)
     namespace = binding.value
@@ -31,17 +32,20 @@ def apply_configuration(config, binding, remember_modification=False,
             if node.modified and skip_modified:
                 continue  # Move along
 
-            node.value = value
+            traits = {'value': value}
             # Set the timestamp if it's there
             ts = Timestamp.fromHashAttributes(attrs)
             # XXX: What should we do if the timestamp is None??
             if ts is not None:
-                node.timestamp = ts
+                traits['timestamp'] = ts
             # Clear the modified flag if desired
-            node.modified = remember_modification
+            traits['modified'] = remember_modification
+            # Set everything at once so notification can be controlled
+            node.trait_set(trait_change_notify=notify, **traits)
 
     # Notify listeners
-    binding.config_update = True
+    if notify:
+        binding.config_update = True
 
 
 def apply_default_configuration(binding):
