@@ -110,6 +110,9 @@ class BaseBindingController(HasStrictTraits):
             self.widget.setParent(None)
             self.widget = None
 
+        self.hide()
+        self.trait_setq(proxy=None, _additional_proxies=[])
+
     def hide(self):
         """Hide the proxies. Stops monitoring the parent device of each proxy
         being visualized.
