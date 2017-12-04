@@ -51,7 +51,6 @@ DATETIMEEDIT_STYLE_SHEET = ("QDateTimeEdit {}".format(STYLE))
 LINEEDIT_STYLE_SHEET = ("QLineEdit {}".format(STYLE))
 CURVE_COLORS = ['b', 'orange', 'k', 'g', 'pink', 'brown']
 CURVE_STYLES = ['-', '--', ':', '-.']
-CURVE_ATTRS_GENERATOR = cycle(product(CURVE_STYLES, CURVE_COLORS))
 
 PLOTTABLE_TYPES = (BoolBinding, FloatBinding, IntBinding)
 
@@ -87,8 +86,8 @@ class _Generation(object):
 
     def __init__(self):
         self.fill = 0
-        self.xs = numpy.empty(self.size, dtype=float)
-        self.ys = numpy.empty(self.size, dtype=float)
+        self.xs = numpy.empty(self.size, dtype=numpy.float)
+        self.ys = numpy.empty(self.size, dtype=numpy.float)
 
     def add_point(self, x, y):
         self.xs[self.fill] = x
@@ -130,8 +129,8 @@ class Curve(HasStrictTraits):
     histsize = Int(0)
     fill = Int(0)
 
-    x = Array(dtype=numpy.float32)
-    y = Array(dtype=numpy.float32)
+    x = Array(dtype=numpy.float)
+    y = Array(dtype=numpy.float)
 
     t0 = Float(0)
     t1 = Float(0)
@@ -148,11 +147,11 @@ class Curve(HasStrictTraits):
 
     def _x_default(self):
         arraysize = self.spare + sum([g.size for g in self.generations], 0)
-        return numpy.empty(arraysize, dtype=float)
+        return numpy.empty(arraysize, dtype=numpy.float)
 
     def _y_default(self):
         arraysize = self.spare + sum([g.size for g in self.generations], 0)
-        return numpy.empty(arraysize, dtype=float)
+        return numpy.empty(arraysize, dtype=numpy.float)
 
     def add_point(self, value, timestamp):
         # Fill the generations data, possibly propagating averaged values
@@ -166,7 +165,6 @@ class Curve(HasStrictTraits):
         self.x[self.fill] = timestamp
         self.y[self.fill] = value
         self.fill += 1
-
         # When the main buffer fills up, copy the generations data
         if self.fill == len(self.x):
             self.fill_current()
@@ -226,8 +224,8 @@ class Curve(HasStrictTraits):
         datasize = len(data)
         gensize = sum([g.size for g in self.generations], 0)
         arraysize = datasize + gensize + self.spare
-        x = numpy.empty(arraysize, dtype=float)
-        y = numpy.empty(arraysize, dtype=float)
+        x = numpy.empty(arraysize, dtype=numpy.float)
+        y = numpy.empty(arraysize, dtype=numpy.float)
 
         for i, d in enumerate(data):
             x[i] = Timestamp.fromHashAttributes(d['v', ...]).toTimestamp()
@@ -404,6 +402,10 @@ class DisplayTrendline(BaseBindingController):
     _y_axis_str_btns = Instance(OrderedDict, args=())
     _sel_x_axis_btn = Instance(QPushButton)
     _sel_y_axis_btn = Instance(QPushButton)
+    _x_button_group = Instance(QButtonGroup)
+    _y_button_group = Instance(QButtonGroup)
+
+    _curve_styles = Instance(cycle, allow_none=False)
 
     def create_widget(self, parent):
         widget = self._initUI(parent)
@@ -489,8 +491,8 @@ class DisplayTrendline(BaseBindingController):
         self._x_axis_str_btns[ONE_HOUR] = None
         self._x_axis_str_btns[TEN_MINUTES] = None
         self._x_axis_str_btns[RESET] = None
-        self._create_button_group(X_AXIS, self._x_axis_str_btns,
-                                  x_axis_btns_layout)
+        self._x_button_group = self._create_button_group(
+            X_AXIS, self._x_axis_str_btns, x_axis_btns_layout)
 
         # Init y-axis buttons
         y_axis_buttons_widget = QWidget()
@@ -499,8 +501,8 @@ class DisplayTrendline(BaseBindingController):
 
         self._y_axis_str_btns[FULL_RANGE] = None
         self._y_axis_str_btns[DETAIL_RANGE] = None
-        self._create_button_group(Y_AXIS, self._y_axis_str_btns,
-                                  y_axis_btns_layout)
+        self._y_button_group = self._create_button_group(
+            Y_AXIS, self._y_axis_str_btns, y_axis_btns_layout)
 
         self._le_detail_range = QLineEdit("10")
         self._le_detail_range.setMinimumWidth(30)
@@ -559,7 +561,7 @@ class DisplayTrendline(BaseBindingController):
         self._plot.setAxisTitle(QwtPlot.yLeft, axis_label(proxy))
 
     def add_proxy(self, proxy):
-        style, color = next(CURVE_ATTRS_GENERATOR)
+        style, color = next(self._curve_styles)
         curve = make.curve([], [], proxy.path, color=color, linestyle=style)
         self._addCurve(proxy, curve)
         if self._curve_count == 2:
@@ -710,6 +712,9 @@ class DisplayTrendline(BaseBindingController):
         layout.addWidget(hidden_btn)
 
         return button_group
+
+    def __curve_styles_default(self):
+        return cycle(product(CURVE_STYLES, CURVE_COLORS))
 
     def _update_x_axis_interval(self, t0, t1):
         """ Update lower and upper bound of curve intervals. """
