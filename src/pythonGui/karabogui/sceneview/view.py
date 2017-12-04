@@ -280,6 +280,7 @@ class SceneView(QWidget):
 
         unregister_from_broadcasts(self)
         self._set_scene_model(None)
+        self._scene_obj_cache.clear()
 
     def set_tab_visible(self, visible):
         """Sets whether this scene is visible.
