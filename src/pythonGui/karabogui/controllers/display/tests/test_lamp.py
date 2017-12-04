@@ -3,7 +3,8 @@ from unittest.mock import patch
 from PyQt4.QtGui import QLabel
 
 from karabo.middlelayer import Configurable, String
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..lamp import LampWidget
 
 
@@ -40,6 +41,6 @@ class TestLamp(GuiTestCase):
             controller.create(None)
 
             for state in states:
-                self.proxy.value = state
+                set_proxy_value(self.proxy, 'state', state)
                 assert controller.widget.pixmap is not None
                 controller.widget.pixmap = None

@@ -1,5 +1,4 @@
-from traits.api import (
-    Event, Instance, List, Property, Str, Trait, TraitHandler)
+from traits.api import Instance, List, Property, Str, Trait, TraitHandler
 
 from karabo.middlelayer import Hash
 from .types import BaseBinding, BindingNamespace, BindingRoot, NodeBinding
@@ -18,8 +17,6 @@ class ChoiceOfNodesBinding(BaseBinding):
     # Namespace of possible values
     choices = Instance(BindingNamespace, kw={'item_type': BindingRoot},
                        transient=True)
-    # An event which fires when subnodes/leaves are updated
-    config_update = Event
 
     def _choice_default(self):
         return next(iter(self.choices))

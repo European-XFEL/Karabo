@@ -6,7 +6,7 @@ from karabo.common.api import State
 from karabo.middlelayer import Configurable, String, Slot
 from karabogui.binding.api import (
     DeviceProxy, PropertyProxy, apply_default_configuration, build_binding)
-from karabogui.testing import GuiTestCase, singletons
+from karabogui.testing import GuiTestCase, set_proxy_value, singletons
 from ..popup import PopUp
 
 
@@ -67,10 +67,10 @@ class TestPopUp(GuiTestCase):
             controller = PopUp(proxy=self.proxy)
             controller.create(None)
 
-            self.proxy.value = 'SOME TEXT'
+            set_proxy_value(self.proxy, 'prop', 'SOME TEXT')
             assert controller._dialog.visible
 
-            self.proxy.value = ''
+            set_proxy_value(self.proxy, 'prop', '')
             assert not controller._dialog.visible
 
     def test_button_actions(self):

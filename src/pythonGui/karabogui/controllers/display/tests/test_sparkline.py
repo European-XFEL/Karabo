@@ -3,7 +3,8 @@ from unittest.mock import patch, Mock
 from karabo.common.scenemodel.api import SparklineModel
 from karabo.middlelayer import Configurable, Float
 from karabogui.testing import (
-    GuiTestCase, get_property_proxy, get_class_property_proxy, singletons)
+    GuiTestCase, get_property_proxy, get_class_property_proxy, set_proxy_value,
+    singletons)
 from .data import build_historic_data_float
 from ..sparkline import DisplaySparkline
 
@@ -73,7 +74,7 @@ class TestDisplaySparkline(GuiTestCase):
         controller = DisplaySparkline(proxy=prop, model=model)
         controller.create(None)
 
-        prop.value = 42.0
+        set_proxy_value(prop, 'prop', 42.0)
 
         historic_data = build_historic_data_float()
         prop.binding.historic_data = historic_data

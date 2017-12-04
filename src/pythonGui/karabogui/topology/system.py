@@ -277,10 +277,10 @@ class SystemTopology(HasStrictTraits):
         self._device_configurations[device_id] = config
 
         # Apply the configuration to the proxy.
-        # Leave modified values untouched!
-        # XXX: Suppress traits notifications?
+        # Leave user-modified values untouched!
         apply_configuration(config, proxy.binding, skip_modified=True)
         # Fire the config_update event
+        # XXX: Still needed with proxy.binding.config_update?
         proxy.config_update = True
 
         return proxy
