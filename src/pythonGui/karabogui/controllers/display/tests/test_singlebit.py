@@ -5,7 +5,8 @@ from karabo.common.scenemodel.api import SingleBitModel
 from karabo.middlelayer import Configurable, Int32
 from karabogui.binding.api import KARABO_SCHEMA_DISPLAY_TYPE
 from karabogui.indicators import STATE_COLORS
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..singlebit import SingleBit
 
 COLORS = {s: str(STATE_COLORS[s]) for s in (State.ACTIVE, State.PASSIVE)}
@@ -36,10 +37,10 @@ class TestSingleBit(GuiTestCase):
         self.model.invert = False
         self.model.bit = 5
 
-        self.proxy.value = 32
+        set_proxy_value(self.proxy, 'prop', 32)
         assert COLORS[State.ACTIVE] in singlebit.styleSheet()
 
-        self.proxy.value = 31
+        set_proxy_value(self.proxy, 'prop', 31)
         assert COLORS[State.PASSIVE] in singlebit.styleSheet()
 
         self.model.bit = 4

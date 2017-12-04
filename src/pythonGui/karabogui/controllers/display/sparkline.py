@@ -402,7 +402,7 @@ class DisplaySparkline(BaseBindingController):
         now = time.time()
         self._fetch_property_history(now - self.model.time_base, now)
 
-    @on_trait_change('proxy:value')
+    @on_trait_change('proxy:binding:config_update')
     def _value_update(self, value):
         timestamp = self.proxy.binding.timestamp
         attrs = self.proxy.binding.attributes
