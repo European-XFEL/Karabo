@@ -119,7 +119,7 @@ if __name__ == '__main__':
                 'karabo-gui=karabo_gui.programs.gui_runner:main',
                 'neo-runner=karabogui.programs.gui_runner:main',
                 'project-runner=karabo_gui.programs.project_runner:main',
-                'scene-runner=karabo_gui.programs.scene_runner:main',
+                'scene-runner=karabogui.programs.scene_runner:main',
                 'navigation-runner=karabo_gui.programs.navigation_runner:main',
             ]},
           # Add an alias for 'build' so we can prepare data for Windows
