@@ -5,7 +5,8 @@ from PyQt4.QtCore import Qt
 from karabo.common.scenemodel.api import DisplayProgressBarModel
 from karabo.middlelayer import Configurable, Float, Int8
 from karabogui.binding.api import build_binding
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..progressbar import DisplayProgressBar, NULL_RANGE, PROGRESS_MAX
 
 
@@ -49,7 +50,8 @@ class TestDisplayProgressBar(GuiTestCase):
         assert self.controller.widget.orientation() == Qt.Horizontal
 
     def test_set_value(self):
-        self.proxy.value = 1.0  # range is [-2, 4]; 1.0 is the middle
+        # value range is [-2, 4]; 1.0 is the middle
+        set_proxy_value(self.proxy, 'prop', 1.0)
         assert self.controller.widget.value() == PROGRESS_MAX * 0.5
 
     def test_no_limits_messagebox(self):

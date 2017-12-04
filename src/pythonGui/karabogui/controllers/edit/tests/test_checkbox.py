@@ -2,7 +2,8 @@ from PyQt4.QtCore import Qt
 
 from karabo.common.scenemodel.api import CheckBoxModel
 from karabo.middlelayer import Configurable, Bool
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..checkbox import EditableCheckBox
 
 
@@ -23,7 +24,7 @@ class TestEditableCheckBox(GuiTestCase):
         assert self.controller.widget is None
 
     def test_set_value(self):
-        self.proxy.value = True
+        set_proxy_value(self.proxy, 'prop', True)
         assert self.controller.widget.checkState() == Qt.Checked
 
     def test_edit_value(self):

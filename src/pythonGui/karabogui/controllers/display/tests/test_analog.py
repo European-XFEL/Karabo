@@ -2,7 +2,8 @@ from unittest.mock import patch
 
 from karabo.middlelayer import Configurable, Float
 from karabogui.binding.api import build_binding
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..analog import DisplayAnalog
 
 
@@ -42,10 +43,10 @@ class TestDisplayAnalog(GuiTestCase):
         controller = DisplayAnalog(proxy=self.proxy)
         controller.create(None)
         # Just exercise the code paths...
-        self.proxy.value = -11.0
-        self.proxy.value = -7.0
-        self.proxy.value = 7.0
-        self.proxy.value = 11.0
+        set_proxy_value(self.proxy, 'prop', -11.0)
+        set_proxy_value(self.proxy, 'prop', -7.0)
+        set_proxy_value(self.proxy, 'prop', 7.0)
+        set_proxy_value(self.proxy, 'prop', 11.0)
 
     def test_exercise_draw_only_alarms(self):
         schema = ObjectWithAlarms.getClassSchema()
@@ -54,9 +55,9 @@ class TestDisplayAnalog(GuiTestCase):
         controller.create(None)
 
         # Just exercise the code paths
-        proxy.value = 7.0
-        proxy.value = -11.0
-        proxy.value = 11.0
+        set_proxy_value(self.proxy, 'prop', 7.0)
+        set_proxy_value(self.proxy, 'prop', -11.0)
+        set_proxy_value(self.proxy, 'prop', 11.0)
 
     def test_exercise_draw_only_warnings(self):
         schema = ObjectWithWarnings.getClassSchema()
@@ -65,9 +66,9 @@ class TestDisplayAnalog(GuiTestCase):
         controller.create(None)
 
         # Just exercise the code paths
-        proxy.value = 1.0
-        proxy.value = -7.0
-        proxy.value = 7.0
+        set_proxy_value(self.proxy, 'prop', 1.0)
+        set_proxy_value(self.proxy, 'prop', -7.0)
+        set_proxy_value(self.proxy, 'prop', 7.0)
 
     def test_no_alarms_messagebox(self):
         controller = DisplayAnalog(proxy=self.proxy)
@@ -81,7 +82,7 @@ class TestDisplayAnalog(GuiTestCase):
                 assert messagebox.show_warning.call_count == 1
 
             # Force an empty draw
-            self.proxy.value = 4.2
+            set_proxy_value(self.proxy, 'prop', 4.2)
         finally:
             # Put things back as they were!
             schema = ObjectWithBoth.getClassSchema()

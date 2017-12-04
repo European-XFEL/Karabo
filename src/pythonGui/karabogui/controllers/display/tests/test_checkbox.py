@@ -1,7 +1,8 @@
 from xml.etree.ElementTree import parse
 
 from karabo.middlelayer import Configurable, Bool
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..checkbox import DisplayCheckBox, CHECKED, UNCHECKED
 
 
@@ -37,10 +38,10 @@ class TestDisplayCheckBox(GuiTestCase):
         assert self.controller.widget is None
 
     def test_set_value(self):
-        self.proxy.value = True
+        set_proxy_value(self.proxy, 'prop', True)
         _check_renderer_against_svg(self.controller.widget.renderer(),
                                     CHECKED)
 
-        self.proxy.value = False
+        set_proxy_value(self.proxy, 'prop', False)
         _check_renderer_against_svg(self.controller.widget.renderer(),
                                     UNCHECKED)

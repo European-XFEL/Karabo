@@ -91,7 +91,7 @@ class DisplayAlignedImage(BaseBindingController):
         self.add_proxy(self.proxy)
         return widget
 
-    def node_update(self, proxy):
+    def value_update(self, proxy):
         img_node = proxy.value
         if "stackAxis" in img_node:
             self._axis = img_node.stackAxis.value

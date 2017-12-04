@@ -33,15 +33,15 @@ def apply_configuration(config, binding, remember_modification=False,
                 continue  # Move along
 
             traits = {'value': value}
-            # Set the timestamp if it's there
+            # Set the timestamp no matter what
             ts = Timestamp.fromHashAttributes(attrs)
-            # XXX: What should we do if the timestamp is None??
-            if ts is not None:
-                traits['timestamp'] = ts
-            # Clear the modified flag if desired
+            traits['timestamp'] = ts or Timestamp()
+            # Set the modified flag if desired
             traits['modified'] = remember_modification
             # Set everything at once so notification can be controlled
-            node.trait_set(trait_change_notify=notify, **traits)
+            node.trait_set(trait_change_notify=False, **traits)
+            if notify:
+                node.config_update = True
 
     # Notify listeners
     if notify:

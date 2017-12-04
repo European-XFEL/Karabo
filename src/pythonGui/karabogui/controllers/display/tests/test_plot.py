@@ -1,5 +1,6 @@
 from karabo.middlelayer import Configurable, VectorFloat
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..plot import DisplayPlot
 
 
@@ -26,5 +27,5 @@ class TestDisplayPlot(GuiTestCase):
         assert curve is not None
 
         value = [2., 4., 6.]
-        self.proxy.value = value
+        set_proxy_value(self.proxy, 'prop', value)
         assert list(curve.data().yData()) == value

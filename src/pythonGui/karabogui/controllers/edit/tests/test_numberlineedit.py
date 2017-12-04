@@ -2,7 +2,8 @@ from unittest.mock import patch
 
 from karabo.common.scenemodel.api import DoubleLineEditModel, IntLineEditModel
 from karabo.middlelayer import Configurable, Double, Int32
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..numberlineedit import DoubleLineEdit, IntLineEdit
 
 
@@ -38,15 +39,14 @@ class TestNumberLineEdit(GuiTestCase):
         assert self.i_controller.widget is None
 
     def test_set_value(self):
-        self.d_proxy.value = 5.4
+        set_proxy_value(self.d_proxy, 'prop', 5.4)
         assert self.d_controller._internal_widget.text() == '5.4'
 
-        self.i_proxy.value = 5
+        set_proxy_value(self.i_proxy, 'prop', 5)
         assert self.i_controller._internal_widget.text() == '5'
 
     def test_edit_value(self):
         self.d_controller._internal_widget.setText('3.14')
-        print(self.d_proxy.value)
         assert abs(self.d_proxy.value - 3.14) < 0.0001
 
         self.i_controller._internal_widget.setText('3')

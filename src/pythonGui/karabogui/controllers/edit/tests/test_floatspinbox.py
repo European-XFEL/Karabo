@@ -3,7 +3,8 @@ from unittest.mock import patch
 from karabo.common.scenemodel.api import FloatSpinBoxModel
 from karabo.middlelayer import Configurable, Double
 from karabogui.binding.api import build_binding
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..floatspinbox import FloatSpinBox
 
 
@@ -29,7 +30,7 @@ class TestFloatSpinBox(GuiTestCase):
         assert self.controller.widget is None
 
     def test_set_value(self):
-        self.proxy.value = 5.0
+        set_proxy_value(self.proxy, 'prop', 5.0)
         assert self.controller._internal_widget.value() == 5.0
 
     def test_edit_value(self):

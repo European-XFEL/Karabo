@@ -1,6 +1,7 @@
 from karabo.common.scenemodel.api import LineEditModel
 from karabo.middlelayer import Configurable, String
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..lineedit import EditableLineEdit
 
 
@@ -22,7 +23,7 @@ class TestEditableLineEdit(GuiTestCase):
 
     def test_set_value(self):
         self.controller._last_cursor_pos = 0
-        self.proxy.value = 'Blah'
+        set_proxy_value(self.proxy, 'prop', 'Blah')
         assert self.controller.widget.text() == 'Blah'
         assert self.controller.widget.cursorPosition() == 0
 

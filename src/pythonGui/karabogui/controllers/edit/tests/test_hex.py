@@ -1,6 +1,7 @@
 from karabo.middlelayer import Configurable, Int8, UInt8
 from karabogui.binding.api import build_binding
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..hex import Hexadecimal
 
 
@@ -25,7 +26,7 @@ class TestHexadecimal(GuiTestCase):
         assert self.controller.widget is None
 
     def test_set_value(self):
-        self.proxy.value = 15
+        set_proxy_value(self.proxy, 'prop', 15)
         assert self.controller._internal_widget.text() == 'f'
 
     def test_edit_value(self):
