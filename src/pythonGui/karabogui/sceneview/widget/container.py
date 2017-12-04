@@ -96,6 +96,7 @@ class ControllerContainer(QWidget):
                                      remove=True)
 
         self.widget_controller.destroy()
+        self.widget_controller = None
 
     def set_geometry(self, rect):
         self.model.set(x=rect.x(), y=rect.y(),
