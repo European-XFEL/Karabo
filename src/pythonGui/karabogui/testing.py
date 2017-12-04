@@ -13,7 +13,8 @@ from karabogui.alarms.api import (
     DEVICE_ID, NEEDS_ACKNOWLEDGING, PROPERTY, TIME_OF_FIRST_OCCURENCE,
     TIME_OF_OCCURENCE)
 from karabogui.binding.api import (
-    build_binding, DeviceClassProxy, DeviceProxy, PropertyProxy)
+    DeviceClassProxy, DeviceProxy, PropertyProxy, apply_configuration,
+    build_binding)
 import karabogui.singletons.api as singletons_mod
 
 
@@ -126,6 +127,12 @@ def get_class_property_proxy(schema, name):
     root = DeviceClassProxy(binding=binding, server_id='Test',
                             status=DeviceStatus.OFFLINE)
     return PropertyProxy(root_proxy=root, path=name)
+
+
+def set_proxy_value(proxy, name, value):
+    """Use `apply_configuration` to set a single property value on a proxy
+    """
+    apply_configuration(Hash(name, value), proxy.root_proxy.binding)
 
 
 @contextlib.contextmanager
