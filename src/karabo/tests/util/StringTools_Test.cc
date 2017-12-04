@@ -90,16 +90,29 @@ void StringTools_Test::testToString() {
     CPPUNIT_ASSERT(toString(true) == "1");
 
     // Floating point types
-    CPPUNIT_ASSERT((float) 1.2345678 == fromString<float>("1.2345678"));
-    CPPUNIT_ASSERT((double) 1.234567890123456 == fromString<double>("1.234567890123456"));
+    CPPUNIT_ASSERT(toString((float) 1.2345678) == "1.2345678");
+    CPPUNIT_ASSERT(toString((float) 0.1) == "0.1000000");  // still use 'fixed' format
+    CPPUNIT_ASSERT(toString((float) -0.1) == "-0.1000000");  // still use 'fixed' format
+    CPPUNIT_ASSERT(toString((float) 0.099999987) == "9.9999987e-02");   // use 'scientific' notation (abs val < 0.1)
+    CPPUNIT_ASSERT(toString((float) -0.099999987) == "-9.9999987e-02");   // use 'scientific' notation (abs val < 0.1)
+    std::string fString = toString((float) 3333330000000.0);
+    CPPUNIT_ASSERT(fString.substr(0,7) == "3333330");
+    
+    CPPUNIT_ASSERT(toString((double) 1.234567890123456) == "1.234567890123456");
+    CPPUNIT_ASSERT(toString((double) 0.123456789012345) == "0.123456789012345");
+    CPPUNIT_ASSERT(toString((double) 0.01234567890123456) == "1.234567890123456e-02");
+    
 
     // Complex types
     CPPUNIT_ASSERT(toString(std::complex<float>(1.2345678, 1.3456789)) == "(1.2345678,1.3456789)");
+    CPPUNIT_ASSERT(toString(std::complex<float>(1234567.0, 0.00013456780)) == "(1.2345670e+06,1.3456780e-04)");
     CPPUNIT_ASSERT(toString(std::complex<double>(1.234567890123456, 6.543210987654321)) == "(1.234567890123456,6.543210987654321)");
 
     // Vectors
     std::vector<unsigned int> uint32Vector(4, 12345);
     CPPUNIT_ASSERT(toString(uint32Vector) == "12345,12345,12345,12345");
+    std::vector<float> floatVector{1,0.5,3.1415956,0.1, 0.09999878, 2.8790123,99.8765411, -0.000000000034567890};
+    CPPUNIT_ASSERT(toString(floatVector) == "1.0000000,0.5000000,3.1415956,0.1000000,9.9998780e-02,2.8790123,99.8765411,-3.4567890e-11");
 
     // Wide strings
     const wchar_t wstr[] = L"abcd0123";
