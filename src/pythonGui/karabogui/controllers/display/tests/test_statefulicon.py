@@ -7,7 +7,8 @@ from karabo.common.api import State
 from karabo.common.scenemodel.api import StatefulIconWidgetModel
 from karabo.middlelayer import Configurable, String
 from karabogui.indicators import STATE_COLORS
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..statefulicon import StatefulIconWidget
 
 ICON_NAME = 'icon_bdump'
@@ -27,7 +28,7 @@ class MockDialog(QDialog):
 
 
 class Object(Configurable):
-    prop = String(displayType='State')
+    state = String(displayType='State')
 
 
 class TestStatefulIconWidget(GuiTestCase):
@@ -35,7 +36,7 @@ class TestStatefulIconWidget(GuiTestCase):
         super(TestStatefulIconWidget, self).setUp()
 
         schema = Object.getClassSchema()
-        self.proxy = get_class_property_proxy(schema, 'prop')
+        self.proxy = get_class_property_proxy(schema, 'state')
         self.model = StatefulIconWidgetModel(icon_name=ICON_NAME)
 
     def test_basics(self):
@@ -56,7 +57,7 @@ class TestStatefulIconWidget(GuiTestCase):
                       'NORMAL', 'ERROR', 'INIT', 'UNKNOWN')
 
             for state in states:
-                self.proxy.value = state
+                set_proxy_value(self.proxy, 'state', state)
                 color = STATE_COLORS[getattr(State, state)]
                 svg = controller._icon.with_color(color)
                 assert controller.widget.loaded_data == QByteArray(svg)

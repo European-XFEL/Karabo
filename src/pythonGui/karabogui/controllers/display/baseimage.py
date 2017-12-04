@@ -57,7 +57,7 @@ class _BaseImage(BaseBindingController):
         hlayout.addWidget(self._toolbar)
         return widget
 
-    def node_update(self, proxy):
+    def value_update(self, proxy):
         img_node = proxy.value
         dimX, dimY, dimZ, format = get_dimensions_and_format(img_node)
         if dimX is None and dimY is None:

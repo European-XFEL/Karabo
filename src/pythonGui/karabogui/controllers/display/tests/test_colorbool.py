@@ -5,7 +5,8 @@ from PyQt4.QtGui import QWidget
 
 from karabo.common.api import State
 from karabo.common.scenemodel.api import ColorBoolModel
-from karabo.middlelayer import Configurable, Bool
+from karabo.middlelayer import Configurable, Bool, Hash
+from karabogui.binding.api import apply_configuration
 from karabogui.indicators import STATE_COLORS
 from karabogui.testing import GuiTestCase, get_class_property_proxy
 from ..colorbool import DisplayColorBool
@@ -44,10 +45,12 @@ class TestDisplayColorBool(GuiTestCase):
             controller = DisplayColorBool(proxy=self.proxy, model=self.model)
             controller.create(None)
 
-            self.proxy.value = True
+            apply_configuration(Hash('prop', True),
+                                self.proxy.root_proxy.binding)
             active = controller.icon.with_color(STATE_COLORS[State.ACTIVE])
             assert controller.widget.loaded_data == QByteArray(active)
 
-            self.proxy.value = False
+            apply_configuration(Hash('prop', False),
+                                self.proxy.root_proxy.binding)
             passive = controller.icon.with_color(STATE_COLORS[State.PASSIVE])
             assert controller.widget.loaded_data == QByteArray(passive)
