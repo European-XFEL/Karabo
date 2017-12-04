@@ -164,9 +164,12 @@ namespace karabo {
 
 
         void ImageData::setBitsPerPixel(const int bitsPerPixel) {
-            // maximum depends on type in data and on encoding
+            // Maximum depends on type in data and on encoding.
+            // But if encoding cannot specify a maximum, just believe the input.
             const int maxBitsPerPixel = defaultBitsPerPixel(getEncoding(), getData());
-            set<int>("bitsPerPixel", std::min<int>(bitsPerPixel, maxBitsPerPixel));
+            const int finalBitsPerPixel = (maxBitsPerPixel == 0 ? bitsPerPixel
+                                           : std::min<int>(bitsPerPixel, maxBitsPerPixel));
+            set<int>("bitsPerPixel", finalBitsPerPixel);
         }
 
 
@@ -267,23 +270,28 @@ namespace karabo {
         int ImageData::defaultBitsPerPixel(int encoding, const karabo::util::NDArray& data) {
             const size_t numBytes = karabo::util::Types::to<karabo::util::ToSize>(data.getType());
 
-            int factor = 0;
+            int factor = -1;
             switch (encoding) {
+                case Encoding::GRAY:
+                    factor = 1;
+                    break;
+                case Encoding::BAYER:
+                    return numBytes * 8; // Plain 8 in http://www.ni.com/white-paper/3903/en/, independent of CHAR_BIT!
                 case Encoding::RGB:
                 case Encoding::BGR:
+                case Encoding::YUV:
                     // NDArray's Dims.x3 should be 3
                     factor = 3;
                     break;
                 case Encoding::RGBA:
                 case Encoding::BGRA:
+                case Encoding::CMYK:
                     // NDArray's Dims.x3 should be 4
                     factor = 4;
                     break;
-                case Encoding::GRAY:
                 default:
-                    // FIXME: extend according to Andrea's comment
-                    // What about CMYK, YUV, BAYER, JPEG, ...?
-                    factor = 1;
+                    // JPEG, PNG, BMP, TIFF, UNDEFINED: return 0 to indicate that it is not defined
+                    factor = 0;
             }
             return factor * numBytes * CHAR_BIT; // CHAR_BIT from <climits> - usually 8
         }
