@@ -3,6 +3,7 @@ from traits.api import (
     String, WeakRef, on_trait_change)
 
 from karabo.common.api import DeviceStatus
+from karabo.middlelayer import Hash
 from karabogui.singletons.api import get_network, get_topology
 from . import const
 from .types import BaseBinding, BindingRoot, PipelineOutputBinding, SlotBinding
@@ -62,6 +63,7 @@ class DeviceProxy(BaseDeviceProxy):
     """The proxy for device instances and project devices. Instances may come
     on and offline.
     """
+    configuration = Instance(Hash)
     # ID of the device we are proxying
     device_id = String
     # An event which fires when the configuration is updated from the network
@@ -266,17 +268,15 @@ class PropertyProxy(HasStrictTraits):
         For a device class, return the defaul value, if one exists.
         Returns None if there is no value.
         """
-        if isinstance(self.root_proxy, DeviceClassProxy):
+        if isinstance(self.root_proxy, DeviceProxy):
+            configuration = self.root_proxy.configuration
+            if configuration is not None and self.path in configuration:
+                return configuration[self.path]
+        else:
             if self.binding is None:
                 return None
             attrs = self.binding.attributes
             return attrs.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
-        else:
-            topology = get_topology()
-            device_id = self.root_proxy.device_id
-            configuration = topology.get_configuration(device_id)
-            if configuration is not None and self.path in configuration:
-                return configuration[self.path]
 
     def get_history(self, time_start, time_end, max_value_count=-1):
         """Request the historical values of `binding` between `time_start` and

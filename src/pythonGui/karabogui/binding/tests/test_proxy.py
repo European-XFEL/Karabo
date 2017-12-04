@@ -162,18 +162,17 @@ def test_property_proxy():
     assert other == proxy
 
 
-def test_property_proxy_value():
-    topology = Mock()
-    with singletons(topology=topology):
-        schema = get_simple_schema()
-        binding = build_binding(schema)
-        root_proxy = DeviceProxy(device_id='dev', binding=binding)
-        proxy = PropertyProxy(root_proxy=root_proxy, path='bar')
+def test_property_proxy_device_value():
+    schema = get_simple_schema()
+    binding = build_binding(schema)
 
-        topology.get_configuration.return_value = Hash('bar', 'Remote')
-        assert proxy.get_device_value() == 'Remote'
+    # First a device proxy
+    root_proxy = DeviceProxy(device_id='dev', binding=binding,
+                             configuration=Hash('bar', 'Remote'))
+    proxy = PropertyProxy(root_proxy=root_proxy, path='bar')
+    assert proxy.get_device_value() == 'Remote'
 
-    # Now do the same with a class proxy
+    # Then a class proxy
     root_proxy = DeviceClassProxy(binding=binding)
     proxy = PropertyProxy(root_proxy=root_proxy, path='foo')
     assert proxy.get_device_value()  # defaultValue of 'foo' is True
