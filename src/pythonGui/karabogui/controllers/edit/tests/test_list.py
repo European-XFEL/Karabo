@@ -6,7 +6,8 @@ from karabo.common.scenemodel.api import EditableListModel
 from karabo.middlelayer import Configurable, VectorInt32
 from karabogui.binding.api import apply_default_configuration
 from karabogui.controllers.listedit import ListEdit
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..list import EditableList
 
 
@@ -38,7 +39,7 @@ class TestEditableList(GuiTestCase):
 
     def test_set_value(self):
         self.controller.last_cursor_position = 0
-        self.proxy.value = [0, 2]
+        set_proxy_value(self.proxy, 'prop', [0, 2])
         assert self.controller._internal_widget.text() == '0,2'
         assert self.controller._internal_widget.cursorPosition() == 0
 
@@ -48,6 +49,7 @@ class TestEditableList(GuiTestCase):
         assert all(self.proxy.value == [3, 4])
 
     def test_edit_empty_value(self):
+        self.controller._internal_widget.setText('NOT IMPORTANT')
         self.controller.set_read_only(False)
         self.controller._internal_widget.setText('')
         value = self.proxy.value

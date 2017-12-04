@@ -238,7 +238,9 @@ def test_multi_device_config_extraction():
     prop_string = PropertyProxy(root_proxy=dev_two, path='bar')
 
     prop_bool.value = True
+    prop_bool.binding.modified = True
     prop_string.value = 'yo'
+    prop_string.binding.modified = True
     configs = extract_sparse_configurations([prop_bool, prop_string])
 
     assert 'one' in configs and 'two' in configs

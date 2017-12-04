@@ -6,7 +6,7 @@ from karabogui.binding.api import (
     ListOfNodesBinding, PropertyProxy, StringBinding, TableBinding,
     KARABO_SCHEMA_DISPLAY_TYPE, KARABO_SCHEMA_ROW_SCHEMA
 )
-from karabogui.testing import GuiTestCase
+from karabogui.testing import GuiTestCase, set_proxy_value
 from ..runconfigurator import RunConfiguratorEdit, NODE_CLASS_NAME
 
 
@@ -76,12 +76,12 @@ class TestRunConfiguratorEdit(GuiTestCase):
     def test_set_value(self):
         item_model = self.controller.widget.model()
         assert item_model.rowCount() == 0
-        self.proxy.value = _build_value()
+        set_proxy_value(self.proxy, 'prop', _build_value())
         assert item_model.rowCount() == 1
 
     def test_edit_value(self):
         value = _build_value()
-        self.proxy.value = value
+        set_proxy_value(self.proxy, 'prop', value)
         item_model = self.controller.widget.model()
         root = item_model.invisibleRootItem()
         child = root.child(0)

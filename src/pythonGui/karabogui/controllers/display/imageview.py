@@ -91,7 +91,7 @@ class DisplayImage(BaseBindingController):
         toolLayout.addWidget(self._cellWidget)
         return widget
 
-    def node_update(self, proxy):
+    def value_update(self, proxy):
         img_node = proxy.value
         dimX, dimY, dimZ, format = get_dimensions_and_format(img_node)
         if dimX is not None and dimY is not None and dimZ is None:
