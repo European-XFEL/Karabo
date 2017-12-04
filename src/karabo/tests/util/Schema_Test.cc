@@ -235,7 +235,7 @@ void Schema_Test::testGetKeyFromAlias() {
 
 void Schema_Test::testGetAliasAsString() {
     CPPUNIT_ASSERT(m_schema.getAliasAsString("exampleKey2") == "10");
-    CPPUNIT_ASSERT(m_schema.getAliasAsString("exampleKey3") == "5.500000000000000");
+    CPPUNIT_ASSERT(m_schema.getAliasAsString("exampleKey3") == "5.5");
     CPPUNIT_ASSERT(m_schema.getAliasAsString("exampleKey4") == "exampleAlias4");
 
     string aliasStr = m_schema.getAliasAsString("exampleKey5");
