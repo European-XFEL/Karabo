@@ -1,5 +1,6 @@
 from karabo.middlelayer import Configurable, String
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..lineedit import DisplayLineEdit
 
 
@@ -25,5 +26,5 @@ class TestDisplayLineEdit(GuiTestCase):
     def test_set_string_value(self):
         controller = DisplayLineEdit(proxy=self.proxy)
         controller.create(None)
-        self.proxy.value = 'hello'
+        set_proxy_value(self.proxy, 'prop', 'hello')
         assert controller.widget.text() == 'hello'

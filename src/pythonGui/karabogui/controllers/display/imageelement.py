@@ -36,7 +36,7 @@ class DisplayImageElement(BaseBindingController):
         widget.setWordWrap(True)
         return widget
 
-    def node_update(self, proxy):
+    def value_update(self, proxy):
         img_node = proxy.value
         dimX, dimY, dimZ, format = get_dimensions_and_format(img_node)
         img_types = (QImage.Format_Indexed8, QImage.Format_RGB888)

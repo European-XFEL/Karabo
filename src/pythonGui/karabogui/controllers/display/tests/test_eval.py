@@ -2,7 +2,8 @@ from unittest.mock import patch
 
 from karabo.common.scenemodel.api import EvaluatorModel
 from karabo.middlelayer import Configurable, Float
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..eval import Evaluator
 
 
@@ -29,19 +30,19 @@ class TestEvaluator(GuiTestCase):
         model = EvaluatorModel(expression='x**2')
         controller = Evaluator(proxy=self.proxy, model=model)
         controller.create(None)
-        self.proxy.value = 2.0
+        set_proxy_value(self.proxy, 'prop', 2.0)
         assert controller._internal_widget.text() == '4.0'
 
     def test_builtin_function(self):
         model = EvaluatorModel(expression='round(x)')
         controller = Evaluator(proxy=self.proxy, model=model)
         controller.create(None)
-        self.proxy.value = 2.5
+        set_proxy_value(self.proxy, 'prop', 2.5)
         expected = str(round(self.proxy.value))
         assert controller._internal_widget.text() == expected
 
     def test_change_expression(self):
-        self.proxy.value = 21.0
+        set_proxy_value(self.proxy, 'prop', 21.0)
         controller = Evaluator(proxy=self.proxy, model=EvaluatorModel())
         controller.create(None)
         action = controller.widget.actions()[0]

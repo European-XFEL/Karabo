@@ -1,7 +1,8 @@
 from karabo.common.scenemodel.api import EditableSpinBoxModel
 from karabo.middlelayer import Configurable, Int32, UInt8
 from karabogui.binding.api import build_binding
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..intspinbox import EditableSpinBox
 
 
@@ -27,7 +28,7 @@ class TestEditableSpinBox(GuiTestCase):
         assert self.controller.widget is None
 
     def test_set_value(self):
-        self.proxy.value = 5
+        set_proxy_value(self.proxy, 'prop', 5)
         assert self.controller._internal_widget.value() == 5
 
     def test_edit_value(self):

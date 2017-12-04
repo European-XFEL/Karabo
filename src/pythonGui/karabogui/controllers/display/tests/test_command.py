@@ -2,12 +2,10 @@ from unittest.mock import Mock
 
 from PyQt4.QtGui import QToolButton
 
-from karabo.middlelayer import Configurable, Hash, State, Slot, String
+from karabo.middlelayer import Configurable, State, Slot, String
 from karabogui.binding.api import (
-    DeviceProxy, PropertyProxy, build_binding, apply_configuration,
-    apply_default_configuration
-)
-from karabogui.testing import GuiTestCase, singletons
+    DeviceProxy, PropertyProxy, build_binding, apply_default_configuration)
+from karabogui.testing import GuiTestCase, set_proxy_value, singletons
 from ..command import DisplayCommand
 
 
@@ -86,8 +84,7 @@ class TestDisplayCommand(GuiTestCase):
         # device state is INIT
         assert not controller._actions[0].action.isEnabled()
 
-        config = Hash("state", State.ACTIVE.value)
-        apply_configuration(config, binding)
+        set_proxy_value(slot_proxy, 'state', State.ACTIVE.value)
         # now `yep` should be enabled
         assert controller._actions[0].action.isEnabled()
 

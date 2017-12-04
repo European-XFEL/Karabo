@@ -4,7 +4,8 @@ from karabo.common.api import State
 from karabo.common.scenemodel.api import DisplayStateColorModel
 from karabo.middlelayer import Configurable, String
 from karabogui.indicators import STATE_COLORS
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..statecolor import DisplayStateColor
 
 
@@ -32,7 +33,7 @@ class TestStateColorModel(GuiTestCase):
                   'NORMAL', 'ERROR', 'INIT', 'UNKNOWN')
 
         for state in states:
-            self.proxy.value = state
+            set_proxy_value(self.proxy, 'state', state)
             color = STATE_COLORS[getattr(State, state)]
             sheet = self.controller.widget.styleSheet()
             assert str(color) in sheet

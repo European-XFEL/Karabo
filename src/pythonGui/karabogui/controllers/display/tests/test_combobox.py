@@ -1,6 +1,7 @@
 from karabo.middlelayer import Configurable, Int8, String
 from karabogui.binding.api import build_binding, apply_default_configuration
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..combobox import DisplayComboBox
 
 
@@ -32,7 +33,7 @@ class TestDisplayComboBox(GuiTestCase):
         apply_default_configuration(self.proxy.root_proxy.binding)
         assert self.controller.widget.currentText() == 'foo'
 
-        self.proxy.binding.value = 'bar'
+        set_proxy_value(self.proxy, 'prop', 'bar')
         assert self.controller.widget.currentText() == 'bar'
 
     def test_binding_change(self):

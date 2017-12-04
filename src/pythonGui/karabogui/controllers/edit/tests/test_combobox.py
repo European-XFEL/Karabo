@@ -1,7 +1,8 @@
 from karabo.common.scenemodel.api import ComboBoxModel
 from karabo.middlelayer import Configurable, String, Int32
 from karabogui.binding.api import build_binding
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..combobox import EditableComboBox
 
 
@@ -26,7 +27,7 @@ class TestEditableComboBox(GuiTestCase):
         assert self.controller.widget is None
 
     def test_set_value(self):
-        self.proxy.value = 'bar'
+        set_proxy_value(self.proxy, 'prop', 'bar')
         assert self.controller.widget.currentIndex() == 1
 
     def test_edit_value(self):

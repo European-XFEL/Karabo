@@ -8,7 +8,7 @@ from karabo.middlelayer import (
 from karabogui.binding.api import (
     DeviceClassProxy, NodeBinding, PropertyProxy, StringBinding,
     apply_configuration, build_binding, KARABO_SCHEMA_DISPLAYED_NAME)
-from karabogui.testing import GuiTestCase, flushed_registry
+from karabogui.testing import GuiTestCase, flushed_registry, set_proxy_value
 from ..base import BaseBindingController
 from ..registry import register_binding_controller
 from ..util import with_display_type
@@ -93,7 +93,7 @@ def _define_binding_classes():
         def create_widget(self, parent):
             return QLabel(parent)
 
-        def node_update(self, proxy):
+        def value_update(self, proxy):
             self.widget.setText(proxy.binding.value.second.value)
 
     @register_binding_controller(klassname='Mono', binding_type=StringBinding)
@@ -184,13 +184,13 @@ class TestBaseBindingController(GuiTestCase):
         assert not controller.visualize_additional_property(self.unsupported)
 
     def test_single_value_update(self):
-        self.first.value = 'Foo'
+        set_proxy_value(self.first, 'first', 'Foo')
         assert self.single.widget.text() == 'First:Foo'
 
     def test_multi_value_update(self):
-        self.first.value = 'Bar'
+        set_proxy_value(self.first, 'first', 'Bar')
         assert self.multi.widget.text() == 'Bar'
-        self.second.value = 'Qux'
+        set_proxy_value(self.second, 'second', 'Qux')
         assert self.multi.widget.text() == 'Qux'
 
     def test_node_value_update(self):
@@ -215,7 +215,7 @@ class TestBaseBindingController(GuiTestCase):
         assert deferred_before + 1 == self.single.deferred
 
     def test_schema_injection(self):
-        self.first.value = 'Now'
+        set_proxy_value(self.first, 'first', 'Now')
         assert self.single.widget.text() == 'First:Now'
 
         try:
@@ -224,7 +224,7 @@ class TestBaseBindingController(GuiTestCase):
             schema = ChangeObject.getClassSchema()
             build_binding(schema, existing=self.first.root_proxy.binding)
             # Schema injection resets the value!
-            self.first.value = 'Now'
+            set_proxy_value(self.first, 'first', 'Now')
             assert self.single.widget.text() == 'Change:Now'
 
         finally:
@@ -259,5 +259,5 @@ class TestBaseBindingController(GuiTestCase):
         controller = self.StateTrackingController(proxy=proxy)
         controller.create(None)
 
-        device.state_binding.value = 'ERROR'
+        set_proxy_value(proxy, 'state', 'ERROR')
         assert controller.widget.text() == 'ERROR'
