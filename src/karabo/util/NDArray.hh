@@ -13,6 +13,7 @@
 #include "Schema.hh"
 #include "ByteSwap.hh"
 #include "CustomNodeElement.hh"
+#include "ToSize.hh"
 
 
 namespace karabo {
@@ -126,17 +127,23 @@ namespace karabo {
             /**
              * The number of items in the array.
              */
-            const size_t size() const;
+            inline size_t size() const {
+                return byteSize() / itemSize();
+            }
 
             /**
              * The total size of the array, in bytes.
              */
-            inline size_t byteSize() const;
+            inline size_t byteSize() const {
+                return get<ByteArray>("data").second;
+            }
 
             /**
              * The size of each item, in bytes.
              */
-            inline size_t itemSize() const;
+            inline size_t itemSize() const {
+                return Types::to<ToSize>(getType());
+            }
 
             /**
              * Get the data contained in the array as a pointer
