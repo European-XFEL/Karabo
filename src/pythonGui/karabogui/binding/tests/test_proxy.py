@@ -191,6 +191,21 @@ def test_property_proxy_history():
             'dev', 'foo', 'start_time', 'end_time', 1)
 
 
+def test_property_proxy_revert():
+    schema = get_simple_schema()
+    binding = build_binding(schema)
+
+    root_proxy = DeviceProxy(device_id='dev', binding=binding,
+                             configuration=Hash('bar', 'Remote'))
+    proxy = PropertyProxy(root_proxy=root_proxy, path='bar')
+    proxy.value = 'Local'
+    proxy.binding.modified = True
+
+    proxy.revert_edit()
+    assert proxy.value == 'Remote'
+    assert not proxy.binding.modified
+
+
 def test_property_proxy_pipeline():
     schema = get_pipeline_schema()
     binding = build_binding(schema)
