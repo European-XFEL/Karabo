@@ -5,7 +5,7 @@ from karabogui.binding.api import (
     DeviceClassProxy, PropertyProxy, build_binding
 )
 from karabogui.const import FINE_COLOR
-from karabogui.testing import GuiTestCase
+from karabogui.testing import GuiTestCase, set_proxy_value
 from ..label import DisplayLabel, ALPHA
 
 
@@ -41,31 +41,31 @@ class TestDisplayLabel(GuiTestCase):
     def test_set_string_value(self):
         controller = DisplayLabel(proxy=self.string)
         controller.create(None)
-        self.string.value = 'hello'
+        set_proxy_value(self.string, 'string', 'hello')
         assert controller._internal_widget.text() == 'hello'
 
     def test_set_abs_err(self):
         controller = DisplayLabel(proxy=self.absolute)
         controller.create(None)
-        self.absolute.value = 0.25
+        set_proxy_value(self.absolute, 'absolute', 0.25)
         assert controller._internal_widget.text() == '0.2'
 
     def test_set_rel_err(self):
         controller = DisplayLabel(proxy=self.relative)
         controller.create(None)
-        self.relative.value = 0.75
+        set_proxy_value(self.relative, 'relative', 0.75)
         assert controller._internal_widget.text() == '0.8'
 
     def test_set_no_err(self):
         controller = DisplayLabel(proxy=self.alarms)
         controller.create(None)
 
-        self.alarms.value = 0.75
+        set_proxy_value(self.alarms, 'alarms', 0.75)
         assert controller._internal_widget.text() == '0.75'
         assert controller._bg_color == FINE_COLOR
 
-        self.alarms.value = 3.0
+        set_proxy_value(self.alarms, 'alarms', 3.0)
         assert controller._bg_color == ALARM_COLOR + ALPHA
 
-        self.alarms.value = 1.5
+        set_proxy_value(self.alarms, 'alarms', 1.5)
         assert controller._bg_color == WARN_COLOR + ALPHA

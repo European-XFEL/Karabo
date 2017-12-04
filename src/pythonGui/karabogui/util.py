@@ -134,7 +134,8 @@ def loadConfigurationFromFile(device_proxy):
         messagebox.show_error("Configuration load failed")
         return
 
-    apply_configuration(config[binding.class_id], binding)
+    apply_configuration(config[binding.class_id], binding,
+                        remember_modification=True)
     # Save the directory information
     set_setting(KaraboSettings.CONFIG_DIR, op.dirname(filename))
 

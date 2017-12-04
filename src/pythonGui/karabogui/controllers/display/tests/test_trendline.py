@@ -1,5 +1,6 @@
 from karabo.middlelayer import Configurable, Bool
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from .data import build_historic_data_float
 from ..trendline import DisplayTrendline
 
@@ -22,7 +23,7 @@ class TestDisplayTrendline(GuiTestCase):
         assert self.controller.widget is None
 
     def test_set_value(self):
-        self.proxy.value = True
+        set_proxy_value(self.proxy, 'prop', True)
         # Allow the update to propogate
         self.process_qt_events()
 

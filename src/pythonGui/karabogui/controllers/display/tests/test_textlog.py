@@ -1,6 +1,7 @@
 from karabo.common.scenemodel.api import DisplayTextLogModel
 from karabo.middlelayer import Configurable, String
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..textlog import DisplayTextLog
 
 
@@ -25,5 +26,5 @@ class TestDisplayTextLog(GuiTestCase):
     def test_set_value(self):
         self.controller.log_widget.clear()
 
-        self.proxy.value = 'Line 1'
+        set_proxy_value(self.proxy, 'prop', 'Line 1')
         assert 'Line 1' in self.controller.log_widget.toPlainText()

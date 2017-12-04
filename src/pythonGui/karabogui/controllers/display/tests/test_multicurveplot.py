@@ -4,7 +4,8 @@ from PyQt4.QtGui import QWidget
 
 from karabo.middlelayer import Configurable, Bool, Int32
 from karabogui.binding.api import PropertyProxy
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..multicurveplot import MultiCurvePlot
 
 
@@ -57,8 +58,8 @@ class TestMultiCurvePlot(GuiTestCase):
         self.patcher.stop()
 
     def test_set_value(self):
-        self.index.value = 1
-        self.value.value = 42
+        set_proxy_value(self.index, 'index', 1)
+        set_proxy_value(self.value, 'value', 42)
 
     def test_reset(self):
-        self.reset.value = True
+        set_proxy_value(self.reset, 'reset', True)

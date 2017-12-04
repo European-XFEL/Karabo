@@ -1,7 +1,8 @@
 from karabo.common.scenemodel.api import (
     DigitIconsModel, IconData, SelectionIconsModel, TextIconsModel)
 from karabo.middlelayer import Configurable, Int32, String
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..icons import DigitIcons, SelectionIcons, TextIcons
 
 NUM_OPTIONS = [1, 2, 3, 4]
@@ -46,7 +47,7 @@ class TestDigitIcons(GuiTestCase):
         assert self.controller.widget is None
 
     def test_set_value(self):
-        self.proxy.value = 3
+        set_proxy_value(self.proxy, 'prop', 3)
 
 
 class TestSelectionIcons(GuiTestCase):
@@ -65,7 +66,7 @@ class TestSelectionIcons(GuiTestCase):
         assert self.controller.widget is None
 
     def test_set_value(self):
-        self.proxy.value = 'qux'
+        set_proxy_value(self.proxy, 'prop', 'qux')
 
 
 class TestTextIcons(GuiTestCase):
@@ -83,4 +84,4 @@ class TestTextIcons(GuiTestCase):
         assert self.controller.widget is None
 
     def test_set_value(self):
-        self.proxy.value = 'baz'
+        set_proxy_value(self.proxy, 'prop', 'baz')

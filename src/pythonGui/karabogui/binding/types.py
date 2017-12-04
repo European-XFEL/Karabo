@@ -14,21 +14,24 @@ class BaseBinding(HasStrictTraits):
     `value` trait which contains the value of the node. The value is validated
     using normal Traits validation.
 
-    If the value of a node changes, the `modified` flag will be set to True.
-    This aids in the creation of minimal "diffs" when extracting the changes
-    made to an object.
+    If the value of a node is changed by the user, the `modified` flag can be
+    set to True to signal this. This aids in the creation of minimal "diffs"
+    when extracting the changes made to an object.
     """
     # Dictionary of attributes copied from the object schema
     attributes = Dict
     # True if the value in `value` has changed
     modified = Bool(False)
+    # When the value was last set on the device
+    timestamp = Instance(Timestamp)
     # The value contained in this node. Derived classes should redefine this.
     value = Undefined
+
+    # An event which fires when the value is updated externally
+    config_update = Event
     # A event which fires when historic data arrives for this object node
     # The data is contained in the new value passed to notification handlers
     historic_data = Event
-    # When the value was last set
-    timestamp = Instance(Timestamp)
 
     # Attribute shortcut properties
     access_mode = Property
@@ -46,12 +49,6 @@ class BaseBinding(HasStrictTraits):
 
         alloweds = self.attributes.get(const.KARABO_SCHEMA_ALLOWED_STATES, [])
         return alloweds == [] or state in alloweds
-
-    def _value_changed(self):
-        """Remember when/if the `value` trait gets set.
-        """
-        self.modified = True
-        self.timestamp = Timestamp()  # Now
 
     def _get_access_mode(self):
         mode = self.attributes.get(const.KARABO_SCHEMA_ACCESS_MODE)
@@ -194,8 +191,6 @@ class Int64Binding(IntBinding):
 
 class NodeBinding(BaseBinding):
     value = Instance(BindingNamespace)
-    # An event which fires when subnodes/leaves are updated
-    config_update = Event
 
 
 class ImageBinding(NodeBinding):

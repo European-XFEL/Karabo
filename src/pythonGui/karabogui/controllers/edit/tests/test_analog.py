@@ -1,7 +1,8 @@
 from karabo.common.scenemodel.api import KnobModel, SliderModel
 from karabo.middlelayer import Configurable, Float, Int32
 from karabogui.binding.api import build_binding
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..analog import Knob, Slider
 
 
@@ -33,7 +34,7 @@ class TestEditAnalog(GuiTestCase):
         assert controller.widget is None
 
     def test_set_value(self):
-        self.proxy.value = 1.0
+        set_proxy_value(self.proxy, 'prop', 1.0)
         assert self.controller.widget.value() == 1.0
 
     def test_edit_value(self):
