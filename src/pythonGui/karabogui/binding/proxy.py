@@ -292,6 +292,16 @@ class PropertyProxy(HasStrictTraits):
                                            self.path, time_start, time_end,
                                            max_value_count)
 
+    def revert_edit(self):
+        """Revert any local edits made to a property.
+        """
+        value = self.get_device_value()
+        binding = self.binding
+        if value is not None:
+            binding.value = value
+            binding.modified = False
+            binding.config_update = True
+
     def start_monitoring(self):
         """Tell the GUI server to start monitoring the device for our property
         """

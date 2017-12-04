@@ -81,12 +81,7 @@ class ControllerContainer(QWidget):
             return
 
         for proxy in self.widget_controller.proxies:
-            # FIXME: Consider doing this in the property proxy
-            value = proxy.get_device_value()
-            proxy.value = value
-            proxy.binding.modified = False
-
-        self._update_background_color()
+            proxy.revert_edit()
 
     def destroy(self):
         """Tell the controller to clean up
