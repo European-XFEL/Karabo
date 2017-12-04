@@ -16,13 +16,13 @@ Tasks
 - [X] Port the Navigation Panel [SMALL]
     - [X] Small fixups in NavigationModel
 
-- [ ] Port the Project View [SMALL]:
-    - [ ] Port DeviceInstanceController
-    - [ ] Port MacroController
+- [X] Port the Project View [SMALL]:
+    - [X] Port DeviceInstanceController
+    - [X] Port MacroController
 
 - [X] Move the Widget Controllers
 
-- [ ] Port the Scene [LARGE]:
+- [X] Port the Scene [LARGE]:
     - [X] Port BaseWidgetContainer into WidgetContainer (started; refactor/scene-base branch)
     - [X] Remove the widget wrappers!
     - [X] Port scene building
