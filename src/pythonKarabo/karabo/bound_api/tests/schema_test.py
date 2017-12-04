@@ -144,7 +144,7 @@ class  Schema_TestCase(unittest.TestCase):
         try:
             schema = TestStruct1.getSchema("TestStruct1")
             self.assertEqual(schema.getAliasAsString("exampleKey2"), "10")
-            self.assertEqual(schema.getAliasAsString("exampleKey3"), "5.500000000000000")
+            self.assertEqual(schema.getAliasAsString("exampleKey3"), "5.5")
            
             self.assertEqual(schema.getAliasAsString("exampleKey4"), "exampleAlias4")
             self.assertEqual(schema.getAliasAsString("exampleKey5"), "exampleAlias5")
@@ -443,13 +443,13 @@ class  Schema_TestCase(unittest.TestCase):
         
         try:
             self.assertEqual(schema.getMinExcAs("exampleKey3", Types.STRING), "10")
-            self.assertEqual(schema.getMinExcAs("exampleKey4", Types.STRING), "-2.220000000000000")
+            self.assertEqual(schema.getMinExcAs("exampleKey4", Types.STRING), "-2.22")
         except Exception as e:
             self.fail("test_getMinExcMaxExc exception in getMinExcAs: " + str(e))
         
         try:    
             self.assertEqual(schema.getMaxExcAs("exampleKey3", Types.STRING), "20")
-            self.assertEqual(schema.getMaxExcAs("exampleKey4", Types.STRING), "5.550000000000000")
+            self.assertEqual(schema.getMaxExcAs("exampleKey4", Types.STRING), "5.55")
         except Exception as e:
             self.fail("test_getMinExcMaxExc exception in getMaxExcAs: " + str(e))
     
@@ -498,25 +498,25 @@ class  Schema_TestCase(unittest.TestCase):
         schema = Configurator(TestStruct1).getSchema("TestStruct1")
         try:
             self.assertEqual(schema.getWarnLowAs("exampleKey5", Types.STRING), "-10")
-            self.assertEqual(schema.getWarnLowAs("exampleKey6", Types.STRING), "-5.500000000000000")
+            self.assertEqual(schema.getWarnLowAs("exampleKey6", Types.STRING), "-5.5")
         except Exception as e:
             self.fail("test_getWarnAlarmLowHighAs exception in getWarnLowAs: " + str(e))
         
         try:
             self.assertEqual(schema.getWarnHighAs("exampleKey5", Types.STRING), "10")
-            self.assertEqual(schema.getWarnHighAs("exampleKey6", Types.STRING), "5.500000000000000")
+            self.assertEqual(schema.getWarnHighAs("exampleKey6", Types.STRING), "5.5")
         except Exception as e:
             self.fail("test_getWarnAlarmLowHighAs exception in getWarnHighAs: " + str(e))
            
         try:
             self.assertEqual(schema.getAlarmLowAs("exampleKey5", Types.STRING), "-20")
-            self.assertEqual(schema.getAlarmLowAs("exampleKey6", Types.STRING), "-22.100000000000001")
+            self.assertEqual(schema.getAlarmLowAs("exampleKey6", Types.STRING), "-22.1")
         except Exception as e:
             self.fail("test_getWarnAlarmLowHighAs exception in getAlarmLowAs: " + str(e))
         
         try:
             self.assertEqual(schema.getAlarmHighAs("exampleKey5", Types.STRING), "20")
-            self.assertEqual(schema.getAlarmHighAs("exampleKey6", Types.STRING), "22.777000000000001")
+            self.assertEqual(schema.getAlarmHighAs("exampleKey6", Types.STRING), "22.777")
         except Exception as e:
             self.fail("test_getWarnAlarmLowHighAs exception in getAlarmHighAs: " + str(e))
             

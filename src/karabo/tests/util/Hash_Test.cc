@@ -492,11 +492,11 @@ void Hash_Test::testGetAs() {
     }
     {
         Hash h("a", std::complex<float>(1.2, 0.5));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "(1.2000000,0.5000000)");
+        CPPUNIT_ASSERT(h.getAs<string > ("a") == "(1.2,0.5)");
     }
     {
         Hash h("a", std::complex<double>(1.2, 0.5));
-        CPPUNIT_ASSERT(h.getAs<string > ("a") == "(1.200000000000000,0.500000000000000)");
+        CPPUNIT_ASSERT(h.getAs<string > ("a") == "(1.2,0.5)");
     }    
 }
 
