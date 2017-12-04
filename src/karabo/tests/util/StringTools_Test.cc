@@ -90,27 +90,32 @@ void StringTools_Test::testToString() {
     CPPUNIT_ASSERT(toString(true) == "1");
 
     // Floating point types
-    CPPUNIT_ASSERT(toString((float) 1.2345678) == "1.234568");
-    CPPUNIT_ASSERT(toString(float(0.1)) == "0.1");
-    CPPUNIT_ASSERT(toString(float(-0.1)) == "-0.1");
-    CPPUNIT_ASSERT(toString((float) 0.000000099999987) == "9.999999e-08");
-    CPPUNIT_ASSERT(toString((float) -99999987198.0) == "-9.999999e+10");
-    CPPUNIT_ASSERT(toString((float) 3333332187236.0) == "3.333332e+12");
+    CPPUNIT_ASSERT(toString(1.2345678f) == "1.234568");
+    CPPUNIT_ASSERT(toString(0.1f) == "0.1");
+    CPPUNIT_ASSERT(toString(-0.1f) == "-0.1");
+    CPPUNIT_ASSERT(toString(0.000000099999987f) == "9.999999e-08");
+    CPPUNIT_ASSERT(toString(-99999987198.0f) == "-9.999999e+10");
+    CPPUNIT_ASSERT(toString(3333332187236.0f) == "3.333332e+12");
     
-    CPPUNIT_ASSERT(toString((double) 1.234567890123456) == "1.23456789012346");
-    CPPUNIT_ASSERT(toString((double) 0.123456789012345) == "0.123456789012345");
-    CPPUNIT_ASSERT(toString((double) 0.01234567890123456) == "0.0123456789012346");
+    CPPUNIT_ASSERT(toString(1.234567890123456) == "1.23456789012346");
+    CPPUNIT_ASSERT(toString(0.123456789012345) == "0.123456789012345");
+    CPPUNIT_ASSERT(toString(0.01234567890123456) == "0.0123456789012346");
     
+    // Border(?) cases ...
+    CPPUNIT_ASSERT(toString(0.0001f) == "0.0001");
+    CPPUNIT_ASSERT(toString(0.00001f) == "1e-05");
+    CPPUNIT_ASSERT(toString(1000000.f) == "1000000");
+    CPPUNIT_ASSERT(toString(10000000.f) == "1e+07");
 
     // Complex types
-    CPPUNIT_ASSERT(toString(std::complex<float>(1.2345678, 1.3456789)) == "(1.234568,1.345679)");
-    CPPUNIT_ASSERT(toString(std::complex<float>(123456700000.0, 0.00000000013456780)) == "(1.234567e+11,1.345678e-10)");
+    CPPUNIT_ASSERT(toString(std::complex<float>(1.2345678f, 1.3456789f)) == "(1.234568,1.345679)");
+    CPPUNIT_ASSERT(toString(std::complex<float>(123456700000.0f, 0.00000000013456780f)) == "(1.234567e+11,1.345678e-10)");
     CPPUNIT_ASSERT(toString(std::complex<double>(1.234567890123456, 6.543210987654321)) == "(1.23456789012346,6.54321098765432)");
 
     // Vectors
     std::vector<unsigned int> uint32Vector(4, 12345);
     CPPUNIT_ASSERT(toString(uint32Vector) == "12345,12345,12345,12345");
-    std::vector<float> floatVector{1,0.5,3.1415956,0.1, 0.09999878, 2.8790123,99.8765411, -0.00000000003456789};
+    std::vector<float> floatVector{1.f,0.5f,3.1415956f,0.1f, 0.09999878f, 2.8790123f,99.8765411f, -0.00000000003456789f};
     CPPUNIT_ASSERT(toString(floatVector) == "1,0.5,3.141596,0.1,0.09999878,2.879012,99.87654,-3.456789e-11");
 
     // Wide strings
