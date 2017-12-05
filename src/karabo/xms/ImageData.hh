@@ -50,6 +50,8 @@ namespace karabo {
                 BMP,
                 TIFF,
             };
+            /// True if encoding is such that one can index the underlying array
+            bool isIndexable(int encoding);
         }
 
         typedef Encoding::EncodingType EncodingType;
@@ -62,37 +64,81 @@ namespace karabo {
 
             static void expectedParameters(karabo::util::Schema& s);
 
+            /**
+             * Constructor of an empty ImageData
+             *
+             * Take care to keep the object consistent if it is later filled with the set-methods.
+             */
             ImageData();
 
             /**
-             * Constructor from NDArray
-             * NOTE: If no dimensions are specified, the shape of NDArray is used.
+             * Constructor from NDArray where the dimensions of the image data will be deduced from NDArray
+             * if encoding is indexable.
              *
-             * @param data NDArray
-             * @param dims The dimensions of the image data
-             * @param encoding The encoding of the bytes
-             * @param bitsPerPixel
+             * @param data NDArray - note that the copy of the NDArray kept inside ImageData will refer to the same raw
+             *                       memory as this input
+             * @param encoding The encoding of the bytes - defaults to GRAY.
+             *                 If UNDEFINED, anything matching GRAY, RGB or RGBA will be identified as such.
+             * @param bitsPerPixel The number of bits used in the original data. Can be smaller than 8 times
+             *                     the size in bytes of the type used in the NDArray 'data'. If zero (default) or
+             *                     negative, a value matching the NDArray type will be calculated (8, 16, ...).
              */
             ImageData(const karabo::util::NDArray& data,
-                      const karabo::util::Dims& dims = karabo::util::Dims(),
                       const EncodingType encoding = Encoding::GRAY,
-                      const int bitsPerPixel = 8);
+                      const int bitsPerPixel = 0);
+
+            /**
+             * Constructor from NDArray with the possibility to specify other dimensions than NDArray,
+             * as needed for non-indexable formats like JPEG, TIFF, ...
+             *
+             * @param data NDArray - note that the copy of the NDArray kept inside ImageData will refer to the same raw
+             *                       memory as this input
+             * @param dims The dimensions of the image data - if 'empty' and encoding is indexable, will be deduced from data
+             * @param encoding The encoding of the bytes - defaults to GRAY.
+             *                 If UNDEFINED, anything matching GRAY, RGB or RGBA will be identified as such.
+             * @param bitsPerPixel The number of bits used in the original data. Can be smaller than 8 times
+             *                     the size in bytes of the type used in the NDArray 'data'. If zero (default) or
+             *                     negative, a value matching the NDArray type will be calculated (8, 16, ...).
+             */
+            ImageData(const karabo::util::NDArray& data,
+                      const karabo::util::Dims& dims,
+                      const EncodingType encoding = Encoding::GRAY,
+                      const int bitsPerPixel = 0);
 
             ImageData(const ImageData& other) = default;
 
             virtual ~ImageData() {
             }
 
+            /**
+             * Get a reference to the underlying image data structure.
+             * Interpretation depends on ImageData::getEncoding().
+             *
+             * @param array
+             */
             const karabo::util::NDArray& getData() const;
 
+            /**
+             * Set image data.
+             *             * Note that the copy stored inside ImageData will refer to the same memory as the input.
+             */
             void setData(const karabo::util::NDArray& array);
 
             karabo::util::Dims getROIOffsets() const;
 
             void setROIOffsets(const karabo::util::Dims& offsets);
 
+            /**
+             * Get number of bits per pixel used to achieve the image data.
+             * Can be less than number of bits used per pixel in getData().
+             */
             int getBitsPerPixel() const;
 
+            /**
+             * Set number of bits per pixel used to achieve the image data.
+             * Can be less than number of bits used per pixel in getData(), but not more (if a too large value is
+             * specified, it will e truncated).
+             */
             void setBitsPerPixel(const int bitsPerPixel);
 
             int getEncoding() const;
@@ -103,11 +149,14 @@ namespace karabo {
              * Returns true if the image data can be directly indexed.
              */
             bool isIndexable() const {
-                const int encoding = getEncoding();
-                return (encoding != Encoding::JPEG && encoding != Encoding::PNG &&
-                        encoding != Encoding::BMP && encoding != Encoding::TIFF);
+                return Encoding::isIndexable(getEncoding());
             }
 
+            /**
+             * See 'setDimensions' for explanation.
+             *
+             * @return Dimension object
+             */
             karabo::util::Dims getDimensions() const;
 
             /**
@@ -131,12 +180,14 @@ namespace karabo {
 
             void setGeometry(const karabo::util::DetectorGeometry & geometry);
 
-            karabo::util::DetectorGeometry getGeometry();
+            karabo::util::DetectorGeometry getGeometry() const;
 
             const karabo::util::Hash& getHeader() const;
 
             void setHeader(const karabo::util::Hash & header);
 
+        private:
+            static int defaultBitsPerPixel(int encoding, const karabo::util::NDArray& data);
         };
 
         /**********************************************************************

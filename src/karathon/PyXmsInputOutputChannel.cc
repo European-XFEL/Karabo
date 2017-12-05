@@ -23,51 +23,15 @@ namespace karathon {
         using namespace karabo::util;
         using namespace karabo::xms;
 
-        boost::shared_ptr<ImageData > self(new ImageData());
-
-        if (obj.is_none())
+        if (obj.is_none()) {
+            auto self = boost::make_shared<ImageData>();
             return self;
-
-        if (PyArray_Check(obj.ptr())) {
+        } else {
             PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
             const NDArray ndarray = Wrapper::fromPyArrayToNDArray(arr);
-            Dims _dimensions = ndarray.getShape();
-            const int rank = _dimensions.rank();
-
-            // Data
-            self->setData(ndarray);
-
-            // Encoding
-            EncodingType _encoding = encoding;
-            if (encoding == Encoding::UNDEFINED) {
-                // No encoding info -> try to guess it from ndarray shape
-                if (rank == 2 || (rank == 3 && _dimensions.x3() == 1))
-                    _encoding = Encoding::GRAY;
-                else if (rank == 3 && _dimensions.x3() == 3)
-                    _encoding = Encoding::RGB;
-                else if (rank == 3 && _dimensions.x3() == 4)
-                    _encoding = Encoding::RGBA;
-            }
-
-            // Dimensions (shape)
-            if (_encoding == Encoding::JPEG || _encoding == Encoding::PNG ||
-                _encoding == Encoding::BMP || _encoding == Encoding::TIFF) {
-                // JPEG, PNG, BMP, TIFF -> cannot use ndarray dimensions, use therefore input parameter
-                _dimensions = dimensions;
-                if (dimensions.size() == 0) {
-                    throw KARABO_PYTHON_EXCEPTION("Dimensions must be supplied for encoded images");
-                }
-            }
-
-            // XXX: Bits per pixel?
-            std::vector<unsigned long long> offsets(rank, 0);
-            self->setDimensions(_dimensions);
-            self->setROIOffsets(Dims(offsets));
-            self->setEncoding(_encoding);
-        } else {
-            throw KARABO_PARAMETER_EXCEPTION("Object type expected to be ndarray");
+            auto self = boost::make_shared<ImageData>(ndarray, dimensions, encoding, bitsPerPixel);
+            return self;
         }
-        return self;
     }
 
 
@@ -357,7 +321,7 @@ void exportPyXmsInputOutputChannel() {
                                                       (bp::arg("array"),
                                                        bp::arg("dims") = karabo::util::Dims(),
                                                        bp::arg("encoding") = karabo::xms::Encoding::UNDEFINED,
-                                                       bp::arg("bitsPerPixel") = 8)))
+                                                       bp::arg("bitsPerPixel") = 0)))
 
                 .def("getData", &karathon::ImageDataWrap::getDataPy)
 
@@ -374,6 +338,10 @@ void exportPyXmsInputOutputChannel() {
                 .def("getROIOffsets", &karathon::ImageDataWrap::getROIOffsetsPy)
 
                 .def("setROIOffsets", &karathon::ImageDataWrap::setROIOffsetsPy, (bp::arg("offsets")))
+
+                .def("getBitsPerPixel", &karabo::xms::ImageData::getBitsPerPixel)
+
+                .def("setBitsPerPixel", &karabo::xms::ImageData::setBitsPerPixel, (bp::arg("bitsPerPixel")))
 
                 .def("getEncoding", &karathon::ImageDataWrap::getEncodingPy)
 
