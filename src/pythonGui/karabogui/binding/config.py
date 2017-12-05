@@ -7,15 +7,11 @@ from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .types import BindingNamespace, BindingRoot, NodeBinding, SlotBinding
 
 
-def apply_configuration(config, binding, remember_modification=False,
-                        skip_modified=False, notify=True):
+def apply_configuration(config, binding, notify=True):
     """Recursively set values from a configuration Hash object to a binding
     object.
 
-    The value of `remember_modification` will be set to each `modified` trait
-    only the binding nodes. If `skip_modified` is True, values from `config`
-    will not be applied to parts of the binding which have been modified
-    previously. If `notify` is False, trait change notifications of binding
+    If `notify` is False, trait change notifications of binding
     nodes won't be triggered.
     """
     _node_types = (ChoiceOfNodesBinding, NodeBinding)
@@ -25,20 +21,16 @@ def apply_configuration(config, binding, remember_modification=False,
     for key, value, attrs in config.iterall():
         if key not in namespace:
             continue
+
         node = getattr(namespace, key)
         if isinstance(value, Hash) and isinstance(node, _node_types):
             apply_configuration(value, node)
         else:
-            if node.modified and skip_modified:
-                continue  # Move along
-
             traits = {'value': value}
             # Set the timestamp no matter what
             ts = Timestamp.fromHashAttributes(attrs)
             traits['timestamp'] = ts or Timestamp()
-            # Set the modified flag if desired
-            traits['modified'] = remember_modification
-            # Set everything at once so notification can be controlled
+            # Set everything at once and notify via the config_update event
             node.trait_set(trait_change_notify=False, **traits)
             if notify:
                 node.config_update = True
@@ -73,7 +65,6 @@ def apply_default_configuration(binding):
         default_value = node.attributes.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
         if default_value is not None:
             node.value = default_value
-            node.modified = False
 
 
 def extract_attribute_modifications(schema, binding):
@@ -148,10 +139,17 @@ def extract_attribute_modifications(schema, binding):
     return None
 
 
-def extract_configuration(binding, modified_only=True):
+def extract_configuration(binding):
     """Extract all the values set on a binding into a Hash object.
     """
     assert isinstance(binding, BindingRoot)
+
+    def _get_binding_value(binding):
+        if isinstance(binding, ListOfNodesBinding):
+            return [Hash(value.class_id, extract_configuration(value))
+                    for value in binding.value]
+        else:
+            return binding.value
 
     def _iter_binding(node, base=''):
         _node_types = (ChoiceOfNodesBinding, NodeBinding)
@@ -167,8 +165,6 @@ def extract_configuration(binding, modified_only=True):
 
     retval = Hash()
     for key, node in _iter_binding(binding):
-        if modified_only and not node.modified:
-            continue
         retval[key] = _get_binding_value(node)
 
     return retval
@@ -186,41 +182,11 @@ def extract_sparse_configurations(proxies, devices=None):
     devices = {} if devices is None else devices
     for proxy in proxies:
         key, binding = proxy.path, proxy.binding
-        if binding is None or not binding.modified:
+        if binding is None or proxy.edit_value is None:
             continue
 
         device_id = proxy.root_proxy.device_id
         hsh = devices.setdefault(device_id, Hash())
-        hsh[key] = _get_binding_value(binding)
+        hsh[key] = proxy.edit_value
 
     return devices
-
-
-def has_modifications(binding):
-    """Returns True if a binding contains any modified values."""
-    assert isinstance(binding, BindingRoot)
-
-    def _iter_binding(node, base=''):
-        _node_types = (ChoiceOfNodesBinding, NodeBinding)
-        namespace = node.value
-        base = base + '.' if base else ''
-        for name in namespace:
-            subnode = getattr(namespace, name)
-            if isinstance(subnode, _node_types):
-                yield from _iter_binding(subnode, base=base + name)
-            elif not isinstance(subnode, SlotBinding):
-                yield subnode
-
-    for node in _iter_binding(binding):
-        if node.modified:
-            return True
-    return False
-
-
-def _get_binding_value(binding):
-    """Extract the value from a single binding instance."""
-    if isinstance(binding, ListOfNodesBinding):
-        return [Hash(value.class_id, extract_configuration(value))
-                for value in binding.value]
-    else:
-        return binding.value
