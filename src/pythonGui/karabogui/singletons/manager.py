@@ -361,7 +361,8 @@ class Manager(QObject):
             device_id, prop_path = name.split(":")
             device_proxy = self._topology.get_device(device_id)
             binding = device_proxy.get_property_binding(prop_path)
-            apply_configuration(data_hash, binding)
+            apply_configuration(data_hash, binding.value.schema)
+            device_proxy.config_update = True
 
         self._big_data[name] = data
         executeLater(show_data, Priority.BIG_DATA)
