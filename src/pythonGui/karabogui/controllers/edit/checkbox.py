@@ -8,9 +8,10 @@ from PyQt4.QtGui import QCheckBox
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import CheckBoxModel
-from karabogui.binding.api import BoolBinding
+from karabogui.binding.api import BoolBinding, get_editor_value
 from karabogui.controllers.base import BaseBindingController
 from karabogui.controllers.registry import register_binding_controller
+from karabogui.util import SignalBlocker
 
 
 @register_binding_controller(ui_name='Toggle Field', can_edit=True,
@@ -27,9 +28,12 @@ class EditableCheckBox(BaseBindingController):
         return widget
 
     def value_update(self, proxy):
-        checkState = Qt.Checked if proxy.value else Qt.Unchecked
-        self.widget.setCheckState(checkState)
+        checkState = Qt.Checked if get_editor_value(proxy) else Qt.Unchecked
+        with SignalBlocker(self.widget):
+            self.widget.setCheckState(checkState)
 
     @pyqtSlot(int)
     def _on_user_edit(self, state):
-        self.proxy.value = (state == Qt.Checked)
+        if self.proxy.binding is None:
+            return
+        self.proxy.edit_value = (state == Qt.Checked)

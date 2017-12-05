@@ -9,11 +9,12 @@ from PyQt4.QtGui import QLineEdit
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import HexadecimalModel
-from karabogui.binding.api import IntBinding, get_min_max
+from karabogui.binding.api import IntBinding, get_editor_value, get_min_max
 from karabogui.const import WIDGET_MIN_HEIGHT
 from karabogui.controllers.base import BaseBindingController
 from karabogui.controllers.registry import register_binding_controller
 from karabogui.controllers.unitlabel import add_unit_label
+from karabogui.util import SignalBlocker
 
 
 @register_binding_controller(ui_name='Hexadecimal', can_edit=True,
@@ -47,11 +48,15 @@ class Hexadecimal(BaseBindingController):
 
     def value_update(self, proxy):
         self.widget.update_label(proxy)
-        self._internal_widget.setText("{:x}".format(proxy.value))
+        with SignalBlocker(self._internal_widget):
+            value = get_editor_value(proxy)
+            self._internal_widget.setText("{:x}".format(value))
 
     @pyqtSlot(str)
     def _on_user_edit(self, text):
+        if self.proxy.binding is None:
+            return
         if text not in ('', '-'):
-            self.proxy.value = int(text, base=16)
+            self.proxy.edit_value = int(text, base=16)
         else:
-            self.proxy.value = 0
+            self.proxy.edit_value = 0

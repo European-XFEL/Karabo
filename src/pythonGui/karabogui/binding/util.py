@@ -30,6 +30,15 @@ def fast_deepcopy(d):
     return out
 
 
+def get_editor_value(property_proxy):
+    """Return the correct value of a PropertyProxy to show in an editor
+    """
+    value = property_proxy.edit_value
+    if value is None:
+        value = property_proxy.value
+    return value
+
+
 def get_min_max(binding):
     """Given a BaseBinding instance, return the minimum and maximum values
     which can be assigned to its `value` trait.

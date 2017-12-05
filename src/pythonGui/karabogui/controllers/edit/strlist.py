@@ -29,8 +29,10 @@ class EditableListElement(BaseBindingController):
 
     @pyqtSlot()
     def _on_edit_clicked(self):
+        if self.proxy.binding is None:
+            return
+
         list_edit = ListEdit(self.proxy, True)
         list_edit.set_texts('Add', '&Name', 'Edit')
-
         if list_edit.exec_() == QDialog.Accepted:
-            self.proxy.value = list_edit.values
+            self.proxy.edit_value = list_edit.values
