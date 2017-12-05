@@ -38,9 +38,6 @@ class SystemTopology(HasStrictTraits):
     # Mapping of (server id, class id) -> Schema
     _class_schemas = Dict
 
-    # Mapping of device_id -> Hash
-    _device_configurations = Dict
-
     # Mapping of device_id -> DeviceProxy
     _device_proxies = Dict
 
@@ -69,7 +66,6 @@ class SystemTopology(HasStrictTraits):
         self._system_hash = None
         self._class_proxies.clear()
         self._class_schemas.clear()
-        self._device_configurations.clear()
         self._device_proxies.clear()
         self._device_schemas.clear()
 
@@ -105,15 +101,6 @@ class SystemTopology(HasStrictTraits):
                 proxy.refresh_schema()
 
         return proxy
-
-    def get_configuration(self, device_id):
-        """Return the up-to-date remote configuration for a given `device_id`.
-
-        NOTE: This is not necessarily the same as the configuration which
-        the user sees, if they have made changes that are not yet applied to
-        the remote device.
-        """
-        return self._device_configurations.get(device_id)
 
     def get_device(self, device_id):
         """Return the proxy for a given device
@@ -271,10 +258,15 @@ class SystemTopology(HasStrictTraits):
         one exists and is initialized.
         """
         proxy = self._device_proxies.get(device_id, None)
-        if proxy is None or len(proxy.binding.value) == 0:
+        if proxy is None:
             return None
 
-        self._device_configurations[device_id] = config
+        # Store the raw configuration on the DeviceProxy instance
+        proxy.configuration = config
+
+        # If the proxy isn't initialized, bail out
+        if len(proxy.binding.value) == 0:
+            return None
 
         # Apply the configuration to the proxy.
         # Leave user-modified values untouched!
@@ -332,7 +324,6 @@ class SystemTopology(HasStrictTraits):
 
             # Use pop() for removal in case there's nothing there
             self._device_schemas.pop(instance_id, None)
-            self._device_configurations.pop(instance_id, None)
 
             # Note the details of what device is gone
             class_id = attributes.get('classId', 'unknown-class')
