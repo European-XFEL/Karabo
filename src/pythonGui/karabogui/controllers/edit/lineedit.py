@@ -8,7 +8,7 @@ from PyQt4.QtGui import QLineEdit
 from traits.api import Instance, Int
 
 from karabo.common.scenemodel.api import LineEditModel
-from karabogui.binding.api import CharBinding, StringBinding
+from karabogui.binding.api import CharBinding, StringBinding, get_editor_value
 from karabogui.controllers.base import BaseBindingController
 from karabogui.controllers.registry import register_binding_controller
 from karabogui.util import SignalBlocker
@@ -29,7 +29,7 @@ class EditableLineEdit(BaseBindingController):
         return widget
 
     def value_update(self, proxy):
-        value = proxy.value
+        value = get_editor_value(proxy)
         if not isinstance(value, str):
             value = value.decode()
 
@@ -39,6 +39,7 @@ class EditableLineEdit(BaseBindingController):
 
     @pyqtSlot(str)
     def _on_text_changed(self, value):
+        if self.proxy.binding is None:
+            return
         self._last_cursor_pos = self.widget.cursorPosition()
-        if self.proxy.binding is not None:
-            self.proxy.value = value
+        self.proxy.edit_value = value

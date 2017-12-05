@@ -4,7 +4,7 @@ from traits.api import Instance, Int
 
 from karabo.common.scenemodel.api import EditableListModel
 from karabogui import icons
-from karabogui.binding.api import VectorBinding
+from karabogui.binding.api import VectorBinding, get_editor_value
 from karabogui.controllers.base import BaseBindingController
 from karabogui.controllers.listedit import ListEdit
 from karabogui.controllers.registry import register_binding_controller
@@ -49,24 +49,29 @@ class EditableList(BaseBindingController):
         self.layout.addWidget(tbEdit)
 
     def value_update(self, proxy):
-        value = proxy.value
+        value = get_editor_value(proxy)
         with SignalBlocker(self._internal_widget):
             self._internal_widget.setText(','.join(str(v) for v in value))
         self._internal_widget.setCursorPosition(self.last_cursor_position)
 
     @pyqtSlot(str)
     def _on_user_edit(self, text):
+        if self.proxy.binding is None:
+            return
         self.last_cursor_position = self._internal_widget.cursorPosition()
         if text:
             # don't need to convert here 'cause the traits does it foh ya.
-            self.proxy.value = [val for val in text.split(',') if val != '']
+            self.proxy.edit_value = [val for val in text.split(',')
+                                     if val != '']
         else:
-            self.proxy.value = []
+            self.proxy.edit_value = []
 
     @pyqtSlot()
     def _on_edit_clicked(self):
+        if self.proxy.binding is None:
+            return
+
         list_edit = ListEdit(self.proxy, True)
         list_edit.set_texts("Add", "&Value", "Edit")
-
         if list_edit.exec_() == QDialog.Accepted:
-            self.proxy.value = list_edit.values
+            self.proxy.edit_value = list_edit.values
