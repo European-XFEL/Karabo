@@ -15,7 +15,7 @@ from karabogui.binding.api import (
     VectorBoolBinding, VectorDoubleBinding, VectorFloatBinding,
     VectorInt8Binding, VectorInt16Binding, VectorInt32Binding,
     VectorInt64Binding, VectorUint8Binding, VectorUint16Binding,
-    VectorUint32Binding, VectorUint64Binding
+    VectorUint32Binding, VectorUint64Binding, get_editor_value
 )
 
 FLOAT_BINDINGS = (VectorDoubleBinding, VectorFloatBinding)
@@ -82,7 +82,7 @@ class ListEdit(QDialog):
         hbox.addLayout(vbox)
 
         binding = proxy.binding
-        values = proxy.value if binding is not None else []
+        values = get_editor_value(proxy) if binding is not None else []
         self.set_list(values)
 
     # ----------------------------------------------------------------------

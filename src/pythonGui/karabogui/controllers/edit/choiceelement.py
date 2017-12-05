@@ -48,4 +48,6 @@ class EditableChoiceElement(BaseBindingController):
 
     @pyqtSlot(int)
     def _on_user_edit(self, index):
+        if self.proxy.binding is None:
+            return
         self.proxy.binding.choice = self.widget.itemText(index)

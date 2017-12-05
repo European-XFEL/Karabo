@@ -46,25 +46,23 @@ class TestEditableList(GuiTestCase):
     def test_edit_value(self):
         self.controller.set_read_only(False)
         self.controller._internal_widget.setText('3,4')
-        assert all(self.proxy.value == [3, 4])
+        assert all(self.proxy.edit_value == [3, 4])
 
     def test_edit_empty_value(self):
         self.controller._internal_widget.setText('NOT IMPORTANT')
         self.controller.set_read_only(False)
         self.controller._internal_widget.setText('')
-        value = self.proxy.value
+        value = self.proxy.edit_value
         assert len(value) == 0 and all(value == [])
 
     def test_no_edit_value(self):
         self.controller.set_read_only(True)
         self.controller._internal_widget.setText('3,4')
-
-        value = self.proxy.value
-        assert len(value) == 1 and all(value == [1])
+        assert self.proxy.edit_value is None
 
     def test_edit_dialog(self):
         target = 'karabogui.controllers.edit.list.ListEdit'
         with patch(target, new=ListEditMock):
             self.controller.set_read_only(False)
             self.controller._on_edit_clicked()
-            assert all(self.proxy.value == [-1, 42, -1])
+            assert all(self.proxy.edit_value == [-1, 42, -1])
