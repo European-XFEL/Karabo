@@ -141,3 +141,16 @@ def test_known_model_collision():
     model.klass = 'XYVector'
     controller = get_model_controller(model)
     assert controller is XYVector
+
+
+def test_display_edit_overlap():
+    # IntLineEdit should be returned for both edit and non-edit widgets
+
+    from karabo.common.scenemodel.api import IntLineEditModel
+    from ..edit.numberlineedit import IntLineEdit
+
+    model = IntLineEditModel(parent_component='DisplayComponent')
+    assert get_model_controller(model) is IntLineEdit
+
+    model = IntLineEditModel(parent_component='EditableApplyLaterComponent')
+    assert get_model_controller(model) is IntLineEdit
