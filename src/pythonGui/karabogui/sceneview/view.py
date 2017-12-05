@@ -13,6 +13,7 @@ from karabo.common.scenemodel.api import (
     FixedLayoutModel, WorkflowItemModel, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
 from karabogui.events import (
     KaraboEventSender, register_for_broadcasts, unregister_from_broadcasts)
+from karabogui.request import send_property_changes
 from .bases import BaseSceneTool
 from .builder import (
     bring_object_to_front, create_object_from_model, fill_root_layout,
@@ -25,6 +26,7 @@ from .tools.api import (
     ConfigurationDropHandler, NavigationDropHandler, ProxySelectionTool,
     SceneSelectionTool, WidgetSceneHandler)
 from .utils import save_painter_state
+from .widget.api import ControllerContainer
 from .workflow.api import SceneWorkflowModel, WorkflowOverlay
 
 
@@ -259,9 +261,12 @@ class SceneView(QWidget):
     def apply_editor_changes(self):
         """Apply user edits to a remote device instance
         """
-        for obj in self._scene_obj_cache.values():
-            if is_widget(obj):
-                obj.apply_changes()
+        widgets = [obj for obj in self._scene_obj_cache.values()
+                   if isinstance(obj, ControllerContainer)]
+        proxies = [proxy for widget in widgets
+                   for proxy in widget.widget_controller.proxies
+                   if proxy.edit_value is not None]
+        send_property_changes(proxies)
 
     def decline_editor_changes(self):
         """Decline user edits in editor widgets
