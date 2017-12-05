@@ -228,7 +228,8 @@ class TestManager(GuiTestCase):
             topology.get_schema.assert_called_with('swerver', 'PrettyDevice')
             topology.get_class.assert_called_with('swerver', 'PrettyDevice')
             network.onInitDevice.assert_called_with(
-                'swerver', 'PrettyDevice', 'dev', Hash(), attrUpdates=None
+                'swerver', 'PrettyDevice', 'dev', Hash('init_prop', 0),
+                attrUpdates=None
             )
 
     def test_init_device_badschema(self):

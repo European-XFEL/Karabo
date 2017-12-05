@@ -21,7 +21,7 @@ from ..api import (
     VectorUint8Binding, VectorUint16Binding, VectorUint32Binding,
     VectorUint64Binding,
     apply_configuration, apply_default_configuration, build_binding,
-    extract_attribute_modifications, extract_configuration, has_modifications,
+    extract_attribute_modifications, extract_configuration,
     KARABO_SCHEMA_DEFAULT_VALUE,
     KARABO_SCHEMA_METRIC_PREFIX_ENUM, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
     KARABO_SCHEMA_UNIT_ENUM, KARABO_SCHEMA_UNIT_SYMBOL
@@ -74,18 +74,16 @@ def test_data_files():
         with open(config_filename, 'rb') as fp:
             config = decodeBinary(fp.read())
 
-        assert not has_modifications(binding)
-        apply_configuration(config, binding, remember_modification=True)
-        assert has_modifications(binding)
+        apply_configuration(config, binding)
         extracted = extract_configuration(binding)
 
         # Check that the configuration was applied
-        for key, value in _flatten_hash(extracted):
-            assert key in config
+        for key, value in _flatten_hash(config):
+            assert key in extracted
             if isinstance(value, np.ndarray):
-                assert all(config[key] == value)
+                assert all(extracted[key] == value)
             else:
-                assert config[key] == value
+                assert extracted[key] == value
 
 
 def test_complete_schema():

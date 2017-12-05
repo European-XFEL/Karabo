@@ -1,17 +1,18 @@
 from traits.api import (
-    HasStrictTraits, Bool, DelegatesTo, Enum, Event, Instance, Int, Property,
-    String, WeakRef, on_trait_change)
+    HasStrictTraits, Any, Bool, DelegatesTo, Enum, Event, Instance, Int,
+    Property, String, WeakRef, on_trait_change)
 
 from karabo.common.api import DeviceStatus
-from karabo.middlelayer import Hash
 from karabogui.singletons.api import get_network, get_topology
 from . import const
+from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .types import BaseBinding, BindingRoot, PipelineOutputBinding, SlotBinding
 
 _ONLINE_STATUSES = (
     DeviceStatus.OK, DeviceStatus.ONLINE, DeviceStatus.ALIVE,
     DeviceStatus.MONITORING, DeviceStatus.SCHEMA, DeviceStatus.ERROR
 )
+_RECURSIVE_BINDINGS = (ChoiceOfNodesBinding, ListOfNodesBinding)
 
 
 class BaseDeviceProxy(HasStrictTraits):
@@ -63,7 +64,6 @@ class DeviceProxy(BaseDeviceProxy):
     """The proxy for device instances and project devices. Instances may come
     on and offline.
     """
-    configuration = Instance(Hash)
     # ID of the device we are proxying
     device_id = String
     # An event which fires when the configuration is updated from the network
@@ -200,12 +200,17 @@ class PropertyProxy(HasStrictTraits):
     binding = Instance(BaseBinding)
     # The value for the property (from the binding instance)
     value = Property(depends_on='binding.value')
+    # A user-entered value
+    edit_value = Any
     # Parent device or class proxy
     root_proxy = Instance(BaseDeviceProxy, allow_none=False)
     # Potential parent path if `binding` is a child of a Pipeline Output
     pipeline_parent_path = String
     # Whether or not this property is currently visible in a scene
     visible = Bool(False)
+
+    # An extra binding instance for `edit_value` validation
+    _edit_binding = Instance(BaseBinding)
 
     # -----------------------------------------------------------------------
     # Traits methods
@@ -218,6 +223,8 @@ class PropertyProxy(HasStrictTraits):
     def _get_value(self):
         binding = self.binding
         if binding is not None:
+            if self.edit_value is not None:
+                return self.edit_value
             return binding.value
 
     def _set_value(self, value):
@@ -245,7 +252,28 @@ class PropertyProxy(HasStrictTraits):
         if self.root_proxy is None:
             return
         self.binding = self.root_proxy.get_property_binding(self.path)
+        self._edit_binding = None  # blindly clear the edit binding
         self.pipeline_parent_path = self._pipeline_parent_path_default()
+
+    def _edit_value_changed(self, value):
+        """When `edit_value` changes, set it to a binding object to validate
+        its value.
+        """
+        if value is None:
+            return
+
+        if self._edit_binding is None:
+            klass = type(self.binding)
+            self._edit_binding = klass()
+            if isinstance(self.binding, _RECURSIVE_BINDINGS):
+                # XXX: Recursive bindings are special
+                self._edit_binding.choices = self.binding.choices
+
+        # Validate (and mutate in some cases, like arrays)
+        self._edit_binding.value = value
+        # Replace quietly
+        self.trait_setq(edit_value=self._edit_binding.value)
+        self.binding.config_update = True
 
     # -----------------------------------------------------------------------
     # Public methods
@@ -268,13 +296,12 @@ class PropertyProxy(HasStrictTraits):
         For a device class, return the defaul value, if one exists.
         Returns None if there is no value.
         """
+        if self.binding is None:
+            return None
+
         if isinstance(self.root_proxy, DeviceProxy):
-            configuration = self.root_proxy.configuration
-            if configuration is not None and self.path in configuration:
-                return configuration[self.path]
+            return self.binding.value
         else:
-            if self.binding is None:
-                return None
             attrs = self.binding.attributes
             return attrs.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
 
@@ -295,12 +322,8 @@ class PropertyProxy(HasStrictTraits):
     def revert_edit(self):
         """Revert any local edits made to a property.
         """
-        value = self.get_device_value()
-        binding = self.binding
-        if value is not None:
-            binding.value = value
-            binding.modified = False
-            binding.config_update = True
+        self.edit_value = None
+        self.binding.config_update = True
 
     def start_monitoring(self):
         """Tell the GUI server to start monitoring the device for our property

@@ -13,15 +13,9 @@ class BaseBinding(HasStrictTraits):
     object created from a schema. It has a dictionary of attributes and a
     `value` trait which contains the value of the node. The value is validated
     using normal Traits validation.
-
-    If the value of a node is changed by the user, the `modified` flag can be
-    set to True to signal this. This aids in the creation of minimal "diffs"
-    when extracting the changes made to an object.
     """
     # Dictionary of attributes copied from the object schema
     attributes = Dict
-    # True if the value in `value` has changed
-    modified = Bool(False)
     # When the value was last set on the device
     timestamp = Instance(Timestamp)
     # The value contained in this node. Derived classes should redefine this.

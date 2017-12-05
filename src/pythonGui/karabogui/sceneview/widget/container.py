@@ -226,7 +226,7 @@ class ControllerContainer(QWidget):
         if not self._is_editable or proxy.binding is None:
             return
 
-        if proxy.binding.modified:
+        if proxy.edit_value is not None:
             device_value = proxy.get_device_value()
             # FIXME: We need to find a way to determine when a property with
             # local modifications has a newer remote value which is different

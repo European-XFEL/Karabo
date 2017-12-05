@@ -258,19 +258,11 @@ class SystemTopology(HasStrictTraits):
         one exists and is initialized.
         """
         proxy = self._device_proxies.get(device_id, None)
-        if proxy is None:
-            return None
-
-        # Store the raw configuration on the DeviceProxy instance
-        proxy.configuration = config
-
-        # If the proxy isn't initialized, bail out
-        if len(proxy.binding.value) == 0:
+        if proxy is None or len(proxy.binding.value) == 0:
             return None
 
         # Apply the configuration to the proxy.
-        # Leave user-modified values untouched!
-        apply_configuration(config, proxy.binding, skip_modified=True)
+        apply_configuration(config, proxy.binding)
         # Fire the config_update event
         # XXX: Still needed with proxy.binding.config_update?
         proxy.config_update = True
