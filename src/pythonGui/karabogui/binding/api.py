@@ -3,7 +3,7 @@ from .builder import build_binding
 from .config import (
     apply_configuration, apply_default_configuration,
     extract_attribute_modifications, extract_configuration,
-    extract_sparse_configurations, has_modifications
+    extract_sparse_configurations
 )
 from .const import (
     KARABO_SCHEMA_NODE_TYPE, KARABO_SCHEMA_LEAF_TYPE, KARABO_SCHEMA_VALUE_TYPE,
