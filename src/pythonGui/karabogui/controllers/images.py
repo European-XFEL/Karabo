@@ -43,6 +43,8 @@ def get_image_data(image_node, dimX, dimY, dimZ, format):
     In case no data is included, a ``NoneType`` is returned.
     """
     pixels = image_node.pixels.value
+    if pixels.data.value is None:
+        return None
     if len(pixels.data.value) == 0:
         return None
 
