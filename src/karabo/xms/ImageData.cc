@@ -28,8 +28,8 @@ namespace karabo {
                 case Encoding::RGBA:
                 case Encoding::BGR:
                 case Encoding::BGRA:
-                case Encoding::CMYK: // ?
-                case Encoding::YUV: // ?
+                case Encoding::CMYK:
+                case Encoding::YUV:
                 case Encoding::BAYER:
                     return true;
                 case Encoding::JPEG:
