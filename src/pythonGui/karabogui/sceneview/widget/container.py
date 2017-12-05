@@ -37,6 +37,10 @@ class ControllerContainer(QWidget):
         self.setToolTip(', '.join(self.model.keys))
         self.update_alarm_symbol()
 
+        # Trigger the status change once (might be offline)
+        device_proxy = self.widget_controller.proxy.root_proxy
+        self._device_status_changed(device_proxy.status)
+
     def add_proxies(self, proxies):
         """Add more proxies to a controller which allows more than one proxy.
         ``True`` is returned when this was possible, otherwise ``False`` is
