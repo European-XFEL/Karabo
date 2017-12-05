@@ -9,7 +9,8 @@ from PyQt4.QtGui import (QAction, QInputDialog, QLineEdit, QDoubleValidator,
 from traits.api import Instance, Str, on_trait_change
 
 from karabo.common.scenemodel.api import DoubleLineEditModel, IntLineEditModel
-from karabogui.binding.api import get_min_max, FloatBinding, IntBinding
+from karabogui.binding.api import (
+    get_editor_value, get_min_max, FloatBinding, IntBinding)
 from karabogui.controllers.base import BaseBindingController
 from karabogui.controllers.registry import register_binding_controller
 from karabogui.controllers.unitlabel import add_unit_label
@@ -55,6 +56,8 @@ class NumberLineEdit(BaseBindingController):
                    else self._error_palette)
         self._internal_widget.setPalette(palette)
 
+        if self.proxy.binding is None:
+            return
         if acceptable_input:
             if isinstance(self._validator, QDoubleValidator):
                 intdci = text.split('.')
@@ -70,7 +73,7 @@ class NumberLineEdit(BaseBindingController):
                 self._display_value = text
             else:
                 self._internal_value = text
-            self.proxy.value = self._validate_value()
+            self.proxy.edit_value = self._validate_value()
 
     def _validate_value(self):
         """This method validates the current value of the widget and returns
@@ -135,7 +138,7 @@ class DoubleLineEdit(NumberLineEdit):
         return widget
 
     def value_update(self, proxy):
-        value = proxy.value
+        value = get_editor_value(proxy)
         self.widget.update_label(proxy)
         self._internal_value = str(value)
 
@@ -173,7 +176,7 @@ class IntLineEdit(NumberLineEdit):
         return super(IntLineEdit, self).create_widget(parent)
 
     def value_update(self, proxy):
-        value = proxy.value
+        value = get_editor_value(proxy)
         self.widget.update_label(proxy)
         self._internal_value = str(value)
         with SignalBlocker(self._internal_widget):
