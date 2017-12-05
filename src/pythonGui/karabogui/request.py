@@ -3,11 +3,21 @@
 # Created on May 9, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from functools import partial
 from inspect import signature
 import uuid
+from weakref import WeakKeyDictionary
+
+from PyQt4.QtCore import pyqtSlot, QTimer
 
 from karabo.middlelayer import Hash
-from karabogui.singletons.api import get_manager
+from karabogui import messagebox
+from karabogui.binding.api import extract_sparse_configurations
+from karabogui.singletons.api import get_manager, get_network, get_topology
+
+# Devices which are waiting for a configuration to come back from the server
+_waiting_devices = WeakKeyDictionary()
+WAIT_SECONDS = 5
 
 
 def call_device_slot(handler, device_id, slot_name, **kwargs):
@@ -48,3 +58,66 @@ def call_device_slot(handler, device_id, slot_name, **kwargs):
     get_manager().callDeviceSlot(token, handler, device_id, slot_name, params)
 
     return token
+
+
+def send_property_changes(proxies):
+    """Given a collection of PropertyProxy instances, gather all the user edits
+    and send them to the GUI server. Then wait for an answer to come back.
+    """
+    def _config_handler(device_proxy, name, new):
+        """Handle a device getting a new configuration
+        """
+        global _waiting_devices
+        properties, timer = _waiting_devices.pop(device_proxy, ([], None))
+        if len(properties) == 0:
+            return
+
+        # Clear the timer and property edits
+        timer.stop()
+        for proxy in properties:
+            proxy.revert_edit()
+
+        # Remove the trait handler
+        device_proxy.on_trait_change(_config_handler, 'config_update',
+                                     remove=True)
+
+    @pyqtSlot()
+    def _timeout_handler(device_proxy):
+        """Handle our wait timer expiring.
+        """
+        global _waiting_devices
+        properties, _ = _waiting_devices.pop(device_proxy, ([], None))
+        if len(properties) == 0:
+            return
+
+        # Remove the trait handler
+        device_proxy.on_trait_change(_config_handler, 'config_update',
+                                     remove=True)
+
+        # Inform the user
+        msg = ('The property changes submitted to device "{}" were not '
+               'acknowledged after {} seconds. The changes may or may '
+               'not have been successful!')
+        msg = msg.format(device_proxy.device_id, WAIT_SECONDS)
+        messagebox.show_warning(msg)
+
+    def _wait_for_changes(device_proxy, properties):
+        """Set all the handlers up
+        """
+        global _waiting_devices
+        timer = QTimer()
+        timer.setSingleShot(True)
+        timer.timeout.connect(partial(_timeout_handler, device_proxy))
+        device_proxy.on_trait_change(_config_handler, 'config_update')
+
+        _waiting_devices[device_proxy] = (properties, timer)
+        timer.start(WAIT_SECONDS * 1000)
+
+    configs = extract_sparse_configurations(proxies)
+    topology, network = get_topology(), get_network()
+    for device_id, config in configs.items():
+        device_proxy = topology.get_device(device_id)
+        properties = [proxy for proxy in proxies
+                      if proxy.root_proxy.device_id == device_id]
+        _wait_for_changes(device_proxy, properties)
+        network.onReconfigure(device_id, config)
