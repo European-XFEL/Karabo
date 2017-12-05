@@ -146,9 +146,9 @@ class ControllerContainer(QWidget):
     def update_global_access_level(self):
         """Update the widget based on a new global access level.
         """
-        # FIXME: Figure this out. We don't get a traits notification for
-        # access level changes
-        self.widget_controller
+        # Treat it like a device state update
+        proxy = self.widget_controller.proxy
+        self.widget_controller.state_update(proxy)
 
     # ---------------------------------------------------------------------
     # Qt methods
