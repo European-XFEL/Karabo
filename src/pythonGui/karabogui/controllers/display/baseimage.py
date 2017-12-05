@@ -13,7 +13,8 @@ from PyQt4.QtGui import (
     QAction, QActionGroup, QCursor, QHBoxLayout, QIcon, QMenu, QToolBar,
     QWidget)
 from PyQt4.Qwt5.Qwt import QwtPlot
-from traits.api import Bool, Callable, HasStrictTraits, Instance, String
+from traits.api import (
+    Bool, Callable, HasStrictTraits, Instance, on_trait_change, String)
 
 from karabo.common.scenemodel.api import ScientificImageModel, WebcamImageModel
 from karabogui import icons
@@ -55,6 +56,12 @@ class _BaseImage(BaseBindingController):
         hlayout = QHBoxLayout(widget)
         hlayout.addWidget(self._image_widget)
         hlayout.addWidget(self._toolbar)
+
+        # synchronize the ui settings to the value stored in the model
+        model = self.model
+        self._show_tool_bar(model.show_tool_bar)
+        self._show_color_bar(model.show_color_bar)
+        self._show_axes(model.show_axes)
         return widget
 
     def value_update(self, proxy):
@@ -123,7 +130,7 @@ class _BaseImage(BaseBindingController):
         return toolbar_widget
 
     def _create_mode_tool_actions(self):
-        """ Create actions and return list of them"""
+        """ Create actions and return list of them """
         selection = WidgetAction(
             icon=icons.cursorArrow,
             checkable=True,
@@ -141,35 +148,35 @@ class _BaseImage(BaseBindingController):
             triggered=partial(self._tool_handler, RectZoomTool)
         )
 
-        return [self._build_qaction(a, build=False) for a in (selection, zoom)]
+        return [self._build_qaction(a) for a in (selection, zoom)]
 
     def _create_context_menu_actions(self):
         actions = []
-        actions.append(WidgetAction(
-            text="Show tool bar",
-            tooltip="Show tool bar for widget",
-            checkable=True,
-            is_checked=self.model.show_tool_bar,
-            triggered=show_toolbar_handler)
-        )
-        actions.append(WidgetAction(
-            text="Show color bar",
-            tooltip="Show color bar for widget",
-            checkable=True,
-            is_checked=self.model.show_color_bar,
-            triggered=show_colorbar_handler)
-        )
-        actions.append(WidgetAction(
-            text="Show axes",
-            tooltip="Show axes for widget",
-            checkable=True,
-            is_checked=self.model.show_axes,
-            triggered=show_axes_handler)
-        )
+        actions.append(
+            WidgetAction(
+                text="Show tool bar",
+                tooltip="Show tool bar for widget",
+                checkable=True,
+                is_checked=self.model.show_tool_bar,
+                triggered=show_toolbar_handler))
+        actions.append(
+            WidgetAction(
+                text="Show color bar",
+                tooltip="Show color bar for widget",
+                checkable=True,
+                is_checked=self.model.show_color_bar,
+                triggered=show_colorbar_handler))
+        actions.append(
+            WidgetAction(
+                text="Show axes",
+                tooltip="Show axes for widget",
+                checkable=True,
+                is_checked=self.model.show_axes,
+                triggered=show_axes_handler))
         q_actions = [self._build_qaction(a) for a in actions]
         return q_actions
 
-    def _build_qaction(self, widget_action, build=True):
+    def _build_qaction(self, widget_action):
         """ Create action from given ``widget_action`` """
         q_action = QAction(widget_action.text, self.widget)
         if widget_action.icon is not None:
@@ -191,15 +198,18 @@ class _BaseImage(BaseBindingController):
             group.addAction(ac)
         actions[0].setChecked(True)  # Mark the first action
 
+    @on_trait_change('model.show_tool_bar', post_init=True)
     def _show_tool_bar(self, show):
         self._toolbar.setVisible(show)
 
     # -----------------------------------------------------------------------
     # qwt related
 
+    @on_trait_change('model.show_color_bar', post_init=True)
     def _show_color_bar(self, show):
         self._plot.enableAxis(QwtPlot.yRight, show)
 
+    @on_trait_change('model.show_axes', post_init=True)
     def _show_axes(self, show):
         self._plot.enableAxis(QwtPlot.xBottom, show)
         self._plot.enableAxis(QwtPlot.yLeft, show)
