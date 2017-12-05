@@ -25,7 +25,7 @@ class TestEditFilesystemControllers(GuiTestCase):
         with patch(sym) as QFileDialog:
             QFileDialog.getExistingDirectory.return_value = '/karabo'
             controller._on_button_click()
-            assert self.proxy.value == '/karabo'
+            assert self.proxy.edit_value == '/karabo'
 
         controller.destroy()
         assert controller.widget is None
@@ -39,7 +39,7 @@ class TestEditFilesystemControllers(GuiTestCase):
         with patch(sym) as getOpenFileName:
             getOpenFileName.return_value = 'file.txt'
             controller._on_button_click()
-            assert self.proxy.value == 'file.txt'
+            assert self.proxy.edit_value == 'file.txt'
 
         controller.destroy()
         assert controller.widget is None
@@ -53,7 +53,7 @@ class TestEditFilesystemControllers(GuiTestCase):
         with patch(sym) as getSaveFileName:
             getSaveFileName.return_value = 'file.txt'
             controller._on_button_click()
-            assert self.proxy.value == 'file.txt'
+            assert self.proxy.edit_value == 'file.txt'
 
         controller.destroy()
         assert controller.widget is None

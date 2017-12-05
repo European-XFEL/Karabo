@@ -47,10 +47,10 @@ class TestNumberLineEdit(GuiTestCase):
 
     def test_edit_value(self):
         self.d_controller._internal_widget.setText('3.14')
-        assert abs(self.d_proxy.value - 3.14) < 0.0001
+        assert abs(self.d_proxy.edit_value - 3.14) < 0.0001
 
         self.i_controller._internal_widget.setText('3')
-        assert self.i_proxy.value == 3
+        assert self.i_proxy.edit_value == 3
 
     def test_change_decimals(self):
         action = self.d_controller.widget.actions()[0]

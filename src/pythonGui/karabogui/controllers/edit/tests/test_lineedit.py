@@ -29,4 +29,4 @@ class TestEditableLineEdit(GuiTestCase):
 
     def test_edit_value(self):
         self.controller.widget.textChanged.emit('Wha??')
-        assert self.proxy.value == 'Wha??'
+        assert self.proxy.edit_value == 'Wha??'
