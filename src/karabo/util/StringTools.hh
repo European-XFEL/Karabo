@@ -27,6 +27,7 @@
 #include <cstdlib>
 #include <bitset>
 
+#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
@@ -73,7 +74,7 @@ namespace karabo {
          */
         inline std::string toString(const float& value) {
             std::ostringstream s;
-            s << std::fixed << std::setprecision(7) << value;
+            s << boost::format("%.7g") % value;
             return s.str();
         }
 
@@ -84,7 +85,7 @@ namespace karabo {
          */
         inline std::string toString(const double& value) {
             std::ostringstream s;
-            s << std::fixed << std::setprecision(15) << value;
+            s << boost::format("%.15g") % value;
             return s.str();
         }
 
@@ -95,18 +96,18 @@ namespace karabo {
          */
         inline std::string toString(const std::complex<float>& value) {
             std::ostringstream s;
-            s << std::fixed << std::setprecision(7) << value;
+            s << boost::format("%.7g") % value;
             return s.str();
         }
 
         /**
-         * Complex dobules are output to their maximum precision of 15 digits
+         * Complex doubles are output to their maximum precision of 15 digits
          * @param value
          * @return 
          */
         inline std::string toString(const std::complex<double>& value) {
             std::ostringstream s;
-            s << std::fixed << std::setprecision(15) << value;
+            s << boost::format("%.15g") % value;
             return s.str();
         }
 
