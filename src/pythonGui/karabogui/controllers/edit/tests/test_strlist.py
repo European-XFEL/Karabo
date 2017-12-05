@@ -38,4 +38,4 @@ class TestEditableListElement(GuiTestCase):
         target = 'karabogui.controllers.edit.strlist.ListEdit'
         with patch(target, new=ListEditMock):
             self.controller._on_edit_clicked()
-            assert self.proxy.value == ['foo', 'bar']
+            assert self.proxy.edit_value == ['foo', 'bar']

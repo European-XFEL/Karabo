@@ -29,7 +29,7 @@ class TestEditableCheckBox(GuiTestCase):
 
     def test_edit_value(self):
         self.controller.widget.setCheckState(Qt.Checked)
-        assert self.proxy.value
+        assert self.proxy.edit_value
 
         self.controller.widget.setCheckState(Qt.Unchecked)
-        assert not self.proxy.value
+        assert not self.proxy.edit_value

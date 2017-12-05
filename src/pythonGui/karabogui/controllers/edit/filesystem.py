@@ -11,11 +11,11 @@ from traits.api import Constant, Instance, Int
 from karabo.common.scenemodel.api import (
     DirectoryModel, FileInModel, FileOutModel)
 from karabogui import icons
-from karabogui.binding.api import StringBinding
+from karabogui.binding.api import StringBinding, get_editor_value
 from karabogui.controllers.base import BaseBindingController
 from karabogui.controllers.registry import register_binding_controller
 from karabogui.controllers.util import with_display_type
-from karabogui.util import getOpenFileName, getSaveFileName
+from karabogui.util import SignalBlocker, getOpenFileName, getSaveFileName
 
 
 class _FileSystemPicker(BaseBindingController):
@@ -45,13 +45,16 @@ class _FileSystemPicker(BaseBindingController):
         return widget
 
     def value_changed(self, proxy):
-        self._path.setText(proxy.value)
-        self._path.setCursorPosition(self._last_cursor_pos)
+        with SignalBlocker(self._path):
+            self._path.setText(get_editor_value(proxy))
+            self._path.setCursorPosition(self._last_cursor_pos)
 
     @pyqtSlot(str)
     def _on_user_edit(self, value):
+        if self.proxy.binding is None:
+            return
         self._last_cursor_pos = self._path.cursorPosition()
-        self.proxy.value = value
+        self.proxy.edit_value = value
 
     @pyqtSlot()
     def _on_button_click(self):

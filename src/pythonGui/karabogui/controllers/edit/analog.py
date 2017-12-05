@@ -9,8 +9,9 @@ from traits.api import Instance
 
 from karabo.common.scenemodel.api import KnobModel, SliderModel
 from karabogui.binding.api import (
-    FloatBinding, IntBinding, get_min_max, KARABO_SCHEMA_MAX_EXC,
-    KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC
+    FloatBinding, IntBinding, get_editor_value, get_min_max,
+    KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MIN_EXC,
+    KARABO_SCHEMA_MIN_INC
 )
 from karabogui.controllers.base import BaseBindingController
 from karabogui.controllers.registry import register_binding_controller
@@ -32,13 +33,13 @@ class _AnalogEditorWidget(BaseBindingController):
         self.widget.setRange(low, high)
 
     def value_update(self, proxy):
-        self.widget.setValue(proxy.value)
+        self.widget.setValue(get_editor_value(proxy))
 
     @pyqtSlot(object)
     def _edit_value(self, value):
         if self.proxy.binding is None:
             return
-        self.proxy.value = value
+        self.proxy.edit_value = value
 
 
 @register_binding_controller(ui_name='Knob', can_edit=True, klassname='Knob',
