@@ -223,8 +223,6 @@ class PropertyProxy(HasStrictTraits):
     def _get_value(self):
         binding = self.binding
         if binding is not None:
-            if self.edit_value is not None:
-                return self.edit_value
             return binding.value
 
     def _set_value(self, value):

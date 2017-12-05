@@ -5,7 +5,7 @@ from traits.api import Instance
 from karabo.common.scenemodel.api import BitfieldModel
 from karabogui.binding.api import (
     IntBinding, Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding
+    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding, get_editor_value
 )
 from karabogui.controllers.base import BaseBindingController
 from karabogui.controllers.registry import register_binding_controller
@@ -50,16 +50,12 @@ class BitfieldWidget(QWidget):
 
 
 @register_binding_controller(ui_name='Bit Field', klassname='Bitfield',
-                             binding_type=IntBinding)
+                             binding_type=IntBinding, can_edit=True)
 class Bitfield(BaseBindingController):
     # The scene data model class for this controller
     model = Instance(BitfieldModel)
     # Internal traits
     _internal_widget = Instance(BitfieldWidget)
-
-    @property
-    def editWidget(self):
-        return self._internal_widget
 
     def binding_update(self, proxy):
         if self.widget is None:
@@ -80,15 +76,15 @@ class Bitfield(BaseBindingController):
         self._internal_widget.setFocusPolicy(focus_policy)
 
     def value_update(self, proxy):
-        self._internal_widget.value = proxy.value
+        self._internal_widget.value = get_editor_value(proxy)
         self.widget.update_label(proxy)
         self.widget.update()
 
     @pyqtSlot(int)
     def _on_user_edit(self, value):
-        binding = self.proxy.binding
-        if binding is not None:
-            binding.value = value
+        if self.proxy.binding is None:
+            return
+        self.proxy.edit_value = value
 
     def _get_binding_bitcount(self):
         bytecount_map = {

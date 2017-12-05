@@ -5,7 +5,8 @@ from karabogui.testing import (
     assert_trait_change, get_class_property_proxy, singletons)
 from ..api import (
     ImageBinding, DeviceProxy, DeviceClassProxy, PropertyProxy,
-    apply_default_configuration, build_binding, extract_sparse_configurations
+    apply_default_configuration, build_binding, extract_sparse_configurations,
+    get_editor_value
 )
 from .schema import (
     get_all_props_schema, get_pipeline_schema, get_simple_schema,
@@ -198,13 +199,13 @@ def test_property_proxy_edit_values():
     proxy = get_class_property_proxy(schema, 'n')
 
     proxy.value = 5
-    assert proxy.value == 5
+    assert get_editor_value(proxy) == 5
 
     proxy.edit_value = 42
-    assert proxy.value == 42
+    assert get_editor_value(proxy) == 42
 
     proxy.revert_edit()
-    assert proxy.value == 5
+    assert get_editor_value(proxy) == 5
     assert proxy.edit_value is None
 
 

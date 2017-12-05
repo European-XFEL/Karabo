@@ -32,7 +32,7 @@ class TestEditableComboBox(GuiTestCase):
 
     def test_edit_value(self):
         self.controller.widget.setCurrentIndex(3)
-        assert self.proxy.value == 'qux'
+        assert self.proxy.edit_value == 'qux'
 
     def test_schema_update(self):
         proxy = get_class_property_proxy(Other.getClassSchema(), 'prop')

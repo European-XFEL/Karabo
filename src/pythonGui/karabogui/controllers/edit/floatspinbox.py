@@ -5,11 +5,12 @@ from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import FloatSpinBoxModel
 from karabogui.binding.api import (
-    FloatBinding, get_min_max, KARABO_SCHEMA_ABSOLUTE_ERROR)
+    FloatBinding, get_editor_value, get_min_max, KARABO_SCHEMA_ABSOLUTE_ERROR)
 from karabogui.const import WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH
 from karabogui.controllers.base import BaseBindingController
 from karabogui.controllers.registry import register_binding_controller
 from karabogui.controllers.unitlabel import add_unit_label
+from karabogui.util import SignalBlocker
 
 
 @register_binding_controller(ui_name='SpinBox (real)', can_edit=True,
@@ -55,7 +56,8 @@ class FloatSpinBox(BaseBindingController):
 
     def value_update(self, proxy):
         self.widget.update_label(proxy)
-        self._internal_widget.setValue(proxy.value)
+        with SignalBlocker(self._internal_widget):
+            self._internal_widget.setValue(get_editor_value(proxy))
 
     @on_trait_change('model:decimals')
     def _set_decimals(self, value):
@@ -94,4 +96,6 @@ class FloatSpinBox(BaseBindingController):
 
     @pyqtSlot(float)
     def _on_user_edit(self, value):
-        self.proxy.value = value
+        if self.proxy.binding is None:
+            return
+        self.proxy.edit_value = value

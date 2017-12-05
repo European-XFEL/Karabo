@@ -10,7 +10,7 @@ from traits.api import Instance
 
 from karabo.common.scenemodel.api import RunConfiguratorModel
 from karabo.middlelayer import Hash
-from karabogui.binding.api import ListOfNodesBinding
+from karabogui.binding.api import ListOfNodesBinding, get_editor_value
 from karabogui.controllers.base import BaseBindingController
 from karabogui.controllers.registry import register_binding_controller
 from karabogui.controllers.util import with_display_type
@@ -60,14 +60,16 @@ class RunConfiguratorEdit(BaseBindingController):
         item_model.clear()
         item_model.setHorizontalHeaderLabels(HEADER_LABELS)
         root_item = item_model.invisibleRootItem()
-        for entry in proxy.value:
+        for entry in get_editor_value(proxy):
             _build(entry, root_item)
 
     @pyqtSlot(object)
     def _item_edited(self, item):
+        if self.proxy.binding is None:
+            return
         # Only react when top-level items are edited (ie: check-state changes)
         if item.parent() is None:
-            self.proxy.value = self._build_value()
+            self.proxy.edit_value = self._build_value()
 
     def _build_value(self):
         def _build_source_hash(item, row):

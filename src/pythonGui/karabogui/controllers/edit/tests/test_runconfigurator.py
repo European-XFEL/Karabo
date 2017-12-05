@@ -89,4 +89,4 @@ class TestRunConfiguratorEdit(GuiTestCase):
                  else Qt.Checked)
         child.setCheckState(state)
 
-        assert self.proxy.value != value
+        assert self.proxy.edit_value != value
