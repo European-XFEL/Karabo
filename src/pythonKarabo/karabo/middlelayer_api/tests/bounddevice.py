@@ -42,6 +42,7 @@ class TestDevice(PythonDevice):
             .expertAccess()
             .assignmentOptional()
             .defaultValue(22.5)
+            .reconfigurable()
             .commit(),
 
             NODE_ELEMENT(expected).key("node")
@@ -75,6 +76,7 @@ class TestDevice(PythonDevice):
             .setNodeSchema(tableSchema)
             .assignmentOptional()
             .defaultValue([Hash("d", 5, "s", "hallo")])
+            .reconfigurable()
             .commit(),
 
             NDARRAY_ELEMENT(expected).key("ndarray")

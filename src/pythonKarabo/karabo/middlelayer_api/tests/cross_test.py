@@ -100,7 +100,7 @@ class Tests(DeviceTest):
             stdout=PIPE)
         schema = yield from self.process.stdout.read()
         yield from self.process.wait()
-        self.assertEqual(adler32(schema), 37959406,
+        self.assertEqual(adler32(schema), 3041212129,
             "The generated schema changed. If this is desired, change the "
             "checksum in the code.")
 
@@ -111,6 +111,9 @@ class Tests(DeviceTest):
             sys.executable, "-m", "karabo.bound_api.launcher",
             "run", "karabo.bound_device_test", "TestDevice",
             stdin=PIPE)
+        # To get DEBUG output of the bound device, add
+        # <Logger><priority>DEBUG</priority></Logger>
+        # after the line with _deviceId_
         self.process.stdin.write(b"""\
             <root KRB_Artificial="">
                 <_deviceId_>boundDevice</_deviceId_>
