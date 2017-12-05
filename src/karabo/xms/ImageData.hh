@@ -72,7 +72,8 @@ namespace karabo {
             ImageData();
 
             /**
-             * Constructor from NDArray
+             * Constructor from NDArray where the dimensions of the image data will be deduced from NDArray
+             * if encoding is indexable.
              *
              * @param data NDArray - note that the copy of the NDArray kept inside ImageData will refer to the same raw
              *                       memory as this input
