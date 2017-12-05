@@ -53,8 +53,7 @@ class ProjectDeviceInstance(HasStrictTraits):
         """Extract a complete device config hash from the proxy
         """
         if len(self.proxy.binding.value) > 0:
-            return extract_configuration(self.proxy.binding,
-                                         modified_only=False)
+            return extract_configuration(self.proxy.binding)
         return Hash()
 
     def rename(self, device_id='', server_id='', class_id=''):
