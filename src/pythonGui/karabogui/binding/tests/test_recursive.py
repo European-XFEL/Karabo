@@ -148,12 +148,6 @@ def test_extract_configuration():
     binding = build_binding(schema)
 
     apply_default_configuration(binding)
-    # apply_default_configuration doesn't set modified flag,
-    # we set manually so the extract_configuration will work
-    binding.value.con.modified = True
-    binding.value.con.value.one.modified = True
-    binding.value.lon.modified = True
-    binding.value.lon.value[0].value.zero.modified = True
     ret = extract_configuration(binding)
 
     assert 'con' in ret

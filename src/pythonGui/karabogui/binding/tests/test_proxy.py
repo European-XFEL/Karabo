@@ -1,13 +1,15 @@
 from unittest.mock import Mock
 
 from karabo.common.api import DeviceStatus
-from karabo.middlelayer import Hash
-from karabogui.testing import assert_trait_change, singletons
+from karabogui.testing import (
+    assert_trait_change, get_class_property_proxy, singletons)
 from ..api import (
     ImageBinding, DeviceProxy, DeviceClassProxy, PropertyProxy,
     apply_default_configuration, build_binding, extract_sparse_configurations
 )
-from .schema import get_pipeline_schema, get_simple_schema, get_slotted_schema
+from .schema import (
+    get_all_props_schema, get_pipeline_schema, get_simple_schema,
+    get_slotted_schema)
 
 
 def test_device_proxy_classes():
@@ -167,9 +169,9 @@ def test_property_proxy_device_value():
     binding = build_binding(schema)
 
     # First a device proxy
-    root_proxy = DeviceProxy(device_id='dev', binding=binding,
-                             configuration=Hash('bar', 'Remote'))
+    root_proxy = DeviceProxy(device_id='dev', binding=binding)
     proxy = PropertyProxy(root_proxy=root_proxy, path='bar')
+    proxy.value = 'Remote'
     assert proxy.get_device_value() == 'Remote'
 
     # Then a class proxy
@@ -191,19 +193,19 @@ def test_property_proxy_history():
             'dev', 'foo', 'start_time', 'end_time', 1)
 
 
-def test_property_proxy_revert():
-    schema = get_simple_schema()
-    binding = build_binding(schema)
+def test_property_proxy_edit_values():
+    schema = get_all_props_schema()
+    proxy = get_class_property_proxy(schema, 'n')
 
-    root_proxy = DeviceProxy(device_id='dev', binding=binding,
-                             configuration=Hash('bar', 'Remote'))
-    proxy = PropertyProxy(root_proxy=root_proxy, path='bar')
-    proxy.value = 'Local'
-    proxy.binding.modified = True
+    proxy.value = 5
+    assert proxy.value == 5
+
+    proxy.edit_value = 42
+    assert proxy.value == 42
 
     proxy.revert_edit()
-    assert proxy.value == 'Remote'
-    assert not proxy.binding.modified
+    assert proxy.value == 5
+    assert proxy.edit_value is None
 
 
 def test_property_proxy_pipeline():
@@ -251,10 +253,8 @@ def test_multi_device_config_extraction():
     prop_bool = PropertyProxy(root_proxy=dev_one, path='foo')
     prop_string = PropertyProxy(root_proxy=dev_two, path='bar')
 
-    prop_bool.value = True
-    prop_bool.binding.modified = True
-    prop_string.value = 'yo'
-    prop_string.binding.modified = True
+    prop_bool.edit_value = True
+    prop_string.edit_value = 'yo'
     configs = extract_sparse_configurations([prop_bool, prop_string])
 
     assert 'one' in configs and 'two' in configs
