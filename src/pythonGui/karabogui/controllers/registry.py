@@ -55,10 +55,13 @@ def get_model_controller(scene_model):
     if controller_klass != '':
         # If a class name is specified by the model, use that
         return _with_attribute(klasses, '_klassname', controller_klass)
-    else:
-        # Otherwise, use the editability
-        # NOTE: It's very very likely that len(klasses) == 1 here
+    elif len(klasses) > 1:
+        # Use the editability to differentiate
         return _with_attribute(klasses, '_can_edit', will_edit)
+    else:
+        # We have to return the only controller that was found.
+        # `klasses` might be a `set` and sets don't allow indexing
+        return next(iter(klasses))
 
 
 def get_scene_model_class(klass):
