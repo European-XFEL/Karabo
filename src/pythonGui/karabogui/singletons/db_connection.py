@@ -204,6 +204,12 @@ class ProjectDatabaseConnection(QObject):
                 data = item['xml']
                 self.cache.store(domain, uuid, data)
             storage = self._build_memcache(items)
+        else:
+            # Project loading failed, use the fast track to tell the world
+            self._waiting_for_read.clear()
+            self._read_items_buffer = []
+            self._broadcast_is_processing(False, bail=True)
+            return
 
         # Then go back through and load any waiting objects
         for item in items:
@@ -242,9 +248,14 @@ class ProjectDatabaseConnection(QObject):
             self.network.onProjectBeginSession(self.project_manager)
             self._have_logged_in = True
 
-    def _broadcast_is_processing(self, previous_processing):
+    def _broadcast_is_processing(self, previous_processing, *, bail=False):
         """Create broadcast event and send to all registered ``QObjects``
         """
+        if bail:
+            # Tell the world reading project failed
+            broadcast_event(KaraboEventSender.DatabaseIsBusy,
+                            {'is_processing': False, 'bail': True})
+
         # Check current processing state against previous one
         if self.is_processing() == previous_processing:
             return
