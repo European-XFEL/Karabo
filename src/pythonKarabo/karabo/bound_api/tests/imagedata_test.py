@@ -7,15 +7,24 @@ from karabo.testing.utils import compare_ndarray_data_ptrs
 
 
 def test_imagedata_from_ndarray():
-    arr = np.arange(20000, dtype='uint8').reshape(100, 200)
+    arr = np.arange(20000, dtype='uint16').reshape(100, 200)
     imageData = ImageData(arr)
     assert np.all(imageData.getData() == arr)
 
+    assert imageData.getBitsPerPixel() == 16
     assert imageData.getDimensionTypes() == (0, 0)
     assert imageData.getDimensions() == (100, 200)
     assert imageData.getEncoding() == Encoding.GRAY
     assert imageData.isIndexable()
     assert imageData.getROIOffsets() == (0, 0)
+
+    # Two additional tests on bitsPerPixel
+    # 1. set it in constructor
+    imageData = ImageData(arr, bitsPerPixel=12)
+    assert imageData.getBitsPerPixel() == 12
+    # 2. change it later
+    imageData.setBitsPerPixel(10);
+    assert imageData.getBitsPerPixel() == 10
 
     # Make sure conversion from Fortran order doesn't harm dimensions
     arr = np.asarray(np.arange(20000, dtype='uint8').reshape(100, 200),
@@ -78,15 +87,18 @@ def test_ndarry_refcounting():
 def test_imagedata_set_and_get():
     a = np.arange(20000, dtype='uint8').reshape(100, 200)
     imageData = ImageData()
-    # Set
+
     imageData.setData(a)  # Also set dataType
     imageData.setDimensionTypes((0, 1))
-    imageData.setDimensions((200, 100))
     imageData.setEncoding(Encoding.GRAY)
     imageData.setROIOffsets((20, 10))  # x, y
-
-    # Get
     assert np.all(imageData.getData() == a)
+    # Now we set dimensions which trickle down to getData.
+    # Before doing so, dimensions are undefined/empty (NOT taken from a!).
+    # Don't test for that since not sure whether this is really desired.
+    imageData.setDimensions((200, 100))
+
+    assert np.all(imageData.getData() == a.reshape(200, 100))
     assert imageData.getDimensionTypes() == (0, 1)
     assert imageData.getDimensions() == (200, 100)
     assert imageData.getEncoding() == Encoding.GRAY
