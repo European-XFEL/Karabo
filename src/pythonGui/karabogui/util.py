@@ -134,8 +134,9 @@ def loadConfigurationFromFile(device_proxy):
         messagebox.show_error("Configuration load failed")
         return
 
-    apply_configuration(config[binding.class_id], binding,
-                        remember_modification=True)
+    # FIXME: This is all wrong. We want to leave the binding values alone and
+    # set PropertyProxy.edit_value traits instead.
+    apply_configuration(config[binding.class_id], binding)
     # Save the directory information
     set_setting(KaraboSettings.CONFIG_DIR, op.dirname(filename))
 

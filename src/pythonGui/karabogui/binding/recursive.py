@@ -108,6 +108,5 @@ def _duplicate_node(node):
         for name in node.value:
             subnode = _duplicate_node(getattr(node.value, name))
             setattr(dupe.value, name, subnode)
-        dupe.modified = False
 
     return dupe
