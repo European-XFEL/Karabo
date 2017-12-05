@@ -1,5 +1,7 @@
 from collections.abc import Iterable
 
+from traits.api import TraitError
+
 from karabo.middlelayer import Hash, MetricPrefix, Timestamp, Unit
 from . import const
 from .proxy import PropertyProxy
@@ -31,7 +33,11 @@ def apply_configuration(config, binding, notify=True):
             ts = Timestamp.fromHashAttributes(attrs)
             traits['timestamp'] = ts or Timestamp()
             # Set everything at once and notify via the config_update event
-            node.trait_set(trait_change_notify=False, **traits)
+            try:
+                node.trait_set(trait_change_notify=False, **traits)
+            except TraitError:
+                # value in the configuration is not compatible to schema
+                continue
             if notify:
                 node.config_update = True
 
