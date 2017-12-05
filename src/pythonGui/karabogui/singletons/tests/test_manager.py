@@ -399,7 +399,8 @@ class TestManager(GuiTestCase):
 
                 callback = later.mock_calls[0][1][0]
                 callback()
-                apply_later.assert_called_with(Hash('a', 10), prop_binding)
+                apply_later.assert_called_with(Hash('a', 10),
+                                               prop_binding.value.schema)
 
     def test_handle_init_reply(self):
         target = 'karabogui.singletons.manager.broadcast_event'
