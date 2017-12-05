@@ -1491,7 +1491,7 @@ class PythonDevice(NoFsm):
                 return self._stateDependentSchema[state]
             self._stateDependentSchema[state] = self.__class__.getSchema(
                 self.classid,
-                AssemblyRules(AccessType(READ | WRITE | INIT), state.value))
+                AssemblyRules(AccessType(WRITE), state.value))
             if not self._injectedSchema.empty():
                 self._stateDependentSchema[state] += self._injectedSchema
             return self._stateDependentSchema[state]
