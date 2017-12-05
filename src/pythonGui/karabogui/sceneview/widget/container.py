@@ -3,7 +3,7 @@ from PyQt4.QtGui import QHBoxLayout, QLabel, QStackedLayout, QWidget
 
 from karabo.common.api import AlarmCondition, DeviceStatus, State
 from karabogui.alarms.api import get_alarm_pixmap
-from karabogui.binding.api import extract_sparse_configurations
+from karabogui.binding.api import extract_sparse_configurations, has_changes
 from karabogui.indicators import get_device_status_pixmap, STATE_COLORS
 from karabogui.singletons.api import get_network
 from karabogui.util import generateObjectName
@@ -86,9 +86,14 @@ class ControllerContainer(QWidget):
     def destroy(self):
         """Tell the controller to clean up
         """
-        device_proxy = self.widget_controller.proxy.root_proxy
-        device_proxy.on_trait_change(self._device_status_changed, 'status',
-                                     remove=True)
+        proxy = self.widget_controller.proxy
+        proxy.root_proxy.on_trait_change(self._device_status_changed, 'status',
+                                         remove=True)
+        if self._is_editable:
+            proxy.on_trait_change(
+                self._on_user_edit, 'edit_value,binding.config_update',
+                remove=True
+            )
 
         self.widget_controller.destroy()
         self.widget_controller = None
@@ -184,7 +189,7 @@ class ControllerContainer(QWidget):
             controller.visualize_additional_property(proxy)
 
         # Attach a handler for the 'status' trait of our main device
-        device_proxy = proxies[0].root_proxy
+        device_proxy = controller.proxy.root_proxy
         device_proxy.on_trait_change(self._device_status_changed, 'status')
 
         return controller
@@ -211,14 +216,25 @@ class ControllerContainer(QWidget):
 
         if self.model.parent_component == 'EditableApplyLaterComponent':
             self._is_editable = True
+            self.widget_controller.proxy.on_trait_change(
+                self._on_user_edit, 'edit_value,binding.config_update')
             layout.setContentsMargins(2, 2, 2, 2)
         else:
             layout.setContentsMargins(0, 0, 0, 0)
 
+        # Tell the widget if it's editing
+        self.widget_controller.set_read_only(not self._is_editable)
+
     # ---------------------------------------------------------------------
     # Editing related code
 
-    def _on_user_edit(self):
+    def _on_user_edit(self, binding, name, value):
+        """Trait notification handler for when the value of a PropertyProxy
+        changes from user or external action.
+        """
+        # Do some trait name filtering
+        if name not in ('edit_value', 'config_update'):
+            return
         self._update_background_color()
 
     def _update_background_color(self):
@@ -228,10 +244,9 @@ class ControllerContainer(QWidget):
 
         if proxy.edit_value is not None:
             device_value = proxy.get_device_value()
-            # FIXME: We need to find a way to determine when a property with
-            # local modifications has a newer remote value which is different
-            # than that entered by the user.
-            if device_value is not None:
+            has_conflict = has_changes(proxy.binding, device_value,
+                                       proxy.edit_value)
+            if has_conflict:
                 color = STATE_COLORS[State.UNKNOWN] + (128,)
             else:
                 color = STATE_COLORS[State.CHANGING] + (128,)

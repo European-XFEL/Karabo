@@ -3,17 +3,34 @@
 # Created on February 10, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import pyqtSlot, Qt
+from PyQt4.QtCore import pyqtSignal, pyqtSlot, Qt
 from PyQt4.QtGui import QSpinBox
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import EditableSpinBoxModel
-from karabogui.binding.api import IntBinding, get_min_max
+from karabogui.binding.api import IntBinding, get_editor_value, get_min_max
 from karabogui.const import WIDGET_MIN_HEIGHT
 from karabogui.controllers.base import BaseBindingController
 from karabogui.controllers.registry import register_binding_controller
 from karabogui.controllers.unitlabel import add_unit_label
-from karabogui.util import MouseWheelEventBlocker
+from karabogui.util import MouseWheelEventBlocker, SignalBlocker
+
+
+class _FocusynSpinBox(QSpinBox):
+    """QSpinBox apparently can't be monitored for focus changes with an
+    eventFilter. So, we do it the hard way.
+
+    Chemist: 'You can't just go "off" Focusyn!?'
+    """
+    focusChanged = pyqtSignal(bool)
+
+    def focusInEvent(self, event):
+        self.focusChanged.emit(True)
+        super(_FocusynSpinBox, self).focusInEvent(event)
+
+    def focusOutEvent(self, event):
+        self.focusChanged.emit(False)
+        super(_FocusynSpinBox, self).focusOutEvent(event)
 
 
 @register_binding_controller(ui_name='Integer Spin Box', can_edit=True,
@@ -27,9 +44,9 @@ class EditableSpinBox(BaseBindingController):
     _blocker = Instance(MouseWheelEventBlocker)
 
     def create_widget(self, parent):
-        self._internal_widget = QSpinBox(parent)
+        self._internal_widget = _FocusynSpinBox(parent)
         self._internal_widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
-        self._internal_widget.setFocusPolicy(Qt.NoFocus)
+        self._internal_widget.focusChanged.connect(self._focus_changed)
         return add_unit_label(self.proxy, self._internal_widget, parent=parent)
 
     def set_read_only(self, ro):
@@ -50,9 +67,20 @@ class EditableSpinBox(BaseBindingController):
 
     def value_update(self, proxy):
         self.widget.update_label(proxy)
-        self._internal_widget.setValue(proxy.value)
+        with SignalBlocker(self._internal_widget):
+            self._internal_widget.setValue(get_editor_value(proxy))
+
+    @pyqtSlot(bool)
+    def _focus_changed(self, has_focus):
+        """Make sure edits get applied when focus is lost"""
+        if not has_focus:
+            value = self._internal_widget.value()
+            proxy_value = get_editor_value(self.proxy)
+            if value != proxy_value:
+                self.proxy.edit_value = value
 
     @pyqtSlot(int)
     def _on_user_edit(self, value):
-        if self.proxy.binding is not None:
-            self.proxy.value = value
+        if self.proxy.binding is None:
+            return
+        self.proxy.edit_value = value

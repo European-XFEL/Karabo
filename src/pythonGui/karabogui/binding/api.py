@@ -49,4 +49,4 @@ from .types import (
     VectorNoneBinding, VectorStringBinding, VectorUint8Binding,
     VectorUint16Binding, VectorUint32Binding, VectorUint64Binding
 )
-from .util import get_min_max, has_changes
+from .util import get_editor_value, get_min_max, has_changes

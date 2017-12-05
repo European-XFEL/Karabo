@@ -8,10 +8,10 @@ from PyQt4.QtGui import QComboBox
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import ComboBoxModel
-from karabogui.binding.api import BaseBinding
+from karabogui.binding.api import BaseBinding, get_editor_value
 from karabogui.controllers.base import BaseBindingController
 from karabogui.controllers.registry import register_binding_controller
-from karabogui.util import MouseWheelEventBlocker
+from karabogui.util import MouseWheelEventBlocker, SignalBlocker
 
 
 def _is_compatible(binding):
@@ -38,20 +38,23 @@ class EditableComboBox(BaseBindingController):
         return widget
 
     def binding_update(self, proxy):
-        self.widget.clear()
-        self.widget.addItems([str(o) for o in proxy.binding.options])
+        with SignalBlocker(self.widget):
+            self.widget.clear()
+            self.widget.addItems([str(o) for o in proxy.binding.options])
 
     def value_update(self, proxy):
-        value = proxy.value
+        value = get_editor_value(proxy)
         options = proxy.binding.options
         try:
             index = next(i for i, v in enumerate(options)
                          if v == value)
-            self.widget.setCurrentIndex(index)
+            with SignalBlocker(self.widget):
+                self.widget.setCurrentIndex(index)
         except StopIteration:
             return
 
     @pyqtSlot(int)
     def _on_user_edit(self, index):
-        if self.proxy.binding is not None:
-            self.proxy.value = self.proxy.binding.options[index]
+        if self.proxy.binding is None:
+            return
+        self.proxy.edit_value = self.proxy.binding.options[index]
