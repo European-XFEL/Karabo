@@ -89,21 +89,6 @@ namespace karabo {
         }
 
 
-        const size_t NDArray::size() const {
-            return byteSize() / itemSize();
-        }
-
-
-        size_t NDArray::byteSize() const {
-            return get<ByteArray>("data").second;
-        }
-
-
-        size_t NDArray::itemSize() const {
-            return Types::to<ToSize>(getType());
-        }
-
-
         const NDArray::DataPointer& NDArray::getDataPtr() const {
             return get<ByteArray>("data").first;
         }
