@@ -35,14 +35,19 @@ def _options_checker(binding):
 
 def test_registry():
     with flushed_registry():
-        @register_binding_controller(binding_type=StringBinding,
-                                     klassname='Displayer',
-                                     is_compatible=_options_checker)
+        @register_binding_controller(klassname='Editor',
+                                     binding_type=StringBinding)
         class DisplayWidget(BaseBindingController):
             model = Instance(UniqueWidgetModel)
 
+        @register_binding_controller(binding_type=StringBinding,
+                                     klassname='Displayer',
+                                     is_compatible=_options_checker)
+        class DisplayWidgetOptions(BaseBindingController):
+            model = Instance(UniqueWidgetModel)
+
         @register_binding_controller(klassname='Editor',
-                                     binding_type=StringBinding)
+                                     binding_type=StringBinding, can_edit=True)
         class EditWidget(BaseBindingController):
             model = Instance(UniqueWidgetModel)
 
@@ -52,12 +57,18 @@ def test_registry():
         bind = binding.value.for_display
         for_display_widgets = get_compatible_controllers(bind)
         assert DisplayWidget in for_display_widgets
-        assert EditWidget in for_display_widgets
+        assert DisplayWidgetOptions in for_display_widgets
+        assert EditWidget not in for_display_widgets
 
         bind = binding.value.for_editing
-        for_editing_widgets = get_compatible_controllers(bind)
-        assert EditWidget in for_editing_widgets
+        for_editing_widgets = get_compatible_controllers(bind, can_edit=True)
         assert DisplayWidget not in for_editing_widgets
+        assert DisplayWidgetOptions not in for_editing_widgets
+        assert EditWidget in for_editing_widgets
+        for_editing_widgets = get_compatible_controllers(bind)
+        assert DisplayWidget in for_editing_widgets
+        assert DisplayWidgetOptions not in for_editing_widgets
+        assert EditWidget not in for_editing_widgets
 
         bind = binding.value.unsupported
         assert get_compatible_controllers(bind) == []
@@ -145,12 +156,12 @@ def test_known_model_collision():
 
 def test_display_edit_overlap():
     # IntLineEdit should be returned for both edit and non-edit widgets
-
     from karabo.common.scenemodel.api import IntLineEditModel
     from ..edit.numberlineedit import IntLineEdit
 
     model = IntLineEditModel(parent_component='DisplayComponent')
     assert get_model_controller(model) is IntLineEdit
 
-    model = IntLineEditModel(parent_component='EditableApplyLaterComponent')
+    model = IntLineEditModel(
+        parent_component='EditableApplyLaterComponent')
     assert get_model_controller(model) is IntLineEdit

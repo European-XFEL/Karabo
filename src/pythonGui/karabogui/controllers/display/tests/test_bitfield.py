@@ -1,7 +1,8 @@
+from numpy import uint64
 from PyQt4.QtCore import QEvent, QPoint, QRect, Qt
 from PyQt4.QtGui import QMouseEvent
 
-from karabo.middlelayer import Configurable, Int16, Int32
+from karabo.middlelayer import Configurable, UInt16, UInt32
 from karabogui.binding.api import build_binding
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
@@ -9,11 +10,11 @@ from ..bitfield import Bitfield
 
 
 class Object(Configurable):
-    prop = Int32(defaultValue=0)
+    prop = UInt32(defaultValue=0)
 
 
 class Object2(Configurable):
-    prop = Int16()
+    prop = UInt16()
 
 
 class TestDisplayCheckBox(GuiTestCase):
@@ -47,11 +48,11 @@ class TestDisplayCheckBox(GuiTestCase):
         controller = Bitfield(proxy=self.proxy)
         controller.create(None)
 
-        set_proxy_value(self.proxy, 'prop', 42)
+        set_proxy_value(self.proxy, 'prop', uint64(42))
         assert controller._internal_widget.value == 42
 
     def test_non_read_only(self):
-        set_proxy_value(self.proxy, 'prop', 0)
+        set_proxy_value(self.proxy, 'prop', uint64(0))
         controller = Bitfield(proxy=self.proxy)
         controller.create(None)
         bitfield = controller._internal_widget

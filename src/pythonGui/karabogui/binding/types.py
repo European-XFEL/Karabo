@@ -163,22 +163,30 @@ class IntBinding(BaseBinding):
     """The base class for all integer binding types"""
 
 
-class Int8Binding(IntBinding):
+class SignedIntBinding(IntBinding):
+    """The base class for all signed integer binding types"""
+
+
+class UnsignedIntBinding(IntBinding):
+    """The base class for all unsigned integer binding types"""
+
+
+class Int8Binding(SignedIntBinding):
     value = Range(low=-(1 << 7), high=(1 << 7), value=0,
                   exclude_low=True, exclude_high=True)
 
 
-class Int16Binding(IntBinding):
+class Int16Binding(SignedIntBinding):
     value = Range(low=-(1 << 15), high=(1 << 15), value=0,
                   exclude_low=True, exclude_high=True)
 
 
-class Int32Binding(IntBinding):
+class Int32Binding(SignedIntBinding):
     value = Range(low=-(1 << 31), high=(1 << 31), value=0,
                   exclude_low=True, exclude_high=True)
 
 
-class Int64Binding(IntBinding):
+class Int64Binding(SignedIntBinding):
     value = Range(low=-(1 << 63), high=(1 << 63), value=0,
                   exclude_low=True, exclude_high=True)
 
@@ -211,19 +219,19 @@ class StringBinding(BaseBinding):
     value = String
 
 
-class Uint8Binding(IntBinding):
+class Uint8Binding(UnsignedIntBinding):
     value = Range(low=0, high=(1 << 8), value=0, exclude_high=True)
 
 
-class Uint16Binding(IntBinding):
+class Uint16Binding(UnsignedIntBinding):
     value = Range(low=0, high=(1 << 16), value=0, exclude_high=True)
 
 
-class Uint32Binding(IntBinding):
+class Uint32Binding(UnsignedIntBinding):
     value = Range(low=0, high=(1 << 32), value=0, exclude_high=True)
 
 
-class Uint64Binding(IntBinding):
+class Uint64Binding(UnsignedIntBinding):
     value = Range(low=0, high=(1 << 64), value=0, exclude_high=True)
 
 
