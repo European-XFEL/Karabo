@@ -33,7 +33,8 @@ def get_compatible_controllers(binding_instance, can_edit=False):
     key = type(binding_instance)
     # Sort based on priority
     klasses = sorted(_controller_registry[key],
-                     key=lambda x: get_class_const_trait(x, '_priority'))
+                     key=lambda x: get_class_const_trait(x, '_priority'),
+                     reverse=True)
     # Give the classes a chance to reject
     klasses = [klass for klass in klasses if check_compatibility(klass)]
     return klasses

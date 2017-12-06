@@ -6,9 +6,7 @@
 from PyQt4.QtCore import QSize
 from PyQt4.QtGui import QStyledItemDelegate
 
-# XXX: For now....
-# from .utils import FIXED_ROW_HEIGHT
-FIXED_ROW_HEIGHT = 30
+from .utils import FIXED_ROW_HEIGHT
 
 
 class ValueDelegate(QStyledItemDelegate):
