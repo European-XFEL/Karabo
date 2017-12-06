@@ -4,8 +4,8 @@ from traits.api import Instance
 
 from karabo.common.scenemodel.api import BitfieldModel
 from karabogui.binding.api import (
-    IntBinding, Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding, get_editor_value
+    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
+    UnsignedIntBinding, get_editor_value
 )
 from karabogui.controllers.base import BaseBindingController
 from karabogui.controllers.registry import register_binding_controller
@@ -50,7 +50,7 @@ class BitfieldWidget(QWidget):
 
 
 @register_binding_controller(ui_name='Bit Field', klassname='Bitfield',
-                             binding_type=IntBinding, can_edit=True)
+                             binding_type=UnsignedIntBinding, can_edit=True)
 class Bitfield(BaseBindingController):
     # The scene data model class for this controller
     model = Instance(BitfieldModel)
@@ -76,7 +76,7 @@ class Bitfield(BaseBindingController):
         self._internal_widget.setFocusPolicy(focus_policy)
 
     def value_update(self, proxy):
-        self._internal_widget.value = get_editor_value(proxy)
+        self._internal_widget.value = int(get_editor_value(proxy))
         self.widget.update_label(proxy)
         self.widget.update()
 
@@ -88,7 +88,6 @@ class Bitfield(BaseBindingController):
 
     def _get_binding_bitcount(self):
         bytecount_map = {
-            Int8Binding: 1, Int16Binding: 2, Int32Binding: 4, Int64Binding: 8,
             Uint8Binding: 1, Uint16Binding: 2, Uint32Binding: 4,
             Uint64Binding: 8
         }
