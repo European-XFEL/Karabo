@@ -41,7 +41,7 @@ class LabelWidget(QLabel):
     def add_proxies(self, proxies):
         """Satisfy the informal widget interface."""
 
-    def apply_changes(self, devices=None, send_immediately=False):
+    def apply_changes(self):
         """Satisfy the informal widget interface."""
 
     def decline_changes(self):
