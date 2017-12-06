@@ -1,0 +1,200 @@
+from enum import Enum
+import json
+
+from PyQt4.QtCore import QMimeData, Qt
+from PyQt4.QtGui import QStyle
+
+from karabo.middlelayer import AccessMode
+from karabogui import globals as krb_globals, icons
+from karabogui.binding.api import (
+    BindingRoot, BoolBinding, CharBinding, ChoiceOfNodesBinding,
+    IntBinding, FloatBinding, NodeBinding, StringBinding, VectorHashBinding,
+    get_editor_value,
+    KARABO_SCHEMA_DISPLAYED_NAME, KARABO_SCHEMA_DISPLAY_TYPE,
+    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MIN_INC,
+    KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_ABSOLUTE_ERROR,
+    KARABO_SCHEMA_RELATIVE_ERROR, KARABO_WARN_LOW, KARABO_WARN_HIGH,
+    KARABO_ALARM_LOW, KARABO_ALARM_HIGH, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
+    KARABO_SCHEMA_UNIT_SYMBOL
+)
+from karabogui.controllers.registry import get_compatible_controllers
+
+# The fixed height of rows in the configurator
+FIXED_ROW_HEIGHT = 30
+# A tuple containing only the attributes which are editable pre-instantiation
+EDITABLE_ATTRIBUTES = (
+    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MIN_INC,
+    KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_ABSOLUTE_ERROR,
+    KARABO_SCHEMA_RELATIVE_ERROR, KARABO_WARN_LOW, KARABO_WARN_HIGH,
+    KARABO_ALARM_LOW, KARABO_ALARM_HIGH, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
+    KARABO_SCHEMA_UNIT_SYMBOL
+)
+
+
+class ButtonState(Enum):
+    PRESSED = QStyle.State_Enabled | QStyle.State_Sunken
+    ENABLED = QStyle.State_Enabled | QStyle.State_Raised | QStyle.State_Off
+    DISABLED = QStyle.State_On
+
+
+def dragged_configurator_items(proxies):
+    """Create a QMimeData object containing items dragged from the configurator
+    """
+    dragged = []
+    for proxy in proxies:
+        if proxy.binding is None:
+            continue
+
+        # Collect the relevant information
+        binding = proxy.binding
+        attrs = binding.attributes
+        data = {'key': proxy.key,
+                'label': attrs.get(KARABO_SCHEMA_DISPLAYED_NAME)}
+
+        factories = get_compatible_controllers(binding, can_edit=False)
+        if factories:
+            data['display_widget_class'] = factories[0].__name__
+        if proxy.binding.access_mode is AccessMode.RECONFIGURABLE:
+            factories = get_compatible_controllers(binding, can_edit=True)
+            if factories:
+                data['edit_widget_class'] = factories[0].__name__
+        # Add it to the list of dragged items
+        dragged.append(data)
+
+    if not dragged:
+        return None
+
+    mimeData = QMimeData()
+    mimeData.setData('source_type', 'ParameterTreeWidget')
+    mimeData.setData('tree_items', json.dumps(dragged))
+    return mimeData
+
+
+def get_child_names(proxy):
+    """Return all the names of a proxy's accessible children.
+
+    In the case of a `BaseDeviceProxy` binding, this is a list of properties.
+    For others, this is a list of attribute names.
+    """
+    ret = []
+    level = krb_globals.GLOBAL_ACCESS_LEVEL
+
+    binding = proxy.binding
+    if isinstance(binding, (BindingRoot, NodeBinding)):
+        for name in binding.value:
+            node = getattr(binding.value, name)
+            if node.required_access_level <= level:
+                ret.append(name)
+    else:
+        # Use a lazy cache on the proxy
+        ret = proxy.editable_attributes
+        if len(ret) == 0:
+            ret = _get_editable_attributes(binding)
+            proxy.editable_attributes = ret
+
+    return ret
+
+
+def get_icon(binding):
+    """Get the proper icon to show next to a property in the configurator
+    """
+    attributes = binding.attributes
+    options = attributes.get('options', None)
+    if options is not None:
+        return icons.enum
+
+    icon = icons.undefined
+    if isinstance(binding, CharBinding):
+        icon = icons.string
+    elif isinstance(binding, StringBinding):
+        path_types = ('directory', 'fileIn', 'fileOut')
+        if attributes.get(KARABO_SCHEMA_DISPLAY_TYPE) in path_types:
+            icon = icons.path
+        else:
+            icon = icons.string
+    elif isinstance(binding, IntBinding):
+        icon = icons.int
+    elif isinstance(binding, FloatBinding):
+        icon = icons.float
+    elif isinstance(binding, BoolBinding):
+        icon = icons.boolean
+
+    return icon
+
+
+def get_proxy_value(index, proxy, is_edit_col=False):
+    """Return the actual value of the given `proxy`, depending on whether this
+    is requested for an editable column
+    """
+    is_editable = index.flags() & Qt.ItemIsEditable == Qt.ItemIsEditable
+    if is_edit_col and not is_editable:
+        return ''
+
+    binding = proxy.binding
+    if isinstance(binding, ChoiceOfNodesBinding):
+        return binding.choice or ''
+    if isinstance(binding, (NodeBinding, VectorHashBinding)):
+        return ''
+
+    value = _proxy_value(proxy, is_edit_col)
+    if isinstance(value, (bytes, bytearray)):
+        return ''
+
+    return value
+
+
+def handle_default_state(allowed, state):
+    """Determine the resting state of a given box's button.
+    """
+    if allowed and state != ButtonState.PRESSED:
+        state = ButtonState.ENABLED
+    if not allowed:
+        state = ButtonState.DISABLED
+    return state
+
+
+def set_fill_rect(painter, option, index):
+    """Update the rectangle of the given `painter` depending on the given
+    `options`
+    """
+    if option.state & QStyle.State_Selected:
+        if option.state & QStyle.State_Active:
+            painter.fillRect(option.rect, option.palette.highlight())
+        elif not (option.state & QStyle.State_HasFocus):
+            painter.fillRect(option.rect, option.palette.background())
+    else:
+        brush = index.data(Qt.BackgroundRole)
+        if brush is not None:
+            painter.fillRect(option.rect, brush)
+
+
+# ----------------------------------------------------------------------------
+# Private details
+
+def _get_editable_attributes(binding):
+    """Return the editable attribute names of a binding
+    """
+    names = []
+    attributes = binding.attributes
+    for name in EDITABLE_ATTRIBUTES:
+        value = attributes.get(name)
+        if value is not None:
+            # Skip blank units
+            if name == KARABO_SCHEMA_UNIT_SYMBOL and value == '':
+                continue
+            # Skip metric prefixes with no associated units
+            if (name == KARABO_SCHEMA_METRIC_PREFIX_SYMBOL and value == ''
+                    and attributes.get(KARABO_SCHEMA_UNIT_SYMBOL, '') == ''):
+                continue
+            names.append(name)
+    return tuple(names)
+
+
+def _proxy_value(proxy, is_edit_col):
+    """If a value is needed from the editable column, then get the value from
+    the binding. This is in case the user has made a change which was not
+    yet applied.
+    """
+    if is_edit_col:
+        return get_editor_value(proxy)
+    return proxy.value

@@ -1,6 +1,6 @@
 from traits.api import (
     HasStrictTraits, Any, Bool, DelegatesTo, Enum, Event, Instance, Int,
-    Property, String, WeakRef, on_trait_change)
+    Property, String, Tuple, WeakRef, on_trait_change)
 
 from karabo.common.api import DeviceStatus
 from karabogui.singletons.api import get_network, get_topology
@@ -209,6 +209,8 @@ class PropertyProxy(HasStrictTraits):
     # Whether or not this property is currently visible in a scene
     visible = Bool(False)
 
+    # Names of attributes in `binding.attributes` which are editable
+    editable_attributes = Tuple
     # An extra binding instance for `edit_value` validation
     _edit_binding = Instance(BaseBinding)
 
@@ -247,10 +249,13 @@ class PropertyProxy(HasStrictTraits):
 
     @on_trait_change('root_proxy.schema_update,path')
     def _binding_update(self):
+        # Clear some edit related traits no matter what
+        self.editable_attributes = ()
+        self._edit_binding = None
         if self.root_proxy is None:
             return
+
         self.binding = self.root_proxy.get_property_binding(self.path)
-        self._edit_binding = None  # blindly clear the edit binding
         self.pipeline_parent_path = self._pipeline_parent_path_default()
 
     def _edit_value_changed(self, value):
