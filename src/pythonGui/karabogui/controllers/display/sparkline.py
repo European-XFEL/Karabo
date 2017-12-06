@@ -349,10 +349,10 @@ class DisplaySparkline(BaseBindingController):
 
     def create_widget(self, parent):
         widget = QWidget(parent)
-        layout = QHBoxLayout(self.widget)
+        layout = QHBoxLayout(widget)
         widget.setFixedHeight(WIDGET_HEIGHT)
 
-        self.line_edit = QLineEdit()
+        self.line_edit = QLineEdit(widget)
         self.line_edit.setReadOnly(True)
         self.render_area = SparkRenderer(widget)
         self.render_area.setFixedWidth(WIDGET_WIDTH)
@@ -397,27 +397,12 @@ class DisplaySparkline(BaseBindingController):
         widget.addActions(time_base_group.actions())
         return widget
 
-    def _widget_changed(self):
-        """Called after the widget is done being created."""
+    def binding_update(self, proxy):
         now = time.time()
         self._fetch_property_history(now - self.model.time_base, now)
 
-    @on_trait_change('proxy:binding:config_update')
-    def _value_update(self, value):
-        timestamp = self.proxy.binding.timestamp
-        attrs = self.proxy.binding.attributes
-        # extract alarms if present, if not the sparkrenderer expects "None"
-        alarms = {k: attrs.get(k, None)
-                  for k in (ALARM_LOW, WARN_LOW, WARN_HIGH, ALARM_HIGH)}
-
-        self.render_area.setData(value, timestamp, alarms)
-        self._set_text()
-
-    @on_trait_change('proxy.visible')
-    def _visibility_update(self, visible):
-        if visible:
-            now = time.time()
-            self._fetch_property_history(now - self.model.time_base, now)
+    def value_update(self, proxy):
+        self._draw(proxy.value, proxy.binding.timestamp)
 
     @on_trait_change('proxy:binding:historic_data')
     def _historic_data_arrived(self, data):
@@ -434,17 +419,13 @@ class DisplaySparkline(BaseBindingController):
 
         self.render_area.setSeries(x[:-1], y[:-1])
         # use the last data point to trigger a redraw
-        last = data[-1]
-        self.proxy.binding.timestamp = Timestamp.fromHashAttributes(last['v',
-                                                                         ...])
-        self._value_update(last["v"])
+        self._draw(y[-1], Timestamp.fromHashAttributes(data[-1]['v', ...]))
 
-    def _fetch_property_history(self, t0, t1):
-        if not self.proxy.visible:
-            return
-        t0 = str(datetime.datetime.utcfromtimestamp(t0).isoformat())
-        t1 = str(datetime.datetime.utcfromtimestamp(t1).isoformat())
-        self.proxy.get_history(t0, t1)
+    @on_trait_change('proxy.visible', post_init=True)
+    def _visibility_update(self, visible):
+        if visible:
+            now = time.time()
+            self._fetch_property_history(now - self.model.time_base, now)
 
     @on_trait_change('model:time_base')
     def _update_time_base(self, timebase):
@@ -467,6 +448,23 @@ class DisplaySparkline(BaseBindingController):
                                         "", text=self.model.show_format)
         if ok:
             self.model.show_format = form
+
+    def _draw(self, value, timestamp):
+        """ Draw data vs. time and alarm limits """
+        attrs = self.proxy.binding.attributes
+        # extract alarms if present, if not the sparkrenderer expects "None"
+        alarms = {k: attrs.get(k, None)
+                  for k in (ALARM_LOW, WARN_LOW, WARN_HIGH, ALARM_HIGH)}
+
+        self.render_area.setData(value, timestamp, alarms)
+        self._set_text()
+
+    def _fetch_property_history(self, t0, t1):
+        if not self.proxy.visible:
+            return
+        t0 = str(datetime.datetime.utcfromtimestamp(t0).isoformat())
+        t1 = str(datetime.datetime.utcfromtimestamp(t1).isoformat())
+        self.proxy.get_history(t0, t1)
 
     def _set_text(self):
         if self.proxy.binding is None or self.line_edit is None:
