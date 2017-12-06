@@ -47,27 +47,32 @@ class ProjectPanel(BasePanelWidget):
             icon=icons.new, text="&New Project",
             tooltip="Create a New (Sub)project",
             triggered=_project_new_handler,
+            name="new"
         )
         load = KaraboAction(
             icon=icons.load, text="&Load Project",
             tooltip="Load an Existing Project",
             triggered=_project_load_handler,
+            name="load"
         )
         save = KaraboAction(
             icon=icons.save, text="&Save Project",
             tooltip="Save Project Snapshot",
             triggered=_project_save_handler,
+            name="save"
         )
         save_as = KaraboAction(
             icon=icons.saveAs, text="&Save Project as",
             tooltip="Create a copy of the project",
             triggered=_project_save_as_handler,
+            name="saveas"
         )
         trash = KaraboAction(
             icon=icons.delete, text="&Move to trash",
             tooltip=("Move the current project to trash. This option can be "
                      "reverted"),
             triggered=_project_trash_handler,
+            name="delete"
         )
 
         for k_action in (new, load, save, save_as, trash):
@@ -125,7 +130,7 @@ class ProjectPanel(BasePanelWidget):
         """ Project loading failed, only enable new project and load project
         """
         for qaction in self._toolbar_actions:
-            if qaction.text() in ("&New Project", "&Load Project"):
+            if qaction.objectName() in ("new", "load"):
                 qaction.setEnabled(True)
 
 # ------------------------------------------------------------------------
