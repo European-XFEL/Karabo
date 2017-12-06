@@ -15,6 +15,7 @@ from karabogui.alarms.api import (
 from karabogui.binding.api import (
     DeviceClassProxy, DeviceProxy, PropertyProxy, apply_configuration,
     build_binding)
+from karabogui.controllers.util import populate_controller_registry
 import karabogui.singletons.api as singletons_mod
 
 
@@ -31,6 +32,7 @@ class GuiTestCase(unittest.TestCase):
         # AFTER the QApplication is created!
         from karabogui import icons
         icons.init()
+        populate_controller_registry()
 
     def process_qt_events(self):
         # Give the event loop 10ms to process its events
