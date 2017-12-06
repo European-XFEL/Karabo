@@ -8,6 +8,7 @@
 #include <boost/thread/pthread/thread_data.hpp>
 #include <karabo/util/StringTools.hh>
 #include <karabo/util/NDArray.hh>
+#include <cppunit/TestAssert.h>
 
 #include "NDArray_Test.hh"
 
@@ -53,16 +54,22 @@ void NDArray_Test::testConstructor() {
         CPPUNIT_ASSERT(flyShape.x2() == 200);
         CPPUNIT_ASSERT(fly.getData<int>()[124] == 2);
         CPPUNIT_ASSERT(fly.size() == 100 * 200);
+        CPPUNIT_ASSERT_EQUAL(sizeof (int), fly.itemSize());
+        CPPUNIT_ASSERT_EQUAL(sizeof (int) * static_cast<size_t>(100 * 200), fly.byteSize());
 
         CPPUNIT_ASSERT(cpyShape.x1() == 100);
         CPPUNIT_ASSERT(cpyShape.x2() == 200);
         CPPUNIT_ASSERT(cpy.getData<int>()[124] == 2);
         CPPUNIT_ASSERT(cpy.size() == 100 * 200);
+        CPPUNIT_ASSERT_EQUAL(sizeof(int), cpy.itemSize());
+        CPPUNIT_ASSERT_EQUAL(sizeof (int) * static_cast<size_t>(100 * 200), cpy.byteSize());
 
         CPPUNIT_ASSERT(refShape.x1() == 100);
         CPPUNIT_ASSERT(refShape.x2() == 200);
         CPPUNIT_ASSERT(ref.getData<int>()[124] == 2);
         CPPUNIT_ASSERT(ref.size() == 100 * 200);
+        CPPUNIT_ASSERT_EQUAL(sizeof(int), ref.itemSize());
+        CPPUNIT_ASSERT_EQUAL(sizeof (int) * static_cast<size_t>(100 * 200), ref.byteSize());
 
         cpy.getData<int>()[0] = 0;
         CPPUNIT_ASSERT(someData[0] == 2);
