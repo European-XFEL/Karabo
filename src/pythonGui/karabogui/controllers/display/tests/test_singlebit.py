@@ -1,5 +1,7 @@
 from unittest.mock import patch
 
+from numpy import uint64
+
 from karabo.common.api import State
 from karabo.common.scenemodel.api import SingleBitModel
 from karabo.middlelayer import Configurable, Int32
@@ -37,10 +39,10 @@ class TestSingleBit(GuiTestCase):
         self.model.invert = False
         self.model.bit = 5
 
-        set_proxy_value(self.proxy, 'prop', 32)
+        set_proxy_value(self.proxy, 'prop', uint64(32))
         assert COLORS[State.ACTIVE] in singlebit.styleSheet()
 
-        set_proxy_value(self.proxy, 'prop', 31)
+        set_proxy_value(self.proxy, 'prop', uint64(31))
         assert COLORS[State.PASSIVE] in singlebit.styleSheet()
 
         self.model.bit = 4
