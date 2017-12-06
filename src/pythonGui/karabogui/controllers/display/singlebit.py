@@ -60,7 +60,7 @@ class SingleBit(BaseBindingController):
         self._internal_widget.setEnabled(not ro)
 
     def value_update(self, proxy):
-        value = (proxy.value >> self.model.bit) & 1 != 0
+        value = (int(proxy.value) >> self.model.bit) & 1 != 0
         value = not value if self.model.invert else value
 
         color = (STATE_COLORS[State.ACTIVE] if value
