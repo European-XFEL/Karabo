@@ -98,10 +98,7 @@ class ProjectPanel(BasePanelWidget):
         if event.sender is KaraboEventSender.NetworkConnectStatus:
             self._handle_network_status_change(data['status'])
         elif event.sender is KaraboEventSender.DatabaseIsBusy:
-            is_processing = data['is_processing']
-            self._enable_toolbar(not is_processing)
-            # Show or hide spin widget
-            self.spin_action.setVisible(is_processing)
+            self._handle_database_is_busy(data)
         return False
 
     def _handle_network_status_change(self, status):
@@ -111,9 +108,25 @@ class ProjectPanel(BasePanelWidget):
 
         self._enable_toolbar(status)
 
+    def _handle_database_is_busy(self, data):
+        bail = data.get('bail', False)
+        is_processing = data['is_processing']
+        if bail:
+            self._enable_partial_toolbar()
+        else:
+            self._enable_toolbar(not is_processing)
+        self.spin_action.setVisible(is_processing)
+
     def _enable_toolbar(self, enable):
         for qaction in self._toolbar_actions:
             qaction.setEnabled(enable)
+
+    def _enable_partial_toolbar(self):
+        """ Project loading failed, only enable new project and load project
+        """
+        for qaction in self._toolbar_actions:
+            if qaction.text() in ("&New Project", "&Load Project"):
+                qaction.setEnabled(True)
 
 # ------------------------------------------------------------------------
 # Helper functions
