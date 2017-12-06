@@ -22,6 +22,8 @@ class KaraboAction(HasStrictTraits):
     is_checked = Bool(False)
     # Defines the method which is called whenever the action is triggered
     triggered = Callable
+    # Object name which can be used for finding actions programmatically
+    name = String
 
 
 def build_qaction(karabo_action, parent):
@@ -45,4 +47,7 @@ def build_qaction(karabo_action, parent):
         q_action.setChecked(karabo_action.is_checked)
     q_action.setStatusTip(karabo_action.tooltip)
     q_action.setToolTip(karabo_action.tooltip)
+    if karabo_action.name:
+        # Only if name is not empty
+        q_action.setObjectName(karabo_action.name)
     return q_action
