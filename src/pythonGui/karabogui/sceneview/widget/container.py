@@ -3,9 +3,9 @@ from PyQt4.QtGui import QHBoxLayout, QLabel, QStackedLayout, QWidget
 
 from karabo.common.api import AlarmCondition, DeviceStatus, State
 from karabogui.alarms.api import get_alarm_pixmap
-from karabogui.binding.api import extract_sparse_configurations, has_changes
+from karabogui.binding.api import has_changes
 from karabogui.indicators import get_device_status_pixmap, STATE_COLORS
-from karabogui.singletons.api import get_network
+from karabogui.request import send_property_changes
 from karabogui.util import generateObjectName
 from .utils import get_proxy
 
@@ -56,27 +56,13 @@ class ControllerContainer(QWidget):
                 proxies_added.append(proxy)
         return len(proxies_added) == len(proxies)
 
-    def apply_changes(self, devices=None, send_immediately=False):
+    def apply_changes(self):
         """Apply user-entered values to the remote device properties
-
-        Returns a dictionary of device -> configuration pairs for the proxies
-        in this widget.
         """
         if not (self._is_editable and self.widget_controller.proxy.visible):
-            return {}
+            return
 
-        configs = extract_sparse_configurations(self.widget_controller.proxies,
-                                                devices=devices)
-
-        if not send_immediately:
-            return configs
-
-        # Otherwise we were probably called from keyPressEvent and no other
-        # widgets need to have their configuration collected.
-        network = get_network()
-        for dev, config in configs.items():
-            network.onReconfigure(dev, config)
-        return {}
+        send_property_changes(self.widget_controller.proxies)
 
     def decline_changes(self):
         """Undo any user-entered changes
@@ -164,7 +150,7 @@ class ControllerContainer(QWidget):
         if key_code == Qt.Key_Escape:
             self.decline_changes()
         elif key_code in (Qt.Key_Enter, Qt.Key_Return):
-            self.apply_changes(send_immediately=True)
+            self.apply_changes()
         super(ControllerContainer, self).keyPressEvent(event)
 
     # ---------------------------------------------------------------------
