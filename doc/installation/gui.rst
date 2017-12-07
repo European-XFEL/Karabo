@@ -176,10 +176,13 @@ Remove folder *karabo* and *karabo_gui*, also remove the file *KaraboGUI-\*.egg-
 
 **UPGRADING PACKAGES**
 
-If you desire to use newer packages of certain libraries, such as matplotlib,
-you will need to upgrade `pip` and `setuptools`::
+If you desire to use newer packages of certain libraries, such as matplotlib and
+cycler in a newer installation of Karabo you will need to upgrade `pip` and
+`setuptools` first::
 
   pip install --upgrade pip
   pip install --upgrade setuptools
-  # Install the local wheel downloaded from the aformentioned link
-  pip install matplotlib-1.5.3-cp34-cp34m-win32.whl
+
+  # Then proceed to matplotlib and cycler updates
+  pip install --no-deps matplotlib==1.5.3
+  pip install --no-deps cycler==0.10.0
