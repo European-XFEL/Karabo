@@ -5,17 +5,17 @@
 In order to install and run karaboGUI on Windows, you need a local python
 installation.
 
-The recommended python suite is `WinPython 
+The recommended python suite is `WinPython
 <https://sourceforge.net/projects/winpython/files/WinPython_3.4/3.4.3.3/>`_.
 This choice was made due to the fact that this suite is dictated
 by availability of almost all packages required by karaboGUI (like PyQwt,
 guiqwt, guidata).
 
-Additionally, you need to install three more modules (suds-jurko, traits, pint) 
-in WinPython using its package manager (for instance WinPython Control 
+Additionally, you need to install three more modules (suds-jurko, traits, pint)
+in WinPython using its package manager (for instance WinPython Control
 Panel).
 
-Below you will find detailed instruction :ref:`how to install WinPython and 
+Below you will find detailed instruction :ref:`how to install WinPython and
 karaboGUI <install-winpython>`.
 
 In principle you can try to use any other available Scientific Python
@@ -157,7 +157,7 @@ Due to `this issue <http://bugs.python.org/issue21354>`_
 the end ('python not found'), the menu entry and shortcut are not created. To
 start karaboGUI you need to navigate to::
 
- [WinPython_Installation_Dir]\python-3.4.3\Lib\site-packages\karabo_gui\programs 
+ [WinPython_Installation_Dir]\python-3.4.3\Lib\site-packages\karabo_gui\programs
 
 Right-click on *gui_runner.py* and  select *Send to Desktop*. In this way, you have
 a shortcut on your *Desktop* and now you can easily start karaboGui via
@@ -173,3 +173,12 @@ the new version, you need to navigate to::
  [WinPython_Installation_Dir]\python-3.4.3\Lib\site-packages
 
 Remove folder *karabo* and *karabo_gui*, also remove the file *KaraboGUI-\*.egg-info*
+
+**UPGRADING PACKAGES**
+
+If you desire to use newer packages of certain libraries, such as matplotlib,
+you will need to upgrade `pip` and `setuptools`::
+
+  pip install --upgrade pip
+  pip install --upgrade setuptools
+  pip install --upgrade matplotlib
