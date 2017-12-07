@@ -93,6 +93,21 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 proxy.on_trait_change(self._state_update,
                                       'state_binding.value')
 
+    def apply_changes(self):
+        """Send all modified properties to the remote device.
+        """
+        proxies = [p for p in self._property_proxies.values()
+                   if p.edit_value is not None]
+        if proxies:
+            send_property_changes(proxies)
+
+    def decline_changes(self):
+        """Revert all modifications made to properties.
+        """
+        for proxy in self._property_proxies.values():
+            if proxy.edit_value is not None:
+                proxy.revert_edit()
+
     def clear_index_modification(self, index):
         """Clear any stored modifications for the proxy referenced by `index`
         """
