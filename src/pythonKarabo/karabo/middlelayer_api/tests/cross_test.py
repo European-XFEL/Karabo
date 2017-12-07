@@ -126,6 +126,8 @@ class Tests(DeviceTest):
         self.process.stdin.close()
         proxy = yield from getDevice("boundDevice")
         self.assertEqual(proxy.a, 22.5 * unit.milliampere,
+                         "didn't receive inital value from bound device")
+        self.assertEqual(proxy.readonly, 2,
                          "didn't receive initial value from bound device")
 
         a_desc = type(proxy).a
@@ -165,6 +167,13 @@ class Tests(DeviceTest):
             with self.assertRaises(ValueError):
                 proxy.a = 77
             self.assertEqual(proxy.a, 22.7 * unit.milliampere)
+
+            # Following test does not yet work, but in fact the request to
+            # change readonly goes over the wire (but shouldn't) and is refused
+            # and is refused on the other end which sends back an error...
+            #with self.assertRaises(ValueError):  # or KaraboError?
+            #    proxy.readonly = 1  # not allowed!
+            self.assertEqual(proxy.readonly, 2)  # unchanged
 
             def setter():
                 proxy.a = 22.3 * unit.milliampere
