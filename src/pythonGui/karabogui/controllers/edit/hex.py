@@ -44,7 +44,8 @@ class Hexadecimal(BaseBindingController):
         mask = 'h' * int(num_bits // 4 + 1)
         if low < 0:
             mask = "#" + mask
-        self._internal_widget.setInputMask(mask)
+        with SignalBlocker(self._internal_widget):
+            self._internal_widget.setInputMask(mask)
 
     def value_update(self, proxy):
         self.widget.update_label(proxy)

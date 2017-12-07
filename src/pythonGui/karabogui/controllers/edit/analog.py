@@ -15,6 +15,7 @@ from karabogui.binding.api import (
 )
 from karabogui.controllers.base import BaseBindingController
 from karabogui.controllers.registry import register_binding_controller
+from karabogui.util import SignalBlocker
 
 
 class _AnalogEditorWidget(BaseBindingController):
@@ -30,10 +31,12 @@ class _AnalogEditorWidget(BaseBindingController):
             low = 0
         if max_inc is None and max_exc is None:
             high = 100
-        self.widget.setRange(low, high)
+        with SignalBlocker(self.widget):
+            self.widget.setRange(low, high)
 
     def value_update(self, proxy):
-        self.widget.setValue(get_editor_value(proxy))
+        with SignalBlocker(self.widget):
+            self.widget.setValue(get_editor_value(proxy))
 
     @pyqtSlot(object)
     def _edit_value(self, value):
