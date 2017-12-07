@@ -181,4 +181,5 @@ you will need to upgrade `pip` and `setuptools`::
 
   pip install --upgrade pip
   pip install --upgrade setuptools
-  pip install --upgrade matplotlib
+  # Install the local wheel downloaded from the aformentioned link
+  pip install matplotlib-1.5.3-cp34-cp34m-win32.whl
