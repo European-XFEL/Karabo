@@ -36,7 +36,7 @@ class ConfigurationTreeView(QTreeView):
     signalApplyChanged = pyqtSignal(object, bool, bool)
     itemSelectionChanged = pyqtSignal()
 
-    def __init__(self, conf=None, parent=None):
+    def __init__(self, parent=None):
         super(ConfigurationTreeView, self).__init__(parent)
         self.setDragEnabled(True)
         self.setTabKeyNavigation(True)
@@ -46,12 +46,8 @@ class ConfigurationTreeView(QTreeView):
                     QAbstractItemView.SelectedClicked)
         self.setEditTriggers(triggers)
 
-        # For compatibility with ConfigurationPanel
-        self.conf = conf
-
         model = ConfigurationTreeModel(parent=self)
         self.setModel(model)
-        self._set_model_proxy(conf)
         model.signalHasModifications.connect(self._update_apply_buttons)
         model.dataChanged.connect(self._update_popup_contents)
 
@@ -77,6 +73,17 @@ class ConfigurationTreeView(QTreeView):
     # ------------------------------------
     # Private methods
 
+    def assign_proxy(self, proxy):
+        self.model().root = proxy
+        if proxy is None:
+            return
+
+        # Show second column only for devices
+        if isinstance(proxy, DeviceProxy):
+            self.setColumnHidden(1, False)
+        else:
+            self.setColumnHidden(1, True)
+
     def _get_popup_info(self, index):
         # Get the index's stored object
         obj = self.model().index_ref(index)
@@ -99,7 +106,7 @@ class ConfigurationTreeView(QTreeView):
         if KARABO_SCHEMA_DESCRIPTION in attributes:
             info['Description'] = attributes.get(KARABO_SCHEMA_DESCRIPTION)
 
-        info['Key'] = '.'.join(obj.path)
+        info['Key'] = obj.path
         if isinstance(binding, BaseBinding):
             # XXX: Maybe make this a little different looking
             name = type(binding).__name__[:-len('binding')]
@@ -138,17 +145,6 @@ class ConfigurationTreeView(QTreeView):
             info[label] = 'n/a' if attr is None else attr
 
         return info
-
-    def _set_model_proxy(self, proxy):
-        self.model().root = proxy
-        if proxy is None:
-            return
-
-        # Show second column only for devices
-        if isinstance(proxy, DeviceProxy):
-            self.setColumnHidden(1, False)
-        else:
-            self.setColumnHidden(1, True)
 
     def _show_popup_widget(self, index, event_pos):
         # Only if the icon was clicked
@@ -271,8 +267,8 @@ class ConfigurationTreeView(QTreeView):
         if sender is KaraboEventSender.AccessLevelChanged:
             model = self.model()
             proxy = model.root
-            self._set_model_proxy(None)
-            self._set_model_proxy(proxy)
+            self.assign_proxy(None)
+            self.assign_proxy(proxy)
 
         return False
 
@@ -314,17 +310,11 @@ class ConfigurationTreeView(QTreeView):
     # NOTE: All of these methods are to stay compatible with the existing
     # configurator panel code.
 
-    def addContextAction(self, action):
-        pass
-
-    def addContextMenu(self, menu):
-        pass
-
-    def addContextSeparator(self):
-        pass
-
     def clear(self):
-        self._set_model_proxy(None)
+        self.assign_proxy(None)
+
+    def apply_all(self):
+        self.model().apply_changes()
 
     def decline_all(self):
         model = self.model()
@@ -337,15 +327,6 @@ class ConfigurationTreeView(QTreeView):
     def decline_item_changes(self, item):
         pass
 
-    def globalAccessLevelChanged(self):
-        pass
-
-    def hideColumn(self, col):
-        pass
-
-    def onApplyAll(self):
-        self.model().apply_changes()
-
     def nbSelectedApplyEnabledItems(self):
         """Return only selected items for not applied yet
         """
@@ -353,9 +334,3 @@ class ConfigurationTreeView(QTreeView):
 
     def selectedItems(self):
         return []
-
-    def setHeaderLabels(self, labels):
-        pass
-
-    def setReadOnly(self, readOnly):
-        pass
