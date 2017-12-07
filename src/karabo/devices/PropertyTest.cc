@@ -84,71 +84,221 @@ namespace karabo {
             INT8_ELEMENT(expected).key("int8Property")
                     .displayedName("Int8 property")
                     .description("A int8 property")
+                    .minInc(std::numeric_limits<signed char>::lowest())
+                    .maxInc(std::numeric_limits<signed char>::max())
                     .reconfigurable()
-                    .assignmentOptional().defaultValue(77)
+                    .assignmentOptional().defaultValue(33)
+                    .commit();
+
+            INT8_ELEMENT(expected).key("int8PropertyReadOnly")
+                    .displayedName("Int8 property")
+                    .description("A int8 property")
+                    .minInc(std::numeric_limits<signed char>::lowest())
+                    .maxInc(std::numeric_limits<signed char>::max())
+                    .readOnly()
+                    .initialValue(33)
+                    .alarmLow(std::numeric_limits<signed char>::lowest()).info("alarmLow").needsAcknowledging(true)
+                    .warnLow(std::numeric_limits<signed char>::lowest() / 2).info("warnLow").needsAcknowledging(false)
+                    .warnHigh(std::numeric_limits<signed char>::max() / 2).info("warnHigh").needsAcknowledging(false)
+                    .alarmHigh(std::numeric_limits<signed char>::max()).info("alarmHigh").needsAcknowledging(true)
                     .commit();
 
             UINT8_ELEMENT(expected).key("uint8Property")
                     .displayedName("UInt8 property")
                     .description("A uint8 property")
+                    .minInc(std::numeric_limits<unsigned char>::lowest())
+                    .maxInc(std::numeric_limits<unsigned char>::max())
                     .reconfigurable()
-                    .assignmentOptional().defaultValue(177)
+                    .assignmentOptional().defaultValue(77)
+                    .commit();
+
+            UINT8_ELEMENT(expected).key("uint8PropertyReadOnly")
+                    .displayedName("Unt8 property read-only")
+                    .description("A uint8 property read-only")
+                    .minInc(std::numeric_limits<unsigned char>::lowest())
+                    .maxInc(std::numeric_limits<unsigned char>::max())
+                    .readOnly()
+                    .initialValue(77)
+                    .alarmLow(std::numeric_limits<unsigned char>::lowest()).info("alarmLow").needsAcknowledging(true)
+                    .warnLow(std::numeric_limits<unsigned char>::lowest() / 2).info("warnLow").needsAcknowledging(false)
+                    .warnHigh(std::numeric_limits<unsigned char>::max() / 2).info("warnHigh").needsAcknowledging(false)
+                    .alarmHigh(std::numeric_limits<unsigned char>::max()).info("alarmHigh").needsAcknowledging(true)
                     .commit();
 
             INT16_ELEMENT(expected).key("int16Property")
                     .displayedName("Int16 property")
                     .description("A int16 property")
+                    .minInc(std::numeric_limits<short>::lowest())
+                    .maxInc(std::numeric_limits<short>::max())
                     .reconfigurable()
                     .assignmentOptional().defaultValue(3200)
+                    .commit();
+
+            INT16_ELEMENT(expected).key("int16PropertyReadOnly")
+                    .displayedName("Int16 property read-only")
+                    .description("A int16 property read-only")
+                    .minInc(std::numeric_limits<short>::lowest())
+                    .maxInc(std::numeric_limits<short>::max())
+                    .readOnly()
+                    .initialValue(3200)
+                    .alarmLow(std::numeric_limits<short>::lowest()).info("alarmLow").needsAcknowledging(true)
+                    .warnLow(std::numeric_limits<short>::lowest() / 2).info("warnLow").needsAcknowledging(false)
+                    .warnHigh(std::numeric_limits<short>::max() / 2).info("warnHigh").needsAcknowledging(false)
+                    .alarmHigh(std::numeric_limits<short>::max()).info("alarmHigh").needsAcknowledging(true)
                     .commit();
 
             UINT16_ELEMENT(expected).key("uint16Property")
                     .displayedName("UInt16 property")
                     .description("A uint16 property")
+                    .minInc(std::numeric_limits<unsigned short>::lowest())
+                    .maxInc(std::numeric_limits<unsigned short>::max())
                     .reconfigurable()
                     .assignmentOptional().defaultValue(32000)
+                    .commit();
+
+            UINT16_ELEMENT(expected).key("uint16PropertyReadOnly")
+                    .displayedName("UInt16 property read-only")
+                    .description("A uint16 property read-only")
+                    .minInc(std::numeric_limits<unsigned short>::lowest())
+                    .maxInc(std::numeric_limits<unsigned short>::max())
+                    .readOnly()
+                    .initialValue(32000)
+                    .alarmLow(std::numeric_limits<unsigned short>::lowest()).info("alarmLow").needsAcknowledging(true)
+                    .warnLow(std::numeric_limits<unsigned short>::lowest() / 2).info("warnLow").needsAcknowledging(false)
+                    .warnHigh(std::numeric_limits<unsigned short>::max() / 2).info("warnHigh").needsAcknowledging(false)
+                    .alarmHigh(std::numeric_limits<unsigned short>::max()).info("alarmHigh").needsAcknowledging(true)
                     .commit();
 
             INT32_ELEMENT(expected).key("int32Property")
                     .displayedName("Int32 property")
                     .description("A int32 property")
+                    .minInc(std::numeric_limits<int>::lowest())
+                    .maxInc(std::numeric_limits<int>::max())
                     .reconfigurable()
                     .assignmentOptional().defaultValue(32000000)
+                    .commit();
+
+            INT32_ELEMENT(expected).key("int32PropertyReadOnly")
+                    .displayedName("Int32 property read-only")
+                    .description("A int32 property read-only")
+                    .minInc(std::numeric_limits<int>::lowest())
+                    .maxInc(std::numeric_limits<int>::max())
+                    .readOnly()
+                    .initialValue(32000000)
+                    .alarmLow(std::numeric_limits<int>::lowest()).info("alarmLow").needsAcknowledging(true)
+                    .warnLow(std::numeric_limits<int>::lowest() / 2).info("warnLow").needsAcknowledging(false)
+                    .warnHigh(std::numeric_limits<int>::max() / 2).info("warnHigh").needsAcknowledging(false)
+                    .alarmHigh(std::numeric_limits<int>::max()).info("alarmHigh").needsAcknowledging(true)
                     .commit();
 
             UINT32_ELEMENT(expected).key("uint32Property")
                     .displayedName("UInt32 property")
                     .description("A uint32 property")
+                    .minInc(std::numeric_limits<unsigned int>::lowest())
+                    .maxInc(std::numeric_limits<unsigned int>::max())
                     .reconfigurable()
                     .assignmentOptional().defaultValue(32000000)
+                    .commit();
+
+            UINT32_ELEMENT(expected).key("uint32PropertyReadOnly")
+                    .displayedName("UInt32 property read-only")
+                    .description("A uint32 property read-only")
+                    .minInc(std::numeric_limits<unsigned int>::lowest())
+                    .maxInc(std::numeric_limits<unsigned int>::max())
+                    .readOnly()
+                    .initialValue(32000000)
+                    .alarmLow(std::numeric_limits<unsigned int>::lowest()).info("alarmLow").needsAcknowledging(true)
+                    .warnLow(std::numeric_limits<unsigned int>::lowest() / 2).info("warnLow").needsAcknowledging(false)
+                    .warnHigh(std::numeric_limits<unsigned int>::max() / 2).info("warnHigh").needsAcknowledging(false)
+                    .alarmHigh(std::numeric_limits<unsigned int>::max()).info("alarmHigh").needsAcknowledging(true)
                     .commit();
 
             INT64_ELEMENT(expected).key("int64Property")
                     .displayedName("Int64 property")
                     .description("A int64 property")
+                    .minInc(std::numeric_limits<long long>::lowest())
+                    .maxInc(std::numeric_limits<long long>::max())
                     .reconfigurable()
                     .assignmentOptional().defaultValue(3200000000LL)
+                    .commit();
+
+            INT64_ELEMENT(expected).key("int64PropertyReadOnly")
+                    .displayedName("Int64 property read-only")
+                    .description("A int64 property read-only")
+                    .minInc(std::numeric_limits<long long>::lowest())
+                    .maxInc(std::numeric_limits<long long>::max())
+                    .readOnly()
+                    .initialValue(3200000000LL)
+                    .alarmLow(std::numeric_limits<long long>::lowest()).info("alarmLow").needsAcknowledging(true)
+                    .warnLow(std::numeric_limits<long long>::lowest() / 2).info("warnLow").needsAcknowledging(false)
+                    .warnHigh(std::numeric_limits<long long>::max() / 2).info("warnHigh").needsAcknowledging(false)
+                    .alarmHigh(std::numeric_limits<long long>::max()).info("alarmHigh").needsAcknowledging(true)
                     .commit();
 
             UINT64_ELEMENT(expected).key("uint64Property")
                     .displayedName("UInt64 property")
                     .description("A uint64 property")
+                    .minInc(std::numeric_limits<unsigned long long>::lowest())
+                    .maxInc(std::numeric_limits<unsigned long long>::max())
                     .reconfigurable()
                     .assignmentOptional().defaultValue(3200000000ULL)
+                    .commit();
+
+            UINT64_ELEMENT(expected).key("uint64PropertyReadOnly")
+                    .displayedName("UInt8 property read-only")
+                    .description("A uint8 property read-only")
+                    .minInc(std::numeric_limits<unsigned long long>::lowest())
+                    .maxInc(std::numeric_limits<unsigned long long>::max())
+                    .readOnly()
+                    .initialValue(3200000000ULL)
+                    .alarmLow(std::numeric_limits<unsigned long long>::lowest()).info("alarmLow").needsAcknowledging(true)
+                    .warnLow(std::numeric_limits<unsigned long long>::lowest() / 2).info("warnLow").needsAcknowledging(false)
+                    .warnHigh(std::numeric_limits<unsigned long long>::max() / 2).info("warnHigh").needsAcknowledging(false)
+                    .alarmHigh(std::numeric_limits<unsigned long long>::max()).info("alarmHigh").needsAcknowledging(true)
                     .commit();
 
             FLOAT_ELEMENT(expected).key("floatProperty")
                     .displayedName("Float property")
                     .description("A float property")
+                    .minInc(std::numeric_limits<float>::lowest())
+                    .maxInc(std::numeric_limits<float>::max())
                     .reconfigurable()
                     .assignmentOptional().defaultValue(3.141596)
+                    .commit();
+
+            FLOAT_ELEMENT(expected).key("floatPropertyReadOnly")
+                    .displayedName("Float property read-only")
+                    .description("A Float property read-only")
+                    .minInc(std::numeric_limits<float>::lowest())
+                    .maxInc(std::numeric_limits<float>::max())
+                    .readOnly()
+                    .initialValue(3.141596)
+                    .alarmLow(std::numeric_limits<float>::lowest()).info("alarmLow").needsAcknowledging(true)
+                    .warnLow(std::numeric_limits<float>::lowest() / 2).info("warnLow").needsAcknowledging(false)
+                    .warnHigh(std::numeric_limits<float>::max() / 2).info("warnHigh").needsAcknowledging(false)
+                    .alarmHigh(std::numeric_limits<float>::max()).info("alarmHigh").needsAcknowledging(true)
                     .commit();
 
             DOUBLE_ELEMENT(expected).key("doubleProperty")
                     .displayedName("Double property")
                     .description("A double property")
+                    .minInc(std::numeric_limits<double>::lowest())
+                    .maxInc(std::numeric_limits<double>::max())
                     .reconfigurable()
                     .assignmentOptional().defaultValue(3.1415967773331)
+                    .commit();
+
+            DOUBLE_ELEMENT(expected).key("doublePropertyReadOnly")
+                    .displayedName("Double property read-only")
+                    .description("A double property read-only")
+                    .minInc(std::numeric_limits<double>::lowest())
+                    .maxInc(std::numeric_limits<double>::max())
+                    .readOnly()
+                    .initialValue(3.1415967773331)
+                    .alarmLow(std::numeric_limits<double>::lowest()).info("alarmLow").needsAcknowledging(true)
+                    .warnLow(std::numeric_limits<double>::lowest() / 2).info("warnLow").needsAcknowledging(false)
+                    .warnHigh(std::numeric_limits<double>::max() / 2).info("warnHigh").needsAcknowledging(false)
+                    .alarmHigh(std::numeric_limits<double>::max()).info("alarmHigh").needsAcknowledging(true)
                     .commit();
 
             STRING_ELEMENT(expected).key("stringProperty")
@@ -385,6 +535,19 @@ namespace karabo {
             updateState(State::NORMAL);
         }
 
+        void PropertyTest::preReconfigure(Hash& incomingReconfiguration) {
+            const std::vector<std::string> keys = {"uint8Property", "int8Property" ,
+                "uint16Property", "int16Property", "uint32Property", "int32Property",
+                "uint64Property", "int64Property", "floatProperty", "doubleProperty"};
+            Hash h;
+
+            for (const std::string& key : keys) {
+                if (incomingReconfiguration.has(key)) {
+                    h.set(key + "ReadOnly", incomingReconfiguration.get<boost::any>(key));
+                }
+            }
+            set(h);
+        }
 
         void PropertyTest::writeOutput() {
 
