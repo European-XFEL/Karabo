@@ -451,6 +451,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 proxy.edit_value = value
             elif isinstance(self.root, DeviceProxy):
                 proxy.revert_edit()
+            self.layoutChanged.emit()
 
         # A value was successfully set!
         return True
