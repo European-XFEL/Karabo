@@ -53,12 +53,13 @@ namespace karabo {
 
             void initialize();
 
+            void preReconfigure(karabo::util::Hash& incomingReconfiguration);
+
             void writeOutput();
 
             void slotUpdateSchema();
 
             long long m_outputCounter;
-            
         };
     } 
 }
