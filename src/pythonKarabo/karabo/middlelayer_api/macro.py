@@ -88,6 +88,7 @@ def _wrapslot(slot, name):
 class Macro(Device):
     abstract = True
     subclasses = []
+    _lastloop = None
 
     project = String(
         displayedName="Project",
@@ -125,15 +126,20 @@ class Macro(Device):
 
     @Slot(displayedName="Cancel")
     def cancel(self):
-        self._lastloop.cancel()
+        if self._lastloop is not None:
+            self._lastloop.cancel()
 
     @classmethod
     def register(cls, name, dict):
+        # configurable subclasses
         Macro._subclasses = {}
         for k, v in dict.items():
+            # patch slots for macro state machine behavior
             if isinstance(v, Slot):
                 _wrapslot(v, k)
         super().register(name, dict)
+        # every macro cls is appended to the subclasses for the macro server
+        # to instantiate
         Macro.subclasses.append(cls)
         cls.__monitors = [m for m in (getattr(cls, a) for a in cls._allattrs)
                           if hasattr(m, "monitor")]
