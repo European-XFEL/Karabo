@@ -51,6 +51,7 @@ Tasks
     - [X] Remove RunConfiguratorPanel
     - [X] Port DeviceScenesDialog (staged; refactor/scene-dialog branch)
     - [X] Port MacroPanel
+    - [X] Port ScriptingPanel
 
 Wrap-up
 -------
