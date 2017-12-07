@@ -73,7 +73,8 @@ class KernelManager(kernel_mixins.QtKernelManagerMixin):
                 "Macro server {} not found in system topology. "
                 "Macro cannot be started.".format(serverId),
                 modal=False)
-            return
+            raise IOError
+
         hostname = socket.gethostname().replace(".", "_")
         network = get_network()
         self.name = "CLI-{}-{}".format(hostname, os.getpid())
