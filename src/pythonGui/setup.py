@@ -91,6 +91,7 @@ if __name__ == '__main__':
 
             # XXX: Refactored GUI package
             "karabogui.binding.tests": ["data/*.config", "data/*.schema"],
+            "karabogui.configurator.dialog": ["*.ui"],
             "karabogui.controllers": ["*.ui"],
             "karabogui.controllers.display": ["*.svg", "*.ui"],
             "karabogui.dialogs": ["*.ui"],
