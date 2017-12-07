@@ -98,8 +98,8 @@ namespace karabo {
                     .readOnly()
                     .initialValue(33)
                     .alarmLow(std::numeric_limits<signed char>::lowest()).info("alarmLow").needsAcknowledging(true)
-                    .warnLow(std::numeric_limits<signed char>::lowest() / 2).info("warnLow").needsAcknowledging(false)
-                    .warnHigh(std::numeric_limits<signed char>::max() / 2).info("warnHigh").needsAcknowledging(false)
+                    .warnLow(std::numeric_limits<signed char>::lowest()).info("warnLow").needsAcknowledging(false)
+                    .warnHigh(std::numeric_limits<signed char>::max()).info("warnHigh").needsAcknowledging(false)
                     .alarmHigh(std::numeric_limits<signed char>::max()).info("alarmHigh").needsAcknowledging(true)
                     .commit();
 
@@ -109,7 +109,7 @@ namespace karabo {
                     .minInc(std::numeric_limits<unsigned char>::lowest())
                     .maxInc(std::numeric_limits<unsigned char>::max())
                     .reconfigurable()
-                    .assignmentOptional().defaultValue(77)
+                    .assignmentOptional().defaultValue(177)
                     .commit();
 
             UINT8_ELEMENT(expected).key("uint8PropertyReadOnly")
@@ -118,10 +118,10 @@ namespace karabo {
                     .minInc(std::numeric_limits<unsigned char>::lowest())
                     .maxInc(std::numeric_limits<unsigned char>::max())
                     .readOnly()
-                    .initialValue(77)
+                    .initialValue(177)
                     .alarmLow(std::numeric_limits<unsigned char>::lowest()).info("alarmLow").needsAcknowledging(true)
-                    .warnLow(std::numeric_limits<unsigned char>::lowest() / 2).info("warnLow").needsAcknowledging(false)
-                    .warnHigh(std::numeric_limits<unsigned char>::max() / 2).info("warnHigh").needsAcknowledging(false)
+                    .warnLow(std::numeric_limits<unsigned char>::lowest()).info("warnLow").needsAcknowledging(false)
+                    .warnHigh(std::numeric_limits<unsigned char>::max()).info("warnHigh").needsAcknowledging(false)
                     .alarmHigh(std::numeric_limits<unsigned char>::max()).info("alarmHigh").needsAcknowledging(true)
                     .commit();
 
@@ -142,8 +142,8 @@ namespace karabo {
                     .readOnly()
                     .initialValue(3200)
                     .alarmLow(std::numeric_limits<short>::lowest()).info("alarmLow").needsAcknowledging(true)
-                    .warnLow(std::numeric_limits<short>::lowest() / 2).info("warnLow").needsAcknowledging(false)
-                    .warnHigh(std::numeric_limits<short>::max() / 2).info("warnHigh").needsAcknowledging(false)
+                    .warnLow(std::numeric_limits<short>::lowest()).info("warnLow").needsAcknowledging(false)
+                    .warnHigh(std::numeric_limits<short>::max()).info("warnHigh").needsAcknowledging(false)
                     .alarmHigh(std::numeric_limits<short>::max()).info("alarmHigh").needsAcknowledging(true)
                     .commit();
 
@@ -164,8 +164,8 @@ namespace karabo {
                     .readOnly()
                     .initialValue(32000)
                     .alarmLow(std::numeric_limits<unsigned short>::lowest()).info("alarmLow").needsAcknowledging(true)
-                    .warnLow(std::numeric_limits<unsigned short>::lowest() / 2).info("warnLow").needsAcknowledging(false)
-                    .warnHigh(std::numeric_limits<unsigned short>::max() / 2).info("warnHigh").needsAcknowledging(false)
+                    .warnLow(std::numeric_limits<unsigned short>::lowest()).info("warnLow").needsAcknowledging(false)
+                    .warnHigh(std::numeric_limits<unsigned short>::max()).info("warnHigh").needsAcknowledging(false)
                     .alarmHigh(std::numeric_limits<unsigned short>::max()).info("alarmHigh").needsAcknowledging(true)
                     .commit();
 
@@ -186,8 +186,8 @@ namespace karabo {
                     .readOnly()
                     .initialValue(32000000)
                     .alarmLow(std::numeric_limits<int>::lowest()).info("alarmLow").needsAcknowledging(true)
-                    .warnLow(std::numeric_limits<int>::lowest() / 2).info("warnLow").needsAcknowledging(false)
-                    .warnHigh(std::numeric_limits<int>::max() / 2).info("warnHigh").needsAcknowledging(false)
+                    .warnLow(std::numeric_limits<int>::lowest()).info("warnLow").needsAcknowledging(false)
+                    .warnHigh(std::numeric_limits<int>::max()).info("warnHigh").needsAcknowledging(false)
                     .alarmHigh(std::numeric_limits<int>::max()).info("alarmHigh").needsAcknowledging(true)
                     .commit();
 
@@ -208,8 +208,8 @@ namespace karabo {
                     .readOnly()
                     .initialValue(32000000)
                     .alarmLow(std::numeric_limits<unsigned int>::lowest()).info("alarmLow").needsAcknowledging(true)
-                    .warnLow(std::numeric_limits<unsigned int>::lowest() / 2).info("warnLow").needsAcknowledging(false)
-                    .warnHigh(std::numeric_limits<unsigned int>::max() / 2).info("warnHigh").needsAcknowledging(false)
+                    .warnLow(std::numeric_limits<unsigned int>::lowest()).info("warnLow").needsAcknowledging(false)
+                    .warnHigh(std::numeric_limits<unsigned int>::max()).info("warnHigh").needsAcknowledging(false)
                     .alarmHigh(std::numeric_limits<unsigned int>::max()).info("alarmHigh").needsAcknowledging(true)
                     .commit();
 
@@ -230,8 +230,8 @@ namespace karabo {
                     .readOnly()
                     .initialValue(3200000000LL)
                     .alarmLow(std::numeric_limits<long long>::lowest()).info("alarmLow").needsAcknowledging(true)
-                    .warnLow(std::numeric_limits<long long>::lowest() / 2).info("warnLow").needsAcknowledging(false)
-                    .warnHigh(std::numeric_limits<long long>::max() / 2).info("warnHigh").needsAcknowledging(false)
+                    .warnLow(std::numeric_limits<long long>::lowest()).info("warnLow").needsAcknowledging(false)
+                    .warnHigh(std::numeric_limits<long long>::max()).info("warnHigh").needsAcknowledging(false)
                     .alarmHigh(std::numeric_limits<long long>::max()).info("alarmHigh").needsAcknowledging(true)
                     .commit();
 
@@ -252,8 +252,8 @@ namespace karabo {
                     .readOnly()
                     .initialValue(3200000000ULL)
                     .alarmLow(std::numeric_limits<unsigned long long>::lowest()).info("alarmLow").needsAcknowledging(true)
-                    .warnLow(std::numeric_limits<unsigned long long>::lowest() / 2).info("warnLow").needsAcknowledging(false)
-                    .warnHigh(std::numeric_limits<unsigned long long>::max() / 2).info("warnHigh").needsAcknowledging(false)
+                    .warnLow(std::numeric_limits<unsigned long long>::lowest()).info("warnLow").needsAcknowledging(false)
+                    .warnHigh(std::numeric_limits<unsigned long long>::max()).info("warnHigh").needsAcknowledging(false)
                     .alarmHigh(std::numeric_limits<unsigned long long>::max()).info("alarmHigh").needsAcknowledging(true)
                     .commit();
 
