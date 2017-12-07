@@ -264,6 +264,9 @@ class ConfigurationTreeModel(QAbstractItemModel):
             if not isinstance(self.root, DeviceProxy):
                 return None
 
+            if state == '':
+                return None
+
             # Properties have a color depending on alarm/warn
             color = (self._proxy_color(obj)
                      if isinstance(obj, PropertyProxy) else None)
@@ -528,11 +531,9 @@ class ConfigurationTreeModel(QAbstractItemModel):
             return _friendly_repr(proxy, get_proxy_value(index, proxy))
         elif column == 2:
             if role == Qt.BackgroundRole:
-                if binding.modified:
-                    if proxy.has_conflict:
-                        color = QColor(*STATE_COLORS[State.UNKNOWN])
-                    else:
-                        color = QColor(*STATE_COLORS[State.CHANGING])
+                if proxy.edit_value is not None:
+                    # FIXME: Show when values conflict with those on device
+                    color = QColor(*STATE_COLORS[State.CHANGING])
                     color.setAlpha(128)
                     return QBrush(color)
             elif role in (Qt.DisplayRole, Qt.EditRole):
