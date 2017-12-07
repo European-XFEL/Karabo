@@ -13,6 +13,7 @@ from karabo.common.api import Capabilities
 from karabogui import icons
 from karabogui.dialogs.device_scenes import DeviceScenesDialog
 from karabogui.enums import NavigationItemTypes
+from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.request import call_device_slot
 from karabogui.singletons.api import (
     get_manager, get_navigation_model, get_selection_tracker)
@@ -204,6 +205,14 @@ class NavigationTreeView(QTreeView):
 
         # Grab control of the global selection
         get_selection_tracker().grab_selection(self.model().selectionModel)
+
+        # Tell the configurator
+        if item_type in ('class', 'device'):
+            configuration = proxy
+        else:
+            configuration = None
+        broadcast_event(KaraboEventSender.ShowConfiguration,
+                        {'configuration': configuration})
 
     @pyqtSlot()
     def onOpenFromFile(self):
