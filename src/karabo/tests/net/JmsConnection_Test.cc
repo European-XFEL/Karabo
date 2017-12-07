@@ -12,6 +12,8 @@
 #include "karabo/net/JmsProducer.hh"
 #include "karabo/log/Logger.hh"
 
+#include <boost/thread.hpp>
+
 using namespace karabo::util;
 using namespace karabo::net;
 
@@ -29,6 +31,12 @@ JmsConnection_Test::~JmsConnection_Test() {
 unsigned int JmsConnection_Test::incrementMessageCount() {
     boost::mutex::scoped_lock lock(m_mutex);
     return ++m_messageCount;
+}
+
+
+unsigned int JmsConnection_Test::getMessageCount() {
+    boost::mutex::scoped_lock lock(m_mutex);
+    return m_messageCount;
 }
 
 
@@ -180,3 +188,44 @@ void JmsConnection_Test::testCommunication2() {
 }
 
 
+void JmsConnection_Test::testPermanentRead() {
+
+    m_connection = boost::make_shared<JmsConnection>();
+    m_connection->connect();
+
+    m_messageCount = 0;
+
+    boost::thread t(boost::bind(&EventLoop::work));
+
+    const std::string topic("nochEinTestTopic");
+    JmsConsumer::Pointer consumer = m_connection->createConsumer(topic);
+    JmsProducer::Pointer producer = m_connection->createProducer();
+
+    consumer->startReading([this](karabo::util::Hash::Pointer p, karabo::util::Hash::Pointer q) {
+        // Do not care about message content...
+        incrementMessageCount();
+    });
+
+
+    auto header = boost::make_shared<Hash>("headerKey", "bar");
+    auto body = boost::make_shared<Hash>("bodyKey", 42);
+
+    const unsigned int numMessages = 10;
+    for (unsigned int i = 0; i < numMessages; ++i) {
+        producer->write(topic, header, body);
+    }
+
+    int trials = 100;
+    while (--trials >= 0) {
+        if (getMessageCount() == numMessages) {
+            break;
+        }
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    }
+
+    EventLoop::stop();
+    t.join();
+
+    // After stop() and join() since otherwise they are missed in case of failure - and program does not stop...
+    CPPUNIT_ASSERT_EQUAL(numMessages, m_messageCount);
+}

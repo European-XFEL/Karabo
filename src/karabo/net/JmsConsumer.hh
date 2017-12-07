@@ -14,9 +14,11 @@
 #define	KARABO_NET_JMSCONSUMER_HH
 
 #include "JmsConnection.hh"
+#include "Strand.hh"
 #include "karabo/io/BinarySerializer.hh"
 #include <openmqc/mqtypes.h>
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/shared_ptr.hpp>
 
 
 /**
@@ -50,6 +52,30 @@ namespace karabo {
                 unknown /// status reported by openmqc that is not specially treated
             };
             typedef boost::function< void (Error, const std::string& description) > ErrorNotifier;
+
+            /**
+             * This triggers permanent reading of messages on the current topic that obey the provided selector.
+             * The given MessageHandler will be called sequentially for each message. An error notifier
+             * can be specified as well and will, in case of an error, be called (and have finished) before
+             * the message handler is called.
+             * Permanent reading can be interrupted by stopReadPermanent.
+             *
+             * @param handler Message handler of signature <void (Hash::Pointer header, Hash::Pointer body)>
+             * @param errorNotifier Error notifier of signature <void (JmsConsumer::Error, string)> with an Error and a
+             *                      string indicating the problem
+             */
+            void startReading(const MessageHandler handler, const ErrorNotifier errorNotifier = ErrorNotifier());
+
+            /**
+             * Stop permanent reading.
+             *
+             * Note: Use with care!
+             * This does not stop receiving messages from the broker. On the contrary, messages are received and pile
+             * up both locally and on the broker since they are not acknowledged!
+             *
+             * To stop receiving, destruct this JmsConsumer.
+             */
+            void stopReading();
 
             /**
              * This function registers a message handler, which will be called exactly once when a message
@@ -87,6 +113,15 @@ namespace karabo {
             // This is e.g. used in karabo-brokerrates to speed up (it digests all messages of a topic!).
             JmsConsumer(const JmsConnection::Pointer& connection, const std::string& topic,
                         const std::string& selector, bool skipSerialisation = false);
+
+            void consumeNextMessage();
+
+            /// A shared pointer to an MQMessageHandle that takes care to correctly free its memory
+            typedef std::shared_ptr<MQMessageHandle> MQMessageHandlePointer;
+
+            void deserialize(const MQMessageHandlePointer& messageHandlerPtr);
+
+            void postErrorOnHandlerStrand(JmsConsumer::Error error, const std::string& msg);
 
             void asyncConsumeMessage(const MessageHandler handler, const ErrorNotifier errorHandler,
                                      const std::string& topic, const std::string& selector);
@@ -126,6 +161,13 @@ namespace karabo {
 
             typedef std::map<std::string, MQConsumerHandle > Consumers;
             std::map<std::string, MQConsumerHandle > m_consumers;
+
+            bool m_readPermanent;
+            MessageHandler m_messageHandler;
+            ErrorNotifier m_errorNotifier;
+
+            karabo::net::Strand::Pointer m_serializerStrand;
+            karabo::net::Strand::Pointer m_handlerStrand;
 
             bool m_useErrorStrand;
             boost::asio::io_service::strand m_errorStrand;
