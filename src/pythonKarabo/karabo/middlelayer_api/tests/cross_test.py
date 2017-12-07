@@ -14,8 +14,8 @@ from karabo.middlelayer import (
     AccessLevel, AlarmCondition, Assignment, background, Configurable,
     DeviceClientBase, getConfigurationFromPast, getDevice, getHistory, Hash,
     isSet, InputChannel, Int32, KaraboError, MetricPrefix, Node,
-    OutputChannel, Schema, shutdown, sleep, Slot, State, unit, Unit, waitUntil, 
-    waitUntilNew)
+    OutputChannel, Schema, setWait, shutdown, sleep, Slot, State, unit, Unit,
+    waitUntil, waitUntilNew)
 
 from .eventloop import DeviceTest, async_tst
 
@@ -100,7 +100,7 @@ class Tests(DeviceTest):
             stdout=PIPE)
         schema = yield from self.process.stdout.read()
         yield from self.process.wait()
-        self.assertEqual(adler32(schema), 3041212129,
+        self.assertEqual(adler32(schema), 2143514750,
             "The generated schema changed. If this is desired, change the "
             "checksum in the code.")
 
@@ -170,9 +170,11 @@ class Tests(DeviceTest):
 
             # Following test does not yet work, but in fact the request to
             # change readonly goes over the wire (but shouldn't) and is refused
-            # and is refused on the other end which sends back an error...
+            # on the other end which sends back an error...
             #with self.assertRaises(ValueError):  # or KaraboError?
             #    proxy.readonly = 1  # not allowed!
+            with self.assertRaises(KaraboError):
+                yield from setWait("boundDevice", readonly=1)  # not allowed
             self.assertEqual(proxy.readonly, 2)  # unchanged
 
             def setter():
