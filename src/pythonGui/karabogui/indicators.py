@@ -22,6 +22,7 @@ class _StateColors(Enum):
     DISABLED_COLOR = (255, 0, 255)
     ERROR_COLOR = (255, 0, 0)
     CHANGING_DECREASING_INCREASING_COLOR = (0, 170, 255)
+    RUNNING_COLOR = (153, 204, 255)
     STATIC_COLOR = (0, 170, 0)
     ACTIVE_COLOR = (120, 255, 0)
     PASSIVE_COLOR = (204, 204, 255)
@@ -37,6 +38,7 @@ STATE_COLORS = {
     State.CHANGING: _StateColors.CHANGING_DECREASING_INCREASING_COLOR.value,
     State.DECREASING: _StateColors.CHANGING_DECREASING_INCREASING_COLOR.value,
     State.INCREASING: _StateColors.CHANGING_DECREASING_INCREASING_COLOR.value,
+    State.RUNNING: _StateColors.RUNNING_COLOR.value,
     State.STATIC: _StateColors.STATIC_COLOR.value,
     State.ACTIVE: _StateColors.ACTIVE_COLOR.value,
     State.PASSIVE: _StateColors.PASSIVE_COLOR.value
@@ -70,6 +72,8 @@ def get_state_icon(state):
         return _STATE_ICONS[State.INCREASING]
     elif state.isDerivedFrom(State.STATIC):
         return _STATE_ICONS[State.STATIC]
+    elif state.isDerivedFrom(State.RUNNING):
+        return _STATE_ICONS[State.RUNNING]
     elif state.isDerivedFrom(State.CHANGING):
         return _STATE_ICONS[State.CHANGING]
     elif state.isDerivedFrom(State.DISABLED):
