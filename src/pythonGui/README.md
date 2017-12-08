@@ -10,8 +10,8 @@ Tasks
     - [X] SystemTree
 
 - [X] Port Core Singletons [LARGE]:
-    - [X] Port Manager (mostly done)
-    - [X] Port Network (mostly done)
+    - [X] Port Manager
+    - [X] Port Network
 
 - [X] Port the Navigation Panel [SMALL]
     - [X] Small fixups in NavigationModel
@@ -23,7 +23,7 @@ Tasks
 - [X] Move the Widget Controllers
 
 - [X] Port the Scene [LARGE]:
-    - [X] Port BaseWidgetContainer into WidgetContainer (started; refactor/scene-base branch)
+    - [X] Port BaseWidgetContainer into WidgetContainer
     - [X] Remove the widget wrappers!
     - [X] Port scene building
         - [X] Use the binding controller registry instead of boilerplate mappings
@@ -40,18 +40,19 @@ Tasks
         - [ ] Remove Monitor
         - [ ] Remove Knob
 
-- [ ] Port the Configurator [LARGE]: (started; refactor/configurator branch)
-    - [ ] Port ConfigurationTreeModel
-    - [ ] Port TableEditDialog
-    - [ ] Port EditWidgetWrapper
-    - [ ] Port SlotButtonDelegate
-    - [ ] Fix ConfigurationTreeView
+- [X] Port the Configurator [LARGE]:
+    - [X] Port ConfigurationTreeModel
+    - [X] Port TableEditDialog
+    - [X] Port EditWidgetWrapper
+    - [X] Port SlotButtonDelegate
+    - [X] Fix ConfigurationTreeView
 
-- [ ] Misc. Small Tasks [SMALL]:
+- [X] Misc. Small Tasks [SMALL]:
     - [X] Remove RunConfiguratorPanel
-    - [X] Port DeviceScenesDialog (staged; refactor/scene-dialog branch)
+    - [X] Port DeviceScenesDialog
     - [X] Port MacroPanel
     - [X] Port ScriptingPanel
+      - [X] Port IPythonWidget
 
 Wrap-up
 -------
