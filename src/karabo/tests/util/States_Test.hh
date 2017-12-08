@@ -12,22 +12,24 @@
 
 class States_Test : public CPPUNIT_NS::TestFixture {
 
+
     CPPUNIT_TEST_SUITE(States_Test);
     CPPUNIT_TEST(testStringRoundTrip);
     CPPUNIT_TEST(testSignifier);
     CPPUNIT_TEST(testSignifierInitTrump);
     CPPUNIT_TEST(testSignifierNonDefaultList);
+    CPPUNIT_TEST(testRunningTrumpActivePassive);
     CPPUNIT_TEST(testComparisons);
     CPPUNIT_TEST_SUITE_END();
-    
-    
+
+
 public:
     States_Test();
     virtual ~States_Test();
     void setUp();
     void tearDown();
-    
-    
+
+
 
 private:
     void testStringRoundTrip();
@@ -35,8 +37,9 @@ private:
     void testSignifierInitTrump();
     void testInterlockTrump();
     void testSignifierNonDefaultList();
+    void testRunningTrumpActivePassive();
     void testComparisons();
-    
+
 };
 
 
