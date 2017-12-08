@@ -116,6 +116,7 @@ void JmsConnection_Test::testCommunication1() {
 
     m_connection->connect();
 
+    EventLoop::addThread();
     JmsConsumer::Pointer consumer = m_connection->createConsumer("testTopic1");
     JmsProducer::Pointer producer = m_connection->createProducer();
     
@@ -128,6 +129,7 @@ void JmsConnection_Test::testCommunication1() {
     producer->write("testTopic1", header, body);
 
     EventLoop::run();
+    EventLoop::removeThread();
 
     CPPUNIT_ASSERT_EQUAL(1000u, m_messageCount);
 }
@@ -170,6 +172,7 @@ void JmsConnection_Test::testCommunication2() {
     Hash::Pointer header2(new Hash("key", "bar"));
     Hash::Pointer body(new Hash("body", 42));
 
+    EventLoop::addThread(3); // One for each consumer using readAsync.
     JmsConsumer::Pointer c1 = m_connection->createConsumer("testTopic1", "key = 'foo'");
     JmsConsumer::Pointer c2 = m_connection->createConsumer("testTopic1", "key = 'bar'");
     JmsConsumer::Pointer c3 = m_connection->createConsumer("testTopic1");
@@ -183,6 +186,7 @@ void JmsConnection_Test::testCommunication2() {
     p->write("testTopic1", header2, body);
    
     EventLoop::run();
+    EventLoop::removeThread(3);
 
     CPPUNIT_ASSERT_EQUAL(4u, m_messageCount);
 }
