@@ -50,6 +50,9 @@ def test_binding_namespace():
     assert list(ns) == ['foo']
     assert repr(ns) == "{\n\tfoo: 0\n}"
 
+    ns.clear()
+    assert list(ns) == []
+
     ints_only = BindingNamespace(item_type=int)
     with assert_raises(ValueError):
         ints_only.not_an_int = 3.14
