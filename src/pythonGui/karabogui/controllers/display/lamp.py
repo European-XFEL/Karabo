@@ -14,6 +14,7 @@ from karabogui.controllers.util import with_display_type
 ICONS_DIR = op.dirname(icons.__file__)
 STATE_LAMP_PATH = {
     State.CHANGING: op.join(ICONS_DIR, 'lamp-changing'),
+    State.RUNNING: op.join(ICONS_DIR, 'lamp-running'),
     State.ACTIVE: op.join(ICONS_DIR, 'lamp-active'),
     State.PASSIVE: op.join(ICONS_DIR, 'lamp-passive'),
     State.STATIC: op.join(ICONS_DIR, 'lamp-static'),
@@ -41,6 +42,8 @@ class LampWidget(BaseBindingController):
         value = proxy.value
         if State(value).isDerivedFrom(State.CHANGING):
             self._set_lamp(STATE_LAMP_PATH[State.CHANGING])
+        elif State(value).isDerivedFrom(State.RUNNING):
+            self._set_lamp(STATE_LAMP_PATH[State.RUNNING])
         elif State(value).isDerivedFrom(State.ACTIVE):
             self._set_lamp(STATE_LAMP_PATH[State.ACTIVE])
         elif State(value).isDerivedFrom(State.PASSIVE):

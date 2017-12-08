@@ -54,7 +54,7 @@ class TestStatefulIconWidget(GuiTestCase):
             controller.create(None)
 
             states = ('CHANGING', 'ACTIVE', 'PASSIVE', 'DISABLED', 'STATIC',
-                      'NORMAL', 'ERROR', 'INIT', 'UNKNOWN')
+                      'RUNNING', 'NORMAL', 'ERROR', 'INIT', 'UNKNOWN')
 
             for state in states:
                 set_proxy_value(self.proxy, 'state', state)
