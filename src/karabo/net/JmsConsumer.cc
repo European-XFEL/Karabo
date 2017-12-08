@@ -34,17 +34,16 @@ namespace karabo {
             m_errorStrand(EventLoop::getIOService()),
             m_topic(topic),
             m_selector(selector) {
-            EventLoop::addThread();
         }
 
 
         JmsConsumer::~JmsConsumer() {
+            this->stopReading();
             this->clearConsumerHandles();
-            EventLoop::removeThread();
         }
 
 
-        void JmsConsumer::startReading(const MessageHandler handler, const ErrorNotifier errorNotifier) {
+        void JmsConsumer::startReading(const MessageHandler& handler, const ErrorNotifier& errorNotifier) {
 
             m_readPermanent = true;
             m_messageHandler = handler;
@@ -56,85 +55,95 @@ namespace karabo {
             this->ensureConsumerSessionAvailable(m_topic, m_selector);
             this->getConsumer(m_topic, m_selector);
 
-            EventLoop::getIOService().post(bind_weak(&karabo::net::JmsConsumer::consumeNextMessage, this));
+            // Cannot just post with bind_weak to the event loop:
+            // Then the destructor could never be called since bind_weak holds a shared_ptr when executing the function.
+            // That's why we end up with an ugly individual thread... :-(.
+            m_readThread = boost::thread(boost::bind(&JmsConsumer::consumeMessages, this));
         }
 
 
         void JmsConsumer::stopReading() {
-            m_readPermanent = false;
+            if (m_readPermanent) {
+                m_readPermanent = false;
+                // Hangs if stuck in ensureConsumerSessionAvailable(..) or getConsumer(..)
+                // via m_connection->waitForConnectionAvailable().
+                // But very unlikely... Or better play with thread interruptions as in DataLogger in version 1.4.7?
+                m_readThread.join();
+            }
         }
 
 
-        void JmsConsumer::consumeNextMessage() {
+        void JmsConsumer::consumeMessages() {
 
-            MQSessionHandle sessionHandle = this->ensureConsumerSessionAvailable(m_topic, m_selector);
-            MQConsumerHandle consumerHandle = this->getConsumer(m_topic, m_selector);
+            // We go for an endless loop instead of reposting to the event loop after a single message has been read.
+            // In this way we are safe against deadlocks blocking all threads in the event loop. Note that not being
+            // able to read (and thus acknowledge!) would create a "black hole" that compromises the whole system!
+            while (m_readPermanent) {
+                MQSessionHandle sessionHandle = this->ensureConsumerSessionAvailable(m_topic, m_selector);
+                MQConsumerHandle consumerHandle = this->getConsumer(m_topic, m_selector);
 
-            JmsConsumer::MQMessageHandlePointer messageHandlePtr(new MQMessageHandle,
-                                                                 [](MQMessageHandle * r) {
-                                                                     MQFreeMessage(*r); }
-                                                                 );
+                JmsConsumer::MQMessageHandlePointer messageHandlePtr(new MQMessageHandle,
+                                                                     [](MQMessageHandle * r) {
+                                                                         MQFreeMessage(*r); }
+                                                                     );
 
-            MQStatus status = MQReceiveMessageWithTimeout(consumerHandle, 100, messageHandlePtr.get());
-            MQError statusCode = MQGetStatusCode(status);
-            switch (statusCode) {
+                MQStatus status = MQReceiveMessageWithTimeout(consumerHandle, 100, messageHandlePtr.get());
+                MQError statusCode = MQGetStatusCode(status);
+                switch (statusCode) {
 
-                case MQ_CONSUMER_DROPPED_MESSAGES:
-                { // Deal with hand-crafted error code
-                    MQString statusString = MQGetStatusString(status);
-                    const std::string stdStatusString(statusString);
-                    MQFreeString(statusString);
-                    KARABO_LOG_FRAMEWORK_ERROR << "Problem during message consumption: " << stdStatusString;
-                    m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, Error::drop, stdStatusString));
-                    // No 'break;'!
-                }
-                case MQ_SUCCESS:
-                { // Message received
-                    MQ_SAFE_CALL(MQAcknowledgeMessages(sessionHandle, *messageHandlePtr));
+                    case MQ_CONSUMER_DROPPED_MESSAGES:
+                    { // Deal with hand-crafted error code
+                        MQString statusString = MQGetStatusString(status);
+                        const std::string stdStatusString(statusString);
+                        MQFreeString(statusString);
+                        KARABO_LOG_FRAMEWORK_ERROR << "Problem during message consumption: " << stdStatusString;
+                        m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, Error::drop, stdStatusString));
+                        // No 'break;'!
+                    }
+                    case MQ_SUCCESS:
+                    { // Message received
+                        MQ_SAFE_CALL(MQAcknowledgeMessages(sessionHandle, *messageHandlePtr));
 
-                    MQMessageType messageType;
-                    MQ_SAFE_CALL(MQGetMessageType(*messageHandlePtr, &messageType));
+                        MQMessageType messageType;
+                        MQ_SAFE_CALL(MQGetMessageType(*messageHandlePtr, &messageType));
 
-                    // Wrong message type -> notify error, but ignore this message
-                    if (messageType != MQ_BYTES_MESSAGE) {
-                        const std::string msg("Received a message of wrong type");
-                        KARABO_LOG_FRAMEWORK_WARN << msg;
-                        m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, Error::type, msg));
+                        // Wrong message type -> notify error, but ignore this message
+                        if (messageType != MQ_BYTES_MESSAGE) {
+                            const std::string msg("Received a message of wrong type");
+                            KARABO_LOG_FRAMEWORK_WARN << msg;
+                            m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, Error::type, msg));
+                            break;
+                        }
+                        m_serializerStrand->post(bind_weak(&JmsConsumer::deserialize, this, messageHandlePtr));
                         break;
                     }
-                    m_serializerStrand->post(bind_weak(&JmsConsumer::deserialize, this, messageHandlePtr));
-                    break;
-                }
 
-                case MQ_TIMEOUT_EXPIRED:
-                    // No message received, just try again
-                    break;
-                case MQ_STATUS_INVALID_HANDLE:
-                case MQ_BROKER_CONNECTION_CLOSED:
-                case MQ_SESSION_CLOSED:
-                case MQ_CONSUMER_CLOSED:
-                    // Invalidate handles and re-post, i.e. go on once broker etc. are back.
-                    // This function may be called concurrently, hence its thread-safe
-                    this->clearConsumerHandles();
-                    break;
-                default:
-                {
-                    MQString tmp = MQGetStatusString(status);
-                    const std::string errorString(tmp);
-                    MQFreeString(tmp);
-                    const std::string msg("Untreated message consumption error '" + errorString + "', try again.");
-                    KARABO_LOG_FRAMEWORK_WARN << msg;
-                    m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, Error::unknown, msg));
+                    case MQ_TIMEOUT_EXPIRED:
+                        // No message received, just try again
+                        break;
+                    case MQ_STATUS_INVALID_HANDLE:
+                    case MQ_BROKER_CONNECTION_CLOSED:
+                    case MQ_SESSION_CLOSED:
+                    case MQ_CONSUMER_CLOSED:
+                        // Invalidate handles and re-post, i.e. go on once broker etc. are back.
+                        // This function may be called concurrently, hence its thread-safe
+                        this->clearConsumerHandles();
+                        break;
+                    default:
+                    {
+                        MQString tmp = MQGetStatusString(status);
+                        const std::string errorString(tmp);
+                        MQFreeString(tmp);
+                        const std::string msg("Untreated message consumption error '" + errorString + "', try again.");
+                        KARABO_LOG_FRAMEWORK_WARN << msg;
+                        m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, Error::unknown, msg));
+                    }
                 }
             }
 
-            if (m_readPermanent) {
-                EventLoop::getIOService().post(bind_weak(&karabo::net::JmsConsumer::consumeNextMessage, this));
-            } else {
-                // Better reset to avoid dangling handlers:
-                m_messageHandler = MessageHandler();
-                m_errorNotifier = ErrorNotifier();
-            }
+            // Better reset to avoid dangling handlers:
+            m_messageHandler = MessageHandler();
+            m_errorNotifier = ErrorNotifier();
         }
 
 
