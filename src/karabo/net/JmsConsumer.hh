@@ -19,6 +19,7 @@
 #include <openmqc/mqtypes.h>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/thread.hpp>
 
 
 /**
@@ -59,15 +60,18 @@ namespace karabo {
              * can be specified as well and will, in case of an error, be called (and have finished) before
              * the message handler is called.
              * Permanent reading can be interrupted by stopReadPermanent.
+             * IMPORTANT:
+             * - Do not mix with readAsync(..) - at least do not call before the message handler given to readAsync
+             *   has been called.
              *
              * @param handler Message handler of signature <void (Hash::Pointer header, Hash::Pointer body)>
              * @param errorNotifier Error notifier of signature <void (JmsConsumer::Error, string)> with an Error and a
              *                      string indicating the problem
              */
-            void startReading(const MessageHandler handler, const ErrorNotifier errorNotifier = ErrorNotifier());
+            void startReading(const MessageHandler& handler, const ErrorNotifier& errorNotifier = ErrorNotifier());
 
             /**
-             * Stop permanent reading.
+             * Stop permanent reading after having started it with startReading(..).
              *
              * Note: Use with care!
              * This does not stop receiving messages from the broker. On the contrary, messages are received and pile
@@ -83,7 +87,12 @@ namespace karabo {
              * can be specified as well and will, in case of an error, be called (and have finished) before
              * the message handler is called.
              * IMPORTANT:
-             * After calling this method it must not be called again before the message handler has been called.
+             * - Do not call in between calling startReading(..) and stopReading().
+             * - After calling this method it must not be called again before the message handler has been called.
+             * - If it is not called again, broker messages are still received, but not acknowledged and thus create
+             *   a broker backlog.
+             * - Since internally reading is using a blocking call, consider to call EventLoop::addThread() once.
+             *
              * @param handler Message handler of signature <void (Hash::Pointer header, Hash::Pointer body)>
              * @param errorNotifier Error notifier of signature <void (JmsConsumer::Error, string)> with an Error and a
              *                      string indicating the problem
@@ -114,7 +123,7 @@ namespace karabo {
             JmsConsumer(const JmsConnection::Pointer& connection, const std::string& topic,
                         const std::string& selector, bool skipSerialisation = false);
 
-            void consumeNextMessage();
+            void consumeMessages();
 
             /// A shared pointer to an MQMessageHandle that takes care to correctly free its memory
             typedef std::shared_ptr<MQMessageHandle> MQMessageHandlePointer;
@@ -168,6 +177,8 @@ namespace karabo {
 
             karabo::net::Strand::Pointer m_serializerStrand;
             karabo::net::Strand::Pointer m_handlerStrand;
+
+            boost::thread m_readThread;
 
             bool m_useErrorStrand;
             boost::asio::io_service::strand m_errorStrand;
