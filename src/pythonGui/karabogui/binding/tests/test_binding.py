@@ -115,6 +115,18 @@ def test_complete_schema():
         assert isinstance(node, expected[name])
 
 
+def test_build_binding_stability():
+    schema = get_all_props_schema()
+    binding = build_binding(schema)
+
+    before_names = list(binding.value)
+    binding = build_binding(schema, existing=binding)
+    after_names = list(binding.value)
+
+    # The order must be unchanged!
+    assert before_names == after_names
+
+
 def test_default_values():
     schema = get_all_props_schema()
     binding = build_binding(schema)
