@@ -62,6 +62,7 @@ void States_Test::testSignifierInitTrump() {
 
     std::vector<State> s;
     s.push_back(State::INIT);
+    s.push_back(State::RUNNING);
     s.push_back(State::CHANGING);
     s.push_back(State::NORMAL);
     s.push_back(State::PASSIVE);
@@ -73,6 +74,7 @@ void States_Test::testSignifierInitTrump() {
 void States_Test::testInterlockTrump() {
 
     std::vector<State> s;
+    s.push_back(State::RUNNING);
     s.push_back(State::CHANGING);
     s.push_back(State::NORMAL);
     s.push_back(State::PASSIVE);
@@ -91,6 +93,7 @@ void States_Test::testSignifierNonDefaultList() {
 
     std::vector<State> s;
     s.push_back(State::DISABLED);
+    s.push_back(State::RUNNING);
     s.push_back(State::CHANGING);
     s.push_back(State::COOLED);
     s.push_back(State::DECREASING);
@@ -100,9 +103,21 @@ void States_Test::testSignifierNonDefaultList() {
 }
 
 
+void States_Test::testRunningTrumpActivePassive() {
+
+    std::vector<State> s;
+    s.push_back(State::DISABLED);
+    s.push_back(State::RUNNING);
+    s.push_back(State::ACTIVE);
+    s.push_back(State::PASSIVE);
+    CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s) == State::RUNNING);
+}
+
+
 void States_Test::testComparisons() {
     CPPUNIT_ASSERT(State::CHANGING.isDerivedFrom(State::NORMAL)); // direct parentage
     CPPUNIT_ASSERT(!State::NORMAL.isDerivedFrom(State::CHANGING)); // direct parentage the other way round should not compare
+    CPPUNIT_ASSERT(State::RUNNING.isDerivedFrom(State::NORMAL)); // direct parentage
     CPPUNIT_ASSERT(!State::CHANGING.isDerivedFrom(State::ERROR)); // no parentage
     CPPUNIT_ASSERT(!State::ERROR.isDerivedFrom(State::CHANGING)); // the other way round
     CPPUNIT_ASSERT(State::HEATED.isDerivedFrom(State::NORMAL)); // longer list of ancestors
