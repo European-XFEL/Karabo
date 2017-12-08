@@ -13,7 +13,7 @@ from karabogui.binding.api import (
     DeviceProxy, ProjectDeviceProxy, extract_configuration)
 from karabogui.configurator.api import ConfigurationTreeView
 from karabogui.events import KaraboEventSender, register_for_broadcasts
-from karabogui.singletons.api import get_manager, get_navigation_model
+from karabogui.singletons.api import get_manager
 from karabogui.util import (
     get_spin_widget, loadConfigurationFromFile, saveConfigurationToFile
 )
@@ -535,21 +535,14 @@ class ConfigurationPanel(BasePanelWidget):
         get_manager().shutdownDevice(self.prevConfiguration.device_id)
 
     def onInitDevice(self):
-        if isinstance(self.prevConfiguration, ProjectDeviceProxy):
-            project_device = self.prevConfiguration
-            hsh = extract_configuration(project_device.binding)
-            get_manager().initDevice(project_device.server_id,
-                                     project_device.binding.class_id,
-                                     project_device.device_id,
-                                     hsh)
-            return
+        config = None
+        proxy = self.prevConfiguration
+        server_id = proxy.server_id
+        class_id = proxy.binding.class_id
+        device_id = ''
 
-        info = get_navigation_model().indexInfo()
-        if len(info) == 0:
-            print("No device for initiation selected.")
-            return
+        if isinstance(proxy, ProjectDeviceProxy):
+            config = extract_configuration(proxy.binding)
+            device_id = proxy.device_id
 
-        server_id = info.get('serverId')
-        class_id = info.get('classId')
-        device_id = info.get('deviceId')
-        get_manager().initDevice(server_id, class_id, device_id)
+        get_manager().initDevice(server_id, class_id, device_id, config=config)
