@@ -98,7 +98,7 @@ void PropertyTest_Test::testSimpleProperties() {
     { // int8
         signed char value = 0;
         m_deviceClient->get("testPropertyTest_0", "int8Property", value);
-        CPPUNIT_ASSERT(value == 77);
+        CPPUNIT_ASSERT(value == 33);
 
         value = 42;
         m_deviceClient->set("testPropertyTest_0", "int8Property", value);
