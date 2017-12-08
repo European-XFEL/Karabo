@@ -13,9 +13,8 @@ def build_binding(schema, existing=None):
     binding = existing or types.BindingRoot()
     binding.class_id = schema.name
     root_namespace = binding.value
-    # Remove everything from the root namespace
-    for name in root_namespace:
-        delattr(root_namespace, name)
+    # Clear the namespace
+    root_namespace.clear()
     # Fill it back in recursively
     for key, value, attrs in schema.hash.iterall():
         node = _build_node(value, attrs)
