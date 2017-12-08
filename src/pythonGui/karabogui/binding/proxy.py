@@ -3,6 +3,7 @@ from traits.api import (
     Property, String, Tuple, WeakRef, on_trait_change)
 
 from karabo.common.api import DeviceStatus
+from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.singletons.api import get_network, get_topology
 from . import const
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
@@ -96,6 +97,13 @@ class DeviceProxy(BaseDeviceProxy):
         if new is DeviceStatus.ONLINE and self._monitor_count > 0:
             self.refresh_schema()
 
+    def __monitor_count_changed(self, old, new):
+        if old == 0 and new == 1:
+            broadcast_event(KaraboEventSender.StartMonitoringDevice,
+                            {'device_id': self.device_id})
+        elif old == 1 and new == 0:
+            broadcast_event(KaraboEventSender.StopMonitoringDevice,
+                            {'device_id': self.device_id})
     # -----------------------------------------------------------------------
     # Public interface
 
