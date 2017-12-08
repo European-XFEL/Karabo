@@ -29,8 +29,8 @@ class TestStateColorModel(GuiTestCase):
         assert self.controller.widget is None
 
     def test_set_values(self):
-        states = ('CHANGING', 'ACTIVE', 'PASSIVE', 'DISABLED', 'STATIC',
-                  'NORMAL', 'ERROR', 'INIT', 'UNKNOWN')
+        states = ('CHANGING', 'ACTIVE', 'PASSIVE', 'DISABLED', 'RUNNING',
+                  'STATIC', 'NORMAL', 'ERROR', 'INIT', 'UNKNOWN')
 
         for state in states:
             set_proxy_value(self.proxy, 'state', state)

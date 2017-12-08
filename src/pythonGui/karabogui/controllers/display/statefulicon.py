@@ -45,6 +45,8 @@ class StatefulIconWidget(BaseBindingController):
         value = proxy.value
         if State(value).isDerivedFrom(State.CHANGING):
             color = STATE_COLORS[State.CHANGING]
+        elif State(value).isDerivedFrom(State.RUNNING):
+            color = STATE_COLORS[State.RUNNING]
         elif State(value).isDerivedFrom(State.ACTIVE):
             color = STATE_COLORS[State.ACTIVE]
         elif State(value).isDerivedFrom(State.PASSIVE):
