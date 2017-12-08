@@ -59,7 +59,7 @@ namespace karabo {
              * The given MessageHandler will be called sequentially for each message. An error notifier
              * can be specified as well and will, in case of an error, be called (and have finished) before
              * the message handler is called.
-             * Permanent reading can be interrupted by stopReadPermanent.
+             * Permanent reading can be interrupted by stopReading.
              * IMPORTANT:
              * - Do not mix with readAsync(..) - at least do not call before the message handler given to readAsync
              *   has been called.
