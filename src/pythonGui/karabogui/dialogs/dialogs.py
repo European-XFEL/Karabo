@@ -48,9 +48,9 @@ class AboutDialog(QDialog):
         super(AboutDialog, self).__init__(parent)
         uic.loadUi(op.join(op.dirname(__file__), 'about.ui'), self)
 
-        splash_path = op.join(op.dirname(icons.__file__), 'splash.png')
-        splash_img = QPixmap(splash_path)
-        self.imgLabel.setPixmap(splash_img)
+        image_path = op.join(op.dirname(icons.__file__), 'tunnel.png')
+        tunnel_img = QPixmap(image_path)
+        self.imgLabel.setPixmap(tunnel_img)
 
         # Pattern matchers for a specific key combos
         self._cheat_codes = {
