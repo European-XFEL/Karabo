@@ -35,7 +35,7 @@ class TestLamp(GuiTestCase):
         with patch(target, new=MockLabel):
 
             states = ('CHANGING', 'ACTIVE', 'PASSIVE', 'DISABLED', 'STATIC',
-                      'NORMAL', 'ERROR', 'INIT', 'UNKNOWN')
+                      'RUNNING', 'NORMAL', 'ERROR', 'INIT', 'UNKNOWN')
 
             controller = LampWidget(proxy=self.proxy)
             controller.create(None)
