@@ -166,6 +166,8 @@ class State(StateBase, metaclass=ParentEnumMeta):
 
     RUNNING = NORMAL
 
+    ACQUIRING = RUNNING
+
     PASSIVE = STATIC
     WARM = PASSIVE
     COLD = PASSIVE
@@ -189,7 +191,6 @@ class State(StateBase, metaclass=ParentEnumMeta):
     LOCKED = ACTIVE
     ENGAGED = ACTIVE
     MONITORING = ACTIVE
-    ACQUIRING = ACTIVE
 
     DISABLED = KNOWN
     INTERLOCK_BROKEN = DISABLED
