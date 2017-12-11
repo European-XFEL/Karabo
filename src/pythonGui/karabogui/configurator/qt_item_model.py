@@ -442,7 +442,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
     def setData(self, index, value, role):
         """Reimplemented function of QAbstractItemModel.
         """
-        if role != Qt.EditRole:
+        if role != Qt.EditRole or value is None:
             return False
 
         # Get the index's stored object
@@ -456,7 +456,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 return False
             name = proxy.editable_attributes[index.row()]
             obj.attributes[name] = value
-            # FIXME: Configuration changed - project needs to be informed
+            # project needs to be informed
+            self.root.binding.config_update = True
 
         else:  # Normal property value setting
             proxy = obj
@@ -464,16 +465,21 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 return False
 
             binding = proxy.binding
+            online_device = isinstance(self.root, DeviceProxy)
             old_value = None if proxy.edit_value is None else proxy.value
             if isinstance(binding, ChoiceOfNodesBinding):
                 old_value = binding.choice  # ChoiceOfNodes is "special"
             changes = has_changes(binding, old_value, value)
             allowed = (binding.is_allowed(self.root.state_binding.value) or
-                       not isinstance(self.root, DeviceProxy))
-            apply_changed = allowed and changes
-            if apply_changed:
-                proxy.edit_value = value
-            elif isinstance(self.root, DeviceProxy):
+                       not online_device)
+            if allowed and changes:
+                if online_device:
+                    proxy.edit_value = value
+                else:  # ProjectDeviceProxy or DeviceClassProxy
+                    proxy.revert_edit()  # XXX: Don't show edited state
+                    proxy.value = value
+                    self.root.binding.config_update = True
+            elif online_device:
                 proxy.revert_edit()
 
             self.layoutChanged.emit()
