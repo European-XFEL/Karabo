@@ -13,6 +13,7 @@ from PyQt4.QtCore import pyqtSlot, QTimer
 from karabo.middlelayer import Hash
 from karabogui import messagebox
 from karabogui.binding.api import extract_sparse_configurations
+from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.singletons.api import get_manager, get_network, get_topology
 
 # Devices which are waiting for a configuration to come back from the server
@@ -63,6 +64,15 @@ def call_device_slot(handler, device_id, slot_name, **kwargs):
 def send_property_changes(proxies):
     """Given a collection of PropertyProxy instances, gather all the user edits
     and send them to the GUI server. Then wait for an answer to come back.
+
+    If an answer, in the form of a new device configuration, doesn't arrive
+    after `WAIT_SECONDS` seconds, a warning dialog is shown. However, if a new
+    configuration does arrive, it is assumed that all property edits were
+    applied and the `edit_value` traits are reset accordingly.
+
+    :param proxies: A sequence (list, tuple, set) of PropertyProxy instances
+                    with their `edit_value` trait set. See the function
+                    `extract_sparse_configurations` for more details.
     """
     def _config_handler(device_proxy, name, new):
         """Handle a device getting a new configuration
@@ -72,14 +82,18 @@ def send_property_changes(proxies):
         if len(properties) == 0:
             return
 
+        # Remove the trait handler
+        device_proxy.on_trait_change(_config_handler, 'config_update',
+                                     remove=True)
+
         # Clear the timer and property edits
         timer.stop()
         for proxy in properties:
             proxy.revert_edit()
 
-        # Remove the trait handler
-        device_proxy.on_trait_change(_config_handler, 'config_update',
-                                     remove=True)
+        # Bump the configurator
+        broadcast_event(KaraboEventSender.UpdateDeviceConfigurator,
+                        {'configuration': device_proxy})
 
     @pyqtSlot()
     def _timeout_handler(device_proxy):

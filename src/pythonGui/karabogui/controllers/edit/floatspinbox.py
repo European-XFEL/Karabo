@@ -18,7 +18,7 @@ from karabogui.util import SignalBlocker
                              binding_type=FloatBinding)
 class FloatSpinBox(BaseBindingController):
     # The scene model class for this controller
-    model = Instance(FloatSpinBoxModel)
+    model = Instance(FloatSpinBoxModel, args=())
     # Internal traits
     _internal_widget = Instance(QDoubleSpinBox)
 
