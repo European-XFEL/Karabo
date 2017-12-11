@@ -57,18 +57,6 @@ private:
                       karabo::util::Hash::Pointer header,
                       karabo::util::Hash::Pointer body);
 
-    void readHandler3(karabo::net::JmsConsumer::Pointer channel,
-                      karabo::util::Hash::Pointer header,
-                      karabo::util::Hash::Pointer body);
-
-    void readHandler4(karabo::net::JmsConsumer::Pointer channel,
-                      karabo::util::Hash::Pointer header,
-                      karabo::util::Hash::Pointer body);
-
-    
-
-    
-
 };
 
 #endif	/* JMSCONNECTION_TEST_HH */
