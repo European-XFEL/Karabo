@@ -530,16 +530,13 @@ namespace karabo {
         void SignalSlotable::onHeartbeatMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
             try {
                 SlotInstancePointer slot = getSlot("slotHeartbeat");
-                // Synchronously call the slot
-                // FIXME: Go via Strand? Or not needed since calling synchronously?
-                if (slot) slot->callRegisteredSlotFunctions(*header, *body);
+                if (slot) {
+                    // Synchronously call the slot - no Strand or so needed since JmsConsumer guarantees ordering
+                    slot->callRegisteredSlotFunctions(*header, *body);
+                }
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": Exception in onHeartbeatMessage: " << e.what();
             }
-            // Re-register
-            m_heartbeatConsumerChannel->startReading(bind_weak(&SignalSlotable::onHeartbeatMessage, this, _1, _2),
-                                                     bind_weak(&SignalSlotable::consumerErrorNotifier, this,
-                                                               std::string("heartbeats"), _1, _2));
         }
 
 
