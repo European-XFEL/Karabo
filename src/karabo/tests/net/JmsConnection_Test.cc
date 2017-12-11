@@ -92,35 +92,40 @@ void JmsConnection_Test::readHandler1(karabo::net::JmsConsumer::Pointer consumer
         CPPUNIT_ASSERT(header->get<std::string>("header") == "some header");
         CPPUNIT_ASSERT(body->has("body"));
         CPPUNIT_ASSERT(body->get<int>("body") == 42);
+        consumer->stopReading();
+        // We switch topic now!
+        consumer->setTopic("testTopic2");
+        consumer->startReading(boost::bind(&JmsConnection_Test::readHandler1, this, consumer, producer, _1, _2));
     }
 
-    if (m_messageCount == 1000) {
+    if (m_messageCount < 100) {
+        body->set<int>("body", m_messageCount + 1);
+        producer->write("testTopic2", header, body);
+    } else if (m_messageCount == 100) {
+        consumer->stopReading();
         boost::posix_time::time_duration diff = boost::posix_time::microsec_clock::local_time() - m_tick;
-        const float msPerMsg = diff.total_milliseconds() / 1000.;
+        const float msPerMsg = diff.total_milliseconds() / 100.;
         CPPUNIT_ASSERT(msPerMsg < 5); // Performance assert...
         return;
     }
 
     m_messageCount++;
-    consumer->setTopic("testTopic2");
-    consumer->readAsync(boost::bind(&JmsConnection_Test::readHandler1, this, consumer, producer, _1, _2));
-    producer->write("testTopic2", header, body);
 }
 
 
 void JmsConnection_Test::testCommunication1() {
 
+    // Here we test e.g. switching topic in consumer and producer
     m_messageCount = 0;
 
     m_connection = JmsConnection::Pointer(new JmsConnection());
 
     m_connection->connect();
 
-    EventLoop::addThread();
     JmsConsumer::Pointer consumer = m_connection->createConsumer("testTopic1");
     JmsProducer::Pointer producer = m_connection->createProducer();
-    
-    consumer->readAsync(boost::bind(&JmsConnection_Test::readHandler1, this, consumer, producer, _1, _2));
+
+    consumer->startReading(boost::bind(&JmsConnection_Test::readHandler1, this, consumer, producer, _1, _2));
 
     Hash::Pointer header(new Hash("header", "some header"));
 
@@ -128,41 +133,34 @@ void JmsConnection_Test::testCommunication1() {
 
     producer->write("testTopic1", header, body);
 
-    EventLoop::run();
-    EventLoop::removeThread();
+    boost::thread t(boost::bind(&EventLoop::work));
+    int trials = 100;
+    while (--trials >= 0) {
+        if (getMessageCount() >= 100) {
+            break;
+        }
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    }
 
-    CPPUNIT_ASSERT_EQUAL(1000u, m_messageCount);
+    EventLoop::stop();
+    t.join();
+
+    // After stop() and join() since otherwise they are missed in case of failure - and program does not stop...
+    CPPUNIT_ASSERT_EQUAL(100u, m_messageCount);
 }
 
 
 void JmsConnection_Test::readHandler2(karabo::net::JmsConsumer::Pointer channel,
                                       karabo::util::Hash::Pointer header,
                                       karabo::util::Hash::Pointer body) {
-
     incrementMessageCount();
-}
-
-
-void JmsConnection_Test::readHandler3(karabo::net::JmsConsumer::Pointer channel,
-                                      karabo::util::Hash::Pointer header,
-                                      karabo::util::Hash::Pointer body) {
-    incrementMessageCount();
-    
-}
-
-
-void JmsConnection_Test::readHandler4(karabo::net::JmsConsumer::Pointer c,
-                                      karabo::util::Hash::Pointer header,
-                                      karabo::util::Hash::Pointer body) {
-    incrementMessageCount();
-    if (header->get<std::string>("key") == "bar") return;
-    c->setTopic("testTopic1");
-    c->readAsync(boost::bind(&JmsConnection_Test::readHandler4, this, c, _1, _2));
 }
 
 
 void JmsConnection_Test::testCommunication2() {
-    
+
+    // Here we basically test selectors for the consumer.
+
     m_connection = JmsConnection::Pointer(new JmsConnection());
     
     m_connection->connect();   
@@ -172,22 +170,31 @@ void JmsConnection_Test::testCommunication2() {
     Hash::Pointer header2(new Hash("key", "bar"));
     Hash::Pointer body(new Hash("body", 42));
 
-    EventLoop::addThread(3); // One for each consumer using readAsync.
     JmsConsumer::Pointer c1 = m_connection->createConsumer("testTopic1", "key = 'foo'");
     JmsConsumer::Pointer c2 = m_connection->createConsumer("testTopic1", "key = 'bar'");
     JmsConsumer::Pointer c3 = m_connection->createConsumer("testTopic1");
     JmsProducer::Pointer p = m_connection->createProducer();
 
-    c1->readAsync(boost::bind(&JmsConnection_Test::readHandler2, this, c1, _1, _2));
-    c2->readAsync(boost::bind(&JmsConnection_Test::readHandler3, this, c2, _1, _2));
-    c3->readAsync(boost::bind(&JmsConnection_Test::readHandler4, this, c3, _1, _2));
+    c1->startReading(boost::bind(&JmsConnection_Test::readHandler2, this, c1, _1, _2));
+    c2->startReading(boost::bind(&JmsConnection_Test::readHandler2, this, c2, _1, _2));
+    c3->startReading(boost::bind(&JmsConnection_Test::readHandler2, this, c3, _1, _2));
 
-    p->write("testTopic1", header1, body);
-    p->write("testTopic1", header2, body);
-   
-    EventLoop::run();
-    EventLoop::removeThread(3);
+    p->write("testTopic1", header1, body); // received by c1 and c3
+    p->write("testTopic1", header2, body); // received by c2 and c3
 
+    boost::thread t(boost::bind(&EventLoop::work));
+    int trials = 100;
+    while (--trials >= 0) {
+        if (getMessageCount() == 4u) {
+            break;
+        }
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    }
+
+    EventLoop::stop();
+    t.join();
+
+    // After stop() and join() since otherwise they are missed in case of failure - and program does not stop...
     CPPUNIT_ASSERT_EQUAL(4u, m_messageCount);
 }
 
