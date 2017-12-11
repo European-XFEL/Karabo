@@ -60,9 +60,6 @@ namespace karabo {
              * can be specified as well and will, in case of an error, be called (and have finished) before
              * the message handler is called.
              * Permanent reading can be interrupted by stopReading.
-             * IMPORTANT:
-             * - Do not mix with readAsync(..) - at least do not call before the message handler given to readAsync
-             *   has been called.
              *
              * @param handler Message handler of signature <void (Hash::Pointer header, Hash::Pointer body)>
              * @param errorNotifier Error notifier of signature <void (JmsConsumer::Error, string)> with an Error and a
@@ -80,24 +77,6 @@ namespace karabo {
              * To stop receiving, destruct this JmsConsumer.
              */
             void stopReading();
-
-            /**
-             * This function registers a message handler, which will be called exactly once when a message
-             * on the current topic and obeying the provided selector will be available. An error notifier
-             * can be specified as well and will, in case of an error, be called (and have finished) before
-             * the message handler is called.
-             * IMPORTANT:
-             * - Do not call in between calling startReading(..) and stopReading().
-             * - After calling this method it must not be called again before the message handler has been called.
-             * - If it is not called again, broker messages are still received, but not acknowledged and thus create
-             *   a broker backlog.
-             * - Since internally reading is using a blocking call, consider to call EventLoop::addThread() once.
-             *
-             * @param handler Message handler of signature <void (Hash::Pointer header, Hash::Pointer body)>
-             * @param errorNotifier Error notifier of signature <void (JmsConsumer::Error, string)> with an Error and a
-             *                      string indicating the problem
-             */
-            void readAsync(const MessageHandler handler, const ErrorNotifier errorNotifier = ErrorNotifier());
 
             /**
              * Set the broker topic to consume messages from
@@ -131,9 +110,6 @@ namespace karabo {
             void deserialize(const MQMessageHandlePointer& messageHandlerPtr);
 
             void postErrorOnHandlerStrand(JmsConsumer::Error error, const std::string& msg);
-
-            void asyncConsumeMessage(const MessageHandler handler, const ErrorNotifier errorHandler,
-                                     const std::string& topic, const std::string& selector);
 
             MQConsumerHandle getConsumer(const std::string& topic, const std::string& selector);
 
@@ -171,7 +147,7 @@ namespace karabo {
             typedef std::map<std::string, MQConsumerHandle > Consumers;
             std::map<std::string, MQConsumerHandle > m_consumers;
 
-            bool m_readPermanent;
+            bool m_reading;
             MessageHandler m_messageHandler;
             ErrorNotifier m_errorNotifier;
 
@@ -179,9 +155,6 @@ namespace karabo {
             karabo::net::Strand::Pointer m_handlerStrand;
 
             boost::thread m_readThread;
-
-            bool m_useErrorStrand;
-            boost::asio::io_service::strand m_errorStrand;
 
             std::string m_topic;
 
