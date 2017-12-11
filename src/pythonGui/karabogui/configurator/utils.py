@@ -48,8 +48,11 @@ def dragged_configurator_items(proxies):
         # Collect the relevant information
         binding = proxy.binding
         attrs = binding.attributes
-        data = {'key': proxy.key,
-                'label': attrs.get(KARABO_SCHEMA_DISPLAYED_NAME)}
+        default_name = proxy.path.split('.')[-1]
+        data = {
+            'key': proxy.key,
+            'label': attrs.get(KARABO_SCHEMA_DISPLAYED_NAME, default_name)
+        }
 
         factories = get_compatible_controllers(binding, can_edit=False)
         if factories:
