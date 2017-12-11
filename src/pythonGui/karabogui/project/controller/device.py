@@ -206,7 +206,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         device.active_config_ref = config_model.uuid
 
     def _broadcast_item_click(self):
-        broadcast_event(KaraboEventSender.UpdateDeviceConfigurator,
+        broadcast_event(KaraboEventSender.ShowConfiguration,
                         {'configuration': self.project_device.proxy})
 
     def _update_icon(self, ui_data):
