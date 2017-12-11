@@ -205,17 +205,20 @@ void JmsConnection_Test::testPermanentRead() {
     JmsConsumer::Pointer consumer = m_connection->createConsumer(topic);
     JmsProducer::Pointer producer = m_connection->createProducer();
 
-    consumer->startReading([this](karabo::util::Hash::Pointer p, karabo::util::Hash::Pointer q) {
-        // Do not care about message content...
+    std::vector<unsigned int> counters;
+    consumer->startReading([this, &counters](karabo::util::Hash::Pointer h, karabo::util::Hash::Pointer body) {
         incrementMessageCount();
+        // Collect counters to test for sequentiality
+        counters.push_back(body->get<unsigned int>("counter"));
     });
 
 
     auto header = boost::make_shared<Hash>("headerKey", "bar");
-    auto body = boost::make_shared<Hash>("bodyKey", 42);
+    auto body = boost::make_shared<Hash>();
 
     const unsigned int numMessages = 10;
     for (unsigned int i = 0; i < numMessages; ++i) {
+        body->set("counter", i);
         producer->write(topic, header, body);
     }
 
@@ -232,4 +235,9 @@ void JmsConnection_Test::testPermanentRead() {
 
     // After stop() and join() since otherwise they are missed in case of failure - and program does not stop...
     CPPUNIT_ASSERT_EQUAL(numMessages, m_messageCount);
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (numMessages), counters.size());
+    for (unsigned i = 0; i < numMessages; ++i) {
+        // Test correct ordering
+        CPPUNIT_ASSERT_EQUAL(i, counters[i]);
+    }
 }
