@@ -41,7 +41,7 @@ class CameraFsm(base.BaseFsm):
             SLOT_ELEMENT(expected).key("acquire")
                 .displayedName("Acquire")
                 .description("Instructs camera to go into acquisition state")
-                .allowedStates(State.STOPPED)
+                .allowedStates(State.ON)
                 .commit(),
 
             SLOT_ELEMENT(expected).key("trigger")
@@ -84,7 +84,7 @@ class CameraFsm(base.BaseFsm):
         KARABO_FSM_STATE_EE(State.INIT, self.initializationStateOnEntry, self.initializationStateOnExit)
         KARABO_FSM_STATE_EE(State.UNKNOWN, self.unknownStateOnEntry, self.unknownStateOnExit)
         KARABO_FSM_STATE_EE(State.ACQUIRING, self.acquisitionStateOnEntry, self.acquisitionStateOnExit)
-        KARABO_FSM_STATE_EE(State.STOPPED, self.readyStateOnEntry, self.readyStateOnExit)
+        KARABO_FSM_STATE_EE(State.ON, self.readyStateOnEntry, self.readyStateOnExit)
 
         #**************************************************************
         #*                    Transition Actions                      *
@@ -105,12 +105,12 @@ class CameraFsm(base.BaseFsm):
         #**************************************************************
         okStt=[
         # Source-State    Event           Target-State     Action           Guard
-        (State.STOPPED,    'AcquireEvent', State.ACQUIRING, 'AcquireAction', 'none'),
-        (State.ACQUIRING, 'StopEvent',    State.STOPPED,    'StopAction',    'none'),
+        (State.ON,    'AcquireEvent', State.ACQUIRING, 'AcquireAction', 'none'),
+        (State.ACQUIRING, 'StopEvent',    State.ON,    'StopAction',    'none'),
         (State.ACQUIRING, 'TriggerEvent', None,            'TriggerAction', 'none')
         ]
         #                        Name  Transition-Table  Initial-State
-        KARABO_FSM_STATE_MACHINE(State.NORMAL, okStt, State.STOPPED)
+        KARABO_FSM_STATE_MACHINE(State.NORMAL, okStt, State.ON)
 
         #**************************************************************
         #*                      Known Machine                         *

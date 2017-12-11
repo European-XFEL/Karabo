@@ -30,7 +30,7 @@ namespace karabo {
 
                 
                 OVERWRITE_ELEMENT(expected).key("state")
-                        .setNewOptions(State::INIT, State::UNKNOWN, State::ERROR, State::ACQUIRING, State::STOPPED)
+                        .setNewOptions(State::INIT, State::UNKNOWN, State::ERROR, State::ACQUIRING, State::ON)
                         .setNewDefaultValue(State::INIT)
                         .commit();
 
@@ -43,7 +43,7 @@ namespace karabo {
                 SLOT_ELEMENT(expected).key("acquire")
                         .displayedName("Acquire")
                         .description("Instructs camera to go into acquisition state")
-                        .allowedStates(State::STOPPED)
+                        .allowedStates(State::ON)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("trigger")
@@ -92,7 +92,7 @@ namespace karabo {
                         .description("Save images while acquiring.")
                         .assignmentOptional().defaultValue(false)
                         .reconfigurable()
-                        .allowedStates(State::STOPPED)
+                        .allowedStates(State::ON)
                         .commit();
 
                 PATH_ELEMENT(expected).key("imageStorage.filePath")
@@ -101,7 +101,7 @@ namespace karabo {
                         .isDirectory()
                         .assignmentOptional().defaultValue("/tmp")
                         .reconfigurable()
-                        .allowedStates(State::STOPPED)
+                        .allowedStates(State::ON)
                         .commit();
 
                 STRING_ELEMENT(expected).key("imageStorage.fileName")
@@ -109,7 +109,7 @@ namespace karabo {
                         .description("The name for saving images to file")
                         .assignmentOptional().defaultValue("image")
                         .reconfigurable()
-                        .allowedStates(State::STOPPED)
+                        .allowedStates(State::ON)
                         .commit();
 
                 STRING_ELEMENT(expected).key("imageStorage.fileType")
@@ -118,7 +118,7 @@ namespace karabo {
                         .assignmentOptional().defaultValue("tif")
                         .options("tif jpg png")
                         .reconfigurable()
-                        .allowedStates(State::STOPPED)
+                        .allowedStates(State::ON)
                         .commit();
 
                 STRING_ELEMENT(expected).key("imageStorage.lastSaved")
@@ -134,7 +134,7 @@ namespace karabo {
                         .minInc(1)
                         .assignmentOptional().defaultValue(10)
                         .reconfigurable()
-                        .allowedStates(State::ERROR, State::STOPPED, State::ACQUIRING)
+                        .allowedStates(State::ERROR, State::ON, State::ACQUIRING)
                         .commit();
 
             }
@@ -146,24 +146,23 @@ namespace karabo {
                 KARABO_SLOT(stop);
                 KARABO_SLOT(resetHardware);
             }
-
             /* INIT, none, UNKNOWN
-             * UNKNOWN, connect, STOPPED
-             * STOPPED, acquire, ACQUIRING
-             * ACQUIRING, stop, STOPPED
+             * UNKNOWN, connect, ON
+             * ON, acquire, ACQUIRING
+             * ACQUIRING, stop, ON
              * ACQUIRING, trigger, None
-             * STOPPED or ACQUIRING, errorFound, ERROR
-             * ERROR, reset, STOPPED
-             * STOPPED or ACQUIRING or ERROR, disconnect, UNKNOWN
+             * ON or ACQUIRING, errorFound, ERROR
+             * ERROR, reset, ON
+             * ON or ACQUIRING or ERROR, disconnect, UNKNOWN
              */
 
             /**
-             * In the end call: updateState(State::STOPPED)
+             * In the end call: updateState(State::ON)
              */
             virtual void resetHardware() = 0;
 
             /**
-             * Should end in State::STOPPED
+             * Should end in State::ON
              */
             virtual void connectCamera() = 0;
 
