@@ -114,12 +114,12 @@ void States_Test::testRunningTrumpActivePassive() {
 }
 
 
-void States_Test::testChainStates() {
+void States_Test::testChainStatesPassive() {
     std::vector<State> s;
     s.push_back(State::ON);
     CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s) == State::ON);
-    s.push_back(State::OFF);
-    CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s) == State::OFF);
+    s.push_back(State::STOPPED);
+    CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s) == State::STOPPED);
     s.push_back(State::ACQUIRING);
     CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s) == State::ACQUIRING);
     s.push_back(State::MOVING);
@@ -133,6 +133,29 @@ void States_Test::testChainStates() {
     s.push_back(State::UNKNOWN);
     CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s) == State::UNKNOWN);
 }
+
+
+void States_Test::testChainStatesActive() {
+    std::vector<State> s;
+
+    s.push_back(State::ON);
+    CPPUNIT_ASSERT(StateSignifier(State::ACTIVE, State::INCREASING).returnMostSignificant(s) == State::ON);
+    s.push_back(State::STOPPED);
+    CPPUNIT_ASSERT(StateSignifier(State::ACTIVE, State::INCREASING).returnMostSignificant(s) == State::ON);
+    s.push_back(State::ACQUIRING);
+    CPPUNIT_ASSERT(StateSignifier(State::ACTIVE, State::INCREASING).returnMostSignificant(s) == State::ACQUIRING);
+    s.push_back(State::MOVING);
+    CPPUNIT_ASSERT(StateSignifier(State::ACTIVE, State::INCREASING).returnMostSignificant(s) == State::MOVING);
+    s.push_back(State::INTERLOCKED);
+    CPPUNIT_ASSERT(StateSignifier(State::ACTIVE, State::INCREASING).returnMostSignificant(s) == State::INTERLOCKED);
+    s.push_back(State::ERROR);
+    CPPUNIT_ASSERT(StateSignifier(State::ACTIVE, State::INCREASING).returnMostSignificant(s) == State::ERROR);
+    s.push_back(State::INIT);
+    CPPUNIT_ASSERT(StateSignifier(State::ACTIVE, State::INCREASING).returnMostSignificant(s) == State::INIT);
+    s.push_back(State::UNKNOWN);
+    CPPUNIT_ASSERT(StateSignifier(State::ACTIVE, State::INCREASING).returnMostSignificant(s) == State::UNKNOWN);
+}
+
 
 
 void States_Test::testComparisons() {
