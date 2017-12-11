@@ -94,12 +94,13 @@ namespace karabo {
                     m_trumpList.push_back(State::INCREASING);
                 }
 
-                m_trumpList.push_back(State::CHANGING);
                 m_trumpList.push_back(State::RUNNING);
+                m_trumpList.push_back(State::CHANGING);
                 m_trumpList.push_back(State::INTERLOCKED);
                 m_trumpList.push_back(State::ERROR);
                 m_trumpList.push_back(State::INIT);
                 m_trumpList.push_back(State::UNKNOWN);
+                
             } else {
                 m_trumpList = trumpList;
 

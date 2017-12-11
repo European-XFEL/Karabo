@@ -116,6 +116,26 @@ class States_TestCase(unittest.TestCase):
         s.append(State.UNKNOWN)
         self.assertIs(signifier.returnMostSignificant(s), State.UNKNOWN)
 
+    def test_acquiring_changing_on_passive(self):
+        s = [State.ON, State.OFF]
+        signifier = StateSignifier(staticMoreSignificant=State.PASSIVE,
+                                   changingMoreSignificant=State.DECREASING)
+        self.assertIs(signifier.returnMostSignificant(s), State.OFF)
+        s.append(State.ACQUIRING)
+        self.assertIs(signifier.returnMostSignificant(s), State.ACQUIRING)
+        s.append(State.CHANGING)
+        self.assertIs(signifier.returnMostSignificant(s), State.CHANGING)
+
+    def test_acquiring_changing_on_active(self):
+        s = [State.ON, State.OFF]
+        signifier = StateSignifier(staticMoreSignificant=State.ACTIVE,
+                                   changingMoreSignificant=State.DECREASING)
+        self.assertIs(signifier.returnMostSignificant(s), State.ON)
+        s.append(State.ACQUIRING)
+        self.assertIs(signifier.returnMostSignificant(s), State.ACQUIRING)
+        s.append(State.CHANGING)
+        self.assertIs(signifier.returnMostSignificant(s), State.CHANGING)
+
     def test_states_signifier_non_def_list(self):
         trumpList = [State.INTERLOCKED, State.UNKNOWN, State.KNOWN]
         s = [State.DISABLED, State.CHANGING, State.COOLED, State.DECREASING,
