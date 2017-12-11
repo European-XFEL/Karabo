@@ -27,8 +27,8 @@ namespace karabo {
          * an ERROR-NORMAL state machine (karabo::core::OkErrorFsm type). 
          * In the NORMAL region the following state transition table is used:
          * 
-         * STOPPED (AcquireEvent) -> (AcquireAction) ACQUIRING
-         * ACQUIRING (StopEvent) -> (StopAction) STOPPED 
+         * ON (AcquireEvent) -> (AcquireAction) ACQUIRING
+         * ACQUIRING (StopEvent) -> (StopAction) ON
          * ACQUIRING (TriggerEvent) -> (TriggerAction) ACQUIRING 
          */
         class CameraFsm : public BaseFsm {
@@ -50,7 +50,7 @@ namespace karabo {
                 SLOT_ELEMENT(expected).key("acquire")
                         .displayedName("Acquire")
                         .description("Instructs camera to go into acquisition state")
-                        .allowedStates(State::STOPPED)
+                        .allowedStates(State::ON)
                         .commit();
 
                 SLOT_ELEMENT(expected).key("trigger")
@@ -117,7 +117,7 @@ namespace karabo {
 
             KARABO_FSM_STATE_VE_EE(ACQUIRING, acquisitionStateOnEntry, acquisitionStateOnExit)
 
-            KARABO_FSM_STATE_VE_EE(STOPPED, readyStateOnEntry, readyStateOnExit)
+            KARABO_FSM_STATE_VE_EE(ON, readyStateOnEntry, readyStateOnExit)
 
             /**************************************************************/
             /*                    Transition Actions                      */
@@ -145,13 +145,13 @@ namespace karabo {
 
             KARABO_FSM_TABLE_BEGIN(OkStateTransitionTable)
             // Source-State, Event, Target-State, Action, Guard
-            Row< STOPPED, AcquireEvent, ACQUIRING, AcquireAction, none >,
-            Row< ACQUIRING, StopEvent, STOPPED, StopAction, none >,
+            Row< ON, AcquireEvent, ACQUIRING, AcquireAction, none >,
+            Row< ACQUIRING, StopEvent, ON, StopAction, none >,
             Row< ACQUIRING, TriggerEvent, none, TriggerAction, none >
             KARABO_FSM_TABLE_END
 
             // Name, Transition-Table, Initial-State, Context
-            KARABO_FSM_STATE_MACHINE(NORMAL, OkStateTransitionTable, STOPPED, Self)
+            KARABO_FSM_STATE_MACHINE(NORMAL, OkStateTransitionTable, ON, Self)
 
             /**************************************************************/
             /*                     KnownState Machine                     */
