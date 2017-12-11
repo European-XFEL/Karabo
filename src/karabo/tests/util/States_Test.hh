@@ -19,7 +19,8 @@ class States_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testSignifierInitTrump);
     CPPUNIT_TEST(testSignifierNonDefaultList);
     CPPUNIT_TEST(testRunningTrumpActivePassive);
-    CPPUNIT_TEST(testChainStates);
+    CPPUNIT_TEST(testChainStatesPassive);
+    CPPUNIT_TEST(testChainStatesActive);
 
     CPPUNIT_TEST(testComparisons);
     CPPUNIT_TEST_SUITE_END();
@@ -41,7 +42,8 @@ private:
     void testSignifierNonDefaultList();
     void testRunningTrumpActivePassive();
     void testComparisons();
-    void testChainStates();
+    void testChainStatesPassive();
+    void testChainStatesActive();
 };
 
 
