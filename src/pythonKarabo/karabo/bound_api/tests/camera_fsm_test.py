@@ -19,7 +19,8 @@ class CameraUser(CameraFsm):
         self.log.DEBUG("-- CameraUser.noStateTransition")
         
     def updateState(self, currentState):
-        self.log.DEBUG("-- CameraUser.updateState to '{}'".format(currentState))
+        self.log.DEBUG("-- CameraUser.updateState "
+                       "to '{}'".format(currentState))
 
     def initializationStateOnEntry(self):
         self.log.DEBUG("-- CameraUser.initializationStateOnEntry")
@@ -82,8 +83,8 @@ class  Camera_fsm_TestCase(unittest.TestCase):
         self.assertIs(fsm.get_state(), State.UNKNOWN)
         self.camera.log.DEBUG("*** State 'UNKNOWN' reached")
         self.camera.connectCamera()
-        self.assertIs(fsm.get_state(), State.STOPPED)
-        self.camera.log.DEBUG("*** State 'STOPPED' reached")
+        self.assertIs(fsm.get_state(), State.ON)
+        self.camera.log.DEBUG("*** State 'ON' reached")
         self.camera.acquire()
         self.assertIs(fsm.get_state(), State.ACQUIRING)
         self.camera.log.DEBUG("*** State 'ACQUIRING' reached")
@@ -91,14 +92,14 @@ class  Camera_fsm_TestCase(unittest.TestCase):
         self.assertIs(fsm.get_state(), State.ACQUIRING)
         self.camera.log.DEBUG("*** Trigger sent. Remain in state 'ACQUIRING'")
         self.camera.stop()
-        self.assertIs(fsm.get_state(), State.STOPPED)
-        self.camera.log.DEBUG("*** State 'STOPPED' reached")
+        self.assertIs(fsm.get_state(), State.ON)
+        self.camera.log.DEBUG("*** State 'ON' reached")
         self.camera.errorFound("user error message", "detailed error message")
         self.assertIs(fsm.get_state(), State.ERROR)
         self.camera.log.DEBUG("*** State 'ERROR' reached")
         self.camera.reset()
-        self.assertIs(fsm.get_state(), State.STOPPED)
-        self.camera.log.DEBUG("*** State 'STOPPED' reached")
+        self.assertIs(fsm.get_state(), State.ON)
+        self.camera.log.DEBUG("*** State 'ON' reached")
         self.camera.disconnectCamera()
         self.assertIs(fsm.get_state(), State.UNKNOWN)
         self.camera.log.DEBUG("*** State 'UNKNOWN' reached")

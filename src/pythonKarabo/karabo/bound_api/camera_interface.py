@@ -20,7 +20,7 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
     def expectedParameters(expected):
         (
         OVERWRITE_ELEMENT(expected).key("state")
-                .setNewOptions(State.INIT, State.UNKNOWN, State.ERROR, State.ACQUIRING, State.CHANGING, State.STOPPED)
+                .setNewOptions(State.INIT, State.UNKNOWN, State.ERROR, State.ACQUIRING, State.CHANGING, State.ON)
                 .setNewDefaultValue(State.INIT)
                 .commit(),
 
@@ -33,7 +33,7 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
         SLOT_ELEMENT(expected).key("acquire")
                 .displayedName("Acquire")
                 .description("Instructs camera to go into acquisition state")
-                .allowedStates(State.STOPPED)
+                .allowedStates(State.ON)
                 .commit(),
 
         SLOT_ELEMENT(expected).key("trigger")
@@ -85,7 +85,7 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
                 .description("Save images while acquiring.")
                 .assignmentOptional().defaultValue(False)
                 .reconfigurable()
-                .allowedStates(State.STOPPED)
+                .allowedStates(State.ON)
                 .commit(),
 
         PATH_ELEMENT(expected).key("imageStorage.filePath")
@@ -94,7 +94,7 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
                 .isDirectory()
                 .assignmentOptional().defaultValue("/tmp")
                 .reconfigurable()
-                .allowedStates(State.STOPPED)
+                .allowedStates(State.ON)
                 .commit(),
 
         STRING_ELEMENT(expected).key("imageStorage.fileName")
@@ -103,7 +103,7 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
                 .assignmentOptional().defaultValue("image")
                 .reconfigurable()
 
-                .allowedStates(State.STOPPED)
+                .allowedStates(State.ON)
                 .commit(),
 
         STRING_ELEMENT(expected).key("imageStorage.fileType")
@@ -112,7 +112,7 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
                 .assignmentOptional().defaultValue("tif")
                 .options("tif jpg png")
                 .reconfigurable()
-                .allowedStates(State.STOPPED)
+                .allowedStates(State.ON)
                 .commit(),
 
         STRING_ELEMENT(expected).key("imageStorage.lastSaved")
@@ -128,7 +128,7 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
                 .minInc(1)
                 .assignmentOptional().defaultValue(10)
                 .reconfigurable()
-                .allowedStates(State.STOPPED, State.ACQUIRING, State.ERROR)
+                .allowedStates(State.ON, State.ACQUIRING, State.ERROR)
                 .commit(),
 
         )
