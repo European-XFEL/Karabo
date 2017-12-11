@@ -45,6 +45,10 @@ namespace karabo {
 
         void JmsConsumer::startReading(const MessageHandler& handler, const ErrorNotifier& errorNotifier) {
 
+            if (m_readPermanent) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Refuse 'startReading' since already reading!";
+                return;
+            }
             m_readPermanent = true;
             m_messageHandler = handler;
             m_errorNotifier = errorNotifier;
@@ -84,9 +88,8 @@ namespace karabo {
 
                 JmsConsumer::MQMessageHandlePointer messageHandlePtr(new MQMessageHandle,
                                                                      [](MQMessageHandle * r) {
-                                                                         MQFreeMessage(*r); }
-                                                                     );
-
+                                                                         MQFreeMessage(*r); delete r;
+                                                                     });
                 MQStatus status = MQReceiveMessageWithTimeout(consumerHandle, 100, messageHandlePtr.get());
                 MQError statusCode = MQGetStatusCode(status);
                 try {
@@ -147,7 +150,7 @@ namespace karabo {
                     // which then throws boost::bad_weak_ptr.
                     // Could be avoided if bind_weak directly makes use of weak_from_this() (which did not exist in
                     // boost 1.55) instead of getting the weak_ptr via shared_from_this()...
-                    break;
+                    return;
                 }
             }
 
