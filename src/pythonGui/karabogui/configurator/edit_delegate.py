@@ -98,7 +98,9 @@ class EditDelegate(QStyledItemDelegate):
             return
 
         # Handle attribute editors specially
-        if not isinstance(obj, PropertyProxy):
+        if isinstance(obj, PropertyProxy):
+            editor.controller.value_update(obj)
+        else:
             editor.controller.value = index.data(Qt.EditRole)
         editor.initialized = True
 
@@ -115,7 +117,7 @@ class EditDelegate(QStyledItemDelegate):
             return
 
         if isinstance(obj, PropertyProxy):
-            value = editor.controller.proxy.value
+            value = editor.controller.proxy.edit_value
         else:
             value = editor.controller.value
         # Set the data via the model

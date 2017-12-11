@@ -107,6 +107,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         for proxy in self._property_proxies.values():
             if proxy.edit_value is not None:
                 proxy.revert_edit()
+        self._notify_of_modifications()
 
     def clear_index_modification(self, index):
         """Clear any stored modifications for the proxy referenced by `index`
@@ -118,6 +119,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if proxy.binding is not None and isinstance(self.root, DeviceProxy):
             proxy.revert_edit()
             self.layoutChanged.emit()
+            self._notify_of_modifications()
 
     def flush_index_modification(self, index):
         """Send any stored modification for the proxy referenced by `index`
@@ -165,7 +167,11 @@ class ConfigurationTreeModel(QAbstractItemModel):
         last = self.index(last_row, 1)
         self.dataChanged.emit(first, last)
         self.layoutChanged.emit()
+        self._notify_of_modifications()
 
+    def _notify_of_modifications(self):
+        """Tell interested listeners about any changes
+        """
         has_modifications = any(p.edit_value is not None
                                 for p in self._property_proxies.values())
         self.signalHasModifications.emit(has_modifications)
@@ -469,7 +475,9 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 proxy.edit_value = value
             elif isinstance(self.root, DeviceProxy):
                 proxy.revert_edit()
+
             self.layoutChanged.emit()
+            self._notify_of_modifications()
 
         # A value was successfully set!
         return True
