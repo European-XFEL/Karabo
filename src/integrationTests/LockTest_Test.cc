@@ -80,7 +80,7 @@ void LockTest_Test::testLocking() {
 
     std::clog << "Tested locking.. Ok" << std::endl;
 
-    waitUntilLockClears();
+    waitUntilLockClears("lockTest3");
 
     m_deviceClient->executeNoWait("lockTest1", "lockAndWaitLong");
     // We are waiting here to give the machinery time to really lock "lockTest3"
@@ -92,7 +92,7 @@ void LockTest_Test::testLocking() {
 
     m_deviceClient->execute("lockTest3", "slotClearLock");
 
-    waitUntilLockClears();
+    waitUntilLockClears("lockTest3");
 
     m_deviceClient->executeNoWait("lockTest1", "lockAndWait");
 
@@ -105,7 +105,7 @@ void LockTest_Test::testLocking() {
 void LockTest_Test::testUnlocking() {
     m_deviceClient->execute("lockTest3", "slotClearLock");
 
-    waitUntilLockClears();
+    waitUntilLockClears("lockTest3");
 
     m_deviceClient->execute("lockTest2", "lockAndWait", KRB_TEST_MAX_TIMEOUT);
     std::clog << "Tested unlocking.. Ok" << std::endl;
@@ -145,14 +145,16 @@ void LockTest_Test::testLockStealing() {
     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
     m_deviceClient->executeNoWait("lockTest3", "slotClearLock");
     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+    waitUntilLockClears("lockTest3");
     m_deviceClient->set("lockTest3", "intProperty", 100);
     CPPUNIT_ASSERT(m_deviceClient->get<int>("lockTest3", "intProperty") == 100);
     std::clog << "Tested stolen lock exception.. Ok" << std::endl;
 }
 
 
-void LockTest_Test::waitUntilLockClears() {
-    while (m_deviceClient->get<std::string>("lockTest3", "lockedBy") != "") {
+void LockTest_Test::waitUntilLockClears(const std::string& deviceId) {
+    unsigned int counter = 0; // Do not wait forever...
+    while (m_deviceClient->get<std::string>(deviceId, "lockedBy") != "" && ++counter < 1000) {
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
     };
 }
