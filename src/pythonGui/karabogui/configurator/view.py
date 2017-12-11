@@ -33,7 +33,6 @@ from .value_delegate import ValueDelegate
 class ConfigurationTreeView(QTreeView):
     """A tree view for `Configuration` instances
     """
-    signalApplyChanged = pyqtSignal(object, bool, bool)
     itemSelectionChanged = pyqtSignal()
 
     def __init__(self, parent=None):
@@ -48,7 +47,6 @@ class ConfigurationTreeView(QTreeView):
 
         model = ConfigurationTreeModel(parent=self)
         self.setModel(model)
-        model.signalHasModifications.connect(self._update_apply_buttons)
         model.dataChanged.connect(self._update_popup_contents)
 
         # Add a delegate for rows with slot buttons
@@ -71,10 +69,11 @@ class ConfigurationTreeView(QTreeView):
         self.customContextMenuRequested.connect(self._show_context_menu)
 
     # ------------------------------------
-    # Private methods
+    # Public methods
 
     def assign_proxy(self, proxy):
-        self.model().root = proxy
+        model = self.model()
+        model.root = proxy
         if proxy is None:
             return
 
@@ -83,6 +82,23 @@ class ConfigurationTreeView(QTreeView):
             self.setColumnHidden(1, False)
         else:
             self.setColumnHidden(1, True)
+
+        # XXX: This is slightly hacky, but it keeps the buttons consistent
+        model._notify_of_modifications()
+
+    def apply_all(self):
+        self.model().apply_changes()
+
+    def decline_all(self):
+        model = self.model()
+        model.decline_changes()
+        model.layoutChanged.emit()
+
+    def clear(self):
+        self.assign_proxy(None)
+
+    # ------------------------------------
+    # Private methods
 
     def _get_popup_info(self, index):
         # Get the index's stored object
@@ -223,13 +239,6 @@ class ConfigurationTreeView(QTreeView):
                 proxy.value = default_value
             self.model().layoutChanged.emit()
 
-    @pyqtSlot(bool)
-    def _update_apply_buttons(self, buttons_enabled):
-        """The model is telling us to enable/disable the apply/decline buttons
-        """
-        root = self.model().root
-        self.signalApplyChanged.emit(root, buttons_enabled, False)
-
     @pyqtSlot(object, object)
     def _update_popup_contents(self, topLeft, bottomRight):
         """When the data in the model changes, blindly update the popup widget
@@ -305,32 +314,3 @@ class ConfigurationTreeView(QTreeView):
                     return
 
         super(ConfigurationTreeView, self).keyPressEvent(event)
-
-    # ------------------------------------
-    # NOTE: All of these methods are to stay compatible with the existing
-    # configurator panel code.
-
-    def clear(self):
-        self.assign_proxy(None)
-
-    def apply_all(self):
-        self.model().apply_changes()
-
-    def decline_all(self):
-        model = self.model()
-        model.decline_changes()
-        model.layoutChanged.emit()
-
-    def decline_all_changes(self):
-        pass
-
-    def decline_item_changes(self, item):
-        pass
-
-    def nbSelectedApplyEnabledItems(self):
-        """Return only selected items for not applied yet
-        """
-        return 0
-
-    def selectedItems(self):
-        return []

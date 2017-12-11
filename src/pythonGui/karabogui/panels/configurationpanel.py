@@ -30,7 +30,6 @@ class ConfigurationPanel(BasePanelWidget):
         super(ConfigurationPanel, self).__init__("Configuration Editor")
         self._showing_proxy = None
         self._awaiting_schema = None
-        self._has_conflicts = False
 
         # Register for broadcast events.
         # This object lives as long as the app. No need to unregister.
@@ -56,7 +55,9 @@ class ConfigurationPanel(BasePanelWidget):
         self._stacked_tree_widgets.addWidget(wait_widget)
 
         # CONFIGURATION_PAGE
-        self._stacked_tree_widgets.addWidget(ConfigurationTreeView(widget))
+        editor = ConfigurationTreeView(widget)
+        editor.model().signalHasModifications.connect(self._on_button_changes)
+        self._stacked_tree_widgets.addWidget(editor)
 
         hLayout = QHBoxLayout()
         hLayout.setContentsMargins(0, 5, 5, 5)
@@ -96,44 +97,8 @@ class ConfigurationPanel(BasePanelWidget):
         self.acApplyAll = QAction(icons.apply, text, widget)
         self.acApplyAll.setStatusTip(text)
         self.acApplyAll.setToolTip(text)
-        self.acApplyAll.setEnabled(False)
         self.acApplyAll.triggered.connect(self._on_apply_all)
         self.pbApplyAll.clicked.connect(self.acApplyAll.triggered)
-
-        text = "Apply all my changes"
-        self.acApplyLocalChanges = QAction(text, widget)
-        self.acApplyLocalChanges.setStatusTip(text)
-        self.acApplyLocalChanges.setToolTip(text)
-        self.acApplyLocalChanges.triggered.connect(self._on_apply_all)
-
-        text = "Adjust to current values on device"
-        self.acApplyRemoteChanges = QAction(text, widget)
-        self.acApplyRemoteChanges.setStatusTip(text)
-        self.acApplyRemoteChanges.setToolTip(text)
-        self.acApplyRemoteChanges.triggered.connect(
-            self._on_apply_all_remote_changes)
-
-        text = "Apply selected local changes"
-        self.acApplySelectedChanges = QAction(text, widget)
-        self.acApplySelectedChanges.setStatusTip(text)
-        self.acApplySelectedChanges.setToolTip(text)
-        self.acApplySelectedChanges.triggered.connect(self._on_apply_all)
-
-        text = "Accept selected remote changes"
-        self.acApplySelectedRemoteChanges = QAction(text, widget)
-        self.acApplySelectedRemoteChanges.setStatusTip(text)
-        self.acApplySelectedRemoteChanges.setToolTip(text)
-        self.acApplySelectedRemoteChanges.triggered.connect(
-            self._on_apply_selected_remote_changes)
-
-        # add menu to toolbutton
-        self.mApply = QMenu(self.pbApplyAll)
-        self.mApply.addAction(self.acApplyLocalChanges)
-        self.mApply.addAction(self.acApplyRemoteChanges)
-        self.mApply.addSeparator()
-        self.mApply.addAction(self.acApplySelectedChanges)
-        self.mApply.addAction(self.acApplySelectedRemoteChanges)
-
         hLayout.addWidget(self.pbApplyAll)
 
         text = "Decline all"
@@ -149,10 +114,8 @@ class ConfigurationPanel(BasePanelWidget):
         self.acResetAll = QAction(icons.no, text, widget)
         self.acResetAll.setStatusTip(text)
         self.acResetAll.setToolTip(text)
-        self.acResetAll.setEnabled(False)
         self.acResetAll.triggered.connect(self._on_reset_all)
         self.pbResetAll.clicked.connect(self.acResetAll.triggered)
-
         hLayout.addWidget(self.pbResetAll)
         hLayout.addStretch()
 
@@ -373,118 +336,8 @@ class ConfigurationPanel(BasePanelWidget):
             # Maybe this method is obsolete?
             self._show_configuration(proxy)
 
-    def _update_apply_all_actions(self, configuration):
-        tree_widget = self._stacked_tree_widgets.widget(CONFIGURATION_PAGE)
-
-        selected_count = tree_widget.nbSelectedApplyEnabledItems()
-        if self.pbApplyAll.isEnabled() and selected_count > 0:
-            if selected_count == 1:
-                text = "Apply selected"
-            else:
-                text = "Apply ({}) selected".format(selected_count)
-
-            description = "Apply selected property changes in one go"
-            self.acApplyLocalChanges.setVisible(False)
-            self.acApplyRemoteChanges.setVisible(False)
-            self.acApplySelectedChanges.setVisible(True)
-            self.acApplySelectedRemoteChanges.setVisible(True)
-        else:
-            text = "Apply all"
-            description = "Apply all property changes in one go"
-            self.acApplyLocalChanges.setVisible(True)
-            self.acApplyRemoteChanges.setVisible(True)
-            self.acApplySelectedChanges.setVisible(False)
-            self.acApplySelectedRemoteChanges.setVisible(False)
-
-        self.pbApplyAll.setText(text)
-        self.pbApplyAll.setStatusTip(description)
-        self.pbApplyAll.setToolTip(description)
-
-        self.acApplyAll.setText(text)
-        self.acApplyAll.setStatusTip(description)
-        self.acApplyAll.setToolTip(description)
-
-        if self.has_conflicts:
-            text = "Resolve conflicts"
-            self.pbApplyAll.setStatusTip(text)
-            self.pbApplyAll.setToolTip(text)
-            self.pbApplyAll.setMenu(self.mApply)
-
-            self.acApplyAll.setStatusTip(text)
-            self.acApplyAll.setToolTip(text)
-            self.acApplyAll.setMenu(self.mApply)
-        else:
-            self.pbApplyAll.setMenu(None)
-            self.acApplyAll.setMenu(None)
-
-    def _update_reset_all_actions(self, configuration):
-        tree_widget = self._stacked_tree_widgets.widget(CONFIGURATION_PAGE)
-        selected_count = tree_widget.nbSelectedApplyEnabledItems()
-
-        if self.pbResetAll.isEnabled() and selected_count > 0:
-            if selected_count == 1:
-                text = "Decline selected"
-            else:
-                text = "Decline ({}) selected".format(selected_count)
-            description = ("Decline all selected property changes and reset "
-                           "them to value on device")
-        else:
-            text = "Decline all"
-            description = ("Decline all property changes and reset them to "
-                           "value on device")
-
-        self.pbResetAll.setText(text)
-        self.pbResetAll.setStatusTip(description)
-        self.pbResetAll.setToolTip(description)
-
-        self.acResetAll.setText(description)
-        self.acResetAll.setStatusTip(description)
-        self.acResetAll.setToolTip(text)
-
     # ----------------------------------------------------------------------
     # property attributes
-
-    @property
-    def has_conflicts(self):
-        return self._has_conflicts
-
-    @has_conflicts.setter
-    def has_conflicts(self, has_conflicts):
-        self._has_conflicts = has_conflicts
-
-        if has_conflicts:
-            icon = icons.applyConflict
-            text = "Resolve conflict"
-            self.pbApplyAll.setIcon(icon)
-            self.pbApplyAll.setStatusTip(text)
-            self.pbApplyAll.setToolTip(text)
-            self.pbApplyAll.setMenu(self.mApply)
-
-            self.acApplyAll.setIcon(icon)
-            self.acApplyAll.setStatusTip(text)
-            self.acApplyAll.setToolTip(text)
-            self.acApplyAll.setMenu(self.mApply)
-
-            self.pbResetAll.setEnabled(False)
-            self.acResetAll.setEnabled(False)
-        else:
-            icon = icons.apply
-            text = "Apply all"
-            description = "Apply all property changes in one go"
-            self.pbApplyAll.setIcon(icon)
-            self.pbApplyAll.setStatusTip(description)
-            self.pbApplyAll.setToolTip(description)
-            self.pbApplyAll.setMenu(None)
-
-            self.acApplyAll.setIcon(icon)
-            self.acApplyAll.setStatusTip(text)
-            self.acApplyAll.setToolTip(text)
-            self.acApplyAll.setMenu(None)
-        self.acApplyLocalChanges.setVisible(has_conflicts)
-        self.acApplyRemoteChanges.setVisible(has_conflicts)
-
-        self.acApplySelectedChanges.setVisible(not has_conflicts)
-        self.acApplySelectedRemoteChanges.setVisible(not has_conflicts)
 
     def _update_buttons_visibility(self, visible):
         self.pbInitDevice.setVisible(visible)
@@ -501,22 +354,17 @@ class ConfigurationPanel(BasePanelWidget):
     # -----------------------------------------------------------------------
     # slots
 
+    @pyqtSlot(bool)
+    def _on_button_changes(self, has_changes):
+        self.pbApplyAll.setEnabled(has_changes)
+        self.pbResetAll.setEnabled(has_changes)
+        self.acApplyAll.setEnabled(has_changes)
+        self.acResetAll.setEnabled(has_changes)
+
     @pyqtSlot()
     def _on_apply_all(self):
         tree_widget = self._stacked_tree_widgets.widget(CONFIGURATION_PAGE)
         tree_widget.apply_all()
-
-    @pyqtSlot()
-    def _on_apply_all_remote_changes(self):
-        tree_widget = self._stacked_tree_widgets.widget(CONFIGURATION_PAGE)
-        tree_widget.decline_all_changes()
-
-    @pyqtSlot()
-    def _on_apply_selected_remote_changes(self):
-        tree_widget = self._stacked_tree_widgets.widget(CONFIGURATION_PAGE)
-        selected = tree_widget.selectedItems()
-        for item in selected:
-            tree_widget.decline_item_changes(item)
 
     @pyqtSlot()
     def _on_reset_all(self):
