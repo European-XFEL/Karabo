@@ -126,7 +126,7 @@ class IntValidator(QValidator):
                              binding_type=FloatBinding, priority=10)
 class DoubleLineEdit(NumberLineEdit):
     # The scene model class used by this controller
-    model = Instance(DoubleLineEditModel)
+    model = Instance(DoubleLineEditModel, args=())
 
     def create_widget(self, parent):
         self._validator = QDoubleValidator(None)
