@@ -20,6 +20,7 @@ class JmsConnection_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testConnect);
     CPPUNIT_TEST(testCommunication1);
     CPPUNIT_TEST(testCommunication2);
+    CPPUNIT_TEST(testPermanentRead);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -37,11 +38,15 @@ private:
 
     unsigned int incrementMessageCount();
 
+    unsigned int getMessageCount();
+
     void testConnect();
 
     void testCommunication1();
 
     void testCommunication2();
+
+    void testPermanentRead();
 
     void readHandler1(karabo::net::JmsConsumer::Pointer consumer,
                       karabo::net::JmsProducer::Pointer producer,
@@ -51,18 +56,6 @@ private:
     void readHandler2(karabo::net::JmsConsumer::Pointer channel,
                       karabo::util::Hash::Pointer header,
                       karabo::util::Hash::Pointer body);
-
-    void readHandler3(karabo::net::JmsConsumer::Pointer channel,
-                      karabo::util::Hash::Pointer header,
-                      karabo::util::Hash::Pointer body);
-
-    void readHandler4(karabo::net::JmsConsumer::Pointer channel,
-                      karabo::util::Hash::Pointer header,
-                      karabo::util::Hash::Pointer body);
-
-    
-
-    
 
 };
 

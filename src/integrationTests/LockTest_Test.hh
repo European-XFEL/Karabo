@@ -38,8 +38,8 @@ private:
     void testRecursiveLocking();
     void testSettingOnLocked();
     void testLockStealing();
-    
-    void waitUntilLockClears();
+
+    void waitUntilLockClears(const std::string& deviceId);
     
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_eventLoopThread;
