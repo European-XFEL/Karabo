@@ -15,11 +15,11 @@ from karabogui.dialogs.device_scenes import DeviceScenesDialog
 from karabogui.enums import NavigationItemTypes
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.request import call_device_slot
-from karabogui.singletons.api import (
-    get_manager, get_navigation_model, get_selection_tracker)
+from karabogui.singletons.api import get_manager, get_selection_tracker
 from karabogui.util import (loadConfigurationFromFile, saveConfigurationToFile,
                             handle_scene_from_server, set_treeview_header)
 from karabogui.widgets.popup import PopupWidget
+from .model import NavigationTreeModel
 
 
 class NavigationTreeView(QTreeView):
@@ -27,7 +27,7 @@ class NavigationTreeView(QTreeView):
         super(NavigationTreeView, self).__init__(parent)
         self._selected_proxy = None  # A BaseDeviceProxy
 
-        model = get_navigation_model()
+        model = NavigationTreeModel(parent=self)
         self.setModel(model)
         self.setSelectionModel(model.selectionModel)
         model.rowsInserted.connect(self._items_added)
