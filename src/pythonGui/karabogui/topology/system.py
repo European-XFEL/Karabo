@@ -248,7 +248,9 @@ class SystemTopology(HasStrictTraits):
             if len(proxy.binding.value) > 0:
                 continue
             build_binding(schema, existing=proxy.binding)
-            apply_default_configuration(proxy.binding)
+            if proxy is self._class_proxies.get(key, None):
+                # Only apply default config if not a project device!
+                apply_default_configuration(proxy.binding)
 
     def device_config_updated(self, device_id, config):
         """Called when a `deviceConfiguration` message is received from the
