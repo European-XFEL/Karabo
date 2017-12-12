@@ -207,7 +207,7 @@ class DeviceInstanceController(BaseProjectGroupController):
 
     def _broadcast_item_click(self):
         broadcast_event(KaraboEventSender.ShowConfiguration,
-                        {'configuration': self.project_device.proxy})
+                        {'proxy': self.project_device.proxy})
 
     def _update_icon(self, ui_data):
         # Get current status of device
@@ -245,7 +245,7 @@ class DeviceInstanceController(BaseProjectGroupController):
 
     def _update_configurator(self):
         broadcast_event(KaraboEventSender.UpdateDeviceConfigurator,
-                        {'configuration': self.project_device.proxy})
+                        {'proxy': self.project_device.proxy})
 
     def _create_sub_menu(self, parent_menu, project_controller):
         """ Create sub menu for parent menu and return it

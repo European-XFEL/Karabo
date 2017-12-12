@@ -46,8 +46,7 @@ class MacroInstanceController(BaseProjectController):
 
     def single_click(self, project_controller, parent=None):
         proxy = get_topology().get_device(self.instance_id)
-        broadcast_event(KaraboEventSender.ShowConfiguration,
-                        {'configuration': proxy})
+        broadcast_event(KaraboEventSender.ShowConfiguration, {'proxy': proxy})
 
     def _get_display_name(self):
         """Traits property getter for ``display_name``
