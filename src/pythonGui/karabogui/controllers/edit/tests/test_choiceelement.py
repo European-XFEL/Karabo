@@ -40,7 +40,7 @@ class TestEditableChoiceElement(GuiTestCase):
         apply_default_configuration(self.proxy.root_proxy.binding)
         assert self.controller.widget.currentText() == 'ChoiceOne'
 
-        self.proxy.binding.choice = 'ChoiceTwo'
+        self.proxy.value = 'ChoiceTwo'
         assert self.controller.widget.currentText() == 'ChoiceTwo'
 
     def test_edit_value(self):
