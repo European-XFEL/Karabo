@@ -6,12 +6,11 @@ from karabo.middlelayer import Hash, Schema
 from ..api import (
     BoolBinding, FloatBinding, Int8Binding, Int16Binding, Int32Binding,
     Int64Binding, Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
-    VectorInt32Binding, get_min_max, has_changes,
+    VectorInt32Binding, fast_deepcopy, get_min_max, has_changes,
     KARABO_SCHEMA_VALUE_TYPE, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
     KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_ABSOLUTE_ERROR,
     KARABO_SCHEMA_RELATIVE_ERROR
 )
-from ..util import fast_deepcopy  # not part of the API
 
 
 def test_simple_int_min_max():

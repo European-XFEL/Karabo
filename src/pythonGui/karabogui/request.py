@@ -93,7 +93,7 @@ def send_property_changes(proxies):
 
         # Bump the configurator
         broadcast_event(KaraboEventSender.UpdateDeviceConfigurator,
-                        {'configuration': device_proxy})
+                        {'proxy': device_proxy})
 
     @pyqtSlot()
     def _timeout_handler(device_proxy):

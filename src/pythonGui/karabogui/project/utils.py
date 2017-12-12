@@ -278,8 +278,7 @@ def show_trash_project_message(is_trashed, simple_name=''):
 def show_no_configuration():
     """Broadcast event to show no configuration in configuration panel
     """
-    broadcast_event(KaraboEventSender.ShowConfiguration,
-                    {'configuration': None})
+    broadcast_event(KaraboEventSender.ShowConfiguration, {'proxy': None})
 
 
 def run_macro(macro_model):
@@ -298,5 +297,4 @@ def run_macro(macro_model):
                               modal=False)
         return
 
-    get_network().onInitDevice(serverId, "MetaMacro",
-                               instance_id, h)
+    get_network().onInitDevice(serverId, "MetaMacro", instance_id, h)

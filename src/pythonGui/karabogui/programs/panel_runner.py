@@ -19,8 +19,7 @@ from karabogui.util import getOpenFileName
 def run_configurator(ns):
     device_id = ns.configurator
     device = get_topology().get_device(device_id)
-    broadcast_event(KaraboEventSender.ShowConfiguration,
-                    {'configuration': device})
+    broadcast_event(KaraboEventSender.ShowConfiguration, {'proxy': device})
     return ConfigurationPanel(), (400, 600)
 
 
