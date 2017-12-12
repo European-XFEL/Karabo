@@ -70,6 +70,10 @@ class SceneView(QWidget):
         self.current_scene_handler = None
 
         self.current_tool = None
+        # Use an internal flag to explicitly mark the design_mode, so when
+        # other tools need the parent widget to handle mouse event won't
+        # trigger the design_mode behavior
+        self._design_mode = False
         self.design_mode = design_mode
         self.tab_visible = False
         self._scene_obj_cache = {}
@@ -91,11 +95,11 @@ class SceneView(QWidget):
 
     @property
     def design_mode(self):
-        # If the inner view is transparent to events, this view is handling
-        return self.inner.testAttribute(Qt.WA_TransparentForMouseEvents)
+        return self._design_mode
 
     @design_mode.setter
     def design_mode(self, value):
+        self._design_mode = value
         # Toggle mouse handling in the inner view
         self.enable_mouse_event_handling(value)
         if not value:
@@ -136,7 +140,8 @@ class SceneView(QWidget):
                 super(SceneView, self).mouseMoveEvent(event)
 
     def mousePressEvent(self, event):
-        if self.design_mode:
+        proxy_selecting = isinstance(self.current_tool, ProxySelectionTool)
+        if self.design_mode or proxy_selecting:
             self.current_tool.mouse_down(self, event)
             if event.isAccepted():
                 self.update()
@@ -160,13 +165,15 @@ class SceneView(QWidget):
             event.accept()
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Shift:
+        if event.key() == Qt.Key_Shift and not self.design_mode:
+            if not self.inner.hasFocus():
+                self.inner.setFocus()
             self.set_cursor('pointing-hand')
-            self.enable_mouse_event_handling(True)
             self.set_tool(ProxySelectionTool())
+            self.enable_mouse_event_handling(True)
 
     def keyReleaseEvent(self, event):
-        if event.key() == Qt.Key_Shift:
+        if event.key() == Qt.Key_Shift and not self.design_mode:
             self.set_cursor('none')
             self.enable_mouse_event_handling(False)
             self.set_tool(None)
@@ -433,6 +440,14 @@ class SceneView(QWidget):
         if scene_obj is not None:
             # In case of layouts or widgets
             send_object_to_back(scene_obj)
+
+    def mouse_left(self):
+        """mouse left scene view area"""
+        if not self.design_mode:
+            # Deactivate special tools if not in design mode
+            self.set_cursor('none')
+            self.set_tool(None)
+            self.enable_mouse_event_handling(False)
 
     # --------------------------------------------------------------------
     # Private methods
