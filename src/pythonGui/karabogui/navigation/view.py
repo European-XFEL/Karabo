@@ -16,8 +16,9 @@ from karabogui.enums import NavigationItemTypes
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.request import call_device_slot
 from karabogui.singletons.api import get_manager, get_selection_tracker
-from karabogui.util import (loadConfigurationFromFile, saveConfigurationToFile,
-                            handle_scene_from_server, set_treeview_header)
+from karabogui.util import (
+    load_configuration_from_file, save_configuration_to_file,
+    handle_scene_from_server, set_treeview_header)
 from karabogui.widgets.popup import PopupWidget
 from .model import NavigationTreeModel
 
@@ -207,22 +208,20 @@ class NavigationTreeView(QTreeView):
         get_selection_tracker().grab_selection(self.model().selectionModel)
 
         # Tell the configurator
-        if item_type in ('class', 'device'):
-            configuration = proxy
-        else:
-            configuration = None
-        broadcast_event(KaraboEventSender.ShowConfiguration,
-                        {'configuration': configuration})
+        if item_type not in ('class', 'device'):
+            # servers and hosts clear the configurator
+            proxy = None
+        broadcast_event(KaraboEventSender.ShowConfiguration, {'proxy': proxy})
 
     @pyqtSlot()
     def onOpenFromFile(self):
         if self._selected_proxy is not None:
-            loadConfigurationFromFile(self._selected_proxy)
+            load_configuration_from_file(self._selected_proxy)
 
     @pyqtSlot()
     def onSaveToFile(self):
         if self._selected_proxy is not None:
-            saveConfigurationToFile(self._selected_proxy)
+            save_configuration_to_file(self._selected_proxy)
 
     @pyqtSlot()
     def onDoubleClickHeader(self):
