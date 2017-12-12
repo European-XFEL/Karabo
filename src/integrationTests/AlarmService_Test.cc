@@ -107,7 +107,7 @@ void AlarmService_Test::testDeviceRegistration() {
 
     // test whether the device actually registers with the alarm service upon instanceNew
     std::vector<std::string> registeredDevices = m_deviceClient->get<std::vector<std::string> >("testAlarmService", "registeredDevices");
-    CPPUNIT_ASSERT(registeredDevices[0] == "alarmTester");
+    CPPUNIT_ASSERT(std::find(registeredDevices.begin(), registeredDevices.end(), std::string("alarmTester")) != registeredDevices.end());
 
     std::clog << std::endl << "Tested device registration.. Ok" << std::endl;
 }
@@ -203,7 +203,8 @@ void AlarmService_Test::testAcknowledgement() {
     CPPUNIT_ASSERT(lastMessage.has("rows"));
     std::string rowId = lastMessage.get<Hash>("rows").begin()->getKey();
     m_rowForDevice1 = rowId;
-    CPPUNIT_ASSERT(lastMessage.has("rows." + rowId + ".add"));
+
+    CPPUNIT_ASSERT_MESSAGE(toString(lastMessage), lastMessage.has("rows." + rowId + ".add"));
 
     //first test if we cannot acknowledge a not acknowledgeable alarm.
     //the alarm service should be in this state after the previous test.

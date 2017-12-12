@@ -214,6 +214,7 @@ namespace karabo {
             m_signalSlotable->registerSynchronousReply(m_replyId);
             sendRequest();
             if (!m_signalSlotable->timedWaitAndPopReceivedReply(m_replyId, header, body, m_timeout)) {
+                // FIXME: Add slotInstanceId and info from m_header etc
                 throw KARABO_TIMEOUT_EXCEPTION("Reply timed out");
             }
         }
@@ -341,9 +342,9 @@ namespace karabo {
 
 
         void SignalSlotable::start() {
-            m_consumerChannel->readAsync(bind_weak(&SignalSlotable::onBrokerMessage, this, _1, _2),
-                                         bind_weak(&SignalSlotable::consumerErrorNotifier, this,
-                                                   std::string(), _1, _2));
+            m_consumerChannel->startReading(bind_weak(&SignalSlotable::onBrokerMessage, this, _1, _2),
+                                            bind_weak(&SignalSlotable::consumerErrorNotifier, this,
+                                                      std::string(), _1, _2));
             ensureInstanceIdIsValid(m_instanceId);
             KARABO_LOG_FRAMEWORK_INFO << "Instance starts up with id " << m_instanceId;
             m_randPing = 0; // Allows to answer on slotPing with argument rand = 0.
@@ -411,9 +412,6 @@ namespace karabo {
             // This emulates the behavior of older karabo versions which called processEvent concurrently
             EventLoop::getIOService().post(bind_weak(&karabo::xms::SignalSlotable::processEvent, this, header, body,
                                                      getEpochMillis()));
-            m_consumerChannel->readAsync(bind_weak(&SignalSlotable::onBrokerMessage, this, _1, _2),
-                                         bind_weak(&SignalSlotable::consumerErrorNotifier, this,
-                                                   std::string(), _1, _2));
         }
 
 
@@ -532,15 +530,13 @@ namespace karabo {
         void SignalSlotable::onHeartbeatMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
             try {
                 SlotInstancePointer slot = getSlot("slotHeartbeat");
-                // Synchronously call the slot
-                if (slot) slot->callRegisteredSlotFunctions(*header, *body);
+                if (slot) {
+                    // Synchronously call the slot - no Strand or so needed since JmsConsumer guarantees ordering
+                    slot->callRegisteredSlotFunctions(*header, *body);
+                }
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": Exception in onHeartbeatMessage: " << e.what();
             }
-            // Re-register
-            m_heartbeatConsumerChannel->readAsync(bind_weak(&SignalSlotable::onHeartbeatMessage, this, _1, _2),
-                                                  bind_weak(&SignalSlotable::consumerErrorNotifier, this,
-                                                            std::string("heartbeats"), _1, _2));
         }
 
 
@@ -996,9 +992,9 @@ namespace karabo {
             m_trackAllInstances = true;
             m_heartbeatConsumerChannel = m_connection->createConsumer(m_topic + "_beats",
                                                                       "signalFunction = 'signalHeartbeat'");
-            m_heartbeatConsumerChannel->readAsync(bind_weak(&SignalSlotable::onHeartbeatMessage, this, _1, _2),
-                                                  bind_weak(&SignalSlotable::consumerErrorNotifier, this,
-                                                            std::string("heartbeats"), _1, _2));
+            m_heartbeatConsumerChannel->startReading(bind_weak(&SignalSlotable::onHeartbeatMessage, this, _1, _2),
+                                                     bind_weak(&SignalSlotable::consumerErrorNotifier, this,
+                                                               std::string("heartbeats"), _1, _2));
             startTrackingSystem();
         }
 
