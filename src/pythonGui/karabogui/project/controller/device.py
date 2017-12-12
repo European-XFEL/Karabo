@@ -204,6 +204,9 @@ class DeviceInstanceController(BaseProjectGroupController):
         device = self.model
         self.project_device.set_project_config_hash(config_model.configuration)
         device.active_config_ref = config_model.uuid
+        # Notify configurator to display the new configuration,
+        # ProjectDeviceInstance doesn't broadcast anything to configurator
+        self._broadcast_item_click()
 
     def _broadcast_item_click(self):
         broadcast_event(KaraboEventSender.ShowConfiguration,
