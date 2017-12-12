@@ -83,7 +83,7 @@ def get_child_names(proxy):
     level = krb_globals.GLOBAL_ACCESS_LEVEL
 
     binding = proxy.binding
-    if isinstance(binding, (BindingRoot, NodeBinding)):
+    if isinstance(binding, (BindingRoot, ChoiceOfNodesBinding, NodeBinding)):
         for name in binding.value:
             node = getattr(binding.value, name)
             if node.required_access_level <= level:
@@ -136,7 +136,7 @@ def get_proxy_value(index, proxy, is_edit_col=False):
     binding = proxy.binding
     if isinstance(binding, ChoiceOfNodesBinding):
         return binding.choice or ''
-    if isinstance(binding, (NodeBinding, VectorHashBinding)):
+    if isinstance(binding, (BindingRoot, NodeBinding, VectorHashBinding)):
         return ''
 
     value = _proxy_value(proxy, is_edit_col)

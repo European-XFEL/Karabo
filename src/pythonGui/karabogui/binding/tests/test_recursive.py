@@ -28,13 +28,13 @@ def test_choice_of_nodes():
     choice = ChoiceOfNodesBinding(choices=namespace)
 
     # Default value is the first node in the namespace, ie Foo
-    assert 'ent' in choice.value
-    assert isinstance(choice.value.ent, Int32Binding)
+    assert 'Foo' in choice.value and 'Bar' not in choice.value
+    assert isinstance(choice.value.Foo.value.ent, Int32Binding)
 
     # Now assign a value
     choice.value = 'Bar'
-    assert 'pie' in choice.value
-    assert isinstance(choice.value.pie, FloatBinding)
+    assert 'Bar' in choice.value and 'Foo' not in choice.value
+    assert isinstance(choice.value.Bar.value.pie, FloatBinding)
 
 
 def test_list_of_nodes():
@@ -99,33 +99,28 @@ def test_choice_of_nodes_configuration():
     binding = build_binding(schema)
 
     # choice is a _NodeTwo
-    binding.value.con.value = '_NodeTwo'
-    config = Hash("con", Hash("one", "hello"))
+    config = Hash('con', Hash('_NodeTwo', Hash('one', 'hello')))
     apply_configuration(config, binding)
-    assert binding.value.con.value.one.value == "hello"
+    assert binding.value.con.choice == '_NodeTwo'
+    assert binding.value.con.value._NodeTwo.value.one.value == 'hello'
 
     # Pass a configuration containing a _NodeOne value
-    config = Hash("con", Hash("zero", "nope"))
+    config = Hash('con', Hash('_NodeOne', Hash('zero', 'nope')))
     apply_configuration(config, binding)
-    # Nothing happened here!
-    assert 'zero' not in binding.value.con.value
-    assert binding.value.con.value.one.value == "hello"
-
-    # Choose _NodeOne, so it works this time.
-    binding.value.con.value = '_NodeOne'
-    apply_configuration(config, binding)
-    assert binding.value.con.value.zero.value == "nope"
+    # A choice was made automagically
+    assert '_NodeOne' in binding.value.con.value
+    assert binding.value.con.value._NodeOne.value.zero.value == 'nope'
 
 
 def test_list_of_nodes_configuration():
     schema = get_recursive_schema()
     binding = build_binding(schema)
 
-    config = Hash("lon", [Hash("_NodeOne", Hash("zero", "hello")),
-                          Hash("_NodeTwo", Hash("one", "world"))])
+    config = Hash('lon', [Hash('_NodeOne', Hash('zero', 'hello')),
+                          Hash('_NodeTwo', Hash('one', 'world'))])
     apply_configuration(config, binding)
-    assert binding.value.lon.value[0].value.zero.value == "hello"
-    assert binding.value.lon.value[1].value.one.value == "world"
+    assert binding.value.lon.value[0].value.zero.value == 'hello'
+    assert binding.value.lon.value[1].value.one.value == 'world'
 
 
 def test_apply_default_configuration():
@@ -133,9 +128,9 @@ def test_apply_default_configuration():
     binding = build_binding(schema)
 
     apply_default_configuration(binding)
-    # default choice is `_NodeTwo`, it should have attr 'one'
-    assert hasattr(binding.value.con.value, 'one')
-    assert binding.value.con.value.one.value == 'Second'
+    # default choice is `_NodeTwo`
+    assert hasattr(binding.value.con.value, '_NodeTwo')
+    assert binding.value.con.value._NodeTwo.value.one.value == 'Second'
 
     # default list only contain `_NodeOne`, it has attr 'zero'
     assert len(binding.value.lon.value) == 1
@@ -152,7 +147,7 @@ def test_extract_configuration():
 
     assert 'con' in ret
     assert 'lon' in ret
-    assert ret['con'] == Hash('one', 'Second')
+    assert ret['con'] == Hash('_NodeTwo', Hash('one', 'Second'))
     assert ret['lon'] == [Hash('_NodeOne', Hash('zero', 'First'))]
 
 
