@@ -376,9 +376,8 @@ class ConfigurationPanel(BasePanelWidget):
         class_id, server_id, dev_id = _get_ids(proxy)
         if (server_id == cur_server_id and class_id == cur_class_id and
                 dev_id == cur_dev_id):
-            # FIXME: Maybe what really needs to be done here is to just
-            # update the view?
-            # Maybe this method is obsolete?
+            # Iff current showing device proxy matches the updated one,
+            # refresh the view.
             self._show_configuration(proxy)
 
     # ----------------------------------------------------------------------
