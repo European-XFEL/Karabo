@@ -29,6 +29,8 @@ class TableEditDialog(QDialog):
         self.controller = EditableTableElement(proxy=proxy)
         self.controller.create(parent)
         self.controller.set_read_only(False)
+        self.controller.binding_update(proxy)
+        self.controller.value_update(proxy)
 
         layout = QHBoxLayout()
         layout.setContentsMargins(2, 2, 2, 2)
