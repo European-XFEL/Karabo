@@ -15,7 +15,7 @@ from PyQt4.QtGui import QDialog, QFileDialog, QHeaderView, QLabel, QMovie
 from karabo.common.scenemodel.api import read_scene
 from karabo.middlelayer import decodeXML, Hash, writeXML
 from karabogui import globals as krb_globals, icons, messagebox
-from karabogui.binding.api import apply_configuration, extract_configuration
+from karabogui.binding.api import DeviceClassProxy, extract_configuration
 from karabogui.enums import KaraboSettings
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.singletons.api import get_db_conn
@@ -109,10 +109,17 @@ def getSaveFileName(parent=None, caption="", filter="", directory="",
         return dialog.selectedFiles()[0]
 
 
-def loadConfigurationFromFile(device_proxy):
+def load_configuration_from_file(device_proxy):
     """Given a ``BaseDeviceProxy`` object instance. Read a configuration Hash
     from an XML file and assign it to the object.
     """
+    if device_proxy is None or device_proxy.binding is None:
+        msg = ('Selected {} cannot load a configuration at this time because '
+               'it does not have a schema.')
+        is_class = isinstance(device_proxy, DeviceClassProxy)
+        messagebox.show_error(msg.format('class' if is_class else 'device'))
+        return
+
     path = get_setting(KaraboSettings.CONFIG_DIR)
     directory = path if path and op.isdir(path) else ""
 
@@ -122,26 +129,19 @@ def loadConfigurationFromFile(device_proxy):
     if not filename:
         return
 
-    if device_proxy is None or device_proxy.binding is None:
-        messagebox.show_error("Configuration load failed")
-        return
-
     with open(filename, 'rb') as fp:
         config = decodeXML(fp.read())
 
-    binding = device_proxy.binding
-    if binding.class_id not in config:
-        messagebox.show_error("Configuration load failed")
-        return
-
-    # FIXME: This is all wrong. We want to leave the binding values alone and
-    # set PropertyProxy.edit_value traits instead.
-    apply_configuration(config[binding.class_id], binding)
     # Save the directory information
     set_setting(KaraboSettings.CONFIG_DIR, op.dirname(filename))
 
+    # Broadcast so the configurator can handle the complexities of applying
+    # a configuration.
+    broadcast_event(KaraboEventSender.LoadConfiguration,
+                    {'proxy': device_proxy, 'configuration': config})
 
-def saveConfigurationToFile(device_proxy):
+
+def save_configuration_to_file(device_proxy):
     """This function saves the current configuration of a device to a file.
     """
     if device_proxy is None or device_proxy.binding is None:
@@ -152,19 +152,18 @@ def saveConfigurationToFile(device_proxy):
     directory = path if path and op.isdir(path) else ""
 
     # default configuration name is classId
-    selectFile = device_proxy.binding.class_id + '.xml'
-
+    default_name = device_proxy.binding.class_id + '.xml'
     filename = getSaveFileName(caption="Save configuration as",
                                filter="Configuration (*.xml)",
                                suffix="xml",
                                directory=directory,
-                               selectFile=selectFile)
+                               selectFile=default_name)
     if not filename:
         return
 
     class_id = device_proxy.binding.class_id
-    config = Hash(class_id, extract_configuration(device_proxy.binding))
-    # XXX: Copy attributes as well?
+    config = Hash(class_id, extract_configuration(device_proxy.binding,
+                                                  include_attributes=True))
 
     # Save configuration to file
     with open(filename, 'w') as fp:

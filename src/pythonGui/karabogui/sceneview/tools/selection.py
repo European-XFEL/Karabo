@@ -20,7 +20,7 @@ class ProxySelectionTool(BaseSceneTool):
             device = proxy.root_proxy
             if isinstance(device, DeviceProxy):  # ignore DeviceClassProxy
                 broadcast_event(KaraboEventSender.ShowConfiguration,
-                                {'configuration': device})
+                                {'proxy': device})
 
     def mouse_move(self, scene_view, event):
         pass

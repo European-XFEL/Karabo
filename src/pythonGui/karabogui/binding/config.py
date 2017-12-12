@@ -7,6 +7,7 @@ from . import const
 from .proxy import PropertyProxy
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .types import BindingNamespace, BindingRoot, NodeBinding, SlotBinding
+from .util import fast_deepcopy
 
 
 def apply_configuration(config, binding, notify=True):
@@ -145,7 +146,7 @@ def extract_attribute_modifications(schema, binding):
     return None
 
 
-def extract_configuration(binding):
+def extract_configuration(binding, include_attributes=False):
     """Extract all the values set on a binding into a Hash object.
     """
     assert isinstance(binding, BindingRoot)
@@ -172,6 +173,8 @@ def extract_configuration(binding):
     retval = Hash()
     for key, node in _iter_binding(binding):
         retval[key] = _get_binding_value(node)
+        if include_attributes:
+            retval[key, ...] = fast_deepcopy(node.attributes)
 
     return retval
 

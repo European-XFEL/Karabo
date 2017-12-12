@@ -8,14 +8,17 @@ from PyQt4.QtGui import (
     QAction, QHBoxLayout, QMenu, QPalette, QPushButton, QScrollArea,
     QStackedWidget, QToolButton, QVBoxLayout, QWidget)
 
-from karabogui import icons
+from karabo.middlelayer import AccessMode
+from karabogui import globals as krb_globals, icons, messagebox
 from karabogui.binding.api import (
-    DeviceProxy, ProjectDeviceProxy, extract_configuration)
+    DeviceProxy, ProjectDeviceProxy, apply_configuration,
+    extract_configuration, fast_deepcopy, flat_iter_hash, has_changes,
+)
 from karabogui.configurator.api import ConfigurationTreeView
 from karabogui.events import KaraboEventSender, register_for_broadcasts
 from karabogui.singletons.api import get_manager
 from karabogui.util import (
-    get_spin_widget, loadConfigurationFromFile, saveConfigurationToFile
+    get_spin_widget, load_configuration_from_file, save_configuration_to_file
 )
 from karabogui.widgets.toolbar import ToolBar
 from .base import BasePanelWidget
@@ -179,19 +182,25 @@ class ConfigurationPanel(BasePanelWidget):
         return [toolbar]
 
     def karaboBroadcastEvent(self, event):
-        """ Router for incoming broadcasts
+        """Router for incoming broadcasts
         """
+        sender = event.sender
         data = event.data
-        if event.sender is KaraboEventSender.ShowConfiguration:
-            proxy = data.get('configuration')
+        if sender is KaraboEventSender.ShowConfiguration:
+            proxy = data.get('proxy')
             self._show_configuration(proxy)
-        elif event.sender is KaraboEventSender.UpdateDeviceConfigurator:
-            proxy = data.get('configuration')
+        elif sender is KaraboEventSender.UpdateDeviceConfigurator:
+            proxy = data.get('proxy')
             self._update_displayed_configuration(proxy)
-        elif event.sender is KaraboEventSender.ClearConfigurator:
+        elif sender is KaraboEventSender.ClearConfigurator:
             deviceId = data.get('deviceId', '')
             self._remove_departed_device(deviceId)
-        elif event.sender is KaraboEventSender.NetworkConnectStatus:
+        elif sender is KaraboEventSender.LoadConfiguration:
+            proxy = data.get('proxy')
+            configuration = data.get('configuration')
+            self._apply_loaded_configuration(proxy, configuration)
+            return True  # Nobody else gets this event!
+        elif sender is KaraboEventSender.NetworkConnectStatus:
             connected = data['status']
             if not connected:
                 self._reset_panel()
@@ -200,6 +209,42 @@ class ConfigurationPanel(BasePanelWidget):
 
     # -----------------------------------------------------------------------
     # private methods
+
+    def _apply_loaded_configuration(self, proxy, configuration):
+        """Apply a configuration loaded from a file to a proxy"""
+        binding = proxy.binding
+        if len(binding.value) == 0 or binding.class_id not in configuration:
+            messagebox.show_error('Configuration load failed')
+            return
+
+        access_level = krb_globals.GLOBAL_ACCESS_LEVEL
+        configuration = configuration[binding.class_id]
+        if isinstance(proxy, DeviceProxy):
+            # Load the configuration into PropertyProxy instances
+            state = proxy.state_binding.value
+            editor = self._stacked_tree_widgets.widget(CONFIGURATION_PAGE)
+            model = editor.model()
+            made_changes = False
+            for path, value, _ in flat_iter_hash(configuration):
+                prop_proxy = model.property_proxy(path)
+                prop_binding = prop_proxy.binding
+                if (prop_binding.access_mode is AccessMode.RECONFIGURABLE and
+                        prop_binding.required_access_level <= access_level and
+                        prop_binding.is_allowed(state) and
+                        has_changes(prop_binding, prop_proxy.value, value)):
+                    prop_proxy.edit_value = value
+                    made_changes = True
+            model.signalHasModifications.emit(made_changes)
+        else:
+            # Load the configuration directly into the binding
+            apply_configuration(configuration, binding)
+            # Apply attributes in a second step
+            for path, _, attrs in flat_iter_hash(configuration):
+                binding = proxy.get_property_binding(path)
+                if binding is not None:
+                    binding.attributes = fast_deepcopy(attrs)
+            # Notify again. XXX: Schema update too?
+            proxy.binding.config_update = True
 
     def _hide_all_buttons(self):
         """Hide buttons and actions"""
@@ -374,12 +419,12 @@ class ConfigurationPanel(BasePanelWidget):
     @pyqtSlot()
     def _on_open_from_file(self):
         if self._showing_proxy is not None:
-            loadConfigurationFromFile(self._showing_proxy)
+            load_configuration_from_file(self._showing_proxy)
 
     @pyqtSlot()
     def _on_save_to_file(self):
         if self._showing_proxy is not None:
-            saveConfigurationToFile(self._showing_proxy)
+            save_configuration_to_file(self._showing_proxy)
 
     @pyqtSlot()
     def _on_kill_device(self):
