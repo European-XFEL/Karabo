@@ -6,8 +6,8 @@ import sys
 
 from setuptools import setup, find_packages
 
-VERSION_FILE_PATH = op.join('karabo_gui', '_version.py')
-REFACTOR_VERSION_FILE_PATH = op.join('karabogui', '_version.py')
+VERSION_FILE_PATH = op.join('karabogui', '_version.py')
+OLD_VERSION_FILE_PATH = op.join('karabo_gui', '_version.py')
 
 
 def _get_src_dist_version():
@@ -16,9 +16,9 @@ def _get_src_dist_version():
 
     # must be a source distribution, use existing version file
     try:
-        from karabo_gui._version import full_version as version
-        from karabo_gui._version import vcs_revision as vcs_rev
-        from karabo_gui._version import vcs_revision_count as dev_num
+        from karabogui._version import full_version as version
+        from karabogui._version import vcs_revision as vcs_rev
+        from karabogui._version import vcs_revision_count as dev_num
     except ImportError:
         msg = ("Unable to import vcs_revision. Try removing {} and the build "
                "directory before building.").format(VERSION_FILE_PATH)
@@ -64,9 +64,9 @@ is_released = {is_released}
                 vcs_revision_count=vers_dict['revision_count'],
                 is_released=vers_dict['released']))
 
-    # XXX: Copy to the refactored package
-    if not op.exists(REFACTOR_VERSION_FILE_PATH):
-        shutil.copy(filename, REFACTOR_VERSION_FILE_PATH)
+    # XXX: Copy to the legacy package
+    if not op.exists(OLD_VERSION_FILE_PATH):
+        shutil.copy(filename, OLD_VERSION_FILE_PATH)
 
     return fullversion
 
@@ -118,9 +118,10 @@ if __name__ == '__main__':
             json.dump(metadata, fp)
 
     setup(entry_points={'console_scripts': [
-                'karabo-gui=karabo_gui.programs.gui_runner:main',
-                'neo-runner=karabogui.programs.gui_runner:main',
+                'karabo-gui=karabogui.programs.gui_runner:main',
                 'panel-runner=karabogui.programs.panel_runner:main',
+                # XXX: The lagacy GUI client
+                'iug-obarak=karabo_gui.programs.gui_runner:main',
             ]},
           # Add an alias for 'build' so we can prepare data for Windows
           cmdclass={WINDOWS_BUILDER: distutils.command.build.build},
