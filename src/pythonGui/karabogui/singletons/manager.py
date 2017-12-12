@@ -290,7 +290,7 @@ class Manager(QObject):
 
         # Refresh the configurator iff this proxy is already showing
         broadcast_event(KaraboEventSender.UpdateDeviceConfigurator,
-                        {'configuration': proxy})
+                        {'proxy': proxy})
 
     def handle_deviceConfiguration(self, deviceId, configuration):
         self._topology.device_config_updated(deviceId, configuration)
