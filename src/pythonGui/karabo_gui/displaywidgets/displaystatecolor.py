@@ -37,6 +37,8 @@ class DisplayStateColor(DisplayWidget):
     def valueChanged(self, box, value, timestamp=None):
         if State(value).isDerivedFrom(State.CHANGING):
             bgColor = STATE_COLORS[State.CHANGING]
+        elif State(value).isDerivedFrom(State.RUNNING):
+            bgColor = STATE_COLORS[State.RUNNING]
         elif State(value).isDerivedFrom(State.ACTIVE):
             bgColor = STATE_COLORS[State.ACTIVE]
         elif State(value).isDerivedFrom(State.PASSIVE):
