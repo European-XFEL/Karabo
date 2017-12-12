@@ -376,9 +376,12 @@ class ResizableScrollArea(QScrollArea):
         self.setMouseTracking(True)
 
     def eventFilter(self, obj, event):
-        if event.type() == QEvent.Enter:
+        event_type = event.type()
+        if event_type == QEvent.Enter:
             # Unset cursor when mouse is over child
             self.unsetCursor()
+        elif event_type == QEvent.Leave:
+            self._child_widget.mouse_left()
         return super(ResizableScrollArea, self).eventFilter(obj, event)
 
     def mouseMoveEvent(self, event):
