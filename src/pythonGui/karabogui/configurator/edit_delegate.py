@@ -194,6 +194,8 @@ class EditDelegate(QStyledItemDelegate):
                         # Ensure that the dialog has a member called
                         # `controller` to enable fetching the data of it
                         self.setModelData(dialog, model, index)
+                    else:
+                        proxy.revert_edit()
             if (state == ButtonState.PRESSED and
                     event.type() == QEvent.MouseButtonRelease):
                 state = ButtonState.ENABLED

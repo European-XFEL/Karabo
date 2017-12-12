@@ -116,7 +116,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if proxy is None or not isinstance(proxy, PropertyProxy):
             return
 
-        if proxy.binding is not None and isinstance(self.root, DeviceProxy):
+        if proxy.binding is not None:
             proxy.revert_edit()
             self.layoutChanged.emit()
             self._notify_of_modifications()
@@ -128,8 +128,11 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if proxy is None or not isinstance(proxy, PropertyProxy):
             return
 
-        if proxy.binding is not None and isinstance(self.root, DeviceProxy):
-            send_property_changes([proxy])
+        if proxy.binding is not None:
+            if isinstance(self.root, DeviceProxy):
+                send_property_changes([proxy])
+            else:
+                self.setData(index, proxy.edit_value, Qt.EditRole)
 
     def index_ref(self, index):
         """Get the object from a ``QModelIndex`` which was created by this
@@ -476,8 +479,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 if online_device:
                     proxy.edit_value = value
                 else:  # ProjectDeviceProxy or DeviceClassProxy
-                    proxy.revert_edit()  # XXX: Don't show edited state
                     proxy.value = value
+                    proxy.revert_edit()  # XXX: Don't show edited state
                     self.root.binding.config_update = True
             elif online_device:
                 proxy.revert_edit()
