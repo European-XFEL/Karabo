@@ -21,7 +21,7 @@ from ..api import (
     VectorUint8Binding, VectorUint16Binding, VectorUint32Binding,
     VectorUint64Binding,
     apply_configuration, apply_default_configuration, build_binding,
-    extract_attribute_modifications, extract_configuration,
+    extract_attribute_modifications, extract_configuration, flat_iter_hash,
     KARABO_SCHEMA_DEFAULT_VALUE,
     KARABO_SCHEMA_METRIC_PREFIX_ENUM, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
     KARABO_SCHEMA_UNIT_ENUM, KARABO_SCHEMA_UNIT_SYMBOL
@@ -50,17 +50,6 @@ def watch_config_update_notification(binding, expected):
         assert notified == expected
 
 
-def _flatten_hash(h, base=''):
-    """Flatten a Hash object"""
-    base = base + '.' if base else ''
-    for key, value, attrs in h.iterall():
-        here = base + key
-        if isinstance(value, Hash):
-            yield from _flatten_hash(value, base=here)
-        else:
-            yield here, value
-
-
 def test_data_files():
     for filename in glob(op.join(TEST_DATA_DIR, '*.schema')):
         classname = op.splitext(op.basename(filename))[0]
@@ -78,7 +67,7 @@ def test_data_files():
         extracted = extract_configuration(binding)
 
         # Check that the configuration was applied
-        for key, value in _flatten_hash(config):
+        for key, value, _ in flat_iter_hash(config):
             assert key in extracted
             if isinstance(value, np.ndarray):
                 assert all(extracted[key] == value)
