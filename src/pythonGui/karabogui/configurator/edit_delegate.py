@@ -214,7 +214,11 @@ class EditWidgetWrapper(QWidget):
             # Enable editing for the widget
             self.controller.set_read_only(False)
         else:
-            attr_name = EDITABLE_ATTRIBUTES[index.row()]
+            # The data of the 0th column is the attribute name!
+            row = index.row()
+            model = index.model()
+            index = model.index(row, 0, parent=index.parent())
+            attr_name = index.data(Qt.DisplayRole)
             klass = _ATTR_EDITOR_FACTORIES[attr_name]
             self.controller = klass(obj, parent=self)
 
