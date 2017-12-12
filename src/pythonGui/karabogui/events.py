@@ -18,6 +18,7 @@ class KaraboEventSender(Enum):
     DeviceDataReceived = "Device class/schema/config received"
     DeviceInitReply = "Device instantiate reply"
     DeviceStateChanged = "Device state changed"
+    LoadConfiguration = "Load device configuration"
     LoginUserChanged = "User changed"
     LogMessages = "Log messages"
     MaximizePanel = "Maximize a panel"

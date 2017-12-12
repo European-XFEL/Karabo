@@ -143,6 +143,15 @@ class ConfigurationTreeModel(QAbstractItemModel):
         key = index.internalId()
         return self._model_index_refs.get(key)
 
+    def property_proxy(self, path):
+        """Get an existing PropertyProxy or create one if needed.
+        """
+        proxy = self._property_proxies.get(path)
+        if proxy is None:
+            proxy = PropertyProxy(path=path, root_proxy=self.root)
+            self._property_proxies[path] = proxy
+        return proxy
+
     # ----------------------------
     # Private interface
 
@@ -176,15 +185,6 @@ class ConfigurationTreeModel(QAbstractItemModel):
                                 for p in self._property_proxies.values())
         self.signalHasModifications.emit(has_modifications)
 
-    def _property_proxy(self, path):
-        """Get an existing PropertyProxy or create one if needed.
-        """
-        proxy = self._property_proxies.get(path)
-        if proxy is None:
-            proxy = PropertyProxy(path=path, root_proxy=self.root)
-            self._property_proxies[path] = proxy
-        return proxy
-
     def _proxy_row(self, proxy):
         """Return the row for the given ``proxy``
         """
@@ -197,7 +197,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
         parts = proxy.path.rsplit('.', 1)
         if len(parts) > 1:
-            parent = self._property_proxy(parts[0])
+            parent = self.property_proxy(parts[0])
             proxy_key = parts[1]
         else:
             parent = self.root
@@ -350,11 +350,11 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 names = get_child_names(parent_obj)
 
             if isinstance(binding, BindingRoot):
-                obj = self._property_proxy(names[row])
+                obj = self.property_proxy(names[row])
             elif isinstance(binding, NodeBinding):
                 # Nodes have properties as children
                 path = parent_obj.path + '.' + names[row]
-                obj = self._property_proxy(path)
+                obj = self.property_proxy(path)
             else:  # Normal binding type
                 # Leaves have attributes as children
                 self._add_attr_backref(binding, parent_obj)
@@ -402,7 +402,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
             parts = child_obj.path.rsplit('.', 1)
             if len(parts) == 1:
                 return QModelIndex()
-            proxy = self._property_proxy(parts[0])
+            proxy = self.property_proxy(parts[0])
 
         return self.createIndex(self._proxy_row(proxy), 0, proxy)
 
