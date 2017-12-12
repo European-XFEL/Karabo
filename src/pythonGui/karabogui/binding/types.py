@@ -116,17 +116,15 @@ class BindingNamespace(object):
         return '{{\n{}\n}}'.format(names)
 
 
-class BindingRoot(HasStrictTraits):
+class BindingRoot(BaseBinding):
     """The root node of an object binding which was created from a schema.
     """
-    # The name of the class represented
-    class_id = String
     # The top-level namespace of the object
     value = Instance(BindingNamespace, kw={'item_type': BaseBinding})
+    # The name of the class represented
+    class_id = String
     # An event which fires when the schema changes
     schema_update = Event
-    # An event which fires when subnodes/leaves are updated
-    config_update = Event
 
 
 # =============================================================================

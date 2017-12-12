@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from PyQt4.QtGui import QComboBox
-from traits.api import Instance, on_trait_change
+from traits.api import Instance
 
 from karabo.common.scenemodel.api import ChoiceElementModel
 from karabogui.binding.api import ChoiceOfNodesBinding
@@ -29,12 +29,8 @@ class DisplayChoiceElement(BaseBindingController):
         self._fill_widget(widget, self.proxy.binding)
         return widget
 
-    @on_trait_change('proxy.binding.choice')
-    def _value_update(self, obj, name, choice):
-        if name != 'choice':
-            return
-
-        index = self.widget.findText(choice)
+    def value_update(self, proxy):
+        index = self.widget.findText(proxy.binding.choice)
         if index >= 0:
             self.widget.setCurrentIndex(index)
 
