@@ -6,7 +6,7 @@
 from PyQt4.QtCore import Qt, pyqtSlot
 from PyQt4.QtGui import (QAction, QInputDialog, QLineEdit, QDoubleValidator,
                          QPalette, QValidator)
-from traits.api import Instance, Str, on_trait_change
+from traits.api import Instance, Int, Str, on_trait_change
 
 from karabo.common.scenemodel.api import DoubleLineEditModel, IntLineEditModel
 from karabogui.binding.api import (
@@ -26,6 +26,7 @@ class NumberLineEdit(BaseBindingController):
     _error_palette = Instance(QPalette)
     _display_value = Str('')
     _internal_value = Str('')
+    _last_cursor_pos = Int(0)
 
     def create_widget(self, parent):
         self._internal_widget = QLineEdit(parent)
@@ -73,6 +74,7 @@ class NumberLineEdit(BaseBindingController):
                 self._display_value = text
             else:
                 self._internal_value = text
+            self._last_cursor_pos = self._internal_widget.cursorPosition()
             self.proxy.edit_value = self._validate_value()
 
     def _validate_value(self):
@@ -147,6 +149,7 @@ class DoubleLineEdit(NumberLineEdit):
         with SignalBlocker(self._internal_widget):
             self._display_value = format_str.format(value)
             self._internal_widget.setText(self._display_value)
+        self._internal_widget.setCursorPosition(self._last_cursor_pos)
 
     @on_trait_change('model.decimals', post_init=True)
     def _decimals_update(self):
@@ -182,6 +185,7 @@ class IntLineEdit(NumberLineEdit):
         with SignalBlocker(self._internal_widget):
             self._display_value = "{}".format(value)
             self._internal_widget.setText(self._display_value)
+        self._internal_widget.setCursorPosition(self._last_cursor_pos)
 
     def _validate_value(self):
         return int(super(IntLineEdit, self)._validate_value())
