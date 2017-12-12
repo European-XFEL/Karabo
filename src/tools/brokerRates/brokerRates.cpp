@@ -61,8 +61,7 @@ public:
 
     /// Register a message, i.e. increase statistics and possibly print.
     void registerMessage(const util::Hash::Pointer& header,
-                         const util::Hash::Pointer& body,
-                         const net::JmsConsumer::Pointer& consumer);
+                         const util::Hash::Pointer& body);
 
 private:
 
@@ -146,8 +145,7 @@ void BrokerStatistics::printId(std::ostream& out, const SlotId& id) const {
 
 
 void BrokerStatistics::registerMessage(const util::Hash::Pointer& header,
-                                       const util::Hash::Pointer& body,
-                                       const net::JmsConsumer::Pointer& consumer) {
+                                       const util::Hash::Pointer& body) {
     try {
         // In the very first call we reset the start time.
         // Otherwise (if the constructor initialises m_start with 'now') starting this
@@ -185,7 +183,6 @@ void BrokerStatistics::registerMessage(const util::Hash::Pointer& header,
     } catch (const std::exception& e) {
         std::cerr << "Problem registering message: " << e.what() << "\nheader:\n" << *header << std::endl;
     }
-    consumer->readAsync(util::bind_weak(&BrokerStatistics::registerMessage, this, _1, _2, consumer));
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -408,7 +405,7 @@ int main(int argc, char** argv) {
 
         // Register our registration message as async reader:
         boost::shared_ptr<BrokerStatistics> stats(new BrokerStatistics(interval));
-        consumer->readAsync(boost::bind(&BrokerStatistics::registerMessage, stats, _1, _2, consumer));
+        consumer->startReading(boost::bind(&BrokerStatistics::registerMessage, stats, _1, _2));
 
         // Block forever
         net::EventLoop::work();

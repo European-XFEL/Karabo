@@ -24,14 +24,12 @@ using namespace karabo::log;
 
 
 void readHandler(const Hash::Pointer& header,
-                 const Hash::Pointer& body,
-                 const JmsConsumer::Pointer& consumer) {
+                 const Hash::Pointer& body) {
 
     cout << *header << endl;
     cout << *body << endl;
     cout << "-----------------------------------------------------------------------" << endl << endl;
 
-    consumer->readAsync(boost::bind(&readHandler, _1, _2, consumer));
 }
 
 
@@ -76,7 +74,7 @@ int main(int argc, char** argv) {
         JmsConsumer::Pointer consumer = connection->createConsumer(topic, selector);
 
         // Read messages
-        consumer->readAsync(boost::bind(&readHandler, _1, _2, consumer));
+        consumer->startReading(boost::bind(&readHandler, _1, _2));
 
         EventLoop::work(); // Block forever
 
