@@ -31,6 +31,8 @@ class ProjectView(QTreeView):
         super(ProjectView, self).__init__(parent)
 
         project_model = get_project_model()
+        project_model.setParent(self)
+
         self.setModel(project_model)
         project_model.rowsInserted.connect(self._items_added)
         self.setSelectionModel(project_model.q_selection_model)
