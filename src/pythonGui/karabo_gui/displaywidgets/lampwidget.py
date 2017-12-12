@@ -12,6 +12,7 @@ class LampWidget(DisplayWidget):
     category = String
     statePixmapName = {
         State.CHANGING: 'lamp-changing',
+        State.RUNNING: 'lamp-running',
         State.ACTIVE: 'lamp-active',
         State.PASSIVE: 'lamp-passive',
         State.STATIC: 'lamp-static',
@@ -44,6 +45,8 @@ class LampWidget(DisplayWidget):
     def valueChanged(self, box, value, timestamp=None):
         if State(value).isDerivedFrom(State.CHANGING):
             self._setPixmap(self.statePixmapName[State.CHANGING])
+        elif State(value).isDerivedFrom(State.RUNNING):
+            self._setPixmap(self.statePixmapName[State.RUNNING])
         elif State(value).isDerivedFrom(State.ACTIVE):
             self._setPixmap(self.statePixmapName[State.ACTIVE])
         elif State(value).isDerivedFrom(State.PASSIVE):
