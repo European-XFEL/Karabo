@@ -87,6 +87,8 @@ class StatefulIconWidget(DisplayWidget):
     def valueChanged(self, box, value, timestamp=None):
         if State(value).isDerivedFrom(State.CHANGING):
             self._setSVG(self.icon.with_color(STATE_COLORS[State.CHANGING]))
+        elif State(value).isDerivedFrom(State.RUNNING):
+            self._setSVG(self.icon.with_color(STATE_COLORS[State.RUNNING]))
         elif State(value).isDerivedFrom(State.ACTIVE):
             self._setSVG(self.icon.with_color(STATE_COLORS[State.ACTIVE]))
         elif State(value).isDerivedFrom(State.PASSIVE):
