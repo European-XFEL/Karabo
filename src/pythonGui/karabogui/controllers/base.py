@@ -5,6 +5,7 @@ from traits.api import (
 from karabo.common.scenemodel.api import BaseWidgetObjectData
 from karabogui import background
 from karabogui.binding.api import PropertyProxy
+from .util import get_class_const_trait
 
 
 class BaseBindingController(HasStrictTraits):
@@ -104,6 +105,19 @@ class BaseBindingController(HasStrictTraits):
 
         self.hide()
         self.trait_setq(proxy=None, _additional_proxies=[])
+
+    def finish_initialization(self):
+        """Force the controller to update itself in the absence of a device
+        update on its main proxy.
+        """
+        if self.widget is None or self.proxy.binding is None:
+            return
+
+        # Not all controllers support this
+        if get_class_const_trait(type(self), '_can_show_nothing'):
+            proxy = self.proxy
+            self.value_update(proxy)
+            self.state_update(proxy)
 
     def hide(self):
         """Hide the proxies. Stops monitoring the parent device of each proxy
