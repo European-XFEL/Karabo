@@ -190,6 +190,13 @@ def extract_sparse_configurations(proxies, devices=None):
     """
     assert all(isinstance(p, PropertyProxy) for p in proxies)
 
+    def _get_value(proxy):
+        if isinstance(proxy.binding, ListOfNodesBinding):
+            return [Hash(value.class_id, extract_configuration(value))
+                    for value in proxy.edit_value]
+        else:
+            return proxy.edit_value
+
     devices = {} if devices is None else devices
     for proxy in proxies:
         key, binding = proxy.path, proxy.binding
@@ -198,6 +205,6 @@ def extract_sparse_configurations(proxies, devices=None):
 
         device_id = proxy.root_proxy.device_id
         hsh = devices.setdefault(device_id, Hash())
-        hsh[key] = proxy.edit_value
+        hsh[key] = _get_value(proxy)
 
     return devices
