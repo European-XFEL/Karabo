@@ -26,7 +26,8 @@ NUMERICAL_BINDINGS = (BoolBinding, FloatBinding, IntBinding)
 
 @register_binding_controller(ui_name='Multi-Curve Plot',
                              klassname='MultiCurvePlot',
-                             binding_type=NUMERICAL_BINDINGS)
+                             binding_type=NUMERICAL_BINDINGS,
+                             can_show_nothing=False)
 class MultiCurvePlot(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(MultiCurvePlotModel)

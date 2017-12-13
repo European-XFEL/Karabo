@@ -22,7 +22,8 @@ from karabogui.controllers.registry import register_binding_controller
 
 @register_binding_controller(ui_name='Aligned Image View',
                              klassname='DisplayAlignedImage',
-                             binding_type=ImageBinding)
+                             binding_type=ImageBinding,
+                             can_show_nothing=False)
 class DisplayAlignedImage(BaseBindingController):
     model = Instance(DisplayAlignedImageModel)
     _plot = Instance(object)  # some QWT class...

@@ -333,7 +333,8 @@ class SparkRenderer(QWidget):
 
 
 @register_binding_controller(ui_name='Sparkline', klassname='DisplaySparkline',
-                             binding_type=(FloatBinding, IntBinding))
+                             binding_type=(FloatBinding, IntBinding),
+                             can_show_nothing=False)
 class DisplaySparkline(BaseBindingController):
     """Displays a spark line with a fixed time basis and coarsing of data
 
