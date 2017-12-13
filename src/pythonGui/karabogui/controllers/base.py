@@ -206,7 +206,10 @@ class BaseBindingController(HasStrictTraits):
             # One of the attached proxies got a new state on its device
             proxy = [p for p in self.proxies
                      if p.root_proxy.state_binding is binding][0]
-            self.state_update(proxy)
+            # Since this notification was from a different binding, we have
+            # to check that the proxy's binding is there.
+            if proxy.binding:
+                self.state_update(proxy)
         except IndexError:
             pass
 
