@@ -343,7 +343,7 @@ class PythonDevice(NoFsm):
         self.validatorIntern   = Validator()
         self.validatorExtern   = Validator()
         rules = ValidatorValidationRules()
-        rules.allowAdditionalKeys = True
+        rules.allowAdditionalKeys = False
         rules.allowMissingKeys    = True
         rules.allowUnrootedConfiguration = True
         rules.injectDefaults = False
@@ -368,6 +368,8 @@ class PythonDevice(NoFsm):
             self.parameters.set("serverId", self.serverid)
 
             # Validate first time to assign timestamps
+            # Note that invalid property keys are already caught via
+            # Configurator(PythonDevice).create in launchPythonDevice below.
             validated = self.validatorIntern.validate(self.fullSchema,
                                                       self.parameters,
                                                       self.getActualTimestamp())
@@ -575,9 +577,17 @@ class PythonDevice(NoFsm):
                     .getParametersInWarnOrAlarm()
 
                 if validate:
-                    validated = self.validatorIntern.validate(self.fullSchema,
-                                                              hash,
-                                                              stamp)
+                    try:
+                        validated = self.validatorIntern \
+                                        .validate(self.fullSchema, hash, stamp)
+                    except RuntimeError as e:
+                        # As in C++, just warn. But note that here (in contrast
+                        # to C++) setting a non-existing parameter skips the
+                        # setting of all other parameters in the same hash.
+                        self.log.WARN("Bad parameter setting attempted, ignore "
+                                      "keys " + str(hash.keys())
+                                      + ". Validation reports: " + str(e))
+                        validated = Hash()
                     resultingCondition = self._evaluateAndUpdateAlarmCondition(
                         forceUpdate=not prevAlarmParams.empty(),
                         prevParamsInAlarm=prevAlarmParams, silent=False)
@@ -1491,7 +1501,7 @@ class PythonDevice(NoFsm):
                 return self._stateDependentSchema[state]
             self._stateDependentSchema[state] = self.__class__.getSchema(
                 self.classid,
-                AssemblyRules(AccessType(READ | WRITE | INIT), state.value))
+                AssemblyRules(AccessType(WRITE), state.value))
             if not self._injectedSchema.empty():
                 self._stateDependentSchema[state] += self._injectedSchema
             return self._stateDependentSchema[state]
