@@ -28,6 +28,7 @@ from .edit_delegate import EditDelegate
 from .qt_item_model import ConfigurationTreeModel
 from .slot_delegate import SlotButtonDelegate
 from .value_delegate import ValueDelegate
+from .utils import get_proxy_value
 
 
 class ConfigurationTreeView(QTreeView):
@@ -140,7 +141,7 @@ class ConfigurationTreeView(QTreeView):
         if display_type and display_type.startswith('bin|'):
             info['Bits'] = display_type[4:]
         if isinstance(obj.root_proxy, DeviceProxy):
-            info['Value on device'] = binding.value
+            info['Value on device'] = get_proxy_value(index, obj)
 
         # Unit related attributes
         additional_attrs = (KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,

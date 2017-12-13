@@ -20,7 +20,7 @@ def run_configurator(ns):
     device_id = ns.configurator
     device = get_topology().get_device(device_id)
     broadcast_event(KaraboEventSender.ShowConfiguration, {'proxy': device})
-    return ConfigurationPanel(), (400, 600)
+    return ConfigurationPanel(), (600, 800)
 
 
 def run_navigation():

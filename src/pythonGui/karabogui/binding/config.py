@@ -17,7 +17,6 @@ def apply_configuration(config, binding, notify=True):
     If `notify` is False, trait change notifications of binding
     nodes won't be triggered.
     """
-    _node_types = (ChoiceOfNodesBinding, NodeBinding)
     namespace = binding.value
     assert isinstance(namespace, BindingNamespace)
 
@@ -26,7 +25,7 @@ def apply_configuration(config, binding, notify=True):
             continue
 
         node = getattr(namespace, key)
-        if isinstance(value, Hash) and isinstance(node, _node_types):
+        if isinstance(value, Hash) and isinstance(node, NodeBinding):
             apply_configuration(value, node)
         else:
             traits = {'value': value}
@@ -53,14 +52,15 @@ def apply_default_configuration(binding):
     assert isinstance(binding, BindingRoot)
 
     def _iter_binding(node):
-        _node_types = (ChoiceOfNodesBinding, NodeBinding)
         namespace = node.value
         for name in namespace:
             subnode = getattr(namespace, name)
-            if isinstance(subnode, _node_types):
-                if isinstance(subnode, ChoiceOfNodesBinding):
-                    yield subnode
+            if isinstance(subnode, NodeBinding):
                 yield from _iter_binding(subnode)
+            if isinstance(subnode, ChoiceOfNodesBinding):
+                yield subnode
+                child = getattr(subnode.value, subnode.choice)
+                yield from _iter_binding(child)
             elif isinstance(subnode, ListOfNodesBinding):
                 yield subnode
                 for lnode in subnode.value:
@@ -155,17 +155,19 @@ def extract_configuration(binding, include_attributes=False):
         if isinstance(binding, ListOfNodesBinding):
             return [Hash(value.class_id, extract_configuration(value))
                     for value in binding.value]
+        elif isinstance(binding, ChoiceOfNodesBinding):
+            value = getattr(binding.value, binding.choice)
+            return Hash(value.class_id, extract_configuration(value))
         else:
             return binding.value
 
     def _iter_binding(node, base=''):
-        _node_types = (ChoiceOfNodesBinding, NodeBinding)
         namespace = node.value
         base = base + '.' if base else ''
         for name in namespace:
             subname = base + name
             subnode = getattr(namespace, name)
-            if isinstance(subnode, _node_types):
+            if isinstance(subnode, NodeBinding):
                 yield from _iter_binding(subnode, base=subname)
             elif not isinstance(subnode, SlotBinding):
                 yield subname, subnode
