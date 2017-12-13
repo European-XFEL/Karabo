@@ -3,6 +3,8 @@
 # Created on November 30, 2011
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from collections import deque
+
 from PyQt4.QtGui import (QFrame, QHBoxLayout, QLabel, QLineEdit, QPushButton,
                          QWidget, QVBoxLayout)
 
@@ -43,6 +45,7 @@ class NavigationPanel(BasePanelWidget):
         self.le_search_filter = QLineEdit()
         self.le_search_filter.setToolTip("Find")
         self.le_search_filter.textChanged.connect(self._search_filter_changed)
+        self.le_search_filter.returnPressed.connect(self._arrow_right_clicked)
         self.pb_match = QPushButton("Aa")
         self.pb_match.setToolTip("Match case")
         self.pb_match.setCheckable(True)
@@ -90,8 +93,8 @@ class NavigationPanel(BasePanelWidget):
     def _init_search_filter(self, connected_to_server=False):
         # A list of nodes found via the search filter
         self.found = []
-        # Current select index of `self.found`
-        self.current_index = -1
+        # A deque array indicates the current selection in `self.found`
+        self.index_array = deque([])
         self.le_search_filter.setText("")
         self.le_search_filter.setEnabled(connected_to_server)
         self.pb_match.setEnabled(connected_to_server)
@@ -110,16 +113,16 @@ class NavigationPanel(BasePanelWidget):
         else:
             self.found = []
 
-        if self.found:
-            result = "{} Results".format(len(self.found))
-            self.current_index = 0
+        n_found = len(self.found)
+        self.index_array = deque(range(n_found))
+        if self.index_array:
+            result = "{} Results".format(n_found)
             self._select_node()
         else:
             result = "No Results"
-            self.current_index = -1
         self.la_result.setText(result)
 
-        enable = len(self.found) > 1
+        enable = n_found > 0
         self.pb_arrow_left.setEnabled(enable)
         self.pb_arrow_right.setEnabled(enable)
 
@@ -127,23 +130,24 @@ class NavigationPanel(BasePanelWidget):
         self._search_filter_changed(self.le_search_filter.text())
 
     def _arrow_left_clicked(self):
-        first_index = 0
-        if self.current_index == first_index:
-            self.current_index = len(self.found)-1
-        else:
-            self.current_index -= 1
+        """rotate index array to the right, so the first index point to the
+        previous found node
+        """
+        self.index_array.rotate(1)
         self._select_node()
 
     def _arrow_right_clicked(self):
-        last_index = len(self.found)-1
-        if self.current_index == last_index:
-            self.current_index = 0
-        else:
-            self.current_index += 1
-        self._select_node()
+        """rotate index array to the left, so the first index point to the
+        next found node
+        """
+        # Enter key press is linked to arrow right, we have to validate if
+        # there are results to show
+        if self.index_array:
+            self.index_array.rotate(-1)
+            self._select_node()
 
     def _select_node(self):
-        """Select node by given current index
+        """Pick the first number in index array, select the corresponding node
         """
-        selected_node = self.found[self.current_index]
-        self.twNavigation.model().selectNode(selected_node)
+        idx = next(iter(self.index_array))
+        self.twNavigation.model().selectNode(self.found[idx])
