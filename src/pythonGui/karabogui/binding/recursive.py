@@ -1,4 +1,4 @@
-from traits.api import Instance, List, Property, Str, Trait, TraitHandler
+from traits.api import Instance, List, Property, Trait, TraitHandler
 
 from karabo.middlelayer import Hash
 from .types import BaseBinding, BindingNamespace, BindingRoot, NodeBinding
@@ -6,28 +6,49 @@ from .util import fast_deepcopy
 
 
 class ChoiceOfNodesBinding(BaseBinding):
-    """A node whose type can be changed by assigning a new classname to its
-    value. Valid classnames are stored in the `choices` namespace. When reading
-    or traversing this node, it appears to be a normal node whose value is a
-    `BindingNamespace`.
+    """A node whose type can be changed by assigning a new classname or Hash to
+    its `value`. Valid classnames are stored in the `choices` namespace. When
+    reading or traversing this node, it appears to be a normal node whose value
+    is a `BindingNamespace` containing a single `BindingRoot` instance.
     """
     value = Property
-    # Backing trait for `value`
-    choice = Str(transient=True)
+    choice = Property(transient=True, depends_on='_value')
     # Namespace of possible values
     choices = Instance(BindingNamespace, kw={'item_type': BindingRoot},
                        transient=True)
+    # Private detail
+    _value = Instance(BindingNamespace, transient=True)
 
-    def _choice_default(self):
-        return next(iter(self.choices))
+    def __value_default(self):
+        ns = BindingNamespace(item_type=BindingRoot)
+        choice = next(iter(self.choices))
+        setattr(ns, choice, getattr(self.choices, choice))
+        return ns
 
-    def _get_value(self, value):
-        choice = self.choice
-        return getattr(self.choices, choice).value
+    def _get_choice(self):
+        return next(iter(self._value))
+
+    def _set_choice(self, choice):
+        assert isinstance(choice, str) and choice in self.choices
+        self._value.clear()
+        setattr(self._value, choice, getattr(self.choices, choice))
+        self.config_update = True
+
+    def _get_value(self):
+        return self._value
 
     def _set_value(self, value):
-        assert isinstance(value, str) and value in self.choices
-        self.choice = value
+        if isinstance(value, Hash):
+            choice = next(iter(value))
+        else:  # value is a str
+            choice = value
+
+        if choice not in self._value:
+            self.choice = choice
+
+        if isinstance(value, Hash):
+            from .config import apply_configuration
+            apply_configuration(value[choice], getattr(self._value, choice))
 
 
 class _ListOfNodesHandler(TraitHandler):

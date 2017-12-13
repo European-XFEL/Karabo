@@ -38,8 +38,7 @@ class TestDisplayChoiceElement(GuiTestCase):
 
     def test_set_value(self):
         apply_default_configuration(self.proxy.root_proxy.binding)
-
         assert self.controller.widget.currentText() == 'ChoiceOne'
 
-        self.proxy.binding.choice = 'ChoiceTwo'
+        self.proxy.value = 'ChoiceTwo'
         assert self.controller.widget.currentText() == 'ChoiceTwo'
