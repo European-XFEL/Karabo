@@ -279,6 +279,7 @@ class Tests(DeviceTest):
         async(print_stdout())
 
         with (yield from getDevice("DataLogger-middlelayerDevice")) as logger:
+            yield from logger
             yield from waitUntil(lambda: logger.state == State.NORMAL)
 
         for i in range(4):
