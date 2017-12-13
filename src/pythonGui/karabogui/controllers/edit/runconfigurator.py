@@ -6,7 +6,7 @@
 from PyQt4.QtCore import pyqtSlot, QModelIndex, Qt
 from PyQt4.QtGui import (QAbstractItemView, QStandardItemModel, QTreeView,
                          QStandardItem)
-from traits.api import Instance
+from traits.api import Bool, Instance
 
 from karabo.common.scenemodel.api import RunConfiguratorModel
 from karabo.middlelayer import Hash
@@ -28,6 +28,8 @@ _is_compatible = with_display_type('RunConfigurator')
 class RunConfiguratorEdit(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(RunConfiguratorModel)
+    # Private traits
+    _is_editing = Bool(False)
 
     def create_widget(self, parent):
         widget = QTreeView(parent=parent)
@@ -39,6 +41,10 @@ class RunConfiguratorEdit(BaseBindingController):
         return widget
 
     def value_update(self, proxy):
+        # Avoid messing with the item model when the user checks an item
+        if self._is_editing:
+            return
+
         def _build(group_node, parent_item):
             name = group_node.value.groupId.value or 'NONAME'
             group_item = QStandardItem(name)
@@ -69,7 +75,11 @@ class RunConfiguratorEdit(BaseBindingController):
             return
         # Only react when top-level items are edited (ie: check-state changes)
         if item.parent() is None:
-            self.proxy.edit_value = self._build_value()
+            try:
+                self._is_editing = True
+                self.proxy.edit_value = self._build_value()
+            finally:
+                self._is_editing = False
 
     def _build_value(self):
         def _build_source_hash(item, row):
