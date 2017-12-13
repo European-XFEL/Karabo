@@ -261,3 +261,15 @@ class TestBaseBindingController(GuiTestCase):
 
         set_proxy_value(proxy, 'state', 'ERROR')
         assert controller.widget.text() == 'ERROR'
+
+    def test_device_state_bad_binding(self):
+        binding = build_binding(StateObject.getClassSchema())
+        device = DeviceClassProxy(binding=binding, server_id='Test',
+                                  status=DeviceStatus.OFFLINE)
+        # Make a proxy for something which doesn't exist
+        proxy = PropertyProxy(root_proxy=device, path='oaoijasdoijasd')
+        controller = self.StateTrackingController(proxy=proxy)
+        controller.create(None)
+
+        set_proxy_value(proxy, 'state', 'ERROR')
+        assert controller.widget.text() == ''
