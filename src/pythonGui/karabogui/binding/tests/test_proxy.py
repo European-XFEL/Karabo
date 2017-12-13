@@ -1,6 +1,7 @@
 from unittest.mock import Mock
 
 from karabo.common.api import DeviceStatus
+from karabo.middlelayer import Hash
 from karabogui.testing import (
     assert_trait_change, get_class_property_proxy, singletons)
 from ..api import (
@@ -248,19 +249,23 @@ def test_schema_updates():
 
 
 def test_multi_device_config_extraction():
-    schema = get_simple_schema()
+    schema = get_all_props_schema()
     dev_one = DeviceProxy(device_id='one', binding=build_binding(schema))
     dev_two = DeviceProxy(device_id='two', binding=build_binding(schema))
-    prop_bool = PropertyProxy(root_proxy=dev_one, path='foo')
-    prop_string = PropertyProxy(root_proxy=dev_two, path='bar')
+    prop_bool = PropertyProxy(root_proxy=dev_one, path='a')
+    prop_string = PropertyProxy(root_proxy=dev_two, path='m')
+    prop_lon = PropertyProxy(root_proxy=dev_two, path='j1')
 
     prop_bool.edit_value = True
     prop_string.edit_value = 'yo'
-    configs = extract_sparse_configurations([prop_bool, prop_string])
+    node_val = Hash('_NodeOne', Hash('zero', 'hello'))
+    prop_lon.edit_value = [node_val]
+    configs = extract_sparse_configurations([prop_bool, prop_string, prop_lon])
 
     assert 'one' in configs and 'two' in configs
-    assert configs['one']['foo'] is True
-    assert configs['two']['bar'] == 'yo'
+    assert configs['one']['a'] is True
+    assert configs['two']['m'] == 'yo'
+    assert configs['two']['j1'] == [node_val]
 
 
 def test_delegation_with_schema_update():
