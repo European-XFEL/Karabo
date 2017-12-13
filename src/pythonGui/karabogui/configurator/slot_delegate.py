@@ -65,6 +65,7 @@ class SlotButtonDelegate(QStyledItemDelegate):
             proxy = model.index_ref(index)
             if isinstance(getattr(proxy, 'binding', None), SlotBinding):
                 self._handle_event_state(proxy, event, option)
+                return True
 
         return super(SlotButtonDelegate, self).editorEvent(
             event, model, option, index)
