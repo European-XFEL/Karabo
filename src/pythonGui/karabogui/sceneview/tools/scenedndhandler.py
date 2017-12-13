@@ -12,8 +12,10 @@ from traits.api import ABCHasStrictTraits
 
 from karabo.common.scenemodel.api import (
     BoxLayoutModel, LabelModel, WorkflowItemModel)
+from karabo.middlelayer import AccessMode
 from karabogui.controllers.registry import (
-    get_compatible_controllers, get_class_const_trait, get_scene_model_class)
+    get_compatible_controllers, get_scene_model_class)
+from karabogui.controllers.util import get_class_const_trait
 from karabogui.enums import NavigationItemTypes
 from karabogui.project.utils import add_device_to_server
 from karabogui.sceneview.widget.utils import get_proxy
@@ -94,9 +96,11 @@ class ConfigurationDropHandler(SceneDnDHandler):
         if klasses:
             create_model(klasses[0], proxy.key, layout_model)
 
-        klasses = get_compatible_controllers(proxy.binding, can_edit=True)
-        if klasses:
-            create_model(klasses[0], proxy.key, layout_model)
+        # Only editable if RECONFIGURABLE
+        if proxy.binding.access_mode is AccessMode.RECONFIGURABLE:
+            klasses = get_compatible_controllers(proxy.binding, can_edit=True)
+            if klasses:
+                create_model(klasses[0], proxy.key, layout_model)
 
         return layout_model
 

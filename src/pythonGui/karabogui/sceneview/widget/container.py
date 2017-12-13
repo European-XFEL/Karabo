@@ -199,21 +199,25 @@ class ControllerContainer(QWidget):
         """Wrap up the alarm symbol and possible edit buttons in a layout with
         the `widget_controller`.
         """
+        controller = self.widget_controller
         layout = QHBoxLayout()
-        layout.addWidget(self.widget_controller.widget)
+        layout.addWidget(controller.widget)
         disp_widgets = self._add_alarm_symbol(layout)
         self.layout.addWidget(disp_widgets)
 
         if self.model.parent_component == 'EditableApplyLaterComponent':
             self._is_editable = True
-            self.widget_controller.proxy.on_trait_change(
+            controller.proxy.on_trait_change(
                 self._on_user_edit, 'edit_value,binding.config_update')
             layout.setContentsMargins(2, 2, 2, 2)
         else:
             layout.setContentsMargins(0, 0, 0, 0)
 
         # Tell the widget if it's editing
-        self.widget_controller.set_read_only(not self._is_editable)
+        controller.set_read_only(not self._is_editable)
+
+        # Make the widget show something
+        controller.finish_initialization()
 
     # ---------------------------------------------------------------------
     # Editing related code
