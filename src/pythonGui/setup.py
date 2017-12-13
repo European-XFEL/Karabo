@@ -83,13 +83,6 @@ if __name__ == '__main__':
         'url': 'http://karabo.eu',
         'packages': find_packages(),
         'package_data': {
-            "karabo_gui.configurator.dialog": ["*.ui"],
-            "karabo_gui.dialogs": ["*.ui"],
-            "karabo_gui.displaywidgets": ["*.svg", "*.ui"],
-            "karabo_gui.icons": ["*.*", "statefulicons/iconset/*.svg"],
-            "karabo_gui.project.dialog": ["*.ui"],
-
-            # XXX: Refactored GUI package
             "karabogui.binding.tests": ["data/*.config", "data/*.schema"],
             "karabogui.configurator.dialog": ["*.ui"],
             "karabogui.controllers": ["*.ui"],
@@ -97,6 +90,13 @@ if __name__ == '__main__':
             "karabogui.dialogs": ["*.ui"],
             "karabogui.icons": ["*.*", "statefulicons/iconset/*.svg"],
             "karabogui.project.dialog": ["*.ui"],
+
+            # XXX: The lagacy GUI files
+            "karabo_gui.configurator.dialog": ["*.ui"],
+            "karabo_gui.dialogs": ["*.ui"],
+            "karabo_gui.displaywidgets": ["*.svg", "*.ui"],
+            "karabo_gui.icons": ["*.*", "statefulicons/iconset/*.svg"],
+            "karabo_gui.project.dialog": ["*.ui"],
         }
     }
 
