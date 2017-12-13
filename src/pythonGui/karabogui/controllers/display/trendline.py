@@ -379,7 +379,8 @@ class _KaraboCurveWidget(CurveWidget):
 
 
 @register_binding_controller(ui_name='Trendline', klassname='DisplayTrendline',
-                             binding_type=PLOTTABLE_TYPES)
+                             binding_type=PLOTTABLE_TYPES,
+                             can_show_nothing=False)
 class DisplayTrendline(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(LinePlotModel)

@@ -22,7 +22,8 @@ DEFAULT_SIZE = 125
 
 @register_binding_controller(ui_name='Image Element',
                              klassname='DisplayImageElement',
-                             binding_type=ImageBinding)
+                             binding_type=ImageBinding,
+                             can_show_nothing=False)
 class DisplayImageElement(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(DisplayImageElementModel)

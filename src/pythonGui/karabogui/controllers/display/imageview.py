@@ -18,7 +18,8 @@ from karabogui.controllers.registry import register_binding_controller
 
 
 @register_binding_controller(ui_name='Image View', klassname='DisplayImage',
-                             binding_type=ImageBinding, priority=10)
+                             binding_type=ImageBinding, priority=10,
+                             can_show_nothing=False)
 class DisplayImage(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(DisplayImageModel)
