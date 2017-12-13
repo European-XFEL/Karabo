@@ -24,7 +24,7 @@ def install():
         os.mkdir(mv_dir)
         directory_created(mv_dir)
 
-    guiScript = os.path.join(get_python_lib(), 'karabo_gui',
+    guiScript = os.path.join(get_python_lib(), 'karabogui',
                              'programs', 'gui_runner.py')
     workDir = get_special_folder_path('CSIDL_DESKTOPDIRECTORY')
 
