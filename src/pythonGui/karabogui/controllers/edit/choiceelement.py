@@ -5,13 +5,13 @@
 #############################################################################
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QComboBox
-from traits.api import Instance, on_trait_change
+from traits.api import Instance
 
 from karabo.common.scenemodel.api import ChoiceElementModel
 from karabogui.binding.api import ChoiceOfNodesBinding
 from karabogui.controllers.base import BaseBindingController
 from karabogui.controllers.registry import register_binding_controller
-from karabogui.util import MouseWheelEventBlocker
+from karabogui.util import MouseWheelEventBlocker, SignalBlocker
 
 
 @register_binding_controller(ui_name='Choice Element', can_edit=True,
@@ -33,18 +33,20 @@ class EditableChoiceElement(BaseBindingController):
         return widget
 
     def binding_update(self, proxy):
-        self.widget.clear()
-        for name in proxy.binding.choices:
-            self.widget.addItem(name)
+        binding = proxy.binding
+        with SignalBlocker(self.widget):
+            self.widget.clear()
+            for name in binding.choices:
+                self.widget.addItem(name)
 
-    @on_trait_change('proxy.binding.choice')
-    def _value_update(self, obj, name, choice):
-        if name != 'choice':
-            return
+        # Make sure the correct item is selected
+        self.value_update(proxy)
 
-        index = self.widget.findText(choice)
+    def value_update(self, proxy):
+        index = self.widget.findText(proxy.binding.choice)
         if index >= 0:
-            self.widget.setCurrentIndex(index)
+            with SignalBlocker(self.widget):
+                self.widget.setCurrentIndex(index)
 
     @pyqtSlot(int)
     def _on_user_edit(self, index):

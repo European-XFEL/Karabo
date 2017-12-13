@@ -353,8 +353,12 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 names = get_child_names(parent_obj)
 
             if isinstance(binding, BindingRoot):
-                obj = self.property_proxy(names[row])
-            elif isinstance(binding, NodeBinding):
+                path = names[row]
+                if parent_obj is not self.root:
+                    # This is the child of a ChoiceOfNodes
+                    path = parent_obj.path + '.' + path
+                obj = self.property_proxy(path)
+            elif isinstance(binding, (ChoiceOfNodesBinding, NodeBinding)):
                 # Nodes have properties as children
                 path = parent_obj.path + '.' + names[row]
                 obj = self.property_proxy(path)
@@ -570,10 +574,11 @@ class ConfigurationTreeModel(QAbstractItemModel):
         state = self.root.state_binding.value
         binding = proxy.binding
         is_class = isinstance(self.root, DeviceClassProxy)
-        uneditable_node_types = (ListOfNodesBinding, NodeBinding)
+        uneditable_node_types = (ChoiceOfNodesBinding, ListOfNodesBinding,
+                                 NodeBinding)
         is_uneditable_node = isinstance(binding, uneditable_node_types)
-        is_editable_type = (not is_uneditable_node or
-                            isinstance(binding, ChoiceOfNodesBinding))
+        is_editable_type = (not is_uneditable_node or (is_class and
+                            isinstance(binding, ChoiceOfNodesBinding)))
         is_class_editable = (is_class and binding.access_mode in
                              (AccessMode.INITONLY, AccessMode.RECONFIGURABLE))
         is_inst_editable = (not is_class and binding.is_allowed(state) and
