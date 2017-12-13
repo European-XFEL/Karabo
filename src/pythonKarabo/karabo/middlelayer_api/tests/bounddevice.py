@@ -6,7 +6,8 @@ import numpy
 
 from karabo.bound import (
     AMPERE, AlarmCondition, Hash, DOUBLE_ELEMENT, Epochstamp, INPUT_CHANNEL,
-    KARABO_CLASSINFO, KILO, METER, MILLI, NDARRAY_ELEMENT, NODE_ELEMENT,
+    INT32_ELEMENT,
+    KARABO_CLASSINFO, KILO, METER, MILLI, MICRO, NDARRAY_ELEMENT, NODE_ELEMENT,
     OUTPUT_CHANNEL, PythonDevice, Schema, SLOT_ELEMENT, State, STRING_ELEMENT,
     TABLE_ELEMENT, Timestamp, Trainstamp)
 
@@ -42,6 +43,14 @@ class TestDevice(PythonDevice):
             .expertAccess()
             .assignmentOptional()
             .defaultValue(22.5)
+            .reconfigurable()
+            .commit(),
+
+            INT32_ELEMENT(expected).key("readonly")
+            .displayedName("Readonly")
+            .description("A readonly parameter")
+            .readOnly()
+            .initialValue(2)
             .commit(),
 
             NODE_ELEMENT(expected).key("node")
@@ -75,6 +84,7 @@ class TestDevice(PythonDevice):
             .setNodeSchema(tableSchema)
             .assignmentOptional()
             .defaultValue([Hash("d", 5, "s", "hallo")])
+            .reconfigurable()
             .commit(),
 
             NDARRAY_ELEMENT(expected).key("ndarray")

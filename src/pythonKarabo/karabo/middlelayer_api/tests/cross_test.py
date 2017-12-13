@@ -14,8 +14,8 @@ from karabo.middlelayer import (
     AccessLevel, AlarmCondition, Assignment, background, Configurable,
     DeviceClientBase, getConfigurationFromPast, getDevice, getHistory, Hash,
     isSet, InputChannel, Int32, KaraboError, MetricPrefix, Node,
-    OutputChannel, Schema, shutdown, sleep, Slot, State, unit, Unit, waitUntil, 
-    waitUntilNew)
+    OutputChannel, Schema, setWait, shutdown, sleep, Slot, State, unit, Unit,
+    waitUntil, waitUntilNew)
 
 from .eventloop import DeviceTest, async_tst
 
@@ -100,7 +100,7 @@ class Tests(DeviceTest):
             stdout=PIPE)
         schema = yield from self.process.stdout.read()
         yield from self.process.wait()
-        self.assertEqual(adler32(schema), 37959406,
+        self.assertEqual(adler32(schema), 2143514750,
             "The generated schema changed. If this is desired, change the "
             "checksum in the code.")
 
@@ -111,6 +111,9 @@ class Tests(DeviceTest):
             sys.executable, "-m", "karabo.bound_api.launcher",
             "run", "karabo.bound_device_test", "TestDevice",
             stdin=PIPE)
+        # To get DEBUG output of the bound device, add
+        # <Logger><priority>DEBUG</priority></Logger>
+        # after the line with _deviceId_
         self.process.stdin.write(b"""\
             <root KRB_Artificial="">
                 <_deviceId_>boundDevice</_deviceId_>
@@ -123,6 +126,8 @@ class Tests(DeviceTest):
         self.process.stdin.close()
         proxy = yield from getDevice("boundDevice")
         self.assertEqual(proxy.a, 22.5 * unit.milliampere,
+                         "didn't receive inital value from bound device")
+        self.assertEqual(proxy.readonly, 2,
                          "didn't receive initial value from bound device")
 
         a_desc = type(proxy).a
@@ -162,6 +167,15 @@ class Tests(DeviceTest):
             with self.assertRaises(ValueError):
                 proxy.a = 77
             self.assertEqual(proxy.a, 22.7 * unit.milliampere)
+
+            # Following test does not yet work, but in fact the request to
+            # change readonly goes over the wire (but shouldn't) and is refused
+            # on the other end which sends back an error...
+            #with self.assertRaises(ValueError):  # or KaraboError?
+            #    proxy.readonly = 1  # not allowed!
+            with self.assertRaises(KaraboError):
+                yield from setWait("boundDevice", readonly=1)  # not allowed
+            self.assertEqual(proxy.readonly, 2)  # unchanged
 
             def setter():
                 proxy.a = 22.3 * unit.milliampere
