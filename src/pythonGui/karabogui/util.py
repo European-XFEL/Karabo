@@ -259,6 +259,9 @@ def set_treeview_header(tree_view):
     tree_view.setColumnWidth(1, 20)
     tree_view.setColumnWidth(2, 20)
 
+    # Prevent drag reorder of the header
+    tree_view.header().setMovable(False)
+
 
 def get_setting(attr):
     """ This function is used to retrieve a value from the QSettings file """
