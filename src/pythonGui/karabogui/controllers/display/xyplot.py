@@ -12,7 +12,8 @@ from karabogui.mplwidget.mplplotwidgets import MplCurvePlot
 
 
 @register_binding_controller(ui_name='XY-Plot', klassname='XYPlot',
-                             binding_type=(FloatBinding, IntBinding))
+                             binding_type=(FloatBinding, IntBinding),
+                             can_show_nothing=False)
 class XYPlot(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(XYPlotModel)
