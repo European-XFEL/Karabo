@@ -14,8 +14,8 @@ from karabogui.alarms.api import ALARM_COLOR, NORM_COLOR, WARN_COLOR
 from karabogui.binding.api import (
     FloatBinding, KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_WARN_HIGH,
     KARABO_WARN_LOW)
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller)
 
 B_ALOW, B_WLOW, B_WHIGH, B_AHIGH = (0.1, 0.3, 0.7, 0.9)
 DARKER_GREY = (64, 64, 64)

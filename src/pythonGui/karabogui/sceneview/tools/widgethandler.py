@@ -9,9 +9,8 @@ from PyQt4.QtGui import QMenu
 from traits.api import Any, ABCHasStrictTraits
 
 from karabo.common.scenemodel.api import BaseWidgetObjectData
-from karabogui.controllers.registry import (
-    get_compatible_controllers, get_scene_model_class)
-from karabogui.controllers.util import get_class_const_trait
+from karabogui.controllers.api import (
+    get_class_const_trait, get_compatible_controllers, get_scene_model_class)
 from karabogui.sceneview.widget.api import ControllerContainer
 
 

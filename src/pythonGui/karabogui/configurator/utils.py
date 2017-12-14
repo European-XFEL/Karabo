@@ -17,7 +17,7 @@ from karabogui.binding.api import (
     KARABO_ALARM_LOW, KARABO_ALARM_HIGH, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
     KARABO_SCHEMA_UNIT_SYMBOL
 )
-from karabogui.controllers.registry import get_compatible_controllers
+from karabogui.controllers.api import get_compatible_controllers
 
 # The fixed height of rows in the configurator
 FIXED_ROW_HEIGHT = 30

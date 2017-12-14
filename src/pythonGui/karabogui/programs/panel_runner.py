@@ -5,7 +5,7 @@ from PyQt4.QtGui import QApplication
 
 from karabo.common.scenemodel.api import read_scene
 from karabogui import icons
-from karabogui.controllers.util import populate_controller_registry
+from karabogui.controllers.api import populate_controller_registry
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.panels.configurationpanel import ConfigurationPanel
 from karabogui.panels.navigationpanel import NavigationPanel

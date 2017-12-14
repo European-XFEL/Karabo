@@ -6,7 +6,7 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QApplication, QMessageBox, QPixmap, QSplashScreen
 
 from karabogui.events import broadcast_event, KaraboEventSender
-from karabogui.controllers.util import populate_controller_registry
+from karabogui.controllers.api import populate_controller_registry
 from karabogui.singletons.api import (
     get_manager, get_network, get_panel_wrangler)
 

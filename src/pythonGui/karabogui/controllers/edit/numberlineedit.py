@@ -11,9 +11,8 @@ from traits.api import Instance, Int, Str, on_trait_change
 from karabo.common.scenemodel.api import DoubleLineEditModel, IntLineEditModel
 from karabogui.binding.api import (
     get_editor_value, get_min_max, FloatBinding, IntBinding)
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
-from karabogui.controllers.unitlabel import add_unit_label
+from karabogui.controllers.api import (
+    BaseBindingController, add_unit_label, register_binding_controller)
 from karabogui.util import SignalBlocker
 
 MAX_FLOATING_PRECISION = 12

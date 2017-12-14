@@ -19,9 +19,8 @@ from karabogui.binding.api import (
     KARABO_SCHEMA_RELATIVE_ERROR
 )
 from karabogui.const import FINE_COLOR, WIDGET_MIN_HEIGHT
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
-from karabogui.controllers.unitlabel import add_unit_label
+from karabogui.controllers.api import (
+    BaseBindingController, add_unit_label, register_binding_controller)
 from karabogui.util import generateObjectName
 
 # alpha layer to add to our global alarm and warn colors
