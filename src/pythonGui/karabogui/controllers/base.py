@@ -117,7 +117,8 @@ class BaseBindingController(HasStrictTraits):
         if get_class_const_trait(type(self), '_can_show_nothing'):
             proxy = self.proxy
             self.value_update(proxy)
-            self.state_update(proxy)
+            if proxy.root_proxy.state_binding.value:
+                self.state_update(proxy)
 
     def hide(self):
         """Hide the proxies. Stops monitoring the parent device of each proxy
