@@ -3,7 +3,7 @@ from xml.etree.ElementTree import SubElement
 from traits.api import Enum, Int, String
 
 from karabo.common.scenemodel.bases import (
-    BaseDisplayEditableWidget, BaseWidgetObjectData)
+    BaseDisplayEditableWidget, BaseEditWidget, BaseWidgetObjectData)
 from karabo.common.scenemodel.const import (
     NS_KARABO, WIDGET_ELEMENT_TAG, SceneTargetWindow)
 from karabo.common.scenemodel.io_utils import (
@@ -17,7 +17,7 @@ class AnalogModel(BaseWidgetObjectData):
     """ A model for Analog Widget"""
 
 
-class BitfieldModel(BaseWidgetObjectData):
+class BitfieldModel(BaseEditWidget):
     """ A model for Bitfield"""
 
 
@@ -65,15 +65,15 @@ class DisplayTextLogModel(BaseWidgetObjectData):
     """ A model for DisplayTextLog"""
 
 
-class EditableListModel(BaseWidgetObjectData):
+class EditableListModel(BaseEditWidget):
     """ A model for EditableList"""
 
 
-class EditableListElementModel(BaseWidgetObjectData):
+class EditableListElementModel(BaseEditWidget):
     """ A model for EditableListElement"""
 
 
-class EditableSpinBoxModel(BaseWidgetObjectData):
+class EditableSpinBoxModel(BaseEditWidget):
     """ A model for EditableSpinBox"""
 
 
@@ -91,15 +91,15 @@ class FileOutModel(BaseDisplayEditableWidget):
     klass = Enum('DisplayFileOut', 'EditableFileOut')
 
 
-class HexadecimalModel(BaseWidgetObjectData):
+class HexadecimalModel(BaseEditWidget):
     """ A model for Hexadecimal"""
 
 
-class IntLineEditModel(BaseWidgetObjectData):
+class IntLineEditModel(BaseEditWidget):
     """ A model for IntLineEdit"""
 
 
-class KnobModel(BaseWidgetObjectData):
+class KnobModel(BaseEditWidget):
     """ A model for Knob"""
 
 
@@ -138,7 +138,7 @@ class PopUpModel(BaseWidgetObjectData):
     """ A model for a pop up window """
 
 
-class RunConfiguratorModel(BaseWidgetObjectData):
+class RunConfiguratorModel(BaseEditWidget):
     """ A model for RunConfigurator ListOfNodes editor
     """
 
@@ -152,7 +152,7 @@ class SceneLinkModel(BaseWidgetObjectData):
     target_window = Enum(*list(SceneTargetWindow))
 
 
-class SliderModel(BaseWidgetObjectData):
+class SliderModel(BaseEditWidget):
     """ A model for Slider"""
 
 
