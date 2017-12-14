@@ -1,24 +1,23 @@
 from PyQt4.QtGui import QDoubleSpinBox
 
-from karabo_gui.util import SignalBlocker
-from karabo_gui.widget import DisplayWidget
-from karabo.middlelayer import Simple
+from karabogui.binding.api import IntBinding, FloatBinding
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller)
 
 
-class MyDisplayWidget(DisplayWidget):
-    category = Simple # this widget will show numbers
-    alias = "My cool widget" # this is shown in the context menu
+# ui_name => shown in the widget selection context menu
+# binding_type => What types of data can this widget handle
+@register_binding_controller(ui_name='My cool widget',
+                             klassname='MyDisplay',
+                             binding_type=(IntBinding, FloatBinding))
+class MyDisplayWidget(BaseBindingController):
+    def create_widget(self, parent):
+        return QDoubleSpinBox(parent)
 
-    def __init__(self, box, parent):
-        super(MyDisplayWidget, self).__init__(box)
-
-        self.widget = QDoubleSpinBox(parent)
-
-    def typeChanged(self, box):
+    def binding_update(self, proxy):
         # Do some initialization for a new value type
         pass
 
-    def valueChanged(self, box, value, timestamp=None):
+    def value_update(self, proxy):
         # Typically something like:
-        with SignalBlocker(self.widget):
-            self.widget.setValue(value)
+        self.widget.setValue(proxy.value)
