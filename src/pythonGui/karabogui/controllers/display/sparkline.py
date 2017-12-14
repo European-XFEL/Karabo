@@ -15,8 +15,8 @@ from karabogui.alarms.api import (
     ALARM_COLOR, ALARM_HIGH, ALARM_LOW, WARN_COLOR, WARN_GLOBAL, WARN_HIGH,
     WARN_LOW)
 from karabogui.binding.api import FloatBinding, IntBinding
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller)
 from karabogui.util import SignalBlocker
 
 # this widget will always have a fixed size in pixels

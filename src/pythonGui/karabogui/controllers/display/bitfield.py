@@ -7,9 +7,8 @@ from karabogui.binding.api import (
     Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
     UnsignedIntBinding, get_editor_value
 )
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
-from karabogui.controllers.unitlabel import add_unit_label
+from karabogui.controllers.api import (
+    BaseBindingController, add_unit_label, register_binding_controller)
 
 
 class BitfieldWidget(QWidget):

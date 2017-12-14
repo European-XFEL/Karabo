@@ -11,8 +11,8 @@ from traits.api import Instance
 from karabo.common.scenemodel.api import CheckBoxModel
 from karabogui import icons
 from karabogui.binding.api import BoolBinding
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller)
 
 ICONS = op.dirname(icons.__file__)
 CHECKED = op.join(ICONS, "checkbox-checked.svg")
