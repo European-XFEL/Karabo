@@ -11,7 +11,8 @@ from karabogui.controllers.util import axis_label
 
 
 @register_binding_controller(ui_name='XY-Plot', klassname='XYVector',
-                             binding_type=VectorBinding)
+                             binding_type=VectorBinding,
+                             can_show_nothing=False)
 class XYVector(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(LinePlotModel)

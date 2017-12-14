@@ -6,18 +6,11 @@ from traits.api import Constant
 
 from karabo.common.scenemodel.api import BaseWidgetObjectData
 from .base import BaseBindingController
+from .util import get_class_const_trait
 
 # Module global registry
 _controller_registry = defaultdict(set)
 _controller_models = defaultdict(set)
-
-
-def get_class_const_trait(klass, name):
-    """Return the value of a `Constant` trait which has been added to a class
-    object by `register_binding_controller`.
-    """
-    trait = klass.class_traits()[name]
-    return trait.default
 
 
 def get_compatible_controllers(binding_instance, can_edit=False):
@@ -82,7 +75,8 @@ class register_binding_controller(object):
     the widget for the various UI builders and adds some useful metadata.
     """
     def __init__(self, *, ui_name='', klassname='', binding_type=(),
-                 can_edit=False, is_compatible=None, priority=0):
+                 is_compatible=None, priority=0, can_edit=False,
+                 can_show_nothing=True):
         assert klassname != '', '`klassname` must be provided!'
 
         # Expand all binding types into a set of all possible subclasses
@@ -95,9 +89,11 @@ class register_binding_controller(object):
         self.ui_name = str(ui_name)
         self.klassname = str(klassname)
         self.binding_type = tuple(binding_type)
-        self.can_edit = bool(can_edit)
         self.is_compatible = is_compatible or (lambda binding: True)
         self.priority = priority
+        self.can_edit = bool(can_edit)
+        # Support for BaseBindingController.finish_initialization
+        self.can_show_nothing = bool(can_show_nothing)
 
     def __call__(self, klass):
         assert issubclass(klass, BaseBindingController)
@@ -106,9 +102,11 @@ class register_binding_controller(object):
         klass.add_class_trait('_binding_type', binding_type_trait)
         klass.add_class_trait('_ui_name', Constant(self.ui_name))
         klass.add_class_trait('_klassname', Constant(self.klassname))
-        klass.add_class_trait('_can_edit', Constant(self.can_edit))
         klass.add_class_trait('_is_compatible', Constant(self.is_compatible))
         klass.add_class_trait('_priority', Constant(self.priority))
+        klass.add_class_trait('_can_edit', Constant(self.can_edit))
+        klass.add_class_trait('_can_show_nothing',
+                              Constant(self.can_show_nothing))
 
         # Register `klass` for building UIs
         model_klass = get_scene_model_class(klass)

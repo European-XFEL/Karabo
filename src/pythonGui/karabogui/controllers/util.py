@@ -17,6 +17,14 @@ def axis_label(proxy):
     return "{} [{}]".format(name, unit) if unit else name
 
 
+def get_class_const_trait(klass, name):
+    """Return the value of a `Constant` trait which has been added to a class
+    object by `register_binding_controller`.
+    """
+    trait = klass.class_traits()[name]
+    return trait.default
+
+
 def has_options(binding):
     """Returns True if a binding has any `options` defined."""
     return len(binding.options) > 0
