@@ -15,7 +15,6 @@ from traits.api import HasStrictTraits, WeakRef
 from karabo.common.api import DeviceStatus
 from karabogui import globals as krb_globals, icons
 from karabogui.alarms.api import get_alarm_icon
-from karabogui.enums import NavigationItemTypes
 from karabogui.events import KaraboEventSender, register_for_broadcasts
 from karabogui.indicators import get_state_icon_for_status
 from karabogui.singletons.api import get_topology
@@ -121,10 +120,9 @@ class NavigationTreeModel(QAbstractItemModel):
     def karaboBroadcastEvent(self, event):
         sender = event.sender
         data = event.data
-        if sender is KaraboEventSender.StartMonitoringDevice:
-            self._toggleMonitoring(data.get('device_id', ''), True)
-        elif sender is KaraboEventSender.StopMonitoringDevice:
-            self._toggleMonitoring(data.get('device_id', ''), False)
+        if sender in (KaraboEventSender.StartMonitoringDevice,
+                      KaraboEventSender.StopMonitoringDevice):
+            self._needs_update()
         elif sender is KaraboEventSender.ShowDevice:
             self.selectNodeById(data.get('deviceId'))
         elif sender is KaraboEventSender.AccessLevelChanged:
@@ -381,18 +379,6 @@ class NavigationTreeModel(QAbstractItemModel):
             item_type = 'device'
 
         self.signalItemChanged.emit(item_type, proxy)
-
-    def _toggleMonitoring(self, device_id, monitoring):
-        nodes = self.tree.find(device_id, full_match=True)
-        # XXX: SystemTree.find is a bit greedy. We only want devices.
-        nodes = [n for n in nodes
-                 if n.info()['type'] == NavigationItemTypes.DEVICE]
-        assert len(nodes) <= 1
-        if nodes:
-            node = nodes[0]
-            assert node.monitoring != monitoring
-            node.monitoring = monitoring
-            self._needs_update()
 
     def _needs_update(self):
         """ Whenever the ``needs_update`` event of a ``SystemTree`` is changed

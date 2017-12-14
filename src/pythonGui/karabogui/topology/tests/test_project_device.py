@@ -32,3 +32,8 @@ def test_project_device():
             device.set_project_config_hash(config)
             assert device._offline_proxy.binding.value.val.value == 'bar'
             assert device.get_current_config_hash() == config
+
+            device.start_monitoring()
+            assert device._online_proxy._monitor_count == 1
+            device.stop_monitoring()
+            assert device._online_proxy._monitor_count == 0
