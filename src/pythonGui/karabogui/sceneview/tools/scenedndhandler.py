@@ -13,9 +13,8 @@ from traits.api import ABCHasStrictTraits
 from karabo.common.scenemodel.api import (
     BoxLayoutModel, LabelModel, WorkflowItemModel)
 from karabo.middlelayer import AccessMode
-from karabogui.controllers.registry import (
-    get_compatible_controllers, get_scene_model_class)
-from karabogui.controllers.util import get_class_const_trait
+from karabogui.controllers.api import (
+    get_class_const_trait, get_compatible_controllers, get_scene_model_class)
 from karabogui.enums import NavigationItemTypes
 from karabogui.project.utils import add_device_to_server
 from karabogui.sceneview.widget.utils import get_proxy

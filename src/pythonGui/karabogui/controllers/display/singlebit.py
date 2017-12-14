@@ -12,9 +12,8 @@ from karabo.common.api import State
 from karabo.common.scenemodel.api import SingleBitModel
 from karabogui.binding.api import (
     IntBinding, get_min_max, KARABO_SCHEMA_DISPLAY_TYPE)
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
-from karabogui.controllers.unitlabel import add_unit_label
+from karabogui.controllers.api import (
+    BaseBindingController, add_unit_label, register_binding_controller)
 from karabogui.indicators import STATE_COLORS
 from karabogui.util import generateObjectName
 

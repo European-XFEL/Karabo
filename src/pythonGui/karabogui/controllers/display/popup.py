@@ -8,8 +8,8 @@ from traits.api import Instance
 from karabo.common.scenemodel.api import PopUpModel
 from karabogui.binding.api import (
     PropertyProxy, SlotBinding, StringBinding, KARABO_SCHEMA_DISPLAYED_NAME)
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller)
 
 
 def _is_compatible(binding):

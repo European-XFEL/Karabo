@@ -14,8 +14,8 @@ from karabo.common.scenemodel.api import DisplayTextLogModel
 from karabogui import icons
 from karabogui.binding.api import StringBinding
 from karabogui.const import FINE_COLOR
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller)
 from karabogui.util import generateObjectName
 
 W_SIZE = 32

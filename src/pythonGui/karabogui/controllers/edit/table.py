@@ -39,8 +39,8 @@ from karabo.common.scenemodel.api import TableElementModel
 from karabo.middlelayer import Hash, SchemaHashType
 from karabogui.binding.api import (
     VectorHashBinding, get_editor_value, KARABO_SCHEMA_ROW_SCHEMA)
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller)
 from karabogui.controllers.tableeditor import (
     ComboBoxDelegate, KaraboTableView, TableModel)
 

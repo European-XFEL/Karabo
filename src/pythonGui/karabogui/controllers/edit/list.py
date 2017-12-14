@@ -5,9 +5,9 @@ from traits.api import Instance, Int
 from karabo.common.scenemodel.api import EditableListModel
 from karabogui import icons
 from karabogui.binding.api import VectorBinding, get_editor_value
-from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller)
 from karabogui.controllers.listedit import ListEdit
-from karabogui.controllers.registry import register_binding_controller
 from karabogui.util import SignalBlocker
 
 
