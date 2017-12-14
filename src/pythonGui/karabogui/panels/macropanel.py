@@ -124,12 +124,13 @@ class MacroPanel(BasePanelWidget):
             text_proxy = self.already_connected.pop(macro_instance)
             text_proxy.stop_monitoring()
             text_proxy.on_trait_change(self.append_console,
-                                       'binding.value', remove=True)
+                                       'binding.config_update', remove=True)
 
     def finish_connection(self, macro_proxy, name, new):
         if macro_proxy.device_id not in self.already_connected:
             text_proxy = PropertyProxy(root_proxy=macro_proxy, path='print')
-            text_proxy.on_trait_change(self.append_console, 'binding.value')
+            text_proxy.on_trait_change(
+                self.append_console, 'binding.config_update')
             # start monitoring property
             text_proxy.start_monitoring()
             self.console.moveCursor(QTextCursor.End)
@@ -139,10 +140,10 @@ class MacroPanel(BasePanelWidget):
                                     'schema_update', remove=True)
 
     def append_console(self, binding, name, new):
-        if name != 'value':
+        if name != 'config_update':
             return
         self.console.moveCursor(QTextCursor.End)
-        self.console.insertPlainText(new)
+        self.console.insertPlainText(binding.value)
 
     def init_reply(self, ok, message):
         self.console.moveCursor(QTextCursor.End)
