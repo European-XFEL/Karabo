@@ -271,14 +271,16 @@ class _BaseImage(BaseBindingController):
 # level, we should remove one of them!
 @register_binding_controller(ui_name='Webcam Image',
                              klassname='WebcamImageDisplay',
-                             binding_type=ImageBinding, priority=10)
+                             binding_type=ImageBinding, priority=10,
+                             can_show_nothing=False)
 class WebcamImageDisplay(_BaseImage):
     model = Instance(WebcamImageModel)
 
 
 @register_binding_controller(ui_name='Scientific Image',
                              klassname='ScientificImageDisplay',
-                             binding_type=ImageBinding, priority=10)
+                             binding_type=ImageBinding, priority=10,
+                             can_show_nothing=False)
 class ScientificImageDisplay(_BaseImage):
     model = Instance(ScientificImageModel)
 

@@ -10,7 +10,8 @@ from traits.api import Any, ABCHasStrictTraits
 
 from karabo.common.scenemodel.api import BaseWidgetObjectData
 from karabogui.controllers.registry import (
-    get_compatible_controllers, get_class_const_trait, get_scene_model_class)
+    get_compatible_controllers, get_scene_model_class)
+from karabogui.controllers.util import get_class_const_trait
 from karabogui.sceneview.widget.api import ControllerContainer
 
 
