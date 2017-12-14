@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 
-from traits.api import TraitError
+from traits.api import TraitError, Undefined
 
 from karabo.middlelayer import Hash, MetricPrefix, Timestamp, Unit
 from . import const
@@ -50,6 +50,7 @@ def apply_default_configuration(binding):
     """Recursively set default values for a binding object.
     """
     assert isinstance(binding, BindingRoot)
+    _special_types = (ChoiceOfNodesBinding, NodeBinding, ListOfNodesBinding)
 
     def _iter_binding(node):
         namespace = node.value
@@ -72,6 +73,10 @@ def apply_default_configuration(binding):
         default_value = node.attributes.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
         if default_value is not None:
             node.value = default_value
+        elif len(node.options) > 0:
+            node.value = node.options[0]
+        elif not isinstance(node, _special_types):
+            node.value = Undefined
 
 
 def extract_attribute_modifications(schema, binding):
@@ -174,6 +179,9 @@ def extract_configuration(binding, include_attributes=False):
 
     retval = Hash()
     for key, node in _iter_binding(binding):
+        value = _get_binding_value(node)
+        if value is Undefined:
+            continue
         retval[key] = _get_binding_value(node)
         if include_attributes:
             retval[key, ...] = fast_deepcopy(node.attributes)
