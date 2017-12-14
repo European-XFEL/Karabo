@@ -52,10 +52,12 @@ def get_model_controller(scene_model):
     elif len(klasses) > 1:
         # Use the editability to differentiate
         return _with_attribute(klasses, '_can_edit', will_edit)
-    else:
+    elif klasses:
         # We have to return the only controller that was found.
         # `klasses` might be a `set` and sets don't allow indexing
         return next(iter(klasses))
+    else:
+        return None
 
 
 def get_scene_model_class(klass):
