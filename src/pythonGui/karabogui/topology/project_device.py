@@ -5,8 +5,8 @@
 #############################################################################
 
 from traits.api import (
-    Bool, DelegatesTo, HasStrictTraits, Instance, on_trait_change, Property,
-    String, WeakRef)
+    Bool, DelegatesTo, HasStrictTraits, Instance, Int, Property, String,
+    WeakRef, on_trait_change)
 
 from karabo.middlelayer import Hash
 from karabogui.binding.api import (
@@ -35,6 +35,7 @@ class ProjectDeviceInstance(HasStrictTraits):
     proxy = Property(Instance(BaseDeviceProxy),
                      depends_on='_online_proxy.online')
     online = DelegatesTo('_online_proxy')
+    schema_update = DelegatesTo('_online_proxy')
 
     # The online/offline proxies and configurations
     _online_proxy = Instance(DeviceProxy)
@@ -43,6 +44,9 @@ class ProjectDeviceInstance(HasStrictTraits):
     # Internal storage for applying offline configuration
     _offline_config = Instance(Hash)
     _deferred_update = Bool(False)
+
+    # Monitor count
+    _monitor_count = Int(0)
 
     def __init__(self, device_id, server_id, class_id):
         super(ProjectDeviceInstance, self).__init__()
@@ -85,8 +89,32 @@ class ProjectDeviceInstance(HasStrictTraits):
             self._deferred_update = True
             self._offline_config = config
 
+    def start_monitoring(self):
+        """Enable monitoring of the online device (when it is online).
+        """
+        self._monitor_count += 1
+
+    def stop_monitoring(self):
+        """Disable monitoring of the online device (when it is online).
+        """
+        self._monitor_count -= 1
+
     # ---------------------------------------------------------------------
     # Traits Handlers
+
+    def __online_proxy_changed(self, old, new):
+        """Keep _monitor_count in sync with _online_proxy."""
+        if old is not None and self._monitor_count > 0:
+            old.remove_monitor()
+        if new is not None and self._monitor_count > 0:
+            new.add_monitor()
+
+    def __monitor_count_changed(self, old, new):
+        """Handle _monitor_count state transitions"""
+        if old == 0 and new == 1:
+            self._online_proxy.add_monitor()
+        elif old == 1 and new == 0:
+            self._online_proxy.remove_monitor()
 
     def _get_proxy(self):
         if self._online_proxy.online:
