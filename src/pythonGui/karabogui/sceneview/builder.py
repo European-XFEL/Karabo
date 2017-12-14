@@ -117,9 +117,10 @@ def create_object_from_model(layout, model, parent_widget, object_dict,
         else:
             klass = get_model_controller(model)
             if klass is None:
-                # FIXME: Handle wiget deprecations here!
-                return
-            obj = ControllerContainer(klass, model, parent_widget)
+                # This widget model is either deprecated/removed or new.
+                obj = UnknownWidget(model, parent_widget)
+            else:
+                obj = ControllerContainer(klass, model, parent_widget)
 
     # Add the new scene object to the layout
     if obj is not None:

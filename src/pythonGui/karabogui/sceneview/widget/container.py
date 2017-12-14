@@ -3,7 +3,6 @@ from PyQt4.QtGui import QHBoxLayout, QLabel, QStackedLayout, QWidget
 
 from karabo.common.api import AlarmCondition, DeviceStatus, State
 from karabogui.alarms.api import get_alarm_pixmap
-from karabogui.binding.api import has_changes
 from karabogui.indicators import get_device_status_pixmap, STATE_COLORS
 from karabogui.request import send_property_changes
 from karabogui.util import generateObjectName
@@ -237,13 +236,7 @@ class ControllerContainer(QWidget):
             return
 
         if proxy.edit_value is not None:
-            device_value = proxy.get_device_value()
-            has_conflict = has_changes(proxy.binding, device_value,
-                                       proxy.edit_value)
-            if has_conflict:
-                color = STATE_COLORS[State.UNKNOWN] + (128,)
-            else:
-                color = STATE_COLORS[State.CHANGING] + (128,)
+            color = STATE_COLORS[State.CHANGING] + (128,)
             formatted_sheet = self._style_sheet.format(color)
             self.setStyleSheet(formatted_sheet)
         else:
