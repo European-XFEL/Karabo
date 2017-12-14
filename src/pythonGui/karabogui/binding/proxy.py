@@ -98,12 +98,20 @@ class DeviceProxy(BaseDeviceProxy):
             self.refresh_schema()
 
     def __monitor_count_changed(self, old, new):
+        if self.topology_node is not None:
+            self.topology_node.monitoring = (new > 0)
+
         if old == 0 and new == 1:
             broadcast_event(KaraboEventSender.StartMonitoringDevice,
                             {'device_id': self.device_id})
         elif old == 1 and new == 0:
             broadcast_event(KaraboEventSender.StopMonitoringDevice,
                             {'device_id': self.device_id})
+
+    def _topology_node_changed(self, new):
+        if new is not None:
+            new.monitoring = (self._monitor_count > 0)
+
     # -----------------------------------------------------------------------
     # Public interface
 
