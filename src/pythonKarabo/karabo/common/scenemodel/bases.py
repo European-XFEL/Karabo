@@ -58,19 +58,19 @@ class BaseShapeObjectData(BaseSceneObjectData):
 
 
 class BaseWidgetObjectData(BaseSceneObjectData):
-    """ A base class for all widgets
+    """ A base class for all controllers
     """
-    # The property names viewed by the widget
+    # The property names viewed by the controller
     keys = List(String)
-    # The possible component type for a parent of the widget
+    # The possible component type for a parent of the controller
     parent_component = String
-    # The X-coordinate of the widget
+    # The X-coordinate of the controller
     x = Float
-    # The Y-coordinate of the widget
+    # The Y-coordinate of the controller
     y = Float
-    # The height of the widget
+    # The height of the controller
     height = Float
-    # The width of the widget
+    # The width of the controller
     width = Float
 
     def _parent_component_default(self):
@@ -80,9 +80,16 @@ class BaseWidgetObjectData(BaseSceneObjectData):
         return 'DisplayComponent'
 
 
+class BaseEditWidget(BaseWidgetObjectData):
+    """ The base class for all controllers which can edit
+    """
+    def _parent_component_default(self):
+        return 'EditableApplyLaterComponent'
+
+
 class BaseDisplayEditableWidget(BaseWidgetObjectData):
     """Handle the value of the `parent_component` trait for models which
-    represent both display and editable widgets.
+    represent both display and editable controllers.
     """
     def _parent_component_default(self):
         if self.klass.startswith('Editable'):
