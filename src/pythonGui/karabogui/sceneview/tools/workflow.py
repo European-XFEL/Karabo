@@ -177,12 +177,13 @@ def connect_channels(start_channel, end_channel):
 
     path = start_channel.proxy.path
     paths = ["{}:{}".format(id, path) for id in start_channel.device_ids]
-    connected_outputs = binding.value.connectedOutputChannels.value
-    new_connections = [c for c in paths if c not in connected_outputs]
+    connected_outputs = binding.value.connectedOutputChannels
+    new_connections = [c for c in paths if c not in connected_outputs.value]
     # Modify the list in place
-    connected_outputs.extend(new_connections)
+    connected_outputs.value.extend(new_connections)
     # Trigger the `config_update` event
-    binding.config_update = True
+    connected_outputs.config_update = True
+    device.binding.config_update = True
 
 
 def disconnect_channels(start_channel, end_channel):
@@ -200,9 +201,10 @@ def disconnect_channels(start_channel, end_channel):
     path = start_channel.proxy.path
     paths = {"{}:{}".format(did, path) for did in start_channel.device_ids}
     # Get the list trait
-    connected_outputs = binding.value.connectedOutputChannels.value
-    new_connections = [c for c in connected_outputs if c not in paths]
+    connected_outputs = binding.value.connectedOutputChannels
+    new_connections = [c for c in connected_outputs.value if c not in paths]
     # Modify the list in place. (normal assignment would not affect the trait)
-    connected_outputs[:] = new_connections
+    connected_outputs.value[:] = new_connections
     # Trigger the `config_update` event
-    binding.config_update = True
+    connected_outputs.config_update = True
+    device.binding.config_update = True
