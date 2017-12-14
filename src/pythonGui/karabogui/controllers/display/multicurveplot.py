@@ -15,9 +15,8 @@ from karabo.common.scenemodel.api import MultiCurvePlotModel
 from karabogui.binding.api import (
     PropertyProxy, BoolBinding, FloatBinding, IntBinding)
 from karabogui.const import FINE_COLOR, MAXNUMPOINTS
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
-from karabogui.controllers.util import axis_label
+from karabogui.controllers.api import (
+    BaseBindingController, axis_label, register_binding_controller)
 from karabogui.mplwidget.mplplotwidgets import MplCurvePlot
 
 BUTTON_SIZE = (52, 32)

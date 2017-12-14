@@ -14,10 +14,9 @@ from traits.api import Dict, Instance, Int
 
 from karabo.common.scenemodel.api import DisplayAlignedImageModel
 from karabogui.binding.api import ImageBinding
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.images import (
-    _DIMENSIONS, get_dimensions_and_format, get_image_data, KaraboImageDialog)
-from karabogui.controllers.registry import register_binding_controller
+from karabogui.controllers.api import (
+    BaseBindingController, KaraboImageDialog, get_dimensions_and_format,
+    get_image_data, register_binding_controller, DIMENSIONS)
 
 
 @register_binding_controller(ui_name='Aligned Image View',
@@ -98,18 +97,18 @@ class DisplayAlignedImage(BaseBindingController):
             self._axis = img_node.stackAxis.value
         else:
             # this might happen for RGB image
-            self._axis = _DIMENSIONS['Z']
+            self._axis = DIMENSIONS['Z']
 
         dimX, dimY, dimZ, img_format = get_dimensions_and_format(img_node)
         if dimX is not None and dimY is not None and dimZ is None:
             if self._cellWidget.isVisible():
                 self._unsetSlider()
         elif dimZ is not None:
-            if self._axis == _DIMENSIONS['Y']:
+            if self._axis == DIMENSIONS['Y']:
                 self._setSlider(dimZ)
-            elif self._axis == _DIMENSIONS['X']:
+            elif self._axis == DIMENSIONS['X']:
                 self._setSlider(dimY)
-            elif self._axis == _DIMENSIONS['Z']:
+            elif self._axis == DIMENSIONS['Z']:
                 self._setSlider(dimX)
         else:
             return
@@ -120,11 +119,11 @@ class DisplayAlignedImage(BaseBindingController):
         self._npys[proxy] = npy
 
         if img_format is not QImage.Format_Indexed8:
-            if self._axis == _DIMENSIONS['X']:
+            if self._axis == DIMENSIONS['X']:
                 npy = self._npys[proxy][:, self._selectedCell, :]
-            elif self._axis == _DIMENSIONS['Y']:
+            elif self._axis == DIMENSIONS['Y']:
                 npy = self._npys[proxy][self._selectedCell, :, :]
-            elif self._axis == _DIMENSIONS['Z']:
+            elif self._axis == DIMENSIONS['Z']:
                 npy = self._npys[proxy][:, :, self._selectedCell]
 
         # Safety
@@ -206,11 +205,11 @@ class DisplayAlignedImage(BaseBindingController):
         self._currentCell.setValue(value)
         npy = None
         for proxy in self._npys:
-            if self._axis == _DIMENSIONS['X']:
+            if self._axis == DIMENSIONS['X']:
                 npy = self._npys[proxy][:, self._selectedCell, :]
-            if self._axis == _DIMENSIONS['Y']:
+            if self._axis == DIMENSIONS['Y']:
                 npy = self._npys[proxy][self._selectedCell, :, :]
-            if self._axis == _DIMENSIONS['Z']:
+            if self._axis == DIMENSIONS['Z']:
                 npy = self._npys[proxy][:, :, self._selectedCell]
 
             for i in range(len(self._images[proxy])):

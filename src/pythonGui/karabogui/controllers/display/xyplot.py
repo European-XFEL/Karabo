@@ -5,9 +5,8 @@ from traits.api import Any, Instance
 from karabo.common.scenemodel.api import XYPlotModel
 from karabogui.binding.api import PropertyProxy, FloatBinding, IntBinding
 from karabogui.const import MAXNUMPOINTS
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
-from karabogui.controllers.util import axis_label
+from karabogui.controllers.api import (
+    BaseBindingController, axis_label, register_binding_controller)
 from karabogui.mplwidget.mplplotwidgets import MplCurvePlot
 
 

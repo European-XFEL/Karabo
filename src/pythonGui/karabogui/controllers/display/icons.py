@@ -7,12 +7,11 @@ from karabo.common.scenemodel.api import (
 from karabogui import icons
 from karabogui.binding.api import (
     BaseBinding, FloatBinding, IntBinding, StringBinding)
-from karabogui.controllers.base import BaseBindingController
+from karabogui.controllers.api import (
+    BaseBindingController, has_options, register_binding_controller)
 from karabogui.controllers.icons_dialogs import (
     DigitDialog, SelectionDialog, TextDialog, IconItem
 )
-from karabogui.controllers.registry import register_binding_controller
-from karabogui.controllers.util import has_options
 
 NUMERICAL_BINDINGS = (FloatBinding, IntBinding)
 

@@ -7,9 +7,8 @@ from karabo.common.scenemodel.api import FloatSpinBoxModel
 from karabogui.binding.api import (
     FloatBinding, get_editor_value, get_min_max, KARABO_SCHEMA_ABSOLUTE_ERROR)
 from karabogui.const import WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
-from karabogui.controllers.unitlabel import add_unit_label
+from karabogui.controllers.api import (
+    BaseBindingController, add_unit_label, register_binding_controller)
 from karabogui.util import SignalBlocker
 
 
