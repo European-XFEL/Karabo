@@ -483,8 +483,10 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 if online_device:
                     proxy.edit_value = value
                 else:  # ProjectDeviceProxy or DeviceClassProxy
+                    # Put the value directly in the binding
                     proxy.value = value
-                    proxy.revert_edit()  # XXX: Don't show edited state
+                    # Then revert edit_value to avoid the CHANGING background
+                    proxy.revert_edit()
                     self.root.binding.config_update = True
             elif online_device:
                 proxy.revert_edit()
@@ -542,7 +544,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 name = binding.attributes.get(KARABO_SCHEMA_DISPLAYED_NAME)
                 return name or proxy.path.split('.')[-1]
             elif role == Qt.FontRole:
-                if binding.assignment is Assignment.MANDATORY:
+                is_class = isinstance(self.root, DeviceClassProxy)
+                if is_class and binding.assignment is Assignment.MANDATORY:
                     font = QFont()
                     font.setBold(True)
                     return font
@@ -553,7 +556,6 @@ class ConfigurationTreeModel(QAbstractItemModel):
         elif column == 2:
             if role == Qt.BackgroundRole:
                 if proxy.edit_value is not None:
-                    # FIXME: Show when values conflict with those on device
                     color = QColor(*STATE_COLORS[State.CHANGING])
                     color.setAlpha(128)
                     return QBrush(color)

@@ -100,6 +100,9 @@ def test_scene_model_registry():
     class SharedModel(BaseWidgetObjectData):
         klass = Enum('Foo', 'Bar')
 
+    class UnusedModel(BaseWidgetObjectData):
+        pass
+
     with flushed_registry():
         @register_binding_controller(klassname='Displayer',
                                      binding_type=StringBinding)
@@ -134,6 +137,9 @@ def test_scene_model_registry():
         model.klass = 'Bar'
         controller = get_model_controller(model)
         assert controller is BarWidget
+
+        model = UnusedModel()
+        assert get_model_controller(model) is None
 
 
 def test_known_model_collision():
