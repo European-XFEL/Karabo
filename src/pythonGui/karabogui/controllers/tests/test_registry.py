@@ -4,12 +4,10 @@ from karabo.common.scenemodel.api import BaseWidgetObjectData
 from karabo.middlelayer import (
     Configurable, Int8, Int16, UInt32, UInt64, String)
 from karabogui.binding.api import StringBinding, IntBinding, build_binding
-from karabogui.testing import flushed_registry
-from ..base import BaseBindingController
-from ..registry import (
-    get_compatible_controllers, get_model_controller,
-    register_binding_controller
-)
+from karabogui.testing import GuiTestCase, flushed_registry
+from ..api import (
+    BaseBindingController, get_class_const_trait, get_compatible_controllers,
+    get_model_controller, register_binding_controller)
 
 
 class SomeObject(Configurable):
@@ -171,3 +169,21 @@ def test_display_edit_overlap():
     model = IntLineEditModel(
         parent_component='EditableApplyLaterComponent')
     assert get_model_controller(model) is IntLineEdit
+
+
+# Use a GuiTestCase to ensure a populated controller registry
+class TestEditableControllerModels(GuiTestCase):
+    def test_models_are_editable(self):
+        from karabogui.controllers import registry
+
+        editable_controllers = set()
+        for klasses in registry._controller_registry.values():
+            for klass in klasses:
+                if get_class_const_trait(klass, '_can_edit'):
+                    editable_controllers.add(klass)
+
+        for klass in editable_controllers:
+            modelklass = klass.class_traits()['model'].trait_type.klass
+            has_klass = 'klass' in modelklass.class_traits()
+            if not has_klass:
+                assert modelklass().parent_component != 'DisplayComponent'
