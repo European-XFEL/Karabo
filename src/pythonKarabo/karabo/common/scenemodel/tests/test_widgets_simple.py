@@ -34,18 +34,23 @@ def _check_empty_widget(klass):
     assert_base_traits(read_model)
 
 
+def _check_editable_empty_widget(klass):
+    traits = base_widget_traits()
+    model = klass(**traits)
+    assert model.parent_component == 'EditableApplyLaterComponent'
+    read_model = single_model_round_trip(model)
+    assert_base_traits(read_model)
+    assert read_model.parent_component == model.parent_component
+
+
 def _geometry_traits():
     return {'x': 0, 'y': 0, 'height': 100, 'width': 100}
 
 
 def test_all_empty_widgets():
     model_classes = (
-        api.BitfieldModel, api.DisplayCommandModel, api.DisplayLabelModel,
-        api.DisplayPlotModel, api.EditableListModel,
-        api.EditableListElementModel, api.EditableSpinBoxModel,
-        api.HexadecimalModel, api.IntLineEditModel, api.KnobModel,
-        api.MultiCurvePlotModel, api.SliderModel, api.XYPlotModel,
-        api.PopUpModel, api.RunConfiguratorModel
+        api.DisplayCommandModel, api.DisplayLabelModel, api.DisplayPlotModel,
+        api.PopUpModel, api.MultiCurvePlotModel, api.XYPlotModel
     )
     for klass in model_classes:
         yield _check_empty_widget, klass
@@ -59,6 +64,16 @@ def test_display_editable_widgets():
     )
     for klass in model_classes:
         yield _check_display_editable_widget, klass
+
+
+def test_editable_simple_model():
+    model_classes = (
+        api.BitfieldModel, api.EditableListModel, api.EditableListElementModel,
+        api.EditableSpinBoxModel, api.HexadecimalModel, api.IntLineEditModel,
+        api.KnobModel, api.RunConfiguratorModel, api.SliderModel
+    )
+    for klass in model_classes:
+        yield _check_editable_empty_widget, klass
 
 
 def test_missing_parent_component():
