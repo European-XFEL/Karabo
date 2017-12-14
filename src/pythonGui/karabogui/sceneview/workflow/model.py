@@ -6,7 +6,7 @@ from traits.api import (
 
 from karabo.common.scenemodel.api import WorkflowItemModel
 from karabogui.binding.api import (
-    DeviceProxy, NodeBinding, PropertyProxy, KARABO_SCHEMA_DISPLAY_TYPE)
+    NodeBinding, PropertyProxy, KARABO_SCHEMA_DISPLAY_TYPE)
 from karabogui.singletons.api import get_topology
 from karabogui.topology.api import ProjectDeviceInstance
 from . import const
@@ -30,24 +30,6 @@ class WorkflowChannelModel(HasStrictTraits):
     position = Property(Instance(QPoint),
                         depends_on=['model.x', 'model.y', 'model.height',
                                     'model.width'])
-
-    def toggle_property_notifications(self, visible):
-        """Register/Unregister for device property notifications.
-
-        NOTE: We change the visibility of the root ``DeviceProxy`` object,
-        because calling `start_monitoring` on an output channel `PropertyProxy`
-        will request a connection to the output channel and data will be
-        continually sent to the GUI. However, we're only interested in the
-        channel node's metadata, and want to avoid the firehose of data.
-        """
-        device_proxy = self.proxy.root_proxy
-        if not isinstance(device_proxy, DeviceProxy):
-            return
-
-        if visible:
-            device_proxy.add_monitor()
-        else:
-            device_proxy.remove_monitor()
 
     def _get_device_ids(self):
         # XXX: There's only one ID until workflow group items are supported
@@ -103,15 +85,47 @@ class WorkflowDeviceModel(HasStrictTraits):
     # The inputs and outputs of the device
     inputs = List(Instance(WorkflowChannelModel))
     outputs = List(Instance(WorkflowChannelModel))
+    # Let SceneWorkflowModel know to refresh its connections
+    check_connection = Event
     # The scene position of the device status icon
     position = Property(Instance(QPoint),
                         depends_on=['model.x', 'model.y', 'model.height',
                                     'model.width'])
+    # Are we visible?
+    _visible = Bool(False)
+
+    # --------------------------------------------
+    # Public interface
+
+    def set_visible(self, visible):
+        """Subscribe/Unsubscribe from device updates on boxes
+        """
+        if self._visible == visible:
+            return  # no change. nothing to do.
+
+        self._visible = visible
+
+        if self.device is not None:
+            if visible:
+                self.device.start_monitoring()
+            else:
+                self.device.stop_monitoring()
+
+    # --------------------------------------------
+    # Traits handlers
 
     @cached_property
     def _get_position(self):
         model = self.model
         return QPoint(model.x, model.y)
+
+    def _device_changed(self, old, new):
+        """When a device is added/removed, make sure it is monitored.
+        """
+        if old is not None and self._visible:
+            old.stop_monitoring()
+        if new is not None and self._visible:
+            new.start_monitoring()
 
     def _model_changed(self):
         """When the model changes, set the project device instance.
@@ -122,14 +136,16 @@ class WorkflowDeviceModel(HasStrictTraits):
 
         self.device = get_topology().get_project_device(self.model.device_id)
 
-    @on_trait_change('device.online,device.proxy.schema_updated')
+    @on_trait_change('device.online,device.schema_update')
     def _refresh_channels(self):
         """When the project device changes, or it changes between
         online/offline states: refresh the workflow channels.
         """
         if self.device is None or len(self.device.proxy.binding.value) == 0:
             # No device, or the device has no schema assigned
-            self.inputs = self.outputs = []
+            self.inputs = []
+            self.outputs = []
+            self.check_connection = True
             return
 
         # Collect all known channels for the current Device[Class]Proxy
@@ -150,6 +166,7 @@ class WorkflowDeviceModel(HasStrictTraits):
 
         self.inputs = _avoid_duplicates(inputs, self.inputs)
         self.outputs = _avoid_duplicates(outputs, self.outputs)
+        self.check_connection = True
 
     def _collect_channels(self, device, binding, *,
                           path='', inputs=None, outputs=None):
@@ -226,19 +243,19 @@ class SceneWorkflowModel(HasStrictTraits):
             self._workflow_items.remove(it)
 
     def destroy(self):
-        """Clean up any channels (causing their Boxes to disconnect)."""
+        """Clean up any channels and devices"""
         # Cause a single items_changed notification. The handler will clean up
-        # the channels.
+        # the channels and devices.
         self._workflow_items[:] = []
 
     def set_visible(self, visible):
-        """Subscribe/Unsubscribe from device updates on boxes
+        """Subscribe/Unsubscribe from device updates
         """
-        for ch in self.channels:
-            ch.toggle_property_notifications(visible)
-
         # Keep the state for later adds/removes
         self._scene_visible = visible
+
+        for device in self.devices:
+            device.set_visible(visible)
 
     # --------------------------------------------
     # Traits handlers
@@ -253,7 +270,7 @@ class SceneWorkflowModel(HasStrictTraits):
         # Event traits don't have a value, they just generate notifications
         self.updated = True
 
-    @on_trait_change('devices:inputs,devices:outputs')
+    @on_trait_change('devices:inputs,devices:outputs,devices:check_connection')
     def _refresh_channels(self, obj, name, old, new):
         if name == 'inputs':
             self._remove_device_channels(old, [])
@@ -261,8 +278,17 @@ class SceneWorkflowModel(HasStrictTraits):
         elif name == 'outputs':
             self._remove_device_channels([], old)
             self._add_device_channels([], new)
+        elif name == 'check_connection':
+            self._refresh_connections()
 
-        self._refresh_connections()
+    def _devices_items_changed(self, event):
+        """A trait notification handler for the `devices_items` list.
+        """
+        for device in event.added:
+            device.set_visible(self._scene_visible)
+        for device in event.removed:
+            # It's safe to just tell every removed device that it's not visible
+            device.set_visible(False)
 
     def __workflow_items_items_changed(self, event):
         """A trait notification handler for the `_workflow_items` list.
@@ -286,24 +312,19 @@ class SceneWorkflowModel(HasStrictTraits):
 
     def _add_device_channels(self, inputs, outputs):
         for ch in inputs:
-            if self._scene_visible:
-                ch.toggle_property_notifications(True)
             self._subscribe_to_input_changes(ch)
-        for ch in outputs:
-            if self._scene_visible:
-                ch.toggle_property_notifications(True)
         self.input_channels.extend(inputs)
         self.output_channels.extend(outputs)
 
     def _remove_device_channels(self, inputs, outputs):
         for ch in inputs:
-            if self._scene_visible:
-                ch.toggle_property_notifications(False)
+            if ch not in self.input_channels:
+                continue
             self._unsubscribe_from_input_changes(ch)
             self.input_channels.remove(ch)
         for ch in outputs:
-            if self._scene_visible:
-                ch.toggle_property_notifications(False)
+            if ch not in self.output_channels:
+                continue
             self.output_channels.remove(ch)
 
     def _connected_outputs_cb(self):
@@ -319,7 +340,7 @@ class SceneWorkflowModel(HasStrictTraits):
                   if ch.proxy.binding.value.dataDistribution is obj]
         for conn in self.connections:
             if conn.input in inputs:
-                conn.data_distribution = value
+                conn.data_distribution = obj.value
 
     def _lookup_output(self, device_id, path):
         for output in self.output_channels:
@@ -357,18 +378,20 @@ class SceneWorkflowModel(HasStrictTraits):
         """Subscribe to updates from a channel node's properties."""
         binding = input_channel.proxy.binding
         connected_outputs = binding.value.connectedOutputChannels
-        connected_outputs.on_trait_change(self._connected_outputs_cb, 'value')
+        connected_outputs.on_trait_change(self._connected_outputs_cb,
+                                          'config_update')
         if 'dataDistribution' in binding.value:
             data_dist = binding.value.dataDistribution
-            data_dist.on_trait_change(self._data_distribution_cb, 'value')
+            data_dist.on_trait_change(self._data_distribution_cb,
+                                      'config_update')
 
     def _unsubscribe_from_input_changes(self, input_channel):
         """Unsubscribe from property updates."""
         binding = input_channel.proxy.binding
         connected_outputs = binding.value.connectedOutputChannels
-        connected_outputs.on_trait_change(self._connected_outputs_cb, 'value',
-                                          remove=True)
+        connected_outputs.on_trait_change(self._connected_outputs_cb,
+                                          'config_update', remove=True)
         if 'dataDistribution' in binding.value:
             data_dist = binding.value.dataDistribution
-            data_dist.on_trait_change(self._data_distribution_cb, 'value',
-                                      remove=True)
+            data_dist.on_trait_change(self._data_distribution_cb,
+                                      'config_update', remove=True)
