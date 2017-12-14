@@ -3,6 +3,7 @@ from glob import glob
 import os.path as op
 
 import numpy as np
+from traits.api import Undefined
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Hash, MetricPrefix, Schema, State,
@@ -127,6 +128,13 @@ def test_default_values():
 
     assert binding.value.a.value
     assert binding.value.b.value == 'c'
+
+    # Make sure the extracted default conversion is minimal
+    # It should include properties with default values, options, or node types
+    config = extract_configuration(binding)
+    default_props = ('a', 'b', 'm', 'h1', 'i1', 'j1')
+    for prop in default_props:
+        assert prop in config, '{!r} missing from config'.format(prop)
 
 
 def test_apply_configuration():
