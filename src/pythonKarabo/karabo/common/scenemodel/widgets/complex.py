@@ -3,7 +3,7 @@ from xml.etree.ElementTree import SubElement
 from traits.api import Bool, Enum, Float, Int, String
 
 from karabo.common.scenemodel.bases import (
-    BaseDisplayEditableWidget, BaseWidgetObjectData)
+    BaseDisplayEditableWidget, BaseEditWidget, BaseWidgetObjectData)
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
 from karabo.common.scenemodel.io_utils import (
     read_base_widget_data, read_empty_display_editable_widget,
@@ -17,8 +17,8 @@ class ColorBoolModel(BaseWidgetObjectData):
     invert = Bool(False)
 
 
-class DoubleLineEditModel(BaseWidgetObjectData):
-    """ A model for DisplayBool Widget"""
+class DoubleLineEditModel(BaseEditWidget):
+    """ A model for DoubleLineEdit Widget"""
 
     # The floating point precision
     decimals = Int(-1)
@@ -46,7 +46,7 @@ class EvaluatorModel(BaseWidgetObjectData):
     expression = String('x')
 
 
-class FloatSpinBoxModel(BaseWidgetObjectData):
+class FloatSpinBoxModel(BaseEditWidget):
     """ A model for FloatSpinBox
     """
     # The step size
