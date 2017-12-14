@@ -26,6 +26,16 @@ class WidgetSceneHandler(ABCHasStrictTraits):
             return
 
         controller = self.widget.widget_controller
+        if len(controller.proxies) > 1:
+            # We currently don't allow user to implicitly mutate a controller
+            # which contains more than one proxy.
+            # XXX: Could provide sub menu for each property
+            main_menu = QMenu(self.widget)
+            info = main_menu.addAction('No mutation for multiple properties')
+            info.setEnabled(False)
+            main_menu.exec_(event.globalPos())
+            return
+
         binding = controller.proxy.binding
         if binding is None:
             # The binding must be valid for this to work...
