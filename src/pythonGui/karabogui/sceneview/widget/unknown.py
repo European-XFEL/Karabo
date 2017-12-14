@@ -100,12 +100,16 @@ class UnknownSvgWidget(QWidget):
 
 
 class UnknownWidget(PlaceholderWidget):
-    """ A widget which can display data from an UnknownWidgetDataModel.
+    """A widget which can display data from an UnknownWidgetDataModel or from a
+    BaseWidgetObjectData subclass which is unsupported for some reason.
     """
     def __init__(self, model, parent=None):
         super(UnknownWidget, self).__init__('Unsupported', parent)
         self.model = model
-        self.setToolTip('Unsupported widget type: ' + self.model.klass)
+        klassname = type(self.model).__name__
+        if hasattr(self.model, 'klass'):
+            klassname = self.model.klass
+        self.setToolTip('Unsupported widget type: ' + klassname)
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
 
     def add_proxies(self, proxies):
