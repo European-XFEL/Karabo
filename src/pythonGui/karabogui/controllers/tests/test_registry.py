@@ -187,3 +187,10 @@ class TestEditableControllerModels(GuiTestCase):
             has_klass = 'klass' in modelklass.class_traits()
             if not has_klass:
                 assert modelklass().parent_component != 'DisplayComponent'
+
+    def test_models_are_valid(self):
+        from karabogui.controllers import registry
+
+        for klasses in registry._controller_registry.values():
+            for klass in klasses:
+                assert klass().model is not None
