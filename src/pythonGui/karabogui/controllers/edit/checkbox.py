@@ -19,7 +19,7 @@ from karabogui.util import SignalBlocker
                              binding_type=BoolBinding, priority=10)
 class EditableCheckBox(BaseBindingController):
     # The scene model class used by this controller
-    model = Instance(CheckBoxModel)
+    model = Instance(CheckBoxModel, args=())
 
     def create_widget(self, parent):
         widget = QCheckBox(parent)

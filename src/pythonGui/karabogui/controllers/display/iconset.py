@@ -55,7 +55,7 @@ def _read_xml_data(data):
                              binding_type=StringBinding)
 class DisplayIconset(BaseBindingController):
     # The scene model class used by this controller
-    model = Instance(DisplayIconsetModel)
+    model = Instance(DisplayIconsetModel, args=())
     # XMLParser object to get associated layer for property value
     xml = Instance(ElementTree, allow_none=True)
 

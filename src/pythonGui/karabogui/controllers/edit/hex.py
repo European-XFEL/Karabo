@@ -20,7 +20,7 @@ from karabogui.util import SignalBlocker
                              klassname='Hexadecimal', binding_type=IntBinding)
 class Hexadecimal(BaseBindingController):
     # The scene model class used by this controller
-    model = Instance(HexadecimalModel)
+    model = Instance(HexadecimalModel, args=())
     # Internal traits
     _internal_widget = Instance(QLineEdit)
 

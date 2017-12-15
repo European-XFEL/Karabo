@@ -21,7 +21,7 @@ def _widget_is_compatible(binding):
                              is_compatible=_widget_is_compatible)
 class DisplayComboBox(BaseBindingController):
     # The scene data model class for this controller
-    model = Instance(ComboBoxModel)
+    model = Instance(ComboBoxModel, args=())
 
     def binding_update(self, proxy):
         self.widget.clear()

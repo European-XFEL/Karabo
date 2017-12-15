@@ -24,7 +24,7 @@ from karabogui.controllers.api import (
                              binding_type=ImageBinding,
                              can_show_nothing=False)
 class DisplayAlignedImage(BaseBindingController):
-    model = Instance(DisplayAlignedImageModel)
+    model = Instance(DisplayAlignedImageModel, args=())
     _plot = Instance(object)  # some QWT class...
     _cellWidget = Instance(QWidget)
     _currentCell = Instance(QSpinBox)

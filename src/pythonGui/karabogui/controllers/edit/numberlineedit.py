@@ -171,7 +171,7 @@ class DoubleLineEdit(NumberLineEdit):
                              priority=10)
 class IntLineEdit(NumberLineEdit):
     # The scene model class used by this controller
-    model = Instance(IntLineEditModel)
+    model = Instance(IntLineEditModel, args=())
 
     def create_widget(self, parent):
         self._validator = IntValidator()

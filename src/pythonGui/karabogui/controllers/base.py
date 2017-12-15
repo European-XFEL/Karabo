@@ -12,8 +12,8 @@ class BaseBindingController(HasStrictTraits):
     """The base class of controllers which mediate the connection between a
     data binding model (and a scene model) and a scene widget view.
     """
-    # Scene data model describing the widget (optional)
-    model = Instance(BaseWidgetObjectData)
+    # Scene data model describing the widget
+    model = Instance(BaseWidgetObjectData, args=())
     # The proxy of the main property being visualized
     proxy = Instance(PropertyProxy)
     # Convenience property for getting all proxies for a widget
@@ -181,6 +181,8 @@ class BaseBindingController(HasStrictTraits):
                 return False
             # Only if `add_proxy` doesn't raise an exception
             self._additional_proxies.append(proxy)
+            # Append the key to data model
+            self.model.keys.append(proxy.key)
             if self._showing:
                 proxy.start_monitoring()
             return True  # The only successful exit from this method!

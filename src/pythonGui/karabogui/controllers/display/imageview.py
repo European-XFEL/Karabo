@@ -21,7 +21,7 @@ from karabogui.controllers.api import (
                              can_show_nothing=False)
 class DisplayImage(BaseBindingController):
     # The scene model class used by this controller
-    model = Instance(DisplayImageModel)
+    model = Instance(DisplayImageModel, args=())
 
     # Internal traits
     _image = Instance(object)  # qwt object
