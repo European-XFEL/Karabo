@@ -16,7 +16,7 @@ code lives in ``karabo.common.scenemodel`` and is responsible for the
 representation of scene data and reading/writing those data to/from files. It
 is built using the `Traits library <http://docs.enthought.com/traits/>`_, which
 you should familiarize yourself with if you plan to work on the scene. The view
-code for the scene lives in ``karabo_gui.sceneview``. It is built using Qt and
+code for the scene lives in ``karabogui.sceneview``. It is built using Qt and
 makes use of the model objects.
 
 .. note::
@@ -143,18 +143,9 @@ scenes.
 The View
 ========
 
-The job of the subpackage ``karabo_gui.sceneview`` is to create a visual
+The job of the subpackage ``karabogui.sceneview`` is to create a visual
 representation of the data in scene model objects *and* give a way to
 manipulate that data.
-
-.. note::
-
-  The current scene view architecture (as of early 2017) is at the bleeding
-  edge of a much larger refactor of the GUI code base. As such, it requires a
-  bit more work than necessary when adding new widgets. It's doing this to
-  accommodate the existing ``DisplayWidget`` classes, which are also used by
-  the configuration panel. This should eventually change, but it's a long
-  process.
 
 
 Adding a New Widget
@@ -165,23 +156,13 @@ should first do that before proceeding with the view portion. Once your new
 widget has a data model class associated with it, you can make it appear in the
 scene by doing the following:
 
-* Create a ``DisplayWidget``/``EditableWidget`` class (or classes) which will
-  be shown in the scene
-* Create a ``BaseWidgetContainer`` class which acts as an intermediary between
-  the ``DisplayWidget`` and the data model instance.
-
-  * The ``karabo_gui.sceneview.widget`` subpackage has lots of examples if
-    you're curious how this intermediary should work.
-  * If your model class contains no data (ie: it's only being used for its type)
-    then you might be able to use the machinery in
-    ``karabo_gui.sceneview.widget.generic``.
-
-* Add your container class to ``karabo_gui.sceneview.widget.api``
-* Import your model class in ``karabo_gui.sceneview.tools.const`` and add it
-  to the ``WIDGET_FACTORIES`` dictionary (mapping ``DisplayWidget`` subclass
-  name -> model class).
-* Import your container and model classes in ``karabo_gui.sceneview.builder``
-  and add them to the ``_SCENE_OBJ_FACTORIES`` dictionary.
+* Create a ``BaseBindingController`` class (or classes) which will be shown in
+  the scene.
+* Make sure your controller class has a ``model`` trait which is an ``Instance``
+  of whatever your scene model class is.
+* Register your controller class with the ``register_binding_controller``
+  decorator.
+* Add unit tests for your controller class.
 * Test in the GUI.
 
 
@@ -192,18 +173,18 @@ scene by doing the following:
 .. note::
 
   If your new scene object **does NOT** need to interact with device properties
-  you should take a look at ``karabo_gui.sceneview.widgets.simple``. Adding
-  things to the scene view isn't *always* complicated.
+  you should take a look at ``karabogui.sceneview.widget``. Adding things to
+  the scene view isn't *always* dealing with properties.
 
 Adding a New Shape
 ------------------
 
-Creating a new shape ``karabo_gui.sceneview.shapes`` is a bit easier, due to
+Creating a new shape ``karabogui.sceneview.shapes`` is a bit easier, due to
 the fact that shapes are not maintaining backwards compatibility with other
 parts of the GUI code base. That said, you should still begin by creating a
 data model class for your shape.
 
 * Create a ``BaseShape`` class which will be shown in the scene
-* Import your shape and model classes in ``karabo_gui.sceneview.builder``
+* Import your shape and model classes in ``karabogui.sceneview.builder``
   and add them to the ``_SHAPE_CLASSES`` dictionary.
 * Test in the GUI
