@@ -25,7 +25,7 @@ DEFAULT_SIZE = 125
                              can_show_nothing=False)
 class DisplayImageElement(BaseBindingController):
     # The scene model class used by this controller
-    model = Instance(DisplayImageElementModel)
+    model = Instance(DisplayImageElementModel, args=())
 
     def create_widget(self, parent):
         widget = QLabel(parent)

@@ -15,7 +15,7 @@ from karabogui.util import SignalBlocker
                              klassname='EditableList',
                              binding_type=VectorBinding, priority=10)
 class EditableList(BaseBindingController):
-    model = Instance(EditableListModel)
+    model = Instance(EditableListModel, args=())
     last_cursor_position = Int(0)
     _internal_widget = Instance(QLineEdit)
     layout = Instance(QHBoxLayout)

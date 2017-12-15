@@ -68,7 +68,7 @@ class _FileSystemPicker(BaseBindingController):
                              is_compatible=with_display_type('directory'))
 class EditableDirectory(_FileSystemPicker):
     # The scene model for this controller
-    model = Instance(DirectoryModel)
+    model = Instance(DirectoryModel, args=())
     # Internal details
     pickerText = Constant('Select directory')
 
@@ -85,7 +85,7 @@ class EditableDirectory(_FileSystemPicker):
                              is_compatible=with_display_type('fileIn'))
 class EditableFileIn(_FileSystemPicker):
     # The scene model for this controller
-    model = Instance(FileInModel)
+    model = Instance(FileInModel, args=())
     # Internal details
     pickerText = Constant('Select input file')
 
@@ -102,7 +102,7 @@ class EditableFileIn(_FileSystemPicker):
                              is_compatible=with_display_type('fileOut'))
 class EditableFileOut(_FileSystemPicker):
     # The scene model for this controller
-    model = Instance(FileOutModel)
+    model = Instance(FileOutModel, args=())
     # Internal details
     pickerText = Constant('Select output file')
 

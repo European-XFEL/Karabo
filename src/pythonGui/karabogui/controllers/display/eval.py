@@ -22,7 +22,7 @@ BINDING_TYPES = (CharBinding, ComplexBinding, FloatBinding, StringBinding,
                              binding_type=BINDING_TYPES)
 class Evaluator(BaseBindingController):
     # The scene model class used by this controller
-    model = Instance(EvaluatorModel)
+    model = Instance(EvaluatorModel, args=())
     # Security holes (evaluation of values)
     globals_ns = Dict
     function = Callable

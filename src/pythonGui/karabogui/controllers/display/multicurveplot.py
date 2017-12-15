@@ -29,7 +29,7 @@ NUMERICAL_BINDINGS = (BoolBinding, FloatBinding, IntBinding)
                              can_show_nothing=False)
 class MultiCurvePlot(BaseBindingController):
     # The scene model class used by this controller
-    model = Instance(MultiCurvePlotModel)
+    model = Instance(MultiCurvePlotModel, args=())
     # Internal traits
     _mpl_widget = Instance(QWidget)
     _reset_proxy = Instance(PropertyProxy)
