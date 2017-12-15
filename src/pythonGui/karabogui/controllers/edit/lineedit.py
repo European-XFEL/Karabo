@@ -19,7 +19,7 @@ from karabogui.util import SignalBlocker
                              binding_type=(CharBinding, StringBinding))
 class EditableLineEdit(BaseBindingController):
     # The scene model class used by this controlelr
-    model = Instance(LineEditModel)
+    model = Instance(LineEditModel, args=())
     # Internal details
     _last_cursor_pos = Int(0)
 

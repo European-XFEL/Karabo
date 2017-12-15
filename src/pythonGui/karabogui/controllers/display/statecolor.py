@@ -19,7 +19,7 @@ from karabogui.util import generateObjectName
                              can_show_nothing=False)
 class DisplayStateColor(BaseBindingController):
     # The specific scene model class used by this widget
-    model = Instance(DisplayStateColorModel)
+    model = Instance(DisplayStateColorModel, args=())
     # CSS template for the widget BG color
     _style_sheet = Str
 

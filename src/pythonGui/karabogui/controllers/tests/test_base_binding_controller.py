@@ -52,7 +52,7 @@ def _define_binding_classes():
     """
     @register_binding_controller(klassname='Norm', binding_type=StringBinding)
     class DeviceController(BaseBindingController):
-        model = Instance(UniqueWidgetModel)
+        model = Instance(UniqueWidgetModel, args=())
         display_names = Dict
 
         def add_proxy(self, proxy):
@@ -75,7 +75,7 @@ def _define_binding_classes():
 
     @register_binding_controller(klassname='Multi', binding_type=StringBinding)
     class MultiBindingController(BaseBindingController):
-        model = Instance(UniqueWidgetModel)
+        model = Instance(UniqueWidgetModel, args=())
 
         def add_proxy(self, proxy):
             return True
@@ -88,7 +88,7 @@ def _define_binding_classes():
 
     @register_binding_controller(klassname='Node', binding_type=NodeBinding)
     class NodeBindingController(BaseBindingController):
-        model = Instance(UniqueWidgetModel)
+        model = Instance(UniqueWidgetModel, args=())
 
         def create_widget(self, parent):
             return QLabel(parent)
@@ -98,7 +98,7 @@ def _define_binding_classes():
 
     @register_binding_controller(klassname='Mono', binding_type=StringBinding)
     class SingleBindingController(BaseBindingController):
-        model = Instance(UniqueWidgetModel)
+        model = Instance(UniqueWidgetModel, args=())
         disp_name = Str
         deferred = Int(0)
 
@@ -118,7 +118,7 @@ def _define_binding_classes():
     @register_binding_controller(klassname='State', binding_type=StringBinding,
                                  is_compatible=with_display_type('State'))
     class StateTrackingController(BaseBindingController):
-        model = Instance(UniqueWidgetModel)
+        model = Instance(UniqueWidgetModel, args=())
 
         def create_widget(self, parent):
             return QLabel(parent)
