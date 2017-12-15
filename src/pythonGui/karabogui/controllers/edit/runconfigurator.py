@@ -26,7 +26,7 @@ _is_compatible = with_display_type('RunConfigurator')
                              is_compatible=_is_compatible, priority=10)
 class RunConfiguratorEdit(BaseBindingController):
     # The scene model class used by this controller
-    model = Instance(RunConfiguratorModel)
+    model = Instance(RunConfiguratorModel, args=())
     # Private traits
     _is_editing = Bool(False)
 

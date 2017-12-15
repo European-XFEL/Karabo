@@ -24,7 +24,7 @@ UNCHECKED = op.join(ICONS, "checkbox-unchecked.svg")
                              binding_type=BoolBinding, priority=10)
 class DisplayCheckBox(BaseBindingController):
     # The scene data model class for this controller
-    model = Instance(CheckBoxModel)
+    model = Instance(CheckBoxModel, args=())
 
     def create_widget(self, parent):
         widget = QSvgWidget(parent)

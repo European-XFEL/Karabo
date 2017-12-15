@@ -29,18 +29,18 @@ class _FilesystemDisplay(BaseBindingController):
                              klassname='DisplayDirectory',
                              is_compatible=with_display_type('directory'))
 class DisplayDirectory(_FilesystemDisplay):
-    model = Instance(DirectoryModel)
+    model = Instance(DirectoryModel, args=())
 
 
 @register_binding_controller(ui_name='File In', binding_type=StringBinding,
                              klassname='DisplayFileIn',
                              is_compatible=with_display_type('fileIn'))
 class DisplayFileIn(_FilesystemDisplay):
-    model = Instance(FileInModel)
+    model = Instance(FileInModel, args=())
 
 
 @register_binding_controller(ui_name='File Out', binding_type=StringBinding,
                              klassname='DisplayFileOut',
                              is_compatible=with_display_type('fileOut'))
 class DisplayFileOut(_FilesystemDisplay):
-    model = Instance(FileOutModel)
+    model = Instance(FileOutModel, args=())

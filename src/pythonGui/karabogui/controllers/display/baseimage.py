@@ -273,7 +273,7 @@ class _BaseImage(BaseBindingController):
                              binding_type=ImageBinding, priority=10,
                              can_show_nothing=False)
 class WebcamImageDisplay(_BaseImage):
-    model = Instance(WebcamImageModel)
+    model = Instance(WebcamImageModel, args=())
 
 
 @register_binding_controller(ui_name='Scientific Image',
@@ -281,7 +281,7 @@ class WebcamImageDisplay(_BaseImage):
                              binding_type=ImageBinding, priority=10,
                              can_show_nothing=False)
 class ScientificImageDisplay(_BaseImage):
-    model = Instance(ScientificImageModel)
+    model = Instance(ScientificImageModel, args=())
 
 
 class WidgetAction(HasStrictTraits):
