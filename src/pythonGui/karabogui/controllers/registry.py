@@ -75,6 +75,24 @@ def get_scene_model_class(klass):
 class register_binding_controller(object):
     """A class decorator for `BaseBindingController` subclasses which registers
     the widget for the various UI builders and adds some useful metadata.
+
+    :param ui_name: The name seen by users in the widget selection menu
+    :param klassname: The name of the widget in the scene file format. This is
+                      used for disambiguation in some of the legacy widgets.
+    :param binding_type: A tuple of `BaseBinding` classes which denotes the
+                         types understood by the controller.
+    :param can_edit: If True, this controller is recognized as an editor.
+    :param is_compatible: A callable which gives the controller extra control
+                          over the process of checking a binding instance for
+                          compatibility with this controller. The callable
+                          should accept one argument of type `BaseBinding`.
+    :param priority: A priority value for this controller which can influence
+                     sorting and picking of defaults when dragging from the
+                     configurator.
+    :param can_show_nothing: If True, the controller should be able to tolerate
+                             calls of its `value_update` and `state_update`
+                             with binding instances whose timestamp is None.
+                             see `BaseBindingController.finish_initialization`
     """
     def __init__(self, *, ui_name='', klassname='', binding_type=(),
                  is_compatible=None, priority=0, can_edit=False,
@@ -94,7 +112,6 @@ class register_binding_controller(object):
         self.is_compatible = is_compatible or (lambda binding: True)
         self.priority = priority
         self.can_edit = bool(can_edit)
-        # Support for BaseBindingController.finish_initialization
         self.can_show_nothing = bool(can_show_nothing)
 
     def __call__(self, klass):
