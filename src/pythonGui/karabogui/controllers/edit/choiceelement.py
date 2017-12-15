@@ -19,7 +19,7 @@ from karabogui.util import MouseWheelEventBlocker, SignalBlocker
                              binding_type=ChoiceOfNodesBinding)
 class EditableChoiceElement(BaseBindingController):
     # The scene model class used by this controller
-    model = Instance(ChoiceElementModel)
+    model = Instance(ChoiceElementModel, args=())
     # Internal traits
     _blocker = Instance(MouseWheelEventBlocker)
 

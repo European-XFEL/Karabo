@@ -24,7 +24,7 @@ def _is_compatible(binding):
                              is_compatible=_is_compatible, priority=20)
 class EditableComboBox(BaseBindingController):
     # The scene model class used by this controller
-    model = Instance(ComboBoxModel)
+    model = Instance(ComboBoxModel, args=())
     # Internal traits
     _filter = Instance(MouseWheelEventBlocker)
 

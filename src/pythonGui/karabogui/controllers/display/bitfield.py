@@ -52,7 +52,7 @@ class BitfieldWidget(QWidget):
                              binding_type=UnsignedIntBinding, can_edit=True)
 class Bitfield(BaseBindingController):
     # The scene data model class for this controller
-    model = Instance(BitfieldModel)
+    model = Instance(BitfieldModel, args=())
     # Internal traits
     _internal_widget = Instance(BitfieldWidget)
 

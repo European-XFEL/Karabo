@@ -49,7 +49,7 @@ class _AnalogEditorWidget(BaseBindingController):
                              binding_type=(FloatBinding, IntBinding))
 class Knob(_AnalogEditorWidget):
     # The scene model class for this controller
-    model = Instance(KnobModel)
+    model = Instance(KnobModel, args=())
 
     def create_widget(self, parent):
         dial = QDial(parent)
@@ -64,7 +64,7 @@ class Knob(_AnalogEditorWidget):
                              binding_type=(FloatBinding, IntBinding))
 class Slider(_AnalogEditorWidget):
     # The scene model class for this controller
-    model = Instance(SliderModel)
+    model = Instance(SliderModel, args=())
 
     def create_widget(self, parent):
         slider = QSlider(Qt.Horizontal, parent)
