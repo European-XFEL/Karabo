@@ -14,8 +14,8 @@ from karabogui.binding.api import (
     KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC
 )
 from karabogui.const import WIDGET_MIN_HEIGHT
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller)
 
 NULL_RANGE = (0, 0)
 PROGRESS_MAX = 200

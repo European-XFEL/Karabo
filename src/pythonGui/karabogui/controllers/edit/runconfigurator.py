@@ -11,9 +11,8 @@ from traits.api import Bool, Instance
 from karabo.common.scenemodel.api import RunConfiguratorModel
 from karabo.middlelayer import Hash
 from karabogui.binding.api import ListOfNodesBinding, get_editor_value
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
-from karabogui.controllers.util import with_display_type
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller, with_display_type)
 
 HEADER_LABELS = ['source', 'type', 'behavior', 'monitored', 'access']
 NODE_CLASS_NAME = '_RunConfiguratorGroup'

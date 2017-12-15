@@ -8,8 +8,8 @@ from traits.api import Instance
 
 from karabo.common.scenemodel.api import ComboBoxModel
 from karabogui.binding.api import BaseBinding
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller)
 
 
 def _widget_is_compatible(binding):

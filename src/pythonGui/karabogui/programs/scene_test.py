@@ -6,10 +6,9 @@ from PyQt4.QtGui import QApplication, QBoxLayout
 from karabo.common.scenemodel.api import BoxLayoutModel, LabelModel, SceneModel
 from karabogui import icons
 import karabogui.binding.api as bindings
-from karabogui.controllers.registry import (
-    get_scene_model_class, get_compatible_controllers)
-from karabogui.controllers.util import (
-    get_class_const_trait, populate_controller_registry)
+from karabogui.controllers.api import (
+    get_class_const_trait, get_compatible_controllers, get_scene_model_class,
+    populate_controller_registry)
 from karabogui.panels.scenepanel import ScenePanel
 from karabogui.singletons.api import get_manager, get_network
 

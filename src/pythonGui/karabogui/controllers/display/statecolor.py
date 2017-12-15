@@ -6,9 +6,8 @@ from karabo.common.api import State
 from karabo.common.scenemodel.api import DisplayStateColorModel
 from karabogui.binding.api import StringBinding
 from karabogui.const import WIDGET_MIN_HEIGHT
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
-from karabogui.controllers.util import with_display_type
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller, with_display_type)
 from karabogui.indicators import STATE_COLORS
 from karabogui.util import generateObjectName
 

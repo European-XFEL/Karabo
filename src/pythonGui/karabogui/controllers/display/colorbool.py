@@ -14,8 +14,8 @@ from karabo.common.api import State
 from karabo.common.scenemodel.api import ColorBoolModel
 from karabogui import icons
 from karabogui.binding.api import BoolBinding
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller)
 from karabogui.icons.statefulicons.color_change_icon import (
     ColorChangeIcon, get_color_change_icon)
 from karabogui.indicators import STATE_COLORS

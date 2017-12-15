@@ -5,9 +5,8 @@ from traits.api import Dict, Instance
 
 from karabo.common.scenemodel.api import LinePlotModel
 from karabogui.binding.api import VectorBinding
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
-from karabogui.controllers.util import axis_label
+from karabogui.controllers.api import (
+    BaseBindingController, axis_label, register_binding_controller)
 
 
 @register_binding_controller(ui_name='XY-Plot', klassname='XYVector',

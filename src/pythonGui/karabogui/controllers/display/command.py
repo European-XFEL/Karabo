@@ -7,8 +7,8 @@ from karabo.common.api import State
 from karabo.common.scenemodel.api import DisplayCommandModel
 from karabogui import globals as krb_globals
 from karabogui.binding.api import SlotBinding, KARABO_SCHEMA_DISPLAYED_NAME
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller)
 
 
 # An item contains the slotbinding proxy and its connected qt action

@@ -10,9 +10,8 @@ from traits.api import Instance
 from karabo.common.scenemodel.api import (
     DirectoryModel, FileInModel, FileOutModel)
 from karabogui.binding.api import StringBinding
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
-from karabogui.controllers.util import with_display_type
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller, with_display_type)
 
 
 class _FilesystemDisplay(BaseBindingController):

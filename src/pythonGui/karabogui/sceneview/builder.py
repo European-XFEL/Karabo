@@ -1,7 +1,7 @@
 from PyQt4.QtCore import QRect
 
 from karabo.common.scenemodel import api as models
-from karabogui.controllers.registry import get_model_controller
+from karabogui.controllers.api import get_model_controller
 from .const import QT_BOX_LAYOUT_DIRECTION
 from .layout.api import BoxLayout, GridLayout, GroupLayout
 from .shapes import LineShape, PathShape, RectangleShape

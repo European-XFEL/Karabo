@@ -19,10 +19,9 @@ from traits.api import (
 from karabo.common.scenemodel.api import ScientificImageModel, WebcamImageModel
 from karabogui import icons
 from karabogui.binding.api import ImageBinding
-from karabogui.controllers.images import (
-    get_dimensions_and_format, get_image_data, KaraboImageWidget)
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
+from karabogui.controllers.api import (
+    BaseBindingController, KaraboImageWidget, get_dimensions_and_format,
+    get_image_data, register_binding_controller)
 from karabogui.util import SignalBlocker
 
 

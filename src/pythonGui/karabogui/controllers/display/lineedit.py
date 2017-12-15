@@ -10,8 +10,8 @@ from traits.api import Instance
 from karabo.common.scenemodel.api import LineEditModel
 from karabogui.binding.api import StringBinding
 from karabogui.const import WIDGET_MIN_HEIGHT
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller)
 
 
 @register_binding_controller(ui_name='Text Field', klassname='DisplayLineEdit',
