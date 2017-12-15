@@ -60,6 +60,10 @@ class EditableList(BaseBindingController):
             return
         self.last_cursor_position = self._internal_widget.cursorPosition()
         if text:
+            if text.endswith(','):
+                # Ignore commas with nothing following!
+                return
+
             # don't need to convert here 'cause the traits does it foh ya.
             self.proxy.edit_value = [val for val in text.split(',')
                                      if val != '']
@@ -75,3 +79,6 @@ class EditableList(BaseBindingController):
         list_edit.set_texts("Add", "&Value", "Edit")
         if list_edit.exec_() == QDialog.Accepted:
             self.proxy.edit_value = list_edit.values
+
+        # Give back the focus!
+        self._internal_widget.setFocus(Qt.PopupFocusReason)
