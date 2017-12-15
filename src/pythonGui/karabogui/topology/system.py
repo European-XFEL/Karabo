@@ -378,6 +378,8 @@ class SystemTopology(HasStrictTraits):
         for proxy in self._device_proxies.values():
             if proxy.device_id in new_topology_nodes:
                 proxy.topology_node = new_topology_nodes[proxy.device_id]
+                attrs = self._get_device_attributes(proxy.device_id)
+                proxy.server_id = attrs.get('serverId', '')
 
     def update_alarms_info(self, alarm_data):
         """Update the ``SystemTreeNode`` objects with the current alarm types
