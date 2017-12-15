@@ -73,6 +73,19 @@ def replace_model_in_top_level_model(layout_model, parent_model, old_model,
     return False
 
 
+def iter_widgets_and_models(obj, model, object_dict):
+    """Given a scene object hierarchy rooted in `obj`, return all of the
+    widgets within, and their models.
+    """
+    if is_widget(obj):
+        yield obj, model
+    elif is_layout(obj):
+        for child_model in model.children:
+            child_obj = object_dict.get(child_model)
+            yield from iter_widgets_and_models(child_obj, child_model,
+                                               object_dict)
+
+
 def add_object_to_layout(obj, layout):
     """Add a SceneView object to a layout"""
     if is_shape(obj):
