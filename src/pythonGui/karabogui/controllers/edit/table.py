@@ -98,13 +98,15 @@ class _BaseTableElement(BaseBindingController):
         if self._item_model.rowCount(None) > len(value):
             start = len(value) - 1
             count = self._item_model.rowCount(None) - len(value)
-            self._item_model.removeRows(start, count, QModelIndex())
+            self._item_model.removeRows(start, count, QModelIndex(),
+                                        from_device_update=True)
 
         # add rows if necessary
         if self._item_model.rowCount(None) < len(value):
             start = self._item_model.rowCount(None)
             count = len(value) - self._item_model.rowCount(None)
-            self._item_model.insertRows(start, count, QModelIndex())
+            self._item_model.insertRows(start, count, QModelIndex(),
+                                        from_device_update=True)
 
         for r, row in enumerate(value):
             for c, key in enumerate(row.getKeys()):
