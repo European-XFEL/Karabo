@@ -27,9 +27,8 @@ from karabogui import globals as krb_globals
 from karabogui.binding.api import (
     BoolBinding, FloatBinding, IntBinding, PropertyProxy
 )
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
-from karabogui.controllers.util import axis_label
+from karabogui.controllers.api import (
+    BaseBindingController, axis_label, register_binding_controller)
 from karabogui.util import SignalBlocker
 
 X_AXIS = "_x_axis_btns"

@@ -8,8 +8,8 @@ from traits.api import Instance
 
 from karabo.common.scenemodel.api import ChoiceElementModel
 from karabogui.binding.api import ChoiceOfNodesBinding
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller)
 
 
 @register_binding_controller(ui_name='Choice Element',

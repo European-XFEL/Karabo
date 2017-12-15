@@ -12,8 +12,8 @@ from traits.api import Dict, Instance
 
 from karabo.common.scenemodel.api import DisplayPlotModel
 from karabogui.binding.api import VectorBinding, KARABO_SCHEMA_DISPLAYED_NAME
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller)
 
 COLORS = ("red", "green", "blue", "gray", "violet", "orange", "lightgreen",
           "black")

@@ -9,8 +9,8 @@ from traits.api import Instance
 
 from karabo.common.scenemodel.api import CheckBoxModel
 from karabogui.binding.api import BoolBinding, get_editor_value
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller)
 from karabogui.util import SignalBlocker
 
 

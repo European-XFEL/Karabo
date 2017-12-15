@@ -15,7 +15,7 @@ from karabogui.alarms.api import (
 from karabogui.binding.api import (
     DeviceClassProxy, DeviceProxy, PropertyProxy, apply_configuration,
     build_binding)
-from karabogui.controllers.util import populate_controller_registry
+from karabogui.controllers.api import populate_controller_registry
 import karabogui.singletons.api as singletons_mod
 
 

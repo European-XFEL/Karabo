@@ -10,9 +10,8 @@ from karabogui.binding.api import (
     CharBinding, ComplexBinding, FloatBinding, IntBinding, StringBinding
 )
 from karabogui.const import WIDGET_MIN_HEIGHT
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
-from karabogui.controllers.unitlabel import add_unit_label
+from karabogui.controllers.api import (
+    BaseBindingController, add_unit_label, register_binding_controller)
 
 BINDING_TYPES = (CharBinding, ComplexBinding, FloatBinding, StringBinding,
                  IntBinding)

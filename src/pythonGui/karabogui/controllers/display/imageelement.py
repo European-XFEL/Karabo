@@ -10,10 +10,9 @@ from traits.api import Instance
 
 from karabo.common.scenemodel.api import DisplayImageElementModel
 from karabogui.binding.api import ImageBinding
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.images import (
-    get_image_data, get_dimensions_and_format)
-from karabogui.controllers.registry import register_binding_controller
+from karabogui.controllers.api import (
+    BaseBindingController, get_image_data, get_dimensions_and_format,
+    register_binding_controller)
 
 
 COLOR_TABLE = [QColor(i, i, i).rgb() for i in range(256)]
