@@ -3,7 +3,6 @@ from glob import glob
 import os.path as op
 
 import numpy as np
-from traits.api import Undefined
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Hash, MetricPrefix, Schema, State,
