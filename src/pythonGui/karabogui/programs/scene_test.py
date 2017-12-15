@@ -1,3 +1,4 @@
+import argparse
 from collections import OrderedDict
 import sys
 
@@ -13,7 +14,7 @@ from karabogui.panels.scenepanel import ScenePanel
 from karabogui.singletons.api import get_manager, get_network
 
 
-def _create_scene_model(devs):
+def _create_scene_model(devs, controllers=None):
     """ Creates a Scene model from registry """
 
     # these should match the types in the DataGenerator Device
@@ -66,11 +67,18 @@ def _create_scene_model(devs):
     type_map['table'] = (bindings.VectorHashBinding, '', True)
 
     rows = []
+    all_controllers = set()
     for device_id in devs:
         for device_key, binding_data in type_map.items():
             binding, display_type, can_edit = binding_data
-            klasses = get_compatible_controllers(binding(), can_edit)
+            klasses = get_compatible_controllers(binding())
+            if can_edit:
+                klasses += get_compatible_controllers(binding(), can_edit=True)
             klasses.sort(key=lambda x: x.__name__)
+            all_controllers.update(klass.__name__ for klass in klasses)
+            if controllers:
+                klasses = [klass for klass in klasses
+                           if klass.__name__ in controllers]
             # add the label
             key = '.'.join([device_id, device_key])
             label = LabelModel(text=key)
@@ -93,6 +101,12 @@ def _create_scene_model(devs):
             rows.append(box)
     vbox = BoxLayoutModel(direction=QBoxLayout.TopToBottom, children=rows)
     scene = SceneModel(children=[vbox])
+
+    print('\n'+'='*60+'\n')
+    print('here is the list of all controllers')
+    for name in all_controllers:
+        print(name)
+    print('='*60)
     return scene
 
 
@@ -103,18 +117,22 @@ def main():
     populate_controller_registry()
 
     psa = """
-=========================================================
- This is a testbench gui viewer.
+============================================================
+This is a testbench gui viewer.
 
  It will generate a scene containing all possible widgets
  for a PropertyTest device.
  Add a PropertyTest device to the topic you will
  connect with instanceID 'x'
-========================================================="""
-
-    print(psa)
-
-    model = _create_scene_model(['x'])
+============================================================"""
+    ap = argparse.ArgumentParser(
+        description=psa, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument('controllerName', nargs='+',
+                    help='List of Controller Names')
+    args = ap.parse_args(sys.argv)
+    ap.print_help()
+    controllers = args.controllerName
+    model = _create_scene_model(['x'], controllers)
     model.simple_name = 'test scene'
     panel = ScenePanel(model, True)
     # XXX: A hack to keep the toolbar visible
