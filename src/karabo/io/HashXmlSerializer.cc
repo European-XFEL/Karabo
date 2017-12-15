@@ -208,6 +208,13 @@ namespace karabo {
                         switch (attr.second) {
                             case Types::SCHEMA:
                             case Types::VECTOR_HASH:
+                                // FIXME: Schema and vector_hash attributes
+                                // (e.g. "rowSchema" and "defaultValue" of a TABLE_ELEMENT) are currently
+                                // not correctly serialised. To avoid exceptions, we interpret them as
+                                // strings here for now.
+                                // Note that the serialisation is an interplay of
+                                // void HashXmlSerializer::writeAttributes(..) and
+                                // std::string Element<KeyType, AttributeType>::getValueAsString()
                                 attrNode.setType(Types::STRING);
                                 break;
                             default:
