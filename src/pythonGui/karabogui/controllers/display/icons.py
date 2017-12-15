@@ -64,8 +64,8 @@ class DigitIcons(_BaseIcons):
     def value_update(self, proxy):
         value = proxy.value
         for item in self.model.values:
-            if (value < int(item.value) or
-                    value == int(item.value) and item.equal):
+            if (value < float(item.value) or
+                    value == float(item.value) and item.equal):
                 self.set_pixmap(item.pixmap)
                 break
 
@@ -108,6 +108,6 @@ class TextIcons(_BaseIcons):
     def value_update(self, proxy):
         value = proxy.value
         for it in self.model.values:
-            if it.value is None or value is not None and it.re.match(value):
+            if it.re.match(value):
                 self.set_pixmap(it.pixmap)
                 return
