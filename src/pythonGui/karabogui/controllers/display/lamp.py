@@ -31,7 +31,7 @@ STATE_LAMP_PATH = {
                              is_compatible=with_display_type('State'),
                              can_show_nothing=False)
 class LampWidget(BaseBindingController):
-    model = Instance(LampModel)
+    model = Instance(LampModel, args=())
 
     def create_widget(self, parent):
         widget = QLabel(parent)

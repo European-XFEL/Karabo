@@ -18,7 +18,7 @@ from karabogui.controllers.api import (
                              binding_type=StringBinding, priority=10)
 class DisplayLineEdit(BaseBindingController):
     # The scene data model class for this controller
-    model = Instance(LineEditModel)
+    model = Instance(LineEditModel, args=())
 
     def create_widget(self, parent):
         widget = QLineEdit(parent)

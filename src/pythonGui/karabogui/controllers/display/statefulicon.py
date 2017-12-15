@@ -28,7 +28,7 @@ WHITE = '#ffffff'
                              can_show_nothing=False)
 class StatefulIconWidget(BaseBindingController):
     # The scene model class used by this controller
-    model = Instance(StatefulIconWidgetModel)
+    model = Instance(StatefulIconWidgetModel, args=())
     # Internal traits
     _icon = Instance(ColorChangeIcon)
 

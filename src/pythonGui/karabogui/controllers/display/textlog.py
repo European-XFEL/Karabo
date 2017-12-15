@@ -25,7 +25,7 @@ W_SIZE = 32
                              binding_type=StringBinding)
 class DisplayTextLog(BaseBindingController):
     # The scene model class for this controller
-    model = Instance(DisplayTextLogModel)
+    model = Instance(DisplayTextLogModel, args=())
     # Internal traits
     log_widget = Instance(QTextEdit)
 

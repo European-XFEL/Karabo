@@ -19,7 +19,7 @@ from karabogui.controllers.listedit import ListEdit
                              binding_type=VectorStringBinding)
 class EditableListElement(BaseBindingController):
     # The scene model class used by this controller
-    model = Instance(EditableListElementModel)
+    model = Instance(EditableListElementModel, args=())
 
     def create_widget(self, parent):
         widget = QPushButton('Edit list', parent)

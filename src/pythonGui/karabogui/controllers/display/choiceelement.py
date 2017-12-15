@@ -17,7 +17,7 @@ from karabogui.controllers.api import (
                              binding_type=ChoiceOfNodesBinding)
 class DisplayChoiceElement(BaseBindingController):
     # The scene data model class for this controller
-    model = Instance(ChoiceElementModel)
+    model = Instance(ChoiceElementModel, args=())
 
     def binding_update(self, proxy):
         if self.widget is not None:

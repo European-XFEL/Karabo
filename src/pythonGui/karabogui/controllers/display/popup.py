@@ -22,7 +22,7 @@ def _is_compatible(binding):
                              is_compatible=_is_compatible)
 class PopUp(BaseBindingController):
     # The scene model class used by this controller
-    model = Instance(PopUpModel)
+    model = Instance(PopUpModel, args=())
     # Internal traits
     _dialog = Instance(QMessageBox)
     _ok = Instance(PropertyProxy)
