@@ -13,7 +13,7 @@ from karabogui.dialogs.dialogs import LutRangeDialog
 
 
 # Ensure correct mapping of reference type to numpy dtype.
-_REFERENCE_TYPENUM_TO_DTYPE = {
+REFERENCE_TYPENUM_TO_DTYPE = {
     0: 'bool',
     2: 'char',
     4: 'int8',
@@ -30,7 +30,7 @@ _REFERENCE_TYPENUM_TO_DTYPE = {
 
 
 # Maps image physical dimension to ndarray dimension
-_DIMENSIONS = {
+DIMENSIONS = {
     'X': 1,
     'Y': 0,
     'Z': 2
@@ -48,7 +48,7 @@ def get_image_data(image_node, dimX, dimY, dimZ, format):
     if len(pixels.data.value) == 0:
         return None
 
-    arr_type = _REFERENCE_TYPENUM_TO_DTYPE[pixels.type.value]
+    arr_type = REFERENCE_TYPENUM_TO_DTYPE[pixels.type.value]
     npy = np.frombuffer(pixels.data.value, dtype=arr_type)
     if format is QImage.Format_Indexed8:
         try:
@@ -83,15 +83,15 @@ def get_dimensions_and_format(image_node):
     format = None
     if len(image_node.dims.value) == 2:
         # Shape
-        dimX = image_node.dims.value[_DIMENSIONS['X']]
-        dimY = image_node.dims.value[_DIMENSIONS['Y']]
+        dimX = image_node.dims.value[DIMENSIONS['X']]
+        dimY = image_node.dims.value[DIMENSIONS['Y']]
         # Format: Grayscale
         format = QImage.Format_Indexed8
     elif len(image_node.dims.value) == 3:
         # Shape
-        dimX = image_node.dims.value[_DIMENSIONS['X']]
-        dimY = image_node.dims.value[_DIMENSIONS['Y']]
-        dimZ = image_node.dims.value[_DIMENSIONS['Z']]
+        dimX = image_node.dims.value[DIMENSIONS['X']]
+        dimY = image_node.dims.value[DIMENSIONS['Y']]
+        dimZ = image_node.dims.value[DIMENSIONS['Z']]
         if dimZ == 3:
             # Format: RGB
             format = QImage.Format_RGB888

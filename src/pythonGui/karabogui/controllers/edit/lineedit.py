@@ -9,8 +9,8 @@ from traits.api import Instance, Int
 
 from karabo.common.scenemodel.api import LineEditModel
 from karabogui.binding.api import CharBinding, StringBinding, get_editor_value
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller)
 from karabogui.util import SignalBlocker
 
 

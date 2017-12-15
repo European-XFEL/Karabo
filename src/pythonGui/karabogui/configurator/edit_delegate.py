@@ -14,7 +14,7 @@ from PyQt4.QtGui import (
 
 from karabo.middlelayer import MetricPrefix, Unit
 from karabogui.binding.api import IntBinding, PropertyProxy, VectorHashBinding
-from karabogui.controllers.registry import get_compatible_controllers
+from karabogui.controllers.api import get_compatible_controllers
 from .dialog.table_edit import TableEditDialog
 from .utils import (
     ButtonState, handle_default_state, set_fill_rect,

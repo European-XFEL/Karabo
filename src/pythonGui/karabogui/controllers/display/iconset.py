@@ -12,8 +12,8 @@ from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import DisplayIconsetModel
 from karabogui.binding.api import StringBinding
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.registry import register_binding_controller
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller)
 from karabogui.util import getOpenFileName
 
 DEFAULT_ICON_PATH = op.join(op.dirname(__file__), 'empty.svg')
