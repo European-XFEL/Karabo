@@ -65,7 +65,7 @@ class ScriptingPanel(BasePanelWidget):
     @pyqtSlot(bool)
     def _on_start_ipython(self, isChecked):
         if self.console:
-            self.mainLayout.removeWidget(self.console)
+            self._stop_ipython()
 
         try:
             self.console = IPythonWidget(banner=BANNER_TEXT)
@@ -78,5 +78,6 @@ class ScriptingPanel(BasePanelWidget):
     def _stop_ipython(self):
         if self.console:
             self.mainLayout.removeWidget(self.console)
+            self.console.stop()
             self.console.setParent(None)
             self.console = None
