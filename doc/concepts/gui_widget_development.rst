@@ -8,8 +8,7 @@ the following Classes needs to be created:
 
 - The Scene MODEL of the widget
 - The UNIT TESTS!
-- The WIDGET itself
-- The CONTAINER
+- The WIDGET CONTROLLER
 
 if the Scene Model contains traits (i.e. needs to persist configuration data), the 
 following elements need to be added:
@@ -59,27 +58,19 @@ UNIT TESTS
 `test_all_empty_widgets` method in the 
 `src/pythonKarabo/karabo/common/scenemodel/tests/test_widget_simple.py` file.
 
-WIDGET
-======
+WIDGET CONTROLLER
+=================
 
-- add the WIDGET code to `src/pythonGui/karabo_gui/*TYPE_OF*widgets` directory in 
-  a single file
-- add the file to the relative `__init__.py` file of the directory
-
-CONTAINER
-=========
-
-- add the CONTAINER code to the `src/pythonGui/karabo_gui/sceneview/widget/` directory in a single file.
-- add import of the CONTAINER to the `src/pythonGui/karabo_gui/sceneview/widget/api.py`
-
-.. note::
-
-   This portion is scheduled to be changed soon.
+- Add the WIDGET CONTROLLER code to the `src/pythonGui/karabogui/controllers/[display|edit]`
+  directory.
+- Note that it is a requirement (enforced by register_binding_controller) that
+  controller classes define a `model` trait which binds them to the scene MODEL
+  class which they use. The unit tests will break if you forget this.
+- Add unit tests for your controller. Look at tests for existing controllers if
+  you are curious how that's accomplished.
 
 Connecting it all together
 ==========================
 
 - add import of the MODEL to the `src/pythonKarabo/karabo/common/scenemodel/api.py` file
-- map the Scene MODEL to the CONTAINER in the `_SCENE_OBJ_FACTORIES` dictionary in the `src/pythonGui/karabo_gui/sceneview/builder.py` file
-- map the WIDGET Name to the MODEL in the `WIDGET_FACTORIES` dictionary in the  `src/pythonGui/karabo_gui/sceneview/tools/const.py` file
-
+- Make sure the controller class is decorated with `register_binding_controller`
