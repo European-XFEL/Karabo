@@ -1,4 +1,5 @@
 from asyncio import set_event_loop
+import atexit
 import functools
 import os
 import os.path as osp
@@ -61,6 +62,12 @@ def start_device_client():
         hostname, os.getpid()))
 
     set_event_loop(NoEventLoop(devices))
+
+    def shutdown_hook():
+        global devices
+        del devices
+
+    atexit.register(shutdown_hook)
 
     return thread
 
