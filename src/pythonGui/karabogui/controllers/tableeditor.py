@@ -34,7 +34,7 @@ class TableModel(QAbstractTableModel):
     # Public interface
 
     def duplicate_row(self, pos):
-        self.insertRows(pos + 1, 1, QModelIndex(), self._data[pos])
+        self.insertRows(pos + 1, 1, QModelIndex(), copy_row=self._data[pos])
 
     def set_role(self, role):
         self._role = role
@@ -161,7 +161,8 @@ class TableModel(QAbstractTableModel):
 
         return False
 
-    def insertRows(self, pos, rows, idx, copy_row=None):
+    def insertRows(self, pos, rows, idx, *,
+                   copy_row=None, from_device_update=False):
         self.beginInsertRows(QModelIndex(), pos, pos + rows - 1)
         try:
             for r in range(rows):
@@ -182,10 +183,11 @@ class TableModel(QAbstractTableModel):
         finally:
             self.endInsertRows()
 
-        self._editing_finished(self._data)
+        if not from_device_update:
+            self._editing_finished(self._data)
         return True
 
-    def removeRows(self, pos, rows, idx):
+    def removeRows(self, pos, rows, idx, *, from_device_update=False):
         # protect ourselves against invalid indices:
         end_pos = pos + rows - 1
         if pos < 0 or end_pos < 0:
@@ -201,7 +203,8 @@ class TableModel(QAbstractTableModel):
         finally:
             self.endRemoveRows()
 
-        self._editing_finished(self._data)
+        if not from_device_update:
+            self._editing_finished(self._data)
         return True
 
 
