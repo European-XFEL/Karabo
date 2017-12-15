@@ -283,7 +283,7 @@
   <customwidget>
    <class>Label</class>
    <extends>QLabel</extends>
-   <header>karabogui/controllers/icons_dialog</header>
+   <header>karabogui/controllers/icons_dialogs</header>
   </customwidget>
  </customwidgets>
  <resources/>
