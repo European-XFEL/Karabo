@@ -308,7 +308,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
         # Check for draggable rows
         binding = getattr(obj, 'binding', None)
-        is_node = isinstance(binding, NodeBinding)
+        is_node = isinstance(binding, (ChoiceOfNodesBinding, NodeBinding))
         is_special = isinstance(binding, (SlotBinding, ImageBinding))
         if is_special or (binding is not None and not is_node):
             flags |= Qt.ItemIsDragEnabled
