@@ -25,7 +25,8 @@ WHITE = '#ffffff'
 @register_binding_controller(ui_name='Standard Icon',
                              klassname='StatefulIconWidget',
                              binding_type=StringBinding,
-                             is_compatible=with_display_type('State'))
+                             is_compatible=with_display_type('State'),
+                             can_show_nothing=False)
 class StatefulIconWidget(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(StatefulIconWidgetModel)
