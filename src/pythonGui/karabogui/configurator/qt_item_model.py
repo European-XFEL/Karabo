@@ -7,6 +7,7 @@ from weakref import WeakValueDictionary
 
 from PyQt4.QtCore import pyqtSignal, QAbstractItemModel, QModelIndex, Qt
 from PyQt4.QtGui import QBrush, QColor, QFont
+from traits.api import Undefined
 
 from karabo.middlelayer import AccessMode, Assignment
 from karabo.common.api import State
@@ -552,7 +553,10 @@ class ConfigurationTreeModel(QAbstractItemModel):
             elif role == Qt.DecorationRole:
                 return get_icon(binding)
         elif column == 1 and role == Qt.DisplayRole:
-            return _friendly_repr(proxy, get_proxy_value(index, proxy))
+            value = get_proxy_value(index, proxy)
+            if value is Undefined:
+                return None
+            return _friendly_repr(proxy, value)
         elif column == 2:
             if role == Qt.BackgroundRole:
                 if proxy.edit_value is not None:
@@ -561,6 +565,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
                     return QBrush(color)
             elif role in (Qt.DisplayRole, Qt.EditRole):
                 value = get_proxy_value(index, proxy, is_edit_col=True)
+                if value is Undefined:
+                    return None
                 if role == Qt.DisplayRole:
                     return _friendly_repr(proxy, value)
                 elif role == Qt.EditRole:
