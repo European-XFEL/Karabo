@@ -109,6 +109,9 @@ class _BaseDialog(QDialog):
         self.image.setPixmap(self.items[row].pixmap)
 
     def on_image_newMime(self, mime):
+        if len(self.items) == 0:
+            return
+
         item = self.items[self.valueList.currentRow()]
         if mime.hasImage():
             _create_temp_url(item, mime.imageData())
@@ -130,6 +133,9 @@ class _BaseDialog(QDialog):
         if not filename:
             return
 
+        if len(self.items) == 0:
+            return
+
         item = self.items[self.valueList.currentRow()]
         item.image = filename
         self._update_image(item)
@@ -140,6 +146,9 @@ class _BaseDialog(QDialog):
 
     @pyqtSlot()
     def on_deleteValue_clicked(self):
+        if len(self.items) == 0:
+            return
+
         cr = self.valueList.currentRow()
         if self.items[cr].value is not None:
             self.valueList.takeItem(cr)
@@ -183,14 +192,17 @@ class DigitDialog(_BaseDialog):
 
     @pyqtSlot()
     def on_addValue_clicked(self):
-        for i, item in enumerate(self.items):
-            if (item.value is None or self.value.value() < item.value or
-                    self.value.value() == item.value and item.equal):
+        idx = 0
+        number_value = float(self.value.value())
+        for idx, item in enumerate(self.items):
+            if (number_value < float(item.value) or
+                    number_value == float(item.value) and item.equal):
                 break
+
         item = IconItem(value=self.value.value(),
                         equal=self.lessEqual.isChecked())
-        self.items.insert(i, item)
-        self.valueList.insertItem(i, self.text_for_item(item))
+        self.items.insert(idx, item)
+        self.valueList.insertItem(idx, self.text_for_item(item))
 
     def text_for_item(self, item):
         if item.value is None:
