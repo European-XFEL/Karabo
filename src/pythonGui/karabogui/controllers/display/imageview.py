@@ -11,10 +11,9 @@ from traits.api import Array, Instance, Int
 
 from karabo.common.scenemodel.api import DisplayImageModel
 from karabogui.binding.api import ImageBinding
-from karabogui.controllers.base import BaseBindingController
-from karabogui.controllers.images import (
-    _DIMENSIONS, get_dimensions_and_format, get_image_data, KaraboImageDialog)
-from karabogui.controllers.registry import register_binding_controller
+from karabogui.controllers.api import (
+    BaseBindingController, KaraboImageDialog, get_dimensions_and_format,
+    get_image_data, register_binding_controller, DIMENSIONS)
 
 
 @register_binding_controller(ui_name='Image View', klassname='DisplayImage',
@@ -100,11 +99,11 @@ class DisplayImage(BaseBindingController):
                 self._unset_slider()
         elif dimZ is not None:
             if dimZ != 3:
-                if self._axis == _DIMENSIONS['Y']:
+                if self._axis == DIMENSIONS['Y']:
                     self._set_slider(dimX)
-                if self._axis == _DIMENSIONS['X']:
+                if self._axis == DIMENSIONS['X']:
                     self._set_slider(dimY)
-                if self._axis == _DIMENSIONS['Z']:
+                if self._axis == DIMENSIONS['Z']:
                     self._set_slider(dimZ)
         else:
             return
@@ -115,11 +114,11 @@ class DisplayImage(BaseBindingController):
 
         self._img_array = array
         if format not in (QImage.Format_Indexed8, QImage.Format_RGB888):
-            if self._axis == _DIMENSIONS['Y']:
+            if self._axis == DIMENSIONS['Y']:
                 array = self._img_array[:, self._selectedCell, :]
-            elif self._axis == _DIMENSIONS['X']:
+            elif self._axis == DIMENSIONS['X']:
                 array = self._img_array[self._selectedCell, :, :]
-            elif self._axis == _DIMENSIONS['Z']:
+            elif self._axis == DIMENSIONS['Z']:
                 array = self._img_array[:, :, self._selectedCell]
 
         # Safety
@@ -146,11 +145,11 @@ class DisplayImage(BaseBindingController):
         self._selectedCell = value
         self._currentCell.setValue(value)
         npy = None
-        if self._axis == _DIMENSIONS['Y']:
+        if self._axis == DIMENSIONS['Y']:
             npy = self._img_array[:, self._selectedCell, :]
-        if self._axis == _DIMENSIONS['X']:
+        if self._axis == DIMENSIONS['X']:
             npy = self._img_array[self._selectedCell, :, :]
-        if self._axis == _DIMENSIONS['Z']:
+        if self._axis == DIMENSIONS['Z']:
             npy = self._img_array[:, :, self._selectedCell]
 
         self._set_image(npy)
