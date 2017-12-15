@@ -4,10 +4,11 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from contextlib import contextmanager
+import time
 
-from PyQt4.QtCore import QEvent, QSize, Qt
-from PyQt4.QtGui import (QPalette, QPainter, QPen, QSizePolicy, QStackedLayout,
-                         QWidget)
+from PyQt4.QtCore import pyqtSlot, QEvent, QSize, Qt, QTimer
+from PyQt4.QtGui import (
+    QPalette, QPainter, QPen, QSizePolicy, QStackedLayout, QWidget)
 
 from karabo.common.scenemodel.api import (
     FixedLayoutModel, WorkflowItemModel, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
@@ -17,8 +18,9 @@ from karabogui.request import send_property_changes
 from .bases import BaseSceneTool
 from .builder import (
     bring_object_to_front, create_object_from_model, fill_root_layout,
-    find_top_level_model, is_widget, remove_object_from_layout,
-    replace_model_in_top_level_model, send_object_to_back)
+    find_top_level_model, is_widget, iter_widgets_and_models,
+    remove_object_from_layout, replace_model_in_top_level_model,
+    send_object_to_back)
 from .const import QT_CURSORS
 from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
@@ -28,6 +30,12 @@ from .tools.api import (
 from .utils import save_painter_state
 from .widget.api import ControllerContainer
 from .workflow.api import SceneWorkflowModel, WorkflowOverlay
+
+_WIDGET_REMOVAL_DELAY = 5000
+
+
+def _get_time_milli():
+    return int(round(time.time() * 1000))
 
 
 class SceneView(QWidget):
@@ -77,6 +85,12 @@ class SceneView(QWidget):
         self.design_mode = design_mode
         self.tab_visible = False
         self._scene_obj_cache = {}
+
+        # Widget cleanup
+        self._widget_removal_queue = []
+        self._widget_removal_timer = QTimer(self)
+        self._widget_removal_timer.setInterval(1000)
+        self._widget_removal_timer.timeout.connect(self._clean_removed_widgets)
 
         # Redraw when the workflow model changes
         self.workflow_model.on_trait_change(lambda *args: self.update(),
@@ -293,6 +307,7 @@ class SceneView(QWidget):
         unregister_from_broadcasts(self)
         self._set_scene_model(None)
         self._scene_obj_cache.clear()
+        self._widget_removal_queue.clear()
 
     def set_tab_visible(self, visible):
         """Sets whether this scene is visible.
@@ -452,6 +467,42 @@ class SceneView(QWidget):
     # --------------------------------------------------------------------
     # Private methods
 
+    @pyqtSlot()
+    def _clean_removed_widgets(self):
+        """Called by the `_widget_removal_timer` when there might be widgets to
+        clean up.
+        """
+        remainders = []
+        current_time = _get_time_milli()
+        while len(self._widget_removal_queue) > 0:
+            removal_time, widget, model = self._widget_removal_queue.pop()
+            if widget.isVisible():
+                continue  # already re-added. ignore
+
+            if (current_time - removal_time) > _WIDGET_REMOVAL_DELAY:
+                # Time's up!
+                widget.destroy()
+                widget.setParent(None)
+                self._scene_obj_cache.pop(model, None)
+            else:
+                remainders.append((removal_time, widget, model))
+
+        self._widget_removal_queue.extend(remainders)
+        if len(self._widget_removal_queue) == 0:
+            self._widget_removal_timer.stop()
+
+    def _collect_removed_widgets(self, obj, model):
+        """Collect widgets for the `widget_removal_queue`.
+        """
+        for item in iter_widgets_and_models(obj, model, self._scene_obj_cache):
+            # Schedule the (possible) eventual cleanup of the widget
+            removal_item = (_get_time_milli(),) + item
+            self._widget_removal_queue.append(removal_item)
+
+        if (self._widget_removal_queue and
+                not self._widget_removal_timer.isActive()):
+            self._widget_removal_timer.start()
+
     def _draw_selection(self, painter):
         """Draw a dashed rect around the selected objects."""
         if not self.selection_model.has_selection():
@@ -488,9 +539,13 @@ class SceneView(QWidget):
         for model in event.removed:
             obj = self._scene_obj_cache.get(model)
             if obj is not None:
+                # Collect widgets _before_ removing
+                self._collect_removed_widgets(obj, model)
+                # Then remove
                 remove_object_from_layout(obj, self.layout,
                                           self._scene_obj_cache,
                                           self.tab_visible)
+
         self._remove_workflow_items(event.removed)
 
         for model in event.added:
