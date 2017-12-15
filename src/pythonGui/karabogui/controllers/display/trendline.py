@@ -382,7 +382,7 @@ class _KaraboCurveWidget(CurveWidget):
                              can_show_nothing=False)
 class DisplayTrendline(BaseBindingController):
     # The scene model class used by this controller
-    model = Instance(LinePlotModel)
+    model = Instance(LinePlotModel, args=())
 
     _initial_start_time = Instance(QDateTime)
     _plot = Instance(object)  # some Qwt bullshit

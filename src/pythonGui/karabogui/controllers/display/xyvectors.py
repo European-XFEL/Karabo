@@ -14,7 +14,7 @@ from karabogui.controllers.api import (
                              can_show_nothing=False)
 class XYVector(BaseBindingController):
     # The scene model class used by this controller
-    model = Instance(LinePlotModel)
+    model = Instance(LinePlotModel, args=())
     # Internal traits
     _plot = Instance(object)  # Some Qwt bullshit
     _curves = Dict

@@ -37,7 +37,7 @@ class _FocusynSpinBox(QSpinBox):
                              binding_type=IntBinding)
 class EditableSpinBox(BaseBindingController):
     # The scene model class for this controller
-    model = Instance(EditableSpinBoxModel)
+    model = Instance(EditableSpinBoxModel, args=())
     # Internal details
     _internal_widget = Instance(QSpinBox)
     _blocker = Instance(MouseWheelEventBlocker)

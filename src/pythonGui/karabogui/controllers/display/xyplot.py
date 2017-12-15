@@ -15,7 +15,7 @@ from karabogui.mplwidget.mplplotwidgets import MplCurvePlot
                              can_show_nothing=False)
 class XYPlot(BaseBindingController):
     # The scene model class used by this controller
-    model = Instance(XYPlotModel)
+    model = Instance(XYPlotModel, args=())
     # Internal traits
     _x_proxy = Instance(PropertyProxy)
     _y_proxy = Instance(PropertyProxy)

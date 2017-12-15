@@ -23,7 +23,7 @@ COLORS = ("red", "green", "blue", "gray", "violet", "orange", "lightgreen",
                              binding_type=VectorBinding)
 class DisplayPlot(BaseBindingController):
     # The scene data model class for this controller
-    model = Instance(DisplayPlotModel)
+    model = Instance(DisplayPlotModel, args=())
     # Internal traits
     _plot = Instance(object)  # some Qwt bullshit
     _curves = Dict

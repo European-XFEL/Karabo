@@ -58,7 +58,7 @@ class _BaseIcons(BaseBindingController):
 @register_binding_controller(ui_name='Icons', binding_type=NUMERICAL_BINDINGS,
                              klassname='DigitIcons', is_compatible=has_options)
 class DigitIcons(_BaseIcons):
-    model = Instance(DigitIconsModel)
+    model = Instance(DigitIconsModel, args=())
     dialog_klass = Type(DigitDialog)
 
     def value_update(self, proxy):
@@ -75,7 +75,7 @@ class DigitIcons(_BaseIcons):
                              binding_type=BaseBinding,
                              is_compatible=has_options)
 class SelectionIcons(_BaseIcons):
-    model = Instance(SelectionIconsModel)
+    model = Instance(SelectionIconsModel, args=())
     dialog_klass = Type(SelectionDialog)
 
     def binding_update(self, proxy):
@@ -102,7 +102,7 @@ class SelectionIcons(_BaseIcons):
                              klassname='TextIcons',
                              is_compatible=has_options)
 class TextIcons(_BaseIcons):
-    model = Instance(TextIconsModel)
+    model = Instance(TextIconsModel, args=())
     dialog_klass = Type(TextDialog)
 
     def value_update(self, proxy):

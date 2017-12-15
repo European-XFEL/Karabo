@@ -22,7 +22,7 @@ from karabogui.util import generateObjectName
                              binding_type=IntBinding)
 class SingleBit(BaseBindingController):
     # The scene model class used by this controller
-    model = Instance(SingleBitModel)
+    model = Instance(SingleBitModel, args=())
     # Internal traits
     _internal_widget = Instance(QLabel)
     _style_sheet = Str

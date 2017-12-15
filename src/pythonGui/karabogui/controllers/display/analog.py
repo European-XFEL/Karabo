@@ -32,7 +32,7 @@ WIDGET_WIDTH = 26
                              binding_type=FloatBinding)
 class DisplayAnalog(BaseBindingController):
     # The scene data model class for this controller
-    model = Instance(AnalogModel)
+    model = Instance(AnalogModel, args=())
 
     def binding_update(self, proxy):
         alarms, warnings = self._alarmsAndWarnings()

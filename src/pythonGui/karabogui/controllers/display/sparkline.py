@@ -342,7 +342,7 @@ class DisplaySparkline(BaseBindingController):
     Rendering is performed via the SparkRenderer class
     """
     # The scene model class used by this controller
-    model = Instance(SparklineModel)
+    model = Instance(SparklineModel, args=())
 
     line_edit = Instance(QLineEdit)
     render_area = Instance(SparkRenderer)
