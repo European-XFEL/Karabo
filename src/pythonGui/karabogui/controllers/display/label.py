@@ -34,7 +34,7 @@ BINDING_TYPES = (CharBinding, ComplexBinding, FloatBinding, StringBinding,
                              binding_type=BINDING_TYPES, priority=20)
 class DisplayLabel(BaseBindingController):
     # The scene data model class for this controller
-    model = Instance(DisplayLabelModel)
+    model = Instance(DisplayLabelModel, args=())
     # Internal traits
     _bg_color = Tuple(FINE_COLOR)
     _internal_widget = Instance(QLabel, allow_none=True)

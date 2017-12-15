@@ -35,7 +35,7 @@ def _scale(val, min_val, max_val):
                              binding_type=(FloatBinding, IntBinding))
 class DisplayProgressBar(BaseBindingController):
     # The specific scene model class used by this widget
-    model = Instance(DisplayProgressBarModel)
+    model = Instance(DisplayProgressBarModel, args=())
     # Value scaling params
     _value_factors = Tuple(Float(-1), Float(-1))
 

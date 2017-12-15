@@ -26,7 +26,7 @@ from karabogui.indicators import STATE_COLORS
                              binding_type=BoolBinding)
 class DisplayColorBool(BaseBindingController):
     # The scene data model class for this controller
-    model = Instance(ColorBoolModel)
+    model = Instance(ColorBoolModel, args=())
     # A icon which will be used in different colors
     icon = Instance(ColorChangeIcon)
 

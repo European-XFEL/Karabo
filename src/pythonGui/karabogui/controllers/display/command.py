@@ -21,7 +21,7 @@ Item = namedtuple('Item', ['proxy', 'action'])
                              binding_type=SlotBinding)
 class DisplayCommand(BaseBindingController):
     # The scene model class for this controller
-    model = Instance(DisplayCommandModel)
+    model = Instance(DisplayCommandModel, args=())
     # Internal traits
     _actions = List(Instance(Item))
     _button = Instance(QToolButton)
