@@ -205,10 +205,22 @@ namespace karabo {
                     std::pair<std::string, Types::ReferenceType> attr = this->readXmlAttribute(std::string(it->value()));
                     Hash::Attributes::Node& attrNode = attrs.set<std::string > (it->name(), attr.first); // Sets as string
                     if (attr.second != Types::UNKNOWN && m_readDataTypes) {
-                        if (attr.second == Types::SCHEMA)
-                            attrNode.setType(Types::STRING);
-                        else
-                            attrNode.setType(attr.second); // Shapes it into correct type
+                        switch (attr.second) {
+                            case Types::SCHEMA:
+                            case Types::VECTOR_HASH:
+                                // FIXME: Schema and vector_hash attributes
+                                // (e.g. "rowSchema" and "defaultValue" of a TABLE_ELEMENT) are currently
+                                // not correctly serialised. To avoid exceptions, we interpret them as
+                                // strings here for now.
+                                // Note that the serialisation is an interplay of
+                                // void HashXmlSerializer::writeAttributes(..) and
+                                // std::string Element<KeyType, AttributeType>::getValueAsString()
+                                attrNode.setType(Types::STRING);
+                                break;
+                            default:
+                                // Shapes it into correct type
+                                attrNode.setType(attr.second);
+                        }
                     }
                 }
             }
