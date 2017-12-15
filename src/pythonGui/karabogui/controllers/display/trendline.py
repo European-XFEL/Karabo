@@ -562,7 +562,7 @@ class DisplayTrendline(BaseBindingController):
 
     def add_proxy(self, proxy):
         style, color = next(self._curve_styles)
-        curve = make.curve([], [], proxy.path, color=color, linestyle=style)
+        curve = make.curve([], [], proxy.key, color=color, linestyle=style)
         self._addCurve(proxy, curve)
         if self._curve_count == 2:
             # show the item panel if we have more than one curve
