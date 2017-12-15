@@ -114,7 +114,8 @@ class BaseBindingController(HasStrictTraits):
             return
 
         # Not all controllers support this
-        if get_class_const_trait(type(self), '_can_show_nothing'):
+        has_data = (self.proxy.binding.timestamp is not None)
+        if has_data or get_class_const_trait(type(self), '_can_show_nothing'):
             proxy = self.proxy
             self.value_update(proxy)
             if proxy.root_proxy.state_binding.value:
