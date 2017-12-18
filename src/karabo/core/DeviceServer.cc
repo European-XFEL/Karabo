@@ -576,6 +576,7 @@ namespace karabo {
                 device->finalizeInternalInitialization();
 
                 if (device->useTimeServer()) { // If device requires, add to map for receiving timing info.
+                    boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
                     m_devicesForTimingMap[deviceId] = device;
                 }
                 // Answer initiation of device (KARABO_LOG_* is done by device)
