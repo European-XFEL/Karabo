@@ -251,7 +251,11 @@ class ConfigurationTreeView(QTreeView):
 
         if self._popup_showing_index.isValid():
             info = self._get_popup_info(self._popup_showing_index)
-            self.popup_widget.setInfo(info)
+            if info is None:
+                # index wasn't actually valid because the device proxy changed
+                self.popup_widget.hide()
+            else:
+                self.popup_widget.setInfo(info)
 
     # ------------------------------------
     # Event handlers
