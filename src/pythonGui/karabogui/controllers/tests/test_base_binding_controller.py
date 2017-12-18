@@ -176,12 +176,18 @@ class TestBaseBindingController(GuiTestCase):
         assert not self.single.visualize_additional_property(self.second)
 
         # Use a temporary controller which won't affect other tests
-        controller = self.MultiBindingController(proxy=self.first)
+        model = UniqueWidgetModel(keys=['first'])
+        controller = self.MultiBindingController(proxy=self.first, model=model)
         # Adding an already watched property doesn't work
         assert not controller.visualize_additional_property(self.first)
+        assert controller.model.keys == ['first']
+
         assert controller.visualize_additional_property(self.second)
+        assert controller.model.keys == ['first', 'second']
+
         assert not controller.visualize_additional_property(self.second)
         assert not controller.visualize_additional_property(self.unsupported)
+        assert controller.model.keys == ['first', 'second']
 
     def test_single_value_update(self):
         set_proxy_value(self.first, 'first', 'Foo')
