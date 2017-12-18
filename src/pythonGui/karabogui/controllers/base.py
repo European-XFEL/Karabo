@@ -181,8 +181,9 @@ class BaseBindingController(HasStrictTraits):
                 return False
             # Only if `add_proxy` doesn't raise an exception
             self._additional_proxies.append(proxy)
-            # Append the key to data model
-            self.model.keys.append(proxy.key)
+            # Append the key to data model if it's not in there yet
+            if proxy.key not in self.model.keys:
+                self.model.keys.append(proxy.key)
             if self._showing:
                 proxy.start_monitoring()
             return True  # The only successful exit from this method!
