@@ -2,6 +2,7 @@ from PyQt4.QtCore import QRect, Qt
 from PyQt4.QtGui import QHBoxLayout, QLabel, QStackedLayout, QWidget
 
 from karabo.common.api import AlarmCondition, DeviceStatus, State
+from karabogui import globals as krb_globals
 from karabogui.alarms.api import get_alarm_pixmap
 from karabogui.indicators import get_device_status_pixmap, STATE_COLORS
 from karabogui.request import send_property_changes
@@ -39,6 +40,8 @@ class ControllerContainer(QWidget):
         # Trigger the status change once (might be offline)
         device_proxy = self.widget_controller.proxy.root_proxy
         self._device_status_changed(device_proxy.status)
+        # ... and the access level check
+        self.update_global_access_level(krb_globals.GLOBAL_ACCESS_LEVEL)
 
     def add_proxies(self, proxies):
         """Add more proxies to a controller which allows more than one proxy.
@@ -132,12 +135,14 @@ class ControllerContainer(QWidget):
         else:
             self.alarm_symbol.hide()
 
-    def update_global_access_level(self):
+    def update_global_access_level(self, level):
         """Update the widget based on a new global access level.
         """
-        # Treat it like a device state update
-        proxy = self.widget_controller.proxy
-        self.widget_controller.state_update(proxy)
+        # enable/disable based on level
+        binding = self.widget_controller.proxy.binding
+        if binding is not None:
+            enabled = (binding.required_access_level <= level)
+            self.widget_controller.widget.setEnabled(enabled)
 
     # ---------------------------------------------------------------------
     # Qt methods

@@ -12,6 +12,7 @@ from PyQt4.QtGui import (
 
 from karabo.common.scenemodel.api import (
     FixedLayoutModel, WorkflowItemModel, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT)
+from karabogui import globals as krb_globals
 from karabogui.events import (
     KaraboEventSender, register_for_broadcasts, unregister_from_broadcasts)
 from karabogui.request import send_property_changes
@@ -573,6 +574,7 @@ class SceneView(QWidget):
         """The global access level has changed. Notify all widgets in the
         scene.
         """
+        level = krb_globals.GLOBAL_ACCESS_LEVEL
         for obj in self._scene_obj_cache.values():
             if is_widget(obj):
-                obj.update_global_access_level()
+                obj.update_global_access_level(level)
