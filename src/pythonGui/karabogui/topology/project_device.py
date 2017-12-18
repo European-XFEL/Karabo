@@ -8,6 +8,7 @@ from traits.api import (
     Bool, DelegatesTo, HasStrictTraits, Instance, Int, Property, String,
     on_trait_change)
 
+from karabo.common.api import DeviceStatus, ONLINE_STATUSES
 from karabo.middlelayer import Hash
 from karabogui.binding.api import (
     BaseDeviceProxy, DeviceProxy, ProjectDeviceProxy,
@@ -47,6 +48,11 @@ class ProjectDeviceInstance(HasStrictTraits):
     # Monitor count
     _monitor_count = Int(0)
 
+    # Error flag of the online device proxy
+    error = Bool(False)
+    # The status of this device, take into consider the error flag
+    status = Property(depends_on=['_online_proxy.online', 'error'])
+
     def __init__(self, device_id, server_id, class_id):
         super(ProjectDeviceInstance, self).__init__()
 
@@ -67,8 +73,8 @@ class ProjectDeviceInstance(HasStrictTraits):
         class_id = class_id or self.class_id
 
         # First check to see if anything is changing!
-        if (device_id == self.device_id and class_id == self.class_id
-                and server_id == self.server_id):
+        if (device_id == self.device_id and class_id == self.class_id and
+                server_id == self.server_id):
             return
 
         self._init_object_state(device_id, server_id, class_id)
@@ -119,6 +125,15 @@ class ProjectDeviceInstance(HasStrictTraits):
         if self._online_proxy.online:
             return self._online_proxy
         return self._offline_proxy
+
+    def _get_status(self):
+        if self._online_proxy.online:
+            status = self._online_proxy.status
+            if status in ONLINE_STATUSES and self.error:
+                return DeviceStatus.ERROR
+            else:
+                return status
+        return self._offline_proxy.status
 
     @on_trait_change('_offline_proxy:schema_update')
     def _apply_offline_config(self):

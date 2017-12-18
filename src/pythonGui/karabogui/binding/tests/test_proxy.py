@@ -113,7 +113,7 @@ def test_device_proxy_status():
         proxy.remove_monitor()
         proxy.status = DeviceStatus.ONLINE
         proxy.add_monitor()
-        assert proxy.status == DeviceStatus.REQUESTED
+        assert proxy.status == DeviceStatus.ONLINEREQUESTED
 
 
 def test_device_proxy_data_feeds():
