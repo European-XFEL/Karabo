@@ -4,6 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from collections import deque
+from functools import partial
 from itertools import product
 
 import numpy as np
@@ -52,7 +53,7 @@ class MultiCurvePlot(BaseBindingController):
         _btn_reset = QPushButton('Reset')
         _btn_reset.setFixedSize(*BUTTON_SIZE)
         _btn_reset.setFocusPolicy(Qt.NoFocus)
-        _btn_reset.clicked.connect(self._reset_plot)
+        _btn_reset.clicked.connect(partial(self._reset_plot, reset=True))
         hbox.addWidget(_btn_reset)
         vbox.addLayout(hbox)
 
