@@ -22,6 +22,12 @@ class XYVector(BaseBindingController):
     def add_proxy(self, proxy):
         curve = make.curve([], [], axis_label(proxy), "r")
         self._add_curve(proxy, curve)
+        if proxy.binding is not None:
+            self.binding_update(proxy)
+            # since proxy.binding IS a VectorBinding, then non zero length
+            # means valid data.
+            if len(proxy.value) > 0:
+                self.value_update(proxy)
         return True
 
     def create_widget(self, parent):
