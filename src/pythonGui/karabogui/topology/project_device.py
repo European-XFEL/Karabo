@@ -6,7 +6,7 @@
 
 from traits.api import (
     Bool, DelegatesTo, HasStrictTraits, Instance, Int, Property, String,
-    WeakRef, on_trait_change)
+    on_trait_change)
 
 from karabo.middlelayer import Hash
 from karabogui.binding.api import (
@@ -14,7 +14,6 @@ from karabogui.binding.api import (
     apply_configuration, apply_default_configuration, extract_configuration
 )
 from karabogui.singletons.api import get_topology
-from .tree import SystemTreeNode
 
 
 class ProjectDeviceInstance(HasStrictTraits):
@@ -29,7 +28,7 @@ class ProjectDeviceInstance(HasStrictTraits):
     server_id = String
 
     # A weak reference to the system topology device node
-    device_node = WeakRef(SystemTreeNode, allow_none=True)
+    device_node = DelegatesTo('_online_proxy', prefix='topology_node')
 
     # The proxy for this device
     proxy = Property(Instance(BaseDeviceProxy),
