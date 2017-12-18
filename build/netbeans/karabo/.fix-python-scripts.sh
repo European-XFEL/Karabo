@@ -20,7 +20,7 @@ SED_PROGRAM='1 s%^.*$%'$NEW_SHEBANG_LINE'%g'
 PYTHON_ENTRY_POINTS=(convert-karabo-device convert-karabo-project
     ikarabo karabo karabo-cli karabo-gui karabo-middlelayerserver
     karabo-pythonserver karabo-start karabo-stop karabo-check
-    kkarabo-xterm arabo-gterm karabo-add-deviceserver
+    karabo-xterm karabo-gterm karabo-add-deviceserver
     karabo-remove-deviceserver karabo-webserver karabo-kill
     pannel-runner iug-obarak
 )
