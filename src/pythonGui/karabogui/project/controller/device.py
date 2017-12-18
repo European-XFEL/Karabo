@@ -10,7 +10,7 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QAction, QDialog, QMenu
 from traits.api import Instance, Property, on_trait_change
 
-from karabo.common.api import DeviceStatus
+from karabo.common.api import DeviceStatus, NO_CONFIG_STATUSES
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     find_parent_object
@@ -28,9 +28,6 @@ from karabogui.singletons.api import get_manager, get_topology
 from karabogui.topology.api import ProjectDeviceInstance
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 from .server import DeviceServerController
-
-_NO_CONFIG_STATUS = (DeviceStatus.NOPLUGIN, DeviceStatus.NOSERVER,
-                     DeviceStatus.REQUESTED)
 
 
 class DeviceInstanceController(BaseProjectGroupController):
@@ -64,7 +61,7 @@ class DeviceInstanceController(BaseProjectGroupController):
                                                 project_controller))
         instantiate_action = QAction('Instantiate', menu)
         can_instantiate = (server_online and not proj_device_online and
-                           proj_device_status not in _NO_CONFIG_STATUS)
+                           proj_device_status not in NO_CONFIG_STATUSES)
         instantiate_action.setEnabled(can_instantiate)
         instantiate_action.triggered.connect(partial(self._instantiate_device,
                                                      project_controller))
@@ -179,10 +176,9 @@ class DeviceInstanceController(BaseProjectGroupController):
             new_config = self.project_device.get_current_config_hash()
             config.configuration = new_config
 
-    @on_trait_change("project_device:proxy.status")
-    def status_change(self):
+    @on_trait_change("project_device:status")
+    def status_change(self, status):
         self._update_icon(self.ui_data)
-        status = self.project_device.proxy.status
         if status not in (DeviceStatus.NOPLUGIN, DeviceStatus.NOSERVER):
             # Show the device's configuration, iff it was already showing
             self._update_configurator()
@@ -217,7 +213,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         if not self.model.initialized:
             return
 
-        status_enum = self.project_device.proxy.status
+        status_enum = self.project_device.status
         ui_data.icon = get_project_device_status_icon(status_enum)
         ui_data.status = status_enum
 
@@ -267,9 +263,8 @@ class DeviceInstanceController(BaseProjectGroupController):
             conf_action.setChecked(is_active)
             config_menu.addAction(conf_action)
 
-        status = self.project_device.proxy.status
-        online = self.project_device.online
-        if status in _NO_CONFIG_STATUS or online:
+        prj_dev = self.project_device
+        if prj_dev.status in NO_CONFIG_STATUSES or prj_dev.online:
             config_menu.setEnabled(False)
 
         return config_menu
