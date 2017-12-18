@@ -67,10 +67,18 @@ namespace karabo {
         void JmsConsumer::stopReading() {
             if (m_reading) {
                 m_reading = false;
-                // Hangs if stuck in ensureConsumerSessionAvailable(..) or getConsumer(..)
-                // via m_connection->waitForConnectionAvailable().
-                // But very unlikely... Or better play with thread interruptions as in DataLogger in version 1.4.7?
-                m_readThread.join();
+                if (m_readThread.get_id() != boost::this_thread::get_id()) {
+                    // Hangs if stuck in ensureConsumerSessionAvailable(..) or getConsumer(..)
+                    // via m_connection->waitForConnectionAvailable().
+                    // But very unlikely... Or better play with thread interruptions as in DataLogger in version 1.4.7?
+                    m_readThread.join();
+                } else {
+                    // Prevent exception about "boost thread: trying joining itself: Resource deadlock avoided"
+                    // that can happen when stopReading is called in destructor. Scenario is that consumeMessages calls
+                    // bind_weak that temporarily creates a shared_ptr shortly before any external shared_ptr is
+                    // cleared. Then the destructor is called in m_readThread.
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Avoided that thread joins itself in 'stopReading'.";
+                }
             }
         }
 
