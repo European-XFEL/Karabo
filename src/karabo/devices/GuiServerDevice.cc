@@ -690,7 +690,11 @@ namespace karabo {
                 {
                     boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
                     const int newCount = --m_monitoredDevices[deviceId]; // prefix decrement!
-                    if (newCount <= 0) unregisterFlag = true;
+                    if (newCount <= 0){
+                        // Erase instance from the monitored list
+                        unregisterFlag = true;
+                        m_monitoredDevices.erase(deviceId);
+                    }
                     KARABO_LOG_FRAMEWORK_DEBUG << "onStopMonitoringDevice " << deviceId << " (" << newCount << ")";
                 }
 
@@ -1138,6 +1142,8 @@ namespace karabo {
                             // others still interested - remove from set of devices to be unregistered
                             deviceIds.erase(jt++); // postfix-++: erase from map on the fly & keep valid iterator
                         } else {
+                            //  erase the monitor entry to avoid unnecessary monitoring
+                            m_monitoredDevices.erase(deviceId);
                             ++jt;
                         }
                     }
