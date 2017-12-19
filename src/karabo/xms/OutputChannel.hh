@@ -200,7 +200,7 @@ namespace karabo {
 
         private:
 
-            void initializeServerConnection();
+            void initializeServerConnection(int countdown);
 
             void onTcpConnect(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel);
 
