@@ -96,25 +96,50 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "Outputting data on channel " << m_channelId << " and chunk " << m_chunkId;
 
             // Initialize server connectivity:
-            // Cannot use bind_weak in constructor but ... in practice it is safe to use here boost::bind -- we don't wait too long
-            karabo::net::EventLoop::getIOService().post(boost::bind(&OutputChannel::initializeServerConnection, this));
+            // Cannot use bind_weak in constructor but... usually it is safe to use here boost::bind.
+            // And in this way we ensure that onTcpConnect is properly bound with bind_weak.
+            // But see the HACK in initializeServerConnection if even that is called too early.
+            // Seen it fail > 150 times, so put 500 here.
+            karabo::net::EventLoop::getIOService().post(boost::bind(&OutputChannel::initializeServerConnection, this, 500));
         }
 
 
         OutputChannel::~OutputChannel() {
-            //KARABO_LOG_FRAMEWORK_DEBUG << "*** OutputChannel::~OutputChannel() DTOR ***";
             if (m_dataConnection) m_dataConnection->stop();
             Memory::unregisterChannel(m_channelId);
         }
 
 
-        void OutputChannel::initializeServerConnection() {
+        void OutputChannel::initializeServerConnection(int countdown) {
             using namespace karabo::net;
+
+            // HACK starts
+            // Treat situations when this method already runs although there is no shared_ptr for this object yet!
+            // Seen e.g. if many devices with OutputChannels are instantiated simultaneously, i.e. in a busy process.
+            if (!weak_from_this().lock()) { // Try to promote to shared_ptr.
+                if (countdown > 0) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "initializeServerConnection: no shared_ptr yet, try again up to "
+                            << countdown << " more times"; // Unfortunately, m_instanceId cannot be filled yet.
+                    // Let other threads potentially take over to increase the chance that shared_ptr is there next time:
+                    boost::this_thread::yield();
+                    // Bare boost::bind with this as in constructor.
+                    karabo::net::EventLoop::getIOService().post(boost::bind(&OutputChannel::initializeServerConnection,
+                                                                            this, --countdown));
+                    return;
+                } else {
+                    const std::string msg("Give up to initialize server connection! Better recreate channel, e.g. by "
+                                          "re-instantiating device.");
+                    KARABO_LOG_FRAMEWORK_ERROR << msg;
+                    throw KARABO_NETWORK_EXCEPTION(msg);
+                }
+            }
+            // HACK ends
 
             karabo::util::Hash h("type", "server", "port", m_port, "compressionUsageThreshold", m_compression * 1E6);
             Connection::Pointer connection = Connection::create("Tcp", h);
-            // The following call can throw only in case you provide with configuration's Hash the none-zero port number
-            // and this port number is already used in the system, for example,  by another application.
+            // The following call can throw in case you provide with configuration's Hash the none-zero port number
+            // and this port number is already used in the system, for example, by another application.
+            // Or when bind_weak tries to create a shared_ptr, but fails - which we try to prevent above...
             try {
                 m_port = connection->startAsync(bind_weak(&karabo::xms::OutputChannel::onTcpConnect, this, _1, _2));
             } catch (const std::exception& ex) {
@@ -122,7 +147,7 @@ namespace karabo {
                 oss << "Could not start TcpServer for output channel (\"" << m_channelId
                         <<  "\", port = " << m_port << ") : " << ex.what();
                 KARABO_LOG_FRAMEWORK_ERROR << oss.str();
-                throw KARABO_NETWORK_EXCEPTION(oss.str());
+                KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION(oss.str()));
             }
             m_dataConnection = connection;
             KARABO_LOG_FRAMEWORK_DEBUG << "Started DeviceOutput-Server listening on port: " << m_port;
