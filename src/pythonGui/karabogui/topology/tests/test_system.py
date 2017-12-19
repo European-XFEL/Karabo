@@ -38,9 +38,9 @@ class TestSystemTopology(GuiTestCase):
             assert klass.status is DeviceStatus.REQUESTED
             network.onGetClassSchema.assert_called_with('swerver', 'divvy')
 
-            klass = topology.get_device('divvy')
+            dev = topology.get_device('divvy')
 
-            assert klass.status is DeviceStatus.REQUESTED
+            assert dev.status is DeviceStatus.ONLINEREQUESTED
             network.onGetDeviceSchema.assert_called_with('divvy')
 
     def test_get_project_device_simple(self):
@@ -55,8 +55,8 @@ class TestSystemTopology(GuiTestCase):
             device = topology.get_project_device(device_id,
                                                  server_id=server_id,
                                                  class_id=class_id,)
-
-            assert not device.proxy.online
+            # Mocked network is not providing online proxy its schema
+            device._online_proxy.status = DeviceStatus.OFFLINE
             assert device._online_proxy is topology.get_device(device_id)
             project_proxy = topology.get_project_device_proxy(
                 device_id, server_id, class_id)
