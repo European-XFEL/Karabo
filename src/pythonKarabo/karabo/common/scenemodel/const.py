@@ -9,6 +9,10 @@ SCENE_FILE_VERSION = 2
 SCENE_MIN_WIDTH = 1024
 SCENE_MIN_HEIGHT = 768
 
+DISPLAY_COMPONENT = 'DisplayComponent'
+
+EDITABLE_COMPONENT = 'EditableApplyLaterComponent'
+
 
 @enum.unique
 class SceneTargetWindow(enum.Enum):

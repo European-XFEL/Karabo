@@ -2,20 +2,17 @@ from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import QDialog, QHBoxLayout, QLineEdit, QToolButton, QWidget
 from traits.api import Instance, Int
 
-from karabo.common.scenemodel.api import EditableListModel
+from karabo.common.scenemodel.api import DisplayListModel, EditableListModel
 from karabogui import icons
-from karabogui.binding.api import VectorBinding, get_editor_value
+from karabogui.binding.api import (
+    VectorBinding, VectorHashBinding, VectorNoneBinding, get_editor_value)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.controllers.listedit import ListEdit
 from karabogui.util import SignalBlocker
 
 
-@register_binding_controller(ui_name='List', can_edit=True,
-                             klassname='EditableList',
-                             binding_type=VectorBinding, priority=10)
-class EditableList(BaseBindingController):
-    model = Instance(EditableListModel, args=())
+class _BaseListController(BaseBindingController):
     last_cursor_position = Int(0)
     _internal_widget = Instance(QLineEdit)
     layout = Instance(QHBoxLayout)
@@ -82,3 +79,25 @@ class EditableList(BaseBindingController):
 
         # Give back the focus!
         self._internal_widget.setFocus(Qt.PopupFocusReason)
+
+
+def _is_compatible(binding):
+    """Don't allow editing of goofy vectors"""
+    prohibited = (VectorHashBinding, VectorNoneBinding)
+    return not isinstance(binding, prohibited)
+
+
+@register_binding_controller(ui_name='Edit List', is_compatible=_is_compatible,
+                             klassname='EditableList', can_edit=True,
+                             binding_type=VectorBinding, priority=10)
+class EditableList(_BaseListController):
+    """The editable version of the list widget"""
+    model = Instance(EditableListModel, args=())
+
+
+@register_binding_controller(ui_name='List', is_compatible=_is_compatible,
+                             klassname='DisplayList', priority=10,
+                             binding_type=VectorBinding)
+class DisplayList(_BaseListController):
+    """The display version of the list widget"""
+    model = Instance(DisplayListModel, args=())
