@@ -5,7 +5,7 @@
 #############################################################################
 from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import QAction, QProgressBar
-from traits.api import Float, Instance, Tuple
+from traits.api import Bool, Float, Instance, Tuple
 
 from karabo.common.scenemodel.api import DisplayProgressBarModel
 from karabogui import messagebox
@@ -32,11 +32,13 @@ def _scale(val, min_val, max_val):
 
 @register_binding_controller(ui_name='Progress Bar',
                              klassname='DisplayProgressBar',
-                             binding_type=(FloatBinding, IntBinding))
+                             binding_type=(FloatBinding, IntBinding),
+                             can_show_nothing=False)
 class DisplayProgressBar(BaseBindingController):
     # The specific scene model class used by this widget
     model = Instance(DisplayProgressBarModel, args=())
     # Value scaling params
+    _error_shown = Bool(False)
     _value_factors = Tuple(Float(-1), Float(-1))
 
     def create_widget(self, parent):
@@ -54,9 +56,18 @@ class DisplayProgressBar(BaseBindingController):
         binding = proxy.binding
         self._eval_limits(binding)
         if self._value_factors == NULL_RANGE:
+            self.error_box(proxy.key)
+        else:
+            self._error_shown = False
+
+    def error_box(self, keyname):
+        if not self._error_shown:
+            # make sure you bother the user only once per widget
             msg = ('No proper configuration detected.\n'
-                   'Please define min and max thresholds.')
+                   'Please define min and max thresholds for '
+                   '{}.'.format(keyname))
             messagebox.show_warning(msg, title='Wrong property configuration')
+            self._error_shown = True
 
     def value_update(self, proxy):
         if self._value_factors == NULL_RANGE:
