@@ -74,11 +74,13 @@ namespace karabo {
                     m_readThread.join();
                 } else {
                     // Prevent exception about "boost thread: trying joining itself: Resource deadlock avoided"
-                    // that can happen when stopReading is called in destructor. Scenario is that consumeMessages calls
-                    // bind_weak that temporarily creates a shared_ptr shortly before any external shared_ptr is
-                    // cleared. Then the destructor is called in m_readThread.
+                    // that can happen when stopReading is called in destructor. Since consumeMessages holds a
+                    // 'self'-guard shared_ptr, this is even the normal scenario.
                     KARABO_LOG_FRAMEWORK_DEBUG << "Avoided that thread joins itself in 'stopReading'.";
                 }
+                // Better reset to avoid dangling handlers:
+                m_messageHandler = MessageHandler();
+                m_errorNotifier = ErrorNotifier();
             }
         }
 
@@ -89,6 +91,14 @@ namespace karabo {
             // In this way we are safe against deadlocks blocking all threads in the event loop. Note that not being
             // able to read (and thus acknowledge!) would create a "black hole" that compromises the whole system!
             while (m_reading) {
+                // Create a guard to keep us alive since consumeMessages is 'boost::bind'-ed to a bare this.
+                // Otherwise bind_weak (as in Karabo 2.2.0) as used below could throw boost::bad_weak_ptr.
+                // Nice side-effect: Destructor does not block event loop threads via stopReading -> m_readThread.join
+                const auto self(weak_from_this().lock()); // simple shared_from_this() could throw
+                if (!self) {
+                    // We are already (being) destructed, so give up (should not happen anyway).
+                    return;
+                }
                 MQSessionHandle sessionHandle = this->ensureConsumerSessionAvailable(m_topic, m_selector);
                 MQConsumerHandle consumerHandle = this->getConsumer(m_topic, m_selector);
 
@@ -98,71 +108,58 @@ namespace karabo {
                                                                      });
                 MQStatus status = MQReceiveMessageWithTimeout(consumerHandle, 100, messageHandlePtr.get());
                 MQError statusCode = MQGetStatusCode(status);
-                try {
-                    switch (statusCode) {
+                switch (statusCode) {
 
-                        case MQ_CONSUMER_DROPPED_MESSAGES:
-                        { // Deal with hand-crafted error code
-                            MQString statusString = MQGetStatusString(status);
-                            const std::string stdStatusString(statusString);
-                            MQFreeString(statusString);
-                            KARABO_LOG_FRAMEWORK_ERROR << "Problem during message consumption: " << stdStatusString;
-                            m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, Error::drop, stdStatusString));
-                            // No 'break;'!
-                        }
-                        case MQ_SUCCESS:
-                        { // Message received
-                            MQ_SAFE_CALL(MQAcknowledgeMessages(sessionHandle, *messageHandlePtr));
-
-                            MQMessageType messageType;
-                            MQ_SAFE_CALL(MQGetMessageType(*messageHandlePtr, &messageType));
-
-                            // Wrong message type -> notify error, but ignore this message
-                            if (messageType != MQ_BYTES_MESSAGE) {
-                                const std::string msg("Received a message of wrong type");
-                                KARABO_LOG_FRAMEWORK_WARN << msg;
-                                m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, Error::type, msg));
-                                break;
-                            }
-                            m_serializerStrand->post(bind_weak(&JmsConsumer::deserialize, this, messageHandlePtr));
-                            break;
-                        }
-
-                        case MQ_TIMEOUT_EXPIRED:
-                            // No message received, just try again
-                            break;
-                        case MQ_STATUS_INVALID_HANDLE:
-                        case MQ_BROKER_CONNECTION_CLOSED:
-                        case MQ_SESSION_CLOSED:
-                        case MQ_CONSUMER_CLOSED:
-                            // Invalidate handles and re-post, i.e. go on once broker etc. are back.
-                            // This function may be called concurrently, hence its thread-safe
-                            this->clearConsumerHandles();
-                            break;
-                        default:
-                        {
-                            MQString tmp = MQGetStatusString(status);
-                            const std::string errorString(tmp);
-                            MQFreeString(tmp);
-                            const std::string msg("Untreated message consumption error '" + errorString + "', try again.");
-                            KARABO_LOG_FRAMEWORK_WARN << msg;
-                            m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, Error::unknown, msg));
-                        }
+                    case MQ_CONSUMER_DROPPED_MESSAGES:
+                    { // Deal with hand-crafted error code
+                        MQString statusString = MQGetStatusString(status);
+                        const std::string stdStatusString(statusString);
+                        MQFreeString(statusString);
+                        KARABO_LOG_FRAMEWORK_ERROR << "Problem during message consumption: " << stdStatusString;
+                        m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, Error::drop, stdStatusString));
+                        // No 'break;'!
                     }
-                } catch (const boost::bad_weak_ptr&) {
-                    // Alas! Remember why there is bind_weak? It is to be safe without tricks like this here:
-                    // If the destructor is called, this method might still be running (until m_readThread is joined).
-                    // But then bind_weak can be called which in turn calls shared_from_this() -
-                    // which then throws boost::bad_weak_ptr.
-                    // Could be avoided if bind_weak directly makes use of weak_from_this() (which did not exist in
-                    // boost 1.55) instead of getting the weak_ptr via shared_from_this()...
-                    return;
-                }
-            }
+                    case MQ_SUCCESS:
+                    { // Message received
+                        MQ_SAFE_CALL(MQAcknowledgeMessages(sessionHandle, *messageHandlePtr));
 
-            // Better reset to avoid dangling handlers:
-            m_messageHandler = MessageHandler();
-            m_errorNotifier = ErrorNotifier();
+                        MQMessageType messageType;
+                        MQ_SAFE_CALL(MQGetMessageType(*messageHandlePtr, &messageType));
+
+                        // Wrong message type -> notify error, but ignore this message
+                        if (messageType != MQ_BYTES_MESSAGE) {
+                            const std::string msg("Received a message of wrong type");
+                            KARABO_LOG_FRAMEWORK_WARN << msg;
+                            m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, Error::type, msg));
+                            break;
+                        }
+                        m_serializerStrand->post(bind_weak(&JmsConsumer::deserialize, this, messageHandlePtr));
+                        break;
+                    }
+
+                    case MQ_TIMEOUT_EXPIRED:
+                        // No message received, just try again
+                        break;
+                    case MQ_STATUS_INVALID_HANDLE:
+                    case MQ_BROKER_CONNECTION_CLOSED:
+                    case MQ_SESSION_CLOSED:
+                    case MQ_CONSUMER_CLOSED:
+                        // Invalidate handles and re-post, i.e. go on once broker etc. are back.
+                        // This function may be called concurrently, hence its thread-safe
+                        this->clearConsumerHandles();
+                        break;
+                    default:
+                    {
+                        MQString tmp = MQGetStatusString(status);
+                        const std::string errorString(tmp);
+                        MQFreeString(tmp);
+                        const std::string msg("Untreated message consumption error '" + errorString + "', try again.");
+                        KARABO_LOG_FRAMEWORK_WARN << msg;
+                        m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, Error::unknown, msg));
+                    }
+                }
+                // Now self goes out of scope. If no-one else holds a shared pointer anymore, destructor is called.
+            }
         }
 
 
