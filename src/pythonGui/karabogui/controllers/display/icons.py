@@ -19,6 +19,7 @@ NUMERICAL_BINDINGS = (FloatBinding, IntBinding)
 class _BaseIcons(BaseBindingController):
     def create_widget(self, parent):
         widget = QLabel(parent)
+        widget.setMinimumSize(24, 24)
         action = QAction('Change Icons...', widget)
         widget.addAction(action)
         action.triggered.connect(self._on_change_icons)
