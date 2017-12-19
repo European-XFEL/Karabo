@@ -42,24 +42,27 @@ class StatefulIconWidget(BaseBindingController):
         return QSvgWidget(parent)
 
     def value_update(self, proxy):
-        value = proxy.value
-        if State(value).isDerivedFrom(State.CHANGING):
+        if self._icon is None:
+            return  # We haven't been configured correctly!
+
+        value = State(proxy.value)
+        if value.isDerivedFrom(State.CHANGING):
             color = STATE_COLORS[State.CHANGING]
-        elif State(value).isDerivedFrom(State.RUNNING):
+        elif value.isDerivedFrom(State.RUNNING):
             color = STATE_COLORS[State.RUNNING]
-        elif State(value).isDerivedFrom(State.ACTIVE):
+        elif value.isDerivedFrom(State.ACTIVE):
             color = STATE_COLORS[State.ACTIVE]
-        elif State(value).isDerivedFrom(State.PASSIVE):
+        elif value.isDerivedFrom(State.PASSIVE):
             color = STATE_COLORS[State.PASSIVE]
-        elif State(value).isDerivedFrom(State.DISABLED):
+        elif value.isDerivedFrom(State.DISABLED):
             color = STATE_COLORS[State.DISABLED]
-        elif State(value) is State.STATIC:
+        elif value is State.STATIC:
             color = STATE_COLORS[State.STATIC]
-        elif State(value) is State.NORMAL:
+        elif value is State.NORMAL:
             color = STATE_COLORS[State.NORMAL]
-        elif State(value) is State.ERROR:
+        elif value is State.ERROR:
             color = STATE_COLORS[State.ERROR]
-        elif State(value) is State.INIT:
+        elif value is State.INIT:
             color = STATE_COLORS[State.INIT]
         else:
             color = STATE_COLORS[State.UNKNOWN]
