@@ -145,6 +145,9 @@ class SystemTopology(HasStrictTraits):
             instance.rename(
                 device_id=device_id, class_id=class_id, server_id=server_id
             )
+        attrs = self._get_device_attributes(device_id)
+        if attrs is not None:
+            instance.error = (attrs.get('status', '') == 'error')
 
         return self._project_devices[device_id]
 
@@ -164,10 +167,11 @@ class SystemTopology(HasStrictTraits):
             mapping[device_id] = proxy
 
             # Only fetch the schema if it's not already cached and server
-            # exists
+            # exists and device plugin is installed
             if schema is None:
                 attrs = self._get_device_attributes(server_id)
-                if attrs is not None:
+                has_plugin = (proxy.status != DeviceStatus.NOPLUGIN)
+                if attrs is not None and has_plugin:
                     proxy.refresh_schema()
 
         return proxy
@@ -421,8 +425,12 @@ class SystemTopology(HasStrictTraits):
         """Check all device proxies to see if they are online or not
         """
         for dev in self._device_proxies.values():
-            attrs = self._get_device_attributes(dev.device_id)
+            did = dev.device_id
+            attrs = self._get_device_attributes(did)
             if dev.status is DeviceStatus.OFFLINE and attrs:
                 dev.status = DeviceStatus.ONLINE
+                prj_dev = self._project_devices.get(did)
+                if prj_dev is not None:
+                    prj_dev.error = (attrs.get('status', '') == 'error')
             elif dev.status is not DeviceStatus.OFFLINE and attrs is None:
                 dev.status = DeviceStatus.OFFLINE
