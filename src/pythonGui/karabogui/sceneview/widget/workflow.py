@@ -63,7 +63,7 @@ class WorkflowItemWidget(QWidget):
     def update_alarm_symbol(self):
         """Satisfy the informal widget interface."""
 
-    def update_global_access_level(self):
+    def update_global_access_level(self, level):
         """Satisfy the informal widget interface."""
 
     def set_geometry(self, rect):
