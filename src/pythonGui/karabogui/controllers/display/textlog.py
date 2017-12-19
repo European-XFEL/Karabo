@@ -11,6 +11,7 @@ from PyQt4.QtGui import (
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import DisplayTextLogModel
+from karabo.middlelayer import Timestamp
 from karabogui import icons
 from karabogui.binding.api import StringBinding
 from karabogui.const import FINE_COLOR
@@ -28,6 +29,7 @@ class DisplayTextLog(BaseBindingController):
     model = Instance(DisplayTextLogModel, args=())
     # Internal traits
     log_widget = Instance(QTextEdit)
+    _timestamp = Instance(Timestamp, args=())
 
     def create_widget(self, parent):
         widget = QFrame(parent)
@@ -67,8 +69,10 @@ class DisplayTextLog(BaseBindingController):
     def value_update(self, proxy):
         # catch both None and empty strings
         value = proxy.value
-        if value:
-            self._write_log(value, proxy.binding.timestamp)
+        timestamp = proxy.binding.timestamp
+        if value and timestamp != self._timestamp:
+            self._write_log(value, timestamp)
+            self._timestamp = timestamp
 
     def _write_log(self, text, timestamp):
         dt = datetime.fromtimestamp(timestamp.toTimestamp())
