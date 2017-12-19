@@ -19,6 +19,8 @@ class ProxySelectionTool(BaseSceneTool):
             proxy = widget.widget_controller.proxy
             device = proxy.root_proxy
             if isinstance(device, DeviceProxy):  # ignore DeviceClassProxy
+                if not device.online:
+                    return  # ignore offline devices
                 broadcast_event(KaraboEventSender.ShowConfiguration,
                                 {'proxy': device})
 
