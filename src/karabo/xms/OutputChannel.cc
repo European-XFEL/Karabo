@@ -114,14 +114,14 @@ namespace karabo {
             using namespace karabo::net;
 
             // HACK starts
-            // Tell scheduler that other threads can take over to minimise the risk that shared_ptr is not yet there:
-            boost::this_thread::yield();
             // Treat situations when this method already runs although there is no shared_ptr for this object yet!
             // Seen e.g. if many devices with OutputChannels are instantiated simultaneously, i.e. in a busy process.
             if (!weak_from_this().lock()) { // Try to promote to shared_ptr.
                 if (countdown > 0) {
                     KARABO_LOG_FRAMEWORK_DEBUG << "initializeServerConnection: no shared_ptr yet, try again up to "
                             << countdown << " more times"; // Unfortunately, m_instanceId cannot be filled yet.
+                    // Let other threads potentially take over to increase the chance that shared_ptr is there next time:
+                    boost::this_thread::yield();
                     // Bare boost::bind with this as in constructor.
                     karabo::net::EventLoop::getIOService().post(boost::bind(&OutputChannel::initializeServerConnection,
                                                                             this, --countdown));
