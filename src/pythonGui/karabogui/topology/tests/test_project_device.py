@@ -1,5 +1,6 @@
 from unittest.mock import Mock
 
+from karabo.common.api import DeviceStatus
 from karabo.middlelayer import Configurable, Hash, String
 from karabogui.testing import singletons, system_hash
 from karabogui.topology.system import SystemTopology
@@ -20,6 +21,8 @@ def test_project_device():
             device = topology.get_project_device('divvy',
                                                  server_id='swerver',
                                                  class_id='FooClass')
+            # mocked network is not providing schema to the online proxy
+            device._online_proxy.status = DeviceStatus.OFFLINE
 
             config = Hash('val', 'foo')
             device.set_project_config_hash(config)
@@ -37,3 +40,8 @@ def test_project_device():
             assert device._online_proxy._monitor_count == 1
             device.stop_monitoring()
             assert device._online_proxy._monitor_count == 0
+
+            device._online_proxy.status = DeviceStatus.ONLINE
+            assert device.status is DeviceStatus.ONLINE
+            device.error = True
+            assert device.status is DeviceStatus.ERROR

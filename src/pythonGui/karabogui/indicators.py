@@ -180,6 +180,7 @@ def get_project_device_status_icon(status, error=False):
         DeviceStatus.NOSERVER: icons.deviceOfflineNoServer,
         DeviceStatus.NOPLUGIN: icons.deviceOfflineNoPlugin,
         DeviceStatus.OFFLINE: icons.deviceOffline,
+        DeviceStatus.REQUESTED: icons.deviceOffline,
         DeviceStatus.INCOMPATIBLE: icons.deviceIncompatible,
         DeviceStatus.MONITORING: icons.deviceMonitored,
     }
