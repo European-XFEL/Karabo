@@ -11,7 +11,8 @@ from numpy import arange
 from traits.api import Dict, Instance
 
 from karabo.common.scenemodel.api import DisplayPlotModel
-from karabogui.binding.api import VectorBinding, KARABO_SCHEMA_DISPLAYED_NAME
+from karabogui.binding.api import (
+    VectorNumberBinding, KARABO_SCHEMA_DISPLAYED_NAME)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 
@@ -20,7 +21,7 @@ COLORS = ("red", "green", "blue", "gray", "violet", "orange", "lightgreen",
 
 
 @register_binding_controller(ui_name='Plot', klassname='DisplayPlot',
-                             binding_type=VectorBinding)
+                             binding_type=VectorNumberBinding)
 class DisplayPlot(BaseBindingController):
     # The scene data model class for this controller
     model = Instance(DisplayPlotModel, args=())

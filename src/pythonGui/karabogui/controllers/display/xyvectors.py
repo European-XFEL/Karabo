@@ -4,13 +4,19 @@ from PyQt4.Qwt5.Qwt import QwtPlot
 from traits.api import Dict, Instance
 
 from karabo.common.scenemodel.api import LinePlotModel
-from karabogui.binding.api import VectorBinding
+from karabogui.binding.api import VectorBoolBinding, VectorNumberBinding
 from karabogui.controllers.api import (
     BaseBindingController, axis_label, register_binding_controller)
 
 
+def _is_compatible(binding):
+    """Don't allow plotting of boolean vectors"""
+    return not isinstance(binding, VectorBoolBinding)
+
+
 @register_binding_controller(ui_name='XY-Plot', klassname='XYVector',
-                             binding_type=VectorBinding,
+                             binding_type=VectorNumberBinding,
+                             is_compatible=_is_compatible,
                              can_show_nothing=False)
 class XYVector(BaseBindingController):
     # The scene model class used by this controller
