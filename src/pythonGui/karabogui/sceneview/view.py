@@ -180,7 +180,7 @@ class SceneView(QWidget):
             event.accept()
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Shift and not self.design_mode:
+        if event.key() == Qt.Key_Control and not self.design_mode:
             if not self.inner.hasFocus():
                 self.inner.setFocus()
             self.set_cursor('pointing-hand')
@@ -188,7 +188,7 @@ class SceneView(QWidget):
             self.enable_mouse_event_handling(True)
 
     def keyReleaseEvent(self, event):
-        if event.key() == Qt.Key_Shift and not self.design_mode:
+        if event.key() == Qt.Key_Control and not self.design_mode:
             self.set_cursor('none')
             self.enable_mouse_event_handling(False)
             self.set_tool(None)
