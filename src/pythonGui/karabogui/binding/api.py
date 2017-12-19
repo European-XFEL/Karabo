@@ -42,12 +42,13 @@ from .types import (
     NodeBinding, NoneBinding, PipelineOutputBinding,
     SchemaBinding, SignedIntBinding, SlotBinding, StringBinding, TableBinding,
     Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
-    UnsignedIntBinding, VectorBinding,VectorBoolBinding, VectorCharBinding,
-    VectorComplexDoubleBinding, VectorComplexFloatBinding, VectorDoubleBinding,
-    VectorFloatBinding, VectorHashBinding, VectorInt8Binding,
-    VectorInt16Binding, VectorInt32Binding, VectorInt64Binding,
-    VectorNoneBinding, VectorStringBinding, VectorUint8Binding,
-    VectorUint16Binding, VectorUint32Binding, VectorUint64Binding
+    UnsignedIntBinding, VectorBinding, VectorNumberBinding, VectorBoolBinding,
+    VectorCharBinding, VectorComplexDoubleBinding, VectorComplexFloatBinding,
+    VectorDoubleBinding, VectorFloatBinding, VectorHashBinding,
+    VectorInt8Binding, VectorInt16Binding, VectorInt32Binding,
+    VectorInt64Binding, VectorNoneBinding, VectorStringBinding,
+    VectorUint8Binding, VectorUint16Binding, VectorUint32Binding,
+    VectorUint64Binding
 )
 from .util import (
     fast_deepcopy, flat_iter_hash, get_editor_value, get_min_max, has_changes)
