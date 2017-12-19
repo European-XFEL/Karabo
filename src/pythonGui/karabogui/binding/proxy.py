@@ -2,17 +2,13 @@ from traits.api import (
     HasStrictTraits, Any, Bool, DelegatesTo, Enum, Event, Instance, Int,
     Property, String, Tuple, WeakRef, on_trait_change)
 
-from karabo.common.api import DeviceStatus
+from karabo.common.api import DeviceStatus, ONLINE_STATUSES
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.singletons.api import get_network, get_topology
 from . import const
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .types import BaseBinding, BindingRoot, PipelineOutputBinding, SlotBinding
 
-_ONLINE_STATUSES = (
-    DeviceStatus.OK, DeviceStatus.ONLINE, DeviceStatus.ALIVE,
-    DeviceStatus.MONITORING, DeviceStatus.SCHEMA, DeviceStatus.ERROR
-)
 _RECURSIVE_BINDINGS = (ChoiceOfNodesBinding, ListOfNodesBinding)
 
 
@@ -41,7 +37,7 @@ class BaseDeviceProxy(HasStrictTraits):
         self.state_binding = self.get_property_binding('state')
 
     def _get_online(self):
-        return self.status in _ONLINE_STATUSES
+        return self.status in ONLINE_STATUSES
 
     def _status_default(self):
         return DeviceStatus.OFFLINE
@@ -86,7 +82,7 @@ class DeviceProxy(BaseDeviceProxy):
             self.status = DeviceStatus.MONITORING
 
     def _schema_update_fired(self):
-        if self.status is DeviceStatus.REQUESTED:
+        if self.status is DeviceStatus.ONLINEREQUESTED:
             if self._monitor_count > 0:
                 self._start_monitoring()
             self.status = DeviceStatus.SCHEMA
@@ -118,7 +114,8 @@ class DeviceProxy(BaseDeviceProxy):
     def add_monitor(self):
         """Ask the GUI server to begin monitoring this device
         """
-        ignored_statuses = (DeviceStatus.OFFLINE, DeviceStatus.REQUESTED)
+        ignored_statuses = (DeviceStatus.OFFLINE,
+                            DeviceStatus.ONLINEREQUESTED)
 
         self._monitor_count += 1
         if self._monitor_count == 1:
@@ -161,9 +158,9 @@ class DeviceProxy(BaseDeviceProxy):
     def refresh_schema(self):
         """Request a recent schema for this device instance
         """
-        if self.status is not DeviceStatus.REQUESTED:
+        if self.status is not DeviceStatus.ONLINEREQUESTED:
             get_network().onGetDeviceSchema(self.device_id)
-            self.status = DeviceStatus.REQUESTED
+            self.status = DeviceStatus.ONLINEREQUESTED
 
     # -----------------------------------------------------------------------
     # Private interface

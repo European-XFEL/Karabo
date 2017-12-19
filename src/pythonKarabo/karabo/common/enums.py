@@ -16,6 +16,8 @@ class DeviceStatus(Enum):
     OK = 'ok'
     # the device is online but doesn't have a schema yet
     ONLINE = 'online'
+    # online device waiting for its schema
+    ONLINEREQUESTED = 'onlinerequested'
     # everything is up-and-running
     ALIVE = 'alive'
     # we are registered to monitor this device
@@ -34,3 +36,17 @@ class DeviceStatus(Enum):
     INCOMPATIBLE = 'incompatible'
     MISSING = 'missing'
     ERROR = 'error'
+
+
+# The device is online in these status
+ONLINE_STATUSES = (
+    DeviceStatus.OK, DeviceStatus.ONLINE, DeviceStatus.ALIVE,
+    DeviceStatus.ONLINEREQUESTED, DeviceStatus.MONITORING,
+    DeviceStatus.SCHEMA, DeviceStatus.ERROR
+)
+
+
+# The device is not able to receive configuration
+NO_CONFIG_STATUSES = (
+    DeviceStatus.NOPLUGIN, DeviceStatus.NOSERVER, DeviceStatus.REQUESTED
+)
