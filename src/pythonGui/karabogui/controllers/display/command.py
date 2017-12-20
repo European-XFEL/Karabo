@@ -10,7 +10,6 @@ from karabogui.binding.api import SlotBinding, KARABO_SCHEMA_DISPLAYED_NAME
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 
-
 # An item contains the slotbinding proxy and its connected qt action
 Item = namedtuple('Item', ['proxy', 'action'])
 
@@ -77,8 +76,9 @@ class DisplayCommand(BaseBindingController):
         display_name = attributes.get(KARABO_SCHEMA_DISPLAYED_NAME, proxy.path)
         item.action.setText(display_name)
         item.action.triggered.connect(item.proxy.execute)
-        state = proxy.root_proxy.state_binding.value
-        if state and state != '':
+        # State binding can be None
+        state_binding = proxy.root_proxy.state_binding
+        if state_binding and state_binding.value != '':
             self.state_update(proxy)
 
     def _set_default_action(self):
