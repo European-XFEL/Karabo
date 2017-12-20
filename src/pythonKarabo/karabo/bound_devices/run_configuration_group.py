@@ -316,4 +316,20 @@ def _generateDeviceScene(instance_id):
                                    children=[button, user_label, expert_label,
                                              descr_layout, name_layout,
                                              expert_table, user_table])
-    return write_scene(SceneModel(children=[root_layout]))
+
+    exp_0 = LabelModel(font=',11,-1,5,50,0,0,0,0,0',
+                       height=72, width=111, x=644, y=15,
+                       parent_component='DisplayComponent',
+                       text='NOTE: You must click the green check mark')
+    exp_1 = LabelModel(font=',11,-1,5,50,0,0,0,0,0',
+                       height=72, width=110.0, x=650, y=74,
+                       parent_component='DisplayComponent',
+                       text='to apply your changes before clicking the')
+    exp_2 = LabelModel(font=',11,-1,5,50,0,0,0,0,0',
+                       height=72, width=111, x=656, y=155,
+                       parent_component='DisplayComponent',
+                       text=' "Save Configuration" button.')
+    exp_layout = BoxLayoutModel(direction=2,
+                                height=77, width=346, x=126, y=531,
+                                children=[exp_0, exp_1, exp_2])
+    return write_scene(SceneModel(children=[root_layout, exp_layout]))
