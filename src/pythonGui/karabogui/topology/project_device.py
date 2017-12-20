@@ -62,7 +62,8 @@ class ProjectDeviceInstance(HasStrictTraits):
         """Extract a complete device config hash from the proxy
         """
         if len(self.proxy.binding.value) > 0:
-            return extract_configuration(self.proxy.binding)
+            return extract_configuration(self.proxy.binding,
+                                         include_attributes=True)
         return Hash()
 
     def rename(self, device_id='', server_id='', class_id=''):
@@ -89,7 +90,7 @@ class ProjectDeviceInstance(HasStrictTraits):
         if len(self._offline_proxy.binding.value) > 0:
             apply_default_configuration(self._offline_proxy.binding)
             apply_configuration(config, self._offline_proxy.binding,
-                                notify=False)
+                                notify=False, include_attributes=True)
         else:
             self._deferred_update = True
             self._offline_config = config
@@ -142,7 +143,8 @@ class ProjectDeviceInstance(HasStrictTraits):
         if self._deferred_update:
             apply_default_configuration(self._offline_proxy.binding)
             apply_configuration(self._offline_config,
-                                self._offline_proxy.binding, notify=False)
+                                self._offline_proxy.binding,
+                                notify=False, include_attributes=True)
             self._deferred_update = False
 
     # ---------------------------------------------------------------------
