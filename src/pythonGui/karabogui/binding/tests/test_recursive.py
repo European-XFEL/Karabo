@@ -7,7 +7,7 @@ from ..api import (
     Int32Binding, ListOfNodesBinding, NodeBinding,
     apply_configuration, apply_default_configuration,
     build_binding, extract_configuration, extract_attribute_modifications,
-    KARABO_SCHEMA_DEFAULT_VALUE
+    KARABO_SCHEMA_ABSOLUTE_ERROR
 )
 from ..recursive import duplicate_binding
 from .schema import get_recursive_schema
@@ -160,17 +160,18 @@ def test_extract_attribute_modifications():
     # no changes
     assert ret is None
 
-    # Change defaultValue from _NodeTwo to _NodeOne
-    binding.value.con.attributes[KARABO_SCHEMA_DEFAULT_VALUE] = '_NodeOne'
+    # Change absoluteError to _NodeOne
+    # (for testing purposes it doesn't matter that this is nonsense)
+    binding.value.con.attributes[KARABO_SCHEMA_ABSOLUTE_ERROR] = '_NodeOne'
     ret = extract_attribute_modifications(schema, binding)
     assert ret[0] == Hash('path', 'con',
-                          'attribute', KARABO_SCHEMA_DEFAULT_VALUE,
+                          'attribute', KARABO_SCHEMA_ABSOLUTE_ERROR,
                           'value', '_NodeOne')
 
     binding = build_binding(schema)
-    binding.value.lon.attributes[KARABO_SCHEMA_DEFAULT_VALUE] = ['_NodeOne',
-                                                                 '_NodeTwo']
+    binding.value.lon.attributes[KARABO_SCHEMA_ABSOLUTE_ERROR] = ['_NodeOne',
+                                                                  '_NodeTwo']
     ret = extract_attribute_modifications(schema, binding)
     assert ret[0] == Hash('path', 'lon',
-                          'attribute', KARABO_SCHEMA_DEFAULT_VALUE,
+                          'attribute', KARABO_SCHEMA_ABSOLUTE_ERROR,
                           'value', ['_NodeOne', '_NodeTwo'])

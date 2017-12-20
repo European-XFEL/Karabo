@@ -10,7 +10,8 @@ from .types import BindingNamespace, BindingRoot, NodeBinding, SlotBinding
 from .util import fast_deepcopy
 
 
-def apply_configuration(config, binding, notify=True):
+def apply_configuration(config, binding, notify=True,
+                        include_attributes=False):
     """Recursively set values from a configuration Hash object to a binding
     object.
 
@@ -26,12 +27,15 @@ def apply_configuration(config, binding, notify=True):
 
         node = getattr(namespace, key)
         if isinstance(value, Hash) and isinstance(node, NodeBinding):
-            apply_configuration(value, node)
+            apply_configuration(value, node, notify=notify,
+                                include_attributes=include_attributes)
         else:
             traits = {'value': value}
             # Set the timestamp no matter what
             ts = Timestamp.fromHashAttributes(attrs)
             traits['timestamp'] = ts or Timestamp()
+            if include_attributes:
+                traits['attributes'] = fast_deepcopy(attrs)
             # Set everything at once and notify via the config_update event
             try:
                 node.trait_set(trait_change_notify=False, **traits)
@@ -122,7 +126,9 @@ def extract_attribute_modifications(schema, binding):
             ret = (v0 != v1)
             # comparison of numpy arrays result in an array
             return all(ret) if isinstance(ret, Iterable) else ret
-        return {k: v for k, v in d0.items() if _not_equal(d1.get(k), v)}
+        return {k: v for k, v in d0.items()
+                if _not_equal(d1.get(k), v) and
+                k in const.KARABO_EDITABLE_ATTRIBUTES}
 
     def _remap_value(name, value):
         enum = _SYMBOL_MAP.get(name, None)
