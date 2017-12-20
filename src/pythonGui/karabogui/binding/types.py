@@ -252,7 +252,13 @@ class VectorBinding(BaseBinding):
     """The base class for all vector binding types"""
 
 
-class VectorBoolBinding(VectorBinding):
+class VectorNumberBinding(VectorBinding):
+    """The base class for all vector binding types which contain types
+    supported by numpy.
+    """
+
+
+class VectorBoolBinding(VectorNumberBinding):
     value = Array(dtype='bool')
 
 
@@ -260,19 +266,19 @@ class VectorCharBinding(VectorBinding):
     value = Bytes
 
 
-class VectorComplexDoubleBinding(VectorBinding):
+class VectorComplexDoubleBinding(VectorNumberBinding):
     value = Array(dtype='complex128', shape=(None,))
 
 
-class VectorComplexFloatBinding(VectorBinding):
+class VectorComplexFloatBinding(VectorNumberBinding):
     value = Array(dtype='complex64', shape=(None,))
 
 
-class VectorDoubleBinding(VectorBinding):
+class VectorDoubleBinding(VectorNumberBinding):
     value = Array(dtype='float64', shape=(None,))
 
 
-class VectorFloatBinding(VectorBinding):
+class VectorFloatBinding(VectorNumberBinding):
     value = Array(dtype='float32', shape=(None,))
 
 
@@ -280,19 +286,19 @@ class VectorHashBinding(VectorBinding):
     value = List(Instance(Hash))
 
 
-class VectorInt8Binding(VectorBinding):
+class VectorInt8Binding(VectorNumberBinding):
     value = Array(dtype='int8', shape=(None,))
 
 
-class VectorInt16Binding(VectorBinding):
+class VectorInt16Binding(VectorNumberBinding):
     value = Array(dtype='int16', shape=(None,))
 
 
-class VectorInt32Binding(VectorBinding):
+class VectorInt32Binding(VectorNumberBinding):
     value = Array(dtype='int32', shape=(None,))
 
 
-class VectorInt64Binding(VectorBinding):
+class VectorInt64Binding(VectorNumberBinding):
     value = Array(dtype='int64', shape=(None,))
 
 
@@ -304,19 +310,19 @@ class VectorStringBinding(VectorBinding):
     value = List(String)
 
 
-class VectorUint8Binding(VectorBinding):
+class VectorUint8Binding(VectorNumberBinding):
     value = Array(dtype='uint8', shape=(None,))
 
 
-class VectorUint16Binding(VectorBinding):
+class VectorUint16Binding(VectorNumberBinding):
     value = Array(dtype='uint16', shape=(None,))
 
 
-class VectorUint32Binding(VectorBinding):
+class VectorUint32Binding(VectorNumberBinding):
     value = Array(dtype='uint32', shape=(None,))
 
 
-class VectorUint64Binding(VectorBinding):
+class VectorUint64Binding(VectorNumberBinding):
     value = Array(dtype='uint64', shape=(None,))
 
 
