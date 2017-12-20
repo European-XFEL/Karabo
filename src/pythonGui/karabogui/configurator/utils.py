@@ -98,6 +98,18 @@ def get_child_names(proxy):
     return ret
 
 
+def get_device_state_string(device_proxy):
+    """Return a device state as a STRING to be checked with
+    BaseBinding.is_allowed.
+
+    NOTE: BaseBinding.is_allowed is tolerant of empty string states because it
+    does not try to make the passed in string a `State` instance. This is an
+    important property!
+    """
+    state_binding = device_proxy.state_binding
+    return state_binding.value if state_binding is not None else ''
+
+
 def get_icon(binding):
     """Get the proper icon to show next to a property in the configurator
     """
