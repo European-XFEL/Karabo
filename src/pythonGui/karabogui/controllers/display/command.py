@@ -37,7 +37,6 @@ class DisplayCommand(BaseBindingController):
         if proxy.binding:
             # Only if the binding is already valid
             self._finalize_item_initialization(item)
-
         return True
 
     def create_widget(self, parent):
@@ -57,20 +56,18 @@ class DisplayCommand(BaseBindingController):
                 break
 
     def state_update(self, proxy):
-        state = State(proxy.root_proxy.state_binding.value)
+        updated_dev = proxy.root_proxy
+        state = State(updated_dev.state_binding.value)
         for item in self._actions:
-            if item.proxy is proxy:
-                is_allowed = proxy.binding.is_allowed(state)
+            item_dev = item.proxy.root_proxy
+            item_binding = item.proxy.binding
+            if item_dev is updated_dev:
+                is_allowed = item_binding.is_allowed(state)
                 is_accessible = (krb_globals.GLOBAL_ACCESS_LEVEL >=
-                                 proxy.binding.required_access_level)
+                                 item_binding.required_access_level)
                 item.action.setEnabled(is_allowed and is_accessible)
 
-        for a in self._button.actions():
-            if a.isEnabled():
-                self._button.setDefaultAction(a)
-                break
-        else:
-            self._button.setDefaultAction(self._button.actions()[0])
+        self._set_default_action()
 
     def _finalize_item_initialization(self, item):
         """When an item gets its binding, finish hooking things up."""
@@ -80,3 +77,14 @@ class DisplayCommand(BaseBindingController):
         display_name = attributes.get(KARABO_SCHEMA_DISPLAYED_NAME, proxy.path)
         item.action.setText(display_name)
         item.action.triggered.connect(item.proxy.execute)
+        state = proxy.root_proxy.state_binding.value
+        if state and state != '':
+            self.state_update(proxy)
+
+    def _set_default_action(self):
+        for a in self._button.actions():
+            if a.isEnabled():
+                self._button.setDefaultAction(a)
+                break
+        else:
+            self._button.setDefaultAction(self._button.actions()[0])
