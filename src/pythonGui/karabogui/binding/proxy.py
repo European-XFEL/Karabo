@@ -1,3 +1,5 @@
+from collections import Counter
+
 from traits.api import (
     HasStrictTraits, Any, Bool, DelegatesTo, Enum, Event, Instance, Int,
     Property, String, Tuple, WeakRef, on_trait_change)
@@ -71,6 +73,8 @@ class DeviceProxy(BaseDeviceProxy):
 
     # A reference counter for tracking the monitoring
     _monitor_count = Int(0)
+    # A counter for pipeline connection objects
+    _pipeline_subscriptions = Instance(Counter, args=())
 
     # -----------------------------------------------------------------------
     # Traits methods
@@ -137,12 +141,24 @@ class DeviceProxy(BaseDeviceProxy):
     def connect_pipeline(self, path):
         """Ask the GUI server to subscribe to a pipeline output
         """
-        get_network().onSubscribeToOutput(self.device_id, path, True)
+        if path not in self._pipeline_subscriptions:
+            get_network().onSubscribeToOutput(self.device_id, path, True)
+
+        # NOTE: We fill a counter object with the path, as we might be
+        # interested in multiple values from an output channel
+        self._pipeline_subscriptions[path] += 1
 
     def disconnect_pipeline(self, path):
         """Ask the GUI server to unsubscribe from a pipeline output
         """
-        get_network().onSubscribeToOutput(self.device_id, path, False)
+        assert path in self._pipeline_subscriptions
+
+        self._pipeline_subscriptions[path] -= 1
+        # NOTE: Only if we fully removed all interested properties
+        # we unsubscribe from the output channel
+        if self._pipeline_subscriptions[path] == 0:
+            del self._pipeline_subscriptions[path]
+            get_network().onSubscribeToOutput(self.device_id, path, False)
 
     def publish_historic_data(self, path, data):
         """A callback which routes historic data received from the GUI server
@@ -259,6 +275,17 @@ class PropertyProxy(HasStrictTraits):
             if isinstance(binding, PipelineOutputBinding):
                 return path
         return ''  # No parent pipeline output node found
+
+    def _pipeline_parent_path_changed(self, new):
+        """Make sure to connect a pipeline if a schema arrives after we start
+        monitoring!
+        """
+        if new == '':
+            return
+
+        if self.visible and isinstance(self.root_proxy, DeviceProxy):
+            # Call blindling, the device proxy will keep things orderly
+            self.root_proxy.connect_pipeline(new)
 
     @on_trait_change('root_proxy.schema_update,path')
     def _binding_update(self):
