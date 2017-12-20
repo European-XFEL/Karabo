@@ -1,6 +1,7 @@
 from traits.api import (
     HasStrictTraits, Array, Bool, Bytes, Complex, Dict, Event, Float, Instance,
-    List, Property, Range, String, Trait, TraitHandler, Undefined
+    List, Property, Range, String, Trait, TraitHandler, Undefined,
+    cached_property
 )
 
 from karabo.middlelayer import (AccessLevel, AccessMode, Assignment, Hash,
@@ -28,11 +29,11 @@ class BaseBinding(HasStrictTraits):
     historic_data = Event
 
     # Attribute shortcut properties
-    access_mode = Property
-    assignment = Property
-    options = Property
-    required_access_level = Property
-    unit_label = Property
+    access_mode = Property(depends_on='attributes')
+    assignment = Property(depends_on='attributes')
+    options = Property(depends_on='attributes')
+    required_access_level = Property(depends_on='attributes')
+    unit_label = Property(depends_on='attributes')
 
     def is_allowed(self, state):
         """Return True if the given `state` is an allowed state for this
@@ -44,21 +45,26 @@ class BaseBinding(HasStrictTraits):
         alloweds = self.attributes.get(const.KARABO_SCHEMA_ALLOWED_STATES, [])
         return alloweds == [] or state in alloweds
 
+    @cached_property
     def _get_access_mode(self):
         mode = self.attributes.get(const.KARABO_SCHEMA_ACCESS_MODE)
         return AccessMode.UNDEFINED if mode is None else AccessMode(mode)
 
+    @cached_property
     def _get_assignment(self):
         assign = self.attributes.get(const.KARABO_SCHEMA_ASSIGNMENT)
         return Assignment.OPTIONAL if assign is None else Assignment(assign)
 
+    @cached_property
     def _get_options(self):
         return self.attributes.get(const.KARABO_SCHEMA_OPTIONS, [])
 
+    @cached_property
     def _get_required_access_level(self):
         level = self.attributes.get(const.KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL)
         return AccessLevel.OBSERVER if level is None else AccessLevel(level)
 
+    @cached_property
     def _get_unit_label(self):
         attrs = self.attributes
         prefix_symbol = attrs.get(const.KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, '')
