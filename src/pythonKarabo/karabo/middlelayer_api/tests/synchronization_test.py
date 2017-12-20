@@ -272,7 +272,7 @@ class Tests(DeviceTest):
         task = background(allCompleted(running, done, raises, cancelled))
         yield from sleep(0)
         done.set_result(None)
-        raises.set_exception(None)
+        raises.set_exception(RuntimeError())
         cancelled.cancel()
         yield from sleep(0)
         task.cancel()
