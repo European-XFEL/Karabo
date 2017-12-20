@@ -10,7 +10,8 @@ from PyQt4.QtGui import (
 
 from karabogui import icons
 from karabogui.binding.api import DeviceProxy, SlotBinding
-from .utils import ButtonState, handle_default_state, set_fill_rect
+from .utils import (
+    ButtonState, get_device_state_string, handle_default_state, set_fill_rect)
 
 ICON_SIZE = 32
 ICON_PADDING = 3
@@ -75,7 +76,7 @@ class SlotButtonDelegate(QStyledItemDelegate):
         key = proxy.key
         state = self._button_states.get(key, ButtonState.DISABLED)
         is_device = isinstance(proxy.root_proxy, DeviceProxy)
-        dev_state = proxy.root_proxy.state_binding.value
+        dev_state = get_device_state_string(proxy.root_proxy)
         allowed = is_device and proxy.binding.is_allowed(dev_state)
         button_state = handle_default_state(allowed, state)
         self._button_states[key] = state
@@ -103,7 +104,7 @@ class SlotButtonDelegate(QStyledItemDelegate):
         """
         key = proxy.key
         is_device = isinstance(proxy.root_proxy, DeviceProxy)
-        dev_state = proxy.root_proxy.state_binding.value
+        dev_state = get_device_state_string(proxy.root_proxy)
         state = self._button_states.get(key, ButtonState.DISABLED)
         if is_device and proxy.binding.is_allowed(dev_state):
             rect = _get_button_rect(option.rect)

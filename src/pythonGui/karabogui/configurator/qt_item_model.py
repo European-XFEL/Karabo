@@ -24,7 +24,8 @@ from karabogui.const import (
 from karabogui.indicators import STATE_COLORS
 from karabogui.request import send_property_changes
 from .utils import (
-    dragged_configurator_items, get_child_names, get_icon, get_proxy_value
+    dragged_configurator_items, get_child_names, get_device_state_string,
+    get_icon, get_proxy_value
 )
 
 
@@ -270,11 +271,11 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
         # background color is sorta special
         if column == 1 and role == Qt.BackgroundRole:
-            state = self.root.state_binding.value
             if not isinstance(self.root, DeviceProxy):
                 return None
 
-            if state == '':
+            state = get_device_state_string(self.root)
+            if state == '':  # `state` can be ''!
                 return None
 
             # Properties have a color depending on alarm/warn
@@ -473,13 +474,13 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 return False
 
             binding = proxy.binding
+            state = get_device_state_string(self.root)
             online_device = isinstance(self.root, DeviceProxy)
             old_value = None if proxy.edit_value is None else proxy.value
             if isinstance(binding, ChoiceOfNodesBinding):
                 old_value = binding.choice  # ChoiceOfNodes is "special"
             changes = has_changes(binding, old_value, value)
-            allowed = (binding.is_allowed(self.root.state_binding.value) or
-                       not online_device)
+            allowed = binding.is_allowed(state) or not online_device
             if allowed and changes:
                 if online_device:
                     proxy.edit_value = value
@@ -579,7 +580,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
     def _proxy_flags(self, proxy):
         """flags() implementation for properties"""
         flags = 0
-        state = self.root.state_binding.value
+        state = get_device_state_string(self.root)
         binding = proxy.binding
         is_class = isinstance(self.root, DeviceClassProxy)
         uneditable_node_types = (ChoiceOfNodesBinding, ListOfNodesBinding,
