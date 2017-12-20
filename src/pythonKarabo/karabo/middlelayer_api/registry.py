@@ -16,6 +16,7 @@ class Registry(object):
 class MetaRegistry(type):
     def __init__(self, name, bases, dict):
         super(MetaRegistry, self).__init__(name, bases, dict)
+        dict.pop("__classcell__", None)
         super(self, self).register(name, dict)
 
 
