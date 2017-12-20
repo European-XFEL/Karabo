@@ -12,8 +12,8 @@ from karabo.bound import (
     STRING_ELEMENT, TABLE_ELEMENT, VECTOR_STRING_ELEMENT
 )
 from karabo.common.scenemodel.api import (
-    DisplayCommandModel, FixedLayoutModel, LabelModel, RunConfiguratorModel,
-    SceneModel, write_scene
+    BoxLayoutModel, DisplayCommandModel, FixedLayoutModel, LabelModel,
+    RunConfiguratorModel, SceneModel, write_scene
 )
 from .run_configuration_group import RunControlDataSource
 
@@ -495,7 +495,25 @@ def _createScene(instance_id):
 
     layout = FixedLayoutModel(height=490, width=600, x=4, y=4,
                               children=[button, table, label])
-    return write_scene(SceneModel(children=[layout], height=500, width=610))
+
+    exp_0 = LabelModel(font=',11,-1,5,50,0,0,0,0,0',
+                       height=28, width=338, x=644, y=15,
+                       parent_component='DisplayComponent',
+                       text='NOTE: You must click the green check mark')
+    exp_1 = LabelModel(font=',11,-1,5,50,0,0,0,0,0',
+                       height=28, width=321, x=650, y=74,
+                       parent_component='DisplayComponent',
+                       text='to apply your changes before clicking the')
+    exp_2 = LabelModel(font=',11,-1,5,50,0,0,0,0,0',
+                       height=28, width=231, x=656, y=155,
+                       parent_component='DisplayComponent',
+                       text=' "Save Configuration" button.')
+    exp_layout = BoxLayoutModel(direction=2,
+                                height=77, width=346, x=126, y=443,
+                                children=[exp_0, exp_1, exp_2])
+
+    return write_scene(SceneModel(children=[layout, exp_layout],
+                                  height=530, width=610))
 
 
 def _creatSource(sources, existing_sources, use):
