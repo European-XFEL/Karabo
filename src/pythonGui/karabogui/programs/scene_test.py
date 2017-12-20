@@ -47,7 +47,6 @@ def _create_scene_model(devs, controllers=None):
     type_map['doublePropertyReadOnly'] = (bindings.FloatBinding, '', False)
     type_map['stringProperty'] = (bindings.StringBinding, '', True)
     type_map['vectors.boolProperty'] = (bindings.VectorBoolBinding, '', True)
-    type_map['vectors.charProperty'] = (bindings.VectorCharBinding, '', True)
     type_map['vectors.int8Property'] = (bindings.VectorInt8Binding, '', True)
     type_map['vectors.uint8Property'] = (bindings.VectorUint8Binding, '', True)
     type_map['vectors.int16Property'] = (bindings.VectorInt16Binding, '', True)
@@ -72,8 +71,7 @@ def _create_scene_model(devs, controllers=None):
         for device_key, binding_data in type_map.items():
             binding, display_type, can_edit = binding_data
             klasses = get_compatible_controllers(binding())
-            if can_edit:
-                klasses += get_compatible_controllers(binding(), can_edit=True)
+            klasses += get_compatible_controllers(binding(), can_edit=True)
             klasses.sort(key=lambda x: x.__name__)
             all_controllers.update(klass.__name__ for klass in klasses)
             if controllers:
@@ -127,9 +125,9 @@ This is a testbench gui viewer.
 ============================================================"""
     ap = argparse.ArgumentParser(
         description=psa, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('controllerName', nargs='+',
+    ap.add_argument('controllerName', nargs='*',
                     help='List of Controller Names')
-    args = ap.parse_args(sys.argv)
+    args = ap.parse_args(sys.argv[1:])
     ap.print_help()
     controllers = args.controllerName
     model = _create_scene_model(['x'], controllers)
