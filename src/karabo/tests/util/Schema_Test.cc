@@ -880,7 +880,7 @@ void Schema_Test::testDaqPolicy() {
         
         CPPUNIT_ASSERT(schema.getDAQPolicy("string1") == DAQPolicy::SAVE);
         CPPUNIT_ASSERT(schema.getDAQPolicy("string2") == DAQPolicy::OMIT);
-        CPPUNIT_ASSERT(schema.getDAQPolicy("string3") == DAQPolicy::SAVE);
+        CPPUNIT_ASSERT(schema.getDAQPolicy("string3") == DAQPolicy::UNSPECIFIED);
     }
     
     // according to specified default policy
