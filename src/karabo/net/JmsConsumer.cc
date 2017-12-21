@@ -60,7 +60,12 @@ namespace karabo {
             // Cannot just post with bind_weak to the event loop:
             // Then the destructor could never be called since bind_weak holds a shared_ptr when executing the function.
             // That's why we end up with an ugly individual thread... :-(.
-            m_readThread = boost::thread(boost::bind(&JmsConsumer::consumeMessages, this));
+            // For the same reason we have to boost::bind to a bare this. To ensure a proper lifetime of 'this':
+            // - we hand over a shared_ptr to boost::bind as argument for consumeMessages,
+            // - the returned function object carries a copy (!) of it,
+            // - the copy is then forwarded to consumeMessages by reference,
+            // - so consumeMessages has control to check whether there is any external shared_ptr alive.
+            m_readThread = boost::thread(boost::bind(&JmsConsumer::consumeMessages, this, shared_from_this()));
         }
 
 
@@ -85,20 +90,11 @@ namespace karabo {
         }
 
 
-        void JmsConsumer::consumeMessages() {
-
+        void JmsConsumer::consumeMessages(JmsConsumer::Pointer& selfGuard) { // Sic! Non-const reference!
             // We go for an endless loop instead of reposting to the event loop after a single message has been read.
             // In this way we are safe against deadlocks blocking all threads in the event loop. Note that not being
             // able to read (and thus acknowledge!) would create a "black hole" that compromises the whole system!
             while (m_reading) {
-                // Create a guard to keep us alive since consumeMessages is 'boost::bind'-ed to a bare this.
-                // Otherwise bind_weak (as in Karabo 2.2.0) as used below could throw boost::bad_weak_ptr.
-                // Nice side-effect: Destructor does not block event loop threads via stopReading -> m_readThread.join
-                const auto self(weak_from_this().lock()); // simple shared_from_this() could throw
-                if (!self) {
-                    // We are already (being) destructed, so give up (should not happen anyway).
-                    return;
-                }
                 MQSessionHandle sessionHandle = this->ensureConsumerSessionAvailable(m_topic, m_selector);
                 MQConsumerHandle consumerHandle = this->getConsumer(m_topic, m_selector);
 
@@ -158,7 +154,12 @@ namespace karabo {
                         m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, Error::unknown, msg));
                     }
                 }
-                // Now self goes out of scope. If no-one else holds a shared pointer anymore, destructor is called.
+                if (selfGuard.unique()) {
+                    // The copy with that the boost::bind-ed 'functor' called consumeMessages is the only one left,
+                    // so let's trigger the destruction of ourselves and leave the while loop.
+                    selfGuard.reset();
+                    return;
+                }
             }
         }
 

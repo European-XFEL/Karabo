@@ -71,10 +71,10 @@ namespace karabo {
              * Stop permanent reading after having started it with startReading(..).
              *
              * Note: Use with care!
-             * This does not stop receiving messages from the broker. On the contrary, messages are received and pile
-             * up both locally and on the broker since they are not acknowledged!
-             *
-             * To stop receiving, destruct this JmsConsumer.
+             * 1) This does not stop receiving messages from the broker. On the contrary, messages are received and pile
+             *    up both locally and on the broker since they are not acknowledged!
+             *    To stop receiving, destruct this JmsConsumer.
+             * 2) Usually blocks until reading thread is joined - up to 100 ms.
              */
             void stopReading();
 
@@ -102,7 +102,7 @@ namespace karabo {
             JmsConsumer(const JmsConnection::Pointer& connection, const std::string& topic,
                         const std::string& selector, bool skipSerialisation = false);
 
-            void consumeMessages();
+            void consumeMessages(JmsConsumer::Pointer& selfGuard);
 
             /// A shared pointer to an MQMessageHandle that takes care to correctly free its memory
             typedef std::shared_ptr<MQMessageHandle> MQMessageHandlePointer;
