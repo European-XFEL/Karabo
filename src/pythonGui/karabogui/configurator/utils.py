@@ -11,24 +11,13 @@ from karabogui.binding.api import (
     IntBinding, FloatBinding, NodeBinding, StringBinding, VectorHashBinding,
     get_editor_value,
     KARABO_SCHEMA_DISPLAYED_NAME, KARABO_SCHEMA_DISPLAY_TYPE,
-    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MIN_INC,
-    KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_ABSOLUTE_ERROR,
-    KARABO_SCHEMA_RELATIVE_ERROR, KARABO_WARN_LOW, KARABO_WARN_HIGH,
-    KARABO_ALARM_LOW, KARABO_ALARM_HIGH, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
-    KARABO_SCHEMA_UNIT_SYMBOL
+    KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_UNIT_SYMBOL,
+    KARABO_EDITABLE_ATTRIBUTES
 )
 from karabogui.controllers.api import get_compatible_controllers
 
 # The fixed height of rows in the configurator
 FIXED_ROW_HEIGHT = 30
-# A tuple containing only the attributes which are editable pre-instantiation
-EDITABLE_ATTRIBUTES = (
-    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MIN_INC,
-    KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_ABSOLUTE_ERROR,
-    KARABO_SCHEMA_RELATIVE_ERROR, KARABO_WARN_LOW, KARABO_WARN_HIGH,
-    KARABO_ALARM_LOW, KARABO_ALARM_HIGH, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
-    KARABO_SCHEMA_UNIT_SYMBOL
-)
 
 
 class ButtonState(Enum):
@@ -191,7 +180,7 @@ def _get_editable_attributes(binding):
     """
     names = []
     attributes = binding.attributes
-    for name in EDITABLE_ATTRIBUTES:
+    for name in KARABO_EDITABLE_ATTRIBUTES:
         value = attributes.get(name)
         if value is not None:
             # Skip blank units

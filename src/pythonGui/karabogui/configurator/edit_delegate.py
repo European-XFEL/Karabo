@@ -13,12 +13,12 @@ from PyQt4.QtGui import (
 )
 
 from karabo.middlelayer import MetricPrefix, Unit
-from karabogui.binding.api import IntBinding, PropertyProxy, VectorHashBinding
+from karabogui.binding.api import (
+    IntBinding, PropertyProxy, VectorHashBinding, KARABO_EDITABLE_ATTRIBUTES)
 from karabogui.controllers.api import get_compatible_controllers
 from .dialog.table_edit import TableEditDialog
 from .utils import (
-    ButtonState, handle_default_state, set_fill_rect,
-    EDITABLE_ATTRIBUTES, FIXED_ROW_HEIGHT)
+    ButtonState, handle_default_state, set_fill_rect, FIXED_ROW_HEIGHT)
 
 TABLE_BUTTON_TEXT = 'Edit Table'
 BUTTON_LABEL_PADDING = 5
@@ -345,6 +345,6 @@ class NumberAttributeEditor(object):
 
 
 _ATTR_EDITOR_FACTORIES = {name: NumberAttributeEditor
-                          for name in EDITABLE_ATTRIBUTES}
+                          for name in KARABO_EDITABLE_ATTRIBUTES}
 _ATTR_EDITOR_FACTORIES['metricPrefixSymbol'] = MetricPrefixAttributeEditor
 _ATTR_EDITOR_FACTORIES['unitSymbol'] = UnitAttributeEditor
