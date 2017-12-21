@@ -8,14 +8,14 @@ import os.path as op
 
 from karabo.bound import (
     PythonDevice, Hash, loadFromFile, saveToFile, Schema, State,
-    TextSerializerSchema,
+    TextSerializerSchema, AccessMode,
     ADMIN, EXPERT, KARABO_CLASSINFO,
     BOOL_ELEMENT, OVERWRITE_ELEMENT, NODE_ELEMENT, SLOT_ELEMENT,
-    STRING_ELEMENT, TABLE_ELEMENT, VECTOR_STRING_ELEMENT
+    STRING_ELEMENT, TABLE_ELEMENT, VECTOR_STRING_ELEMENT, UINT32_ELEMENT
 )
 from karabo.common.scenemodel.api import (
     BoxLayoutModel, DisplayCommandModel, FixedLayoutModel, LabelModel,
-    LineEditModel, SceneModel, TableElementModel, write_scene
+    LineEditModel, SceneModel, TableElementModel, write_scene,
 )
 
 OUTPUT_CHANNEL_SEPARATOR = ':'
@@ -39,6 +39,13 @@ class RunControlDataSource(object):
                          "SASE1/SPB/SAMP/INJ_CAM_1")
             .assignmentOptional().defaultValue('Source')
             .reconfigurable()
+            .commit(),
+
+            UINT32_ELEMENT(expected).key("nProperties")
+            .displayedName("#")
+            .description("Number of properties to record for this source")
+            .readOnly()
+            .initialValue(0)
             .commit(),
 
             STRING_ELEMENT(expected).key('type')
@@ -246,6 +253,8 @@ class RunConfigurationGroup(PythonDevice):
                     if _findDataSource(currentSources, fullName) is None:
                         # Existing device still missing output channel
                         retSources.append(_buildSource(fullName))
+
+        self._updateNProperties(retSources)
         return retSources
 
 
@@ -262,6 +271,18 @@ def _findDataSource(hashes, instance_id):
             return hsh
     return None
 
+def _updateNProperties(self, sources):
+    for source in sources:
+        sourceId = source.get("source")
+        behavior = source.get("behavior")
+        accessMode = AccessMode.INIT
+        if behavior == "init":
+            accessMode |= AccessMode.READ
+        elif behavior == "record-all":
+            accessMode |= (AccessMode.READ | AccessMode.WRITE)
+
+        props = self.remote().getDataSourceSchemaAsHash(sourceId, accessMode)
+        source.set("nProperties", len(props.getPaths()))
 
 def _generateDeviceScene(instance_id):
     DEFAULT_FONT = ",10,-1,5,50,0,0,0,0,0"
