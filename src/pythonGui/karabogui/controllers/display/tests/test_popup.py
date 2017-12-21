@@ -11,6 +11,8 @@ from ..popup import PopUp
 
 
 class MockMessageBox(QMessageBox):
+    visible = False
+
     def setVisible(self, visible):
         self.visible = visible
 
@@ -67,11 +69,11 @@ class TestPopUp(GuiTestCase):
             controller = PopUp(proxy=self.proxy)
             controller.create(None)
 
-            set_proxy_value(self.proxy, 'prop', 'SOME TEXT')
-            assert controller._dialog.visible
-
             set_proxy_value(self.proxy, 'prop', '')
             assert not controller._dialog.visible
+
+            set_proxy_value(self.proxy, 'prop', 'SOME TEXT')
+            assert controller._dialog.visible
 
     def test_button_actions(self):
         controller = PopUp(proxy=self.proxy)
