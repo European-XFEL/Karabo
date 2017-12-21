@@ -45,7 +45,10 @@ namespace karabo {
                 
                 // by default we omit saving to DAQ. Setting the attribute here will ensure that it is configurable 
                 // in the GUI.
-                this->m_node->template setAttribute<int>(KARABO_SCHEMA_DAQ_POLICY, expected.getDefaultDAQPolicy());
+                const DAQPolicy& daqPolicy = expected.getDefaultDAQPolicy();
+                if (daqPolicy != DAQPolicy::UNSPECIFIED) {
+                    this->m_node->template setAttribute<int>(KARABO_SCHEMA_DAQ_POLICY, daqPolicy);
+                }
             }
 
             /**
