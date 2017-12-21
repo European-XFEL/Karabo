@@ -4,7 +4,7 @@ from karabo.common.api import DeviceStatus, State
 from karabo.middlelayer import (
     Bool, Configurable, Float, Int32, Slot, String, VectorHash
 )
-from karabogui.binding.api import DeviceClassProxy, build_binding
+from karabogui.binding.api import ProjectDeviceProxy, build_binding
 from karabogui.testing import GuiTestCase
 from ..qt_item_model import ConfigurationTreeModel
 
@@ -28,8 +28,8 @@ class TestConfiguratorModel(GuiTestCase):
         super(TestConfiguratorModel, self).setUp()
 
         binding = build_binding(Object.getClassSchema())
-        root = DeviceClassProxy(binding=binding, server_id='Test',
-                                status=DeviceStatus.OFFLINE)
+        root = ProjectDeviceProxy(binding=binding, server_id='Test',
+                                  status=DeviceStatus.OFFLINE)
         self.model = ConfigurationTreeModel()
         self.model.root = root
 

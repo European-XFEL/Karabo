@@ -105,10 +105,15 @@ class Manager(QObject):
         for key in readonly_paths:
             config.erase(key)
 
-        # Compute a runtime schema from the configuration and an
+        # Compute a runtime schema from the project device proxy and an
         # unmodified copy of the device class schema.
-        attr_updates = extract_attribute_modifications(
-            schema, class_proxy.binding)
+        attr_updates = None
+        project_dev_proxy = self._topology.get_project_device_proxy(
+            deviceId, serverId, classId, create_instance=False)
+        if project_dev_proxy is not None:
+            # This feature only works with named devices!
+            attr_updates = extract_attribute_modifications(
+                schema, project_dev_proxy.binding)
 
         # Send signal to network
         get_network().onInitDevice(serverId, classId, deviceId, config,
