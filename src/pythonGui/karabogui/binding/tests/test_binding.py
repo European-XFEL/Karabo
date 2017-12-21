@@ -22,9 +22,8 @@ from ..api import (
     VectorUint64Binding,
     apply_configuration, apply_default_configuration, build_binding,
     extract_attribute_modifications, extract_configuration, flat_iter_hash,
-    KARABO_SCHEMA_DEFAULT_VALUE,
     KARABO_SCHEMA_METRIC_PREFIX_ENUM, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
-    KARABO_SCHEMA_UNIT_ENUM, KARABO_SCHEMA_UNIT_SYMBOL
+    KARABO_SCHEMA_UNIT_ENUM, KARABO_SCHEMA_UNIT_SYMBOL, KARABO_ALARM_LOW
 )
 from .schema import get_all_props_schema, get_vectorattr_schema
 
@@ -170,11 +169,11 @@ def test_attribute_modification():
     assert modifications is None
 
     attributes = binding.value.h.attributes
-    attributes[KARABO_SCHEMA_DEFAULT_VALUE] = 42
+    attributes[KARABO_ALARM_LOW] = 42
     modifications = extract_attribute_modifications(schema, binding)
     assert len(modifications) == 1
     assert modifications[0] == Hash('path', 'h',
-                                    'attribute', KARABO_SCHEMA_DEFAULT_VALUE,
+                                    'attribute', KARABO_ALARM_LOW,
                                     'value', 42)
 
     binding = build_binding(schema)
@@ -223,9 +222,9 @@ def test_extract_attribute_modifications_vectorattr():
     ret = extract_attribute_modifications(schema, binding)
     assert ret is None
 
-    # Change defaultValue from [True, True] to [False, False]
+    # Change alarmLow from [True, True] to [False, False]
     newv = np.array([False, False])
-    binding.value.vec.attributes[KARABO_SCHEMA_DEFAULT_VALUE] = newv
+    binding.value.vec.attributes[KARABO_ALARM_LOW] = newv
     ret = extract_attribute_modifications(schema, binding)
     # XXX: middlelayer Hash can't compare np array either
     assert all(ret[0]['value'] == newv)
