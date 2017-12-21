@@ -13,8 +13,8 @@ from karabo.middlelayer import AccessMode, Assignment
 from karabo.common.api import State
 from karabogui.binding.api import (
     BaseBinding, BindingRoot, ChoiceOfNodesBinding, DeviceClassProxy,
-    DeviceProxy, ImageBinding, ListOfNodesBinding, NodeBinding, PropertyProxy,
-    SlotBinding, has_changes,
+    DeviceProxy, ImageBinding, ListOfNodesBinding, NodeBinding,
+    ProjectDeviceProxy, PropertyProxy, SlotBinding, has_changes,
     KARABO_SCHEMA_ALLOWED_STATES, KARABO_SCHEMA_DISPLAYED_NAME,
     KARABO_SCHEMA_DISPLAY_TYPE, KARABO_WARN_LOW, KARABO_WARN_HIGH,
     KARABO_ALARM_LOW, KARABO_ALARM_HIGH
@@ -441,8 +441,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
         elif isinstance(binding, (BindingRoot, NodeBinding)):
             # Roots and nodes have children
             return len(get_child_names(proxy))
-        elif isinstance(self.root, DeviceClassProxy):
-            # class properties can have children (attributes)
+        elif isinstance(self.root, ProjectDeviceProxy):
+            # project device properties can have children (attributes)
             return len(get_child_names(proxy))
 
         # otherwise no children
