@@ -19,7 +19,7 @@ from karabogui.binding.api import (
     KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MAX_INC,
     KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MAX_EXC,
     KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_UNIT_SYMBOL,
-    KARABO_SCHEMA_TAGS
+    KARABO_SCHEMA_TAGS, KARABO_SCHEMA_DAQ_POLICY
 )
 from karabogui.events import (
     KaraboEventSender, register_for_broadcasts, unregister_from_broadcasts)
@@ -157,7 +157,9 @@ class ConfigurationTreeView(QTreeView):
             (KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_EXC),
             (KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_EXC),
             (KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MIN_INC),
-            (KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MAX_INC)]
+            (KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MAX_INC),
+            ('DAQ Policy', KARABO_SCHEMA_DAQ_POLICY)]
+
         for label, attr_name in additional_attrs:
             attr = attributes.get(attr_name)
             info[label] = 'n/a' if attr is None else attr

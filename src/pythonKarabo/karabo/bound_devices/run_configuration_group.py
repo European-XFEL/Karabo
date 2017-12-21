@@ -3,12 +3,13 @@
 # Created on September 26, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+import enum
 import os
 import os.path as op
 
 from karabo.bound import (
     PythonDevice, Hash, loadFromFile, saveToFile, Schema, State,
-    TextSerializerSchema, AccessMode,
+    TextSerializerSchema,
     ADMIN, EXPERT, KARABO_CLASSINFO,
     BOOL_ELEMENT, OVERWRITE_ELEMENT, NODE_ELEMENT, SLOT_ELEMENT,
     STRING_ELEMENT, TABLE_ELEMENT, VECTOR_STRING_ELEMENT, UINT32_ELEMENT
@@ -20,6 +21,11 @@ from karabo.common.scenemodel.api import (
 
 OUTPUT_CHANNEL_SEPARATOR = ':'
 SAVED_GROUPS_DIR = 'run_config_groups'
+
+class AccessMode(enum.Enum):
+    INIT = 1 << 0
+    READ = 1 << 1
+    WRITE = 1 << 2
 
 
 @KARABO_CLASSINFO('RunControlDataSource', '2.2')
@@ -257,6 +263,19 @@ class RunConfigurationGroup(PythonDevice):
         self._updateNProperties(retSources)
         return retSources
 
+    def _updateNProperties(self, sources):
+        for source in sources:
+            sourceId = source.get("source")
+            behavior = source.get("behavior")
+            accessMode = AccessMode.INIT.value
+            if behavior == "init":
+                accessMode |= AccessMode.READ.value
+            elif behavior == "record-all":
+                accessMode |= (AccessMode.READ.value | AccessMode.WRITE.value)
+
+            props = self.remote().getDataSourceSchemaAsHash(sourceId, accessMode)
+            source.set("nProperties", len(props.getPaths()))
+
 
 def _buildSource(name):
     source = Hash('source', name, 'type', 'control',
@@ -271,18 +290,6 @@ def _findDataSource(hashes, instance_id):
             return hsh
     return None
 
-def _updateNProperties(self, sources):
-    for source in sources:
-        sourceId = source.get("source")
-        behavior = source.get("behavior")
-        accessMode = AccessMode.INIT
-        if behavior == "init":
-            accessMode |= AccessMode.READ
-        elif behavior == "record-all":
-            accessMode |= (AccessMode.READ | AccessMode.WRITE)
-
-        props = self.remote().getDataSourceSchemaAsHash(sourceId, accessMode)
-        source.set("nProperties", len(props.getPaths()))
 
 def _generateDeviceScene(instance_id):
     DEFAULT_FONT = ",10,-1,5,50,0,0,0,0,0"
