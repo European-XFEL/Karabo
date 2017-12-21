@@ -74,6 +74,7 @@ namespace karabo {
         * An enum specifying the DAQ storage policy
         */
         enum DAQPolicy {
+            UNSPECIFIED = -1,
             OMIT = 0,
             SAVE = 1,                
         };

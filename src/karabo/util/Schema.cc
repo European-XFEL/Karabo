@@ -30,7 +30,7 @@ namespace karabo {
 
         Schema::Schema(const std::string& classId, const Schema::AssemblyRules& rules) :
             m_currentAccessMode(rules.m_accessMode), m_currentState(rules.m_state), m_currentAccessLevel(rules.m_accessLevel), m_rootName(classId),
-                m_defaultDAQPolicy(DAQPolicy::SAVE) {
+                m_defaultDAQPolicy(DAQPolicy::UNSPECIFIED) {
         }
 
 
