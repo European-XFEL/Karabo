@@ -151,13 +151,17 @@ class SystemTopology(HasStrictTraits):
 
         return self._project_devices[device_id]
 
-    def get_project_device_proxy(self, device_id, server_id, class_id):
+    def get_project_device_proxy(self, device_id, server_id, class_id,
+                                 create_instance=True):
         """Return the project device proxy for a given class on a given server
+
+        If `create_instance` is False, avoid creating the project device and
+        return None.
         """
         key = (server_id, class_id)
         mapping = self._project_device_proxies.setdefault(key, {})
         proxy = mapping.get(device_id)
-        if proxy is None:
+        if proxy is None and create_instance:
             schema = self._class_schemas.get(key)
             binding = (BindingRoot(class_id=class_id) if schema is None
                        else build_binding(schema))

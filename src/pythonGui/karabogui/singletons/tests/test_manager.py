@@ -183,6 +183,7 @@ class TestManager(GuiTestCase):
             dkp = _get_class_proxy(empty_schema)
             topology.get_schema.return_value = empty_schema
             topology.get_class.return_value = dkp
+            topology.get_project_device_proxy.return_value = None
 
             cfg = Hash('init_prop', 42, 'ro_prop', -1)
             manager.initDevice('swerver', 'PrettyDevice', 'dev', config=cfg)
@@ -203,6 +204,7 @@ class TestManager(GuiTestCase):
             dkp = _get_class_proxy(schema)
             topology.get_schema.return_value = schema
             topology.get_class.return_value = dkp
+            topology.get_project_device_proxy.return_value = None
 
             cfg = Hash('init_prop', 42, 'ro_prop', -1, 'evolved', 43)
             manager.initDevice('swerver', 'PrettyDevice', 'dev', config=cfg)
@@ -223,6 +225,7 @@ class TestManager(GuiTestCase):
             dkp = _get_class_proxy(schema)
             topology.get_schema.return_value = schema
             topology.get_class.return_value = dkp
+            topology.get_project_device_proxy.return_value = None
 
             manager.initDevice('swerver', 'PrettyDevice', 'dev')
             topology.get_schema.assert_called_with('swerver', 'PrettyDevice')
