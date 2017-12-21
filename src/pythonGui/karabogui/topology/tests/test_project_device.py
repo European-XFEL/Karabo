@@ -2,6 +2,7 @@ from unittest.mock import Mock
 
 from karabo.common.api import DeviceStatus
 from karabo.middlelayer import Configurable, Hash, String
+from karabogui.binding.api import KARABO_SCHEMA_ABSOLUTE_ERROR
 from karabogui.testing import singletons, system_hash
 from karabogui.topology.system import SystemTopology
 
@@ -32,6 +33,7 @@ def test_project_device():
             assert device._offline_proxy.binding.value.val.value == 'foo'
 
             config = Hash('val', 'bar')
+            config['val', KARABO_SCHEMA_ABSOLUTE_ERROR] = 42
             device.set_project_config_hash(config)
             assert device._offline_proxy.binding.value.val.value == 'bar'
             assert device.get_current_config_hash() == config
