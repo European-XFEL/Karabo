@@ -515,25 +515,7 @@ namespace karabo {
                 }
             }
 
-            // We cannot just requestNoWait 'slotGetSchema', because '_slotSchemaUpdated' will cache the Schema in
-            // m_runtimeSystemDescription. But if we cache, we also have to connect for updates.
-            // Disadvantage is that 'stayConnected' also connects for 'signal[State]Changed' which could be noisy.
-            // But usually no-one needs just the schema without the properties as well...
-            auto weakSigSlotPtr = m_signalSlotable;
-            // Capturing the member variable would capture a bare 'this' - which we want to avoid and thus capture a copy.
-            auto successHandler = [weakSigSlotPtr, instanceId] () {
-                karabo::xms::SignalSlotable::Pointer p = weakSigSlotPtr.lock();
-                if (p) p->requestNoWait(instanceId, "slotGetSchema", "", "_slotSchemaUpdated", false);
-            };
-            auto failureHandler = [instanceId] () {
-                try {
-                    throw; // to get access to the original exception
-                } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_WARN << "getDeviceSchemaNoWait failed to connect to '" << instanceId << "': " << e.what();
-                }
-            };
-            stayConnected(instanceId, successHandler, failureHandler);
-
+            m_signalSlotable.lock()->requestNoWait(instanceId, "slotGetSchema", "", "_slotSchemaUpdated", false);
             return Schema();
         }
 
