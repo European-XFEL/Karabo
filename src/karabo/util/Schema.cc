@@ -29,7 +29,8 @@ namespace karabo {
 
 
         Schema::Schema(const std::string& classId, const Schema::AssemblyRules& rules) :
-            m_currentAccessMode(rules.m_accessMode), m_currentState(rules.m_state), m_currentAccessLevel(rules.m_accessLevel), m_rootName(classId) {
+            m_currentAccessMode(rules.m_accessMode), m_currentState(rules.m_state), m_currentAccessLevel(rules.m_accessLevel), m_rootName(classId),
+                m_defaultDAQPolicy(DAQPolicy::SAVE) {
         }
 
 
@@ -1182,6 +1183,7 @@ namespace karabo {
                     checkForRunttimeUpdateFixedType(AlarmCondition::ALARM_VARIANCE_LOW.asString(), setAlarmVarianceLow, double);
                     checkForRunttimeUpdateFixedType(AlarmCondition::ALARM_VARIANCE_HIGH.asString(), setAlarmVarianceHigh, double);
                     checkForRunttimeUpdateFixedType(KARABO_SCHEMA_ENABLE_ROLLING_STATS, setRollingStatistics, unsigned int);
+                    checkForRunttimeUpdateFixedTypeEnum(KARABO_SCHEMA_DAQ_POLICY, setDAQPolicy, DAQPolicy);
 
                 } catch (...) {
                     success = false;
@@ -1238,6 +1240,35 @@ namespace karabo {
 
         const std::string& Schema::getCustomNodeClass(const std::string& path) const {
             return m_hash.getAttribute<std::string>(path, KARABO_SCHEMA_CLASS_ID);
+        }
+        
+        
+        //**********************************************
+        //               DAQPolicy                     *
+        //**********************************************
+
+
+        void Schema::setDAQPolicy(const std::string& path, const DAQPolicy& value) {
+            m_hash.setAttribute<int>(path, KARABO_SCHEMA_DAQ_POLICY, value);
+        }
+
+
+        bool Schema::hasDAQPolicy(const std::string& path) const {
+            return m_hash.hasAttribute(path, KARABO_SCHEMA_DAQ_POLICY);
+        }
+
+
+        DAQPolicy Schema::getDAQPolicy(const std::string& path) const {
+            return static_cast<DAQPolicy>(m_hash.getAttribute<int> (path, KARABO_SCHEMA_DAQ_POLICY));
+        }
+        
+        
+        void Schema::setDefaultDAQPolicy(const DAQPolicy& policy) {
+            m_defaultDAQPolicy = policy;
+        }
+        
+        DAQPolicy Schema::getDefaultDAQPolicy() const {
+            return m_defaultDAQPolicy;
         }
     }
 }
