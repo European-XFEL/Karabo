@@ -25,6 +25,10 @@ from .exceptions import KaraboError
 from .hash import Hash
 from .serializers import decodeBinary, encodeBinary
 
+_MSG_TIME_TO_LIVE = 600000  # in ms - i.e. 10 minutes
+_MSG_PRIORITY_HIGH = 4  # never dropped (except if expired)
+_MSG_PRIORITY_LOW = 3  # can be dropped in case of congestion
+
 
 class Broker:
     def __init__(self, loop, deviceId, classId):
@@ -54,7 +58,7 @@ class Broker:
         p['signalInstanceId'] = self.deviceId
         p['__format'] = 'Bin'
         m.properties = p
-        self.producer.send(m, 1, 4, 100000)
+        self.producer.send(m, 1, _MSG_PRIORITY_HIGH, _MSG_TIME_TO_LIVE)
 
     def heartbeat(self, interval):
         h = Hash()
@@ -65,9 +69,13 @@ class Broker:
         m.data = encodeBinary(h)
         p = openmq.Properties()
         p["signalFunction"] = "signalHeartbeat"
+        # Note: C++ adds
+        # p["signalInstanceId"] = self.deviceId # redundant and unused
+        # p["slotInstanceIds"] = "__none__" # unused
+        # p["slotFunctions"] = "__none__" # unused
         p["__format"] = "Bin"
         m.properties = p
-        self.hbproducer.send(m, 1, 4, 100000)
+        self.hbproducer.send(m, 1, _MSG_PRIORITY_LOW, _MSG_TIME_TO_LIVE)
 
     def notify_network(self, info):
         """notify the network that we are alive
@@ -81,16 +89,24 @@ class Broker:
                   self.deviceId, self.info)
 
         @coroutine
-        def heartbeat():
+        def heartbeat(first):
             try:
                 while True:
+                    # Permamnently send heartbeats, but first one not
+                    # immediately: Those interested in us just got informed.
                     interval = self.info["heartbeatInterval"]
+                    sleepInterval = interval
+                    if first:
+                        # '//2' protects change of 'tracking factor' close to 1
+                        # '+1' protects against 0 if interval is 1
+                        sleepInterval = interval // 2 + 1
+                        first = False
+                    yield from sleep(sleepInterval)
                     self.heartbeat(interval)
-                    yield from sleep(interval)
             finally:
                 self.emit('call', {'*': ['slotInstanceGone']},
                           self.deviceId, self.info)
-        async(heartbeat())
+        async(heartbeat(True))
 
     def call(self, signal, targets, reply, args):
         if not targets:
