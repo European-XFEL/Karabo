@@ -110,6 +110,13 @@ namespace karabo {
                     .reconfigurable()
                     .commit();
 
+            VECTOR_STRING_ELEMENT(expected).key("p2pDevices")
+                    .displayedName("P2p Devices")
+                    .description("Point-to-point connections should be established for these devices. NOTE: Only evaluated at start up or for new devices.")
+                    .assignmentOptional().defaultValue(std::vector<std::string>())
+                    .reconfigurable()
+                    .commit();
+
             NODE_ELEMENT(expected).key("networkPerformance")
                     .displayedName("Network performance monitoring")
                     .description("Contains information about how much data is being read/written from/to the network")
@@ -207,15 +214,19 @@ namespace karabo {
                 asyncConnect(karabo::util::DATALOGMANAGER_ID, "signalLoggerMap", "", "slotLoggerMap",
                              bind_weak(&karabo::devices::GuiServerDevice::loggerMapConnectedHandler, this));
 
-                //scan topology to find additional alarm services
+                // scan topology to treat alarm services, project managers and run configurators
+                // NOTE: If instanceNewHandler would be registered before enableInstanceTracking(),
+                //       this code would probably not be needed here, but just in instanceNewHandler!
                 const Hash& topology = remote().getSystemTopology();
                 const boost::optional<const Hash::Node&> devices = topology.find("device");
                 if (devices) {
                     const Hash& deviceEntry = devices->getValue<Hash>();
                     for (Hash::const_iterator it = deviceEntry.begin(); it != deviceEntry.end(); ++it) {
-                        Hash topologyEntry; // prepare input for connectPotentialAlarmService
-                        Hash::Node& hn = topologyEntry.set("device." + it->getKey(), it->getValue<Hash>());
+                        const std::string& deviceId = it->getKey();
+                        Hash topologyEntry; // prepare input as instanceNewHandler expects it
+                        Hash::Node& hn = topologyEntry.set("device." + deviceId, it->getValue<Hash>());
                         hn.setAttributes(it->getAttributes());
+                        checkForConnectingP2p(deviceId);
                         connectPotentialAlarmService(topologyEntry);
                         registerPotentialProjectManager(topologyEntry);
                         connectPotentialRunConfigurator(topologyEntry);
@@ -243,6 +254,28 @@ namespace karabo {
 
         void GuiServerDevice::loggerMapConnectedHandler() {
             requestNoWait(karabo::util::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "slotLoggerMap");
+        }
+
+
+        void GuiServerDevice::checkForConnectingP2p(const std::string& deviceId) {
+            const std::vector<std::string> p2pDevices = get<std::vector<std::string> >("p2pDevices");
+            if (std::find(p2pDevices.begin(), p2pDevices.end(), deviceId) != p2pDevices.end()) {
+                KARABO_LOG_FRAMEWORK_DEBUG;
+
+                auto successHandler = [deviceId] () {
+                    KARABO_LOG_FRAMEWORK_INFO << "Going to establish p2p to '" << deviceId << "'";
+                };
+                auto failureHandler = [deviceId] () {
+                    try {
+                        throw;
+                    } catch (const std::exception& e) {
+                        // As of now (2018-01-03), this is expected for middlelayer...
+                        KARABO_LOG_FRAMEWORK_WARN << "Cannot establish p2p to '" << deviceId << "' since:\n"
+                                << e.what();
+                    }
+                };
+                asyncConnectP2p(deviceId, successHandler, failureHandler);
+            }
         }
 
 
@@ -932,6 +965,7 @@ namespace karabo {
 
                     tryToUpdateNewInstanceAttributes(instanceId, INSTANCE_NEW_EVENT);
 
+                    checkForConnectingP2p(instanceId);
                     connectPotentialAlarmService(topologyEntry);
                     registerPotentialProjectManager(topologyEntry);
                     connectPotentialRunConfigurator(topologyEntry);
