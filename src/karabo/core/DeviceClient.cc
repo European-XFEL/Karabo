@@ -1107,6 +1107,7 @@ namespace karabo {
             auto successHandler = [weakSigSlotPtr, deviceId] () {
                 karabo::xms::SignalSlotable::Pointer p = weakSigSlotPtr.lock();
                 if (p) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "registerDeviceMonitor connected to '" << deviceId << "'";
                     p->requestNoWait(deviceId, "slotGetSchema", "", "_slotSchemaUpdated", false);
                     p->requestNoWait(deviceId, "slotGetConfiguration", "", "_slotChanged");
                 }
@@ -1146,7 +1147,7 @@ namespace karabo {
             {
                 boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
                 if (m_deviceChangedHandlers.has(instanceId)) m_deviceChangedHandlers.erase(instanceId);
-                // What about cleaning cache
+                // Cache will be cleaned once age() disconnected the device.
             }
             mortalize(instanceId);
         }
