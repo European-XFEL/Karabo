@@ -935,11 +935,14 @@ namespace karabo {
 
         void SignalSlotable::registerDefaultSignalsAndSlots() {
 
-            // The heartbeat signal goes through a different topic, so we
-            // cannot use the normal registerSignal.
+            // The heartbeat signal goes through a different topic, so we cannot use the normal registerSignal.
+            // Use dropable KARABO_PUB_PRIO since
+            // - loss of a single heartbeat should not harm (see letInstanceSlowlyDieWithoutHeartbeat),
+            // - a device sending heartbeats like crazy can compromise all heartbeat listeners (because they cannot digest
+            //   quickly enough) - even worse, non-dropable heartbeats would create broker backlog in the beats topic
             Signal::Pointer heartbeatSignal = boost::make_shared<Signal>(this, m_heartbeatProducerChannel,
-                                                                         m_instanceId, "signalHeartbeat", KARABO_SYS_PRIO,
-                                                                         KARABO_SYS_TTL);
+                                                                         m_instanceId, "signalHeartbeat",
+                                                                         KARABO_PUB_PRIO, KARABO_SYS_TTL);
             heartbeatSignal->setTopic(m_topic + "_beats");
             storeSignal("signalHeartbeat", heartbeatSignal);
 
