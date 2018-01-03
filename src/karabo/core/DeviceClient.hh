@@ -964,6 +964,8 @@ namespace karabo {
              * Otherwise:
              *  - if connections are already established, just call asyncSuccessHandler (if not empty)
              *  - else request connection asynchronously using given handlers as success and failure call backs
+             * Note that asyncFailureHandler works like an SignalSlotable::Requestor::AsyncErrorHandler, i.e. one
+             * can make use of the "try { throw;} catch(..) {..}" pattern to get details of the problems.
              */
             void stayConnected(const std::string& instanceId,
                                const boost::function<void ()>& asyncSuccessHandler = boost::function<void ()>(),
