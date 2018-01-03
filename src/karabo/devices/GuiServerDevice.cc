@@ -594,19 +594,21 @@ namespace karabo {
 
         void GuiServerDevice::onGetDeviceConfiguration(WeakChannelPointer channel, const karabo::util::Hash& hash) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onGetDeviceConfiguration";
-                string deviceId = hash.get<string > ("deviceId");
+                const string& deviceId = hash.get<string > ("deviceId");
 
                 Hash config = remote().getConfigurationNoWait(deviceId);
 
                 if (!config.empty()) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "onGetDeviceConfiguration for '" << deviceId << "': direct answer";
                     // Can't we just use 'config' instead of 'remote().get(deviceId)'?
                     Hash h("type", "deviceConfiguration", "deviceId", deviceId, "configuration", remote().get(deviceId));
                     safeClientWrite(channel, h);
+                } else {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "onGetDeviceConfiguration for '" << deviceId << "': expect later answer";
                 }
 
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetDeviceConfiguration(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetDeviceConfiguration(): " << e.what();
             }
         }
 
@@ -637,9 +639,7 @@ namespace karabo {
         void GuiServerDevice::onStartMonitoringDevice(WeakChannelPointer channel, const karabo::util::Hash& info) {
             try {
                 bool registerFlag = false;
-                string deviceId = info.get<string > ("deviceId");
-
-                KARABO_LOG_FRAMEWORK_DEBUG << "onStartMonitoringDevice : \"" << deviceId << "\"";
+                const string& deviceId = info.get<string > ("deviceId");
 
                 {
                     boost::mutex::scoped_lock lock(m_channelMutex);
@@ -653,9 +653,9 @@ namespace karabo {
                 {
                     boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
                     // Increase count of device in visible devices map
-                    m_monitoredDevices[deviceId]++;
-                    if (m_monitoredDevices[deviceId] == 1) registerFlag = true;
-                    KARABO_LOG_FRAMEWORK_DEBUG << "onStartMonitoringDevice " << deviceId << " (" << m_monitoredDevices[deviceId] << ")";
+                    const int newCount = ++m_monitoredDevices[deviceId];
+                    if (newCount == 1) registerFlag = true;
+                    KARABO_LOG_FRAMEWORK_DEBUG << "onStartMonitoringDevice " << deviceId << " (" << newCount << ")";
                 }
 
                 if (registerFlag) { // Fresh device on the shelf
@@ -666,8 +666,8 @@ namespace karabo {
                 // TODO This could check a dirty-flag whether the device changed since last time seen
                 onGetDeviceConfiguration(channel, info);
 
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onStartMonitoringDevice(): " << e.userFriendlyMsg();
+            } catch (const exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onStartMonitoringDevice(): " << e.what();
             }
         }
 
@@ -677,8 +677,6 @@ namespace karabo {
             try {
                 bool unregisterFlag = false;
                 const string& deviceId = info.get<string > ("deviceId");
-
-                KARABO_LOG_FRAMEWORK_DEBUG << "onStopMonitoringDevice : \"" << deviceId << "\"";
 
                 {
                     boost::mutex::scoped_lock lock(m_channelMutex);
@@ -703,8 +701,8 @@ namespace karabo {
                     remote().unregisterDeviceMonitor(deviceId);
                 }
 
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onStopMonitoringDevice(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onStopMonitoringDevice(): " << e.what();
             }
         }
 
@@ -731,18 +729,19 @@ namespace karabo {
 
         void GuiServerDevice::onGetDeviceSchema(WeakChannelPointer channel, const karabo::util::Hash& info) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onGetDeviceSchema";
                 const string& deviceId = info.get<string > ("deviceId");
 
                 Schema schema = remote().getDeviceSchemaNoWait(deviceId);
 
                 if (!schema.empty()) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Schema available, direct answer";
+                    KARABO_LOG_FRAMEWORK_DEBUG << "onGetDeviceSchema for '" << deviceId << "': direct answer";
                     Hash h("type", "deviceSchema", "deviceId", deviceId, "schema", schema);
                     safeClientWrite(channel, h);
+                } else {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "onGetDeviceSchema for '" << deviceId << "': expect later answer";
                 }
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetDeviceSchema(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetDeviceSchema(): " << e.what();
             }
         }
 
@@ -1024,19 +1023,21 @@ namespace karabo {
         void GuiServerDevice::deviceChangedHandler(const std::string& deviceId, const karabo::util::Hash& what) {
             try {
 
-                //KARABO_LOG_FRAMEWORK_DEBUG << "deviceChangedHandler" << ": deviceId = \"" << deviceId << "\"";
+                if (what.has("deviceId")) { // only request for full configuration should contain that...
+                    KARABO_LOG_FRAMEWORK_DEBUG << "deviceChangedHandler" << ": deviceId = '" << deviceId << "'";
+                }
 
                 Hash h("type", "deviceConfiguration", "deviceId", deviceId, "configuration", what);
                 boost::mutex::scoped_lock lock(m_channelMutex);
-                // Broadcast to all GUIs
+                // Loop on all clients
                 for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                    // Optimization: broadcast only to visible DeviceInstances
+                    // Optimization: broadcast only to clients interested in deviceId
                     if (it->second.find(deviceId) != it->second.end()) {
                         if (it->first && it->first->isOpen()) it->first->writeAsync(h);
                     }
                 }
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in deviceChangedHandler(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in deviceChangedHandler(): " << e.what();
             }
         }
 
@@ -1063,7 +1064,7 @@ namespace karabo {
 
         void GuiServerDevice::schemaUpdatedHandler(const std::string& deviceId, const karabo::util::Schema& schema) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting schema updated";
+                KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting schema updated for '" << deviceId << "'";
 
                 if (schema.empty()) {
                     KARABO_LOG_FRAMEWORK_WARN << "Going to send an empty schema, should not happen...";
@@ -1073,6 +1074,8 @@ namespace karabo {
                        "schema", schema);
 
                 // Broadcast to all GUIs
+                // why bother all and not only those that are interested in deviceId?
+                // As in deviceChangedHandle!
                 safeAllClientsWrite(h);
 
             } catch (const Exception& e) {
@@ -1150,8 +1153,7 @@ namespace karabo {
                 }
                 // All devices left in deviceIds have to be unregistered from monitoring.
 
-
-                BOOST_FOREACH(const std::string& deviceId, deviceIds) {
+                for (const std::string& deviceId : deviceIds) {
                     remote().unregisterDeviceMonitor(deviceId);
                 }
 
@@ -1167,10 +1169,8 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_INFO << m_networkConnections.size() << " pipeline channel(s) left.";
                 }
 
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onError(): " << e.userFriendlyMsg();
-            } catch (const std::exception& se) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Standard exception in onError(): " << se.what();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onError(): " << e.what();
             }
         }
 
