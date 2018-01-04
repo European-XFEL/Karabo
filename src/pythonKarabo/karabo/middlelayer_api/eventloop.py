@@ -84,29 +84,35 @@ class Broker:
 
         :param info: the info Hash that should be published regularly.
         """
+        if info["heartbeatInterval"] <= 0:
+            raise KaraboError("Non-positive heartbeat interval: {}"
+                              .format(info["heartbeatInterval"]))
+
         self.info = info
         self.emit('call', {'*': ['slotInstanceNew']},
                   self.deviceId, self.info)
 
         @coroutine
-        def heartbeat(first):
+        def heartbeat():
             try:
+                first = True
                 while True:
-                    # Permamnently send heartbeats, but first one not
+                    # Permanently send heartbeats, but first one not
                     # immediately: Those interested in us just got informed.
                     interval = self.info["heartbeatInterval"]
-                    sleepInterval = interval
+                    # Protect against any bad interval that causes spinning
+                    sleepInterval = abs(interval) if interval != 0 else 10
                     if first:
                         # '//2' protects change of 'tracking factor' close to 1
-                        # '+1' protects against 0 if interval is 1
-                        sleepInterval = interval // 2 + 1
+                        # '+1' protects against 0 if sleepInterval is 1
+                        sleepInterval = sleepInterval // 2 + 1
                         first = False
                     yield from sleep(sleepInterval)
                     self.heartbeat(interval)
             finally:
                 self.emit('call', {'*': ['slotInstanceGone']},
                           self.deviceId, self.info)
-        async(heartbeat(True))
+        async(heartbeat())
 
     def call(self, signal, targets, reply, args):
         if not targets:
