@@ -36,7 +36,8 @@ def test_project_device():
             config['val', KARABO_SCHEMA_ABSOLUTE_ERROR] = 42
             device.set_project_config_hash(config)
             assert device._offline_proxy.binding.value.val.value == 'bar'
-            assert device.get_current_config_hash() == config
+            extracted_config = device.get_current_config_hash()
+            assert extracted_config['val', KARABO_SCHEMA_ABSOLUTE_ERROR] == 42
 
             device.start_monitoring()
             assert device._online_proxy._monitor_count == 1
