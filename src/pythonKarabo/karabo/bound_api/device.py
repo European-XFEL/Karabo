@@ -200,6 +200,15 @@ class PythonDevice(NoFsm):
                     .description("The progress of the current action")
                     .readOnly().initialValue(0).commit(),
 
+            INT32_ELEMENT(expected).key("heartbeatInterval")
+                    .displayedName("Heartbeat interval")
+                    .description("The heartbeat interval")
+                    .assignmentOptional()
+                    .defaultValue(20)  # smaller than C++ device: own process!
+                    .minInc(10)  # avoid too much traffic
+                    .adminAccess()
+                    .commit(),
+
             NODE_ELEMENT(expected).key("performanceStatistics")
                     .displayedName("Performance Statistics")
                     .description("Accumulates some statistics")
@@ -393,7 +402,8 @@ class PythonDevice(NoFsm):
 
         # Instantiate SignalSlotable object
         self._ss = SignalSlotable(self.deviceid, "JmsConnection",
-                                  self.parameters["_connection_"], 20, info)
+                                  self.parameters["_connection_"],
+                                  self.parameters["heartbeatInterval"], info)
 
         # Setup device logger (needs self._ss and self.parameters)
         self.loadLogger()
