@@ -71,6 +71,13 @@ class BaseBinding(HasStrictTraits):
         unit_symbol = attrs.get(const.KARABO_SCHEMA_UNIT_SYMBOL, '')
         return prefix_symbol + unit_symbol
 
+    def update_attributes(self, attrs):
+        """Silently update attributes dictionary"""
+        if attrs:
+            traits = {'attributes': self.attributes}
+            traits['attributes'].update(attrs)
+            self.trait_set(trait_change_notify=False, **traits)
+
 
 class BindingNamespace(object):
     """A namespace which is iterable and remembers the order in which values
