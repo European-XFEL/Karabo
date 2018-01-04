@@ -1722,7 +1722,7 @@ namespace karabo {
             /**
              * Get the default DAQ policy to use if not specified per element
              */
-            DAQPolicy getDefaultDAQPolicy() const;
+            const DAQPolicy& getDefaultDAQPolicy() const;
 
 
         private: // functions
