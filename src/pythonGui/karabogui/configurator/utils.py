@@ -46,7 +46,7 @@ def dragged_configurator_items(proxies):
         factories = get_compatible_controllers(binding, can_edit=False)
         if factories:
             data['display_widget_class'] = factories[0].__name__
-        if proxy.binding.access_mode is AccessMode.RECONFIGURABLE:
+        if binding.access_mode is AccessMode.RECONFIGURABLE:
             factories = get_compatible_controllers(binding, can_edit=True)
             if factories:
                 data['edit_widget_class'] = factories[0].__name__
@@ -102,11 +102,10 @@ def get_device_state_string(device_proxy):
 def get_icon(binding):
     """Get the proper icon to show next to a property in the configurator
     """
-    attributes = binding.attributes
-    options = attributes.get('options', None)
-    if options is not None:
+    if len(binding.options) > 0:
         return icons.enum
 
+    attributes = binding.attributes
     icon = icons.undefined
     if isinstance(binding, CharBinding):
         icon = icons.string
