@@ -30,6 +30,11 @@ from .schema import get_all_props_schema, get_vectorattr_schema
 TEST_DATA_DIR = op.join(op.dirname(__file__), 'data')
 
 
+def _dict_diff(d0, d1):
+    """Get the new items in dictionary d1"""
+    return {k: v for k, v in d1.items() if k not in d0 or d0[k] != v}
+
+
 @contextmanager
 def watch_config_update_notification(binding, expected):
     """Watch for binding.config_update notification, assert that trait event
@@ -149,6 +154,15 @@ def test_apply_configuration():
     with watch_config_update_notification(binding, expected=False):
         apply_configuration(config, binding, notify=False)
     assert binding.value.a.value
+
+    config = Hash('a', True)
+    # change one item in attributes and add a new item
+    attr = {'defaultValue': False, 'displayedName': 'A'}
+    config['a', ...] = attr
+    old_attrs = {k: v for k, v in binding.value.a.attributes.items()}
+    apply_configuration(config, binding, include_attributes=True)
+    new_attrs = {k: v for k, v in binding.value.a.attributes.items()}
+    assert _dict_diff(old_attrs, new_attrs) == attr
 
     config = Hash('not', 'exist')
     apply_configuration(config, binding)
