@@ -1267,7 +1267,7 @@ namespace karabo {
             m_defaultDAQPolicy = policy;
         }
         
-        const DAQPolicy& Schema::getDefaultDAQPolicy() const {
+        DAQPolicy Schema::getDefaultDAQPolicy() const {
             return m_defaultDAQPolicy;
         }
     }
