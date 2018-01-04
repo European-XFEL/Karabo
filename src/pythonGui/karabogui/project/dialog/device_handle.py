@@ -71,6 +71,7 @@ class DeviceHandleDialog(QDialog):
             else:
                 title = 'Edit device configuration'
                 self._init_config_widgets(model)
+                self.cbConfig.setEnabled(not is_online)
                 if active_dev_conf is not None:
                     self._update_config_widgets(active_dev_conf)
                     index = self.cbConfig.findText(active_dev_conf.simple_name)
