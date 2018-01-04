@@ -1378,7 +1378,7 @@ class PythonDevice(NoFsm):
             self.parameters += reconfiguration
 
         if not instanceInfoUpdate.empty():
-            self.updateInstanceInfo(instanceInfoUpdate)
+            self._ss.updateInstanceInfo(instanceInfoUpdate)
 
         if self.validatorExtern.hasReconfigurableParameter():
             self._ss.emit("signalStateChanged", reconfiguration, self.deviceid)
