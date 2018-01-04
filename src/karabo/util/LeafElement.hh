@@ -43,12 +43,9 @@ namespace karabo {
                 m_defaultValue.setElement(static_cast<Derived*> (this));
                 m_readOnlySpecific.setElement(static_cast<Derived*> (this));
                 
-                // by default we omit saving to DAQ. Setting the attribute here will ensure that it is configurable 
-                // in the GUI.
-                const DAQPolicy& daqPolicy = expected.getDefaultDAQPolicy();
-                if (daqPolicy != DAQPolicy::UNSPECIFIED) {
-                    this->m_node->template setAttribute<int>(KARABO_SCHEMA_DAQ_POLICY, daqPolicy);
-                }
+                // set the default DAQ policy
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_DAQ_POLICY, expected.getDefaultDAQPolicy());
+                
             }
 
             /**
