@@ -20,6 +20,7 @@
 #include <string>
 #include <algorithm>
 #include <vector>
+#include <cstdlib>
 
 namespace karabo {
     namespace xms {
@@ -318,6 +319,9 @@ namespace karabo {
 
             m_instanceId = instanceId;
             m_connection = connection;
+            if (heartbeatInterval <= 0) {
+                throw KARABO_SIGNALSLOT_EXCEPTION("Non-positive heartbeat interval: " + toString(heartbeatInterval));
+            }
             m_heartbeatInterval = heartbeatInterval;
             // Threading not yet established for this instance, so no mutex lock needed
             m_instanceInfo = instanceInfo;
@@ -1110,6 +1114,8 @@ namespace karabo {
 
 
         void SignalSlotable::delayedEmitHeartbeat(int delayInSeconds) {
+            // Protect against any bad interval that causes spinning:
+            delayInSeconds = (delayInSeconds ? std::abs(delayInSeconds) : 10);
             m_heartbeatTimer.expires_from_now(boost::posix_time::seconds(delayInSeconds));
             m_heartbeatTimer.async_wait(bind_weak(&karabo::xms::SignalSlotable::emitHeartbeat, this,
                                                   boost::asio::placeholders::error));
