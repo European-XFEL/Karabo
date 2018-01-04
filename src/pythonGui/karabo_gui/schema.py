@@ -31,13 +31,13 @@ SCHEMA_ATTRIBUTE_NAMES = (
     'alias', 'allowedStates', 'tags', 'options', 'minInc', 'maxInc',
     'minExc', 'maxExc', 'minSize', 'maxSize', 'warnLow',
     'warnHigh', 'alarmLow', 'alarmHigh', 'archivePolicy',
-    'relativeError', 'absoluteError', 'rowSchema'
+    'relativeError', 'absoluteError', 'rowSchema', 'daqPolicy'
 )
 # The names of attributes which can be edited prior to class instantiation
 EDITABLE_ATTRIBUTE_NAMES = (
     'minExc', 'maxExc', 'minInc', 'maxInc', 'absoluteError', 'relativeError',
     'warnLow', 'warnHigh', 'alarmLow', 'alarmHigh', 'metricPrefixSymbol',
-    'unitSymbol'
+    'unitSymbol', 'daqPolicy'
 )
 
 
