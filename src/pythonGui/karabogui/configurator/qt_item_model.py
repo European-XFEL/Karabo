@@ -73,7 +73,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if oldproxy is not None:
             oldproxy.on_trait_change(self._config_update, 'config_update',
                                      remove=True)
-            oldproxy.on_trait_change(self._config_update, 'schema_update',
+            oldproxy.on_trait_change(self._schema_update, 'schema_update',
                                      remove=True)
             if isinstance(oldproxy, DeviceProxy):
                 oldproxy.on_trait_change(self._state_update,
@@ -90,7 +90,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
         if proxy is not None:
             proxy.on_trait_change(self._config_update, 'config_update')
-            proxy.on_trait_change(self._config_update, 'schema_update')
+            proxy.on_trait_change(self._schema_update, 'schema_update')
             if isinstance(proxy, DeviceProxy):
                 proxy.on_trait_change(self._state_update,
                                       'state_binding.value')
@@ -120,7 +120,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
         if proxy.binding is not None:
             proxy.revert_edit()
-            self.layoutChanged.emit()
+            # XXX: layoutChanged to be investigated
+            # self.layoutChanged.emit()
             self._notify_of_modifications()
 
     def flush_index_modification(self, index):
@@ -173,6 +174,17 @@ class ConfigurationTreeModel(QAbstractItemModel):
         """Return the PropertyProxy for a given BaseBinding"""
         return self._attr_backreferences.get(binding)
 
+    def _schema_update(self):
+        """Notify the view of a schema update
+        """
+        self.layoutAboutToBeChanged.emit()
+        last_row = self.rowCount()
+        first = self.index(0, 1)
+        last = self.index(last_row, 1)
+        self.dataChanged.emit(first, last)
+        self.layoutChanged.emit()
+        self._notify_of_modifications()
+
     def _config_update(self):
         """Notify the view of item updates
         """
@@ -180,7 +192,6 @@ class ConfigurationTreeModel(QAbstractItemModel):
         first = self.index(0, 1)
         last = self.index(last_row, 1)
         self.dataChanged.emit(first, last)
-        self.layoutChanged.emit()
         self._notify_of_modifications()
 
     def _notify_of_modifications(self):
@@ -493,7 +504,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
             elif online_device:
                 proxy.revert_edit()
 
-            self.layoutChanged.emit()
+            # XXX: Layout changed to be investigated
+            # self.layoutChanged.emit()
             self._notify_of_modifications()
 
         # A value was successfully set!
