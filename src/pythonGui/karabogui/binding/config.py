@@ -34,11 +34,11 @@ def apply_configuration(config, binding, notify=True,
             # Set the timestamp no matter what
             ts = Timestamp.fromHashAttributes(attrs)
             traits['timestamp'] = ts or Timestamp()
-            if include_attributes:
-                traits['attributes'] = fast_deepcopy(attrs)
             # Set everything at once and notify via the config_update event
             try:
                 node.trait_set(trait_change_notify=False, **traits)
+                if include_attributes:
+                    node.update_attributes(fast_deepcopy(attrs))
             except TraitError:
                 # value in the configuration is not compatible to schema
                 continue
