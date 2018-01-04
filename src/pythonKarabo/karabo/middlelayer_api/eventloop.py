@@ -84,10 +84,6 @@ class Broker:
 
         :param info: the info Hash that should be published regularly.
         """
-        if info["heartbeatInterval"] <= 0:
-            raise KaraboError("Non-positive heartbeat interval: {}"
-                              .format(info["heartbeatInterval"]))
-
         self.info = info
         self.emit('call', {'*': ['slotInstanceNew']},
                   self.deviceId, self.info)

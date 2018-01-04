@@ -336,6 +336,7 @@ namespace karabo {
                         .displayedName("Heartbeat interval")
                         .description("The heartbeat interval")
                         .assignmentOptional().defaultValue(120)
+                        .minInc(10) // avoid too much traffic - 10 is minimum of server as well
                         .adminAccess()
                         .commit();
 
