@@ -1,11 +1,19 @@
 from traits.api import (
-    HasStrictTraits, Array, Bool, Bytes, Complex, Dict, Event, Float, Instance,
-    List, Property, Range, String, Trait, TraitHandler, Undefined
+    HasStrictTraits, Array, Bool, Bytes, CArray, Complex, Dict, Enum, Event,
+    Float, Instance, List, Property, Range, String, Trait, TraitHandler,
+    Undefined
 )
 
 from karabo.middlelayer import (AccessLevel, AccessMode, Assignment, Hash,
                                 State, Timestamp)
 from . import const
+
+KEY_ACCMODE = const.KARABO_SCHEMA_ACCESS_MODE
+KEY_ASSIGNMENT = const.KARABO_SCHEMA_ASSIGNMENT
+KEY_ACCLVL = const.KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL
+KEY_OPT = const.KARABO_SCHEMA_OPTIONS
+KEY_UNIT = const.KARABO_SCHEMA_UNIT_SYMBOL
+KEY_UNITPREFIX = const.KARABO_SCHEMA_METRIC_PREFIX_SYMBOL
 
 
 class BaseBinding(HasStrictTraits):
@@ -14,8 +22,11 @@ class BaseBinding(HasStrictTraits):
     `value` trait which contains the value of the node. The value is validated
     using normal Traits validation.
     """
-    # Dictionary of attributes copied from the object schema
-    attributes = Dict
+    # Attributes property copied from the object schema, we control the
+    # setter of the attributes so their shortcuts can be updated in time
+    # but avoid hammering the configurator
+    attributes = Property
+    _attributes = Dict
     # When the value was last set on the device
     timestamp = Instance(Timestamp)
     # The value contained in this node. Derived classes should redefine this.
@@ -27,12 +38,12 @@ class BaseBinding(HasStrictTraits):
     # The data is contained in the new value passed to notification handlers
     historic_data = Event
 
-    # Attribute shortcut properties
-    access_mode = Property
-    assignment = Property
-    options = Property
-    required_access_level = Property
-    unit_label = Property
+    # Attribute shortcuts
+    access_mode = Enum(*AccessMode)
+    assignment = Enum(*Assignment)
+    options = List
+    required_access_level = Enum(*AccessLevel)
+    unit_label = String
 
     def is_allowed(self, state):
         """Return True if the given `state` is an allowed state for this
@@ -44,33 +55,53 @@ class BaseBinding(HasStrictTraits):
         alloweds = self.attributes.get(const.KARABO_SCHEMA_ALLOWED_STATES, [])
         return alloweds == [] or state in alloweds
 
-    def _get_access_mode(self):
-        mode = self.attributes.get(const.KARABO_SCHEMA_ACCESS_MODE)
-        return AccessMode.UNDEFINED if mode is None else AccessMode(mode)
+    def _get_attributes(self):
+        return self._attributes
 
-    def _get_assignment(self):
-        assign = self.attributes.get(const.KARABO_SCHEMA_ASSIGNMENT)
-        return Assignment.OPTIONAL if assign is None else Assignment(assign)
-
-    def _get_options(self):
-        return self.attributes.get(const.KARABO_SCHEMA_OPTIONS, [])
-
-    def _get_required_access_level(self):
-        level = self.attributes.get(const.KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL)
-        return AccessLevel.OBSERVER if level is None else AccessLevel(level)
-
-    def _get_unit_label(self):
-        attrs = self.attributes
-        prefix_symbol = attrs.get(const.KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, '')
-        unit_symbol = attrs.get(const.KARABO_SCHEMA_UNIT_SYMBOL, '')
-        return prefix_symbol + unit_symbol
+    def _set_attributes(self, value):
+        self._attributes = value
+        self._update_shortcuts(value)
 
     def update_attributes(self, attrs):
         """Silently update attributes dictionary"""
         if attrs:
-            traits = {'attributes': self.attributes}
-            traits['attributes'].update(attrs)
-            self.trait_set(trait_change_notify=False, **traits)
+            traits = {'_attributes': self._attributes}
+            traits['_attributes'].update(attrs)
+            self.trait_setq(**traits)
+            self._update_shortcuts(attrs)
+
+    def _access_mode_default(self):
+        mode = self.attributes.get(const.KARABO_SCHEMA_ACCESS_MODE)
+        return AccessMode.UNDEFINED if mode is None else AccessMode(mode)
+
+    def _assignment_default(self):
+        assign = self.attributes.get(const.KARABO_SCHEMA_ASSIGNMENT)
+        return Assignment.OPTIONAL if assign is None else Assignment(assign)
+
+    def _options_default(self):
+        return self.attributes.get(KEY_OPT, [])
+
+    def _required_access_level_default(self):
+        level = self.attributes.get(KEY_ACCLVL)
+        return AccessLevel.OBSERVER if level is None else AccessLevel(level)
+
+    def _unit_label_default(self):
+        attrs = self.attributes
+        unit = attrs.get(KEY_UNITPREFIX, '') + attrs.get(KEY_UNIT, '')
+        return unit
+
+    def _update_shortcuts(self, attrs):
+        if KEY_ACCMODE in attrs:
+            self.access_mode = AccessMode(attrs[KEY_ACCMODE])
+        if KEY_ACCLVL in attrs:
+            self.required_access_level = AccessLevel(attrs[KEY_ACCLVL])
+        if KEY_ASSIGNMENT in attrs:
+            self.assignment = Assignment(attrs[KEY_ASSIGNMENT])
+        if KEY_OPT in attrs:
+            self.options = attrs[KEY_OPT]
+        if KEY_UNIT in attrs or KEY_UNITPREFIX in attrs:
+            unit = attrs.get(KEY_UNITPREFIX, '') + attrs.get(KEY_UNIT, '')
+            self.unit_label = unit
 
 
 class BindingNamespace(object):
@@ -140,6 +171,10 @@ class BindingRoot(BaseBinding):
 
 class BoolBinding(BaseBinding):
     value = Bool
+    # number type binding (Bool, Float and Int) could have options in type of
+    # numpy array, CArray will cast list to a numpy array. Be aware that when
+    # comparing numpy arrays, result is an array as well.
+    options = CArray
 
 
 class _ByteArrayHandler(TraitHandler):
@@ -167,6 +202,7 @@ class ComplexBinding(BaseBinding):
 
 class FloatBinding(BaseBinding):
     value = Float
+    options = CArray
 
 
 class HashBinding(BaseBinding):
@@ -175,6 +211,7 @@ class HashBinding(BaseBinding):
 
 class IntBinding(BaseBinding):
     """The base class for all integer binding types"""
+    options = CArray
 
 
 class SignedIntBinding(IntBinding):
