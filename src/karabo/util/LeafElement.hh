@@ -197,8 +197,7 @@ namespace karabo {
             }
             
             /**
-             * The <b>daqPolicy</b> sets the DAQ policy for a parameter. Note that this is a suggestion only,
-             * this attribute may be changed for each instance at init time.
+             * The <b>daqPolicy</b> sets the DAQ policy for a parameter.
              * @return reference to the Element (to allow method's chaining)
              */
             virtual Derived& daqPolicy(const DAQPolicy& policy) {
