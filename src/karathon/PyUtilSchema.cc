@@ -1538,6 +1538,7 @@ void exportPyUtilSchema() {
             ;
     
     bp::enum_< DAQPolicy>("DAQPolicy")
+            .value("UNSPECIFIED", DAQPolicy::UNSPECIFIED)
             .value("OMIT", DAQPolicy::OMIT)
             .value("SAVE", DAQPolicy::SAVE)
             ;
