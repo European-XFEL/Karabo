@@ -30,7 +30,9 @@ ALL_BINDINGS = (
 
 def test_binding_traits():
     # Binding models must only have these traits!
-    expected_traits = ('attributes', 'timestamp', 'value')
+    expected_traits = ('attributes', '_attributes', 'timestamp', 'value',
+                       'access_mode', 'assignment', 'options',
+                       'required_access_level', 'unit_label')
     for binding_factory in ALL_BINDINGS:
         obj = binding_factory()
         for trait in obj.copyable_trait_names():
