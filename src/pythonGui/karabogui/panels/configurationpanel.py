@@ -242,7 +242,7 @@ class ConfigurationPanel(BasePanelWidget):
             for path, _, attrs in flat_iter_hash(configuration):
                 binding = proxy.get_property_binding(path)
                 if binding is not None:
-                    binding.attributes = fast_deepcopy(attrs)
+                    binding.update_attributes(fast_deepcopy(attrs))
             # Notify again. XXX: Schema update too?
             proxy.binding.config_update = True
 
