@@ -7,7 +7,7 @@ import sys
 from setuptools import setup, find_packages
 
 VERSION_FILE_PATH = op.join('karabogui', '_version.py')
-OLD_VERSION_FILE_PATH = op.join('karabo_gui', '_version.py')
+LEGACY_VERSION_FILE_PATH = op.join('karabo_gui', '_version.py')
 
 
 def _get_src_dist_version():
@@ -64,9 +64,9 @@ is_released = {is_released}
                 vcs_revision_count=vers_dict['revision_count'],
                 is_released=vers_dict['released']))
 
-    # XXX: Copy to the legacy package
-    if not op.exists(OLD_VERSION_FILE_PATH):
-        shutil.copy(filename, OLD_VERSION_FILE_PATH)
+    # XXX: Copy version file to the legacy gui package
+    if not op.exists(LEGACY_VERSION_FILE_PATH):
+        shutil.copy(filename, LEGACY_VERSION_FILE_PATH)
 
     return fullversion
 
@@ -118,10 +118,11 @@ if __name__ == '__main__':
             json.dump(metadata, fp)
 
     setup(entry_points={'console_scripts': [
-                'karabo-gui=karabogui.programs.gui_runner:main',
+                # XXX: The refactored GUI client
+                'karabo-gui-new=karabogui.programs.gui_runner:main',
                 'panel-runner=karabogui.programs.panel_runner:main',
                 # XXX: The lagacy GUI client
-                'iug-obarak=karabo_gui.programs.gui_runner:main',
+                'karabo-gui=karabo_gui.programs.gui_runner:main',
             ]},
           # Add an alias for 'build' so we can prepare data for Windows
           cmdclass={WINDOWS_BUILDER: distutils.command.build.build},
