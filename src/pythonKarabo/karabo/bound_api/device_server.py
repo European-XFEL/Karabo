@@ -70,6 +70,14 @@ class DeviceServer(object):
                     .expertAccess()
                     .commit()
                     ,
+            INT32_ELEMENT(expected).key("heartbeatInterval")
+                    .displayedName("Heartbeat interval")
+                    .description("The heartbeat interval")
+                    .assignmentOptional().defaultValue(10)
+                    .minInc(10)  # avoid too much traffic
+                    .adminAccess()
+                    .commit()
+                    ,
             VECTOR_STRING_ELEMENT(expected).key("deviceClasses")
                     .displayedName("Device Classes")
                     .description("The device classes the server will manage")
@@ -203,7 +211,8 @@ class DeviceServer(object):
         info["visibility"] = self.visibility
 
         self.ss = SignalSlotable(self.serverid, "JmsConnection",
-                                 self.connectionParameters, 10, info)
+                                 self.connectionParameters,
+                                 config["heartbeatInterval"], info)
 
         # Register before self.ss.start(), i.e before sending instanceNew:
         self._registerAndConnectSignalsAndSlots()
