@@ -10,11 +10,11 @@ from dateutil.parser import parse as from_isoformat
 from pint import DimensionalityError
 
 from karabo.middlelayer import (
-    AlarmCondition, background, Bool, Configurable, connectDevice, decodeBinary,
-    Device, DeviceNode, execute, Float, getDevice, Hash, isAlive, isSet, Int32,
-    KaraboError, lock, MetricPrefix, Node, Queue, setNoWait, setWait, Slot,
-    slot, State, String, unit, Unit, VectorChar, VectorInt16, VectorString,
-    VectorFloat, waitUntil, waitUntilNew)
+    AlarmCondition, background, Bool, Configurable, connectDevice,
+    decodeBinary, Device, DeviceNode, execute, Float, getDevice, isAlive,
+    isSet, Int32, KaraboError, lock, MetricPrefix, Node, Queue, setNoWait,
+    setWait, Slot, slot, State, String, unit, Unit, VectorChar, VectorInt16,
+    VectorString, VectorFloat, waitUntil, waitUntilNew)
 from karabo.middlelayer_api import openmq
 from karabo.middlelayer_api.injectable import Injectable
 
@@ -522,7 +522,7 @@ class Tests(DeviceTest):
             task = async(d.count())
             try:
                 for i in range(30):
-                    h = yield from async(waitUntilNew(d))
+                    yield from async(waitUntilNew(d))
                     self.assertEqual(i, d.counter)
             finally:
                 yield from task
@@ -798,6 +798,23 @@ class Tests(DeviceTest):
             yield from a.slotKillDevice()
 
     @async_tst
+    def test_device_node_alive(self):
+        class A(Device):
+            dn = DeviceNode()
+
+        node_device = A({"_deviceId_": "devicenode", "dn": "gonzales"})
+        gonzales = Local({"_deviceId_": "gonzales"})
+        try:
+            yield from gonzales.startInstance()
+            yield from node_device.startInstance()
+            self.assertTrue(isAlive(node_device.dn))
+            background(gonzales.slotKillDevice())
+            yield from waitUntil(lambda: not isAlive(node_device.dn))
+            self.assertFalse(isAlive(node_device.dn))
+        finally:
+            yield from node_device.slotKillDevice()
+
+    @async_tst
     def test_devicenode_nocopy_lock(self):
         class A(Device):
             dn = DeviceNode(lock=True)
@@ -1012,12 +1029,14 @@ class Tests(DeviceTest):
     def test_device_restart(self):
         proxy = None
         self.remote.done = False
+
         class A(Device):
             @coroutine
             def onInitialization(self):
                 nonlocal future, proxy
                 proxy = yield from connectDevice("remote")
                 future.set_result(None)
+
         future = Future()
         a = A({"_deviceId_": "testrestart"})
         yield from a.startInstance()
