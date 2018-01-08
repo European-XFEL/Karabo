@@ -1,7 +1,7 @@
 import traceback
 
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QAction, QInputDialog, QLineEdit
+from PyQt4.QtGui import QAction, QFrame, QInputDialog, QLabel
 from traits.api import Callable, Dict, Instance
 
 from karabo.common.scenemodel.api import EvaluatorModel
@@ -9,9 +9,10 @@ from karabogui import messagebox
 from karabogui.binding.api import (
     CharBinding, ComplexBinding, FloatBinding, IntBinding, StringBinding
 )
-from karabogui.const import WIDGET_MIN_HEIGHT
+from karabogui.const import WIDGET_MIN_HEIGHT, FINE_COLOR
 from karabogui.controllers.api import (
     BaseBindingController, add_unit_label, register_binding_controller)
+from karabogui.util import generateObjectName
 
 BINDING_TYPES = (CharBinding, ComplexBinding, FloatBinding, StringBinding,
                  IntBinding)
@@ -27,7 +28,7 @@ class Evaluator(BaseBindingController):
     globals_ns = Dict
     function = Callable
     # Storage for the main widget
-    _internal_widget = Instance(QLineEdit)
+    _internal_widget = Instance(QLabel)
 
     def _globals_ns_default(self):
         ns = {}
@@ -40,16 +41,22 @@ class Evaluator(BaseBindingController):
                     self.globals_ns)
 
     def create_widget(self, parent):
-        line_edit = QLineEdit(parent)
-        line_edit.setMinimumHeight(WIDGET_MIN_HEIGHT)
-        line_edit.setReadOnly(True)
-        line_edit.setFocusPolicy(Qt.NoFocus)
-        self._internal_widget = line_edit
-        widget = add_unit_label(self.proxy, line_edit, parent=parent)
+        label = QLabel(parent)
+        label.setMinimumHeight(WIDGET_MIN_HEIGHT)
+        label.setFocusPolicy(Qt.NoFocus)
+        self._internal_widget = label
+        widget = add_unit_label(self.proxy, label, parent=parent)
+        widget.setFrameStyle(QFrame.Box | QFrame.Plain)
 
         action = QAction('Change expression...', widget)
         widget.addAction(action)
         action.triggered.connect(self._change_expression)
+
+        objectName = generateObjectName(self)
+        widget.setObjectName(objectName)
+        style_sheet = ("QWidget#{}".format(objectName) +
+                       " {{ background-color : rgba{}; }}")
+        widget.setStyleSheet(style_sheet.format(FINE_COLOR))
         return widget
 
     def value_update(self, proxy):
