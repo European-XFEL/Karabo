@@ -86,8 +86,9 @@ class ProjectDeviceInstance(HasStrictTraits):
         if config is None:
             return
 
-        # Make sure the offline proxy has schema first
-        if len(self._offline_proxy.binding.value) > 0:
+        # Only apply offline device configuration if the device is offline
+        # and we have schema, otherwise trigger a deferred update
+        if not self.online and len(self._offline_proxy.binding.value) > 0:
             apply_default_configuration(self._offline_proxy.binding)
             apply_configuration(config, self._offline_proxy.binding,
                                 notify=False, include_attributes=True)
@@ -136,11 +137,12 @@ class ProjectDeviceInstance(HasStrictTraits):
                 return status
         return self._offline_proxy.status
 
-    @on_trait_change('_offline_proxy:schema_update')
+    @on_trait_change('_online_proxy:online,_offline_proxy:schema_update')
     def _apply_offline_config(self):
-        """Triggered when offline proxy schema arrrived
+        """Apply offline device configuration
         """
-        if self._deferred_update:
+        # Only apply to offline device which already has a schema
+        if not self.online and self._deferred_update:
             apply_default_configuration(self._offline_proxy.binding)
             apply_configuration(self._offline_config,
                                 self._offline_proxy.binding,
