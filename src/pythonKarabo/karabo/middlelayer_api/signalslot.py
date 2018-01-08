@@ -131,6 +131,7 @@ class SignalSlotable(Configurable):
         displayedName="Heartbeat interval",
         description="The heartbeat interval",
         assignment=Assignment.OPTIONAL, defaultValue=20,
+        minInc=10,
         requiredAccessLevel=AccessLevel.ADMIN)
 
     _ss = None
