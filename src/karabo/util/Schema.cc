@@ -1257,11 +1257,21 @@ namespace karabo {
             return m_hash.hasAttribute(path, KARABO_SCHEMA_DAQ_POLICY);
         }
 
-
         DAQPolicy Schema::getDAQPolicy(const std::string& path) const {
-            return static_cast<DAQPolicy>(m_hash.getAttribute<int> (path, KARABO_SCHEMA_DAQ_POLICY));
+            const int policyInt = m_hash.getAttribute<int>(path, KARABO_SCHEMA_DAQ_POLICY);
+            switch(policyInt) {
+                case DAQPolicy::UNSPECIFIED:
+                    return DAQPolicy::UNSPECIFIED;            
+                case DAQPolicy::OMIT:
+                    return DAQPolicy::OMIT;
+                case DAQPolicy::SAVE:
+                    return DAQPolicy::SAVE;
+                default:
+                    throw KARABO_PARAMETER_EXCEPTION("Unknown DaqPolicy " + toString(policyInt));
+                    return DAQPolicy::UNSPECIFIED; // please the compiler
+            }
+            
         }
-        
         
         void Schema::setDefaultDAQPolicy(const DAQPolicy& policy) {
             m_defaultDAQPolicy = policy;
