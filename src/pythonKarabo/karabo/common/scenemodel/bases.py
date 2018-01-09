@@ -2,6 +2,8 @@ from traits.api import Enum, Instance, Int, Float, List, Range, String
 
 from karabo.common.api import BaseSavableModel
 
+from .const import DISPLAY_COMPONENT, EDITABLE_COMPONENT
+
 
 class BaseLayoutData(BaseSavableModel):
     """ An empty base class to simplify holding layout data in other objects.
@@ -77,14 +79,14 @@ class BaseWidgetObjectData(BaseSceneObjectData):
         """If this method is not overridden by a derived class, return the
         default value of 'DisplayComponent'
         """
-        return 'DisplayComponent'
+        return DISPLAY_COMPONENT
 
 
 class BaseEditWidget(BaseWidgetObjectData):
     """ The base class for all controllers which can edit
     """
     def _parent_component_default(self):
-        return 'EditableApplyLaterComponent'
+        return EDITABLE_COMPONENT
 
 
 class BaseDisplayEditableWidget(BaseWidgetObjectData):
@@ -93,5 +95,5 @@ class BaseDisplayEditableWidget(BaseWidgetObjectData):
     """
     def _parent_component_default(self):
         if self.klass.startswith('Editable'):
-            return 'EditableApplyLaterComponent'
-        return 'DisplayComponent'
+            return EDITABLE_COMPONENT
+        return DISPLAY_COMPONENT
