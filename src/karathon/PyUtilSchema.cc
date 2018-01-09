@@ -1536,6 +1536,12 @@ void exportPyUtilSchema() {
             .value("PULSEMASTER", DaqDataType::PULSEMASTER)
             .value("TRAINMASTER", DaqDataType::TRAINMASTER)
             ;
+    
+    bp::enum_< DAQPolicy>("DAQPolicy")
+            .value("UNSPECIFIED", DAQPolicy::UNSPECIFIED)
+            .value("OMIT", DAQPolicy::OMIT)
+            .value("SAVE", DAQPolicy::SAVE)
+            ;
 
     {
         bp::enum_<MetricPrefixType>("MetricPrefix")
@@ -1958,6 +1964,10 @@ void exportPyUtilSchema() {
         s.def("setDaqDataType", &Schema::setDaqDataType, (bp::arg("path"), bp::arg("dataType")));
         s.def("getDaqDataType", &Schema::getDaqDataType, (bp::arg("path")));
         s.def("hasDaqDataType", &Schema::hasDaqDataType, (bp::arg("path")));
+        s.def("setDAQPolicy", &Schema::setDAQPolicy, (bp::arg("path"), bp::arg("policy")));
+        s.def("getDAQPolicy", &Schema::getDAQPolicy, (bp::arg("path")));
+        s.def("hasDAQPolicy", &Schema::hasDAQPolicy, (bp::arg("path")));
+        s.def("setDefaultDAQPolicy", &Schema::setDefaultDAQPolicy, (bp::arg("policy")));
         s.def("isCustomNode", &Schema::isCustomNode, (bp::arg("path")));
         s.def("getCustomNodeClass", &Schema::getCustomNodeClass, (bp::arg("path")),
               bp::return_value_policy< bp::copy_const_reference >());
