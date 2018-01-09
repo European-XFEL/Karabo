@@ -1,10 +1,11 @@
 from PyQt4.QtCore import Qt
 
+from karabo.common.api import (
+    KARABO_SCHEMA_DISPLAY_TYPE, KARABO_SCHEMA_ROW_SCHEMA)
 from karabo.middlelayer import Configurable, Bool, String, Hash, encodeXML
 from karabogui.binding.api import (
     BindingNamespace, BindingRoot, BoolBinding, DeviceClassProxy,
     ListOfNodesBinding, PropertyProxy, StringBinding, TableBinding,
-    KARABO_SCHEMA_DISPLAY_TYPE, KARABO_SCHEMA_ROW_SCHEMA
 )
 from karabogui.testing import GuiTestCase, set_proxy_value
 from ..runconfigurator import RunConfiguratorEdit, NODE_CLASS_NAME

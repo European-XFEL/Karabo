@@ -12,9 +12,10 @@ from PyQt4.QtGui import (
     QStyledItemDelegate, QValidator, QWidget
 )
 
+from karabo.common.api import KARABO_EDITABLE_ATTRIBUTES
 from karabo.middlelayer import DaqPolicy, MetricPrefix, Unit
 from karabogui.binding.api import (
-    IntBinding, PropertyProxy, VectorHashBinding, KARABO_EDITABLE_ATTRIBUTES)
+    IntBinding, PropertyProxy, VectorHashBinding)
 from karabogui.controllers.api import get_compatible_controllers
 from .dialog.table_edit import TableEditDialog
 from .utils import (

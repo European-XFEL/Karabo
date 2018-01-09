@@ -10,16 +10,18 @@ from PyQt4.QtCore import pyqtSignal, pyqtSlot, QRect, Qt
 from PyQt4.QtGui import (QAbstractItemDelegate, QAbstractItemView, QAction,
                          QCursor, QMenu, QTreeView)
 
-from karabogui import icons
-from karabogui.alarms.api import ALARM_LOW, ALARM_HIGH, WARN_LOW, WARN_HIGH
-from karabogui.binding.api import (
-    BaseBinding, DeviceProxy, PropertyProxy, VectorHashBinding,
+from karabo.common.api import (
     KARABO_SCHEMA_ALIAS, KARABO_SCHEMA_DESCRIPTION,
     KARABO_SCHEMA_DEFAULT_VALUE, KARABO_SCHEMA_DISPLAY_TYPE,
     KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MAX_INC,
     KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MAX_EXC,
     KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_UNIT_SYMBOL,
     KARABO_SCHEMA_TAGS, KARABO_SCHEMA_DAQ_POLICY
+)
+from karabogui import icons
+from karabogui.alarms.api import ALARM_LOW, ALARM_HIGH, WARN_LOW, WARN_HIGH
+from karabogui.binding.api import (
+    BaseBinding, DeviceProxy, PropertyProxy, VectorHashBinding,
 )
 from karabogui.events import (
     KaraboEventSender, register_for_broadcasts, unregister_from_broadcasts)

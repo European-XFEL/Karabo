@@ -1,13 +1,13 @@
 from nose.tools import assert_raises
 from traits.api import TraitError
 
+from karabo.common.api import KARABO_SCHEMA_ABSOLUTE_ERROR
 from karabo.middlelayer import Hash
 from ..api import (
     BindingNamespace, BindingRoot, ChoiceOfNodesBinding, FloatBinding,
     Int32Binding, ListOfNodesBinding, NodeBinding,
     apply_configuration, apply_default_configuration,
     build_binding, extract_configuration, extract_attribute_modifications,
-    KARABO_SCHEMA_ABSOLUTE_ERROR
 )
 from ..recursive import duplicate_binding
 from .schema import get_recursive_schema
