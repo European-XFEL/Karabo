@@ -8,10 +8,9 @@ from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import QAction, QInputDialog, QLabel
 from traits.api import Instance, Str, on_trait_change
 
-from karabo.common.api import State
+from karabo.common.api import State, KARABO_SCHEMA_DISPLAY_TYPE
 from karabo.common.scenemodel.api import SingleBitModel
-from karabogui.binding.api import (
-    IntBinding, get_min_max, KARABO_SCHEMA_DISPLAY_TYPE)
+from karabogui.binding.api import IntBinding, get_min_max
 from karabogui.controllers.api import (
     BaseBindingController, add_unit_label, register_binding_controller)
 from karabogui.indicators import STATE_COLORS

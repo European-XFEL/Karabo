@@ -7,11 +7,12 @@ from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import QDial, QSlider
 from traits.api import Instance
 
+from karabo.common.api import (
+    KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MIN_EXC,
+    KARABO_SCHEMA_MIN_INC)
 from karabo.common.scenemodel.api import KnobModel, SliderModel
 from karabogui.binding.api import (
     FloatBinding, IntBinding, get_editor_value, get_min_max,
-    KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MIN_EXC,
-    KARABO_SCHEMA_MIN_INC
 )
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)

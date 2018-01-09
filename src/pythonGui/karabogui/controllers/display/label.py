@@ -10,13 +10,15 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QFrame, QLabel
 from traits.api import Instance, Str, Tuple
 
-from karabo.common.scenemodel.api import DisplayLabelModel
-from karabogui.alarms.api import ALARM_COLOR, WARN_COLOR
-from karabogui.binding.api import (
-    CharBinding, ComplexBinding, FloatBinding, IntBinding, StringBinding,
+from karabo.common.api import (
     KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_WARN_HIGH, KARABO_WARN_LOW,
     KARABO_SCHEMA_ABSOLUTE_ERROR, KARABO_SCHEMA_DISPLAY_TYPE,
     KARABO_SCHEMA_RELATIVE_ERROR
+)
+from karabo.common.scenemodel.api import DisplayLabelModel
+from karabogui.alarms.api import ALARM_COLOR, WARN_COLOR
+from karabogui.binding.api import (
+    CharBinding, ComplexBinding, FloatBinding, IntBinding, StringBinding
 )
 from karabogui.const import FINE_COLOR, WIDGET_MIN_HEIGHT
 from karabogui.controllers.api import (

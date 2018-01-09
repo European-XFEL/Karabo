@@ -9,8 +9,8 @@ import json
 from PyQt4.QtCore import pyqtSlot, Qt, QAbstractTableModel, QModelIndex
 from PyQt4.QtGui import QTableView, QComboBox, QItemDelegate
 
+from karabo.common.api import KARABO_SCHEMA_VALUE_TYPE
 from karabo.middlelayer import AccessMode, Hash
-from karabogui.binding.api import KARABO_SCHEMA_VALUE_TYPE
 from karabogui.enums import NavigationItemTypes
 
 

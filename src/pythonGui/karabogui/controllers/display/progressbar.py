@@ -7,12 +7,12 @@ from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import QAction, QProgressBar
 from traits.api import Bool, Float, Instance, Tuple
 
+from karabo.common.api import (
+    KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MIN_EXC,
+    KARABO_SCHEMA_MIN_INC)
 from karabo.common.scenemodel.api import DisplayProgressBarModel
 from karabogui import messagebox
-from karabogui.binding.api import (
-    FloatBinding, IntBinding, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
-    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC
-)
+from karabogui.binding.api import FloatBinding, IntBinding
 from karabogui.const import WIDGET_MIN_HEIGHT
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)

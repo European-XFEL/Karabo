@@ -8,12 +8,13 @@ from PyQt4.QtCore import Qt, QRectF
 from PyQt4.QtGui import QColor, QLabel, QPainter, QPainterPath, QPixmap, QPen
 from traits.api import Instance
 
+from karabo.common.api import (
+    KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_WARN_HIGH,
+    KARABO_WARN_LOW)
 from karabo.common.scenemodel.api import AnalogModel
 from karabogui import messagebox
 from karabogui.alarms.api import ALARM_COLOR, NORM_COLOR, WARN_COLOR
-from karabogui.binding.api import (
-    FloatBinding, KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_WARN_HIGH,
-    KARABO_WARN_LOW)
+from karabogui.binding.api import FloatBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 
