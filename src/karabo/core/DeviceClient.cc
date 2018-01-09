@@ -1767,6 +1767,15 @@ if (nodeData) {\
 
             for (vector<string>::const_iterator it = params.begin(); it != params.end(); ++it) {
                 const string& path = *it;
+                
+                // skip all parameters with DAQ policy OMIT
+                if (schemaHash.hasAttribute(path, KARABO_SCHEMA_DAQ_POLICY)) {
+                    const DAQPolicy& daqPolicy = static_cast<DAQPolicy>(schemaHash.getAttribute<int>(path, KARABO_SCHEMA_DAQ_POLICY));
+                    if(daqPolicy == DAQPolicy::OMIT) {
+                        KARABO_LOG_FRAMEWORK_DEBUG << "FILTER OUT: PATH='" << path << "', daqPolicy=" << daqPolicy;
+                        continue;
+                    }
+                }
 
                 // Get accessMode
                 int accessMode = INIT;

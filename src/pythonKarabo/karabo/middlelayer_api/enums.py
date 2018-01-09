@@ -155,3 +155,12 @@ class EncodingType(IntEnum):
     PNG = 9
     BMP = 10
     TIFF = 11
+
+
+@unique
+class DaqPolicy(IntEnum):
+    """DAQ storage policy
+    """
+    UNSPECIFIED = -1
+    OMIT = 0
+    SAVE = 1

@@ -471,6 +471,10 @@ public:
 .def("tags"\
 , (T & (T::*)(std::vector<std::string> const &))(&T::tags)\
 , (bp::arg("tags"))\
+, bp::return_internal_reference<> ())\
+.def("daqPolicy"\
+, (T & (T::*)(karabo::util::DAQPolicy const &))(&T::daqPolicy)\
+, (bp::arg("daqPolicy"))\
 , bp::return_internal_reference<> ())
 
 

@@ -12,7 +12,7 @@ from PyQt4.QtGui import (
     QStyledItemDelegate, QValidator, QWidget
 )
 
-from karabo.middlelayer import MetricPrefix, Unit
+from karabo.middlelayer import DaqPolicy, MetricPrefix, Unit
 from karabogui.binding.api import (
     IntBinding, PropertyProxy, VectorHashBinding, KARABO_EDITABLE_ATTRIBUTES)
 from karabogui.controllers.api import get_compatible_controllers
@@ -287,6 +287,11 @@ class MetricPrefixAttributeEditor(EnumAttributeEditor):
     enum_klass = MetricPrefix
 
 
+class DaqPolicyAttributeEditor(EnumAttributeEditor):
+    """An EnumAttributeEditor for DaqPolicy values."""
+    enum_klass = DaqPolicy
+
+
 class IntValidator(QValidator):
     def validate(self, input, pos):
         if input in ('+', '-', ''):
@@ -348,3 +353,4 @@ _ATTR_EDITOR_FACTORIES = {name: NumberAttributeEditor
                           for name in KARABO_EDITABLE_ATTRIBUTES}
 _ATTR_EDITOR_FACTORIES['metricPrefixSymbol'] = MetricPrefixAttributeEditor
 _ATTR_EDITOR_FACTORIES['unitSymbol'] = UnitAttributeEditor
+_ATTR_EDITOR_FACTORIES['daqPolicy'] = DaqPolicyAttributeEditor

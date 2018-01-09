@@ -69,6 +69,15 @@ namespace karabo {
             PULSEMASTER  = 10,
             TRAINMASTER  = 11,
         };
+        
+        /**
+        * An enum specifying the DAQ storage policy
+        */
+        enum DAQPolicy {
+            UNSPECIFIED = -1,
+            OMIT = 0,
+            SAVE = 1,                
+        };
 
         /**
          * The Schema class correlates to the Hash class like an XML Schema document correlates to an XML document.
@@ -140,6 +149,8 @@ namespace karabo {
 #define KARABO_RUNTIME_SCHEMA_UPDATE "runtimeSchemaUpdates"
 
 #define KARABO_SCHEMA_DAQ_DATA_TYPE "daqDataType"
+            
+#define KARABO_SCHEMA_DAQ_POLICY "daqPolicy"
 
             // Grant friendship to the GenericElement
             // GenericElement is the base class for all schema build-up helper classes
@@ -159,6 +170,8 @@ namespace karabo {
 
             // Indices
             std::map<std::string, std::string> m_aliasToKey;
+            
+            DAQPolicy m_defaultDAQPolicy;
 
         public:
 
@@ -239,6 +252,8 @@ namespace karabo {
                 EXPERT,
                 ADMIN
             };
+            
+            
 
         public:
 
@@ -1669,6 +1684,46 @@ namespace karabo {
              * @param path of custom node element
              */
             const std::string& getCustomNodeClass(const std::string& path) const;
+            
+            //**********************************************
+            //               daqPolicy                     *
+            //**********************************************
+
+            /**
+             * Set the DAQ policy for the element identified by path
+             * @param path
+             * @param value
+             */
+            void setDAQPolicy(const std::string& path, const DAQPolicy& value);
+
+            /**
+             * Check if the element identified by path has an DAQ policy set
+             * @param path
+             * @return 
+             */
+            bool hasDAQPolicy(const std::string& path) const;
+
+            /**
+             * Get the DAQ policy for the element identified by path.
+             * @param path
+             * @return maps to the Schema::DAQPolicy enum
+             */
+            DAQPolicy getDAQPolicy(const std::string& path) const;
+            
+            /**
+             * Set the default DAQ policy to use if not specified per element.
+             * Needs to be called at the very beginning of the expected parameter
+             * section.
+             * 
+             * @param policy
+             */
+            void setDefaultDAQPolicy(const DAQPolicy& value);
+            
+            /**
+             * Get the default DAQ policy to use if not specified per element
+             */
+            DAQPolicy getDefaultDAQPolicy() const;
+
 
         private: // functions
 
