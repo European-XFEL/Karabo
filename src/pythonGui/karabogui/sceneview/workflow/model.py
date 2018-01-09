@@ -4,9 +4,9 @@ from traits.api import (
     String, cached_property, on_trait_change
 )
 
+from karabo.common.api import KARABO_SCHEMA_DISPLAY_TYPE
 from karabo.common.scenemodel.api import WorkflowItemModel
-from karabogui.binding.api import (
-    NodeBinding, PropertyProxy, KARABO_SCHEMA_DISPLAY_TYPE)
+from karabogui.binding.api import NodeBinding, PropertyProxy
 from karabogui.singletons.api import get_topology
 from karabogui.topology.api import ProjectDeviceInstance
 from . import const

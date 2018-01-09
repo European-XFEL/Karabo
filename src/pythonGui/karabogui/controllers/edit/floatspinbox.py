@@ -3,9 +3,10 @@ from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import QAction, QDoubleSpinBox, QInputDialog
 from traits.api import Instance, on_trait_change
 
+from karabo.common.api import KARABO_SCHEMA_ABSOLUTE_ERROR
 from karabo.common.scenemodel.api import FloatSpinBoxModel
 from karabogui.binding.api import (
-    FloatBinding, get_editor_value, get_min_max, KARABO_SCHEMA_ABSOLUTE_ERROR)
+    FloatBinding, get_editor_value, get_min_max)
 from karabogui.const import WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH
 from karabogui.controllers.api import (
     BaseBindingController, add_unit_label, register_binding_controller)
