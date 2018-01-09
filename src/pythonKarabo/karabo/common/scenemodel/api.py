@@ -3,8 +3,8 @@ from .bases import (
     BaseDisplayEditableWidget, BaseLayoutData, BaseLayoutModel,
     BaseSceneObjectData, BaseShapeObjectData, BaseWidgetObjectData)
 from .const import (
-    NS_KARABO, NS_SVG, SCENE_FILE_VERSION, SCENE_MIN_HEIGHT, SCENE_MIN_WIDTH,
-    SceneTargetWindow)
+    DISPLAY_COMPONENT, EDITABLE_COMPONENT, NS_KARABO, NS_SVG, 
+    SCENE_FILE_VERSION, SCENE_MIN_HEIGHT, SCENE_MIN_WIDTH, SceneTargetWindow)
 from .exceptions import SceneReaderException, SceneWriterException
 from .io import read_scene, write_scene, write_single_model
 from .layouts import (
@@ -27,10 +27,11 @@ from .widgets.plot import LinePlotModel, PlotCurveModel, SparklineModel
 from .widgets.simple import (
     AnalogModel, BitfieldModel, CheckBoxModel, ChoiceElementModel,
     ComboBoxModel, DirectoryModel, DisplayCommandModel, DisplayLabelModel,
-    DisplayPlotModel, DisplayTextLogModel, EditableListElementModel,
-    EditableListModel, EditableSpinBoxModel, FileInModel, FileOutModel,
-    HexadecimalModel, IntLineEditModel, KnobModel, LabelModel, LampModel,
-    LineEditModel, MultiCurvePlotModel, PopUpModel, RunConfiguratorModel,
-    SceneLinkModel, SliderModel, WorkflowItemModel, XYPlotModel)
+    DisplayListModel, DisplayPlotModel, DisplayTextLogModel,
+    EditableListElementModel, EditableListModel, EditableSpinBoxModel,
+    FileInModel, FileOutModel, HexadecimalModel, IntLineEditModel, KnobModel,
+    LabelModel, LampModel, LineEditModel, MultiCurvePlotModel, PopUpModel,
+    RunConfiguratorModel, SceneLinkModel, SliderModel, WorkflowItemModel,
+    XYPlotModel)
 from .widgets.vacuum import VacuumWidgetModel
 from .widgets.statefulicon import StatefulIconWidgetModel
