@@ -1,7 +1,7 @@
 import importlib
 import os
 
-from karabogui.binding.api import (
+from karabo.common.api import (
     KARABO_SCHEMA_DISPLAYED_NAME, KARABO_SCHEMA_DISPLAY_TYPE)
 
 

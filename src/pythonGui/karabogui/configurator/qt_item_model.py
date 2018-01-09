@@ -10,14 +10,14 @@ from PyQt4.QtGui import QBrush, QColor, QFont
 from traits.api import Undefined
 
 from karabo.middlelayer import AccessMode, Assignment
-from karabo.common.api import State
+from karabo.common.api import (
+    State, KARABO_SCHEMA_ALLOWED_STATES, KARABO_SCHEMA_DISPLAYED_NAME,
+    KARABO_SCHEMA_DISPLAY_TYPE, KARABO_WARN_LOW, KARABO_WARN_HIGH,
+    KARABO_ALARM_LOW, KARABO_ALARM_HIGH)
 from karabogui.binding.api import (
     BaseBinding, BindingRoot, ChoiceOfNodesBinding, DeviceClassProxy,
     DeviceProxy, ImageBinding, ListOfNodesBinding, NodeBinding,
     ProjectDeviceProxy, PropertyProxy, SlotBinding, has_changes,
-    KARABO_SCHEMA_ALLOWED_STATES, KARABO_SCHEMA_DISPLAYED_NAME,
-    KARABO_SCHEMA_DISPLAY_TYPE, KARABO_WARN_LOW, KARABO_WARN_HIGH,
-    KARABO_ALARM_LOW, KARABO_ALARM_HIGH
 )
 from karabogui.const import (
     OK_COLOR, ERROR_COLOR_ALPHA, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR)
