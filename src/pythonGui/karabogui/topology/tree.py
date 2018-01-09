@@ -78,14 +78,22 @@ class SystemTreeNode(HasStrictTraits):
     def append_alarm_type(self, dev_property, alarm_type):
         """Append given ``alarm_type`` to dict and update list with device
         properties
+
+        returns whether the maximum alarm level has changed
         """
+        pre_change = self.alarm_info.alarm_type
         self.alarm_info.append_alarm_type(dev_property, alarm_type)
+        return pre_change != self.alarm_info.alarm_type
 
     def remove_alarm_type(self, dev_property, alarm_type):
         """Remove given ``dev_property`` with ``alarm_type`` from dict list
         or remove ``alarm_type`` from dict
+
+        returns whether the maximum alarm level has changed
         """
+        pre_change = self.alarm_info.alarm_type
         self.alarm_info.remove_alarm_type(dev_property, alarm_type)
+        return pre_change != self.alarm_info.alarm_type
 
     @on_trait_change('children[]')
     def _register_clear_cache(self):
