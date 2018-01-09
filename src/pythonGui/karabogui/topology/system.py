@@ -394,23 +394,23 @@ class SystemTopology(HasStrictTraits):
         """
         update_types = alarm_data.get('update_types')
         alarm_entries = alarm_data.get('alarm_entries')
+        # Only update system tree if the maximum alarm level has changed for
+        # any device, avoiding unnecessary repaint of the system tree.
+        needs_update = False
 
-        def visitor(node):
-            if node.attributes.get('type') != 'device':
-                return
+        for up_type, alarm_entry in zip(update_types, alarm_entries):
+            node = self.system_tree.get_instance_node(alarm_entry.deviceId)
+            if node is not None:
+                if up_type in ADD_ALARM_TYPES:
+                    needs_update |= node.append_alarm_type(
+                        alarm_entry.property, alarm_entry.type)
+                elif up_type in REMOVE_ALARM_TYPES:
+                    needs_update |= node.remove_alarm_type(
+                        alarm_entry.property, alarm_entry.type)
 
-            for up_type, alarm_entry in zip(update_types, alarm_entries):
-                if node.node_id == alarm_entry.deviceId:
-                    if up_type in ADD_ALARM_TYPES:
-                        node.append_alarm_type(alarm_entry.property,
-                                               alarm_entry.type)
-                    elif up_type in REMOVE_ALARM_TYPES:
-                        node.remove_alarm_type(alarm_entry.property,
-                                               alarm_entry.type)
-
-        self.visit_system_tree(visitor)
         # NOTE: this should actually be called in the system_tree itself
-        self.system_tree.needs_update = True
+        if needs_update:
+            self.system_tree.needs_update = True
 
     # ---------------------------------------------------------------------
     # Utilities
