@@ -42,6 +42,10 @@ namespace karabo {
             LeafElement(Schema& expected) : GenericElement<Derived>(expected) {
                 m_defaultValue.setElement(static_cast<Derived*> (this));
                 m_readOnlySpecific.setElement(static_cast<Derived*> (this));
+                
+                // set the default DAQ policy
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_DAQ_POLICY, expected.getDefaultDAQPolicy());
+                
             }
 
             /**
@@ -191,6 +195,16 @@ namespace karabo {
                 this->m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, ValueType());
                 return m_readOnlySpecific;
             }
+            
+            /**
+             * The <b>daqPolicy</b> sets the DAQ policy for a parameter.
+             * @return reference to the Element (to allow method's chaining)
+             */
+            virtual Derived& daqPolicy(const DAQPolicy& policy) {
+                this->m_node->template setAttribute<int>(KARABO_SCHEMA_DAQ_POLICY, policy);
+                return *(static_cast<Derived*> (this));
+            }
+            
         };
 
         /**

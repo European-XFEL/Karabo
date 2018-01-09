@@ -3,6 +3,7 @@
 # Created on September 26, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+import enum
 import os
 import os.path as op
 
@@ -11,15 +12,20 @@ from karabo.bound import (
     TextSerializerSchema,
     ADMIN, EXPERT, KARABO_CLASSINFO,
     BOOL_ELEMENT, OVERWRITE_ELEMENT, NODE_ELEMENT, SLOT_ELEMENT,
-    STRING_ELEMENT, TABLE_ELEMENT, VECTOR_STRING_ELEMENT
+    STRING_ELEMENT, TABLE_ELEMENT, VECTOR_STRING_ELEMENT, UINT32_ELEMENT
 )
 from karabo.common.scenemodel.api import (
     BoxLayoutModel, DisplayCommandModel, FixedLayoutModel, LabelModel,
-    LineEditModel, SceneModel, TableElementModel, write_scene
+    LineEditModel, SceneModel, TableElementModel, write_scene,
 )
 
 OUTPUT_CHANNEL_SEPARATOR = ':'
 SAVED_GROUPS_DIR = 'run_config_groups'
+
+class AccessMode(enum.Enum):
+    INIT = 1 << 0
+    READ = 1 << 1
+    WRITE = 1 << 2
 
 
 @KARABO_CLASSINFO('RunControlDataSource', '2.2')
@@ -39,6 +45,13 @@ class RunControlDataSource(object):
                          "SASE1/SPB/SAMP/INJ_CAM_1")
             .assignmentOptional().defaultValue('Source')
             .reconfigurable()
+            .commit(),
+
+            UINT32_ELEMENT(expected).key("nProperties")
+            .displayedName("#")
+            .description("Number of properties to record for this source")
+            .readOnly()
+            .initialValue(0)
             .commit(),
 
             STRING_ELEMENT(expected).key('type')
@@ -246,7 +259,22 @@ class RunConfigurationGroup(PythonDevice):
                     if _findDataSource(currentSources, fullName) is None:
                         # Existing device still missing output channel
                         retSources.append(_buildSource(fullName))
+
+        self._updateNProperties(retSources)
         return retSources
+
+    def _updateNProperties(self, sources):
+        for source in sources:
+            sourceId = source.get("source")
+            behavior = source.get("behavior")
+            accessMode = AccessMode.INIT.value
+            if behavior == "init":
+                accessMode |= AccessMode.READ.value
+            elif behavior == "record-all":
+                accessMode |= (AccessMode.READ.value | AccessMode.WRITE.value)
+
+            props = self.remote().getDataSourceSchemaAsHash(sourceId, accessMode)
+            source.set("nProperties", len(props.getPaths()))
 
 
 def _buildSource(name):

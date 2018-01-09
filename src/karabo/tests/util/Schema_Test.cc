@@ -860,3 +860,52 @@ void Schema_Test::testDaqDataType(){
     }
 }
 
+void Schema_Test::testDaqPolicy() {
+    // legacy behavior: save everything if not specified otherwise
+    {
+        Schema schema;
+        STRING_ELEMENT(schema).key("string1")
+                .daqPolicy(DAQPolicy::SAVE)
+                .readOnly()
+                .commit();
+
+        STRING_ELEMENT(schema).key("string2")
+                .daqPolicy(DAQPolicy::OMIT)
+                .readOnly()
+                .commit();
+
+        STRING_ELEMENT(schema).key("string3")
+                .readOnly()
+                .commit();
+        
+        CPPUNIT_ASSERT(schema.getDAQPolicy("string1") == DAQPolicy::SAVE);
+        CPPUNIT_ASSERT(schema.getDAQPolicy("string2") == DAQPolicy::OMIT);
+        CPPUNIT_ASSERT(schema.getDAQPolicy("string3") == DAQPolicy::UNSPECIFIED);
+    }
+    
+    // according to specified default policy
+    {
+        Schema schema;
+        schema.setDefaultDAQPolicy(DAQPolicy::OMIT);
+        STRING_ELEMENT(schema).key("string1")
+                .daqPolicy(DAQPolicy::SAVE)
+                .readOnly()
+                .commit();
+
+        STRING_ELEMENT(schema).key("string2")
+                .daqPolicy(DAQPolicy::OMIT)
+                .readOnly()
+                .commit();
+
+        STRING_ELEMENT(schema).key("string3")
+                .readOnly()
+                .commit();
+        
+        CPPUNIT_ASSERT(schema.getDAQPolicy("string1") == DAQPolicy::SAVE);
+        CPPUNIT_ASSERT(schema.getDAQPolicy("string2") == DAQPolicy::OMIT);
+        CPPUNIT_ASSERT(schema.getDAQPolicy("string3") == DAQPolicy::OMIT);
+    }
+        
+    
+}
+
