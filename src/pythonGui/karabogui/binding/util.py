@@ -1,6 +1,7 @@
 import numbers
 
 import numpy as np
+from traits.api import Undefined
 
 from karabo.common import const
 from karabo.middlelayer import Hash, Schema
@@ -50,6 +51,18 @@ def get_editor_value(property_proxy):
     value = property_proxy.edit_value
     if value is None:
         value = property_proxy.value
+    if value is Undefined:
+        binding = property_proxy.binding
+        if isinstance(binding, types.VectorNumberBinding):
+            return np.array([])
+        elif isinstance(binding, types.VectorCharBinding):
+            return b''
+        elif isinstance(binding, types.VectorBinding):
+            return []
+        elif isinstance(binding, types.StringBinding):
+            return ''
+        else:
+            return None
     return value
 
 
