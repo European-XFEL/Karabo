@@ -1,13 +1,13 @@
 from PyQt4.QtGui import QLabel
 from traits.api import Dict, Instance, Int, Str
 
-from karabo.common.api import DeviceStatus, State
+from karabo.common.api import DeviceStatus, State, KARABO_SCHEMA_DISPLAYED_NAME
 from karabo.common.scenemodel.api import BaseWidgetObjectData
 from karabo.middlelayer import (
     Bool, Configurable, Hash, Node, String, AccessMode)
 from karabogui.binding.api import (
     DeviceClassProxy, NodeBinding, PropertyProxy, StringBinding,
-    apply_configuration, build_binding, KARABO_SCHEMA_DISPLAYED_NAME)
+    apply_configuration, build_binding)
 from karabogui.testing import GuiTestCase, flushed_registry, set_proxy_value
 from ..base import BaseBindingController
 from ..registry import register_binding_controller
