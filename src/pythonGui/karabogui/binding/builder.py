@@ -1,5 +1,5 @@
+from karabo.common import const
 from karabo.middlelayer import Hash, NodeType, Schema
-from . import const
 from . import recursive
 from . import types
 from .util import fast_deepcopy

@@ -4,10 +4,10 @@ from traits.api import (
     HasStrictTraits, Any, Bool, DelegatesTo, Enum, Event, Instance, Int,
     Property, String, Tuple, WeakRef, on_trait_change)
 
+from karabo.common import const
 from karabo.common.api import DeviceStatus, ONLINE_STATUSES
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.singletons.api import get_network, get_topology
-from . import const
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .types import BaseBinding, BindingRoot, PipelineOutputBinding, SlotBinding
 

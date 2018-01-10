@@ -35,10 +35,11 @@ from PyQt4.QtCore import pyqtSlot, Qt, QModelIndex, QPoint, QTimer
 from PyQt4.QtGui import QAbstractItemView, QMenu, QStyledItemDelegate
 from traits.api import Bool, Instance, Int, on_trait_change
 
+from karabo.common.api import KARABO_SCHEMA_ROW_SCHEMA
 from karabo.common.scenemodel.api import TableElementModel
 from karabo.middlelayer import Hash, SchemaHashType
 from karabogui.binding.api import (
-    VectorHashBinding, get_editor_value, KARABO_SCHEMA_ROW_SCHEMA)
+    VectorHashBinding, get_editor_value)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.controllers.tableeditor import (
