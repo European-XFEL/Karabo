@@ -10,9 +10,9 @@ from guiqwt.builder import make
 from numpy import arange
 from traits.api import Dict, Instance
 
+from karabo.common.api import KARABO_SCHEMA_DISPLAYED_NAME
 from karabo.common.scenemodel.api import DisplayPlotModel
-from karabogui.binding.api import (
-    VectorNumberBinding, KARABO_SCHEMA_DISPLAYED_NAME)
+from karabogui.binding.api import VectorNumberBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 

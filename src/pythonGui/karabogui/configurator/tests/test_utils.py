@@ -1,10 +1,9 @@
 import json
 
+from karabo.common.api import (
+    KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_UNIT_SYMBOL)
 from karabo.middlelayer import AccessMode, Configurable, Int8, String, Unit
 from karabogui import icons
-from karabogui.binding.api import (
-    KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_UNIT_SYMBOL
-)
 from karabogui.testing import GuiTestCase, get_class_property_proxy
 from ..utils import (
     dragged_configurator_items, get_child_names, get_icon)

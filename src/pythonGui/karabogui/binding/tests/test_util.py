@@ -2,14 +2,16 @@ import sys
 
 import numpy as np
 
+from karabo.common.api import (
+    KARABO_SCHEMA_VALUE_TYPE, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
+    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_ABSOLUTE_ERROR,
+    KARABO_SCHEMA_RELATIVE_ERROR
+)
 from karabo.middlelayer import Hash, Schema
 from ..api import (
     BoolBinding, FloatBinding, Int8Binding, Int16Binding, Int32Binding,
     Int64Binding, Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
-    VectorInt32Binding, fast_deepcopy, get_min_max, has_changes,
-    KARABO_SCHEMA_VALUE_TYPE, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
-    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_ABSOLUTE_ERROR,
-    KARABO_SCHEMA_RELATIVE_ERROR
+    VectorInt32Binding, fast_deepcopy, get_min_max, has_changes
 )
 
 

@@ -2,8 +2,8 @@ import numbers
 
 import numpy as np
 
+from karabo.common import const
 from karabo.middlelayer import Hash, Schema
-from . import const
 from . import types
 
 

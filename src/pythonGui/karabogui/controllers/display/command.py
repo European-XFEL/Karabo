@@ -3,10 +3,10 @@ from collections import namedtuple
 from PyQt4.QtGui import QAction, QStackedLayout, QToolButton, QWidget
 from traits.api import Instance, List
 
-from karabo.common.api import State
+from karabo.common.api import State, KARABO_SCHEMA_DISPLAYED_NAME
 from karabo.common.scenemodel.api import DisplayCommandModel
 from karabogui import globals as krb_globals
-from karabogui.binding.api import SlotBinding, KARABO_SCHEMA_DISPLAYED_NAME
+from karabogui.binding.api import SlotBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 

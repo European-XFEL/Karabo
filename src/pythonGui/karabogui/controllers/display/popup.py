@@ -5,10 +5,11 @@ from PyQt4.QtGui import QMessageBox
 from PyQt4.QtSvg import QSvgWidget
 from traits.api import Instance
 
+from karabo.common.api import KARABO_SCHEMA_DISPLAYED_NAME
 from karabo.common.scenemodel.api import PopUpModel
 from karabo.middlelayer import Timestamp
 from karabogui.binding.api import (
-    PropertyProxy, SlotBinding, StringBinding, KARABO_SCHEMA_DISPLAYED_NAME)
+    PropertyProxy, SlotBinding, StringBinding)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 

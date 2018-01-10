@@ -4,9 +4,9 @@ from traits.api import (
     Undefined
 )
 
+from karabo.common import const
 from karabo.middlelayer import (AccessLevel, AccessMode, Assignment, Hash,
                                 State, Timestamp)
-from . import const
 
 KEY_ACCMODE = const.KARABO_SCHEMA_ACCESS_MODE
 KEY_ASSIGNMENT = const.KARABO_SCHEMA_ASSIGNMENT
