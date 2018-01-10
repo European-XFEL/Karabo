@@ -45,6 +45,11 @@ class ProjectDeviceInstance(HasStrictTraits):
     _offline_config = Instance(Hash)
     _deferred_update = Bool(False)
 
+    # An event indicates there are changes in offline configurations so
+    # the project should prompt for save
+    save_project = DelegatesTo('_offline_proxy',
+                               prefix='binding.config_update')
+
     # Monitor count
     _monitor_count = Int(0)
 
