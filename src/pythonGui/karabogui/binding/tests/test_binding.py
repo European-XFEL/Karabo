@@ -4,6 +4,10 @@ import os.path as op
 
 import numpy as np
 
+from karabo.common.api import (
+    KARABO_SCHEMA_METRIC_PREFIX_ENUM, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
+    KARABO_SCHEMA_UNIT_ENUM, KARABO_SCHEMA_UNIT_SYMBOL, KARABO_ALARM_LOW
+)
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Hash, MetricPrefix, Schema, State,
     Unit, decodeBinary
@@ -22,8 +26,6 @@ from ..api import (
     VectorUint64Binding,
     apply_configuration, apply_default_configuration, build_binding,
     extract_attribute_modifications, extract_configuration, flat_iter_hash,
-    KARABO_SCHEMA_METRIC_PREFIX_ENUM, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
-    KARABO_SCHEMA_UNIT_ENUM, KARABO_SCHEMA_UNIT_SYMBOL, KARABO_ALARM_LOW
 )
 from .schema import get_all_props_schema, get_vectorattr_schema
 
