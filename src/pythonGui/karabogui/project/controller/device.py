@@ -165,14 +165,15 @@ class DeviceInstanceController(BaseProjectGroupController):
 
         self._update_check_state()
 
-    @on_trait_change('project_device:proxy.binding.config_update')
+    @on_trait_change('project_device:save_project')
     def _active_config_changed_in_configurator(self):
-        """Called whenever project device current configuration is changed
+        """Called whenever project device's offline configuration is changed
         """
         if self.project_device.online:
             return
         config = self.active_config
         if config is not None:
+            # XXX: Get only non default configuration
             new_config = self.project_device.get_current_config_hash()
             config.configuration = new_config
 
