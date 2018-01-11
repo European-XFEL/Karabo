@@ -55,8 +55,11 @@ class ProjectDeviceInstance(HasStrictTraits):
 
     # Error flag of the online device proxy
     error = Bool(False)
-    # The status of this device, take into consider the error flag
-    status = Property(depends_on=['_online_proxy.online', 'error'])
+    # The status of this device, take into consider the error flag and
+    # offline proxy's status (server may be gone, status has to change
+    # accordingly)
+    status = Property(depends_on=['_online_proxy.online', 'error',
+                                  '_offline_proxy.status'])
 
     def __init__(self, device_id, server_id, class_id):
         super(ProjectDeviceInstance, self).__init__()
