@@ -12,8 +12,8 @@ from karabo.middlelayer import AccessMode
 from karabogui import globals as krb_globals, icons
 from karabogui.binding.api import (
     BindingRoot, BoolBinding, CharBinding, ChoiceOfNodesBinding,
-    IntBinding, FloatBinding, NodeBinding, StringBinding, VectorHashBinding,
-    get_editor_value)
+    IntBinding, FloatBinding, ListOfNodesBinding, NodeBinding, StringBinding,
+    VectorHashBinding, get_editor_value)
 from karabogui.controllers.api import get_compatible_controllers
 
 # The fixed height of rows in the configurator
@@ -136,6 +136,10 @@ def get_proxy_value(index, proxy, is_edit_col=False):
     binding = proxy.binding
     if isinstance(binding, ChoiceOfNodesBinding):
         return binding.choice or ''
+    if isinstance(binding, ListOfNodesBinding):
+        # Use the class_id to represent each node in the ListOfNodes
+        val = [rootnode.class_id for rootnode in binding.value]
+        return val
     if isinstance(binding, (BindingRoot, NodeBinding, VectorHashBinding)):
         return ''
 
