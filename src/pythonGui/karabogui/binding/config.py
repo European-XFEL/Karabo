@@ -65,8 +65,9 @@ def apply_default_configuration(binding):
                 yield from _iter_binding(subnode)
             if isinstance(subnode, ChoiceOfNodesBinding):
                 yield subnode
-                child = getattr(subnode.value, subnode.choice)
-                yield from _iter_binding(child)
+                for choice in subnode.choices:
+                    child = getattr(subnode.choices, choice)
+                    yield from _iter_binding(child)
             elif isinstance(subnode, ListOfNodesBinding):
                 yield subnode
                 for lnode in subnode.value:
