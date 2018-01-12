@@ -14,7 +14,6 @@ from traits.api import (
 
 from karabo.common.api import DeviceStatus
 from karabo.common.project.api import BaseProjectObjectModel
-from karabogui.project.utils import show_no_configuration
 
 
 class ProjectControllerUiData(HasStrictTraits):
@@ -158,9 +157,6 @@ class BaseProjectGroupController(BaseProjectController):
         """Return number of rows
         """
         return len(self.children)
-
-    def single_click(self, project_controller, parent=None):
-        show_no_configuration()
 
     def items_assigned(self, obj, name, old, new):
         """ Handles assignment to a list trait and passes the notification
