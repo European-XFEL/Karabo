@@ -173,9 +173,8 @@ class SystemTopology(HasStrictTraits):
             # Only fetch the schema if it's not already cached and server
             # exists and device plugin is installed
             if schema is None:
-                attrs = self._get_device_attributes(server_id)
-                has_plugin = (proxy.status != DeviceStatus.NOPLUGIN)
-                if attrs is not None and has_plugin:
+                if proxy.status not in (DeviceStatus.NOSERVER,
+                                        DeviceStatus.NOPLUGIN):
                     proxy.refresh_schema()
 
         return proxy
