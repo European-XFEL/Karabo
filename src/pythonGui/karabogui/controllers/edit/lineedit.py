@@ -8,15 +8,18 @@ from PyQt4.QtGui import QLineEdit
 from traits.api import Instance, Int
 
 from karabo.common.scenemodel.api import LineEditModel
-from karabogui.binding.api import CharBinding, StringBinding, get_editor_value
+from karabogui.binding.api import (
+    CharBinding, StringBinding, VectorCharBinding, get_editor_value)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.util import SignalBlocker
 
+BINDING_TYPES = (CharBinding, StringBinding, VectorCharBinding)
+
 
 @register_binding_controller(ui_name='Text Field', can_edit=True,
                              klassname='EditableLineEdit', priority=10,
-                             binding_type=(CharBinding, StringBinding))
+                             binding_type=BINDING_TYPES)
 class EditableLineEdit(BaseBindingController):
     # The scene model class used by this controlelr
     model = Instance(LineEditModel, args=())
