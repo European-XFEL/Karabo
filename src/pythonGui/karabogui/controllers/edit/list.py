@@ -5,7 +5,8 @@ from traits.api import Instance, Int
 from karabo.common.scenemodel.api import DisplayListModel, EditableListModel
 from karabogui import icons
 from karabogui.binding.api import (
-    VectorBinding, VectorHashBinding, VectorNoneBinding, get_editor_value)
+    VectorBinding, VectorCharBinding, VectorHashBinding, VectorNoneBinding,
+    get_editor_value)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.controllers.listedit import ListEdit
@@ -83,7 +84,7 @@ class _BaseListController(BaseBindingController):
 
 def _is_compatible(binding):
     """Don't allow editing of goofy vectors"""
-    prohibited = (VectorHashBinding, VectorNoneBinding)
+    prohibited = (VectorHashBinding, VectorNoneBinding, VectorCharBinding)
     return not isinstance(binding, prohibited)
 
 
