@@ -25,7 +25,8 @@ from ..api import (
     VectorUint8Binding, VectorUint16Binding, VectorUint32Binding,
     VectorUint64Binding,
     apply_configuration, apply_default_configuration, build_binding,
-    extract_attribute_modifications, extract_configuration, flat_iter_hash,
+    extract_attribute_modifications, extract_configuration, extract_edits,
+    flat_iter_hash
 )
 from .schema import get_all_props_schema, get_vectorattr_schema
 
@@ -141,6 +142,11 @@ def test_default_values():
     for prop in default_props:
         assert prop in config, '{!r} missing from config'.format(prop)
 
+    # Since no user edits, an empty Hash should have been extracted
+    # XXX: ListOfNodeBinding is always extracted
+    config = extract_edits(schema, binding)
+    assert config == Hash('j1', [])
+
 
 def test_apply_configuration():
     schema = get_all_props_schema()
@@ -157,13 +163,13 @@ def test_apply_configuration():
         apply_configuration(config, binding, notify=False)
     assert binding.value.a.value
 
-    config = Hash('a', True)
+    config = Hash('e', 0.5)
     # change one item in attributes and add a new item
-    attr = {'defaultValue': False, 'displayedName': 'A'}
-    config['a', ...] = attr
-    old_attrs = {k: v for k, v in binding.value.a.attributes.items()}
+    attr = {KARABO_SCHEMA_UNIT_SYMBOL: 'g', KARABO_ALARM_LOW: 0.0}
+    config['e', ...] = attr
+    old_attrs = {k: v for k, v in binding.value.e.attributes.items()}
     apply_configuration(config, binding, include_attributes=True)
-    new_attrs = {k: v for k, v in binding.value.a.attributes.items()}
+    new_attrs = {k: v for k, v in binding.value.e.attributes.items()}
     assert _dict_diff(old_attrs, new_attrs) == attr
 
     config = Hash('not', 'exist')
@@ -175,6 +181,21 @@ def test_apply_configuration():
     # bytes type value is converted to bytearray by traits handler
     apply_configuration(config, binding)
     assert binding.value.mm.value == bytearray(b'foo')
+
+
+def test_extract_edit():
+    schema = get_all_props_schema()
+    binding = build_binding(schema)
+    apply_default_configuration(binding)
+
+    # 'a' has default value == True, give 'e' an alarm low attribute
+    # XXX: j1 will always be extracted
+    config = Hash('a', False, 'e', 0.0, 'j1', [])
+    config['e', ...] = {KARABO_ALARM_LOW: 42.0}
+    apply_configuration(config, binding, include_attributes=True)
+
+    extracted = extract_edits(schema, binding)
+    assert extracted == config
 
 
 def test_attribute_modification():
