@@ -1,5 +1,5 @@
 from traits.api import (
-    HasStrictTraits, Array, Bool, Bytes, CArray, Complex, Dict, Enum, Event,
+    HasStrictTraits, Array, Bool, CArray, Complex, Dict, Enum, Event,
     Float, Instance, List, Property, Range, String, Trait, TraitHandler,
     Undefined
 )
@@ -300,8 +300,19 @@ class VectorBoolBinding(VectorNumberBinding):
     value = Array(dtype='bool')
 
 
+class _ByteHandler(TraitHandler):
+    """A trait handler to handle string to bytes conversion
+    """
+    def validate(self, obj, name, value):
+        if isinstance(value, bytes):
+            return value
+        elif isinstance(value, str):
+            return value.encode()
+        self.error(obj, name, value)
+
+
 class VectorCharBinding(VectorBinding):
-    value = Bytes
+    value = Trait(_ByteHandler())
 
 
 class VectorComplexDoubleBinding(VectorNumberBinding):
