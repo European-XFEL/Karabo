@@ -19,7 +19,6 @@ from karabogui.enums import KaraboSettings
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.project.dialog.object_handle import (
     ObjectDuplicateDialog, ObjectEditDialog)
-from karabogui.project.utils import show_no_configuration
 from karabogui.singletons.api import get_db_conn, get_panel_wrangler
 from karabogui.util import getSaveFileName, get_setting, set_setting
 from .bases import BaseProjectController, ProjectControllerUiData
@@ -57,9 +56,6 @@ class SceneController(BaseProjectController):
 
     def create_ui_data(self):
         return ProjectControllerUiData(icon=icons.image)
-
-    def single_click(self, project_controller, parent=None):
-        show_no_configuration()
 
     def double_click(self, project_controller, parent=None):
         broadcast_event(KaraboEventSender.ShowSceneView, {'model': self.model})
