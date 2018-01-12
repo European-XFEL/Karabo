@@ -6,7 +6,8 @@ from karabo.common import const
 from karabo.middlelayer import Hash, MetricPrefix, Timestamp, Unit
 from .proxy import PropertyProxy
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
-from .types import BindingNamespace, BindingRoot, NodeBinding, SlotBinding
+from .types import (BindingNamespace, BindingRoot, NodeBinding, SlotBinding,
+                    VectorHashBinding)
 from .util import fast_deepcopy
 
 
@@ -180,7 +181,9 @@ def extract_configuration(binding, include_attributes=False):
             subnode = getattr(namespace, name)
             if isinstance(subnode, NodeBinding):
                 yield from _iter_binding(subnode, base=subname)
-            elif not isinstance(subnode, SlotBinding):
+            elif not isinstance(subnode, (SlotBinding, VectorHashBinding)):
+                # XXX: Extract VectorHashBinding values has to be treated
+                # differently
                 yield subname, subnode
 
     retval = Hash()
