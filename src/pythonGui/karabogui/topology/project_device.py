@@ -12,7 +12,7 @@ from karabo.common.api import DeviceStatus, ONLINE_STATUSES
 from karabo.middlelayer import Hash
 from karabogui.binding.api import (
     BaseDeviceProxy, DeviceProxy, ProjectDeviceProxy,
-    apply_configuration, apply_default_configuration, extract_configuration
+    apply_configuration, apply_default_configuration, extract_edits
 )
 from karabogui.singletons.api import get_topology
 
@@ -66,12 +66,16 @@ class ProjectDeviceInstance(HasStrictTraits):
 
         self._init_object_state(device_id, server_id, class_id)
 
-    def get_current_config_hash(self):
-        """Extract a complete device config hash from the proxy
+    def get_user_edited_config_hash(self):
+        """Extract user edited values and attributes from the offline proxy
         """
-        if len(self.proxy.binding.value) > 0:
-            return extract_configuration(self.proxy.binding,
-                                         include_attributes=True)
+        topology = get_topology()
+        # To extract user edits we need a device schema to find default
+        # attribute values
+        schema = topology.get_schema(self.server_id, self.class_id)
+
+        if schema is not None and len(self._offline_proxy.binding.value) > 0:
+            return extract_edits(schema, self._offline_proxy.binding)
         return Hash()
 
     def rename(self, device_id='', server_id='', class_id=''):
