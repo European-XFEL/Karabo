@@ -11,8 +11,8 @@ from PyQt4.QtGui import (
 from karabo.middlelayer import AccessMode
 from karabogui import globals as krb_globals, icons, messagebox
 from karabogui.binding.api import (
-    DeviceProxy, ProjectDeviceProxy, apply_configuration,
-    extract_configuration, fast_deepcopy, flat_iter_hash, has_changes,
+    DeviceProxy, ProjectDeviceProxy, attr_fast_deepcopy, apply_configuration,
+    extract_configuration, flat_iter_hash, has_changes,
 )
 from karabogui.configurator.api import ConfigurationTreeView
 from karabogui.events import KaraboEventSender, register_for_broadcasts
@@ -242,7 +242,8 @@ class ConfigurationPanel(BasePanelWidget):
             for path, _, attrs in flat_iter_hash(configuration):
                 binding = proxy.get_property_binding(path)
                 if binding is not None:
-                    binding.update_attributes(fast_deepcopy(attrs))
+                    # only update editable attribute values
+                    binding.update_attributes(attr_fast_deepcopy(attrs, {}))
             # Notify again. XXX: Schema update too?
             proxy.binding.config_update = True
 

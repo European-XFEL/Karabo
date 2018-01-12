@@ -2,7 +2,7 @@
 from .builder import build_binding
 from .config import (
     apply_configuration, apply_default_configuration,
-    extract_attribute_modifications, extract_configuration,
+    extract_attribute_modifications, extract_configuration, extract_edits,
     extract_sparse_configurations
 )
 from .proxy import (
@@ -27,4 +27,5 @@ from .types import (
     VectorUint64Binding
 )
 from .util import (
-    fast_deepcopy, flat_iter_hash, get_editor_value, get_min_max, has_changes)
+    attr_fast_deepcopy, flat_iter_hash, get_editor_value, get_min_max,
+    has_changes, is_equal)
