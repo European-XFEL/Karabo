@@ -23,6 +23,18 @@ using namespace karabo::net;
 using namespace karabo::log;
 
 
+void printHelp(const char* execName) {
+    cout << "Log all messages of a given broker topic to standard output.\n" << endl;
+    cout << "Usage: " << execName << " [-h] [-t topic] [-b brokerUrl] [-s selection]\n" << endl;
+    cout << "  -h          : print this help and exit" << endl;
+    cout << "  -t topic    : broker topic - if not specified, use environment variables" << endl;
+    cout << "                KARABO_BROKER_TOPIC or USER in that order of precendence" << endl;
+    cout << "  -b brokerUrl: URL of broker, but environment variable KARABO_BROKER has" << endl;
+    cout << "                precedence - if neither option nor variable given, use" << endl;
+    cout << "                tcp://exfl-broker.desy.de:7777" << endl;
+    cout << "  -s selector : selector string, e.g. \"slotInstanceIds LIKE '%|deviceId|%'\"" << endl << endl;
+}
+
 void readHandler(const Hash::Pointer& header,
                  const Hash::Pointer& body) {
 
@@ -39,7 +51,14 @@ int main(int argc, char** argv) {
 
         // Parse command line
         Hash options;
-        for (int i = 1; i + 1 < argc; i+=2) {
+        for (int i = 1; i < argc; i += 2) {
+            const std::string argv_i(argv[i]);
+            if (argv_i == "-h" || argv[i - 1] == std::string("-h")
+                || argc <= i + 1
+                || (argv_i != "-b" && argv_i != "-t" && argv_i != "-s")) {
+                printHelp(argv[0]);
+                return 0;
+            };
             options.set<string>(argv[i], argv[i + 1]);
         }
         string brokerUrl("tcp://exfl-broker.desy.de:7777");
@@ -59,16 +78,19 @@ int main(int argc, char** argv) {
         Logger::configure(Hash("priority", "ERROR"));
         Logger::useOstream();
 
-        cout << "# Starting to consume messages..." << std::endl;
-        cout << "# Broker: " << brokerUrl << endl;
-        cout << "# Topic: " << topic << endl;
-        cout << "# Selector: " << selector << endl << endl;
+        cout << "# Trying to connect to broker '" << brokerUrl << "'...\n" << endl;
 
         // Create connection object
         JmsConnection::Pointer connection = boost::make_shared<JmsConnection>(brokerUrl);
 
         // Connect
         connection->connect();
+        brokerUrl = connection->getBrokerUrl(); // environment variable has precedence...
+
+        cout << "# Starting to consume messages..." << std::endl;
+        cout << "# Broker: " << brokerUrl << endl;
+        cout << "# Topic: " << topic << endl;
+        cout << "# Selector: " << selector << endl << endl;
 
         // Obtain consumer
         JmsConsumer::Pointer consumer = connection->createConsumer(topic, selector);
