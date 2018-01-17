@@ -1,4 +1,4 @@
-from traits.api import Instance, List, Property, Trait, TraitHandler
+from traits.api import Dict, Instance, List, Property, Trait, TraitHandler
 
 from karabo.middlelayer import Hash
 from .types import BaseBinding, BindingNamespace, BindingRoot, NodeBinding
@@ -18,6 +18,12 @@ class ChoiceOfNodesBinding(BaseBinding):
                        transient=True)
     # Private detail
     _value = Instance(BindingNamespace, transient=True)
+    # Visible children names {accesslevel: [names]}
+    children_names = Dict()
+
+    def _choice_changed(self):
+        # When the choice is changed, clear the children name cache
+        self.children_names = {}
 
     def __value_default(self):
         ns = BindingNamespace(item_type=BindingRoot)
@@ -93,6 +99,12 @@ class ListOfNodesBinding(BaseBinding):
     # Namespace of possible list values
     choices = Instance(BindingNamespace, kw={'item_type': BindingRoot},
                        transient=True)
+    # Visible children names {accesslevel: [names]}
+    children_names = Dict()
+
+    def _value_changed(self):
+        # When the value is changed, clear the children name cache
+        self.children_names = {}
 
 
 # =============================================================================
