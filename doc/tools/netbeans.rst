@@ -25,6 +25,8 @@ installed already, it is recommended to use openjdk).
       sudo apt-get install openjdk-7-jdk or for java 8 follow
       `https://wiki.ubuntuusers.de/Java/Installation/OpenJDK/`_
 
+* Ubuntu 16.04 - should have everything needed
+
 
 Installing NetBeans
 ===================
@@ -54,6 +56,53 @@ to development version)
 
 Tuning NetBeans
 ===============
+
+Code-Assistance
+---------------
+
+Currently Netbeans has a shortcoming, that no variables can be used
+for the code-assistance configuration. As a consequence absolute paths
+to include folders must be set.
+
+The code-assistance configuration can be found under::
+
+  Tools -> Options -> C/C++ -> Code Assistance -> C++ Compiler
+
+Add the following two lines:
+
+.. code-block:: bash
+
+  content_of_KARABO_variable/include
+  content_of_KARABO_variable/extern/include
+
+
+
+Code formatting options
+-----------------------
+
+Please import the NetBeans options from the file
+`netbeans-8.0-settings.zip` in the git repository under the directory `build/netbeans`. This can be done via::
+
+  Tools -> Options -> Import
+
+Afterwards, take care that the lines that you edited (and not all the others!)
+are adjusted according to the formatting rules. For this go to::
+
+  Tools -> Options -> Editor -> On Save
+
+For `All Languages` choose `Modified Lines Only` - for both `Reformat` and
+`Remove Trailing Whitespace From`.
+
+
+Parallel Compilation
+-----------------------
+
+Unfortunately, you have to tell NetBeans by hand to make use of more than one
+CPU core for compilation. For that you have to edit the C/C++ project options at::
+
+  Tools -> Options -> C/C++ -> Project Options
+
+In the `Make Options`, add e.g. `-j8` to compile up to 8 source files in parallel.
 
 
 Subversion
@@ -127,41 +176,6 @@ You have to restart netbeans to get this work-around into shape.
 
 
 .. _netbeansCodeAssistance:
-
-Code-Assistance
----------------
-
-Currently Netbeans has a shortcoming, that no variables can be used
-for the code-assistance configuration. As a consequence absolute paths
-to include folders must be set.
-
-The code-assistance configuration can be found under::
-
-  Tools -> Options -> C/C++ -> Code Assistance -> C++ Compiler
-
-If you are working as a package developer you should add the following two lines:
-
-.. code-block:: bash
-
-  /yourPathToKaraboInstallation/karabo-XXXX/include
-  /yourPathToKaraboInstallation/karabo-XXXX/extern/include
-
-If you are working as a framework developer you should use:
-
-.. code-block:: bash
-
-  /yourPathToKaraboFramework/karaboFramework/package/Debug/OS/Version/Platform/karabo/include
-  /yourPathToKaraboFramework/karaboFramework/package/Debug/OS/Version/Platform/karabo/extern/include
-
-
-
-Code formatting options
------------------------
-
-You can import netbeans options from the file
-`netbeans-8.0-defaults.zip`_.
-
-.. _netbeans-8.0-defaults.zip: https://docs.xfel.eu/share/page/site/KaraboFramework/document-details?nodeRef=workspace://SpacesStore/d8a56017-6269-4006-993c-0704bd1f31da
 
 
 Heap size
