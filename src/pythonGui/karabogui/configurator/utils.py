@@ -73,10 +73,14 @@ def get_child_names(proxy):
 
     binding = proxy.binding
     if isinstance(binding, (BindingRoot, ChoiceOfNodesBinding, NodeBinding)):
-        for name in binding.value:
-            node = getattr(binding.value, name)
-            if node.required_access_level <= level:
-                ret.append(name)
+        ret = binding.children_names.get(level, [])
+        # lazily cache visible children names
+        if len(ret) == 0:
+            for name in binding.value:
+                node = getattr(binding.value, name)
+                if node.required_access_level <= level:
+                    ret.append(name)
+            binding.children_names[level] = ret
     else:
         # Use a lazy cache on the proxy
         ret = proxy.editable_attributes

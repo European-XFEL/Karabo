@@ -163,6 +163,14 @@ class BindingRoot(BaseBinding):
     class_id = String
     # An event which fires when the schema changes
     schema_update = Event
+    # A cache for visible children names {accesslevel: [names]}
+    # All bindings with their value type as BindingNamespace should have
+    # this trait to cache the names in the value according to access level
+    children_names = Dict()
+
+    def _schema_update_fired(self):
+        # when schema changes, clear cached children names
+        self.children_names = {}
 
 
 # =============================================================================
@@ -244,6 +252,8 @@ class Int64Binding(SignedIntBinding):
 
 class NodeBinding(BaseBinding):
     value = Instance(BindingNamespace)
+    # Visible children names {accesslevel: [names]}
+    children_names = Dict()
 
 
 class ImageBinding(NodeBinding):
