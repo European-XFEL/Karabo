@@ -32,6 +32,22 @@ namespace karabo {
             Timestamp(const Epochstamp& e, const Trainstamp& t);
 
             /**
+             * Return Epochstamp part of the timestamp
+             * @return
+             */
+            inline Epochstamp getEpochstamp() const {
+                return m_epochstamp;
+            }
+
+            /**
+             * Return Trainstamp part of the timestamp
+             * @return
+             */
+            inline Trainstamp getTrainstamp() const {
+                return m_trainstamp;
+            }
+
+            /**
              * Return the seconds entry of the timestamp
              * @return 
              */
