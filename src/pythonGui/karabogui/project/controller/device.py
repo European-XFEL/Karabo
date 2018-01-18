@@ -173,8 +173,7 @@ class DeviceInstanceController(BaseProjectGroupController):
             return
         config = self.active_config
         if config is not None:
-            # XXX: Get only non default configuration
-            new_config = self.project_device.get_current_config_hash()
+            new_config = self.project_device.get_user_edited_config_hash()
             config.configuration = new_config
 
     @on_trait_change("project_device:status")

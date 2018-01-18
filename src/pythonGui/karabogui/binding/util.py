@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 import numbers
 
 import numpy as np
@@ -8,12 +9,19 @@ from karabo.middlelayer import Hash, Schema
 from . import types
 
 
-def fast_deepcopy(d):
+def attr_fast_deepcopy(d, ref=None):
     """copy.deepcopy is criminally slow. We can bypass its fanciness as long
     as we only copy 'simple' datastructures.
+
+    Pass a not None attributes dict to `ref` to get only changed attributes
     """
-    out = dict.fromkeys(d)
+    out = {}
+
     for k, v in d.items():
+        if ref is not None:
+            if (k not in const.KARABO_EDITABLE_ATTRIBUTES or
+                    is_equal(v, ref.get(k))):
+                continue
         try:
             out[k] = v.copy()  # dicts, sets, ndarrays
         except TypeError:
@@ -106,7 +114,7 @@ def has_changes(binding, old_value, new_value):
             changes = True
         else:
             changes = False
-            cmp = _cmp
+            cmp = is_equal
             if isinstance(old_value, np.ndarray):
                 cmp = _build_array_cmp(old_value.dtype)
             for i in range(len(old_value)):
@@ -116,6 +124,23 @@ def has_changes(binding, old_value, new_value):
     else:
         changes = (str(old_value) != str(new_value))
     return changes
+
+
+def is_equal(a, b):
+    """A compare function deals with element-wise comparison result and
+    Schema object comparison
+    """
+    type_check = map(lambda x: isinstance(x, Schema), (a, b))
+    if any(type_check):
+        if all(type_check):
+            # Compare Schema objects' names and hashes
+            return a.name == b.name and a.hash == b.hash
+        else:
+            # one of a, b is not Schema, simply return False
+            return False
+    res = (a == b)
+    # comparison of numpy arrays result in an array
+    return all(res) if isinstance(res, Iterable) else res
 
 
 # -----------------------------------------------------------------------------
@@ -134,10 +159,6 @@ def _build_array_cmp(dtype):
             return False
 
     return _array_cmp
-
-
-def _cmp(a, b):
-    return a == b
 
 
 def _float_min_max(binding):

@@ -5,14 +5,13 @@ import numpy as np
 from karabo.common.api import (
     KARABO_SCHEMA_VALUE_TYPE, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
     KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_ABSOLUTE_ERROR,
-    KARABO_SCHEMA_RELATIVE_ERROR
+    KARABO_SCHEMA_RELATIVE_ERROR, KARABO_SCHEMA_DISPLAYED_NAME
 )
 from karabo.middlelayer import Hash, Schema
 from ..api import (
     BoolBinding, FloatBinding, Int8Binding, Int16Binding, Int32Binding,
     Int64Binding, Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
-    VectorInt32Binding, fast_deepcopy, get_min_max, has_changes
-)
+    VectorInt32Binding, attr_fast_deepcopy, get_min_max, has_changes, is_equal)
 
 
 def test_simple_int_min_max():
@@ -46,7 +45,7 @@ def test_unsupported():
     assert get_min_max(BoolBinding()) == (None, None)
 
 
-def test_fast_deepcopy():
+def test_attr_fast_deepcopy():
     def _safe_compare(a, b):
         # Use repr() to get around the lack of Schema comparison
         return len(a) == len(b) and all(repr(a[k]) == repr(b[k]) for k in a)
@@ -60,8 +59,25 @@ def test_fast_deepcopy():
         'f': Hash('simple', 32),
         'g': Schema()
     }
-    copy = fast_deepcopy(d)
+    copy = attr_fast_deepcopy(d)
     assert _safe_compare(copy, d)
+
+    d0 = {
+        KARABO_SCHEMA_DISPLAYED_NAME: 'foo',
+        KARABO_SCHEMA_MIN_EXC: 0,
+    }
+    ref = {
+        KARABO_SCHEMA_DISPLAYED_NAME: 'bar',
+        KARABO_SCHEMA_MIN_EXC: 1,
+    }
+    # get diff between d0 and ref, KARABO_SCHEMA_DISPLAYED_NAME is not in
+    # KARABO_EDITABLE_ATTRIBUTES, should not be included in the diff
+    diff = attr_fast_deepcopy(d0, ref)
+    assert diff == {KARABO_SCHEMA_MIN_EXC: 0}
+
+
+def test_is_equal():
+    assert is_equal(np.array([1, 2, 3]), np.array([1, 2, 3]))
 
 
 def test_has_changes():
