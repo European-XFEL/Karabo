@@ -3,9 +3,9 @@ from unittest import TestCase, main
 from zlib import adler32
 
 from karabo.middlelayer import (
-    AccessLevel, AccessMode, Assignment, Configurable, DaqDataType,
+    AccessLevel, AccessMode, Assignment, Configurable, DaqDataType, DaqPolicy,
     decodeBinary, encodeBinary, Hash, Int32, isSet, KaraboError, MetricPrefix,
-    Node, Overwrite, Slot, State, String, Unit, unit, VectorHash)
+    Node, Overwrite, Slot, State, String, Unit, unit, VectorHash, VectorFloat)
 from karabo.middlelayer_api.injectable import Injectable
 
 
@@ -745,6 +745,81 @@ class Tests(TestCase):
 
         a = A()
         self.assertEqual(a.node.daqDataType, DaqDataType.TRAIN)
+
+    def test_applyRunTimeUpdates(self):
+        class A(Configurable):
+            b = Int32(maxExc=50, defaultValue=1,
+                      daqPolicy=DaqPolicy.OMIT)
+            c = VectorFloat()
+
+        class B(Configurable):
+            a = Int32(maxExc=50, defaultValue=1)
+            node = Node(A)
+
+            @Slot(requiredAccessLevel=AccessLevel.EXPERT)
+            def mySlot(self):
+                pass
+
+        conf = B()
+        self.assertEqual(conf.a.descriptor.maxExc, 50)
+        self.assertEqual(conf.a.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.node.b.descriptor.maxExc, 50)
+        self.assertEqual(conf.node.b.descriptor.daqPolicy, DaqPolicy.OMIT)
+        self.assertEqual(conf.node.c.descriptor.daqPolicy,
+                         DaqPolicy.UNSPECIFIED)
+
+        # Nodes don't have default daq type or descriptor
+        self.assertIsNotNone(conf.node)
+        with self.assertRaises(AttributeError):
+            self.assertIsNone(conf.node.daqPolicy)
+
+        # Slots have descriptor but no daqPolicy
+        self.assertIsNotNone(conf.mySlot.descriptor)
+        with self.assertRaises(AttributeError):
+            self.assertEqual(conf.mySlot.descriptor.daqPolicy,
+                             DaqPolicy.UNSPECIFIED)
+
+        updates = [Hash('path', "a",
+                        'attribute', "maxExc",
+                        'value', 100.0),
+                   Hash('path', "node.b",
+                        'attribute', "maxExc",
+                        'value', 200),
+                   Hash('path', "a",
+                        'attribute', "minInc",
+                        'value', 0),
+                   Hash('path', "a",
+                        'attribute', "daqPolicy",
+                        'value', DaqPolicy.SAVE)
+                   ]
+        success = conf.applyRuntimeUpdates(updates)
+        self.assertTrue(success)
+        self.assertEqual(conf.a.descriptor.maxExc, 100)
+        self.assertEqual(conf.node.b.descriptor.maxExc, 200)
+        self.assertEqual(conf.a.descriptor.minInc, 0)
+        self.assertEqual(conf.a.descriptor.daqPolicy, DaqPolicy.SAVE)
+
+        # test non-allowed attributes
+        updates = [Hash('path', "a",
+                        'attribute', "AnyAttribute",
+                        'value', 100.0),
+                   ]
+        success = conf.applyRuntimeUpdates(updates)
+        self.assertFalse(success)
+
+        # unit symbol gets a non-allowed integer setting
+        updates = [Hash('path', "a",
+                        'attribute', "maxExc",
+                        'value', 100.0),
+                   Hash('path', "node.b",
+                        'attribute', "unitSymbol",
+                        'value', 200),
+                   ]
+        success = conf.applyRuntimeUpdates(updates)
+        self.assertFalse(success)
+        self.assertEqual(conf.a.descriptor.maxExc, 100)
+        self.assertNotEqual(conf.node.b.descriptor.unitSymbol, 200)
+        self.assertEqual(conf.node.b.descriptor.unitSymbol, Unit.NUMBER)
 
 
 if __name__ == "__main__":
