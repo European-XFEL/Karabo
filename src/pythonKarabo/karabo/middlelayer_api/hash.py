@@ -22,8 +22,9 @@ import numpy as np
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
 from . import basetypes
-from .enums import (AccessLevel, AccessMode, Assignment, MetricPrefix,
-                    NodeType, Unit)
+from .enums import (
+    AccessLevel, AccessMode, Assignment, DaqPolicy, MetricPrefix, NodeType,
+    Unit)
 from .exceptions import KaraboError
 from .registry import Registry
 
@@ -561,6 +562,7 @@ class Type(Descriptor, Registry):
 
     unitSymbol = Attribute(Unit.NUMBER)
     metricPrefixSymbol = Attribute(MetricPrefix.NONE)
+    daqPolicy = Attribute(DaqPolicy.UNSPECIFIED)
     enum = None
 
     types = [None] * 51

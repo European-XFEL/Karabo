@@ -3,6 +3,7 @@ from collections import OrderedDict
 from weakref import WeakKeyDictionary
 
 from karabo.common.alarm_conditions import AlarmCondition
+from karabo.common.api import KARABO_RUNTIME_ATTRIBUTES_MDL
 from .basetypes import isSet, KaraboValue, NoneValue
 from .enums import NodeType
 from .hash import Attribute, Descriptor, Hash, Schema, HashList
@@ -180,6 +181,58 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         """
         yield from gather(*self._initializers)
         del self._initializers
+
+    def applyRuntimeUpdates(self, updates):
+        """Apply run-time attribute updates to a schema
+
+        :param updates: List of Hashes with "path", "attribute" and "value"
+        :return success: True if all updates could be applied, False otherwise
+        """
+
+        def _applyAttribute(obj, path, attr_name, attr_value):
+            # Basic check if the attribute is allowed to be set
+            if attr_name not in KARABO_RUNTIME_ATTRIBUTES_MDL:
+                return False
+
+            key = path.split(".", 1)
+
+            if len(key) > 1:
+                obj = getattr(obj, key[0])
+                path = key[1]
+                return _applyAttribute(obj, path, attr_name,
+                                       attr_value)
+
+            value = getattr(obj, path, None)
+            if not isSet(value):
+                return False
+
+            # Get the descriptor as it has the attributes
+            desc = getattr(obj.__class__, path)
+            attr = getattr(desc.__class__, attr_name, None)
+            if isinstance(attr, Attribute):
+                if attr.default is None:
+                    setattr(desc, attr_name, attr_value)
+                else:
+                    try:
+                        converted = type(attr.default)(attr_value)
+                        if converted != attr_value:
+                            return False
+                        setattr(desc, attr_name, converted)
+                    except ValueError:
+                        # validation from configurable default failed
+                        return False
+                # We succesfully applied an attribute update!
+                return True
+
+            return False
+
+        success = True
+        for update in updates:
+            path, attr_name, attr_value = (update["path"], update["attribute"],
+                                           update["value"])
+            success &= _applyAttribute(self, path, attr_name, attr_value)
+
+        return success
 
     def _use(self):
         """this method is called each time an attribute of this configurable
