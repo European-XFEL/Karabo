@@ -2,7 +2,7 @@ from traits.api import Dict, Instance, List, Property, Trait, TraitHandler
 
 from karabo.middlelayer import Hash
 from .types import BaseBinding, BindingNamespace, BindingRoot, NodeBinding
-from .util import fast_deepcopy
+from .util import attr_fast_deepcopy
 
 
 class ChoiceOfNodesBinding(BaseBinding):
@@ -127,7 +127,7 @@ def duplicate_binding(binding):
 def _duplicate_node(node):
     """Duplicate a `BaseBinding` object
     """
-    traits = {'attributes': fast_deepcopy(node.attributes)}
+    traits = {'attributes': attr_fast_deepcopy(node.attributes)}
     if isinstance(node, (ChoiceOfNodesBinding, ListOfNodesBinding)):
         choices = node.choices
         traits['choices'] = ns = BindingNamespace(item_type=BindingRoot)
