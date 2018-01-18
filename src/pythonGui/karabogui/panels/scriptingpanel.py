@@ -66,7 +66,9 @@ class ScriptingPanel(BasePanelWidget):
     def _on_start_ipython(self, isChecked):
         if self.console:
             self._stop_ipython()
-
+            # Clicking once when started will stop the console. We cannot
+            # directly start a new due to race conditions.
+            return
         try:
             self.console = IPythonWidget(banner=BANNER_TEXT)
             self.console.exit_requested.connect(self._stop_ipython)

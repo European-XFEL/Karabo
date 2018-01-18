@@ -36,7 +36,7 @@ class IPythonWidget(RichJupyterWidget):
         self.kernel_manager = KernelManager()
         self.kernel_manager.start_kernel()
         self.kernel_client = self.kernel_manager.client()
-        self.exit_requested.connect(self.stop)
+        # NOTE: the exit_requested signal is not bound here
         # The following line avoids a bug in IPython's QtConsole
         # see https://github.com/jupyter/qtconsole/issues/174
         self.execute_on_complete_input = False
@@ -123,7 +123,6 @@ class KernelClient(inprocess.QtInProcessKernelClient):
         # This is bound to 'binding.config_update' notifications
         if name != 'config_update':
             return
-
         mapping = {
             self._iopub: self.iopub_channel,
             self._shell: self.shell_channel,
