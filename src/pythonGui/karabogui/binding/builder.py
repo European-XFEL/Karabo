@@ -2,7 +2,7 @@ from karabo.common import const
 from karabo.middlelayer import Hash, NodeType, Schema
 from . import recursive
 from . import types
-from .util import fast_deepcopy
+from .util import attr_fast_deepcopy
 
 
 def build_binding(schema, existing=None):
@@ -31,7 +31,7 @@ def _build_node(value, attrs):
     """
     # Always deal with a copy of the attributes
     # (to allow bindings to modify)
-    attrs = fast_deepcopy(attrs)
+    attrs = attr_fast_deepcopy(attrs)
 
     def _build_subnamespace(hashval, item_type):
         assert isinstance(hashval, Hash)
