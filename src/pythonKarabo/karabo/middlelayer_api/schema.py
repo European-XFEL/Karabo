@@ -209,22 +209,15 @@ class Configurable(Registry, metaclass=MetaConfigurable):
             # Get the descriptor as it has the attributes
             desc = getattr(obj.__class__, path)
             attr = getattr(desc.__class__, attr_name, None)
-            if isinstance(attr, Attribute):
-                if attr.default is None:
-                    setattr(desc, attr_name, attr_value)
-                else:
-                    try:
-                        converted = type(attr.default)(attr_value)
-                        if converted != attr_value:
-                            return False
-                        setattr(desc, attr_name, converted)
-                    except ValueError:
-                        # validation from configurable default failed
-                        return False
-                # We succesfully applied an attribute update!
-                return True
-
-            return False
+            if not isinstance(attr, Attribute):
+                # not Attribute type
+                return False
+            if attr.default and not isinstance(attr_value, type(attr.default)):
+                # wrong attr value type
+                return False
+            # Apply attribute change
+            setattr(desc, attr_name, attr_value)
+            return True
 
         success = True
         for update in updates:
