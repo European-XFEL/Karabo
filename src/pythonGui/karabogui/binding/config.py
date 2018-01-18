@@ -1,14 +1,13 @@
-from collections.abc import Iterable
-
 from traits.api import TraitError, Undefined
 
 from karabo.common import const
-from karabo.middlelayer import Hash, MetricPrefix, Timestamp, Unit
+from karabo.middlelayer import (
+    AccessMode, Hash, MetricPrefix, Timestamp, Unit)
 from .proxy import PropertyProxy
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
-from .types import (BindingNamespace, BindingRoot, NodeBinding, SlotBinding,
-                    VectorHashBinding)
-from .util import fast_deepcopy
+from .types import (
+    BindingNamespace, BindingRoot, NodeBinding, SlotBinding, VectorHashBinding)
+from .util import attr_fast_deepcopy, is_equal
 
 
 def apply_configuration(config, binding, notify=True,
@@ -39,7 +38,8 @@ def apply_configuration(config, binding, notify=True,
             try:
                 node.trait_set(trait_change_notify=False, **traits)
                 if include_attributes:
-                    node.update_attributes(fast_deepcopy(attrs))
+                    # pass an empty dictionary to get only editable attributes
+                    node.update_attributes(attr_fast_deepcopy(attrs, {}))
             except TraitError:
                 # value in the configuration is not compatible to schema
                 continue
@@ -96,6 +96,8 @@ def extract_attribute_modifications(schema, binding):
     'Symbol' values to C++ enumeration values (integers). This is because the
     C++ Schema code only knows how to assign from enumeration values, not from
     their stringified representations.
+    NOTE2: This function is solely used to send attributes modification to
+    GUI server during device instantiation
     """
     assert isinstance(binding, BindingRoot)
 
@@ -123,15 +125,6 @@ def extract_attribute_modifications(schema, binding):
             elif not isinstance(subnode, SlotBinding):
                 yield subname, subnode
 
-    def _dictdiff(d0, d1):
-        def _not_equal(v0, v1):
-            ret = (v0 != v1)
-            # comparison of numpy arrays result in an array
-            return all(ret) if isinstance(ret, Iterable) else ret
-        return {k: v for k, v in d0.items()
-                if _not_equal(d1.get(k), v) and
-                k in const.KARABO_EDITABLE_ATTRIBUTES}
-
     def _remap_value(name, value):
         enum = _SYMBOL_MAP.get(name, None)
         return list(enum).index(enum(value)) if enum else value
@@ -147,7 +140,7 @@ def extract_attribute_modifications(schema, binding):
         binding_attrs = node.attributes
         # What values in `binding_attrs` are different from those in
         # `schema_attrs`?
-        diff = _dictdiff(binding_attrs, schema_attrs)
+        diff = attr_fast_deepcopy(binding_attrs, schema_attrs)
         if not diff:
             continue
         diff = {_NAME_MAP.get(k, k): _remap_value(k, v)
@@ -171,6 +164,9 @@ def extract_configuration(binding, include_attributes=False):
         elif isinstance(binding, ChoiceOfNodesBinding):
             value = getattr(binding.value, binding.choice)
             return Hash(value.class_id, extract_configuration(value))
+        elif isinstance(binding, VectorHashBinding):
+            value = binding.value
+            return [] if value is Undefined else value
         else:
             return binding.value
 
@@ -182,9 +178,7 @@ def extract_configuration(binding, include_attributes=False):
             subnode = getattr(namespace, name)
             if isinstance(subnode, NodeBinding):
                 yield from _iter_binding(subnode, base=subname)
-            elif not isinstance(subnode, (SlotBinding, VectorHashBinding)):
-                # XXX: Extract VectorHashBinding values has to be treated
-                # differently
+            elif not isinstance(subnode, SlotBinding):
                 yield subname, subnode
 
     retval = Hash()
@@ -194,7 +188,77 @@ def extract_configuration(binding, include_attributes=False):
             continue
         retval[key] = _get_binding_value(node)
         if include_attributes:
-            retval[key, ...] = fast_deepcopy(node.attributes)
+            # only copy editable attributes
+            retval[key, ...] = attr_fast_deepcopy(node.attributes, {})
+
+    return retval
+
+
+def extract_edits(schema, binding):
+    """Extract all user edited (non default) values on a binding into a
+    Hash object.
+    """
+    assert isinstance(binding, BindingRoot)
+
+    def _get_binding_default(binding):
+        val = binding.attributes.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
+        if val is None and len(binding.options) > 0:
+            return binding.options[0]
+        return val
+
+    def _iter_binding(node, base=''):
+        namespace = node.value
+        base = base + '.' if base else ''
+        for name in namespace:
+            subname = base + name
+            subnode = getattr(namespace, name)
+            if isinstance(subnode, ChoiceOfNodesBinding):
+                chosen = subnode.choice
+                yield from _iter_binding(getattr(subnode.value, chosen),
+                                         '{}.{}'.format(subname, chosen))
+            elif isinstance(subnode, NodeBinding):
+                yield from _iter_binding(subnode, base=subname)
+            elif not isinstance(subnode, SlotBinding):
+                # All rest binding types (including ListOfNodesBinding)
+                yield subname, subnode
+
+    def _get_attr_modification(key, node):
+        schema_attrs = schema.hash[key, ...]
+        binding_attrs = node.attributes
+        return attr_fast_deepcopy(binding_attrs, schema_attrs)
+
+    def _is_readonly(key):
+        return schema.hash[key, 'accessMode'] == AccessMode.READONLY.value
+
+    retval = Hash()
+    for key, node in _iter_binding(binding):
+        if isinstance(node, ListOfNodesBinding):
+            value = []
+            for lnode in node.value:
+                # XXX: Each node in ListOfNodesBinding is a device equivalent
+                # We don't have machenism to horizontally loop through sub
+                # devices, so we save the device class id and an empty Hash
+                # i.e sub device's config is not saved
+                # possible fix (currently this fix breaks old GUI):
+                # value.append(Hash(lnode.class_id,
+                #                   extract_configuration(lnode)))
+                value.append(Hash(lnode.class_id, Hash()))
+            retval[key] = value
+            continue
+
+        default_val = _get_binding_default(node)
+        value = None if node.value is Undefined else node.value
+        attr_changes = _get_attr_modification(key, node)
+
+        has_attr_changes = len(attr_changes) > 0
+        has_val_changes = not is_equal(default_val, value)
+        is_readonly = _is_readonly(key)
+        if (not (has_val_changes or has_attr_changes) or
+                is_readonly and not has_attr_changes):
+            continue
+        retval[key] = value
+        if has_attr_changes:
+            retval[key, ...] = attr_changes
 
     return retval
 
