@@ -91,7 +91,8 @@ are adjusted according to the formatting rules. For this go to::
   Tools -> Options -> Editor -> On Save
 
 For `All Languages` choose `Modified Lines Only` - for both `Reformat` and
-`Remove Trailing Whitespace From`.
+`Remove Trailing Whitespace From`. This ensure proper format for new lines
+without spamming code review with formatting noise.
 
 
 Parallel Compilation
