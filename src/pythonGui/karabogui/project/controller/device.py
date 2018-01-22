@@ -373,6 +373,8 @@ class DeviceInstanceController(BaseProjectGroupController):
 
         :param server: The server this device belongs to
         """
+        if self.project_device.online:
+            return
         device = self.model
         dev_conf = device.select_config(device.active_config_ref)
         if dev_conf is not None:
