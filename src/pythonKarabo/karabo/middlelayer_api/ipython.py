@@ -66,6 +66,7 @@ class Client(KernelClient):
 
 class IPythonKernel(Device):
     client = None
+    manager = None
 
     archive = Bool(
         displayedName="Archive", accessMode=AccessMode.RECONFIGURABLE,
@@ -124,7 +125,10 @@ class IPythonKernel(Device):
     @coslot
     def slotKillDevice(self):
         self.state = State.STOPPING
-        yield from self._ss.loop.run_in_executor(None,
-                                                 self.manager.shutdown_kernel)
+        if self.manager is not None and self.manager.has_kernel:
+            self.manager.request_shutdown()
+            yield from self._ss.loop.run_in_executor(
+                None, self.manager.finish_shutdown)
+            self.manager = None
         self.state = State.STOPPED
         yield from super().slotKillDevice()
