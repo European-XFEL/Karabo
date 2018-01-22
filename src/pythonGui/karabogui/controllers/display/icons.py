@@ -6,7 +6,7 @@ from karabo.common.scenemodel.api import (
     DigitIconsModel, SelectionIconsModel, TextIconsModel)
 from karabogui import icons
 from karabogui.binding.api import (
-    BaseBinding, FloatBinding, IntBinding, StringBinding)
+    BaseBinding, FloatBinding, get_binding_value, IntBinding, StringBinding)
 from karabogui.controllers.api import (
     BaseBindingController, has_options, register_binding_controller)
 from karabogui.controllers.icons_dialogs import (
@@ -40,7 +40,8 @@ class _BaseIcons(BaseBindingController):
         self.model.trait_setq(values=converted)
 
         # Maybe update the widget
-        if self.widget is not None:
+        if (self.widget is not None and
+                get_binding_value(self.proxy) is not None):
             self.value_update(self.proxy)
 
     @pyqtSlot()

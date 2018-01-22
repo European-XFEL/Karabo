@@ -18,7 +18,8 @@ from karabo.common.api import (
 from karabo.common.scenemodel.api import DisplayLabelModel
 from karabogui.alarms.api import ALARM_COLOR, WARN_COLOR
 from karabogui.binding.api import (
-    CharBinding, ComplexBinding, FloatBinding, IntBinding, StringBinding
+    CharBinding, ComplexBinding, FloatBinding, get_binding_value, IntBinding,
+    StringBinding
 )
 from karabogui.const import FINE_COLOR, WIDGET_MIN_HEIGHT
 from karabogui.controllers.api import (
@@ -61,15 +62,14 @@ class DisplayLabel(BaseBindingController):
         self.widget.update_label(proxy)
 
         binding = proxy.binding
-        value = binding.value
-
-        self._check_alarms(binding, value)
-
-        if isinstance(binding, StringBinding):
-            # Make sure that long binary data (e.g. image) is not shown,
-            # Otherwise slowness is the case
+        value = get_binding_value(proxy, '')
+        if value == '' or isinstance(binding, StringBinding):
+            # Early bail out for Long binary data (e.g. image) or
+            # if the property is not set (Undefined)
             self._internal_widget.setText(value[:255])
             return
+
+        self._check_alarms(binding, value)
 
         disp_type = binding.attributes.get(KARABO_SCHEMA_DISPLAY_TYPE)
         try:

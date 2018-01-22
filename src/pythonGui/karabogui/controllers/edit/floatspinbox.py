@@ -56,8 +56,10 @@ class FloatSpinBox(BaseBindingController):
 
     def value_update(self, proxy):
         self.widget.update_label(proxy)
-        with SignalBlocker(self._internal_widget):
-            self._internal_widget.setValue(get_editor_value(proxy))
+        value = get_editor_value(proxy)
+        if value is not None:
+            with SignalBlocker(self._internal_widget):
+                self._internal_widget.setValue(value)
 
     @on_trait_change('model:decimals')
     def _set_decimals(self, value):

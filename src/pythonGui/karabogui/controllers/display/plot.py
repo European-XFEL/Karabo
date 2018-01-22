@@ -21,7 +21,8 @@ COLORS = ("red", "green", "blue", "gray", "violet", "orange", "lightgreen",
 
 
 @register_binding_controller(ui_name='Plot', klassname='DisplayPlot',
-                             binding_type=VectorNumberBinding)
+                             binding_type=VectorNumberBinding,
+                             can_show_nothing=False)
 class DisplayPlot(BaseBindingController):
     # The scene data model class for this controller
     model = Instance(DisplayPlotModel, args=())

@@ -47,7 +47,7 @@ class _BaseListController(BaseBindingController):
         self.layout.addWidget(tbEdit)
 
     def value_update(self, proxy):
-        value = get_editor_value(proxy)
+        value = get_editor_value(proxy, [])
         with SignalBlocker(self._internal_widget):
             self._internal_widget.setText(','.join(str(v) for v in value))
         self._internal_widget.setCursorPosition(self.last_cursor_position)

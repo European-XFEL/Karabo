@@ -3,7 +3,8 @@ from collections import deque
 from traits.api import Any, Instance
 
 from karabo.common.scenemodel.api import XYPlotModel
-from karabogui.binding.api import PropertyProxy, FloatBinding, IntBinding
+from karabogui.binding.api import (
+    FloatBinding, get_binding_value, IntBinding, PropertyProxy)
 from karabogui.const import MAXNUMPOINTS
 from karabogui.controllers.api import (
     BaseBindingController, axis_label, register_binding_controller)
@@ -29,10 +30,7 @@ class XYPlot(BaseBindingController):
         self._x_values = deque(maxlen=MAXNUMPOINTS)
         self._y_values = deque(maxlen=MAXNUMPOINTS)
 
-        if self.proxy.binding is not None:
-            self._last_x_value = self.proxy.value
-        else:
-            self._last_x_value = None
+        self._last_x_value = get_binding_value(self.proxy)
         return widget
 
     def add_proxy(self, proxy):

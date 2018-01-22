@@ -4,7 +4,7 @@ from traits.api import (
 
 from karabo.common.scenemodel.api import BaseWidgetObjectData
 from karabogui import background
-from karabogui.binding.api import PropertyProxy
+from karabogui.binding.api import get_binding_value, PropertyProxy
 from .util import get_class_const_trait
 
 
@@ -113,12 +113,15 @@ class BaseBindingController(HasStrictTraits):
         if self.widget is None or self.proxy.binding is None:
             return
 
-        # Not all controllers support this
-        has_data = (self.proxy.binding.timestamp is not None)
+        # controllers which specify themselves `_can_show_nothing` should
+        # be able to deal with Undefined, i.e. their value_update() and
+        # state_update() function should use get_binding_value() and
+        # specify a proper default value if the proxy.value is Undefined
+        proxy = self.proxy
+        has_data = (proxy.binding.timestamp is not None)
         if has_data or get_class_const_trait(type(self), '_can_show_nothing'):
-            proxy = self.proxy
             self.value_update(proxy)
-            if proxy.root_proxy.state_binding.value:
+            if get_binding_value(proxy.root_proxy.state_binding):
                 self.state_update(proxy)
 
     def hide(self):
@@ -212,7 +215,8 @@ class BaseBindingController(HasStrictTraits):
         try:
             # One of the attached proxies got a new value on its binding
             proxy = [p for p in self.proxies if p.binding is binding][0]
-            self.value_update(proxy)
+            if get_binding_value(proxy) is not None:
+                self.value_update(proxy)
         except IndexError:
             pass
 
