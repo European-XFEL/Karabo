@@ -3,6 +3,8 @@
 # Created on February 1, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from functools import partial
+
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
 
@@ -13,6 +15,10 @@ from karabogui.widgets.toolbar import ToolBar
 from .base import BasePanelWidget
 
 BANNER_TEXT = "Welcome to the embedded ipython console.\n"
+STATUS_TIP = {
+    True: "End IPython session",  # session is on
+    False: "Start IPython console"  # session is off
+}
 
 
 class ScriptingPanel(BasePanelWidget):
@@ -53,28 +59,31 @@ class ScriptingPanel(BasePanelWidget):
         """
         toolbar = ToolBar(parent=self)
 
-        text = "Start IPython console"
         self.acStartIPython = QAction("IP[y]:", toolbar)
-        self.acStartIPython.setToolTip(text)
-        self.acStartIPython.setStatusTip(text)
-        self.acStartIPython.triggered.connect(self._on_start_ipython)
+        self.acStartIPython.setCheckable(True)
+        self._set_button_state(False)
+        self.acStartIPython.triggered.connect(self._on_button_pressed)
         toolbar.addAction(self.acStartIPython)
 
         return [toolbar]
 
     @pyqtSlot(bool)
-    def _on_start_ipython(self, isChecked):
-        if self.console:
+    def _on_button_pressed(self, isChecked):
+        if isChecked:
+            # Turn on session
+            try:
+                stop_cb = partial(self._set_button_state, False)
+                call_backs = {'start_ch': self.enable_button_cb,
+                              'stop_ch': stop_cb}
+                self.console = IPythonWidget(
+                    banner=BANNER_TEXT, call_backs=call_backs)
+                self.console.exit_requested.connect(self._stop_ipython)
+                self.mainLayout.addWidget(self.console)
+                self._set_button_state(True)
+            except IOError:
+                self._set_button_state(False)
+        else:
             self._stop_ipython()
-            # Clicking once when started will stop the console. We cannot
-            # directly start a new due to race conditions.
-            return
-        try:
-            self.console = IPythonWidget(banner=BANNER_TEXT)
-            self.console.exit_requested.connect(self._stop_ipython)
-            self.mainLayout.addWidget(self.console)
-        except IOError:
-            pass  # connection failed or not online
 
     @pyqtSlot()
     def _stop_ipython(self):
@@ -83,3 +92,19 @@ class ScriptingPanel(BasePanelWidget):
             self.console.stop()
             self.console.setParent(None)
             self.console = None
+
+    @pyqtSlot()
+    def enable_button_cb(self):
+        self.acStartIPython.setEnabled(True)
+
+    @pyqtSlot()
+    def _set_button_state(self, state):
+        action = self.acStartIPython
+
+        if state:
+            # always disable the button and wait for client's callback
+            action.setEnabled(False)
+        action.setChecked(state)
+        text = STATUS_TIP[state]
+        self.acStartIPython.setToolTip(text)
+        self.acStartIPython.setStatusTip(text)
