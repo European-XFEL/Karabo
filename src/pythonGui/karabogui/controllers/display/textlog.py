@@ -13,7 +13,7 @@ from traits.api import Instance
 from karabo.common.scenemodel.api import DisplayTextLogModel
 from karabo.middlelayer import Timestamp
 from karabogui import icons
-from karabogui.binding.api import StringBinding
+from karabogui.binding.api import get_binding_value, StringBinding
 from karabogui.const import FINE_COLOR
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
@@ -68,7 +68,7 @@ class DisplayTextLog(BaseBindingController):
 
     def value_update(self, proxy):
         # catch both None and empty strings
-        value = proxy.value
+        value = get_binding_value(proxy, '')
         timestamp = proxy.binding.timestamp
         if value and timestamp != self._timestamp:
             self._write_log(value, timestamp)

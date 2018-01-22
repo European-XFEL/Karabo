@@ -65,7 +65,7 @@ class RunConfiguratorEdit(BaseBindingController):
         item_model.clear()
         item_model.setHorizontalHeaderLabels(HEADER_LABELS)
         root_item = item_model.invisibleRootItem()
-        for entry in get_editor_value(proxy):
+        for entry in get_editor_value(proxy, []):
             _build(entry, root_item)
 
     @pyqtSlot(object)

@@ -19,7 +19,7 @@ except ImportError:
 
 from karabo.middlelayer import Hash, State
 from karabogui import globals as krb_globals, messagebox
-from karabogui.binding.api import PropertyProxy
+from karabogui.binding.api import get_binding_value, PropertyProxy
 from karabogui.enums import KaraboSettings
 from karabogui.request import send_property_changes
 from karabogui.singletons.api import get_network, get_topology
@@ -136,15 +136,16 @@ class KernelClient(inprocess.QtInProcessKernelClient):
         }
         for proxy, channel in mapping.items():
             if proxy.binding is binding:
-                if proxy.value:
-                    channel.receive(proxy.value)
+                value = get_binding_value(proxy)
+                if value is not None:
+                    channel.receive(value)
                 break
 
     def _state_update(self, binding, name, event):
         if name != 'config_update':
             return
 
-        value = binding.value
+        value = get_binding_value(binding, State.UNKNOWN)
         self.alive = State(value) is State.STARTED
         if self.alive:
             if not self.started:

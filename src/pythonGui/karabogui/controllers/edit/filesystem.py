@@ -45,7 +45,7 @@ class _FileSystemPicker(BaseBindingController):
 
     def value_changed(self, proxy):
         with SignalBlocker(self._path):
-            self._path.setText(get_editor_value(proxy))
+            self._path.setText(get_editor_value(proxy, ''))
             self._path.setCursorPosition(self._last_cursor_pos)
 
     @pyqtSlot(str)
