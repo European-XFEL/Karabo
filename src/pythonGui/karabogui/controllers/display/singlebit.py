@@ -10,7 +10,7 @@ from traits.api import Instance, Str, on_trait_change
 
 from karabo.common.api import State, KARABO_SCHEMA_DISPLAY_TYPE
 from karabo.common.scenemodel.api import SingleBitModel
-from karabogui.binding.api import IntBinding, get_min_max
+from karabogui.binding.api import get_binding_value, get_min_max, IntBinding
 from karabogui.controllers.api import (
     BaseBindingController, add_unit_label, register_binding_controller)
 from karabogui.indicators import STATE_COLORS
@@ -58,7 +58,8 @@ class SingleBit(BaseBindingController):
         self._internal_widget.setEnabled(not ro)
 
     def value_update(self, proxy):
-        value = (int(proxy.value) >> self.model.bit) & 1 != 0
+        value = int(get_binding_value(proxy, 0))
+        value = (value >> self.model.bit) & 1 != 0
         value = not value if self.model.invert else value
 
         color = (STATE_COLORS[State.ACTIVE] if value

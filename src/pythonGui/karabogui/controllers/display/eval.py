@@ -7,7 +7,8 @@ from traits.api import Callable, Dict, Instance
 from karabo.common.scenemodel.api import EvaluatorModel
 from karabogui import messagebox
 from karabogui.binding.api import (
-    CharBinding, ComplexBinding, FloatBinding, IntBinding, StringBinding
+    CharBinding, ComplexBinding, FloatBinding, get_binding_value, IntBinding,
+    StringBinding
 )
 from karabogui.const import WIDGET_MIN_HEIGHT, FINE_COLOR
 from karabogui.controllers.api import (
@@ -60,6 +61,7 @@ class Evaluator(BaseBindingController):
         return widget
 
     def value_update(self, proxy):
+        # update unit label
         self.widget.update_label(proxy)
 
         try:
@@ -83,4 +85,5 @@ class Evaluator(BaseBindingController):
             return
 
         self.model.expression = text
-        self.value_update(self.proxy)
+        if get_binding_value(self.proxy) is not None:
+            self.value_update(self.proxy)

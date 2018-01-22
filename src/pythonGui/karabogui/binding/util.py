@@ -53,25 +53,25 @@ def flat_iter_hash(h, base=''):
             yield here, value, attrs
 
 
-def get_editor_value(property_proxy):
+def get_editor_value(property_proxy, default=None):
     """Return the correct value of a PropertyProxy to show in an editor
+
+    :param default: return default if value is None or Undefined
     """
     value = property_proxy.edit_value
-    if value is None:
-        value = property_proxy.value
-    if value is Undefined:
-        binding = property_proxy.binding
-        if isinstance(binding, types.VectorNumberBinding):
-            return np.array([])
-        elif isinstance(binding, types.VectorCharBinding):
-            return b''
-        elif isinstance(binding, types.VectorBinding):
-            return []
-        elif isinstance(binding, types.StringBinding):
-            return ''
-        else:
-            return None
+    if value is None or value is Undefined:
+        return get_binding_value(property_proxy, default)
     return value
+
+
+def get_binding_value(binding, default=None):
+    """Get the binding value, this function is used to deal with Undefined or
+    None binding values.
+
+    :param default: return default if value is None or Undefined
+    """
+    value = binding.value
+    return default if value is None or value is Undefined else value
 
 
 def get_min_max(binding):
