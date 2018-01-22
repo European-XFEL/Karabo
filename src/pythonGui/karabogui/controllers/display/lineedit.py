@@ -8,7 +8,7 @@ from PyQt4.QtGui import QLineEdit
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import LineEditModel
-from karabogui.binding.api import StringBinding
+from karabogui.binding.api import get_binding_value, StringBinding
 from karabogui.const import WIDGET_MIN_HEIGHT
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
@@ -28,4 +28,4 @@ class DisplayLineEdit(BaseBindingController):
         return widget
 
     def value_update(self, proxy):
-        self.widget.setText(proxy.value)
+        self.widget.setText(get_binding_value(proxy, ''))

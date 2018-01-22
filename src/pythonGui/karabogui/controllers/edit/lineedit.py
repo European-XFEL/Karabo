@@ -32,7 +32,7 @@ class EditableLineEdit(BaseBindingController):
         return widget
 
     def value_update(self, proxy):
-        value = get_editor_value(proxy)
+        value = get_editor_value(proxy, '')
         if not isinstance(value, str):
             value = value.decode()
 
