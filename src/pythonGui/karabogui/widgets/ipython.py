@@ -28,7 +28,7 @@ from karabogui.util import get_setting
 
 
 class IPythonWidget(RichJupyterWidget):
-    def __init__(self, banner=None, *args, **kwargs):
+    def __init__(self, banner=None, call_backs={}, *args, **kwargs):
         if banner is not None:
             self.banner = banner
         super().__init__(*args, local_kernel=True, **kwargs)
@@ -36,7 +36,13 @@ class IPythonWidget(RichJupyterWidget):
         self.kernel_manager = KernelManager()
         self.kernel_manager.start_kernel()
         self.kernel_client = self.kernel_manager.client()
-        # NOTE: the exit_requested signal is not bound here
+
+        session_start_cb = call_backs.get('start_ch')
+        session_stop_cb = call_backs.get('stop_ch')
+        if session_start_cb:
+            self.kernel_client.started_channels.connect(session_start_cb)
+        if session_stop_cb:
+            self.kernel_client.stopped_channels.connect(session_stop_cb)
         # The following line avoids a bug in IPython's QtConsole
         # see https://github.com/jupyter/qtconsole/issues/174
         self.execute_on_complete_input = False
