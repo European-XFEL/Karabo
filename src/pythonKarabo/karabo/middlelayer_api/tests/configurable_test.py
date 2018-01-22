@@ -3,9 +3,13 @@ from unittest import TestCase, main
 from zlib import adler32
 
 from karabo.middlelayer import (
-    AccessLevel, AccessMode, Assignment, Configurable, DaqDataType, DaqPolicy,
-    decodeBinary, encodeBinary, Hash, Int32, isSet, KaraboError, MetricPrefix,
-    Node, Overwrite, Slot, State, String, Unit, unit, VectorHash, VectorFloat)
+    AccessLevel, AccessMode, Assignment, Bool, Configurable, ComplexDouble,
+    ComplexFloat, DaqDataType, DaqPolicy, decodeBinary, Double, encodeBinary,
+    Float, Hash, Int8, Int16, Int32, Int64, isSet, KaraboError, MetricPrefix,
+    Node, Overwrite, Slot, State, String, UInt8, UInt16, UInt32, UInt64, Unit,
+    unit, VectorBool, VectorComplexDouble, VectorComplexFloat, VectorDouble,
+    VectorHash, VectorFloat, VectorInt8, VectorInt16, VectorInt32, VectorInt64,
+    VectorString, VectorUInt8, VectorUInt16, VectorUInt32, VectorUInt64)
 from karabo.middlelayer_api.injectable import Injectable
 
 
@@ -746,6 +750,86 @@ class Tests(TestCase):
         a = A()
         self.assertEqual(a.node.daqDataType, DaqDataType.TRAIN)
 
+    def test_daqPolicy(self):
+
+        class MyNode(Configurable):
+            string = String()
+
+        class A(Configurable):
+            a = Bool()
+            b = Float()
+            c = VectorFloat()
+            d = Int8()
+            e = VectorInt8()
+            f = UInt8()
+            g = VectorUInt8()
+            h = Int16()
+            i = VectorInt16()
+            j = UInt16()
+            k = VectorUInt16()
+            l = Int32()
+            m = VectorInt32()
+            n = UInt32()
+            o = VectorUInt32()
+            p = Int64()
+            q = VectorInt64()
+            r = UInt64()
+            s = VectorUInt64()
+            t = Double()
+            u = VectorDouble()
+            v = ComplexFloat()
+            w = VectorComplexFloat()
+            x = ComplexDouble()
+            y = VectorComplexDouble()
+            z = String()
+            az = VectorString()
+            aa = VectorBool()
+
+            node = Node(MyNode)
+
+            @Slot(requiredAccessLevel=AccessLevel.EXPERT)
+            def mySlot(self):
+                pass
+
+        conf = A()
+        self.assertEqual(conf.a.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.b.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.c.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.e.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.f.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.g.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.h.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.i.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.j.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.k.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.l.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.m.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.n.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.o.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.p.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.q.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.r.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.s.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.t.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.u.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.v.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.w.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.x.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.y.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.z.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.az.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+        self.assertEqual(conf.aa.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
+
+        # Slots have descriptor but no daqPolicy
+        self.assertIsNotNone(conf.mySlot.descriptor)
+        with self.assertRaises(AttributeError):
+            print(conf.mySlot.descriptor.daqPolicy)
+
+        # Nodes don't have default daqPolicy or descriptor
+        self.assertIsNotNone(conf.node)
+        with self.assertRaises(AttributeError):
+            print(conf.node.descriptor)
+
     def test_applyRunTimeUpdates(self):
         class A(Configurable):
             b = Int32(maxExc=50, defaultValue=1,
@@ -756,10 +840,6 @@ class Tests(TestCase):
             a = Int32(maxExc=50, defaultValue=1)
             node = Node(A)
 
-            @Slot(requiredAccessLevel=AccessLevel.EXPERT)
-            def mySlot(self):
-                pass
-
         conf = B()
         self.assertEqual(conf.a.descriptor.maxExc, 50)
         self.assertEqual(conf.a.descriptor.daqPolicy, DaqPolicy.UNSPECIFIED)
@@ -767,17 +847,6 @@ class Tests(TestCase):
         self.assertEqual(conf.node.b.descriptor.daqPolicy, DaqPolicy.OMIT)
         self.assertEqual(conf.node.c.descriptor.daqPolicy,
                          DaqPolicy.UNSPECIFIED)
-
-        # Nodes don't have default daq type or descriptor
-        self.assertIsNotNone(conf.node)
-        with self.assertRaises(AttributeError):
-            self.assertIsNone(conf.node.daqPolicy)
-
-        # Slots have descriptor but no daqPolicy
-        self.assertIsNotNone(conf.mySlot.descriptor)
-        with self.assertRaises(AttributeError):
-            self.assertEqual(conf.mySlot.descriptor.daqPolicy,
-                             DaqPolicy.UNSPECIFIED)
 
         updates = [Hash('path', "a",
                         'attribute', "maxExc",
