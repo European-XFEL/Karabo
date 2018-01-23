@@ -1,7 +1,8 @@
 import json
 
 from karabo.common.api import (
-    KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_UNIT_SYMBOL)
+    KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_UNIT_SYMBOL,
+    KARABO_SCHEMA_DAQ_POLICY)
 from karabo.middlelayer import AccessMode, Configurable, Int8, String, Unit
 from karabogui import icons
 from karabogui.testing import GuiTestCase, get_class_property_proxy
@@ -38,7 +39,8 @@ class TestConfiguratorUtils(GuiTestCase):
 
         property_names = get_child_names(proxy)
         assert property_names == (KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
-                                  KARABO_SCHEMA_UNIT_SYMBOL)
+                                  KARABO_SCHEMA_UNIT_SYMBOL,
+                                  KARABO_SCHEMA_DAQ_POLICY)
 
         device_names = get_child_names(proxy.root_proxy)
         assert device_names == ['string', 'integer']
