@@ -44,14 +44,20 @@ class TestConfiguratorModel(GuiTestCase):
         assert bar_index.isValid()
         assert bar_index.data() == 'bar'
 
+        # minInc, maxInc and daqPolicy attributes
+
         # minInc
-        assert self.model.rowCount(parent=bar_index) == 2
+        assert self.model.rowCount(parent=bar_index) == 3
         min_inc_index = bar_index.child(0, 0)
         assert min_inc_index.data() == 'minInc'
 
         # maxInc
         max_inc_index = bar_index.child(1, 1)
         assert max_inc_index.data(role=Qt.EditRole) == 10
+
+        # daqPolicy
+        daq_index = bar_index.child(2, 2)
+        assert daq_index.data() == '-1'
 
         max_inc_index = bar_index.child(1, 2)
         flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
