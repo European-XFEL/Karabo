@@ -866,6 +866,7 @@ class Tests(DeviceTest):
         h = schema.hash
         self.assertEqual(h["value", ...], {
             'requiredAccessLevel': 0,
+            'daqPolicy': -1,
             'metricPrefixSymbol': '',
             'accessMode': 4,
             'description': 'The Value',
