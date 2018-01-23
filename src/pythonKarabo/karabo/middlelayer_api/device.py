@@ -163,3 +163,23 @@ class Device(AlarmMixin, SignalSlotable):
     def _notifyNewSchema(self):
         """Notfiy the network that our schema has changed"""
         self.signalSchemaUpdated(self.getDeviceSchema(), self.deviceId)
+
+    @slot
+    def slotUpdateSchemaAttributes(self, updates):
+        """Apply runtime attribute updates to the device
+
+        This method will apply all attributes to the device. If a single
+        attribute cannot be set, the success return boolean is set to False.
+        However, even with a single failure, all other remaining attributes
+        are still tried to be set.
+
+        :param updates: List of Hashes with "path", "attribute" and "value"
+                        as keys
+        """
+        ret = Hash()
+        ret["success"] = self.applyRuntimeUpdates(updates)
+        ret["instanceId"] = self.deviceId
+        ret["updatedSchema"] = self.getDeviceSchema()
+        ret["requestedUpdate"] = updates
+
+        return ret
