@@ -217,6 +217,11 @@ class ProjectDeviceProxy(DeviceClassProxy):
     """
     device_id = String
 
+    def update_status(self):
+        """Request a recalculating of the device status
+        """
+        self.status = self._status_default()
+
 
 class PropertyProxy(HasStrictTraits):
     """A proxy for a single device property
