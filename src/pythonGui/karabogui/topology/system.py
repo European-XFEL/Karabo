@@ -87,7 +87,8 @@ class SystemTopology(HasStrictTraits):
             return None
 
     def get_class(self, server_id, class_id):
-        """Return the proxy for a given class on a given server
+        """Return the class proxy (DeviceClassProxy) for a given
+        class on a given server
         """
         key = (server_id, class_id)
         proxy = self._class_proxies.get(key)
@@ -103,7 +104,7 @@ class SystemTopology(HasStrictTraits):
         return proxy
 
     def get_device(self, device_id):
-        """Return the proxy for a given device
+        """Return the online version proxy (DeviceProxy) for a given device
         """
         proxy = self._device_proxies.get(device_id)
         if proxy is None:
@@ -128,6 +129,10 @@ class SystemTopology(HasStrictTraits):
                            init_config=None):
         """Return a ``ProjectDeviceInstance`` for a device on a specific
         server.
+
+        The ProjectDeviceInstance holds two proxies, when the device is online
+        it uses DeviceProxy, when the device is offline, it uses
+        ProjectDeviceProxy (which is a modified version of ClassDeviceProxy)
         """
         if device_id not in self._project_devices:
             if class_id == '' or server_id == '':
@@ -153,7 +158,8 @@ class SystemTopology(HasStrictTraits):
 
     def get_project_device_proxy(self, device_id, server_id, class_id,
                                  create_instance=True):
-        """Return the project device proxy for a given class on a given server
+        """Return the project device proxy (offline version of a device in a
+        certain project) for a given class on a given server
 
         If `create_instance` is False, avoid creating the project device and
         return None.
@@ -386,6 +392,8 @@ class SystemTopology(HasStrictTraits):
             self._system_hash.merge(server_hash, "merge")
 
         # Update high-level representation
+        # Error and alarm information are also get updated to nodes appear in
+        # the system topology in the navigation panel
         new_topology_nodes = self.system_tree.update(server_hash)
 
         self._update_online_device_status()
@@ -434,18 +442,30 @@ class SystemTopology(HasStrictTraits):
         return attrs
 
     def _update_online_device_status(self):
-        """Check all device proxies to see if they are online or not
+        """Check all online version of device proxies (DeviceProxy or
+        ProjectDevice) to see if their status should be updated.
+
+        Call this function every time a new system hash is arrived from the
+        GUI server, so we can keep all device presentations up to date
         """
+        # self._device_proxies is a dictionary keeps all the online devices
+        # which are visible in the topology
         for dev in self._device_proxies.values():
             did = dev.device_id
+            # extract this device's information from system hash
             attrs = self._get_device_attributes(did)
             if dev.status is DeviceStatus.OFFLINE and attrs:
                 dev.status = DeviceStatus.ONLINE
-                prj_dev = self._project_devices.get(did)
-                if prj_dev is not None:
-                    prj_dev.error = (attrs.get('status', '') == 'error')
             elif dev.status is not DeviceStatus.OFFLINE and attrs is None:
                 dev.status = DeviceStatus.OFFLINE
+            # The information we pull out of the system hash may also contain
+            # device error or alarm information, project device will not be
+            # updated until user show them in the configurator, so here we set
+            # the shortcut flag directly so their icon will be updated in the
+            # project panel view.
+            prj_dev = self._project_devices.get(did)
+            if prj_dev is not None and attrs is not None:
+                prj_dev.error = (attrs.get('status', '') == 'error')
 
     def _project_device_proxies_server_update(self, server_id):
         """Check if the server_id and class_id of a project device proxy is in
