@@ -3,7 +3,6 @@
 # Created on January 10, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
 from traits.api import (HasStrictTraits, Bool, Dict, Instance, Property,
                         on_trait_change)
 
@@ -239,17 +238,25 @@ class SystemTopology(HasStrictTraits):
         """Called when a `classSchema` message is received from the server.
         """
         key = (server_id, class_id)
-        if (key not in self._class_proxies and
-                key not in self._project_device_proxies):
-            # We used to print 'Unrequested schema for classId {} arrived' here
-            return None
+        if len(schema.hash) > 0:
+            # if it's a valid schema we cache it even if it is not requested,
+            # may be useful in future
+            self._class_schemas[key] = schema
 
-        self._class_schemas[key] = schema
-        if len(schema.hash) == 0:
+        if (key not in self._class_proxies.keys() and
+                key not in self._project_device_proxies.keys()):
+            # This schema has nothing to do with us whatsoever
+            # We used to print 'Unrequested schema for classId {} arrived'.
             return
 
         proxies = []
-        if key in self._class_proxies:
+        if key not in self._class_proxies.keys():
+            # We lazy build a DeviceClassProxy for future usage
+            binding = build_binding(schema)
+            proxy = DeviceClassProxy(server_id=server_id, binding=binding)
+            self._class_proxies[key] = proxy
+            apply_default_configuration(proxy.binding)
+        else:
             proxies = [self._class_proxies[key]]
         proxies.extend(self._project_device_proxies.get(key, {}).values())
 
@@ -338,7 +345,11 @@ class SystemTopology(HasStrictTraits):
 
         elif instance_type == 'server':
             self.system_tree.remove_server(instance_id)
-            # XXX: We used to clear all class tree widgets here
+            for key in self._class_proxies.keys():
+                if key[0] == instance_id:
+                    # Clear the class proxy binding values when device server
+                    # goes offline
+                    self._class_proxies[key].binding.value.clear()
 
             # Update the status of all online devices (device proxies)
             self._update_online_device_status()
@@ -372,15 +383,19 @@ class SystemTopology(HasStrictTraits):
 
         # Topology changed so send new class schema requests
         srv_hsh = server_hash.get('server', None)
-        if srv_hsh is not None:
-            # Request schema for already viewed classes, if a server is new
-            for server_id, class_id in self._class_proxies.keys():
-                if server_id in srv_hsh:
-                    self.get_class(server_id, class_id)
+        if srv_hsh is None:
+            return
+
+        for server_id in srv_hsh:
+            for srv_id, cls_id in self._class_proxies.keys():
+                if (srv_id == server_id and cls_id
+                        in srv_hsh[srv_id, ...].get('deviceClasses', ())):
+                    proxy = self._class_proxies[(srv_id, cls_id)]
+                    if len(proxy.binding.value) == 0:
+                        proxy.refresh_schema()
 
             # Update all offline devices (project device proxies)
-            for server_id in srv_hsh:
-                self._project_device_proxies_server_update(server_id)
+            self._project_device_proxies_server_update(server_id)
 
     def update(self, server_hash):
         """A new device or server was added, or an existing device or server
@@ -468,28 +483,12 @@ class SystemTopology(HasStrictTraits):
                 prj_dev.error = (attrs.get('status', '') == 'error')
 
     def _project_device_proxies_server_update(self, server_id):
-        """Check if the server_id and class_id of a project device proxy is in
-        the system topology, update the status accordingly
+        """Because the server online status has changed , update the project
+        device proxy's status accordingly
         """
         for (srv_id, cls_id), mapping in self._project_device_proxies.items():
+            # key -> (server_id, class_id)
             # mapping -> {deviceId: project_device_proxy}
-            if server_id != srv_id:
-                continue
-            path = 'server.{}'.format(srv_id)
-            attributes = self.get_attributes(path)
-            for proxy in mapping.values():
-                if attributes is None:
-                    # This proxy's server is not found in the system topology
-                    proxy.status = DeviceStatus.NOSERVER
-                else:
-                    # Get all available device classes on this server
-                    dev_classes = attributes.get('deviceClasses', [])
-                    if cls_id in dev_classes:
-                        # Only change the proxy status if its previously not
-                        # available (i.e. noserver or noplugin)
-                        if proxy.status in (DeviceStatus.NOSERVER,
-                                            DeviceStatus.NOPLUGIN):
-                            proxy.status = DeviceStatus.OFFLINE
-                    else:
-                        # We know the server is online, but no device class
-                        proxy.status = DeviceStatus.NOPLUGIN
+            if server_id == srv_id:
+                for dev_id, proxy in mapping.items():
+                    proxy.update_status()

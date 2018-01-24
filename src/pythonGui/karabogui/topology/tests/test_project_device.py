@@ -26,7 +26,7 @@ def test_project_device():
 
             config = Hash('val', 'foo')
             device.set_project_config_hash(config)
-            assert device._deferred_update
+            assert device._offline_config == config
 
             topology.class_schema_updated('swerver', 'FooClass', schema)
             assert device._offline_proxy.binding.value.val.value == 'foo'
