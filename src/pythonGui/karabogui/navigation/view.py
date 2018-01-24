@@ -124,6 +124,12 @@ class NavigationTreeView(QTreeView):
         self.clearSelection()
         self.model().clear()
 
+    def scrollTo(self, index, hint=QAbstractItemView.EnsureVisible):
+        """Reimplementation of the Qt function
+        """
+        self.setExpanded(index, True)
+        super(NavigationTreeView, self).scrollTo(index)
+
     # ----------------------------
     # Slots
 
