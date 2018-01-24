@@ -25,8 +25,12 @@ class TestSystemTopology(GuiTestCase):
 
             klass = topology.get_class('swerver', 'divvy')
 
-            assert klass.status is DeviceStatus.REQUESTED
-            network.onGetClassSchema.assert_called_with('swerver', 'divvy')
+            # server with name 'swerver' don't have the requested class
+            assert klass.status is DeviceStatus.NOPLUGIN
+            # GUI's system topology won't request for schema if the devic
+            # class is not in the deviceClasses list of the server, this
+            # solves the race condition in MDL
+            assert network.onGetClassSchema.call_count == 0
 
     def test_get_device_simple(self):
         network = Mock()
@@ -35,8 +39,8 @@ class TestSystemTopology(GuiTestCase):
             topology.update(system_hash())
             klass = topology.get_class('swerver', 'divvy')
 
-            assert klass.status is DeviceStatus.REQUESTED
-            network.onGetClassSchema.assert_called_with('swerver', 'divvy')
+            assert klass.status is DeviceStatus.NOPLUGIN
+            assert network.onGetClassSchema.call_count == 0
 
             dev = topology.get_device('divvy')
 
