@@ -6,7 +6,7 @@ from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.api import KARABO_RUNTIME_ATTRIBUTES_MDL
 from .basetypes import isSet, KaraboValue, NoneValue
 from .enums import NodeType
-from .hash import Attribute, Descriptor, Hash, Schema, HashList
+from .hash import Attribute, Descriptor, Hash, Schema, HashList, Slot
 from .registry import Registry
 from .timestamp import Timestamp
 
@@ -250,7 +250,11 @@ class Overwrite(object):
     def overwrite(self, original):
         _, attrs = original.toSchemaAndAttrs(None, None)
         attrs.pop("enum", None)
-        ret = original.__class__(strict=False, enum=original.enum, **attrs)
+        if issubclass(original.__class__, Slot):
+            ret = original.__class__(strict=False, **attrs)
+            ret.method = original.method
+        else:
+            ret = original.__class__(strict=False, enum=original.enum, **attrs)
         ret.__init__(key=original.key, **self.kwargs)
         return ret
 
