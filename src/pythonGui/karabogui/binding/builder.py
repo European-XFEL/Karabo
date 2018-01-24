@@ -1,3 +1,5 @@
+from traits.api import Undefined
+
 from karabo.common import const
 from karabo.middlelayer import Hash, NodeType, Schema
 from . import recursive
@@ -7,7 +9,8 @@ from .util import attr_fast_deepcopy
 
 def build_binding(schema, existing=None):
     """Given a schema object, build an object binding which matches the
-    structure defined in the schema.
+    structure defined in the schema. All leaf nodes are built with an initial
+    value of Undefined.
     """
     # Use `existing` or create a new instance.
     binding = existing or types.BindingRoot()
@@ -62,7 +65,7 @@ def _build_node(value, attrs):
     elif node_type == NodeType.Leaf:
         value_type = attrs[const.KARABO_SCHEMA_VALUE_TYPE]
         binding_factory = _BINDING_MAP[value_type]
-        return binding_factory(attributes=attrs)
+        return binding_factory(attributes=attrs, value=Undefined)
 
     elif node_type in _RECURSIVE_BINDING_MAP:
         namespace = _build_node_choices(value)

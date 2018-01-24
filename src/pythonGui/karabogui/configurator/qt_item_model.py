@@ -7,7 +7,6 @@ from weakref import WeakValueDictionary
 
 from PyQt4.QtCore import pyqtSignal, QAbstractItemModel, QModelIndex, Qt
 from PyQt4.QtGui import QBrush, QColor, QFont
-from traits.api import Undefined
 
 from karabo.middlelayer import AccessMode, Assignment
 from karabo.common.api import (
@@ -17,8 +16,8 @@ from karabo.common.api import (
 from karabogui.binding.api import (
     BaseBinding, BindingRoot, ChoiceOfNodesBinding, DeviceClassProxy,
     DeviceProxy, ImageBinding, ListOfNodesBinding, NodeBinding,
-    ProjectDeviceProxy, PropertyProxy, SlotBinding, has_changes,
-)
+    ProjectDeviceProxy, PropertyProxy, SlotBinding, get_binding_value,
+    has_changes)
 from karabogui.const import (
     OK_COLOR, ERROR_COLOR_ALPHA, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR)
 from karabogui.indicators import STATE_COLORS
@@ -537,7 +536,9 @@ class ConfigurationTreeModel(QAbstractItemModel):
         """data(role=Qt.ColorRole) for properties."""
         binding = proxy.binding
         attributes = binding.attributes
-        value = binding.value
+        value = get_binding_value(binding)
+        if value is None:
+            return None  # indicate no color
         alarm_low = attributes.get(KARABO_ALARM_LOW)
         alarm_high = attributes.get(KARABO_ALARM_HIGH)
         warn_low = attributes.get(KARABO_WARN_LOW)
@@ -567,9 +568,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 return get_icon(binding)
         elif column == 1 and role == Qt.DisplayRole:
             value = get_proxy_value(index, proxy)
-            if value is Undefined:
-                return None
-            return _friendly_repr(proxy, value)
+            return value if isinstance(value, str) else _friendly_repr(proxy,
+                                                                       value)
         elif column == 2:
             if role == Qt.BackgroundRole:
                 if proxy.edit_value is not None:
@@ -578,12 +578,10 @@ class ConfigurationTreeModel(QAbstractItemModel):
                     return QBrush(color)
             elif role in (Qt.DisplayRole, Qt.EditRole):
                 value = get_proxy_value(index, proxy, is_edit_col=True)
-                if value is Undefined:
-                    return None
-                if role == Qt.DisplayRole:
-                    return _friendly_repr(proxy, value)
-                elif role == Qt.EditRole:
+                if role == Qt.EditRole or isinstance(value, str):
                     return value
+                elif role == Qt.DisplayRole:
+                    return _friendly_repr(proxy, value)
 
     def _attribute_flags(self, binding):
         """flags() implementation for property attributes"""

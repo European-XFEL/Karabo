@@ -1,5 +1,7 @@
 from unittest.mock import Mock
 
+from traits.api import Undefined
+
 from karabo.common.api import DeviceStatus
 from karabo.middlelayer import Hash
 from karabogui.testing import (
@@ -281,4 +283,4 @@ def test_delegation_with_schema_update():
         build_binding(schema, existing=device.binding)
 
     # The value on the proxy has been reset to the default for strings
-    assert proxy.value == ''
+    assert proxy.value is Undefined

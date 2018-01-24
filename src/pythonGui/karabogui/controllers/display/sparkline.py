@@ -14,7 +14,7 @@ from karabo.middlelayer import Timestamp
 from karabogui.alarms.api import (
     ALARM_COLOR, ALARM_HIGH, ALARM_LOW, WARN_COLOR, WARN_GLOBAL, WARN_HIGH,
     WARN_LOW)
-from karabogui.binding.api import FloatBinding, IntBinding
+from karabogui.binding.api import FloatBinding, get_binding_value, IntBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.util import SignalBlocker
@@ -468,8 +468,9 @@ class DisplaySparkline(BaseBindingController):
         self.proxy.get_history(t0, t1)
 
     def _set_text(self):
-        if self.proxy.binding is None or self.line_edit is None:
+        value = get_binding_value(self.proxy)
+        if self.line_edit is None or value is None:
             return
         template = "{:" + self.model.show_format + "}"
         with SignalBlocker(self.line_edit):
-            self.line_edit.setText(template.format(self.proxy.value))
+            self.line_edit.setText(template.format(value))
