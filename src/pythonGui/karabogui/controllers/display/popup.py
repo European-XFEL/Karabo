@@ -9,7 +9,7 @@ from karabo.common.api import KARABO_SCHEMA_DISPLAYED_NAME
 from karabo.common.scenemodel.api import PopUpModel
 from karabo.middlelayer import Timestamp
 from karabogui.binding.api import (
-    PropertyProxy, SlotBinding, StringBinding)
+    get_binding_value, PropertyProxy, SlotBinding, StringBinding)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 
@@ -62,7 +62,7 @@ class PopUp(BaseBindingController):
         return widget
 
     def value_update(self, proxy):
-        value = proxy.value
+        value = get_binding_value(proxy, '')
         timestamp = proxy.binding.timestamp
         if timestamp != self._timestamp:
             self._dialog.setText(value)

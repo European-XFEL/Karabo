@@ -74,19 +74,20 @@ class NumberLineEdit(BaseBindingController):
             else:
                 self._internal_value = text
             self._last_cursor_pos = self._internal_widget.cursorPosition()
+            # proxy.edit_value is set to None if the user input is not valid
             self.proxy.edit_value = self._validate_value()
 
     def _validate_value(self):
         """This method validates the current value of the widget and returns
-        on sucess the value or in failure 0.
+        on sucess the value or in failure None.
         """
         if not self._internal_value:
-            return 0
+            return None
 
         value = self._internal_value
         state, _, _ = self._validator.validate(value, 0)
-        if state == QValidator.Invalid or state == QValidator.Intermediate:
-            value = 0
+        if state == QValidator.Invalid:
+            value = None
         return value
 
 
@@ -139,14 +140,15 @@ class DoubleLineEdit(NumberLineEdit):
         return widget
 
     def value_update(self, proxy):
-        value = get_editor_value(proxy)
+        value = get_editor_value(proxy, '')
         self.widget.update_label(proxy)
         self._internal_value = str(value)
 
         format_str = ('{}' if self.model.decimals == -1
                       else '{{:.{}f}}'.format(self.model.decimals))
         with SignalBlocker(self._internal_widget):
-            self._display_value = format_str.format(value)
+            displayed = '' if value == '' else format_str.format(value)
+            self._display_value = displayed
             self._internal_widget.setText(self._display_value)
         self._internal_widget.setCursorPosition(self._last_cursor_pos)
 
@@ -163,7 +165,8 @@ class DoubleLineEdit(NumberLineEdit):
             self.model.decimals = num_decimals
 
     def _validate_value(self):
-        return float(super(DoubleLineEdit, self)._validate_value())
+        ret = super(DoubleLineEdit, self)._validate_value()
+        return float(ret) if ret is not None else None
 
 
 @register_binding_controller(ui_name='Integer Field', can_edit=True,
@@ -178,7 +181,7 @@ class IntLineEdit(NumberLineEdit):
         return super(IntLineEdit, self).create_widget(parent)
 
     def value_update(self, proxy):
-        value = get_editor_value(proxy)
+        value = get_editor_value(proxy, '')
         self.widget.update_label(proxy)
         self._internal_value = str(value)
         with SignalBlocker(self._internal_widget):
@@ -187,4 +190,5 @@ class IntLineEdit(NumberLineEdit):
         self._internal_widget.setCursorPosition(self._last_cursor_pos)
 
     def _validate_value(self):
-        return int(super(IntLineEdit, self)._validate_value())
+        ret = super(IntLineEdit, self)._validate_value()
+        return int(ret) if ret is not None else None

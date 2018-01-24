@@ -4,7 +4,8 @@ from PyQt4.Qwt5.Qwt import QwtPlot
 from traits.api import Dict, Instance
 
 from karabo.common.scenemodel.api import LinePlotModel
-from karabogui.binding.api import VectorBoolBinding, VectorNumberBinding
+from karabogui.binding.api import (get_binding_value, VectorBoolBinding,
+                                   VectorNumberBinding)
 from karabogui.controllers.api import (
     BaseBindingController, axis_label, register_binding_controller)
 
@@ -28,12 +29,11 @@ class XYVector(BaseBindingController):
     def add_proxy(self, proxy):
         curve = make.curve([], [], axis_label(proxy), "r")
         self._add_curve(proxy, curve)
-        if proxy.binding is not None:
+
+        # get_binding_value makes sure that proxy.value is not Undefined
+        if get_binding_value(proxy) is not None:
             self.binding_update(proxy)
-            # since proxy.binding IS a VectorBinding, then non zero length
-            # means valid data.
-            if len(proxy.value) > 0:
-                self.value_update(proxy)
+            self.value_update(proxy)
         return True
 
     def create_widget(self, parent):
@@ -50,13 +50,20 @@ class XYVector(BaseBindingController):
 
     def value_update(self, proxy):
         value = proxy.value
-        if proxy is self.proxy:
-            for p, c in self._curves.items():
-                if len(value) == len(p.value):
-                    c.set_data(value, p.value)
-        elif len(self.proxy.value) == len(value):
-            self._curves[proxy].set_data(self.proxy.value, value)
-        self._plot.replot()
+        if len(value) > 0:
+            if proxy is self.proxy:
+                for p, c in self._curves.items():
+                    # since proxy is used as key for stored curves, before
+                    # getting the previous values from the proxy, we have to
+                    # check for Undefined
+                    y_val = get_binding_value(p, [])
+                    if len(value) == len(y_val):
+                        c.set_data(value, y_val)
+            else:
+                x_val = (get_binding_value(self.proxy, []))
+                if len(value) == len(x_val):
+                    self._curves[proxy].set_data(x_val, value)
+            self._plot.replot()
 
     def _add_curve(self, proxy, curve):
         if proxy in self._curves:

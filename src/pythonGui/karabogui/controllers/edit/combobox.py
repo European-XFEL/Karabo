@@ -44,6 +44,8 @@ class EditableComboBox(BaseBindingController):
 
     def value_update(self, proxy):
         value = get_editor_value(proxy)
+        if value is None:
+            return
         options = proxy.binding.options
         try:
             index = next(i for i, v in enumerate(options)

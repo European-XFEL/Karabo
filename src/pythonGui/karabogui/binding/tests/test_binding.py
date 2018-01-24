@@ -3,6 +3,7 @@ from glob import glob
 import os.path as op
 
 import numpy as np
+from traits.api import Undefined
 
 from karabo.common.api import (
     KARABO_SCHEMA_METRIC_PREFIX_ENUM, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
@@ -127,8 +128,8 @@ def test_default_values():
     schema = get_all_props_schema()
     binding = build_binding(schema)
 
-    assert not binding.value.a.value
-    assert binding.value.b.value == ''
+    assert binding.value.a.value is Undefined
+    assert binding.value.b.value is Undefined
 
     apply_default_configuration(binding)
 
