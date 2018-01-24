@@ -43,7 +43,6 @@ class ProjectDeviceInstance(HasStrictTraits):
 
     # Internal storage for applying offline configuration
     _offline_config = Instance(Hash)
-    _deferred_update = Bool(False)
 
     # An event indicates there are changes in offline configurations so
     # the project should prompt for save
@@ -75,7 +74,10 @@ class ProjectDeviceInstance(HasStrictTraits):
         schema = topology.get_schema(self.server_id, self.class_id)
 
         if schema is not None and len(self._offline_proxy.binding.value) > 0:
-            return extract_edits(schema, self._offline_proxy.binding)
+            new_config = extract_edits(schema, self._offline_proxy.binding)
+            # update our own copy of the device config
+            self._offline_config = new_config
+            return new_config
         return Hash()
 
     def rename(self, device_id='', server_id='', class_id=''):
@@ -97,16 +99,16 @@ class ProjectDeviceInstance(HasStrictTraits):
         """
         if config is None:
             return
+        # Store the offline config, whenever the device goes from online to
+        # offline or its schema changes, we need to apply the config again.
+        self._offline_config = config
 
         # Only apply offline device configuration if the device is offline
-        # and we have schema, otherwise trigger a deferred update
+        # and we have schema
         if not self.online and len(self._offline_proxy.binding.value) > 0:
             apply_default_configuration(self._offline_proxy.binding)
             apply_configuration(config, self._offline_proxy.binding,
                                 notify=False, include_attributes=True)
-        else:
-            self._deferred_update = True
-            self._offline_config = config
 
     def start_monitoring(self):
         """Enable monitoring of the online device (when it is online).
@@ -154,12 +156,19 @@ class ProjectDeviceInstance(HasStrictTraits):
         """Apply offline device configuration
         """
         # Only apply to offline device which already has a schema
-        if not self.online and self._deferred_update:
+        if not self.online and len(self._offline_proxy.binding.value) > 0:
             apply_default_configuration(self._offline_proxy.binding)
             apply_configuration(self._offline_config,
                                 self._offline_proxy.binding,
                                 notify=False, include_attributes=True)
-            self._deferred_update = False
+
+    @on_trait_change('_offline_proxy.status', post_init=True)
+    def _status_changed(self, old, new):
+        """Clear the offline proxy binding values when device server goes
+        offline
+        """
+        if new == DeviceStatus.NOSERVER:
+            self._offline_proxy.binding.value.clear()
 
     # ---------------------------------------------------------------------
     # utils
@@ -169,7 +178,6 @@ class ProjectDeviceInstance(HasStrictTraits):
         """
         topology = get_topology()
 
-        self._deferred_update = False
         if self._offline_proxy is not None:
             topology.remove_project_device_proxy(
                  self.device_id, self.server_id, self.class_id
