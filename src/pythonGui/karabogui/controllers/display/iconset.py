@@ -11,7 +11,7 @@ from PyQt4.QtSvg import QSvgWidget
 from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import DisplayIconsetModel
-from karabogui.binding.api import StringBinding
+from karabogui.binding.api import get_binding_value, StringBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.util import getOpenFileName
@@ -77,11 +77,9 @@ class DisplayIconset(BaseBindingController):
             return
 
         # It's possible to get here before the binding is initialized
-        binding = self.proxy.binding
-        if binding is None:
-            value = ''
-        else:
-            value = binding.value
+        value = get_binding_value(self.proxy)
+        if value is None:
+            return
 
         self.xml.getroot().set('>filter', value)
         buffer = QBuffer()

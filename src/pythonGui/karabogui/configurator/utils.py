@@ -13,7 +13,7 @@ from karabogui import globals as krb_globals, icons
 from karabogui.binding.api import (
     BindingRoot, BoolBinding, CharBinding, ChoiceOfNodesBinding,
     IntBinding, FloatBinding, ListOfNodesBinding, NodeBinding, StringBinding,
-    VectorHashBinding, get_editor_value)
+    VectorHashBinding, get_binding_value, get_editor_value)
 from karabogui.controllers.api import get_compatible_controllers
 
 # The fixed height of rows in the configurator
@@ -100,7 +100,9 @@ def get_device_state_string(device_proxy):
     important property!
     """
     state_binding = device_proxy.state_binding
-    return state_binding.value if state_binding is not None else ''
+    if state_binding is None:
+        return ''
+    return get_binding_value(state_binding, '')
 
 
 def get_icon(binding):
@@ -142,7 +144,7 @@ def get_proxy_value(index, proxy, is_edit_col=False):
         return binding.choice or ''
     if isinstance(binding, ListOfNodesBinding):
         # Use the class_id to represent each node in the ListOfNodes
-        val = [rootnode.class_id for rootnode in binding.value]
+        val = [node.class_id for node in get_binding_value(binding, [])]
         return val
     if isinstance(binding, (BindingRoot, NodeBinding, VectorHashBinding)):
         return ''
@@ -207,5 +209,5 @@ def _proxy_value(proxy, is_edit_col):
     yet applied.
     """
     if is_edit_col:
-        return get_editor_value(proxy)
-    return proxy.value
+        return get_editor_value(proxy, '')
+    return get_binding_value(proxy, '')

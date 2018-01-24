@@ -6,7 +6,7 @@ from traits.api import Instance, List
 from karabo.common.api import State, KARABO_SCHEMA_DISPLAYED_NAME
 from karabo.common.scenemodel.api import DisplayCommandModel
 from karabogui import globals as krb_globals
-from karabogui.binding.api import SlotBinding
+from karabogui.binding.api import get_binding_value, SlotBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 
@@ -33,7 +33,7 @@ class DisplayCommand(BaseBindingController):
         item = Item(proxy=proxy, action=action)
         self._actions.append(item)
 
-        if proxy.binding:
+        if proxy.binding is not None:
             # Only if the binding is already valid
             self._finalize_item_initialization(item)
         return True
@@ -56,7 +56,10 @@ class DisplayCommand(BaseBindingController):
 
     def state_update(self, proxy):
         updated_dev = proxy.root_proxy
-        state = State(updated_dev.state_binding.value)
+        value = get_binding_value(updated_dev.state_binding, '')
+        if value == '':
+            return
+        state = State(value)
         for item in self._actions:
             item_dev = item.proxy.root_proxy
             item_binding = item.proxy.binding
@@ -77,8 +80,7 @@ class DisplayCommand(BaseBindingController):
         item.action.setText(display_name)
         item.action.triggered.connect(item.proxy.execute)
         # State binding can be None
-        state_binding = proxy.root_proxy.state_binding
-        if state_binding and state_binding.value != '':
+        if proxy.root_proxy.state_binding is not None:
             self.state_update(proxy)
 
     def _set_default_action(self):

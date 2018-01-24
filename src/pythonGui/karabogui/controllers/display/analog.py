@@ -14,7 +14,7 @@ from karabo.common.api import (
 from karabo.common.scenemodel.api import AnalogModel
 from karabogui import messagebox
 from karabogui.alarms.api import ALARM_COLOR, NORM_COLOR, WARN_COLOR
-from karabogui.binding.api import FloatBinding
+from karabogui.binding.api import FloatBinding, get_binding_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 
@@ -50,9 +50,10 @@ class DisplayAnalog(BaseBindingController):
         return widget
 
     def value_update(self, proxy):
+        # This widget should deal with Undefined value
         alarms, warnings = self._alarmsAndWarnings()
         if alarms and warnings:
-            self._paintWidget(proxy.value, warnings, alarms)
+            self._paintWidget(get_binding_value(proxy), warnings, alarms)
 
     # -------------------------------------------------------------------------
     # Private
@@ -153,8 +154,12 @@ class DisplayAnalog(BaseBindingController):
             painter.scale(1, -1)
             painter.translate(0, -pixmap.height())
 
+            # value is not set, show nothing
+            if value is None:
+                w_value = self._drawEmpty(painter)
+
             # check if we have no alarm or warning set complete
-            if None in alarm.values() and None in warning.values():
+            elif None in alarm.values() and None in warning.values():
                 w_value = self._drawEmpty(painter)
 
             # check if we have both alarm and warnings

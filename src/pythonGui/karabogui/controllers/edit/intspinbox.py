@@ -66,8 +66,10 @@ class EditableSpinBox(BaseBindingController):
 
     def value_update(self, proxy):
         self.widget.update_label(proxy)
-        with SignalBlocker(self._internal_widget):
-            self._internal_widget.setValue(get_editor_value(proxy))
+        value = get_editor_value(proxy)
+        if value is not None:
+            with SignalBlocker(self._internal_widget):
+                self._internal_widget.setValue(value)
 
     @pyqtSlot(bool)
     def _focus_changed(self, has_focus):

@@ -55,7 +55,6 @@ def apply_default_configuration(binding):
     """Recursively set default values for a binding object.
     """
     assert isinstance(binding, BindingRoot)
-    _special_types = (ChoiceOfNodesBinding, NodeBinding, ListOfNodesBinding)
 
     def _iter_binding(node):
         namespace = node.value
@@ -81,8 +80,6 @@ def apply_default_configuration(binding):
             node.value = default_value
         elif len(node.options) > 0:
             node.value = node.options[0]
-        elif not isinstance(node, _special_types):
-            node.value = Undefined
 
 
 def extract_attribute_modifications(schema, binding):

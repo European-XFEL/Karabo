@@ -36,8 +36,10 @@ class _AnalogEditorWidget(BaseBindingController):
             self.widget.setRange(low, high)
 
     def value_update(self, proxy):
-        with SignalBlocker(self.widget):
-            self.widget.setValue(get_editor_value(proxy))
+        value = get_editor_value(proxy)
+        if value is not None:
+            with SignalBlocker(self.widget):
+                self.widget.setValue(value)
 
     @pyqtSlot(object)
     def _edit_value(self, value):
