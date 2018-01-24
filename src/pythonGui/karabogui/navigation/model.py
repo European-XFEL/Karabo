@@ -174,6 +174,9 @@ class NavigationTreeModel(QAbstractItemModel):
         self.selectionModel.setCurrentIndex(index,
                                             QItemSelectionModel.ClearAndSelect)
 
+        treeview = super(NavigationTreeModel, self).parent()
+        treeview.scrollTo(index)
+
     def selectNodeById(self, node_id):
         """Select the `SystemTreeNode` with the given `node_id`.
 
