@@ -3,7 +3,6 @@ from unittest import TestCase, main
 import time
 
 from karabo.middlelayer_api.timestamp import Timestamp
-from karabo.middlelayer_api.hash import Hash
 
 
 class Tests(TestCase):
@@ -22,9 +21,10 @@ class Tests(TestCase):
         self.assertEqual(repr(t3), "2009-04-20T10:32:22 UTC")
         self.assertEqual(Timestamp(repr(t3)), t3)
         self.assertEqual(Timestamp(str(t3)), t3)
+        self.assertEqual(t3.toTimestamp(), 1240223542)
 
         t4 = Timestamp(t2)
-        self.assertEqual(t3.toTimestamp(), 1240223542)
+        self.assertEqual(t4, t2)
 
     def test_hash_read(self):
         self.assertIsNone(Timestamp.fromHashAttributes(dict()))
@@ -33,7 +33,6 @@ class Tests(TestCase):
         self.assertEqual(t.tid, 22)
 
     def test_hash_write(self):
-        h = Hash("a", 3)
         t = Timestamp("2009-09-01 14:23 UTC")
         d = t.toDict()
         self.assertEqual(d["sec"], 1251814980)
@@ -48,6 +47,12 @@ class Tests(TestCase):
         self.assertLessEqual(t1, t2)
         self.assertEqual(t2, t3)
         self.assertGreaterEqual(t2, t1)
+
+    def test_properties(self):
+        t = Timestamp("2009-09-01 14:23 UTC")
+        self.assertEqual(t.train_id, 0)
+        self.assertEqual(t.time_frac, 135584022528)
+        self.assertEqual(t.time_sec, 1251814980)
 
 
 if __name__ == "__main__":

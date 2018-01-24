@@ -45,6 +45,18 @@ class Timestamp(object):
         ret.tid = attrs['tid']
         return ret
 
+    @property
+    def time_frac(self):
+        """The fractional seconds of the timestamp in attoseconds
+        """
+        return numpy.uint64(self.time % RESOLUTION)
+
+    @property
+    def time_sec(self):
+        """The seconds of the timestamp from epoch
+        """
+        return numpy.uint64(self.time // RESOLUTION)
+
     def toDict(self):
         return {"frac": numpy.uint64(self.time % RESOLUTION),
                 "sec": numpy.uint64(self.time // RESOLUTION),
@@ -52,7 +64,7 @@ class Timestamp(object):
 
     def toTimestamp(self):
         """Return the time as seconds since 1970-01-01 00:00 UTC"""
-        return self.time / 10 ** 18
+        return self.time / RESOLUTION
 
     def toLocal(self):
         """Return the time as an ISO 8601 string in the local timezone"""
