@@ -101,6 +101,11 @@ def parse_commandline():
                             help='artifacts will be copied into the plugins '
                                  'folder unless --copy=False')
 
+    parser_ins.add_argument('-f', '--force',
+                            action='store_true',
+                            help='Force installation of device and its '
+                            'dependencies, may overwrite existing')
+
     parser_ins.set_defaults(command=install)
 
     parser_uins = sps.add_parser('uninstall',
@@ -254,6 +259,21 @@ def install(args):
         copyFlag = args.copy
         path = os.path.join('installed', args.device)
         if os.path.isdir(path):
+            tag = run_cmd('git -C {} tag'.format(path)).decode("utf-8").\
+                  rstrip()
+            if tag == args.tag:
+                print("Skip {}-{} installation... already installed".
+                      format(args.device, tag, args.tag))
+                return
+
+            if not args.force:
+                # Prompt for user's confirmation
+                overwrite = input('{} already installed: do you want to '
+                                  'replace tag {} with {}? [y/N]'.
+                                  format(args.device, tag, args.tag))
+                if overwrite.lower() != "y":
+                    print('Abort {} installation'.format(args.device))
+                    return
             run_cmd('rm -rf {}'.format(path))
         os.makedirs(path, exist_ok=True)
         print('Downloading source for {}... '.format(args.device),
