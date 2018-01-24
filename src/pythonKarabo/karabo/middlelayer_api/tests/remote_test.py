@@ -1,5 +1,6 @@
-from asyncio import (async, coroutine, Future, gather, get_event_loop, sleep,
-                     wait_for, TimeoutError)
+from asyncio import (
+    async, coroutine, Future, gather, get_event_loop, sleep, wait_for,
+    TimeoutError)
 from contextlib import contextmanager
 from datetime import datetime
 from unittest import main
@@ -12,9 +13,10 @@ from pint import DimensionalityError
 from karabo.middlelayer import (
     AlarmCondition, background, Bool, Configurable, connectDevice,
     decodeBinary, Device, DeviceNode, execute, Float, getDevice, isAlive,
-    isSet, Int32, KaraboError, lock, MetricPrefix, Node, Queue, setNoWait,
-    setWait, Slot, slot, State, String, unit, Unit, VectorChar, VectorInt16,
-    VectorString, VectorFloat, waitUntil, waitUntilNew)
+    isSet, Int32, KaraboError, lock, MetricPrefix, Node, Overwrite,
+    Queue, setNoWait, setWait, Slot, slot, State, String, unit, Unit,
+    VectorChar, VectorInt16, VectorString, VectorFloat, waitUntil,
+    waitUntilNew)
 from karabo.middlelayer_api import openmq
 from karabo.middlelayer_api.injectable import Injectable
 
@@ -96,7 +98,7 @@ class Remote(Injectable, Device):
     def doit(self):
         self.done = True
 
-    @Slot()
+    @Slot(displayedName="Change")
     @coroutine
     def changeit(self):
         self.value -= 4
@@ -977,6 +979,8 @@ class Tests(DeviceTest):
         with (yield from getDevice("remote")) as d:
             self.remote.__class__.injected = String()
             self.remote.__class__.injected_node = Node(Nested)
+            self.remote.__class__.changeit = Overwrite(
+                displayedName="ChangeIt")
 
             @Int32()
             @coroutine
@@ -985,7 +989,7 @@ class Tests(DeviceTest):
                 myself.tobeinit = 123
             self.remote.__class__.tobeinit = tobeinit
 
-            @Slot()
+            @Slot(displayedName="Injected")
             def slot(self):
                 nonlocal slotdata
                 slotdata = 44
@@ -996,6 +1000,8 @@ class Tests(DeviceTest):
                 yield from wait_for(waitUntil(lambda: hasattr(d, "injected")),
                                     timeout=0.1)
             yield from self.remote.publishInjectedParameters(tobeinit=100)
+            self.assertEqual(self.remote.changeit.descriptor.displayedName,
+                             "ChangeIt")
             self.remote.injected = "smthng"
             self.remote.injected_node = Nested({})
             yield from waitUntil(lambda: hasattr(d, "injected"))
@@ -1004,6 +1010,8 @@ class Tests(DeviceTest):
             self.remote.injected = "bla"
             yield from waitUntil(lambda: d.injected == "bla")
             yield from d.injected_slot()
+            self.assertEqual(
+                self.remote.injected_slot.descriptor.displayedName, "Injected")
             self.assertEqual(slotdata, 44)
 
             d.injected_node.val = 10

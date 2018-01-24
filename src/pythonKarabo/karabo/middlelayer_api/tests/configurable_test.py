@@ -679,6 +679,10 @@ class Tests(TestCase):
                            metricPrefixSymbol=MetricPrefix.MILLI,
                            options=[8, 9, 10])
 
+            @Slot(displayedName="MandyRandy", allowedStates=[State.INIT])
+            def randyMandy(self):
+                pass
+
             deviceId = None
 
             def _register_slots(self):
@@ -696,6 +700,9 @@ class Tests(TestCase):
             accessMode=AccessMode.INITONLY,
             unitSymbol=Unit.SECOND, metricPrefixSymbol=MetricPrefix.MEGA,
             tags={"naughty"}, options=[6, 4])
+        mandy.__class__.randyMandy = Overwrite(
+            displayedName="NoMandy", allowedStates=[State.ON]
+        )
         run_coro(mandy.publishInjectedParameters())
 
         self.assertEqual(mandy.number.descriptor.key, "number")
@@ -715,6 +722,9 @@ class Tests(TestCase):
         self.assertEqual(mandy.number.descriptor.units, unit.megasecond)
         self.assertEqual(Mandy.number.options, [8, 9, 10])
         self.assertEqual(mandy.number.descriptor.options, [6, 4])
+        self.assertIs(mandy.randyMandy.descriptor.displayedName, "NoMandy")
+        self.assertEqual(mandy.randyMandy.descriptor.allowedStates,
+                         {State.ON})
 
     def test_slot(self):
         class A(Configurable):

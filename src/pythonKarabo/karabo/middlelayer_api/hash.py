@@ -482,6 +482,8 @@ class Slot(Descriptor):
                 """Document the important things done here"""
                 # add some important code here
     '''
+    method = None
+
     def toSchemaAndAttrs(self, device, state):
         h, attrs = super(Slot, self).toSchemaAndAttrs(device, state)
         attrs["nodeType"] = NodeType.Node
