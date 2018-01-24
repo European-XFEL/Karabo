@@ -33,7 +33,11 @@ class AlarmInfo(HasStrictTraits):
 
         if alarm_type in self.alarm_dict:
             dev_props = self.alarm_dict[alarm_type]
-            dev_props.remove(dev_property)
+            if dev_property in dev_props:
+                # XXX: somehow the dev_property get lost after the same
+                # property triggers multiple time of different warnings.
+                # to be investigated.
+                dev_props.remove(dev_property)
             if len(dev_props) == 0:
                 del self.alarm_dict[alarm_type]
 
