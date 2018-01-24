@@ -10,7 +10,7 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QAction, QDialog, QMenu
 from traits.api import Instance, Property, on_trait_change
 
-from karabo.common.api import DeviceStatus, NO_CONFIG_STATUSES
+from karabo.common.api import NO_CONFIG_STATUSES
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     find_parent_object
@@ -179,9 +179,8 @@ class DeviceInstanceController(BaseProjectGroupController):
     @on_trait_change("project_device:status")
     def status_change(self, status):
         self._update_icon(self.ui_data)
-        if status not in (DeviceStatus.NOPLUGIN, DeviceStatus.NOSERVER):
-            # Show the device's configuration, iff it was already showing
-            self._update_configurator()
+        # Show the device's configuration, iff it was already showing
+        self._update_configurator()
 
     @on_trait_change("project_device:device_node.alarm_info.alarm_dict_items")
     def _alarm_info_change(self):
