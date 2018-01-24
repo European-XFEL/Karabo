@@ -95,7 +95,7 @@ class _BaseTableElement(BaseBindingController):
                 self.model.column_schema = SchemaHashType.toString(schema)
 
     def value_update(self, proxy):
-        value = get_editor_value(proxy)
+        value = get_editor_value(proxy, [])
         if self._item_model.rowCount(None) > len(value):
             start = len(value) - 1
             count = self._item_model.rowCount(None) - len(value)

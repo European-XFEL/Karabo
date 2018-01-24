@@ -81,8 +81,7 @@ class ListEdit(QDialog):
         vbox.addWidget(button)
         hbox.addLayout(vbox)
 
-        binding = proxy.binding
-        values = get_editor_value(proxy) if binding is not None else []
+        values = get_editor_value(proxy, [])
         self.set_list(values)
 
     # ----------------------------------------------------------------------

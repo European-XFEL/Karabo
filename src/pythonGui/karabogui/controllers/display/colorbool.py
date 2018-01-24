@@ -13,7 +13,7 @@ from traits.api import Instance, on_trait_change
 from karabo.common.api import State
 from karabo.common.scenemodel.api import ColorBoolModel
 from karabogui import icons
-from karabogui.binding.api import BoolBinding
+from karabogui.binding.api import BoolBinding, get_binding_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.icons.statefulicons.color_change_icon import (
@@ -45,13 +45,12 @@ class DisplayColorBool(BaseBindingController):
         return widget
 
     def value_update(self, proxy):
-        binding = proxy.binding
-        if None in (binding, self.widget):
-            # We might get here when the scene model changes and the widget or
-            # proxy is not yet ready.
+        value = get_binding_value(proxy)
+        if self.widget is None or value is None:
+            # We might get here when the scene model changes and the widget
+            # is not yet ready or the property proxy is not set.
             return
 
-        value = proxy.value
         if not self.model.invert:
             color_state = State.ACTIVE if value else State.PASSIVE
         else:

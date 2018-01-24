@@ -48,9 +48,10 @@ class Hexadecimal(BaseBindingController):
 
     def value_update(self, proxy):
         self.widget.update_label(proxy)
-        with SignalBlocker(self._internal_widget):
-            value = get_editor_value(proxy)
-            self._internal_widget.setText("{:x}".format(value))
+        value = get_editor_value(proxy)
+        if value is not None:
+            with SignalBlocker(self._internal_widget):
+                self._internal_widget.setText("{:x}".format(value))
 
     @pyqtSlot(str)
     def _on_user_edit(self, text):

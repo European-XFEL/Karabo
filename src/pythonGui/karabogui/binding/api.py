@@ -27,5 +27,5 @@ from .types import (
     VectorUint64Binding
 )
 from .util import (
-    attr_fast_deepcopy, flat_iter_hash, get_editor_value, get_min_max,
-    has_changes, is_equal)
+    attr_fast_deepcopy, flat_iter_hash, get_binding_value, get_editor_value,
+    get_min_max, has_changes, is_equal)
