@@ -390,7 +390,8 @@ def develop(args):
         if os.path.exists('DEPENDS'):
             install_dependencies(args)
         if os.path.exists('Makefile'):
-            print('Compiling, please wait... ', end='', flush=True)
+            print('Compiling {}, please wait... '.format(args.device),
+                  end='', flush=True)
             run_cmd('make CONF={} -j{}'.format(args.config, args.jobs))
             print('done.')
             os.chdir(os.path.join('..', '..', 'plugins'))
