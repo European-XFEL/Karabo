@@ -86,6 +86,7 @@ class StatefulIconWidget(BaseBindingController):
         iconlist.setMinimumSize(400, 600)
         model = QStandardItemModel(iconlist)
 
+        non_selection = ICONS["icon_default"]
         # we add all items with a preview icon
         for key, icon in ICONS.items():
             listItem = QStandardItem(icon.description)
@@ -105,3 +106,5 @@ class StatefulIconWidget(BaseBindingController):
 
         iconlist.doubleClicked.connect(handleDoubleClick)
         dialog.exec_()
+        if self._icon is None:
+            self._icon = non_selection
