@@ -40,20 +40,25 @@ class AlarmPanel(BasePanelWidget):
         register_for_broadcasts(self)
 
     def karaboBroadcastEvent(self, event):
-        if event.sender is KaraboEventSender.AlarmServiceInit:
-            data = event.data
+        sender = event.sender
+        data = event.data
+        if sender is KaraboEventSender.AlarmServiceInit:
             self.model.initAlarms(data.get('instance_id'),
                                   data.get('update_types'),
                                   data.get('alarm_entries'))
             self._alternate_title_color()
-            return False
-        elif event.sender is KaraboEventSender.AlarmServiceUpdate:
-            data = event.data
+        elif sender is KaraboEventSender.AlarmServiceUpdate:
             self.model.updateAlarms(data.get('instance_id'),
                                     data.get('update_types'),
                                     data.get('alarm_entries'))
             self._alternate_title_color()
-            return False
+        elif sender is KaraboEventSender.NetworkConnectStatus:
+            if not data['status']:
+                # If disconnected to server, unregister the alarm panel from
+                # broadcast, otherwise we will get two times of the same info
+                # next time
+                unregister_from_broadcasts(self)
+        return False
 
     def closeEvent(self, event):
         super(AlarmPanel, self).closeEvent(event)
