@@ -110,7 +110,7 @@ def parse_commandline():
     parser_ins.add_argument('-n', '--no-clobber',
                             action='store_true',
                             help='Do not overwrite an existing device and its '
-                            'dependencies (overrides  a  previous -f option)')
+                            'dependencies (overrides a -f option)')
 
     parser_ins.set_defaults(command=install)
 
