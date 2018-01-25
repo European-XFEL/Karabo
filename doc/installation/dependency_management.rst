@@ -84,6 +84,23 @@ libraries) will need to have their ``RUNPATH`` metadata set so that runtime
 linking works appropriately. This is handled by the ``extern/relocate_deps.sh``
 script, and should be made there when adding/removing/updating dependencies.
 
+In order to test the built result, you can create a feature branch with name
+format of ``deps-mr-<package>`` and push it to the framework repository. The
+CI runner will pick up this branch and create the a new dependency package at
+http://exflserv05.desy.de/karabo/karaboDevelopmentDeps
+
+Once the dependency package is created, you can try verify it by clean building
+the framework locally using this pakcage:
+
+.. code-block:: bash
+
+    ./auto_build_all.sh Clean-All
+    FORCED_DEPS_TAG=deps-mr-<package> ./auto_build_all.sh Debug --pyDevelop
+
+This will build the framework using the updated dependency packages created
+from your feature branch. Once finished, you can try to use the framework to
+verify if the new/updated pakcage plays nicely with the framework.
+
 Once you are reasonably sure that everything works, open a merge request for
 the branch. After the merge request is approved and merged into the master
 branch, add a tag to the merge commit:
