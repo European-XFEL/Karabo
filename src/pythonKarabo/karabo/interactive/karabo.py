@@ -104,7 +104,13 @@ def parse_commandline():
     parser_ins.add_argument('-f', '--force',
                             action='store_true',
                             help='Force installation of device and its '
-                            'dependencies, may overwrite existing')
+                            'dependencies, may overwrite existing (this option'
+                            ' is ignored when the -n option is also used)')
+
+    parser_ins.add_argument('-n', '--no-clobber',
+                            action='store_true',
+                            help='Do not overwrite an existing device and its '
+                            'dependencies (overrides  a  previous -f option)')
 
     parser_ins.set_defaults(command=install)
 
@@ -266,7 +272,10 @@ def install(args):
                       format(args.device, tag, args.tag))
                 return
 
-            if not args.force:
+            if args.no_clobber:
+                print('Abort {} installation'.format(args.device))
+                sys.exit(1)
+            elif not args.force:
                 # Prompt for user's confirmation
                 overwrite = input('{} already installed: do you want to '
                                   'replace tag {} with {}? [y/N]'.
