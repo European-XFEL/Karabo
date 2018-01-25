@@ -97,7 +97,8 @@ class SystemTopology(HasStrictTraits):
             self._class_proxies[key] = proxy
 
             attrs = self._get_device_attributes(server_id)
-            if attrs is not None:
+            if attrs and class_id in attrs.get('deviceClasses', ()):
+                # The server is online and has the device class we want
                 proxy.refresh_schema()
 
         return proxy
@@ -181,6 +182,14 @@ class SystemTopology(HasStrictTraits):
                 if proxy.status not in (DeviceStatus.NOSERVER,
                                         DeviceStatus.NOPLUGIN):
                     proxy.refresh_schema()
+                else:
+                    # The device class is not installed on the server, but
+                    # requested from the project, we create an empty
+                    # DeviceClassProxy in the system topology and wait for
+                    # a server restart. Once the device plugin is installed
+                    # on the server, requesting schema and building bindings
+                    # will be triggered automatically
+                    self.get_class(*key)
 
         return proxy
 
