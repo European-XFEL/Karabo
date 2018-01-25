@@ -90,7 +90,7 @@ CI runner will pick up this branch and create the a new dependency package at
 http://exflserv05.desy.de/karabo/karaboDevelopmentDeps
 
 Once the dependency package is created, you can try verify it by clean building
-the framework locally using this pakcage:
+the framework locally using this package:
 
 .. code-block:: bash
 
