@@ -210,4 +210,4 @@ def _project_trash_handler(project_view):
     root_model = item_model.root_model
     if root_model is not None:
         project_view.update_is_trashed(project=root_model,
-                                       parent_project=None)
+                                       project_controller=None)
