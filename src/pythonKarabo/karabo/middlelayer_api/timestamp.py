@@ -45,6 +45,12 @@ class Timestamp(object):
         ret.tid = attrs['tid']
         return ret
 
+    def toHashAttributes(self, hash_):
+        time_properties = self.toDict()
+        for entry in hash_:
+            for k, v in time_properties.items():
+                hash_.setAttribute(entry, k, v)
+
     @property
     def time_frac(self):
         """The fractional seconds of the timestamp in attoseconds
