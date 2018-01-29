@@ -3,6 +3,7 @@ from unittest import TestCase, main
 import time
 
 from karabo.middlelayer_api.timestamp import Timestamp
+from karabo.middlelayer import Hash
 
 
 class Tests(TestCase):
@@ -39,6 +40,19 @@ class Tests(TestCase):
         self.assertEqual(d["frac"], 135584022528)
         self.assertEqual(d["tid"], 0)
 
+    def test_to_hash_attributes(self):
+        t = Timestamp("2009-09-01 14:23 UTC")
+        h = Hash("akey", "aval", "anotherkey", 5)
+        t.toHashAttributes(h)
+        self.assertEqual(h.getAttributes("akey"),
+                         {"frac": 135584022528,
+                          "sec": 1251814980,
+                          "tid": 0})
+        self.assertEqual(h.getAttributes("anotherkey"),
+                         {"frac": 135584022528,
+                          "sec": 1251814980,
+                          "tid": 0})
+
     def test_compare(self):
         t1 = Timestamp()
         t2 = Timestamp()
@@ -50,7 +64,7 @@ class Tests(TestCase):
 
     def test_properties(self):
         t = Timestamp("2009-09-01 14:23 UTC")
-        self.assertEqual(t.train_id, 0)
+        self.assertEqual(t.tid, 0)
         self.assertEqual(t.time_frac, 135584022528)
         self.assertEqual(t.time_sec, 1251814980)
 
