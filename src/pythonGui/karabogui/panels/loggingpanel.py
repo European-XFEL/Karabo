@@ -25,10 +25,10 @@ class LoggingPanel(BasePanelWidget):
         """
         widget = QWidget(self)
 
-        self.__logWidget = LogWidget(widget)
+        self._log_widget = LogWidget(widget)
         mainLayout = QVBoxLayout(widget)
         mainLayout.setContentsMargins(5, 5, 5, 5)
-        mainLayout.addWidget(self.__logWidget)
+        mainLayout.addWidget(self._log_widget)
 
         return widget
 
@@ -40,13 +40,13 @@ class LoggingPanel(BasePanelWidget):
         self.__acSaveLog = QAction(icons.save, "&Save log data (.log)", self)
         self.__acSaveLog.setToolTip(text)
         self.__acSaveLog.setStatusTip(text)
-        self.__acSaveLog.triggered.connect(self.__logWidget.onSaveToFile)
+        self.__acSaveLog.triggered.connect(self._log_widget.onSaveToFile)
 
         text = "Clear log"
         self.__acClearLog = QAction(icons.editClear, text, self)
         self.__acClearLog.setToolTip(text)
         self.__acClearLog.setStatusTip(text)
-        self.__acClearLog.triggered.connect(self.__logWidget.onClearLog)
+        self.__acClearLog.triggered.connect(self._log_widget.onClearLog)
 
         toolBar = ToolBar(parent=self)
         toolBar.addAction(self.__acSaveLog)
@@ -58,7 +58,14 @@ class LoggingPanel(BasePanelWidget):
         """
         if event.sender is KaraboEventSender.LogMessages:
             messages = event.data.get('messages', [])
-            self.__logWidget.onLogDataAvailable(messages)
+            self._log_widget.onLogDataAvailable(messages)
+
+        elif event.sender is KaraboEventSender.NetworkConnectStatus:
+            data = event.data
+            # on False status we only clear the logs
+            if not data['status']:
+                self._log_widget.onClearLog()
+
         return False
 
     def closeEvent(self, event):
