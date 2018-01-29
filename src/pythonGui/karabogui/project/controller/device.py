@@ -18,6 +18,7 @@ from karabo.common.project.api import (
 from karabo.middlelayer import Hash
 from karabo.middlelayer_api.project.api import (read_project_model,
                                                 write_project_model)
+from karabogui.binding.api import extract_configuration
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.indicators import get_project_device_status_icon
 from karabogui.project.dialog.device_handle import DeviceHandleDialog
@@ -374,12 +375,12 @@ class DeviceInstanceController(BaseProjectGroupController):
         """
         if self.project_device.online:
             return
-        device = self.model
-        dev_conf = device.select_config(device.active_config_ref)
-        if dev_conf is not None:
-            get_manager().initDevice(server.server_id, dev_conf.class_id,
-                                     device.instance_id,
-                                     dev_conf.configuration)
+
+        prj_dev = self.project_device
+        config = extract_configuration(prj_dev.proxy.binding)
+
+        get_manager().initDevice(prj_dev.server_id, prj_dev.class_id,
+                                 prj_dev.device_id, config=config)
 
     def shutdown_device(self, show_confirm=True):
         device = self.model
