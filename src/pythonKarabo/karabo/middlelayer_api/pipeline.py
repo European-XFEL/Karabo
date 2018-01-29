@@ -483,7 +483,7 @@ class NetworkOutput(Configurable):
         This method can be used if the output channel is used in 'raw' mode,
         e.g. does not have a schema.
         """
-        assert isinstance(hsh, Hash) and self.schema is None
+        assert isinstance(hsh, Hash)
 
         if timestamp is None:
             timestamp = Timestamp()
@@ -496,7 +496,7 @@ class NetworkOutput(Configurable):
         self.writeChunkNoWait([(hsh, timestamp)])
 
     def writeRawDataNoWait(self, hsh, timestamp=None):
-        assert isinstance(hsh, Hash) and self.schema is None
+        assert isinstance(hsh, Hash)
 
         if timestamp is None:
             timestamp = Timestamp()
