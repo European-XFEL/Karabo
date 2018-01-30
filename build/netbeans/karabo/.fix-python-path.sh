@@ -14,7 +14,7 @@ OLD_PREFIX=$(cat $PACKAGEDIR/extern/lib/python${PYTHON_VERSION}/config-${PYTHON_
 PYTHON_FILES=(config-${PYTHON_VERSION}m/Makefile site-packages/sipconfig.py config-${PYTHON_VERSION}m/python-config.py
 )
 
-SED_PROGRAM='s%'$OLD_PREFIX'%'$PACKAGEDIR'%g'
+SED_PROGRAM='s%'$OLD_PREFIX'%'$PACKAGEDIR/extern'%g'
 count=0
 
 while [ "x${PYTHON_FILES[count]}" != "x" ]
