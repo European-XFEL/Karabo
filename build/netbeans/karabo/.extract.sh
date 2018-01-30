@@ -128,6 +128,9 @@ mkdir -p $HOME/.karabo
 # fix the shebang line of Python entry-points
 safeRunCommand "$KARABO/bin/.fix-python-scripts.sh" $KARABO
 
+# set the Python path in the config
+safeRunCommand "$KARABO/bin/.fix-python-path.sh" $KARABO
+
 if [ ! -e "$KARABO/var/service" ]
 then
     mv $KARABO/service.in $KARABO/var/service
