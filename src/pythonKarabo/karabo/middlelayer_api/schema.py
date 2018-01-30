@@ -188,7 +188,6 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         :param updates: List of Hashes with "path", "attribute" and "value"
         :return success: True if all updates could be applied, False otherwise
         """
-
         def _applyAttribute(obj, path, attr_name, attr_value):
             # Basic check if the attribute is allowed to be set
             if attr_name not in KARABO_RUNTIME_ATTRIBUTES_MDL:
@@ -212,9 +211,14 @@ class Configurable(Registry, metaclass=MetaConfigurable):
             if not isinstance(attr, Attribute):
                 # not Attribute type
                 return False
-            if attr.default and not isinstance(attr_value, type(attr.default)):
-                # wrong attr value type
-                return False
+
+            if attr.default:
+                # convert the enum attribute value
+                try:
+                    attr_value = type(attr.default)(attr_value)
+                except ValueError:
+                    return False
+
             # Apply attribute change
             setattr(desc, attr_name, attr_value)
             return True
