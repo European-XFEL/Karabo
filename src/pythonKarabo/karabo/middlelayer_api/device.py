@@ -20,7 +20,7 @@ class Device(AlarmMixin, SignalSlotable):
     you can define expected parameters for it.
     """
 
-    __version__ = "1.3"
+    __version__ = "2.2"
 
     _serverId_ = String(
         displayedName="_ServerID_",
@@ -50,7 +50,6 @@ class Device(AlarmMixin, SignalSlotable):
         accessMode=AccessMode.READONLY)
 
     classVersion = String(
-        defaultValue=__version__,
         displayedName="Class version",
         description="The version of the class of this device",
         requiredAccessLevel=AccessLevel.EXPERT,
@@ -117,6 +116,7 @@ class Device(AlarmMixin, SignalSlotable):
 
         self.hostName, _, self.domainname = socket.gethostname().partition('.')
         self.classId = type(self).__name__
+        self.classVersion = type(self).__version__
 
     def _initInfo(self):
         info = super(Device, self)._initInfo()
