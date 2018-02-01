@@ -49,6 +49,13 @@ class Device(AlarmMixin, SignalSlotable):
         requiredAccessLevel=AccessLevel.EXPERT,
         accessMode=AccessMode.READONLY)
 
+    classVersion = String(
+        defaultValue=__version__,
+        displayedName="Class version",
+        description="The version of the class of this device",
+        requiredAccessLevel=AccessLevel.EXPERT,
+        accessMode=AccessMode.READONLY)
+
     serverId = String(
         displayedName="ServerID",
         description="The device-server which this device is running on",
