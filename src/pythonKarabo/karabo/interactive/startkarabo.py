@@ -39,6 +39,7 @@ same as tabs in a gnome terminal.
 from functools import wraps
 import os
 import os.path as osp
+import re
 import shutil
 import subprocess
 import sys
@@ -163,9 +164,9 @@ def killkarabo():
 
     Several signals can be given on the command line. A "-l" signifies that
     not the device server, but its logger is meant. A + sign before a signal
-    means (as in -+k) that the signal should be sent to the entire process
-    group. This may be used to kill all bound Python devices of a device
-    server.
+    means (as in -+p) that the signal should be sent to the entire process
+    group. This is implicit for the "-k" option to always kill all bound
+    Python devices of a device server.
 
     There are other commands that can be given to a device server:
 
@@ -198,6 +199,19 @@ def killkarabo():
     if "-l" in args:
         args.remove("-l")
         dirs = [osp.join(d, "log") for d in dirs]
+
+    # Add '+' option to '-k' arguments
+    re1 = re.compile('-k+$')
+    args = ['-+k' if re1.match(a) else a for a in args]
+
+    # Split arguments containing 'k' and add '+' option to the latter
+    re2 = re.compile('-[a-z]*k[a-z]*')
+    for i in range(len(args)):
+        if re2.match(args[i]) is not None:
+            args[i] = args[i].replace('k', '')
+            args.append('-+k')
+    args = list(set(args))  # get rid of duplicates
+
     os.execv(path, ["svc"] + args + dirs)
 
 
