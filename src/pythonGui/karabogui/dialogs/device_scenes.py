@@ -7,6 +7,7 @@ import os.path as op
 
 from PyQt4 import uic
 from PyQt4.QtGui import QDialog, QDialogButtonBox
+from traits.api import Undefined
 
 from karabo.common.api import Capabilities
 from karabogui.singletons.api import get_topology
@@ -64,7 +65,8 @@ class DeviceScenesDialog(QDialog):
 
         item = self.deviceNames.currentItem()
         if item:
-            self.sceneNames.addItems(self._get_device_scenes(item.text()))
+            scenes = self._get_device_scenes(item.text())
+            self.sceneNames.addItems(scenes)
 
     def on_sceneNames_itemSelectionChanged(self):
         """Synchronize the Ok button with the scene selection
@@ -124,10 +126,12 @@ class DeviceScenesDialog(QDialog):
         except AttributeError:
             # This device lied about its capabilities!
             return []
-
-        if scenes == []:
+        if scenes == [] or scenes is Undefined:
             # Not loaded yet. Request it.
             self._request_device_scenes(device)
+            # and return for now an empty list
+            return []
+
         return scenes
 
     def _request_device_scenes(self, device_proxy):
