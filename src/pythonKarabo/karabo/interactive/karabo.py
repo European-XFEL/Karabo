@@ -116,7 +116,8 @@ def parse_commandline():
     parser_ins.set_defaults(command=install)
 
     parser_uins = sps.add_parser('uninstall',
-                                 help='Uninstalls an existing device')
+                                 help='Uninstalls an existing device. '
+                                 'Dependencies will not be uninstalled.')
     parser_uins.set_defaults(command=uninstall)
 
     parser_uins.add_argument('device',
@@ -419,9 +420,17 @@ def list_devices(args):
 
 
 def uninstall(args):
+    path = os.path.join('installed', args.device)
+    if os.path.isdir(path):
+        run_cmd('rm -rf {}'.format(path))
     so_path = 'plugins/lib{}.so'.format(args.device)
     if os.path.isfile(so_path):
-        run_cmd('rm -f {}'.format(so_path))
+        if not os.path.islink(so_path):
+            run_cmd('rm -f {}'.format(so_path))
+        else:
+            print('Failed to uninstall {}. {} is not a regular file.'.
+                  format(args.device, so_path))
+            sys.exit(1)
     else:
         run_cmd('pip uninstall -y {}'.format(args.device))
     print('{} was successfully uninstalled'.format(args.device))
@@ -470,8 +479,18 @@ def install_dependencies(args):
         args_copy.copy = item[2]
         install(args_copy)
 
+
 def undevelop(args):
-    uninstall(args)
+    so_path = 'plugins/lib{}.so'.format(args.device)
+    if os.path.islink(so_path):
+        run_cmd('rm -f {}'.format(so_path))
+    elif os.path.exists(so_path):
+        print('Failed to undo development mode installation for {}. {} is '
+              'not a link.'.format(args.device, so_path))
+        sys.exit(1)
+    else:
+        run_cmd('pip uninstall -y {}'.format(args.device))
+    print('Development mode installation for {} undone'.format(args.device))
 
 
 def main():
