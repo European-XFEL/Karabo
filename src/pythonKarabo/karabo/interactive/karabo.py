@@ -132,6 +132,17 @@ def parse_commandline():
                             type=str,
                             help='The name of the device package')
 
+    parser_dev.add_argument('-f', '--force',
+                            action='store_true',
+                            help='Force installation of device\'s '
+                            'dependencies, may overwrite existing (this option'
+                            ' is ignored when the -n option is also used)')
+
+    parser_dev.add_argument('-n', '--no-clobber',
+                            action='store_true',
+                            help='Do not overwrite device\'s '
+                            'dependencies (overrides a -f option)')
+
     parser_udev = sps.add_parser('undevelop',
                                  help='Deactivates develop mode for a given'
                                       'device')
