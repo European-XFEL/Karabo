@@ -1,4 +1,5 @@
 import argparse
+import copy
 import glob
 import subprocess
 import sys
@@ -452,11 +453,11 @@ def install_dependencies(args):
         return
     print('Automatically installing now.')
     for item in devices:
-        args.device = item[0]
-        args.tag = item[1]
-        args.copy = item[2]
-        install(args)
-
+        args_copy = copy.deepcopy(args)
+        args_copy.device = item[0]
+        args_copy.tag = item[1]
+        args_copy.copy = item[2]
+        install(args_copy)
 
 def undevelop(args):
     uninstall(args)
