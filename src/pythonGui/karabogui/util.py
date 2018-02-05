@@ -12,6 +12,7 @@ from dateutil.tz import tzlocal, tzutc
 from PyQt4.QtCore import QEvent, QObject, QSize, QSettings
 from PyQt4.QtGui import QDialog, QFileDialog, QHeaderView, QLabel, QMovie
 
+from karabo.common.project.api import read_macro
 from karabo.common.scenemodel.api import read_scene
 from karabo.middlelayer import decodeXML, Hash, writeXML
 from karabogui import globals as krb_globals, icons, messagebox
@@ -202,14 +203,16 @@ def handle_scene_from_server(dev_id, name, project, success, reply):
     if not (success and reply.get('payload.success', False)):
         msg = 'Scene "{}" from device "{}" was not retreived!'
         messagebox.show_warning(msg.format(name, dev_id),
-                                title='Load Scene from Device Failed')
+                                title='Load Scene from Device Failed',
+                                modal=False)
         return
 
     data = reply.get('payload.data', '')
     if not data:
         msg = 'Scene "{}" from device "{}" contains no data!'
         messagebox.show_warning(msg.format(name, dev_id),
-                                title='Load Scene from Device Failed')
+                                title='Load Scene from Device Failed',
+                                modal=False)
         return
 
     with StringIO(data) as fp:
@@ -224,6 +227,34 @@ def handle_scene_from_server(dev_id, name, project, success, reply):
         event_type = KaraboEventSender.ShowSceneView
         project.scenes.append(scene)
     broadcast_event(event_type, {'model': scene})
+
+
+def handle_macro_from_server(dev_id, name, project, success, reply):
+    if not (success and reply.get('payload.success', False)):
+        msg = 'Macro "{}" from device "{}" was not retreived!'
+        messagebox.show_warning(msg.format(name, dev_id),
+                                title='Load Macro from Device Failed',
+                                modal=False)
+        return
+
+    data = reply.get('payload.data', '')
+    if not data:
+        msg = 'Macro "{}" from device "{}" contains no data!'
+        messagebox.show_warning(msg.format(name, dev_id),
+                                title='Load Macro from Device Failed',
+                                modal=False)
+        return
+
+    with StringIO(data) as fp:
+        macro = read_macro(fp)
+        macro.initialized = macro.modified = True
+        macro.simple_name = '{}-{}'.format(dev_id, name)
+        macro.reset_uuid()
+
+    # Macro's can only be added to project. Hence, add first to the project
+    project.macros.append(macro)
+    # and then open it
+    broadcast_event(KaraboEventSender.ShowMacroView, {'model': macro})
 
 
 def is_database_processing():

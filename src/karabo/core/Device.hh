@@ -50,8 +50,8 @@ namespace karabo {
         enum Capabilities {
 
             PROVIDES_SCENES = (1u << 0),
+            PROVIDES_MACROS = (1u << 1),
             // add future capabilities as bitmask:
-            // SOME_FUTURE_CAPABILITY       = (1u << 1),
             // SOME_OTHER_FUTURE_CAPABILITY = (1u << 2),
         };
 
@@ -1413,6 +1413,7 @@ namespace karabo {
                 this->initSchema();
 
                 bool hasAvailableScenes = false;
+                bool hasAvailableMacros = false;
                 int  heartbeatInterval = 0;
 
                 {
@@ -1432,6 +1433,7 @@ namespace karabo {
 
                     // Do this under mutex protection
                     hasAvailableScenes = m_parameters.has("availableScenes");
+                    hasAvailableMacros = m_parameters.has("availableMacros");
                     heartbeatInterval  = m_parameters.get<int>("heartbeatInterval");
                 }
 
@@ -1449,6 +1451,7 @@ namespace karabo {
                 // the capabilities field specifies the optional capabilities a device provides.
                 unsigned int capabilities = 0;
                 if (hasAvailableScenes) capabilities |= Capabilities::PROVIDES_SCENES;
+                if (hasAvailableMacros) capabilities |= Capabilities::PROVIDES_MACROS;
                 instanceInfo.set("capabilities", capabilities);
 
                 // Initialize the SignalSlotable instance
