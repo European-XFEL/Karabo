@@ -1,4 +1,5 @@
 import argparse
+import copy
 import glob
 import subprocess
 import sys
@@ -267,15 +268,20 @@ def install(args):
         if os.path.isdir(path):
             tag = run_cmd('git -C {} tag'.format(path)).decode("utf-8").\
                   rstrip()
-            if tag == args.tag:
+            if args.no_clobber:  # abort if different version installed
+                if tag != args.tag:
+                    print('{}-{} already installed: abort!'.
+                          format(args.device, tag))
+                    sys.exit(1)
+                else:  # same version -> skip
+                    return
+            elif args.force:  # always overwrite
+                run_cmd('rm -rf {}'.format(path))
+            elif tag == args.tag:  # tag already installed
                 print("Skip {}-{} installation... already installed".
-                      format(args.device, tag, args.tag))
+                      format(args.device, tag))
                 return
-
-            if args.no_clobber:
-                print('Abort {} installation'.format(args.device))
-                sys.exit(1)
-            elif not args.force:
+            else:  # interactive
                 # Prompt for user's confirmation
                 overwrite = input('{} already installed: do you want to '
                                   'replace tag {} with {}? [y/N]'.
@@ -283,7 +289,7 @@ def install(args):
                 if overwrite.lower() != "y":
                     print('Abort {} installation'.format(args.device))
                     return
-            run_cmd('rm -rf {}'.format(path))
+                run_cmd('rm -rf {}'.format(path))
         os.makedirs(path, exist_ok=True)
         print('Downloading source for {}... '.format(args.device),
               end='', flush=True)
@@ -447,11 +453,11 @@ def install_dependencies(args):
         return
     print('Automatically installing now.')
     for item in devices:
-        args.device = item[0]
-        args.tag = item[1]
-        args.copy = item[2]
-        install(args)
-
+        args_copy = copy.deepcopy(args)
+        args_copy.device = item[0]
+        args_copy.tag = item[1]
+        args_copy.copy = item[2]
+        install(args_copy)
 
 def undevelop(args):
     uninstall(args)
