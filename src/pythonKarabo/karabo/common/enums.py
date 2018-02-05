@@ -3,6 +3,7 @@ from enum import Enum, IntEnum
 
 class Capabilities(IntEnum):
     PROVIDES_SCENES = 1
+    PROVIDES_MACROS = 2
     # add future capabilities as bit maskable properties:
     # FUTURE_CAPABILITY = 2
     # SOME_OTHER_CAPABILITY = 4
