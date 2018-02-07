@@ -279,9 +279,15 @@ def install(args):
         path = os.path.join('installed', args.device)
         if os.path.isdir(path):
             tag = run_cmd('cd {}; git tag'.format(path)).decode("utf-8").\
-                  rstrip()
+                rstrip()
+            sha1 = run_cmd('cd {}; git show -s --format=%h'.format(path)).\
+                decode("utf-8").rstrip()
             if args.no_clobber:  # abort if different version installed
-                if tag != args.tag:
+                if tag == '':  # not a tag
+                    print('{}-{} already installed: abort!'.
+                          format(args.device, sha1))
+                    sys.exit(1)
+                elif tag != args.tag:
                     print('{}-{} already installed: abort!'.
                           format(args.device, tag))
                     sys.exit(1)
@@ -295,9 +301,15 @@ def install(args):
                 return
             else:  # interactive
                 # Prompt for user's confirmation
-                overwrite = input('{} already installed: do you want to '
-                                  'replace tag {} with {}? [y/N]'.
-                                  format(args.device, tag, args.tag))
+                if tag != '':
+                    ver = tag
+                else:  # not a tag
+                    ver = sha1
+                overwrite = input('{}-{} already installed: do you want to '
+                                  'replace it with {}-{}? [y/N]'.
+                                  format(args.device, ver, args.device,
+                                         args.tag))
+
                 if overwrite.lower() != "y":
                     print('Abort {} installation'.format(args.device))
                     return
