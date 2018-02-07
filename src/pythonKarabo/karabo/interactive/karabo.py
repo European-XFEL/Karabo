@@ -278,7 +278,7 @@ def install(args):
         copyFlag = args.copy
         path = os.path.join('installed', args.device)
         if os.path.isdir(path):
-            tag = run_cmd('git -C {} tag'.format(path)).decode("utf-8").\
+            tag = run_cmd('cd {}; git tag'.format(path)).decode("utf-8").\
                   rstrip()
             if args.no_clobber:  # abort if different version installed
                 if tag != args.tag:
