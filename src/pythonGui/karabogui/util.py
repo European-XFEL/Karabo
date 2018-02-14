@@ -15,7 +15,8 @@ from PyQt4.QtGui import QDialog, QFileDialog, QHeaderView, QLabel, QMovie
 from karabo.common.scenemodel.api import read_scene
 from karabo.middlelayer import decodeXML, Hash, writeXML
 from karabogui import globals as krb_globals, icons, messagebox
-from karabogui.binding.api import DeviceClassProxy, extract_configuration
+from karabogui.binding.api import (
+    DeviceClassProxy, DeviceProxy, extract_configuration)
 from karabogui.enums import KaraboSettings
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.singletons.api import get_db_conn
@@ -151,8 +152,14 @@ def save_configuration_to_file(device_proxy):
     path = get_setting(KaraboSettings.CONFIG_DIR)
     directory = path if path and op.isdir(path) else ""
 
-    # default configuration name is classId
-    default_name = device_proxy.binding.class_id + '.xml'
+    class_id = device_proxy.binding.class_id
+
+    # use deviceId for existing device proxies
+    if isinstance(device_proxy, DeviceProxy):
+        default_name = device_proxy.device_id.replace('/', '-') + '.xml'
+    else:
+        default_name = class_id + '.xml'
+
     filename = getSaveFileName(caption="Save configuration as",
                                filter="Configuration (*.xml)",
                                suffix="xml",
@@ -161,7 +168,6 @@ def save_configuration_to_file(device_proxy):
     if not filename:
         return
 
-    class_id = device_proxy.binding.class_id
     config = Hash(class_id, extract_configuration(device_proxy.binding,
                                                   include_attributes=True))
 
