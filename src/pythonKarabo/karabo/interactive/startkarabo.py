@@ -264,8 +264,9 @@ def xtermlog():
     servers = [fn for fn in defaultall()
                if isexecutable(osp.join(fn, "log", "run"))]
     for server in servers:
-        subprocess.Popen(["xterm", "-T", server, "-e", "tail", "-f",
-                          absolute("var", "log", server, "current")])
+        # Capital '-F' to follow renaming - 'current' is a rolling  log file
+        subprocess.Popen(["xterm", "-T", server, "-e", "tail", "-n", "100",
+                          "-F", absolute("var", "log", server, "current")])
 
 
 server_template = """#!/bin/bash
