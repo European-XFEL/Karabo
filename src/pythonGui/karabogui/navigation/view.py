@@ -11,7 +11,7 @@ from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog, QMenu,
 
 from karabo.common.api import Capabilities
 from karabogui import icons
-from karabogui.dialogs.device_scenes import DeviceScenesDialog
+from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.enums import NavigationItemTypes
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.request import call_device_slot
@@ -173,10 +173,12 @@ class NavigationTreeView(QTreeView):
     @pyqtSlot()
     def onOpenDeviceScene(self):
         info = self.indexInfo()
-        dialog = DeviceScenesDialog(device_id=info.get('deviceId', ''))
+        dialog = DeviceCapabilityDialog(
+            device_id=info.get('deviceId', ''),
+            capability=Capabilities.PROVIDES_SCENES)
         if dialog.exec() == QDialog.Accepted:
             device_id = dialog.device_id
-            scene_name = dialog.scene_name
+            scene_name = dialog.capa_name
             handler = partial(handle_scene_from_server, device_id, scene_name,
                               None)
             call_device_slot(handler, device_id, 'requestScene',
