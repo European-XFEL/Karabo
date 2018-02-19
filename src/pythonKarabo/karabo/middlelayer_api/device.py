@@ -133,6 +133,8 @@ class Device(AlarmMixin, SignalSlotable):
         capabilities = 0
         if hasattr(self, "availableScenes"):
             capabilities |= Capabilities.PROVIDES_SCENES
+        if hasattr(self, "availableMacros"):
+            capabilities |= Capabilities.PROVIDES_MACROS
         info["capabilities"] = capabilities
 
         return info
