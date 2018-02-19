@@ -226,7 +226,7 @@ def _load_scene_from_device(project_controller):
         project = project_controller.model
         project_scenes = {s.simple_name for s in project.scenes}
 
-        if scene_name in project_scenes:
+        if '{}|{}'.format(device_id, scene_name) in project_scenes:
             msg = ('A scene with that name already exists in the selected '
                    'project.')
             messagebox.show_warning(msg, title='Cannot Load Scene')
