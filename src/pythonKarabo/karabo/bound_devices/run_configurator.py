@@ -507,7 +507,7 @@ def _createScene(instance_id):
     exp_2 = LabelModel(font=',11,-1,5,50,0,0,0,0,0',
                        height=28, width=231, x=656, y=155,
                        parent_component='DisplayComponent',
-                       text=' "Save Configuration" button.')
+                       text=' "Push to DAQ" button.')
     exp_layout = BoxLayoutModel(direction=2,
                                 height=77, width=346, x=126, y=443,
                                 children=[exp_0, exp_1, exp_2])
