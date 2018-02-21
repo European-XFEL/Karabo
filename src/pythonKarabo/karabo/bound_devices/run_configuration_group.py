@@ -49,7 +49,8 @@ class RunControlDataSource(object):
 
             UINT32_ELEMENT(expected).key("nProperties")
             .displayedName("#")
-            .description("Number of properties to record for this source")
+            .description("Number of properties to record for this source. Not "
+                         "active feature yet.")
             .readOnly()
             .initialValue(0)
             .commit(),
@@ -260,7 +261,9 @@ class RunConfigurationGroup(PythonDevice):
                         # Existing device still missing output channel
                         retSources.append(_buildSource(fullName))
 
-        self._updateNProperties(retSources)
+        # The update of properties causes timeout's, no async features
+        # available, temporarily disabled feature
+        # self._updateNProperties(retSources)
         return retSources
 
     def _updateNProperties(self, sources):
@@ -273,7 +276,8 @@ class RunConfigurationGroup(PythonDevice):
             elif behavior == "record-all":
                 accessMode |= (AccessMode.READ.value | AccessMode.WRITE.value)
 
-            props = self.remote().getDataSourceSchemaAsHash(sourceId, accessMode)
+            props = self.remote().getDataSourceSchemaAsHash(sourceId,
+                                                            accessMode)
             source.set("nProperties", len(props.getPaths()))
 
 
