@@ -224,6 +224,25 @@ void TimeClasses_Test::testTimeDuration() {
     CPPUNIT_ASSERT(durQ + hundredAttoDur == TimeDuration(112ull, 0ull));
     CPPUNIT_ASSERT(durQ - oneSecMinusHundredAttoDur == TimeDuration(111ull, 0ull));
 
+    // safeMultiply
+    // simple case - no overflow
+    const auto big128_a = safeMultiply(4ull, 100000ull);
+    CPPUNIT_ASSERT_EQUAL(0ull, big128_a.first);
+    CPPUNIT_ASSERT_EQUAL(400000ull, big128_a.second);
+    // now with an overflow
+    const unsigned long long maxULL = -1;
+    const auto big128_b = safeMultiply(4ull, maxULL);
+    CPPUNIT_ASSERT_EQUAL(3ull, big128_b.first);
+    CPPUNIT_ASSERT_EQUAL(maxULL - 3ull, big128_b.second);
+    const auto big128_c = safeMultiply(1000ull, maxULL - 3000ull);
+    CPPUNIT_ASSERT_EQUAL(999ull, big128_c.first);
+    CPPUNIT_ASSERT_EQUAL(maxULL - 3001000ull + 1ull, big128_c.second);
+    // now an overflow where the internal safeAdd has an overflow
+    const unsigned long long lower33bits = (1ull << 33ull) - 1ull;
+    const auto big128_d = safeMultiply(lower33bits, maxULL);
+    CPPUNIT_ASSERT_EQUAL(lower33bits - 1ull, big128_d.first);
+    CPPUNIT_ASSERT_EQUAL(maxULL - lower33bits + 1ull, big128_d.second);
+
     // Testing operator* (operator *= implicitly tested since used inside operator*)
     // 1) without 'crossing' seconds border
     const TimeDuration durO(1ull, 123ull);
@@ -231,6 +250,13 @@ void TimeClasses_Test::testTimeDuration() {
     // 2) with 'crossing' seconds border
     const TimeDuration durP(1234ull, 400000000000000000ull); // 17 zeros: 0.4 s
     CPPUNIT_ASSERT(durP * 7ull == TimeDuration(8640ull, 800000000000000000ull));
+    // 3) with multiplication where factor * fractions is above largest ull
+    //    (i.e. > 18.446 seconds)
+    const TimeDuration durR(1ull, 900000000000000001ull); // 17 zeros: 0.9 s
+    CPPUNIT_ASSERT(durR * 9ull == TimeDuration(17ull, 100000000000000009ull));
+    CPPUNIT_ASSERT(durR * 100ull == TimeDuration(190ull, 100ull));
+    CPPUNIT_ASSERT(durR * 1000000ull == TimeDuration(1900000ull, 1000000ull));
+    CPPUNIT_ASSERT(durR * 100000000000000ull == TimeDuration(190000000000000ull, 100000000000000ull));
 
     // Testing operator/
     const TimeDuration durL(222ull, 222222222222222ull);
