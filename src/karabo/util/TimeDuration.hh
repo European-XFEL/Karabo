@@ -95,7 +95,7 @@ namespace karabo {
             TimeDuration& set(const TimeValue seconds, const TimeValue fractions);
             TimeDuration& set(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions);
 
-            TimeDuration& add(const TimeValue seconds, const TimeValue fractions);
+            TimeDuration& add(TimeValue seconds, TimeValue fractions);
             TimeDuration& add(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions);
 
             TimeDuration& sub(const TimeValue seconds, const TimeValue fractions);
@@ -212,6 +212,9 @@ namespace karabo {
                 toHash(hash);
                 return hash;
             }
+
+            // Sanitize, i.e. take care that 'frac' is below 1 second and adjust 'sec' accordingly.
+            static inline void sanitize(TimeValue& sec, TimeValue& frac);
             /// One second expressed in attoseconds
             static const TimeValue m_oneSecondInAtto = 1000000000000000000ULL; // initialise integer type directly here
         private:
@@ -220,6 +223,10 @@ namespace karabo {
             static std::string DEFAULT_FORMAT;
         };
 
+        // Multiply two 64-bit unsigned long long numbers and return a pair to be interpreted as a single
+        // 128-bit value where 'first' is the higher (left) 64 bits and 'second' the lower ones, respectively.
+        std::pair<unsigned long long, unsigned long long>
+        safeMultiply(unsigned long long a, unsigned long long b);
     }
 }
 
@@ -316,16 +323,6 @@ namespace karabo {
             return *this;
         }
 
-        inline TimeDuration& TimeDuration::operator*=(TimeValue factor) {
-            m_Seconds *= factor;
-            m_Fractions *= factor;
-
-            const TimeValue extraSeconds = m_Fractions / m_oneSecondInAtto;
-            m_Seconds += extraSeconds;
-            m_Fractions -= (extraSeconds * m_oneSecondInAtto);
-
-            return *this;
-        }
 
         inline void TimeDuration::setDefaultFormat(const std::string& fmt) {
             DEFAULT_FORMAT = fmt;
@@ -335,7 +332,13 @@ namespace karabo {
             return os << duration.format(TimeDuration::DEFAULT_FORMAT);
         }
 
-
+        inline void TimeDuration::sanitize(TimeValue& sec, TimeValue& frac) {
+            if (frac >= m_oneSecondInAtto) {
+                // Add full seconds to sec and assign the rest to frac
+                sec += frac / m_oneSecondInAtto;
+                frac %= m_oneSecondInAtto;
+            }
+        }
     }
 }
 
