@@ -6,6 +6,7 @@
  */
 
 #include "TimeDuration.hh"
+#include "Overflow.hh"
 
 namespace karabo {
     namespace util {
@@ -58,23 +59,13 @@ namespace karabo {
         }
 
 
-        TimeDuration& TimeDuration::add(TimeValue seconds, TimeValue fractions) {
-            sanitize(seconds, fractions);
-            m_Seconds += seconds;
-            m_Fractions += fractions;
-            if (m_Fractions > m_oneSecondInAtto) {
-                ++m_Seconds;
-                m_Fractions -= m_oneSecondInAtto;
-            }
-            return *this;
+        TimeDuration& TimeDuration::add(const TimeValue seconds, const TimeValue fractions) {
+            return (*this) += TimeDuration(seconds, fractions);
         }
 
 
         TimeDuration & TimeDuration::add(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions) {
-            m_Seconds += days * DAY + hours * HOUR + minutes * MINUTE + seconds;
-            m_Fractions += fractions;
-            sanitize(m_Seconds, m_Fractions);
-            return *this;
+            return (*this) += TimeDuration(days * DAY + hours * HOUR + minutes * MINUTE + seconds, fractions);
         }
 
 
@@ -240,7 +231,7 @@ namespace karabo {
             // Do not care about overflowing seconds - that's billions of years...
             m_Seconds *= factor;
 
-            const std::pair<TimeValue, TimeValue> fractions = safeMultiply(m_Fractions, factor);
+            const std::pair<TimeValue, TimeValue> fractions = karabo::util::safeMultiply(m_Fractions, factor);
             // Treat non-overflow part...
             m_Fractions = fractions.second % m_oneSecondInAtto;
             m_Seconds += (fractions.second / m_oneSecondInAtto);
@@ -259,56 +250,6 @@ namespace karabo {
             }
 
             return *this;
-        }
-
-
-        unsigned long long safeAddToFirst(unsigned long long& first, unsigned long long second) {
-            // Add 'second' to 'first' and return overflow bits shifted by 64 bit to the right
-
-            unsigned long long overflow = 0ull;
-
-            const unsigned long long allBits = -1; // all bits set!
-            if (first > allBits - second) {
-                ++overflow; // overflow is only one bit
-            }
-            first += second; // if overflow, remaining bits are OK
-
-            return overflow;
-        }
-
-
-        std::pair<unsigned long long, unsigned long long>
-        safeMultiply(unsigned long long a, unsigned long long b) {
-            // Inspired by Norman Ramsey's answer at
-            // https://stackoverflow.com/questions/1815367/multiplication-of-large-numbers-how-to-catch-overflow
-
-            const unsigned long long maskHigh = (1ull << 32ull) - 1ull; // only lower 32-bits are set
-
-            const unsigned long long aHigh = a >> 32ull;
-            const unsigned long long bHigh = b >> 32ull;
-            const unsigned long long aLow = a & maskHigh;
-            const unsigned long long bLow = b & maskHigh;
-
-            // Now the result is 2**64 * aHigh * bHigh + 2**32 * (aHigh * bLow + aLow * bHigh) + aLow * bLow,
-            // so calculate each term:
-            unsigned long long low = aLow * bLow;
-            const unsigned long long mid1 = aHigh * bLow;
-            const unsigned long long mid2 = aLow * bHigh;
-            unsigned long long high = aHigh * bHigh;
-
-            // Add high parts of mid1 and mid2 to high:
-            high += (mid1 >> 32ull); // Shifting by 32 bits divides by 2**32 while adding it to high implicitly...
-            high += (mid2 >> 32ull); // ...multiplies by 2**64, so overall we multiply by 2**32 as desired.
-
-            // Add low parts of mid1 to low, taking care of overflow:
-            const unsigned long long mid1Low = mid1 << 32ull; // Shift 32 bits to multiply with 2**32 as desired.
-            high += safeAddToFirst(low, mid1Low);
-
-            // Add low parts of mid2 to low, taking care of overflow:
-            const unsigned long long mid2Low = mid2 << 32ull; // Shift 32 bits to multiply with 2**32 as desired.
-            high += safeAddToFirst(low, mid2Low);
-
-            return std::make_pair(high, low);
         }
     }
 }
