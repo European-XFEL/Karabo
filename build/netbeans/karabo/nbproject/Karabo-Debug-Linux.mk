@@ -123,6 +123,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/Hash.o \
 	${OBJECTDIR}/_ext/163016059/HashFilter.o \
 	${OBJECTDIR}/_ext/163016059/NDArray.o \
+	${OBJECTDIR}/_ext/163016059/Overflow.o \
 	${OBJECTDIR}/_ext/163016059/OverwriteElement.o \
 	${OBJECTDIR}/_ext/163016059/PluginLoader.o \
 	${OBJECTDIR}/_ext/163016059/RollingWindowStatistics.o \
@@ -631,6 +632,11 @@ ${OBJECTDIR}/_ext/163016059/NDArray.o: ../../../src/karabo/util/NDArray.cc
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/NDArray.o ../../../src/karabo/util/NDArray.cc
 
+${OBJECTDIR}/_ext/163016059/Overflow.o: ../../../src/karabo/util/Overflow.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/Overflow.o ../../../src/karabo/util/Overflow.cc
+
 ${OBJECTDIR}/_ext/163016059/OverwriteElement.o: ../../../src/karabo/util/OverwriteElement.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} "$@.d"
@@ -802,7 +808,7 @@ ${TESTDIR}/TestFiles/f4: ${TESTDIR}/_ext/936498188/EventLoop_Test.o ${TESTDIR}/_
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f4 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
 
-${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/AlarmCondition_Test.o ${TESTDIR}/_ext/1033104525/Base64_Test.o ${TESTDIR}/_ext/1033104525/ByteSwap_Test.o ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o ${TESTDIR}/_ext/1033104525/Configurator_Test.o ${TESTDIR}/_ext/1033104525/DateTimeString_Test.o ${TESTDIR}/_ext/1033104525/Dims_Test.o ${TESTDIR}/_ext/1033104525/Epochstamp_Test.o ${TESTDIR}/_ext/1033104525/Exception_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/HashFilter_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/MetaTools_Test.o ${TESTDIR}/_ext/1033104525/NDArray_Test.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/Serializable_Test.o ${TESTDIR}/_ext/1033104525/States_Test.o ${TESTDIR}/_ext/1033104525/StatisticalEvaluator_Test.o ${TESTDIR}/_ext/1033104525/StringTools_Test.o ${TESTDIR}/_ext/1033104525/TimeClasses_Test.o ${TESTDIR}/_ext/1033104525/Types_Test.o ${TESTDIR}/_ext/1033104525/Validator_Test.o ${TESTDIR}/_ext/1033104525/Version_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/1033104525/AlarmCondition_Test.o ${TESTDIR}/_ext/1033104525/Base64_Test.o ${TESTDIR}/_ext/1033104525/ByteSwap_Test.o ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o ${TESTDIR}/_ext/1033104525/Configurator_Test.o ${TESTDIR}/_ext/1033104525/DateTimeString_Test.o ${TESTDIR}/_ext/1033104525/Dims_Test.o ${TESTDIR}/_ext/1033104525/Epochstamp_Test.o ${TESTDIR}/_ext/1033104525/Exception_Test.o ${TESTDIR}/_ext/1033104525/Factory_Test.o ${TESTDIR}/_ext/1033104525/HashFilter_Test.o ${TESTDIR}/_ext/1033104525/Hash_Test.o ${TESTDIR}/_ext/1033104525/MetaTools_Test.o ${TESTDIR}/_ext/1033104525/NDArray_Test.o ${TESTDIR}/_ext/1033104525/Overflow_Test.o ${TESTDIR}/_ext/1033104525/Schema_Test.o ${TESTDIR}/_ext/1033104525/Serializable_Test.o ${TESTDIR}/_ext/1033104525/States_Test.o ${TESTDIR}/_ext/1033104525/StatisticalEvaluator_Test.o ${TESTDIR}/_ext/1033104525/StringTools_Test.o ${TESTDIR}/_ext/1033104525/TimeClasses_Test.o ${TESTDIR}/_ext/1033104525/Types_Test.o ${TESTDIR}/_ext/1033104525/Validator_Test.o ${TESTDIR}/_ext/1033104525/Version_Test.o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
 
@@ -1011,6 +1017,12 @@ ${TESTDIR}/_ext/1033104525/NDArray_Test.o: ../../../src/karabo/tests/util/NDArra
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/NDArray_Test.o ../../../src/karabo/tests/util/NDArray_Test.cc
+
+
+${TESTDIR}/_ext/1033104525/Overflow_Test.o: ../../../src/karabo/tests/util/Overflow_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/1033104525
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Overflow_Test.o ../../../src/karabo/tests/util/Overflow_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/Schema_Test.o: ../../../src/karabo/tests/util/Schema_Test.cc 
@@ -2257,6 +2269,19 @@ ${OBJECTDIR}/_ext/163016059/NDArray_nomain.o: ${OBJECTDIR}/_ext/163016059/NDArra
 	    $(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/NDArray_nomain.o ../../../src/karabo/util/NDArray.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/NDArray.o ${OBJECTDIR}/_ext/163016059/NDArray_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163016059/Overflow_nomain.o: ${OBJECTDIR}/_ext/163016059/Overflow.o ../../../src/karabo/util/Overflow.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/Overflow.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/Overflow_nomain.o ../../../src/karabo/util/Overflow.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/Overflow.o ${OBJECTDIR}/_ext/163016059/Overflow_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/OverwriteElement_nomain.o: ${OBJECTDIR}/_ext/163016059/OverwriteElement.o ../../../src/karabo/util/OverwriteElement.cc 
