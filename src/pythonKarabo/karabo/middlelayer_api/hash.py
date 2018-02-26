@@ -443,7 +443,7 @@ class Descriptor(object):
             return self._setter(instance, value)
 
     def checkedInit(self, instance, value=None):
-        """Check whether it is allowed and initialze
+        """Check whether it is allowed and initialize
 
         This checks whether it is allowed to initialize the value and
         returns an iterable with coroutines which may be needed for
@@ -561,7 +561,6 @@ class Type(Descriptor, Registry):
 
     All basic Karabo types are described by a Type.
     """
-
     unitSymbol = Attribute(Unit.NUMBER)
     metricPrefixSymbol = Attribute(MetricPrefix.NONE)
     daqPolicy = Attribute(DaqPolicy.UNSPECIFIED)
@@ -601,7 +600,7 @@ class Type(Descriptor, Registry):
         This is important for data coming from the network, as that has no
         notion about units or enums.
 
-        Note that for cirtical applications, it is advisable to do unit
+        Note that for critical applications, it is advisable to do unit
         conversions and timestamp handling by hand.
         """
         raise NotImplementedError
@@ -675,6 +674,9 @@ class Type(Descriptor, Registry):
 
 class Vector(Type):
     """This is the base class for all vectors of data"""
+    minSize = Attribute()
+    maxSize = Attribute()
+
     @classmethod
     def register(cls, name, dict):
         super(Vector, cls).register(name, dict)
@@ -685,6 +687,17 @@ class Vector(Type):
     def read(cls, file):
         size, = file.readFormat('I')
         return (cls.basetype.read(file) for i in range(size))
+
+    def check(self, ret):
+        if self.minSize is not None and len(ret) < self.minSize:
+            raise ValueError("Vector {} of {} with size {} is shorter than "
+                             "the allowed size of {}".format(
+                                ret, self.key, len(ret), self.minSize))
+        if self.maxSize is not None and len(ret) > self.maxSize:
+            raise ValueError("Vector {} of {} with size {} is larger than "
+                             "the allowed size of {}".format(
+                                ret, self.key, len(ret), self.maxSize))
+        super().check(ret)
 
     @classmethod
     def yieldBinary(cls, data):
@@ -723,12 +736,14 @@ class NumpyVector(Vector):
         return ",".join(str(x) for x in data)
 
     def cast(self, other):
-        if isinstance(other, np.ndarray) and \
-                other.dtype == self.basetype.numpy:
+        if (isinstance(other, np.ndarray) and
+                other.dtype == self.basetype.numpy):
             ret = other
         else:
             ret = np.array(other, dtype=self.basetype.numpy)
         assert ret.ndim == 1, "can only treat one-dimensional vectors"
+
+        self.check(ret)
         return ret
 
     def toKaraboValue(self, data, strict=True):
@@ -738,6 +753,8 @@ class NumpyVector(Vector):
         if data.units != self.units:
             data = data.to(self.units)
             data.descriptor = self
+        self.check(data)
+
         return data
 
     @classmethod
@@ -879,6 +896,7 @@ class VectorChar(Vector):
             return bytes(other)
 
     def toKaraboValue(self, data, strict=True):
+        self.check(data)
         return basetypes.VectorCharValue(data, descriptor=self)
 
 
@@ -1135,9 +1153,11 @@ class VectorString(Vector):
             if not isinstance(s, str):
                 raise TypeError
             return s
+        self.check(other)
         return [check(s) for s in other]
 
     def toKaraboValue(self, data, strict=True):
+        self.check(data)
         return basetypes.VectorStringValue(data, descriptor=self)
 
 

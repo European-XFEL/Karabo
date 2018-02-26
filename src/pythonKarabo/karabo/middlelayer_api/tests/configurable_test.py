@@ -7,9 +7,10 @@ from karabo.middlelayer import (
     ComplexFloat, DaqDataType, DaqPolicy, decodeBinary, Double, encodeBinary,
     Float, Hash, Int8, Int16, Int32, Int64, isSet, KaraboError, MetricPrefix,
     Node, Overwrite, Slot, State, String, UInt8, UInt16, UInt32, UInt64, Unit,
-    unit, VectorBool, VectorComplexDouble, VectorComplexFloat, VectorDouble,
-    VectorHash, VectorFloat, VectorInt8, VectorInt16, VectorInt32, VectorInt64,
-    VectorString, VectorUInt8, VectorUInt16, VectorUInt32, VectorUInt64)
+    unit, VectorBool, VectorChar, VectorComplexDouble, VectorComplexFloat,
+    VectorDouble, VectorHash, VectorFloat, VectorInt8, VectorInt16,
+    VectorInt32, VectorInt64, VectorString, VectorUInt8, VectorUInt16,
+    VectorUInt32, VectorUInt64)
 from karabo.middlelayer_api.injectable import Injectable
 
 
@@ -554,6 +555,111 @@ class Tests(TestCase):
         self.assertEqual(a.nested.nested.value, 7)
         self.assertEqual(a.values_set, [])
         self.assertEqual(a.children_set, [("nested.nested.value", 7, C.value)])
+
+    def test_vector_size(self):
+
+        class A(Configurable):
+            stringVector = VectorString(
+                defaultValue=['bla', 'blub'],
+                minSize=2)
+
+            floatVector = VectorFloat(
+                defaultValue=[1, 2, 3],
+                minSize=2,
+                maxSize=4)
+
+            boolVector = VectorBool(
+                defaultValue=[True, False],
+                minSize=2,
+                maxSize=4)
+
+            charVector = VectorChar(
+                defaultValue=[1, 2],
+                minSize=2,
+                maxSize=4)
+
+            doubleVector = VectorDouble(
+                defaultValue=[1.2, 1.3],
+                minSize=2,
+                maxSize=4)
+
+            intVector = VectorInt32(
+                defaultValue=[1, 2, 3],
+                minSize=2,
+                maxSize=4)
+
+            complexVector = VectorComplexFloat(
+                defaultValue=[2+3j, 3+4j, 4],
+                maxSize=4)
+
+        a = A()
+        self.assertEqual(a.stringVector.descriptor.minSize, 2)
+        self.assertEqual(a.floatVector.descriptor.minSize, 2)
+        self.assertEqual(a.floatVector.descriptor.maxSize, 4)
+        self.assertEqual(a.boolVector.descriptor.minSize, 2)
+        self.assertEqual(a.boolVector.descriptor.maxSize, 4)
+        self.assertEqual(a.charVector.descriptor.minSize, 2)
+        self.assertEqual(a.charVector.descriptor.maxSize, 4)
+        self.assertEqual(a.doubleVector.descriptor.minSize, 2)
+        self.assertEqual(a.doubleVector.descriptor.maxSize, 4)
+        self.assertEqual(a.intVector.descriptor.minSize, 2)
+        self.assertEqual(a.intVector.descriptor.maxSize, 4)
+        self.assertEqual(a.complexVector.descriptor.maxSize, 4)
+
+        with self.assertRaises(ValueError):
+            a.stringVector = ['miau']
+        a.stringVector = ['miau', 'wuff']
+        self.assertEqual(a.stringVector, ['miau', 'wuff'])
+
+        with self.assertRaises(ValueError):
+            a.floatVector = [1]
+        with self.assertRaises(ValueError):
+            a.floatVector = [1] * 5
+        a.floatVector = [1, 27, 35]
+        # pint differences
+        self.assertEqual(a.floatVector.value[0], 1)
+        self.assertEqual(a.floatVector.value[2], 35)
+        with self.assertRaises(ValueError):
+            a.floatVector = ['nofloat', 'float?']
+
+        with self.assertRaises(ValueError):
+            a.boolVector = [False]
+        a.boolVector = [False, True, True]
+        self.assertEqual(a.boolVector.value[0], False)
+        self.assertEqual(a.boolVector.value[1], True)
+        self.assertEqual(a.boolVector.value[2], True)
+
+        with self.assertRaises(ValueError):
+            a.charVector = [1]
+        with self.assertRaises(ValueError):
+            a.charVector = [1, 2, 3, 4, 5]
+        a.charVector = [1, 2]
+        self.assertEqual(a.charVector.value[0], 1)
+        self.assertEqual(a.charVector.value[1], 2)
+
+        with self.assertRaises(ValueError):
+            a.doubleVector = [1.2]
+        with self.assertRaises(ValueError):
+            a.doubleVector = [1.7, 2.1, 3.6, 4.12, 5.0]
+        a.doubleVector = [1.2, 2.5]
+        self.assertEqual(a.doubleVector.value[0], 1.2)
+        self.assertEqual(a.doubleVector.value[1], 2.5)
+
+        with self.assertRaises(ValueError):
+            a.intVector = [1]
+        with self.assertRaises(ValueError):
+            a.intVector = [1, 2, 3, 4, 5]
+        a.intVector = [17, 5]
+        self.assertEqual(a.intVector.value[0], 17)
+        self.assertEqual(a.intVector.value[1], 5)
+
+        a.complexVector = [2+3j]
+        self.assertEqual(a.complexVector.value[0], 2+3j)
+        with self.assertRaises(ValueError):
+            a.complexVector = [2+3j, 3+4j, 4, 17+4j, 1]
+        a.complexVector = [5+3j, 3+4j]
+        self.assertEqual(a.complexVector.value[0], 5+3j)
+        self.assertEqual(a.complexVector.value[1], 3+4j)
 
     def test_table(self):
         class Row(Configurable):
