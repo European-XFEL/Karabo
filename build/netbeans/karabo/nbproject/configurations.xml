@@ -1591,16 +1591,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/util/Overflow_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/util/Overflow_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/tests/util/Schema_Test.cc"
             ex="false"
             tool="1"
@@ -1977,16 +1967,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/OrderedMap.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Overflow.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Overflow.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3555,16 +3535,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/util/Overflow_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/util/Overflow_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/tests/util/Schema_Test.cc"
             ex="false"
             tool="1"
@@ -3938,16 +3908,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/OrderedMap.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Overflow.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Overflow.hh"
             ex="false"
             tool="3"
             flavor2="0">
