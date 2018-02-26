@@ -5,8 +5,9 @@
  * Created on April 27, 2013, 10:55 PM
  */
 
+#include <boost/multiprecision/cpp_int.hpp>
+
 #include "TimeDuration.hh"
-#include "Overflow.hh"
 
 namespace karabo {
     namespace util {
@@ -231,12 +232,23 @@ namespace karabo {
             // Do not care about overflowing seconds - that's billions of years...
             m_Seconds *= factor;
 
-            const std::pair<TimeValue, TimeValue> fractions = karabo::util::safeMultiply(m_Fractions, factor);
+            // Multiplying two large 64-bit values (as TimeValue) might overflow, so get 128-bit result from boost:
+            using boost::multiprecision::uint128_t;
+            uint128_t fractions128bits;
+            boost::multiprecision::multiply(fractions128bits, m_Fractions, factor);
+            // Now split it into two 64-bit values, i.e.
+            static const uint128_t lower64BitsSet = (uint128_t(1ull) << 64ull) - 1ull;
+            // ...lower part
+            const auto fractions64bits = static_cast<unsigned long long> (fractions128bits & lower64BitsSet);
+            // and higher part.
+            const auto fractions64bitsOverflow = static_cast<unsigned long long> (fractions128bits >> 64ull);
+
             // Treat non-overflow part...
-            m_Fractions = fractions.second % m_oneSecondInAtto;
-            m_Seconds += (fractions.second / m_oneSecondInAtto);
+            m_Fractions = fractions64bits % m_oneSecondInAtto;
+            m_Seconds += (fractions64bits / m_oneSecondInAtto);
+
             // ... and add overflow if needed:
-            if (fractions.first) {
+            if (fractions64bitsOverflow) {
                 // Calculate duration of single overflow
                 TimeValue attos = TimeValue(0ull) - 1ull; // all bits are set, i.e. maximum TimeValue (which is unsigned)!
                 TimeValue seconds = 0ull;
@@ -245,7 +257,7 @@ namespace karabo {
                 // (no harm if attos + 1 == 1 second - constructor sanitizes)
                 TimeDuration overflow(seconds, attos + 1);
                 // Multiply with number of overflows and add
-                overflow *= fractions.first; // recursion...
+                overflow *= fractions64bitsOverflow; // recursion...
                 (*this) += overflow;
             }
 
