@@ -9,17 +9,19 @@ import os.path as op
 from PyQt4.QtGui import QAction, QDialog, QMenu
 from traits.api import Instance, Property, String
 
+from karabo.common.api import Capabilities
 from karabo.common.project.api import (
     DeviceServerModel, MacroModel, ProjectModel, read_macro)
 from karabo.common.scenemodel.api import SceneModel, read_scene
 from karabogui import icons, messagebox
-from karabogui.dialogs.device_scenes import DeviceScenesDialog
+from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.enums import KaraboSettings
 from karabogui.project.dialog.object_handle import ObjectEditDialog
 from karabogui.project.dialog.server_handle import ServerHandleDialog
 from karabogui.request import call_device_slot
 from karabogui.util import (
-    getOpenFileName, get_setting, set_setting, handle_scene_from_server)
+    getOpenFileName, get_setting, set_setting, handle_macro_from_server,
+    handle_scene_from_server)
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 
 
@@ -79,8 +81,12 @@ def _fill_macros_menu(menu, project_controller):
     add_action.triggered.connect(partial(_add_macro, project_controller))
     load_action = QAction('Load macro...', menu)
     load_action.triggered.connect(partial(_load_macro, project_controller))
+    load_from_device = QAction('Load from device...', menu)
+    load_from_device.triggered.connect(partial(_load_macro_from_device,
+                                               project_controller))
     menu.addAction(add_action)
     menu.addAction(load_action)
+    menu.addAction(load_from_device)
 
 
 def _fill_scenes_menu(menu, project_controller):
@@ -154,6 +160,26 @@ def _load_macro(project_controller):
     project.macros.append(macro)
 
 
+def _load_macro_from_device(project_controller):
+    """Request a scene directly from a device
+    """
+    dialog = DeviceCapabilityDialog(capability=Capabilities.PROVIDES_MACROS)
+    if dialog.exec() == QDialog.Accepted:
+        device_id = dialog.device_id
+        macro_name = dialog.capa_name
+        project = project_controller.model
+        project_macros = {s.simple_name for s in project.macros}
+        if '{}-{}'.format(device_id, macro_name) in project_macros:
+            msg = ('A macro with that name already exists in the selected '
+                   'project.')
+            messagebox.show_warning(msg, title='Cannot Load Macro')
+            return
+
+        handler = partial(handle_macro_from_server, device_id, macro_name,
+                          project)
+        call_device_slot(handler, device_id, 'requestMacro', name=macro_name)
+
+
 def _add_scene(project_controller):
     """ Add a scene to the associated project
     """
@@ -193,14 +219,14 @@ def _load_scene(project_controller):
 def _load_scene_from_device(project_controller):
     """Request a scene directly from a device
     """
-    dialog = DeviceScenesDialog()
+    dialog = DeviceCapabilityDialog(capability=Capabilities.PROVIDES_SCENES)
     if dialog.exec() == QDialog.Accepted:
         device_id = dialog.device_id
-        scene_name = dialog.scene_name
+        scene_name = dialog.capa_name
         project = project_controller.model
         project_scenes = {s.simple_name for s in project.scenes}
 
-        if scene_name in project_scenes:
+        if '{}|{}'.format(device_id, scene_name) in project_scenes:
             msg = ('A scene with that name already exists in the selected '
                    'project.')
             messagebox.show_warning(msg, title='Cannot Load Scene')

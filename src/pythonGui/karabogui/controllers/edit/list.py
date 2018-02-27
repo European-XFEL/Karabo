@@ -1,12 +1,21 @@
+import re
+from ast import literal_eval
+
 from PyQt4.QtCore import pyqtSlot, Qt
-from PyQt4.QtGui import QDialog, QHBoxLayout, QLineEdit, QToolButton, QWidget
+from PyQt4.QtGui import (
+    QDialog, QHBoxLayout, QLineEdit, QToolButton, QValidator, QWidget)
 from traits.api import Instance, Int
 
 from karabo.common.scenemodel.api import DisplayListModel, EditableListModel
 from karabogui import icons
 from karabogui.binding.api import (
     VectorBinding, VectorCharBinding, VectorHashBinding, VectorNoneBinding,
-    get_editor_value)
+    VectorBoolBinding, VectorComplexDoubleBinding, VectorComplexFloatBinding,
+    VectorDoubleBinding, VectorFloatBinding, VectorInt8Binding,
+    VectorInt16Binding, VectorInt32Binding, VectorInt64Binding,
+    VectorStringBinding, VectorUint8Binding, VectorUint16Binding,
+    VectorUint32Binding, VectorUint64Binding, get_editor_value)
+
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.controllers.listedit import ListEdit
@@ -16,6 +25,7 @@ from karabogui.util import SignalBlocker
 class _BaseListController(BaseBindingController):
     last_cursor_position = Int(0)
     _internal_widget = Instance(QLineEdit)
+    _validator = Instance(QValidator)
     layout = Instance(QHBoxLayout)
 
     def create_widget(self, parent):
@@ -24,10 +34,14 @@ class _BaseListController(BaseBindingController):
         self.layout.setContentsMargins(0, 0, 0, 0)
 
         self._internal_widget = QLineEdit()
-
         self.layout.addWidget(self._internal_widget)
 
         return composite_widget
+
+    def binding_update(self, proxy):
+        binding = proxy.binding
+        self._validator = ListValidator(binding=binding)
+        self._internal_widget.setValidator(self._validator)
 
     def set_read_only(self, ro):
         focus_policy = Qt.NoFocus if ro else Qt.StrongFocus
@@ -56,17 +70,18 @@ class _BaseListController(BaseBindingController):
     def _on_user_edit(self, text):
         if self.proxy.binding is None:
             return
-        self.last_cursor_position = self._internal_widget.cursorPosition()
-        if text:
-            if text.endswith(','):
-                # Ignore commas with nothing following!
-                return
 
-            # don't need to convert here 'cause the traits does it foh ya.
-            self.proxy.edit_value = [val for val in text.split(',')
-                                     if val != '']
-        else:
+        if not text:
             self.proxy.edit_value = []
+            return
+
+        acceptable_input = self._internal_widget.hasAcceptableInput()
+        self.last_cursor_position = self._internal_widget.cursorPosition()
+        if acceptable_input:
+            cast = (str if isinstance(self.proxy.binding, VectorStringBinding)
+                    else literal_eval)
+            self.proxy.edit_value = [cast(val)
+                                     for val in text.split(',') if val != '']
 
     @pyqtSlot()
     def _on_edit_clicked(self):
@@ -102,3 +117,66 @@ class EditableList(_BaseListController):
 class DisplayList(_BaseListController):
     """The display version of the list widget"""
     model = Instance(DisplayListModel, args=())
+
+
+REGEX_MAP = {
+    VectorBoolBinding: r"(0|1|[T]rue|[F]alse)",
+    VectorComplexDoubleBinding: r"^[-+]?\d*[\.]\d*$|^[-+]?\d+$",  # X
+    VectorComplexFloatBinding: r"^[-+]?\d*[\.]\d*$|^[-+]?\d+$",  # X
+    VectorDoubleBinding: r"^[-+]?\d*[\.]\d*$|^[-+]?\d+$",
+    VectorFloatBinding: r"^[-+]?\d*[\.]\d*$|^[-+]?\d+$",
+    VectorInt8Binding: r"^[-+]?\d+$",
+    VectorInt16Binding: r"^[-+]?\d+$",
+    VectorInt32Binding: r"^[-+]?\d+$",
+    VectorInt64Binding: r"^[-+]?\d+$",
+    VectorStringBinding: r"^.+$",
+    VectorUint8Binding: r"^[+]?\d+$",
+    VectorUint16Binding: r"^[+]?\d+$",
+    VectorUint32Binding: r"^[+]?\d+$",
+    VectorUint64Binding: r"^[+]?\d+$",
+}
+
+MEDIATE_MAP = {
+    VectorBoolBinding: ('T', 't', 'r', 'u', 'F', 'a', 'l', 's', ','),
+    VectorComplexDoubleBinding: ('+', '-', 'j', ','),  # X
+    VectorComplexFloatBinding: ('+', '-', 'j', ','),  # X
+    VectorDoubleBinding: ('+', '-', ','),
+    VectorFloatBinding: ('+', '-', ',', '.'),
+    VectorInt8Binding: ('+', '-', ','),
+    VectorInt16Binding: ('+', '-', ','),
+    VectorInt32Binding: ('+', '-', ','),
+    VectorInt64Binding: ('+', '-', ','),
+    VectorStringBinding: (','),
+    VectorUint8Binding: ('+', ','),
+    VectorUint16Binding: ('+', ','),
+    VectorUint32Binding: ('+', ','),
+    VectorUint64Binding: ('+', ','),
+}
+
+
+class ListValidator(QValidator):
+    pattern = None
+    intermediate = ()
+
+    def __init__(self, binding=None):
+        super(ListValidator, self).__init__()
+        self.pattern = re.compile(REGEX_MAP.get(type(binding), ''))
+        self.intermediate = MEDIATE_MAP.get(type(binding), ())
+
+    def validate(self, input, pos):
+        """The main validate function
+        """
+        # completely empty input is acceptable!
+        if input == '':
+            return self.Acceptable, input, pos
+
+        # intermediate positions
+        if input[-1] in self.intermediate:
+            return self.Intermediate, input, pos
+
+        values = [val for val in input.split(',')]
+        for value in values:
+            if not self.pattern.match(value):
+                return self.Invalid, input, pos
+
+        return self.Acceptable, input, pos

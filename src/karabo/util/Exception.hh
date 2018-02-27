@@ -17,10 +17,10 @@
 #include <boost/thread.hpp>
 #include <boost/current_function.hpp>
 #include <boost/function.hpp>
+#include <boost/circular_buffer.hpp>
 
 #include <iostream>
 #include <string>
-#include <vector>
 #include <sstream>
 
 #include "karaboDll.hh"
@@ -165,7 +165,7 @@ namespace karabo {
             std::string m_exceptionText;
             mutable std::string m_detailedMsg;
             static boost::mutex m_mutex;
-            static std::vector<ExceptionInfo> m_trace;
+            static boost::circular_buffer<ExceptionInfo> m_trace;
             static std::map<void*, ExceptionHandler> m_exceptionHandlers;
             static bool m_hasUnhandled;
         };

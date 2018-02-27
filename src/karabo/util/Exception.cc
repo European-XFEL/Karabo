@@ -23,7 +23,8 @@ namespace karabo {
 
         // Init static members
         boost::mutex Exception::m_mutex;
-        std::vector<Exception::ExceptionInfo> Exception::m_trace;
+        // circular buffer to avoid leakage if trace is never cleared
+        boost::circular_buffer<Exception::ExceptionInfo> Exception::m_trace(100);
         std::map<void*, Exception::ExceptionHandler> Exception::m_exceptionHandlers;
         bool Exception::m_hasUnhandled = false;
 
@@ -144,14 +145,15 @@ namespace karabo {
 
 
         ostream & operator<<(ostream& os, const Exception& exception) {
-            if (Exception::m_trace.size() >= 1) {
-                Exception::showTrace(os);
-            }
-            string fill(Exception::m_trace.size()*3, ' ');
-            os << fill << Exception::m_trace.size() + 1 << ". Exception " << string(5, '=') << ">  {" << endl;
-            Exception::format(os, exception.m_exceptionInfo, fill);
-            os << fill << "}" << endl << endl;
+            Exception::showTrace(os); // no-op if m_trace is empty
 
+            {
+                boost::mutex::scoped_lock lock(Exception::m_mutex);
+                string fill(Exception::m_trace.size()*3, ' ');
+                os << fill << Exception::m_trace.size() + 1 << ". Exception " << string(5, '=') << ">  {" << endl;
+                Exception::format(os, exception.m_exceptionInfo, fill);
+                os << fill << "}" << endl << endl;
+            }
             Exception::clearTrace();
             return os;
         }
@@ -184,15 +186,18 @@ namespace karabo {
                 string s = m_exceptionInfo.message + "\n";
                 err += s;
             }
-            if (Exception::m_trace.size() >= 1) {
+            {
+                boost::mutex::scoped_lock lock(Exception::m_mutex);
                 for (unsigned int i = 0; i < Exception::m_trace.size(); ++i) {
-                    Exception::ExceptionInfo myException = Exception::m_trace[i];
+                    const Exception::ExceptionInfo& myException = Exception::m_trace[i];
                     if (!myException.message.empty() && myException.message != "Propagation") {
                         string s = myException.message + "\n";
                         err += s;
                     }
                 }
             }
+            Exception::clearTrace();
+
             return err;
         }
 

@@ -398,6 +398,8 @@ class PythonDevice(NoFsm):
         capabilities = 0
         if configuration.has("availableScenes"):
             capabilities |= Capabilities.PROVIDES_SCENES
+        if configuration.has("availableMacros"):
+            capabilities |= Capabilities.PROVIDES_MACROS
         info["capabilities"] = capabilities
 
         # Instantiate SignalSlotable object
