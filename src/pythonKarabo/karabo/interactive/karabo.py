@@ -1,4 +1,5 @@
 import argparse
+import copy
 import glob
 import subprocess
 import sys
@@ -115,7 +116,8 @@ def parse_commandline():
     parser_ins.set_defaults(command=install)
 
     parser_uins = sps.add_parser('uninstall',
-                                 help='Uninstalls an existing device')
+                                 help='Uninstalls an existing device. '
+                                 'Dependencies will not be uninstalled.')
     parser_uins.set_defaults(command=uninstall)
 
     parser_uins.add_argument('device',
@@ -130,6 +132,17 @@ def parse_commandline():
     parser_dev.add_argument('device',
                             type=str,
                             help='The name of the device package')
+
+    parser_dev.add_argument('-f', '--force',
+                            action='store_true',
+                            help='Force installation of device\'s '
+                            'dependencies, may overwrite existing (this option'
+                            ' is ignored when the -n option is also used)')
+
+    parser_dev.add_argument('-n', '--no-clobber',
+                            action='store_true',
+                            help='Do not overwrite device\'s '
+                            'dependencies (overrides a -f option)')
 
     parser_udev = sps.add_parser('undevelop',
                                  help='Deactivates develop mode for a given'
@@ -265,25 +278,42 @@ def install(args):
         copyFlag = args.copy
         path = os.path.join('installed', args.device)
         if os.path.isdir(path):
-            tag = run_cmd('git -C {} tag'.format(path)).decode("utf-8").\
-                  rstrip()
-            if tag == args.tag:
+            tag = run_cmd('cd {}; git tag'.format(path)).decode("utf-8").\
+                rstrip()
+            sha1 = run_cmd('cd {}; git show -s --format=%h'.format(path)).\
+                decode("utf-8").rstrip()
+            if args.no_clobber:  # abort if different version installed
+                if tag == '':  # not a tag
+                    print('{}-{} already installed: abort!'.
+                          format(args.device, sha1))
+                    sys.exit(1)
+                elif tag != args.tag:
+                    print('{}-{} already installed: abort!'.
+                          format(args.device, tag))
+                    sys.exit(1)
+                else:  # same version -> skip
+                    return
+            elif args.force:  # always overwrite
+                run_cmd('rm -rf {}'.format(path))
+            elif tag == args.tag:  # tag already installed
                 print("Skip {}-{} installation... already installed".
-                      format(args.device, tag, args.tag))
+                      format(args.device, tag))
                 return
-
-            if args.no_clobber:
-                print('Abort {} installation'.format(args.device))
-                sys.exit(1)
-            elif not args.force:
+            else:  # interactive
                 # Prompt for user's confirmation
-                overwrite = input('{} already installed: do you want to '
-                                  'replace tag {} with {}? [y/N]'.
-                                  format(args.device, tag, args.tag))
+                if tag != '':
+                    ver = tag
+                else:  # not a tag
+                    ver = sha1
+                overwrite = input('{}-{} already installed: do you want to '
+                                  'replace it with {}-{}? [y/N]'.
+                                  format(args.device, ver, args.device,
+                                         args.tag))
+
                 if overwrite.lower() != "y":
                     print('Abort {} installation'.format(args.device))
                     return
-            run_cmd('rm -rf {}'.format(path))
+                run_cmd('rm -rf {}'.format(path))
         os.makedirs(path, exist_ok=True)
         print('Downloading source for {}... '.format(args.device),
               end='', flush=True)
@@ -402,9 +432,17 @@ def list_devices(args):
 
 
 def uninstall(args):
+    path = os.path.join('installed', args.device)
+    if os.path.isdir(path):
+        run_cmd('rm -rf {}'.format(path))
     so_path = 'plugins/lib{}.so'.format(args.device)
     if os.path.isfile(so_path):
-        run_cmd('rm -f {}'.format(so_path))
+        if not os.path.islink(so_path):
+            run_cmd('rm -f {}'.format(so_path))
+        else:
+            print('Failed to uninstall {}. {} is not a regular file.'.
+                  format(args.device, so_path))
+            sys.exit(1)
     else:
         run_cmd('pip uninstall -y {}'.format(args.device))
     print('{} was successfully uninstalled'.format(args.device))
@@ -447,14 +485,24 @@ def install_dependencies(args):
         return
     print('Automatically installing now.')
     for item in devices:
-        args.device = item[0]
-        args.tag = item[1]
-        args.copy = item[2]
-        install(args)
+        args_copy = copy.deepcopy(args)
+        args_copy.device = item[0]
+        args_copy.tag = item[1]
+        args_copy.copy = item[2]
+        install(args_copy)
 
 
 def undevelop(args):
-    uninstall(args)
+    so_path = 'plugins/lib{}.so'.format(args.device)
+    if os.path.islink(so_path):
+        run_cmd('rm -f {}'.format(so_path))
+    elif os.path.exists(so_path):
+        print('Failed to undo development mode installation for {}. {} is '
+              'not a link.'.format(args.device, so_path))
+        sys.exit(1)
+    else:
+        run_cmd('pip uninstall -y {}'.format(args.device))
+    print('Development mode installation for {} undone'.format(args.device))
 
 
 def main():

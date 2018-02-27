@@ -18,6 +18,8 @@ class MyNode(Configurable):
 
 
 class MyDevice(Device):
+    __version__ = "1.2"
+
     # an output channel without schema
     output = OutputChannel()
     dataOutput = OutputChannel(Data)
@@ -36,6 +38,11 @@ class Tests(DeviceTest):
         cls.myDevice = MyDevice(dict(_deviceId_='MyDevice'))
         with cls.deviceManager(lead=cls.myDevice):
             yield
+
+    @sync_tst
+    def test_device_version(self):
+        expected = "1.2"
+        self.assertEqual(self.myDevice.classVersion, expected)
 
     @sync_tst
     def test_output_names(self):

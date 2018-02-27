@@ -231,6 +231,13 @@ void TimeClasses_Test::testTimeDuration() {
     // 2) with 'crossing' seconds border
     const TimeDuration durP(1234ull, 400000000000000000ull); // 17 zeros: 0.4 s
     CPPUNIT_ASSERT(durP * 7ull == TimeDuration(8640ull, 800000000000000000ull));
+    // 3) with multiplication where factor * fractions is above largest ull
+    //    (i.e. > 18.446 seconds)
+    const TimeDuration durR(1ull, 900000000000000001ull); // 17 zeros: 0.9 s
+    CPPUNIT_ASSERT(durR * 9ull == TimeDuration(17ull, 100000000000000009ull));
+    CPPUNIT_ASSERT(durR * 100ull == TimeDuration(190ull, 100ull));
+    CPPUNIT_ASSERT(durR * 1000000ull == TimeDuration(1900000ull, 1000000ull));
+    CPPUNIT_ASSERT(durR * 100000000000000ull == TimeDuration(190000000000000ull, 100000000000000ull));
 
     // Testing operator/
     const TimeDuration durL(222ull, 222222222222222ull);

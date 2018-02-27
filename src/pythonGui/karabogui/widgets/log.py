@@ -5,7 +5,7 @@
 #############################################################################
 from collections import namedtuple
 
-from PyQt4.QtCore import (QAbstractTableModel, QDate, QDateTime,
+from PyQt4.QtCore import (pyqtSlot, QAbstractTableModel, QDate, QDateTime,
                           QModelIndex, Qt)
 from PyQt4.QtGui import (QAbstractItemView, QColor, QDateTimeEdit,
                          QFormLayout, QFrame, QGroupBox, QHBoxLayout,
@@ -237,6 +237,7 @@ class LogWidget(QWidget):
         self.logs = self.logs[:-10000]
         self.onFilterChanged()
 
+    @pyqtSlot(bool)
     def onFilterOptionVisible(self, checked):
         """This slot is called from here when the filter options should be
         visible or not.
@@ -252,6 +253,7 @@ class LogWidget(QWidget):
 
         self.filterWidget.setVisible(checked)
 
+    @pyqtSlot()
     def onFilterChanged(self):
         self.queryModel.setList(self.filter(self.logs))
 
@@ -292,6 +294,7 @@ class LogWidget(QWidget):
             return list(g)
         return []
 
+    @pyqtSlot(QModelIndex)
     def onItemDoubleClicked(self, index):
         value = index.data()
         if value is None:
@@ -300,6 +303,7 @@ class LogWidget(QWidget):
         broadcast_event(KaraboEventSender.ShowNavigationItem,
                         {'device_path': value})
 
+    @pyqtSlot()
     def onSaveToFile(self):
         """Write current database content to a file """
         filename = getSaveFileName(
@@ -313,6 +317,7 @@ class LogWidget(QWidget):
             for log in self.logs:
                 out.write("{0} | {1} | {2} | {3} | {4} | {5}#\n".format(*log))
 
+    @pyqtSlot()
     def onClearLog(self):
         self.logs = []
         self.onFilterChanged()

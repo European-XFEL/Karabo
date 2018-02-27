@@ -5,7 +5,7 @@
 #############################################################################
 import numpy as np
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QColor, QImage, QLabel, QPixmap
+from PyQt4.QtGui import QColor, QFrame, QImage, QLabel, QPixmap
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import DisplayImageElementModel
@@ -29,6 +29,7 @@ class DisplayImageElement(BaseBindingController):
 
     def create_widget(self, parent):
         widget = QLabel(parent)
+        widget.setFrameStyle(QFrame.Panel | QFrame.Sunken)
         widget.setAutoFillBackground(True)
         widget.setAlignment(Qt.AlignCenter)
         widget.setFixedHeight(DEFAULT_SIZE)
