@@ -119,10 +119,10 @@ if __name__ == '__main__':
 
     setup(entry_points={'console_scripts': [
                 # XXX: The refactored GUI client
-                'karabo-gui-new=karabogui.programs.gui_runner:main',
+                'karabo-gui=karabogui.programs.gui_runner:main',
                 'panel-runner=karabogui.programs.panel_runner:main',
                 # XXX: The lagacy GUI client
-                'karabo-gui=karabo_gui.programs.gui_runner:main',
+                'karabo-gui-2017=karabo_gui.programs.gui_runner:main',
             ]},
           # Add an alias for 'build' so we can prepare data for Windows
           cmdclass={WINDOWS_BUILDER: distutils.command.build.build},
