@@ -9,7 +9,7 @@ from karabo.middlelayer import (
     decodeBinary, Double, encodeBinary, Float, Hash, Int8, Int16, MetricPrefix,
     NumpyVector, NDArray, QuantityValue, Schema, State, String, Timestamp,
     Type, Unit, unit, UInt64, VectorBool, VectorChar, VectorComplexFloat,
-    VectorFloat, VectorHash, VectorInt8, VectorString)
+    VectorInt32, VectorFloat, VectorHash, VectorInt8, VectorString)
 
 
 class Tests(TestCase):
@@ -280,6 +280,48 @@ class Tests(TestCase):
                                metricPrefixSymbol=MetricPrefix.KILO)
         v = d.toKaraboValue(v)
         self.assertAlmostEqual(v[1].magnitude, 3e-6+4e-6j)
+
+    def test_size_vector(self):
+        d = VectorString(minSize=2)
+        # violate still non-string setting
+        with self.assertRaises(TypeError):
+            v = d.toKaraboValue([1, 1])
+        with self.assertRaises(ValueError):
+            v = d.toKaraboValue(['miau'])
+        v = d.toKaraboValue(['wuff', 'scratch'])
+        self.assertEqual(v, ['wuff', 'scratch'])
+
+        d = VectorComplexFloat(minSize=2)
+        v = d.toKaraboValue([2+3j, 3+4j, 4])
+        self.assertAlmostEqual(v[1].magnitude, 3+4j)
+        with self.assertRaises(TypeError):
+            v = d.toKaraboValue(['miau'])
+        with self.assertRaises(ValueError):
+            v = d.toKaraboValue([3+4j])
+
+        d = VectorInt32(minSize=2, maxSize=3)
+        v = d.toKaraboValue([2, 3, 4])
+        self.assertAlmostEqual(v[1].magnitude, 3)
+        with self.assertRaises(ValueError):
+            v = d.toKaraboValue([2])
+        with self.assertRaises(ValueError):
+            v = d.toKaraboValue([2, 3, 4, 5])
+
+        d = VectorFloat(minSize=2, maxSize=3)
+        v = d.toKaraboValue([2, 3, 4])
+        self.assertAlmostEqual(v[1].magnitude, 3)
+        with self.assertRaises(ValueError):
+            v = d.toKaraboValue([2])
+        with self.assertRaises(ValueError):
+            v = d.toKaraboValue([2, 3, 4, 5])
+
+        d = VectorBool(minSize=2, maxSize=3)
+        v = d.toKaraboValue([False, True, False])
+        self.assertAlmostEqual(v[1].magnitude, True)
+        with self.assertRaises(ValueError):
+            v = d.toKaraboValue([True])
+        with self.assertRaises(ValueError):
+            v = d.toKaraboValue([False, True, False, True])
 
     def test_ndarray(self):
         d = NDArray(dtype=ComplexFloat, shape=(2, 3))
