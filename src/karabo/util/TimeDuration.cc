@@ -5,9 +5,11 @@
  * Created on April 27, 2013, 10:55 PM
  */
 
+#include "TimeDuration.hh"
+
 #include <boost/multiprecision/cpp_int.hpp>
 
-#include "TimeDuration.hh"
+#include <limits>
 
 namespace karabo {
     namespace util {
@@ -237,7 +239,7 @@ namespace karabo {
             uint128_t fractions128bits;
             boost::multiprecision::multiply(fractions128bits, m_Fractions, factor);
             // Now split it into two 64-bit values, i.e.
-            static const uint128_t lower64BitsSet = (uint128_t(1ull) << 64ull) - 1ull;
+            static const uint128_t lower64BitsSet = std::numeric_limits<uint64_t>::max();
             // ...lower part
             const auto fractions64bits = static_cast<unsigned long long> (fractions128bits & lower64BitsSet);
             // and higher part.
@@ -250,7 +252,7 @@ namespace karabo {
             // ... and add overflow if needed:
             if (fractions64bitsOverflow) {
                 // Calculate duration of single overflow
-                TimeValue attos = TimeValue(0ull) - 1ull; // all bits are set, i.e. maximum TimeValue (which is unsigned)!
+                TimeValue attos = std::numeric_limits<TimeValue>::max(); // all bits are set, i.e. maximum TimeValue (which is unsigned)!
                 TimeValue seconds = 0ull;
                 sanitize(seconds, attos);
                 // + 1 since overflow is one more than all 64 bits set
