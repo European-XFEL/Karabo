@@ -38,9 +38,11 @@ namespace karabo {
         }
 
 
-        IndexBuilderService::IndexBuilderService() : m_cache() {
-            karabo::net::EventLoop::addThread();
-        }
+        IndexBuilderService::IndexBuilderService() : 
+            m_cache(),
+            m_idxBuildStrand(boost::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService())) {
+                karabo::net::EventLoop::addThread();
+            }
 
 
         IndexBuilderService::~IndexBuilderService() {
@@ -56,7 +58,9 @@ namespace karabo {
                 // such a request is in the queue
                 return;
             }
-            karabo::net::EventLoop::getIOService().post(bind_weak(&IndexBuilderService::build, this, commandLineArguments));
+            // Do not post directly to EventLoop to avoid that hundreds of jobs 
+            // access the disk in parallel
+            m_idxBuildStrand->post(bind_weak(&IndexBuilderService::build, this, commandLineArguments));
         }
 
 
@@ -148,7 +152,18 @@ namespace karabo {
 
                 bool rebuildIndex = false;
 
+                vector<Hash> result;
+
+                int lastFileIndex = getFileIndex(deviceId);
+                if (lastFileIndex < 0) {
+                    KARABO_LOG_WARN << "File \"" << get<string>("directory") << "/" << deviceId << "/raw/archive.last\" not found. No data will be sent...";
+                    reply(deviceId, property, result);
+                    return;
+                }
+                
                 // Register a property in prop file for indexing if it is not there
+                // touching properties_with_index.txt file will cause the DataLogger to close current raw file
+                // and increment the content of archive.last
                 try {
                     boost::mutex::scoped_lock lock(m_propFileInfoMutex);
                     bf::path propPath(get<string>("directory") + "/" + deviceId + "/raw/properties_with_index.txt");
@@ -209,8 +224,6 @@ namespace karabo {
                     return;
                 }
 
-                vector<Hash> result;
-
                 Epochstamp from;
                 if (params.has("from")) from = Epochstamp(params.get<string>("from"));
                 Epochstamp to;
@@ -218,21 +231,19 @@ namespace karabo {
                 unsigned int maxNumData = 0;
                 if (params.has("maxNumData")) maxNumData = params.getAs<int>("maxNumData");
 
-                int lastFileIndex = getFileIndex(deviceId);
-                if (lastFileIndex < 0) {
-                    KARABO_LOG_WARN << "File \"" << get<string>("directory") << "/" << deviceId << "/raw/archive.last\" not found. No data will be sent...";
-                    reply(deviceId, property, result);
-                    return;
-                }
-
                 // start rebuilding index for deviceId, property and all files
                 if (rebuildIndex) {
                     rebuildIndex = false;
+                    // We use previously read value of lastFileIndex as we do not want to  trigger rebuilding of the 
+                    // very last index file, i.e. the one that the DataLogger will start to write from now on!
+                    // (See also comment about DataLogReader in DataLogger::slotChanged.)
                     int idx = lastFileIndex;
-                    while (idx >= 0) {
+                    while (idx >= 0) { 
+                        //files are processed starting from the most recent as we arbitrarily assume user is more likely interested to recent data
                         m_ibs->buildIndexFor(get<string>("directory") + " " + deviceId + " " + property + " " + toString(idx));
                         idx--;
                     }
+                    
                 }
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "From (UTC): " << from.toIso8601Ext();

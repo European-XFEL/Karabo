@@ -10,7 +10,7 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QAction, QDialog, QMenu
 from traits.api import Instance, Property, on_trait_change
 
-from karabo.common.api import NO_CONFIG_STATUSES
+from karabo.common.api import Capabilities, NO_CONFIG_STATUSES
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     find_parent_object
@@ -18,14 +18,19 @@ from karabo.common.project.api import (
 from karabo.middlelayer import Hash
 from karabo.middlelayer_api.project.api import (read_project_model,
                                                 write_project_model)
+from karabogui import messagebox
+from karabogui.binding.api import extract_configuration
 from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.indicators import get_project_device_status_icon
 from karabogui.project.dialog.device_handle import DeviceHandleDialog
 from karabogui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabogui.project.utils import (
     check_device_config_exists, check_device_instance_exists)
+from karabogui.request import call_device_slot
 from karabogui.singletons.api import get_manager, get_topology
 from karabogui.topology.api import ProjectDeviceInstance
+from karabogui.util import handle_scene_from_server, handle_macro_from_server
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 from .server import DeviceServerController
 
@@ -41,6 +46,9 @@ class DeviceInstanceController(BaseProjectGroupController):
     project_device = Instance(ProjectDeviceInstance)
 
     def context_menu(self, project_controller, parent=None):
+        def _test_mask(mask, bit):
+            return (mask & bit) == bit
+
         menu = QMenu(parent)
 
         server_controller = find_parent_object(self, project_controller,
@@ -48,6 +56,9 @@ class DeviceInstanceController(BaseProjectGroupController):
         server_online = server_controller.online
         proj_device_online = self.project_device.online
         proj_device_status = self.project_device.proxy.status
+        proj_topo_node = self.project_device.device_node
+
+        capabilities = proj_topo_node.capabilities if proj_topo_node else 0
 
         edit_action = QAction('Edit', menu)
         edit_action.triggered.connect(partial(self._edit_device,
@@ -59,6 +70,18 @@ class DeviceInstanceController(BaseProjectGroupController):
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_device,
                                                 project_controller))
+
+        macro_action = QAction('Open Device Macro', menu)
+        has_macro = _test_mask(capabilities, Capabilities.PROVIDES_MACROS)
+        macro_action.setEnabled(has_macro)
+        macro_action.triggered.connect(partial(self._load_macro_from_device,
+                                               project_controller))
+        scene_action = QAction('Open Device Scene', menu)
+        has_scene = _test_mask(capabilities, Capabilities.PROVIDES_SCENES)
+        scene_action.setEnabled(has_scene)
+        scene_action.triggered.connect(partial(self._load_scene_from_device,
+                                               project_controller))
+
         instantiate_action = QAction('Instantiate', menu)
         can_instantiate = (server_online and not proj_device_online and
                            proj_device_status not in NO_CONFIG_STATUSES)
@@ -74,6 +97,9 @@ class DeviceInstanceController(BaseProjectGroupController):
         menu.addSeparator()
         menu.addAction(dupe_action)
         menu.addAction(delete_action)
+        menu.addSeparator()
+        menu.addAction(macro_action)
+        menu.addAction(scene_action)
         menu.addSeparator()
         menu.addAction(instantiate_action)
         menu.addAction(shutdown_action)
@@ -367,6 +393,52 @@ class DeviceInstanceController(BaseProjectGroupController):
                                     DeviceServerModel)
         self.instantiate(server)
 
+    def _load_macro_from_device(self, project_controller):
+        """Request a scene directly from a device
+        """
+        dialog = DeviceCapabilityDialog(
+            device_id=self.model.instance_id,
+            capability=Capabilities.PROVIDES_MACROS)
+        if dialog.exec() == QDialog.Accepted:
+            device_id = dialog.device_id
+            macro_name = dialog.capa_name
+            project = project_controller.model
+            project_macros = {s.simple_name for s in project.macros}
+
+            if '{}-{}'.format(device_id, macro_name) in project_macros:
+                msg = ('A macro with that name already exists in the selected '
+                       'project.')
+                messagebox.show_warning(msg, modal=False,
+                                        title='Cannot Load Macro')
+                return
+
+            handler = partial(handle_macro_from_server, device_id, macro_name,
+                              project)
+            call_device_slot(handler, device_id, 'requestMacro',
+                             name=macro_name)
+
+    def _load_scene_from_device(self, project_controller):
+        """Request a scene directly from a device
+        """
+        dialog = DeviceCapabilityDialog(device_id=self.model.instance_id)
+        if dialog.exec() == QDialog.Accepted:
+            device_id = dialog.device_id
+            scene_name = dialog.capa_name
+            project = project_controller.model
+            project_scenes = {s.simple_name for s in project.scenes}
+
+            if '{}|{}'.format(device_id, scene_name) in project_scenes:
+                msg = ('A scene with that name already exists in the selected '
+                       'project.')
+                messagebox.show_warning(msg, modal=False,
+                                        title='Cannot Load Scene')
+                return
+
+            handler = partial(handle_scene_from_server, device_id, scene_name,
+                              project)
+            call_device_slot(handler, device_id, 'requestScene',
+                             name=scene_name)
+
     def instantiate(self, server):
         """ Instantiate this device instance on the given `server`
 
@@ -374,12 +446,12 @@ class DeviceInstanceController(BaseProjectGroupController):
         """
         if self.project_device.online:
             return
-        device = self.model
-        dev_conf = device.select_config(device.active_config_ref)
-        if dev_conf is not None:
-            get_manager().initDevice(server.server_id, dev_conf.class_id,
-                                     device.instance_id,
-                                     dev_conf.configuration)
+
+        prj_dev = self.project_device
+        config = extract_configuration(prj_dev.proxy.binding)
+
+        get_manager().initDevice(prj_dev.server_id, prj_dev.class_id,
+                                 prj_dev.device_id, config=config)
 
     def shutdown_device(self, show_confirm=True):
         device = self.model

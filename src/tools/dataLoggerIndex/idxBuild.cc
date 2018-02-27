@@ -171,12 +171,6 @@ int main(int argc, char** argv) {
             throw KARABO_PARAMETER_EXCEPTION("File \"" + rawdir.string() + "\" is not a directory!");
 
         bf::path idxdir(karaboHistory + "/" + deviceId + "/idx");
-        // check if we need to re-build all index files
-        if (requestedFilenum == -1) {
-            // simply delete the whole directory with the old content and create the new one
-            bf::remove_all(idxdir);
-            bf::create_directory(idxdir);
-        }
     }
 
     cout << devices.size() << " devices to process found... process only properties that require indexing ..." << endl;
@@ -251,7 +245,9 @@ int main(int argc, char** argv) {
         }
 
         string pattern = "archive_";
-        for (vector<bf::path>::iterator i = rawtxt.begin(); i != rawtxt.end(); ++i) {
+        // Process most recent file first as it is most likely what is needed 
+        // first from user that triggers indexing
+        for (vector<bf::path>::reverse_iterator i = rawtxt.rbegin(); i != rawtxt.rend(); ++i) {
             // extract filenum from file name
             int filenum = fromString<size_t>(i->filename().stem().string().substr(pattern.size()));
             if (requestedFilenum < 0 || requestedFilenum == filenum) {
