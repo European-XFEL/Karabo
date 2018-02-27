@@ -13,12 +13,8 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <boost/tuple/tuple.hpp>
+#include <boost/asio/io_service.hpp>
 
-namespace boost {
-    namespace asio {
-        class io_service;
-    }
-}
 
 namespace karabo {
     namespace net {
