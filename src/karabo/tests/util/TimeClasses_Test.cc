@@ -85,9 +85,9 @@ void TimeClasses_Test::testEpochstampConversion() {
     CPPUNIT_ASSERT_EQUAL(1, static_cast<int> (asPtime.date().month()));
     CPPUNIT_ASSERT_EQUAL(31, static_cast<int> (asPtime.date().day()));
 
-    CPPUNIT_ASSERT_EQUAL(3, asPtime.time_of_day().hours());
-    CPPUNIT_ASSERT_EQUAL(2, asPtime.time_of_day().minutes());
-    CPPUNIT_ASSERT_EQUAL(5, asPtime.time_of_day().seconds());
+    CPPUNIT_ASSERT_EQUAL(3, static_cast<int>(asPtime.time_of_day().hours()));
+    CPPUNIT_ASSERT_EQUAL(2, static_cast<int>(asPtime.time_of_day().minutes()));
+    CPPUNIT_ASSERT_EQUAL(5, static_cast<int>(asPtime.time_of_day().seconds()));
     auto totalNanoSec = asPtime.time_of_day().total_nanoseconds();
     auto nanoSec = totalNanoSec - asPtime.time_of_day().total_seconds() * 1000000000ull;
     CPPUNIT_ASSERT_EQUAL(123000ull, nanoSec); // nanoseconds are truncated to microseconds
