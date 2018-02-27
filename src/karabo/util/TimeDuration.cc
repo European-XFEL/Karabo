@@ -7,6 +7,10 @@
 
 #include "TimeDuration.hh"
 
+#include <boost/multiprecision/cpp_int.hpp>
+
+#include <limits>
+
 namespace karabo {
     namespace util {
 
@@ -27,12 +31,14 @@ namespace karabo {
         TimeDuration::TimeDuration(const TimeValue seconds, const TimeValue fractions) :
             m_Seconds(seconds),
             m_Fractions(fractions) {
+            sanitize(m_Seconds, m_Fractions);
         }
 
 
         TimeDuration::TimeDuration(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions) :
             m_Seconds(days*DAY + hours*HOUR + minutes*MINUTE + seconds),
             m_Fractions(fractions) {
+            sanitize(m_Seconds, m_Fractions);
         }
 
 
@@ -43,6 +49,7 @@ namespace karabo {
         TimeDuration& TimeDuration::set(const TimeValue seconds, const TimeValue fractions) {
             m_Seconds = seconds;
             m_Fractions = fractions;
+            sanitize(m_Seconds, m_Fractions);
             return *this;
         }
 
@@ -50,29 +57,18 @@ namespace karabo {
         TimeDuration & TimeDuration::set(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions) {
             m_Seconds = days * DAY + hours * HOUR + minutes * MINUTE + seconds;
             m_Fractions = fractions;
+            sanitize(m_Seconds, m_Fractions);
             return *this;
         }
 
 
         TimeDuration& TimeDuration::add(const TimeValue seconds, const TimeValue fractions) {
-            m_Seconds += seconds;
-            m_Fractions += fractions;
-            if (m_Fractions > m_oneSecondInAtto) {
-                ++m_Seconds;
-                m_Fractions -= m_oneSecondInAtto;
-            }
-            return *this;
+            return (*this) += TimeDuration(seconds, fractions);
         }
 
 
         TimeDuration & TimeDuration::add(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions) {
-            m_Seconds += days * DAY + hours * HOUR + minutes * MINUTE + seconds;
-            m_Fractions += fractions;
-            if (m_Fractions > m_oneSecondInAtto) {
-                ++m_Seconds;
-                m_Fractions -= m_oneSecondInAtto;
-            }
-            return *this;
+            return (*this) += TimeDuration(days * DAY + hours * HOUR + minutes * MINUTE + seconds, fractions);
         }
 
 
@@ -224,12 +220,50 @@ namespace karabo {
         void TimeDuration::fromHash(const karabo::util::Hash& hash) {
             m_Seconds = hash.get<unsigned long long>("seconds");
             m_Fractions = hash.get<unsigned long long>("fractions");
+            sanitize(m_Seconds, m_Fractions);
         }
 
 
         void TimeDuration::toHash(karabo::util::Hash& hash) {
             hash.set<unsigned long long>("seconds", getSeconds());
             hash.set<unsigned long long>("fractions", getFractions(ATTOSEC));
+        }
+
+
+        TimeDuration& TimeDuration::operator*=(TimeValue factor) {
+            // Do not care about overflowing seconds - that's billions of years...
+            m_Seconds *= factor;
+
+            // Multiplying two large 64-bit values (as TimeValue) might overflow, so get 128-bit result from boost:
+            using boost::multiprecision::uint128_t;
+            uint128_t fractions128bits;
+            boost::multiprecision::multiply(fractions128bits, m_Fractions, factor);
+            // Now split it into two 64-bit values, i.e.
+            static const uint128_t lower64BitsSet = std::numeric_limits<uint64_t>::max();
+            // ...lower part
+            const auto fractions64bits = static_cast<unsigned long long> (fractions128bits & lower64BitsSet);
+            // and higher part.
+            const auto fractions64bitsOverflow = static_cast<unsigned long long> (fractions128bits >> 64ull);
+
+            // Treat non-overflow part...
+            m_Fractions = fractions64bits % m_oneSecondInAtto;
+            m_Seconds += (fractions64bits / m_oneSecondInAtto);
+
+            // ... and add overflow if needed:
+            if (fractions64bitsOverflow) {
+                // Calculate duration of single overflow
+                TimeValue attos = std::numeric_limits<TimeValue>::max(); // all bits are set, i.e. maximum TimeValue (which is unsigned)!
+                TimeValue seconds = 0ull;
+                sanitize(seconds, attos);
+                // + 1 since overflow is one more than all 64 bits set
+                // (no harm if attos + 1 == 1 second - constructor sanitizes)
+                TimeDuration overflow(seconds, attos + 1);
+                // Multiply with number of overflows and add
+                overflow *= fractions64bitsOverflow; // recursion...
+                (*this) += overflow;
+            }
+
+            return *this;
         }
     }
 }
