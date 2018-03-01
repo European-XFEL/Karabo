@@ -14,10 +14,16 @@
 namespace karabo {
     namespace net {
 
-        boost::mutex karabo::net::EventLoop::m_initMutex;
+        boost::asio::io_service EventLoop::m_ioService;
+        boost::thread_group EventLoop::m_threadPool;
+        boost::mutex EventLoop::m_threadPoolMutex;
+        boost::mutex EventLoop::m_initMutex;
+        EventLoop::ThreadMap EventLoop::m_threadMap;
+        boost::mutex EventLoop::m_signalHandlerMutex;
+        EventLoop::SignalHandler EventLoop::m_signalHandler;
 
 
-        EventLoop::EventLoop() : m_ioService() {
+        EventLoop::EventLoop() {
         }
 
 
@@ -149,15 +155,13 @@ namespace karabo {
                 it->second->join();
                 m_threadPool.remove_thread(it->second);
                 delete it->second;
+                m_threadMap.erase(it);
             }
-            m_threadMap.erase(id);
-            KARABO_LOG_FRAMEWORK_DEBUG << "Removed thread (id: " << id
-                    << ") from event-loop, now running: "
-                    << m_threadPool.size() << " threads in total";
         }
 
 
         void EventLoop::clearThreadPool() {
+            boost::mutex::scoped_lock lock(m_threadPoolMutex);
             for (ThreadMap::iterator it = m_threadMap.begin(); it != m_threadMap.end(); ++it) {
                 m_threadPool.remove_thread(it->second);
                 delete it->second;
@@ -185,6 +189,7 @@ namespace karabo {
                 } catch (const RemoveThreadException&) {
                     // This is a sign to remove this thread from the pool
                     // As we can not kill ourselves we will ask another thread to kindly do so
+                    boost::mutex::scoped_lock lock(m_threadPoolMutex);
                     if (m_threadPool.is_this_thread_in()) {
                         m_ioService.post(boost::bind(&karabo::net::EventLoop::asyncDestroyThread, this, boost::this_thread::get_id()));
                         return; // No more while, we want to die
