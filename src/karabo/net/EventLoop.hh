@@ -119,21 +119,21 @@ namespace karabo {
             void asyncDestroyThread(const boost::thread::id& id);
 
             void clearThreadPool();
-
+            
             size_t _getNumberOfThreads() const;
 
             void _setSignalHandler(const SignalHandler& handler);
 
-            boost::asio::io_service m_ioService;
-            boost::thread_group m_threadPool;
-            mutable boost::mutex m_threadPoolMutex;
+            static boost::asio::io_service m_ioService;
+            static boost::thread_group m_threadPool;
+            static boost::mutex m_threadPoolMutex;
             static boost::mutex m_initMutex;
 
             typedef std::map<boost::thread::id, boost::thread*> ThreadMap;
-            ThreadMap m_threadMap;
+            static ThreadMap m_threadMap;
 
-            boost::mutex m_signalHandlerMutex;
-            SignalHandler m_signalHandler;
+            static boost::mutex m_signalHandlerMutex;
+            static SignalHandler m_signalHandler;
         };
     }
 }
