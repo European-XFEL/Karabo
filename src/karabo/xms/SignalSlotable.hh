@@ -362,6 +362,8 @@ namespace karabo {
              * @param slotSignature is the signature of the slot
              * @param successHandler is called when connection is successfully stopped (maybe be empty [=default])
              * @param failureHandler is called when the disconnection failed (maybe be empty [=default])
+             * @param timeout in milliseconds for internal async requests - non-positive (default) means the very long
+             *                default timeout
              */
             void asyncDisconnect(const std::string& signalInstanceId, const std::string& signalFunction,
                                  const std::string& slotInstanceId, const std::string& slotFunction,
