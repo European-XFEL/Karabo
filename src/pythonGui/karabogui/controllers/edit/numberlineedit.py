@@ -59,7 +59,8 @@ class NumberLineEdit(BaseBindingController):
         if self.proxy.binding is None:
             return
         if acceptable_input:
-            if isinstance(self._validator, QDoubleValidator) and self._validator.StandardNotation:
+            if (isinstance(self._validator, QDoubleValidator) and
+                    self._validator.StandardNotation):
                 intdci = text.split('.')
                 if len(intdci) > 1:
                     part2 = intdci[1]
