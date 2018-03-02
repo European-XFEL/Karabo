@@ -81,7 +81,10 @@ namespace karabo {
             instance().m_ioService.reset();
 
             instance().runProtected();
-            instance().m_threadPool.join_all();
+            {
+                boost::mutex::scoped_lock lock(m_threadPoolMutex);
+                instance().m_threadPool.join_all();
+            }
             instance().clearThreadPool();
         }
 
@@ -148,13 +151,22 @@ namespace karabo {
         }
 
 
-        void EventLoop::asyncDestroyThread(const boost::thread::id& id) {
+        void EventLoop::_joinAndRemoveThread(boost::thread* thr) {
             boost::mutex::scoped_lock lock(m_threadPoolMutex);
+            thr->join();
+            m_threadPool.remove_thread(thr);
+            delete thr;
+        }
+
+
+        void EventLoop::asyncDestroyThread(const boost::thread::id& id) {
             ThreadMap::iterator it = m_threadMap.find(id);
             if (it != m_threadMap.end()) {
-                it->second->join();
-                m_threadPool.remove_thread(it->second);
-                delete it->second;
+                if (m_threadPool.size() > 1) { // Failed to print the last thread: SIGSEGV
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Running threads in total : " << m_threadPool.size()
+                            << ".  Then remove thread (id: " << id << ") from the event-loop.";
+                }
+                m_ioService.post(boost::bind(&EventLoop::_joinAndRemoveThread, this, it->second));
                 m_threadMap.erase(it);
             }
         }
@@ -191,7 +203,7 @@ namespace karabo {
                     // As we can not kill ourselves we will ask another thread to kindly do so
                     boost::mutex::scoped_lock lock(m_threadPoolMutex);
                     if (m_threadPool.is_this_thread_in()) {
-                        m_ioService.post(boost::bind(&karabo::net::EventLoop::asyncDestroyThread, this, boost::this_thread::get_id()));
+                        asyncDestroyThread(boost::this_thread::get_id());
                         return; // No more while, we want to die
                     } else {
                         // We are in the main blocking thread here, which we never want to kill
