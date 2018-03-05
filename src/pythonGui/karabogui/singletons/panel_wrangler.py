@@ -70,7 +70,8 @@ class PanelWrangler(QObject):
 
         elif sender in (KaraboEventSender.ShowSceneView,
                         KaraboEventSender.ShowUnattachedSceneView):
-            target_window = SceneTargetWindow.MainWindow
+            target_window = data.get(
+                'target_window', SceneTargetWindow.MainWindow)
             model = data.get('model')
             attached = sender is KaraboEventSender.ShowSceneView
             self._open_scene(model, target_window, attached=attached)
