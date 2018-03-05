@@ -435,7 +435,7 @@ class DeviceInstanceController(BaseProjectGroupController):
                 return
 
             handler = partial(handle_scene_from_server, device_id, scene_name,
-                              project)
+                              project, None)
             call_device_slot(handler, device_id, 'requestScene',
                              name=scene_name)
 
