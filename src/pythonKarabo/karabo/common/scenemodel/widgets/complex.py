@@ -4,7 +4,8 @@ from traits.api import Bool, Enum, Float, Int, String
 
 from karabo.common.scenemodel.bases import (
     BaseDisplayEditableWidget, BaseEditWidget, BaseWidgetObjectData)
-from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
+from karabo.common.scenemodel.const import (
+    NS_KARABO, WIDGET_ELEMENT_TAG, SceneTargetWindow)
 from karabo.common.scenemodel.io_utils import (
     read_base_widget_data, read_empty_display_editable_widget,
     write_base_widget_data)
@@ -15,6 +16,25 @@ from karabo.common.scenemodel.registry import (
 class ColorBoolModel(BaseWidgetObjectData):
     """ A model for DisplayBool Widget"""
     invert = Bool(False)
+
+
+class DeviceSceneLinkModel(BaseWidgetObjectData):
+    """ A model for a DeviceSceneLink Widget """
+
+    # What device scene is being linked to?
+    target = String
+    # Where should the target be opened?
+    target_window = Enum(*list(SceneTargetWindow))
+    # The text to be displayed
+    text = String
+    # A string describing the font
+    font = String
+    # A foreground color, CSS-style
+    foreground = String
+    # A background color, CSS-style
+    background = String
+    # The line width of a frame around the text
+    frame_width = Int(1)
 
 
 class DoubleLineEditModel(BaseEditWidget):
@@ -80,6 +100,41 @@ class TableElementModel(BaseDisplayEditableWidget):
     column_schema = String
     # The actual type of the widget
     klass = Enum('DisplayTableElement', 'EditableTableElement')
+
+
+@register_scene_reader('DeviceSceneLink', version=2)
+def _device_scene_link_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    # If unspecified, the default is 'scene'
+    traits['target'] = element.get(NS_KARABO + 'target', '')
+    traits['text'] = element.get(NS_KARABO + 'text', '')
+    traits['font'] = element.get(NS_KARABO + 'font')
+    traits['foreground'] = element.get(NS_KARABO + 'foreground', 'black')
+    bg = element.get(NS_KARABO + 'background')
+    if bg is not None:
+        traits['background'] = bg
+    fw = element.get(NS_KARABO + 'frameWidth')
+    if fw is not None:
+        traits['frame_width'] = int(fw)
+    # If unspecified, the default is 'mainwin'
+    target_window = element.get(NS_KARABO + 'target_window', 'mainwin')
+    traits['target_window'] = SceneTargetWindow(target_window)
+    return DeviceSceneLinkModel(**traits)
+
+
+@register_scene_writer(DeviceSceneLinkModel)
+def _device_scene_link_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'DeviceSceneLink')
+    for name in ('text', 'font', 'foreground'):
+        element.set(NS_KARABO + name, getattr(model, name))
+
+    element.set(NS_KARABO + 'frameWidth', str(model.frame_width))
+    if model.background != '':
+        element.set(NS_KARABO + 'background', model.background)
+    element.set(NS_KARABO + 'target', model.target)
+    element.set(NS_KARABO + 'target_window', model.target_window.value)
+    return element
 
 
 @register_scene_reader('DisplayColorBool', version=2)
