@@ -738,6 +738,114 @@ void SignalSlotable_Test::testConnectAsyncMulti() {
 }
 
 
+void SignalSlotable_Test::testDisconnectAsync() {
+
+    auto signaler = boost::make_shared<SignalSlotable>("signalInstance");
+    signaler->registerSignal<int>("signal");
+    signaler->start();
+
+    auto slotter = boost::make_shared<SignalSlotable>("slotInstance");
+    bool slotCalled = false;
+    auto slotFunc = [&slotCalled] () {
+        slotCalled = true;
+    };
+    slotter->registerSlot(slotFunc, "slot");
+    slotter->start();
+
+    ///////////////////////////////////////////////////////////////////////////
+    // First test successful asyncDisconnect
+    CPPUNIT_ASSERT(signaler->connect("signalInstance", "signal", "slotInstance", "slot"));
+
+    bool disconnectSuccess = false;
+    auto disconnectSuccessHandler = [&disconnectSuccess] () {
+        disconnectSuccess = true;
+    };
+    bool disconnectFailed = false;
+    bool disconnectTimeout = false;
+    std::string disconnectFailedMsg;
+    auto disconnectFailedHandler = [&disconnectFailed, &disconnectTimeout, &disconnectFailedMsg] () {
+        disconnectFailed = true;
+        try {
+            throw;
+        } catch (const karabo::util::TimeoutException& e) {
+            disconnectTimeout = true;
+        } catch (const karabo::util::SignalSlotException& e) {
+            disconnectFailedMsg = e.what();
+        } catch (...) { // Avoid that an exception leaks out and crashes the test program.
+        }
+    };
+    signaler->asyncDisconnect("signalInstance", "signal", "slotInstance", "slot",
+                              disconnectSuccessHandler, disconnectFailedHandler);
+    // Give disconnection call some time to travel
+    for (int i = 0; i < 100; ++i) {
+        if (disconnectSuccess) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    };
+    CPPUNIT_ASSERT(disconnectSuccess);
+    CPPUNIT_ASSERT(!disconnectFailed);
+
+    signaler->emit("signal");
+    // Give signal some time to travel - but it won't, since disconnected!
+    boost::this_thread::sleep(boost::posix_time::milliseconds(200));
+    CPPUNIT_ASSERT(!slotCalled);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Now test failureHandler - we are not connected, so fail
+    disconnectSuccess = false;
+    disconnectFailed = false;
+    signaler->asyncDisconnect("signalInstance", "signal", "slotInstance", "slot",
+                              disconnectSuccessHandler, disconnectFailedHandler);
+    // Give some time to find out that signal is not there
+    for (int i = 0; i < 100; ++i) {
+        if (disconnectFailed) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    };
+    CPPUNIT_ASSERT(disconnectFailed);
+    CPPUNIT_ASSERT(!disconnectSuccess);
+    // connectFailedMsg is the full, formatted exception info ("Exception =====> {\n ... \n Message....")
+    // check that the original message is part of it (in two steps)
+    CPPUNIT_ASSERT(disconnectFailedMsg.find("failed to disconnect slot") != std::string::npos);
+    CPPUNIT_ASSERT(disconnectFailedMsg.find("was not connected") != std::string::npos);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Another test of failure (disconnect from non-existing signal), but exactly the same symptom
+    disconnectSuccess = false;
+    disconnectFailed = false;
+    disconnectFailedMsg.clear();
+    signaler->asyncDisconnect("signalInstance", "NOT_A_signal", "slotInstance", "slot",
+                              disconnectSuccessHandler, disconnectFailedHandler);
+    // Give some time to find out that signal is not there
+    for (int i = 0; i < 100; ++i) {
+        if (disconnectFailed) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    };
+    CPPUNIT_ASSERT(disconnectFailed);
+    CPPUNIT_ASSERT(!disconnectSuccess);
+    // connectFailedMsg is the full, formatted exception info ("Exception =====> {\n ... \n Message....")
+    // check that the original message is part of it
+    CPPUNIT_ASSERT(disconnectFailedMsg.find("failed to disconnect slot") != std::string::npos);
+    CPPUNIT_ASSERT(disconnectFailedMsg.find("was not connected") != std::string::npos);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // One more test of failure (disconnect from non-existing signalInstance): timeout
+    disconnectSuccess = false;
+    disconnectFailed = false;
+    disconnectFailedMsg.clear();
+    signaler->asyncDisconnect("NOT_A_signalInstance", "signal", "slotInstance", "slot",
+                              disconnectSuccessHandler, disconnectFailedHandler, 150); // timeout of 150 ms
+    // Give some time to find out that signal is not there
+    for (int i = 0; i < 200; ++i) {
+        if (disconnectFailed) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    };
+    CPPUNIT_ASSERT(disconnectFailed);
+    CPPUNIT_ASSERT(disconnectTimeout);
+    CPPUNIT_ASSERT(!disconnectSuccess);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // No need to test non-existing slot - it is exactly the same as a non-connected slot
+}
+
 void SignalSlotable_Test::testMethod() {
 
     const std::string instanceId("SignalSlotDemo");
