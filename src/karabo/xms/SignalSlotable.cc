@@ -315,7 +315,8 @@ namespace karabo {
 
         void SignalSlotable::init(const std::string& instanceId,
                                   const karabo::net::JmsConnection::Pointer& connection,
-                                  const int heartbeatInterval, const karabo::util::Hash& instanceInfo) {
+                                  const int heartbeatInterval, const karabo::util::Hash& instanceInfo,
+                                  bool consumeBroadcasts) {
 
             m_instanceId = instanceId;
             m_connection = connection;
@@ -333,7 +334,10 @@ namespace karabo {
             // Create producers and consumers
             m_producerChannel = m_connection->createProducer();
             // This will select messages addressed to me
-            const string selector("slotInstanceIds LIKE '%|" + m_instanceId + "|%' OR slotInstanceIds LIKE '%|*|%'");
+            string selector("slotInstanceIds LIKE '%|" + m_instanceId + "|%'");
+            if (consumeBroadcasts) { // ...and possibly broadcast messages
+                selector += " OR slotInstanceIds LIKE '%|*|%'";
+            }
             m_consumerChannel = m_connection->createConsumer(m_topic, selector);
             m_heartbeatProducerChannel = m_connection->createProducer();
 

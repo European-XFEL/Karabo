@@ -173,8 +173,11 @@ namespace karabo {
             instanceInfo.set("host", net::bareHostName());
             instanceInfo.set("visibility", m_visibility);
 
-            // Initialize SignalSlotable instance
-            init(m_serverId, m_connection, config.get<int>("heartbeatInterval"), instanceInfo);
+            // Initialize SignalSlotable instance that does not receive broadcasts
+            init(m_serverId, m_connection, config.get<int>("heartbeatInterval"), instanceInfo, false);
+            // ...but create extra channel to receive these (and forward to devices)
+            const std::string selector("slotInstanceIds LIKE '%|*|%'");
+            m_broadcastConsumerChannel = m_connection->createConsumer(m_topic, selector);
 
             registerSlots();
         }
@@ -235,6 +238,11 @@ namespace karabo {
 
             // This starts SignalSlotable
             SignalSlotable::start();
+            // We consume broadcast messages here once for the whole server, taking care that they are forwarded
+            // to the devices as well. In this way, big C++ servers with hundreds of messages have to receive each
+            // broadcast message only once and not hundreds of times.
+            m_broadcastConsumerChannel->startReading(bind_weak(&DeviceServer::onBroadcastMessage, this, _1, _2),
+                                                     bind_weak(&DeviceServer::broadcastConsumerErrorNotifier, this, _1, _2));
 
             startFsm();
 
@@ -257,6 +265,34 @@ namespace karabo {
         }
 
 
+        void DeviceServer::onBroadcastMessage(const karabo::util::Hash::Pointer& header,
+                                              const karabo::util::Hash::Pointer& body) {
+            // Forward to myself...
+            if (!tryToCallDirectly(getInstanceId(), header, body)) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Failed to forward broadcast message to itself!";
+            }
+            // ... and to all devices.
+            // NOTE: Even devices that just (try to) come up will be called, before their
+            //       inalizeInternalInitialization() is finished. But that should not harm.
+            boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+            for (const auto& deviceId_ptr : m_deviceInstanceMap) {
+                if (!tryToCallDirectly(deviceId_ptr.first, header, body)) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Failed to forward broadcast message to local device "
+                            << deviceId_ptr.first;
+                    // Even if we cannot reach it locally (which should never happen), it does not make sense to trigger
+                    // its death via
+                    //       call(deviceId_ptr.first, "slotKillDevice");
+                    // since that might reach a remote device! Neither it makes sense to try to forward this broadcast
+                    // individually via the broker - for the same reason.
+                }
+            }
+        }
+
+
+        void DeviceServer::broadcastConsumerErrorNotifier(karabo::net::JmsConsumer::Error ec, const std::string& message) {
+            // Need this detour since I cannot use pointer to protected member function directly :-(.
+            SignalSlotable::consumerErrorNotifier("broadcasts", ec, message);
+        }
         bool DeviceServer::isRunning() const {
 
             return m_serverIsRunning;
@@ -554,8 +590,8 @@ namespace karabo {
 
         void DeviceServer::instantiate(const std::string& deviceId, const std::string& classId,
                                        const util::Hash& config, const xms::SignalSlotable::AsyncReply& asyncReply) {
-            // Each device adds two threads, one of them is permanently used for reading from broker.
-            // Since finalizeInternalInitialization() blocks for > 1 s, we temporarily add another thread.
+            // Each device adds one thread already. But since
+            // device->finalizeInternalInitialization() blocks for > 1 s, we temporarily add another thread.
             EventLoop::addThread();
             bool putInMap = false;
             try {
@@ -574,7 +610,7 @@ namespace karabo {
                 }
 
                 // This will throw an exception if it can't be started (because of duplicated name for example)
-                device->finalizeInternalInitialization();
+                device->finalizeInternalInitialization(false); // DeviceServer will forward broadcasts!
 
                 if (device->useTimeServer()) { // If device requires, add to map for receiving timing info.
                     boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
