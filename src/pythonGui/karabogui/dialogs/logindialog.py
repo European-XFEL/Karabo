@@ -6,7 +6,25 @@
 import os.path as op
 
 from PyQt4 import uic
-from PyQt4.QtGui import QDialog, QIntValidator
+from PyQt4.QtCore import QEvent, QObject, Qt
+from PyQt4.QtGui import QComboBox, QDialog, QIntValidator, QKeyEvent
+
+
+class KeyPressEventFilter(QObject):
+    """Purge a ComboBox on Shift+Delete events
+    """
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.KeyPress:
+            if isinstance(event, QKeyEvent):
+                if (event.key() == Qt.Key_Delete and
+                        event.modifiers() == Qt.ShiftModifier):
+                    if isinstance(obj, QComboBox) and obj.count():
+                        index = obj.currentIndex()
+                        obj.removeItem(index)
+                        obj.setCurrentIndex(index if index < obj.count() - 1
+                                            else index - 1)
+                        return True
+        return super().eventFilter(obj, event)
 
 
 class LoginDialog(QDialog):
@@ -30,6 +48,10 @@ class LoginDialog(QDialog):
             self.cbProvider.setCurrentIndex(index)
 
         self.cbHostname.editTextChanged.connect(self.onHostnameTextChanged)
+
+        self.keyPressHandler = KeyPressEventFilter()
+        self.cbHostname.installEventFilter(self.keyPressHandler)
+
         self.cbHostname.setEditable(True)
         self.cbHostname.setEditText(hostname)
 
@@ -53,7 +75,6 @@ class LoginDialog(QDialog):
             hostname, port = self.cbHostname.currentText().split(':')
             self.cbHostname.setEditText(hostname)
             self.lePort.setText(port)
-
 
     @property
     def username(self):
