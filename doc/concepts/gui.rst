@@ -27,17 +27,16 @@ non-connected state. The panels are in clock-wise, starting at the center-top
 * The central scene, which is used to display custom views
 * The configurator panel, which lists *all* properties and slots available for
     a device as appropriate for your access level
-* The logging panel, giving access to global logging and notification messages,
-    alarms and an an iKarabo console
+* The logging panel, giving access to global logging, the alarm service
+    and an an iKarabo console
 * The project panel, giving you a logical view on the projects you have loaded
-* The navigation panel, which gives you a live view of the system in a flat
-    hierarchy and allows for filtering.
+* The navigation panel, which gives you a live view of the full system topology
+and allows for filtering.
 
-In order to connect yourself to a domain, click on the connect icon. The
-following dialoag will appear, asking you for your credentials and the domain
-you would like to connect to. The ``GUI server`` combo-box will update itself
-to the list of GUI-servers available for this domain. Further you can choose
-if the GUI should open the last view you had configured for this client.
+In order to connect yourself to a ``GUI server``, click on the connect icon. The
+following dialoag will appear, asking you for your credentials and the gui
+server with port you would like to connect to.
+The ``GUI server`` combo-box will remember the last used gui servers up to a maximum of 5.
 
 .. figure:: images/gui/connect_dialog_current.png
 
@@ -47,8 +46,7 @@ Upon connection the GUI will switch to a connected state, which already shows
 you a live view of the system.
 
 Any of the listed panels may be detached and arranged separatly on the screen.
-This arrangement is saved as part of your last connected view. In the following
-we will discuss each panel in more detail, followed by a discussion of best-
+In the following we will discuss each panel in more detail, followed by a discussion of best-
 practices when creating custom panels for distributed control systems.
 
 The Navigation Panel
@@ -64,11 +62,8 @@ hierarchy showing the unified and alarm states of the running devices.
 .. figure:: images/gui/navigation_panel_current.png
 
    The Karabo navigation panel. Icons next to the device instance id give you
-   the color code state of the device, as well as the alarm condition the device
-   is in. Finally, the large lock indicated that a device is locked due to
-   ``Topic locking``, the smaller, framed lock that it is locked due to
-   ``Device Locking``.
-
+   the **color code status** of the device, as well as the alarm condition of the device
+   if an alarm is active.
 
 The Project Panel
 =================
@@ -91,7 +86,7 @@ A project has different categories namely:
 - Device Servers
 - Subprojects
 
-The context menu allows to either add or load project members to a project. 
+The context menu allows to either add or load project members to a project.
 
 Adding a sub project or loading a project from the repository is done through a
 dialog, which allows to browse for existing configurations.
@@ -141,13 +136,22 @@ menu, which allows direct selection and creation of configurations.
 The Alarm Service
 +++++++++++++++++
 
-Alarms are acknowledged through the alarm service. It uses the following
-custom widget.
+Alarms can be viewed and acknowledged through the alarm service. The panel is located in
+the middle area of the GUI. It uses the following custom widget.
 
 .. figure:: images/gui/alarm_service.png
    :alt: alarm_service.png
 
    The alarm service widget.
+
+
+
+The Logging Panel
++++++++++++++++++
+
+.. figure:: images/gui/log_panel.png
+   :alt: log_panel.png
+
 
 The Central Scene
 =================
@@ -171,8 +175,191 @@ The Central Scene
    to the other detail panels and the master panel.
 
 
-Scene Composition
-+++++++++++++++++
+Scene Composition - Basic Widgets
++++++++++++++++++++++++++++++++++
+
+
+Evaluate Expression
+~~~~~~~~~~~~~~~~~~~
+
+The user can enter an expression which will be evaluated by the widget.
+
+.. figure:: images/gui/string_change_expression.png
+   :alt: string_change_expression.png
+
+.. figure:: images/gui/expression_valuated.png
+   :alt: expression_valuated.png
+
+
+Iconset
+~~~~~~~
+
+This type of widget will just show a icon in the scene.
+
+.. figure:: images/gui/iconset.png
+   :alt: iconset.png
+
+It's possible to add an icon image using an url or from a file.
+
+.. figure:: images/gui/iconset_options.png
+   :alt: iconset_options.png
+
+
+PopUp
+~~~~~
+
+If the widget is configured as a **PopUp**, the value of the property will be shown
+in a pop-up dialog whenever changes occur.
+
+.. figure:: images/gui/popup_widget.png
+   :alt: popup_widget.png
+
+
+Text Field
+~~~~~~~~~~
+
+Just a normal box which the user could enter or see information of the property.
+
+.. figure:: images/gui/text_field_widget.png
+   :alt: text_field_widget.png
+
+
+Text Log
+~~~~~~~~
+
+This widget gives to the user the history regarding the value of the property.
+
+
+.. figure:: images/gui/text_log_widget.png
+   :alt: text_log_widget.png
+
+The user can also clear the log of the widget using the button above the box.
+
+
+Value Field
+~~~~~~~~~~~
+
+This widget just shows to the user the value of the property in a box.
+
+.. figure:: images/gui/value_field.png
+   :alt: value_field.png
+
+
+Combo Box
+~~~~~~~~~
+
+A combobox widget with the values of the property which were defined previously.
+
+
+.. figure:: images/gui/combobox_widget.png
+   :alt: combobox_widget.png
+
+
+.. figure:: images/gui/combobox_selected.png
+   :alt: combobox_selected.png
+
+
+Generic Lamp
+~~~~~~~~~~~~
+
+This is just widget which signalize using colors what is property value.
+
+.. figure:: images/gui/state_started.png
+   :alt: state_started.png
+
+
+.. figure:: images/gui/state_stopped.png
+   :alt: state_stopped.png
+
+
+State color field
+~~~~~~~~~~~~~~~~~
+
+This widget is the same as described in Generic Lamp, the difference is just
+the shape of the object which will show to the user the state color of the
+property.
+
+.. figure:: images/gui/state_color_field.png
+   :alt: state_color_field.png
+
+
+Single Bit
+~~~~~~~~~~
+
+A widget which change his color according to the property value.
+
+.. figure:: images/gui/single_bit.png
+   :alt: single_bit.png
+
+
+The Table Element
+~~~~~~~~~~~~~~~~~
+
+Using the table element widget the user can see and edit some properties of the
+device. The name and the values of each properties are showed in each column of
+the widget.
+
+.. figure:: images/gui/table_element.png
+   :alt: table_element.png
+
+
+Analog Widget
+~~~~~~~~~~~~~
+
+.. figure:: images/gui/analog_widget.png
+   :alt: analog_widget.png
+
+
+List
+~~~~
+
+This widget just shows to the user a box with the whole values of the property.
+
+
+.. figure:: images/gui/list.png
+   :alt: list.png
+
+
+Switch Bool
+~~~~~~~~~~~
+
+This widget shows to the user the state of the bool property and also is
+possible to invert the logic of the colors.
+
+.. figure:: images/gui/switch_bool.png
+   :alt: switch_bool.png
+
+
+Toggle Field
+~~~~~~~~~~~~
+
+This widget is similar to the 'Switch Bool'. However, the boolean property is
+showed as a different icon.
+
+
+.. figure:: images/gui/toggle_field.png
+   :alt: toggle_field.png
+
+
+Progress Bar
+~~~~~~~~~~~~
+
+The Progress Bar widget shows to the user the percentage value of the property
+taking in consideration the max and min values of the property.
+
+.. figure:: images/gui/toggle_field.png
+   :alt: toggle_field.png
+
+
+File in
+~~~~~~~
+
+With this widget it's possible to the user to select a file and the path to the
+file will be showed in the box.
+
+.. figure:: images/gui/filename_in.png
+   :alt: filename_in.png
+
 
 Plotting Widgets
 ++++++++++++++++
@@ -201,32 +388,101 @@ in the trendline.
    reserved for alarm condition indication, and should not be used for other
    purposes!
 
-.. todo::
-
-   Implement this or a similar concept. Specifically, the quick access buttons
-   and the alarm ranges are needed in my opinion.
 
 
 Plotting X vs. Y Values
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+The XY-Plot show the relationship between two variables. To create that plot
+the user has to add a property into the scene and select the XY-Plot by right
+clicking the property.
+
+.. figure:: images/gui/adding_property.png
+   :alt: adding_property.png
+
+After that, it's possible to add others properties into the plot just dragging
+and drop that to the graph. It's also possible to click on the plot to see
+which points were used.
+
+.. figure:: images/gui/xy_plot.png
+   :alt: xy_plot.png
 
 
+Multi-Curve Plot
+~~~~~~~~~~~~~~~~
+
+This graph is similar to the 'Plotting X vs. Y Values' but the user can also
+add more properties into it.
+
+.. figure:: images/gui/multiplot.png
+   :alt: multiplot.png
+
+
+Plot
+~~~~
+
+It's also possible to plot the list of the properties values.
+
+.. figure:: images/gui/list_plot.png
+   :alt: list_plot.png
+
+
+Sparkline
+~~~~~~~~~
+
+.. figure:: images/gui/sparkline.png
+   :alt: sparkline.png
 
 
 Image Widgets
 +++++++++++++
 
-The Table Element
-+++++++++++++++++
+Image Element
+~~~~~~~~~~~~~
 
-Hyperlinks between Scenes
-+++++++++++++++++++++++++
+.. figure:: images/gui/image_element.png
+   :alt: image_element.png
 
-Run Configuration
+
+Image View
+~~~~~~~~~~
+
+.. figure:: images/gui/image_view.png
+   :alt: image_view.png
+
+
+Scientific Image
+~~~~~~~~~~~~~~~~
+
+.. figure:: images/gui/scientific_image.png
+   :alt: scientific_image.png
+
+
+Webcam Image
+~~~~~~~~~~~~
+
+.. figure:: images/gui/webcam_image.png
+   :alt: webcam_image.png
+
+
+The scene toolbar
 =================
 
-The Logging Panel
-=================
+Scenelink - Hyperlinks between Scenes
++++++++++++++++++++++++++++++++++++++
 
+It's possible to link between scenes using the scene link widget. For this,
+please go to edit mode of the scene and select the tool *Add scene link to scene*
+from the toolbar. Afterwards, click on the scene and a dialog will pop up for configuration.
+
+Scenelink - Hyperlink widget:
+
+.. figure:: images/gui/hyperlink_scene1.png
+   :alt: hyperlink_scene1.png
+
+In this configuration window the target can be selected as well as the link
+widget should open the scene in the **Main Window**, or in a new pop-up **Dialog**.
+
+.. figure:: images/gui/hyperlink_target.png
+   :alt: hyperlink_target.png
 
