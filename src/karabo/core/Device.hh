@@ -74,8 +74,15 @@ namespace karabo {
             /**
              * This method is called to finalize initialization of a device. It is needed to allow user 
              * code to hook in after the base device constructor, but before the device is fully initialized.
+             *
+             * It will typically be called by the DeviceServer.
+             * The call is blocking and afterwards communication should happen only via slot calls.
+             *
+             * @param consumeBroadcasts If true, listen directly to broadcast messages (addressed to '*'), as usually expected.
+             *                          Whoever sets this to false has to enure that broadcast messages reach the Device
+             *                          in some other way, otherwise the device will not work correctly.
              */
-            virtual void finalizeInternalInitialization() = 0;
+            virtual void finalizeInternalInitialization(bool consumeBroadcasts) = 0;
 
             /*
              * A pure virtual method to be overwritten to return a tag-filtered
@@ -1393,12 +1400,15 @@ namespace karabo {
             }
 
         private: // Functions
-
             /**
-             * This function will typically be called by the DeviceServer (or directly within the startDevice application).
-             * The call to run is blocking and afterwards communication should happen only via call-backs
+             * This function will typically be called by the DeviceServer.
+             * The call is blocking and afterwards communication should happen only via slot calls.
+             *
+             * @param consumeBroadcasts If false, do not listen directly to broadcast messages (addressed to '*').
+             *                          Whoever sets this to true has to enure that broadcast messages reach the Device
+             *                          in some other way.
              */
-            void finalizeInternalInitialization() {
+            void finalizeInternalInitialization(bool consumeBroadcasts) {
 
                 using namespace karabo::util;
                 using namespace karabo::net;
@@ -1454,8 +1464,7 @@ namespace karabo {
                 if (hasAvailableMacros) capabilities |= Capabilities::PROVIDES_MACROS;
                 instanceInfo.set("capabilities", capabilities);
 
-                // Initialize the SignalSlotable instance
-                init(m_deviceId, m_connection, heartbeatInterval, instanceInfo);
+                init(m_deviceId, m_connection, heartbeatInterval, instanceInfo, consumeBroadcasts);
 
                 //
                 // Now do all registrations etc. (Note that it is safe to register slots in the constructor)
