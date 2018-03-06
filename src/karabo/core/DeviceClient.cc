@@ -187,12 +187,13 @@ namespace karabo {
         }
 
 
-        void DeviceClient::eraseFromRuntimeSystemDescription(const std::string& path) {
+        bool DeviceClient::eraseFromRuntimeSystemDescription(const std::string& path) {
             try {
                 boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-                m_runtimeSystemDescription.erase(path);
+                return m_runtimeSystemDescription.erase(path);
             } catch (...) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Could not erase path \"" << path << " from device-client cache";
+                return false;
             }
         }
 
@@ -1509,19 +1510,22 @@ if (nodeData) {\
                         karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
                         if (p) {
                             for (size_t i = 0; i < forDisconnect.size(); ++i) {
+                                // Disconnect - and clean system description from respective 'areas'.
+                                // It does not harm to clean twice 'configuration' - if disconnected from either of
+                                // signal(State)Changed, the device configuration is not reliable anymore.
                                 const string& instanceId = forDisconnect[i];
-                                KARABO_LOG_FRAMEWORK_DEBUG << "Disconnect '" << instanceId << "'.";
-                                // TODO: Use asyncDisconnect once available.
-                                //       But not urgent as long as 'age' runs in its own thread - which it shouldn't...
-                                p->disconnect(instanceId, "signalChanged", "", "_slotChanged");
-                                p->disconnect(instanceId, "signalStateChanged", "", "_slotChanged");
-                                p->disconnect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated");
-
-                                // Since we stopped listening, remove configuration and schema from system description.
-                                const std::string path("device." + instanceId);
-                                this->eraseFromRuntimeSystemDescription(path + ".configuration");
-                                this->eraseFromRuntimeSystemDescription(path + ".fullSchema");
-                                this->eraseFromRuntimeSystemDescription(path + ".activeSchema");
+                                KARABO_LOG_FRAMEWORK_DEBUG << "Prepare disconnection from '" << instanceId << "'.";
+                                std::vector<std::string> cleanAreas(1, "configuration");
+                                p->asyncDisconnect(instanceId, "signalChanged", "", "_slotChanged",
+                                                   bind_weak(&DeviceClient::disconnectHandler, this,
+                                                             "signalChanged", instanceId, cleanAreas));
+                                p->asyncDisconnect(instanceId, "signalStateChanged", "", "_slotChanged",
+                                                   bind_weak(&DeviceClient::disconnectHandler, this,
+                                                             "signalStateChanged", instanceId, cleanAreas));
+                                cleanAreas = {"fullSchema", "activeSchema"};
+                                p->asyncDisconnect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated",
+                                                   bind_weak(&DeviceClient::disconnectHandler, this,
+                                                             "signalSchemaUpdated", instanceId, cleanAreas));
                             }
                         }
                     }
@@ -1530,9 +1534,22 @@ if (nodeData) {\
                     KARABO_LOG_FRAMEWORK_ERROR << "Aging thread encountered an exception: " << e.what();
                     // Aging is essential, so go on. Wait a little in case of repeating error conditions.
                     boost::this_thread::sleep(boost::posix_time::seconds(5));
-                } catch (...) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception encountered in aging thread";
-                    boost::this_thread::sleep(boost::posix_time::seconds(5));
+                }
+            }
+        }
+
+
+        void DeviceClient::disconnectHandler(const std::string& signal, const std::string& instanceId,
+                                             const std::vector<std::string>& toClear) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "Disconnected from signal '" << signal << "' of '" << instanceId << "'.";
+            const std::string path("device." + instanceId);
+            for (const std::string& area : toClear) {
+                const std::string fullPath(path + "." + area);
+                if (!eraseFromRuntimeSystemDescription(fullPath)) {
+                    // Happens e.g. for second reply from disconnecting signalState and signalStateChanged
+                    // FIXME: make LOG_TRACE
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Failed to clear " << fullPath << " from system description (for signal"
+                            << signal << ").";
                 }
             }
         }
