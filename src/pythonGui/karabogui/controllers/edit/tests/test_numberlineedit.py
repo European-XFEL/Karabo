@@ -12,7 +12,7 @@ class IntObject(Configurable):
 
 
 class FloatObject(Configurable):
-    prop = Double(minInc=-10, maxInc=10)
+    prop = Double(minInc=-1000, maxInc=1000)
 
 
 class TestNumberLineEdit(GuiTestCase):
@@ -51,6 +51,13 @@ class TestNumberLineEdit(GuiTestCase):
 
         self.i_controller._internal_widget.setText('3')
         assert self.i_proxy.edit_value == 3
+
+    def test_scientific_notation(self):
+        test_strings = ['3.141592e0', '1.23e2', '1.23e+2', '1.23e-1']
+        results = [3.141592, 123., 123., 0.123]
+        for i, test_string in enumerate(test_strings):
+            self.d_controller._internal_widget.setText(test_string)
+            assert self.d_proxy.edit_value == results[i]
 
     def test_change_decimals(self):
         action = self.d_controller.widget.actions()[0]
