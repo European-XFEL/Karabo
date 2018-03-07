@@ -21,10 +21,10 @@ class KeyPressEventFilter(QObject):
                     if isinstance(obj, QComboBox) and obj.count():
                         index = obj.currentIndex()
                         obj.removeItem(index)
-                        obj.setCurrentIndex(index if index < obj.count() - 1
+                        obj.setCurrentIndex(index if index < obj.count()
                                             else index - 1)
                         return True
-        return super().eventFilter(obj, event)
+        return False
 
 
 class LoginDialog(QDialog):
