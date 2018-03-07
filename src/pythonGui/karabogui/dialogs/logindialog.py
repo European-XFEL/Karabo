@@ -6,7 +6,7 @@
 import os.path as op
 
 from PyQt4 import uic
-from PyQt4.QtCore import QEvent, QObject, Qt
+from PyQt4.QtCore import pyqtSlot, QEvent, QObject, Qt
 from PyQt4.QtGui import QComboBox, QDialog, QIntValidator, QKeyEvent
 
 
@@ -68,6 +68,7 @@ class LoginDialog(QDialog):
         self.lePort.setText(port)
         self.lePort.setValidator(QIntValidator(None))
 
+    @pyqtSlot(str)
     def onHostnameTextChanged(self, value):
         """Split the selected text into hostname and port
         """
