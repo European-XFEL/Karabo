@@ -109,6 +109,9 @@ namespace karabo {
 
             boost::asio::deadline_timer m_ageingTimer;
 
+            static const unsigned int m_ageingIntervallMilliSec = 1000u;
+            static const unsigned int m_ageingIntervallMilliSecCtr = 200u;
+
             bool m_getOlder; /// defines whether aging is running or not
 
             boost::thread m_signalsChangedThread;
