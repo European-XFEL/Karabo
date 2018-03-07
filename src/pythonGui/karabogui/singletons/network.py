@@ -323,13 +323,13 @@ class Network(QObject):
             Apply of the LRU algorithm on lis
 
             The LRU algorithm evicts from lis the Least Recently Used
-            element and item is move to the lis front.
+            element and item is moved to the lis front.
             As the result, lis always contain its most popular element
             """
             if item in lis:
                 lis.remove(item)
             lis = [item] + lis
-            return lis if len(lis) < maxsize else lis[:maxsize]
+            return lis if len(lis) <= maxsize else lis[:maxsize]
 
         # cache the server address
         server = '{}:{}'.format(self.hostname, self.port)
