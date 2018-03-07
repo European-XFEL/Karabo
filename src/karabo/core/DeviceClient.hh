@@ -107,9 +107,9 @@ namespace karabo {
 
             bool m_topologyInitialized;
 
-            boost::thread m_ageingThread;
+            boost::asio::deadline_timer m_ageingTimer;
 
-            bool m_getOlder;
+            bool m_getOlder; /// defines whether aging is running or not
 
             boost::thread m_signalsChangedThread;
             bool m_runSignalsChangedThread;
@@ -991,7 +991,7 @@ namespace karabo {
 
             virtual void slotProvideSystemTopology();
 
-            void age();
+            void age(const boost::system::error_code& e);
 
             void disconnectHandler(const std::string& signal, const std::string& instanceId,
                                    const std::vector<std::string>& toClear);
