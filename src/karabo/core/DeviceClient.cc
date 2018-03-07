@@ -290,12 +290,12 @@ namespace karabo {
             if (on && !m_getOlder) {
                 m_getOlder = true;
                 if (weak_from_this().lock()) {
-                    m_ageingTimer.expires_from_now(boost::posix_time::seconds(1));
+                    m_ageingTimer.expires_from_now(boost::posix_time::milliseconds(m_ageingIntervallMilliSec));
                     m_ageingTimer.async_wait(bind_weak(&DeviceClient::age, this, boost::asio::placeholders::error));
                 } else {
                     // Very likely called from constructor, so cannot use bind_weak :-(, but therefore wait only 200 ms:
                     // constructor will likely be finished, but destruction still very unlikely to have started...
-                    m_ageingTimer.expires_from_now(boost::posix_time::milliseconds(200));
+                    m_ageingTimer.expires_from_now(boost::posix_time::milliseconds(m_ageingIntervallMilliSecCtr));
                     m_ageingTimer.async_wait(boost::bind(&DeviceClient::age, this, boost::asio::placeholders::error));
                 }
                 KARABO_LOG_FRAMEWORK_DEBUG << "Ageing is started";
@@ -1499,7 +1499,6 @@ if (nodeData) {\
         void DeviceClient::age(const boost::system::error_code& e) {
             if (e) return;
 
-            int secondsUntilNextCheck = 1;
             try {
                 vector<string> forDisconnect;
                 {
@@ -1543,12 +1542,10 @@ if (nodeData) {\
                 }
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Ageing encountered an exception: " << e.what();
-                // Ageing is essential, so go on. Wait a little longer in case of repeating error conditions.
-                secondsUntilNextCheck = 5;
             }
 
             if (m_getOlder) {
-                m_ageingTimer.expires_from_now(boost::posix_time::seconds(secondsUntilNextCheck));
+                m_ageingTimer.expires_from_now(boost::posix_time::milliseconds(m_ageingIntervallMilliSec));
                 m_ageingTimer.async_wait(bind_weak(&DeviceClient::age, this, boost::asio::placeholders::error));
             }
         }
