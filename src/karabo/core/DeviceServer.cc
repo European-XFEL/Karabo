@@ -267,23 +267,30 @@ namespace karabo {
 
         void DeviceServer::onBroadcastMessage(const karabo::util::Hash::Pointer& header,
                                               const karabo::util::Hash::Pointer& body) {
-            // Forward to myself...
-            if (!tryToCallDirectly(getInstanceId(), header, body)) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Failed to forward broadcast message to itself!";
+            // const_cast to have ids refer to a const Node...
+            boost::optional<const Hash::Node&> ids = const_cast<const Hash*> (header.get())->find("slotInstanceIds");
+            // Check whether besides to '*', message was also addressed to me directly (theoretically possible).
+            if (!ids || ids->getValue<std::string>().find(("|" + getInstanceId()) += "|") == std::string::npos) {
+                // Forward to myself - my id is not addressed directly.
+                if (!tryToCallDirectly(getInstanceId(), header, body)) {
+                    // This cannot happen: Reading started when SignalSlotable::start() was completed,
+                    // so inner-process shortcut is active!
+                    KARABO_LOG_FRAMEWORK_ERROR << "Failed to forward broadcast message to itself! How can that happen?";
+                }
             }
             // ... and to all devices.
-            // NOTE: Even devices that just (try to) come up will be called, before their
-            //       inalizeInternalInitialization() is finished. But that should not harm.
             boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
             for (const auto& deviceId_ptr : m_deviceInstanceMap) {
-                if (!tryToCallDirectly(deviceId_ptr.first, header, body)) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Failed to forward broadcast message to local device "
-                            << deviceId_ptr.first;
-                    // Even if we cannot reach it locally (which should never happen), it does not make sense to trigger
-                    // its death via
-                    //       call(deviceId_ptr.first, "slotKillDevice");
-                    // since that might reach a remote device! Neither it makes sense to try to forward this broadcast
-                    // individually via the broker - for the same reason.
+                const std::string& devId = deviceId_ptr.first; // .second is shared_ptr to device...
+                // Check whether besides to '*', message was also addressed to device directly (theoretically...)
+                if (!ids || ids->getValue<std::string>().find(("|" + devId) += "|") == std::string::npos) {
+                    if (!tryToCallDirectly(devId, header, body)) {
+                        // Can happen if devId just tries to come up, but has not yet registered for shortcut messaging.
+                        // But this registration happens before the device broadcasts its existence and before that the
+                        // device is not really part of the game, so no harm.
+                        KARABO_LOG_FRAMEWORK_WARN << "Failed to forward broadcast message to local device "
+                                << devId << " which likely is just coming up and thus not fully part of the system yet.";
+                    }
                 }
             }
         }
