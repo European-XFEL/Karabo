@@ -6,15 +6,16 @@
  * Copyright (c) 2010-2012 European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include <karabo/log/Logger.hh>
-#include <karabo/io/FileTools.hh>
-#include <karabo/webAuth/Authenticator.hh>
-#include <karabo/util/DataLogUtils.hh>
-#include <karabo/util/Schema.hh>
+#include "karabo/log/Logger.hh"
+#include "karabo/io/FileTools.hh"
+#include "karabo/webAuth/Authenticator.hh"
+#include "karabo/util/DataLogUtils.hh"
+#include "karabo/util/Schema.hh"
 
 #include "DeviceClient.hh"
 #include "Device.hh"
 #include "karabo/net/utils.hh"
+#include "karabo/net/EventLoop.hh"
 
 using namespace std;
 using namespace karabo::util;
@@ -32,6 +33,7 @@ namespace karabo {
             , m_isShared(false)
             , m_internalTimeout(2000)
             , m_topologyInitialized(false)
+            , m_ageingTimer(karabo::net::EventLoop::getIOService())
             , m_getOlder(false) // Sic! To start aging in setAgeing below.
             , m_runSignalsChangedThread(false)
             , m_signalsChangedInterval(-1)
@@ -63,6 +65,7 @@ namespace karabo {
             , m_isShared(true)
             , m_internalTimeout(2000)
             , m_topologyInitialized(false)
+            , m_ageingTimer(karabo::net::EventLoop::getIOService())
             , m_getOlder(false) // Sic! To start aging in setAgeing below.
             , m_runSignalsChangedThread(false)
             , m_signalsChangedInterval(-1)
@@ -89,6 +92,7 @@ namespace karabo {
 
         void DeviceClient::setupSlots() {
             karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
+            // Note: Since setupSlots() is called from constructor, bind_weak is not an option...
             p->registerSlot<Hash, string > (boost::bind(&karabo::core::DeviceClient::_slotChanged, this, _1, _2), "_slotChanged");
             p->registerSlot<Schema, string, string > (boost::bind(&karabo::core::DeviceClient::_slotClassSchema, this, _1, _2, _3), "_slotClassSchema");
             p->registerSlot<Schema, string > (boost::bind(&karabo::core::DeviceClient::_slotSchemaUpdated, this, _1, _2), "_slotSchemaUpdated");
@@ -187,12 +191,13 @@ namespace karabo {
         }
 
 
-        void DeviceClient::eraseFromRuntimeSystemDescription(const std::string& path) {
+        bool DeviceClient::eraseFromRuntimeSystemDescription(const std::string& path) {
             try {
                 boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-                m_runtimeSystemDescription.erase(path);
+                return m_runtimeSystemDescription.erase(path);
             } catch (...) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Could not erase path \"" << path << " from device-client cache";
+                return false;
             }
         }
 
@@ -284,14 +289,20 @@ namespace karabo {
         void DeviceClient::setAgeing(bool on) {
             if (on && !m_getOlder) {
                 m_getOlder = true;
-                m_ageingThread = boost::thread(boost::bind(&karabo::core::DeviceClient::age, this));
-                KARABO_LOG_FRAMEWORK_DEBUG << "DeviceClient: age thread is started";
+                if (weak_from_this().lock()) {
+                    m_ageingTimer.expires_from_now(boost::posix_time::milliseconds(m_ageingIntervallMilliSec));
+                    m_ageingTimer.async_wait(bind_weak(&DeviceClient::age, this, boost::asio::placeholders::error));
+                } else {
+                    // Very likely called from constructor, so cannot use bind_weak :-(, but therefore wait only 200 ms:
+                    // constructor will likely be finished, but destruction still very unlikely to have started...
+                    m_ageingTimer.expires_from_now(boost::posix_time::milliseconds(m_ageingIntervallMilliSecCtr));
+                    m_ageingTimer.async_wait(boost::bind(&DeviceClient::age, this, boost::asio::placeholders::error));
+                }
+                KARABO_LOG_FRAMEWORK_DEBUG << "Ageing is started";
             } else if (!on && m_getOlder) {
                 m_getOlder = false;
-                if (m_ageingThread.joinable()) {
-                    m_ageingThread.join();
-                    KARABO_LOG_FRAMEWORK_DEBUG << "DeviceClient: age thread is joined";
-                }
+                m_ageingTimer.cancel();
+                KARABO_LOG_FRAMEWORK_DEBUG << "Ageing is stopped";
             }
         }
 
@@ -1261,7 +1272,7 @@ namespace karabo {
                                                        Connection(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated")};
                     // One could 'extend' asyncFailureHandler by a wrapper that also disconnects all succeeded
                     // connections (and stop the automatic reconnect of the others). But we let that be done by the
-                    // usual aging.
+                    // usual ageing.
                     p->asyncConnect(cons, asyncSuccessHandler, asyncFailureHandler);
                 } else {
                     p->connect(instanceId, "signalChanged", "", "_slotChanged");
@@ -1485,54 +1496,72 @@ if (nodeData) {\
         }
 
 
-        void DeviceClient::age() {
-            while (m_getOlder) { // Loop forever
-                try {
-                    vector<string> forDisconnect;
-                    {
-                        boost::mutex::scoped_lock lock(m_instanceUsageMutex);
-                        // Loop connected instances
-                        for (InstanceUsage::iterator it = m_instanceUsage.begin(); it != m_instanceUsage.end(); /*NOT ++it*/) {
+        void DeviceClient::age(const boost::system::error_code& e) {
+            if (e) return;
 
-                            it->second++; // All just age (but some do not die).
-                            if (!this->isImmortal(it->first) // registered monitors are immortal
-                                && it->second >= CONNECTION_KEEP_ALIVE) {
-                                forDisconnect.push_back(it->first); // we do this to reduce mutex locking time
-                                m_instanceUsage.erase(it++);
-                            } else {
-                                ++it;
-                            }
+            try {
+                vector<string> forDisconnect;
+                {
+                    boost::mutex::scoped_lock lock(m_instanceUsageMutex);
+                    // Loop connected instances
+                    for (InstanceUsage::iterator it = m_instanceUsage.begin(); it != m_instanceUsage.end(); /*NOT ++it*/) {
+
+                        it->second++; // All just age, but registered monitors are immortal.
+                        if (!this->isImmortal(it->first) && it->second >= CONNECTION_KEEP_ALIVE) {
+                            // We copy here to reduce mutex locking time
+                            forDisconnect.push_back(it->first);
+                            m_instanceUsage.erase(it++);
+                        } else {
+                            ++it;
                         }
                     }
+                }
 
-                    if (forDisconnect.size()) {
-                        karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
-                        if (p) {
-                            for (size_t i = 0; i < forDisconnect.size(); ++i) {
-                                const string& instanceId = forDisconnect[i];
-                                KARABO_LOG_FRAMEWORK_DEBUG << "Disconnect '" << instanceId << "'.";
-                                // TODO: Use asyncDisconnect once available.
-                                //       But not urgent as long as 'age' runs in its own thread - which it shouldn't...
-                                p->disconnect(instanceId, "signalChanged", "", "_slotChanged");
-                                p->disconnect(instanceId, "signalStateChanged", "", "_slotChanged");
-                                p->disconnect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated");
-
-                                // Since we stopped listening, remove configuration and schema from system description.
-                                const std::string path("device." + instanceId);
-                                this->eraseFromRuntimeSystemDescription(path + ".configuration");
-                                this->eraseFromRuntimeSystemDescription(path + ".fullSchema");
-                                this->eraseFromRuntimeSystemDescription(path + ".activeSchema");
-                            }
+                if (forDisconnect.size()) {
+                    karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
+                    if (p) {
+                        for (size_t i = 0; i < forDisconnect.size(); ++i) {
+                            // Disconnect - and clean system description from respective 'areas'.
+                            // It does not harm to clean twice 'configuration' - if disconnected from either of
+                            // signal(State)Changed, the device configuration is not reliable anymore.
+                            const string& instanceId = forDisconnect[i];
+                            KARABO_LOG_FRAMEWORK_DEBUG << "Prepare disconnection from '" << instanceId << "'.";
+                            std::vector<std::string> cleanAreas(1, "configuration");
+                            p->asyncDisconnect(instanceId, "signalChanged", "", "_slotChanged",
+                                               bind_weak(&DeviceClient::disconnectHandler, this,
+                                                         "signalChanged", instanceId, cleanAreas));
+                            p->asyncDisconnect(instanceId, "signalStateChanged", "", "_slotChanged",
+                                               bind_weak(&DeviceClient::disconnectHandler, this,
+                                                         "signalStateChanged", instanceId, cleanAreas));
+                            cleanAreas = {"fullSchema", "activeSchema"};
+                            p->asyncDisconnect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated",
+                                                   bind_weak(&DeviceClient::disconnectHandler, this,
+                                                             "signalSchemaUpdated", instanceId, cleanAreas));
                         }
                     }
-                    boost::this_thread::sleep(boost::posix_time::seconds(1));
-                } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Aging thread encountered an exception: " << e.what();
-                    // Aging is essential, so go on. Wait a little in case of repeating error conditions.
-                    boost::this_thread::sleep(boost::posix_time::seconds(5));
-                } catch (...) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception encountered in aging thread";
-                    boost::this_thread::sleep(boost::posix_time::seconds(5));
+                }
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Ageing encountered an exception: " << e.what();
+            }
+
+            if (m_getOlder) {
+                m_ageingTimer.expires_from_now(boost::posix_time::milliseconds(m_ageingIntervallMilliSec));
+                m_ageingTimer.async_wait(bind_weak(&DeviceClient::age, this, boost::asio::placeholders::error));
+            }
+        }
+
+
+        void DeviceClient::disconnectHandler(const std::string& signal, const std::string& instanceId,
+                                             const std::vector<std::string>& toClear) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "Disconnected from signal '" << signal << "' of '" << instanceId << "'.";
+            const std::string path("device." + instanceId);
+            for (const std::string& area : toClear) {
+                const std::string fullPath(path + "." + area);
+                if (!eraseFromRuntimeSystemDescription(fullPath)) {
+                    // Happens e.g. for second reply from disconnecting signalState and signalStateChanged
+                    // FIXME: make LOG_TRACE
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Failed to clear " << fullPath << " from system description "
+                            << "(for signal " << signal << ").";
                 }
             }
         }
