@@ -6,7 +6,7 @@
 from functools import partial
 
 from PyQt4.QtCore import QSize
-from PyQt4.QtGui import QDialog
+from PyQt4.QtGui import QDialog, QVBoxLayout, QWidget
 
 from karabo.common.project.api import ProjectModel
 from karabogui import icons
@@ -19,10 +19,10 @@ from karabogui.project.view import ProjectView
 from karabogui.singletons.api import get_db_conn
 from karabogui.util import get_spin_widget
 from karabogui.widgets.toolbar import ToolBar
-from .base import BasePanelWidget
+from .base import BasePanelWidget, Searchable
 
 
-class ProjectPanel(BasePanelWidget):
+class ProjectPanel(BasePanelWidget, Searchable):
     """ A dockable panel which contains a view of the project
     """
     def __init__(self):
@@ -35,8 +35,16 @@ class ProjectPanel(BasePanelWidget):
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
         """
+        widget = QWidget(self)
+        main_layout = QVBoxLayout(widget)
+        main_layout.setContentsMargins(5, 5, 5, 5)
+
         self.project_view = ProjectView()
-        return self.project_view
+        h_layout = self.create_search_bar(self.project_view.model())
+        main_layout.addLayout(h_layout)
+
+        main_layout.addWidget(self.project_view)
+        return widget
 
     def toolbars(self):
         """This should create and return one or more `ToolBar` instances needed
@@ -113,6 +121,9 @@ class ProjectPanel(BasePanelWidget):
 
         self._enable_toolbar(status)
 
+        if not status:
+            self._init_search_filter(status)
+
     def _handle_database_is_busy(self, data):
         bail = data.get('bail', False)
         is_processing = data['is_processing']
@@ -120,6 +131,7 @@ class ProjectPanel(BasePanelWidget):
             self._enable_partial_toolbar()
         else:
             self._enable_toolbar(not is_processing)
+            self._init_search_filter(not is_processing)
         self.spin_action.setVisible(is_processing)
 
     def _enable_toolbar(self, enable):
