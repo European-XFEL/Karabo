@@ -29,7 +29,8 @@ namespace karabo {
         // Forward
         template <class T>
         class Device;
-/**
+
+        /**
          * @class DeviceClient
          * @brief This class can be used to (remotely) control devices of the distributed system
          *        Synchronous calls (i.e. get()) are in fact asynchronous under the hood\
@@ -43,7 +44,8 @@ namespace karabo {
          * In the context of a Device the DeviceClient is available using the Device::remote() function;
          * it then shares the SignalSlotable instance of the device, e.g. there is no instantiation overhead.
          */
-        class DeviceClient {
+        class DeviceClient : public boost::enable_shared_from_this<DeviceClient> {
+
 
             template<class T>
             friend class Device;
@@ -105,9 +107,12 @@ namespace karabo {
 
             bool m_topologyInitialized;
 
-            boost::thread m_ageingThread;
+            boost::asio::deadline_timer m_ageingTimer;
 
-            bool m_getOlder;
+            static const unsigned int m_ageingIntervallMilliSec = 1000u;
+            static const unsigned int m_ageingIntervallMilliSecCtr = 200u;
+
+            bool m_getOlder; /// defines whether aging is running or not
 
             boost::thread m_signalsChangedThread;
             bool m_runSignalsChangedThread;
@@ -989,7 +994,10 @@ namespace karabo {
 
             virtual void slotProvideSystemTopology();
 
-            void age();
+            void age(const boost::system::error_code& e);
+
+            void disconnectHandler(const std::string& signal, const std::string& instanceId,
+                                   const std::vector<std::string>& toClear);
 
             void sendSignalsChanged();
 
@@ -1003,7 +1011,8 @@ namespace karabo {
 
             bool existsInRuntimeSystemDescription(const std::string& path) const;
 
-            void eraseFromRuntimeSystemDescription(const std::string& path);
+            /// returns true if path could be removed
+            bool eraseFromRuntimeSystemDescription(const std::string& path);
 
             /// Get section (e.g. "device") from runtime description.
             /// Returns empty Hash if section does not exist.
