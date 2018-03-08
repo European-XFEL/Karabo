@@ -27,6 +27,7 @@ class ProjectPanel(BasePanelWidget, Searchable):
     """
     def __init__(self):
         super(ProjectPanel, self).__init__("Projects")
+        self._init_search_filter()
 
         # Register for broadcast events.
         # This object lives as long as the app. No need to unregister.
