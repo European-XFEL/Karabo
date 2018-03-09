@@ -144,7 +144,7 @@ class ProjectViewItemModel(QAbstractItemModel):
         matcher = regex.fullmatch if full_match else regex.match
 
         def _visitor(obj):
-            """Find all macros and scenes"""
+            """Find all items matching"""
             if matcher(obj.display_name) is not None:
                 models.append(obj)
 
