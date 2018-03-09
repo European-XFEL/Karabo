@@ -4,10 +4,11 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from contextlib import contextmanager
+import re
 from weakref import WeakValueDictionary
 
 from PyQt4.QtCore import QAbstractItemModel, QModelIndex, Qt
-from PyQt4.QtGui import QItemSelectionModel
+from PyQt4.QtGui import QItemSelection, QItemSelectionModel
 
 from karabo.common.api import walk_traits_object
 from karabo.common.project.api import MacroModel
@@ -22,7 +23,6 @@ from karabogui.project.controller.device_config import (
 from karabogui.project.controller.device import DeviceInstanceController
 from karabogui.project.utils import show_no_configuration
 from karabogui.singletons.api import get_topology
-
 TABLE_HEADER_LABELS = ["Projects", "", ""]
 
 PROJECT_COLUMN = 0
@@ -128,6 +128,54 @@ class ProjectViewItemModel(QAbstractItemModel):
                 self._controller = None
         finally:
             self.endResetModel()
+
+    def findNodes(self, text, case_sensitive=True,
+                  use_reg_ex=True, full_match=False):
+        """ Find in the ``self._traits_model`` all objects maching criteria"""
+        if self._controller is None:
+            return []
+
+        models = []
+
+        pattern = text if use_reg_ex else ".*{}".format(re.escape(text))
+        flags = 0 if case_sensitive else re.IGNORECASE
+        regex = re.compile(pattern, flags=flags)
+
+        matcher = regex.fullmatch if full_match else regex.match
+
+        def _visitor(obj):
+            """Find all items matching"""
+            if matcher(obj.display_name) is not None:
+                models.append(obj)
+
+        walk_traits_object(self._controller, _visitor)
+        return models
+
+    def selectIndex(self, index):
+        """Select the given `index` of type `QModelIndex` if this is not None
+        """
+        if index is None:
+            self.q_selection_model.selectionChanged.emit(
+                    QItemSelection(), QItemSelection())
+            return
+
+        self.q_selection_model.setCurrentIndex(
+                index, QItemSelectionModel.ClearAndSelect)
+
+        treeview = super(ProjectViewItemModel, self).parent()
+        treeview.scrollTo(index)
+
+    def selectNode(self, controller):
+        """Select the node matching the given `controller`
+        """
+        if controller is not None:
+            index = self.createIndex(
+                    self._controller_row(controller),
+                    PROJECT_COLUMN, controller)
+        else:
+            # Select nothing
+            index = None
+        self.selectIndex(index)
 
     # ----------------------------
     # private methods
