@@ -60,7 +60,9 @@ class NumberLineEdit(BaseBindingController):
             return
         if acceptable_input:
             if (isinstance(self._validator, QDoubleValidator) and
+                    '.' in text and
                     self._validator.StandardNotation):
+                    # XXX: do we need this if-clause?
                 intdci = text.split('.')
                 if len(intdci) > 1:
                     part2 = intdci[1]
