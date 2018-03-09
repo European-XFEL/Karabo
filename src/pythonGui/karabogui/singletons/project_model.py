@@ -135,7 +135,7 @@ class ProjectViewItemModel(QAbstractItemModel):
         if self._controller is None:
             return []
 
-        models = []
+        controllers = []
 
         pattern = text if use_reg_ex else ".*{}".format(re.escape(text))
         flags = 0 if case_sensitive else re.IGNORECASE
@@ -146,10 +146,22 @@ class ProjectViewItemModel(QAbstractItemModel):
         def _visitor(obj):
             """Find all items matching"""
             if matcher(obj.display_name) is not None:
-                models.append(obj)
+                controllers.append(obj)
 
-        walk_traits_object(self._controller, _visitor)
-        return models
+        self.visit(_visitor)
+        return controllers
+
+    def visit(self, visitor):
+        """Walk every controller in the model and run a `visitor` function on
+        each item.
+        """
+        def _iter_tree_node(node):
+            yield node
+            for child in getattr(node, 'children', []):
+                yield from _iter_tree_node(child)
+
+        for controller in _iter_tree_node(self._controller):
+            visitor(controller)
 
     def selectIndex(self, index):
         """Select the given `index` of type `QModelIndex` if this is not None
