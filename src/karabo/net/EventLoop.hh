@@ -9,7 +9,8 @@
 #define	KARABO_NET_EVENTLOOP_HH
 
 #include <map>
-
+#include <mutex>
+#include <memory>
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 #include <boost/function/function_fwd.hpp>
@@ -106,7 +107,7 @@ namespace karabo {
             EventLoop(const EventLoop&) = delete;
             EventLoop& operator=(const EventLoop&) = delete;
 
-            static EventLoop& instance();
+            static std::shared_ptr<EventLoop> instance();
 
             void _addThread(const int nThreads);
 
@@ -126,16 +127,18 @@ namespace karabo {
 
             void _setSignalHandler(const SignalHandler& handler);
 
-            static boost::asio::io_service m_ioService;
-            static boost::thread_group m_threadPool;
-            static boost::mutex m_threadPoolMutex;
-            static boost::mutex m_initMutex;
+            boost::asio::io_service m_ioService;
+            boost::thread_group m_threadPool;
+            mutable boost::mutex m_threadPoolMutex;
+            static std::shared_ptr<EventLoop> m_instance;
+            static std::atomic<EventLoop*> m_instanceAtomic;
+            static std::mutex m_initMutex;
 
             typedef std::map<boost::thread::id, boost::thread*> ThreadMap;
-            static ThreadMap m_threadMap;
+            ThreadMap m_threadMap;
 
-            static boost::mutex m_signalHandlerMutex;
-            static SignalHandler m_signalHandler;
+            boost::mutex m_signalHandlerMutex;
+            SignalHandler m_signalHandler;
         };
     }
 }
