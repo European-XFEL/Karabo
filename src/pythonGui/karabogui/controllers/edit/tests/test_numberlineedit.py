@@ -59,6 +59,16 @@ class TestNumberLineEdit(GuiTestCase):
             self.d_controller._internal_widget.setText(test_string)
             assert self.d_proxy.edit_value == results[i]
 
+        last_accepted_value = '1.2'
+        self.d_controller._internal_widget.setText(last_accepted_value)
+        test_out_of_range = ['1.0e5', '-1.0e5']
+        results = [100000, -100000]
+        for i, test_string in enumerate(test_out_of_range):
+            # shouldn't be accepted:
+            self.d_controller._internal_widget.setText(test_string)
+            assert self.d_proxy.edit_value != results[i]
+            assert self.d_proxy.edit_value == last_accepted_value
+
     def test_change_decimals(self):
         action = self.d_controller.widget.actions()[0]
         assert 'decimals' in action.text().lower()
