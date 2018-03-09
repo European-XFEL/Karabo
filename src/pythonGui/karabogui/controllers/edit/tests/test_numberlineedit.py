@@ -67,7 +67,7 @@ class TestNumberLineEdit(GuiTestCase):
             # shouldn't be accepted:
             self.d_controller._internal_widget.setText(test_string)
             assert self.d_proxy.edit_value != results[i]
-            assert self.d_proxy.edit_value == last_accepted_value
+            assert self.d_proxy.edit_value == float(last_accepted_value)
 
     def test_change_decimals(self):
         action = self.d_controller.widget.actions()[0]
