@@ -324,7 +324,9 @@ class RunConfigurator(PythonDevice):
             self._updateRunConfiguratorGroupInstance(deviceId, group)
             self._updateDependentProperties()
             # now notify clients
-            result = Hash('group', group['id'],
+            result = Hash('group',
+                          group.get('id', self.remote().get(deviceId,
+                                                            'group.id')),
                           'instanceId', self.getInstanceId(),
                           'sources', self._getGroupSources(deviceId))
             self._ss.emit('signalGroupSourceChanged', result, deviceId)
@@ -448,9 +450,13 @@ class RunConfigurator(PythonDevice):
                                          'description', description,
                                          'use', use))
 
-            # `sources`
-            _creatSource(group.get('expert'), sources, use)
-            _creatSource(group.get('user'), sources, use)
+            # `existing sources but check before for None`
+            expert_sources = group.get('expert')
+            user_sources = group.get('user')
+            if expert_sources is not None:
+                _creatSource(expert_sources, sources, use)
+            if user_sources is not None:
+                _creatSource(user_sources, sources, use)
 
         h.set('configurations', configurations)
         h.set('availableGroups', available_groups)
