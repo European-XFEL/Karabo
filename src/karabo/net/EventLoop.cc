@@ -150,14 +150,6 @@ namespace karabo {
         }
 
 
-        void EventLoop::_joinAndRemoveThread(boost::thread* thr) {
-            boost::mutex::scoped_lock lock(m_threadPoolMutex);
-            thr->join();
-            m_threadPool.remove_thread(thr);
-            delete thr;
-        }
-
-
         void EventLoop::asyncDestroyThread(const boost::thread::id& id) {
             boost::mutex::scoped_lock lock(m_threadPoolMutex);
             ThreadMap::iterator it = m_threadMap.find(id);

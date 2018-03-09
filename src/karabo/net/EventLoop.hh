@@ -113,8 +113,6 @@ namespace karabo {
 
             void _removeThread(const int nThreads);
 
-            void _joinAndRemoveThread(boost::thread* thr);
-
             void runProtected();
 
             static void asyncInjectException();
