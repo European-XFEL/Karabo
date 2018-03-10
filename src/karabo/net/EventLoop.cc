@@ -14,27 +14,22 @@
 namespace karabo {
     namespace net {
 
-        
-        std::atomic<EventLoop*> EventLoop::m_instanceAtomic {nullptr};
+
         std::shared_ptr<EventLoop> EventLoop::m_instance {nullptr};
-        std::mutex EventLoop::m_initMutex;
-
-
-        EventLoop::EventLoop() {
-        }
+        std::once_flag EventLoop::m_initInstanceFlag;
 
 
         EventLoop::~EventLoop() {
         }
 
 
+        void EventLoop::init() {
+            m_instance.reset(new EventLoop);
+        }
+
+
         std::shared_ptr<EventLoop> EventLoop::instance() {
-            if (m_instanceAtomic == nullptr) {
-                std::lock_guard<std::mutex> lock(m_initMutex);
-                if (m_instanceAtomic == nullptr) {
-                    m_instance.reset((m_instanceAtomic = new EventLoop));
-                }
-            }
+            std::call_once(m_initInstanceFlag, &EventLoop::init);
             return m_instance;
         }
 
