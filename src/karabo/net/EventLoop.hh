@@ -39,7 +39,7 @@ namespace karabo {
 
             KARABO_CLASSINFO(EventLoop, "EventLoop", "1.0")
 
-            virtual ~EventLoop();
+            virtual ~EventLoop() = default;
 
             /**
              * Add a number of threads to the event loop, increasing the number
