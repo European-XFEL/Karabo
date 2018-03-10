@@ -149,11 +149,11 @@ namespace karabo {
                 m_threadPool.remove_thread(it->second);
                 delete it->second;
                 m_threadMap.erase(it);
-                //if (m_threadPool.size() > 1) { // Failed to print the last thread: SIGSEGV
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Removerd thread (id: " << id
+                if (m_threadPool.size() > 1) { // Failed to print the last thread: SIGSEGV
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Removed thread (id: " << id
                             << ") from event-loop, now running: "
                             << m_threadPool.size() << " threads in total";
-                //}
+                }
             }
         }
 
