@@ -29,6 +29,8 @@ namespace karabo {
 
             KARABO_CLASSINFO(Logger, "Logger", "")
 
+            virtual ~Logger() = default;
+
             static void expectedParameters(karabo::util::Schema& expected);
 
             /**
@@ -135,8 +137,11 @@ namespace karabo {
 
             static void useAppender(const std::string& category, bool inheritAppenders, krb_log4cpp::Appender*);
 
-            Logger() {
-            };
+            Logger() = default;
+
+            Logger(const Logger&) = delete;
+
+            Logger& operator=(const Logger&) = delete;
 
             typedef std::unordered_map<std::string, krb_log4cpp::Category*> CategoryMap;
             static CategoryMap m_categories;
