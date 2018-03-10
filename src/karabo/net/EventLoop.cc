@@ -19,13 +19,9 @@ namespace karabo {
         std::once_flag EventLoop::m_initInstanceFlag;
 
 
-        EventLoop::~EventLoop() {
-        }
-
-
         void EventLoop::init() {
             m_instance.reset(new EventLoop);
-        }
+        } 
 
 
         std::shared_ptr<EventLoop> EventLoop::instance() {
@@ -39,7 +35,7 @@ namespace karabo {
         }
 
 
-        void EventLoop::work() {
+      void EventLoop::work() {
 
             boost::asio::signal_set signals(getIOService(), SIGINT, SIGTERM);
             auto loop = instance();
@@ -153,11 +149,11 @@ namespace karabo {
                 m_threadPool.remove_thread(it->second);
                 delete it->second;
                 m_threadMap.erase(it);
-                if (m_threadPool.size() > 1) { // Failed to print the last thread: SIGSEGV
+                //if (m_threadPool.size() > 1) { // Failed to print the last thread: SIGSEGV
                     KARABO_LOG_FRAMEWORK_DEBUG << "Removerd thread (id: " << id
                             << ") from event-loop, now running: "
                             << m_threadPool.size() << " threads in total";
-                }
+                //}
             }
         }
 
