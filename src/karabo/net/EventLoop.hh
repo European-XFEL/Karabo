@@ -101,11 +101,13 @@ namespace karabo {
 
         private:
 
-            EventLoop();
+            EventLoop() = default;
 
             // Delete copy constructor and assignment operator since EventLoop is a singleton:
             EventLoop(const EventLoop&) = delete;
             EventLoop& operator=(const EventLoop&) = delete;
+
+            static void init();
 
             static std::shared_ptr<EventLoop> instance();
 
@@ -128,9 +130,9 @@ namespace karabo {
             boost::asio::io_service m_ioService;
             boost::thread_group m_threadPool;
             mutable boost::mutex m_threadPoolMutex;
+
             static std::shared_ptr<EventLoop> m_instance;
-            static std::atomic<EventLoop*> m_instanceAtomic;
-            static std::mutex m_initMutex;
+            static std::once_flag m_initInstanceFlag;
 
             typedef std::map<boost::thread::id, boost::thread*> ThreadMap;
             ThreadMap m_threadMap;
