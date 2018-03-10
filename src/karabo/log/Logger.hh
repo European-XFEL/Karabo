@@ -139,10 +139,6 @@ namespace karabo {
 
             Logger() = default;
 
-            Logger(const Logger&) = delete;
-
-            Logger& operator=(const Logger&) = delete;
-
             typedef std::unordered_map<std::string, krb_log4cpp::Category*> CategoryMap;
             static CategoryMap m_categories;
 
