@@ -150,6 +150,10 @@ namespace karabo {
                 delete it->second;
                 m_threadMap.erase(it);
                 if (m_threadPool.size() > 1) { // Failed to print the last thread: SIGSEGV
+                    // An attempt to use Logger API here may result in SIGSEGV: we are depending on
+                    // life time of this object (that's bad!!!).  We depend on the answer to the following questions:
+                    // 1. How does the order of static's initialization (and the corresponding destruction order) work?
+                    // 2. How does the static'c re-initialization influence on such order?
                     KARABO_LOG_FRAMEWORK_DEBUG << "Removed thread (id: " << id
                             << ") from event-loop, now running: "
                             << m_threadPool.size() << " threads in total";
