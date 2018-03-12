@@ -18,13 +18,14 @@ def add_unit_label(proxy, widget, parent=None):
     layout = QHBoxLayout(widget_group)
     layout.setSizeConstraint(QHBoxLayout.SetMinimumSize)
     layout.addWidget(widget)
-    label = QLabel(unit_label, parent)
+    label = QLabel(unit_label, widget_group)
     label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
     layout.addWidget(label)
     layout.setContentsMargins(0, 0, 0, 0)
     # Add an `update_label` "method" for keeping things synced
     widget_group.update_label = lambda b: _updater(label, b)
-
+    widget_group.setSizePolicy(QSizePolicy.MinimumExpanding,
+                               QSizePolicy.MinimumExpanding)
     return widget_group
 
 
