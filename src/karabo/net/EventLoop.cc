@@ -14,42 +14,40 @@
 namespace karabo {
     namespace net {
 
-        boost::mutex karabo::net::EventLoop::m_initMutex;
+
+        std::shared_ptr<EventLoop> EventLoop::m_instance {nullptr};
+        std::once_flag EventLoop::m_initInstanceFlag;
 
 
-        EventLoop::EventLoop() : m_ioService() {
-        }
+        void EventLoop::init() {
+            m_instance.reset(new EventLoop);
+        } 
 
 
-        EventLoop::~EventLoop() {
-        }
-
-
-        EventLoop& EventLoop::instance() {
-            boost::mutex::scoped_lock lock(m_initMutex);
-            static EventLoop loop;
-            return loop;
+        std::shared_ptr<EventLoop> EventLoop::instance() {
+            std::call_once(m_initInstanceFlag, &EventLoop::init);
+            return m_instance;
         }
 
 
         boost::asio::io_service& EventLoop::getIOService() {
-            return instance().m_ioService;
+            return instance()->m_ioService;
         }
 
 
-        void EventLoop::work() {
+      void EventLoop::work() {
 
             boost::asio::signal_set signals(getIOService(), SIGINT, SIGTERM);
-            EventLoop& loop = instance();
+            auto loop = instance();
             // TODO: Consider to use ordinary function instead of this lengthy lambda.
             boost::function<void(boost::system::error_code ec, int signo) > signalHandler
                     = [&loop](boost::system::error_code ec, int signo) {
                         if (ec) return;
 
                         {
-                            boost::mutex::scoped_lock(loop.m_signalHandlerMutex);
-                            if (loop.m_signalHandler) {
-                                loop.m_signalHandler(signo);
+                            boost::mutex::scoped_lock(loop->m_signalHandlerMutex);
+                            if (loop->m_signalHandler) {
+                                loop->m_signalHandler(signo);
                             }
                         }
                         // Some time to do all actions possibly triggered by handler.
@@ -72,21 +70,21 @@ namespace karabo {
         void EventLoop::run() {
             // First reset io service if e.g. stop() was called before this run()
             // and after a previous run() had finished since out of work.
-            instance().m_ioService.reset();
-
-            instance().runProtected();
-            instance().m_threadPool.join_all();
-            instance().clearThreadPool();
+            auto loop = instance();
+            loop->m_ioService.reset();
+            loop->runProtected();
+            loop->m_threadPool.join_all();
+            loop->clearThreadPool();
         }
 
 
         void EventLoop::stop() {
-            instance().m_ioService.stop();
+            instance()->m_ioService.stop();
         }
 
 
         size_t EventLoop::getNumberOfThreads() {
-            return instance()._getNumberOfThreads();
+            return instance()->_getNumberOfThreads();
         }
 
 
@@ -97,7 +95,7 @@ namespace karabo {
 
 
         void EventLoop::setSignalHandler(const SignalHandler& handler) {
-            instance()._setSignalHandler(handler);
+            instance()->_setSignalHandler(handler);
         }
 
 
@@ -108,15 +106,16 @@ namespace karabo {
 
 
         void EventLoop::addThread(const int nThreads) {
-            EventLoop& loop = instance();
-            loop.m_ioService.post(boost::bind(&karabo::net::EventLoop::_addThread, &loop, nThreads));
+            auto loop = instance();
+            loop->m_ioService.post(boost::bind(&karabo::net::EventLoop::_addThread, loop, nThreads));
         }
 
 
         void EventLoop::_addThread(const int nThreads) {
             boost::mutex::scoped_lock lock(m_threadPoolMutex);
+            auto loop = instance();
             for (int i = 0; i < nThreads; ++i) {
-                boost::thread* thread = m_threadPool.create_thread(boost::bind(&karabo::net::EventLoop::runProtected, this));
+                boost::thread* thread = m_threadPool.create_thread(boost::bind(&EventLoop::runProtected, loop));
                 m_threadMap[thread->get_id()] = thread;
                 KARABO_LOG_FRAMEWORK_DEBUG << "A thread (id: " << thread->get_id()
                         << ") was added to the event-loop, now running: "
@@ -126,7 +125,7 @@ namespace karabo {
 
 
         void EventLoop::removeThread(const int nThreads) {
-            instance()._removeThread(nThreads);
+            instance()->_removeThread(nThreads);
         }
 
 
@@ -149,15 +148,22 @@ namespace karabo {
                 it->second->join();
                 m_threadPool.remove_thread(it->second);
                 delete it->second;
+                m_threadMap.erase(it);
+                if (m_threadPool.size() > 1) { // Failed to print the last thread: SIGSEGV
+                    // An attempt to use Logger API here may result in SIGSEGV: we are depending on
+                    // life time of this object (that's bad!!!).  We depend on the answer to the following questions:
+                    // 1. How does the order of static's initialization (and the corresponding destruction order) work?
+                    // 2. How does the static'c re-initialization influence on such order?
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Removed thread (id: " << id
+                            << ") from event-loop, now running: "
+                            << m_threadPool.size() << " threads in total";
+                }
             }
-            m_threadMap.erase(id);
-            KARABO_LOG_FRAMEWORK_DEBUG << "Removed thread (id: " << id
-                    << ") from event-loop, now running: "
-                    << m_threadPool.size() << " threads in total";
         }
 
 
         void EventLoop::clearThreadPool() {
+            boost::mutex::scoped_lock lock(m_threadPoolMutex);
             for (ThreadMap::iterator it = m_threadMap.begin(); it != m_threadMap.end(); ++it) {
                 m_threadPool.remove_thread(it->second);
                 delete it->second;
@@ -185,8 +191,9 @@ namespace karabo {
                 } catch (const RemoveThreadException&) {
                     // This is a sign to remove this thread from the pool
                     // As we can not kill ourselves we will ask another thread to kindly do so
+                    boost::mutex::scoped_lock lock(m_threadPoolMutex);
                     if (m_threadPool.is_this_thread_in()) {
-                        m_ioService.post(boost::bind(&karabo::net::EventLoop::asyncDestroyThread, this, boost::this_thread::get_id()));
+                        m_ioService.post(boost::bind(&EventLoop::asyncDestroyThread, this, boost::this_thread::get_id()));
                         return; // No more while, we want to die
                     } else {
                         // We are in the main blocking thread here, which we never want to kill
