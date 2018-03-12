@@ -11,6 +11,9 @@ from karabo.bound import (
     LIST_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT, STRING_ELEMENT,
     TABLE_ELEMENT, VECTOR_STRING_ELEMENT
 )
+from karabo.common.api import (
+    KARABO_SCHEMA_DISPLAY_TYPE_RUNCONFIGURATOR as DT_RUNCONF,
+    KARABO_SCHEMA_DISPLAY_TYPE_SCENES as DT_SCENES)
 from karabo.common.scenemodel.api import (
     BoxLayoutModel, DeviceSceneLinkModel, DisplayCommandModel,
     FixedLayoutModel, LabelModel, RunConfiguratorModel, SceneModel, 
@@ -151,7 +154,7 @@ class RunConfigurator(PythonDevice):
             .description('All configuration groups and their sources')
             .appendNodesOfConfigurationBase(_RunConfiguratorGroup)
             # This signals to the GUI what type of widget to use
-            .setSpecialDisplayType('RunConfigurator')
+            .setSpecialDisplayType(DT_RUNCONF)
             .assignmentOptional().defaultValue([])
             .reconfigurable()
             .commit(),
@@ -170,6 +173,7 @@ class RunConfigurator(PythonDevice):
             .commit(),
 
             VECTOR_STRING_ELEMENT(expected).key('availableScenes')
+            .setSpecialDisplayType(DT_SCENES)
             .readOnly().initialValue(['scene', 'link'])
             .commit(),
 

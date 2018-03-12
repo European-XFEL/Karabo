@@ -497,6 +497,13 @@ void Schema_Test::testPerKeyFunctionality() {
             CPPUNIT_ASSERT(m_schema.isAccessReadOnly(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.getDisplayType(keys[i]) == "bin|0:isError,1:isMoving,2:isBusy,15:isOn");
         }
+
+        if (keys[i] == "exampleKey9") {
+            CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.isAccessReadOnly(keys[i]) == true);
+            CPPUNIT_ASSERT_EQUAL(std::string("TestDisplayType"), m_schema.getDisplayType(keys[i]));
+        }
     }
 
 }
@@ -530,12 +537,14 @@ void Schema_Test::testVectorElements() {
     CPPUNIT_ASSERT(sch.isAccessReadOnly("vecInt") == true);
     CPPUNIT_ASSERT(sch.isAssignmentOptional("vecInt") == true);
     CPPUNIT_ASSERT(sch.hasDefaultValue("vecInt") == true);
+    CPPUNIT_ASSERT_EQUAL(std::string("Curve"), sch.getDisplayType("vecInt"));
 
     CPPUNIT_ASSERT(sch.getValueType("vecDouble") == Types::VECTOR_DOUBLE);
     CPPUNIT_ASSERT(sch.getAlarmLow<vector<double> >("vecDouble") == vector<double>(3, -5.5));
     CPPUNIT_ASSERT(sch.getAlarmHigh<vector<double> >("vecDouble") == vector<double>(3, 7.7));
     CPPUNIT_ASSERT(sch.isAccessReadOnly("vecDouble") == true);
     CPPUNIT_ASSERT(sch.isAssignmentOptional("vecDouble") == true);
+    CPPUNIT_ASSERT_EQUAL(std::string("Curve"), sch.getDisplayType("vecDouble"));
 
     //readOnly element has default value (even if initialValue not specified) and default value is vector<double>() -- empty vector
     CPPUNIT_ASSERT(sch.hasDefaultValue("vecDouble") == true);
@@ -550,6 +559,7 @@ void Schema_Test::testVectorElements() {
     CPPUNIT_ASSERT(sch.isAssignmentOptional("vecIntReconfig") == true);
     CPPUNIT_ASSERT(sch.hasDefaultValue("vecIntReconfig") == true);
     CPPUNIT_ASSERT(sch.getDefaultValue<vector<int> >("vecIntReconfig") == vecDef);
+    CPPUNIT_ASSERT_EQUAL(std::string("Curve"), sch.getDisplayType("vecIntReconfig"));
 
     CPPUNIT_ASSERT(sch.hasDefaultValue("vecIntReconfigStr") == true);
 
@@ -583,6 +593,9 @@ void Schema_Test::testVectorElements() {
     vector<State> allowedStates = sch.getAllowedStates("vecBool");
     CPPUNIT_ASSERT(allowedStates[0] == State::STARTED);
     CPPUNIT_ASSERT(allowedStates[1] == State::STOPPED);
+
+    CPPUNIT_ASSERT_EQUAL(std::string("Curve"), sch.getDisplayType("vecBool"));
+
 }
 
 void Schema_Test::testArrayElements() {
