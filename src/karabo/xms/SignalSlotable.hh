@@ -255,7 +255,7 @@ namespace karabo {
              * @param signalSignature is the signature of the signal
              * @param slotInstanceId is the instance ID of the slot (if empty use this instance)
              * @param slotSignature is the signature of the slot
-             * @return whether connection is already succesfully established
+             * @return whether connection is already successfully established
              */
             bool connect(const std::string& signalInstanceId, const std::string& signalSignature,
                          const std::string& slotInstanceId, const std::string& slotSignature);
@@ -273,6 +273,18 @@ namespace karabo {
              * @return whether connection is already succesfully established
              */
             bool connect(const std::string& signal, const std::string& slot);
+
+            /// An AsyncErrorHandler takes no argument, but it will be called such that it can rethrow and then catch
+            /// exceptions. The caught exception indicates the failure reason, e.g.:
+            ///
+            /// void asyncErrorHandler () {
+            ///     try {
+            ///         throw;
+            ///     } catch (std::exception& e) { // or any other exception type - or several catch statements
+            ///         KARABO_LOG_FRAMEWORK_WARN << "Probem when trying to do something: " << e.what();
+            ///     }
+            ///  }
+            typedef boost::function<void() > AsyncErrorHandler;
 
             /**
              * This function tries to establish asynchronously a connection between a signal
@@ -298,7 +310,7 @@ namespace karabo {
             void asyncConnect(const std::string& signalInstanceId, const std::string& signalSignature,
                               const std::string& slotInstanceId, const std::string& slotSignature,
                               const boost::function<void ()>& successHandler = boost::function<void ()>(),
-                              const boost::function<void ()>& failureHandler = boost::function<void ()>(),
+                              const AsyncErrorHandler& failureHandler = AsyncErrorHandler(),
                               int timeout = 0);
 
             /**
@@ -317,7 +329,7 @@ namespace karabo {
              */
             void asyncConnect(const std::vector<SignalSlotConnection>& signalSlotConnections,
                               const boost::function<void ()>& successHandler = boost::function<void ()>(),
-                              const boost::function<void ()>& failureHandler = boost::function<void ()>(),
+                              const AsyncErrorHandler& failureHandler = AsyncErrorHandler(),
                               int timeout = 0);
             /**
              * Disconnects a slot from a signal, identified both by their
@@ -335,6 +347,29 @@ namespace karabo {
              */
             bool disconnect(const std::string& signalInstanceId, const std::string& signalFunction,
                             const std::string& slotInstanceId, const std::string& slotFunction);
+
+            /**
+             * This function tries to disconnect a previously established connection between
+             * a signal and a slot. These two are identified both by their respective
+             * instance IDs and signatures.
+             * In case the connection was established by this instance, the function also
+             * erases it from the list of connections that have to be re-established
+             * in case signal or slot instances come back after a shutdown.
+             *
+             * @param signalInstanceId is the instance ID of the signal (if empty use this instance)
+             * @param signalSignature is the signature of the signal
+             * @param slotInstanceId is the instance ID of the slot (if empty use this instance)
+             * @param slotSignature is the signature of the slot
+             * @param successHandler is called when connection is successfully stopped (maybe be empty [=default])
+             * @param failureHandler is called when the disconnection failed (maybe be empty [=default])
+             * @param timeout in milliseconds for internal async requests - non-positive (default) means the very long
+             *                default timeout
+             */
+            void asyncDisconnect(const std::string& signalInstanceId, const std::string& signalFunction,
+                                 const std::string& slotInstanceId, const std::string& slotFunction,
+                                 const boost::function<void ()>& successHandler = boost::function<void ()>(),
+                                 const AsyncErrorHandler& failureHandler = AsyncErrorHandler(),
+                                 int timeout = 0);
             /**
              * Emits a signal, i.e. publishes the given payload
              * Emitting a signal is a fire-and-forget activity. The function returns immediately.
@@ -516,7 +551,7 @@ namespace karabo {
              */
             void asyncConnectP2p(const std::string& signalInstanceId,
                                  const boost::function<void()>& successHandler,
-                                 const boost::function<void()>& errHandler);
+                                 const AsyncErrorHandler& errHandler);
 
             void disconnectP2P(const std::string& instanceId);
 
@@ -526,7 +561,7 @@ namespace karabo {
 
             public:
 
-                typedef boost::function<void() > AsyncErrorHandler;
+                typedef SignalSlotable::AsyncErrorHandler AsyncErrorHandler;
 
                 explicit Requestor(SignalSlotable* signalSlotable);
 
@@ -672,8 +707,7 @@ namespace karabo {
             // (probably later merge m_slotInstances and m_slotInstanceStrands to a single map).
             std::unordered_map<std::string, boost::shared_ptr<karabo::net::Strand> > m_slotInstanceStrands;
 
-            typedef std::map<std::string, std::pair<boost::shared_ptr<boost::asio::deadline_timer>,
-            Requestor::AsyncErrorHandler> > ReceiveAsyncErrorHandles;
+            typedef std::map<std::string, std::pair<boost::shared_ptr<boost::asio::deadline_timer>, AsyncErrorHandler> > ReceiveAsyncErrorHandles;
             ReceiveAsyncErrorHandles m_receiveAsyncErrorHandles;
 
             // TODO Split into two mutexes
@@ -783,7 +817,7 @@ namespace karabo {
 
             void connectP2pInfoHandler(const karabo::util::Hash& instanceInfo, const std::string& signalInstanceId,
                                        const boost::function<void()>& successHandler,
-                                       const SignalSlotable::Requestor::AsyncErrorHandler& errHandler,
+                                       const AsyncErrorHandler& errHandler,
                                        bool storeConnection);
 
             void handleReply(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer & body);
@@ -950,7 +984,8 @@ namespace karabo {
 
             void storeConnection(const std::string& signalInstanceId, const std::string& signalFunction,
                                  const std::string& slotInstanceId, const std::string& slotFunction);
-
+            bool removeStoredConnection(const std::string& signalInstanceId, const std::string& signalFunction,
+                                        const std::string& slotInstanceId, const std::string& slotFunction);
             bool tryToDisconnectFromSignal(const std::string& signalInstanceId, const std::string& signalFunction,
                                            const std::string& slotInstanceId, const std::string& slotFunction);
 
@@ -1047,15 +1082,15 @@ namespace karabo {
             void setTopic(const std::string& topic = "");
 
             void receiveAsyncTimeoutHandler(const boost::system::error_code& e, const std::string& replyId,
-                                            const SignalSlotable::Requestor::AsyncErrorHandler& errorHandler);
+                                            const AsyncErrorHandler& errorHandler);
 
             /// For the given replyId of a 'request.receiveAsync', register error handling,
             /// i.e. the timer for timeout and the handler for remote exceptions.
             void addReceiveAsyncErrorHandles(const std::string& replyId,
                                              const boost::shared_ptr<boost::asio::deadline_timer>& timer,
-                                             const SignalSlotable::Requestor::AsyncErrorHandler& errorHandler);
+                                             const AsyncErrorHandler& errorHandler);
 
-            std::pair<boost::shared_ptr<boost::asio::deadline_timer>, SignalSlotable::Requestor::AsyncErrorHandler>
+            std::pair<boost::shared_ptr<boost::asio::deadline_timer>, AsyncErrorHandler>
             getReceiveAsyncErrorHandles(const std::string& replyId) const;
 
             /// Helper that calls 'handler' such that it can do
@@ -1063,7 +1098,7 @@ namespace karabo {
             ///  try { throw; } catch (const SignalSlotException &e) { <action>}
             ///
             /// @param message text given to the SignalSlotException
-            static void callErrorHandler(const boost::function<void () > handler, const std::string& message);
+            static void callErrorHandler(const AsyncErrorHandler& handler, const std::string& message);
 
             void multiAsyncConnectSuccessHandler(const std::string& uuid, size_t requestNum);
 
