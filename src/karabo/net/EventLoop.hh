@@ -9,7 +9,8 @@
 #define	KARABO_NET_EVENTLOOP_HH
 
 #include <map>
-
+#include <mutex>
+#include <memory>
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 #include <boost/function/function_fwd.hpp>
@@ -38,7 +39,7 @@ namespace karabo {
 
             KARABO_CLASSINFO(EventLoop, "EventLoop", "1.0")
 
-            virtual ~EventLoop();
+            virtual ~EventLoop() = default;
 
             /**
              * Add a number of threads to the event loop, increasing the number
@@ -100,13 +101,15 @@ namespace karabo {
 
         private:
 
-            EventLoop();
+            EventLoop() = default;
 
             // Delete copy constructor and assignment operator since EventLoop is a singleton:
             EventLoop(const EventLoop&) = delete;
             EventLoop& operator=(const EventLoop&) = delete;
 
-            static EventLoop& instance();
+            static void init();
+
+            static std::shared_ptr<EventLoop> instance();
 
             void _addThread(const int nThreads);
 
@@ -119,7 +122,7 @@ namespace karabo {
             void asyncDestroyThread(const boost::thread::id& id);
 
             void clearThreadPool();
-
+            
             size_t _getNumberOfThreads() const;
 
             void _setSignalHandler(const SignalHandler& handler);
@@ -127,7 +130,9 @@ namespace karabo {
             boost::asio::io_service m_ioService;
             boost::thread_group m_threadPool;
             mutable boost::mutex m_threadPoolMutex;
-            static boost::mutex m_initMutex;
+
+            static std::shared_ptr<EventLoop> m_instance;
+            static std::once_flag m_initInstanceFlag;
 
             typedef std::map<boost::thread::id, boost::thread*> ThreadMap;
             ThreadMap m_threadMap;
