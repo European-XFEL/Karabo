@@ -35,7 +35,10 @@ def run_scene():
     filename = getOpenFileName(filter='*.svg')
     if not filename:
         sys.exit()
+    return run_scene_file(filename)
 
+
+def run_scene_file(filename):
     model = read_scene(filename)
     panel = ScenePanel(model, True)
 
@@ -58,8 +61,11 @@ def run_panel(ns):
         panel, size = run_navigation()
     elif ns.project:
         panel, size = run_project()
-    elif ns.scene:
+    elif ns.scene_chooser:
         panel, size = run_scene()
+    elif ns.scene_file:
+        panel, size = run_scene_file(
+            ns.scene_file)
 
     # XXX: A hack to keep the toolbar visible
     panel.toolbar.setVisible(True)
@@ -81,7 +87,8 @@ def main():
                     help='A device ID should be provided')
     ag.add_argument('-n', '--navigation', action='store_true')
     ag.add_argument('-p', '--project', action='store_true')
-    ag.add_argument('-s', '--scene', action='store_true')
+    ag.add_argument('-s', '--scene_chooser', action='store_true')
+    ag.add_argument('-S', '--scene_file', type=str, metavar='FILENAME')
     run_panel(ap.parse_args())
 
 
