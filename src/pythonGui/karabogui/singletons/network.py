@@ -48,7 +48,8 @@ class Network(QObject):
         self.username = ''
         self.password = ''
         self.provider = ''
-        self.hostname, self.port = self.load_settings()
+        self.hostname, self.port, self.guiservers, self.maxservers = (
+                self.load_settings())
 
         # Listen for the quit notification
         qApp.aboutToQuit.connect(self.onQuitApplication)
@@ -63,7 +64,8 @@ class Network(QObject):
                              password=self.password,
                              provider=self.provider,
                              hostname=self.hostname,
-                             port=self.port)
+                             port=self.port,
+                             guiservers=self.guiservers)
 
         if dialog.exec_() == QDialog.Accepted:
             self.username = dialog.username
@@ -71,6 +73,7 @@ class Network(QObject):
             self.provider = dialog.provider
             self.hostname = dialog.hostname
             self.port = dialog.port
+            self.guiservers = dialog.guiservers
             self.startServerConnection()
             isConnected = True
 
@@ -78,19 +81,29 @@ class Network(QObject):
         self.signalServerConnectionChanged.emit(isConnected)
 
     def load_settings(self):
+        # Maximum number of GUI servers to be stored, 5 by default
+        maxservers = 5
+
         # Try to load from the environment variables first
         hostname = os.environ.get(krb_globals.KARABO_GUI_HOST, None)
         port = os.environ.get(krb_globals.KARABO_GUI_PORT, None)
         if hostname is not None and port is not None:
-            return (hostname, port)
+            servers = get_setting(KaraboSettings.GUI_SERVERS)
+            maxservers = (get_setting(KaraboSettings.MAX_GUI_SERVERS)
+                          or maxservers)
+            return (hostname, port, servers, maxservers)
 
         # Load from QSettings
-        server = get_setting(KaraboSettings.GUI_SERVER)
-        server = server or 'localhost:44444'
-        hostname, port = server.split(':')
+        servers = get_setting(KaraboSettings.GUI_SERVERS) or []
+        maxservers = get_setting(KaraboSettings.MAX_GUI_SERVERS) or maxservers
+        if servers:
+            hostname, port = servers[0].split(':')
+        else:
+            hostname, port = "localhost", "44444"
+
         port = int(port)
 
-        return (hostname, port)
+        return (hostname, port, servers, maxservers)
 
     def disconnectFromServer(self):
         """
@@ -305,9 +318,26 @@ class Network(QObject):
         self.endServerConnection()
 
     def onConnected(self):
+        def _LRU(item, lis, maxsize):
+            """
+            Apply of the LRU algorithm on lis
+
+            The LRU algorithm evicts from lis the Least Recently Used
+            element and item is moved to the lis front.
+            As the result, lis always contain its most popular element
+            """
+            if item in lis:
+                lis.remove(item)
+            lis = [item] + lis
+            return lis if len(lis) <= maxsize else lis[:maxsize]
+
         # cache the server address
         server = '{}:{}'.format(self.hostname, self.port)
-        set_setting(KaraboSettings.GUI_SERVER, server)
+
+        self.guiservers = _LRU(server, self.guiservers, int(self.maxservers))
+
+        set_setting(KaraboSettings.GUI_SERVERS, self.guiservers)
+        set_setting(KaraboSettings.MAX_GUI_SERVERS, self.maxservers)
 
         # If some requests got piled up, because of no server connection,
         # now these get handled
