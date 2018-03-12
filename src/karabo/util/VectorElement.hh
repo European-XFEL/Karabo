@@ -61,6 +61,15 @@ namespace karabo {
                 return _readOnlySpecific;
             }
 
+            /**
+             * Enable modification of the displayType of the element.
+             * @param displayType
+             * @return reference to the Element (to allow method's chaining)
+             */
+            VectorElement& setSpecialDisplayType(const std::string& displayType) {
+                this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, displayType);
+                return *this;
+            }
 
         protected:
 
@@ -68,7 +77,10 @@ namespace karabo {
 
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LEAF);
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, karabo::util::Schema::PROPERTY);
-                this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Curve");
+                if (!this->m_node->hasAttribute(KARABO_SCHEMA_DISPLAY_TYPE)) {
+                    // for backward-compatibility displayType is "Curve" on vectors
+                    this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Curve");
+                }
                 this->m_node->setAttribute(KARABO_SCHEMA_VALUE_TYPE, Types::to<ToLiteral>(Types::from<CONT<T> >()));
 
                 if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->init(); // This is the default
