@@ -1244,7 +1244,7 @@ namespace karabo {
              */
             const karabo::util::AlarmCondition & getAlarmCondition(const std::string & key, const std::string & sep = ".") const {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-                const std::string& propertyCondition = this->m_parameters.template getAttribute<std::string>(key, KARABO_ALARM_ATTR, sep);
+                const std::string& propertyCondition = this->m_parameters.template getAttribute<std::string>(key, KARABO_ALARM_ATTR, sep.at(0));
                 return karabo::util::AlarmCondition::fromString(propertyCondition);
             }
 
