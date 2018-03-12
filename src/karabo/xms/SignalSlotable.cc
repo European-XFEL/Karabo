@@ -1449,6 +1449,28 @@ namespace karabo {
             m_signalSlotConnections[slotInstanceId].insert(connection);
         }
 
+
+        bool SignalSlotable::removeStoredConnection(const std::string& signalInstanceId, const std::string& signalFunction,
+                                                    const std::string& slotInstanceId, const std::string& slotFunction) {
+
+            bool connectionWasKnown = false;
+            const SignalSlotConnection connection(signalInstanceId, signalFunction, slotInstanceId, slotFunction);
+
+            boost::mutex::scoped_lock lock(m_signalSlotConnectionsMutex);
+            // Might be in there twice: once for signal, once for slot.
+            SignalSlotConnections::iterator it = m_signalSlotConnections.find(signalInstanceId);
+            if (it != m_signalSlotConnections.end()) {
+                connectionWasKnown = (it->second.erase(connection) >= 1);
+            }
+            it = m_signalSlotConnections.find(slotInstanceId);
+            if (it != m_signalSlotConnections.end()) {
+                connectionWasKnown = (it->second.erase(connection) >= 1 ? true : connectionWasKnown);
+            }
+
+            return connectionWasKnown;
+        }
+
+
         bool SignalSlotable::tryToConnectToSignal(const std::string& signalInstanceId, const std::string& signalFunction,
                                                   const std::string& slotInstanceId, const std::string& slotFunction) {
 
@@ -1633,7 +1655,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::callErrorHandler(const boost::function<void () > handler, const std::string& message) {
+        void SignalSlotable::callErrorHandler(const SignalSlotable::AsyncErrorHandler& handler, const std::string& message) {
             if (handler) {
                 try {
                     throw KARABO_SIGNALSLOT_EXCEPTION(message);
@@ -1655,7 +1677,7 @@ namespace karabo {
 
         void SignalSlotable::asyncConnect(const std::vector<SignalSlotConnection>& signalSlotConnections,
                                           const boost::function<void ()>& successHandler,
-                                          const boost::function<void ()>& failureHandler,
+                                          const SignalSlotable::AsyncErrorHandler& failureHandler,
                                           int timeout) {
             if (signalSlotConnections.empty()) {
                 return; // Nothing to do, so don't create book keeping structure that can never be cleared.
@@ -1773,7 +1795,7 @@ namespace karabo {
 
             for (std::set<SignalSlotConnection>::const_iterator it = connections.begin(), iEnd = connections.end();
                  it != iEnd; ++it) {
-                KARABO_LOG_FRAMEWORK_DEBUG << this->getInstanceId() << " tries to reconnect signal '"
+                KARABO_LOG_FRAMEWORK_INFO << this->getInstanceId() << " tries to reconnect signal '"
                         << it->signalInstanceId << "." << it->signal << "' to slot '"
                         << it->slotInstanceId << "." << it->slot << "'.";
                 // No success (nor failure) handler needed - there will be log error messages anyway.
@@ -1835,20 +1857,8 @@ namespace karabo {
             const std::string& slotInstanceId = (slotInstanceIdIn.empty() ? m_instanceId : slotInstanceIdIn);
 
             // Remove from list of connections that this SignalSlotable established.
-            bool connectionWasKnown = false;
-            {
-                boost::mutex::scoped_lock lock(m_signalSlotConnectionsMutex);
-                const SignalSlotConnection connection(signalInstanceId, signalFunction, slotInstanceId, slotFunction);
-                // Might be in there twice: once for signal, once for slot.
-                SignalSlotConnections::iterator it = m_signalSlotConnections.find(signalInstanceId);
-                if (it != m_signalSlotConnections.end()) {
-                    connectionWasKnown = (it->second.erase(connection) >= 1);
-                }
-                it = m_signalSlotConnections.find(slotInstanceId);
-                if (it != m_signalSlotConnections.end()) {
-                    connectionWasKnown = (it->second.erase(connection) >= 1 ? true : connectionWasKnown);
-                }
-            }
+            const bool connectionWasKnown = removeStoredConnection(signalInstanceId, signalFunction,
+                                                                   slotInstanceId, slotFunction);
 
             const bool result = tryToDisconnectFromSignal(signalInstanceId, signalFunction, slotInstanceId, slotFunction);
 
@@ -1861,7 +1871,7 @@ namespace karabo {
             }
 
             if (result && !connectionWasKnown) {
-                KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << "Disconnected slot '" << slotInstanceId << "." << slotFunction
+                KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << " disconnected slot '" << slotInstanceId << "." << slotFunction
                         << "' from signal '" << signalInstanceId << "." << signalFunction << "', but did not connect them "
                         << "before. Whoever connected them will probably re-connect once '" << signalInstanceId
                         << "' or '" << slotInstanceId << "' come back.";
@@ -1918,7 +1928,57 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::slotDisconnectFromSignal(const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction) {
+        void SignalSlotable::asyncDisconnect(const std::string& signalInstanceIdIn, const std::string& signalFunction,
+                                             const std::string& slotInstanceIdIn, const std::string& slotFunction,
+                                             const boost::function<void ()>& successHandler,
+                                             const SignalSlotable::AsyncErrorHandler& failureHandler,
+                                             int timeout) {
+            const std::string& signalInstanceId = (signalInstanceIdIn.empty() ? m_instanceId : signalInstanceIdIn);
+            const std::string& slotInstanceId = (slotInstanceIdIn.empty() ? m_instanceId : slotInstanceIdIn);
+
+            // Remove from list of connections that this SignalSlotable established.
+            const bool connectionWasKnown = removeStoredConnection(signalInstanceId, signalFunction,
+                                                                   slotInstanceId, slotFunction);
+
+            // Prepare lambdas as handlers for async request to slotDisconnectFromSignal:
+            const std::string instanceId(this->getInstanceId()); // copy for lambda since that should not copy a bare 'this'
+            const std::string errorMsg(signalInstanceId + " failed to disconnect slot '" + slotInstanceId + "." + slotFunction
+                                       + "' from signal '" + signalInstanceId + "." + signalFunction + "'");
+            auto innerSuccessHandler = [ = ] (bool disconnected){// '[ = ]' to copy all stuff by value
+                if (disconnected) {
+                    if (!connectionWasKnown) {
+                        KARABO_LOG_FRAMEWORK_WARN << instanceId << " disconnected slot '"
+                                << slotInstanceId << "." << slotFunction << "' from signal '"
+                                << signalInstanceId << "." << signalFunction << "', but did not connect them before. "
+                                << "Whoever connected them will probably re-connect once '" << signalInstanceId
+                                << "' or '" << slotInstanceId << "' come back.";
+                    }
+                    if (successHandler) {
+                        successHandler();
+                    } else if (connectionWasKnown) { // else already logged above
+                        KARABO_LOG_FRAMEWORK_DEBUG << instanceId << " successfully disconnected slot '" << slotInstanceId << "." << slotFunction
+                                << "' from signal '" << signalInstanceId << "." << signalFunction << "'.";
+                    }
+                } else {
+                    callErrorHandler(failureHandler, errorMsg + " - was not connected!");
+                }
+            };
+
+            // Now send the request,
+            // potentially giving a non-default timeout and adding a meaningful log message for failures without handler.
+            auto requestor = request(signalInstanceId, "slotDisconnectFromSignal", signalFunction, slotInstanceId, slotFunction);
+            if (timeout > 0) requestor.timeout(timeout);
+            requestor.receiveAsync<bool>(innerSuccessHandler, failureHandler ? failureHandler : [errorMsg]() {
+                try {
+                    throw;
+                } catch (const std::exception& e) {
+                    KARABO_LOG_FRAMEWORK_WARN << errorMsg << " - " << e.what();
+                }
+            });
+        }
+
+
+    void SignalSlotable::slotDisconnectFromSignal(const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction) {
             if (signalFunction == "signalHeartbeat") {
                 // Never disconnect from heartbeats - why?
                 reply(true);
@@ -2483,7 +2543,7 @@ namespace karabo {
         void SignalSlotable::connectP2pInfoHandler(const karabo::util::Hash& instanceInfo,
                                                    const std::string& signalInstanceId,
                                                    const boost::function<void()>& successHandler,
-                                                   const SignalSlotable::Requestor::AsyncErrorHandler& errHandler,
+                                                   const SignalSlotable::AsyncErrorHandler& errHandler,
                                                    bool storeConnection) {
             if (instanceInfo.has("p2p_connection")) {
                 const std::string& signalConnectionString = instanceInfo.get<std::string>("p2p_connection");
@@ -2574,7 +2634,7 @@ namespace karabo {
 
 
         void SignalSlotable::receiveAsyncTimeoutHandler(const boost::system::error_code& e, const std::string& replyId,
-                                                        const SignalSlotable::Requestor::AsyncErrorHandler& errorHandler) {
+                                                        const SignalSlotable::AsyncErrorHandler& errorHandler) {
             if (e) return; // Timer got cancelled.
 
             // Remove the slot with function name replyId, as the message took too long
@@ -2599,20 +2659,20 @@ namespace karabo {
 
 
         void SignalSlotable::addReceiveAsyncErrorHandles(const std::string& replyId, const boost::shared_ptr<boost::asio::deadline_timer>& timer,
-                                                  const Requestor::AsyncErrorHandler& errorHandler) {
+                                                         const SignalSlotable::AsyncErrorHandler& errorHandler) {
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             m_receiveAsyncErrorHandles[replyId] = std::make_pair(timer, errorHandler);
         }
 
 
-        std::pair<boost::shared_ptr<boost::asio::deadline_timer>, SignalSlotable::Requestor::AsyncErrorHandler>
+        std::pair<boost::shared_ptr<boost::asio::deadline_timer>, SignalSlotable::AsyncErrorHandler>
         SignalSlotable::getReceiveAsyncErrorHandles(const std::string& replyId) const {
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             auto it = m_receiveAsyncErrorHandles.find(replyId);
             if (it != m_receiveAsyncErrorHandles.end()) {
                 return it->second;
             }
-            return std::make_pair(boost::shared_ptr<boost::asio::deadline_timer>(), Requestor::AsyncErrorHandler());
+            return std::make_pair(boost::shared_ptr<boost::asio::deadline_timer>(), AsyncErrorHandler());
         }
 
 
