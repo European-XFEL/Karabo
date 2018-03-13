@@ -42,6 +42,10 @@ class DisplayColorBool(BaseBindingController):
         logicAction = QAction("Invert color logic", widget)
         logicAction.triggered.connect(self.logic_action)
         widget.addAction(logicAction)
+        # update the context menu and keep track
+        logicAction.setCheckable(True)
+        logicAction.setChecked(self.model.invert)
+
         return widget
 
     def value_update(self, proxy):
