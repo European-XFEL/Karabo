@@ -14,7 +14,8 @@ from .model import SceneModel, UnknownWidgetDataModel, UnknownXMLDataModel
 from .registry import register_scene_reader, register_scene_writer
 from .shapes import LineModel, PathModel, RectangleModel
 from .widgets.complex import (
-    ColorBoolModel, DisplayProgressBarModel, DisplayStateColorModel,
+    ColorBoolModel, DeviceSceneLinkModel,
+    DisplayProgressBarModel, DisplayStateColorModel,
     DoubleLineEditModel, EvaluatorModel, FloatSpinBoxModel, MonitorModel,
     SingleBitModel, TableElementModel)
 from .widgets.icon import (
