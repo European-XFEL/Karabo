@@ -11,8 +11,8 @@ from karabo.bound import (
     PythonDevice, Hash, loadFromFile, saveToFile, Schema, State,
     TextSerializerSchema,
     ADMIN, EXPERT, KARABO_CLASSINFO,
-    BOOL_ELEMENT, OVERWRITE_ELEMENT, NODE_ELEMENT, SLOT_ELEMENT,
-    STRING_ELEMENT, TABLE_ELEMENT, VECTOR_STRING_ELEMENT, UINT32_ELEMENT
+    BOOL_ELEMENT, OVERWRITE_ELEMENT, NODE_ELEMENT, SLOT_ELEMENT, 
+    STRING_ELEMENT, TABLE_ELEMENT, UINT32_ELEMENT, VECTOR_STRING_ELEMENT
 )
 from karabo.common.scenemodel.api import (
     BoxLayoutModel, DisplayCommandModel, FixedLayoutModel, LabelModel,
@@ -154,6 +154,7 @@ class RunConfigurationGroup(PythonDevice):
             VECTOR_STRING_ELEMENT(expected).key('availableScenes')
             .readOnly().initialValue(['scene'])
             .commit(),
+
         )
 
     def initialization(self):
