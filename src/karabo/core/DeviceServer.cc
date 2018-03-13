@@ -288,7 +288,7 @@ namespace karabo {
                         // Can happen if devId just tries to come up, but has not yet registered for shortcut messaging.
                         // But this registration happens before the device broadcasts its existence and before that the
                         // device is not really part of the game, so no harm.
-                        KARABO_LOG_FRAMEWORK_WARN << "Failed to forward broadcast message to local device "
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Failed to forward broadcast message to local device "
                                 << devId << " which likely is just coming up and thus not fully part of the system yet.";
                     }
                 }
