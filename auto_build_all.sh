@@ -125,7 +125,7 @@ runPythonIntegrationTests() {
 
     echo
     echo Running Karabo Python integration tests ...
-    echo 
+    echo
     cd $scriptDir/src/pythonKarabo/karabo/integration_tests/
     cd device_comm_test
     safeRunCommand "python3 -m unittest discover -v"
@@ -134,6 +134,9 @@ runPythonIntegrationTests() {
     safeRunCommand "python3 -m unittest discover -v"
     cd ..
     cd run_configuration_group
+    safeRunCommand "python3 -m unittest discover -v"
+    cd ..
+    cd device_cross_test
     safeRunCommand "python3 -m unittest discover -v"
     cd ..
     echo
@@ -181,7 +184,7 @@ elif [[ $1 = "Clean" || $1 = "Clean-All" ]]; then
     safeRunCommand "cd $scriptDir/build/netbeans/karabo"
     safeRunCommand "make bundle-clean CONF=Debug"
     safeRunCommand "make bundle-clean CONF=Release"
-    if [[ $1 = "Clean-All" ]]; then 
+    if [[ $1 = "Clean-All" ]]; then
         safeRunCommand "make clean-extern"
     fi
     safeRunCommand "cd $scriptDir/build/netbeans/karabo"
@@ -286,6 +289,7 @@ fi
 if [ "$RUNTESTS" = "y" ]; then
     runUnitTests
 fi
+
 if [ "$RUNINTEGRATIONTESTS" = "y" ]; then
     runIntegrationTests
     runPythonIntegrationTests
