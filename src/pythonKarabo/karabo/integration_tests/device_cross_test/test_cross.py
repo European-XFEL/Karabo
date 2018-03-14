@@ -12,12 +12,12 @@ from zlib import adler32
 
 from karabo.middlelayer import (
     AccessLevel, AlarmCondition, Assignment, background, Configurable,
-    DeviceClientBase, getConfigurationFromPast, getDevice, getHistory, Hash,
-    isSet, InputChannel, Int32, KaraboError, MetricPrefix, Node,
-    OutputChannel, Schema, setWait, shutdown, sleep, Slot, State, unit, Unit,
+    DeviceClientBase, getDevice, getHistory, isSet, InputChannel, Int32,
+    KaraboError, MetricPrefix, Node,
+    OutputChannel, setWait, shutdown, sleep, Slot, State, unit, Unit,
     waitUntil, waitUntilNew)
 
-from .eventloop import DeviceTest, async_tst
+from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 
 
 class Child(Configurable):
