@@ -124,6 +124,12 @@ namespace karabo {
         }
 
 
+        void SignalSlotable::registerBroadcastHandler(boost::function<void(const karabo::util::Hash::Pointer& header,
+                                                                           const karabo::util::Hash::Pointer& body) > handler) {
+            m_broadCastHandler = handler;
+        }
+
+
         karabo::util::Hash::Pointer SignalSlotable::prepareCallHeader(const std::string& slotInstanceId,
                                                                       const std::string& slotFunction) const {
             auto header = boost::make_shared<Hash>();
@@ -627,6 +633,15 @@ namespace karabo {
                 // Collect performance statistics
                 if (m_updatePerformanceStatistics) {
                     updateLatencies(header, whenPostedEpochMs);
+                }
+
+                // If it is a broadcast message and a handler registered for that, call it:
+                if (m_broadCastHandler) {
+                    boost::optional<Hash::Node&> allInstanceIds = header->find("slotInstanceIds");
+                    if (allInstanceIds && allInstanceIds->is<std::string>() // properly formed header...
+                        && allInstanceIds->getValue<std::string>().find("|*|") != std::string::npos) { // ...for broadcast
+                        m_broadCastHandler(header, body);
+                    }
                 }
 
                 // Check whether this message is an async reply
