@@ -15,6 +15,7 @@ FINE_COLOR = (214, 214, 255, 64)
 ERROR_COLOR_ALPHA = (255, 155, 155, 128)  # semitransparent
 PROPERTY_ALARM_COLOR = (255, 125, 125, 128)
 PROPERTY_WARN_COLOR = (255, 255, 125, 128)
+CMD_LATCH = (255, 145, 255, 128)
 
 # Parameter item properties
 INTERNAL_KEY = Qt.UserRole
