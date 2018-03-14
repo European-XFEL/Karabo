@@ -70,7 +70,6 @@ namespace karabo {
             int m_visibility;
 
             karabo::net::JmsConnection::Pointer m_connection;
-            karabo::net::JmsConsumer::Pointer m_broadcastConsumerChannel;
 
             std::string m_serverId;
 
@@ -271,8 +270,6 @@ namespace karabo {
             void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period);
 
             void onBroadcastMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
-
-            void broadcastConsumerErrorNotifier(karabo::net::JmsConsumer::Error ec, const std::string& message);
 
             KARABO_FSM_DECLARE_MACHINE(StateMachine, m_fsm);
         };

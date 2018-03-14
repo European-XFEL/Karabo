@@ -173,11 +173,8 @@ namespace karabo {
             instanceInfo.set("host", net::bareHostName());
             instanceInfo.set("visibility", m_visibility);
 
-            // Initialize SignalSlotable instance that does not receive broadcasts
-            init(m_serverId, m_connection, config.get<int>("heartbeatInterval"), instanceInfo, false);
-            // ...but create extra channel to receive these (and forward to devices)
-            const std::string selector("slotInstanceIds LIKE '%|*|%'");
-            m_broadcastConsumerChannel = m_connection->createConsumer(m_topic, selector);
+            // Initialize SignalSlotable instance
+            init(m_serverId, m_connection, config.get<int>("heartbeatInterval"), instanceInfo);
 
             registerSlots();
         }
@@ -236,13 +233,11 @@ namespace karabo {
 
         void DeviceServer::finalizeInternalInitialization() {
 
+            // Do before calling start() since not thread safe,
+            // boost::bind is safe since handler is only called directly from SignalSlotable code of 'this'.
+            registerBroadcastHandler(boost::bind(&DeviceServer::onBroadcastMessage, this, _1, _2));
             // This starts SignalSlotable
             SignalSlotable::start();
-            // We consume broadcast messages here once for the whole server, taking care that they are forwarded
-            // to the devices as well. In this way, big C++ servers with hundreds of messages have to receive each
-            // broadcast message only once and not hundreds of times.
-            m_broadcastConsumerChannel->startReading(bind_weak(&DeviceServer::onBroadcastMessage, this, _1, _2),
-                                                     bind_weak(&DeviceServer::broadcastConsumerErrorNotifier, this, _1, _2));
 
             startFsm();
 
@@ -269,21 +264,16 @@ namespace karabo {
                                               const karabo::util::Hash::Pointer& body) {
             // const_cast to have ids refer to a const Node...
             boost::optional<const Hash::Node&> ids = const_cast<const Hash*> (header.get())->find("slotInstanceIds");
-            // Check whether besides to '*', message was also addressed to me directly (theoretically possible).
-            if (!ids || ids->getValue<std::string>().find(("|" + getInstanceId()) += "|") == std::string::npos) {
-                // Forward to myself - my id is not addressed directly.
-                if (!tryToCallDirectly(getInstanceId(), header, body)) {
-                    // This cannot happen: Reading started when SignalSlotable::start() was completed,
-                    // so inner-process shortcut is active!
-                    KARABO_LOG_FRAMEWORK_ERROR << "Failed to forward broadcast message to itself! How can that happen?";
-                }
+            if (!ids || !ids->is<std::string>()) {
+                return;
             }
-            // ... and to all devices.
+            // Message header is properly formed, so forward to all devices
+            const std::string& slotInstanceIds = ids->getValue<std::string>();
             boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
             for (const auto& deviceId_ptr : m_deviceInstanceMap) {
                 const std::string& devId = deviceId_ptr.first; // .second is shared_ptr to device...
                 // Check whether besides to '*', message was also addressed to device directly (theoretically...)
-                if (!ids || ids->getValue<std::string>().find(("|" + devId) += "|") == std::string::npos) {
+                if (slotInstanceIds.find(("|" + devId) += "|") == std::string::npos) {
                     if (!tryToCallDirectly(devId, header, body)) {
                         // Can happen if devId just tries to come up, but has not yet registered for shortcut messaging.
                         // But this registration happens before the device broadcasts its existence and before that the
@@ -296,10 +286,6 @@ namespace karabo {
         }
 
 
-        void DeviceServer::broadcastConsumerErrorNotifier(karabo::net::JmsConsumer::Error ec, const std::string& message) {
-            // Need this detour since I cannot use pointer to protected member function directly :-(.
-            SignalSlotable::consumerErrorNotifier("broadcasts", ec, message);
-        }
         bool DeviceServer::isRunning() const {
 
             return m_serverIsRunning;
