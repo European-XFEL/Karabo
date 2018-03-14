@@ -3,7 +3,8 @@ import sys
 
 from PyQt4.QtGui import QApplication
 
-from karabo.common.scenemodel.api import read_scene
+from karabo.common.scenemodel.api import (
+    read_scene, DeviceSceneLinkModel, SceneModel)
 from karabogui import icons
 from karabogui.controllers.api import populate_controller_registry
 from karabogui.events import broadcast_event, KaraboEventSender
@@ -45,6 +46,17 @@ def run_scene_file(filename):
     return panel, (1024, 768)
 
 
+def run_scene_link(ns):
+    device_id, scene_name = ns.dev_scene_link.split('|')
+    keys = ["{}.availableScenes".format(device_id)]
+    link = DeviceSceneLinkModel(
+        keys=keys, target=scene_name, text=ns.dev_scene_link, width=200)
+    model = SceneModel(children=[link])
+    panel = ScenePanel(model, True)
+
+    return panel, (1024, 768)
+
+
 def run_panel(ns):
     app = QApplication(sys.argv)
     # Run the lazy initializers (icons, widget controllers)
@@ -57,6 +69,8 @@ def run_panel(ns):
 
     if ns.configurator:
         panel, size = run_configurator(ns)
+    elif ns.dev_scene_link:
+        panel, size = run_scene_link(ns)
     elif ns.navigation:
         panel, size = run_navigation()
     elif ns.project:
@@ -85,6 +99,8 @@ def main():
     ag = ap.add_mutually_exclusive_group(required=True)
     ag.add_argument('-c', '--configurator', type=str, metavar='DEVICE_ID',
                     help='A device ID should be provided')
+    ag.add_argument(
+        '-l', '--dev_scene_link', type=str, metavar='DEVICE|SCENENAME')
     ag.add_argument('-n', '--navigation', action='store_true')
     ag.add_argument('-p', '--project', action='store_true')
     ag.add_argument('-s', '--scene_chooser', action='store_true')
