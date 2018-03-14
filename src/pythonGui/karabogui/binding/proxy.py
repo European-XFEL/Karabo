@@ -10,9 +10,11 @@ from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.singletons.api import get_network, get_topology
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .types import (
-    BaseBinding, BindingRoot, FloatBinding, PipelineOutputBinding, SlotBinding)
+    BaseBinding, BindingRoot, FloatBinding, PipelineOutputBinding,
+    VectorDoubleBinding, VectorFloatBinding, SlotBinding)
 
 _RECURSIVE_BINDINGS = (ChoiceOfNodesBinding, ListOfNodesBinding)
+_NOCAST_BINDINGS = (FloatBinding, VectorDoubleBinding, VectorFloatBinding)
 
 
 class BaseDeviceProxy(HasStrictTraits):
@@ -320,9 +322,9 @@ class PropertyProxy(HasStrictTraits):
 
         # Validate (and mutate in some cases, like arrays)
         self._edit_binding.value = value
-        # Replace quietly but don't update floats
+        # Replace quietly but don't send no cast bindings to gui
         self.trait_setq(edit_value=self._edit_binding.value)
-        if not isinstance(self.binding, FloatBinding):
+        if not isinstance(self.binding, _NOCAST_BINDINGS):
             self.binding.config_update = True
 
     # -----------------------------------------------------------------------
