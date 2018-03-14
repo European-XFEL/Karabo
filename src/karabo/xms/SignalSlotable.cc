@@ -124,6 +124,12 @@ namespace karabo {
         }
 
 
+        void SignalSlotable::registerBroadcastHandler(boost::function<void(const karabo::util::Hash::Pointer& header,
+                                                                           const karabo::util::Hash::Pointer& body) > handler) {
+            m_broadCastHandler = handler;
+        }
+
+
         karabo::util::Hash::Pointer SignalSlotable::prepareCallHeader(const std::string& slotInstanceId,
                                                                       const std::string& slotFunction) const {
             auto header = boost::make_shared<Hash>();
@@ -315,7 +321,8 @@ namespace karabo {
 
         void SignalSlotable::init(const std::string& instanceId,
                                   const karabo::net::JmsConnection::Pointer& connection,
-                                  const int heartbeatInterval, const karabo::util::Hash& instanceInfo) {
+                                  const int heartbeatInterval, const karabo::util::Hash& instanceInfo,
+                                  bool consumeBroadcasts) {
 
             m_instanceId = instanceId;
             m_connection = connection;
@@ -333,7 +340,10 @@ namespace karabo {
             // Create producers and consumers
             m_producerChannel = m_connection->createProducer();
             // This will select messages addressed to me
-            const string selector("slotInstanceIds LIKE '%|" + m_instanceId + "|%' OR slotInstanceIds LIKE '%|*|%'");
+            string selector("slotInstanceIds LIKE '%|" + m_instanceId + "|%'");
+            if (consumeBroadcasts) { // ...and possibly broadcast messages
+                selector += " OR slotInstanceIds LIKE '%|*|%'";
+            }
             m_consumerChannel = m_connection->createConsumer(m_topic, selector);
             m_heartbeatProducerChannel = m_connection->createProducer();
 
@@ -623,6 +633,15 @@ namespace karabo {
                 // Collect performance statistics
                 if (m_updatePerformanceStatistics) {
                     updateLatencies(header, whenPostedEpochMs);
+                }
+
+                // If it is a broadcast message and a handler registered for that, call it:
+                if (m_broadCastHandler) {
+                    boost::optional<Hash::Node&> allInstanceIds = header->find("slotInstanceIds");
+                    if (allInstanceIds && allInstanceIds->is<std::string>() // properly formed header...
+                        && allInstanceIds->getValue<std::string>().find("|*|") != std::string::npos) { // ...for broadcast
+                        m_broadCastHandler(header, body);
+                    }
                 }
 
                 // Check whether this message is an async reply

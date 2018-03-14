@@ -269,6 +269,8 @@ namespace karabo {
              */
             void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period);
 
+            void onBroadcastMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
+
             KARABO_FSM_DECLARE_MACHINE(StateMachine, m_fsm);
         };
 

@@ -155,11 +155,13 @@ namespace karabo {
              * @param connection An existing broker connection
              * @param heartbeatInterval The interval (in s) in which a heartbeat is emitted
              * @param instanceInfo A hash containing any important additional information
+             * @param consumeBroadcasts if true (default), receive messages addressed to everybody (i.e. to '*')
+             *                          on its own. If false, some other mechanism has to ensure to deliver these.
              */
             void init(const std::string& instanceId,
                       const karabo::net::JmsConnection::Pointer& connection,
                       const int heartbeatInterval,
-                      const karabo::util::Hash& instanceInfo);
+                      const karabo::util::Hash& instanceInfo, bool consumeBroadcasts = true);
 
             /**
              * This function starts the communication.
@@ -870,6 +872,21 @@ namespace karabo {
                                const karabo::util::Hash::Pointer& body, int prio, int timeToLive,
                                const std::string& topic = "", bool forceViaBroker = false) const;
 
+            // protected since needed in DeviceServer
+            bool tryToCallDirectly(const std::string& slotInstanceId,
+                                   const karabo::util::Hash::Pointer& header,
+                                   const karabo::util::Hash::Pointer& body) const;
+
+            /**
+             * Register a handler to be called for every received message that is addressed to everybody.
+             * NOTE:
+             * This is not thread safe - call before SignalSlotable::start starts receiving messages.
+             *
+             * @param handler with header and body (as Hash::Pointer) of the message
+             */
+            void registerBroadcastHandler(boost::function<void(const karabo::util::Hash::Pointer& header,
+                                                               const karabo::util::Hash::Pointer& body) > handler);
+
         private: // Functions
 
             /**
@@ -1066,12 +1083,7 @@ namespace karabo {
 
             bool timedWaitAndPopReceivedReply(const std::string& replyId, karabo::util::Hash::Pointer& header,
                                               karabo::util::Hash::Pointer& body, int timeout);
-
             long long getEpochMillis() const;
-
-            bool tryToCallDirectly(const std::string& slotInstanceId,
-                                   const karabo::util::Hash::Pointer& header,
-                                   const karabo::util::Hash::Pointer& body) const;
 
             bool tryToCallP2P(const std::string& slotInstanceId, const karabo::util::Hash::Pointer& header,
                               const karabo::util::Hash::Pointer& body, int prio) const;
@@ -1124,6 +1136,8 @@ namespace karabo {
             LatencyStats m_processingLatency; // measurements in milliseconds
             LatencyStats m_eventLoopLatency; // measurements in milliseconds for
 
+            boost::function<void(const karabo::util::Hash::Pointer& header,
+                                 const karabo::util::Hash::Pointer& body) > m_broadCastHandler;
         };
 
         /**** Requestor Implementation ****/
