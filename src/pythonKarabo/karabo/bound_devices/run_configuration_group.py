@@ -14,6 +14,8 @@ from karabo.bound import (
     BOOL_ELEMENT, OVERWRITE_ELEMENT, NODE_ELEMENT, SLOT_ELEMENT, 
     STRING_ELEMENT, TABLE_ELEMENT, UINT32_ELEMENT, VECTOR_STRING_ELEMENT
 )
+from karabo.common.api import (
+    KARABO_SCHEMA_DISPLAY_TYPE_SCENES as DT_SCENES)
 from karabo.common.scenemodel.api import (
     BoxLayoutModel, DisplayCommandModel, FixedLayoutModel, LabelModel,
     LineEditModel, SceneModel, TableElementModel, write_scene,
@@ -184,6 +186,7 @@ class RunConfigurationGroup(PythonDevice):
             .commit(),
 
             VECTOR_STRING_ELEMENT(expected).key('availableScenes')
+            .setSpecialDisplayType(DT_SCENES)
             .readOnly().initialValue(['scene'])
             .commit(),
 
