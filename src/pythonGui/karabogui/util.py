@@ -13,7 +13,7 @@ from PyQt4.QtCore import QEvent, QObject, QSize, QSettings
 from PyQt4.QtGui import QDialog, QFileDialog, QHeaderView, QLabel, QMovie
 
 from karabo.common.project.api import read_macro
-from karabo.common.scenemodel.api import read_scene
+from karabo.common.scenemodel.api import SceneTargetWindow, read_scene
 from karabo.middlelayer import decodeXML, Hash, writeXML
 from karabogui import globals as krb_globals, icons, messagebox
 from karabogui.binding.api import (
@@ -197,7 +197,8 @@ def temp_file(suffix='', prefix='tmp', dir=None):
         os.unlink(filename)
 
 
-def handle_scene_from_server(dev_id, name, project, success, reply):
+def handle_scene_from_server(dev_id, name, project, target_window, success,
+                             reply):
     """Callback handler for a request to a device to load one of its scenes.
     """
     if not (success and reply.get('payload.success', False)):
@@ -223,10 +224,13 @@ def handle_scene_from_server(dev_id, name, project, success, reply):
 
     # Add to the project AND open it
     event_type = KaraboEventSender.ShowUnattachedSceneView
+    window = SceneTargetWindow.MainWindow
+    if target_window is not None:
+        window = target_window
     if project is not None:
         event_type = KaraboEventSender.ShowSceneView
         project.scenes.append(scene)
-    broadcast_event(event_type, {'model': scene})
+    broadcast_event(event_type, {'model': scene, 'target_window': window})
 
 
 def handle_macro_from_server(dev_id, name, project, success, reply):
