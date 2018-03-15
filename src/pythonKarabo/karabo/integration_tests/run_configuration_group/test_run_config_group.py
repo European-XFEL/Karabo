@@ -64,10 +64,14 @@ class TestRunConfigurationGroup(BoundDeviceTestCase):
         # exceptions 'tearDown' is called and stops Python processes.
         config = Hash("Logger.priority", "ERROR",
                       "deviceId", DEVICE_ID,
+                      "owner", Hash("name", "G.Enius",
+                                    "email", "genius@xfel.eu",
+                                    "lastVerifiedDate", "none"),
                       "group", Hash("id", "Sample Environment",
                                     "description", "Bla Bla Bla",
                                     "expert", _get_experts(),
-                                    "user", _get_users()))
+                                    "user", _get_users())
+                      )
 
         classConfig = Hash("classId", "RunConfigurationGroup",
                            "deviceId", DEVICE_ID,
