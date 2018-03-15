@@ -399,6 +399,12 @@ namespace configurationTest {
                     .reconfigurable()
                     .commit();
 
+            VECTOR_STRING_ELEMENT(expected).key("exampleKey9")
+                    .displayedName("Example key 9")
+                    .setSpecialDisplayType("TestDisplayType")
+                    .readOnly().initialValue(std::vector<std::string>({"Hallo", "World"}))
+                    .commit();
+
             INT32_ELEMENT(expected).key("sampleKey")
                     .assignmentOptional().defaultValueFromString("10")
                     .reconfigurable()
