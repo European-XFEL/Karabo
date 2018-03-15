@@ -68,15 +68,15 @@ class Searchable:
 
         return h_layout
 
-    def _init_search_filter(self, enabled=False):
+    def _init_search_filter(self, connected_to_server=False):
         # A list of nodes found via the search filter
         self.found = []
         # A deque array indicates the current selection in `self.found`
         self.index_array = deque([])
         self.le_search_filter.setText("")
-        self.le_search_filter.setEnabled(enabled)
-        self.pb_match.setEnabled(enabled)
-        self.pb_reg_ex.setEnabled(enabled)
+        self.le_search_filter.setEnabled(connected_to_server)
+        self.pb_match.setEnabled(connected_to_server)
+        self.pb_reg_ex.setEnabled(connected_to_server)
         self.pb_arrow_left.setEnabled(False)
         self.pb_arrow_right.setEnabled(False)
 
