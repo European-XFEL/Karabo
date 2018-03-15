@@ -211,3 +211,14 @@ def _proxy_value(proxy, is_edit_col):
     if is_edit_col:
         return get_editor_value(proxy, '')
     return get_binding_value(proxy, '')
+
+
+def threshold_triggered(value, limit_low, limit_high):
+    """Check if a value exceeds the limits low or high
+
+    This method is typically used to check alarms and warnings
+    """
+    if ((limit_low is not None and value < limit_low) or
+            (limit_high is not None and value > limit_high)):
+        return True
+    return False
