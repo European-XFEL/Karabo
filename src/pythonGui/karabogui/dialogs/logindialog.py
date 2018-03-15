@@ -9,6 +9,8 @@ from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot, QEvent, QObject, Qt
 from PyQt4.QtGui import QComboBox, QDialog, QIntValidator, QKeyEvent
 
+import karabogui.globals as krb_globals
+
 
 class KeyPressEventFilter(QObject):
     """Purge a ComboBox on Shift+Delete events
@@ -35,10 +37,11 @@ class LoginDialog(QDialog):
         uic.loadUi(filepath, self)
 
         if not username:
-            username = 'operator'
-        self.leUsername.setText(username)
-        self.leUsername.selectAll()
+            username = krb_globals.GLOBAL_USER
+        index = self.leUsername.findText(username)
+        self.leUsername.setCurrentIndex(index)
 
+        # password
         if not password:
             password = 'karabo'
         self.lePassword.setText(password)
@@ -47,6 +50,7 @@ class LoginDialog(QDialog):
             index = self.cbProvider.findText(provider)
             self.cbProvider.setCurrentIndex(index)
 
+        hostname = 'localhost' if not hostname else hostname
         self.cbHostname.editTextChanged.connect(self.onHostnameTextChanged)
         self.cbHostname.setInsertPolicy(QComboBox.NoInsert)
 
@@ -54,18 +58,11 @@ class LoginDialog(QDialog):
         self.cbHostname.installEventFilter(self.keyPressHandler)
 
         self.cbHostname.setEditable(True)
-        self.cbHostname.setEditText(hostname)
-
         for server in guiservers:
             self.cbHostname.addItem(server)
+        self.cbHostname.setEditText(hostname)
 
-        if not hostname:
-            hostname = 'localhost'
-
-        if not port:
-            port = '44444'
-        else:
-            port = str(port)
+        port = str(port) if port else'44444'
         self.lePort.setText(port)
         self.lePort.setValidator(QIntValidator(None))
 
@@ -80,7 +77,7 @@ class LoginDialog(QDialog):
 
     @property
     def username(self):
-        return self.leUsername.text().lower()
+        return self.leUsername.currentText()
 
     @property
     def password(self):

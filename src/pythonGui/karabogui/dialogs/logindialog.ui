@@ -19,17 +19,7 @@
      <item row="0" column="0">
       <widget class="QLabel" name="laUsername">
        <property name="text">
-        <string>Username:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="leUsername">
-       <property name="toolTip">
-        <string>Set username for login</string>
-       </property>
-       <property name="statusTip">
-        <string>Set username for login</string>
+        <string>Username</string>
        </property>
       </widget>
      </item>
@@ -87,6 +77,38 @@
      </item>
      <item row="4" column="1">
       <widget class="QLineEdit" name="lePort"/>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="leUsername">
+       <property name="currentIndex">
+        <number>2</number>
+       </property>
+       <item>
+        <property name="text">
+         <string>admin</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>expert</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>operator</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>user</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>observer</string>
+        </property>
+       </item>
+      </widget>
      </item>
     </layout>
    </item>
