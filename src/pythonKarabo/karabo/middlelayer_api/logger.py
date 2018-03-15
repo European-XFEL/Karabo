@@ -69,6 +69,10 @@ class NetworkHandler(Handler):
 class PrintHandler(Handler):
     def emit(self, record):
         print("---------- Logger start -----------")
+        level = ("DEBUG", "INFO", "WARN", "ERROR"
+                 )[bisect([20, 30, 40], record.levelno)]
+        print(datetime.fromtimestamp(record.created), level,
+              self.parent.broker.deviceId)
         print(self.handler.format(record))
         print("---------- Logger end -----------")
 
