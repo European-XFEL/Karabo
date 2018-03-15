@@ -9,7 +9,7 @@ import socket
 from struct import calcsize, pack, unpack
 
 from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
-from PyQt4.QtCore import (pyqtSignal, QByteArray, QCoreApplication,
+from PyQt4.QtCore import (pyqtSignal, pyqtSlot, QByteArray, QCoreApplication,
                           QCryptographicHash, QObject)
 from PyQt4.QtGui import QDialog, QMessageBox, qApp
 
@@ -48,7 +48,7 @@ class Network(QObject):
         self.username = ''
         self.password = ''
         self.provider = ''
-        self.hostname, self.port, self.guiservers, self.maxservers = (
+        self.hostname, self.port, self.guiservers, self.max_servers = (
                 self.load_settings())
 
         # Listen for the quit notification
@@ -213,6 +213,7 @@ class Network(QObject):
             print("Logout problem. Please verify, if service is running. {}"
                   "".format(str(e)))
 
+    @pyqtSlot()
     def onReadServerData(self):
         """ Run the network reader generator until it yields.
         """
@@ -254,6 +255,7 @@ class Network(QObject):
             diff = Timestamp().toTimestamp() - recv_timestamp
             broadcast_event(KaraboEventSender.ProcessingDelay, {'value': diff})
 
+    @pyqtSlot(QObject)
     def onSocketError(self, socketError):
         print("onSocketError", self.tcpSocket.errorString(), socketError)
 
@@ -306,6 +308,7 @@ class Network(QObject):
         else:
             self.disconnectFromServer()
 
+    @pyqtSlot()
     def onQuitApplication(self):
         """
         This slot is triggered from the MainWindow.
@@ -317,27 +320,28 @@ class Network(QObject):
         """
         self.endServerConnection()
 
+    @pyqtSlot()
     def onConnected(self):
-        def _LRU(item, lis, maxsize):
-            """
-            Apply of the LRU algorithm on lis
+        def _least_recently_used(item, sequence, maxsize):
+            """Apply of the Least Recently Used (LRU) algorithm on sequence
 
-            The LRU algorithm evicts from lis the Least Recently Used
-            element and item is moved to the lis front.
-            As the result, lis always contain its most popular element
+            The LRU algorithm evicts from sequence the least recently used
+            element and item is moved to the sequence front.
+            As the result, sequence always contains its most popular element
             """
-            if item in lis:
-                lis.remove(item)
-            lis = [item] + lis
-            return lis if len(lis) <= maxsize else lis[:maxsize]
+            if item in sequence:
+                sequence.remove(item)
+            sequence = [item] + sequence
+            return sequence if len(sequence) <= maxsize else sequence[:maxsize]
 
         # cache the server address
         server = '{}:{}'.format(self.hostname, self.port)
 
-        self.guiservers = _LRU(server, self.guiservers, int(self.maxservers))
+        self.guiservers = _least_recently_used(server, self.guiservers,
+                                               int(self.max_servers))
 
         set_setting(KaraboSettings.GUI_SERVERS, self.guiservers)
-        set_setting(KaraboSettings.MAX_GUI_SERVERS, self.maxservers)
+        set_setting(KaraboSettings.MAX_GUI_SERVERS, self.max_servers)
 
         # If some requests got piled up, because of no server connection,
         # now these get handled
@@ -346,6 +350,7 @@ class Network(QObject):
         self.requestQueue = []
         self.dataReader = self._networkReadGenerator()
 
+    @pyqtSlot()
     def onDisconnected(self):
         pass
 
