@@ -48,6 +48,7 @@ class LoginDialog(QDialog):
             self.cbProvider.setCurrentIndex(index)
 
         self.cbHostname.editTextChanged.connect(self.onHostnameTextChanged)
+        self.cbHostname.setInsertPolicy(QComboBox.NoInsert)
 
         self.keyPressHandler = KeyPressEventFilter()
         self.cbHostname.installEventFilter(self.keyPressHandler)
