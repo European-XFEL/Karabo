@@ -125,7 +125,7 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(schema.getNodeType("exampleKey5"), NodeType.LEAF)
         except Exception as e:
             self.fail("test_getNodeType exception: " + str(e))
-        
+
     def test_getValueType(self):
         try:
             schema = TestStruct1.getSchema("TestStruct1")
@@ -357,6 +357,8 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(schema.getDisplayType("exampleBitsKey2"), "bin|10:In Error, 21:Busy, 35:HV On, 55:Crate On")
             self.assertEqual(schema.getDisplayType("exampleBitsKey3"), "oct")
             self.assertEqual(schema.getDisplayType("exampleBitsKey4"), "hex")
+            self.assertEqual(schema.getDisplayType("exampleKey8"), "Curve")
+            self.assertEqual(schema.getDisplayType("exampleKey9"), "TestDisplayType")
         except Exception as e:
             self.fail("test_getDisplatType exception: " + str(e))
     

@@ -355,6 +355,7 @@ class TestStruct1(object):
                 .commit()
                 ,
         VECTOR_STRING_ELEMENT(expected).key("exampleKey9")
+                .setSpecialDisplayType("TestDisplayType")
                 .readOnly().initialValue(["Hallo", "World"])
                 .commit()
                 ,

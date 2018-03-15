@@ -149,8 +149,24 @@ namespace karabo {
 #define KARABO_RUNTIME_SCHEMA_UPDATE "runtimeSchemaUpdates"
 
 #define KARABO_SCHEMA_DAQ_DATA_TYPE "daqDataType"
-            
+
 #define KARABO_SCHEMA_DAQ_POLICY "daqPolicy"
+
+#define KARABO_SCHEMA_DISPLAY_TYPE_BIN "bin"
+#define KARABO_SCHEMA_DISPLAY_TYPE_OCT "oct"
+#define KARABO_SCHEMA_DISPLAY_TYPE_HEX "hex"
+#define KARABO_SCHEMA_DISPLAY_TYPE_BITSET "Bitset"
+#define KARABO_SCHEMA_DISPLAY_TYPE_FILEOUT "fileOut"
+#define KARABO_SCHEMA_DISPLAY_TYPE_FILEIN "fileIn"
+#define KARABO_SCHEMA_DISPLAY_TYPE_IMAGEDATA "ImageData"
+#define KARABO_SCHEMA_DISPLAY_TYPE_CURVE "Curve"
+#define KARABO_SCHEMA_DISPLAY_TYPE_SCENES "Scenes"
+#define KARABO_SCHEMA_DISPLAY_TYPE_RUNCONFIGURATOR "RunConfigurator"
+#define KARABO_SCHEMA_DISPLAY_TYPE_DIRECTORY "directory"
+#define KARABO_SCHEMA_DISPLAY_TYPE_OUTPUT_CHANNEL "OutputChannel"
+#define KARABO_SCHEMA_DISPLAY_TYPE_INPUT_CHANNEL "InputChannel"
+#define KARABO_SCHEMA_DISPLAY_TYPE_STATE "State"
+
 
             // Grant friendship to the GenericElement
             // GenericElement is the base class for all schema build-up helper classes
