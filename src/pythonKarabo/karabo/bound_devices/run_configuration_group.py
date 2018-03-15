@@ -11,8 +11,8 @@ from karabo.bound import (
     PythonDevice, Hash, loadFromFile, saveToFile, Schema, State,
     TextSerializerSchema,
     ADMIN, EXPERT, KARABO_CLASSINFO,
-    BOOL_ELEMENT, OVERWRITE_ELEMENT, NODE_ELEMENT, SLOT_ELEMENT,
-    STRING_ELEMENT, TABLE_ELEMENT, VECTOR_STRING_ELEMENT, UINT32_ELEMENT
+    BOOL_ELEMENT, OVERWRITE_ELEMENT, NODE_ELEMENT, SLOT_ELEMENT, 
+    STRING_ELEMENT, TABLE_ELEMENT, UINT32_ELEMENT, VECTOR_STRING_ELEMENT
 )
 from karabo.common.scenemodel.api import (
     BoxLayoutModel, DisplayCommandModel, FixedLayoutModel, LabelModel,
@@ -21,6 +21,7 @@ from karabo.common.scenemodel.api import (
 
 OUTPUT_CHANNEL_SEPARATOR = ':'
 SAVED_GROUPS_DIR = 'run_config_groups'
+
 
 class AccessMode(enum.Enum):
     INIT = 1 << 0
@@ -79,6 +80,13 @@ class RunControlDataSource(object):
                          "and recording states.")
             .assignmentOptional().defaultValue(False)
             .reconfigurable()
+            .commit(),
+
+            BOOL_ELEMENT(expected).key('inUse')
+            .displayedName('In use')
+            .description("If true, the device's data are being recorded by "
+                         "the DAQ. If a device is false, contact ITDM.")
+            .readOnly().initialValue(True)
             .commit(),
         )
 
@@ -144,6 +152,30 @@ class RunConfigurationGroup(PythonDevice):
             .reconfigurable()
             .commit(),
 
+            NODE_ELEMENT(expected).key('owner')
+            .displayedName('Owner')
+            .description('The person to contact regarding usage of this group')
+            .commit(),
+
+            STRING_ELEMENT(expected).key('owner.name')
+            .displayedName('Name')
+            .description('Contact person name')
+            .assignmentMandatory()
+            .commit(),
+
+            STRING_ELEMENT(expected).key('owner.email')
+            .displayedName('Email')
+            .description('Contact person email')
+            .assignmentOptional().noDefaultValue()
+            .commit(),
+
+            STRING_ELEMENT(expected).key('owner.lastVerifiedDate')
+            .displayedName('Last Verified Date')
+            .description('The date it was last checked for DAQ compliance')
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit(),
+
             # Converted internally into group_saveGroupConfiguration
             SLOT_ELEMENT(expected).key('group.saveGroupConfiguration')
             .displayedName('Save configuration')
@@ -154,6 +186,7 @@ class RunConfigurationGroup(PythonDevice):
             VECTOR_STRING_ELEMENT(expected).key('availableScenes')
             .readOnly().initialValue(['scene'])
             .commit(),
+
         )
 
     def initialization(self):
