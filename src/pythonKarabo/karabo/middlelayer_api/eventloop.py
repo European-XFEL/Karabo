@@ -25,7 +25,8 @@ from .exceptions import KaraboError
 from .hash import Hash
 from .serializers import decodeBinary, encodeBinary
 
-_MSG_TIME_TO_LIVE = 600000  # in ms - i.e. 10 minutes
+# See C++ karabo/xms/Signal.hh for reasoning about the two minutes...
+_MSG_TIME_TO_LIVE = 120000  # in ms - i.e. 2 minutes
 _MSG_PRIORITY_HIGH = 4  # never dropped (except if expired)
 _MSG_PRIORITY_LOW = 3  # can be dropped in case of congestion
 
@@ -140,7 +141,7 @@ class Broker:
         m = openmq.BytesMessage()
         m.data = encodeBinary(Hash("messages", [message]))
         m.properties = p
-        self.producer.send(m, 1, 4, 100000)
+        self.producer.send(m, 1, _MSG_PRIORITY_LOW, _MSG_TIME_TO_LIVE)
 
     def emit(self, signal, targets, *args):
         self.call(signal, targets, None, args)
