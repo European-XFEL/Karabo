@@ -7,7 +7,7 @@ from collections import defaultdict
 from datetime import datetime
 from functools import wraps
 
-from PyQt4.QtCore import QObject
+from PyQt4.QtCore import pyqtSlot, QObject
 from PyQt4.QtGui import QMessageBox
 
 from karabo.common.api import State, DeviceStatus
@@ -155,11 +155,13 @@ class Manager(QObject):
 
         get_network().onKillServer(serverId)
 
+    @pyqtSlot(object)
     def onReceivedData(self, hsh):
         handler = getattr(self, "handle_" + hsh["type"])
         kwargs = {k: v for k, v in hsh.items() if k != "type"}
         handler(**kwargs)
 
+    @pyqtSlot(bool)
     def onServerConnectionChanged(self, isConnected):
         """If the server connection is changed, the model needs an update.
         """

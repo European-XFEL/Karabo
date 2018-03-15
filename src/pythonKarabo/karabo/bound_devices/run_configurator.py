@@ -7,13 +7,14 @@ from collections import OrderedDict
 
 from karabo.bound import (
     Hash, HashMergePolicy, PythonDevice, Schema, State, VectorHash,
-    EXPERT, KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS,
-    BOOL_ELEMENT, LIST_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT,
-    STRING_ELEMENT, TABLE_ELEMENT, VECTOR_STRING_ELEMENT
+    EXPERT, KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS, BOOL_ELEMENT,
+    LIST_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT, STRING_ELEMENT,
+    TABLE_ELEMENT, VECTOR_STRING_ELEMENT
 )
 from karabo.common.scenemodel.api import (
-    BoxLayoutModel, DisplayCommandModel, FixedLayoutModel, LabelModel,
-    RunConfiguratorModel, SceneModel, write_scene
+    BoxLayoutModel, DeviceSceneLinkModel, DisplayCommandModel,
+    FixedLayoutModel, LabelModel, RunConfiguratorModel, SceneModel, 
+    SceneTargetWindow, write_scene
 )
 from .run_configuration_group import RunControlDataSource
 
@@ -169,8 +170,9 @@ class RunConfigurator(PythonDevice):
             .commit(),
 
             VECTOR_STRING_ELEMENT(expected).key('availableScenes')
-            .readOnly().initialValue(['scene'])
+            .readOnly().initialValue(['scene', 'link'])
             .commit(),
+
         )
 
     def initialization(self):
@@ -264,6 +266,12 @@ class RunConfigurator(PythonDevice):
             payload.set('success', True)
             payload.set('name', name)
             payload.set('data', _createScene(self.getInstanceId()))
+        elif name == 'link':
+            groups = {val['id']: group
+                      for group, val in self._runConfigGroups.items()}
+            payload.set('success', True)
+            payload.set('name', name)
+            payload.set('data', _createLink(self.getInstanceId(), groups))
 
         self.reply(Hash('type', 'deviceScene',
                         'origin', self.getInstanceId(),
@@ -316,7 +324,9 @@ class RunConfigurator(PythonDevice):
             self._updateRunConfiguratorGroupInstance(deviceId, group)
             self._updateDependentProperties()
             # now notify clients
-            result = Hash('group', group['id'],
+            result = Hash('group',
+                          group.get('id', self.remote().get(deviceId,
+                                                            'group.id')),
                           'instanceId', self.getInstanceId(),
                           'sources', self._getGroupSources(deviceId))
             self._ss.emit('signalGroupSourceChanged', result, deviceId)
@@ -440,9 +450,13 @@ class RunConfigurator(PythonDevice):
                                          'description', description,
                                          'use', use))
 
-            # `sources`
-            _creatSource(group.get('expert'), sources, use)
-            _creatSource(group.get('user'), sources, use)
+            # `existing sources but check before for None`
+            expert_sources = group.get('expert')
+            user_sources = group.get('user')
+            if expert_sources is not None:
+                _creatSource(expert_sources, sources, use)
+            if user_sources is not None:
+                _creatSource(user_sources, sources, use)
 
         h.set('configurations', configurations)
         h.set('availableGroups', available_groups)
@@ -492,19 +506,24 @@ def _createScene(instance_id):
     button = DisplayCommandModel(
         keys=[instance_id + '.buildConfigurationInUse'],
         height=29, width=101, x=495, y=440)
+    link = DeviceSceneLinkModel(
+        keys=[instance_id + '.availableScenes'], target='link',
+        font=DEFAULT_FONT, foreground='#000000', frame_width=1,
+        text='Run Groups', target_window=SceneTargetWindow.Dialog,
+        height=29, width=101, x=495, y=475)
 
     layout = FixedLayoutModel(height=490, width=600, x=4, y=4,
-                              children=[button, table, label])
+                              children=[button, table, label, link])
 
-    exp_0 = LabelModel(font=',11,-1,5,50,0,0,0,0,0',
+    exp_0 = LabelModel(font=DEFAULT_FONT,
                        height=28, width=338, x=644, y=15,
                        parent_component='DisplayComponent',
                        text='NOTE: You must click the green check mark')
-    exp_1 = LabelModel(font=',11,-1,5,50,0,0,0,0,0',
+    exp_1 = LabelModel(font=DEFAULT_FONT,
                        height=28, width=321, x=650, y=74,
                        parent_component='DisplayComponent',
                        text='to apply your changes before clicking the')
-    exp_2 = LabelModel(font=',11,-1,5,50,0,0,0,0,0',
+    exp_2 = LabelModel(font=DEFAULT_FONT,
                        height=28, width=231, x=656, y=155,
                        parent_component='DisplayComponent',
                        text=' "Push to DAQ" button.')
@@ -514,6 +533,24 @@ def _createScene(instance_id):
 
     return write_scene(SceneModel(children=[layout, exp_layout],
                                   height=530, width=610))
+
+
+def _createLink(instance_id, run_groups):
+    DEFAULT_FONT = ',11,-1,5,50,0,0,0,0,0'
+    label = LabelModel(font=DEFAULT_FONT, foreground='#000000',
+                       text='Links to Run Configuration Groups',
+                       height=31, width=205, x=4, y=4)
+    group_layouts = []
+    for group_name, group_device_id in run_groups.items():
+        key = "{}.availableScenes".format(group_device_id)
+        link = DeviceSceneLinkModel(
+            keys=[key], target="scene", font=DEFAULT_FONT, frame_width=1,
+            foreground='#000000', target_window=SceneTargetWindow.Dialog,
+            text=group_name, width=205)
+        group_layouts.append(BoxLayoutModel(children=[link]))
+
+    groups = BoxLayoutModel(direction=2, y=60, x=4, children=group_layouts)
+    return write_scene(SceneModel(children=[label, groups]))
 
 
 def _creatSource(sources, existing_sources, use):
