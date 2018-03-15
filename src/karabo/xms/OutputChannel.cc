@@ -212,15 +212,12 @@ namespace karabo {
             }
             // Prepare to accept more connections
             if (m_dataConnection) m_dataConnection->startAsync(bind_weak(&karabo::xms::OutputChannel::onTcpConnect, this, _1, _2));
-            TcpChannel::Pointer tch = boost::dynamic_pointer_cast<TcpChannel>(channel);
             KARABO_LOG_FRAMEWORK_DEBUG << "***** Connection established *****";
             channel->readAsyncHash(bind_weak(&karabo::xms::OutputChannel::onTcpChannelRead, this, _1, channel, _2));
         }
 
 
         void OutputChannel::onTcpChannelError(const karabo::net::ErrorCode& error, const karabo::net::Channel::Pointer& channel) {
-            using namespace karabo::net;
-            TcpChannel::Pointer tch = boost::dynamic_pointer_cast<TcpChannel>(channel);
             KARABO_LOG_FRAMEWORK_INFO << "Tcp channel error on \"" << m_instanceId << "\", code #" << error.value() << " -- \""
                     << error.message() << "\".  Channel closed.";
             // Unregister channel
