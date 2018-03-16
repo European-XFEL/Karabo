@@ -1789,13 +1789,16 @@ namespace karabo {
             }
 
             void onBrokerError(const std::string& message) {
-                KARABO_LOG_ERROR << "Broker consumption problem: " << message;
                 // Trigger alarm, but not always a new one (system is busy anyway). By setting messagingProblems
                 // up to every second, we can investigate roughly the time of problems via the data logger.
+                // Similarly, log to network only every second.
                 if (!get<bool>("performanceStatistics.messagingProblems")
                     || (karabo::util::Epochstamp() - m_lastBrokerErrorStamp).getTotalSeconds() >= 1ull) {
                     set(karabo::util::Hash("performanceStatistics.messagingProblems", true));
                     m_lastBrokerErrorStamp.now();
+                    KARABO_LOG_ERROR << "Broker consumption problem: " << message;
+                } else {
+                    KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": Broker consumption problem: " << message;
                 }
             }
 
