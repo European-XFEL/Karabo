@@ -1,2 +1,3 @@
-git+https://git.xfel.eu/gitlab/Karabo/rtd-conf-py.git
-slumber
+git+https://git.xfel.eu/gitlab/xfel-rtd/rtd-conf.git
+slumber==0.7.1
+breathe==4.7.3
