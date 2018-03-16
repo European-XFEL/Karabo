@@ -546,9 +546,8 @@ MessageConsumer::receive(Message ** const message,
 
   // Hack by XFEL:
   // ReceiveQueue::size() seems to do a kind of locking, so we ask the size once
-  // here and update it ourselves. This means that our count might miss new
-  // messages arriving, but that will then be treated by the next call to
-  // receive()
+  // here and update it ourselves. This means that our count misses new messages
+  // arriving, but we cure that below if lower threshold is reached.
   xQueueSize = receiveQueue->size();
 
   while (1) {
@@ -628,6 +627,9 @@ MessageConsumer::receive(Message ** const message,
     // One message was removed, so decrease our count, but protect against underflow
     // of the unsigned - may happen if only expired messages arrived...
     if (xQueueSize) --xQueueSize;
+    if (xQueueSize <= xThresholdLow_) {
+       xQueueSize = receiveQueue->size();
+     }
     continue;
   } 
   
