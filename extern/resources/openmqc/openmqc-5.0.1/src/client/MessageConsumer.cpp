@@ -68,7 +68,7 @@ MessageConsumer::MessageConsumer(Session * const sessionArg,
                                  const UTF8String * const messageSelectorArg,
                                  const PRBool noLocalArg,
                                  MQMessageListenerFunc messageListenerArg,
-                                 void * messageListenerCallbackDataArg) : prtcnt(0), ovrcnt(0), expcnt(0)
+                                 void * messageListenerCallbackDataArg) : xThreshold_(xThresholdHigh_)
 {
   CHECK_OBJECT_VALIDITY();
 
@@ -528,9 +528,11 @@ MessageConsumer::receive(Message ** const message,
   MQError errorCode = MQ_SUCCESS;
   Packet * packet = NULL;
 
-  // Hack by XFEL:
-  PRInt32 threshold = 0;
-  PRUint32 numDropped = 0;
+  // Hack by XFEL: variables need to be declared before NULLCHK which jumps to Cleanup:
+  PRUint32 xNumDropped = 0;
+  PRUint32 xNumExpired = 0;
+  PRUint32 xNumOverflow = 0;
+  PRUint32 xQueueSize = 0;
 
   NULLCHK( message );
   *message = NULL;
@@ -541,6 +543,13 @@ MessageConsumer::receive(Message ** const message,
 
   // Check if the receiveQueue or Session have been closed 
   ASSERT( receiveQueue != NULL );
+
+  // Hack by XFEL:
+  // ReceiveQueue::size() seems to do a kind of locking, so we ask the size once
+  // here and update it ourselves. This means that our count might miss new
+  // messages arriving, but that will then be treated by the next call to
+  // receive()
+  xQueueSize = receiveQueue->size();
 
   while (1) {
 
@@ -590,25 +599,23 @@ MessageConsumer::receive(Message ** const message,
 
   // Hack by XFEL:
   // Do not only drop expired messages, but, if queue too large, also low priority ones.
-  PRUint8 prio;
-  ERRCHK( (*message)->getJMSPriority(&prio) );
+  PRUint8 xPrio;
+  ERRCHK( (*message)->getJMSPriority(&xPrio) );
 
-  if (receiveQueue->size() > 200) threshold = 100;
-  if (receiveQueue->size() < 100) threshold = 200;
+  // Tolerate high threshold until that is reached - then throw messages away to reach lower one
+  if (xQueueSize > xThresholdHigh_) {
+    xThreshold_ = xThresholdLow_;
+  } else if (xQueueSize < xThresholdLow_) {
+    xThreshold_ = xThresholdHigh_;
+  }
+  const bool xExpired = (*message)->isExpired() == PR_TRUE;
+  // HACK! Priorities below 4 may overflow...
+  const bool xOverflowed = xQueueSize > xThreshold_ && xPrio < 4;
 
-  bool expired = ((*message)->isExpired()) == PR_TRUE;
-  bool overflowed = receiveQueue?  receiveQueue->size() > threshold && prio < 4 : false;
-
-  if (this->isDMQConsumer == PR_FALSE && (expired || overflowed)) {
-
-    if (expired) expcnt++;
-    if (overflowed) ovrcnt++;
-
-    if ( ++prtcnt % 1000 == 0 ) {
-       //LOG_INFO(( CODELOC, CONSUMER_LOG_MASK, NULL_CONN_ID, MQ_SUCCESS, "MessageConsumer::receive : killed %3d%% PRIO and %3d%% EXP, WM %d", ovrcnt/10, expcnt/10, threshold ));
-       expcnt = 0;
-       ovrcnt = 0;
-    }
+  if (this->isDMQConsumer == PR_FALSE && (xExpired || xOverflowed)) {
+    ++xNumDropped;
+    if (xExpired) ++xNumExpired;
+    if (xOverflowed) ++xNumOverflow;
 
     ERRCHK( session->acknowledgeExpiredMessage(*message) );
     this->session->messageDelivered();
@@ -618,7 +625,9 @@ MessageConsumer::receive(Message ** const message,
     HANDLED_DELETE( *message );
 
     receiveQueue->receiveDone();
-    ++numDropped;
+    // One message was removed, so decrease our count, but protect against underflow
+    // of the unsigned - may happen if only expired messages arrived...
+    if (xQueueSize) --xQueueSize;
     continue;
   } 
   
@@ -639,8 +648,14 @@ MessageConsumer::receive(Message ** const message,
 
   } //while
 
-  // Hack by XFEL: return info about dropped messages
-  return (numDropped == 0 ? MQ_SUCCESS : MQ_CONSUMER_DROPPED_MESSAGES);
+  // Hack by XFEL: info about dropped messages - also in return code
+  if (xNumDropped) {
+    char xMsg[256];
+    snprintf(xMsg, 256, "dropped %d messages: %d expired, %d overflowed (queue size %d)",
+	     xNumDropped, xNumExpired, xNumOverflow, xQueueSize);
+    LOG_WARNING(( CODELOC, CONSUMER_LOG_MASK, NULL_CONN_ID, MQ_SUCCESS, xMsg ));
+  }
+  return (xNumDropped == 0 ? MQ_SUCCESS : MQ_CONSUMER_DROPPED_MESSAGES);
 
 Cleanup:
   if (packet != NULL) {
