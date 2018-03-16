@@ -1,7 +1,8 @@
 from unittest import main, TestCase
 
 from karabo.middlelayer_api.alarm import AlarmMixin
-from karabo.middlelayer import AlarmCondition, Configurable, Int32, Node
+from karabo.middlelayer import (
+    AccessLevel, AlarmCondition, Configurable, Int32, Node)
 
 
 class Tests(TestCase):
@@ -92,6 +93,8 @@ class Tests(TestCase):
                          'AlarmCondition')
         self.assertEqual(a.globalAlarmCondition.descriptor.displayType,
                          'AlarmCondition')
+        self.assertEqual(a.globalAlarmCondition.descriptor.requiredAccessLevel,
+                         AccessLevel.ADMIN)
 
 
 if __name__ == "__main__":
