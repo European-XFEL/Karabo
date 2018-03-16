@@ -31,7 +31,7 @@
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QLineEdit" name="lePassword">
+      <widget class="QLineEdit" name="ui_password">
        <property name="echoMode">
         <enum>QLineEdit::Password</enum>
        </property>
@@ -45,7 +45,7 @@
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QComboBox" name="cbProvider">
+      <widget class="QComboBox" name="ui_provider">
        <item>
         <property name="text">
          <string>LOCAL</string>
@@ -66,7 +66,7 @@
       </widget>
      </item>
      <item row="3" column="1">
-      <widget class="QComboBox" name="cbHostname"/>
+      <widget class="QComboBox" name="ui_hostname"/>
      </item>
      <item row="4" column="0">
       <widget class="QLabel" name="laPort">
@@ -76,10 +76,10 @@
       </widget>
      </item>
      <item row="4" column="1">
-      <widget class="QLineEdit" name="lePort"/>
+      <widget class="QLineEdit" name="ui_port"/>
      </item>
      <item row="0" column="1">
-      <widget class="QComboBox" name="leUsername">
+      <widget class="QComboBox" name="ui_username">
        <property name="currentIndex">
         <number>2</number>
        </property>
@@ -141,7 +141,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="pbConnect">
+      <widget class="QPushButton" name="ui_connect">
        <property name="text">
         <string>Connect</string>
        </property>
@@ -177,7 +177,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>pbConnect</sender>
+   <sender>ui_connect</sender>
    <signal>clicked()</signal>
    <receiver>Dialog</receiver>
    <slot>accept()</slot>

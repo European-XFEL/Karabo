@@ -6,96 +6,72 @@
 import os.path as op
 
 from PyQt4 import uic
-from PyQt4.QtCore import pyqtSlot, QEvent, QObject, Qt
-from PyQt4.QtGui import QComboBox, QDialog, QIntValidator, QKeyEvent
-
-import karabogui.globals as krb_globals
-
-
-class KeyPressEventFilter(QObject):
-    """Purge a ComboBox on Shift+Delete events
-    """
-    def eventFilter(self, obj, event):
-        if event.type() == QEvent.KeyPress:
-            if isinstance(event, QKeyEvent):
-                if (event.key() == Qt.Key_Delete and
-                        event.modifiers() == Qt.ShiftModifier):
-                    if isinstance(obj, QComboBox) and obj.count():
-                        index = obj.currentIndex()
-                        obj.removeItem(index)
-                        obj.setCurrentIndex(index if index < obj.count()
-                                            else index - 1)
-                        return True
-        return False
+from PyQt4.QtCore import pyqtSlot
+from PyQt4.QtGui import QComboBox, QDialog, QIntValidator
 
 
 class LoginDialog(QDialog):
-    def __init__(self, username='', password='', provider='', hostname='',
-                 port='', guiservers=[], parent=None):
+    def __init__(self, username='OPERATOR', password='', provider='',
+                 hostname='', port='', guiservers=[], parent=None):
         super(LoginDialog, self).__init__(parent)
         filepath = op.join(op.abspath(op.dirname(__file__)), 'logindialog.ui')
         uic.loadUi(filepath, self)
 
-        if not username:
-            username = krb_globals.GLOBAL_USER
-        index = self.leUsername.findText(username)
-        self.leUsername.setCurrentIndex(index)
+        index = self.ui_username.findText(username)
+        self.ui_username.setCurrentIndex(index)
 
         # password
         if not password:
             password = 'karabo'
-        self.lePassword.setText(password)
+        self.ui_password.setText(password)
 
         if provider:
-            index = self.cbProvider.findText(provider)
-            self.cbProvider.setCurrentIndex(index)
+            index = self.ui_provider.findText(provider)
+            self.ui_provider.setCurrentIndex(index)
 
-        hostname = 'localhost' if not hostname else hostname
-        self.cbHostname.editTextChanged.connect(self.onHostnameTextChanged)
-        self.cbHostname.setInsertPolicy(QComboBox.NoInsert)
+        hostname = hostname if hostname else 'localhost'
+        self.ui_hostname.editTextChanged.connect(self.on_hostname_changed)
+        self.ui_hostname.setInsertPolicy(QComboBox.NoInsert)
 
-        self.keyPressHandler = KeyPressEventFilter()
-        self.cbHostname.installEventFilter(self.keyPressHandler)
-
-        self.cbHostname.setEditable(True)
+        self.ui_hostname.setEditable(True)
         for server in guiservers:
-            self.cbHostname.addItem(server)
-        self.cbHostname.setEditText(hostname)
+            self.ui_hostname.addItem(server)
+        self.ui_hostname.setEditText(hostname)
 
-        port = str(port) if port else'44444'
-        self.lePort.setText(port)
-        self.lePort.setValidator(QIntValidator(None))
+        port = str(port) if port else '44444'
+        self.ui_port.setText(port)
+        self.ui_port.setValidator(QIntValidator(None))
 
     @pyqtSlot(str)
-    def onHostnameTextChanged(self, value):
+    def on_hostname_changed(self, value):
         """Split the selected text into hostname and port
         """
         if ':' in value:
-            hostname, port = self.cbHostname.currentText().split(':')
-            self.cbHostname.setEditText(hostname)
-            self.lePort.setText(port)
+            hostname, port = self.ui_hostname.currentText().split(':')
+            self.ui_hostname.setEditText(hostname)
+            self.ui_port.setText(port)
 
     @property
     def username(self):
-        return self.leUsername.currentText()
+        return self.ui_username.currentText()
 
     @property
     def password(self):
-        return self.lePassword.text()
+        return self.ui_password.text()
 
     @property
     def provider(self):
-        return self.cbProvider.currentText()
+        return self.ui_provider.currentText()
 
     @property
     def hostname(self):
-        return self.cbHostname.currentText()
+        return self.ui_hostname.currentText()
 
     @property
     def port(self):
-        return int(self.lePort.text())
+        return int(self.ui_port.text())
 
     @property
     def guiservers(self):
-        return [self.cbHostname.itemText(i)
-                for i in range(self.cbHostname.count())]
+        return [self.ui_hostname.itemText(i)
+                for i in range(self.ui_hostname.count())]
