@@ -950,6 +950,7 @@ namespace karabo {
                     return m_fullSchema.getAliasFromKey<AliasType>(key);
                 } catch (const karabo::util::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving alias from parameter (" + key + ")"));
+                    return AliasType(); // compiler happiness line - requires that AliasType is default constructable...
                 }
             }
 
@@ -965,6 +966,7 @@ namespace karabo {
                     return m_fullSchema.getKeyFromAlias(alias);
                 } catch (const karabo::util::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter from alias (" + karabo::util::toString(alias) + ")"));
+                    return std::string(); // compiler happiness line...
                 }
             }
 
