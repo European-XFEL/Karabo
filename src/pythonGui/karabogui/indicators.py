@@ -15,6 +15,31 @@ from . import icons
 # Mapping states to colors
 
 
+def get_state_color(value):
+    """Return a state color for a given state string
+
+    :param value: state string representation
+    :type value: str
+    """
+    state = State(value)
+    if state.isDerivedFrom(State.CHANGING):
+        color = STATE_COLORS[State.CHANGING]
+    elif state.isDerivedFrom(State.RUNNING):
+        color = STATE_COLORS[State.RUNNING]
+    elif state.isDerivedFrom(State.ACTIVE):
+        color = STATE_COLORS[State.ACTIVE]
+    elif state.isDerivedFrom(State.PASSIVE):
+        color = STATE_COLORS[State.PASSIVE]
+    elif state.isDerivedFrom(State.DISABLED):
+        color = STATE_COLORS[State.DISABLED]
+    elif state in [State.STATIC, State.NORMAL, State.ERROR, State.INIT]:
+        color = STATE_COLORS[state]
+    else:
+        color = STATE_COLORS[State.UNKNOWN]
+
+    return color
+
+
 class _StateColors(Enum):
     UNKNOWN_COLOR = (255, 170, 0)
     KNOWN_NORMAL_COLOR = (200, 200, 200)

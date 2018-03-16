@@ -20,11 +20,11 @@ from karabogui.binding.api import (
     has_changes)
 from karabogui.const import (
     OK_COLOR, ERROR_COLOR_ALPHA, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR)
-from karabogui.indicators import STATE_COLORS
+from karabogui.indicators import get_state_color, STATE_COLORS
 from karabogui.request import send_property_changes
 from .utils import (
     dragged_configurator_items, get_child_names, get_device_state_string,
-    get_icon, get_proxy_value
+    get_icon, get_proxy_value, threshold_triggered
 )
 
 
@@ -543,12 +543,17 @@ class ConfigurationTreeModel(QAbstractItemModel):
         alarm_high = attributes.get(KARABO_ALARM_HIGH)
         warn_low = attributes.get(KARABO_WARN_LOW)
         warn_high = attributes.get(KARABO_WARN_HIGH)
-        if ((alarm_low is not None and value < alarm_low) or
-                (alarm_high is not None and value > alarm_high)):
+        is_state = attributes.get(KARABO_SCHEMA_DISPLAY_TYPE) == 'State'
+
+        if threshold_triggered(value, alarm_low, alarm_high):
             return PROPERTY_ALARM_COLOR
-        elif ((warn_low is not None and value < warn_low) or
-                (warn_high is not None and value > warn_high)):
+
+        if threshold_triggered(value, warn_low, warn_high):
             return PROPERTY_WARN_COLOR
+
+        if is_state:
+            return get_state_color(value) + (128,)
+
         return None  # indicate no color
 
     def _proxy_data(self, index, proxy, role, column):

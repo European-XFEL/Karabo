@@ -7,7 +7,7 @@ from karabo.middlelayer import AccessMode, Configurable, Int8, String, Unit
 from karabogui import icons
 from karabogui.testing import GuiTestCase, get_class_property_proxy
 from ..utils import (
-    dragged_configurator_items, get_child_names, get_icon)
+    dragged_configurator_items, get_child_names, get_icon, threshold_triggered)
 
 
 class Object(Configurable):
@@ -53,3 +53,25 @@ class TestConfiguratorUtils(GuiTestCase):
         schema = Object.getClassSchema()
         proxy = get_class_property_proxy(schema, 'string')
         assert get_icon(proxy.binding) == icons.string
+
+    def test_threshold_triggered(self):
+        # check the low limit
+        value = 1
+        high_limit = None
+        low_limit = 2
+        assert threshold_triggered(value, low_limit, high_limit) is True
+        value = 3
+        assert threshold_triggered(value, low_limit, high_limit) is False
+        low_limit = None
+        assert threshold_triggered(value, low_limit, high_limit) is False
+
+        # check the high limit
+        value = 3
+        high_limit = 2
+        low_limit = 1
+        assert threshold_triggered(value, low_limit, high_limit) is True
+
+        high_limit = 3
+        assert threshold_triggered(value, low_limit, high_limit) is False
+        low_limit = None
+        assert threshold_triggered(value, low_limit, high_limit) is False
