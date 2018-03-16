@@ -10,7 +10,7 @@ from struct import calcsize, pack, unpack
 
 from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
 from PyQt4.QtCore import (pyqtSignal, pyqtSlot, QByteArray, QCoreApplication,
-                          QCryptographicHash, QObject)
+                          QObject)
 from PyQt4.QtGui import QDialog, QMessageBox, qApp
 
 from karabo.authenticator import Authenticator
@@ -45,11 +45,10 @@ class Network(QObject):
         self._waitingMessages = {}
         self._monitoringPerformance = False
 
-        self.username = ''
         self.password = ''
         self.provider = ''
-        self.hostname, self.port, self.guiservers, self.max_servers = (
-                self.load_settings())
+        (self.username, self.hostname, self.port,
+            self.guiservers, self.max_servers) = self.load_login_settings()
 
         # Listen for the quit notification
         qApp.aboutToQuit.connect(self.onQuitApplication)
@@ -80,22 +79,26 @@ class Network(QObject):
         # Update MainWindow toolbar
         self.signalServerConnectionChanged.emit(isConnected)
 
-    def load_settings(self):
+    def load_login_settings(self):
         # Maximum number of GUI servers to be stored, 5 by default
-        maxservers = 5
+        max_servers = 5
 
         # Try to load from the environment variables first
         hostname = os.environ.get(krb_globals.KARABO_GUI_HOST, None)
         port = os.environ.get(krb_globals.KARABO_GUI_PORT, None)
         if hostname is not None and port is not None:
             servers = get_setting(KaraboSettings.GUI_SERVERS)
-            maxservers = (get_setting(KaraboSettings.MAX_GUI_SERVERS)
-                          or maxservers)
-            return (hostname, port, servers, maxservers)
+            max_servers = (get_setting(KaraboSettings.MAX_GUI_SERVERS)
+                           or max_servers)
+            username = krb_globals.DEFAULT_USER
+            return (username, hostname, port, servers, max_servers)
 
         # Load from QSettings
+        username = (get_setting(KaraboSettings.USERNAME)
+                    or krb_globals.DEFAULT_USER)
         servers = get_setting(KaraboSettings.GUI_SERVERS) or []
-        maxservers = get_setting(KaraboSettings.MAX_GUI_SERVERS) or maxservers
+        max_servers = (get_setting(KaraboSettings.MAX_GUI_SERVERS)
+                       or max_servers)
         if servers:
             hostname, port = servers[0].split(':')
         else:
@@ -103,7 +106,7 @@ class Network(QObject):
 
         port = int(port)
 
-        return (hostname, port, servers, maxservers)
+        return (username, hostname, port, servers, max_servers)
 
     def disconnectFromServer(self):
         """
@@ -147,57 +150,45 @@ class Network(QObject):
         self._monitoringPerformance = not self._monitoringPerformance
 
     def _login(self):
-        """
-        Authentification login.
+        """Authentification login.
         """
         # System variables definition
         ipAddress = socket.gethostname()  # Machine Name
 
-        # Easteregg
-        if self.username == "god":
-            md5 = QCryptographicHash.hash(str(self.password),
-                                          QCryptographicHash.Md5).toHex()
-            if md5 == "39d676ecced45b02da1fb45731790b4c":
-                print("Entering god mode...")
-                krb_globals.GLOBAL_ACCESS_LEVEL = AccessLevel.GOD
-            else:
-                krb_globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
+        # Execute Login
+        ok = False
+        try:
+            self.authenticator = Authenticator(
+                self.username, self.password, self.provider, ipAddress,
+                self.brokerHost, self.brokerPort, self.brokerTopic)
+            ok = self.authenticator.login()
+        except Exception as e:
+            # TODO Fall back to inbuild access level
+            default = krb_globals.KARABO_DEFAULT_ACCESS_LEVEL
+            krb_globals.GLOBAL_ACCESS_LEVEL = default
+            print("Login problem. Please verify, if service is running. {}"
+                  "".format(str(e)))
 
+            # Inform the GUI to change correspondingly the allowed
+            # level-downgrade
+            broadcast_event(KaraboEventSender.LoginUserChanged, {})
+            self._sendLoginInformation(self.username, self.password,
+                                       self.provider, self.sessionToken)
+            return
+
+        if ok:
+            krb_globals.GLOBAL_ACCESS_LEVEL = AccessLevel(
+                self.authenticator.defaultAccessLevelId)
         else:
-            # Execute Login
-            ok = False
-            try:
-                self.authenticator = Authenticator(
-                    self.username, self.password, self.provider, ipAddress,
-                    self.brokerHost, self.brokerPort, self.brokerTopic)
-                ok = self.authenticator.login()
-            except Exception as e:
-                # TODO Fall back to inbuild access level
-                default = krb_globals.KARABO_DEFAULT_ACCESS_LEVEL
-                krb_globals.GLOBAL_ACCESS_LEVEL = default
-                print("Login problem. Please verify, if service is running. {}"
-                      "".format(str(e)))
-
-                # Inform the GUI to change correspondingly the allowed
-                # level-downgrade
-                broadcast_event(KaraboEventSender.LoginUserChanged, {})
-                self._sendLoginInformation(self.username, self.password,
-                                           self.provider, self.sessionToken)
-                return
-
-            if ok:
-                krb_globals.GLOBAL_ACCESS_LEVEL = AccessLevel(
-                    self.authenticator.defaultAccessLevelId)
-            else:
-                print("Login failed")
-                self.onSocketError(QAbstractSocket.ConnectionRefusedError)
-                # krb_globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
-                return
+            print("Login failed")
+            self.onSocketError(QAbstractSocket.ConnectionRefusedError)
+            # krb_globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
+            return
 
         # Inform the GUI to change correspondingly the allowed level-downgrade
         broadcast_event(KaraboEventSender.LoginUserChanged, {})
-        self._sendLoginInformation(self.username, self.password, self.provider,
-                                   self.sessionToken)
+        self._sendLoginInformation(self.username, self.password,
+                                   self.provider, self.sessionToken)
 
     def _logout(self):
         """
@@ -340,6 +331,7 @@ class Network(QObject):
         self.guiservers = _least_recently_used(server, self.guiservers,
                                                int(self.max_servers))
 
+        set_setting(KaraboSettings.USERNAME, self.username)
         set_setting(KaraboSettings.GUI_SERVERS, self.guiservers)
         set_setting(KaraboSettings.MAX_GUI_SERVERS, self.max_servers)
 
