@@ -111,7 +111,6 @@ namespace karabo {
                         MQString statusString = MQGetStatusString(status);
                         const std::string stdStatusString(statusString);
                         MQFreeString(statusString);
-                        KARABO_LOG_FRAMEWORK_ERROR << "Problem during message consumption: " << stdStatusString;
                         m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, Error::drop, stdStatusString));
                         // No 'break;'!
                     }
@@ -189,10 +188,10 @@ namespace karabo {
         void JmsConsumer::postErrorOnHandlerStrand(JmsConsumer::Error error, const std::string& msg) {
             if (m_errorNotifier) {
                 m_handlerStrand->post(boost::bind(m_errorNotifier, error, msg));
+            } else {
+                KARABO_LOG_FRAMEWORK_ERROR << "Error " << static_cast<int> (error) << ": " << msg;
             }
         }
-
-
 
 
         MQConsumerHandle JmsConsumer::getConsumer(const std::string& topic, const std::string& selector) {
