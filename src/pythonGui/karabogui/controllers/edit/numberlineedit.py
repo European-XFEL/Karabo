@@ -126,6 +126,47 @@ class IntValidator(QValidator):
         self.max = max
 
 
+class NumberValidator(QValidator):
+    def __init__(self, min=None, max=None, decimals=-1, parent=None):
+        QValidator.__init__(self, parent)
+        self.min = min
+        self.max = max
+        self.decimals = decimals
+
+    def validate(self, input, pos):
+        # start input check
+        if input in ('+', '-', ''):
+            return self.Intermediate, input, pos
+
+        # we might not have standard notation
+        if input[-1] in ('+', '-', 'e'):
+            return self.Intermediate, input, pos
+
+        # check for floating point precision
+        if self.decimals != -1:
+            input_split = input.split('.')
+            if len(input_split) > 1 and len(input_split[1]) > self.decimals:
+                return self.Invalid, input, pos
+
+        # try if we can cast input
+        try:
+            value = float(input)
+        except ValueError:
+            return self.Invalid, input, pos
+        # then check for limits
+        if ((self.min is None or self.min <= value) and
+                (self.max is None or value <= self.max)):
+            return self.Acceptable, input, pos
+        else:
+            return self.Intermediate, input, pos
+
+    def setBottom(self, min):
+        self.min = min
+
+    def setTop(self, max):
+        self.max = max
+
+
 @register_binding_controller(ui_name='Float Field', can_edit=True,
                              klassname='DoubleLineEdit',
                              binding_type=FloatBinding, priority=10)
@@ -134,9 +175,9 @@ class DoubleLineEdit(NumberLineEdit):
     model = Instance(DoubleLineEditModel, args=())
 
     def create_widget(self, parent):
-        self._validator = QDoubleValidator(None)
+        self._validator = NumberValidator()
+        self._validator.decimals = self.model.decimals
         widget = super(DoubleLineEdit, self).create_widget(parent)
-
         decimal_action = QAction('Change number of decimals', widget)
         decimal_action.triggered.connect(self._pick_decimals)
         widget.addAction(decimal_action)
@@ -158,6 +199,7 @@ class DoubleLineEdit(NumberLineEdit):
     @on_trait_change('model.decimals', post_init=True)
     def _decimals_update(self):
         self.value_update(self.proxy)
+        self._validator.decimals = self.model.decimals
 
     @pyqtSlot()
     def _pick_decimals(self):
