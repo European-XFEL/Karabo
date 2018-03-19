@@ -48,8 +48,19 @@ class TestNumberLineEdit(GuiTestCase):
     def test_edit_value(self):
         self.d_controller._internal_widget.setText('3.14')
         assert abs(self.d_proxy.edit_value - 3.14) < 0.0001
+        self.d_controller._internal_widget.setText('3.14e-2')
+        assert abs(self.d_proxy.edit_value - 0.0314) < 0.00001
+        # Since `maxInc=1000`, then the following shouldn't be accepted,
+        # so the value is still 0.0314
+        self.d_controller._internal_widget.setText('3.14e9')
+        assert abs(self.d_proxy.edit_value - 0.0314) < 0.00001
 
         self.i_controller._internal_widget.setText('3')
+        assert self.i_proxy.edit_value == 3
+        # Since 12 is greater than `maxInc=10`, then it shouldn't be accepted,
+        # so the value is still 3
+        self.i_controller._internal_widget.setText('12')
+        assert self.i_proxy.edit_value != 12
         assert self.i_proxy.edit_value == 3
 
     def test_scientific_notation(self):
