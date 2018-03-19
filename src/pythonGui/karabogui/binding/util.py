@@ -108,7 +108,7 @@ def has_changes(binding, old_value, new_value):
         elif rel_err is not None:
             changes = (diff >= abs(old_value * rel_err))
         else:
-            changes = (diff >= 1e-4)
+            changes = (diff >= abs(old_value * 1e-7))  # IEEE 754 compliance
     elif isinstance(old_value, (list, np.ndarray)):
         if len(old_value) != len(new_value):
             changes = True
