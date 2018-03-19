@@ -74,8 +74,15 @@ namespace karabo {
             /**
              * This method is called to finalize initialization of a device. It is needed to allow user 
              * code to hook in after the base device constructor, but before the device is fully initialized.
+             *
+             * It will typically be called by the DeviceServer.
+             * The call is blocking and afterwards communication should happen only via slot calls.
+             *
+             * @param consumeBroadcasts If true, listen directly to broadcast messages (addressed to '*'), as usually expected.
+             *                          Whoever sets this to false has to enure that broadcast messages reach the Device
+             *                          in some other way, otherwise the device will not work correctly.
              */
-            virtual void finalizeInternalInitialization() = 0;
+            virtual void finalizeInternalInitialization(bool consumeBroadcasts) = 0;
 
             /*
              * A pure virtual method to be overwritten to return a tag-filtered
@@ -640,24 +647,16 @@ namespace karabo {
                     emit("signalAlarmUpdate", getInstanceId(), changedAlarms);
                 }
 
-
                 if (!validated.empty()) {
                     m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
 
-                    // if Hash contains at least one reconfigurable parameter -> signalStateChanged
-                    if (validated.has("state")) {
-                        emit("signalStateChanged", validated, getInstanceId()); // more reliable delivery: timeToLive == 600000 (10min)
-                        return;
+                    auto signal = "signalChanged"; // less reliable delivery
+                    if (validated.has("state") || m_validatorIntern.hasReconfigurableParameter()) {
+                        // If Hash contains state or at least one reconfigurable parameter:
+                        // ==> more reliable delivery.
+                        signal = "signalStateChanged";
                     }
-
-                    // if Hash contains at least one reconfigurable parameter -> signalStateChanged
-                    if (m_validatorIntern.hasReconfigurableParameter()) {
-                        emit("signalStateChanged", validated, getInstanceId()); // more reliable delivery: timeToLive == 600000 (10min)
-                        return;
-                    }
-
-                    // ... otherwise -> signalChanged
-                    emit("signalChanged", validated, getInstanceId()); // less reliable delivery: timeToLive == 3000 (3 secs)
+                    emit(signal, validated, getInstanceId());
                 }
             }
 
@@ -718,29 +717,28 @@ namespace karabo {
                     std::vector<std::string> paths;
                     tmp.getPaths(paths);
 
-                    BOOST_FOREACH(std::string path, paths) {
+                    for (const std::string& path : paths) {
                         timestamp.toHashAttributes(tmp.getAttributes(path));
                     }
                     m_parameters.merge(tmp, Hash::REPLACE_ATTRIBUTES);
 
-                    // if Hash contains 'state' key -> signalStateChanged
+                    // Find out which signal to use...
+                    auto signal = "signalChanged"; // default, less reliable delivery
                     if (tmp.has("state")) {
-                        emit("signalStateChanged", tmp, getInstanceId()); // more reliable delivery: timeToLive == 600000 (10min)
-                        return;
-                    }
-
-
-                    // if Hash contains at least one reconfigurable parameter -> signalStateChanged
-
-                    BOOST_FOREACH(std::string path, paths) {
-                        if (m_fullSchema.has(path) && m_fullSchema.isAccessReconfigurable(path)) {
-                            emit("signalStateChanged", tmp, getInstanceId()); // more reliable delivery: timeToLive == 600000 (10min)
-                            return;
+                        // if Hash contains 'state' key -> signalStateChanged
+                        signal = "signalStateChanged"; // more reliable delivery
+                    } else {
+                        for (const std::string& path : paths) {
+                            if (m_fullSchema.has(path) && m_fullSchema.isAccessReconfigurable(path)) {
+                                // if Hash contains at least one reconfigurable parameter -> signalStateChanged
+                                signal = "signalStateChanged"; // more reliable delivery
+                                break;
+                            }
                         }
                     }
 
-                    // ... otherwise -> signalChanged
-                    emit("signalChanged", tmp, getInstanceId());
+                    // ...and finally emit:
+                    emit(signal, tmp, getInstanceId());
                 }
             }
 
@@ -952,6 +950,7 @@ namespace karabo {
                     return m_fullSchema.getAliasFromKey<AliasType>(key);
                 } catch (const karabo::util::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving alias from parameter (" + key + ")"));
+                    return AliasType(); // compiler happiness line - requires that AliasType is default constructable...
                 }
             }
 
@@ -967,6 +966,7 @@ namespace karabo {
                     return m_fullSchema.getKeyFromAlias(alias);
                 } catch (const karabo::util::Exception& e) {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter from alias (" + karabo::util::toString(alias) + ")"));
+                    return std::string(); // compiler happiness line...
                 }
             }
 
@@ -1244,7 +1244,7 @@ namespace karabo {
              */
             const karabo::util::AlarmCondition & getAlarmCondition(const std::string & key, const std::string & sep = ".") const {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-                const std::string& propertyCondition = this->m_parameters.template getAttribute<std::string>(key, KARABO_ALARM_ATTR, sep);
+                const std::string& propertyCondition = this->m_parameters.template getAttribute<std::string>(key, KARABO_ALARM_ATTR, sep.at(0));
                 return karabo::util::AlarmCondition::fromString(propertyCondition);
             }
 
@@ -1393,12 +1393,15 @@ namespace karabo {
             }
 
         private: // Functions
-
             /**
-             * This function will typically be called by the DeviceServer (or directly within the startDevice application).
-             * The call to run is blocking and afterwards communication should happen only via call-backs
+             * This function will typically be called by the DeviceServer.
+             * The call is blocking and afterwards communication should happen only via slot calls.
+             *
+             * @param consumeBroadcasts If false, do not listen directly to broadcast messages (addressed to '*').
+             *                          Whoever sets this to true has to enure that broadcast messages reach the Device
+             *                          in some other way.
              */
-            void finalizeInternalInitialization() {
+            void finalizeInternalInitialization(bool consumeBroadcasts) {
 
                 using namespace karabo::util;
                 using namespace karabo::net;
@@ -1454,8 +1457,7 @@ namespace karabo {
                 if (hasAvailableMacros) capabilities |= Capabilities::PROVIDES_MACROS;
                 instanceInfo.set("capabilities", capabilities);
 
-                // Initialize the SignalSlotable instance
-                init(m_deviceId, m_connection, heartbeatInterval, instanceInfo);
+                init(m_deviceId, m_connection, heartbeatInterval, instanceInfo, consumeBroadcasts);
 
                 //
                 // Now do all registrations etc. (Note that it is safe to register slots in the constructor)

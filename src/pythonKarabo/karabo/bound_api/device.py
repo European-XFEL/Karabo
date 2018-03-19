@@ -630,17 +630,15 @@ class PythonDevice(NoFsm):
                 if not validated.empty():
                     self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
 
-                    # Hash containing 'state' should be signalled by 'signalStateChanged'
-                    if 'state' in validated:
-                        self._ss.emit("signalStateChanged", validated, self.deviceid)
-                        return;
+                    # Hash containing 'state' or at least one reconfigurable key
+                    # should be signalled by 'signalStateChanged'
+                    signal = "signalChanged"
+                    if ('state' in validated or
+                        (validate and
+                         self.validatorIntern.hasReconfigurableParameter())):
+                        signal = "signalStateChanged"
 
-                    # if at least one key is reconfigurable -> signalStateChanged, also validation was performed
-                    if validate and self.validatorIntern.hasReconfigurableParameter():
-                        self._ss.emit("signalStateChanged", validated, self.deviceid)
-                        return
-
-                    self._ss.emit("signalChanged", validated, self.deviceid)
+                    self._ss.emit(signal, validated, self.deviceid)
                     
 
     def _evaluateAndUpdateAlarmCondition(self, forceUpdate, prevParamsInAlarm,
