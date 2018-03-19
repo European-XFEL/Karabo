@@ -9,9 +9,12 @@ from karabo.common.api import DeviceStatus, ONLINE_STATUSES
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.singletons.api import get_network, get_topology
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
-from .types import BaseBinding, BindingRoot, PipelineOutputBinding, SlotBinding
+from .types import (
+    BaseBinding, BindingRoot, FloatBinding, PipelineOutputBinding,
+    VectorDoubleBinding, VectorFloatBinding, SlotBinding)
 
 _RECURSIVE_BINDINGS = (ChoiceOfNodesBinding, ListOfNodesBinding)
+_NOCAST_BINDINGS = (FloatBinding, VectorDoubleBinding, VectorFloatBinding)
 
 
 class BaseDeviceProxy(HasStrictTraits):
@@ -319,9 +322,10 @@ class PropertyProxy(HasStrictTraits):
 
         # Validate (and mutate in some cases, like arrays)
         self._edit_binding.value = value
-        # Replace quietly
+        # Replace quietly but don't send no cast bindings to gui
         self.trait_setq(edit_value=self._edit_binding.value)
-        self.binding.config_update = True
+        if not isinstance(self.binding, _NOCAST_BINDINGS):
+            self.binding.config_update = True
 
     # -----------------------------------------------------------------------
     # Public methods

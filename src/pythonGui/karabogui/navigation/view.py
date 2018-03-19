@@ -180,7 +180,7 @@ class NavigationTreeView(QTreeView):
             device_id = dialog.device_id
             scene_name = dialog.capa_name
             handler = partial(handle_scene_from_server, device_id, scene_name,
-                              None)
+                              None, None)
             call_device_slot(handler, device_id, 'requestScene',
                              name=scene_name)
 

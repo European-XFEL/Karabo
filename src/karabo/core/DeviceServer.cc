@@ -233,6 +233,9 @@ namespace karabo {
 
         void DeviceServer::finalizeInternalInitialization() {
 
+            // Do before calling start() since not thread safe,
+            // boost::bind is safe since handler is only called directly from SignalSlotable code of 'this'.
+            registerBroadcastHandler(boost::bind(&DeviceServer::onBroadcastMessage, this, _1, _2));
             // This starts SignalSlotable
             SignalSlotable::start();
 
@@ -253,6 +256,32 @@ namespace karabo {
                                  KARABO_LOG_FRAMEWORK_INFO << "Successfully connected to time server '"
                                          << timeServerId << "'";
                              });
+            }
+        }
+
+
+        void DeviceServer::onBroadcastMessage(const karabo::util::Hash::Pointer& header,
+                                              const karabo::util::Hash::Pointer& body) {
+            // const_cast to have ids refer to a const Node...
+            boost::optional<const Hash::Node&> ids = const_cast<const Hash*> (header.get())->find("slotInstanceIds");
+            if (!ids || !ids->is<std::string>()) {
+                return;
+            }
+            // Message header is properly formed, so forward to all devices
+            const std::string& slotInstanceIds = ids->getValue<std::string>();
+            boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+            for (const auto& deviceId_ptr : m_deviceInstanceMap) {
+                const std::string& devId = deviceId_ptr.first; // .second is shared_ptr to device...
+                // Check whether besides to '*', message was also addressed to device directly (theoretically...)
+                if (slotInstanceIds.find(("|" + devId) += "|") == std::string::npos) {
+                    if (!tryToCallDirectly(devId, header, body)) {
+                        // Can happen if devId just tries to come up, but has not yet registered for shortcut messaging.
+                        // But this registration happens before the device broadcasts its existence and before that the
+                        // device is not really part of the game, so no harm.
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Failed to forward broadcast message to local device "
+                                << devId << " which likely is just coming up and thus not fully part of the system yet.";
+                    }
+                }
             }
         }
 
@@ -554,8 +583,8 @@ namespace karabo {
 
         void DeviceServer::instantiate(const std::string& deviceId, const std::string& classId,
                                        const util::Hash& config, const xms::SignalSlotable::AsyncReply& asyncReply) {
-            // Each device adds two threads, one of them is permanently used for reading from broker.
-            // Since finalizeInternalInitialization() blocks for > 1 s, we temporarily add another thread.
+            // Each device adds one thread already. But since
+            // device->finalizeInternalInitialization() blocks for > 1 s, we temporarily add another thread.
             EventLoop::addThread();
             bool putInMap = false;
             try {
@@ -574,7 +603,7 @@ namespace karabo {
                 }
 
                 // This will throw an exception if it can't be started (because of duplicated name for example)
-                device->finalizeInternalInitialization();
+                device->finalizeInternalInitialization(false); // DeviceServer will forward broadcasts!
 
                 if (device->useTimeServer()) { // If device requires, add to map for receiving timing info.
                     boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
