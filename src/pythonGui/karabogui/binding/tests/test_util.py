@@ -86,8 +86,9 @@ def test_has_changes():
     assert not has_changes(binding, 2, 2)
 
     binding = FloatBinding()
-    assert not has_changes(binding, 2.0, 2.00005)
-    assert has_changes(binding, 2.0, 2.0005)
+    assert not has_changes(binding, 1.0, 1. + 5e-8)
+    assert not has_changes(binding, 2.0e10, (2 + 1.0e-7)*1e10)
+    assert has_changes(binding, 2.0, 2.0 + 3e-7)
 
     binding = FloatBinding(attributes={KARABO_SCHEMA_ABSOLUTE_ERROR: 0.5})
     assert not has_changes(binding, 2.0, 2.3)
