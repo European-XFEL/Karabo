@@ -39,10 +39,10 @@ class Network(QObject):
         self._waitingMessages = {}
         self._monitoringPerformance = False
 
-        self.host = "localhost"
+        self.hostname = "localhost"
         self.port = "44444"
-        self.password = 'karabo'
-        self.provider = 'LOCAL'
+        self.password = "karabo"
+        self.provider = "LOCAL"
         self.max_servers = 5
         self.load_login_settings()
 
@@ -82,7 +82,7 @@ class Network(QObject):
                          or krb_globals.DEFAULT_USER)
         self.guiservers = get_setting(KaraboSettings.GUI_SERVERS) or []
         self.max_servers = (get_setting(KaraboSettings.MAX_GUI_SERVERS)
-                            or int(self.max_servers))
+                            or self.max_servers)
         if self.guiservers:
             self.hostname, self.port = self.guiservers[0].split(':')
 
