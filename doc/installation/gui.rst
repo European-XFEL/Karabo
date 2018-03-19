@@ -11,16 +11,15 @@ by availability of almost all packages required by karaboGUI (such as PyQwt,
 guiqwt, guidata).
 
 
-Updating
-=========
-When updating version, ensure to remove the previous installation before 
-continuing, as otherwise the GUI may have unpredictable behavior.
-Navigate to::
+.. warning:: 
+    When updating version, ensure to remove the previous installation before 
+    continuing, as otherwise the GUI may have unpredictable behavior.
+    Navigate to::
 
- [WinPython_Installation_Dir]\python-3.4.3\Lib\site-packages
+        [WinPython_Installation_Dir]\python-3.4.3\Lib\site-packages
 
-Then remove the *karabo* and *karabogui* folders, as well as the *KaraboGUI-\*.egg-info*
-file.
+    Then remove the *karabo* and *karabogui* folders, as well as the *KaraboGUI-\*.egg-info*
+    file.
 
 
 Installation instructions
