@@ -11,7 +11,7 @@ from PyQt4.QtGui import QComboBox, QDialog, QIntValidator
 
 
 class LoginDialog(QDialog):
-    def __init__(self, username='OPERATOR', password='', provider='',
+    def __init__(self, username='', password='', provider='',
                  hostname='', port='', guiservers=[], parent=None):
         super(LoginDialog, self).__init__(parent)
         filepath = op.join(op.abspath(op.dirname(__file__)), 'logindialog.ui')
