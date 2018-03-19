@@ -531,6 +531,9 @@ KARABO_PYTHON_COMMON_ATTRIBUTES(T) \
 .def("minSize"\
 , (T & ( T::*)(int const & ))(&T::minSize)\
 , bp::return_internal_reference<> () )\
+.def("setSpecialDisplayType"\
+, (T & ( T::*)(std::string const &)) (&T::setSpecialDisplayType)\
+, bp::return_internal_reference<> () )\
 ;\
 }
 

@@ -50,6 +50,10 @@ class DisplayProgressBar(BaseBindingController):
         widget.setOrientation(_orientation(self.model.is_vertical))
         # Use a fixed integer range. Minimum defaults to 0.
         widget.setMaximum(PROGRESS_MAX)
+        # update boolean context menu
+        orient_action.setCheckable(True)
+        orient_action.setChecked(self.model.is_vertical)
+
         return widget
 
     def binding_update(self, proxy):
