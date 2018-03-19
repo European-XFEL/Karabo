@@ -1,16 +1,10 @@
-#############################################################################
-# Author: <burkhard.heisen@xfel.eu>
-# Created on February 17, 2012
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
-#############################################################################
 from functools import partial
-import os
 import socket
 from struct import calcsize, pack, unpack
 
 from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
-from PyQt4.QtCore import (pyqtSignal, QByteArray, QCoreApplication,
-                          QCryptographicHash, QObject)
+from PyQt4.QtCore import (
+    pyqtSignal, pyqtSlot, QByteArray, QCoreApplication, QObject)
 from PyQt4.QtGui import QDialog, QMessageBox, qApp
 
 from karabo.authenticator import Authenticator
@@ -25,7 +19,7 @@ from karabogui.util import get_setting, set_setting
 
 
 class Network(QObject):
-    # signals
+    # our qt signals
     signalServerConnectionChanged = pyqtSignal(bool)
     signalReceivedData = pyqtSignal(object)
 
@@ -45,18 +39,18 @@ class Network(QObject):
         self._waitingMessages = {}
         self._monitoringPerformance = False
 
-        self.username = ''
-        self.password = ''
-        self.provider = ''
-        self.hostname, self.port, self.guiservers, self.maxservers = (
-                self.load_settings())
+        self.host = "localhost"
+        self.port = "44444"
+        self.password = 'karabo'
+        self.provider = 'LOCAL'
+        self.max_servers = 5
+        self.load_login_settings()
 
         # Listen for the quit notification
         qApp.aboutToQuit.connect(self.onQuitApplication)
 
     def connectToServer(self):
-        """
-        Connection to server via LoginDialog.
+        """Connection to server via LoginDialog
         """
         isConnected = False
 
@@ -80,45 +74,30 @@ class Network(QObject):
         # Update MainWindow toolbar
         self.signalServerConnectionChanged.emit(isConnected)
 
-    def load_settings(self):
+    def load_login_settings(self):
         # Maximum number of GUI servers to be stored, 5 by default
-        maxservers = 5
-
-        # Try to load from the environment variables first
-        hostname = os.environ.get(krb_globals.KARABO_GUI_HOST, None)
-        port = os.environ.get(krb_globals.KARABO_GUI_PORT, None)
-        if hostname is not None and port is not None:
-            servers = get_setting(KaraboSettings.GUI_SERVERS)
-            maxservers = (get_setting(KaraboSettings.MAX_GUI_SERVERS)
-                          or maxservers)
-            return (hostname, port, servers, maxservers)
 
         # Load from QSettings
-        servers = get_setting(KaraboSettings.GUI_SERVERS) or []
-        maxservers = get_setting(KaraboSettings.MAX_GUI_SERVERS) or maxservers
-        if servers:
-            hostname, port = servers[0].split(':')
-        else:
-            hostname, port = "localhost", "44444"
+        self.username = (get_setting(KaraboSettings.USERNAME)
+                         or krb_globals.DEFAULT_USER)
+        self.guiservers = get_setting(KaraboSettings.GUI_SERVERS) or []
+        self.max_servers = (get_setting(KaraboSettings.MAX_GUI_SERVERS)
+                            or int(self.max_servers))
+        if self.guiservers:
+            self.hostname, self.port = self.guiservers[0].split(':')
 
-        port = int(port)
-
-        return (hostname, port, servers, maxservers)
+        self.port = int(self.port)
 
     def disconnectFromServer(self):
-        """
-        Disconnect from server.
+        """Disconnect from server
         """
         # All panels need to be reseted and all projects closed
         self.signalServerConnectionChanged.emit(False)
         self.endServerConnection()
 
     def startServerConnection(self):
+        """Create the tcp socket and connect to hostname and port
         """
-        Attempt to connect to host on given port and save user specific data
-        for later authentification.
-        """
-
         self.tcpSocket = QTcpSocket(self)
         self.tcpSocket.connected.connect(self.onConnected)
         self.tcpSocket.readyRead.connect(self.onReadServerData)
@@ -127,8 +106,7 @@ class Network(QObject):
         self.tcpSocket.connectToHost(self.hostname, self.port)
 
     def endServerConnection(self):
-        """
-        End connection to server and database.
+        """End connection to server and database
         """
         self._logout()
         self.requestQueue = []
@@ -147,63 +125,48 @@ class Network(QObject):
         self._monitoringPerformance = not self._monitoringPerformance
 
     def _login(self):
-        """
-        Authentification login.
+        """Authentification login.
         """
         # System variables definition
         ipAddress = socket.gethostname()  # Machine Name
 
-        # Easteregg
-        if self.username == "god":
-            md5 = QCryptographicHash.hash(str(self.password),
-                                          QCryptographicHash.Md5).toHex()
-            if md5 == "39d676ecced45b02da1fb45731790b4c":
-                print("Entering god mode...")
-                krb_globals.GLOBAL_ACCESS_LEVEL = AccessLevel.GOD
-            else:
-                krb_globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
+        # Execute Login
+        success = False
+        try:
+            self.authenticator = Authenticator(
+                self.username, self.password, self.provider, ipAddress,
+                self.brokerHost, self.brokerPort, self.brokerTopic)
+            success = self.authenticator.login()
+        except Exception as e:
+            # XXX Fall back to inbuild access level
+            default = krb_globals.KARABO_DEFAULT_ACCESS_LEVEL
+            krb_globals.GLOBAL_ACCESS_LEVEL = default
+            print("Login problem. Please verify, if service is running. {}"
+                  "".format(e))
 
+            # Inform the GUI to change correspondingly the allowed
+            # level-downgrade
+            broadcast_event(KaraboEventSender.LoginUserChanged, {})
+            self._sendLoginInformation(self.username, self.password,
+                                       self.provider, self.sessionToken)
+            return
+
+        if success:
+            krb_globals.GLOBAL_ACCESS_LEVEL = AccessLevel(
+                self.authenticator.defaultAccessLevelId)
         else:
-            # Execute Login
-            ok = False
-            try:
-                self.authenticator = Authenticator(
-                    self.username, self.password, self.provider, ipAddress,
-                    self.brokerHost, self.brokerPort, self.brokerTopic)
-                ok = self.authenticator.login()
-            except Exception as e:
-                # TODO Fall back to inbuild access level
-                default = krb_globals.KARABO_DEFAULT_ACCESS_LEVEL
-                krb_globals.GLOBAL_ACCESS_LEVEL = default
-                print("Login problem. Please verify, if service is running. {}"
-                      "".format(str(e)))
-
-                # Inform the GUI to change correspondingly the allowed
-                # level-downgrade
-                broadcast_event(KaraboEventSender.LoginUserChanged, {})
-                self._sendLoginInformation(self.username, self.password,
-                                           self.provider, self.sessionToken)
-                return
-
-            if ok:
-                krb_globals.GLOBAL_ACCESS_LEVEL = AccessLevel(
-                    self.authenticator.defaultAccessLevelId)
-            else:
-                print("Login failed")
-                self.onSocketError(QAbstractSocket.ConnectionRefusedError)
-                # krb_globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
-                return
+            print("Login failed")
+            self.onSocketError(QAbstractSocket.ConnectionRefusedError)
+            return
 
         # Inform the GUI to change correspondingly the allowed level-downgrade
         broadcast_event(KaraboEventSender.LoginUserChanged, {})
-        self._sendLoginInformation(self.username, self.password, self.provider,
-                                   self.sessionToken)
+        self._sendLoginInformation(self.username, self.password,
+                                   self.provider, self.sessionToken)
 
     def _logout(self):
+        """Authentification logout
         """
-        Authentification logout.
-        """
-        # Execute Logout
         if self.authenticator is None:
             return
 
@@ -211,18 +174,20 @@ class Network(QObject):
             self.authenticator.logout()
         except Exception as e:
             print("Logout problem. Please verify, if service is running. {}"
-                  "".format(str(e)))
+                  "".format(e))
 
+    @pyqtSlot()
     def onReadServerData(self):
-        """ Run the network reader generator until it yields.
+        """Run the network reader generator until it yields.
         """
         # self.dataReader is a generator object from self._networkReadGenerator
         # Stepping it with next() causes network data to be read.
         next(self.dataReader)
 
     def _networkReadGenerator(self):
-        """ A generator which continuously reads GUI server messages and yields
-        when there isn't enough buffered data to be read.
+        """A generator which continuously reads GUI server messages
+
+        The generator yields when there isn't enough buffered data to be read.
         """
         sizeFormat = 'I'  # unsigned int
         bytesNeededSize = calcsize(sizeFormat)
@@ -254,6 +219,7 @@ class Network(QObject):
             diff = Timestamp().toTimestamp() - recv_timestamp
             broadcast_event(KaraboEventSender.ProcessingDelay, {'value': diff})
 
+    @pyqtSlot(QObject)
     def onSocketError(self, socketError):
         print("onSocketError", self.tcpSocket.errorString(), socketError)
 
@@ -299,45 +265,49 @@ class Network(QObject):
         self.connectToServer()
 
     def onServerConnection(self, connect):
-        """ connect states wether we should connect to or disconnect from
-        the server. """
+        """Connect or disconnect depending on the input parameter
+
+        :param connect: Either True or False
+        :type connect: bool
+        """
         if connect:
             self.connectToServer()
         else:
             self.disconnectFromServer()
 
+    @pyqtSlot()
     def onQuitApplication(self):
-        """
-        This slot is triggered from the MainWindow.
+        """This slot is triggered from the MainWindow
 
-        The user wants to quit the application.
-        So the network connection needs to be closed
-        and the manager needs to be informed to close
+        The user wants to quit the application so the network connection
+        needs to be closed and the manager needs to be informed to close
         the database connection as well.
         """
         self.endServerConnection()
 
+    @pyqtSlot()
     def onConnected(self):
-        def _LRU(item, lis, maxsize):
-            """
-            Apply of the LRU algorithm on lis
+        def _least_recently_used(item, sequence, maxsize):
+            """Apply of the Least Recently Used (LRU) algorithm on sequence
 
-            The LRU algorithm evicts from lis the Least Recently Used
-            element and item is moved to the lis front.
-            As the result, lis always contain its most popular element
+            The LRU algorithm evicts from sequence the least recently used
+            element and item is moved to the sequence front.
+            As the result, sequence always contains its most popular element
             """
-            if item in lis:
-                lis.remove(item)
-            lis = [item] + lis
-            return lis if len(lis) <= maxsize else lis[:maxsize]
+            if item in sequence:
+                sequence.remove(item)
+            sequence = [item] + sequence
+            return sequence if len(sequence) <= maxsize else sequence[:maxsize]
 
         # cache the server address
         server = '{}:{}'.format(self.hostname, self.port)
 
-        self.guiservers = _LRU(server, self.guiservers, int(self.maxservers))
+        self.guiservers = _least_recently_used(server, self.guiservers,
+                                               int(self.max_servers))
 
+        set_setting(KaraboSettings.USERNAME, self.username)
         set_setting(KaraboSettings.GUI_SERVERS, self.guiservers)
-        set_setting(KaraboSettings.MAX_GUI_SERVERS, self.maxservers)
+        set_setting(KaraboSettings.MAX_GUI_SERVERS, self.max_servers)
 
         # If some requests got piled up, because of no server connection,
         # now these get handled
@@ -346,11 +316,12 @@ class Network(QObject):
         self.requestQueue = []
         self.dataReader = self._networkReadGenerator()
 
+    @pyqtSlot()
     def onDisconnected(self):
         pass
 
-# ---------------------------------------------------------------------
-# Protocol methods
+    # ---------------------------------------------------------------------
+    # Protocol methods
 
     def onKillDevice(self, device_id):
         h = Hash("type", "killDevice")
@@ -516,8 +487,8 @@ class Network(QObject):
         h = Hash("type", "error", "traceback", error)
         self._tcpWriteHash(h)
 
-# --------------------------------------------------------------------------
-# private functions
+    # --------------------------------------------------------------------------
+    # private functions
 
     def _tcpWriteHash(self, h):
         # There might be a connect to server in progress, but without success
