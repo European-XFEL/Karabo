@@ -5,7 +5,7 @@
 #############################################################################
 from numpy import log2
 from PyQt4.QtCore import pyqtSlot, Qt
-from PyQt4.QtGui import QAction, QInputDialog, QLabel
+from PyQt4.QtGui import QAction, QInputDialog, QLabel, QSizePolicy
 from traits.api import Instance, Str, on_trait_change
 
 from karabo.common.api import State, KARABO_SCHEMA_DISPLAY_TYPE
@@ -30,15 +30,16 @@ class SingleBit(BaseBindingController):
         self._internal_widget = QLabel(parent)
         self._internal_widget.setAlignment(Qt.AlignCenter)
         self._internal_widget.setFocusPolicy(Qt.NoFocus)
-        self._internal_widget.setFixedSize(24, 24)
+        self._internal_widget.setMinimumSize(14, 8)
+        self._internal_widget.setSizePolicy(QSizePolicy.Expanding,
+                                            QSizePolicy.Expanding)
 
         objectName = generateObjectName(self)
         self._internal_widget.setObjectName(objectName)
         self._style_sheet = ("QLabel#{}".format(objectName) +
                              " {{ background-color: rgba{}; "
                              "border: 2px solid black;"
-                             "border-radius: 12px; }} ")
-
+                             "border-radius: 6px;}}")
         widget = add_unit_label(self.proxy, self._internal_widget,
                                 parent=parent)
 
