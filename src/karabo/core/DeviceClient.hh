@@ -343,13 +343,23 @@ namespace karabo {
             karabo::util::Hash loadConfigurationFromFile(const std::string& filename);
 
             /**
-             * Instantiate a device on a remote server
+             * Attempt to instantiate a device of the specified class, on a remote server with a given initial configuration
+             * 
              * @param serverInstanceId of the server to instantiate the device on. Needs to have the device plugin available
              * @param classId of the device to be instantiate
-             * @param configuration Hash which contains the initial device configuration
+             * @param configuration Hash which contains the initial device configuration. It must have one out of the two 
+             *        following forms:
+             *          option 1: 
+             *               - key "classId" pointing to a string,
+             *          option 2: 
+             *               - no classId specified: class id to be instantiated is taken from classId parameter
+             *          option 3 (for backward compatibility - not recommended):
+             *               - a single key (e.g. "myClassId") representing the classId
+             *               - the value for this key is a Hash with all the non-default properties
+             * 
              * @param timeoutInSeconds by default set to -1, which means block indefinitely, if a positive value an Exception is thrown
              *        if the device hasn't been instantiated.
-             * @return
+             * @return (ok, reply) pair where ok is true if no exception occurred and reply is the answer received from server
              */
             std::pair<bool, std::string> instantiate(const std::string& serverInstanceId, const std::string& classId,
                                                      const karabo::util::Hash& configuration = karabo::util::Hash(),
@@ -358,8 +368,7 @@ namespace karabo {
             /**
              * Instantiate a device on a remote server
              * @param serverInstanceId of the server to instantiate the device on. Needs to have the device plugin available
-             * @param configuration Hash which contains the initial device configuration. The classId of the device needs to be the top
-             *        level key.
+             * @param configuration Hash which contains the initial device configuration. The 'classId' attribute must be present.
              * @param timeoutInSeconds by default set to -1, which means block indefinitely, if a positive value an Exception is thrown
              *        if the device hasn't been instantiated.
              * @return
@@ -368,13 +377,35 @@ namespace karabo {
                                                      const karabo::util::Hash& configuration,
                                                      int timeoutInSeconds = -1);
 
+            
+            /**
+             * Utility method that takes care of adding classId to configuration of device to be instantiated 
+             * by instantiate and instantiateNoWait. If configuration does not have 'classId' key, this is added, 
+             * with the value of classId parameter. Otherwise the configuration 'classId' value is used.
+             * In the latter case, if the value of classId parameter mismatches the one of 'classId' attribute of configuration 
+             * a warning is thrown.
+             * @param classId of the device to be instantiated. 
+             * @param configuration of the device to be instantiated.
+             * @return configuration ready to be sent to device server
+             */
+            karabo::util::Hash formatConfigToInstantiate(const std::string& classId, const karabo::util::Hash& configuration);
+            
             /**
              * Instantiate a device on a remote server. In contrast to DeviceClient::instantiate, this function returns
              * immediately.
-             * @param serverInstanceId of the server to instantiate the device on. Needs to have the device plugin available.
+             * 
+             * @param serverInstanceId of the server to instantiate the device on. Needs to have the device plugin available
              * @param classId of the device to be instantiate
-             * @param configuration Hash which contains the initial device configuration
-             * @return
+             * @param configuration Hash which contains the initial device configuration. It must have one out of the two 
+             *        following forms:
+             *          option 1: 
+             *               - key "classId" pointing to a string,
+             *          option 2: 
+             *               - no classId specified: class id to be instantiated is taken from classId parameter
+             *          option 3 (for backward compatibility - not recommended):
+             *               - a single key (e.g. "myClassId") representing the classId
+             *               - the value for this key is a Hash with all the non-default properties
+             *
              */
             void instantiateNoWait(const std::string& serverInstanceId, const std::string& classId,
                                    const karabo::util::Hash& configuration = karabo::util::Hash());
@@ -383,8 +414,7 @@ namespace karabo {
              * Instantiate a device on a remote server. In contrast to DeviceClient::instantiate, this function returns
              * immediately.
              * @param serverInstanceId of the server to instantiate the device on. Needs to have the device plugin available
-             * @param configuration Hash which contains the initial device configuration. The classId of the device needs to be the top
-             *        level key.
+             * @param configuration Hash which contains the initial device configuration. The 'classId' attribute must be present.
              * @return
              */
             void instantiateNoWait(const std::string& serverInstanceId, const karabo::util::Hash& configuration);
