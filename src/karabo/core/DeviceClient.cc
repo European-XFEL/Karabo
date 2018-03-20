@@ -728,8 +728,8 @@ namespace karabo {
 
         void DeviceClient::instantiateNoWait(const std::string& serverInstanceId, const std::string& classId, const karabo::util::Hash& configuration) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN();
-            Hash tmp(classId, configuration);
-            m_signalSlotable.lock()->call(serverInstanceId, "slotStartDevice", tmp);
+            Hash cfgToSend = formatConfigToInstantiate(classId, configuration);
+            m_signalSlotable.lock()->call(serverInstanceId, "slotStartDevice", cfgToSend);
         }
 
 
@@ -738,10 +738,31 @@ namespace karabo {
             m_signalSlotable.lock()->call(serverInstanceId, "slotStartDevice", completeConfiguration);
         }
 
+        Hash DeviceClient::formatConfigToInstantiate(const std::string& classId, const karabo::util::Hash& configuration) {
+            if (configuration.has("classId")) {
+                // in this case cpp device server takes the one in the configuration anyway
+                // and middlelayer server is happy
+                const std::string& cid = configuration.get<string>("classId");
+                if (cid != classId) {
+                    // this is probably not what caller wants, but we keep allowing it not to possibly break existing code
+                    KARABO_LOG_FRAMEWORK_WARN << "instantiate classId parameter '" << classId << "' mismatches configuration classId '" << cid << " '.";
+                }
+                return configuration;
+            } else {
+                Hash cfgToSend("configuration", configuration, "classId", classId);
+                
+                if (configuration.has("deviceId")) {
+                    const std::string& did = configuration.get<string>("deviceId");
+                    cfgToSend.set("deviceId", did);
+                    cfgToSend.erase("configuration.deviceId");
+                }    
+                return cfgToSend;
+            }
+        }
 
         std::pair<bool, std::string > DeviceClient::instantiate(const std::string& serverInstanceId, const std::string& classId, const karabo::util::Hash& configuration, int timeoutInSeconds) {
-            Hash tmp(classId, configuration);
-            return this->instantiate(serverInstanceId, tmp, timeoutInSeconds);
+                Hash cfgToSend = formatConfigToInstantiate(classId, configuration);
+                return this->instantiate(serverInstanceId, cfgToSend, timeoutInSeconds);
         }
 
 
