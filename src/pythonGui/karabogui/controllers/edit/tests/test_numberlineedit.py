@@ -79,3 +79,29 @@ class TestNumberLineEdit(GuiTestCase):
             action.trigger()
 
         assert self.d_controller.model.decimals == 4
+
+    def test_decimal_validation(self):
+        self.d_controller._internal_widget.setText('1.0')
+        assert self.d_proxy.edit_value == 1.0
+        self.d_controller.model.decimals = 3
+        # invalid input for floating decimals
+        self.d_controller._internal_widget.setText('1.0003')
+        assert self.d_proxy.edit_value == 1.0
+        self.d_controller._internal_widget.setText('1.231')
+        assert self.d_proxy.edit_value == 1.231
+        self.d_controller._internal_widget.setText('1e-1')
+        assert self.d_proxy.edit_value == 0.1
+        # try to trick decimals fails!
+        self.d_controller._internal_widget.setText('1.278e-2')
+        assert self.d_proxy.edit_value == 0.1
+        # follow user input, we are only allowed to set 3 digits
+        self.d_controller._internal_widget.setText('1')
+        assert self.d_proxy.edit_value == 1.0
+        self.d_controller._internal_widget.setText('1.1')
+        assert self.d_proxy.edit_value == 1.1
+        self.d_controller._internal_widget.setText('1.12')
+        assert self.d_proxy.edit_value == 1.12
+        self.d_controller._internal_widget.setText('1.124')
+        assert self.d_proxy.edit_value == 1.124
+        self.d_controller._internal_widget.setText('1.1244')
+        assert self.d_proxy.edit_value == 1.124
