@@ -15,6 +15,7 @@ from karabogui.util import generateObjectName
 @register_binding_controller(ui_name='State Color Field',
                              klassname='DisplayStateColor',
                              binding_type=StringBinding,
+                             priority=20,
                              is_compatible=with_display_type('State'),
                              can_show_nothing=False)
 class DisplayStateColor(BaseBindingController):
