@@ -1500,31 +1500,19 @@ if (nodeData) {\
             if (e) return;
 
             try {
-                vector<string> forDisconnect;
-                {
-                    boost::mutex::scoped_lock lock(m_instanceUsageMutex);
-                    // Loop connected instances
-                    for (InstanceUsage::iterator it = m_instanceUsage.begin(); it != m_instanceUsage.end(); /*NOT ++it*/) {
+                boost::mutex::scoped_lock lock(m_instanceUsageMutex);
+                // Loop connected instances
+                for (InstanceUsage::iterator it = m_instanceUsage.begin(); it != m_instanceUsage.end(); /*NOT ++it*/) {
 
-                        it->second++; // All just age, but registered monitors are immortal.
-                        if (!this->isImmortal(it->first) && it->second >= CONNECTION_KEEP_ALIVE) {
-                            // We copy here to reduce mutex locking time
-                            forDisconnect.push_back(it->first);
-                            m_instanceUsage.erase(it++);
-                        } else {
-                            ++it;
-                        }
-                    }
-                }
-
-                if (forDisconnect.size()) {
-                    karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
-                    if (p) {
-                        for (size_t i = 0; i < forDisconnect.size(); ++i) {
-                            // Disconnect - and clean system description from respective 'areas'.
-                            // It does not harm to clean twice 'configuration' - if disconnected from either of
-                            // signal(State)Changed, the device configuration is not reliable anymore.
-                            const string& instanceId = forDisconnect[i];
+                    const bool immortal = this->isImmortal(it->first);
+                    if (!immortal && ++(it->second) >= CONNECTION_KEEP_ALIVE) {
+                        // It is mortal and too old, nobody has interest anymore:
+                        // Disconnect - and clean system description from respective 'areas'.
+                        // It does not harm to clean twice 'configuration' - if disconnected from either of
+                        // signal(State)Changed, the device configuration is not reliable anymore.
+                        const string& instanceId = it->first;
+                        karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
+                        if (p) {
                             KARABO_LOG_FRAMEWORK_DEBUG << "Prepare disconnection from '" << instanceId << "'.";
                             std::vector<std::string> cleanAreas(1, "configuration");
                             p->asyncDisconnect(instanceId, "signalChanged", "", "_slotChanged",
@@ -1535,9 +1523,22 @@ if (nodeData) {\
                                                          "signalStateChanged", instanceId, cleanAreas));
                             cleanAreas = {"fullSchema", "activeSchema"};
                             p->asyncDisconnect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated",
-                                                   bind_weak(&DeviceClient::disconnectHandler, this,
-                                                             "signalSchemaUpdated", instanceId, cleanAreas));
+                                               bind_weak(&DeviceClient::disconnectHandler, this,
+                                                         "signalSchemaUpdated", instanceId, cleanAreas));
+                        } else { // How happen?
+                            KARABO_LOG_FRAMEWORK_ERROR << "SignalSlotable invalid in age(..), cannot disconnect "
+                                    << instanceId;
                         }
+                        m_instanceUsage.erase(it++); // postfix increment for erasing while iterating through map
+                    } else { // immortal or 'young'
+                        if (immortal) {
+                            // Do not let it age. Once it gets mortal, it will stay connected for
+                            // CONNECTION_KEEP_ALIVE seconds. In this way we are quickly back without the
+                            // disconnect/connect overhead in case immortality is re-established quickly, e.g.
+                            // by a GUI client quickly closing and opening a scene etc.
+                            it->second = 0;
+                        }
+                        ++it;
                     }
                 }
             } catch (const std::exception& e) {
