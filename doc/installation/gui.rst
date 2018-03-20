@@ -56,11 +56,11 @@ First, upgrade `pip`, `setuptools`, and `matplotlib`::
 
 There are four additional packages needed:
 - `suds-jurko <http://pypi.python.org/packages/source/s/suds-jurko/suds-jurko-0.6.zip>`_
-- `traits 4.6.0 <https://pypi.python.org/pypi/traits>`_
+- `traits 4.6.0 <https://www.lfd.uci.edu/~gohlke/pythonlibs/#traits>`_
 - `pint 0.7.2 <https://pypi.python.org/pypi/Pint/>`_
 - `cycler 0.10.0 <https://pypi.python.org/pypi/cycler/>`_
 
-Install these a follows::
+Install these from the links above, or as follows::
 
     pip install suds-jurko==0.6
     pip install traits==4.6.0
