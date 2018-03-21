@@ -1,6 +1,7 @@
 from unittest.mock import Mock
 
-from PyQt4.QtGui import QToolButton
+from PyQt4.QtGui import QToolButton, QMessageBox
+from unittest.mock import MagicMock
 
 from karabo.middlelayer import Configurable, State, Slot, String
 from karabogui.binding.api import (
@@ -104,3 +105,45 @@ class TestDisplayCommand(GuiTestCase):
 
         assert controller._actions[0].action.text() == 'Call ME'
         assert controller._actions[1].action.text() == 'yep'
+
+    def test_confirmation_dialog(self):
+        slot_proxy = get_slot_proxy()
+        controller = DisplayCommand(proxy=slot_proxy)
+        controller.create(None)
+        network = Mock()
+
+        def _get_rgb_button():
+            red = button.palette().color(0).red()
+            green = button.palette().color(0).green()
+            blue = button.palette().color(0).blue()
+            return (red, green, blue)
+
+        with singletons(network=network):
+            controller.model.requires_confirmation = False
+            controller._button.click()
+            button = controller.widget.children()[1]
+
+            rgb = _get_rgb_button()
+
+            self.assertTupleEqual(rgb, (76, 76, 76))
+            self.assertEqual(network.onExecute.call_count, 1)
+            self.assertFalse(button.font().bold())
+
+        with singletons(network=network):
+            QMessageBox.question = MagicMock(return_value=QMessageBox.No)
+            controller._requires_confirmation_slot()
+            controller._button.click()
+            self.assertEqual(network.onExecute.call_count, 1)
+            self.assertTrue(button.font().bold())
+
+            rgb = _get_rgb_button()
+
+            self.assertTupleEqual(rgb, (255, 145, 255))
+
+            QMessageBox.question = MagicMock(return_value=QMessageBox.Yes)
+            controller._button.click()
+            self.assertEqual(network.onExecute.call_count, 2)
+
+        controller._requires_confirmation_slot()
+        rgb = _get_rgb_button()
+        self.assertTupleEqual(rgb, (76, 76, 76))
