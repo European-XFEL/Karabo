@@ -5,14 +5,15 @@
 #############################################################################
 from guiqwt.builder import make
 from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import (QCheckBox, QComboBox, QHBoxLayout, QImage, QLabel,
+from PyQt4.QtGui import (QCheckBox, QComboBox, QHBoxLayout, QLabel,
                          QSlider, QSpinBox, QVBoxLayout, QWidget)
 from traits.api import Array, Instance, Int
 
 from karabo.common.scenemodel.api import DisplayImageModel
+from karabo.middlelayer import EncodingType
 from karabogui.binding.api import ImageBinding
 from karabogui.controllers.api import (
-    BaseBindingController, KaraboImageDialog, get_dimensions_and_format,
+    BaseBindingController, KaraboImageDialog, get_dimensions_and_encoding,
     get_image_data, register_binding_controller, DIMENSIONS)
 
 
@@ -93,12 +94,12 @@ class DisplayImage(BaseBindingController):
 
     def value_update(self, proxy):
         img_node = proxy.value
-        dimX, dimY, dimZ, format = get_dimensions_and_format(img_node)
+        dimX, dimY, dimZ, encoding = get_dimensions_and_encoding(img_node)
         if dimX is not None and dimY is not None and dimZ is None:
             if self._cellWidget.isVisible():
                 self._unset_slider()
         elif dimZ is not None:
-            if dimZ != 3:
+            if encoding == EncodingType.GRAY:
                 if self._axis == DIMENSIONS['Y']:
                     self._set_slider(dimX)
                 if self._axis == DIMENSIONS['X']:
@@ -108,12 +109,29 @@ class DisplayImage(BaseBindingController):
         else:
             return
 
-        array = get_image_data(img_node, dimX, dimY, dimZ, format)
+        array = get_image_data(img_node, dimX, dimY, dimZ)
         if array is None:
             return
 
+        if encoding == EncodingType.YUV:
+            if dimZ == 2:  # YUV422
+                # input image is (u1, y1, v1, y2, u2, y3, v2, y4, ...)
+                # only display "luma" (Y') component in the GUI
+                array = array[:, :, 1]
+                dimZ = None
+                encoding = EncodingType.GRAY
+            elif dimZ == 3:  # YUV444
+                # input image is (u1, y1, v1, u2, y2, v2, ...)
+                # only display "luma" (Y') component in the GUI
+                array = array[:, :, 1]
+                dimZ = None
+                encoding = EncodingType.GRAY
+            else:
+                return
+
         self._img_array = array
-        if format not in (QImage.Format_Indexed8, QImage.Format_RGB888):
+
+        if dimZ is not None and encoding == EncodingType.GRAY:
             if self._axis == DIMENSIONS['Y']:
                 array = self._img_array[:, self._selectedCell, :]
             elif self._axis == DIMENSIONS['X']:
