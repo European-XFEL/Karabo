@@ -17,10 +17,11 @@ from traits.api import (
     Bool, Callable, HasStrictTraits, Instance, on_trait_change, String)
 
 from karabo.common.scenemodel.api import ScientificImageModel, WebcamImageModel
+from karabo.middlelayer import EncodingType
 from karabogui import icons
 from karabogui.binding.api import ImageBinding
 from karabogui.controllers.api import (
-    BaseBindingController, KaraboImageWidget, get_dimensions_and_format,
+    BaseBindingController, KaraboImageWidget, get_dimensions_and_encoding,
     get_image_data, register_binding_controller)
 from karabogui.util import SignalBlocker
 
@@ -65,13 +66,29 @@ class _BaseImage(BaseBindingController):
 
     def value_update(self, proxy):
         img_node = proxy.value
-        dimX, dimY, dimZ, format = get_dimensions_and_format(img_node)
+        dimX, dimY, dimZ, encoding = get_dimensions_and_encoding(img_node)
         if dimX is None and dimY is None:
             return
 
-        npy = get_image_data(img_node, dimX, dimY, dimZ, format)
+        npy = get_image_data(img_node, dimX, dimY, dimZ)
         if npy is None:
             return
+
+        if encoding == EncodingType.YUV:
+            if dimZ == 2:  # YUV422
+                # input image is (u1, y1, v1, y2, u2, y3, v2, y4, ...)
+                # only display "luma" (Y') component in the GUI
+                npy = npy[:, :, 1]
+                dimZ = None
+                encoding = EncodingType.GRAY
+            elif dimZ == 3:  # YUV444
+                # input image is (u1, y1, v1, u2, y2, v2, ...)
+                # only display "luma" (Y') component in the GUI
+                npy = npy[:, :, 1]
+                dimZ = None
+                encoding = EncodingType.GRAY
+            else:
+                return
 
         # Check for already existing image items
         image_items = self._image_widget.get_image_item()
@@ -86,7 +103,12 @@ class _BaseImage(BaseBindingController):
             if lut_range[0] == lut_range[1]:
                 # if not set not set, let it autoscale
                 lut_range = None
-            last_img.set_data(npy.astype('float'), lut_range=lut_range)
+            if encoding == EncodingType.GRAY:
+                last_img.set_data(npy.astype('float'), lut_range=lut_range)
+            elif encoding == EncodingType.RGB:
+                last_img.set_data(npy.astype('float'))
+            else:
+                return
 
             # In case an axis is disabled - the scale needs to be adapted
             if self._zoom_rect.isEmpty():
