@@ -3,13 +3,16 @@ from unittest.mock import Mock
 from traits.api import Undefined
 
 from karabo.common.api import DeviceStatus
-from karabo.middlelayer import Hash
+from karabo.middlelayer import Configurable, Hash, Int32
 from karabogui.testing import (
-    assert_trait_change, get_class_property_proxy, singletons)
+    assert_trait_change, get_class_property_proxy, singletons,
+    GuiTestCase, set_proxy_value)
+from karabogui.controllers.edit.numberlineedit import IntLineEdit
+from karabo.common.scenemodel.api import IntLineEditModel
 from ..api import (
     ImageBinding, DeviceProxy, DeviceClassProxy, PropertyProxy,
     apply_default_configuration, build_binding, extract_sparse_configurations,
-    get_editor_value
+    get_editor_value, get_binding_value
 )
 from .schema import (
     get_all_props_schema, get_pipeline_schema, get_simple_schema,
@@ -284,3 +287,55 @@ def test_delegation_with_schema_update():
 
     # The value on the proxy has been reset to the default for strings
     assert proxy.value is Undefined
+
+
+class IntObject(Configurable):
+    # prop = Int32()
+    prop = Int32(minExc=-2**24, maxExc=2**24)   # 12345678 < 2*24 < 123456789
+
+
+class TestNumberEdit(GuiTestCase):
+    def setUp(self):
+        super(TestNumberEdit, self).setUp()
+        self.i_proxy = get_class_property_proxy(IntObject.getClassSchema(),
+                                                'prop')
+        self.i_controller = IntLineEdit(proxy=self.i_proxy,
+                                        model=IntLineEditModel())
+        self.i_controller.create(None)
+        self.i_controller.set_read_only(False)
+
+    def tearDown(self):
+        self.i_controller.destroy()
+        assert self.i_controller.widget is None
+
+    def test_property_proxy_edit_values_from_text_input(self):
+        def pprint():
+            print("\nproxy: editor_value = {}".format(
+                get_editor_value(self.i_proxy)))
+            print("proxy: binding_value = {}".format(
+                get_binding_value(self.i_proxy)))
+            print("controller: _internal_value = {}".format(
+                self.i_controller._internal_value))
+            print("controller: editor_value = {}".format(
+                self.i_controller.proxy.edit_value))
+            print("Validated: "+str(self.i_controller._validate_value()))
+            print()
+        set_proxy_value(self.i_proxy, 'prop', 1234)
+        pprint()
+
+        self.i_controller._internal_widget.setText("12345")
+        self.i_controller._internal_widget.setText("123456")
+        self.i_controller._internal_widget.setText("1234567")
+        self.i_controller._internal_widget.setText("12345678")
+        self.i_controller._internal_widget.setText("123456789")
+        pprint()
+        assert get_editor_value(self.i_proxy) == 1234
+
+        # another scenario
+        # self.i_controller._on_text_changed("12345")
+        # self.i_controller._on_text_changed("123456")
+        # self.i_controller._on_text_changed("1234567")
+        # self.i_controller._on_text_changed("12345678")
+        # self.i_controller._on_text_changed("123456789")
+        # pprint()
+        # assert get_editor_value(self.i_proxy) == 123456789
