@@ -4,8 +4,8 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from PyQt4.QtCore import Qt, pyqtSlot
-from PyQt4.QtGui import (QAction, QInputDialog, QLineEdit, QDoubleValidator,
-                         QPalette, QValidator)
+from PyQt4.QtGui import (
+    QAction, QInputDialog, QLineEdit, QPalette, QValidator)
 from traits.api import Instance, Int, Str, on_trait_change
 
 from karabo.common.scenemodel.api import DoubleLineEditModel, IntLineEditModel
@@ -59,30 +59,14 @@ class NumberLineEdit(BaseBindingController):
         if self.proxy.binding is None:
             return
         if acceptable_input:
-            if (isinstance(self._validator, QDoubleValidator) and
-                    '.' in text and
-                    self._validator.StandardNotation):
-                    # XXX: do we need this if-clause?
-                intdci = text.split('.')
-                if len(intdci) > 1:
-                    part2 = intdci[1]
-                    if self._internal_value:
-                        tail = self._internal_value.split('.')[1]
-                        if len(tail) > len(part2):
-                            part2 += tail[len(part2):]
-                else:
-                    part2 = ''
-                self._internal_value = '.'.join([intdci[0], part2])
-                self._display_value = text
-            else:
-                self._internal_value = text
+            self._internal_value = text
             self._last_cursor_pos = self._internal_widget.cursorPosition()
             # proxy.edit_value is set to None if the user input is not valid
             self.proxy.edit_value = self._validate_value()
 
     def _validate_value(self):
         """This method validates the current value of the widget and returns
-        on sucess the value or in failure None.
+        on success the value or in failure None.
         """
         if not self._internal_value:
             return None
