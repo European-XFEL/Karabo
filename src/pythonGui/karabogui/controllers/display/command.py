@@ -1,10 +1,14 @@
 from collections import namedtuple
 
-from PyQt4.QtGui import QAction, QStackedLayout, QToolButton, QWidget
+from PyQt4.QtCore import pyqtSlot
+from PyQt4.QtGui import (
+    QAction, QMessageBox, QStackedLayout, QToolButton, QWidget
+)
 from traits.api import Instance, List
 
 from karabo.common.api import State, KARABO_SCHEMA_DISPLAYED_NAME
 from karabo.common.scenemodel.api import DisplayCommandModel
+from karabogui.const import CMD_LATCH
 from karabogui import globals as krb_globals
 from karabogui.binding.api import get_binding_value, SlotBinding
 from karabogui.controllers.api import (
@@ -46,7 +50,32 @@ class DisplayCommand(BaseBindingController):
         layout.addWidget(self._button)
 
         self.add_proxy(self.proxy)
+
+        confirmation = QAction('Requires Confirmation', widget)
+        confirmation.setCheckable(True)
+        confirmation.setChecked(self.model.requires_confirmation)
+        confirmation.toggled.connect(self._requires_confirmation_slot)
+
+        self._change_button_style(widget)
+
+        widget.addAction(confirmation)
         return widget
+
+    @pyqtSlot()
+    def _requires_confirmation_slot(self):
+        self.model.requires_confirmation = not self.model.requires_confirmation
+        self._change_button_style(self.widget)
+
+    def _change_button_style(self, widget):
+        """Receives the widget button which will be modified
+        :param widget: QWidget
+        """
+        if self.model.requires_confirmation:
+            rgb = ("rgb({0}, {1}, {2})").format(*CMD_LATCH)
+            widget.setStyleSheet(
+                'QToolButton {{ font: bold; color: {} }}'.format(rgb))
+        else:
+            widget.setStyleSheet('QToolButton { color: rgb(76, 76, 76) }')
 
     def binding_update(self, proxy):
         for item in self._actions:
@@ -78,10 +107,30 @@ class DisplayCommand(BaseBindingController):
         # if displayed name is not set, use path
         display_name = attributes.get(KARABO_SCHEMA_DISPLAYED_NAME, proxy.path)
         item.action.setText(display_name)
-        item.action.triggered.connect(item.proxy.execute)
-        # State binding can be None
+        item.action.triggered.connect(lambda: self._dialog_confirmation(item))
         if proxy.root_proxy.state_binding is not None:
             self.state_update(proxy)
+
+    @pyqtSlot()
+    def _dialog_confirmation(self, item_proxy):
+        """This slot is necessary when the operator wants a dialog
+        confirmation for the user when execute the button action
+        :param item_proxy: It's an Item object with proxy and action
+        information
+        """
+        if self.model.requires_confirmation:
+            message_box = QMessageBox()
+            message_box.setModal(False)
+            confirmation = message_box.question(
+                                    self.widget, 'Confirmation',
+                                    'Continue with this operation?',
+                                    QMessageBox.No,
+                                    QMessageBox.Yes
+                                )
+
+            if confirmation == QMessageBox.No:
+                return
+        item_proxy.proxy.execute()
 
     def _set_default_action(self):
         for a in self._button.actions():
