@@ -7,6 +7,7 @@ from karabogui.indicators import STATE_COLORS
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..statecolor import DisplayStateColor
+from karabogui.controllers.util import get_class_const_trait
 
 
 class Object(Configurable):
@@ -48,3 +49,6 @@ class TestStateColorModel(GuiTestCase):
             action.trigger()
 
         assert self.controller.widget.text() == 'fake news'
+
+    def test_priority(self):
+        assert get_class_const_trait(self.controller, '_priority') == 20
