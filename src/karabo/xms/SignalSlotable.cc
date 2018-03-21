@@ -431,18 +431,19 @@ namespace karabo {
 
         void SignalSlotable::consumerErrorNotifier(const std::string& consumer,
                                                    karabo::net::JmsConsumer::Error ec, const std::string& message) {
-            // log an error anyway
             const std::string fullMsg("Error " + toString(static_cast<int> (ec))
                                       + " from JmsConsumer '" + consumer + "': " + message);
-            KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": " << fullMsg;
-
             boost::mutex::scoped_lock lock(m_brokerErrorHandlerMutex);
             if (m_brokerErrorHandler) {
                 try {
                     m_brokerErrorHandler(fullMsg);
                 } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": Exception in broker error handler: " << e.what();
+                    KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": Exception in broker error handler when "
+                            << "handling '" << fullMsg << "':" << e.what();
                 }
+            } else {
+                // log an extra error only if no handler
+                KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << ": " << fullMsg;
             }
         }
 
