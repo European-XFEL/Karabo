@@ -653,7 +653,8 @@ MessageConsumer::receive(Message ** const message,
   // Hack by XFEL: info about dropped messages - also in return code
   if (xNumDropped) {
     char xMsg[256];
-    snprintf(xMsg, 256, "dropped %d messages: %d expired, %d overflowed (queue size %d)",
+    snprintf(xMsg, sizeof(xMsg),
+             "dropped %d messages: %d expired, %d overflowed (queue size %d)",
 	     xNumDropped, xNumExpired, xNumOverflow, xQueueSize);
     LOG_WARNING(( CODELOC, CONSUMER_LOG_MASK, NULL_CONN_ID, MQ_SUCCESS, xMsg ));
   }

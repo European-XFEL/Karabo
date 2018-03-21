@@ -134,7 +134,7 @@ private:
   void afterMessageListener(const Message * message, MQError mqerror);
 
   // Hack by XFEL:
-  static const PRUint32 xThresholdLow_ = 500;
+  static const PRUint32 xThresholdLow_ = 200;
   static const PRUint32 xThresholdHigh_ = 5000;
   PRInt32 xThreshold_;
 
