@@ -1,6 +1,7 @@
 from karabo.middlelayer_api.hash import ByteArray
 from karabo.middlelayer import (
-    Bool, Configurable, Hash, Int8, Node, VectorInt8, VectorInt16)
+    Bool, Configurable, EncodingType, Hash, Int8, Node,
+    VectorInt8, VectorInt16)
 
 
 # Reverse map of controllers.images.
@@ -41,6 +42,7 @@ class ImageNode(Configurable):
     dims = VectorInt16()
     stackAxis = Int8()
     geometry = Node(Geometry)
+    encoding = Int8()
 
 
 class OutputNodeInner(Configurable):
@@ -68,11 +70,11 @@ dimX = 40
 dimY = 30
 
 
-def get_image_hash(val=0, dimz=False, *, rgb=False, update=True):
+def get_image_hash(val=0, dimZ=None, *, encoding=EncodingType.GRAY,
+                   update=True):
     npix = dimX * dimY
     dims_val = [dimY, dimX]
-    if dimz:
-        dimZ = 3 if rgb else 2
+    if dimZ:
         dims_val.append(dimZ)
         npix *= dimZ
     pixel_hsh = Hash('type', TYPENUM_MAP['uint8'],
@@ -80,5 +82,6 @@ def get_image_hash(val=0, dimz=False, *, rgb=False, update=True):
     img_hsh = Hash('pixels', pixel_hsh,
                    'dims', dims_val,
                    'stackAxis', ZAXIS,
-                   'geometry', _get_geometry_hash(update))
+                   'geometry', _get_geometry_hash(update),
+                   'encoding', encoding)
     return Hash('image', img_hsh)
