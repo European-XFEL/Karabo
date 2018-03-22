@@ -81,6 +81,13 @@ class NumberLineEdit(BaseBindingController):
             value = None
         return value
 
+    def on_decline(self):
+        """When the input was declined, this method is executed
+        """
+        # we know that after we are in valid range, hence we reset the
+        # background
+        self._internal_widget.setPalette(self._normal_palette)
+
 
 class IntValidator(QValidator):
     def __init__(self, min=None, max=None, parent=None):
