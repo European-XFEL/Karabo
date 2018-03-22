@@ -64,10 +64,10 @@ class TestNumberLineEdit(GuiTestCase):
         test_out_of_range = ['1.0e5', '-1.0e5']
         results = [100000, -100000]
         for i, test_string in enumerate(test_out_of_range):
-            # shouldn't be accepted:
+            # shouldn't be accepted, the edit value is None:
             self.d_controller._internal_widget.setText(test_string)
             assert self.d_proxy.edit_value != results[i]
-            assert self.d_proxy.edit_value == float(last_accepted_value)
+            assert self.d_proxy.edit_value is None
 
     def test_change_decimals(self):
         action = self.d_controller.widget.actions()[0]
@@ -86,14 +86,14 @@ class TestNumberLineEdit(GuiTestCase):
         self.d_controller.model.decimals = 3
         # invalid input for floating decimals
         self.d_controller._internal_widget.setText('1.0003')
-        assert self.d_proxy.edit_value == 1.0
+        assert self.d_proxy.edit_value is None
         self.d_controller._internal_widget.setText('1.231')
         assert self.d_proxy.edit_value == 1.231
         self.d_controller._internal_widget.setText('1e-1')
         assert self.d_proxy.edit_value == 0.1
         # try to trick decimals fails!
         self.d_controller._internal_widget.setText('1.278e-2')
-        assert self.d_proxy.edit_value == 0.1
+        assert self.d_proxy.edit_value is None
         # follow user input, we are only allowed to set 3 digits
         self.d_controller._internal_widget.setText('1')
         assert self.d_proxy.edit_value == 1.0
@@ -104,4 +104,4 @@ class TestNumberLineEdit(GuiTestCase):
         self.d_controller._internal_widget.setText('1.124')
         assert self.d_proxy.edit_value == 1.124
         self.d_controller._internal_widget.setText('1.1244')
-        assert self.d_proxy.edit_value == 1.124
+        assert self.d_proxy.edit_value is None

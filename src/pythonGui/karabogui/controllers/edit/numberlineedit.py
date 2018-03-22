@@ -52,17 +52,21 @@ class NumberLineEdit(BaseBindingController):
     @pyqtSlot(str)
     def _on_text_changed(self, text):
         acceptable_input = self._internal_widget.hasAcceptableInput()
-        palette = (self._normal_palette if acceptable_input
-                   else self._error_palette)
-        self._internal_widget.setPalette(palette)
-
         if self.proxy.binding is None:
+            self._internal_widget.setPalette(self._normal_palette)
             return
         if acceptable_input:
             self._internal_value = text
             self._last_cursor_pos = self._internal_widget.cursorPosition()
             # proxy.edit_value is set to None if the user input is not valid
             self.proxy.edit_value = self._validate_value()
+        else:
+            # erase the edit value
+            self.proxy.edit_value = None
+        # update color after text change!
+        palette = (self._normal_palette if acceptable_input
+                   else self._error_palette)
+        self._internal_widget.setPalette(palette)
 
     def _validate_value(self):
         """This method validates the current value of the widget and returns
