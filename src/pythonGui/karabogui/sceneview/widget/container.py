@@ -74,6 +74,8 @@ class ControllerContainer(QWidget):
 
         for proxy in self.widget_controller.proxies:
             proxy.revert_edit()
+        # allow the controller to react on the decline
+        self.widget_controller.on_decline()
 
     def destroy(self):
         """Tell the controller to clean up
