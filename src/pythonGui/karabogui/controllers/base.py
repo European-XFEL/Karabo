@@ -86,6 +86,11 @@ class BaseBindingController(HasStrictTraits):
         "OPTIONAL": Not all widgets care when their values change, but most do.
         """
 
+    def on_decline(self):
+        """Implemented by subclasses to receive notifications that the value
+        was declined.
+        """
+
     # -------------------------------------------------------------------------
     # Public interface
 

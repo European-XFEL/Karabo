@@ -121,6 +121,15 @@ class TestNumberLineEdit(GuiTestCase):
         self.d_controller._internal_widget.setText('1.1244')
         assert self.d_proxy.edit_value is None
 
+    def test_decline_color(self):
+        self.d_controller._internal_widget.setText('10000.0')
+        assert self.d_proxy.edit_value is None
+        error_pal = self.d_controller._error_palette
+        assert self.d_controller._internal_widget.palette() == error_pal
+        self.d_controller.on_decline()
+        normal_pal = self.d_controller._normal_palette
+        assert self.d_controller._internal_widget.palette() == normal_pal
+
 
 class IntObject24(Configurable):
     prop = Int32(minExc=-2**24, maxExc=2**24)   # 12345678 < 2*24 < 123456789
