@@ -55,15 +55,17 @@ class TestNumberLineEdit(GuiTestCase):
         # Since `maxInc=1000`, then the following shouldn't be accepted,
         # so the value is still 0.0314
         self.d_controller._internal_widget.setText('3.14e9')
-        assert abs(self.d_proxy.edit_value - 0.0314) < 0.00001
+        assert abs(self.d_proxy._edit_binding.value - 0.0314) < 0.00001
+        assert self.d_proxy.edit_value is None
 
         self.i_controller._internal_widget.setText('3')
         assert self.i_proxy.edit_value == 3
         # Since 12 is greater than `maxInc=10`, then it shouldn't be accepted,
         # so the value is still 3
         self.i_controller._internal_widget.setText('12')
-        assert self.i_proxy.edit_value != 12
-        assert self.i_proxy.edit_value == 3
+        assert self.i_proxy.edit_value != '12'
+        assert self.i_proxy.edit_value is None
+        assert self.i_controller._internal_value == '3'
 
     def test_scientific_notation(self):
         test_strings = ['3.141592e0', '1.23e2', '1.23e+2', '1.23e-1']
@@ -121,19 +123,24 @@ class TestNumberLineEdit(GuiTestCase):
 
 
 class IntObject24(Configurable):
-    # prop = Int32()
     prop = Int32(minExc=-2**24, maxExc=2**24)   # 12345678 < 2*24 < 123456789
 
 
-class TestNumberEdit(GuiTestCase):
+class TestNumberIntEdit(GuiTestCase):
     def setUp(self):
-        super(TestNumberEdit, self).setUp()
+        super(TestNumberIntEdit, self).setUp()
         self.i_proxy = get_class_property_proxy(IntObject24.getClassSchema(),
                                                 'prop')
         self.i_controller = IntLineEdit(proxy=self.i_proxy,
                                         model=IntLineEditModel())
         self.i_controller.create(None)
         self.i_controller.set_read_only(False)
+        self.normal_palette = self.i_controller._normal_palette
+        self.error_palette = self.i_controller._error_palette
+
+    @property
+    def palette(self):
+            return self.i_controller._internal_widget.palette()
 
     def tearDown(self):
         self.i_controller.destroy()
@@ -158,16 +165,9 @@ class TestNumberEdit(GuiTestCase):
         self.i_controller._internal_widget.setText("123456")
         self.i_controller._internal_widget.setText("1234567")
         self.i_controller._internal_widget.setText("12345678")
+        assert self.palette == self.normal_palette
         self.i_controller._internal_widget.setText("123456789")
         pprint()
+        assert self.palette == self.error_palette
         assert not get_editor_value(self.i_proxy) == 12345678
         assert get_editor_value(self.i_proxy) == 1234
-
-        # another scenario
-        # self.i_controller._on_text_changed("12345")
-        # self.i_controller._on_text_changed("123456")
-        # self.i_controller._on_text_changed("1234567")
-        # self.i_controller._on_text_changed("12345678")
-        # self.i_controller._on_text_changed("123456789")
-        # pprint()
-        # assert get_editor_value(self.i_proxy) == 12345678
