@@ -91,6 +91,19 @@ def get_min_max(binding):
     return None, None
 
 
+def get_min_max_size(binding):
+    """Given a BaseBinding instance, return the minimum and maximum size
+    which can be assigned to the vector trait
+    """
+    if isinstance(binding, types.VectorBinding):
+        min_size = binding.attributes.get(const.KARABO_SCHEMA_MIN_SIZE)
+        max_size = binding.attributes.get(const.KARABO_SCHEMA_MAX_SIZE)
+
+        return min_size, max_size
+
+    return None, None
+
+
 def has_changes(binding, old_value, new_value):
     """Compare old/new values assigned to a binding to determine if there is
     a real difference.
