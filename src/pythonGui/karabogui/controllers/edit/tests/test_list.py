@@ -4,7 +4,7 @@ from PyQt4.QtGui import QDialog
 
 from karabo.common.scenemodel.api import EditableListModel
 from karabo.middlelayer import Configurable, VectorInt32
-from karabogui.binding.api import apply_default_configuration
+from karabogui.binding.api import apply_default_configuration, get_min_max_size
 from karabogui.controllers.listedit import ListEdit
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
@@ -13,6 +13,10 @@ from ..list import EditableList
 
 class Object(Configurable):
     prop = VectorInt32(defaultValue=[1])
+
+
+class SizeObject(Configurable):
+    prop = VectorInt32(defaultValue=[1], minSize=1, maxSize=3)
 
 
 class ListEditMock(ListEdit):
@@ -32,6 +36,13 @@ class TestEditableList(GuiTestCase):
                                        model=EditableListModel())
         self.controller.create(None)
         apply_default_configuration(self.proxy.root_proxy.binding)
+
+        self.size_proxy = get_class_property_proxy(SizeObject.getClassSchema(),
+                                                   'prop')
+        self.size_controller = EditableList(proxy=self.size_proxy,
+                                            model=EditableListModel())
+        self.size_controller.create(None)
+        apply_default_configuration(self.size_proxy.root_proxy.binding)
 
     def tearDown(self):
         self.controller.destroy()
@@ -66,3 +77,13 @@ class TestEditableList(GuiTestCase):
             self.controller.set_read_only(False)
             self.controller._on_edit_clicked()
             assert all(self.proxy.edit_value == [-1, 42, -1])
+
+    def test_size_list(self):
+        assert get_min_max_size(self.size_proxy.binding) == (1, 3)
+        self.size_controller.set_read_only(False)
+        self.size_controller._internal_widget.setText('3,4')
+        assert all(self.size_proxy.edit_value == [3, 4])
+        self.size_controller._internal_widget.setText('3,4,5,6')
+        assert self.size_proxy.edit_value is None
+        self.size_controller._internal_widget.setText('')
+        assert self.size_proxy.edit_value is None
