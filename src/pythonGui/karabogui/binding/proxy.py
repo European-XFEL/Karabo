@@ -375,7 +375,8 @@ class PropertyProxy(HasStrictTraits):
         """Revert any local edits made to a property.
         """
         self.edit_value = None
-        self.binding.config_update = True
+        if self.binding is not None:
+            self.binding.config_update = True
 
     def start_monitoring(self):
         """Tell the GUI server to start monitoring the device for our property
