@@ -3,18 +3,20 @@ from ast import literal_eval
 
 from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import (
-    QDialog, QHBoxLayout, QLineEdit, QToolButton, QValidator, QWidget)
+    QDialog, QHBoxLayout, QLineEdit, QPalette, QToolButton,
+    QValidator, QWidget)
 from traits.api import Instance, Int
 
 from karabo.common.scenemodel.api import DisplayListModel, EditableListModel
 from karabogui import icons
 from karabogui.binding.api import (
-    VectorBinding, VectorCharBinding, VectorHashBinding, VectorNoneBinding,
-    VectorBoolBinding, VectorComplexDoubleBinding, VectorComplexFloatBinding,
-    VectorDoubleBinding, VectorFloatBinding, VectorInt8Binding,
-    VectorInt16Binding, VectorInt32Binding, VectorInt64Binding,
-    VectorStringBinding, VectorUint8Binding, VectorUint16Binding,
-    VectorUint32Binding, VectorUint64Binding, get_editor_value)
+    get_min_max_size, VectorBinding, VectorCharBinding, VectorHashBinding,
+    VectorNoneBinding, VectorBoolBinding, VectorComplexDoubleBinding,
+    VectorComplexFloatBinding, VectorDoubleBinding, VectorFloatBinding,
+    VectorInt8Binding, VectorInt16Binding, VectorInt32Binding,
+    VectorInt64Binding, VectorStringBinding, VectorUint8Binding,
+    VectorUint16Binding, VectorUint32Binding, VectorUint64Binding,
+    get_editor_value)
 
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
@@ -27,20 +29,27 @@ class _BaseListController(BaseBindingController):
     _internal_widget = Instance(QLineEdit)
     _validator = Instance(QValidator)
     layout = Instance(QHBoxLayout)
+    _normal_palette = Instance(QPalette)
+    _error_palette = Instance(QPalette)
 
     def create_widget(self, parent):
         composite_widget = QWidget(parent)
         self.layout = QHBoxLayout(composite_widget)
         self.layout.setContentsMargins(0, 0, 0, 0)
-
         self._internal_widget = QLineEdit()
         self.layout.addWidget(self._internal_widget)
+        self._normal_palette = self._internal_widget.palette()
+        self._error_palette = QPalette(self._normal_palette)
+        self._error_palette.setColor(QPalette.Text, Qt.red)
 
         return composite_widget
 
     def binding_update(self, proxy):
         binding = proxy.binding
+        min_size, max_size = get_min_max_size(proxy.binding)
         self._validator = ListValidator(binding=binding)
+        self._validator.min_size = min_size
+        self._validator.max_size = max_size
         self._internal_widget.setValidator(self._validator)
 
     def set_read_only(self, ro):
@@ -72,7 +81,7 @@ class _BaseListController(BaseBindingController):
             return
 
         if not text:
-            self.proxy.edit_value = []
+            self.proxy.edit_value = self._validate_empty()
             return
 
         acceptable_input = self._internal_widget.hasAcceptableInput()
@@ -82,6 +91,26 @@ class _BaseListController(BaseBindingController):
                     else literal_eval)
             self.proxy.edit_value = [cast(val)
                                      for val in text.split(',') if val != '']
+        else:
+            # erase edit value!
+            self.proxy.edit_value = None
+        # update color after text change!
+        palette = (self._normal_palette if acceptable_input
+                   else self._error_palette)
+        self._internal_widget.setPalette(palette)
+
+    def on_decline(self):
+        if self._internal_widget.palette() == self._error_palette:
+            self._internal_widget.setPalette(self._normal_palette)
+
+    def _validate_empty(self):
+        """This method validates an empty value on the list
+        """
+        value = []
+        state, _, _ = self._validator.validate(value, 0)
+        if state == QValidator.Invalid:
+            value = None
+        return value
 
     @pyqtSlot()
     def _on_edit_clicked(self):
@@ -158,23 +187,35 @@ class ListValidator(QValidator):
     pattern = None
     intermediate = ()
 
-    def __init__(self, binding=None):
+    def __init__(self, binding=None, min_size=None, max_size=None):
         super(ListValidator, self).__init__()
         self.pattern = re.compile(REGEX_MAP.get(type(binding), ''))
         self.intermediate = MEDIATE_MAP.get(type(binding), ())
+        self.min_size = min_size
+        self.max_size = max_size
 
     def validate(self, input, pos):
         """The main validate function
         """
-        # completely empty input is acceptable!
-        if input == '':
+        # completely empty input might be acceptable!
+        if input in ('', []) and (self.min_size is None or self.min_size == 0):
             return self.Acceptable, input, pos
+        elif (input in ('', []) and self.min_size is not None
+                and self.min_size > 0):
+            return self.Invalid, input, pos
+
+        # check for size first
+        values = [val for val in input.split(',')]
+        if self.min_size is not None and len(values) < self.min_size:
+            return self.Invalid, input, pos
+        if self.max_size is not None and len(values) > self.max_size:
+            return self.Invalid, input, pos
 
         # intermediate positions
         if input[-1] in self.intermediate:
             return self.Intermediate, input, pos
 
-        values = [val for val in input.split(',')]
+        # check every single list value if it is valid
         for value in values:
             if not self.pattern.match(value):
                 return self.Invalid, input, pos
