@@ -10,13 +10,13 @@ from traits.api import Instance, Int
 from karabo.common.scenemodel.api import DisplayListModel, EditableListModel
 from karabogui import icons
 from karabogui.binding.api import (
-    get_min_max_size, VectorBinding, VectorCharBinding, VectorHashBinding,
-    VectorNoneBinding, VectorBoolBinding, VectorComplexDoubleBinding,
-    VectorComplexFloatBinding, VectorDoubleBinding, VectorFloatBinding,
-    VectorInt8Binding, VectorInt16Binding, VectorInt32Binding,
-    VectorInt64Binding, VectorStringBinding, VectorUint8Binding,
-    VectorUint16Binding, VectorUint32Binding, VectorUint64Binding,
-    get_editor_value)
+    get_editor_value, get_min_max_size, VectorBinding, VectorCharBinding,
+    VectorHashBinding, VectorNoneBinding, VectorBoolBinding,
+    VectorComplexDoubleBinding, VectorComplexFloatBinding,
+    VectorDoubleBinding, VectorFloatBinding, VectorInt8Binding,
+    VectorInt16Binding, VectorInt32Binding, VectorInt64Binding,
+    VectorStringBinding, VectorUint8Binding, VectorUint16Binding,
+    VectorUint32Binding, VectorUint64Binding)
 
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
