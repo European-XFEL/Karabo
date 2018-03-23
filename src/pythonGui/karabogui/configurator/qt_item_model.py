@@ -18,6 +18,7 @@ from karabogui.binding.api import (
     DeviceProxy, ImageBinding, ListOfNodesBinding, NodeBinding,
     ProjectDeviceProxy, PropertyProxy, SlotBinding, get_binding_value,
     has_changes)
+from karabogui.alarms.const import get_global_alarm_color
 from karabogui.const import (
     OK_COLOR, ERROR_COLOR_ALPHA, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR)
 from karabogui.indicators import get_state_color, STATE_COLORS
@@ -543,7 +544,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
         alarm_high = attributes.get(KARABO_ALARM_HIGH)
         warn_low = attributes.get(KARABO_WARN_LOW)
         warn_high = attributes.get(KARABO_WARN_HIGH)
-        is_state = attributes.get(KARABO_SCHEMA_DISPLAY_TYPE) == 'State'
+        state = attributes.get(KARABO_SCHEMA_DISPLAY_TYPE) == 'State'
+        alarm = attributes.get(KARABO_SCHEMA_DISPLAY_TYPE) == 'AlarmCondition'
 
         if threshold_triggered(value, alarm_low, alarm_high):
             return PROPERTY_ALARM_COLOR
@@ -551,8 +553,11 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if threshold_triggered(value, warn_low, warn_high):
             return PROPERTY_WARN_COLOR
 
-        if is_state:
+        if state:
             return get_state_color(value) + (128,)
+
+        if alarm:
+            return get_global_alarm_color(value)
 
         return None  # indicate no color
 
