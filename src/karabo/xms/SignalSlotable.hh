@@ -60,14 +60,16 @@ namespace karabo {
 
             friend class Signal;
 
-            // Forward
         protected:
+            // Forward
             class Requestor;
-            class AsyncReply;
 
         public:
 
             KARABO_CLASSINFO(SignalSlotable, "SignalSlotable", "1.0")
+
+            // Forward
+            class AsyncReply;
 
             typedef boost::function<void (const std::string& /*instanceId*/,
                                           const karabo::util::Hash& /*instanceInfo*/) > InstanceInfoHandler;
@@ -557,6 +559,44 @@ namespace karabo {
 
             void disconnectP2P(const std::string& instanceId);
 
+            /**
+             * A functor to place an asynchronous reply during slot execution.
+             *
+             * Must not be used once the SignalSlotable object that created it is (being) destructed.
+             */
+            class AsyncReply {
+
+            public:
+
+                /**
+                 * Construct functor for an asynchronous reply.
+                 * Use only within a slot call of a SignalSlotable
+                 * @param signalSlotable pointer to the SignalSlotable whose slot is currently executed (usually: this)
+                 */
+                explicit AsyncReply(SignalSlotable* signalSlotable)
+                    : m_signalSlotable(signalSlotable), m_replyId(m_signalSlotable->registerAsyncReply()) {
+                }
+                // ~AsyncReply(); // not needed, nor has to be virtual
+
+                /**
+                 * Place the reply - almost like using SignalSlotable::reply in the synchronous case.
+                 * The difference is that here the reply is immediately send and cannot be overwritten
+                 * by a following call.
+                 */
+                template <typename ...Args>
+                void operator()(const Args&... args) const;
+
+                /**
+                 * If a proper reply cannot be placed, please use this to reply an error
+                 * @param message is the text for the RemoteException
+                 */
+                void error(const std::string& message) const;
+
+            private:
+                SignalSlotable * const m_signalSlotable; // pointer is const - but may call non-const methods
+                const std::string m_replyId;
+            };
+
         protected:
 
             class Requestor {
@@ -643,47 +683,7 @@ namespace karabo {
 
             };
 
-            /**
-             * A functor to place an asynchronous reply during slot execution.
-             *
-             * Must not be used once the SignalSlotable object that created it is (being) destructed.
-             */
-            class AsyncReply {
-
-            public:
-
-                /**
-                 * Construct functor for an asynchronous reply.
-                 * Use only within a slot call of a SignalSlotable
-                 * @param signalSlotable pointer to the SignalSlotable whose slot is currently executed (usually: this)
-                 */
-                explicit AsyncReply(SignalSlotable* signalSlotable)
-                    : m_signalSlotable(signalSlotable), m_replyId(m_signalSlotable->registerAsyncReply()) {
-                }
-                // ~AsyncReply(); // not needed, nor has to be virtual
-
-                /**
-                 * Place the reply - almost like using SignalSlotable::reply in the synchronous case.
-                 * The difference is that here the reply is immediately send and cannot be overwritten
-                 * by a following call.
-                 */
-                template <typename ...Args>
-                void operator()(const Args&... args) const;
-
-                /**
-                 * If a proper reply cannot be placed, please use this to reply an error
-                 * @param message is the text for the RemoteException
-                 */
-                void error(const std::string& message) const;
-
-            private:
-                SignalSlotable* const m_signalSlotable; // pointer is const - but may call non-const methods
-                const std::string m_replyId;
-            };
-
-
             // Use (mutex, condition variable) pair for waiting simultaneously many events
-
             struct BoostMutexCond {
 
                 boost::mutex m_mutex;
