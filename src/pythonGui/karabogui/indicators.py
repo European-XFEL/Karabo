@@ -11,6 +11,7 @@ from PyQt4.QtGui import QColor, QIcon, QPainter, QPixmap
 from karabo.common.api import State, DeviceStatus
 from . import icons
 
+
 # --------------------------------------------------------------------------
 # Mapping states to colors
 
@@ -69,7 +70,6 @@ STATE_COLORS = {
     State.PASSIVE: _StateColors.PASSIVE_COLOR.value
 }
 
-
 # --------------------------------------------------------------------------
 # Mapping states to icons
 
@@ -127,7 +127,7 @@ def _create_state_icon(color):
         pen.setWidth(pen_width)
         pen.setColor(Qt.black)
         painter.setPen(pen)
-        painter.drawRect(0, 0, width-pen_width, height-pen_width)
+        painter.drawRect(0, 0, width - pen_width, height - pen_width)
         return QIcon(pix)
 
 
