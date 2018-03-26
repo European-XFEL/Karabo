@@ -9,6 +9,7 @@ from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import QAction, QDialog, QCursor, QMessageBox, QTreeView
 
 from karabo.common.project.api import find_parent_object
+from karabogui.events import KaraboEventSender, broadcast_event
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.utils import (
     maybe_save_modified_project, save_as_object, save_object,
@@ -212,6 +213,8 @@ class ProjectView(QTreeView):
                 return
             # The master project
             self.model().root_model = None
+            broadcast_event(KaraboEventSender.ProjectFilterUpdated,
+                            {'status': False})
 
     def update_is_trashed(self, project, project_controller):
         """ Mark the given `project` as (un-)trashed
