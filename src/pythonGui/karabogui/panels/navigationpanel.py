@@ -11,7 +11,7 @@ from karabogui.navigation.view import NavigationTreeView
 from .base import BasePanelWidget, Searchable
 
 
-class NavigationPanel(BasePanelWidget, Searchable):
+class NavigationPanel(Searchable, BasePanelWidget):
     def __init__(self):
         super(NavigationPanel, self).__init__("Navigation")
         self._init_search_filter()
