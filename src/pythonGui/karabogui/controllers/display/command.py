@@ -16,6 +16,7 @@ from karabogui.controllers.api import (
 
 # An item contains the slotbinding proxy and its connected qt action
 Item = namedtuple('Item', ['proxy', 'action'])
+DEFAULT_TEXT = 'NO TEXT'
 
 
 # XXX: Reactivate the ability to assign icon/image to the button and save it
@@ -30,7 +31,7 @@ class DisplayCommand(BaseBindingController):
     _button = Instance(QToolButton)
 
     def add_proxy(self, proxy):
-        action = QAction('NO TEXT', self._button)
+        action = QAction(DEFAULT_TEXT, self._button)
         action.setEnabled(False)
         self._button.addAction(action)
 
@@ -39,7 +40,7 @@ class DisplayCommand(BaseBindingController):
 
         if proxy.binding is not None:
             # Only if the binding is already valid
-            self._finalize_item_initialization(item)
+            self._item_creation(item)
         return True
 
     def create_widget(self, parent):
@@ -79,8 +80,9 @@ class DisplayCommand(BaseBindingController):
 
     def binding_update(self, proxy):
         for item in self._actions:
-            if item.proxy is proxy and item.action.text() == 'NO TEXT':
-                self._finalize_item_initialization(item)
+            if item.proxy is proxy:
+                initial = item.action.text() == DEFAULT_TEXT
+                self._item_creation(item, initial)
                 break
 
     def state_update(self, proxy):
@@ -100,16 +102,23 @@ class DisplayCommand(BaseBindingController):
 
         self._set_default_action()
 
-    def _finalize_item_initialization(self, item):
-        """When an item gets its binding, finish hooking things up."""
+    def _item_creation(self, item, initial=True):
+        """When an item gets its binding or update, finish hooking things up.
+
+        :param initial: true or false for signal connection
+        :type initial: bool
+        """
         proxy = item.proxy
         attributes = proxy.binding.attributes
         # if displayed name is not set, use path
         display_name = attributes.get(KARABO_SCHEMA_DISPLAYED_NAME, proxy.path)
         item.action.setText(display_name)
-        item.action.triggered.connect(lambda: self._dialog_confirmation(item))
-        if proxy.root_proxy.state_binding is not None:
-            self.state_update(proxy)
+        # only initially we connect signals and slots
+        if initial:
+            item.action.triggered.connect(
+                lambda: self._dialog_confirmation(item))
+            if proxy.root_proxy.state_binding is not None:
+                self.state_update(proxy)
 
     @pyqtSlot()
     def _dialog_confirmation(self, item_proxy):
@@ -125,8 +134,7 @@ class DisplayCommand(BaseBindingController):
                                     self.widget, 'Confirmation',
                                     'Continue with this operation?',
                                     QMessageBox.No,
-                                    QMessageBox.Yes
-                                )
+                                    QMessageBox.Yes)
 
             if confirmation == QMessageBox.No:
                 return
