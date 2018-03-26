@@ -18,6 +18,9 @@ from karabogui.widgets.toolbar import ToolBar
 
 
 class Searchable:
+    def __init__(self, name):
+        super(Searchable, self).__init__(name)
+
     def create_search_bar(self, treemodel):
         """Returns a QHBoxLayout containing the search bar.
         """
