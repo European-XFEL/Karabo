@@ -22,7 +22,7 @@ from karabogui.widgets.toolbar import ToolBar
 from .base import BasePanelWidget, Searchable
 
 
-class ProjectPanel(BasePanelWidget, Searchable):
+class ProjectPanel(Searchable, BasePanelWidget):
     """ A dockable panel which contains a view of the project
     """
     def __init__(self):
@@ -113,6 +113,8 @@ class ProjectPanel(BasePanelWidget, Searchable):
             self._handle_network_status_change(data['status'])
         elif event.sender is KaraboEventSender.DatabaseIsBusy:
             self._handle_database_is_busy(data)
+        elif event.sender is KaraboEventSender.ProjectFilterUpdated:
+            self._init_search_filter(data['status'])
         return False
 
     def _handle_network_status_change(self, status):
