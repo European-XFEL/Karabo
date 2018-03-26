@@ -4,14 +4,16 @@ import numpy as np
 
 from karabo.common.api import (
     KARABO_SCHEMA_VALUE_TYPE, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
-    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_ABSOLUTE_ERROR,
+    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MIN_SIZE,
+    KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_ABSOLUTE_ERROR,
     KARABO_SCHEMA_RELATIVE_ERROR, KARABO_SCHEMA_DISPLAYED_NAME
 )
 from karabo.middlelayer import Hash, Schema
-from ..api import (
+from karabogui.binding.api import (
     BoolBinding, FloatBinding, Int8Binding, Int16Binding, Int32Binding,
     Int64Binding, Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
-    VectorInt32Binding, attr_fast_deepcopy, get_min_max, has_changes, is_equal)
+    VectorBoolBinding, VectorInt32Binding, VectorFloatBinding,
+    attr_fast_deepcopy, get_min_max, get_min_max_size, has_changes, is_equal)
 
 
 def test_simple_int_min_max():
@@ -87,7 +89,7 @@ def test_has_changes():
 
     binding = FloatBinding()
     assert not has_changes(binding, 1.0, 1. + 5e-8)
-    assert not has_changes(binding, 2.0e10, (2 + 1.0e-7)*1e10)
+    assert not has_changes(binding, 2.0e10, (2 + 1.0e-7) * 1e10)
     assert has_changes(binding, 2.0, 2.0 + 3e-7)
 
     binding = FloatBinding(attributes={KARABO_SCHEMA_ABSOLUTE_ERROR: 0.5})
@@ -106,3 +108,15 @@ def test_has_changes():
     assert has_changes(binding, np.array([1, 2, 3]), np.array([1, 2]))
     assert has_changes(binding, np.array([1, 2, 7]), np.array([1, 2, 3]))
     assert not has_changes(binding, np.array([1, 2, 3]), np.array([1, 2, 3]))
+
+
+def test_vector_min_max():
+    binding = VectorInt32Binding(attributes={KARABO_SCHEMA_MIN_SIZE: 1,
+                                             KARABO_SCHEMA_MAX_SIZE: 2})
+    assert get_min_max_size(binding) == (1, 2)
+
+    binding = VectorBoolBinding(attributes={KARABO_SCHEMA_MIN_SIZE: 43})
+    assert get_min_max_size(binding) == (43, None)
+
+    binding = VectorFloatBinding(attributes={KARABO_SCHEMA_MAX_SIZE: 17})
+    assert get_min_max_size(binding) == (None, 17)
