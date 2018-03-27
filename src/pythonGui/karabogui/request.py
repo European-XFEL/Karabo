@@ -13,7 +13,6 @@ from PyQt4.QtCore import pyqtSlot, QTimer
 from karabo.middlelayer import Hash
 from karabogui import messagebox
 from karabogui.binding.api import extract_sparse_configurations
-from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.singletons.api import get_manager, get_network, get_topology
 
 # Devices which are waiting for a configuration to come back from the server
@@ -90,10 +89,6 @@ def send_property_changes(proxies):
         timer.stop()
         for proxy in properties:
             proxy.revert_edit()
-
-        # Bump the configurator
-        broadcast_event(KaraboEventSender.UpdateDeviceConfigurator,
-                        {'proxy': device_proxy})
 
     @pyqtSlot()
     def _timeout_handler(device_proxy):
