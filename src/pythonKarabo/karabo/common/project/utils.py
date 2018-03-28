@@ -55,7 +55,7 @@ def device_instance_exists(project, instance_ids):
     return found
 
 
-def device_config_exists(project, config_names):
+def device_config_exists(project, instance_id, config_names):
     """Check whether the a ``project`` already has a device[s] configuration
     with the given ``config_names`` and return ``True`` or ``False``
     """
@@ -67,8 +67,10 @@ def device_config_exists(project, config_names):
 
     def visitor(obj):
         nonlocal found
-        if isinstance(obj, DeviceConfigurationModel):
-            if obj.simple_name in config_names:
+        if (isinstance(obj, DeviceInstanceModel)
+                and obj.instance_id == instance_id):
+            existing = set(conf.simple_name for conf in obj.configs)
+            if not existing.isdisjoint(config_names):
                 found = True
 
     walk_traits_object(project, visitor)
