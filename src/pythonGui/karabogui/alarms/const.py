@@ -4,11 +4,13 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from collections import OrderedDict, namedtuple
+import os.path as op
 
 from PyQt4.QtGui import QColor
 
 from karabogui import icons
 
+ICON_PATH = op.dirname(icons.__file__)
 
 WARN_COLOR = (255, 255, 0)  # yellow
 ALARM_COLOR = (255, 0, 0)  # red
@@ -151,3 +153,31 @@ def get_alarm_pixmap(alarm_type, extent=16):
         icon = get_alarm_icon(alarm_type)
         if icon is not None:
             return icon.pixmap(extent)
+
+
+def get_alarm_svg(alarm_type):
+    """The svg icon for the given `alarm_type` is returned.
+    """
+    svg_none = op.join(ICON_PATH, 'alarm_none.svg')
+    svg_warn = op.join(ICON_PATH, 'warning.svg')
+    svg_alarm = op.join(ICON_PATH, 'critical.svg')
+    svg_interlock = op.join(ICON_PATH, 'interlock.svg')
+
+    ALARM_SVG = {
+        ALARM_NONE: svg_none,
+        WARN_GLOBAL: svg_warn,
+        WARN_LOW: svg_warn,
+        WARN_HIGH: svg_warn,
+        WARN_VARIANCE_LOW: svg_warn,
+        WARN_VARIANCE_HIGH: svg_warn,
+        ALARM_GLOBAL: svg_alarm,
+        ALARM_LOW: svg_alarm,
+        ALARM_HIGH: svg_alarm,
+        ALARM_VARIANCE_LOW: svg_alarm,
+        ALARM_VARIANCE_HIGH: svg_alarm,
+        INTERLOCK: svg_interlock,
+    }
+
+    alarm_svg = ALARM_SVG.get(alarm_type)
+    if alarm_svg is not None:
+        return alarm_svg
