@@ -122,12 +122,12 @@ def test_device_config_exists():
                               devices=[bar])
 
     proj = ProjectModel(servers=[serv0])
-    assert device_config_exists(proj, 'default')
-    assert not device_config_exists(proj, 'new-conf1')
+    assert device_config_exists(proj, foo.instance_id, 'default')
+    assert not device_config_exists(proj, foo.instance_id, 'new-conf1')
     proj.servers.append(serv1)
-    assert device_config_exists(proj, 'default')
-    assert not device_config_exists(proj, 'new-conf2')
-    assert device_config_exists(proj, ('default', 'new-conf1'))
+    assert not device_config_exists(proj, bar.instance_id, 'new-conf2')
+    assert device_config_exists(proj, foo.instance_id,
+                                ('default', 'new-conf1'))
 
     dev0 = DeviceConfigurationModel(class_id='BazClass',
                                     simple_name='new-conf2')
@@ -137,5 +137,5 @@ def test_device_config_exists():
                               devices=[blah])
     sub_proj = ProjectModel(servers=[serv0])
     proj.subprojects.append(sub_proj)
-    assert device_config_exists(sub_proj, 'new-conf2')
-    assert device_config_exists(proj, 'new-conf2')
+    assert device_config_exists(sub_proj, blah.instance_id, 'new-conf2')
+    assert device_config_exists(proj, blah.instance_id, 'new-conf2')
