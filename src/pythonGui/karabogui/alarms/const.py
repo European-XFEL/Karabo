@@ -93,23 +93,6 @@ ALARM_COLORS = {
 }
 
 
-def get_global_alarm_color(condition):
-    """Return the alpha color for a given global alarmCondition string
-
-    :param: alarm level representation
-    :type: str
-    """
-    if condition == ALARM_NONE:
-        return None
-    ALPHA = (128,)
-    if condition == ALARM_GLOBAL:
-        return ALARM_COLOR + ALPHA
-    if condition == WARN_GLOBAL:
-        return WARN_COLOR + ALPHA
-    if condition == INTERLOCK:
-        return INTERLOCK_COLOR + ALPHA
-
-
 def get_alarm_key_index(key):
     """ Return ``index`` position in ``ALARM_DATA`` OrderedDict for the given
         ``key``.
