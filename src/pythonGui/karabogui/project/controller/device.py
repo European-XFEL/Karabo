@@ -343,7 +343,8 @@ class DeviceInstanceController(BaseProjectGroupController):
         result = dialog.exec()
         if result == QDialog.Accepted:
             # Check for existing device configuration
-            if check_device_config_exists(dialog.configuration_name):
+            if check_device_config_exists(device.instance_id,
+                                          dialog.configuration_name):
                 return
 
             config_model = DeviceConfigurationModel(
