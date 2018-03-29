@@ -5,8 +5,8 @@
 #############################################################################
 from PyQt4.QtCore import Qt, pyqtSlot
 from PyQt4.QtGui import (
-    QAction, QHBoxLayout, QMenu, QPalette, QPushButton, QScrollArea,
-    QStackedWidget, QToolButton, QVBoxLayout, QWidget)
+    QAction, QHBoxLayout, QPalette, QPushButton, QScrollArea, QStackedWidget,
+    QVBoxLayout, QWidget)
 
 from karabo.middlelayer import AccessMode
 from karabogui import globals as krb_globals, icons, messagebox
@@ -141,43 +141,25 @@ class ConfigurationPanel(BasePanelWidget):
         toolbar = ToolBar(parent=self)
 
         text = "Open configuration from file (*.xml)"
-        self.acOpenFromFile = QAction(icons.load, text, toolbar)
-        self.acOpenFromFile.setStatusTip(text)
-        self.acOpenFromFile.setToolTip(text)
-        self.acOpenFromFile.triggered.connect(self._on_open_from_file)
-
-        self.openMenu = QMenu(toolbar)
-        self.openMenu.addAction(self.acOpenFromFile)
-
-        text = "Open configuration"
-        self.tbOpenConfig = QToolButton()
-        self.tbOpenConfig.setIcon(icons.load)
-        self.tbOpenConfig.setStatusTip(text)
-        self.tbOpenConfig.setToolTip(text)
-        self.tbOpenConfig.setVisible(False)
-        self.tbOpenConfig.setPopupMode(QToolButton.InstantPopup)
-        self.tbOpenConfig.setMenu(self.openMenu)
+        tb_open_config = QPushButton()
+        tb_open_config.setIcon(icons.load)
+        tb_open_config.setStatusTip(text)
+        tb_open_config.setToolTip(text)
+        tb_open_config.setVisible(False)
+        tb_open_config.setFlat(True)
+        tb_open_config.clicked.connect(self._on_open_from_file)
 
         text = "Save configuration to file (*.xml)"
-        self.acSaveToFile = QAction(icons.saveAs, text, toolbar)
-        self.acSaveToFile.setStatusTip(text)
-        self.acSaveToFile.setToolTip(text)
-        self.acSaveToFile.triggered.connect(self._on_save_to_file)
+        tb_save_config = QPushButton()
+        tb_save_config.setIcon(icons.saveAs)
+        tb_save_config.setStatusTip(text)
+        tb_save_config.setToolTip(text)
+        tb_save_config.setVisible(False)
+        tb_save_config.setFlat(True)
+        tb_save_config.clicked.connect(self._on_save_to_file)
 
-        self.saveMenu = QMenu(toolbar)
-        self.saveMenu.addAction(self.acSaveToFile)
-
-        text = "Save configuration"
-        self.tbSaveConfig = QToolButton()
-        self.tbSaveConfig.setIcon(icons.saveAs)
-        self.tbSaveConfig.setStatusTip(text)
-        self.tbSaveConfig.setToolTip(text)
-        self.tbSaveConfig.setVisible(False)
-        self.tbSaveConfig.setPopupMode(QToolButton.InstantPopup)
-        self.tbSaveConfig.setMenu(self.saveMenu)
-
-        self.acOpenConfig = toolbar.addWidget(self.tbOpenConfig)
-        self.acSaveConfig = toolbar.addWidget(self.tbSaveConfig)
+        self.ui_open_config = toolbar.addWidget(tb_open_config)
+        self.ui_save_config = toolbar.addWidget(tb_save_config)
 
         return [toolbar]
 
@@ -300,8 +282,8 @@ class ConfigurationPanel(BasePanelWidget):
         self._stacked_tree_widgets.blockSignals(False)
 
         visible = (index != BLANK_PAGE)
-        self.acOpenConfig.setVisible(visible)
-        self.acSaveConfig.setVisible(visible)
+        self.ui_open_config.setVisible(visible)
+        self.ui_save_config.setVisible(visible)
 
     def _set_tree_widget_configuration(self, tree_widget, proxy):
         tree_widget.assign_proxy(proxy)
