@@ -243,7 +243,7 @@ def show_save_project_message(project):
                'to save the project?').format(project.simple_name)
         options = (QMessageBox.Save | QMessageBox.No)
         reply = QMessageBox.question(None, 'Save project', ask, options,
-                                     QMessageBox.Save)
+                                     QMessageBox.No)
         if reply == QMessageBox.No:
             return False
 
