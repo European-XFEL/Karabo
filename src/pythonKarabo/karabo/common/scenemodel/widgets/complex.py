@@ -18,6 +18,11 @@ class ColorBoolModel(BaseWidgetObjectData):
     invert = Bool(False)
 
 
+class DisplayCommandModel(BaseWidgetObjectData):
+    """ A model for DisplayCommand"""
+    requires_confirmation = Bool(False)
+
+
 class DeviceSceneLinkModel(BaseWidgetObjectData):
     """ A model for a DeviceSceneLink Widget """
 
@@ -100,6 +105,25 @@ class TableElementModel(BaseDisplayEditableWidget):
     column_schema = String
     # The actual type of the widget
     klass = Enum('DisplayTableElement', 'EditableTableElement')
+
+
+
+@register_scene_reader('DisplayCommand', version=2)
+def __display_command_reader(read_func, element):
+    confirmation = element.get(NS_KARABO + 'requires_confirmation', '')
+    confirmation = confirmation.lower() == 'true'
+    traits = read_base_widget_data(element)
+    traits['requires_confirmation'] = confirmation
+    return DisplayCommandModel(**traits)
+
+
+@register_scene_writer(DisplayCommandModel)
+def __display_command_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'DisplayCommand')
+    element.set(NS_KARABO + 'requires_confirmation',
+                str(model.requires_confirmation).lower())
+    return element
 
 
 @register_scene_reader('DeviceSceneLink', version=2)
