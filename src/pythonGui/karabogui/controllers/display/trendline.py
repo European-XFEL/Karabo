@@ -272,11 +272,11 @@ class Curve(HasStrictTraits):
 
     def get_min_y_value(self):
         """ Return min value of all y values."""
-        return min(self.y[:self.fill])
+        return min(self.y[:self.fill]) if self.fill else 0
 
     def get_max_y_value(self):
         """ Return max value for all y values"""
-        return max(self.y[:self.fill])
+        return max(self.y[:self.fill]) if self.fill else 0
 
 
 class DateTimeScaleDraw(QwtScaleDraw):
