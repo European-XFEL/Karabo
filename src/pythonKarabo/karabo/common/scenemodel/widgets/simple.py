@@ -96,6 +96,10 @@ class FileOutModel(BaseDisplayEditableWidget):
     klass = Enum('DisplayFileOut', 'EditableFileOut')
 
 
+class GlobalAlarmModel(BaseWidgetObjectData):
+    """ A model for GlobalAlarm Widget"""
+
+
 class HexadecimalModel(BaseEditWidget):
     """ A model for Hexadecimal"""
 
@@ -196,6 +200,7 @@ def __display_command_reader(read_func, element):
     traits = read_base_widget_data(element)
     traits['requires_confirmation'] = confirmation
     return DisplayCommandModel(**traits)
+
 
 @register_scene_writer(DisplayCommandModel)
 def __display_command_writer(write_func, model, parent):
@@ -299,11 +304,12 @@ def _build_empty_widget_readers_and_writers():
         return writer
 
     names = ('AnalogModel', 'BitfieldModel', 'DisplayLabelModel',
-             'DisplayListModel', 'DisplayPlotModel','DisplayTextLogModel',
+             'DisplayListModel', 'DisplayPlotModel', 'DisplayTextLogModel',
              'EditableListModel', 'EditableListElementModel',
-             'EditableSpinBoxModel', 'HexadecimalModel', 'IntLineEditModel',
-             'KnobModel', 'LampModel', 'MultiCurvePlotModel', 'PopUpModel',
-             'RunConfiguratorModel', 'SliderModel', 'XYPlotModel')
+             'EditableSpinBoxModel', 'GlobalAlarmModel', 'HexadecimalModel',
+             'IntLineEditModel', 'KnobModel', 'LampModel',
+             'MultiCurvePlotModel', 'PopUpModel', 'RunConfiguratorModel',
+             'SliderModel', 'XYPlotModel')
     for name in names:
         klass = globals()[name]
         file_name = name[:-len('Model')]

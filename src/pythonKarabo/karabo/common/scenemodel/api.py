@@ -3,7 +3,7 @@ from .bases import (
     BaseDisplayEditableWidget, BaseLayoutData, BaseLayoutModel,
     BaseSceneObjectData, BaseShapeObjectData, BaseWidgetObjectData)
 from .const import (
-    DISPLAY_COMPONENT, EDITABLE_COMPONENT, NS_KARABO, NS_SVG, 
+    DISPLAY_COMPONENT, EDITABLE_COMPONENT, NS_KARABO, NS_SVG,
     SCENE_FILE_VERSION, SCENE_MIN_HEIGHT, SCENE_MIN_WIDTH, SceneTargetWindow)
 from .exceptions import SceneReaderException, SceneWriterException
 from .io import read_scene, write_scene, write_single_model
@@ -30,9 +30,9 @@ from .widgets.simple import (
     ComboBoxModel, DirectoryModel, DisplayCommandModel, DisplayLabelModel,
     DisplayListModel, DisplayPlotModel, DisplayTextLogModel,
     EditableListElementModel, EditableListModel, EditableSpinBoxModel,
-    FileInModel, FileOutModel, HexadecimalModel, IntLineEditModel, KnobModel,
-    LabelModel, LampModel, LineEditModel, MultiCurvePlotModel, PopUpModel,
-    RunConfiguratorModel, SceneLinkModel, SliderModel, WorkflowItemModel,
-    XYPlotModel)
+    FileInModel, FileOutModel, GlobalAlarmModel, HexadecimalModel,
+    IntLineEditModel, KnobModel, LabelModel, LampModel, LineEditModel,
+    MultiCurvePlotModel, PopUpModel, RunConfiguratorModel, SceneLinkModel,
+    SliderModel, WorkflowItemModel, XYPlotModel)
 from .widgets.vacuum import VacuumWidgetModel
 from .widgets.statefulicon import StatefulIconWidgetModel
