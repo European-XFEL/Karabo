@@ -280,7 +280,7 @@ class Curve(HasStrictTraits):
 
 
 class DateTimeScaleDraw(QwtScaleDraw):
-        '''Class used to draw a datetime axis on our plot. '''
+        """Class used to draw a datetime axis on our plot. """
         formats = ((60, "%Y-%m-%d %H:%M", "%Ss"),
                    (60 * 60, "%Y-%m-%d", "%H:%M"),
                    (60 * 60 * 24, "%Y-%m-%d", "%Hh"),
@@ -296,7 +296,7 @@ class DateTimeScaleDraw(QwtScaleDraw):
             self.minor = min
 
         def label(self, value):
-            '''create the text of each label to draw the axis. '''
+            """create the text of each label to draw the axis. """
             if value == self.start:
                 fmt = self.minor + "\n" + self.major
             else:
