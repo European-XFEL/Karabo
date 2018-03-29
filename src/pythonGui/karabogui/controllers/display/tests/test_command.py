@@ -92,6 +92,8 @@ class TestDisplayCommand(GuiTestCase):
     def test_button_finalization(self):
         slot1, slot2 = get_slot_proxy(additional=True, klass=EmptyDevice)
 
+        slotSchema = SlottedDevice()
+
         controller = DisplayCommand(proxy=slot1)
         controller.create(None)
         controller.visualize_additional_property(slot2)
@@ -100,10 +102,17 @@ class TestDisplayCommand(GuiTestCase):
         assert controller._actions[1].action.text() == 'NO TEXT'
 
         # The device "comes online"
-        schema = SlottedDevice.getClassSchema()
+        schema = slotSchema.getClassSchema()
         build_binding(schema, existing=slot1.root_proxy.binding)
 
         assert controller._actions[0].action.text() == 'Call ME'
+        assert controller._actions[1].action.text() == 'yep'
+
+        # The device "has schema injection"
+        slotSchema.callme.descriptor.displayedName = 'Injected'
+        schema = slotSchema.getClassSchema()
+        build_binding(schema, existing=slot1.root_proxy.binding)
+        assert controller._actions[0].action.text() == 'Injected'
         assert controller._actions[1].action.text() == 'yep'
 
     def test_confirmation_dialog(self):
