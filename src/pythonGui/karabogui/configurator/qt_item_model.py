@@ -18,9 +18,9 @@ from karabogui.binding.api import (
     DeviceProxy, ImageBinding, ListOfNodesBinding, NodeBinding,
     ProjectDeviceProxy, PropertyProxy, SlotBinding, get_binding_value,
     has_changes)
-from karabogui.alarms.const import get_global_alarm_color
 from karabogui.const import (
-    OK_COLOR, ERROR_COLOR_ALPHA, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR)
+    OK_COLOR, ERROR_COLOR_ALPHA, PROPERTY_ALARM_COLOR,
+    PROPERTY_ALARM_COLOR_MAP, PROPERTY_WARN_COLOR)
 from karabogui.indicators import get_state_color, STATE_COLORS
 from karabogui.request import send_property_changes
 from .utils import (
@@ -557,7 +557,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
             return get_state_color(value) + (128,)
 
         if alarm:
-            return get_global_alarm_color(value)
+            return PROPERTY_ALARM_COLOR_MAP.get(value)
 
         return None  # indicate no color
 
