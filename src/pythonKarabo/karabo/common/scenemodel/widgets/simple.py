@@ -49,11 +49,6 @@ class DirectoryModel(BaseDisplayEditableWidget):
     klass = Enum('DisplayDirectory', 'EditableDirectory')
 
 
-class DisplayCommandModel(BaseWidgetObjectData):
-    """ A model for DisplayCommand"""
-    requires_confirmation = Bool(default_value=False)
-
-
 class DisplayLabelModel(BaseWidgetObjectData):
     """ A model for DisplayLabel"""
 
@@ -191,24 +186,6 @@ def _write_class_and_geometry(model, element, widget_class_name):
     """
     element.set(NS_KARABO + 'class', widget_class_name)
     set_numbers(('x', 'y', 'width', 'height'), model, element)
-
-
-@register_scene_reader('DisplayCommand', version=2)
-def __display_command_reader(read_func, element):
-    confirmation = element.get(NS_KARABO + 'requires_confirmation', '')
-    confirmation = confirmation.lower() == 'true'
-    traits = read_base_widget_data(element)
-    traits['requires_confirmation'] = confirmation
-    return DisplayCommandModel(**traits)
-
-
-@register_scene_writer(DisplayCommandModel)
-def __display_command_writer(write_func, model, parent):
-    element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'DisplayCommand')
-    element.set(NS_KARABO + 'requires_confirmation',
-                str(model.requires_confirmation).lower())
-    return element
 
 
 @register_scene_reader('Label', version=1)
