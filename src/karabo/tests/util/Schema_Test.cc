@@ -598,6 +598,7 @@ void Schema_Test::testVectorElements() {
 
 }
 
+
 void Schema_Test::testArrayElements() {
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
     OtherSchemaElements::expectedParameters(sch);
@@ -629,6 +630,7 @@ void Schema_Test::testArrayElements() {
     CPPUNIT_ASSERT(sch.isCustomNode("arrUInt16"));
     CPPUNIT_ASSERT_EQUAL(sch.getCustomNodeClass("arrUInt16"), std::string("NDArray"));
 }
+
 
 void Schema_Test::testPathElement() {
     Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
@@ -789,30 +791,65 @@ void Schema_Test::testInvalidNodes() {
 void Schema_Test::testOverwriteRestrictions() {
     Schema schema;
     PATH_ELEMENT(schema).key("path")
-         .readOnly()
-         .commit();
-    
+            .readOnly()
+            .commit();
+
     CPPUNIT_ASSERT_THROW(
-        OVERWRITE_ELEMENT(schema).key("path")
-                .setNewMinInc(100)
-                .commit(), karabo::util::LogicException);
-    
-    
+                         OVERWRITE_ELEMENT(schema).key("path")
+                         .setNewMinInc(100)
+                         .commit(), karabo::util::LogicException);
+
+
 }
 
-void Schema_Test::testStateAndAlarmSets(){
+
+void Schema_Test::testRuntimeAttributes() {
     Schema schema;
-    
+    FLOAT_ELEMENT(schema).key("floatProperty")
+            .minInc(-10.0)
+            .maxInc(10.0)
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+
+    CPPUNIT_ASSERT_EQUAL(-10.0f, schema.getMinInc<float>("floatProperty"));
+    CPPUNIT_ASSERT_EQUAL(10.0f, schema.getMaxInc<float>("floatProperty"));
+
+    std::vector<Hash> v;
+    v.push_back(Hash("path", "floatProperty", "attribute", KARABO_SCHEMA_MIN_INC, "value", -20.0));
+    v.push_back(Hash("path", "floatProperty", "attribute", KARABO_SCHEMA_MAX_INC, "value", 100.0));
+    CPPUNIT_ASSERT(schema.applyRuntimeUpdates(v) == true);
+    CPPUNIT_ASSERT_EQUAL(-20.0f, schema.getMinInc<float>("floatProperty"));
+    CPPUNIT_ASSERT_EQUAL(100.0f, schema.getMaxInc<float>("floatProperty"));
+
+    // set integer to float property, still we can set it
+    v.clear();
+    v.push_back(Hash("path", "floatProperty", "attribute", KARABO_SCHEMA_MIN_INC, "value", -20.0));
+    v.push_back(Hash("path", "floatProperty", "attribute", KARABO_SCHEMA_MAX_INC, "value", 1));
+    CPPUNIT_ASSERT(schema.applyRuntimeUpdates(v) == true);
+
+    // we set a maxInc that is way smaller than minInc
+    v.clear();
+    v.push_back(Hash("path", "floatProperty", "attribute", KARABO_SCHEMA_MIN_INC, "value", 100.0));
+    v.push_back(Hash("path", "floatProperty", "attribute", KARABO_SCHEMA_MAX_INC, "value", -20.0));
+    // test is supposed to fail
+    CPPUNIT_ASSERT(schema.applyRuntimeUpdates(v) == true);
+}
+
+
+void Schema_Test::testStateAndAlarmSets() {
+    Schema schema;
+
     STRING_ELEMENT(schema).key("string")
             .readOnly()
             .commit();
-    
+
     STATE_ELEMENT(schema).key("state")
             .commit();
-    
+
     ALARM_ELEMENT(schema).key("alarm")
             .commit();
-    
+
     Hash h("string", "abc");
     Validator val;
     Hash h_out;
@@ -834,6 +871,7 @@ void Schema_Test::testStateAndAlarmSets(){
     CPPUNIT_ASSERT(r.first == true); //should validate as we faked setAlarmCondition
 }
 
+
 void Schema_Test::testSubSchema() {
     Schema schema("test");
     GraphicsRenderer1::expectedParameters(schema);
@@ -849,7 +887,8 @@ void Schema_Test::testSubSchema() {
     }
 }
 
-void Schema_Test::testDaqDataType(){
+
+void Schema_Test::testDaqDataType() {
     Schema schema("test");
     GraphicsRenderer1::expectedParameters(schema);
     {
@@ -873,6 +912,7 @@ void Schema_Test::testDaqDataType(){
     }
 }
 
+
 void Schema_Test::testDaqPolicy() {
     // legacy behavior: save everything if not specified otherwise
     {
@@ -890,12 +930,12 @@ void Schema_Test::testDaqPolicy() {
         STRING_ELEMENT(schema).key("string3")
                 .readOnly()
                 .commit();
-        
+
         CPPUNIT_ASSERT(schema.getDAQPolicy("string1") == DAQPolicy::SAVE);
         CPPUNIT_ASSERT(schema.getDAQPolicy("string2") == DAQPolicy::OMIT);
         CPPUNIT_ASSERT(schema.getDAQPolicy("string3") == DAQPolicy::UNSPECIFIED);
     }
-    
+
     // according to specified default policy
     {
         Schema schema;
@@ -913,12 +953,12 @@ void Schema_Test::testDaqPolicy() {
         STRING_ELEMENT(schema).key("string3")
                 .readOnly()
                 .commit();
-        
+
         CPPUNIT_ASSERT(schema.getDAQPolicy("string1") == DAQPolicy::SAVE);
         CPPUNIT_ASSERT(schema.getDAQPolicy("string2") == DAQPolicy::OMIT);
         CPPUNIT_ASSERT(schema.getDAQPolicy("string3") == DAQPolicy::OMIT);
     }
-        
-    
+
+
 }
 
