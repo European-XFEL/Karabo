@@ -92,6 +92,10 @@ class DeviceProxy(BaseDeviceProxy):
         if self.status is DeviceStatus.ONLINEREQUESTED:
             if self._monitor_count > 0:
                 self._start_monitoring()
+                # reestablish the pipelining
+                for path in self._pipeline_subscriptions:
+                    get_network().onSubscribeToOutput(self.device_id, path,
+                                                      True)
             self.status = DeviceStatus.SCHEMA
         elif self.status in (DeviceStatus.ALIVE, DeviceStatus.MONITORING):
             get_network().onGetDeviceConfiguration(self.device_id)
