@@ -93,12 +93,16 @@ def check_device_instance_exists(instance_id):
     return False
 
 
-def check_device_config_exists(config_name):
-    """Check whether the incoming ``simple_name`` already exists in the current
-    projects and return ``True`` if that is the case else ``False``.
+def check_device_config_exists(instance_id, config_name):
+    """Check whether the configuration already exists for the device
+
+    :param instance_id: deviceId to be searched for
+    :param config_name: device configuration to be searched for
+
+    :return ``True`` if config name is found else ``False``.
     """
     root_project = get_project_model().root_model
-    if device_config_exists(root_project, config_name):
+    if device_config_exists(root_project, instance_id, config_name):
         msg = ('Another device configuration with the same name \"<b>{}</b>\" '
                '<br>already exists! Therefore it will not be '
                'added!').format(config_name)
