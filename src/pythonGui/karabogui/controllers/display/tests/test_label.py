@@ -1,12 +1,12 @@
 from karabo.common.api import DeviceStatus
 from karabo.middlelayer import Configurable, Float, String
-from karabogui.alarms.api import ALARM_COLOR, WARN_COLOR
 from karabogui.binding.api import (
     DeviceClassProxy, PropertyProxy, build_binding
 )
-from karabogui.const import FINE_COLOR
+from karabogui.const import (
+    FINE_COLOR, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR)
 from karabogui.testing import GuiTestCase, set_proxy_value
-from ..label import DisplayLabel, ALPHA
+from ..label import DisplayLabel
 
 
 class Object(Configurable):
@@ -62,10 +62,13 @@ class TestDisplayLabel(GuiTestCase):
 
         set_proxy_value(self.alarms, 'alarms', 0.75)
         assert controller._internal_widget.text() == '0.75'
+        controller.update_alarms(None)
         assert controller._bg_color == FINE_COLOR
 
         set_proxy_value(self.alarms, 'alarms', 3.0)
-        assert controller._bg_color == ALARM_COLOR + ALPHA
+        controller.update_alarms('alarm')
+        assert controller._bg_color == PROPERTY_ALARM_COLOR
 
         set_proxy_value(self.alarms, 'alarms', 1.5)
-        assert controller._bg_color == WARN_COLOR + ALPHA
+        controller.update_alarms('warn')
+        assert controller._bg_color == PROPERTY_WARN_COLOR
