@@ -19,9 +19,18 @@ PROPERTY_INTERLOCK_COLOR = (51, 51, 255, 128)
 CMD_LATCH = (255, 145, 255, 128)
 
 PROPERTY_ALARM_COLOR_MAP = {
+    None: FINE_COLOR,
     'none': None,
     'alarm': PROPERTY_ALARM_COLOR,
+    'alarmLow': PROPERTY_ALARM_COLOR,
+    'alarmHigh': PROPERTY_ALARM_COLOR,
+    'alarmVarianceLow': PROPERTY_ALARM_COLOR,
+    'alarmVarianceHigh': PROPERTY_ALARM_COLOR,
     'warn': PROPERTY_WARN_COLOR,
+    'warnLow': PROPERTY_WARN_COLOR,
+    'warnHigh': PROPERTY_WARN_COLOR,
+    'warnVarianceLow': PROPERTY_WARN_COLOR,
+    'warnVarianceHigh': PROPERTY_WARN_COLOR,
     'interlock': PROPERTY_INTERLOCK_COLOR}
 
 # Parameter item properties
