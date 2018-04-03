@@ -174,6 +174,9 @@ class ConfigurationPanel(BasePanelWidget):
         elif sender is KaraboEventSender.UpdateDeviceConfigurator:
             proxy = data.get('proxy')
             self._update_displayed_configuration(proxy)
+        elif sender is KaraboEventSender.UpdateValueConfigurator:
+            proxy = data.get('proxy')
+            self._update_displayed_values(proxy)
         elif sender is KaraboEventSender.ClearConfigurator:
             deviceId = data.get('deviceId', '')
             self._remove_departed_device(deviceId)
@@ -342,6 +345,18 @@ class ConfigurationPanel(BasePanelWidget):
         # This is the configuration we're viewing now
         self._set_stack_widget_index(index)
         self._set_configuration(proxy)
+
+    def _update_displayed_values(self, proxy):
+        """Update the apply and decline buttons after displayed value update
+        """
+        if self._showing_proxy is not proxy:
+            return
+
+        index = CONFIGURATION_PAGE
+        tree_widget = self._stacked_tree_widgets.widget(index)
+        model = tree_widget.model()
+        if model is not None:
+            model._notify_of_modifications()
 
     def _update_displayed_configuration(self, proxy):
         if self._showing_proxy is None:
