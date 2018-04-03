@@ -71,13 +71,19 @@ class DeviceConfigurationController(BaseProjectController):
             device_model.configs.remove(config)
 
     def _edit_config(self, project_controller):
+        config = self.model
+        device_model = find_parent_object(config, project_controller.model,
+                                          DeviceInstanceModel)
+        instance_id = device_model.instance_id
+
         dialog = ObjectEditDialog(object_type='device configuration',
-                                  model=self.model)
+                                  model=config)
         result = dialog.exec()
         if result == QDialog.Accepted:
             # Check for existing device configuration
             renamed = self.model.simple_name != dialog.simple_name
-            if renamed and check_device_config_exists(dialog.simple_name):
+            if renamed and check_device_config_exists(instance_id,
+                                                      dialog.simple_name):
                 return
 
-            self.model.simple_name = dialog.simple_name
+            config.simple_name = dialog.simple_name
