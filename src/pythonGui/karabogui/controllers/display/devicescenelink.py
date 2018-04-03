@@ -11,6 +11,7 @@ from traits.api import Instance
 
 from karabo.common.scenemodel.api import (
     DeviceSceneLinkModel, SceneTargetWindow)
+from karabo.common.enums import ONLINE_STATUSES
 from karabogui.alarms.api import NORM_COLOR
 from karabogui.binding.api import get_binding_value, VectorStringBinding
 from karabogui.controllers.api import (
@@ -135,6 +136,14 @@ class DisplayDeviceSceneLink(BaseBindingController):
         text_action.triggered.connect(self._edit_text)
         self._internal_widget.addAction(text_action)
         return self._internal_widget
+
+    def on_device_status_update(self, device_status):
+        """When the device_status goes to a non online status this method will
+        be called to disable the scenelink.
+
+        :param device_status: DeviceStatus(Enum)"""
+        enable_widget = (device_status in ONLINE_STATUSES)
+        self._internal_widget.setEnabled(enable_widget)
 
     @pyqtSlot()
     def _select_scene(self):
