@@ -185,8 +185,12 @@ class Device(AlarmMixin, SignalSlotable):
         :param updates: List of Hashes with "path", "attribute" and "value"
                         as keys
         """
+        success = self.applyRuntimeUpdates(updates)
+        if success:
+            self._notifyNewSchema()
+
         ret = Hash()
-        ret["success"] = self.applyRuntimeUpdates(updates)
+        ret["success"] = success
         ret["instanceId"] = self.deviceId
         ret["updatedSchema"] = self.getDeviceSchema()
         ret["requestedUpdate"] = updates
