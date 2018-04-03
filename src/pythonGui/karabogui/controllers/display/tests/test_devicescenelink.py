@@ -1,8 +1,12 @@
 from unittest.mock import Mock, patch
 
+from karabo.common.enums import DeviceStatus
 from karabo.middlelayer import Configurable, VectorString
 from karabo.common.scenemodel.api import (
     DeviceSceneLinkModel, SceneTargetWindow)
+from karabogui.controllers.display.devicescenelink import LinkWidget
+from karabogui.sceneview.widget.container import ControllerContainer
+from karabogui.singletons.api import get_topology
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy)
 from ..devicescenelink import DisplayDeviceSceneLink
@@ -15,24 +19,22 @@ class Object(Configurable):
 class TestDisplayDeviceSceneLink(GuiTestCase):
     def setUp(self):
         super(TestDisplayDeviceSceneLink, self).setUp()
-        schema = Object.getClassSchema()
-        self.proxy = get_class_property_proxy(schema, 'availableScenes')
-        self.proxy.value = ['bob', 'frank']
-        self.controller = DisplayDeviceSceneLink(proxy=self.proxy)
-        self.controller.create(None)
 
-    def tearDown(self):
-        self.controller.destroy()
-        assert self.controller.widget is None
+        self.model = DeviceSceneLinkModel()
+        self.model.keys = ['deviceUno.availableScenes']
+        self.model.target_window = SceneTargetWindow.Dialog
 
-    def test_clicked(self):
-        self.controller.model = DeviceSceneLinkModel()
-        self.controller.model.keys = ['deviceUno.availableScenes']
-        self.controller.model.target = 'Vinny'
-        self.controller.model.target_window = SceneTargetWindow.Dialog
-        target = 'karabogui.controllers.display.' +\
-                 'devicescenelink.call_device_slot'
-        caller = Mock()
-        with patch(target) as caller:
-            self.controller._internal_widget._handle_click()
-            assert caller.call_count == 1
+    def test_clicked_device_off(self):
+
+        container = ControllerContainer(klass=DisplayDeviceSceneLink,
+                                        model=self.model,
+                                        parent=None)
+
+        container._device_status_changed(DeviceStatus.OFFLINE)
+        self.assertFalse(container.widget_controller.widget.isEnabled())
+
+        container._device_status_changed(DeviceStatus.ONLINE)
+        self.assertTrue(container.widget_controller.widget.isEnabled())
+
+        container._device_status_changed(DeviceStatus.OFFLINE)
+        self.assertFalse(container.widget_controller.widget.isEnabled())
