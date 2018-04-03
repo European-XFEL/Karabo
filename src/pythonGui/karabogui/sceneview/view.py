@@ -260,7 +260,7 @@ class SceneView(QWidget):
     def karaboBroadcastEvent(self, event):
         if event.sender in (KaraboEventSender.AlarmServiceInit,
                             KaraboEventSender.AlarmServiceUpdate):
-            self._update_alarm_symbols()
+            self._notify_alarm()
         elif event.sender is KaraboEventSender.AccessLevelChanged:
             self._update_widget_states()
         return False
@@ -564,11 +564,11 @@ class SceneView(QWidget):
         items = [m for m in models if isinstance(m, WorkflowItemModel)]
         self.workflow_model.remove_items(items)
 
-    def _update_alarm_symbols(self):
+    def _notify_alarm(self):
         """Update alarm indicators of widgets in need"""
         for obj in self._scene_obj_cache.values():
             if is_widget(obj):
-                obj.update_alarm_symbol()
+                obj.update_alarm()
 
     def _update_widget_states(self):
         """The global access level has changed. Notify all widgets in the
