@@ -53,6 +53,9 @@ CURVE_STYLES = ['-', '--', ':', '-.']
 
 PLOTTABLE_TYPES = (BoolBinding, FloatBinding, IntBinding)
 
+DEFAULT_MIN = -0.5
+DEFAULT_MAX = 0.5
+
 
 def get_start_end_date_time(selected_time_span):
     """ Return beginning and end date time for given ``selected_time_span``.
@@ -272,11 +275,11 @@ class Curve(HasStrictTraits):
 
     def get_min_y_value(self):
         """ Return min value of all y values."""
-        return min(self.y[:self.fill]) if self.fill else 0
+        return min(self.y[:self.fill]) if self.fill else DEFAULT_MIN
 
     def get_max_y_value(self):
         """ Return max value for all y values"""
-        return max(self.y[:self.fill]) if self.fill else 0
+        return max(self.y[:self.fill]) if self.fill else DEFAULT_MAX
 
 
 class DateTimeScaleDraw(QwtScaleDraw):
