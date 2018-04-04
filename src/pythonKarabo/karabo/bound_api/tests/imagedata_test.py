@@ -17,6 +17,7 @@ def test_imagedata_from_ndarray():
     assert imageData.getEncoding() == Encoding.GRAY
     assert imageData.isIndexable()
     assert imageData.getROIOffsets() == (0, 0)
+    assert imageData.getBinning() == (1, 1)
 
     # Two additional tests on bitsPerPixel
     # 1. set it in constructor
@@ -41,6 +42,7 @@ def test_imagedata_from_ndarray():
     assert imageData.getDimensions() == (100, 200, 3)
     assert imageData.getEncoding() == Encoding.RGB
     assert imageData.getROIOffsets() == (0, 0, 0)
+    assert imageData.getBinning() == (1, 1, 1)
 
     arr = np.arange(80000, dtype='uint8').reshape(100, 200, 4)
     imageData = ImageData(arr)
@@ -51,6 +53,7 @@ def test_imagedata_from_ndarray():
     assert imageData.getDimensions() == (100, 200, 4)
     assert imageData.getEncoding() == Encoding.RGBA
     assert imageData.getROIOffsets() == (0, 0, 0)
+    assert imageData.getBinning() == (1, 1, 1)
 
 
 def test_ndarry_refcounting():
@@ -91,7 +94,8 @@ def test_imagedata_set_and_get():
     imageData.setData(a)  # Also set dataType
     imageData.setDimensionTypes((0, 1))
     imageData.setEncoding(Encoding.GRAY)
-    imageData.setROIOffsets((20, 10))  # x, y
+    imageData.setROIOffsets((20, 10))  # y, x
+    imageData.setBinning((8, 3))
     assert np.all(imageData.getData() == a)
     # Now we set dimensions which trickle down to getData.
     # Before doing so, dimensions are undefined/empty (NOT taken from a!).
@@ -103,6 +107,7 @@ def test_imagedata_set_and_get():
     assert imageData.getDimensions() == (200, 100)
     assert imageData.getEncoding() == Encoding.GRAY
     assert imageData.getROIOffsets() == (20, 10)
+    assert imageData.getBinning() == (8, 3)
 
 
 def test_imagedata_in_hash():
