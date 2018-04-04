@@ -53,6 +53,9 @@ CURVE_STYLES = ['-', '--', ':', '-.']
 
 PLOTTABLE_TYPES = (BoolBinding, FloatBinding, IntBinding)
 
+DEFAULT_MIN = -0.5
+DEFAULT_MAX = 0.5
+
 
 def get_start_end_date_time(selected_time_span):
     """ Return beginning and end date time for given ``selected_time_span``.
@@ -272,15 +275,15 @@ class Curve(HasStrictTraits):
 
     def get_min_y_value(self):
         """ Return min value of all y values."""
-        return min(self.y[:self.fill])
+        return min(self.y[:self.fill]) if self.fill else DEFAULT_MIN
 
     def get_max_y_value(self):
         """ Return max value for all y values"""
-        return max(self.y[:self.fill])
+        return max(self.y[:self.fill]) if self.fill else DEFAULT_MAX
 
 
 class DateTimeScaleDraw(QwtScaleDraw):
-        '''Class used to draw a datetime axis on our plot. '''
+        """Class used to draw a datetime axis on our plot. """
         formats = ((60, "%Y-%m-%d %H:%M", "%Ss"),
                    (60 * 60, "%Y-%m-%d", "%H:%M"),
                    (60 * 60 * 24, "%Y-%m-%d", "%Hh"),
@@ -296,7 +299,7 @@ class DateTimeScaleDraw(QwtScaleDraw):
             self.minor = min
 
         def label(self, value):
-            '''create the text of each label to draw the axis. '''
+            """create the text of each label to draw the axis. """
             if value == self.start:
                 fmt = self.minor + "\n" + self.major
             else:
