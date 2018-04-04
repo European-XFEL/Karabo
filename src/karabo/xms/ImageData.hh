@@ -128,6 +128,10 @@ namespace karabo {
 
             void setROIOffsets(const karabo::util::Dims& offsets);
 
+            karabo::util::Dims getBinning() const;
+
+            void setBinning(const karabo::util::Dims& binning);
+
             /**
              * Get number of bits per pixel used to achieve the image data.
              * Can be less than number of bits used per pixel in getData().

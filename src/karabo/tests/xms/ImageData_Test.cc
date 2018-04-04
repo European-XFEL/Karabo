@@ -42,6 +42,7 @@ void ImageData_Test::testConstructor() {
 
         Dims imageDims = image.getDimensions();
         Dims imageOffsets(image.getROIOffsets());
+        Dims imageBinning(image.getBinning());
 
         CPPUNIT_ASSERT(image.getData().size() == 100 * 200);
         CPPUNIT_ASSERT_EQUAL(2, image.getData().getData<int>()[0]);
@@ -56,6 +57,10 @@ void ImageData_Test::testConstructor() {
         CPPUNIT_ASSERT(imageOffsets.rank() == 2);
         CPPUNIT_ASSERT(imageOffsets.x1() == 0);
         CPPUNIT_ASSERT(imageOffsets.x2() == 0);
+
+        CPPUNIT_ASSERT(imageBinning.rank() == 2);
+        CPPUNIT_ASSERT(imageBinning.x1() == 1);
+        CPPUNIT_ASSERT(imageBinning.x2() == 1);
 
         CPPUNIT_ASSERT_EQUAL(32, image.getBitsPerPixel());
 
@@ -82,14 +87,16 @@ void ImageData_Test::testConstructor() {
         CPPUNIT_ASSERT_NO_THROW(image.getGeometry());
         CPPUNIT_ASSERT_NO_THROW(image.getHeader());
         CPPUNIT_ASSERT_NO_THROW(image.getROIOffsets());
+        CPPUNIT_ASSERT_NO_THROW(image.getBinning());
     }
 }
 
 
 void ImageData_Test::testSetAndGetMethods() {
 
-    Dims dims(200, 100); // width, height
+    Dims dims(200, 100); // height, width
     Dims offsets(10, 50);
+    Dims binning(3, 8);
     int tmp[] = {Dimension::DATA, Dimension::STACK};
     std::vector<int> dimTypes(tmp, tmp + 2);
     std::vector<unsigned char> someData(dims.size(), 2); // i.e. type UINT8
@@ -101,12 +108,14 @@ void ImageData_Test::testSetAndGetMethods() {
         ImageData image(arr);
         image.setDimensions(dims);
         image.setROIOffsets(offsets);
+        image.setBinning(binning);
         image.setDimensionTypes(dimTypes);
         image.setHeader(Hash("one", 1));
 
         // Get
         Dims imageDims(image.getDimensions());
         Dims imageOffsets(image.getROIOffsets());
+        Dims imageBinning(image.getBinning());
         std::vector<int> imageDimTypes = image.getDimensionTypes();
 
         CPPUNIT_ASSERT(imageDims.rank() == 2);
@@ -116,6 +125,10 @@ void ImageData_Test::testSetAndGetMethods() {
         CPPUNIT_ASSERT(imageOffsets.rank() == 2);
         CPPUNIT_ASSERT(imageOffsets.x1() == 10);
         CPPUNIT_ASSERT(imageOffsets.x2() == 50);
+
+        CPPUNIT_ASSERT(imageBinning.rank() == 2);
+        CPPUNIT_ASSERT(imageBinning.x1() == 3);
+        CPPUNIT_ASSERT(imageBinning.x2() == 8);
 
         CPPUNIT_ASSERT(imageDimTypes.size() == 2);
         CPPUNIT_ASSERT(imageDimTypes[0] == Dimension::DATA);

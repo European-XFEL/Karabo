@@ -62,7 +62,7 @@ namespace karathon {
             karabo::util::Dims dims(Wrapper::fromPyTupleToStdVector<unsigned long long>(obj));
             self->setDimensions(dims);
         } else {
-            throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
+            throw KARABO_PYTHON_EXCEPTION(std::string("Unsupported argument type '") + obj.ptr()->ob_type->tp_name + "'");
         }
     }
 
@@ -84,7 +84,7 @@ namespace karathon {
             std::vector<int> dimTypes = Wrapper::fromPyTupleToStdVector<int>(obj);
             self->setDimensionTypes(dimTypes);
         } else {
-            throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
+            throw KARABO_PYTHON_EXCEPTION(std::string("Unsupported argument type '") + obj.ptr()->ob_type->tp_name + "'");
         }
     }
 
@@ -104,8 +104,30 @@ namespace karathon {
         } else if (bp::extract<bp::tuple>(obj).check()) {
             karabo::util::Dims offsets(Wrapper::fromPyTupleToStdVector<unsigned long long>(obj));
             self->setROIOffsets(offsets);
-        } else
-            throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
+        } else {
+            throw KARABO_PYTHON_EXCEPTION(std::string("Unsupported argument type '") + obj.ptr()->ob_type->tp_name + "'");
+        }
+    }
+
+
+    bp::object ImageDataWrap::getBinningPy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
+        karabo::util::Dims binning = self->getBinning();
+        return Wrapper::fromStdVectorToPyTuple(binning.toVector());
+    }
+
+
+    void ImageDataWrap::setBinningPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj) {
+        if (bp::extract<karabo::util::Dims>(obj).check()) {
+            self->setBinning(bp::extract<karabo::util::Dims>(obj));
+        } else if (bp::extract<bp::list>(obj).check()) {
+            karabo::util::Dims binning(Wrapper::fromPyListToStdVector<unsigned long long>(obj));
+            self->setBinning(binning);
+        } else if (bp::extract<bp::tuple>(obj).check()) {
+            karabo::util::Dims binning(Wrapper::fromPyTupleToStdVector<unsigned long long>(obj));
+            self->setBinning(binning);
+        } else {
+            throw KARABO_PYTHON_EXCEPTION(std::string("Unsupported argument type '") + obj.ptr()->ob_type->tp_name + "'");
+        }
     }
 
 
@@ -338,6 +360,10 @@ void exportPyXmsInputOutputChannel() {
                 .def("getROIOffsets", &karathon::ImageDataWrap::getROIOffsetsPy)
 
                 .def("setROIOffsets", &karathon::ImageDataWrap::setROIOffsetsPy, (bp::arg("offsets")))
+
+                .def("getBinning", &karathon::ImageDataWrap::getBinningPy)
+
+                .def("setBinning", &karathon::ImageDataWrap::setBinningPy, (bp::arg("binning")))
 
                 .def("getBitsPerPixel", &karabo::xms::ImageData::getBitsPerPixel)
 
