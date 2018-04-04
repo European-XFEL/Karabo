@@ -41,6 +41,8 @@ namespace karathon {
         static void setDimensionTypesPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj);
         static bp::object getROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData >& self);
         static void setROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj);
+        static bp::object getBinningPy(const boost::shared_ptr<karabo::xms::ImageData >& self);
+        static void setBinningPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj);
         static bp::object getEncodingPy(const boost::shared_ptr<karabo::xms::ImageData >& self);
         static void setGeometryPy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& geometry);
         static karabo::util::DetectorGeometry getGeometryPy(const boost::shared_ptr<karabo::xms::ImageData >& self);
