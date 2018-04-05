@@ -69,7 +69,8 @@ namespace karabo {
                     .commit();
             INT32_ELEMENT(s).key("encoding")
                     .displayedName("Encoding")
-                    .description("Describes the color space of pixel encoding of the data (e.g. GRAY, RGB, JPG, PNG etc.")
+                    .description("Describes the color space of pixel encoding of"
+                    " the data (e.g. GRAY, RGB, JPG, PNG etc.).")
                     .readOnly()
                     .commit();
             INT32_ELEMENT(s).key("bitsPerPixel")
@@ -79,7 +80,14 @@ namespace karabo {
                     .commit();
             VECTOR_UINT64_ELEMENT(s).key("roiOffsets")
                     .displayedName("ROI Offsets")
-                    .description("Describes the offset of the Region-of-Interest; it will contain zeros if the image has no ROI defined")
+                    .description("The offset of the Region-of-Interest (ROI); "
+                    "it will contain zeros if the image has no ROI defined.")
+                    .readOnly()
+                    .commit();
+            VECTOR_UINT64_ELEMENT(s).key("binning")
+                    .displayedName("Binning")
+                    .description("The number of binned adjacent pixels. They "
+                    "are reported out of the camera as a single pixel.")
                     .readOnly()
                     .commit();
             // TODO Convert into a serializable object later
@@ -144,6 +152,9 @@ namespace karabo {
             const std::vector<unsigned long long> offsets(dataDims.rank(), 0ull);
             setROIOffsets(karabo::util::Dims(offsets));
 
+            const std::vector<unsigned long long> binning(dataDims.rank(), 1ull);
+            setBinning(karabo::util::Dims(binning));
+
             setDimensionScales(std::string());
         }
 
@@ -155,6 +166,16 @@ namespace karabo {
 
         void ImageData::setROIOffsets(const karabo::util::Dims& offsets) {
             set<std::vector<unsigned long long> >("roiOffsets", offsets.toVector());
+        }
+
+
+        karabo::util::Dims ImageData::getBinning() const {
+            return karabo::util::Dims(get<std::vector<unsigned long long> >("binning"));
+        }
+
+
+        void ImageData::setBinning(const karabo::util::Dims& binning) {
+            set<std::vector<unsigned long long> >("binning", binning.toVector());
         }
 
 
