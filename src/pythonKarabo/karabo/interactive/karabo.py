@@ -12,8 +12,6 @@ from pkg_resources import iter_entry_points
 
 from karabo.packaging.device_template import configure_template
 
-DEV_NULL = open(os.devnull, 'w')
-
 
 def run_local():
     try:
@@ -28,11 +26,12 @@ def run_local():
 
 def run_cmd(cmd):
     try:
-        global DEV_NULL
-        output = subprocess.check_output(cmd, shell=True, stderr=DEV_NULL)
+        output = subprocess.check_output(cmd, shell=True,
+                                         stderr=subprocess.STDOUT)
         return output
     except subprocess.CalledProcessError as e:
-        print("Problem with system call: {}".format(e))
+        print("Problem with system call:\n{}"
+              .format(e.output.decode("utf-8")))
         exit(e.returncode)
 
 
@@ -264,12 +263,12 @@ def download(args):
               '-o {dest}'.format(device=args.device, tag=args.tag,
                                  repo=args.repo, filename=filename, dest=dest)
         try:
-            global DEV_NULL
-            subprocess.check_output(cmd, shell=True, stderr=DEV_NULL)
+            subprocess.check_output(cmd, shell=True,
+                                    stderr=subprocess.STDOUT)
             return dest
         except subprocess.CalledProcessError as e:
-            print("Problem dowloading {device}-{tag}: {e}"
-                  "".format(device=args.device, tag=args.tag, e=e))
+            print("Problem dowloading {}-{}:\n{}"
+                  .format(args.device, args.tag, e.output.decode("utf-8")))
         return None
 
 
