@@ -5,7 +5,7 @@
 
 DEPENDENCIES_BASE=( bzip2 libpng snappy jpeg tiff python3.4 lapack boost
 freetype hdf5 log4cpp cppunit openmq nss openmqc patchelf gmock libxml libxslt
-daemontools )
+daemontools libzmq )
 
 DEPENDENCIES_PYTHON=( setuptools setuptools_scm pip wheel cython numpy scipy six
 nose py pytest pytest_runner pillow sip backports backports_abc tornado
