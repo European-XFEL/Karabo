@@ -148,18 +148,33 @@ namespace karabo {
         /**
          * Vector values are output as a comma separated list, where the StringTools::toString
          * method for their value type T defines the representation of each element
-         * @param value
+         * @param value is the vector to be converted
+         * @param maxElementsShown is the maximum number of vector elements treated. If value.size() is larger,
+         *                         skip elements in the middle. Default is 100. If zero, do _not_ skip elements.
          * @return 
          */
         template <typename T>
-        inline std::string toString(const std::vector<T>& value) {
+        inline std::string toString(const std::vector<T>& value, size_t maxElementsShown = 100) {
             if (value.empty()) return "";
+
             std::ostringstream s;
-            typename std::vector<T>::const_iterator it = value.begin();
-            s << toString(*it);
-            it++;
-            for (; it != value.end(); ++it) {
-                s << "," << toString(*it);
+            const size_t size = value.size();
+            s << toString(value[0]);
+            if (maxElementsShown == 0) {
+                maxElementsShown = std::numeric_limits<size_t>::max();
+            }
+            // If size > maxElementsShown, show only a few less than first and last (maxElementsShown / 2) values.
+            // Otherwise string for (maxElementsShown - 1) elements is longer than for maxElementsShown elements,
+            // due to adding how many elements are skipped.
+            const size_t numElementsBeginEnd = std::max(maxElementsShown / 2, static_cast<size_t> (6)) - 5;
+            size_t index = 1;
+            for (; index < size; ++index) {
+                // If vector is too long, jump to last elements, but state how many we skip:
+                if (size > maxElementsShown && index == numElementsBeginEnd) {
+                    s << ",...(skip " << size - 2 * numElementsBeginEnd << " values)...";
+                    index = size - numElementsBeginEnd;
+                }
+                s << "," << toString(value[index]);
             }
             return s.str();
         }
@@ -185,6 +200,7 @@ namespace karabo {
         }
 
         inline std::string toString(const std::vector<unsigned char>& value) {
+            // Really? unsigned char is UINT8 and not CHAR!
             return karabo::util::base64Encode(&value[0], value.size());
         }
 
@@ -212,6 +228,7 @@ namespace karabo {
 
         inline std::string toString(const std::pair<const unsigned char*, size_t>& value) {
             if (value.second == 0) return "";
+            // Really? See above at toString(const std::vector<unsigned char>& value).
             return karabo::util::base64Encode(value.first, value.second);
         }
 
