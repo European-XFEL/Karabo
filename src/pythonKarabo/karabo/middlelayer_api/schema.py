@@ -8,7 +8,7 @@ from .basetypes import isSet, KaraboValue, NoneValue
 from .enums import NodeType
 from .hash import Attribute, Descriptor, Hash, Schema, HashList, Slot
 from .registry import Registry
-from .timestamp import Timestamp
+from .time_mixin import get_timestamp
 
 
 class MetaConfigurable(type(Registry)):
@@ -136,7 +136,9 @@ class Configurable(Registry, metaclass=MetaConfigurable):
 
     def setValue(self, descriptor, value):
         if isinstance(value, KaraboValue) and value.timestamp is None:
-            value.timestamp = Timestamp()
+            value.timestamp = get_timestamp()
+        elif isinstance(value, KaraboValue) and value.tid == 0:
+            value.timestamp = get_timestamp(value.timestamp)
         if isSet(value):
             # calls the setChildValue of the signalslotable
             self.setChildValue(descriptor.key, value, descriptor)

@@ -14,7 +14,7 @@ from .proxy import ProxyBase, ProxyFactory, ProxyNodeBase, SubProxyBase
 from .schema import Configurable, Node
 from .serializers import decodeBinary, encodeBinary
 from .synchronization import background, firstCompleted
-from .timestamp import Timestamp
+from .time_mixin import get_timestamp
 
 
 class PipelineMetaData(ProxyBase):
@@ -473,7 +473,7 @@ class NetworkOutput(Configurable):
         """
         hsh = self.schema.configurationAsHash()
         if timestamp is None:
-            timestamp = Timestamp()
+            timestamp = get_timestamp()
         yield from self.writeChunk([(hsh, timestamp)])
 
     @coroutine
@@ -486,20 +486,20 @@ class NetworkOutput(Configurable):
         assert isinstance(hsh, Hash)
 
         if timestamp is None:
-            timestamp = Timestamp()
+            timestamp = get_timestamp()
         yield from self.writeChunk([(hsh, timestamp)])
 
     def writeDataNoWait(self, timestamp=None):
         hsh = self.schema.configurationAsHash()
         if timestamp is None:
-            timestamp = Timestamp()
+            timestamp = get_timestamp()
         self.writeChunkNoWait([(hsh, timestamp)])
 
     def writeRawDataNoWait(self, hsh, timestamp=None):
         assert isinstance(hsh, Hash)
 
         if timestamp is None:
-            timestamp = Timestamp()
+            timestamp = get_timestamp()
         self.writeChunkNoWait([(hsh, timestamp)])
 
     def setChildValue(self, key, value, descriptor):
