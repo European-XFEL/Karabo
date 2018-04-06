@@ -150,11 +150,11 @@ namespace karabo {
          * method for their value type T defines the representation of each element
          * @param value is the vector to be converted
          * @param maxElementsShown is the maximum number of vector elements treated. If value.size() is larger,
-         *                         skip elements in the middle. Default is 100. If zero, do _not_ skip elements.
+         *                         skip elements in the middle. Default is 0 which means _no_ skipping of elements.
          * @return 
          */
         template <typename T>
-        inline std::string toString(const std::vector<T>& value, size_t maxElementsShown = 100) {
+        inline std::string toString(const std::vector<T>& value, size_t maxElementsShown = 0) {
             if (value.empty()) return "";
 
             std::ostringstream s;
