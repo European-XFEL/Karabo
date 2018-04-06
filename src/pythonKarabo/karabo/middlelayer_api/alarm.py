@@ -3,6 +3,7 @@ from .enums import AccessLevel, AccessMode
 from .hash import Hash, HashType, String
 from .schema import Configurable
 from .signalslot import Signal, slot
+from .time_mixin import get_timestamp
 
 
 class Alarm(String):
