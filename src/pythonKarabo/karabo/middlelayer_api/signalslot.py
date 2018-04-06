@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 from asyncio import (async, CancelledError, coroutine, get_event_loop,
                      TimeoutError, wait_for)
+from collections import defaultdict
 import logging
 import random
 import sys
@@ -329,13 +330,17 @@ class SignalSlotable(Configurable):
         """
         if not self._sethash:
             return
-        h = Hash()
+        hash_dict = defaultdict(Hash)
         while self._sethash:
             k, (v, desc) = self._sethash.popitem()
             value, attrs = desc.toDataAndAttrs(v)
+            tid = attrs.get('tid', 0)
+            h = hash_dict[tid]
             h[k] = value
             h[k, ...].update(attrs)
-        if h:
+        # we have to send our changes in tid order for the DAQ!
+        for tid in sorted(hash_dict.keys()):
+            h = hash_dict[tid]
             self.signalChanged(h, self.deviceId)
 
     def setChildValue(self, key, value, desc):
