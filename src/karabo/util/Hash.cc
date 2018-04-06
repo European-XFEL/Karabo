@@ -805,7 +805,7 @@ namespace karabo {
                 const Hash::Attributes& attrs = hit->getAttributes();
                 if (attrs.size() > 0) {
                     for (Hash::Attributes::const_iterator ait = attrs.begin(); ait != attrs.end(); ++ait) {
-                        os << " " << ait->getKey() << "=\"" << ait->getValueAs<std::string>() /*<< " " << Types::to<ToLiteral>(ait->getType())*/ << "\"";
+                        os << " " << ait->getKey() << "=\"" << ait->getValueAsShortString(30) /*<< " " << Types::to<ToLiteral>(ait->getType())*/ << "\"";
                     }
                 }
 
@@ -837,7 +837,7 @@ namespace karabo {
                 } else if (type == Types::UNKNOWN) {
                     os << " => " << hit->type().name() << " " << Types::to<ToLiteral>(type) << std::endl;
                 } else {
-                    os << " => " << hit->getValueAs<std::string>() << " " << Types::to<ToLiteral>(type) << std::endl;
+                    os << " => " << hit->getValueAsShortString(100) << " " << Types::to<ToLiteral>(type) << std::endl;
                 }
             }
         }

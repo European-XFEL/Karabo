@@ -228,14 +228,15 @@ namespace karabo {
             Cont<T> getValueAs() const;
 
             /**
-             * Return the value cast to string. Casting is performed via
-             * string literal casts, i.e. less strict.
+             * Return the value cast to string.
              * The only difference to getValueAs<string>() concerns elements of type Types::ReferenceType::VECTOR_*:
-             * Whereas getValueAs<string>() might shorten the string by leaving out vector elements in the middle,
-             * getValueAsFullString() will return all these elements.
+             * Whereas getValueAs<string>() returns all vector elements, getValueAsShortString() shortens the string by
+             * leaving out vector elements in the middle, if the vector size
+             * exceeds the argument.
+             * @param maxNumVectorElements maximum number of vector elements taken into account
              * @return
              */
-            std::string getValueAsFullString() const;
+            std::string getValueAsShortString(size_t maxNumVectorElements) const;
 
             /**
              * Set an attribute to this Element, identified by key
@@ -625,29 +626,29 @@ namespace karabo {
         }
 
         template<class KeyType, typename AttributeType>
-        std::string Element<KeyType, AttributeType>::getValueAsFullString() const {
+        std::string Element<KeyType, AttributeType>::getValueAsShortString(size_t maxNumVectorElements) const {
 
-#define CASE_RETURN_VECTOR(VectorRefType, ElementCppType) \
-       case Types::ReferenceType::VectorRefType: /* 0: no skipping of elements */\
-           return karabo::util::toString(this->getValueAs <ElementCppType, std::vector>(), 0);
+#define CASE_RETURN_VECTOR(VectorRefType, ElementCppType, maxSize) \
+       case Types::ReferenceType::VectorRefType: \
+           return karabo::util::toString(this->getValueAs <ElementCppType, std::vector>(), maxSize);
 
             switch (this->getType()) {
                     // Not treating (VECTOR_CHAR, char) here: That is our raw data container treated elsewhere.
-                    CASE_RETURN_VECTOR(VECTOR_INT8, signed char)
-                    CASE_RETURN_VECTOR(VECTOR_INT16, short)
-                    CASE_RETURN_VECTOR(VECTOR_INT32, int)
-                    CASE_RETURN_VECTOR(VECTOR_INT64, long long)
-                    CASE_RETURN_VECTOR(VECTOR_UINT8, unsigned char)
-                    CASE_RETURN_VECTOR(VECTOR_UINT16, unsigned short)
-                    CASE_RETURN_VECTOR(VECTOR_UINT32, unsigned int)
-                    CASE_RETURN_VECTOR(VECTOR_UINT64, unsigned long long)
-                    CASE_RETURN_VECTOR(VECTOR_FLOAT, float)
-                    CASE_RETURN_VECTOR(VECTOR_DOUBLE, double)
-                    CASE_RETURN_VECTOR(VECTOR_BOOL, bool)
-                    CASE_RETURN_VECTOR(VECTOR_STRING, std::string)
-                    CASE_RETURN_VECTOR(VECTOR_COMPLEX_FLOAT, std::complex<float>)
-                    CASE_RETURN_VECTOR(VECTOR_COMPLEX_DOUBLE, std::complex<double>)
-                    CASE_RETURN_VECTOR(VECTOR_NONE, CppNone) // for completeness
+                    CASE_RETURN_VECTOR(VECTOR_INT8, signed char, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_INT16, short, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_INT32, int, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_INT64, long long, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_UINT8, unsigned char, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_UINT16, unsigned short, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_UINT32, unsigned int, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_UINT64, unsigned long long, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_FLOAT, float, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_DOUBLE, double, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_BOOL, bool, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_STRING, std::string, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_COMPLEX_FLOAT, std::complex<float>, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_COMPLEX_DOUBLE, std::complex<double>, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_NONE, CppNone, maxNumVectorElements) // for completeness
                 default:
                     return this->getValueAs<std::string>();
             }
