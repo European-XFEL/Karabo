@@ -86,7 +86,7 @@ class UnknownSvgWidget(QWidget):
     def set_visible(self, visible):
         """Satisfy the informal widget interface."""
 
-    def update_alarm_symbol(self):
+    def update_alarm(self):
         """Satisfy the informal widget interface."""
 
     def update_global_access_level(self, level):
@@ -127,7 +127,7 @@ class UnknownWidget(PlaceholderWidget):
     def set_visible(self, visible):
         """Satisfy the informal widget interface."""
 
-    def update_alarm_symbol(self):
+    def update_alarm(self):
         """Satisfy the informal widget interface."""
 
     def update_global_access_level(self, level):
