@@ -15,7 +15,7 @@ from traits.api import Bool, Callable, Dict, Instance, List
 from karabo.common.scenemodel.api import MultiCurvePlotModel
 from karabogui.binding.api import (
     PropertyProxy, BoolBinding, FloatBinding, IntBinding)
-from karabogui.const import FINE_COLOR, MAXNUMPOINTS
+from karabogui.const import ALL_OK_COLOR, MAXNUMPOINTS
 from karabogui.controllers.api import (
     BaseBindingController, axis_label, register_binding_controller)
 from karabogui.mplwidget.mplplotwidgets import MplCurvePlot
@@ -62,7 +62,7 @@ class MultiCurvePlot(BaseBindingController):
             objname = str(id(self))
             _btn_reset.setObjectName(objname)
             sheet = ("QPushButton#{} {{ background-color : rgba{}; }}"
-                     "".format(objname, FINE_COLOR))
+                     "".format(objname, ALL_OK_COLOR))
             _btn_reset.setStyleSheet(sheet)
         self._resetbox_linked = _changestyle
 

@@ -14,7 +14,7 @@ from karabo.common.scenemodel.api import DisplayTextLogModel
 from karabo.middlelayer import Timestamp
 from karabogui import icons
 from karabogui.binding.api import get_binding_value, StringBinding
-from karabogui.const import FINE_COLOR
+from karabogui.const import ALL_OK_COLOR
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.util import generateObjectName
@@ -61,7 +61,7 @@ class DisplayTextLog(BaseBindingController):
         # nice color background
         objectName = generateObjectName(widget)
         sheet = ('QWidget#{} {{ background-color : rgba{}; }}'
-                 ''.format(objectName, FINE_COLOR))
+                 ''.format(objectName, ALL_OK_COLOR))
         self.log_widget.setObjectName(objectName)
         self.log_widget.setStyleSheet(sheet)
         return widget
