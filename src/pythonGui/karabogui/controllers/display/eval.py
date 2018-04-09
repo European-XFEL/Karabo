@@ -11,7 +11,7 @@ from karabogui.binding.api import (
     StringBinding
 )
 from karabogui.const import (
-    FINE_COLOR, PROPERTY_ALARM_COLOR_MAP, WIDGET_MIN_HEIGHT)
+    ALL_OK_COLOR, PROPERTY_ALARM_COLOR_MAP, WIDGET_MIN_HEIGHT)
 from karabogui.controllers.api import (
     BaseBindingController, add_unit_label, register_binding_controller)
 from karabogui.util import generateObjectName
@@ -29,7 +29,7 @@ class Evaluator(BaseBindingController):
     # Security holes (evaluation of values)
     globals_ns = Dict
     function = Callable
-    _bg_color = Tuple(FINE_COLOR)
+    _bg_color = Tuple(ALL_OK_COLOR)
     _style_sheet = Str
     # Storage for the main widget
     _internal_widget = Instance(QLabel)
