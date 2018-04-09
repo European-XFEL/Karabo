@@ -334,11 +334,7 @@ class SignalSlotable(Configurable):
         while self._sethash:
             k, (v, desc) = self._sethash.popitem()
             value, attrs = desc.toDataAndAttrs(v)
-            try:
-                tid = attrs['tid']
-            except KeyError:
-                tid = 0
-                print('SCREAM BLOODY MURDER TID NOT PRESENT', k, value)
+            tid = attrs.get('tid', 0)
             h = hash_dict[tid]
             h[k] = value
             h[k, ...].update(attrs)
