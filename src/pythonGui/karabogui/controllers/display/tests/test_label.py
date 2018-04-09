@@ -4,7 +4,7 @@ from karabogui.binding.api import (
     DeviceClassProxy, PropertyProxy, build_binding
 )
 from karabogui.const import (
-    FINE_COLOR, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR)
+    ALL_OK_COLOR, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR)
 from karabogui.testing import GuiTestCase, set_proxy_value
 from ..label import DisplayLabel
 
@@ -63,7 +63,7 @@ class TestDisplayLabel(GuiTestCase):
         set_proxy_value(self.alarms, 'alarms', 0.75)
         assert controller._internal_widget.text() == '0.75'
         controller.update_alarms(None)
-        assert controller._bg_color == FINE_COLOR
+        assert controller._bg_color == ALL_OK_COLOR
 
         set_proxy_value(self.alarms, 'alarms', 3.0)
         controller.update_alarms('alarm')
