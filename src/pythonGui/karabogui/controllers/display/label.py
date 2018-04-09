@@ -11,23 +11,20 @@ from PyQt4.QtGui import QFrame, QLabel
 from traits.api import Instance, Str, Tuple
 
 from karabo.common.api import (
-    KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_WARN_HIGH, KARABO_WARN_LOW,
     KARABO_SCHEMA_ABSOLUTE_ERROR, KARABO_SCHEMA_DISPLAY_TYPE,
     KARABO_SCHEMA_RELATIVE_ERROR
 )
 from karabo.common.scenemodel.api import DisplayLabelModel
-from karabogui.alarms.api import ALARM_COLOR, WARN_COLOR
 from karabogui.binding.api import (
     CharBinding, ComplexBinding, FloatBinding, get_binding_value, IntBinding,
     StringBinding
 )
-from karabogui.const import FINE_COLOR, WIDGET_MIN_HEIGHT
+from karabogui.const import (
+    FINE_COLOR, PROPERTY_ALARM_COLOR_MAP, WIDGET_MIN_HEIGHT)
 from karabogui.controllers.api import (
     BaseBindingController, add_unit_label, register_binding_controller)
 from karabogui.util import generateObjectName
 
-# alpha layer to add to our global alarm and warn colors
-ALPHA = (64,)
 BINDING_TYPES = (CharBinding, ComplexBinding, FloatBinding, StringBinding,
                  IntBinding)
 
@@ -69,8 +66,6 @@ class DisplayLabel(BaseBindingController):
             self._internal_widget.setText(value[:255])
             return
 
-        self._check_alarms(binding, value)
-
         disp_type = binding.attributes.get(KARABO_SCHEMA_DISPLAY_TYPE)
         try:
             fmt = {
@@ -103,19 +98,7 @@ class DisplayLabel(BaseBindingController):
         ret = fmt.format(value)
         self._internal_widget.setText(ret)
 
-    def _check_alarms(self, binding, value):
-        attributes = binding.attributes
-        alarm_low = attributes.get(KARABO_ALARM_LOW)
-        alarm_high = attributes.get(KARABO_ALARM_HIGH)
-        warn_low = attributes.get(KARABO_WARN_LOW)
-        warn_high = attributes.get(KARABO_WARN_HIGH)
-        if ((alarm_low is not None and value < alarm_low) or
-                (alarm_high is not None and value > alarm_high)):
-            self._bg_color = ALARM_COLOR + ALPHA
-        elif ((warn_low is not None and value < warn_low) or
-                (warn_high is not None and value > warn_high)):
-            self._bg_color = WARN_COLOR + ALPHA
-        else:
-            self._bg_color = FINE_COLOR
+    def update_alarms(self, alarm_type):
+        self._bg_color = PROPERTY_ALARM_COLOR_MAP[alarm_type]
         sheet = self._style_sheet.format(self._bg_color)
         self.widget.setStyleSheet(sheet)

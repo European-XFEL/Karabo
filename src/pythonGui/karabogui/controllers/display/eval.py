@@ -1,8 +1,8 @@
 import traceback
 
-from PyQt4.QtCore import Qt
+from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import QAction, QFrame, QInputDialog, QLabel
-from traits.api import Callable, Dict, Instance
+from traits.api import Callable, Dict, Instance, Str, Tuple
 
 from karabo.common.scenemodel.api import EvaluatorModel
 from karabogui import messagebox
@@ -10,7 +10,8 @@ from karabogui.binding.api import (
     CharBinding, ComplexBinding, FloatBinding, get_binding_value, IntBinding,
     StringBinding
 )
-from karabogui.const import WIDGET_MIN_HEIGHT, FINE_COLOR
+from karabogui.const import (
+    FINE_COLOR, PROPERTY_ALARM_COLOR_MAP, WIDGET_MIN_HEIGHT)
 from karabogui.controllers.api import (
     BaseBindingController, add_unit_label, register_binding_controller)
 from karabogui.util import generateObjectName
@@ -28,6 +29,8 @@ class Evaluator(BaseBindingController):
     # Security holes (evaluation of values)
     globals_ns = Dict
     function = Callable
+    _bg_color = Tuple(FINE_COLOR)
+    _style_sheet = Str
     # Storage for the main widget
     _internal_widget = Instance(QLabel)
 
@@ -42,11 +45,12 @@ class Evaluator(BaseBindingController):
                     self.globals_ns)
 
     def create_widget(self, parent):
-        label = QLabel(parent)
-        label.setMinimumHeight(WIDGET_MIN_HEIGHT)
-        label.setFocusPolicy(Qt.NoFocus)
-        self._internal_widget = label
-        widget = add_unit_label(self.proxy, label, parent=parent)
+        self._internal_widget = QLabel(parent)
+        self._internal_widget.setAlignment(Qt.AlignCenter)
+        self._internal_widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
+        self._internal_widget.setWordWrap(True)
+        widget = add_unit_label(self.proxy, self._internal_widget,
+                                parent=parent)
         widget.setFrameStyle(QFrame.Box | QFrame.Plain)
 
         action = QAction('Change expression...', widget)
@@ -54,10 +58,9 @@ class Evaluator(BaseBindingController):
         action.triggered.connect(self._change_expression)
 
         objectName = generateObjectName(self)
+        self._style_sheet = ("QWidget#{}".format(objectName) +
+                             " {{ background-color : rgba{}; }}")
         widget.setObjectName(objectName)
-        style_sheet = ("QWidget#{}".format(objectName) +
-                       " {{ background-color : rgba{}; }}")
-        widget.setStyleSheet(style_sheet.format(FINE_COLOR))
         return widget
 
     def value_update(self, proxy):
@@ -70,6 +73,7 @@ class Evaluator(BaseBindingController):
             disp_value = traceback.format_exception_only(type(e), e)[0]
         self._internal_widget.setText(disp_value)
 
+    @pyqtSlot()
     def _change_expression(self):
         text, ok = QInputDialog.getText(self.widget, 'Enter Expression',
                                         'f(x) = ', text=self.model.expression)
@@ -87,3 +91,8 @@ class Evaluator(BaseBindingController):
         self.model.expression = text
         if get_binding_value(self.proxy) is not None:
             self.value_update(self.proxy)
+
+    def update_alarms(self, alarm_type):
+        self._bg_color = PROPERTY_ALARM_COLOR_MAP[alarm_type]
+        sheet = self._style_sheet.format(self._bg_color)
+        self.widget.setStyleSheet(sheet)
