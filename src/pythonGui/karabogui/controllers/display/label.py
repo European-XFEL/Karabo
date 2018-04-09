@@ -20,7 +20,7 @@ from karabogui.binding.api import (
     StringBinding
 )
 from karabogui.const import (
-    FINE_COLOR, PROPERTY_ALARM_COLOR_MAP, WIDGET_MIN_HEIGHT)
+    ALL_OK_COLOR, PROPERTY_ALARM_COLOR_MAP, WIDGET_MIN_HEIGHT)
 from karabogui.controllers.api import (
     BaseBindingController, add_unit_label, register_binding_controller)
 from karabogui.util import generateObjectName
@@ -36,7 +36,7 @@ class DisplayLabel(BaseBindingController):
     # The scene data model class for this controller
     model = Instance(DisplayLabelModel, args=())
     # Internal traits
-    _bg_color = Tuple(FINE_COLOR)
+    _bg_color = Tuple(ALL_OK_COLOR)
     _internal_widget = Instance(QLabel, allow_none=True)
     _style_sheet = Str
 
