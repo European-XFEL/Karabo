@@ -15,6 +15,7 @@ from karabo.common.api import (
     KARABO_SCHEMA_DEFAULT_VALUE, KARABO_SCHEMA_DISPLAY_TYPE,
     KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MAX_INC,
     KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MAX_EXC,
+    KARABO_SCHEMA_MIN_SIZE, KARABO_SCHEMA_MAX_SIZE,
     KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_UNIT_SYMBOL,
     KARABO_SCHEMA_TAGS, KARABO_SCHEMA_DAQ_POLICY
 )
@@ -139,6 +140,7 @@ class ConfigurationTreeView(QTreeView):
             info['Tags'] = ", ".join(attributes.get(KARABO_SCHEMA_TAGS))
         if binding.timestamp is not None:
             info['Timestamp'] = binding.timestamp.toLocal()
+            info['Train Id'] = binding.timestamp.tid
         display_type = attributes.get(KARABO_SCHEMA_DISPLAY_TYPE)
         if display_type and display_type.startswith('bin|'):
             info['Bits'] = display_type[4:]
@@ -160,6 +162,8 @@ class ConfigurationTreeView(QTreeView):
             (KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_EXC),
             (KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MIN_INC),
             (KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MAX_INC),
+            (KARABO_SCHEMA_MIN_SIZE, KARABO_SCHEMA_MIN_SIZE),
+            (KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_MAX_SIZE),
             ('DAQ Policy', KARABO_SCHEMA_DAQ_POLICY)]
 
         for label, attr_name in additional_attrs:
