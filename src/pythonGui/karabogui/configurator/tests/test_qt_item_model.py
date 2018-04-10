@@ -2,7 +2,7 @@ from PyQt4.QtCore import Qt
 
 from karabo.common.api import DeviceStatus, State
 from karabo.middlelayer import (
-    Bool, Configurable, Float, Int32, Slot, String, VectorHash
+    Bool, Configurable, Float, Int32, Slot, String, VectorFloat, VectorHash
 )
 from karabogui.binding.api import ProjectDeviceProxy, build_binding
 from karabogui.testing import GuiTestCase
@@ -16,6 +16,8 @@ class Object(Configurable):
     bar = Float(minInc=0, maxInc=10)
     baz = Int32()
     qux = String(options=['foo', 'bar', 'baz', 'qux'])
+    vector = VectorFloat(defaultValue=["1"],
+                         minSize=1, maxSize=2)
     table = VectorHash()
 
     @Slot(allowedStates=[State.INTERLOCKED, State.ACTIVE])
@@ -37,7 +39,7 @@ class TestConfiguratorModel(GuiTestCase):
         # This is constant
         assert self.model.columnCount() == 3
         # The number of properties in the Object class up above
-        assert self.model.rowCount() == 7
+        assert self.model.rowCount() == 8
 
     def test_attributes(self):
         bar_index = self.model.index(2, 0)
@@ -62,6 +64,17 @@ class TestConfiguratorModel(GuiTestCase):
         max_inc_index = bar_index.child(1, 2)
         flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
         assert max_inc_index.flags() == flags
+
+        # ------------------------------------
+        # Test the vector
+        vector_index = self.model.index(5, 0)
+        assert vector_index.isValid()
+        assert vector_index.data() == 'vector'
+        assert self.model.rowCount(parent=bar_index) == 3
+
+        # daqPolicy
+        min_size_index = vector_index.child(0, 0)
+        assert min_size_index.data() == 'daqPolicy'
 
     def test_flags(self):
         bar_index = self.model.index(2, 0)
