@@ -131,3 +131,66 @@ void StringTools_Test::testWiden() {
     Widen<wchar_t> toWString;
     CPPUNIT_ASSERT(toWString("abcd0123") == L"abcd0123");
 }
+
+
+void StringTools_Test::testTokenize() {
+
+    std::vector<string> out;
+
+    // Test 1, 2, 3 single character tokens
+    tokenize("a", out, '.');
+    CPPUNIT_ASSERT_EQUAL(1ul, out.size());
+    CPPUNIT_ASSERT_EQUAL(std::string("a"), out[0]);
+
+    tokenize("b.c", out, '.');
+    CPPUNIT_ASSERT_EQUAL(2ul, out.size());
+    CPPUNIT_ASSERT_EQUAL(std::string("b"), out[0]);
+    CPPUNIT_ASSERT_EQUAL(std::string("c"), out[1]);
+
+    tokenize("d.e.f", out, '.');
+    CPPUNIT_ASSERT_EQUAL(3ul, out.size());
+    CPPUNIT_ASSERT_EQUAL(std::string("d"), out[0]);
+    CPPUNIT_ASSERT_EQUAL(std::string("e"), out[1]);
+    CPPUNIT_ASSERT_EQUAL(std::string("f"), out[2]);
+
+    // Test few more multi-character tokens
+    tokenize("Aa.buu.c.undNochWa][", out, '.');
+    CPPUNIT_ASSERT_EQUAL(4ul, out.size());
+    CPPUNIT_ASSERT_EQUAL(std::string("Aa"), out[0]);
+    CPPUNIT_ASSERT_EQUAL(std::string("buu"), out[1]);
+    CPPUNIT_ASSERT_EQUAL(std::string("c"), out[2]);
+    CPPUNIT_ASSERT_EQUAL(std::string("undNochWa]["), out[3]);
+
+    // Test empty token in beginning, middle and end
+    tokenize(".a", out, '.');
+    CPPUNIT_ASSERT_EQUAL(2ul, out.size());
+    CPPUNIT_ASSERT_EQUAL(std::string(), out[0]);
+    CPPUNIT_ASSERT_EQUAL(std::string("a"), out[1]);
+
+    tokenize("a..z", out, '.');
+    CPPUNIT_ASSERT_EQUAL(3ul, out.size());
+    CPPUNIT_ASSERT_EQUAL(std::string("a"), out[0]);
+    CPPUNIT_ASSERT_EQUAL(std::string(), out[1]);
+    CPPUNIT_ASSERT_EQUAL(std::string("z"), out[2]);
+
+    tokenize("a.", out, '.');
+    CPPUNIT_ASSERT_EQUAL(2ul, out.size());
+    CPPUNIT_ASSERT_EQUAL(std::string("a"), out[0]);
+    CPPUNIT_ASSERT_EQUAL(std::string(), out[1]);
+
+    // Test up to three empty tokens in a row
+    tokenize("", out, '.');
+    CPPUNIT_ASSERT_EQUAL(1ul, out.size());
+    CPPUNIT_ASSERT_EQUAL(std::string(), out[0]);
+
+    tokenize(".", out, '.');
+    CPPUNIT_ASSERT_EQUAL(2ul, out.size());
+    CPPUNIT_ASSERT_EQUAL(std::string(), out[0]);
+    CPPUNIT_ASSERT_EQUAL(std::string(), out[1]);
+
+    tokenize("..", out, '.');
+    CPPUNIT_ASSERT_EQUAL(3ul, out.size());
+    CPPUNIT_ASSERT_EQUAL(std::string(), out[0]);
+    CPPUNIT_ASSERT_EQUAL(std::string(), out[1]);
+    CPPUNIT_ASSERT_EQUAL(std::string(), out[2]);
+}
