@@ -76,7 +76,7 @@ class DisplayCommand(BaseBindingController):
             widget.setStyleSheet(
                 'QToolButton {{ font: bold; color: {} }}'.format(rgb))
         else:
-            widget.setStyleSheet('QToolButton { color: rgb(76, 76, 76) }')
+            widget.setStyleSheet("")
 
     def binding_update(self, proxy):
         for item in self._actions:
