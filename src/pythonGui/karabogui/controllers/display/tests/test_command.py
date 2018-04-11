@@ -132,9 +132,6 @@ class TestDisplayCommand(GuiTestCase):
             controller._button.click()
             button = controller.widget.children()[1]
 
-            rgb = _get_rgb_button()
-
-            self.assertTupleEqual(rgb, (76, 76, 76))
             self.assertEqual(network.onExecute.call_count, 1)
             self.assertFalse(button.font().bold())
 
@@ -145,14 +142,14 @@ class TestDisplayCommand(GuiTestCase):
             self.assertEqual(network.onExecute.call_count, 1)
             self.assertTrue(button.font().bold())
 
-            rgb = _get_rgb_button()
+            before_rgb = _get_rgb_button()
 
-            self.assertTupleEqual(rgb, (255, 145, 255))
+            self.assertTupleEqual(before_rgb, (255, 145, 255))
 
             QMessageBox.question = MagicMock(return_value=QMessageBox.Yes)
             controller._button.click()
             self.assertEqual(network.onExecute.call_count, 2)
 
         controller._requires_confirmation_slot()
-        rgb = _get_rgb_button()
-        self.assertTupleEqual(rgb, (76, 76, 76))
+        after_rgb = _get_rgb_button()
+        self.assertNotEqual(before_rgb, after_rgb)
