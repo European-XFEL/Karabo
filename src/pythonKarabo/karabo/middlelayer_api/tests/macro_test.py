@@ -9,10 +9,11 @@ from karabo.common.states import State
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     call, waitUntilNew, waitUntil, waitWhile, setWait, setNoWait, getDevice,
-    executeNoWait, updateDevice, Queue, connectDevice, lock)
+    getConfiguration, getSchema, executeNoWait, updateDevice, Queue,
+    connectDevice, lock)
 from karabo.middlelayer_api.device_server import KaraboStream
 from karabo.middlelayer_api.exceptions import KaraboError
-from karabo.middlelayer_api.hash import Int32 as Int, Slot
+from karabo.middlelayer_api.hash import Hash, Int32 as Int, Slot
 from karabo.middlelayer_api.macro import Macro
 from karabo.middlelayer_api.schema import Configurable, Node
 from karabo.middlelayer_api.signalslot import slot
@@ -325,6 +326,22 @@ class Tests(DeviceTest):
             self.assertEqual(d.value, 0)
             call("remote", "changeit")
             self.assertEqual(d.value, -4)
+
+    @sync_tst
+    def test_getSchema(self):
+        """test calling get Schema"""
+        schema_deviceId = getSchema("remote")
+        with getDevice("remote") as d:
+            schema_proxy = getSchema(d)
+        self.assertEqual(schema_deviceId.paths(), schema_proxy.paths())
+
+    @sync_tst
+    def test_getConfiguration(self):
+        """test calling get Schema"""
+        conf_deviceId = getConfiguration("remote")
+        with getDevice("remote") as d:
+            conf_proxy = getConfiguration(d)
+        self.assertEqual(conf_deviceId.paths(), conf_proxy.paths())
 
     @sync_tst
     def test_call_param(self):
