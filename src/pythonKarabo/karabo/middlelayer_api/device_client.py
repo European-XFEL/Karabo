@@ -109,9 +109,47 @@ def _parse_date(date):
 
 
 @synchronize
-def call(device, target, *args):
-    """Call a target slot from a device"""
-    return (yield from get_instance().call(device, target, *args))
+def call(device, target_slot, *args):
+    """Call a target slot from a device
+
+    :param device: deviceId or proxy
+    :param target_slot: slot to be called
+    """
+    if isinstance(device, ProxyBase):
+        device = device._deviceId
+    return (yield from get_instance().call(device, target_slot, *args))
+
+
+@synchronize
+def getSchema(device):
+    """Get a schema from a target device
+
+    :param device: deviceId or proxy
+
+    :returns: Hash of the Schema
+    """
+    if isinstance(device, ProxyBase):
+        return device._schema_hash
+
+    schema, _ = yield from get_instance().call(device, "slotGetSchema",
+                                               False)
+    return schema.hash
+
+
+@synchronize
+def getConfiguration(device):
+    """Get a configuration from a target device
+
+    :param device: deviceId or proxy
+
+    :returns: Configuration Hash
+    """
+    if isinstance(device, ProxyBase):
+        yield from device._update()
+        device = device._deviceId
+
+    hsh, _ = yield from get_instance().call(device, "slotGetConfiguration")
+    return hsh
 
 
 @synchronize
