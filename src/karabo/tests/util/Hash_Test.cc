@@ -11,7 +11,6 @@
 #include <stack>
 #include "Hash_Test.hh"
 #include "karabo/util/ToLiteral.hh"
-#include "Factory_Test.hh"
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/Exception.hh>
 #include <karabo/util/PackParameters.hh>
@@ -862,9 +861,9 @@ void Hash_Test::testMerge() {
     h2.set("g.h.j", -188);
     h2.set("h.i", -199);
     h2.set("h.j", 200);
-    h2.set("i[3]", Hash());
-    h2.set("i[1].j", 200);
-    h2.set("i[2]", Hash("k.l", 5.));
+    h2.set(".i[3]", Hash());
+    h2.set(".i[1].j", 200);
+    h2.set(".i[2]", Hash("k.l", 5.));
     h2.set("j", Hash("k", 5.));
     h2.set("array", NDArray(Dims(5,5)));
     h2.set("array2", NDArray(Dims(5,5)));
@@ -872,7 +871,7 @@ void Hash_Test::testMerge() {
     h2.setAttribute("e", "attrKey4", -1);
     h2.setAttribute("e", "attrKey5", -11.f);
     h2.setAttribute("f", "attrKey7", 77u);
-    h2.setAttribute("i", "attrKey8", 123ll); // attribute on new vector<Hash> node
+    h2.setAttribute(".i", "attrKey8", 123ll); // attribute on new vector<Hash> node
     h2.setAttribute("j", "attrKey9", 12.3); // ... and new Hash node
 
 
@@ -926,9 +925,9 @@ void Hash_Test::testMerge() {
     CPPUNIT_ASSERT(h1.has("g.h.j"));
     CPPUNIT_ASSERT(h1.has("h.i"));
     CPPUNIT_ASSERT(h1.has("h.j"));
-    CPPUNIT_ASSERT(h1.has("i[1].j"));
-    CPPUNIT_ASSERT(h1.has("i[2].k.l"));
-    CPPUNIT_ASSERT(h1.has("i[3]"));
+    CPPUNIT_ASSERT(h1.has(".i[1].j"));
+    CPPUNIT_ASSERT(h1.has(".i[2].k.l"));
+    CPPUNIT_ASSERT(h1.has(".i[3]"));
     CPPUNIT_ASSERT(h1.has("j.k"));
     CPPUNIT_ASSERT(h1.has("array"));
     CPPUNIT_ASSERT(h1.has("array.data"));
@@ -945,16 +944,16 @@ void Hash_Test::testMerge() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Int attribute value incorrect (MERGE)", -1, h1b.getAttribute<int>("e", "attrKey4"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Float attribute value incorrect (MERGE)", -11.f, h1b.getAttribute<float>("e", "attrKey5"));
     // Just add attributes for new Hash/vector<Hash> (identical for REPLACE or MERGE)
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on vector<Hash> added", 1ul, h1.getAttributes("i").size());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on vector<Hash> added", 1ul, h1.getAttributes(".i").size());
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Int64 attributes on vector<Hash> wrong",
-                                 123ll, h1.getAttribute<long long>("i", "attrKey8"));
+                                 123ll, h1.getAttribute<long long>(".i", "attrKey8"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on Hash added", 1ul, h1.getAttributes("j").size());
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Double attributes on Hash wrong",
                                  12.3, h1.getAttribute<double>("j", "attrKey9"));
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on vector<Hash> added (MERGE)", 1ul, h1b.getAttributes("i").size());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on vector<Hash> added (MERGE)", 1ul, h1b.getAttributes(".i").size());
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Int64 attributes on vector<Hash> wrong  (MERGE)",
-                                 123ll, h1b.getAttribute<long long>("i", "attrKey8"));
+                                 123ll, h1b.getAttribute<long long>(".i", "attrKey8"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Not all attributes on Hash added (MERGE)", 1ul, h1b.getAttributes("j").size());
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Double attributes on Hash wrong (MERGE)",
                                  12.3, h1b.getAttribute<double>("j", "attrKey9"));
@@ -983,8 +982,8 @@ void Hash_Test::testMerge() {
     selectedPaths.insert("b.c");
     selectedPaths.insert("g.h.i");
     selectedPaths.insert("h.i");
-    selectedPaths.insert("i[2]");
-    selectedPaths.insert("i[5]"); // check that we tolerate to select path with invalid index
+    selectedPaths.insert(".i[2]");
+    selectedPaths.insert(".i[5]"); // check that we tolerate to select path with invalid index
     h1c.merge(h2, Hash::MERGE_ATTRIBUTES, selectedPaths);
 
     // Keep everything it had before merging:
@@ -999,7 +998,7 @@ void Hash_Test::testMerge() {
     CPPUNIT_ASSERT(h1c.has("b.c"));
     CPPUNIT_ASSERT(h1c.has("g.h.i"));
     CPPUNIT_ASSERT(h1c.has("h.i"));
-    CPPUNIT_ASSERT(h1c.has("i[2].k.l"));
+    CPPUNIT_ASSERT(h1c.has(".i[2].k.l"));
     // But not the other ones from h2:
     CPPUNIT_ASSERT(!h1c.has("c.b[0].key")); // neither at old position of h2
     CPPUNIT_ASSERT(!h1c.has("c.b[2]"));     // nor an extended vector<Hash> at all
@@ -1007,17 +1006,22 @@ void Hash_Test::testMerge() {
     // Take care that adding path "g.h.i" does not trigger that other children of "g.h" in h2 are taken as well:
     CPPUNIT_ASSERT(!h1c.has("g.h.j"));
     CPPUNIT_ASSERT(!h1c.has("h.j"));
-    // Adding i[2] should not trigger to add children of i[1] nor i[3]]
-    CPPUNIT_ASSERT(!h1c.has("i[1].j"));
-    CPPUNIT_ASSERT(!h1c.has("i[3]"));
+    // Adding .i[2] should not trigger to add children of .i[1] nor .i[3]]
+    CPPUNIT_ASSERT(!h1c.has(".i[1].j"));
+    CPPUNIT_ASSERT(!h1c.has(".i[3]"));
 
     // Some further small tests for so far untested cases with selected paths...
-    Hash hashTarget("a.b", 1, "a.c", Hash(), "c", "so so!");
-    const Hash hashSource("a.d", 8., "ha", 9);
+    Hash hashTarget(".b", 1, ".c", Hash(), "c", "so so!");
+    const Hash hashSource(".d", 8., "e..e[0]", Hash("f", 0), "e..e[1]", Hash("g", 1), "ha", 9);
     selectedPaths.clear();
-    selectedPaths.insert("a"); // trigger merging a.d
+    selectedPaths.insert(""); // trigger merging '.d'
+    selectedPaths.insert("e..e[1]");
     hashTarget.merge(hashSource, Hash::MERGE_ATTRIBUTES, selectedPaths);
-    CPPUNIT_ASSERT(hashTarget.has("a.d"));
+    CPPUNIT_ASSERT(hashTarget.has(".d"));
+    CPPUNIT_ASSERT(hashTarget.has("e..e[0]"));
+    CPPUNIT_ASSERT(!hashTarget.has("e..e[0].f")); // no children of e[0] since e[0] not selected (see test above)
+    CPPUNIT_ASSERT(hashTarget.has("e..e[1]"));
+    CPPUNIT_ASSERT(hashTarget.has("e..e[1].g"));
 
     Hash hashTargetB("a[1].b", 1, "c", "Does not matter");
     Hash hashTargetC(hashTargetB);
@@ -1207,6 +1211,116 @@ void Hash_Test::testErase() {
     // single element vector<Hash>: vector is removed completely
     hVector2.erasePath("a[0]");
     CPPUNIT_ASSERT(hVector2.has("a") == false);
+
+    // Test erase with empty keys at various places of the path
+    Hash hEmptyKey("", 1, "a.", 2, "a1.", 3,
+                   "b..", 31, "c..d", 32, "e..f", 33);
+    Hash hEmptyKey2(hEmptyKey); // for next test section
+    // only empty key
+    CPPUNIT_ASSERT_EQUAL(6ul, hEmptyKey.size());
+    CPPUNIT_ASSERT(hEmptyKey.has(""));
+    CPPUNIT_ASSERT(hEmptyKey.erase("")); // only empty key
+    CPPUNIT_ASSERT_EQUAL(5ul, hEmptyKey.size());
+
+    CPPUNIT_ASSERT(hEmptyKey.has("a"));
+    CPPUNIT_ASSERT(hEmptyKey.has("a."));
+    CPPUNIT_ASSERT(hEmptyKey.erase("a.")); // empty key at end
+    CPPUNIT_ASSERT(!hEmptyKey.has("a."));
+    CPPUNIT_ASSERT(hEmptyKey.has("a"));
+
+    CPPUNIT_ASSERT(hEmptyKey.has("a1"));
+    CPPUNIT_ASSERT(hEmptyKey.has("a1."));
+    CPPUNIT_ASSERT(hEmptyKey.erase("a1"));
+    CPPUNIT_ASSERT(!hEmptyKey.has("a1."));
+    CPPUNIT_ASSERT(!hEmptyKey.has("a1"));
+
+    CPPUNIT_ASSERT(hEmptyKey.has("b"));
+    CPPUNIT_ASSERT(hEmptyKey.has("b."));
+    CPPUNIT_ASSERT(hEmptyKey.has("b.."));
+    Hash& b = hEmptyKey.get<Hash>("b");
+    CPPUNIT_ASSERT(b.has("."));
+    CPPUNIT_ASSERT(b.erase(".")); // empty key at begin and end
+    CPPUNIT_ASSERT(!hEmptyKey.has("b.."));
+    CPPUNIT_ASSERT(hEmptyKey.has("b."));
+
+    CPPUNIT_ASSERT(hEmptyKey.has("c"));
+    CPPUNIT_ASSERT(hEmptyKey.has("c."));
+    CPPUNIT_ASSERT(hEmptyKey.has("c..d"));
+    Hash& c = hEmptyKey.get<Hash>("c");
+    CPPUNIT_ASSERT(c.erase(".d")); // empty key at begin
+    CPPUNIT_ASSERT(!hEmptyKey.has("c..d"));
+    CPPUNIT_ASSERT(hEmptyKey.has("c."));
+
+    CPPUNIT_ASSERT(hEmptyKey.has("e"));
+    CPPUNIT_ASSERT(hEmptyKey.has("e."));
+    CPPUNIT_ASSERT(hEmptyKey.has("e..f"));
+    CPPUNIT_ASSERT(hEmptyKey.erase("e..f")); // empty key in middle
+    CPPUNIT_ASSERT(!hEmptyKey.has("e..f"));
+    CPPUNIT_ASSERT(hEmptyKey.has("e."));
+
+    // Test erasePath with empty keys at various places of the path.
+    // Same test cases as for erase, but sometimes other result!
+
+    // only empty key
+    CPPUNIT_ASSERT_EQUAL(6ul, hEmptyKey2.size());
+    CPPUNIT_ASSERT(hEmptyKey2.has(""));
+    hEmptyKey2.erasePath("");
+    CPPUNIT_ASSERT_EQUAL(5ul, hEmptyKey2.size());
+
+    CPPUNIT_ASSERT(hEmptyKey2.has("a"));
+    CPPUNIT_ASSERT(hEmptyKey2.has("a."));
+    hEmptyKey2.erasePath("a."); // empty key an end
+    CPPUNIT_ASSERT(!hEmptyKey2.has("a."));
+    CPPUNIT_ASSERT(!hEmptyKey2.has("a"));
+
+    CPPUNIT_ASSERT(hEmptyKey2.has("a1"));
+    CPPUNIT_ASSERT(hEmptyKey2.has("a1."));
+    hEmptyKey2.erasePath("a1");
+    CPPUNIT_ASSERT(!hEmptyKey2.has("a1."));
+    CPPUNIT_ASSERT(!hEmptyKey2.has("a1"));
+
+    CPPUNIT_ASSERT(hEmptyKey2.has("b"));
+    CPPUNIT_ASSERT(hEmptyKey2.has("b."));
+    CPPUNIT_ASSERT(hEmptyKey2.has("b.."));
+    Hash& b2 = hEmptyKey2.get<Hash>("b");
+    CPPUNIT_ASSERT(b2.has("."));
+    b2.erasePath("."); // empty key at begin and end
+    CPPUNIT_ASSERT(!hEmptyKey2.has("b.."));
+    CPPUNIT_ASSERT(!hEmptyKey2.has("b."));
+    CPPUNIT_ASSERT(hEmptyKey2.has("b"));
+
+    CPPUNIT_ASSERT(hEmptyKey2.has("c"));
+    CPPUNIT_ASSERT(hEmptyKey2.has("c."));
+    CPPUNIT_ASSERT(hEmptyKey2.has("c..d"));
+    Hash& c2 = hEmptyKey2.get<Hash>("c");
+    c2.erasePath(".d"); // empty key at begin
+    CPPUNIT_ASSERT(!hEmptyKey2.has("c..d"));
+    CPPUNIT_ASSERT(!hEmptyKey2.has("c."));
+    CPPUNIT_ASSERT(hEmptyKey2.has("c"));
+
+    CPPUNIT_ASSERT(hEmptyKey2.has("e"));
+    CPPUNIT_ASSERT(hEmptyKey2.has("e."));
+    CPPUNIT_ASSERT(hEmptyKey2.has("e..f"));
+    hEmptyKey2.erasePath("e..f"); // empty key in middle
+    CPPUNIT_ASSERT(!hEmptyKey2.has("e..f"));
+    CPPUNIT_ASSERT(!hEmptyKey2.has("e."));
+    CPPUNIT_ASSERT(!hEmptyKey2.has("e"));
+
+    // Check vector treatment, i.e. erasePath("a.v[0]") where v was - either size 1 or longer
+    // Test erasePath where it acts differently than erase
+    Hash hEmptyKey3("a.vec[1]", Hash(), ".vecb[1]", Hash());
+    hEmptyKey3.erasePath("a.vec[1]");
+    CPPUNIT_ASSERT(hEmptyKey3.has("a.vec[0]"));
+    hEmptyKey3.erasePath("a.vec[0]");
+    CPPUNIT_ASSERT(!hEmptyKey3.has("a.vec"));
+    CPPUNIT_ASSERT(!hEmptyKey3.has("a"));
+    // Now empty key instead of "a":
+    hEmptyKey3.erasePath(".vecb[1]");
+    CPPUNIT_ASSERT(hEmptyKey3.has(".vecb[0]"));
+    hEmptyKey3.erasePath(".vecb[0]");
+    CPPUNIT_ASSERT(!hEmptyKey3.has(".vecb"));
+    CPPUNIT_ASSERT(!hEmptyKey3.has(""));
+    CPPUNIT_ASSERT(hEmptyKey3.empty());
 }
 
 
@@ -1956,4 +2070,38 @@ void Hash_Test::testCounter(){
     // BOOL would be counted leading to a count of 5
     CPPUNIT_ASSERT(karabo::util::counter(h, karabo::util::Types::BOOL) == 1);
     CPPUNIT_ASSERT(karabo::util::counter(h, karabo::util::Types::HASH) == 1);
+}
+
+
+void Hash_Test::testKeys() {
+    // Test various funny keys/paths
+    Hash h(" ", true,
+           "", false,
+           ".", 0,
+           ".b", 1,
+           "a.", 2,
+           "c..b", 3);
+
+    CPPUNIT_ASSERT(h.has(" "));
+    CPPUNIT_ASSERT(h.has(""));
+    CPPUNIT_ASSERT(h.has("a"));
+    CPPUNIT_ASSERT(h.has("c"));
+    CPPUNIT_ASSERT_EQUAL(4ul, h.size()); // no other 1st level keys!
+
+    const Hash& g = h.get<Hash>("");
+    CPPUNIT_ASSERT(g.has(""));
+    CPPUNIT_ASSERT(g.has("b"));
+    CPPUNIT_ASSERT_EQUAL(2ul, g.size()); // dito
+
+    const Hash& a = h.get<Hash>("a");
+    CPPUNIT_ASSERT(a.has(""));
+    CPPUNIT_ASSERT_EQUAL(1ul, a.size()); // dito
+
+    const Hash& c = h.get<Hash>("c");
+    CPPUNIT_ASSERT(a.has(""));
+    CPPUNIT_ASSERT_EQUAL(1ul, c.size()); // dito
+
+    const Hash& c1 = c.get<Hash>("");
+    CPPUNIT_ASSERT(c1.has("b"));
+    CPPUNIT_ASSERT_EQUAL(1ul, c1.size()); // dito
 }
