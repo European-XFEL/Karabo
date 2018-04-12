@@ -499,7 +499,7 @@ namespace karabo {
             std::set<std::string> result;
 
 
-            BOOST_FOREACH(const std::string& path, paths) {
+            for (const std::string& path : paths) {
                 const size_t sepPos = path.find_first_of(separator);
                 // Add what is left after first separator - if that is not empty and if that before separator matches key:
                 if (sepPos != std::string::npos // Found a separator,
