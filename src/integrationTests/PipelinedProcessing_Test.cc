@@ -89,13 +89,13 @@ void PipelinedProcessing_Test::testPipe() {
     CPPUNIT_ASSERT(success.first);
 
     // Ask for a property of the device to wait until it is available
-    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>("p2pTestSender", "nData", 5, KRB_TEST_MAX_TIMEOUT));
+    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>("p2pTestSender", "nData", 25, KRB_TEST_MAX_TIMEOUT));
 
     // Then call its slot
     m_deviceClient->execute("p2pTestSender", "write", KRB_TEST_MAX_TIMEOUT);
 
     // And poll for the correct answer
-    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>("pipeTestReceiver", "nTotalData", 5, KRB_TEST_MAX_TIMEOUT));
+    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>("pipeTestReceiver", "nTotalData", 25, KRB_TEST_MAX_TIMEOUT));
     
     // Test if data source was correctly passed
     std::vector<std::string> sources = m_deviceClient->get<std::vector<std::string> >("pipeTestReceiver", "dataSources");
@@ -107,6 +107,9 @@ void PipelinedProcessing_Test::testPipe() {
         CPPUNIT_ASSERT(sources[0] == "p2pTestSender:output1");
     }
 
+    // Check that EOS handling is not called too early
+    const unsigned int nTotalOnEos = m_deviceClient->get<unsigned int>("pipeTestReceiver", "nTotalOnEos");
+    CPPUNIT_ASSERT_EQUAL(25u, nTotalOnEos);
 }
 
 template <typename T>
