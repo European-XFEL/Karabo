@@ -11,7 +11,7 @@ from karabo.bound import (
     PythonDevice, Hash, loadFromFile, saveToFile, Schema, State,
     TextSerializerSchema,
     ADMIN, EXPERT, KARABO_CLASSINFO,
-    BOOL_ELEMENT, OVERWRITE_ELEMENT, NODE_ELEMENT, SLOT_ELEMENT, 
+    BOOL_ELEMENT, OVERWRITE_ELEMENT, NODE_ELEMENT, SLOT_ELEMENT,
     STRING_ELEMENT, TABLE_ELEMENT, UINT32_ELEMENT, VECTOR_STRING_ELEMENT
 )
 from karabo.common.api import (
@@ -244,6 +244,8 @@ class RunConfigurationGroup(PythonDevice):
         """
         group = self.get('group')
         path = op.join(SAVED_GROUPS_DIR, self.getInstanceId() + '.xml')
+        # create directory if it does not already exist
+        os.makedirs(op.dirname(path), exist_ok=True)
         saveToFile(group, path)
 
     def requestScene(self, params):
