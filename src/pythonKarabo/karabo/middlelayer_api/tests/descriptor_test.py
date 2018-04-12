@@ -5,11 +5,12 @@ import numpy
 from pint import DimensionalityError
 
 from karabo.middlelayer import (
-    AccessMode, Assignment, AccessLevel, Attribute, Bool, Char, ComplexFloat,
-    decodeBinary, Double, encodeBinary, Float, Hash, Int8, Int16, MetricPrefix,
-    NumpyVector, NDArray, QuantityValue, Schema, State, String, Timestamp,
-    Type, Unit, unit, UInt64, VectorBool, VectorChar, VectorComplexFloat,
-    VectorInt32, VectorFloat, VectorHash, VectorInt8, VectorString)
+    AccessMode, AlarmCondition, Assignment, AccessLevel, Attribute, Bool, Char,
+    ComplexFloat, decodeBinary, Double, encodeBinary, Float,
+    Hash, Int8, Int16, LeafType, MetricPrefix, NumpyVector, NDArray,
+    QuantityValue, Schema, State, String, Timestamp, Type, Unit, unit,
+    UInt64, VectorBool, VectorChar, VectorComplexFloat, VectorInt32,
+    VectorFloat, VectorHash, VectorInt8, VectorString)
 
 
 class Tests(TestCase):
@@ -27,7 +28,6 @@ class Tests(TestCase):
         for k, v in desc.__dict__.items():
             if isinstance(v, Attribute):
                 self.assertEqual(getattr(desc, k), getattr(newdesc, k))
-
 
     def check_general(self, desc, value):
         """check things common to all values"""
@@ -52,6 +52,7 @@ class Tests(TestCase):
     def test_int_enum(self):
         class E(Enum):
             a = 3
+
         d = Int8(enum=E)
         v = d.toKaraboValue(E.a)
         self.assertIs(v.enum, E.a)
@@ -65,6 +66,7 @@ class Tests(TestCase):
 
         class F(Enum):
             a = 3
+
         with self.assertRaises(TypeError):
             d.toKaraboValue(F.a)
 
@@ -73,6 +75,7 @@ class Tests(TestCase):
             a = 1
             b = 2
             c = 3
+
         class F(Enum):
             a = 1
 
@@ -240,17 +243,17 @@ class Tests(TestCase):
 
     def test_complex(self):
         d = ComplexFloat()
-        v = d.toKaraboValue(3+4j)
-        self.assertEqual(v, 3+4j)
+        v = d.toKaraboValue(3 + 4j)
+        self.assertEqual(v, 3 + 4j)
         self.check_general(d, v)
 
         d = ComplexFloat(unitSymbol=Unit.METER,
                          metricPrefixSymbol=MetricPrefix.MILLI)
 
-        v = d.toKaraboValue(5+3j)
+        v = d.toKaraboValue(5 + 3j)
         with self.assertRaises(DimensionalityError):
-            v = d.toKaraboValue((5+3j) * unit.m / unit.m)
-        v = d.toKaraboValue(5+3j, strict=False)
+            v = d.toKaraboValue((5 + 3j) * unit.m / unit.m)
+        v = d.toKaraboValue(5 + 3j, strict=False)
         self.assertEqual(v.real, QuantityValue("5 mm"))
         self.assertEqual(v.imag, QuantityValue("3 mm"))
         v = d.toKaraboValue("5 m")
@@ -261,16 +264,16 @@ class Tests(TestCase):
 
     def test_vector_complex(self):
         d = VectorComplexFloat()
-        v = d.toKaraboValue([1+2j, 2+3j, 3])
+        v = d.toKaraboValue([1 + 2j, 2 + 3j, 3])
         self.check_general(d, v)
-        self.assertEqual(v[1], 2+3j)
+        self.assertEqual(v[1], 2 + 3j)
 
         d = VectorComplexFloat(unitSymbol=Unit.METER,
                                metricPrefixSymbol=MetricPrefix.MILLI)
-        v = d.toKaraboValue([2+3j, 3+4j, 4])
+        v = d.toKaraboValue([2 + 3j, 3 + 4j, 4])
         with self.assertRaises(DimensionalityError):
-            v = d.toKaraboValue([2+3j, 3+4j, 4] * unit.m / unit.m)
-        v = d.toKaraboValue([2+3j, 3+4j, 4], strict=False)
+            v = d.toKaraboValue([2 + 3j, 3 + 4j, 4] * unit.m / unit.m)
+        v = d.toKaraboValue([2 + 3j, 3 + 4j, 4], strict=False)
         self.assertEqual(v[1].real, QuantityValue("3 mm"))
         self.assertEqual(v[1].imag, QuantityValue("4 mm"))
         self.assertNotEqual(v[2], 4)
@@ -279,7 +282,7 @@ class Tests(TestCase):
         d = VectorComplexFloat(unitSymbol=Unit.METER,
                                metricPrefixSymbol=MetricPrefix.KILO)
         v = d.toKaraboValue(v)
-        self.assertAlmostEqual(v[1].magnitude, 3e-6+4e-6j)
+        self.assertAlmostEqual(v[1].magnitude, 3e-6 + 4e-6j)
 
     def test_size_vector(self):
         d = VectorString(minSize=2)
@@ -292,12 +295,12 @@ class Tests(TestCase):
         self.assertEqual(v, ['wuff', 'scratch'])
 
         d = VectorComplexFloat(minSize=2)
-        v = d.toKaraboValue([2+3j, 3+4j, 4])
-        self.assertAlmostEqual(v[1].magnitude, 3+4j)
+        v = d.toKaraboValue([2 + 3j, 3 + 4j, 4])
+        self.assertAlmostEqual(v[1].magnitude, 3 + 4j)
         with self.assertRaises(TypeError):
             v = d.toKaraboValue(['miau'])
         with self.assertRaises(ValueError):
-            v = d.toKaraboValue([3+4j])
+            v = d.toKaraboValue([3 + 4j])
 
         d = VectorInt32(minSize=2, maxSize=3)
         v = d.toKaraboValue([2, 3, 4])
@@ -373,6 +376,7 @@ class Tests(TestCase):
     def test_string_enum(self):
         class E(Enum):
             a = "bla"
+
         d = String(enum=E)
         v = d.toKaraboValue(E.a)
         self.assertIs(v.enum, E.a)
@@ -386,6 +390,7 @@ class Tests(TestCase):
 
         class F(Enum):
             a = "bla"
+
         with self.assertRaises(TypeError):
             d.toKaraboValue(F.a)
 
@@ -394,6 +399,7 @@ class Tests(TestCase):
             a = "A"
             b = "B"
             c = "C"
+
         class F(Enum):
             c = "C"
 
@@ -561,6 +567,23 @@ class Tests(TestCase):
             Double(strict=False, requiredAccessLevel=27)
         with self.assertRaises(ValueError):
             Double(strict=False, metricPrefixSymbol="asdf")
+
+    def test_leafType(self):
+
+        state = String(
+            displayType="State",
+            enum=State)
+
+        alarm = String(
+            displayType="Alarm Condition",
+            enum=AlarmCondition)
+
+        # Check for state
+        schema, attrs = state.toSchemaAndAttrs(None, None)
+        self.assertEqual(attrs["leafType"], LeafType.State)
+        # Check for Alarms
+        schema, attrs = alarm.toSchemaAndAttrs(None, None)
+        self.assertEqual(attrs["leafType"], LeafType.AlarmCondition)
 
 
 if __name__ == "__main__":
