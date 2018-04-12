@@ -60,7 +60,7 @@ namespace karabo {
         UINT32_ELEMENT(expected).key("nData")
                 .displayedName("Number of data")
                 .description("Number of data")
-                .assignmentOptional().defaultValue(5)
+                .assignmentOptional().defaultValue(25)
                 .reconfigurable()
                 .commit();
 
