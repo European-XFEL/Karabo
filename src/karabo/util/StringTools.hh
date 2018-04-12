@@ -200,7 +200,15 @@ namespace karabo {
         }
 
         inline std::string toString(const std::vector<unsigned char>& value) {
-            // Really? unsigned char is UINT8 and not CHAR!
+            // GF, April 2018:
+            // unsigned char maps to the Karabo type UINT8 which is supposed to represent
+            // (unsigned...) numbers, in contrast to char (Karabo type CHAR) which is used
+            // for raw data
+            // ==> I doubt the correctness of this specialisation of
+            //     toString(const std::vector<unsigned char>& value),
+            //     but I do not dare to remove it, creating probably unexpected side effects.
+            //
+            // See the open merge request 1523 which seems to properly handle that.
             return karabo::util::base64Encode(&value[0], value.size());
         }
 
@@ -228,7 +236,7 @@ namespace karabo {
 
         inline std::string toString(const std::pair<const unsigned char*, size_t>& value) {
             if (value.second == 0) return "";
-            // Really? See above at toString(const std::vector<unsigned char>& value).
+            // See comment above at std::string toString(const std::vector<unsigned char>& value)
             return karabo::util::base64Encode(value.first, value.second);
         }
 
