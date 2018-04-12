@@ -23,8 +23,8 @@ from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
 from . import basetypes
 from .enums import (
-    AccessLevel, AccessMode, Assignment, DaqPolicy, MetricPrefix, NodeType,
-    Unit)
+    AccessLevel, AccessMode, Assignment, DaqPolicy, LeafType, MetricPrefix,
+    NodeType, Unit)
 from .exceptions import KaraboError
 from .registry import Registry
 
@@ -79,20 +79,16 @@ class Enumable(object):
         schema, attrs = super(Enumable, self).toSchemaAndAttrs(device, state)
         if self.enum is not None:
             attrs["classId"] = self.enum.__name__
+            if self.enum is State:
+                attrs["leafType"] = LeafType.State.value
+            elif self.enum is AlarmCondition:
+                attrs["leafType"] = LeafType.AlarmCondition.value
             if self.options is None:
                 attrs["options"] = [val.value
                                     for val in self.enum.__members__.values()]
             else:
                 attrs["options"] = [opt.value for opt in self.options]
-            # HACK to comply with C++:
-            # Schema entries of State and AlarmCondition have leaf type
-            # attributes, required e.g. in
-            # DeviceClient::get<T>(instanceId, key, keySep)
-            KARABO_SCHEMA_LEAF_TYPE = "leafType"  # see util/Schema.hh
-            if self.enum is State:
-                attrs[KARABO_SCHEMA_LEAF_TYPE] = 2  # LeafType::STATE
-            elif self.enum is AlarmCondition:
-                attrs[KARABO_SCHEMA_LEAF_TYPE] = 3  # LeafType::ALARM_CONDITION
+
         return schema, attrs
 
     def toKaraboValue(self, data, strict=True):
