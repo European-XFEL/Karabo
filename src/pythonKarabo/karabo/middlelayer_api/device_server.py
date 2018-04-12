@@ -1,4 +1,4 @@
-from asyncio import (async, coroutine, create_subprocess_exec, Future, gather,
+from asyncio import (async, coroutine, create_subprocess_exec, gather,
                      get_event_loop, set_event_loop, sleep, TimeoutError, wait,
                      wait_for)
 import copy
@@ -22,6 +22,7 @@ from .schema import Node
 from .serializers import decodeBinary, encodeXML
 from .signalslot import SignalSlotable, slot, coslot
 from .synchronization import background, firstCompleted
+from .time_mixin import TimeMixin
 
 
 class DeviceServerBase(SignalSlotable):
@@ -274,6 +275,7 @@ class DeviceServerBase(SignalSlotable):
 
 
 class MiddleLayerDeviceServer(DeviceServerBase):
+
     pluginNamespace = String(
         displayedName="Plugin Namespace",
         description="Namespace to search for middle layer plugins",
@@ -281,9 +283,31 @@ class MiddleLayerDeviceServer(DeviceServerBase):
         defaultValue="karabo.middlelayer_device",
         requiredAccessLevel=AccessLevel.EXPERT)
 
+    timeServerId = String(
+        displayedName="TimeServer",
+        accessMode=AccessMode.INITONLY)
+
     def __init__(self, configuration):
         super(MiddleLayerDeviceServer, self).__init__(configuration)
         self.deviceInstanceMap = {}
+
+    @coroutine
+    def _run(self, **kwargs):
+        if isSet(self.timeServerId):
+            self._ss.connect(self.timeServerId, "signalTimeTick",
+                             self.slotTimeTick)
+        yield from super(MiddleLayerDeviceServer, self)._run(**kwargs)
+
+    @slot
+    def slotTimeTick(self, train_id, sec, frac, period):
+        """Slot called by the timeServer
+
+        :param train_id: Propagated train Id
+        :param sec: time since epoch in seconds
+        :param frac: remaining time in attoseconds
+        :param period: update interval between train Id's in microsec
+        """
+        TimeMixin.set_reference(train_id, sec, frac, period)
 
     @coroutine
     def scanPluginsOnce(self):
@@ -447,7 +471,6 @@ class BoundDeviceServer(DeviceServerBase):
             yield from process.wait()
         finally:
             task.cancel()
-
 
     @coroutine
     def startDevice(self, classId, deviceId, config):
