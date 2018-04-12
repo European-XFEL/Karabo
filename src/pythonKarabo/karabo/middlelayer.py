@@ -67,6 +67,7 @@ from .middlelayer_api.synchronization import (
     allCompleted, background, firstCompleted, firstException, gather,
     processEvents, sleep, synchronous
 )
+from .middlelayer_api.time_mixin import TimeMixin, get_timestamp
 from .middlelayer_api.timestamp import Timestamp
 from .middlelayer_api import numeric
 
