@@ -142,6 +142,18 @@ class KaraboValue(object):
         """
         return self.descriptor.description
 
+    @property
+    def has_tid(self):
+        """Property to indicate whether our KaraboValue has a valid trainId
+        """
+        return (self.timestamp.tid > 0)
+
+    @property
+    def tid(self):
+        """Property to directly provide the trainId of the KaraboValue
+        """
+        return self.timestamp.tid
+
     def __iter__(self):
         for a in super().__iter__():
             y = wrap(a)
