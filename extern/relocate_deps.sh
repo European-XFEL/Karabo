@@ -78,13 +78,13 @@ rewrite_rpaths() {
     while [ "x${target_packages[count]}" != "x" ]
     do
         local package=${target_packages[count]}
-        local package_dir=$($INSTALL_PREFIX/bin/python3 -c "import os,$package as pkg;print(os.path.dirname(pkg.__file__))")
+        local package_dir=$(LD_LIBRARY_PATH=$INSTALL_PREFIX/lib $INSTALL_PREFIX/bin/python3 -c "import os,$package as pkg;print(os.path.dirname(pkg.__file__))")
         run_rpath_fixer "-f -g '*.so' -l $INSTALL_PREFIX/lib -d $package_dir"
         count=$(($count + 1))
     done
 
     # These are specific libs which need to be relocated
-    local target_libs=(libtiffxx.so libhdf5_hl.so libfreetype.so libxslt.so libexslt.so libxml2mod.so)
+    local target_libs=(libtiffxx.so libhdf5_hl.so libfreetype.so libxslt.so libexslt.so libxml2mod.so libzmq.so)
 
     # Relocate the libraries
     count=0
