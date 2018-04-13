@@ -135,6 +135,8 @@
       </logicalFolder>
       <logicalFolder name="f2" displayName="Serialization" projectFiles="true">
         <itemPath>../../../src/karabo/io/BinarySerializer.hh</itemPath>
+        <itemPath>../../../src/karabo/io/BufferSet.cc</itemPath>
+        <itemPath>../../../src/karabo/io/BufferSet.hh</itemPath>
         <itemPath>../../../src/karabo/io/HashBinarySerializer.cc</itemPath>
         <itemPath>../../../src/karabo/io/HashBinarySerializer.hh</itemPath>
         <itemPath>../../../src/karabo/io/HashHdf5Serializer.cc</itemPath>
@@ -713,6 +715,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/BinarySerializer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/BufferSet.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/BufferSet.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2660,6 +2672,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/BinarySerializer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/BufferSet.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/BufferSet.hh"
             ex="false"
             tool="3"
             flavor2="0">

@@ -22,7 +22,8 @@ namespace karabo {
     using util::UINT32_ELEMENT;
     using util::VECTOR_STRING_ELEMENT;
     using xms::INPUT_CHANNEL_ELEMENT;
-
+    using util::FLOAT_ELEMENT;
+    
     KARABO_REGISTER_FOR_CONFIGURATION(core::BaseDevice, core::Device<>, PipeReceiverDevice)
 
     void PipeReceiverDevice::expectedParameters(util::Schema& expected) {
@@ -36,6 +37,11 @@ namespace karabo {
                 .displayedName("Input")
                 .description("Input channel: client")
                 .dataSchema(data)
+                .commit();
+        
+        INPUT_CHANNEL_ELEMENT(expected).key("input2")
+                .displayedName("Input2")
+                .description("Input channel: client")
                 .commit();
 
         BOOL_ELEMENT(expected).key("onData")
@@ -87,12 +93,17 @@ namespace karabo {
                 .displayedName("Data sources on input from index resolve")
                 .readOnly()
                 .commit();
+        
+        FLOAT_ELEMENT(expected).key("averageTransferTime")
+                .readOnly()
+                .commit();
 
     }
 
 
     PipeReceiverDevice::PipeReceiverDevice(const karabo::util::Hash& config) : Device<>(config) {
 
+        KARABO_SLOT0(reset);
         KARABO_INITIAL_FUNCTION(initialization)
     }
 
@@ -104,7 +115,9 @@ namespace karabo {
         } else {
             KARABO_ON_INPUT("input", onInput);
         }
+        KARABO_ON_INPUT("input2", onInputProfile);
         KARABO_ON_EOS("input", onEndOfStream);
+        KARABO_ON_EOS("input2", onEndOfStreamProfile);
 
     }
 
@@ -123,7 +136,7 @@ namespace karabo {
 
 
     void PipeReceiverDevice::onData(const util::Hash& data, const xms::InputChannel::MetaData& metaData) {
-
+        
         set("dataSources", std::vector<std::string>(1, metaData.getSource()));
         set("currentDataId", data.get<int>("dataId"));
         const auto& v = data.get<std::vector<long long>>("data");
@@ -140,6 +153,34 @@ namespace karabo {
     void PipeReceiverDevice::onEndOfStream(const xms::InputChannel::Pointer& input) {
 
         set<unsigned int>("nTotalOnEos", get<unsigned int>("nTotalData"));
+    }
+
+    void PipeReceiverDevice::onInputProfile(const xms::InputChannel::Pointer& input) {
+        util::Hash data;
+        
+        for (size_t i = 0; i < input->size(); ++i) {
+            input->read(data, i); // clears data before filling        
+            unsigned long long transferTime = boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds() - data.get<unsigned long long>("inTime");
+            m_transferTimes.push_back(transferTime);
+            set("nTotalData", get<unsigned int>("nTotalData") + 1);
+            karabo::util::NDArray arr = data.get<karabo::util::NDArray>("array");
+            KARABO_LOG_INFO<<arr.byteSize();
+        }
+         
+    }
+
+
+    void PipeReceiverDevice::onEndOfStreamProfile(const xms::InputChannel::Pointer& input) {
+        unsigned long long transferTime = 0;
+        for(auto time = m_transferTimes.begin(); time != m_transferTimes.end(); ++time) {
+            transferTime += *time;
+        }
+        
+        set<float>("averageTransferTime", (float)transferTime/m_transferTimes.size());
+    }
+    
+    void PipeReceiverDevice::reset() {
+        m_transferTimes.clear();
     }
 
 }
