@@ -7,6 +7,8 @@
 
 #include "PropertyTest_Test.hh"
 #include <karabo/net/EventLoop.hh>
+#include <karabo/util/Hash.hh>
+#include <karabo/util/Schema.hh>
 
 
 USING_KARABO_NAMESPACES;
@@ -30,7 +32,9 @@ void PropertyTest_Test::setUp() {
     // Start central event-loop
     m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
     // Create and start server
-    Hash config("serverId", "propertyTestServer_0", "scanPlugins", false, "Logger.priority", "ERROR");
+    // FATAL log level since testAttributeEditing() triggers ERRORs on purpose which
+    // might mislead someone checking the log output (e.g. when hunting some other problem).
+    Hash config("serverId", "propertyTestServer_0", "scanPlugins", false, "Logger.priority", "FATAL");
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
     // Create client
@@ -55,6 +59,7 @@ void PropertyTest_Test::allTestRunner() {
     testSimpleProperties();
     testVectorProperties();
     testTableProperties();
+    testAttributeEditing();
 }
 
 
@@ -275,6 +280,7 @@ void PropertyTest_Test::testSimpleProperties() {
         CPPUNIT_ASSERT(value == 76.543211787654);
     }
 
+    std::clog << "Tested simple properties.. Ok" << std::endl;
 }
 
 
@@ -575,6 +581,7 @@ void PropertyTest_Test::testVectorProperties() {
         for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT(value[i] == "HELLO");
     }
 
+    std::clog << "Tested vector properties.. Ok" << std::endl;
 }
 
 
@@ -624,4 +631,85 @@ void PropertyTest_Test::testTableProperties() {
     CPPUNIT_ASSERT(value[2].get<int>("e3") == 42);
     CPPUNIT_ASSERT(value[2].get<float>("e4") == 55.5555F);
     CPPUNIT_ASSERT(value[2].get<double>("e5") == 9.99999999);
+
+    std::clog << "Tested table element.. Ok" << std::endl;
+}
+
+void PropertyTest_Test::testAttributeEditing() {
+
+    // Here we test attribute editing affecting reconfiguration requests.
+    // The example attributes tested here are maxSize and minSize for vectors.
+    // Attributes relevant for readOnly values are tested in the
+    // RunTimeSchemaAttributes_Test that also tests the proper forwarding in the
+    // GuiServerDevice from a (fake) Gui client.
+
+    // Need a SignalSlotable instead of DeviceClient to circumvent the checks done in the
+    // DeviceClient before sending requests!
+    auto caller = boost::make_shared<SignalSlotable>("caller");
+    caller->start();
+
+    Hash toSend;
+    std::vector<int>& vec = toSend.bindReference<std::vector<int> >("vectors.int32Property");
+
+    // Allowed size is 1 - 10 elements
+    vec = std::vector<int>{1, 2, 3};
+    CPPUNIT_ASSERT_NO_THROW(caller->request("testPropertyTest_0", "slotReconfigure", toSend)
+                            .timeout(1000) // in ms
+                            .receive());
+
+    // Empty is too short
+    vec = std::vector<int>();
+    CPPUNIT_ASSERT_THROW(caller->request("testPropertyTest_0", "slotReconfigure", toSend)
+                         .timeout(1000) // in ms
+                         .receive(),
+                         karabo::util::RemoteException);
+
+    // 11 is too long
+    vec = std::vector<int>(11, 1);
+    CPPUNIT_ASSERT_THROW(caller->request("testPropertyTest_0", "slotReconfigure", toSend)
+                         .timeout(1000) // in ms
+                         .receive(),
+                         karabo::util::RemoteException);
+
+    // Now make 11 to be fine
+    m_deviceClient->setAttribute("testPropertyTest_0", "vectors.int32Property",
+                                 KARABO_SCHEMA_MAX_SIZE, 11u);
+    CPPUNIT_ASSERT_NO_THROW(caller->request("testPropertyTest_0", "slotReconfigure", toSend)
+                            .timeout(1000) // in ms
+                            .receive());
+
+    // But 12 is still too long
+    vec = std::vector<int>(12, 2);
+    CPPUNIT_ASSERT_THROW(caller->request("testPropertyTest_0", "slotReconfigure", toSend)
+                         .timeout(1000) // in ms
+                         .receive(),
+                         karabo::util::RemoteException);
+
+    // Now make empty vec to be fine
+    m_deviceClient->setAttribute("testPropertyTest_0", "vectors.int32Property",
+                                 KARABO_SCHEMA_MIN_SIZE, 0u);
+    vec.clear();
+    CPPUNIT_ASSERT_NO_THROW(caller->request("testPropertyTest_0", "slotReconfigure", toSend)
+                            .timeout(1000) // in ms
+                            .receive());
+
+    // Now make 2 the minumum and test that size 1 is not ok
+    m_deviceClient->setAttribute("testPropertyTest_0", "vectors.int32Property",
+                                 KARABO_SCHEMA_MIN_SIZE, 2u);
+    vec = std::vector<int>(1, 0);
+    CPPUNIT_ASSERT_THROW(caller->request("testPropertyTest_0", "slotReconfigure", toSend)
+                         .timeout(1000) // in ms
+                         .receive(),
+                         karabo::util::RemoteException);
+
+    // Now make 8 the minumum and test that size 9 now is too long
+    m_deviceClient->setAttribute("testPropertyTest_0", "vectors.int32Property",
+                                 KARABO_SCHEMA_MAX_SIZE, 8u);
+    vec = std::vector<int>(9, 100);
+    CPPUNIT_ASSERT_THROW(caller->request("testPropertyTest_0", "slotReconfigure", toSend)
+                         .timeout(1000) // in ms
+                         .receive(),
+                         karabo::util::RemoteException);
+
+    std::clog << "Tested attribute editing.. Ok" << std::endl;
 }
