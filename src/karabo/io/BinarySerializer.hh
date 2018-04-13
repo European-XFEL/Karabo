@@ -18,6 +18,8 @@
 
 namespace karabo {
     namespace io {
+        
+        class BufferSet;
 
         /*
          * @class BinarySerializer
@@ -41,6 +43,15 @@ namespace karabo {
             virtual void save(const T& object, std::vector<char>& archive) = 0;
 
             /**
+             * Save an object to the BufferSet
+             * @param object
+             * @param archive
+             */
+            virtual void save(const T& object, karabo::io::BufferSet& archive) {
+                throw KARABO_NOT_IMPLEMENTED_EXCEPTION("save exception");
+            }
+            
+            /**
              * Load an object from a binary archive.
              * @param object to load data into
              * @param archive binary archive containing the data
@@ -55,6 +66,15 @@ namespace karabo {
              */
             void load(T& object, const std::vector<char>& archive) {
                 load(object, &archive[0], archive.size());
+            }
+
+            /**
+             * Load an object from BufferSet archive
+             * @param object
+             * @param archive BufferSet object
+             */
+            virtual void load(T& object, const karabo::io::BufferSet& archive) {
+                throw KARABO_NOT_IMPLEMENTED_EXCEPTION("load exception");
             }
 
              /**

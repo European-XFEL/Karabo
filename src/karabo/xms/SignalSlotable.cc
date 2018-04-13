@@ -2434,7 +2434,7 @@ namespace karabo {
             OutputChannels::const_iterator it = m_outputChannels.find(ioChannelId);
             if (it != m_outputChannels.end()) {
                 karabo::util::Hash h(it->second->getInformation());
-                if (processId == static_cast<int> (getpid())) {
+                if (processId == static_cast<int> (getpid()) && !std::getenv("KARABO_NO_PIPELINE_SHORTCUT")) {
                     h.set("memoryLocation", "local");
                 } else {
                     h.set("memoryLocation", "remote");

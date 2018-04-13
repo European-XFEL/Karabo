@@ -56,6 +56,23 @@ namespace karabo {
                 .displayedName("Output1")
                 .dataSchema(data)
                 .commit();
+        
+        Schema data2;
+        
+        UINT64_ELEMENT(data2).key("inTime")
+                .readOnly()
+                .commit();
+        
+        NDARRAY_ELEMENT(data2).key("array")
+                .dtype(Types::DOUBLE)
+                .shape("256,256,512")
+                .commit();
+
+        OUTPUT_CHANNEL(expected).key("output2")
+                .displayedName("Output2")
+                .dataSchema(data2)
+                .commit();
+        
 
         UINT32_ELEMENT(expected).key("nData")
                 .displayedName("Number of data")
@@ -78,6 +95,18 @@ namespace karabo {
                 .description("Monitors the currently processed data token")
                 .readOnly()
                 .commit();
+        
+        STRING_ELEMENT(expected).key("scenario")
+                .options("test,profile")
+                .assignmentOptional().defaultValue("test")
+                .reconfigurable()
+                .commit();
+        
+        BOOL_ELEMENT(expected).key("copyAllData")
+                .assignmentOptional().defaultValue(true)
+                .reconfigurable()
+                .commit();
+        
 
     }
 
@@ -103,7 +132,11 @@ namespace karabo {
         }
 
         // start extra thread since write is a slot and must not block
-        m_writingThread = boost::thread(boost::bind(&Self::writing, this));
+        if (get<std::string>("scenario") == "test") {
+            m_writingThread = boost::thread(boost::bind(&Self::writing, this));
+        } else {
+            m_writingThread = boost::thread(boost::bind(&Self::writingProfile, this));
+        } 
 
         updateState(State::ACTIVE);
     }
@@ -162,6 +195,43 @@ namespace karabo {
 
         // Done, signal EOS token
         signalEndOfStream("output1");
+
+        updateState(State::NORMAL);
+    }
+    
+    void P2PSenderDevice::writingProfile() {
+        try {
+            const int nData = get<unsigned int>("nData");
+            const unsigned int delayInMs = get<unsigned int>("delay");
+            NDArray ndarr(Dims(256, 256, 512));
+            Hash data;
+            bool copyAllData = get<bool>("copyAllData");
+            auto channel = this->getOutputChannel("output2");
+
+            // Loop all the data to be send
+            for (int iData = 0; iData < nData; ++iData) {
+
+                // Fill the data object - for now only dataId.
+                data.set("array", ndarr);
+                data.set("inTime", (unsigned long long) boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds());
+
+                // Write
+                channel->write(data, copyAllData);
+                channel->update();
+                
+                KARABO_LOG_INFO << "Written data # " << iData;
+                set("currentDataId", iData);
+
+                boost::this_thread::sleep(boost::posix_time::milliseconds(delayInMs));
+            }
+        } catch (const std::exception &eStd) {
+            KARABO_LOG_ERROR << "Stop writing since:\n" << eStd.what();
+        } catch (...) {
+            KARABO_LOG_ERROR << "Stop writing since unknown exception";
+        }
+
+        // Done, signal EOS token
+        signalEndOfStream("output2");
 
         updateState(State::NORMAL);
     }
