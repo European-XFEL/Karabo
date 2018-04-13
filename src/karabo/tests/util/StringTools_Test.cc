@@ -118,6 +118,32 @@ void StringTools_Test::testToString() {
     std::vector<float> floatVector{1.f,0.5f,3.1415956f,0.1f, 0.09999878f, 2.8790123f,99.8765411f, -0.00000000003456789f};
     CPPUNIT_ASSERT(toString(floatVector) == "1,0.5,3.141596,0.1,0.09999878,2.879012,99.87654,-3.456789e-11");
 
+    // Vectors, but playing with maximum number
+    const std::vector<int> int32Vector{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    CPPUNIT_ASSERT_EQUAL(std::string("1,2,3,4,5,6,7,8,9,10,11,12,13,14,15"), toString(int32Vector)); // all is default
+    // Ask for less - but at least first and last are shown and on each end up to 5 less than half maximum
+    CPPUNIT_ASSERT_EQUAL(std::string("1,...(skip 13 values)...,15"), toString(int32Vector, 1));
+    // From 14 on more than just first/last are shown
+    CPPUNIT_ASSERT_EQUAL(std::string("1,2,...(skip 11 values)...,14,15"), toString(int32Vector, 14));
+    // Check if vector size hits maximum, all elements are indeed treated
+    CPPUNIT_ASSERT_EQUAL(std::string("2,3,4,5,6,7,8,9,10,11,12,13,14,15"),
+                         toString(std::vector<int>(int32Vector.begin() + 1, int32Vector.end()), 14));
+
+    // If some elements are skipped, ten (five on each end) less than the maximum are taken into account:
+    const std::vector<long long> int64Vector(30, 12345);
+    std::string only18_12345;
+    for (size_t i = 0; i < int64Vector.size(); ++i) {
+        if (i == 9) {
+            only18_12345 += "...(skip 12 values)...,";
+            i += 11;
+        } else if (i == int64Vector.size() - 1) {
+            only18_12345 += "12345";
+        } else {
+            only18_12345 += "12345,";
+        }
+    }
+    CPPUNIT_ASSERT_EQUAL(only18_12345, toString(int64Vector, 28));
+
     // Wide strings
     const wchar_t wstr[] = L"abcd0123";
     string str = "abcd0123";

@@ -228,6 +228,17 @@ namespace karabo {
             Cont<T> getValueAs() const;
 
             /**
+             * Return the value cast to string.
+             * The only difference to getValueAs<string>() concerns elements of type Types::ReferenceType::VECTOR_*:
+             * Whereas getValueAs<string>() returns all vector elements, getValueAsShortString() shortens the string by
+             * leaving out vector elements in the middle, if the vector size
+             * exceeds the argument.
+             * @param maxNumVectorElements maximum number of vector elements taken into account
+             * @return
+             */
+            std::string getValueAsShortString(size_t maxNumVectorElements) const;
+
+            /**
              * Set an attribute to this Element, identified by key
              * @param key
              * @param value
@@ -613,6 +624,37 @@ namespace karabo {
                 return Cont<T>(); // Make the compiler happy
             }
         }
+
+        template<class KeyType, typename AttributeType>
+        std::string Element<KeyType, AttributeType>::getValueAsShortString(size_t maxNumVectorElements) const {
+
+#define CASE_RETURN_VECTOR(VectorRefType, ElementCppType, maxSize) \
+       case Types::ReferenceType::VectorRefType: \
+           return karabo::util::toString(this->getValueAs <ElementCppType, std::vector>(), maxSize);
+
+            switch (this->getType()) {
+                    // Not treating (VECTOR_CHAR, char) here: That is our raw data container treated elsewhere.
+                    CASE_RETURN_VECTOR(VECTOR_INT8, signed char, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_INT16, short, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_INT32, int, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_INT64, long long, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_UINT8, unsigned char, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_UINT16, unsigned short, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_UINT32, unsigned int, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_UINT64, unsigned long long, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_FLOAT, float, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_DOUBLE, double, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_BOOL, bool, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_STRING, std::string, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_COMPLEX_FLOAT, std::complex<float>, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_COMPLEX_DOUBLE, std::complex<double>, maxNumVectorElements)
+                    CASE_RETURN_VECTOR(VECTOR_NONE, CppNone, maxNumVectorElements) // for completeness
+                default:
+                    return this->getValueAs<std::string>();
+            }
+#undef CASE_RETURN_VECTOR
+        }
+
 
         template<class KeyType, typename AttributeType>
         boost::any& Element<KeyType, AttributeType>::getValueAsAny() {
