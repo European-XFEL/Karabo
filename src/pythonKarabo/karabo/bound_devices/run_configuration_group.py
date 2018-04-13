@@ -244,8 +244,6 @@ class RunConfigurationGroup(PythonDevice):
         """
         group = self.get('group')
         path = op.join(SAVED_GROUPS_DIR, self.getInstanceId() + '.xml')
-        # create directory if it does not already exist
-        os.makedirs(op.dirname(path), exist_ok=True)
         saveToFile(group, path)
 
     def requestScene(self, params):
