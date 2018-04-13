@@ -155,9 +155,6 @@ namespace karabo {
             std::string m_serverId;
             std::string m_deviceId;
 
-            std::map<std::string, karabo::util::Schema> m_stateDependentSchema;
-            mutable boost::mutex m_stateDependentSchemaMutex;
-
             // Regular expression for error detection in state word
             boost::regex m_errorRegex;
 
@@ -180,6 +177,7 @@ namespace karabo {
             karabo::util::Schema m_staticSchema;
             karabo::util::Schema m_injectedSchema;
             karabo::util::Schema m_fullSchema;
+            std::map<std::string, karabo::util::Schema> m_stateDependentSchema;
 
             karabo::util::AlarmCondition m_globalAlarmCondition;
             std::set<std::string> m_accumulatedGlobalAlarms;
@@ -882,9 +880,11 @@ namespace karabo {
                 {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                     // Clear previously injected parameters
+                    // Instead of via injected schema, could erase all paths that are in
+                    // m_fullSchema/m_parameters, but not in m_staticSchema!
                     std::vector<std::string> keys = m_injectedSchema.getKeys();
 
-                    BOOST_FOREACH(std::string key, keys) {
+                    for (const std::string& key : keys) {
                         if (m_parameters.has(key)) m_parameters.erase(key);
                     }
 
@@ -1676,7 +1676,6 @@ namespace karabo {
             void slotGetSchema(bool onlyCurrentState) {
                 if (onlyCurrentState) {
                     const karabo::util::State& currentState = getState();
-                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                     const karabo::util::Schema schema(getStateDependentSchema(currentState));
                     reply(schema, m_deviceId);
                 } else {
@@ -1714,7 +1713,6 @@ namespace karabo {
             std::pair<bool, std::string> validate(const karabo::util::Hash& unvalidated, karabo::util::Hash& validated) {
                 // Retrieve the current state of the device instance
                 const karabo::util::State& currentState = getState();
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 const karabo::util::Schema whiteList(getStateDependentSchema(currentState));
                 KARABO_LOG_DEBUG << "Incoming (un-validated) reconfiguration:\n" << unvalidated;
                 std::pair<bool, std::string> valResult = m_validatorExtern.validate(whiteList, unvalidated, validated, getActualTimestamp());
@@ -1768,16 +1766,17 @@ namespace karabo {
             karabo::util::Schema getStateDependentSchema(const karabo::util::State& state) {
                 using namespace karabo::util;
                 const std::string& currentState = state.name();
-                KARABO_LOG_DEBUG << "call: getStateDependentSchema() for state: " << currentState;
-                boost::mutex::scoped_lock lock(m_stateDependentSchemaMutex);
-                // Check cache, whether a special set of state-dependent expected parameters was created before
+                KARABO_LOG_FRAMEWORK_DEBUG << "call: getStateDependentSchema() for state: " << currentState;
+                // Check cache whether a special state-dependent Schema was created before
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 std::map<std::string, Schema>::iterator it = m_stateDependentSchema.find(currentState);
                 if (it == m_stateDependentSchema.end()) { // No
-                    it = m_stateDependentSchema.insert(make_pair(currentState, Device::getSchema(m_classId, Schema::AssemblyRules(WRITE, currentState)))).first; // New one
-                    KARABO_LOG_DEBUG << "Providing freshly cached state-dependent schema:\n" << it->second;
-                    if (!m_injectedSchema.empty()) it->second.merge(m_injectedSchema);
+                    const Schema::AssemblyRules rules(WRITE, currentState);
+                    it = m_stateDependentSchema.insert(make_pair(currentState,
+                                                                 m_fullSchema.subSchemaByRules(rules))).first; // New one
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Providing freshly cached state-dependent schema:\n" << it->second;
                 } else {
-                    KARABO_LOG_DEBUG << "Schema was already cached";
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Schema was already cached";
                 }
                 return it->second;
             }
@@ -1951,6 +1950,9 @@ namespace karabo {
             void slotUpdateSchemaAttributes(const std::vector<karabo::util::Hash>& updates) {
                 bool success = false;
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                // Whenever updating the m_fullSchema, we have to clear the cache
+                m_stateDependentSchema.clear();
+                // FIXME: Also update m_injectedSchema?
                 try {
                     success = m_fullSchema.applyRuntimeUpdates(updates);
                     // Notify the distributed system
