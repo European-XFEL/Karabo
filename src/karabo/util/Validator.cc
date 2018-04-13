@@ -539,14 +539,14 @@ namespace karabo {
                 if (masterNode.hasAttribute(KARABO_SCHEMA_MIN_SIZE)) {
                     int minSize = masterNode.getAttribute<unsigned int>(KARABO_SCHEMA_MIN_SIZE);
                     if (currentSize < minSize) {
-                        report << "Number of elements (" << currentSize << " for (vector-)parameter \"" << scope << "\" is smaller than lower bound (" << minSize << ")" << endl;
+                        report << "Number of elements (" << currentSize << ") for (vector-)parameter \"" << scope << "\" is smaller than lower bound (" << minSize << ")" << endl;
                     }
                 }
 
                 if (masterNode.hasAttribute(KARABO_SCHEMA_MAX_SIZE)) {
                     int maxSize = masterNode.getAttribute<unsigned int>(KARABO_SCHEMA_MAX_SIZE);
                     if (currentSize > maxSize) {
-                        report << "Number of elements (" << currentSize << " for (vector-)parameter \"" << scope << "\" is greater than upper bound (" << maxSize << ")" << endl;
+                        report << "Number of elements (" << currentSize << ") for (vector-)parameter \"" << scope << "\" is greater than upper bound (" << maxSize << ")" << endl;
                     }
                 }
             }
