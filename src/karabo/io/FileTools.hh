@@ -74,8 +74,8 @@ namespace karabo {
                 boost::system::error_code ec;
                 boost::filesystem::create_directories(directory, ec);
                 if (ec) {
-                    KARABO_LOG_FRAMEWORK_TRACE << "Failed to create directories: " << directory
-                        << ". code = " << ec.value() << " -- " << ec.message();
+                    KARABO_LOG_FRAMEWORK_ERROR_C("karabo::io::saveToFile") << "Failed to create directories: "
+                            << directory << ". code = " << ec.value() << " -- " << ec.message();
                 }
             }
 
