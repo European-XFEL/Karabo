@@ -1,5 +1,7 @@
 from unittest import TestCase, main
-from karabo.middlelayer import Timestamp, TimeMixin
+from time import sleep
+
+from karabo.middlelayer import Timestamp, TimeMixin, get_timestamp
 
 PERIOD = 100000  # microseconds [us]
 
@@ -47,6 +49,16 @@ class TestTimeMixin(TestCase):
         second = Timestamp("2009-04-20T10:32:23 UTC")
         elapsed_tid = self.tmix.elapsed_tid(first, second)
         self.assertEqual(elapsed_tid, 100)
+
+    def test_actual_timestamp(self):
+        reference = Timestamp()
+
+        # set a new reference tick in the mixin!
+        t_dict = reference.toDict()
+        self.tmix.set_reference(1000, t_dict['sec'], t_dict['frac'], 100000)
+        sleep(1)
+        new_timestamp = get_timestamp()
+        self.assertEqual(new_timestamp.tid, 1010)
 
 
 if __name__ == "__main__":
