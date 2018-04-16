@@ -4,13 +4,13 @@ from zlib import adler32
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Bool, Configurable, ComplexDouble,
-    ComplexFloat, DaqDataType, DaqPolicy, decodeBinary, Double, encodeBinary,
-    Float, Hash, Int8, Int16, Int32, Int64, isSet, KaraboError, MetricPrefix,
-    Node, Overwrite, Slot, State, String, UInt8, UInt16, UInt32, UInt64, Unit,
-    unit, VectorBool, VectorChar, VectorComplexDouble, VectorComplexFloat,
-    VectorDouble, VectorHash, VectorFloat, VectorInt8, VectorInt16,
-    VectorInt32, VectorInt64, VectorString, VectorUInt8, VectorUInt16,
-    VectorUInt32, VectorUInt64)
+    ComplexFloat, DaqDataType, DaqPolicy, decodeBinary, DeviceNode, Double,
+    encodeBinary, Float, Hash, Int8, Int16, Int32, Int64, isSet, KaraboError,
+    MetricPrefix, Node, Overwrite, Slot, State, String, UInt8, UInt16, UInt32,
+    UInt64, Unit, unit, VectorBool, VectorChar, VectorComplexDouble,
+    VectorComplexFloat, VectorDouble, VectorHash, VectorFloat, VectorInt8,
+    VectorInt16, VectorInt32, VectorInt64, VectorString, VectorUInt8,
+    VectorUInt16, VectorUInt32, VectorUInt64)
 from karabo.middlelayer_api.injectable import Injectable
 
 
@@ -1005,6 +1005,17 @@ class Tests(TestCase):
         self.assertEqual(conf.a.descriptor.maxExc, 100)
         self.assertNotEqual(conf.node.b.descriptor.unitSymbol, 200)
         self.assertEqual(conf.node.b.descriptor.unitSymbol, Unit.NUMBER)
+
+    def test_deviceNode(self):
+        class A(Configurable):
+            node = DeviceNode()
+
+        a = A()
+        schema = a.getClassSchema()
+        self.assertEqual(schema.hash['node', 'accessMode'],
+                         AccessMode.INITONLY.value)
+        self.assertEqual(schema.hash['node', 'assignment'],
+                         Assignment.MANDATORY.value)
 
 
 if __name__ == "__main__":
