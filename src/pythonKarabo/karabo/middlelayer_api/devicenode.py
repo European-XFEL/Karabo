@@ -4,7 +4,7 @@ from itertools import chain
 
 from .basetypes import isSet
 from .device_client import getDevice, lock
-from .enums import AccessMode, NodeType
+from .enums import AccessMode, Assignment, NodeType
 from .signalslot import coslot
 from .hash import Hash, String
 
@@ -138,6 +138,7 @@ class DeviceNode(String):
         h, attrs = super().toSchemaAndAttrs(device, state)
         if device is None or (not self.properties and not self.commands):
             attrs["accessMode"] = AccessMode.INITONLY.value
+            attrs["assignment"] = Assignment.MANDATORY.value
             return h, attrs
         attrs["nodeType"] = NodeType.Node
         attrs["displayType"] = "deviceNode"
