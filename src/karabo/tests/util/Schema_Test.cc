@@ -885,6 +885,58 @@ void Schema_Test::testSubSchema() {
         CPPUNIT_ASSERT(sub.has("b"));
         CPPUNIT_ASSERT(!sub.has("c"));
     }
+
+    // Now testing 'by rules':
+    {
+        Schema::AssemblyRules rules(READ | WRITE | INIT); // i.e. everything
+        const Schema sub = schema.subSchemaByRules(rules);
+        // Everything is in:
+        std::vector<std::string> finalPaths;
+        sub.getParameterHash().getPaths(finalPaths);
+        CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (7), finalPaths.size());
+    }
+
+    {
+        Schema::AssemblyRules rules(READ | WRITE | INIT, "ON"); // i.e. required sate ON or non-defined
+        const Schema sub = schema.subSchemaByRules(rules);
+        CPPUNIT_ASSERT(!sub.has("color"));
+
+        // But all else since only "color" is reconfigurable for state OFF
+        std::vector<std::string> finalPaths;
+        sub.getParameterHash().getPaths(finalPaths);
+        CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (6), finalPaths.size());
+    }
+
+    {
+        Schema::AssemblyRules rules(READ | WRITE | INIT, "", Schema::OPERATOR);
+        const Schema sub = schema.subSchemaByRules(rules);
+        CPPUNIT_ASSERT(!sub.has("antiAlias"));
+
+        // But all else is left since "antiAlias" is the only expert access level (defaults are user or observer)
+        std::vector<std::string> finalPaths;
+        sub.getParameterHash().getPaths(finalPaths);
+        CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (6), finalPaths.size());
+    }
+
+    {
+        Schema::AssemblyRules rules(READ);
+        const Schema sub = schema.subSchemaByRules(rules);
+        // Nothing is readOnly...
+        CPPUNIT_ASSERT(sub.empty());
+    }
+
+    {
+        Schema::AssemblyRules rules(INIT | READ);
+        const Schema sub = schema.subSchemaByRules(rules);
+        CPPUNIT_ASSERT(sub.has("antiAlias"));
+        CPPUNIT_ASSERT(sub.has("shapes.rectangle.b"));
+        CPPUNIT_ASSERT(sub.has("shapes.rectangle.c"));
+
+        // All else is WRITE (i.e. reconfigurable))
+        std::vector<std::string> finalPaths;
+        sub.getParameterHash().getPaths(finalPaths);
+        CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (3), finalPaths.size());
+    }
 }
 
 
