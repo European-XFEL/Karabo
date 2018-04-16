@@ -11,7 +11,7 @@ from dateutil.parser import parse as from_isoformat
 from pint import DimensionalityError
 
 from karabo.middlelayer import (
-    AlarmCondition, background, Bool, Configurable, connectDevice,
+    Assignment, AlarmCondition, background, Bool, Configurable, connectDevice,
     decodeBinary, Device, DeviceNode, execute, Float, getDevice, isAlive,
     isSet, Int32, KaraboError, lock, MetricPrefix, Node, Overwrite,
     Queue, setNoWait, setWait, Slot, slot, State, String, unit, Unit,
@@ -766,6 +766,7 @@ class Tests(DeviceTest):
                             commands=[{"doit": "do_it"}, "changeit"])
 
         a = A({"_deviceId_": "devicenode", "dn": "remote"})
+
         yield from a.startInstance()
         try:
             a.dn.value = 5
