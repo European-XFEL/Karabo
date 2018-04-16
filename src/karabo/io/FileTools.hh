@@ -8,6 +8,7 @@
 #include <boost/filesystem.hpp>
 #include <ostream>
 
+#include <karabo/log/Logger.hh>
 #include "Input.hh"
 #include "Output.hh"
 #include "BinaryFileInput.hh"
@@ -66,6 +67,18 @@ namespace karabo {
         inline void saveToFile(const T& object, const std::string& filename, const karabo::util::Hash& config = karabo::util::Hash()) {
             boost::filesystem::path filepath(filename);
             std::string extension = filepath.extension().string().substr(1);
+            boost::filesystem::path directory = filepath.parent_path();
+
+            // Create the directory and any parents if not existing already
+            if (!boost::filesystem::exists(directory)) {
+                boost::system::error_code ec;
+                boost::filesystem::create_directories(directory, ec);
+                if (ec) {
+                    KARABO_LOG_FRAMEWORK_ERROR_C("karabo::io::saveToFile") << "Failed to create directories: "
+                            << directory << ". code = " << ec.value() << " -- " << ec.message();
+                }
+            }
+
             boost::to_lower(extension);
             karabo::util::Hash h("filename", filepath.normalize().string());
             h.merge(config);
