@@ -287,7 +287,6 @@ else
 fi
 
 if [ "$RUNTESTS" = "y" ]; then
-    runIntegrationTests # temporarily...
     runUnitTests
 fi
 
