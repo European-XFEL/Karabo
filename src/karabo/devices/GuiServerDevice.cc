@@ -91,9 +91,9 @@ namespace karabo {
                     .displayedName("Instantiate wait time")
                     .description("Time interval between the instantiation of devices.")
                     .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
-                    .assignmentOptional().defaultValue(1500)
+                    .assignmentOptional().defaultValue(500)
                     .reconfigurable()
-                    .minExc(500).maxInc(5000)  // NOTE: Not _too_ fast. The device instantiation timer is always running!
+                    .minExc(200).maxInc(5000) // NOTE: Not _too_ fast. The device instantiation timer is always running!
                     .commit();
 
             UINT32_ELEMENT(expected).key("connectedClientCount")
