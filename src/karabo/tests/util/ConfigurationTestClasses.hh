@@ -249,7 +249,7 @@ namespace configurationTest {
                     .displayedName("Color")
                     .description("The default color for any shape")
                     .assignmentOptional().defaultValue("red")
-                    .reconfigurable()
+                    .reconfigurable().allowedStates(State::OFF)
                     .commit();
 
             BOOL_ELEMENT(expected).key("bold")

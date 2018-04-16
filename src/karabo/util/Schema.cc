@@ -1215,6 +1215,7 @@ namespace karabo {
 
             std::set<std::string> selectedPaths;
             for (const std::string& path : getPaths()) { // getDeepPaths would e.g. dig into NDArrayElement details
+
                 // Check that it belongs to selected m_accessMode - which is an OR of possible enum AccessType values
                 if (!(getAccessMode(path) & rules.m_accessMode)) {
                     continue;
@@ -1222,8 +1223,7 @@ namespace karabo {
 
                 // Check that, in case allowed state(s) requested on both sides (rules or Schema item at path),
                 // they match:
-                const std::vector<State> states(hasAllowedStates(path) ?
-                                                getAllowedStates(path) : std::vector<State>());
+                const std::vector<State> states(hasAllowedStates(path) ? getAllowedStates(path) : std::vector<State>());
                 if (!rules.m_state.empty() // empty: rules do not care about state
                     && !states.empty() // empty: states not restricted
                     && std::find(states.begin(), states.end(), State::fromString(rules.m_state)) == states.end()) {
@@ -1232,7 +1232,7 @@ namespace karabo {
 
                 // Last check: access level
                 if (rules.m_accessLevel != -1 // rules do not care about access level
-                    && rules.m_accessLevel >= getRequiredAccessLevel(path)) {
+                    && rules.m_accessLevel < getRequiredAccessLevel(path)) {
                     continue;
                 }
 
@@ -1240,11 +1240,14 @@ namespace karabo {
             }
 
             // Finally assemble Schema out of surviving paths
-            Hash resultHash;
-            // Note: Merge policy does not matter since resultHash is empty...
-            resultHash.merge(getParameterHash(), Hash::REPLACE_ATTRIBUTES, selectedPaths);
             Schema result;
-            result.setParameterHash(resultHash);
+            if (!selectedPaths.empty()) {
+                Hash resultHash;
+                // Note: 1) Merge policy does not matter since resultHash is empty.
+                //       2) selectedPaths.empty() indicates to ignore this selection and take all!
+                resultHash.merge(getParameterHash(), Hash::REPLACE_ATTRIBUTES, selectedPaths);
+                result.setParameterHash(resultHash);
+            }
 
             return result;
         }
