@@ -22,7 +22,7 @@ from .basetypes import KaraboValue
 from .device import Device
 from .eventloop import EventLoop, synchronize
 from .exceptions import KaraboError
-from .hash import Hash, Type
+from .hash import Hash, Schema, Type
 from .proxy import (AutoDisconnectProxyFactory, DeviceClientProxyFactory,
                     ProxyBase, ProxyNodeBase)
 from .signalslot import coslot, slot
@@ -126,14 +126,14 @@ def getSchema(device):
 
     :param device: deviceId or proxy
 
-    :returns: Hash of the Schema
+    :returns: Full Schema object
     """
     if isinstance(device, ProxyBase):
-        return device._schema_hash
+        return Schema(name=device.classId, hash=device._schema_hash)
 
     schema, _ = yield from get_instance().call(device, "slotGetSchema",
                                                False)
-    return schema.hash
+    return schema
 
 
 @synchronize
