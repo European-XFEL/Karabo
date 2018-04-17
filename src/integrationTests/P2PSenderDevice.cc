@@ -109,7 +109,7 @@ namespace karabo {
     }
 
 
-#define TEST_VECTOR_SIZE 100
+#define TEST_VECTOR_SIZE 1000000
 
     // For machine "Intel(R) Xeon(R) CPU E5-1620 v2 @ 3.70GHz" 8 cpus (7400.60 bogomips/cpu)
     // MemTotal:       32821756 kB

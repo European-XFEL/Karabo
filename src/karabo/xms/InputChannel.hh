@@ -69,7 +69,7 @@ namespace karabo {
             typedef std::map<std::string, std::pair<karabo::net::Connection::Pointer, karabo::net::Channel::Pointer> > OpenConnections;
 
             boost::asio::io_service& m_ioService;
-            boost::asio::io_service::strand m_strand;
+            karabo::net::Strand::Pointer m_strand;
             boost::asio::deadline_timer m_deadline;
 
             /// Callback on available data (per InputChannel)
