@@ -4,7 +4,7 @@ from .actions import (BoxVSceneAction, BoxHSceneAction, CreateToolAction,
                       GroupSceneAction, SceneBringToFrontAction,
                       SceneSendToBackAction, UngroupSceneAction)
 from .clipboard import (SceneCopyAction, SceneCutAction, SceneDeleteAction,
-                        ScenePasteAction, ScenePasteReplaceAction,
+                        ScenePasteAction, ScenePasteReplaceAction, SceneMoveAction,
                         SceneSelectAllAction)
 from .drawing import (LineSceneTool, RectangleSceneTool, SceneLinkTool,
                       TextSceneTool)
