@@ -263,7 +263,48 @@ class  Timestamp_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail(" testing conversion from uint64 attributes: " + str(e))
 
-        
+        try:
+            # Test time attributes with a mix of uint32 and small uint64 values
+            h64 = Hash()
+            h64.setAs("tid", 2**31, Types.UINT32)
+            h64.setAs("sec", 2, Types.UINT64)
+            h64.setAs("frac", 3, Types.UINT64)
+            
+            h = Hash()
+            h["timestamp64"] = True
+            h.setAttribute("timestamp64", "tid", h64["tid"])
+            h.setAttribute("timestamp64", "sec", h64["sec"])
+            h.setAttribute("timestamp64", "frac", h64["frac"])
+            attrs = h.getAttributes("timestamp64")
+            self.assertEqual(Timestamp.hashAttributesContainTimeInformation(attrs), True)
+            tm = Timestamp.fromHashAttributes(attrs)
+
+            self.assertEqual(tm.getTrainId(), 2**31)
+            self.assertEqual(tm.getSeconds(), 2)
+            self.assertEqual(tm.getFractionalSeconds(), 3)
+        except Exception as e:
+            self.fail(" testing conversion from large uint32/ small uint64 attributes: " + str(e))
+
+        try:
+            # Test casts from negative or ill-formed time attributes
+            h = Hash()
+            h["timestamp"] = True
+            h.setAttribute("timestamp", "tid", -1)
+            h.setAttribute("timestamp", "sec", "aa12")
+            h.setAttribute("timestamp", "frac", 456)
+            attrs = h.getAttributes("timestamp")
+            self.assertEqual(Timestamp.hashAttributesContainTimeInformation(attrs), True)
+            
+            tm = Timestamp.fromHashAttributes(attrs)
+            self.assertEqual(tm.getTrainId(), 2**64 - 1)
+            self.assertEqual(tm.getSeconds(), 0)
+
+            h.setAttribute("timestamp", "sec", "123")
+            tm = Timestamp.fromHashAttributes(h.getAttributes("timestamp"))
+            self.assertEqual(tm.getSeconds(), 123)
+
+        except Exception as e:
+            self.fail(" testing conversion from negative or ill-formed time attributes: " + str(e))
 
 if __name__ == '__main__':
     unittest.main()
