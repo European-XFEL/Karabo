@@ -12,8 +12,9 @@ from karabo.middlelayer_api.device_client import (
     getConfiguration, getSchema, executeNoWait, updateDevice, Queue,
     connectDevice, lock)
 from karabo.middlelayer_api.device_server import KaraboStream
+from karabo.middlelayer_api.enums import AccessMode
 from karabo.middlelayer_api.exceptions import KaraboError
-from karabo.middlelayer_api.hash import Hash, Int32 as Int, Slot
+from karabo.middlelayer_api.hash import Int32 as Int, Slot
 from karabo.middlelayer_api.macro import Macro
 from karabo.middlelayer_api.schema import Configurable, Node
 from karabo.middlelayer_api.signalslot import slot
@@ -34,7 +35,10 @@ class MyNode(Configurable):
 
 
 class Remote(Device):
-    value = Int(defaultValue=7)
+    value = Int(
+        defaultValue=7,
+        accessMode=AccessMode.RECONFIGURABLE)
+
     counter = Int(defaultValue=-1)
     deep = Node(MyNode)
 
@@ -333,7 +337,21 @@ class Tests(DeviceTest):
         schema_deviceId = getSchema("remote")
         with getDevice("remote") as d:
             schema_proxy = getSchema(d)
-        self.assertEqual(schema_deviceId.paths(), schema_proxy.paths())
+
+        hash_deviceId = schema_deviceId.hash
+        hash_proxy = schema_proxy.hash
+        self.assertEqual(hash_deviceId.paths(),
+                         hash_proxy.paths())
+        self.assertEqual(hash_proxy["value", "accessMode"],
+                         AccessMode.RECONFIGURABLE.value)
+        self.assertEqual(hash_deviceId["value", "accessMode"],
+                         AccessMode.RECONFIGURABLE.value)
+
+        self.assertIn("counter", hash_deviceId)
+        self.assertIn("counter", hash_proxy)
+        self.assertEqual(hash_deviceId["counter", "defaultValue"], -1)
+        self.assertEqual(hash_proxy["counter", "defaultValue"], -1)
+        self.assertEqual(schema_deviceId.name, schema_proxy.name)
 
     @sync_tst
     def test_getConfiguration(self):
