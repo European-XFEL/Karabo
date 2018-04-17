@@ -8,6 +8,7 @@
 #include <iostream>
 #include <iomanip>
 #include <cmath>
+#include <limits>
 
 #include <karabo/util/Epochstamp.hh>
 #include <karabo/util/TimePeriod.hh>
@@ -398,6 +399,24 @@ void TimeClasses_Test::testTrainstamp() {
 
     const Trainstamp stamp5(Trainstamp::fromHashAttributes(attrs));
     CPPUNIT_ASSERT_EQUAL(trainId + 2, stamp5.getTrainId());
+
+    attrs.set("tid", "123454321");
+    CPPUNIT_ASSERT(Trainstamp::hashAttributesContainTimeInformation(attrs));
+
+    const Trainstamp stamp6(Trainstamp::fromHashAttributes(attrs));
+    CPPUNIT_ASSERT_EQUAL(trainId, stamp6.getTrainId());
+
+    attrs.set("tid", "a123454321");
+    CPPUNIT_ASSERT(Trainstamp::hashAttributesContainTimeInformation(attrs));
+
+    const Trainstamp stamp7(Trainstamp::fromHashAttributes(attrs));
+    CPPUNIT_ASSERT_EQUAL(0ull, stamp7.getTrainId());
+
+    attrs.set("tid", -1);
+    CPPUNIT_ASSERT(Trainstamp::hashAttributesContainTimeInformation(attrs));
+
+    const Trainstamp stamp8(Trainstamp::fromHashAttributes(attrs));
+    CPPUNIT_ASSERT_EQUAL(std::numeric_limits<unsigned long long>::max(), stamp8.getTrainId());
 }
 
 
