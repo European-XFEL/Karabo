@@ -138,12 +138,12 @@ class  Timestamp_TestCase(unittest.TestCase):
             self.fail(" testing construction from seconds and fractions: " + str(e))
 
         try:
-            hash = Hash()
+            h = Hash()
             # Cannot use Hash("seconds", 987, "fractions", 123),
             # but have to set explicitely with type, otherwise Hash uses int32...
-            hash.setAs("seconds", 987, Types.UINT64)
-            hash.setAs("fractions", 123, Types.UINT64)
-            dur2 = TimeDuration(hash)
+            h.setAs("seconds", 987, Types.UINT64)
+            h.setAs("fractions", 123, Types.UINT64)
+            dur2 = TimeDuration(h)
             dur3 = TimeDuration(987, 123)
             self.assertEqual(dur3 - dur2, durZero)
         except Exception as e:
@@ -202,7 +202,44 @@ class  Timestamp_TestCase(unittest.TestCase):
 
         except Exception as e:
             self.fail(" testing comparison operators: " + str(e))
+    
+    
+    def test_TimeAttributes(self):
 
+        try:
+            # Test time attributes
+            h = Hash()
+            h["timestamp"] = True
+            h.setAttribute("timestamp", "tid", 987)
+            h.setAttribute("timestamp", "sec", 123)
+            h.setAttribute("timestamp", "frac", 456)
+            attrs = h.getAttributes("timestamp")
+            self.assertEqual(Timestamp.hashAttributesContainTimeInformation(attrs), True)
+            tm = Timestamp.fromHashAttributes(attrs)
+            self.assertEqual(tm, tm)
+        except Exception as e:
+            self.fail(" testing conversion from attributes: " + str(e))
+
+        try:
+            # Test explicit time attributes set as uint64
+            h64 = Hash()
+            h64.setAs("tid", 987, Types.UINT64)
+            h64.setAs("sec", 123, Types.UINT64)
+            h64.setAs("frac", 456, Types.UINT64)
+
+            h["timestamp64"] = True
+            h.setAttribute("timestamp64", "tid", h64["tid"])
+            h.setAttribute("timestamp64", "sec", h64["sec"])
+            h.setAttribute("timestamp64", "frac", h64["frac"])
+            attrs = h.getAttributes("timestamp64")
+            self.assertEqual(Timestamp.hashAttributesContainTimeInformation(attrs), True)
+            tm = Timestamp.fromHashAttributes(attrs)
+            self.assertEqual(tm, tm)
+
+        except Exception as e:
+            self.fail(" testing conversion from uint64 attributes: " + str(e))
+
+        
 
 if __name__ == '__main__':
     unittest.main()
