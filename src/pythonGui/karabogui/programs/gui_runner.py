@@ -3,7 +3,8 @@ import sys
 from traceback import print_exception, format_exception
 
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QApplication, QMessageBox, QPixmap, QSplashScreen
+from PyQt4.QtGui import (
+    QApplication, QIcon, QMessageBox, QPixmap, QSplashScreen)
 
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.controllers.api import populate_controller_registry
@@ -56,6 +57,9 @@ def init_gui(app, splash):
 
 def run_gui(args):
     app = QApplication(args)
+    # set a nice app logo
+    logo_path = op.join(op.dirname(__file__), '..', "icons", "app_logo.png")
+    app.setWindowIcon(QIcon(logo_path))
 
     # These should be set to simplify QSettings usage
     app.setOrganizationName('XFEL')
