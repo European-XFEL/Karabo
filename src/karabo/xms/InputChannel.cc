@@ -16,6 +16,7 @@
 
 using namespace karabo::util;
 using namespace karabo::io;
+using namespace karabo::net;
 
 using std::string;
 
@@ -85,7 +86,7 @@ namespace karabo {
 
         InputChannel::InputChannel(const karabo::util::Hash& config)
             : m_ioService(karabo::net::EventLoop::getIOService())
-            , m_strand(m_ioService)
+            , m_strand(boost::make_shared<Strand>(m_ioService))
             , m_deadline(m_ioService)
             , m_isEndOfStream(false)
             , m_respondToEndOfStream(true) {
@@ -411,12 +412,12 @@ namespace karabo {
                     if (this->getMinimumNumberOfData() <= 0) {
                         KARABO_LOG_FRAMEWORK_TRACE << debugId << "Triggering another compute";
                         this->swapBuffers();
-                        m_strand.post(util::bind_weak(&InputChannel::triggerIOEvent, this));
+                        m_strand->post(util::bind_weak(&InputChannel::triggerIOEvent, this));
                     }
                     if (m_eosChannels.size() == m_openConnections.size()) {
                         if (m_respondToEndOfStream) {
                             KARABO_LOG_FRAMEWORK_TRACE << debugId << "Triggering EOS function after reception of " << m_eosChannels.size() << " EOS tokens";
-                            m_strand.post(util::bind_weak(&InputChannel::triggerEndOfStreamEvent, this));
+                            m_strand->post(util::bind_weak(&InputChannel::triggerEndOfStreamEvent, this));
                         }
                         // Reset eos tracker
                         m_eosChannels.clear();
@@ -454,7 +455,7 @@ namespace karabo {
                     // ...and in parallel process first one.
                     // No mutex under callback
                     KARABO_LOG_FRAMEWORK_TRACE << debugId << "Triggering IOEvent";
-                    m_strand.post(util::bind_weak(&InputChannel::triggerIOEvent, this));
+                    m_strand->post(util::bind_weak(&InputChannel::triggerIOEvent, this));
                 }
                 //else { // Data complete on both pots now
                 // triggerIOEvent will be called by the update of the triggerIOEvent
@@ -528,7 +529,6 @@ namespace karabo {
 
 
         void InputChannel::triggerIOEvent() {
-            boost::mutex::scoped_lock lock(m_mutex); // mutex protects user handlers and update()
             std::string exceptMsg;
             try {
                 // There is either m_inputHandler or m_dataHandler
@@ -573,38 +573,47 @@ namespace karabo {
             // No exception handling needed:
             // Since this method is posted, EventLoop::runProtected() handles that.
             if (m_endOfStreamHandler) {
-                boost::mutex::scoped_lock lock(m_mutex);
-                // Fetch number of data pieces
-                size_t nActiveData = Memory::size(m_channelId, m_activeChunk);
-                // Check the same condition as in InputChannel::update() below!!!
-                if (nActiveData >= this->getMinimumNumberOfData()) {
-                    // either spinning via EventLoop until no active data is left ...
-                    m_strand.post(util::bind_weak(&InputChannel::triggerEndOfStreamEvent, this));
-                } else {
-                    // ... or call handler
-                    m_endOfStreamHandler(shared_from_this());
+                // Safety check if we still have some data in current pot that are not processed yet (we were called too early!)
+                size_t nActiveData = 0;
+                {
+                    boost::mutex::scoped_lock lock(m_mutex);
+                    // Fetch number of data pieces ... should be 0!
+                    nActiveData = Memory::size(m_channelId, m_activeChunk);
                 }
+                if (nActiveData >= this->getMinimumNumberOfData()) {
+                    // first register 'triggerIOEvent' and then 'triggerEndOfStreamEvent' to keep an order.
+                    update();
+                    m_strand->post(util::bind_weak(&InputChannel::triggerEndOfStreamEvent, this));
+                    return;
+                }
+                // call handler
+                m_endOfStreamHandler(shared_from_this());
             }
         }
 
 
         void InputChannel::update() {
             try {
-                // Clear active chunk
-                Memory::clearChunkData(m_channelId, m_activeChunk);
+                size_t nActiveData = 0;
+                {
+                    boost::mutex::scoped_lock lock(m_mutex); // mutex protects user handlers and update()
 
-                // Swap buffers
-                swapBuffers();
+                    // Clear active chunk
+                    Memory::clearChunkData(m_channelId, m_activeChunk);
 
-                // Fetch number of data pieces
-                size_t nActiveData = Memory::size(m_channelId, m_activeChunk);
+                    // Swap buffers
+                    swapBuffers();
+
+                    // Fetch number of data pieces
+                    nActiveData = Memory::size(m_channelId, m_activeChunk);
+                }
 
                 KARABO_LOG_FRAMEWORK_TRACE << "InputChannel::update() nActiveData = " << nActiveData
                         << " and MinData = " << this->getMinimumNumberOfData();
 
                 if (nActiveData >= this->getMinimumNumberOfData()) {
                     // After swapping the pots, the new active one is ready...
-                    m_strand.post(util::bind_weak(&InputChannel::triggerIOEvent, this));
+                    m_strand->post(util::bind_weak(&InputChannel::triggerIOEvent, this));
                     // ...and the other one can be filled
                     notifyOutputChannelsForPossibleRead();
                 }
