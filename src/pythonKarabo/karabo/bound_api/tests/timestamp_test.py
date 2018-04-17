@@ -283,7 +283,7 @@ class  Timestamp_TestCase(unittest.TestCase):
             self.assertEqual(tm.getSeconds(), 2)
             self.assertEqual(tm.getFractionalSeconds(), 3)
         except Exception as e:
-            self.fail(" testing conversion from large uint32/ small uint64 attributes: " + str(e))
+            self.fail(" testing conversion from large uint32 / small uint64 attributes: " + str(e))
 
         try:
             # Test casts from negative or ill-formed time attributes
