@@ -18,9 +18,9 @@ from karabogui.sceneview.tools.api import (
     CreateWorkflowConnectionToolAction, GroupEntireSceneAction,
     GridSceneAction, GroupSceneAction, UngroupSceneAction, LineSceneTool,
     TextSceneTool, RectangleSceneTool, SceneBringToFrontAction,
-    SceneCopyAction, SceneCutAction, SceneDeleteAction, SceneLinkTool,
-    ScenePasteAction, ScenePasteReplaceAction, SceneSelectAllAction,
-    SceneSendToBackAction, SceneSelectionTool)
+    SceneCopyAction, SceneCutAction, SceneDeleteAction, SceneMoveAction,
+    SceneLinkTool, ScenePasteAction, ScenePasteReplaceAction,
+    SceneSelectAllAction, SceneSendToBackAction, SceneSelectionTool)
 from karabogui.widgets.toolbar import ToolBar
 from .base import BasePanelWidget
 
@@ -197,6 +197,12 @@ class ScenePanel(BasePanelWidget):
 
         self.qactions.extend(self._build_qaction(a)
                              for a in self.create_clipboard_actions())
+
+        self.qactions.append(self._build_separator())
+
+        self.qactions.extend(self._build_qaction(a)
+                             for a in self.create_move_actions())
+
         self.qactions.append(self._build_separator())
 
         self.qactions.extend(self._build_qaction(a)
@@ -318,6 +324,33 @@ class ScenePanel(BasePanelWidget):
                                          shortcut=QKeySequence.Delete,
                                          text="Delete",
                                          tooltip="Delete selected items"))
+
+        return actions
+
+    def create_move_actions(self):
+        actions = []
+
+        actions.append(SceneMoveAction(
+            icon=icons.arrowLeft,
+            shortcut=QKeySequence.MoveToPreviousChar,
+            text="Left",
+            tooltip="Move item to the left"))
+        actions.append(SceneMoveAction(
+            icon=icons.arrowRight,
+            shortcut=QKeySequence.MoveToNextChar,
+            text="Right",
+            tooltip="Move item to the right"))
+        actions.append(SceneMoveAction(
+            icon=icons.arrowUp,
+            shortcut=QKeySequence.MoveToPreviousLine,
+            text="Up",
+            tooltip="Move item up"))
+        actions.append(SceneMoveAction(
+            icon=icons.arrowDown,
+            shortcut=QKeySequence.MoveToNextLine,
+            text="Down",
+            tooltip="Move item down"))
+
         return actions
 
     def create_order_actions(self):
