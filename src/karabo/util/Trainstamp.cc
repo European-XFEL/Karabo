@@ -33,7 +33,7 @@ namespace karabo {
 
             try {
 
-                const Element<std::string>& element =  attributes.getNode("tid");
+                auto& element =  attributes.getNode("tid");
                 tid = element.getValueAs<decltype(tid)>();
 
             } catch (const Exception& e) {
