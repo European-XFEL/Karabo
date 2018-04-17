@@ -30,8 +30,12 @@ namespace karabo {
 
         Trainstamp Trainstamp::fromHashAttributes(const Hash::Attributes& attributes) {
             unsigned long long tid;
+
             try {
-                attributes.get("tid", tid);
+
+                const Element<std::string>& element =  attributes.getNode("tid");
+                tid = element.getValueAs<decltype(tid)>();
+
             } catch (const Exception& e) {
                 KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Provided attributes do not contain proper trainId information"));
             }
