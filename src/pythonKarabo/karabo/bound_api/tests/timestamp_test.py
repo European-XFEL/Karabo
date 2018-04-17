@@ -210,22 +210,22 @@ class  Timestamp_TestCase(unittest.TestCase):
             # Test time attributes
             h = Hash()
             h["timestamp"] = True
-            h.setAttribute("timestamp", "tid", 987)
-            h.setAttribute("timestamp", "sec", 123)
-            h.setAttribute("timestamp", "frac", 456)
+            h.setAttribute("timestamp", "tid", 22)
+            h.setAttribute("timestamp", "sec", 1234)
+            h.setAttribute("timestamp", "frac", 5678)
             attrs = h.getAttributes("timestamp")
             self.assertEqual(Timestamp.hashAttributesContainTimeInformation(attrs), True)
             tm = Timestamp.fromHashAttributes(attrs)
-            self.assertEqual(tm, tm)
+            self.assertEqual(tm, 1234000000000000005678)
         except Exception as e:
             self.fail(" testing conversion from attributes: " + str(e))
 
         try:
             # Test explicit time attributes set as uint64
             h64 = Hash()
-            h64.setAs("tid", 987, Types.UINT64)
-            h64.setAs("sec", 123, Types.UINT64)
-            h64.setAs("frac", 456, Types.UINT64)
+            h64.setAs("tid", 22, Types.UINT64)
+            h64.setAs("sec", 1234, Types.UINT64)
+            h64.setAs("frac", 5678, Types.UINT64)
 
             h["timestamp64"] = True
             h.setAttribute("timestamp64", "tid", h64["tid"])
@@ -234,7 +234,7 @@ class  Timestamp_TestCase(unittest.TestCase):
             attrs = h.getAttributes("timestamp64")
             self.assertEqual(Timestamp.hashAttributesContainTimeInformation(attrs), True)
             tm = Timestamp.fromHashAttributes(attrs)
-            self.assertEqual(tm, tm)
+            self.assertEqual(tm, 1234000000000000005678)
 
         except Exception as e:
             self.fail(" testing conversion from uint64 attributes: " + str(e))
