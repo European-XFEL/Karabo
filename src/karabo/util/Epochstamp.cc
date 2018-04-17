@@ -232,9 +232,15 @@ namespace karabo {
 
         Epochstamp Epochstamp::fromHashAttributes(const Hash::Attributes& attributes) {
             unsigned long long seconds, fraction;
+
             try {
-                attributes.get("sec", seconds);
-                attributes.get("frac", fraction);
+
+                auto& sec_element =  attributes.getNode("sec");
+                seconds = sec_element.getValueAs<decltype(seconds)>();
+
+                auto& frac_element = attributes.getNode("frac");
+                fraction = frac_element.getValueAs<decltype(fraction)>();
+
             } catch (const Exception& e) {
                 KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Provided attributes do not contain proper timestamp information"));
             }
