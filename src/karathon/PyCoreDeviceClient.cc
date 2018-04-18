@@ -87,6 +87,8 @@ void exportPyCoreDeviceClient() {
             .def("unregisterDeviceMonitor", (void (DeviceClient::*)(const string&))(&DeviceClient::unregisterDeviceMonitor), bp::arg("instanceId"))
             .def("set", (void(DeviceClientWrap::*)(const string&, const string&, const bp::object&, const std::string&, int))(&DeviceClientWrap::setPy), (bp::arg("deviceId"), bp::arg("key"), bp::arg("value"), bp::arg("keySep") = ".", bp::arg("timeoutInSeconds") = -1))
             .def("set", (void(DeviceClientWrap::*)(const string&, const karabo::util::Hash&, int))(&DeviceClientWrap::setPy), (bp::arg("deviceId"), bp::arg("hash"), bp::arg("timeoutInSeconds") = -1))
+            .def("setAttribute", (void(DeviceClientWrap::*)(const std::string&, const std::string&, const std::string&, const bp::object&, int))(&DeviceClientWrap::setAttributePy),
+                 (bp::arg("deviceId"), bp::arg("key"), bp::arg("attributeKey"), bp::arg("attributeValue"), bp::arg("timeoutInSeconds") = -1))
             .def("setNoWait", &DeviceClientWrap::setNoWaitPy, (bp::arg("instanceId"), bp::arg("key"), bp::arg("value"), bp::arg("keySep") = "."))
             .def("execute", &DeviceClientWrap::executePy, (bp::arg("instanceId"), bp::arg("functionName"), bp::arg("timeoutInSeconds") = -1))
             .def("executeNoWait", &DeviceClientWrap::executeNoWaitPy, (bp::arg("instanceId"), bp::arg("functionName")))

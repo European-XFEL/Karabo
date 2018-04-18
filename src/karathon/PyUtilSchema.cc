@@ -1961,6 +1961,7 @@ void exportPyUtilSchema() {
         s.def("updateAliasMap", &schemawrap::updateAliasMap);
         s.def("hasRollingStatistics", &Schema::hasRollingStatistics);
         s.def("subSchema", &Schema::subSchema, (bp::arg("subNodePath"), bp::arg("filterTags") = ""));
+        s.def("subSchemaByRules", &Schema::subSchemaByRules, (bp::arg("assemblyRules")));
         s.def("setDaqDataType", &Schema::setDaqDataType, (bp::arg("path"), bp::arg("dataType")));
         s.def("getDaqDataType", &Schema::getDaqDataType, (bp::arg("path")));
         s.def("hasDaqDataType", &Schema::hasDaqDataType, (bp::arg("path")));
