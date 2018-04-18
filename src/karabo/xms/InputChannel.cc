@@ -580,8 +580,10 @@ namespace karabo {
                     nActiveData = Memory::size(m_channelId, m_activeChunk);
                 }
                 if (nActiveData >= this->getMinimumNumberOfData()) {
+                    KARABO_LOG_FRAMEWORK_WARN << "triggerEndOfStream comes too early ... nActiveData = " << nActiveData
+                            << " and minimum number of data = " << this->getMinimumNumberOfData();
                     // first register 'triggerIOEvent' and then 'triggerEndOfStreamEvent' to keep an order.
-                    update();
+                    this->update();
                     m_strand->post(util::bind_weak(&InputChannel::triggerEndOfStreamEvent, this));
                     return;
                 }
