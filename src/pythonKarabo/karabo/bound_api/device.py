@@ -329,7 +329,6 @@ class PythonDevice(NoFsm):
         # Initialize threading locks...
         self._lock = threading.Lock()
         self._stateChangeLock = threading.Lock()
-        self._stateDependentSchemaLock = threading.Lock()
         self._stateDependentSchema = {}
         self._injectedSchema = Schema()
 
@@ -862,10 +861,12 @@ class PythonDevice(NoFsm):
         validator.setValidationRules(rules)
         validated = validator.validate(schema, Hash(), self.getActualTimestamp())
         with self._stateChangeLock:
+            # Instead of looping on paths of injectedSchema, could probably
+            # directly loop on paths of self.parameters
             for path in self._injectedSchema.getPaths():
                 if self.parameters.has(path) and not self.staticSchema.has(path): 
                     self.parameters.erase(path)
-            self._stateDependentSchema = {}
+            self._stateDependentSchema.clear()
             self._injectedSchema.copy(schema)
             self.fullSchema.copy(self.staticSchema)
             self.fullSchema += self._injectedSchema
@@ -1398,15 +1399,11 @@ class PythonDevice(NoFsm):
 
     def slotGetSchema(self, onlyCurrentState):
 
-        #senderId = self._ss.getSenderInfo("slotGetSchema").getInstanceIdOfSender()
-
         if onlyCurrentState:
             currentState = self["state"]
             schema = self._getStateDependentSchema(currentState)
-            #self._ss.call(senderId, "slotSchemaUpdated", schema, self.deviceid)
             self._ss.reply(schema, self.deviceid)
         else:
-            #self._ss.call(senderId, "slotSchemaUpdated", self.fullSchema, self.deviceid)
             self._ss.reply(self.fullSchema, self.deviceid)
 
     def slotKillDevice(self):        
@@ -1429,6 +1426,11 @@ class PythonDevice(NoFsm):
 
     def slotUpdateSchemaAttributes(self, updates):
         success = self.fullSchema.applyRuntimeUpdates(updates)
+
+        # Whenever updating self.fullSchema, we have to clear the cache
+        self._stateDependentSchema.clear()
+        # FIXME: Also update m_injectedSchema?
+
         if success:
             # Notify everyone
             self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
@@ -1506,14 +1508,11 @@ class PythonDevice(NoFsm):
         return self.getActualTimestamp()
 
     def _getStateDependentSchema(self, state):
-        with self._stateDependentSchemaLock:
-            if state in self._stateDependentSchema:
-                return self._stateDependentSchema[state]
-            self._stateDependentSchema[state] = self.__class__.getSchema(
-                self.classid,
-                AssemblyRules(AccessType(WRITE), state.value))
-            if not self._injectedSchema.empty():
-                self._stateDependentSchema[state] += self._injectedSchema
+        with self._stateChangeLock:
+            if state not in self._stateDependentSchema:
+                rules = AssemblyRules(AccessType(WRITE), state.value)
+                schemaForState = self.fullSchema.subSchemaByRules(rules)
+                self._stateDependentSchema[state] = schemaForState
             return self._stateDependentSchema[state]
 
     def getInstanceId(self):
