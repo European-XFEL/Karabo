@@ -85,9 +85,8 @@ namespace karabo {
 
 
         InputChannel::InputChannel(const karabo::util::Hash& config)
-            : m_ioService(karabo::net::EventLoop::getIOService())
-            , m_strand(boost::make_shared<Strand>(m_ioService))
-            , m_deadline(m_ioService)
+            : m_strand(boost::make_shared<Strand>(karabo::net::EventLoop::getIOService()))
+            , m_deadline(karabo::net::EventLoop::getIOService())
             , m_isEndOfStream(false)
             , m_respondToEndOfStream(true) {
             parseOutputChannelConfiguration(config);
