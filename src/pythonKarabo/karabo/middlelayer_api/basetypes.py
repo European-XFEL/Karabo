@@ -369,6 +369,7 @@ class TableValue(MutableSequence, KaraboValue):
         """
         v = self[index]
         self.value = numpy.delete(self.value, index)
+        self[index] = []
         return v
 
     def __len__(self):
