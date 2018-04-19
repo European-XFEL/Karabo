@@ -148,7 +148,7 @@ class NavigationTreeView(QTreeView):
         node = self.model().index_ref(index)
         if node is None:
             return
-        popupWidget = PopupWidget(self)
+        popupWidget = PopupWidget(parent=self)
         popupWidget.setInfo(node.attributes)
 
         pos = QCursor.pos()
