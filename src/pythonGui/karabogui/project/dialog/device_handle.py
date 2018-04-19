@@ -141,8 +141,9 @@ class DeviceHandleDialog(QDialog):
     def _update_button_box(self):
         """Only enable Ok button, if title and configuration is set
         """
-        enabled = (len(self.leTitle.text()) > 0 and
-                   len(self.cbConfig.currentText()) > 0)
+        enabled = (len(self.leTitle.text()) and
+                   len(self.cbConfig.currentText()) and
+                   len(self.cbClass.currentText()))
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
 
     @pyqtSlot(int)
