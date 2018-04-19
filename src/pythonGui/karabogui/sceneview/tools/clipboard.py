@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from io import StringIO
 
-from PyQt4.QtCore import QByteArray, QMimeData
+from PyQt4.QtCore import QByteArray, QMimeData, QPoint
 from PyQt4.QtGui import QApplication, QDialog, QMessageBox
 
 from karabo.common.scenemodel.api import (
@@ -10,6 +10,7 @@ from karabogui.sceneview.bases import BaseSceneAction
 from karabogui.dialogs.dialogs import ReplaceDialog
 
 MIME_TYPE = 'image/svg+xml'
+GRID_INC = 10
 
 
 def _add_models_to_clipboard(models, rect):
@@ -163,7 +164,8 @@ class SceneDeleteAction(BaseSceneAction):
         if len(selection_model) == 0:
             return
 
-        result = QMessageBox.question(None, "Really delete?", "Do you really "
+        result = QMessageBox.question(None, "Really delete?",
+                                      "Do you really "
                                       "want to delete the items?",
                                       QMessageBox.Yes | QMessageBox.No)
         if result == QMessageBox.No:
@@ -172,3 +174,22 @@ class SceneDeleteAction(BaseSceneAction):
         for o in selection_model:
             scene_view.remove_model(o.model)
         selection_model.clear_selection()
+
+
+class SceneMoveAction(BaseSceneAction):
+    """Move selected objects inside the scene view.
+    """
+    def perform(self, scene_view):
+        selection_model = scene_view.selection_model
+        if len(selection_model) == 0:
+            return
+
+        increment = {"Left": QPoint(-GRID_INC, 0),
+                     "Right": QPoint(GRID_INC, 0),
+                     "Up": QPoint(0, -GRID_INC),
+                     "Down": QPoint(0, GRID_INC)}
+        offset = increment.get(self.text)
+        # move each item in the selection with increment!
+        for c in scene_view.selection_model:
+            c.translate(offset)
+        scene_view.update()
