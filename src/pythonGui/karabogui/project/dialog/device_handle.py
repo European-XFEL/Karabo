@@ -4,6 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 import os.path as op
+import re
 
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot
@@ -18,9 +19,17 @@ class DeviceIdValidator(QValidator):
     def __init__(self, parent=None):
         QValidator.__init__(self, parent)
 
+    # naming convention:
+    #   part_one[/optional_part_two[/optional_part_three]]
+    # '-' sign is also allowed
+    pattern = re.compile('^[\w-]+(/[\w-]+){,2}$')
+
     def validate(self, input, pos):
-        if input in ('+', '-', ''):
+        if input.endswith('/') and input.count('/') <= 2:
             return self.Intermediate, input, pos
+
+        if not self.pattern.match(input):
+            return self.Invalid, input, pos
 
         return self.Acceptable, input.upper(), pos
 
