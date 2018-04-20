@@ -236,10 +236,10 @@ namespace karabo {
             try {
 
                 auto& sec_element =  attributes.getNode("sec");
-                seconds = sec_element.getValueAs<decltype(seconds)>();
+                seconds = sec_element.getValue<decltype(seconds), long long, unsigned int, int>();
 
                 auto& frac_element = attributes.getNode("frac");
-                fraction = frac_element.getValueAs<decltype(fraction)>();
+                fraction = frac_element.getValue<decltype(fraction), long long, unsigned int, int>();
 
             } catch (const Exception& e) {
                 KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Provided attributes do not contain proper timestamp information"));
