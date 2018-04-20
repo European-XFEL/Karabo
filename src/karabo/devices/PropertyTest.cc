@@ -113,7 +113,7 @@ namespace karabo {
                     .commit();
 
             UINT8_ELEMENT(expected).key("uint8PropertyReadOnly")
-                    .displayedName("Unt8 property read-only")
+                    .displayedName("UInt8 property read-only")
                     .description("A uint8 property read-only")
                     .minInc(std::numeric_limits<unsigned char>::lowest())
                     .maxInc(std::numeric_limits<unsigned char>::max())
