@@ -60,7 +60,7 @@ class NavigationTreeView(QTreeView):
         # Device server instance menu
         self.mServerItem = QMenu(self)
 
-        text = "Shutdown instance"
+        text = "Shutdown server"
         self.acKillServer = QAction(icons.delete, text, self)
         self.acKillServer.setStatusTip(text)
         self.acKillServer.setToolTip(text)
@@ -89,7 +89,7 @@ class NavigationTreeView(QTreeView):
         self.acSaveToFile.triggered.connect(self.onSaveToFile)
         self.mDeviceItem.addAction(self.acSaveToFile)
 
-        text = "Shutdown instance"
+        text = "Shutdown device"
         self.acKillDevice = QAction(icons.delete, text, self)
         self.acKillDevice.setStatusTip(text)
         self.acKillDevice.setToolTip(text)
