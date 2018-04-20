@@ -1664,7 +1664,14 @@ namespace karabo {
              * @return a sub-schema of this schema.
              */
             Schema subSchema(const std::string& subNodePath, const std::string& filterTags = std::string()) const;
-            
+
+            /**
+             * Retrieve a sub-schema of those paths that fulfill given rules
+             * @param rules assemby rules: - if their state field is emtpy, accept all states
+             *                             - similarly, default accessLevel -1 means do not care
+             *
+             */
+            Schema subSchemaByRules(const AssemblyRules& rules) const;
             
             /**
              * Set the DAQ data type for a given node element. 
