@@ -13,6 +13,7 @@
 #include <string>
 #include <complex>
 #include <vector>
+#include <type_traits>
 
 #include <boost/any.hpp>
 #include <boost/cast.hpp>
@@ -180,6 +181,17 @@ namespace karabo {
             void setValue(const Element<KeyType, AttributesType>& value);
 
             /**
+             * Return the first successful cast to one of the ValueTypes
+             * (DestValueType, SourceValueType or one of the SourceValueTypes).
+             * Strict casting is applied,
+             * i.e. at least one of the ValueTypes needs to be of the exact type
+             * of inserted value (or implicitly castable)
+             * @return DestValueType by "copy". Candidate for Return Value Optimization through copy elision.
+             */
+            template<class DestValueType, class SourceValueType, class ...SourceValueTypes>
+            inline DestValueType getValue() const;
+
+            /**
              * Return the value cast to ValueType. Strict casting is applied,
              * i.e. the ValueType needs to be of the exact type of inserted
              * value (or implicitly castable)
@@ -229,7 +241,7 @@ namespace karabo {
 
             /**
              * Return the value cast to string.
-             * The only difference to getValueAs<string>() concerns elements of type Types::ReferenceType::VECTOR_*:
+             * The only difference to etValueAs<string>() concerns elements of type Types::ReferenceType::VECTOR_*:
              * Whereas getValueAs<string>() returns all vector elements, getValueAsShortString() shortens the string by
              * leaving out vector elements in the middle, if the vector size
              * exceeds the argument.
@@ -423,7 +435,6 @@ namespace karabo {
             template<class ValueType>
             inline const ValueType& getValue(boost::false_type /*is_hash_the_base*/) const;
 
-
             inline void setKey(const KeyType& key);
 
             inline std::string getValueAsString() const;
@@ -557,6 +568,33 @@ namespace karabo {
         inline const ValueType& Element<KeyType, AttributeType>::getValue() const {
             return getValue<ValueType>(typename boost::is_base_of<Hash, ValueType>::type());
         }
+
+        template<class KeyType, typename AttributeType>
+        template<class DestValueType, class SourceValueType, class ...SourceValueTypes>
+        inline DestValueType Element<KeyType, AttributeType>::getValue() const {
+            // First try to cast from boost::any to the destination type
+            auto ptr = boost::any_cast<SourceValueType>(&m_value);
+
+            if (ptr) {
+             if (std::is_arithmetic<DestValueType>::value 
+                 && std::is_arithmetic<SourceValueType>::value) {
+                 // Use boost::numeric_cast to filter out losses of range
+                 // and reject conversions from negative value to unsigned types
+                 try {
+                    return boost::numeric_cast<DestValueType>(*ptr);
+                 } catch (boost::numeric::bad_numeric_cast& e) {
+                    KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, m_value.type(),
+                                                                                    typeid (DestValueType))));
+                 }
+             }
+             // Not arithmetic types, try a implicit static cast.
+             return *ptr;
+            }
+
+            // The current source type is not the right one, proceed with the rest of the list
+            return getValue<DestValueType, SourceValueTypes...>();
+        }
+
 
         template<class KeyType, typename AttributeType>
         template<class ValueType>
