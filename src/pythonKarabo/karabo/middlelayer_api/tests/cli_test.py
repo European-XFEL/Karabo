@@ -163,7 +163,7 @@ class Tests(TestCase):
         yield from self.other.startInstance()
 
     def test_autodisconnect(self):
-        """test the automatic disconnect after 15 s ATTENION! LONG TEST!
+        """test the automatic disconnect after 15 s ATTENTION! LONG TEST!
 
         this tests that a device connected to by connectDevice automatically
         disconnects again after 15 s. Unfortunately this means the test
