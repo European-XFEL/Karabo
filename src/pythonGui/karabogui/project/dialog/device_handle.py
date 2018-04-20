@@ -22,7 +22,7 @@ class DeviceIdValidator(QValidator):
         if input in ('+', '-', ''):
             return self.Intermediate, input, pos
 
-        return self.Acceptable, input, pos
+        return self.Acceptable, input.upper(), pos
 
 
 class DeviceHandleDialog(QDialog):
