@@ -177,6 +177,8 @@ class ConfigurationPanel(BasePanelWidget):
         elif sender is KaraboEventSender.UpdateValueConfigurator:
             proxy = data.get('proxy')
             self._update_displayed_values(proxy)
+            # we are the only one interested!
+            return True
         elif sender is KaraboEventSender.ClearConfigurator:
             deviceId = data.get('deviceId', '')
             self._remove_departed_device(deviceId)
