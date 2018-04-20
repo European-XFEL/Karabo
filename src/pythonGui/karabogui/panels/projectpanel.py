@@ -115,6 +115,8 @@ class ProjectPanel(Searchable, BasePanelWidget):
             self._handle_database_is_busy(data)
         elif event.sender is KaraboEventSender.ProjectFilterUpdated:
             self._init_search_filter(data['status'])
+            # we are the only one interested!
+            return True
         return False
 
     def _handle_network_status_change(self, status):
