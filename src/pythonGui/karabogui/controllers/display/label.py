@@ -53,6 +53,8 @@ class DisplayLabel(BaseBindingController):
         self._style_sheet = ("QWidget#{}".format(objectName) +
                              " {{ background-color : rgba{}; }}")
         widget.setObjectName(objectName)
+        sheet = self._style_sheet.format(ALL_OK_COLOR)
+        widget.setStyleSheet(sheet)
         return widget
 
     def value_update(self, proxy):
