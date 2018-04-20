@@ -241,7 +241,7 @@ namespace karabo {
 
             /**
              * Return the value cast to string.
-             * The only difference to etValueAs<string>() concerns elements of type Types::ReferenceType::VECTOR_*:
+             * The only difference to getValueAs<string>() concerns elements of type Types::ReferenceType::VECTOR_*:
              * Whereas getValueAs<string>() returns all vector elements, getValueAsShortString() shortens the string by
              * leaving out vector elements in the middle, if the vector size
              * exceeds the argument.
