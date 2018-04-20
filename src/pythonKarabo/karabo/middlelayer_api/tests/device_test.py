@@ -1,12 +1,20 @@
 from contextlib import contextmanager
 from unittest import main
 
-from karabo.middlelayer import Float, Hash
+import numpy as np
+
+from karabo.middlelayer import AccessMode, getDevice
 from karabo.middlelayer_api.device import Device
+from karabo.middlelayer_api.hash import Float, Hash, VectorHash
 from karabo.middlelayer_api.pipeline import InputChannel, OutputChannel
 from karabo.middlelayer_api.schema import Configurable, Node
 
 from .eventloop import async_tst, DeviceTest, sync_tst
+
+
+class RowSchema(Configurable):
+    x = Float(defaultValue=1.0)
+    y = Float(defaultValue=1.0)
 
 
 class Data(Configurable):
@@ -29,6 +37,12 @@ class MyDevice(Device):
     @InputChannel()
     def input(self, data, meta):
         pass
+
+    table = VectorHash(
+        rows=RowSchema,
+        displayedName="Table",
+        defaultValue=[Hash("x", 2.0, "y", 5.6)],
+        accessMode=AccessMode.RECONFIGURABLE)
 
 
 class Tests(DeviceTest):
@@ -82,6 +96,19 @@ class Tests(DeviceTest):
         # provoke attribute error because we don't have a schema
         with self.assertRaises(AttributeError):
             self.myDevice.output.writeDataNoWait(hsh)
+
+    @async_tst
+    def test_clear_table_external(self):
+        with (yield from getDevice("MyDevice")) as d:
+            dtype = d.table.descriptor.dtype
+            current_value = np.array((2.0, 5.6),
+                                     dtype=dtype)
+            self.assertEqual(d.table.value, current_value)
+            # clear the value on the device side. The values are popped.
+            d.table.clear()
+            empty_table = np.array([], dtype=dtype)
+            success = np.array_equal(d.table.value, empty_table)
+            self.assertTrue(success)
 
 
 if __name__ == '__main__':
