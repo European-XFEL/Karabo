@@ -192,10 +192,7 @@ class TableModel(QAbstractTableModel):
     def removeRows(self, pos, rows, idx, *, from_device_update=False):
         # protect ourselves against invalid indices by declaring layout change
         self.layoutAboutToBeChanged.emit()
-        end_pos = pos + rows - 1
-
-        if end_pos > len(self._data) - 1:
-            end_pos = len(self._data) - 1
+        end_pos = pos + rows
 
         self.beginRemoveRows(QModelIndex(), pos, end_pos)
         try:

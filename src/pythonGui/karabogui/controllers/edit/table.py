@@ -61,20 +61,21 @@ class _BaseTableElement(BaseBindingController):
                                     QAbstractItemView.SelectRows |
                                     QAbstractItemView.SelectColumns)
         widget.horizontalHeader().setStretchLastSection(True)
-        widget.setSelectionMode(QAbstractItemView.SingleSelection)
-
-        # add context menu to cells
-        widget.setContextMenuPolicy(Qt.CustomContextMenu)
-        widget.customContextMenuRequested.connect(self._context_menu)
         return widget
 
     def set_read_only(self, ro):
         if ro:
             self._role = Qt.DisplayRole
             self.widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
+            self.widget.setAlternatingRowColors(True)
+            self.widget.setSelectionMode(QAbstractItemView.NoSelection)
         else:
             self._role = Qt.EditRole
+            self.widget.setSelectionMode(QAbstractItemView.SingleSelection)
             self.widget.setEditTriggers(QAbstractItemView.SelectedClicked)
+            # add context menu to cells
+            self.widget.setContextMenuPolicy(Qt.CustomContextMenu)
+            self.widget.customContextMenuRequested.connect(self._context_menu)
             self.widget.setAcceptDrops(True)
 
         self.widget.setFocusPolicy(Qt.NoFocus if ro else Qt.ClickFocus)
