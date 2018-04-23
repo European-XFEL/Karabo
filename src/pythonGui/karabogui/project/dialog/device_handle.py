@@ -19,22 +19,22 @@ class DeviceIdValidator(QValidator):
     """ This class provides validation of the `Device ID` field of the `Add
         device configuration` window.
         The naming convention is as follows:
-        part_one[/optional_part_two[/optional_part_three]]
+        part_one[/optional_part_two[/optional_part_three[/and_so_on]]]
         '-' sign is also allowed
     """
     def __init__(self, parent=None):
         QValidator.__init__(self, parent)
 
-    pattern = re.compile('^[\w-]+(/[\w-]+){,2}$')
+    pattern = re.compile('^[\w-]+(/[\w-]+)*$')
 
     def validate(self, input, pos):
-        if input.endswith('/') and input.count('/') <= 2:
+        if input.endswith('/'):
             return self.Intermediate, input, pos
 
         if not self.pattern.match(input):
             return self.Invalid, input, pos
 
-        return self.Acceptable, input.upper(), pos
+        return self.Acceptable, input, pos
 
 
 class DeviceHandleDialog(QDialog):
