@@ -836,6 +836,14 @@ namespace karabo {
                     os << " => xxx " << Types::to<ToLiteral>(type) << std::endl;
                 } else if (type == Types::UNKNOWN) {
                     os << " => " << hit->type().name() << " " << Types::to<ToLiteral>(type) << std::endl;
+                } else if (type == Types::BYTE_ARRAY) {
+                    const size_t size = hit->getValue<ByteArray>().second;
+                    const boost::shared_ptr<char>& ptr = hit->getValue<ByteArray>().first;
+                    os << " => 0x" << std::hex;
+                    for (size_t i = 0; i < std::min(size_t(30), size); ++i) {
+                        os << std::setw(2) << std::setfill('0') << int(ptr.get()[i]);
+                    }
+                    os << std::dec << "... " << Types::to<ToLiteral>(type) << std::endl;
                 } else {
                     os << " => " << hit->getValueAsShortString(100) << " " << Types::to<ToLiteral>(type) << std::endl;
                 }
