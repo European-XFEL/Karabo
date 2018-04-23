@@ -235,6 +235,17 @@ namespace karathon {
             this->setNoWait(instanceId, tmp);
         }
 
+        void setAttributePy(const std::string& instanceId, const std::string& key, const std::string& attributeKey,
+                            const bp::object& attributeValue, int timeoutInSeconds = -1) {
+            // HashWrap::set does special treatment of Hash, PyArray (i.e. numpy array), ImageData and PyDict -
+            // but we do not want these as attributes anyway...
+            boost::any attrValueAsAny;
+            Wrapper::toAny(attributeValue, attrValueAsAny);
+
+            ScopedGILRelease nogil;
+            this->setAttribute(instanceId, key, attributeKey, attrValueAsAny, timeoutInSeconds);
+        }
+
         void executeNoWaitPy(std::string instanceId, const std::string& functionName) {
             ScopedGILRelease nogil;
             m_signalSlotableWrap->call(instanceId, functionName);

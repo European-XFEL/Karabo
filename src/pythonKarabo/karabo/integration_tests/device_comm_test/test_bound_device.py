@@ -161,6 +161,50 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
                                    ).waitForReply(timeOutInMs)
             self.assertEqual(ret[0], 0)
 
+        with self.subTest(msg="Test attribute setting"):
+            # This tests that attributes relevant for reconfiguring
+            # are taken inot account - here min and max size of vector elements
+
+            # Allowed size is 1 - 10 elements - no exception expected
+            self.dc.set("testComm1", "vectorInt32", [1, 2, 3, 4])  # OK!
+
+            # Empty is too short
+            self.assertRaises(RuntimeError, self.dc.set,
+                              "testComm1", "vectorInt32", [])  # not OK!
+
+            # 11 is too long
+            self.assertRaises(RuntimeError, self.dc.set,
+                              "testComm1", "vectorInt32", [1]*11)  # not OK!
+
+            KARABO_SCHEMA_MIN_SIZE = "minSize"
+            KARABO_SCHEMA_MAX_SIZE = "maxSize"
+            # Now make 11 to be fine
+            self.dc.setAttribute("testComm1", "vectorInt32",
+                                 KARABO_SCHEMA_MAX_SIZE, 11)
+            self.dc.set("testComm1", "vectorInt32", [1]*11)  # OK now!
+
+            # But 12 is still too long
+            self.assertRaises(RuntimeError, self.dc.set,
+                              "testComm1", "vectorInt32", [2]*12)  # still not OK!
+            self.dc.setAttribute("testComm1", "vectorInt32",
+                                 KARABO_SCHEMA_MAX_SIZE, 11)
+            # Now make empty vec to be fine
+            self.dc.setAttribute("testComm1", "vectorInt32",
+                                 KARABO_SCHEMA_MIN_SIZE, 0)
+            self.dc.set("testComm1", "vectorInt32", [])  # OK now!
+
+            # Now make 2 the minumum and test that size 1 is not ok
+            self.dc.setAttribute("testComm1", "vectorInt32",
+                                 KARABO_SCHEMA_MIN_SIZE, 2)
+            self.assertRaises(RuntimeError, self.dc.set,
+                              "testComm1", "vectorInt32", [3])  # not OK now!
+            # Now make 8 the minumum and test that size 9 now is too long
+            self.dc.setAttribute("testComm1", "vectorInt32",
+                                 KARABO_SCHEMA_MAX_SIZE, 8)
+            self.assertRaises(RuntimeError, self.dc.set,
+                              "testComm1", "vectorInt32", [4]*9)  # not OK now!
+
+
     def waitUntilEqual(self, devId, propertyName, whatItShouldBe, maxTries):
         """
         Wait until property 'propertyName' of device 'deviceId' equals
