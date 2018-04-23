@@ -81,32 +81,49 @@ void PipelinedProcessing_Test::testGetOutputChannelSchema() {
 
 void PipelinedProcessing_Test::testPipe() {
 
-    const Hash cfg("deviceId", "pipeTestReceiver", "processingTime", 100,
+    const Hash cfg("deviceId", "pipeTestReceiver", "processingTime", 0,
                    "input.connectedOutputChannels", "p2pTestSender:output1");
 
     std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerPP", "PipeReceiverDevice",
                                                                        cfg, KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
 
-    // Ask for a property of the device to wait until it is available
-    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>("p2pTestSender", "nData", 5, KRB_TEST_MAX_TIMEOUT));
+    unsigned int n = 0;
+    auto startTimepoint = std::chrono::high_resolution_clock::now();
+    unsigned int nTotalOnEos = 0;
 
-    // Then call its slot
-    m_deviceClient->execute("p2pTestSender", "write", KRB_TEST_MAX_TIMEOUT);
+    for(; n < 10; ++n) {
+        // Ask for a property of the device to wait until it is available
+        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>("p2pTestSender", "nData", 12, KRB_TEST_MAX_TIMEOUT));
 
-    // And poll for the correct answer
-    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>("pipeTestReceiver", "nTotalData", 5, KRB_TEST_MAX_TIMEOUT));
-    
-    // Test if data source was correctly passed
-    std::vector<std::string> sources = m_deviceClient->get<std::vector<std::string> >("pipeTestReceiver", "dataSources");
-    CPPUNIT_ASSERT(sources[0] == "p2pTestSender:output1");
-    
-    // This only can be tested if we used an input handler and not onData
-    if (!m_deviceClient->get<bool>("pipeTestReceiver", "onData")) {
-        std::vector<std::string> sources = m_deviceClient->get<std::vector<std::string> >("pipeTestReceiver", "dataSourcesFromIndex");
+        // Then call its slot
+        m_deviceClient->execute("p2pTestSender", "write", KRB_TEST_MAX_TIMEOUT);
+
+        // And poll for the correct answer
+        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>("pipeTestReceiver", "nTotalData", 12*(n+1), KRB_TEST_MAX_TIMEOUT));
+
+        // Test if data source was correctly passed
+        std::vector<std::string> sources = m_deviceClient->get<std::vector<std::string> >("pipeTestReceiver", "dataSources");
         CPPUNIT_ASSERT(sources[0] == "p2pTestSender:output1");
+
+        // This only can be tested if we used an input handler and not onData
+        if (!m_deviceClient->get<bool>("pipeTestReceiver", "onData")) {
+            std::vector<std::string> sources = m_deviceClient->get<std::vector<std::string> >("pipeTestReceiver", "dataSourcesFromIndex");
+            CPPUNIT_ASSERT(sources[0] == "p2pTestSender:output1");
+        }
+
+        // Check that EOS handling is not called too early
+        nTotalOnEos = m_deviceClient->get<unsigned int>("pipeTestReceiver", "nTotalOnEos");
+        CPPUNIT_ASSERT_EQUAL(12u*(n+1), nTotalOnEos);
     }
 
+    const unsigned int dataItemSize = m_deviceClient->get<unsigned int>("pipeTestReceiver", "dataItemSize");
+    auto endTimepoint = std::chrono::high_resolution_clock::now();
+    auto dur = endTimepoint - startTimepoint;
+    int64_t elapsedTimeIn_microseconds = std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+    double mbps = double(dataItemSize) * double(nTotalOnEos) / double(elapsedTimeIn_microseconds);
+    std::clog << "Megabytes per sec : " << mbps << ", elapsedTimeIn_microseconds = " << elapsedTimeIn_microseconds
+            << ", dataItemSize = " << dataItemSize << ", nTotalOnEos=" << nTotalOnEos << std::endl;
 }
 
 template <typename T>
