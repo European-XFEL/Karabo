@@ -1,6 +1,6 @@
-from karabo.bound import (Epochstamp, PythonDevice, Hash, SLOT_ELEMENT,
-                          STRING_ELEMENT, KARABO_CLASSINFO, launchPythonDevice)
-from karabo.common.states import State
+from karabo.bound import (Epochstamp, Hash, KARABO_CLASSINFO, PythonDevice,
+                          State, SLOT_ELEMENT, STRING_ELEMENT,
+                          VECTOR_INT32_ELEMENT, launchPythonDevice)
 
 
 @KARABO_CLASSINFO("CommTestDevice", "2.0")
@@ -21,6 +21,13 @@ class CommTestDevice(PythonDevice):
             ,
             STRING_ELEMENT(expected).key("someString")
                 .readOnly().initialValue("")
+                .commit()
+            ,
+            VECTOR_INT32_ELEMENT(expected).key("vectorInt32")
+                .reconfigurable()
+                .minSize(1)
+                .maxSize(10)
+                .assignmentOptional().defaultValue([1, 2, 3])
                 .commit()
             ,
         )
