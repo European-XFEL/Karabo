@@ -16,12 +16,15 @@ from karabogui.singletons.api import get_topology
 
 
 class DeviceIdValidator(QValidator):
+    """ This class provides validation of the `Device ID` field of the `Add
+        device configuration` window.
+        The naming convention is as follows:
+        part_one[/optional_part_two[/optional_part_three]]
+        '-' sign is also allowed
+    """
     def __init__(self, parent=None):
         QValidator.__init__(self, parent)
 
-    # naming convention:
-    #   part_one[/optional_part_two[/optional_part_three]]
-    # '-' sign is also allowed
     pattern = re.compile('^[\w-]+(/[\w-]+){,2}$')
 
     def validate(self, input, pos):
