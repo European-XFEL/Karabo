@@ -60,7 +60,7 @@ namespace karabo {
         UINT32_ELEMENT(expected).key("nData")
                 .displayedName("Number of data")
                 .description("Number of data")
-                .assignmentOptional().defaultValue(5)
+                .assignmentOptional().defaultValue(12)
                 .reconfigurable()
                 .commit();
 
@@ -109,11 +109,34 @@ namespace karabo {
     }
 
 
+#define TEST_VECTOR_SIZE 1000000
+
+    // For machine "Intel(R) Xeon(R) CPU E5-1620 v2 @ 3.70GHz" 8 cpus (7400.60 bogomips/cpu)
+    // MemTotal:       32821756 kB
+    //
+    // Vector size      |   Speed  MBytes/sec
+    //------------------+---------------------
+    //  100             |   0.00478766
+    //  1000            |   0.0478
+    //  10000           |   0.478
+    //  100000          |   4.78551
+    //  1000000         |   47.8558
+    //  10000000        |   478.616
+    //  50000000        |   958.46
+    //  100000000       |   1198.28
+    //------------------+---------------------
+
     void P2PSenderDevice::writing() {
         try {
             const int nData = get<unsigned int>("nData");
             const unsigned int delayInMs = get<unsigned int>("delay");
+            std::vector<long long> vec(TEST_VECTOR_SIZE);
             Hash data;
+
+            KARABO_LOG_FRAMEWORK_DEBUG << "P2PSenderDevice::writing : nData = " << nData
+                    << ", delay in ms = " << delayInMs << ", vector<long long>.size = " << vec.size();
+
+            for (size_t i = 1; i <= vec.size(); ++i) vec[i-1] = i;
 
             // Loop all the data to be send
             for (int iData = 0; iData < nData; ++iData) {
@@ -121,13 +144,15 @@ namespace karabo {
                 // Fill the data object - for now only dataId.
                 data.set("dataId", iData);
 
+                vec[0] = -iData;
+                data.set("data", vec);
+
                 // Write
                 writeChannel("output1", data);
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "Written data # " << iData;
                 set("currentDataId", iData);
-
-                boost::this_thread::sleep(boost::posix_time::milliseconds(delayInMs));
+                if (delayInMs > 0) boost::this_thread::sleep(boost::posix_time::milliseconds(delayInMs));
             }
         } catch (const std::exception &eStd) {
             KARABO_LOG_ERROR << "Stop writing since:\n" << eStd.what();
@@ -141,5 +166,6 @@ namespace karabo {
         updateState(State::NORMAL);
     }
 
+#undef TEST_VECTOR_SIZE
 
 }
