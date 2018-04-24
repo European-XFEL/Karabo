@@ -84,7 +84,8 @@ void NDArray_Test::testConstructor() {
     NDArray& ref = h.get<NDArray >("ref");
     CPPUNIT_ASSERT(ref.getData<int>()[124] == 2);
     CPPUNIT_ASSERT(ref.getShape().x1() == 100);
-    CPPUNIT_ASSERT(ref.size() == 100 * 200);    
+    CPPUNIT_ASSERT(ref.size() == 100 * 200);
+    std::clog << "Hash with NDArray ...\n" << h << std::endl;
 }
 
 
