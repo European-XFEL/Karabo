@@ -11,6 +11,7 @@ class KaraboEventSender(Enum):
     AccessLevelChanged = "Global Access Level changed"
     AlarmServiceInit = "Alarm service init"
     AlarmServiceUpdate = "Alarm service update"
+    brokerInformationUpdate = "Broker information update"
     ClearConfigurator = "Clear configurator"
     ConnectMacroInstance = "Connect macro instance"
     CreateMainWindow = "Create the main window"
