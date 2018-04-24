@@ -28,7 +28,7 @@ class DeviceIdValidator(QValidator):
     pattern = re.compile('^[\w-]+(/[\w-]+)*$')
 
     def validate(self, input, pos):
-        if input.endswith('/'):
+        if not input or input.endswith('/'):
             return self.Intermediate, input, pos
 
         if not self.pattern.match(input):
