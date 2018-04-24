@@ -118,6 +118,8 @@ class PanelWrangler(QObject):
 
         elif sender is KaraboEventSender.CreateMainWindow:
             self._create_main_window()
+            # we are the only one interested!
+            return True
 
         return False
 

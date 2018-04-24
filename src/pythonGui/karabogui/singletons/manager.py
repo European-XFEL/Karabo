@@ -199,6 +199,8 @@ class Manager(QObject):
 
     def handle_brokerInformation(self, **kwargs):
         get_network()._handleBrokerInformation(**kwargs)
+        broadcast_event(KaraboEventSender.brokerInformationUpdate,
+                        kwargs)
 
     def handle_systemTopology(self, systemTopology):
         self._topology.update(systemTopology)
