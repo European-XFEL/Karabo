@@ -4,14 +4,37 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 import os.path as op
+import re
 
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QDialog, QDialogButtonBox
+from PyQt4.QtGui import QDialog, QDialogButtonBox, QValidator
 
 from karabo.middlelayer import AccessLevel
 from karabogui import globals as krb_globals
 from karabogui.singletons.api import get_topology
+
+
+class DeviceIdValidator(QValidator):
+    """ This class provides validation of the `Device ID` field of the `Add
+        device configuration` window.
+        The naming convention is as follows:
+        part_one[/optional_part_two[/optional_part_three[/and_so_on]]]
+        '-' sign is also allowed
+    """
+    def __init__(self, parent=None):
+        QValidator.__init__(self, parent)
+
+    pattern = re.compile('^[\w-]+(/[\w-]+)*$')
+
+    def validate(self, input, pos):
+        if not input or input.endswith('/'):
+            return self.Intermediate, input, pos
+
+        if not self.pattern.match(input):
+            return self.Invalid, input, pos
+
+        return self.Acceptable, input, pos
 
 
 class DeviceHandleDialog(QDialog):
@@ -34,7 +57,8 @@ class DeviceHandleDialog(QDialog):
         filepath = op.join(op.abspath(op.dirname(__file__)),
                            'device_handle.ui')
         uic.loadUi(filepath, self)
-
+        validator = DeviceIdValidator()
+        self.leTitle.setValidator(validator)
         self._initUI(server_id, model, add_config, class_id, is_online)
 
     def _initUI(self, server_id, model, add_config, class_id, is_online):
