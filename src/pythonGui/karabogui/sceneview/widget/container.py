@@ -214,7 +214,7 @@ class ControllerContainer(QWidget):
                 self._on_user_edit, 'edit_value,binding.config_update')
             layout.setContentsMargins(2, 2, 2, 2)
         else:
-            layout.setContentsMargins(0, 0, 0, 0)
+            layout.setContentsMargins(0, 0, 1, 1)
 
         # Tell the widget if it's editing
         controller.set_read_only(not self._is_editable)
