@@ -50,6 +50,7 @@ class DeviceClientBase(Device):
 
     @coslot
     def slotInstanceNew(self, instanceId, info):
+        self.removeServerChildren(instanceId, info)
         self.updateSystemTopology(instanceId, info, "instanceNew")
         yield from super().slotInstanceNew(instanceId, info)
 
@@ -60,6 +61,7 @@ class DeviceClientBase(Device):
 
     @slot
     def slotInstanceGone(self, instanceId, info):
+        self.removeServerChildren(instanceId, info)
         self.systemTopology[info["type"]].pop(instanceId, None)
         return super().slotInstanceGone(instanceId, info)
 
@@ -67,8 +69,17 @@ class DeviceClientBase(Device):
     def slotPingAnswer(self, deviceId, info):
         self.updateSystemTopology(deviceId, info, None)
 
+    def removeServerChildren(self, instanceId, info):
+        """Cleanup the device children from the server
+        """
+        if info["type"] == "server":
+            devices = getDevices(serverId=instanceId)
+            for deviceId in devices:
+                self.systemTopology["device"].pop(deviceId, None)
+
     def updateSystemTopology(self, instanceId, info, task):
         type = info["type"]
+
         ret = Hash(type, Hash())
         ret[type][instanceId] = Hash()
         ret[type][instanceId, ...] = dict(info.items())
@@ -418,6 +429,7 @@ def _getDevice(deviceId, sync, factory=DeviceClientProxyFactory):
         instance._ss.enter_context(connectSchemaUpdated())
         yield from proxy
         return proxy
+
     future = asyncio.async(create())
     futures[deviceId] = future
     return (yield from asyncio.shield(future))
