@@ -17,18 +17,6 @@
    sodipodi:docname="New document 8">
   <defs
      id="defs6895">
-    <inkscape:path-effect
-       is_visible="true"
-       id="path-effect3783"
-       effect="spiro" />
-    <inkscape:path-effect
-       is_visible="true"
-       id="path-effect3787"
-       effect="spiro" />
-    <inkscape:path-effect
-       is_visible="true"
-       id="path-effect3791"
-       effect="spiro" />
   </defs>
   <sodipodi:namedview
      id="base"
@@ -64,11 +52,6 @@
       </cc:Work>
     </rdf:RDF>
   </metadata>
-  <g
-     inkscape:label="Layer 1"
-     inkscape:groupmode="layer"
-     id="layer1"
-     transform="translate(0.02286,-1013.6512)">
     <g
        id="icon_kbmirror"
        inkscape:label="icon_kbmirror"
@@ -119,5 +102,4 @@
          id="path4854"
          inkscape:connector-curvature="0" />
     </g>
-  </g>
 </svg>
