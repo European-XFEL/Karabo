@@ -9,250 +9,14 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="41.968952"
-   height="42.228786"
+   width="42"
+   height="42"
    id="svg4102"
    version="1.1"
    inkscape:version="0.91 r13725"
    sodipodi:docname="icon_roots_pump.svg">
   <defs
      id="defs4104">
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-4-5-5-2-4-7-6"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect5500-6-2"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-4-5-5-2-4-7-90-7"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect5500-6-0-5"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-0-9-1-5-7-8-6-78-4"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-3-1-1-57-0-3-1-8-0"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-4-5-5-7-6-6-0-9-5"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-9-7-6-73-7-0-4-9-4"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-9-7-6-0-5-5-5-6-2-7"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-0-9-1-5-7-8-6-7-4-2"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-3-1-1-57-0-3-1-6-9-1"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-4-5-5-7-6-6-0-4-9-4"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-9-7-6-73-7-0-4-6-5-9"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-9-7-6-0-5-5-5-6-3-8-9"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-0-9-1-5-7-0-1-2-3-7"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-3-1-1-57-0-0-7-1-30-8"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-4-5-5-7-6-5-4-5-4-2"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-9-7-6-73-7-5-0-0-5-7"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-11-5-3-4-65-5-3-9-2-72-8"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-9-7-6-0-5-5-6-4-6-5-0"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-11-5-7-03-4-8-2"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-0-9-1-5-0-0"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-3-1-1-57-4-8"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-4-5-5-7-5-9"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-9-7-6-73-76-2"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-9-7-6-0-5-2-8"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-0-9-1-5-7-81-2"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-3-1-1-57-0-5-0"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-4-5-5-7-6-8-5"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-9-7-6-73-7-6-5"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-11-5-3-4-65-5-4-2"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-9-7-6-0-5-5-2-7"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-0-9-1-5-7-0-11-6"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-3-1-1-57-0-0-3-7"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-4-5-5-7-6-5-75-8"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-9-7-6-73-7-5-9-7"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-9-7-6-0-5-5-6-86-8"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-6-4-5-4-7-1"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-6-7-7-5-3-6"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-67-1-8-9-4-0"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-3-7-3-6-9-7-9"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-0-8-3-3-3-1-5"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-8-4-1-4-2-3-8"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-2-4-7-2-6-4-9"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-1-8-4-4-2-3-0"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-4-9-1-9-8-9-0"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-82-6-5-6-8-3-0"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-7-7-1-0-5-4-7"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-2-7-6-0-5-2-2"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-6-4-8-1-8-4-5"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-90-4-2-9-1-5-5"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-1-0-0-0-5-5-2"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-0-65-6-1-7-5-1"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-3-7-8-1-6-7-4"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-4-2-3-8-3-6-8"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-9-2-8-6-6-3-6"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-5-5-7-9-8-18-4"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-9-00-12-6-5-9-6-6"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-11-9-9-9-7-5-8"
-       is_visible="true" />
     <marker
        inkscape:stockid="Arrow1Mend"
        orient="auto"
@@ -263,7 +27,7 @@
       <path
          inkscape:connector-curvature="0"
          id="path5043"
-         d="M 0,0 L 5,-5 L -12.5,0 L 5,5 L 0,0 z"
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 Z"
          style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;marker-start:none"
          transform="matrix(-0.4,0,0,-0.4,-4,0)" />
     </marker>
@@ -277,7 +41,7 @@
       <path
          inkscape:connector-curvature="0"
          id="path6951"
-         d="M 0,0 L 5,-5 L -12.5,0 L 5,5 L 0,0 z"
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 Z"
          style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;marker-start:none"
          transform="matrix(-0.4,0,0,-0.4,-4,0)" />
     </marker>
@@ -291,22 +55,10 @@
       <path
          inkscape:connector-curvature="0"
          id="path6955"
-         d="M 0,0 L 5,-5 L -12.5,0 L 5,5 L 0,0 z"
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 Z"
          style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;marker-start:none"
          transform="matrix(-0.4,0,0,-0.4,-4,0)" />
     </marker>
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect22425-4-3"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect22429-1-5"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect22433-9-5"
-       is_visible="true" />
   </defs>
   <sodipodi:namedview
      id="base"
@@ -315,9 +67,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="5.12"
-     inkscape:cx="31.922524"
-     inkscape:cy="-26.382567"
+     inkscape:zoom="14.481547"
+     inkscape:cx="36.607919"
+     inkscape:cy="10.680485"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -342,13 +94,10 @@
       </cc:Work>
     </rdf:RDF>
   </metadata>
-  <g
-     inkscape:label="Layer 1"
-     inkscape:groupmode="layer"
-     id="layer1">
     <g
        id="icon_roots_pump"
-       inkscape:label="icon_roots_pump">
+       inkscape:label="icon_roots_pump"
+       transform="matrix(0.98249529,0,0,0.98249516,2.8806651e-7,-0.07917521)">
       <desc
          id="desc12625">Roots Pump ROOTS</desc>
       <ellipse
@@ -389,5 +138,5 @@
          d="m 15.092752,28.244976 c 0,0 4.190639,2.014912 6.37859,2.010033 2.288005,-0.0051 6.373702,-2.102603 6.373702,-2.102603"
          style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.14753485px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
     </g>
-  </g>
+
 </svg>
