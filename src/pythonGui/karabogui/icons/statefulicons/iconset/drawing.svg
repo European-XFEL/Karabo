@@ -51,11 +51,6 @@
       </cc:Work>
     </rdf:RDF>
   </metadata>
-  <g
-     inkscape:label="Layer 1"
-     inkscape:groupmode="layer"
-     id="layer1"
-     transform="translate(-278.14755,-367.65228)">
     <g
        id="g4143">
       <path
@@ -81,5 +76,4 @@
          d="m 285.07275,380.93362 12.71165,0"
          style="fill:none;stroke:#000000;stroke-width:1.14356673;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
     </g>
-  </g>
 </svg>
