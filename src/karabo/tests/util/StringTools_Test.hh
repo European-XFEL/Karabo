@@ -17,6 +17,7 @@ class StringTools_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testFromString);
     CPPUNIT_TEST(testToString);
     CPPUNIT_TEST(testWiden);
+    CPPUNIT_TEST(testTokenize);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -29,6 +30,7 @@ private:
     void testFromString();
     void testToString();
     void testWiden();
+    void testTokenize();
 };
 
 #endif	/* STRINGTOOLS_TEST_HH */
