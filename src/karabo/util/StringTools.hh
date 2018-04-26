@@ -654,7 +654,7 @@ namespace karabo {
 
 
         /**
-         * Split a string into it components separated by any of the given delimeters
+         * Split a string into its components separated by any of the given delimiters
          *
          * @param inputString
          * @param tokens output container - will never be empty
@@ -675,7 +675,7 @@ namespace karabo {
                 unsigned char code = *delimiters++;
                 delims[code] = true;
             }
-            typedef std::string::const_iterator iter;
+            using iter = std::string::const_iterator;
             iter beg = inputString.begin();
             for (iter it = beg, end = inputString.end(); it != end;) {
                 if (delims[*it & 0xff]) { // & 0xff ensures to be within length of delims
@@ -692,7 +692,7 @@ namespace karabo {
         }
 
         /**
-         * Split a string into it components separated by the given delimeter
+         * Split a string into its components separated by the given delimiter
          *
          * @param inputString
          * @param tokens output container - will never be empty
