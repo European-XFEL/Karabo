@@ -5066,20 +5066,16 @@
        id="linearGradient5233"
        gradientUnits="userSpaceOnUse" />
   </defs>
-  <g
-     id="layer1"
-     transform="matrix(0.30676061,0,0,0.27118646,-0.25701628,-0.76958494)">
     <g
        id="icon_default">
       <desc
-         id="desc5024">Non icon selected</desc>
+         id="desc5024">No icon selected</desc>
       <path
          d="M 89.03143,4.43728 L 54.000008,38.109907 L 18.96859,4.43728 L 2.437278,20.327383 L 37.468696,54.00001 L 2.437269,87.672649 L 18.96859,103.56274 L 54.000005,69.890113 L 89.03143,103.56274 L 105.56273,87.672649 L 70.531317,54.00001 L 105.56273,20.327383 Z"
          id="rect2323"
          style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:3.19899988;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.08780003;stroke-opacity:1"
          inkscape:connector-curvature="0" />
     </g>
-  </g>
   <g
      transform="translate(-47.22905,-49.928318)"
      id="g5368" />

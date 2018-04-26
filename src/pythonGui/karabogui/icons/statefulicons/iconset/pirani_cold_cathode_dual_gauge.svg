@@ -51,10 +51,6 @@
       </cc:Work>
     </rdf:RDF>
   </metadata>
-  <g
-     inkscape:label="Layer 1"
-     inkscape:groupmode="layer"
-     id="layer1">
     <g
        style="display:inline"
        id="icon_pcc"
@@ -90,5 +86,4 @@
            id="tspan24857-89-9-2-0"
            sodipodi:role="line">PCC</tspan></text>
     </g>
-  </g>
 </svg>
