@@ -765,7 +765,7 @@ namespace karabo {
             Hash* leaf = this->setNodesAsNeeded(tokens, separator);
 
             // Set last token
-            std::string token = tokens.back();
+            std::string& token = tokens.back();
             int index = karabo::util::getAndCropIndex(token);
             if (index == -1) // No vector
                 return leaf->m_container.set(token, value);
@@ -783,7 +783,7 @@ namespace karabo {
 
             Hash* leaf = this->setNodesAsNeeded(tokens, separator);
 
-            std::string token = tokens.back();
+            std::string& token = tokens.back();
             int index = karabo::util::getAndCropIndex(token);
             if (index == -1) // No vector of hashes
                 return leaf->m_container.set(token, value);

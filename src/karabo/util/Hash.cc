@@ -175,7 +175,7 @@ namespace karabo {
             size_t length = tokens.size();
             std::string thePath = path;
             try {
-                while (length > 0 && !thePath.empty()) {
+                while (length > 0) {
                     std::string key;
                     Hash* hash = getLastHashPtr(thePath, key, separator);
                     if (!hash) {
@@ -185,7 +185,7 @@ namespace karabo {
                     if (index == -1) {
                         hash->m_container.erase(key);
                         thePath = concat(tokens, --length, sep);
-                        if (thePath.empty()) break;
+                        if (length == 0) break; // Done!
                     } else {
                         Container::map_iterator it = hash->m_container.find(key);
                         if (it == hash->m_container.mend()) {
@@ -198,7 +198,7 @@ namespace karabo {
                         }
                         if (!vect.empty()) break;
                         thePath = concat(tokens, --length, sep);
-                        if (thePath.empty()) {
+                        if (length == 0) {
                             erase(key, separator);
                             break;
                         } else {
@@ -219,11 +219,8 @@ namespace karabo {
         const Hash& Hash::getLastHash(const std::string& path, std::string& lastKey, const char separator) const {
             const Hash* hash = getLastHashPtr(path, lastKey, separator);
             if (!hash) {
-                if (path.empty()) throw KARABO_PARAMETER_EXCEPTION("Illegal call with empty path");
-                else {
-                    // If getLastHashPtr would provide an error code, we could be more specific...
-                    throw KARABO_PARAMETER_EXCEPTION("non-existing key, wrong type or index out of range in '" + path + "'.");
-                }
+                // If getLastHashPtr would provide an error code, we could be more specific...
+                throw KARABO_PARAMETER_EXCEPTION("non-existing key, wrong type or index out of range in '" + path + "'.");
             }
             return *hash;
         }
@@ -236,7 +233,6 @@ namespace karabo {
 
         const Hash* Hash::getLastHashPtr(const std::string& path, std::string& lastKey, const char separator) const {
             // TODO: We should add an error code to be returned as argument by value.
-            if (path.empty()) return 0;
             std::vector<std::string> tokens;
             karabo::util::tokenize(path, tokens, separator);
 
@@ -516,8 +512,7 @@ namespace karabo {
                                         unsigned int size) {
 
 
-            BOOST_FOREACH(const std::string& path, paths) {
-                if (path.empty() || path[0] == separator) continue; // ignore paths that are empty or start with separator
+            for (const std::string& path : paths) {
 
                 const size_t sepPos = path.find_first_of(separator);
                 const std::string& firstKeyOfPath = (sepPos == std::string::npos ? path : std::string(path, 0, sepPos));
@@ -546,8 +541,7 @@ namespace karabo {
             std::set<unsigned int> result;
 
 
-            BOOST_FOREACH(const std::string& path, paths) {
-                if (path.empty() || path[0] == separator) continue; // ignore paths that are empty or start with separator
+            for (const std::string& path : paths) {
 
                 const size_t sepPos = path.find_first_of(separator);
                 const std::string& firstKeyOfPath = (sepPos == std::string::npos ? path : std::string(path, 0, sepPos));
@@ -800,7 +794,7 @@ namespace karabo {
             std::string fill(depth * 2, ' ');
 
             for (Hash::const_iterator hit = hash.begin(); hit != hash.end(); hit++) {
-                os << fill << hit->getKey();
+                os << fill << "'" << hit->getKey() << "'";
 
                 const Hash::Attributes& attrs = hit->getAttributes();
                 if (attrs.size() > 0) {

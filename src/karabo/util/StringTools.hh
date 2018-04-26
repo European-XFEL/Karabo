@@ -677,14 +677,22 @@ namespace karabo {
 
         int getAndCropIndex(std::string& str);
 
-        //-----------------------------------------------------------------------------------------------
-        //
-        // http://stackoverflow.com/questions/5505965/fast-string-splitting-with-multiple-delimiters
-        //
-        //-----------------------------------------------------------------------------------------------
 
+        /**
+         * Split a string into its components separated by any of the given delimiters
+         *
+         * @param inputString
+         * @param tokens output container - will never be empty
+         * @param delimiters each char in this C-style string indicates the end of a substring
+         */
         template<typename container>
         inline void tokenize(const std::string& inputString, container& tokens, char const* delimiters) {
+            //-----------------------------------------------------------------------------------------------
+            //
+            // http://stackoverflow.com/questions/5505965/fast-string-splitting-with-multiple-delimiters
+            //
+            // (but simplified to avoid dropping of empty tokens)
+            //-----------------------------------------------------------------------------------------------
             container output;
 
             std::bitset < 255 > delims;
@@ -692,27 +700,29 @@ namespace karabo {
                 unsigned char code = *delimiters++;
                 delims[code] = true;
             }
-            typedef std::string::const_iterator iter;
-            iter beg;
-            bool in_token = false;
-            for (std::string::const_iterator it = inputString.begin(), end = inputString.end();
-                 it != end; ++it) {
-                if (delims[*it & 0xff]) {
-                    if (in_token) {
-                        output.push_back(typename container::value_type(beg, it));
-                        in_token = false;
-                    }
-                } else if (!in_token) {
-                    beg = it;
-                    in_token = true;
+            using iter = std::string::const_iterator;
+            iter beg = inputString.begin();
+            for (iter it = beg, end = inputString.end(); it != end;) {
+                if (delims[*it & 0xff]) { // & 0xff ensures to be within length of delims
+                    output.push_back(typename container::value_type(beg, it));
+                    beg = ++it;
+                } else {
+                    ++it;
                 }
             }
-            if (in_token) {
-                output.push_back(typename container::value_type(beg, inputString.end()));
-            }
+
+            output.push_back(typename container::value_type(beg, inputString.end()));
+
             output.swap(tokens);
         }
 
+        /**
+         * Split a string into its components separated by the given delimiter
+         *
+         * @param inputString
+         * @param tokens output container - will never be empty
+         * @param delimiter
+         */
         template <typename container>
         inline void tokenize(const std::string& inputString, container& tokens, const char delimiter) {
             const char delims[] = {delimiter, 0};
