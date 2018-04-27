@@ -148,6 +148,7 @@ def load_project(is_subproject=False):
             read_lazy_object(domain, uuid, db_conn, read_project_model,
                              existing=model)
             db_conn.default_domain = domain
+            db_conn.stored_domain = domain
             db_conn.flush()
             if not dialog.ignore_cache:
                 # Set modified flag recursively to True to make sure that
@@ -229,7 +230,7 @@ def save_object(obj, domain=None):
     """
     db_conn = get_db_conn()
     if domain is None:
-        domain = db_conn.default_domain
+        domain = db_conn.stored_domain or db_conn.default_domain
 
     recursive_save_object(obj, db_conn, domain)
     db_conn.default_domain = domain
