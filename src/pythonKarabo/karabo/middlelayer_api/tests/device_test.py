@@ -6,6 +6,7 @@ import numpy as np
 
 from karabo.middlelayer import AccessMode, getDevice
 from karabo.middlelayer_api.device import Device
+from karabo.middlelayer_api.device_client import getSchema
 from karabo.middlelayer_api.hash import Float, Hash, Slot, VectorHash
 from karabo.middlelayer_api.pipeline import InputChannel, OutputChannel
 from karabo.middlelayer_api.schema import Configurable, Node
@@ -49,6 +50,7 @@ class MyDevice(Device):
     @coroutine
     def mySlot(self):
         pass
+
 
 class Tests(DeviceTest):
     @classmethod
@@ -107,6 +109,8 @@ class Tests(DeviceTest):
         self.assertEqual(self.myDevice.lastCommand, "")
         with (yield from getDevice("MyDevice")) as d:
             yield from d.mySlot()
+        self.assertEqual(self.myDevice.lastCommand, "mySlot")
+        yield from getSchema("MyDevice")
         self.assertEqual(self.myDevice.lastCommand, "mySlot")
 
     @async_tst
