@@ -8,7 +8,7 @@ from .common.project.api import (
     MacroModel, ProjectModel
 )
 from .common.scenemodel.api import SceneModel, read_scene, write_scene
-from .common.states import State, StateSignifier
+from .common.states import State
 
 from .middlelayer_api.device_client import (
     call, connectDevice, DeviceClientBase, disconnectDevice, execute,
@@ -70,7 +70,7 @@ from .middlelayer_api.synchronization import (
 )
 from .middlelayer_api.time_mixin import TimeMixin, get_timestamp
 from .middlelayer_api.timestamp import Timestamp
-from .middlelayer_api.utils import mostSignificantState
+from .middlelayer_api.utils import StateSignifier
 from .middlelayer_api import numeric
 
 
