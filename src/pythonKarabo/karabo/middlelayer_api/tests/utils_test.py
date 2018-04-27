@@ -1,7 +1,7 @@
 from unittest import TestCase, main
 
 from karabo.middlelayer import (
-    String, State, mostSignificantState)
+    String, State, StateSignifier)
 
 
 class Tests(TestCase):
@@ -24,20 +24,21 @@ class Tests(TestCase):
         v4 = a4.toKaraboValue(State.OFF)
         self.assertEqual(v4, State.OFF)
 
-        state = mostSignificantState([v1, v2, v3, v4])
+        signifier = StateSignifier()
+        state = signifier.returnMostSignificant([v1, v2, v3, v4])
         self.assertEqual(state, State.MOVING)
         self.assertEqual(state.timestamp, v4.timestamp)
 
         v4 = a4.toKaraboValue(State.INIT)
         self.assertEqual(v4, State.INIT)
 
-        state = mostSignificantState([v1, v2, v3, v4])
+        state = signifier.returnMostSignificant([v1, v2, v3, v4])
         self.assertEqual(state, State.INIT)
         self.assertEqual(state.timestamp, v4.timestamp)
 
         v1 = a1.toKaraboValue(State.ON)
         self.assertEqual(v1, State.ON)
-        state = mostSignificantState([v1, v2, v3, v4])
+        state = signifier.returnMostSignificant([v1, v2, v3, v4])
         self.assertEqual(state, State.INIT)
         self.assertEqual(state.timestamp, v1.timestamp)
 
