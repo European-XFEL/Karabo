@@ -1,8 +1,8 @@
 import os
 
-from karabo.common.states import State, StateSignifier
+from karabo.common.states import StateSignifier as SignifierBase
 
-from .basetypes import newest_timestamp
+from .basetypes import wrap_methods
 
 
 def get_karabo_version():
@@ -19,20 +19,7 @@ def get_karabo_version():
     return version
 
 
-def mostSignificantState(iterable, signifier=None):
-    """Return the most significant state from the iterable with KaraboValues
-
-    Attaches the newest timestamp to the most significant state
-
-    :param iterable: iterable with KaraboValues (States)
-    :param signifier: Optional state signifier, otherwise default is used.
+@wrap_methods
+class StateSignifier(SignifierBase):
+    """Wrapper of the StateSignifier to provide newest timestamp
     """
-    if signifier is None:
-        signifier = StateSignifier(
-            staticMoreSignificant=State.PASSIVE,
-            changingMoreSignificant=State.DECREASING)
-
-    state = signifier.returnMostSignificant(iterable)
-    state.timestamp = newest_timestamp(iterable)
-
-    return state
