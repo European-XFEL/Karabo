@@ -72,6 +72,9 @@ class ProjectDatabaseConnection(QObject):
         # XXX: This is really asinine right now!
         self._have_logged_in = False
 
+        # cached domain for saving project
+        self.stored_domain = None
+
     def karaboBroadcastEvent(self, event):
         """ Router for incoming broadcasts
         """
