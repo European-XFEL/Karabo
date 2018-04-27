@@ -437,6 +437,12 @@ class BoundDeviceServer(DeviceServerBase):
             return schema, classId, self.serverId
         return super(BoundDeviceServer, self).slotGetClassSchema(classId)
 
+    @slot
+    def slotDeviceGone(self, instanceId):
+        self.logger.info("Device '{0}' notifies '{1.serverId}' about its "
+                         "future death.".format(instanceId, self))
+        self.deviceInstanceMap.pop(id, None)
+
     def supervise(self, deviceId, process, info):
         def supervisor():
             while True:
