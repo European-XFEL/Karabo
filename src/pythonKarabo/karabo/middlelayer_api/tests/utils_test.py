@@ -9,7 +9,6 @@ class Tests(TestCase):
         pass
 
     def test_signifier(self):
-
         a1 = String(enum=State)
         a2 = String(enum=State)
         a3 = String(enum=State)
@@ -51,7 +50,7 @@ class Tests(TestCase):
         self.assertEqual(state, State.MOVING)
         # no timestamp provided, hence there is no timestamp attached.
         with self.assertRaises(AttributeError):
-            no_timestamp = state.timestamp is None
+            print(state.timestamp)
 
         # timestamp provided for the most significant state, we have timestamp
         v1 = a1.toKaraboValue(State.ERROR)
@@ -59,14 +58,13 @@ class Tests(TestCase):
         self.assertEqual(state, State.ERROR)
         self.assertEqual(state.timestamp, v1.timestamp)
 
-
         v1 = a1.toKaraboValue(State.OFF)
         state = signifier.returnMostSignificant([v1, v2, v3, v4])
         self.assertEqual(state, State.MOVING)
-        self.assertEqual(state.timestamp, v1.timestamp)
         # timestamp provided for a less significant, we have no timestamp
         with self.assertRaises(AttributeError):
-            no_timestamp = state.timestamp is None
+            print(state.timestamp)
+
 
 if __name__ == "__main__":
     main()
