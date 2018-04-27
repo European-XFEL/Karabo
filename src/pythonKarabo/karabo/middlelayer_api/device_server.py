@@ -441,7 +441,7 @@ class BoundDeviceServer(DeviceServerBase):
     def slotDeviceGone(self, instanceId):
         self.logger.info("Device '{0}' notifies '{1.serverId}' about its "
                          "future death.".format(instanceId, self))
-        self.deviceInstanceMap.pop(id, None)
+        self.deviceInstanceMap.pop(instanceId, None)
 
     def supervise(self, deviceId, process, info):
         def supervisor():
