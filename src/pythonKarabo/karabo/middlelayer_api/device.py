@@ -94,6 +94,13 @@ class Device(AlarmMixin, SignalSlotable):
         accessMode=AccessMode.RECONFIGURABLE, assignment=Assignment.OPTIONAL,
         requiredAccessLevel=AccessLevel.EXPERT, defaultValue="")
 
+    lastCommand = String(
+        displayedName="Last command",
+        defaultValue="",
+        description="The last slot called.",
+        accessMode=AccessMode.READONLY,
+        requiredAccessLevel=AccessLevel.EXPERT)
+
     @Bool(
         displayedName="Archive",
         description="Decides whether the properties of this device "
