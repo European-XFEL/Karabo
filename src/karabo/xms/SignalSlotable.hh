@@ -705,9 +705,9 @@ namespace karabo {
 
             typedef std::map<std::string, SlotInstancePointer> SlotInstances;
             SlotInstances m_slotInstances;
-            // Each slot instance has its strand where actual calls should be posted
-            // (probably later merge m_slotInstances and m_slotInstanceStrands to a single map).
-            std::unordered_map<std::string, boost::shared_ptr<karabo::net::Strand> > m_slotInstanceStrands;
+
+            karabo::net::Strand::Pointer m_eventStrand; // private??
+            karabo::net::Strand::Pointer m_globalEventStrand; // private??
 
             typedef std::map<std::string, std::pair<boost::shared_ptr<boost::asio::deadline_timer>, AsyncErrorHandler> > ReceiveAsyncErrorHandles;
             ReceiveAsyncErrorHandles m_receiveAsyncErrorHandles;
@@ -808,14 +808,10 @@ namespace karabo {
 
             void stopEmittingHearbeats();
 
-            void onBrokerMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
-
             void consumerErrorNotifier(const std::string& consumer,
                                        karabo::net::JmsConsumer::Error ec, const std::string& message);
 
             void onHeartbeatMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
-
-            void onP2pMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
             void connectP2pInfoHandler(const karabo::util::Hash& instanceInfo, const std::string& signalInstanceId,
                                        const boost::function<void()>& successHandler,
