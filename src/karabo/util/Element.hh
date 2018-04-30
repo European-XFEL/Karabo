@@ -687,6 +687,8 @@ namespace karabo {
                     CASE_RETURN_VECTOR(VECTOR_COMPLEX_FLOAT, std::complex<float>, maxNumVectorElements)
                     CASE_RETURN_VECTOR(VECTOR_COMPLEX_DOUBLE, std::complex<double>, maxNumVectorElements)
                     CASE_RETURN_VECTOR(VECTOR_NONE, CppNone, maxNumVectorElements) // for completeness
+                case Types::ReferenceType::BYTE_ARRAY:
+                    return karabo::util::toString(this->getValue<ByteArray>(), maxNumVectorElements);
                 default:
                     return this->getValueAs<std::string>();
             }
