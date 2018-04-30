@@ -52,8 +52,7 @@ namespace karabo {
                 boost::shared_lock<boost::shared_mutex> lock(m_instanceMapMutex);
                 auto it = m_instanceMap.find(instanceId);
                 if (it != m_instanceMap.end()) {
-                    // FIXME: get rid of getEpochMillis()!
-                    it->second->processEvent(header, body, getEpochMillis());
+                    it->second->processEvent(header, body);
                     return true;
                 } else {
                     return false;
@@ -358,8 +357,7 @@ namespace karabo {
 
 
         void SignalSlotable::start() {
-            // FIXME: remove getEpochMillis())
-            m_consumerChannel->startReading(bind_weak(&SignalSlotable::processEvent, this, _1, _2, getEpochMillis()),
+            m_consumerChannel->startReading(bind_weak(&SignalSlotable::processEvent, this, _1, _2),
                                             bind_weak(&SignalSlotable::consumerErrorNotifier, this,
                                                       std::string(), _1, _2));
             ensureInstanceIdIsValid(m_instanceId);
@@ -455,7 +453,12 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::handleReply(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
+        void SignalSlotable::handleReply(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body,
+                                         long long whenPostedEpochMs) {
+            // Collect performance statistics
+            if (m_updatePerformanceStatistics) {
+                updateLatencies(header, whenPostedEpochMs);
+            }
             boost::optional<Hash::Node&> signalIdNode = header->find("signalInstanceId");
             const std::string& signalId = (signalIdNode && signalIdNode->is<std::string>() ?
                                            signalIdNode->getValue<std::string>() : "unspecified sender");
@@ -623,13 +626,8 @@ namespace karabo {
 
 
         void SignalSlotable::processEvent(const karabo::util::Hash::Pointer& header,
-                                          const karabo::util::Hash::Pointer& body, long long whenPostedEpochMs) {
+                                          const karabo::util::Hash::Pointer& body) {
             try {
-
-                // Collect performance statistics
-                if (m_updatePerformanceStatistics) {
-                    updateLatencies(header, whenPostedEpochMs);
-                }
 
                 // If it is a broadcast message and a handler registered for that, call it:
                 if (m_broadCastHandler) {
@@ -643,8 +641,7 @@ namespace karabo {
                 // Check whether this message is an async reply
                 if (header->has("replyFrom")) {
                     // replies are never global, so use normal event strand
-                    // FIXME: getEpochMillis() to be posted and treated
-                    m_eventStrand->post(bind_weak(&SignalSlotable::handleReply, this, header, body));
+                    m_eventStrand->post(bind_weak(&SignalSlotable::handleReply, this, header, body, getEpochMillis()));
                     return;
                 }
                 // TODO: To check for remote errors reported after requestNoWait, do e.g.
@@ -706,7 +703,7 @@ namespace karabo {
                         // FIXME: getEpochMillis() to be posted and treated
                         Strand::Pointer& strand = (globalCall ? m_globalEventStrand : m_eventStrand);
                         strand->post(bind_weak(&SignalSlotable::processSingleSlot, this,
-                                               slotFunction, globalCall, signalInstanceId, header, body));
+                                               slotFunction, globalCall, signalInstanceId, header, body, getEpochMillis()));
                     }
                 }
             } catch (const std::exception& e) {
@@ -716,7 +713,12 @@ namespace karabo {
 
 
         void SignalSlotable::processSingleSlot(const std::string& slotFunction, bool globalCall, const std::string& signalInstanceId,
-                                               const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
+                                               const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body,
+                                               long long whenPostedEpochMs) {
+            // Collect performance statistics
+            if (m_updatePerformanceStatistics) {
+                updateLatencies(header, whenPostedEpochMs);
+            }
             try {
                 // Check whether slot is callable
                 if (m_slotCallGuardHandler) {
@@ -2555,8 +2557,8 @@ namespace karabo {
                     m_connectionStrings[signalInstanceId] = signalConnectionString;
                 }
                 m_pointToPoint->connect(signalInstanceId, m_instanceId, signalConnectionString,
-                                        // FIXME: get rid of getEpochMillis(), find out when called here!
-                                        bind_weak(&SignalSlotable::processEvent, this, _1, _2, getEpochMillis()));
+                                        // FIXME: find out when called here!
+                                        bind_weak(&SignalSlotable::processEvent, this, _1, _2));
                 if (successHandler) successHandler();
             } else if (errHandler) {
                 try {
@@ -2604,9 +2606,8 @@ namespace karabo {
             // connection string should not be empty
             if (signalConnectionString.empty()) return false;
 
-            // FIXME: remove getEpocMillis())
             m_pointToPoint->connect(signalInstanceId, m_instanceId, signalConnectionString,
-                                    bind_weak(&SignalSlotable::processEvent, this, _1, _2, getEpochMillis()));
+                                    bind_weak(&SignalSlotable::processEvent, this, _1, _2));
             return true;
         }
 
