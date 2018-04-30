@@ -23,35 +23,35 @@ class ServerHandleDialog(QDialog):
 
         avail_hosts, avail_servers = self._get_available_hosts_servers()
         for server_id in avail_servers:
-            self.cbServerId.addItem(server_id)
+            self.ui_server_id.addItem(server_id)
 
         for host in avail_hosts:
-            self.cbHost.addItem(host)
+            self.ui_host.addItem(host)
 
         if model is None:
             title = 'Add server'
         else:
             title = 'Edit server'
-            index = self.cbServerId.findText(model.server_id)
+            index = self.ui_server_id.findText(model.server_id)
             if index < 0:
-                server_edit = self.cbServerId.lineEdit()
+                server_edit = self.ui_server_id.lineEdit()
                 server_edit.setText(model.server_id)
             else:
-                self.cbServerId.setCurrentIndex(index)
+                self.ui_server_id.setCurrentIndex(index)
 
-            index = self.cbHost.findText(model.host)
+            index = self.ui_host.findText(model.host)
             if index < 0:
-                host_edit = self.cbHost.lineEdit()
+                host_edit = self.ui_host.lineEdit()
                 host_edit.setText(model.host)
             else:
-                self.cbHost.setCurrentIndex(index)
-            self.teDescription.setPlainText(model.description)
+                self.ui_host.setCurrentIndex(index)
+            self.ui_description.setPlainText(model.description)
         self.setWindowTitle(title)
 
-        self.cbServerId.currentIndexChanged.connect(self._update_button_box)
-        self.cbServerId.editTextChanged.connect(self._update_button_box)
-        self.cbHost.currentIndexChanged.connect(self._update_button_box)
-        self.cbHost.editTextChanged.connect(self._update_button_box)
+        self.ui_server_id.currentIndexChanged.connect(self._update_button_box)
+        self.ui_server_id.editTextChanged.connect(self._update_button_box)
+        self.ui_host.currentIndexChanged.connect(self._update_button_box)
+        self.ui_host.editTextChanged.connect(self._update_button_box)
         self._update_button_box()
 
     def _get_available_hosts_servers(self):
@@ -79,26 +79,18 @@ class ServerHandleDialog(QDialog):
     def _update_button_box(self):
         """Only enable Ok button, if title and configuration is set
         """
-        enabled = (len(self.cbServerId.currentText()) > 0 and
-                   len(self.cbHost.currentText()) > 0)
+        enabled = (len(self.ui_server_id.currentText()) and
+                   len(self.ui_host.currentText()))
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
 
     @property
     def server_id(self):
-        return self.cbServerId.currentText()
+        return self.ui_server_id.currentText()
 
     @property
     def host(self):
-        return self.cbHost.currentText()
-
-    @property
-    def author(self):
-        return self.leAuthor.text()
-
-    @property
-    def copyOf(self):
-        return self.leCopyOf.text()
+        return self.ui_host.currentText()
 
     @property
     def description(self):
-        return self.teDescription.toPlainText()
+        return self.ui_description.toPlainText()

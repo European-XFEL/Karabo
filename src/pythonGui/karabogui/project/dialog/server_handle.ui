@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>403</width>
-    <height>405</height>
+    <height>317</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,10 +16,20 @@
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QFormLayout" name="formLayout">
+     <property name="fieldGrowthPolicy">
+      <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+     </property>
      <item row="0" column="0">
       <widget class="QLabel" name="laServerId">
        <property name="text">
         <string>Server ID:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="ui_server_id">
+       <property name="editable">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -30,57 +40,22 @@
        </property>
       </widget>
      </item>
+     <item row="1" column="1">
+      <widget class="QComboBox" name="ui_host">
+       <property name="editable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
      <item row="2" column="0">
-      <widget class="QLabel" name="laAuthor">
-       <property name="text">
-        <string>Author:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QLineEdit" name="leAuthor">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="laCopyOf">
-       <property name="text">
-        <string>Copy of:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QLineEdit" name="leCopyOf">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="0">
       <widget class="QLabel" name="laDescription">
        <property name="text">
         <string>Description:</string>
        </property>
       </widget>
      </item>
-     <item row="4" column="1">
-      <widget class="QTextEdit" name="teDescription"/>
-     </item>
-     <item row="1" column="1">
-      <widget class="QComboBox" name="cbHost">
-       <property name="editable">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QComboBox" name="cbServerId">
-       <property name="editable">
-        <bool>true</bool>
-       </property>
-      </widget>
+     <item row="2" column="1">
+      <widget class="QTextEdit" name="ui_description"/>
      </item>
     </layout>
    </item>

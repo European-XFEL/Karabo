@@ -1,4 +1,5 @@
 from asyncio import coroutine
+import os
 import socket
 
 from karabo.common.enums import Capabilities
@@ -67,6 +68,13 @@ class Device(AlarmMixin, SignalSlotable):
         requiredAccessLevel=AccessLevel.EXPERT,
         accessMode=AccessMode.READONLY)
 
+    pid = Int32(
+        displayedName="Process ID",
+        defaultValue=0,
+        description="The unix process ID of the device (i.e. of the server)",
+        requiredAccessLevel=AccessLevel.EXPERT,
+        accessMode=AccessMode.READONLY)
+
     state = String(
         displayedName="State", enum=State, displayType='State',
         description="The current state the device is in",
@@ -85,6 +93,13 @@ class Device(AlarmMixin, SignalSlotable):
                     "(empty if not locked)",
         accessMode=AccessMode.RECONFIGURABLE, assignment=Assignment.OPTIONAL,
         requiredAccessLevel=AccessLevel.EXPERT, defaultValue="")
+
+    lastCommand = String(
+        displayedName="Last command",
+        defaultValue="",
+        description="The last slot called.",
+        accessMode=AccessMode.READONLY,
+        requiredAccessLevel=AccessLevel.EXPERT)
 
     @Bool(
         displayedName="Archive",
@@ -117,6 +132,7 @@ class Device(AlarmMixin, SignalSlotable):
         self.hostName, _, self.domainname = socket.gethostname().partition('.')
         self.classId = type(self).__name__
         self.classVersion = type(self).__version__
+        self.pid = os.getpid()
 
     def _initInfo(self):
         info = super(Device, self)._initInfo()
