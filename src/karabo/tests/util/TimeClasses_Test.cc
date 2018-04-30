@@ -1,13 +1,14 @@
-/* 
+/*
  * File:   TimeClasses_Test.cc
  * Author: boukhelef
- * 
+ *
  * Created on July 10, 2013, 2:35 PM
  */
 
 #include <iostream>
 #include <iomanip>
 #include <cmath>
+#include <limits>
 
 #include <karabo/util/Epochstamp.hh>
 #include <karabo/util/TimePeriod.hh>
@@ -372,7 +373,7 @@ void TimeClasses_Test::testTrainstamp() {
     CPPUNIT_ASSERT_EQUAL(0ull, stamp.getTrainId());
 
     // specific ctr.
-    const unsigned long long trainId = 123454321;
+    unsigned long long trainId = 123454321;
     const Trainstamp stamp2(trainId);
     CPPUNIT_ASSERT_EQUAL(trainId, stamp2.getTrainId());
 
@@ -387,7 +388,7 @@ void TimeClasses_Test::testTrainstamp() {
     stamp2.toHashAttributes(attrs);
     CPPUNIT_ASSERT(attrs.has("tid"));
     CPPUNIT_ASSERT(Trainstamp::hashAttributesContainTimeInformation(attrs));
-    CPPUNIT_ASSERT_EQUAL(trainId, attrs.get<unsigned long long>("tid"));
+    CPPUNIT_ASSERT_EQUAL(trainId, attrs.get<decltype(trainId)>("tid"));
 
     attrs.erase("tid");
     CPPUNIT_ASSERT(!Trainstamp::hashAttributesContainTimeInformation(attrs));
@@ -395,9 +396,52 @@ void TimeClasses_Test::testTrainstamp() {
 
     attrs.set("tid", trainId + 2);
     CPPUNIT_ASSERT(Trainstamp::hashAttributesContainTimeInformation(attrs));
-
     const Trainstamp stamp5(Trainstamp::fromHashAttributes(attrs));
     CPPUNIT_ASSERT_EQUAL(trainId + 2, stamp5.getTrainId());
+
+    // Test that we can read a Train Id into an int
+    auto trainIdAsInt = attrs.getNode("tid").getValue<int, decltype(trainId)>();
+    CPPUNIT_ASSERT_EQUAL(trainId + 2, static_cast<decltype(trainId)>(trainIdAsInt));
+
+    // Test that we can read a large Train Id
+    attrs.set("tid", trainId * trainId);
+    CPPUNIT_ASSERT(Trainstamp::hashAttributesContainTimeInformation(attrs));
+    const Trainstamp stamp6(Trainstamp::fromHashAttributes(attrs));
+    CPPUNIT_ASSERT_EQUAL(trainId * trainId, stamp6.getTrainId());
+
+    // Check that we cannot convert from string attributes to Train Id
+    attrs.set("tid", "123454321");
+    CPPUNIT_ASSERT(Trainstamp::hashAttributesContainTimeInformation(attrs));
+    CPPUNIT_ASSERT_THROW(Trainstamp::fromHashAttributes(attrs), karabo::util::ParameterException);
+
+    attrs.erase("tid");
+    CPPUNIT_ASSERT(!Trainstamp::hashAttributesContainTimeInformation(attrs));
+
+    // Use a signed long long as Train Id
+    auto tid = static_cast<long long>(trainId);
+
+    auto castToUInt = [&attrs, &tid]() {
+        return attrs.getNode("tid").template getValue<unsigned int, int, short, decltype(tid)>();
+    };
+
+    // Test the numeric cast from small signed long long to unsigned int
+    attrs.set("tid", tid);
+    CPPUNIT_ASSERT_EQUAL(static_cast<unsigned int>(tid), castToUInt());
+
+    // Check that the default method get() for reading from the attributes
+    // will fail due to a type mismatch
+    CPPUNIT_ASSERT_THROW(attrs.get("tid", trainId), karabo::util::CastException);
+
+    // Check that we cannot cast a negative Train Id into an unsigned integer
+    tid = -1;
+    attrs.set("tid", tid);
+    CPPUNIT_ASSERT_THROW(castToUInt(), karabo::util::CastException);
+
+    // Check that we cannot cast a large Train Id into an unsigned int
+    tid = std::numeric_limits<decltype(trainId)>::max();
+    attrs.set("tid", tid);
+    CPPUNIT_ASSERT_THROW(castToUInt(), karabo::util::CastException);
+
 }
 
 
@@ -437,4 +481,41 @@ void TimeClasses_Test::testTimestamp() {
     CPPUNIT_ASSERT(stamp1 == stamp3);
     CPPUNIT_ASSERT(stamp1 != stamp2a);
     CPPUNIT_ASSERT(stamp1 != stamp2b);
+
+    // Test building timestamp from unsigned long long attributes
+    Hash::Attributes attrs;
+    stamp1.toHashAttributes(attrs);
+
+    CPPUNIT_ASSERT(Timestamp::hashAttributesContainTimeInformation(attrs));
+
+    const Timestamp stamp4(Timestamp::fromHashAttributes(attrs));
+    CPPUNIT_ASSERT_EQUAL(stamp1.getTrainId(), stamp4.getTrainId());
+    CPPUNIT_ASSERT_EQUAL(stamp1.getSeconds(), stamp4.getSeconds());
+    CPPUNIT_ASSERT_EQUAL(stamp1.getFractionalSeconds(), stamp4.getFractionalSeconds());
+
+    attrs.erase("tid");
+    attrs.erase("sec");
+    attrs.erase("frac");
+    CPPUNIT_ASSERT(!Timestamp::hashAttributesContainTimeInformation(attrs));
+
+    // Test building timestamp from positive integer attributes
+    int tid = 1;
+    const int seconds = 1;
+    const int frac = 12;
+    attrs.set("tid", tid);
+    attrs.set("sec", seconds);
+    attrs.set("frac", frac);
+    const Timestamp stamp5(Timestamp::fromHashAttributes(attrs));
+    CPPUNIT_ASSERT_EQUAL(static_cast<unsigned long long>(tid), stamp5.getTrainId());
+    CPPUNIT_ASSERT_EQUAL(static_cast<unsigned long long>(seconds), stamp5.getSeconds());
+    CPPUNIT_ASSERT_EQUAL(static_cast<unsigned long long>(frac), stamp5.getFractionalSeconds());
+
+    // Check that building trainstamp from a negative integer attribute fails
+    tid = -1;
+    attrs.set("tid", tid);
+    CPPUNIT_ASSERT_EQUAL(tid, attrs.getNode("tid").getValue<decltype(tid)>());
+    CPPUNIT_ASSERT(Timestamp::hashAttributesContainTimeInformation(attrs));
+
+    CPPUNIT_ASSERT_THROW(Trainstamp::fromHashAttributes(attrs), karabo::util::ParameterException);
+    CPPUNIT_ASSERT_THROW(Timestamp::fromHashAttributes(attrs), karabo::util::ParameterException);
 }
