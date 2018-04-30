@@ -180,6 +180,14 @@ namespace karabo {
         }
 
         /**
+         * Byte array is output as a hexadecimal string (short) 
+         * @param value   ByteArray object
+         * @param maxBytesShown  max. number of bytes to be presented
+         * @return string representation of ByteArray
+         */
+        std::string toString(const karabo::util::ByteArray& value, size_t maxBytesShown = 0);
+
+        /**
          * String vector values are output as a comma separated list. The individual strings in the list
          * may not contain comma (,) separators, e.g. an element "Hello, World" is not allowed as it would
          * yield a representation ambiguous with two elements "Hello" and "World" -> "Hello, World".
