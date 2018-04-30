@@ -818,10 +818,10 @@ namespace karabo {
                                        const AsyncErrorHandler& errHandler,
                                        bool storeConnection);
 
-            void handleReply(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer & body);
+            void handleReply(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer & body,
+                             long long whenPostedEpochMs);
 
-            void processEvent(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body,
-                              long long whenPostedEpochMs);
+            void processEvent(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
             /**
              * Parses out the instanceId part of signalId or slotId
@@ -922,7 +922,8 @@ namespace karabo {
             void slotPingAnswer(const std::string& instanceId, const karabo::util::Hash& hash);
 
             void processSingleSlot(const std::string& slotFunction, bool globalCall, const std::string& signalInstanceId,
-                                   const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
+                                   const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body,
+                                   long long whenPostedEpochMs);
 
             void replyException(const karabo::util::Hash& header, const std::string& message);
 
