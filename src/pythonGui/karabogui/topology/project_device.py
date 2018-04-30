@@ -158,6 +158,10 @@ class ProjectDeviceInstance(HasStrictTraits):
         # Only apply to offline device which already has a schema
         if not self.online and len(self._offline_proxy.binding.value) > 0:
             apply_default_configuration(self._offline_proxy.binding)
+            if self._offline_config is None:
+                print("Ignoring corrupted project configuration for "
+                      "device {}!".format(self._offline_proxy.device_id))
+                return
             apply_configuration(self._offline_config,
                                 self._offline_proxy.binding,
                                 notify=False, include_attributes=True)

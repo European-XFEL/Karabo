@@ -1,3 +1,4 @@
+from asyncio import coroutine
 from contextlib import contextmanager
 from unittest import main
 
@@ -5,7 +6,8 @@ import numpy as np
 
 from karabo.middlelayer import AccessMode, getDevice
 from karabo.middlelayer_api.device import Device
-from karabo.middlelayer_api.hash import Float, Hash, VectorHash
+from karabo.middlelayer_api.device_client import getSchema
+from karabo.middlelayer_api.hash import Float, Hash, Slot, VectorHash
 from karabo.middlelayer_api.pipeline import InputChannel, OutputChannel
 from karabo.middlelayer_api.schema import Configurable, Node
 
@@ -43,6 +45,11 @@ class MyDevice(Device):
         displayedName="Table",
         defaultValue=[Hash("x", 2.0, "y", 5.6)],
         accessMode=AccessMode.RECONFIGURABLE)
+
+    @Slot(displayedName="MySlot")
+    @coroutine
+    def mySlot(self):
+        pass
 
 
 class Tests(DeviceTest):
@@ -96,6 +103,15 @@ class Tests(DeviceTest):
         # provoke attribute error because we don't have a schema
         with self.assertRaises(AttributeError):
             self.myDevice.output.writeDataNoWait(hsh)
+
+    @async_tst
+    def test_lastCommand(self):
+        self.assertEqual(self.myDevice.lastCommand, "")
+        with (yield from getDevice("MyDevice")) as d:
+            yield from d.mySlot()
+        self.assertEqual(self.myDevice.lastCommand, "mySlot")
+        yield from getSchema("MyDevice")
+        self.assertEqual(self.myDevice.lastCommand, "mySlot")
 
     @async_tst
     def test_clear_table_external(self):

@@ -109,7 +109,9 @@ class MainWindow(QMainWindow):
         if sender is KaraboEventSender.ProcessingDelay:
             self.networkPerfDisplay.setText('{:.3f}'.format(data['value']))
             return True  # Nobody else should handle this event!
-
+        if sender is KaraboEventSender.brokerInformationUpdate:
+            self._update_broker_connection(data)
+            return True  # Nobody else should handle this event!
         if sender is KaraboEventSender.DatabaseIsBusy:
             self._database_is_processing(data.get('is_processing'))
         elif sender is KaraboEventSender.MaximizePanel:
@@ -233,6 +235,8 @@ class MainWindow(QMainWindow):
 
     def _setupStatusBar(self):
         self.statusBar().showMessage('Ready...')
+        self.brokerInformation = QLabel()
+        self.statusBar().addPermanentWidget(self.brokerInformation)
 
     def _setupPanelAreas(self):
         """Build the main splitter structure of the main window
@@ -382,6 +386,14 @@ class MainWindow(QMainWindow):
             return msg_box.exec() != QMessageBox.Yes
         return False
 
+    def _update_broker_connection(self, data=None):
+        """Update the status bar with our broker connection information
+        """
+        if data is not None:
+            info = ('KARABO TOPIC: <b>{}</b>'.format(data['topic']))
+            self.brokerInformation.setText(info)
+        else:
+            self.brokerInformation.setText("")
     # --------------------------------------
     # Qt slots
 
@@ -413,6 +425,7 @@ class MainWindow(QMainWindow):
             # Disconnecting AND need to save first
             self.acServerConnect.setChecked(True)
         else:
+            self._update_broker_connection()
             # Either connecting or no need to save before disconnecting
             get_network().onServerConnection(connect)
 

@@ -440,9 +440,9 @@ class TestManager(GuiTestCase):
         network = Mock()
         with singletons(network=network):
             manager = Manager()
-            manager.handle_brokerInformation(one=2, two=3, five=4)
+            manager.handle_brokerInformation(one=2, two=3, topic=4)
             network._handleBrokerInformation.assert_called_once_with(
-                one=2, two=3, five=4)
+                one=2, two=3, topic=4)
 
     def test_handle_property_history(self):
         topology, device_proxy = Mock(), Mock()

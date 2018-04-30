@@ -72,6 +72,9 @@ class ProjectDatabaseConnection(QObject):
         # XXX: This is really asinine right now!
         self._have_logged_in = False
 
+        # cached domain for saving project
+        self._default_domain = None
+
     def karaboBroadcastEvent(self, event):
         """ Router for incoming broadcasts
         """
@@ -164,11 +167,15 @@ class ProjectDatabaseConnection(QObject):
 
     @property
     def default_domain(self):
-        value = get_setting(KaraboSettings.PROJECT_DOMAIN)
-        return value or 'CAS_INTERNAL'
+        if self._default_domain is None:
+            self._default_domain = (
+                    get_setting(KaraboSettings.PROJECT_DOMAIN)
+                    or 'CAS_INTERNAL')
+        return self._default_domain
 
     @default_domain.setter
     def default_domain(self, value):
+        self._default_domain = value
         set_setting(KaraboSettings.PROJECT_DOMAIN, value)
 
     @property

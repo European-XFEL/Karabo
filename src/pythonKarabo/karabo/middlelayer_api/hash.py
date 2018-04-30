@@ -527,6 +527,7 @@ class Slot(Descriptor):
         @coroutine
         def wrapper():
             try:
+                device.lastCommand = self.method.__name__
                 ret = yield from coro
                 device.update()
                 device._ss.reply(message, ret)
