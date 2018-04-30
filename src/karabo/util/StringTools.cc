@@ -99,5 +99,30 @@ namespace karabo {
                     throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Conversion to string not implemented for this NDArray type");
             }
         }
+
+
+        std::string toString(const karabo::util::ByteArray& value, size_t maxBytesShown) {
+            if (!value.first || value.second == 0) return "";
+
+            std::ostringstream os;
+            const size_t size = value.second;
+            const boost::shared_ptr<char>& ptr = value.first;
+            if (maxBytesShown == 0) {
+                maxBytesShown = std::numeric_limits<size_t>::max();
+            }
+            const std::size_t nBytes = maxBytesShown/2;
+            os << "0x" << std::hex;
+            for (std::size_t i = 0; i < size;) {
+                if (i < nBytes || i >= (size - nBytes)) {
+                    os << std::setw(2) << std::setfill('0') << int(ptr.get()[i]);
+                    ++i;
+                } else {
+                    os << "...(skip " << std::dec << (size - 2*nBytes) << " bytes)..." << std::hex;
+                    i = size - nBytes;
+                }
+            }
+            os << std::dec;
+            return os.str();
+        }
     }
 }

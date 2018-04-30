@@ -649,18 +649,8 @@ namespace karabo {
                     CASE_RETURN_VECTOR(VECTOR_COMPLEX_FLOAT, std::complex<float>, maxNumVectorElements)
                     CASE_RETURN_VECTOR(VECTOR_COMPLEX_DOUBLE, std::complex<double>, maxNumVectorElements)
                     CASE_RETURN_VECTOR(VECTOR_NONE, CppNone, maxNumVectorElements) // for completeness
-                case Types::ReferenceType::BYTE_ARRAY: {
-                    std::ostringstream os;
-                    const size_t size = this->getValue<ByteArray>().second;
-                    const boost::shared_ptr<char>& ptr = this->getValue<ByteArray>().first;
-                    std::size_t minsz = std::min(maxNumVectorElements, size);
-                    os << "0x" << std::hex;
-                    for (std::size_t i = 0; i < minsz; ++i) {
-                        os << std::setw(2) << std::setfill('0') << int(ptr.get()[i]);
-                    }
-                    os << std::dec << (minsz == maxNumVectorElements ? "...":"");
-                    return os.str();
-                }
+                case Types::ReferenceType::BYTE_ARRAY:
+                    return karabo::util::toString(this->getValue<ByteArray>(), maxNumVectorElements);
                 default:
                     return this->getValueAs<std::string>();
             }
