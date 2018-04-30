@@ -23,6 +23,7 @@ from .serializers import decodeBinary, encodeXML
 from .signalslot import SignalSlotable, slot, coslot
 from .synchronization import background, firstCompleted
 from .time_mixin import TimeMixin
+from .utils import get_karabo_version
 
 
 class DeviceServerBase(SignalSlotable):
@@ -108,6 +109,7 @@ class DeviceServerBase(SignalSlotable):
         info["type"] = "server"
         info["serverId"] = self.serverId
         info["version"] = self.__class__.__version__
+        info["karaboVersion"] = get_karabo_version()
         info["host"] = self.hostname
         info["visibility"] = self.visibility.value
         info.merge(self.deviceClassesHash())

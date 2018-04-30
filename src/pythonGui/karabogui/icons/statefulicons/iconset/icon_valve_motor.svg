@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="34.257812"
+   height="42.109375"
+   id="svg4102"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="icon_valve_motor.svg">
+  <defs
+     id="defs4104" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="5.12"
+     inkscape:cx="7.7636527"
+     inkscape:cy="16.053193"
+     inkscape:document-units="px"
+     inkscape:current-layer="svg4102"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:window-width="1234"
+     inkscape:window-height="711"
+     inkscape:window-x="686"
+     inkscape:window-y="201"
+     inkscape:window-maximized="0" />
+  <metadata
+     id="metadata4107">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     id="icon_valve_motor"
+     inkscape:label="icon_valve_motor">
+    <desc
+       id="desc5268">Valve with Motor</desc>
+    <path
+       sodipodi:nodetypes="cccc"
+       inkscape:connector-curvature="0"
+       id="path4691-5-0-9-6-1-1-7"
+       d="M 0.4400475,41.669323 17.122573,30.604922 0.4400475,19.540522 Z"
+       style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.88010299;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <path
+       sodipodi:nodetypes="cccc"
+       inkscape:connector-curvature="0"
+       id="path4691-6-4-8-8-4-3-6-2"
+       d="M 33.80511,41.669323 17.122572,30.604922 33.80511,19.540522 Z"
+       style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.88010299;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <path
+       sodipodi:nodetypes="cc"
+       inkscape:connector-curvature="0"
+       id="path4711-7-4-4-9-7-0-5"
+       d="m 17.122573,30.604922 0,-14.903075"
+       style="fill:none;stroke:#000000;stroke-width:0.88010299;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <circle
+       r="6.3476562"
+       cy="9.3945312"
+       cx="17.089844"
+       id="path5254"
+       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.89999998;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <text
+       sodipodi:linespacing="125%"
+       id="text5256"
+       y="13.396221"
+       x="12.365096"
+       style="font-style:normal;font-weight:normal;font-size:34.8462677px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       xml:space="preserve"><tspan
+         style="font-size:10.88945866px"
+         y="13.396221"
+         x="12.365096"
+         id="tspan5258"
+         sodipodi:role="line">M</tspan></text>
+  </g>
+</svg>
