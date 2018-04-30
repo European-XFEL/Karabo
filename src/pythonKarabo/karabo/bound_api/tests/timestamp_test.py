@@ -138,12 +138,12 @@ class  Timestamp_TestCase(unittest.TestCase):
             self.fail(" testing construction from seconds and fractions: " + str(e))
 
         try:
-            hash = Hash()
+            h = Hash()
             # Cannot use Hash("seconds", 987, "fractions", 123),
             # but have to set explicitely with type, otherwise Hash uses int32...
-            hash.setAs("seconds", 987, Types.UINT64)
-            hash.setAs("fractions", 123, Types.UINT64)
-            dur2 = TimeDuration(hash)
+            h.setAs("seconds", 987, Types.UINT64)
+            h.setAs("fractions", 123, Types.UINT64)
+            dur2 = TimeDuration(h)
             dur3 = TimeDuration(987, 123)
             self.assertEqual(dur3 - dur2, durZero)
         except Exception as e:
@@ -202,7 +202,117 @@ class  Timestamp_TestCase(unittest.TestCase):
 
         except Exception as e:
             self.fail(" testing comparison operators: " + str(e))
+    
+    
+    def test_time_attributes(self):
 
+        try:
+            # Test time attributes
+            h = Hash()
+            h["timestamp"] = True
+            h.setAttribute("timestamp", "tid", 22)
+            h.setAttribute("timestamp", "sec", 1234)
+            h.setAttribute("timestamp", "frac", 5678)
+            attrs = h.getAttributes("timestamp")
+            self.assertEqual(Timestamp.hashAttributesContainTimeInformation(attrs), True)
+
+            tm = Timestamp.fromHashAttributes(attrs)
+
+            self.assertEqual(tm.getTrainId(), 22)
+            self.assertEqual(tm.getSeconds(), 1234)
+            self.assertEqual(tm.getFractionalSeconds(), 5678)
+        except Exception as e:
+            self.fail(" testing conversion from attributes: " + str(e))
+
+
+        try:
+            # Test Train ID upgrade to uint64 without explicit Types.UINT64
+            h = Hash()
+            h["timestamp"] = True
+            h.setAttribute("timestamp", "tid", 2**40)
+            h.setAttribute("timestamp", "sec", 1234)
+            h.setAttribute("timestamp", "frac", 5678)
+
+
+            attrs = h.getAttributes("timestamp")
+            self.assertEqual(Timestamp.hashAttributesContainTimeInformation(attrs), True)
+            tm = Timestamp.fromHashAttributes(attrs)
+
+            self.assertEqual(tm.getTrainId(), 2**40)
+            self.assertEqual(tm.getSeconds(), 1234)
+            self.assertEqual(tm.getFractionalSeconds(), 5678)
+        except Exception as e:
+            self.fail(" testing conversion from attributes with large train id: " + str(e))
+
+        try:
+            # Test explicit time attributes set as uint64
+            h64 = Hash()
+            h64.setAs("tid", 2**40, Types.UINT64)
+            h64.setAs("sec",  2**41, Types.UINT64)
+            h64.setAs("frac",  2**42, Types.UINT64)
+
+            h["timestamp64"] = True
+            h.setAttribute("timestamp64", "tid", h64["tid"])
+            h.setAttribute("timestamp64", "sec", h64["sec"])
+            h.setAttribute("timestamp64", "frac", h64["frac"])
+            attrs = h.getAttributes("timestamp64")
+            self.assertEqual(Timestamp.hashAttributesContainTimeInformation(attrs), True)
+            tm = Timestamp.fromHashAttributes(attrs)
+
+            self.assertEqual(tm.getTrainId(), 2**40)
+            self.assertEqual(tm.getSeconds(), 2**41)
+            self.assertEqual(tm.getFractionalSeconds(), 2**42)
+        except Exception as e:
+            self.fail(" testing conversion from uint64 attributes: " + str(e))
+
+        try:
+            # Test time attributes with a mix of uint32 and small uint64 values
+            h64 = Hash()
+            h64.setAs("tid", 2**31, Types.UINT32)
+            h64.setAs("sec", 2, Types.UINT64)
+            h64.setAs("frac", 3, Types.UINT64)
+            
+            h = Hash()
+            h["timestamp64"] = True
+            h.setAttribute("timestamp64", "tid", h64["tid"])
+            h.setAttribute("timestamp64", "sec", h64["sec"])
+            h.setAttribute("timestamp64", "frac", h64["frac"])
+            attrs = h.getAttributes("timestamp64")
+            self.assertEqual(Timestamp.hashAttributesContainTimeInformation(attrs), True)
+            tm = Timestamp.fromHashAttributes(attrs)
+
+            self.assertEqual(tm.getTrainId(), 2**31)
+            self.assertEqual(tm.getSeconds(), 2)
+            self.assertEqual(tm.getFractionalSeconds(), 3)
+        except Exception as e:
+            self.fail(" testing conversion from large uint32 / small uint64 attributes: " + str(e))
+
+        try:
+            # Test failures in case of negative or string literals as time attributes
+            h = Hash()
+            h["timestamp"] = True
+            h.setAttribute("timestamp", "tid", -1)
+            h.setAttribute("timestamp", "sec", "123")
+            h.setAttribute("timestamp", "frac", 456)
+            attrs = h.getAttributes("timestamp")
+            self.assertEqual(Timestamp.hashAttributesContainTimeInformation(attrs), True)
+            
+            with self.assertRaises(Exception):
+                Timestamp.fromHashAttributes(attrs)
+
+            h.setAttribute("timestamp", "sec", 123)
+
+            with self.assertRaises(Exception):
+                Timestamp.fromHashAttributes(attrs)
+
+            h.setAttribute("timestamp", "tid", 1)
+            tm = Timestamp.fromHashAttributes(h.getAttributes("timestamp"))
+            self.assertEqual(tm.getTrainId(), 1)
+            self.assertEqual(tm.getSeconds(), 123)
+            self.assertEqual(tm.getFractionalSeconds(), 456)
+
+        except Exception as e:
+            self.fail(" testing conversion from negative or ill-formed time attributes: " + str(e))
 
 if __name__ == '__main__':
     unittest.main()
