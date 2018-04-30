@@ -573,7 +573,7 @@ namespace karabo {
         template<class DestValueType, class SourceValueType, class ...SourceValueTypes>
         inline DestValueType Element<KeyType, AttributeType>::getValue() const {
             // First try to cast from boost::any to the destination type
-            auto ptr = boost::any_cast<SourceValueType>(&m_value);
+            const SourceValueType* ptr = boost::any_cast<SourceValueType>(&m_value);
 
             if (ptr) {
              if (std::is_arithmetic<DestValueType>::value 
