@@ -7,6 +7,7 @@
 
 #include "StringTools_Test.hh"
 #include <karabo/util/StringTools.hh>
+#include <boost/core/null_deleter.hpp>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(StringTools_Test);
 
@@ -150,6 +151,13 @@ void StringTools_Test::testToString() {
     CPPUNIT_ASSERT(toString(std::wstring(L"abcd0123")) == str);
     CPPUNIT_ASSERT(toString(L"abcd0123") == "abcd0123");
     CPPUNIT_ASSERT(toString(wstr) == "abcd0123");
+
+    // ByteArray
+    static char s[]={0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                     0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15,
+                     0x16, 0x17, 0x18, 0x19, 0x20, 0x21, 0x22, 0x23};
+    ByteArray ba = std::make_pair(boost::shared_ptr<char>(s, boost::null_deleter()), 24);
+    std::clog << "testToString: BYTE_ARRAY => " << toString(ba, 16) << std::endl;
 }
 
 
