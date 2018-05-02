@@ -706,9 +706,6 @@ namespace karabo {
             typedef std::map<std::string, SlotInstancePointer> SlotInstances;
             SlotInstances m_slotInstances;
 
-            karabo::net::Strand::Pointer m_eventStrand; // private??
-            karabo::net::Strand::Pointer m_globalEventStrand; // private??
-
             typedef std::map<std::string, std::pair<boost::shared_ptr<boost::asio::deadline_timer>, AsyncErrorHandler> > ReceiveAsyncErrorHandles;
             ReceiveAsyncErrorHandles m_receiveAsyncErrorHandles;
 
@@ -728,8 +725,12 @@ namespace karabo {
 
             int m_randPing;
 
-            // Reply/Request related
         private:
+            karabo::net::Strand::Pointer m_unicastEventStrand;
+            karabo::net::Strand::Pointer m_broadcastEventStrand;
+
+            // Reply/Request related
+
             // Map slot name and whether it was called globally
             std::map<boost::thread::id, std::pair<std::string, bool> > m_currentSlots; // unordered? needs std::hash<boost::thread::id>...
             mutable boost::mutex m_currentSlotsMutex;
