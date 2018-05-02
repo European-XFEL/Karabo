@@ -227,9 +227,9 @@ namespace karabo {
 
 
         SignalSlotable::SignalSlotable() :
-            m_eventStrand(boost::make_shared<karabo::net::Strand>(EventLoop::getIOService())),
-            m_globalEventStrand(boost::make_shared<karabo::net::Strand>(EventLoop::getIOService())),
             m_randPing(rand() + 2),
+            m_unicastEventStrand(boost::make_shared<karabo::net::Strand>(EventLoop::getIOService())),
+            m_broadcastEventStrand(boost::make_shared<karabo::net::Strand>(EventLoop::getIOService())),
             m_trackAllInstances(false),
             m_heartbeatInterval(10),
             m_trackingTimer(EventLoop::getIOService()),
@@ -640,8 +640,8 @@ namespace karabo {
 
                 // Check whether this message is an async reply
                 if (header->has("replyFrom")) {
-                    // replies are never global, so use normal event strand
-                    m_eventStrand->post(bind_weak(&SignalSlotable::handleReply, this, header, body, getEpochMillis()));
+                    // replies are never broadcasted, so use normal event strand
+                    m_unicastEventStrand->post(bind_weak(&SignalSlotable::handleReply, this, header, body, getEpochMillis()));
                     return;
                 }
                 // TODO: To check for remote errors reported after requestNoWait, do e.g.
@@ -653,7 +653,7 @@ namespace karabo {
                 // as in handleReply (or better find a unified solution)
 
                 /* The header of each event (message)
-                 * should contain all slotFunctions that must be a called
+                 * should contain all slotFunctions that must be called
                  * The formatting is like:
                  * slotFunctions -> [|<instanceId1>:<slotFunction1>[,<slotFunction2>]]
                  * Example:
@@ -688,22 +688,20 @@ namespace karabo {
                         continue;
                     }
                     const string instanceId(instanceSlots.substr(0, pos));
-                    // We should call only functions defined for our instanceId or global ("*") ones
-                    const bool globalCall = (instanceId == "*");
-                    if (!globalCall && instanceId != m_instanceId) continue;
+                    // We should call only functions defined for our instanceId or broadcasted ("*") ones
+                    const bool isBroadcast = (instanceId == "*");
+                    if (!isBroadcast && instanceId != m_instanceId) continue;
 
                     const vector<string> slotFunctions = karabo::util::fromString<string, vector>(instanceSlots.substr(pos + 1));
                     for (const string& slotFunction : slotFunctions) {
-                        // Global calls in their own Strand: massive 'attacks' of instanceNew/Gone etc.
-                        // should not introduce latencies for normal slot calls - and ordering between global and normal
-                        // calls is anyway not guaranteed since global ones never use inner process or p2p short cuts.
-                        // But that means that the same slot called globally and directly can run in parallel, e.g. slotPing
-                        // FIXME: Is that desired??? To prevent that we could add back a mutex lock around the slot
-                        //        call in Slot.cc as we had in the past...
-                        // FIXME: getEpochMillis() to be posted and treated
-                        Strand::Pointer& strand = (globalCall ? m_globalEventStrand : m_eventStrand);
+                        // Broadcasted calls in their own Strand: massive 'attacks' of instanceNew/Gone etc. should
+                        // not introduce latencies for normal slot calls - and ordering between broadcast and normal
+                        // calls is anyway not guaranteed since broadcasts never use inner process or p2p short cuts.
+                        // To avoid that the same slot called as broadcast and directly can run in parallel (e.g.
+                        // slotPing!), there is an otherwise undesired mutex lock in Slot::callRegisteredSlotFunctions.
+                        Strand::Pointer& strand = (isBroadcast ? m_broadcastEventStrand : m_unicastEventStrand);
                         strand->post(bind_weak(&SignalSlotable::processSingleSlot, this,
-                                               slotFunction, globalCall, signalInstanceId, header, body, getEpochMillis()));
+                                               slotFunction, isBroadcast, signalInstanceId, header, body, getEpochMillis()));
                     }
                 }
             } catch (const std::exception& e) {
@@ -2557,7 +2555,6 @@ namespace karabo {
                     m_connectionStrings[signalInstanceId] = signalConnectionString;
                 }
                 m_pointToPoint->connect(signalInstanceId, m_instanceId, signalConnectionString,
-                                        // FIXME: find out when called here!
                                         bind_weak(&SignalSlotable::processEvent, this, _1, _2));
                 if (successHandler) successHandler();
             } else if (errHandler) {
