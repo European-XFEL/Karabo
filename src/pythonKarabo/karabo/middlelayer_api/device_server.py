@@ -442,6 +442,7 @@ class BoundDeviceServer(DeviceServerBase):
         self.logger.info("Device '{0}' notifies '{1.serverId}' about its "
                          "future death.".format(instanceId, self))
         self.deviceInstanceMap.pop(instanceId, None)
+        self.processes.pop(instanceId, None)
 
     def supervise(self, deviceId, process, info):
         def supervisor():
@@ -473,6 +474,7 @@ class BoundDeviceServer(DeviceServerBase):
                     finally:
                         self._ss.emit("call", {"*": ['slotInstanceGone']},
                                       deviceId, info)
+                        self.processes.pop(deviceId, None)
 
         task = background(supervisor())
         try:
@@ -494,12 +496,12 @@ class BoundDeviceServer(DeviceServerBase):
             sys.executable, "-m", "karabo.bound_api.launcher",
             "run", self.boundNamespace, classId, deviceId,
             env=env, stdin=PIPE)
-        self.processes[deviceId] = process
         process.stdin.write(encodeXML(config).encode('utf8'))
         process.stdin.close()
         done, pending, error = yield from firstCompleted(
             ok=future, error=process.wait())
         if "ok" in done:
+            self.processes[deviceId] = process
             background(self.supervise(deviceId, process, done["ok"]))
             return True, '"{}" started'.format(deviceId)
         else:
@@ -517,6 +519,8 @@ class BoundDeviceServer(DeviceServerBase):
             self.logger.exception("some processes did not finish in time")
             for p in self.processes.values():
                 p.kill()
+        self.processes.clear()
+
         yield from super(BoundDeviceServer, self).slotKillServer()
 
 
