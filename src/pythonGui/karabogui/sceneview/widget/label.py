@@ -26,16 +26,13 @@ class LabelWidget(QLabel):
         self.setToolTip(self.model.text)
         self.setLineWidth(model.frame_width)
 
-        # two different style sheets are required!
-        tool_style = """QToolTip { background-color: black;
-                                   color: white; }"""
-        label_style = """QLabel {{ qproperty-font: {};
-                                   background-color: {};
-                                   color: {}; }}""".format(model.font,
-                                                           model.background,
-                                                           model.foreground)
-        stylesheet = tool_style + label_style
-        self.setStyleSheet(stylesheet)
+        styleSheet = []
+        styleSheet.append('qproperty-font: "{}";'.format(model.font))
+        styleSheet.append('color: "{}";'.format(model.foreground))
+        if model.background:
+            styleSheet.append('background-color: "{}";'.format(
+                model.background))
+        self.setStyleSheet("".join(styleSheet))
 
         _, _, model.width, model.height = calc_rect_from_text(model.font,
                                                               model.text)
