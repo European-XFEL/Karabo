@@ -420,13 +420,33 @@ class SystemTopology(HasStrictTraits):
         # the system topology in the navigation panel
         new_topology_nodes = self.system_tree.update(server_hash)
 
-        self._update_online_device_status()
+        device_hash = server_hash.get('device', '')
+        if not device_hash:
+            return
 
-        # Update proxy topology node references
-        for proxy in self._device_proxies.values():
-            if proxy.device_id in new_topology_nodes:
+        for device_id, _, attrs in device_hash.iterall():
+            # Check if we already have a proxy, otherwise
+            # we handle it later!
+            proxy = self._device_proxies.get(device_id)
+            if proxy is None:
+                continue
+
+            if proxy.status is DeviceStatus.OFFLINE and attrs:
+                proxy.status = DeviceStatus.ONLINE
+            elif proxy.status is not DeviceStatus.OFFLINE and attrs is None:
+                proxy.status = DeviceStatus.OFFLINE
+            # The information we pull out of the system hash may also contain
+            # device error or alarm information, project device will not be
+            # updated until user show them in the configurator, so here we set
+            # the shortcut flag directly so their icon will be updated in the
+            # project panel view.
+            prj_dev = self._project_devices.get(device_id)
+            if prj_dev is not None and attrs is not None:
+                prj_dev.error = (attrs.get('status', '') == 'error')
+
+            # Update proxy topology node references
+            if device_id in new_topology_nodes:
                 proxy.topology_node = new_topology_nodes[proxy.device_id]
-                attrs = self._get_device_attributes(proxy.device_id)
                 proxy.server_id = attrs.get('serverId', '')
 
     def update_alarms_info(self, alarm_data):
