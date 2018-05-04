@@ -158,7 +158,8 @@ void DeviceClient_Test::testMonitorChannel() {
     CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (100u), vecInt64inChannel.size());
     CPPUNIT_ASSERT_EQUAL(1ll, vecInt64inChannel[0]);
     CPPUNIT_ASSERT(ndArrayDims == Dims(100ull, 200ull));
-    CPPUNIT_ASSERT_EQUAL(1.f, ndArrayEntry);
+    // Float comparison can fail, see e.g. https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/26996
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1., ndArrayEntry, 1.e-7);
     CPPUNIT_ASSERT(imageDims == Dims(400ull, 500ull));
     CPPUNIT_ASSERT_EQUAL(static_cast<unsigned short> (1), imageEntry);
 
