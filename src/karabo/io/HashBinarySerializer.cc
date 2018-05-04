@@ -103,12 +103,10 @@ namespace karabo {
             const string& key = element.getKey();
             writeKey(buffers.back(), key);
             if (element.is<Hash>()) {
-                buffers.add();
                 writeType(buffers.back(), Types::HASH);
                 writeAttributes(element.getAttributes(), buffers.back());
                 writeHash(element.getValue<Hash > (), buffers);
             } else if (element.is<Hash::Pointer>()) {
-                buffers.add();
                 writeType(buffers.back(), Types::HASH_POINTER);
                 writeAttributes(element.getAttributes(), buffers.back());
                 writeHash(*(element.getValue<Hash::Pointer > ()), buffers);
@@ -118,7 +116,6 @@ namespace karabo {
                 const vector<Hash>& tmp = element.getValue<vector<Hash> >();
                 writeSize(buffers.back(), tmp.size());
                 for (size_t i = 0; i < tmp.size(); ++i) {
-                    buffers.add();
                     writeHash(tmp[i], buffers);
                 }
             } else if (element.is<vector<Hash::Pointer> >()) {
@@ -127,7 +124,6 @@ namespace karabo {
                 const vector<Hash::Pointer>& tmp = element.getValue<vector<Hash::Pointer> >();
                 writeSize(buffers.back(), tmp.size());
                 for (size_t i = 0; i < tmp.size(); ++i) {
-                    buffers.add();
                     writeHash(*(tmp[i]), buffers);                    
                 }
             } else {
@@ -351,9 +347,8 @@ namespace karabo {
         void HashBinarySerializer::readHash(Hash& hash, std::istream& is,  const BufferSet& buffers) const {
             unsigned size = readSize(is);
             for (unsigned i = 0; i < size; ++i) {
-                std::string name = readKey(is);
-                
                 nextBufIfEos(is, buffers);
+                std::string name = readKey(is);                                
                 Hash::Node& node = hash.set(name, true); // The boolean is a dummy to allow working on references later
                 readNode(node, is, buffers);
                 
@@ -396,39 +391,35 @@ namespace karabo {
         
         
         void HashBinarySerializer::readNode(Hash::Node& node, std::istream& is,  const BufferSet& buffers) const {
-            nextBufIfEos(is, buffers);
+            
             Types::ReferenceType type = readType(is);
-            nextBufIfEos(is, buffers);
             readAttributes(node.getAttributes(), is);
-            nextBufIfEos(is, buffers);
             if (type == Types::HASH) {
                 node.setValue(Hash());
                 Hash& tmp = node.getValue<Hash>();
-                readHash(tmp, is, buffers);
+                readHash(tmp, is, buffers);                
             } else if (type == Types::HASH_POINTER) {
                 node.setValue(Hash::Pointer(new Hash()));
                 Hash& tmp = *(node.getValue<Hash::Pointer>());
-                readHash(tmp, is, buffers);
+                readHash(tmp, is, buffers);                
             } else if (type == Types::VECTOR_HASH) {
                 const size_t size = readSize(is);
-                nextBufIfEos(is, buffers);
                 node.setValue(std::vector<Hash > ());
                 std::vector<Hash>& result = node.getValue<std::vector<Hash > >();
                 result.resize(size);
                 for (size_t i = 0; i < size; ++i) {
-                    readHash(result[i], is, buffers);
+                    readHash(result[i], is, buffers);                    
                 }
             } else if (type == Types::VECTOR_HASH_POINTER) {
                 const size_t size = readSize(is);
-                nextBufIfEos(is, buffers);
                 node.setValue(std::vector<Hash::Pointer > ());
                 std::vector<Hash::Pointer>& result = node.getValue<std::vector<Hash::Pointer > >();
                 result.resize(size, Hash::Pointer(new Hash()));
                 for (size_t i = 0; i < size; ++i) {
-                    readHash(*(result[i]), is, buffers);
+                    readHash(*(result[i]), is, buffers);                    
                 }
             } else {
-                readAny(node.getValueAsAny(), type, is, buffers);
+                readAny(node.getValueAsAny(), type, is, buffers);                
             }
         }
 
@@ -477,10 +468,8 @@ namespace karabo {
                 case Types::SCHEMA:
                 case Types::SIMPLE:
                     readSingleValue(is, value, type, buffers);
-                    nextBufIfEos(is, buffers);
                     return;
                 case Types::SEQUENCE: readSequence(is, value, type);
-                    nextBufIfEos(is, buffers);
                     return;
                 case Types::HASH:
                     readHash(boost::any_cast<Hash& > (value), is, buffers);
@@ -488,7 +477,6 @@ namespace karabo {
                 case Types::VECTOR_HASH:
                 {
                     unsigned size = readSize(is);
-                    nextBufIfEos(is, buffers);
                     value = std::vector<Hash > ();
                     std::vector<Hash>& result = boost::any_cast<std::vector<Hash>& >(value);
                     result.resize(size);
@@ -560,6 +548,12 @@ namespace karabo {
         template<>
         karabo::util::ByteArray HashBinarySerializer::readSingleValue(std::istream& is) const {
             const size_t size = readSize(is);
+            ByteArray result(boost::shared_ptr<char>(new char[size], &byteArrayDeleter), size);
+            is.read(result.first.get(), size);
+            return result;
+        }
+        
+        karabo::util::ByteArray HashBinarySerializer::readSingleValue(std::istream& is, size_t size) const {
             ByteArray result(boost::shared_ptr<char>(new char[size], &byteArrayDeleter), size);
             is.read(result.first.get(), size);
             return result;
@@ -644,18 +638,18 @@ namespace karabo {
                 case Types::STRING: value = readSingleValue<std::string > (is);
                     break;
                 case Types::BYTE_ARRAY: {
+                        const size_t size = readSize(is);
                         nextBufIfEos(is, buffers);
-                        if (!buffers.currentIsByteArrayCopy()) {
-                            buffers.next(); //this is simply the size
+                        if (!buffers.currentIsByteArrayCopy()) {                            
                             value = buffers.currentAsByteArray();
+                            // switch to the next buffer and set stream to it.
+                            buffers.next();
+                            auto& cb = buffers.current();
+                            is.rdbuf()->pubsetbuf(cb.data(), cb.size());
+                            is.rdbuf()->pubseekpos(0);
                         } else { // bytearray wasn't separated 
-                            value = readSingleValue<ByteArray>(is);
-                            // If we still have space in current buffer ...                            
-                            if(size_t(is.tellg() + 1L) < buffers.current().size()) break; 
-                        }
-                        buffers.next();
-                        is.rdbuf()->pubsetbuf(buffers.current().data(), buffers.current().size());
-                        is.rdbuf()->pubseekpos(0);
+                            value = readSingleValue(is, size);                            
+                        }                                                
                         break;
                 }
                 case Types::SCHEMA: value = readSingleValue<Schema >(is);

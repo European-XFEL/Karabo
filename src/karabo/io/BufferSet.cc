@@ -40,8 +40,7 @@ namespace karabo {
 
 
         void BufferSet::emplaceBack(const karabo::util::ByteArray& array) {
-           
-            add();
+
             BufferType& buffer = current();
             buffer.reserve(buffer.size() + sizeof(unsigned int) + array.second);
             {
@@ -60,10 +59,7 @@ namespace karabo {
                     buffer.resize(pos + n);
                     std::memcpy(buffer.data() + pos, src, n);
                 }
-
-                add();
             } else {
-                m_buffers[m_currentBuffer].contentType = BufferContents::NO_COPY_BYTEARRAY_SIZE;
                 updateSize();
                 m_buffers.push_back(Buffer(boost::shared_ptr<BufferType>(new BufferType()),
                                                     boost::const_pointer_cast<BufferType::value_type>(array.first),
