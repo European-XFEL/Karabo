@@ -8,9 +8,11 @@
 #ifndef HASHBINARYSERIALIZER_TEST_HH
 #define	HASHBINARYSERIALIZER_TEST_HH
 #include <karabo/util/Configurator.hh>
+#include <karabo/util/Hash.hh>
 #include <karabo/log/Logger.hh>
 
 #include <cppunit/extensions/HelperMacros.h>
+
 
 class HashBinarySerializer_Test : public CPPUNIT_NS::TestFixture {
 
@@ -30,6 +32,8 @@ public:
 private:
     void testSerialization();
     void testSpeedLargeArrays();
+
+    void hashContentTest(const karabo::util::Hash& toBeTested, const std::string& whichSerialisation);
 
 private:
 
