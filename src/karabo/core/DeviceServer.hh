@@ -73,7 +73,6 @@ namespace karabo {
 
             std::string m_serverId;
 
-            DeviceInstanceMap m_devicesForTimingMap; // protect via m_deviceInstanceMutex!
             std::string m_timeServerId;
             unsigned long long m_timeId;
             unsigned long long m_timeSec; // seconds

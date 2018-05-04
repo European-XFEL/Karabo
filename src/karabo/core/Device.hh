@@ -116,11 +116,6 @@ namespace karabo {
              */
             virtual void onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) = 0;
 
-            /**
-             * Check if the device is configured to use the time server ticks
-             * @return boolean
-             */
-            virtual bool useTimeServer() const = 0;
         };
 
         /**
@@ -324,12 +319,13 @@ namespace karabo {
 
                 BOOL_ELEMENT(expected).key("useTimeserver")
                         .displayedName("Use Timeserver")
-                        .description("Decides whether to use time and train ID from TimeServer device")
+                        .description("Unused - whether device connects to time server "
+                                     "is configured via 'timeServerId'")
                         .init()
-                        .expertAccess()
-                        .assignmentOptional().defaultValue(false)
+                        .adminAccess()
+                        .assignmentOptional().defaultValue(true)
                         .commit();
-
+                
                 INT32_ELEMENT(expected).key("progress")
                         .displayedName("Progress")
                         .description("The progress of the current action")
@@ -1121,10 +1117,6 @@ namespace karabo {
             virtual void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
             }
 
-            bool useTimeServer() const {
-                return this->get<bool>("useTimeserver");
-            }
-
             /**
              * Execute a command on this device
              * @param command
@@ -1352,7 +1344,8 @@ namespace karabo {
 
             /**
              * Returns the actual timestamp. The Trainstamp part of Timestamp is extrapolated from the last values
-             * received via slotTimeTick (or zero if no time ticks received yet, e.g. if useTimeserver is false).
+             * received via slotTimeTick (or zero if no time ticks received yet).
+             * To receive time ticks, the server of the device has to be connected to a time server.
              *
              * @return the actual timestamp
              */
@@ -1363,8 +1356,8 @@ namespace karabo {
             /**
              * Returns the Timestamp for given Epochstamp. The Trainstamp part of Timestamp is extrapolated forward or
              * backward from the last values received via slotTimeTick
-             * (or zero if no time ticks received yet, e.g. if useTimeserver is false).
-             *
+             * (or zero if no time ticks received yet).
+             * To receive time ticks, the server of the device has to be connected to a time server.
              * @param epoch for that the time stamp is searched for
              * @return the matching timestamp, consisting of epoch and the corresponding Trainstamp
              */
@@ -1503,9 +1496,6 @@ namespace karabo {
 
                 this->set("pid", ::getpid());
 
-                if (get<bool>("useTimeserver")) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << " is configured to use the TimeServer";
-                }
             }
 
             void initClassId() {
