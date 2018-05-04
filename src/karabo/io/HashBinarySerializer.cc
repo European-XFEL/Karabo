@@ -55,7 +55,6 @@ namespace karabo {
             writeSize(buffers.back(), hash.size());
             for (Hash::const_iterator iter = hash.begin(); iter != hash.end(); ++iter) {
                 writeNodeMultiBuffer(*iter, buffers);
-                buffers.updateSize();
             }
         }
 
@@ -351,7 +350,6 @@ namespace karabo {
                 std::string name = readKey(is);                                
                 Hash::Node& node = hash.set(name, true); // The boolean is a dummy to allow working on references later
                 readNode(node, is, buffers);
-                
             }
         }
 

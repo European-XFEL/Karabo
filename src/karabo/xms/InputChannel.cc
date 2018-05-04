@@ -439,7 +439,6 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_TRACE << debugId << "Reading from remote memory (over tcp)";
                     karabo::io::BufferSet tmp(false);
                     tmp.emplaceBack(data);
-                    
                     Memory::writeAsContiguousBlock(tmp, header, m_channelId, m_inactiveChunk, false);
                 }
 

@@ -41,7 +41,6 @@ namespace karabo {
             */
             enum BufferContents {
                 COPY = 0,
-                NO_COPY_BYTEARRAY_SIZE,
                 NO_COPY_BYTEARRAY_CONTENTS
             };
             
@@ -84,14 +83,16 @@ namespace karabo {
              * Add a buffer to the BufferSet
              * @param assureSizeCorrect, assure the size of the previous buffer is updated. Usually true, except when having added a ByteArray before
              */
-            void add(bool assureSizeCorrect = true);
+            void add();
 
             /**
              * Update the size of the current buffer to reflect the size of the vector is refers to
              */
             void updateSize() {
                 if (m_buffers.size()) {
-                    m_buffers.back().size = m_buffers.back().vec->size();
+                    if(m_buffers.back().contentType == BufferContents::COPY) {
+                        m_buffers.back().size = m_buffers.back().vec->size();
+                    }
                 }
             }
 
@@ -126,7 +127,7 @@ namespace karabo {
             /**
              * Emplace a ByteArray at the back of the BufferSet
              */
-            void emplaceBack(const karabo::util::ByteArray& array);
+            void emplaceBack(const karabo::util::ByteArray& array, bool writeSize=true);
 
             /**
              * Emplace a shared pointer to a vector at the end of the BufferSet
