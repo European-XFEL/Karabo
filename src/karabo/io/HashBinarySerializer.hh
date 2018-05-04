@@ -180,6 +180,8 @@ namespace karabo {
                 return all.tbuffer[0];
             }
             
+            karabo::util::ByteArray readSingleValue(std::istream& is, size_t size) const;
+            
 
             template<typename T>
             inline std::complex<T> readComplexValue(std::istream& is) const {
