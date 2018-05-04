@@ -23,8 +23,8 @@ namespace karabo {
         }
 
 
-        void BufferSet::add(bool assure_size_correct) {
-            if (assure_size_correct) updateSize();
+        void BufferSet::add() {
+            updateSize();
             m_buffers.push_back(Buffer());
             m_currentBuffer++;
         }
@@ -39,17 +39,18 @@ namespace karabo {
         }
 
 
-        void BufferSet::emplaceBack(const karabo::util::ByteArray& array) {
-
+        void BufferSet::emplaceBack(const karabo::util::ByteArray& array, bool writeSize) {
             BufferType& buffer = current();
-            buffer.reserve(buffer.size() + sizeof(unsigned int) + array.second);
-            {
-                unsigned int size = static_cast<unsigned int> (array.second);
-                const char* src = reinterpret_cast<const char*> (&size);
-                const size_t n = sizeof (unsigned int);
-                const size_t pos = buffer.size();
-                buffer.resize(pos + n);
-                std::memcpy(buffer.data() + pos, src, n);                
+            if(writeSize) {
+                buffer.reserve(buffer.size() + sizeof(unsigned int) + array.second);
+                {
+                    unsigned int size = static_cast<unsigned int> (array.second);
+                    const char* src = reinterpret_cast<const char*> (&size);
+                    const size_t n = sizeof (unsigned int);
+                    const size_t pos = buffer.size();
+                    buffer.resize(pos + n);
+                    std::memcpy(buffer.data() + pos, src, n);
+                }
             }
             if (m_copyAllData) {
                 {
@@ -66,7 +67,7 @@ namespace karabo {
                                                     array.second,
                                                     BufferContents::NO_COPY_BYTEARRAY_CONTENTS));
                 m_currentBuffer++;
-                add(false);
+                add();
             }
         }
 
@@ -85,14 +86,13 @@ namespace karabo {
                 std::memcpy(buffer.data() + pos, src, n);
                 add();
             } else {
-                updateSize();
                 if (m_buffers.back().size == 0) {
                     Buffer & buffer = m_buffers.back();
                     buffer.vec = boost::const_pointer_cast<BufferType>(ptr);
                     buffer.ptr = boost::shared_ptr<BufferType::value_type>(0);
                     buffer.size = ptr->size();
                     buffer.contentType = BufferContents::COPY;
-                    add(false);
+                    add();
                 } else {
                     m_buffers.push_back(Buffer(boost::const_pointer_cast<BufferType>(ptr),
                                                         boost::shared_ptr<BufferType::value_type>(0),
@@ -100,7 +100,7 @@ namespace karabo {
                                                         BufferContents::COPY));
                     
                     m_currentBuffer++;
-                    add(false);
+                    add();
                 }
             }
         }
@@ -108,10 +108,9 @@ namespace karabo {
 
         void BufferSet::appendTo(BufferSet& other, bool copy) const {
             for (auto it = m_buffers.begin(); it != m_buffers.end(); ++it) {
-                if (it->contentType == BufferContents::NO_COPY_BYTEARRAY_SIZE) { // byte-array case
-                    continue; // skip size entry
-                } else if (it->contentType == BufferContents::NO_COPY_BYTEARRAY_CONTENTS) {
-                    other.emplaceBack(std::make_pair(it->ptr, it->size));
+                if (it->contentType == BufferContents::NO_COPY_BYTEARRAY_CONTENTS) {
+                    //do not write the size as it is in previous buffer
+                    other.emplaceBack(std::make_pair(it->ptr, it->size), false);
                 } else if (it->size) {
                     if (copy) {
                         const char* src = it->vec->data();
