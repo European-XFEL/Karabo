@@ -549,9 +549,14 @@ def getDevices(serverId=None):
                 if a["serverId"] == serverId]
 
 
-def getServers():
-    """Return a list of currently running servers"""
-    return list(get_instance().systemTopology["server"])
+def getServers(visibility=3):
+    """Return a list of currently running servers
+
+    :param visibility: Integer specifying the visiblity of desired servers.
+                       Default visibility level is 3.
+    """
+    return [k for k, v, a in get_instance().systemTopology["server"].iterall()
+            if a["visibility"] <= visibility]
 
 
 def getClasses(serverId):
