@@ -420,17 +420,9 @@ class SystemTopology(HasStrictTraits):
         # the system topology in the navigation panel
         new_topology_nodes = self.system_tree.update(server_hash)
 
-        device_hash = server_hash.get('device', '')
-        if not device_hash:
-            return
-
-        for device_id, _, attrs in device_hash.iterall():
-            # Check if we already have a proxy, otherwise
-            # we handle it later!
-            proxy = self._device_proxies.get(device_id)
-            if proxy is None:
-                continue
-
+        for proxy in self._device_proxies.values():
+            # extract this device's information from system hash
+            attrs = self._get_device_attributes(proxy.device_id)
             if proxy.status is DeviceStatus.OFFLINE and attrs:
                 proxy.status = DeviceStatus.ONLINE
             elif proxy.status is not DeviceStatus.OFFLINE and attrs is None:
@@ -440,12 +432,11 @@ class SystemTopology(HasStrictTraits):
             # updated until user show them in the configurator, so here we set
             # the shortcut flag directly so their icon will be updated in the
             # project panel view.
-            prj_dev = self._project_devices.get(device_id)
+            prj_dev = self._project_devices.get(proxy.device_id)
             if prj_dev is not None and attrs is not None:
                 prj_dev.error = (attrs.get('status', '') == 'error')
 
-            # Update proxy topology node references
-            if device_id in new_topology_nodes:
+            if proxy.device_id in new_topology_nodes:
                 proxy.topology_node = new_topology_nodes[proxy.device_id]
                 proxy.server_id = attrs.get('serverId', '')
 
