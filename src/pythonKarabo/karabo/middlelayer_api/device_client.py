@@ -549,20 +549,14 @@ def getDevices(serverId=None):
                 if a["serverId"] == serverId]
 
 
-def getServers(includeSystemServers=False):
+def getServers(visibility=3):
     """Return a list of currently running servers
 
-    Optional parameter is to return system servers.
-
-    :param includeSystemServers: boolean to include system services, default
-                                 is False
+    :param visibility: Integer specifying the visiblity of desired servers.
+                       Default visibility level is 3.
     """
-    instance = get_instance()
-    if includeSystemServers is True:
-        return list(instance.systemTopology["server"])
-    else:
-        return [k for k, v, a in instance.systemTopology["server"].iterall()
-                if a["visibility"] < 4]
+    return [k for k, v, a in get_instance().systemTopology["server"].iterall()
+            if a["visibility"] <= visibility]
 
 
 def getClasses(serverId):
