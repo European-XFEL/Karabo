@@ -184,6 +184,7 @@ namespace karabo {
             static int getChunkStatus(const size_t channelIdx, const size_t chunkIdx);
 
             static void readAsContiguousBlock(karabo::io::BufferSet& buffer, karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx);
+            static void assureAllDataIsCopied(const size_t channelIdx, const size_t chunkIdx);
             static void cacheAsContiguousBlock(const size_t channelIdx, const size_t chunkIdx);
             static const SerializedChunk& readContiguousBlockCache(const size_t channelIdx, const size_t chunkIdx);
 
