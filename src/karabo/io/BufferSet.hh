@@ -156,6 +156,20 @@ namespace karabo {
              * @return 
              */
             size_t totalSize() const;
+            
+            
+            /**
+             * Will return true if any data in the BufferSet is a reference or a pointer to data not managed by
+             * the BufferSet.
+             */
+            inline bool containsNonCopies() const {
+                for (auto it = m_buffers.begin(); it != m_buffers.end(); ++it) {
+                    if(it->contentType != BufferContents::COPY) {
+                        return true;
+                    }
+                }
+                return false;
+            }
 
             /**
             * Append the buffers of this BufferSet to, for instance, a vector of boost asio buffers, const or mutable
