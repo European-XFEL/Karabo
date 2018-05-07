@@ -180,7 +180,7 @@ namespace karabo {
                 return all.tbuffer[0];
             }
             
-            karabo::util::ByteArray readSingleValue(std::istream& is, size_t size) const;
+            karabo::util::ByteArray readByteArrayAsCopy(std::istream& is, size_t size) const;
             
 
             template<typename T>

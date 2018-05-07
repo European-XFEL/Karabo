@@ -100,7 +100,8 @@ void HashBinarySerializer_Test::testSerialization() {
     m_hash.set<vector<Hash::Pointer> >("vec_hash_ptr", vector<Hash::Pointer>(10, boost::make_shared<Hash>(h)));
     Schema s;
     s.setParameterHash(h);
-    m_hash.set<Schema>("schema", s);
+    m_hash.set<Schema>("schema", s);    
+    m_hash.setAttribute("schema", "schema", s);
 
     BinarySerializer<Hash>::Pointer p = BinarySerializer<Hash>::create("Bin");
     vector<char> archive1;
@@ -123,6 +124,7 @@ void HashBinarySerializer_Test::testSerialization() {
     CPPUNIT_ASSERT_NO_THROW(hashContentTest(hash.get<Hash>("hash"), "std::vector<char>"));
     CPPUNIT_ASSERT_NO_THROW(hashContentTest(*hash.get<Hash::Pointer>("hash_ptr"), "std::vector<char> ptr"));
     CPPUNIT_ASSERT_NO_THROW(hashContentTest(hash.get<Schema>("schema").getParameterHash(), "std::vector<char> Schema"));
+    CPPUNIT_ASSERT_NO_THROW(hashContentTest(hash.getAttribute<Schema>("schema", "schema").getParameterHash(), "std::vector<char> Schema - Attribute"));
     const vector<Hash>& vecHash = hash.get<vector<Hash> >("vec_hash");
     CPPUNIT_ASSERT_EQUAL(100ul, vecHash.size());
     CPPUNIT_ASSERT_NO_THROW(hashContentTest(vecHash[0], "std::vector<char> vector<Hash>[0]")); // skip others...
@@ -145,6 +147,7 @@ void HashBinarySerializer_Test::testSerialization() {
     CPPUNIT_ASSERT_NO_THROW(hashContentTest(hashArchive1.get<Hash>("hash"), "BufferSet(true)"));
     CPPUNIT_ASSERT_NO_THROW(hashContentTest(*hashArchive1.get<Hash::Pointer>("hash_ptr"), "BufferSet(true) ptr"));
     CPPUNIT_ASSERT_NO_THROW(hashContentTest(hashArchive1.get<Schema>("schema").getParameterHash(), "BufferSet(true) Schema"));
+    CPPUNIT_ASSERT_NO_THROW(hashContentTest(hashArchive1.getAttribute<Schema>("schema", "schema").getParameterHash(), "BufferSet(true) Schema - Attribute"));
     const vector<Hash>& vecHash1 = hashArchive1.get<vector<Hash> >("vec_hash");
     CPPUNIT_ASSERT_EQUAL(100ul, vecHash1.size());
     CPPUNIT_ASSERT_NO_THROW(hashContentTest(vecHash1[0], "BufferSet(true) vector<Hash>[0]")); // skip others...
@@ -161,6 +164,7 @@ void HashBinarySerializer_Test::testSerialization() {
     CPPUNIT_ASSERT_NO_THROW(hashContentTest(hashArchive2.get<Hash>("hash"), "BufferSet(false)"));
     CPPUNIT_ASSERT_NO_THROW(hashContentTest(*hashArchive2.get<Hash::Pointer>("hash_ptr"), "BufferSet(false) ptr"));
     CPPUNIT_ASSERT_NO_THROW(hashContentTest(hashArchive2.get<Schema>("schema").getParameterHash(), "BufferSet(false) Schema"));
+    CPPUNIT_ASSERT_NO_THROW(hashContentTest(hashArchive2.getAttribute<Schema>("schema", "schema").getParameterHash(), "BufferSet(false) Schema - Attribute"));
     const vector<Hash>& vecHash2 = hashArchive2.get<vector<Hash> >("vec_hash");
     CPPUNIT_ASSERT_EQUAL(100ul, vecHash2.size());
     CPPUNIT_ASSERT_NO_THROW(hashContentTest(vecHash2[0], "BufferSet(false) vector<Hash>[0]")); // skip others...
@@ -217,6 +221,7 @@ void HashBinarySerializer_Test::hashContentTest(const Hash& innerHash, const std
     CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(serialisationType, 4., complexDattr.imag(), 1.e-15);
     CPPUNIT_ASSERT_EQUAL_MESSAGE(serialisationType, std::string("Hello Karabo"), innerHash.getAttribute<string>("str", "str"));
     // test here NDArray attribute?
+    
 
     // vector values
     auto vecBool = innerHash.get < vector<bool> >("vec_bool");

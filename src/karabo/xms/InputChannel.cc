@@ -600,31 +600,6 @@ namespace karabo {
         }
 
 
-        void InputChannel::swapBuffers() {
-            boost::mutex::scoped_lock lock(m_swapBuffersMutex);
-            std::swap(m_activeChunk, m_inactiveChunk);
-        }
-
-
-        bool InputChannel::canCompute() const {
-            //KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Current size of async read data cache: " << Memory::size(m_channelId, m_activeChunk);
-            //KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Is end of stream? " << m_isEndOfStream;
-            //KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: MinData " << this->getMinimumNumberOfData();
-            if ((this->getMinimumNumberOfData() == 0xFFFFFFFF)) {
-                if (m_isEndOfStream && m_respondToEndOfStream) {
-                    return false;
-                }
-                return true;
-            }
-
-            if (m_isEndOfStream && (Memory::size(m_channelId, m_activeChunk) == 0)) return false;
-
-            if (!m_isEndOfStream && (this->getMinimumNumberOfData() <= 0)) return false;
-
-            return Memory::size(m_channelId, m_activeChunk) >= this->getMinimumNumberOfData();
-        }
-
-
         void InputChannel::update() {
             try {
                 size_t nActiveData = 0;
@@ -653,6 +628,31 @@ namespace karabo {
             } catch (const std::exception& ex) {
                 KARABO_LOG_FRAMEWORK_ERROR << "InputChannel::update exception -- " << ex.what();
             }
+        }
+        
+        
+        void InputChannel::swapBuffers() {
+            boost::mutex::scoped_lock lock(m_swapBuffersMutex);
+            std::swap(m_activeChunk, m_inactiveChunk);
+        }
+
+
+        bool InputChannel::canCompute() const {
+            //KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Current size of async read data cache: " << Memory::size(m_channelId, m_activeChunk);
+            //KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Is end of stream? " << m_isEndOfStream;
+            //KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: MinData " << this->getMinimumNumberOfData();
+            if ((this->getMinimumNumberOfData() == 0xFFFFFFFF)) {
+                if (m_isEndOfStream && m_respondToEndOfStream) {
+                    return false;
+                }
+                return true;
+            }
+
+            if (m_isEndOfStream && (Memory::size(m_channelId, m_activeChunk) == 0)) return false;
+
+            if (!m_isEndOfStream && (this->getMinimumNumberOfData() <= 0)) return false;
+
+            return Memory::size(m_channelId, m_activeChunk) >= this->getMinimumNumberOfData();
         }
 
 
