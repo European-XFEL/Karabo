@@ -13,6 +13,7 @@
 #include <vector>
 
 #include <karabo/util/Factory.hh>
+#include <karabo/io/BufferSet.hh>
 
 #include "Connection.hh"
 
@@ -50,13 +51,14 @@ namespace karabo {
             typedef boost::function<void (const boost::system::error_code&, karabo::util::Hash&) > ReadHashHandler;
             typedef boost::function<void (const boost::system::error_code&, karabo::util::Hash::Pointer&) > ReadHashPointerHandler;
             typedef boost::function<void (const boost::system::error_code&, boost::shared_ptr<std::vector<char> >&) > ReadVectorPointerHandler;
-
+            
             typedef boost::function<void (const boost::system::error_code&, karabo::util::Hash&, std::vector<char>&) > ReadHashVectorHandler;
             typedef boost::function<void (const boost::system::error_code&, karabo::util::Hash&, std::string&) > ReadHashStringHandler;
             typedef boost::function<void (const boost::system::error_code&, karabo::util::Hash&, karabo::util::Hash&) > ReadHashHashHandler;
             typedef boost::function<void (const boost::system::error_code&, karabo::util::Hash::Pointer&, karabo::util::Hash::Pointer&) > ReadHashPointerHashPointerHandler;
             typedef boost::function<void (const boost::system::error_code&, karabo::util::Hash&, boost::shared_ptr<std::vector<char> >&) > ReadHashVectorPointerHandler;
-
+            
+            
             typedef boost::function<void (const boost::system::error_code&) > WriteCompleteHandler;
 
             virtual ~Channel() {
@@ -250,7 +252,8 @@ namespace karabo {
             virtual void readAsyncVectorPointer(const ReadVectorPointerHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
-
+            
+            
 
             //**************************************************************/
             //*              Asynchronous Read - With Header               */
@@ -263,6 +266,7 @@ namespace karabo {
             virtual void readAsyncHashVector(const ReadHashVectorHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
+                        
 
             /**
              * Asynchronously reads data into a hash header and a string. All memory management is done by the API.
@@ -297,7 +301,8 @@ namespace karabo {
             virtual void readAsyncHashVectorPointer(const ReadHashVectorPointerHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
-
+            
+            
             //**************************************************************/
             //*              Synchronous Write - No Header                 */
             //**************************************************************/
@@ -362,6 +367,15 @@ namespace karabo {
             /**
              * Synchronous write. The function blocks until all bytes are written.
              * @param header containing metadata for the data being written
+             * @param data vector of chars containing the data to be written
+             */
+            virtual void write(const karabo::util::Hash& header, const karabo::io::BufferSet& data) {
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
+            }
+            
+            /**
+             * Synchronous write. The function blocks until all bytes are written.
+             * @param header containing metadata for the data being written
              * @param data vector of chars containing the data to be written, passed as a shared pointer
              */
             virtual void write(const karabo::util::Hash& header, boost::shared_ptr<const std::vector<char> >& data) {
@@ -409,6 +423,19 @@ namespace karabo {
              *        which takes const boost::system::error_code& as its only argument.
              */
             virtual void writeAsyncVector(const std::vector<char>& data, const WriteCompleteHandler& handler) {
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
+            }
+            
+            /**
+             * Write data asynchronously, i.e. do not block upon call. Upon write completion a handler function is called 
+             * @param a karabo::io::BufferSet containing the data to be written.
+             * @param handler to be called upon write completion handler. Needs to be a function wrapped into a boost::function
+             *        which takes const boost::system::error_code& as its only argument.
+             * 
+             * Note: it is not guaranteed that the BufferSet manages the data it holds. Care must thus be taken that data is
+             * not altered or deleted before the async. write operation completes.
+             */
+            virtual void writeAsyncBufferSet(const karabo::io::BufferSet& data, const WriteCompleteHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
