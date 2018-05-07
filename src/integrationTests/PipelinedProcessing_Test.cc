@@ -174,7 +174,7 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut) {
     
     float transferTime = m_deviceClient->get<float>(receiver, "averageTransferTime") / 1000;
 
-    KARABO_LOG_FRAMEWORK_INFO_C("PipelinedProcessing_Test") << "Average transfer time (copy) is "<< transferTime << " milliseconds";
+    std::clog << "Average transfer time (copy, "<<(noShortCut ? "no short cut" : "short cut") <<") is "<< transferTime << " milliseconds" << std::endl;
 
     // Reset receiver and ask sender "not to copy"
     m_deviceClient->execute(receiver, "reset", KRB_TEST_MAX_TIMEOUT);
@@ -188,12 +188,10 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut) {
     
     float transferTime2 = m_deviceClient->get<float>(receiver, "averageTransferTime") / 1000;
     
-    KARABO_LOG_FRAMEWORK_INFO_C("PipelinedProcessing_Test") << "Average transfer time (no copy) is " << transferTime2 << " milliseconds";
+    std::clog << "Average transfer time (no copy, "<<(noShortCut ? "no short cut" : "short cut") <<") is " << transferTime2 << " milliseconds" << std::endl;
 
-    if(!noShortCut) {
-        CPPUNIT_ASSERT(transferTime2 < 1); //should take less than a ms.
-    } else {
-        putenv("KARABO_NO_PIPELINE_SHORTCUT=");
+    if(noShortCut) {
+        unsetenv("KARABO_NO_PIPELINE_SHORTCUT=");
     }
 }
 

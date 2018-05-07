@@ -183,6 +183,26 @@ namespace karabo {
             header.set<std::vector<unsigned int> >("byteSizes", byteSizes);            
             header.set("sourceInfo", *reinterpret_cast<const std::vector<karabo::util::Hash>*>(&metaData));
         }
+        
+        void Memory::assureAllDataIsCopied(const size_t channelIdx, const size_t chunkIdx) {
+            const Data& data = m_cache[channelIdx][chunkIdx];
+            
+            bool containsNonCopies = false;
+            for (Data::const_iterator it = data.begin(); it != data.end(); ++it) {
+                containsNonCopies |= (*it)->containsNonCopies();
+            }
+            if(!containsNonCopies) {
+                return; // all good, no need to copy
+            }
+            
+            Data copiedData(1, DataPointer(new DataType(true)));
+            
+            for (Data::const_iterator it = data.begin(); it != data.end(); ++it) {
+                (*it)->appendTo(*(copiedData.front()), false);                
+            }
+            copiedData.front()->rewind();
+            m_cache[channelIdx][chunkIdx] = copiedData;
+        }
 
         void Memory::cacheAsContiguousBlock(const size_t channelIdx, const size_t chunkIdx) {
             SerializedChunkPointer scp = SerializedChunkPointer(new SerializedChunk);
