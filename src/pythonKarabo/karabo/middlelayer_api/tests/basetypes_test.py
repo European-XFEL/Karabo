@@ -320,6 +320,17 @@ class Tests(TestCase):
         with self.assertRaises(AttributeError):
             range(a)
 
+    def test_displayType(self):
+        descriptor = Int32(displayType="hex")
+        a = QuantityValue(123, descriptor=descriptor)
+        self.assertEqual(str(a), "0x7b")
+        descriptor.displayType = "oct"
+        self.assertEqual(str(a), "0o173")
+        descriptor.displayType = "bin"
+        self.assertEqual(str(a), "0b1111011")
+        descriptor.displayType = "bin|0:a,1:b,2:c,3:d"
+        self.assertEqual(str(a), "{a|b|d}")
+
     def test_special(self):
         vps = QuantityValue(1, Unit.VOLT_PER_SECOND)
         aps = QuantityValue(1, Unit.AMPERE_PER_SECOND)
