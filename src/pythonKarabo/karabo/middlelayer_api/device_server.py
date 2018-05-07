@@ -522,8 +522,9 @@ class BoundDeviceServer(DeviceServerBase):
             for p in self.processes.values():
                 p.kill()
         self.processes.clear()
-
         yield from super(BoundDeviceServer, self).slotKillServer()
+
+        return self.serverId
 
 
 class DeviceServer(MiddleLayerDeviceServer, BoundDeviceServer):
