@@ -16,6 +16,7 @@ import os
 import queue
 import signal
 import socket
+import sys
 import time
 import threading
 import traceback
@@ -524,7 +525,9 @@ class EventLoop(SelectorEventLoop):
         self.set_default_executor(ThreadPoolExecutor(200))
         self.set_exception_handler(EventLoop.exceptionHandler)
         self.logger = logging.getLogger("Event Loop")
-        faulthandler.register(signal.SIGALRM, all_threads=False)
+        # we overwrite sys.stderr for macros, so sys.__stderr__ it is
+        faulthandler.register(signal.SIGALRM, file=sys.__stderr__,
+                              all_threads=False)
 
     def exceptionHandler(self, context):
         try:
