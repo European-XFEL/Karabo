@@ -570,7 +570,7 @@ namespace karabo {
                 OutputChannel::Pointer channel = this->getOutputChannel(channelName);
                 // Provide proper meta data information, as well as correct train- and timestamp
                 OutputChannel::MetaData meta(m_instanceId + ":" + channelName, timestamp);
-                channel->write(data, meta);
+                channel->write(data, meta, false);  // false means "no copy"
                 channel->update();
             }
 

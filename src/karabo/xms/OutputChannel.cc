@@ -218,8 +218,9 @@ namespace karabo {
 
 
         void OutputChannel::onTcpChannelError(const karabo::net::ErrorCode& error, const karabo::net::Channel::Pointer& channel) {
-            KARABO_LOG_FRAMEWORK_INFO << "Tcp channel error on \"" << m_instanceId << "\", code #" << error.value() << " -- \""
+            KARABO_LOG_FRAMEWORK_INFO << "Tcp channel error on \"" << m_instanceId << "\", code #" << error.value() << " -- \"" 
                     << error.message() << "\".  Channel closed.";
+
             // Unregister channel
             onInputGone(channel);
         }
@@ -710,7 +711,10 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_TRACE << "OUTPUT Now distributing (local memory)";
             try {
                 if (tcpChannel->isOpen()) {
-                    tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), std::vector<char>());
+                    // in case of short-cutting the receiver may async. work on data the sender is already altering again.
+                    // we assure that the contents in the chunk the receiver gets sent have been copied once
+                    Memory::assureAllDataIsCopied(m_channelId, chunkId);
+                    tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), karabo::io::BufferSet());
                 }
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::distributeLocal  :  " << e.what();
@@ -727,7 +731,7 @@ namespace karabo {
 
             if (tcpChannel) {
                 karabo::util::Hash header;
-                std::vector<char> data;
+                karabo::io::BufferSet data(false);
                 Memory::readAsContiguousBlock(data, header, m_channelId, chunkId);
 
                 try {
@@ -737,6 +741,7 @@ namespace karabo {
                 } catch (const std::exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::distributeRemote  :  " << e.what();
                 }
+                data.clear();
             }
 
             unregisterWriterFromChunk(chunkId);
@@ -801,7 +806,10 @@ namespace karabo {
             // Writing no data signals input to read from memory
             try {
                 if (tcpChannel->isOpen()) {
-                    tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), std::vector<char>());
+                    // in case of short-cutting the receiver may async. work on data the sender is already altering again.
+                    // we assure that the contents in the chunk the receiver gets sent have been copied once
+                    Memory::assureAllDataIsCopied(m_channelId, chunkId);
+                    tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), karabo::io::BufferSet());
                 }
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::copyLocal  :  " << e.what();
@@ -820,7 +828,7 @@ namespace karabo {
 
             if (tcpChannel) {
                 karabo::util::Hash header;
-                std::vector<char> data;
+                karabo::io::BufferSet data(false);
                 Memory::readAsContiguousBlock(data, header, m_channelId, chunkId);
 
                 try {
@@ -830,6 +838,7 @@ namespace karabo {
                 } catch (const std::exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::copyRemote  :  " << e.what();
                 }
+                data.clear();
             }
 
             unregisterWriterFromChunk(chunkId);
@@ -842,24 +851,24 @@ namespace karabo {
         }
 
 
-        void OutputChannel::write(const karabo::util::Hash& data, const OutputChannel::MetaData& metaData) {
-            Memory::write(data, m_channelId, m_chunkId, metaData);
+        void OutputChannel::write(const karabo::util::Hash& data, const OutputChannel::MetaData& metaData, bool copyAllData) {
+            Memory::write(data, m_channelId, m_chunkId, metaData, copyAllData);
         }
 
 
-        void OutputChannel::write(const karabo::util::Hash& data) {
+        void OutputChannel::write(const karabo::util::Hash& data, bool copyAllData) {
             OutputChannel::MetaData meta(/*source*/ m_instanceId + ":" + m_channelName, /*timestamp*/ karabo::util::Timestamp());
-            Memory::write(data, m_channelId, m_chunkId, meta);
+            Memory::write(data, m_channelId, m_chunkId, meta, copyAllData);
         }
 
 
         void OutputChannel::write(const karabo::util::Hash::Pointer& data, const OutputChannel::MetaData& metaData) {
-            write(*data, metaData);
+            write(*data, metaData, true);
         }
 
 
         void OutputChannel::write(const karabo::util::Hash::Pointer& data) {
-            write(*data);
+            write(*data, true);
         }
     }
 }

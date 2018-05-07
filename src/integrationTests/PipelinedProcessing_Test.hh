@@ -34,6 +34,7 @@ private:
     void appTestRunner();
     void testGetOutputChannelSchema();
     void testPipe();
+    void testProfileTransferTimes(bool noShortCut=false);
 
     template <typename T>
     bool pollDeviceProperty(const std::string& deviceId,
@@ -42,6 +43,7 @@ private:
                             const int maxTimeout) const;
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
+    karabo::core::DeviceServer::Pointer m_deviceServer2;
     boost::thread m_eventLoopThread;
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
