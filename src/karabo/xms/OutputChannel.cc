@@ -711,6 +711,9 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_TRACE << "OUTPUT Now distributing (local memory)";
             try {
                 if (tcpChannel->isOpen()) {
+                    // in case of short-cutting the receiver may async. work on data the sender is already altering again.
+                    // we assure that the contents in the chunk the receiver gets sent have been copied once
+                    Memory::assureAllDataIsCopied(m_channelId, chunkId);
                     tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), karabo::io::BufferSet());
                 }
             } catch (const std::exception& e) {
@@ -803,6 +806,9 @@ namespace karabo {
             // Writing no data signals input to read from memory
             try {
                 if (tcpChannel->isOpen()) {
+                    // in case of short-cutting the receiver may async. work on data the sender is already altering again.
+                    // we assure that the contents in the chunk the receiver gets sent have been copied once
+                    Memory::assureAllDataIsCopied(m_channelId, chunkId);
                     tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), karabo::io::BufferSet());
                 }
             } catch (const std::exception& e) {
