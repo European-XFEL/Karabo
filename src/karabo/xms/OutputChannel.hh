@@ -169,6 +169,9 @@ namespace karabo {
              * @param data input Hash object
              * @param metaData a MetaData object containing meta data for this data token.
              * @param copyAllData If false, serialization is optimized to avoid copies for big data.
+             * 
+             * Note: when using copyAllData==false, data must stay untouched and in scope until update() has been
+             * called for the channel.
              */
             void write(const karabo::util::Hash& data, const Memory::MetaData& metaData, bool copyAllData=true);
             
@@ -178,6 +181,9 @@ namespace karabo {
              * name are used as data source.
              * @param data input Hash object
              * @param copyAllData If false, serialization is optimized to avoid copies for big data.
+             * 
+             * Note: when using copyAllData==false, data must stay untouched and in scope until update() has been
+             * called for the channel.
              */
             void write(const karabo::util::Hash& data, bool copyAllData=true);
 
@@ -185,18 +191,16 @@ namespace karabo {
              * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
              * @param data shared pointer to input Hash object
              * @param metaData a MetaData object containing meta data for this data token.
-             * @param copyAllData If false, serialization is optimized to avoid copies for big data.
              */
-            KARABO_DEPRECATED void write(const karabo::util::Hash::Pointer& data, const Memory::MetaData& metaData, bool copyAllData=true);
+            KARABO_DEPRECATED void write(const karabo::util::Hash::Pointer& data, const Memory::MetaData& metaData);
             
             /**
              * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
              * Metadata is initialized to default values. Namely the sending devices device id and the output channel's
              * name are used as data source.
              * @param data shared pointer to input Hash object
-             * @param copyAllData If false, serialization is optimized to avoid copies for big data.
              */
-            KARABO_DEPRECATED void write(const karabo::util::Hash::Pointer& data, bool copyAllData=true);
+            KARABO_DEPRECATED void write(const karabo::util::Hash::Pointer& data);
 
             void update();
 
@@ -253,15 +257,15 @@ namespace karabo {
 
             unsigned int getNextSharedInputIdx();
 
-            void distributeLocal(unsigned int chunkId, const InputChannelInfo & channelInfo, bool copy_all_data);
+            void distributeLocal(unsigned int chunkId, const InputChannelInfo & channelInfo);
 
-            void distributeRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo, bool copy_all_data);
+            void distributeRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo);
 
             void copy(unsigned int chunkId);
 
-            void copyLocal(const unsigned int& chunkId, const InputChannelInfo & channelInfo, bool copy_all_data);
+            void copyLocal(const unsigned int& chunkId, const InputChannelInfo & channelInfo);
 
-            void copyRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo, bool copy_all_data);
+            void copyRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo);
 
             /// Provide a string identifying this output channel (useful in DEBUG logging)
             std::string debugId() const;

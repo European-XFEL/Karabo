@@ -13,7 +13,7 @@ namespace karabo {
         typedef std::vector<char> BufferType;
 
 
-        BufferSet::BufferSet(bool copy_all_data) : m_currentBuffer(0), m_copyAllData(copy_all_data) {
+        BufferSet::BufferSet(bool copyAllData) : m_currentBuffer(0), m_copyAllData(copyAllData) {
               m_buffers.push_back(Buffer());          
         };
 
@@ -155,7 +155,7 @@ namespace karabo {
         std::ostream& operator<<(std::ostream& os, const BufferSet& bs) {
             using namespace karabo::util;
             os << "BufferSet content:\n";
-            os << "\t\"copy_all_data\" flag is\t" << std::boolalpha << bs.m_copyAllData << '\n';
+            os << "\t\"copyAllData\" flag is\t" << std::boolalpha << bs.m_copyAllData << '\n';
             os << "\tCurrent buffer index is\t" << bs.m_currentBuffer << '\n';
             
             std::vector<decltype(bs.m_buffers.front().size)> size_vec;

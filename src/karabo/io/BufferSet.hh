@@ -54,7 +54,7 @@ namespace karabo {
                 std::size_t size;
                 int contentType;
                 
-                explicit Buffer() {                    
+                Buffer() {                    
                     vec = boost::shared_ptr<BufferType>(new BufferType());
                     ptr = boost::shared_ptr<BufferType::value_type>(vec->data(), boost::null_deleter());
                     size = 0;
@@ -81,7 +81,6 @@ namespace karabo {
             
             /**
              * Add a buffer to the BufferSet
-             * @param assureSizeCorrect, assure the size of the previous buffer is updated. Usually true, except when having added a ByteArray before
              */
             void add();
 
@@ -188,16 +187,9 @@ namespace karabo {
 
         private:
 
-            //TODO: Sometimes m_bufferPointers are pointing to internal arrays in m_bufferVectors, but ...
-            // ... it is not consistent and, in future, this should be provided:  m_bufferPointers should
-            // always point either to some m_bufferVectors items (copy) or to some external memory (no-copy).
-            // As a result the code can be simplified by using only m_bufferPointers (view) and m_bufferVectors
-            // will serve to be a data storage.
             std::vector<Buffer> m_buffers;
             mutable size_t m_currentBuffer;
             bool m_copyAllData;
-
-            
 
         };
     }
