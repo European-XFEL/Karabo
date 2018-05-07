@@ -551,7 +551,7 @@ namespace karabo {
             return result;
         }
         
-        karabo::util::ByteArray HashBinarySerializer::readSingleValue(std::istream& is, size_t size) const {
+        karabo::util::ByteArray HashBinarySerializer::readByteArrayAsCopy(std::istream& is, size_t size) const {
             ByteArray result(boost::shared_ptr<char>(new char[size], &byteArrayDeleter), size);
             is.read(result.first.get(), size);
             return result;
@@ -646,7 +646,7 @@ namespace karabo {
                             is.rdbuf()->pubsetbuf(cb.data(), cb.size());
                             is.rdbuf()->pubseekpos(0);
                         } else { // bytearray wasn't separated 
-                            value = readSingleValue(is, size);                            
+                            value = readByteArrayAsCopy(is, size);                            
                         }                                                
                         break;
                 }

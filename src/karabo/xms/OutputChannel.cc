@@ -416,8 +416,8 @@ namespace karabo {
             int chunkId = chunkIds.front();
             chunkIds.pop_front();
             KARABO_LOG_FRAMEWORK_DEBUG << "Distributing from queue: " << chunkId;
-            if (channelInfo.get<std::string > ("memoryLocation") == "local") distributeLocal(chunkId, channelInfo, true);
-            else distributeRemote(chunkId, channelInfo, true);
+            if (channelInfo.get<std::string > ("memoryLocation") == "local") distributeLocal(chunkId, channelInfo);
+            else distributeRemote(chunkId, channelInfo);
         }
 
 
@@ -426,8 +426,8 @@ namespace karabo {
             int chunkId = chunkIds.front();
             chunkIds.pop_front();
             KARABO_LOG_FRAMEWORK_DEBUG << "Copying from queue: " << chunkId;
-            if (channelInfo.get<std::string > ("memoryLocation") == "local") copyLocal(chunkId, channelInfo, true);
-            else copyRemote(chunkId, channelInfo, true);
+            if (channelInfo.get<std::string > ("memoryLocation") == "local") copyLocal(chunkId, channelInfo);
+            else copyRemote(chunkId, channelInfo);
         }
 
 
@@ -601,10 +601,10 @@ namespace karabo {
                     eraseSharedInput(instanceId);
                     if (channelInfo.get<std::string > ("memoryLocation") == "local") {
                         KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Now distributing data (local)";
-                        distributeLocal(chunkId, channelInfo, false);
+                        distributeLocal(chunkId, channelInfo);
                     } else {
                         KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Now distributing data (remote)";
-                        distributeRemote(chunkId, channelInfo, false);
+                        distributeRemote(chunkId, channelInfo);
                     }
                 } else { // Not found
                     if (m_onNoSharedInputChannelAvailable == "drop") {
@@ -627,9 +627,9 @@ namespace karabo {
                         }
                         KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " found (shared) input channel after waiting, distributing now";
                         if (channelInfo.get<std::string > ("memoryLocation") == "local") {
-                            distributeLocal(chunkId, channelInfo, false);
+                            distributeLocal(chunkId, channelInfo);
                         } else {
-                            distributeRemote(chunkId, channelInfo, false);
+                            distributeRemote(chunkId, channelInfo);
                         }
                     } else {
                         // We should never be here!!
@@ -644,10 +644,10 @@ namespace karabo {
                         if (instanceId == channelInfo.get<std::string>("instanceId")) {
                             if (channelInfo.get<std::string > ("memoryLocation") == "local") {
                                 KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Distributing data (local)";
-                                distributeLocal(chunkId, channelInfo, false);
+                                distributeLocal(chunkId, channelInfo);
                             } else {
                                 KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Distributing data (remote)";
-                                distributeRemote(chunkId, channelInfo, false);
+                                distributeRemote(chunkId, channelInfo);
                             }
                             break;
                         }
@@ -675,10 +675,10 @@ namespace karabo {
                             if (instanceId == channelInfo.get<std::string>("instanceId")) {
                                 if (channelInfo.get<std::string > ("memoryLocation") == "local") {
                                     KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Now distributing data (local)";
-                                    distributeLocal(chunkId, channelInfo, false);
+                                    distributeLocal(chunkId, channelInfo);
                                 } else {
                                     KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Now distributing data (remote)";
-                                    distributeRemote(chunkId, channelInfo, false);
+                                    distributeRemote(chunkId, channelInfo);
                                 }
                                 break;
                             }
@@ -701,7 +701,7 @@ namespace karabo {
         }
 
 
-        void OutputChannel::distributeLocal(unsigned int chunkId, const InputChannelInfo& channelInfo, bool copy_all_data) {
+        void OutputChannel::distributeLocal(unsigned int chunkId, const InputChannelInfo& channelInfo) {
             using namespace karabo::net;
 
             Channel::Pointer tcpChannel = channelInfo.get<ChannelWeakPointer > ("tcpChannel").lock();
@@ -711,7 +711,7 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_TRACE << "OUTPUT Now distributing (local memory)";
             try {
                 if (tcpChannel->isOpen()) {
-                    tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), karabo::io::BufferSet(copy_all_data));
+                    tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), karabo::io::BufferSet());
                 }
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::distributeLocal  :  " << e.what();
@@ -721,14 +721,14 @@ namespace karabo {
         }
 
 
-        void OutputChannel::distributeRemote(const unsigned int& chunkId, const InputChannelInfo& channelInfo, bool copy_all_data) {
+        void OutputChannel::distributeRemote(const unsigned int& chunkId, const InputChannelInfo& channelInfo) {
             using namespace karabo::net;
 
             Channel::Pointer tcpChannel = channelInfo.get<ChannelWeakPointer > ("tcpChannel").lock();
 
             if (tcpChannel) {
                 karabo::util::Hash header;
-                karabo::io::BufferSet data(copy_all_data);
+                karabo::io::BufferSet data(false);
                 Memory::readAsContiguousBlock(data, header, m_channelId, chunkId);
 
                 try {
@@ -761,10 +761,10 @@ namespace karabo {
                     eraseCopyInput(instanceId);
                     if (channelInfo.get<std::string > ("memoryLocation") == "local") {
                         KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Now copying data (local)";
-                        copyLocal(chunkId, channelInfo, false);
+                        copyLocal(chunkId, channelInfo);
                     } else {
                         KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Now copying data (remote)";
-                        copyRemote(chunkId, channelInfo, false);
+                        copyRemote(chunkId, channelInfo);
                     }
                 } else if (onSlowness == "drop") {
                     unregisterWriterFromChunk(chunkId);
@@ -783,17 +783,17 @@ namespace karabo {
                     eraseCopyInput(instanceId);
                     if (channelInfo.get<std::string > ("memoryLocation") == "local") {
                         KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Now copying data (local)";
-                        copyLocal(chunkId, channelInfo, false);
+                        copyLocal(chunkId, channelInfo);
                     } else {
                         KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Now copying data (remote)";
-                        copyRemote(chunkId, channelInfo, false);
+                        copyRemote(chunkId, channelInfo);
                     }
                 }
             }
         }
 
 
-        void OutputChannel::copyLocal(const unsigned int& chunkId, const InputChannelInfo& channelInfo, bool copy_all_data) {
+        void OutputChannel::copyLocal(const unsigned int& chunkId, const InputChannelInfo& channelInfo) {
             using namespace karabo::net;
 
             Channel::Pointer tcpChannel = channelInfo.get<ChannelWeakPointer > ("tcpChannel").lock();
@@ -803,7 +803,7 @@ namespace karabo {
             // Writing no data signals input to read from memory
             try {
                 if (tcpChannel->isOpen()) {
-                    tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), karabo::io::BufferSet(copy_all_data));
+                    tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), karabo::io::BufferSet());
                 }
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::copyLocal  :  " << e.what();
@@ -815,14 +815,14 @@ namespace karabo {
         }
 
 
-        void OutputChannel::copyRemote(const unsigned int& chunkId, const InputChannelInfo& channelInfo, bool copy_all_data) {
+        void OutputChannel::copyRemote(const unsigned int& chunkId, const InputChannelInfo& channelInfo) {
             using namespace karabo::net;
 
             Channel::Pointer tcpChannel = channelInfo.get<ChannelWeakPointer > ("tcpChannel").lock();
 
             if (tcpChannel) {
                 karabo::util::Hash header;
-                karabo::io::BufferSet data(copy_all_data);
+                karabo::io::BufferSet data(false);
                 Memory::readAsContiguousBlock(data, header, m_channelId, chunkId);
 
                 try {
@@ -845,24 +845,24 @@ namespace karabo {
         }
 
 
-        void OutputChannel::write(const karabo::util::Hash& data, const OutputChannel::MetaData& metaData, bool copy_all_data) {
-            Memory::write(data, m_channelId, m_chunkId, metaData, copy_all_data);
+        void OutputChannel::write(const karabo::util::Hash& data, const OutputChannel::MetaData& metaData, bool copyAllData) {
+            Memory::write(data, m_channelId, m_chunkId, metaData, copyAllData);
         }
 
 
-        void OutputChannel::write(const karabo::util::Hash& data, bool copy_all_data) {
+        void OutputChannel::write(const karabo::util::Hash& data, bool copyAllData) {
             OutputChannel::MetaData meta(/*source*/ m_instanceId + ":" + m_channelName, /*timestamp*/ karabo::util::Timestamp());
-            Memory::write(data, m_channelId, m_chunkId, meta, copy_all_data);
+            Memory::write(data, m_channelId, m_chunkId, meta, copyAllData);
         }
 
 
-        void OutputChannel::write(const karabo::util::Hash::Pointer& data, const OutputChannel::MetaData& metaData, bool copy_all_data) {
-            write(*data, metaData, copy_all_data);
+        void OutputChannel::write(const karabo::util::Hash::Pointer& data, const OutputChannel::MetaData& metaData) {
+            write(*data, metaData, true);
         }
 
 
-        void OutputChannel::write(const karabo::util::Hash::Pointer& data, bool copy_all_data) {
-            write(*data, copy_all_data);
+        void OutputChannel::write(const karabo::util::Hash::Pointer& data) {
+            write(*data, true);
         }
     }
 }

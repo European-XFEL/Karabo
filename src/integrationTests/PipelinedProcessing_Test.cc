@@ -57,8 +57,8 @@ void PipelinedProcessing_Test::appTestRunner() {
 
     testGetOutputChannelSchema();
     testPipe();
-    testProfileTransferTimes();
-    testProfileTransferTimes(true);
+    testProfileTransferTimes(false); // allows local short-cutting on PP
+    testProfileTransferTimes(true); // forces PP data to go via loopback TCP
 }
 
 
@@ -192,6 +192,8 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut) {
 
     if(!noShortCut) {
         CPPUNIT_ASSERT(transferTime2 < 1); //should take less than a ms.
+    } else {
+        putenv("KARABO_NO_PIPELINE_SHORTCUT=");
     }
 }
 
