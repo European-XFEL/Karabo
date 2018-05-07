@@ -35,7 +35,7 @@ namespace karabo {
                 VECTOR_POINTER,
                 HASH_VECTOR_POINTER,
                 HASH_POINTER,
-                HASH_POINTER_HASH_POINTER,
+                HASH_POINTER_HASH_POINTER,                
             };
 
             TcpConnection::Pointer m_connectionPointer;
@@ -188,7 +188,7 @@ namespace karabo {
             void readAsyncHashPointer(const ReadHashPointerHandler& handler);
 
             void readAsyncVectorPointer(const ReadVectorPointerHandler& handler);
-
+                        
             //**************************************************************/
             //*              Asynchronous Read - With Header               */
             //**************************************************************/
@@ -201,7 +201,7 @@ namespace karabo {
 
             void readAsyncHashPointerHashPointer(const ReadHashPointerHashPointerHandler& handler);
 
-            void readAsyncHashVectorPointer(const ReadHashVectorPointerHandler& handler);
+            void readAsyncHashVectorPointer(const ReadHashVectorPointerHandler& handler);                        
 
             void readAsyncRaw(char* data, size_t& size, const ReadRawHandler& handler);
 
@@ -212,13 +212,17 @@ namespace karabo {
             void write(const karabo::util::Hash& data);
 
             void write(const karabo::util::Hash& header, const boost::shared_ptr<std::vector<char> >& body);
+            
+            void write(const karabo::util::Hash& header, const karabo::io::BufferSet& body);
+            
+            void write(const char* header, const size_t& headerSize, const karabo::io::BufferSet& body);
 
             void write(const karabo::util::Hash& header, const karabo::util::Hash& body);
 
             void writeAsyncRaw(const char* data, const size_t& size, const WriteCompleteHandler& handler);
 
             void writeAsyncVector(const std::vector<char>& data, const WriteCompleteHandler& handler);
-
+            
             void writeAsyncVectorPointer(const boost::shared_ptr<std::vector<char> >& data, const WriteCompleteHandler& handler);
 
             void writeAsyncHash(const karabo::util::Hash& data, const WriteCompleteHandler& handler);

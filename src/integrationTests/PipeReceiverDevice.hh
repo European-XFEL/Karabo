@@ -40,10 +40,15 @@ namespace karabo {
         void initialization();
 
         void onInput(const karabo::xms::InputChannel::Pointer& input);
-
+        
         void onData(const karabo::util::Hash& data, const xms::InputChannel::MetaData& metaData);
+        void onInputProfile(const xms::InputChannel::Pointer& input);
+        void reset();
 
         void onEndOfStream(const karabo::xms::InputChannel::Pointer& input);
+        void onEndOfStreamProfile(const karabo::xms::InputChannel::Pointer& input);
+        
+        std::vector<unsigned long long> m_transferTimes;
     };
 }
 

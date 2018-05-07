@@ -166,23 +166,31 @@ namespace karabo {
 
             /**
              * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
-             * @param data
-             * @metaData a MetaData object containing meta data for this data token.
+             * @param data input Hash object
+             * @param metaData a MetaData object containing meta data for this data token.
+             * @param copyAllData If false, serialization is optimized to avoid copies for big data.
+             * 
+             * Note: when using copyAllData==false, data must stay untouched and in scope until update() has been
+             * called for the channel.
              */
-            void write(const karabo::util::Hash& data, const Memory::MetaData& metaData);
+            void write(const karabo::util::Hash& data, const Memory::MetaData& metaData, bool copyAllData=true);
             
             /**
              * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
              * Metadata is initialized to default values. Namely the sending devices device id and the output channel's
              * name are used as data source.
-             * @param data
+             * @param data input Hash object
+             * @param copyAllData If false, serialization is optimized to avoid copies for big data.
+             * 
+             * Note: when using copyAllData==false, data must stay untouched and in scope until update() has been
+             * called for the channel.
              */
-            void write(const karabo::util::Hash& data);
+            void write(const karabo::util::Hash& data, bool copyAllData=true);
 
             /**
              * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
-             * @param data
-             * @metaData a MetaData object containing meta data for this data token.
+             * @param data shared pointer to input Hash object
+             * @param metaData a MetaData object containing meta data for this data token.
              */
             KARABO_DEPRECATED void write(const karabo::util::Hash::Pointer& data, const Memory::MetaData& metaData);
             
@@ -190,7 +198,7 @@ namespace karabo {
              * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
              * Metadata is initialized to default values. Namely the sending devices device id and the output channel's
              * name are used as data source.
-             * @param data
+             * @param data shared pointer to input Hash object
              */
             KARABO_DEPRECATED void write(const karabo::util::Hash::Pointer& data);
 
