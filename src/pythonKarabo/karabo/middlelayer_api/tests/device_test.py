@@ -1,10 +1,11 @@
-from asyncio import coroutine
+from asyncio import coroutine, sleep
 from contextlib import contextmanager
 from unittest import main
 
 import numpy as np
 
-from karabo.middlelayer import AccessMode, getDevice
+from karabo.common.states import State
+from karabo.middlelayer import AccessMode, getDevice, executeNoWait, Int32
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import getSchema
 from karabo.middlelayer_api.hash import Float, Hash, Slot, VectorHash
@@ -30,6 +31,10 @@ class MyNode(Configurable):
 class MyDevice(Device):
     __version__ = "1.2"
 
+    counter = Int32(
+        defaultValue=0,
+    )
+
     # an output channel without schema
     output = OutputChannel()
     dataOutput = OutputChannel(Data)
@@ -46,10 +51,22 @@ class MyDevice(Device):
         defaultValue=[Hash("x", 2.0, "y", 5.6)],
         accessMode=AccessMode.RECONFIGURABLE)
 
-    @Slot(displayedName="MySlot")
+    @Slot(displayedName="Increase", allowedStates=[State.ON])
     @coroutine
-    def mySlot(self):
-        pass
+    def increaseCounter(self):
+        self.state = State.ACQUIRING
+        self.counter += 1
+        yield from sleep(0.2)
+        self.state = State.ON
+
+    @Slot(displayedName="start")
+    @coroutine
+    def start(self):
+        return 5
+
+    @coroutine
+    def onInitialization(self):
+        self.state = State.ON
 
 
 class Tests(DeviceTest):
@@ -108,10 +125,22 @@ class Tests(DeviceTest):
     def test_lastCommand(self):
         self.assertEqual(self.myDevice.lastCommand, "")
         with (yield from getDevice("MyDevice")) as d:
-            yield from d.mySlot()
-        self.assertEqual(self.myDevice.lastCommand, "mySlot")
+            yield from d.start()
+        self.assertEqual(self.myDevice.lastCommand, "start")
         yield from getSchema("MyDevice")
-        self.assertEqual(self.myDevice.lastCommand, "mySlot")
+        self.assertEqual(self.myDevice.lastCommand, "start")
+
+    @async_tst
+    def test_two_calls_concurrent(self):
+        self.assertEqual(self.myDevice.counter, 0)
+        with (yield from getDevice("MyDevice")) as d:
+            yield from d.increaseCounter()
+        self.assertEqual(self.myDevice.counter, 1)
+        # Concurrent slot calls, one will return due to state block
+        executeNoWait("MyDevice", "increaseCounter")
+        executeNoWait("MyDevice", "increaseCounter")
+        yield from sleep(1)
+        self.assertEqual(self.myDevice.counter, 2)
 
     @async_tst
     def test_clear_table_external(self):
