@@ -10,7 +10,6 @@
 #include "HashXmlSerializer.hh"
 
 #include "SchemaXmlSerializer.hh"
-#include "karabo/tests/io/HashXmlSerializer_Test.hh"
 
 using namespace karabo::util;
 using namespace std;

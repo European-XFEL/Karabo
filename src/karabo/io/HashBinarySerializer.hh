@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include "BinarySerializer.hh"
+#include "BufferSet.hh"
 
 /**
  * The main European XFEL namespace
@@ -16,7 +17,7 @@
 namespace karabo {
 
     namespace io {
-
+        
         /**
          * @class HashBinarySerializer
          * @brief The HashBinarySerializer provides an implementation of BinarySerializer
@@ -38,12 +39,16 @@ namespace karabo {
             HashBinarySerializer(const karabo::util::Hash& input);
 
             virtual void save(const karabo::util::Hash& object, std::vector<char>& buffer);
+            
+            virtual void save(const karabo::util::Hash& object, BufferSet& buffers);
 
             virtual void load(karabo::util::Hash& object, const char* archive, const size_t nBytes);
+            
+            virtual void load(karabo::util::Hash& object, const BufferSet& buffers);
 
             void save(const std::vector<karabo::util::Hash>& objects, std::vector<char>& archive);
 
-            void load(std::vector<karabo::util::Hash>& objects, const char* archive, const size_t nBytes);
+            void load(std::vector<karabo::util::Hash>& objects, const char* archive, const size_t nBytes);            
 
             /**
              * Destructor.
@@ -58,9 +63,12 @@ namespace karabo {
         private: // functions
 
             void writeHash(const karabo::util::Hash& hash, std::vector<char>& buffer) const;
+            void writeHash(const karabo::util::Hash& hash, BufferSet& buffers) const;
             void writeNode(const karabo::util::Hash::Node& element, std::vector<char>& buffer) const;
+            void writeNodeMultiBuffer(const karabo::util::Hash::Node& element, BufferSet& buffers) const;
             void writeAttributes(const karabo::util::Hash::Attributes& attributes, std::vector<char>& buffer) const;
             void writeAny(const boost::any& value, const karabo::util::Types::ReferenceType type, std::vector<char>& buffer) const;
+            void writeAny(const boost::any& value, const karabo::util::Types::ReferenceType type, BufferSet& buffers) const;
 
             template<typename T>
             inline void writeSingleValue(std::vector<char>& buffer, const T& value) const {
@@ -69,6 +77,20 @@ namespace karabo {
                 const size_t pos = buffer.size();
                 buffer.resize(pos + n);
                 std::memcpy(&buffer[pos], src, n);
+            }
+            
+            template<typename T>
+            inline void writeSingleValue(BufferSet& buffers, const T& value) const {
+                const char* src = reinterpret_cast<const char*> (&value);
+                const size_t n = sizeof (value);
+                const size_t pos = buffers.back().size();
+                buffers.back().resize(pos + n);
+                std::memcpy(&(buffers.back())[pos], src, n);
+            }
+            
+            
+            inline void writeSingleValue(BufferSet& buffers, const karabo::util::ByteArray& value) const {                
+                buffers.emplaceBack(value);
             }
 
             template<typename T>
@@ -106,6 +128,8 @@ namespace karabo {
             }
 
             inline void writeSingleValue(std::vector<char>& buffer, const boost::any&, const karabo::util::Types::ReferenceType type) const;
+            
+            inline void writeSingleValue(BufferSet& buffers, const boost::any&, const karabo::util::Types::ReferenceType type) const;
 
             inline void writeSequence(std::vector<char>& buffer, const boost::any&, const karabo::util::Types::ReferenceType type) const;
 
@@ -118,12 +142,30 @@ namespace karabo {
             inline void writeSize(std::vector<char>& buffer, const unsigned size) const;
 
             void readHash(karabo::util::Hash& hash, std::istream& is) const;
+            
+            void readHash(karabo::util::Hash& hash, std::istream& is, const BufferSet& buffers) const;
 
             void readNode(karabo::util::Hash::Node& element, std::istream& is) const;
+            
+            void readNode(karabo::util::Hash::Node& element, std::istream& is, const BufferSet& buffers) const;
 
             void readAttributes(karabo::util::Hash::Attributes& attributes, std::istream& is) const;
 
             void readAny(boost::any& value, const karabo::util::Types::ReferenceType type, std::istream& is) const;
+            
+            void readAny(boost::any& value, const karabo::util::Types::ReferenceType type, std::istream& is, const BufferSet& buffers) const;
+            
+            inline bool nextBufIfEos(std::istream& is, const BufferSet& buffers) const {
+                if(is.tellg() == -1 || (size_t)is.tellg() >= buffers.current().size() - 1) { //buffers of zero size will also pass through in this way
+                    if ( buffers.next()) {
+                        auto& cb = buffers.current();
+                        is.rdbuf()->pubsetbuf(cb.data(), cb.size());
+                        is.rdbuf()->pubseekpos(0);
+                        return true;
+                    }
+                }
+                return false;
+            }
 
             template<typename T>
             inline T readSingleValue(std::istream& is) const {
@@ -137,6 +179,9 @@ namespace karabo {
                 is.read(all.buffer, sizeof (T));
                 return all.tbuffer[0];
             }
+            
+            karabo::util::ByteArray readByteArrayAsCopy(std::istream& is, size_t size) const;
+            
 
             template<typename T>
             inline std::complex<T> readComplexValue(std::istream& is) const {
@@ -164,10 +209,10 @@ namespace karabo {
             }
 
             inline void readSingleValue(std::istream& is, boost::any& value, const karabo::util::Types::ReferenceType type) const;
+            inline void readSingleValue(std::istream& is, boost::any& value, const karabo::util::Types::ReferenceType type, const BufferSet& buffers) const;
 
             inline void readSequence(std::istream& is, boost::any&, const karabo::util::Types::ReferenceType type) const;
-
-
+           
 
             static inline unsigned readSize(std::istream& is);
 

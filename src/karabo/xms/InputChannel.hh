@@ -110,7 +110,7 @@ namespace karabo {
             std::multimap<std::string, unsigned int> m_sourceMap;
             std::multimap<unsigned long long, unsigned int> m_trainIdMap;
             std::map<unsigned int, MetaData> m_reverseMetaDataMap;
-
+            
         public:
 
             /**
@@ -200,7 +200,7 @@ namespace karabo {
             void onTcpChannelError(const karabo::net::ErrorCode&, const karabo::net::Channel::Pointer&);
 
             void onTcpChannelRead(const karabo::net::ErrorCode& ec, karabo::net::Channel::Pointer channel,
-                                  const karabo::util::Hash& header, const std::vector<char>& data);
+                                  const karabo::util::Hash& header, const boost::shared_ptr<std::vector<char> >& data);
 
             void swapBuffers();
 

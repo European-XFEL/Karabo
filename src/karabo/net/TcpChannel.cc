@@ -11,6 +11,7 @@
 #include "Channel.hh"
 #include "TcpChannel.hh"
 #include "EventLoop.hh"
+#include "karabo/io/HashBinarySerializer.hh"
 
 namespace karabo {
     namespace net {
@@ -300,7 +301,7 @@ namespace karabo {
             // 'false' ensures that we leave the context and go via the event loop:
             this->readAsyncSizeInBytesImpl(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1), false);
         }
-
+        
 
         void TcpChannel::readAsyncString(const ReadStringHandler& handler) {
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
@@ -337,8 +338,8 @@ namespace karabo {
             // 'false' ensures that we leave the context and go via the event loop:
             this->readAsyncSizeInBytesImpl(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1), false);
         }
-
-
+        
+  
         void TcpChannel::readAsyncHashVectorPointer(const ReadHashVectorPointerHandler& handler) {
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
             m_activeHandler = TcpChannel::HASH_VECTOR_POINTER;
@@ -533,8 +534,8 @@ namespace karabo {
                 throw KARABO_MESSAGE_EXCEPTION("Unsupported compression algorithm: \"" + header.get<string>("__compression__") + "\".");
             header.erase("__compression__");
         }
-
-
+        
+        
         void TcpChannel::decompress(karabo::util::Hash& header, const std::vector<char>& source, std::string& target) {
             if (header.get<string>("__compression__") == "snappy") {
                 std::vector<char> uncompressed;
@@ -631,6 +632,26 @@ namespace karabo {
                 KARABO_RETHROW
             }
         }
+        
+        void TcpChannel::write(const karabo::util::Hash& header, const karabo::io::BufferSet& body) {
+            try {
+                size_t sizeofLength = m_connectionPointer->getSizeofLength();
+                if (sizeofLength == 0) {
+                    throw KARABO_PARAMETER_EXCEPTION("With sizeofLength=0 you cannot use this interface.  Use write(const char* data, const size_t& size) instead.");
+                }
+                if (m_textSerializer) {
+                    throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Text serialization is not implemented for BufferSets");
+                } else {
+                    std::vector<char> headerBuf;
+                    m_binarySerializer->save(header, headerBuf);
+                    write(&headerBuf[0], headerBuf.size(), body);
+                   
+                }
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
 
 
         void TcpChannel::write(const karabo::util::Hash& data) {
@@ -744,6 +765,34 @@ namespace karabo {
                     try { m_socket.close(); } catch (...) {}
                     throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message() + ". Channel is closed!");
                 }
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+        
+        void TcpChannel::write(const char* header, const size_t& headerSize, const karabo::io::BufferSet& body) {
+            try {
+                boost::system::error_code error; //in case of error
+
+                size_t sizeofLength = m_connectionPointer->getSizeofLength();
+                if (sizeofLength == 0) {
+                    throw KARABO_PARAMETER_EXCEPTION("With sizeofLength=0 you cannot use this interface.  Use write(const char* data, const size_t& size) instead.");
+                }
+                _KARABO_SIZE_TO_VECTOR(m_outboundHeaderPrefix, headerSize);
+                size_t total_size = body.totalSize();
+                _KARABO_SIZE_TO_VECTOR(m_outboundMessagePrefix, total_size);
+                vector<const_buffer> buf;
+                buf.push_back(buffer(m_outboundHeaderPrefix));
+                buf.push_back(buffer(header, headerSize));
+                buf.push_back(buffer(m_outboundMessagePrefix));
+                body.appendTo(buf);
+                m_writtenBytes += boost::asio::write(m_socket, buf, transfer_all(), error);
+                if (error) {
+                    const std::string local_ep_ip = m_socket.local_endpoint().address().to_string();
+                    const std::string remote_ep_ip = m_socket.remote_endpoint().address().to_string();
+                    try { m_socket.close(); } catch (...) {}
+                    throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message() + ". Channel "+local_ep_ip+"->"+remote_ep_ip+" is closed!");
+                }                
             } catch (...) {
                 KARABO_RETHROW
             }
