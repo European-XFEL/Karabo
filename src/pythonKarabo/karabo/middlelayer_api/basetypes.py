@@ -9,6 +9,7 @@ import inspect
 from itertools import chain
 import numbers
 import re
+from xml.sax.saxutils import escape
 
 import numpy
 import pint
@@ -160,6 +161,12 @@ class KaraboValue(object):
             y.timestamp = self.timestamp
             yield y
 
+    def _repr_html_generator_(self):
+        yield escape(str(self))
+
+    def _repr_html_(self):
+        return "".join(self._repr_html_generator_())
+
 
 class _Singleton(KaraboValue):
     """Base class for True, False, None"""
@@ -243,6 +250,12 @@ class EnumValue(KaraboValue):
     def __repr__(self):
         return repr(self.enum)
 
+    def _repr_pretty_(self, p, cycle):
+        p.text("<{}>".format(self))
+
+    def _repr_html_generator_(self):
+        yield "<i>{}</i>".format(self)
+
     def __hash__(self):
         return hash(self.enum)
 
@@ -306,6 +319,18 @@ class VectorStringValue(KaraboValue, list):
 
     def __repr__(self):
         return "VectorString" + super().__repr__()
+
+    def _repr_html_generator_(self):
+        yield "<br />".join(escape(s) for s in self)
+
+    def _repr_pretty_(self, p, cycle):
+        with p.group(1, "[", "]"):
+            if self:
+                p.text(self.value[0])
+            for s in self.value[1:]:
+                p.text(",")
+                p.breakable()
+                p.text(s)
 
     @property
     def value(self):
@@ -395,6 +420,18 @@ class TableValue(MutableSequence, KaraboValue):
                     yield "{:10} ".format(val)
                 yield "\n"
         return "".join(inner())
+
+    def _repr_html_generator_(self):
+        yield "<table><tr>"
+        for name in self.value.dtype.names:
+            yield "<th>{}</th>".format(name)
+        for row in self.value:
+            yield "</tr><tr>"
+            for col in row:
+                yield "<td>"
+                yield from col._repr_html_generator_()
+                yield "</td>"
+        yield "</tr></table>"
 
 
 # Pint is based on the concept of a unit registry. For each unit registry,
@@ -490,6 +527,84 @@ class QuantityValue(KaraboValue, Quantity):
         _, objs, _ = context
         ret.timestamp = newest_timestamp(objs)
         return ret
+
+    def _format(self, value, fmt=""):
+        absolute = getattr(self.descriptor, "absoluteError", None)
+        relative = getattr(self.descriptor, "relativeError", None)
+
+        if absolute is not None and self.value != 0:
+            err = abs(absolute / self.value)
+            if relative is not None:
+                err = max(err, relative)
+        elif relative is not None:
+            err = relative
+        else:
+            return "{{:~{}}}".format(fmt).format(value)
+
+        err = 1 - int(numpy.log10(err))
+        if err > 0:
+            return "{{:.{}~{}}}".format(err, fmt).format(1.0 * value)
+        else:
+            return "{{:~{}}}".format(fmt).format(0)
+
+    def _repr_pretty_(self, p, cycle):
+        try:
+            if self.descriptor.displayType.startswith("bin|"):
+                fields = self.descriptor.displayType[4:].split(",")
+                fields = (field.split(":") for field in fields)
+                fields = ((int(bit), name) for bit, name in fields)
+                first = True
+                p.text("{ ")
+                for bit, name in fields:
+                    if self.value & (1 << bit):
+                        if not first:
+                            p.breakable()
+                            p.text("| ")
+                        first = False
+                        p.text(name)
+                p.text(" }")
+                return
+            formats = dict(hex="0x{:x}", oct="0o{:o}", bin="0b{:b}")
+            p.text(formats[self.descriptor.displayType].format(self.value))
+            return
+        except AttributeError:
+            pass
+        p.text(self._format(self))
+
+    _fmt_pattern = re.compile(r"([0-9]\.?[0-9]*)e(-?)\+?0*([0-9]+)")
+
+    def _repr_html_generator_(self):
+        try:
+            if self.descriptor.displayType.startswith("bin|"):
+                fields = self.descriptor.displayType[4:].split(",")
+                fields = (field.split(":") for field in fields)
+                fields = ((int(bit), name) for bit, name in fields)
+                res = "<br/>".join(escape(name) for bit, name in fields
+                                   if self.value & (1 << bit))
+                yield res
+                return
+            formats = dict(hex="0x{:x}", oct="0o{:o}", bin="0b{:b}")
+            yield formats[self.descriptor.displayType].format(self.value)
+            return
+        except AttributeError:
+            pass
+        fmt = self._format(self, "H")
+        yield self._fmt_pattern.sub(r"\1 × 10<sup>\2\3</sup>", fmt)
+
+    def __str__(self):
+        try:
+            if self.descriptor.displayType.startswith("bin|"):
+                fields = self.descriptor.displayType[4:].split(",")
+                fields = (field.split(":") for field in fields)
+                fields = ((int(bit), name) for bit, name in fields)
+                res = "|".join(name for bit, name in fields
+                               if self.value & (1 << bit))
+                return "{{{}}}".format(res)
+            formats = dict(hex="0x{:x}", oct="0o{:o}", bin="0b{:b}")
+            return formats[self.descriptor.displayType].format(self.value)
+        except AttributeError:
+            pass
+        return self._format(self)
 
 
 # Whenever Pint does calculations, it returns the results as an objecti
