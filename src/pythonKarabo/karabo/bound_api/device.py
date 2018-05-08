@@ -772,8 +772,7 @@ class PythonDevice(NoFsm):
 
         self.set(key, value, self.getActualTimestamp())
         
-    def writeChannel(self, channelName, data, timestamp=None,
-                     copyAllData=True):
+    def writeChannel(self, channelName, data, timestamp=None):
         """
         Write data to an output channel.
         :param channelName: name given to an OUTPUT_CHANNEL in
@@ -782,8 +781,6 @@ class PythonDevice(NoFsm):
          channel
         :param timestamp: optional timestamp; if none is given, the current
          timestamp is used
-        :param copyAllData: if set to False, data copies are avoided if
-         possible. Default value is True.
 
         Example for an output channel sending an image (key: "image") and
         a frame number (key: "frame"):
@@ -798,7 +795,9 @@ class PythonDevice(NoFsm):
         if not timestamp:
             timestamp = self.getActualTimestamp()
         meta = ChannelMetaData(sourceName, timestamp)
-        channel.write(data, meta)
+        # sync. interface so no need to copy data. It will have been send
+        # when this call is done
+        channel.write(data, meta, False)
         channel.update()
 
     def signalEndOfStream(self, channelName):

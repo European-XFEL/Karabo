@@ -14,7 +14,7 @@ from karabo.bound import (BOOL_ELEMENT, ChannelMetaData,
                           )
 
 
-@KARABO_CLASSINFO("PPSenderDevice", "2.4")
+@KARABO_CLASSINFO("PPSenderDevice", "2.2.4")
 class PPSenderDevice(PythonDevice):
     TEST_VECTOR_SIZE = 1000000
 
