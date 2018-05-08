@@ -138,6 +138,9 @@ runPythonIntegrationTests() {
     cd device_cross_test
     safeRunCommand "python3 -m unittest discover -v"
     cd ..
+    cd pipeline_processing_test
+    safeRunCommand "python3 -m unittest discover -v"
+    cd ..
     echo
     echo Integration tests complete
     echo

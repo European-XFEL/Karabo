@@ -795,7 +795,9 @@ class PythonDevice(NoFsm):
         if not timestamp:
             timestamp = self.getActualTimestamp()
         meta = ChannelMetaData(sourceName, timestamp)
-        channel.write(data, meta)
+        # sync. interface so no need to copy data. It will have been send
+        # when this call is done
+        channel.write(data, meta, False)
         channel.update()
 
     def signalEndOfStream(self, channelName):
