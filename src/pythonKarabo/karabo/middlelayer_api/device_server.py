@@ -368,6 +368,8 @@ class MiddleLayerDeviceServer(DeviceServerBase):
         # then kill the server
         yield from super(MiddleLayerDeviceServer, self).slotKillServer()
 
+        return self.serverId
+
     def addChild(self, deviceId, child):
         self.deviceInstanceMap[deviceId] = child
 
@@ -520,8 +522,9 @@ class BoundDeviceServer(DeviceServerBase):
             for p in self.processes.values():
                 p.kill()
         self.processes.clear()
-
         yield from super(BoundDeviceServer, self).slotKillServer()
+
+        return self.serverId
 
 
 class DeviceServer(MiddleLayerDeviceServer, BoundDeviceServer):
