@@ -194,7 +194,7 @@ namespace karathon {
     }
 
 
-    void OutputChannelWrap::writePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& data, const bp::object& meta) {
+    void OutputChannelWrap::writePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& data, const bp::object& meta, bool copyAllData) {
         if (!bp::extract<karathon::ChannelMetaData>(meta).check()) {
             throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type for parameter 'meta'. Needs to be ChannelMetaData");
         }
@@ -206,7 +206,7 @@ namespace karathon {
         const karabo::util::Hash dataHash = bp::extract<karabo::util::Hash>(data);
         const karabo::xms::Memory::MetaData metaData = bp::extract<karathon::ChannelMetaData>(meta);
         ScopedGILRelease nogil;
-        self->write(dataHash, metaData);
+        self->write(dataHash, metaData, copyAllData);
     }
 
 
@@ -469,7 +469,7 @@ void exportPyXmsInputOutputChannel() {
 
                 .def("getInformation", &karabo::xms::OutputChannel::getInformation)
 
-                .def("write", &karathon::OutputChannelWrap().writePy, (bp::arg("data"), bp::arg("meta")))
+                .def("write", &karathon::OutputChannelWrap().writePy, (bp::arg("data"), bp::arg("meta"), bp::arg("copyAllData")=true))
 
                 .def("update", &karathon::OutputChannelWrap().updatePy)
 
