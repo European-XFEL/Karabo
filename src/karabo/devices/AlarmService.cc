@@ -539,7 +539,8 @@ namespace karabo {
 
             if (!rowUpdates.empty()) {
                 m_updateHash.merge(rowUpdates);
-
+                emit("signalAlarmServiceUpdate", getInstanceId(), std::string("alarmUpdate"), m_updateHash);
+                m_updateHash.clear();
             }
         }
 
