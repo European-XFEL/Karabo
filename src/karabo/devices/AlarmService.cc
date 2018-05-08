@@ -226,7 +226,12 @@ namespace karabo {
                             }
                         }
                     }
-                    emit("signalAlarmServiceUpdate", getInstanceId(), std::string("alarmUpdate"), rowUpdates);
+                    {
+                        boost::mutex::scoped_lock lock(m_updateMutex);
+                        if (!rowUpdates.empty()) {
+                            m_updateHash.merge(rowUpdates);
+                        }
+                    }
                 }
 
             }
@@ -530,8 +535,12 @@ namespace karabo {
                 }
 
             }
-            if (!rowUpdates.empty()) emit("signalAlarmServiceUpdate", getInstanceId(), std::string("alarmUpdate"), rowUpdates);
+            boost::mutex::scoped_lock lock(m_updateMutex);
 
+            if (!rowUpdates.empty()) {
+                m_updateHash.merge(rowUpdates);
+
+            }
         }
 
 
