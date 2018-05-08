@@ -76,12 +76,14 @@ namespace karabo {
                 .displayedName("Total number of data tokens")
                 .description("The total number of data received within one stream")
                 .readOnly()
+                .initialValue(0u)
                 .commit();
 
         UINT32_ELEMENT(expected).key("nTotalOnEos")
                 .displayedName("Total on Eos ")
                 .description("The total number of data received when End of Stream was received")
                 .readOnly()
+                .initialValue(0u)
                 .commit();
         
         VECTOR_STRING_ELEMENT(expected).key("dataSources")
@@ -175,12 +177,16 @@ namespace karabo {
         for(auto time = m_transferTimes.begin(); time != m_transferTimes.end(); ++time) {
             transferTime += *time;
         }
-        
+
         set<float>("averageTransferTime", (float)transferTime/m_transferTimes.size());
     }
     
     void PipeReceiverDevice::reset() {
         m_transferTimes.clear();
+
+        set(karabo::util::Hash("nTotalData", 0u,
+                               "nTotalOnEos", 0u,
+                               "averageTransferTime", 0.f));
     }
 
 }
