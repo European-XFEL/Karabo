@@ -144,19 +144,20 @@ namespace karabo {
 
 #define TEST_VECTOR_SIZE 1000000
 
-    // For machine "Intel(R) Xeon(R) CPU E5-1620 v2 @ 3.70GHz" 8 cpus (7400.60 bogomips/cpu)
-    // MemTotal:       32821756 kB
+    // For machine "Intel(R) Xeon(R) CPU E5-1650 v4 @ 3.60GHz" 12 cpus (7183.79 bogomips/cpu)
+    // MemTotal:       32804800 kB
+    //
+    // Note that these numbers measure the pipeline shortcut as implemented in
+    // af64553 Speed up large array serialization and pipelines processing (between 2.2.3 and 2.)
+    // Numbers have uncertainties since they contain some polling/message travel overhead...
     //
     // Vector size      |   Speed  MBytes/sec
     //------------------+---------------------
-    //  100             |   0.00478766
-    //  1000            |   0.0478
-    //  10000           |   0.478
-    //  100000          |   4.78551
-    //  1000000         |   47.8558
-    //  10000000        |   478.616
-    //  50000000        |   958.46
-    //  100000000       |   1198.28
+    //  100000          |   220.87
+    //  1000000         |   1198.32
+    //  10000000        |   819.13
+    //  50000000        |   950.02
+    //  100000000       |   973.16
     //------------------+---------------------
 
     void P2PSenderDevice::writing() {
