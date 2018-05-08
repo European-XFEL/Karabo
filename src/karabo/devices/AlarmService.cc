@@ -68,11 +68,20 @@ namespace karabo {
                     .expertAccess()
                     .commit();
 
+            INT32_ELEMENT(expected).key("updateTime")
+                    .displayedName("Update Time")
+                    .description("Time interval between the sending of updates!")
+                    .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
+                    .assignmentOptional().defaultValue(500)
+                    .reconfigurable()
+                    .minExc(100).maxInc(1000)
+                    .commit();
         }
 
 
         AlarmService::AlarmService(const karabo::util::Hash& input) :
-            karabo::core::Device<>(input) {
+            karabo::core::Device<>(input),
+            m_updateTimer(karabo::net::EventLoop::getIOService()) {
             setupSignalsAndSlots();
             KARABO_INITIAL_FUNCTION(initialize);
         }
@@ -105,10 +114,37 @@ namespace karabo {
             m_flushRunning = true;
             m_flushWorker = boost::thread(&AlarmService::flushRunner, this);
             m_alarmIdCounter = 0;
-
+            m_updateHash = Hash();
             updateState(State::NORMAL);
+
+            m_updateTimer.expires_from_now(boost::posix_time::milliseconds(get<int>("updateTime")));
+            m_updateTimer.async_wait(bind_weak(&karabo::devices::AlarmService::sendAlarmUpdates, this, boost::asio::placeholders::error));
+
         }
 
+
+        void AlarmService::sendAlarmUpdates(const boost::system::error_code& err) {
+            if (err) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Sending alarm update timer was cancelled!";
+                return;
+            }
+            try {
+
+                boost::mutex::scoped_lock lock(m_updateMutex);
+                if (!m_updateHash.empty()) {
+                    emit("signalAlarmServiceUpdate", getInstanceId(), std::string("alarmUpdate"), m_updateHash);
+                    m_updateHash.clear();
+                }
+
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in sendAlarmUpdates(): " << e.userFriendlyMsg();
+            }
+
+            // Always restart the timer!
+            m_updateTimer.expires_from_now(boost::posix_time::milliseconds(get<int>("updateTime")));
+            m_updateTimer.async_wait(bind_weak(&karabo::devices::AlarmService::sendAlarmUpdates, this, boost::asio::placeholders::error));
+
+        }
 
         void AlarmService::setupSignalsAndSlots() {
 
@@ -209,9 +245,11 @@ namespace karabo {
 
             removeDeviceAlarms(deviceId, alarmInfo.get<Hash>("toClear"), rowUpdates);
             addDeviceAlarms(deviceId, alarmInfo.get<Hash>("toAdd"), rowUpdates);
-
+            {
+                boost::mutex::scoped_lock lock(m_updateMutex);
             if (!rowUpdates.empty()) {
-                emit("signalAlarmServiceUpdate", getInstanceId(), std::string("alarmUpdate"), rowUpdates);
+                m_updateHash.merge(rowUpdates);
+                }
             }
         }
 
