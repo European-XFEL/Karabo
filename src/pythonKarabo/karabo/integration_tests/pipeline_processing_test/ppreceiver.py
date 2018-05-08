@@ -10,7 +10,7 @@ from karabo.bound import (BOOL_ELEMENT, FLOAT_ELEMENT, INPUT_CHANNEL,
                           UINT32_ELEMENT, Unit, VECTOR_STRING_ELEMENT)
 
 
-@KARABO_CLASSINFO("PPReceiverDevice", "2.4")
+@KARABO_CLASSINFO("PPReceiverDevice", "2.2.4")
 class PPReceiverDevice(PythonDevice):
 
     def expectedParameters(expected):
@@ -109,7 +109,7 @@ class PPReceiverDevice(PythonDevice):
 
     def onInput(self, input):
         allMeta = input.getMetaData()
-        self.set("dataSources", allMeta[0].get("source"))
+
         sources = []
 
         for i in range(input.size()):
@@ -122,8 +122,8 @@ class PPReceiverDevice(PythonDevice):
 
         self.set("dataSources", [metaData["source"], ])
         self.set("currentDataId", data.get("dataId"))
-        v = np.array(data.get("data"))
-        self.set("dataItemSize", v.size*getsizeof(v[0]))
+        v = data.get("data")
+        self.set("dataItemSize", len(v)*getsizeof(v[0]))
         self.set("nTotalData", self.get("nTotalData") + 1)
         processingTime = self.get("processingTime")
         if processingTime > 0:
