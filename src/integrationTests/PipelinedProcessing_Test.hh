@@ -40,10 +40,10 @@ private:
     bool pollDeviceProperty(const std::string& deviceId,
                             const std::string& propertyName,
                             const T& expected,
-                            const int maxTimeout) const;
+                            const int maxTimeout,
+                            bool checkForEqual = true) const; // if false, wait until not equal anymore
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
-    karabo::core::DeviceServer::Pointer m_deviceServer2;
     boost::thread m_eventLoopThread;
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
