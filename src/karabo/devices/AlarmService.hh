@@ -189,6 +189,9 @@ namespace karabo {
                                                      const karabo::util::AlarmCondition& lastAdded,
                                                      karabo::util::Hash& rowUpdates);
 
+            /* Internal method to send a bulk hash of alarm system updates */
+            void sendAlarmUpdates(const boost::system::error_code& error);
+
         private: // members
 
             std::map<std::string, karabo::util::Hash> m_registeredDevices;
@@ -208,9 +211,12 @@ namespace karabo {
 
             boost::thread m_flushWorker;
 
+            karabo::util::Hash m_updateHash; // our bulkset hash
             mutable boost::shared_mutex m_alarmChangeMutex;
             boost::atomic<bool> m_flushRunning;
             std::string m_flushFilePath;
+            boost::mutex m_updateMutex;
+            boost::asio::deadline_timer m_updateTimer; // our update timer for bulksets
 
             unsigned long long m_alarmIdCounter;
 
