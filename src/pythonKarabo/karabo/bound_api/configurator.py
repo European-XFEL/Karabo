@@ -15,7 +15,7 @@ class Configurator(object):
     """
     _instance = None
     registry = {}
-    
+
     @staticmethod
     def registerAsBaseClass(theClass):
         """
@@ -29,7 +29,7 @@ class Configurator(object):
             Configurator.registry[theClass.__classid__] = {}
         Configurator.registry[theClass.__classid__][theClass.__classid__] = theClass  # self-registering
 
-    
+
     def __init__(self, classid):
         """
         The argument to the constructor may be the classid of a configurable
@@ -50,12 +50,12 @@ class Configurator(object):
         self.baseRegistry = Configurator.registry[classid]
         assert classid in self.baseRegistry
 
-        
+
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
             cls._instance = super(Configurator, cls).__new__(cls)
         return cls._instance
-    
+
     def registerClass(self, derived):
         """
         Register a derived class, i.e. a class deriving from a registered
@@ -65,7 +65,7 @@ class Configurator(object):
         """
         self.baseRegistry[derived.__classid__] = derived
         return self
-        
+
     def getSchema(self, classid, rules = AssemblyRules(AccessType(READ | WRITE | INIT))):
         """
         Get schema for class with "classid" derived from base class given to
@@ -87,12 +87,13 @@ class Configurator(object):
         def inheritanceChain(c, bases_id, clist):
             if not isinstance(c, type):
                 return
-            if c.__classid__ not in bases_id:
+            classId = getattr(c , '__classid__', None)
+            if classId is not None and classId not in bases_id:
                 for x in c.__bases__:
                     inheritanceChain(x, bases_id, clist)
             if c not in clist:
                 clist.append(c)
-                
+
         clist = []
         inheritanceChain(Derived, Derived.__bases_classid__, clist)
         # clist contains list of classes in inheritance order
@@ -104,8 +105,8 @@ class Configurator(object):
             except AttributeError as e:
                 print("Exception while adding expected parameters for class %r: %r" % (theClass.__name__, e))
         return schema
-    
-    
+
+
     def create(self, *args):
         """
         The factory method to create the instance of class with "classId" that
@@ -118,7 +119,7 @@ class Configurator(object):
 
                 instance = Configurator(Shape).create("EditableCircle",
                                                       Hash("radius", 12.345))
-                
+
         The factory method to create instance of class that inherits from base
         class given to constructor using input "configuration".
         The configuration should have "classId" of class to be created as a
@@ -179,8 +180,8 @@ class Configurator(object):
         except RuntimeError as e:
             raise RuntimeError("Validation Exception: " + str(e))
         return Derived(validated)
-    
-    
+
+
     def createNode(self, nodename, classid, configuration, validation = True):
         """
         The helper method to create instance of class specified by "classId"
@@ -212,7 +213,7 @@ class Configurator(object):
         """
 
         return self.create(configuration[choicename], validation)
-       
+
     def createList(self, listname, input, validation = True):
         """
         The helper method to create the list of instances of classes derived
@@ -230,7 +231,7 @@ class Configurator(object):
         for hash in input[listname]:
             instances.append(self.create(hash, validation))
         return instances
-            
+
     def getRegisteredClasses(self):
         """
         Returns list of "classid"'s for all registered classes derived from
@@ -238,7 +239,7 @@ class Configurator(object):
         """
 
         return list(self.baseRegistry.keys())
-    
+
     @staticmethod
     def getRegisteredBaseClasses():
         """
