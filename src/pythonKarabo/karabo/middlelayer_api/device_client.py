@@ -73,7 +73,7 @@ class DeviceClientBase(Device):
         """Cleanup the device children from the server
         """
         if info["type"] == "server":
-            devices = getDevices(serverId=instanceId)
+            devices = getDevices(serverId=instanceId, visibility=4)
             for deviceId in devices:
                 self.systemTopology["device"].pop(deviceId, None)
 
@@ -536,17 +536,21 @@ def lock(proxy, wait_for_release=None):
     return context()
 
 
-def getDevices(serverId=None):
+def getDevices(serverId=None, visibility=3):
     """Return a list of currently running devices
 
-    Optionally, it may only return the devices running on device server
-    `serverId`."""
+    :param serverId: Optional serverId, so that only devices are returned
+                     running on device server
+    :param visibility: Integer specifying the visiblity of desired devices.
+                       Default visibility level is 3.
+    """
     instance = get_instance()
     if serverId is None:
-        return list(instance.systemTopology["device"])
+        return [k for k, v, a in instance.systemTopology["device"].iterall()
+                if a["visibility"] <= visibility]
     else:
         return [k for k, v, a in instance.systemTopology["device"].iterall()
-                if a["serverId"] == serverId]
+                if a["serverId"] == serverId and a["visibility"] <= visibility]
 
 
 def getServers(visibility=3):
