@@ -133,6 +133,7 @@ class Device(AlarmMixin, SignalSlotable):
         self.classId = type(self).__name__
         self.classVersion = type(self).__version__
         self.pid = os.getpid()
+        self._statusInfo = "ok"
 
     def _initInfo(self):
         info = super(Device, self)._initInfo()
@@ -142,7 +143,7 @@ class Device(AlarmMixin, SignalSlotable):
         info["visibility"] = self.visibility.value
         info["compatibility"] = self.__class__.__version__
         info["host"] = self.hostName
-        info["status"] = "ok"
+        info["status"] = self._statusInfo
         info["archive"] = self.archive.value
 
         # device capabilities are encoded in a bit mask field
@@ -179,6 +180,15 @@ class Device(AlarmMixin, SignalSlotable):
         self.update()
 
     slotReconfigure = coslot(slotReconfigure, passMessage=True)
+
+    def update(self):
+        """Update the instanceInfo Hash according to the status info
+        """
+        statusInfo = "error" if self.state == State.ERROR else "ok"
+        if statusInfo != self._statusInfo:
+            self.updateInstanceInfo(Hash("status", statusInfo))
+            self._statusInfo = statusInfo
+        super(Device, self).update()
 
     @slot
     def slotGetSchema(self, onlyCurrentState):
