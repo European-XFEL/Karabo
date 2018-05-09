@@ -567,7 +567,9 @@ class QuantityValue(KaraboValue, Quantity):
             formats = dict(hex="0x{:x}", oct="0o{:o}", bin="0b{:b}")
             p.text(formats[self.descriptor.displayType].format(self.value))
             return
-        except AttributeError:
+        except (AttributeError, KeyError):
+            # Attribute Errors if displayType is None
+            # KeyError if we do not have the format
             pass
         p.text(self._format(self))
 
@@ -586,7 +588,9 @@ class QuantityValue(KaraboValue, Quantity):
             formats = dict(hex="0x{:x}", oct="0o{:o}", bin="0b{:b}")
             yield formats[self.descriptor.displayType].format(self.value)
             return
-        except AttributeError:
+        except (AttributeError, KeyError):
+            # Attribute Errors if displayType is None
+            # KeyError if we do not have the format
             pass
         fmt = self._format(self, "H")
         yield self._fmt_pattern.sub(r"\1 × 10<sup>\2\3</sup>", fmt)
@@ -602,7 +606,9 @@ class QuantityValue(KaraboValue, Quantity):
                 return "{{{}}}".format(res)
             formats = dict(hex="0x{:x}", oct="0o{:o}", bin="0b{:b}")
             return formats[self.descriptor.displayType].format(self.value)
-        except AttributeError:
+        except (AttributeError, KeyError):
+            # Attribute Errors if displayType is None
+            # KeyError if we do not have the format
             pass
         return self._format(self)
 
