@@ -22,7 +22,7 @@ PYTHON_ENTRY_POINTS=(convert-karabo-device convert-karabo-project
     karabo-pythonserver karabo-start karabo-stop karabo-check
     karabo-xterm karabo-gterm karabo-add-deviceserver
     karabo-remove-deviceserver karabo-webserver karabo-kill
-    pannel-runner karabo-gui-2017
+    pannel-runner karabo-scene2py
 )
 
 count=0
