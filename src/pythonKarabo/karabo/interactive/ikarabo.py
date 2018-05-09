@@ -3,7 +3,7 @@ from IPython import start_ipython
 SCRIPT = """
 # This provides the namespace
 from karabo.middlelayer.cli import *
-from karabo.usermacros.cli import *
+from karabo.macros.cli import *
 
 # This initializes everything
 from karabo.middlelayer_api import ikarabo
