@@ -524,7 +524,6 @@ class EventLoop(SelectorEventLoop):
         self.changedFutures = set()  # call if some property changes
         self.set_default_executor(ThreadPoolExecutor(200))
         self.set_exception_handler(EventLoop.exceptionHandler)
-        self.logger = logging.getLogger("Event Loop")
         # we overwrite sys.stderr for macros, so sys.__stderr__ it is
         faulthandler.register(signal.SIGALRM, file=sys.__stderr__,
                               all_threads=False)
@@ -558,7 +557,6 @@ class EventLoop(SelectorEventLoop):
                 except Exception:
                     self.connection = None
             self.connection.start()
-            self.logger = logging.getLogger(deviceId)
 
         return Broker(self, deviceId, classId)
 
