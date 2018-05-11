@@ -5,53 +5,55 @@ import unittest
 
 from karabo.bound import (
     Configurator, KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS,
-    INT32_ELEMENT,STRING_ELEMENT, Hash, Types
+    INT32_ELEMENT, STRING_ELEMENT, Hash, Types
 )
 from karabo.common.states import State
+
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("ExampleBase", "1.0")
 class ExampleBaseClass(object):
-
     def __init__(self, configuration):
         self.configuration = configuration
 
     @staticmethod
     def expectedParameters(expected):
-    
         e = STRING_ELEMENT(expected)
-        e.key('firstWord').displayedName("First Word").description("Input for first word")
+        e.key('firstWord').displayedName("First Word").description(
+            "Input for first word")
         e.assignmentOptional().defaultValue("")
         e.reconfigurable().commit()
 
         e = STRING_ELEMENT(expected)
-        e.key("secondWord").displayedName("Second Word").description("Input for first word")
+        e.key("secondWord").displayedName("Second Word").description(
+            "Input for first word")
         e.assignmentOptional().defaultValue("")
         e.reconfigurable().commit()
 
         e = INT32_ELEMENT(expected)
-        e.key("multiply").displayedName("Multiply").description("multiplies word")
+        e.key("multiply").displayedName("Multiply").description(
+            "multiplies word")
         e.assignmentOptional().defaultValue(1)
         e.allowedStates(State.ERROR).reconfigurable().commit()
 
         e = STRING_ELEMENT(expected)
-        e.key("composedWord").displayedName("Composed word").description("The composed word")
+        e.key("composedWord").displayedName("Composed word").description(
+            "The composed word")
         e.assignmentOptional().noDefaultValue()
         e.readOnly().commit()
 
 
 @KARABO_CLASSINFO("ExampleDerived", "1.0")
 class ExampleDerivedClass(ExampleBaseClass):
-    
     def __init__(self, configuration):
         super(ExampleDerivedClass, self).__init__(configuration)
         self.configuration = configuration
-    
+
     @staticmethod
     def expectedParameters(expected):
-
         e = STRING_ELEMENT(expected)
-        e.key('hostname').displayedName("Hostname").description("Input for host name")
+        e.key('hostname').displayedName("Hostname").description(
+            "Input for host name")
         e.assignmentOptional().defaultValue("")
         e.reconfigurable().commit()
 
@@ -62,15 +64,13 @@ class ExampleDerivedClass(ExampleBaseClass):
 
 
 @KARABO_CLASSINFO("Example", "1.0")
-class ExampleClass(ExampleDerivedClass):
-    
+class ExampleClass(ExampleBaseClass):
     def __init__(self, configuration):
         super(ExampleClass, self).__init__(configuration)
         self.configuration = configuration
-    
+
     @staticmethod
     def expectedParameters(expected):
-
         e = STRING_ELEMENT(expected)
         e.key('street').displayedName("Street").description("Street")
         e.assignmentOptional().defaultValue("Albert-Einstein-Ring")
@@ -82,32 +82,73 @@ class ExampleClass(ExampleDerivedClass):
         e.reconfigurable().commit()
 
 
-class  Decorators_TestCase(unittest.TestCase):
-    #def setUp(self):
-    #    self.foo = Decorators_()
-    #
+# ------------------------------------------------
+# Inherit from a class without Karabo
 
-    #def tearDown(self):
-    #    self.foo.dispose()
-    #    self.foo = None
+class NoKaraboClass(object):
+    def __init__(self, configuration):
+        super(NoKaraboClass, self).__init__(configuration)
 
+    def getKaraboVersion(self):
+        return 2
+
+
+@KARABO_CLASSINFO("ExampleNoKarabo", "1.0")
+class ExampleNoKarabo(NoKaraboClass, ExampleDerivedClass):
+    def __init__(self, configuration):
+        super(ExampleNoKarabo, self).__init__(configuration)
+        self.configuration = configuration
+
+    @staticmethod
+    def expectedParameters(expected):
+        e = STRING_ELEMENT(expected)
+        e.key('hostname').displayedName("Hostname").description(
+            "Input for host name")
+        e.assignmentOptional().defaultValue("")
+        e.reconfigurable().commit()
+
+        e = INT32_ELEMENT(expected)
+        e.key("port").displayedName("Port").description("Input for port")
+        e.assignmentOptional().defaultValue(2999)
+        e.reconfigurable().commit()
+
+
+class Decorators_TestCase(unittest.TestCase):
     def test_decorators_(self):
         try:
+            # call Configurator by classid
+            schema = Configurator("ExampleBase").getSchema('Example')
+            # call Configurator by class
+            schema = Configurator(ExampleBaseClass).getSchema('Example')
+            self.assertEqual(
+                schema.getValueType("firstWord"), Types.STRING,
+                "expectedParameters failed -- no 'firstWord' key found")
+            self.assertEqual(
+                schema.getValueType("secondWord"), Types.STRING,
+                "expectedParameters failed -- no 'secondWord' key found")
+            self.assertEqual(
+                schema.getValueType("multiply"), Types.INT32,
+                "expectedParameters failed -- no 'multiply' key found")
+            self.assertEqual(
+                schema.getValueType("composedWord"), Types.STRING,
+                "expectedParameters failed -- no 'composedWord' key found")
+
+            schema_derived = Configurator(ExampleBaseClass).getSchema(
+                'Example')
+
+            # Just try the other methods
             example = Configurator('ExampleBase').create('Example', Hash())
-            example2 = ExampleBaseClass.create('Example', Hash())
-            schema = Configurator("ExampleBase").getSchema('Example')     # call Configurator by classid
-            schema = Configurator(ExampleBaseClass).getSchema('Example')  # call Configurator by class
-            self.assertEqual(schema.getValueType("firstWord"),  Types.STRING, "expectedParameters failed -- no 'firstWord' key found")
-            self.assertEqual(schema.getValueType("secondWord"), Types.STRING, "expectedParameters failed -- no 'secondWord' key found")
-            self.assertEqual(schema.getValueType("multiply"),   Types.INT32, "expectedParameters failed -- no 'multiply' key found")
-            self.assertEqual(schema.getValueType("composedWord"), Types.STRING, "expectedParameters failed -- no 'composedWord' key found")
-            self.assertEqual(schema.getValueType("hostname"),   Types.STRING)
-            self.assertEqual(schema.getValueType("port"),       Types.INT32)
-            self.assertEqual(schema.getValueType("street"),     Types.STRING)
+            schema_derived = Configurator(ExampleBaseClass).getSchema(
+                'Example')
+            schema_inherit = ExampleNoKarabo.create(
+                'ExampleNoKarabo', Hash()).getSchema('ExampleNoKarabo')
+            self.assertFalse(schema_inherit.empty())
+            self.assertTrue(schema_inherit.has('hostname'))
+            self.assertTrue(schema_inherit.has('port'))
 
         except Exception as e:
             self.fail("test_decorators group 1: " + str(e))
 
+
 if __name__ == '__main__':
     unittest.main()
-
