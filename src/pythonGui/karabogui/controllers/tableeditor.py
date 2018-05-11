@@ -53,11 +53,6 @@ class TableModel(QAbstractTableModel):
             return None
 
         row, col = idx.row(), idx.column()
-        if row < 0 or row >= len(self._data):
-            return None
-
-        if col < 0 or col >= len(self._column_hash):
-            return None
 
         if role == Qt.CheckStateRole and self._role == Qt.EditRole:
             key = self._column_hash.getKeys()[col]
@@ -136,12 +131,6 @@ class TableModel(QAbstractTableModel):
                 return True
 
         if role == Qt.EditRole or role == Qt.DisplayRole:
-            if row < 0 or row >= len(self._data):
-                return False
-
-            if col < 0 or col >= len(self._column_hash):
-                return False
-
             key = self._column_hash.getKeys()[col]
             vtype = _value_type(self._column_schema, key)
             # now display value
@@ -164,7 +153,7 @@ class TableModel(QAbstractTableModel):
     def insertRows(self, pos, rows, idx, *,
                    copy_row=None, from_device_update=False):
         self.layoutAboutToBeChanged.emit()
-        self.beginInsertRows(QModelIndex(), pos, pos + rows - 1)
+        self.beginInsertRows(QModelIndex(), pos, pos + rows)
         try:
             for r in range(rows):
                 row_hash = copy.copy(copy_row)
@@ -192,10 +181,7 @@ class TableModel(QAbstractTableModel):
     def removeRows(self, pos, rows, idx, *, from_device_update=False):
         # protect ourselves against invalid indices by declaring layout change
         self.layoutAboutToBeChanged.emit()
-        end_pos = pos + rows - 1
-
-        if end_pos > len(self._data) - 1:
-            end_pos = len(self._data) - 1
+        end_pos = pos + rows
 
         self.beginRemoveRows(QModelIndex(), pos, end_pos)
         try:
