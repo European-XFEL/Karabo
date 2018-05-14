@@ -23,7 +23,7 @@ def KARABO_CLASSINFO(classid, version):
                 Configurator(theClass.__base_classid__).registerClass(theClass)
                 theClass.__bases_classid__ = []
                 for base in theClass.__bases__:
-                    for i in base.__bases_classid__:
+                    for i in getattr(base, '__bases_classid__', ()):
                         if i not in theClass.__bases_classid__:
                             theClass.__bases_classid__.append(i)
                 theClass.__bases_classid__ = tuple(theClass.__bases_classid__)
