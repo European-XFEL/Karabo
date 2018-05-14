@@ -5,7 +5,8 @@ from unittest import main
 import numpy as np
 
 from karabo.common.states import State
-from karabo.middlelayer import AccessMode, getDevice, executeNoWait, Int32
+from karabo.middlelayer import (
+    AccessMode, getDevice, Int32, waitUntil, waitWhile)
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import getSchema
 from karabo.middlelayer_api.hash import Float, Hash, Slot, VectorHash
@@ -135,12 +136,13 @@ class Tests(DeviceTest):
         self.assertEqual(self.myDevice.counter, 0)
         with (yield from getDevice("MyDevice")) as d:
             yield from d.increaseCounter()
-        self.assertEqual(self.myDevice.counter, 1)
-        # Concurrent slot calls, one will return due to state block
-        executeNoWait("MyDevice", "increaseCounter")
-        executeNoWait("MyDevice", "increaseCounter")
-        yield from sleep(1)
-        self.assertEqual(self.myDevice.counter, 2)
+            self.assertEqual(self.myDevice.counter, 1)
+            # Concurrent slot calls, one will return due to state block
+            self.myDevice._ss.emit("call", {"MyDevice": ["increaseCounter",
+                                                         "increaseCounter"]})
+            yield from waitUntil(lambda: d.state != State.ON)
+            yield from waitWhile(lambda: d.state == State.ACQUIRING)
+            self.assertEqual(self.myDevice.counter, 2)
 
     @async_tst
     def test_clear_table_external(self):
