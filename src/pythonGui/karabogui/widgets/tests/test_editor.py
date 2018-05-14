@@ -14,8 +14,11 @@ class TestConst(GuiTestCase):
         widget.appendPlainText("Karabo 3")
         self.assertEqual(widget.cache_blocks, 3)
         self.assertEqual(widget.cache_lines, 1)
+        widget.destroy()
 
     def test_margins(self):
+        # The line numbers are derived from 8 per digit + 3.
+        # Hence, 2 digits give 19 and 3 digits give 27
         widget = CodeEditor(None)
         widget.appendPlainText("Karabo")
         self.assertEqual(widget.numberWidgetArea(), 11)
@@ -27,3 +30,5 @@ class TestConst(GuiTestCase):
             widget.appendPlainText("{}".format(text))
         # We have three digits now
         self.assertEqual(widget.numberWidgetArea(), 27)
+        self.assertEqual(widget.textCursor().block().lineCount(), 1)
+        widget.destroy()
