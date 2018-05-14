@@ -34,7 +34,7 @@ class CodeEditor(QPlainTextEdit):
     """
     def __init__(self, parent=None):
         super(CodeEditor, self).__init__(parent)
-        self.LineNumberWidget = LineNumberWidget(parent=self)
+        self.number_widget = LineNumberWidget(parent=self)
         self.cache_blocks = -1
         self.cache_lines = -1
         self.blockCountChanged.connect(self.updateMargins)
@@ -54,16 +54,16 @@ class CodeEditor(QPlainTextEdit):
     @pyqtSlot(QRect, int)
     def updateLineNumberWidget(self, rect, dy):
         if dy:
-            self.LineNumberWidget.scroll(0, dy)
+            self.number_widget.scroll(0, dy)
         # NOTE: Cache comparison is done due to cursor blinking, e.g.
         # sending an update request. Since we don't want to repaint everytime,
         # we cache our blocks and lines
         elif (self.cache_blocks != self.blockCount()
               or self.cache_lines != self.textCursor().block().lineCount()):
             # Execute the paintEvent
-            self.LineNumberWidget.update(0, rect.y(),
-                                         self.numberWidgetArea(),
-                                         rect.height())
+            self.number_widget.update(0, rect.y(),
+                                      self.numberWidgetArea(),
+                                      rect.height())
             self.cache_blocks = self.blockCount()
             self.cache_lines = self.textCursor().block().lineCount()
         if rect.contains(self.viewport().rect()):
@@ -89,7 +89,7 @@ class CodeEditor(QPlainTextEdit):
         super(CodeEditor, self).resizeEvent(event)
         cr = self.contentsRect()
         # resize the block number area
-        self.LineNumberWidget.setGeometry(
+        self.number_widget.setGeometry(
             QRect(cr.left(), cr.top(), self.numberWidgetArea(), cr.height()))
 
     def numberPaintEvent(self, event):
@@ -97,7 +97,7 @@ class CodeEditor(QPlainTextEdit):
 
         This method draws the block numbers.
         """
-        painter = QPainter(self.LineNumberWidget)
+        painter = QPainter(self.number_widget)
         painter.fillRect(event.rect(), LINE_WIDGET_BACKGROUND)
 
         block = self.firstVisibleBlock()
