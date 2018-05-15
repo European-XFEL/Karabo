@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from PyQt4.QtCore import pyqtSlot, Qt, QEvent
-from PyQt4.QtGui import QTextEdit, QPlainTextEdit, QSplitter, QTextCursor
+from PyQt4.QtGui import QPlainTextEdit, QSplitter, QTextCursor
 
 try:
     from qtconsole.pygments_highlighter import PygmentsHighlighter
@@ -19,6 +19,7 @@ from karabogui import icons, messagebox
 from karabogui.binding.api import PropertyProxy
 from karabogui.project.utils import run_macro
 from karabogui.singletons.api import get_topology
+from karabogui.widgets.codeeditor import CodeEditor
 from karabogui.widgets.toolbar import ToolBar
 from karabogui.util import getSaveFileName
 from .base import BasePanelWidget
@@ -44,21 +45,21 @@ class MacroPanel(BasePanelWidget):
         """Returns a QWidget containing the main content of the panel.
         """
         widget = QSplitter(Qt.Vertical, parent=self)
-        self.teEditor = QTextEdit(widget)
-        self.teEditor.installEventFilter(self)
-        self.teEditor.setAcceptRichText(False)
-        self.teEditor.setStyleSheet("font-family: monospace")
-        self.teEditor.setPlainText(write_macro(self.model))
+        self.ui_editor = CodeEditor(widget)
+        self.ui_editor.installEventFilter(self)
+        self.ui_editor.setStyleSheet("font-family: monospace")
+        self.ui_editor.setPlainText(write_macro(self.model))
 
-        PygmentsHighlighter(self.teEditor.document())
-        widget.addWidget(self.teEditor)
-        self.teEditor.setLineWrapMode(QTextEdit.NoWrap)
-        self.teEditor.textChanged.connect(self.on_macro_changed)
+        self.ui_editor.setLineWrapMode(QPlainTextEdit.NoWrap)
 
-        self.console = QPlainTextEdit(widget)
-        self.console.setReadOnly(True)
-        self.console.setStyleSheet("font-family: monospace")
-        widget.addWidget(self.console)
+        PygmentsHighlighter(self.ui_editor.document())
+        widget.addWidget(self.ui_editor)
+        self.ui_editor.textChanged.connect(self.on_macro_changed)
+
+        self.ui_console = QPlainTextEdit(widget)
+        self.ui_console.setReadOnly(True)
+        self.ui_console.setStyleSheet("font-family: monospace")
+        widget.addWidget(self.ui_console)
 
         return widget
 
@@ -74,7 +75,7 @@ class MacroPanel(BasePanelWidget):
     def eventFilter(self, obj, event):
         if event.type() == QEvent.KeyPress:
             if event.key() == Qt.Key_Tab:
-                self.teEditor.textCursor().insertText(" " * 4)
+                self.ui_editor.textCursor().insertText(" " * 4)
                 return True
         return False
 
@@ -109,9 +110,9 @@ class MacroPanel(BasePanelWidget):
     def connect(self, macro_instance):
         if macro_instance not in self.already_connected:
             macro_proxy = get_topology().get_device(macro_instance)
-            self.console.moveCursor(QTextCursor.End)
-            self.console.insertPlainText('connecting to {} '
-                                         '...'.format(macro_instance))
+            self.ui_console.moveCursor(QTextCursor.End)
+            self.ui_console.insertPlainText('connecting to {} '
+                                            '...'.format(macro_instance))
             macro_proxy.on_trait_change(self.finish_connection,
                                         'schema_update')
             if len(macro_proxy.binding.value) != 0:
@@ -133,8 +134,8 @@ class MacroPanel(BasePanelWidget):
                 self.append_console, 'binding.config_update')
             # start monitoring property
             text_proxy.start_monitoring()
-            self.console.moveCursor(QTextCursor.End)
-            self.console.insertPlainText(' connection done\n')
+            self.ui_console.moveCursor(QTextCursor.End)
+            self.ui_console.insertPlainText(' connection done\n')
             self.already_connected[macro_proxy.device_id] = text_proxy
         macro_proxy.on_trait_change(self.finish_connection,
                                     'schema_update', remove=True)
@@ -142,26 +143,26 @@ class MacroPanel(BasePanelWidget):
     def append_console(self, binding, name, new):
         if name != 'config_update':
             return
-        self.console.moveCursor(QTextCursor.End)
-        self.console.insertPlainText(binding.value)
+        self.ui_console.moveCursor(QTextCursor.End)
+        self.ui_console.insertPlainText(binding.value)
 
     def init_reply(self, ok, message):
-        self.console.moveCursor(QTextCursor.End)
-        self.console.insertPlainText(message)
-        self.console.insertPlainText("\n")
+        self.ui_console.moveCursor(QTextCursor.End)
+        self.ui_console.insertPlainText(message)
+        self.ui_console.insertPlainText("\n")
 
     @pyqtSlot()
     def on_run(self):
-        self.console.clear()
+        self.ui_console.clear()
         try:
             compile(self.model.code, self.model.simple_name, "exec")
         except SyntaxError as e:
             if e.filename == self.model.simple_name:
-                c = self.teEditor.textCursor()
+                c = self.ui_editor.textCursor()
                 c.movePosition(c.Start)
                 c.movePosition(c.Down, n=e.lineno - 1)
                 c.movePosition(c.Right, n=e.offset)
-                self.teEditor.setTextCursor(c)
+                self.ui_editor.setTextCursor(c)
             formatted_msg = "{}\n{}{}^\nin {} line {}".format(
                     e.msg, e.text, " " * e.offset, e.filename, e.lineno)
             messagebox.show_warning(formatted_msg, title=type(e).__name__)
@@ -183,4 +184,4 @@ class MacroPanel(BasePanelWidget):
 
     @pyqtSlot()
     def on_macro_changed(self):
-        self.model.code = self.teEditor.toPlainText()
+        self.model.code = self.ui_editor.toPlainText()
