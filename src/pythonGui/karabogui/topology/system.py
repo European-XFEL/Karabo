@@ -449,6 +449,7 @@ class SystemTopology(HasStrictTraits):
         # any device, avoiding unnecessary repaint of the system tree.
         needs_update = False
 
+        node_ids = set()
         for up_type, alarm_entry in zip(update_types, alarm_entries):
             node = self.system_tree.get_instance_node(alarm_entry.deviceId)
             if node is not None:
@@ -459,9 +460,11 @@ class SystemTopology(HasStrictTraits):
                     needs_update |= node.remove_alarm_type(
                         alarm_entry.property, alarm_entry.type)
 
+                # add nodes for event firing!
+                node_ids.add(alarm_entry.deviceId)
         # NOTE: this should actually be called in the system_tree itself
         if needs_update:
-            self.system_tree.needs_update = True
+            self.system_tree.alarm_update = node_ids
 
     # ---------------------------------------------------------------------
     # Utilities
