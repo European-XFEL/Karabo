@@ -47,19 +47,19 @@ class TestDisplayAlignedImage(GuiTestCase):
         assert isinstance(controller._currentCell, QSpinBox)
         assert isinstance(controller._slider, QSlider)
 
-        apply_configuration(get_image_hash(dimz=True),
+        apply_configuration(get_image_hash(dimZ=3),
                             ouput_proxy.binding)
         img = controller._images[img_proxy][0]
         assert img is not None
 
         # new qwt image
-        apply_configuration(get_image_hash(val=1, dimz=True),
+        apply_configuration(get_image_hash(val=1, dimZ=3),
                             ouput_proxy.binding)
         assert controller._images[img_proxy][0] is not img
         newimg = controller._images[img_proxy][0]
 
         # same qwt image, different data
-        apply_configuration(get_image_hash(val=2, dimz=True, update=False),
+        apply_configuration(get_image_hash(val=2, dimZ=3, update=False),
                             ouput_proxy.binding)
         assert controller._images[img_proxy][0] is newimg
 

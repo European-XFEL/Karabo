@@ -9,9 +9,10 @@ from PyQt4.QtGui import QColor, QFrame, QImage, QLabel, QPixmap
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import DisplayImageElementModel
+from karabo.middlelayer import EncodingType
 from karabogui.binding.api import ImageBinding
 from karabogui.controllers.api import (
-    BaseBindingController, get_image_data, get_dimensions_and_format,
+    BaseBindingController, get_image_data, get_dimensions_and_encoding,
     register_binding_controller)
 
 
@@ -39,23 +40,37 @@ class DisplayImageElement(BaseBindingController):
 
     def value_update(self, proxy):
         img_node = proxy.value
-        dimX, dimY, dimZ, format = get_dimensions_and_format(img_node)
-        img_types = (QImage.Format_Indexed8, QImage.Format_RGB888)
-        if not all((dimX, dimY, format in img_types)):
-            return
-
-        npy = get_image_data(img_node, dimX, dimY, dimZ, format)
+        dimX, dimY, dimZ, encoding = get_dimensions_and_encoding(img_node)
+        npy = get_image_data(img_node, dimX, dimY, dimZ)
         if npy is None:
             return
 
         # Cast
         npy = npy.astype(np.uint8)
 
-        if format is QImage.Format_Indexed8:
-            image = QImage(npy.data, dimX, dimY, dimX, format)
+        if encoding == EncodingType.GRAY and not dimZ:
+            image = QImage(npy.data, dimX, dimY, dimX,
+                           QImage.Format_Indexed8)
             image.setColorTable(COLOR_TABLE)
-        elif format is QImage.Format_RGB888:
-            image = QImage(npy.data, dimX, dimY, dimX * dimZ, format)
+        elif encoding == EncodingType.RGB and dimZ == 3:
+            image = QImage(npy.data, dimX, dimY, dimX * dimZ,
+                           QImage.Format_RGB888)
+        elif encoding == EncodingType.YUV:
+            if dimZ == 2:  # YUV422
+                # input image is (u1, y1, v1, y2, u2, y3, v2, y4, ...)
+                # only display "luma" (Y') component in the GUI
+                npy = np.copy(npy[:, :, 1])
+                image = QImage(npy.data, dimX, dimY, dimX,
+                               QImage.Format_Indexed8)
+            elif dimZ == 3:  # YUV444
+                # input image is (u1, y1, v1, u2, y2, v2, ...)
+                # only display "luma" (Y') component in the GUI
+                npy = np.copy(npy[:, :, 1])
+                image = QImage(npy.data, dimX, dimY, dimX,
+                               QImage.Format_Indexed8)
+            else:
+                return
+            image.setColorTable(COLOR_TABLE)
         else:
             return
         pixmap = QPixmap.fromImage(image)
