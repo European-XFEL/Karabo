@@ -437,9 +437,26 @@ namespace karabo {
                 } else { // TCP data
 
                     KARABO_LOG_FRAMEWORK_TRACE << debugId << "Reading from remote memory (over tcp)";
-                    karabo::io::BufferSet tmp(false);
-                    tmp.emplaceBack(data);
-                    Memory::writeAsContiguousBlock(tmp, header, m_channelId, m_inactiveChunk, false);
+                    unsigned int nData = header.get<unsigned int>("nData");
+                    
+                    // TODO: this code conceptually belongs into the Memory class, but is here to avoid an API change
+                    // it should be relocated there once we have chunked reads from TCP into BufferSets
+                    if(nData == 1) { //single BufferSet written case - we can directly use the single buffer
+                        karabo::io::BufferSet tmp(false);
+                        tmp.emplaceBack(data);
+                        Memory::writeAsContiguousBlock(tmp, header, m_channelId, m_inactiveChunk, false);
+                    } else { // more than one BufferSet was used on input - we need to separate them
+                        const std::vector<unsigned int>& byteSizes = header.get<std::vector<unsigned int> >("byteSizes");
+                        unsigned int byteIndex = 0;
+                        for(size_t i = 0; i != nData; ++i) {
+                            karabo::io::BufferSet tmp(false);
+                            // currently there is a need for a copy here, however if information of the written BufferSet is maintained, separate chunks will already be available
+                            boost::shared_ptr<std::vector<char> > chunk(new std::vector<char>(data->begin()+byteIndex, data->begin()+byteIndex+byteSizes[i]));
+                            tmp.emplaceBack(chunk);
+                            Memory::writeAsContiguousBlock(tmp, header, m_channelId, m_inactiveChunk, false);
+                            byteIndex += byteSizes[i];
+                        }
+                    }
                 }
 
 
