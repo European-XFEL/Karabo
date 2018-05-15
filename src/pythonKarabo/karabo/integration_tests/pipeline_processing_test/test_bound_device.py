@@ -35,7 +35,10 @@ class TestPipelineProcessing(BoundDeviceTestCase):
                       "input.connectedOutputChannels",
                       "p2pTestSender:output1",
                       "input2.connectedOutputChannels",
-                      "p2pTestSender:output2")
+                      "p2pTestSender:output2",
+                      "input3.connectedOutputChannels",
+                      "p2pTestSender:output3"
+                      )
 
         classConfig = Hash("classId", "PPReceiverDevice",
                            "deviceId", "pipeTestReceiver",
@@ -67,6 +70,9 @@ class TestPipelineProcessing(BoundDeviceTestCase):
 
         with self.subTest(msg="Test Profile Transfer Times (short cut)"):
             self._profileTransferTimes()
+
+        with self.subTest(msg="Test multiple write with different sources"):
+            self._testMultiWrite()
 
     def _testPipe(self):
         startTimePoint = datetime.now()
@@ -131,6 +137,19 @@ class TestPipelineProcessing(BoundDeviceTestCase):
         msg = "Average transfer time (no copy, no short cut) " \
               "is {:0.2f} milliseconds"
         print(msg.format(transferTime))
+
+    def _testMultiWrite(self):
+        self.dc.set("p2pTestSender", "scenario", "multiSource")
+        nData = self.dc.get("p2pTestSender","nData")
+        self.dc.execute("p2pTestSender", "write", self.KRB_TEST_MAX_TIMEOUT)
+        self.assertTrue(self.waitUntilEqual("pipeTestReceiver",
+                                            "numSourceLength",
+                                             nData,
+                                             self.KRB_TEST_MAX_TIMEOUT))
+        sourceLengths = self.dc.get("pipeTestReceiver", "numSources")
+        self.assertTrue(all([s == 2 for s in sourceLengths]))
+        sourcesCorrect = self.dc.get("pipeTestReceiver", "sourcesCorrect")
+        self.assertTrue(all(sourcesCorrect))
 
     def waitUntilEqual(self, devId, propertyName, whatItShouldBe, timeout):
         """

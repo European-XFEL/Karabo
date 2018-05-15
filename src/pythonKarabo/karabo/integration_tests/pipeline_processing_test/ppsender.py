@@ -105,7 +105,7 @@ class PPSenderDevice(PythonDevice):
                 .commit()
             ,
             STRING_ELEMENT(expected).key("scenario")
-                .options("test,profile")
+                .options("test,profile,multiSource")
                 .assignmentOptional().defaultValue("test")
                 .reconfigurable()
                 .commit()
@@ -113,6 +113,29 @@ class PPSenderDevice(PythonDevice):
             BOOL_ELEMENT(expected).key("copyAllData")
                 .assignmentOptional().defaultValue(True)
                 .reconfigurable()
+                .commit()
+            ,
+        )
+
+        data3 = Schema()
+
+        (
+            INT32_ELEMENT(data3).key("dataId")
+                .readOnly()
+                .commit()
+            ,
+            STRING_ELEMENT(data3).key("from")
+                .readOnly()
+                .commit()
+            ,
+            NDARRAY_ELEMENT(data3).key("array")
+                .dtype(Types.UINT32)
+                .shape("100")
+                .commit()
+            ,
+            OUTPUT_CHANNEL(expected).key("output3")
+                .displayedName("Output3")
+                .dataSchema(data3)
                 .commit()
             ,
         )
@@ -132,8 +155,10 @@ class PPSenderDevice(PythonDevice):
                 self.writingWorker.join()
         if self.get("scenario") == "test":
             self.writingWorker = Thread(target=self.writing)
-        else:
+        elif self.get("scenario") == "profile":
             self.writingWorker = Thread(target=self.writingProfile)
+        elif self.get("scenario") == "multiSource":
+            self.writingWorker = Thread(target=self.writingMultiSource)
 
         self.writingWorker.start()
         self.updateState(State.ACTIVE)
@@ -194,6 +219,36 @@ class PPSenderDevice(PythonDevice):
             self.log.ERROR("Stop writing because: {}".format(e))
 
         self.signalEndOfStream("output2")
+        self.updateState(State.NORMAL)
+
+    def writingMultiSource(self):
+        try:
+            nData = self.get("nData")
+            delayInMs = self.get("delay")
+            channel = self._ss.getOutputChannel("output3")
+            data = Hash()
+            for i in range(nData):
+                data.set("dataId", i)
+                data.set("from", "firstWrite")
+                data.set("array", np.arange(100))
+                meta = ChannelMetaData("source1", Timestamp())
+                channel.write(data, meta=meta)
+
+                data.set("dataId", 1000+i)
+                data.set("from", "secondWrite")
+                data.set("array", np.arange(100, 200))
+                meta = ChannelMetaData("source2", Timestamp())
+                channel.write(data, meta=meta)
+
+                channel.update()
+                if delayInMs > 0:
+                    sleep(delayInMs/1000)
+
+
+        except Exception as e:
+            self.log.ERROR("Stop writing because: {}".format(e))
+
+        self.signalEndOfStream("output3")
         self.updateState(State.NORMAL)
 
 
