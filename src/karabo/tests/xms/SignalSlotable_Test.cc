@@ -140,9 +140,8 @@ SignalSlotable_Test::~SignalSlotable_Test() {
 
 
 void SignalSlotable_Test::setUp() {
-    // #include "karabo/log/Logger.hh"
-    // karabo::log::Logger::configure(Hash("priority", "DEBUG"));
-    // karabo::log::Logger::useOstream();
+    //Logger::configure(Hash("priority", "ERROR"));
+    //Logger::useOstream();
     // Event loop is started in xmsTestRunner.cc's main()
 }
 
@@ -557,7 +556,7 @@ void SignalSlotable_Test::testConnectAsync() {
 
 void SignalSlotable_Test::testConnectAsyncMulti() {
 
-    // One instance with signalA and slotB...
+    // One instance with and signalA and slotB...
     auto signalerA = boost::make_shared<SignalSlotable>("signalA_slotB");
     signalerA->registerSignal<int>("signalA");
     bool slotCalledB = false;
@@ -569,7 +568,7 @@ void SignalSlotable_Test::testConnectAsyncMulti() {
     signalerA->registerSlot<int>(slotFuncB, "slotB");
     signalerA->start();
 
-    // .. and one with signalB and slotA...
+    // .. and one with and signalB and slotA...
     auto signalerB = boost::make_shared<SignalSlotable>("signalB_slotA");
     signalerB->registerSignal<int>("signalB");
     bool slotCalledA = false;
@@ -845,235 +844,6 @@ void SignalSlotable_Test::testDisconnectAsync() {
 
     ///////////////////////////////////////////////////////////////////////////
     // No need to test non-existing slot - it is exactly the same as a non-connected slot
-}
-
-
-void SignalSlotable_Test::testDisconnectAsyncMulti() {
-
-    // Setup some SinalSlotables with slot and signal
-    // Copied from testConnectAsyncMulti - but here no signals are raised, so the interface does not matter...
-    // One instance with signalA and slotB...
-    auto signalerA = boost::make_shared<SignalSlotable>("signalA_slotB");
-    signalerA->registerSignal<int>("signalA");
-    bool slotCalledB = false;
-    int inSlotB = -10;
-    auto slotFuncB = [&slotCalledB, &inSlotB] (int i) {
-        inSlotB += i;
-        slotCalledB = true;
-    };
-    signalerA->registerSlot<int>(slotFuncB, "slotB");
-    signalerA->start();
-
-    // .. and one with signalB and slotA...
-    auto signalerB = boost::make_shared<SignalSlotable>("signalB_slotA");
-    signalerB->registerSignal<int>("signalB");
-    bool slotCalledA = false;
-    int inSlotA = -10;
-    auto slotFuncA = [&slotCalledA, &inSlotA] (int i) {
-        inSlotA += i;
-        slotCalledA = true;
-    };
-    signalerB->registerSlot<int>(slotFuncA, "slotA");
-    signalerB->start();
-
-    //////////////////////////////////////////////////////////////////////////
-    // Cross connect the instances
-    using SignalSlotConnection = SignalSlotable::SignalSlotConnection;
-    const std::vector<SignalSlotConnection> connections{SignalSlotConnection("signalA_slotB", "signalA", "signalB_slotA", "slotA"),
-                                                        SignalSlotConnection("signalB_slotA", "signalB", "signalA_slotB", "slotB")};
-    for (const SignalSlotConnection& conn : connections) {
-        CPPUNIT_ASSERT(signalerA->connect(conn.signalInstanceId, conn.signal, conn.slotInstanceId, conn.slot));
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Handlers
-    bool disconnectSuccess = false;
-    auto disconnectSuccessHandler = [&disconnectSuccess] () {
-        disconnectSuccess = true;
-    };
-    bool disconnectFailed = false;
-    bool disconnectTimeout = false;
-    std::string disconnectFailedMsg;
-    auto disconnectFailedHandler = [&disconnectFailed, &disconnectTimeout, &disconnectFailedMsg] () {
-        disconnectFailed = true;
-        try {
-            throw;
-        } catch (const karabo::util::TimeoutException& e) {
-            disconnectTimeout = true;
-        } catch (const karabo::util::SignalSlotException& e) {
-            disconnectFailedMsg = e.what();
-        } catch (...) { // Avoid that an exception leaks out and crashes the test program.
-        }
-    };
-
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // Test successful disconnection
-    signalerA->asyncDisconnect(connections, disconnectSuccessHandler, disconnectFailedHandler);
-
-    // Give disconnection calls some time to travel
-    for (int i = 0; i < 200; ++i) {
-        if (disconnectSuccess || disconnectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-    };
-    CPPUNIT_ASSERT(disconnectSuccess);
-    CPPUNIT_ASSERT(!disconnectFailed);
-    CPPUNIT_ASSERT(!disconnectTimeout);
-    CPPUNIT_ASSERT_EQUAL(std::string(), disconnectFailedMsg);
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // Test failing disconnection - since not connected
-
-    // Reset indicators
-    disconnectSuccess = false;
-    disconnectFailed = false;
-    // ... and try to disconnect
-    signalerA->asyncDisconnect(connections, disconnectSuccessHandler, disconnectFailedHandler);
-
-    // Give disconnection calls some time to travel
-    for (int i = 0; i < 200; ++i) {
-        if (disconnectSuccess || disconnectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-    };
-
-    CPPUNIT_ASSERT(!disconnectSuccess);
-    CPPUNIT_ASSERT(disconnectFailed);
-    CPPUNIT_ASSERT(!disconnectTimeout);
-    // connectFailedMsg is the full, formatted exception info ("Exception =====> {\n ... \n Message....")
-    // check that the original message is part of it
-    CPPUNIT_ASSERT(disconnectFailedMsg.find("failed to disconnect slot") != std::string::npos);
-    CPPUNIT_ASSERT(disconnectFailedMsg.find("was not connected") != std::string::npos);
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // Test failing disconnection - Timeout due to non-existing signalInstanceId
-    // reset indicators
-    disconnectSuccess = false;
-    disconnectFailed = false;
-    disconnectFailedMsg.clear();
-
-    // Connect again
-    for (const SignalSlotConnection& conn : connections) {
-        CPPUNIT_ASSERT(signalerA->connect(conn.signalInstanceId, conn.signal, conn.slotInstanceId, conn.slot));
-    }
-    // Add one invalid - non-existing signalInstanceId
-    auto moreConnections(connections);
-    moreConnections.push_back(SignalSlotConnection("NOT_A_signalA_slotB", "signalA", "signalB_slotA", "slotA"));
-
-    // Now try to disconnect all
-    signalerA->asyncDisconnect(moreConnections, disconnectSuccessHandler, disconnectFailedHandler,
-                               200); // timeout of 200 ms);
-
-    // Give disconnection calls some time to travel
-    for (int i = 0; i < 300; ++i) { // a bit more here since 200 ms are to be expected
-        if (disconnectSuccess || disconnectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-    };
-    CPPUNIT_ASSERT(!disconnectSuccess);
-    CPPUNIT_ASSERT(disconnectFailed);
-    CPPUNIT_ASSERT(disconnectTimeout);
-    CPPUNIT_ASSERT_EQUAL(std::string(), disconnectFailedMsg);
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // Test failing disconnection - due to non-existing signal:
-    // same symptom as for an existing, but not connected signal
-
-    // reset indicators
-    disconnectSuccess = false;
-    disconnectFailed = false;
-    disconnectTimeout = false;
-    disconnectFailedMsg.clear();
-
-    // Connect again the valid ones
-    for (const SignalSlotConnection& conn : connections) {
-        CPPUNIT_ASSERT(signalerA->connect(conn.signalInstanceId, conn.signal, conn.slotInstanceId, conn.slot));
-    }
-
-    // Overwrite the wrong one by another wrong one...
-    moreConnections.back() = SignalSlotConnection("signalA_slotB", "NOT_A_signalA", "signalB_slotA", "slotA");
-
-    // Now try to disconnect all
-    signalerA->asyncDisconnect(moreConnections, disconnectSuccessHandler, disconnectFailedHandler);
-
-    // Give disconnection calls some time to travel
-    for (int i = 0; i < 200; ++i) {
-        if (disconnectSuccess || disconnectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-    };
-    CPPUNIT_ASSERT(!disconnectSuccess);
-    CPPUNIT_ASSERT(disconnectFailed);
-    CPPUNIT_ASSERT(!disconnectTimeout);
-    // connectFailedMsg is the full, formatted exception info ("Exception =====> {\n ... \n Message....")
-    // check that the original message is part of it
-    CPPUNIT_ASSERT(disconnectFailedMsg.find("failed to disconnect slot") != std::string::npos);
-    CPPUNIT_ASSERT(disconnectFailedMsg.find("was not connected") != std::string::npos);
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // Test failing disconnection - due to non-existing slot:
-    // same symptom as for an existing, but not connected slot
-
-    // reset indicators
-    disconnectSuccess = false;
-    disconnectFailed = false;
-    disconnectTimeout = false;
-    disconnectFailedMsg.clear();
-
-    // Connect again the valid ones
-    for (const SignalSlotConnection& conn : connections) {
-        CPPUNIT_ASSERT(signalerA->connect(conn.signalInstanceId, conn.signal, conn.slotInstanceId, conn.slot));
-    }
-
-    // Overwrite the wrong one by another wrong one...
-    moreConnections.back() = SignalSlotConnection("signalA_slotB", "signalA", "signalB_slotA", "NOT_A_slotA");
-
-    // Now try to disconnect all
-    signalerA->asyncDisconnect(moreConnections, disconnectSuccessHandler, disconnectFailedHandler);
-
-    // Give disconnection calls some time to travel
-    for (int i = 0; i < 200; ++i) {
-        if (disconnectSuccess || disconnectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-    };
-    CPPUNIT_ASSERT(!disconnectSuccess);
-    CPPUNIT_ASSERT(disconnectFailed);
-    CPPUNIT_ASSERT(!disconnectTimeout);
-    // connectFailedMsg is the full, formatted exception info ("Exception =====> {\n ... \n Message....")
-    // check that the original message is part of it
-    CPPUNIT_ASSERT(disconnectFailedMsg.find("failed to disconnect slot") != std::string::npos);
-    CPPUNIT_ASSERT(disconnectFailedMsg.find("was not connected") != std::string::npos);
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // Test failing disconnection - due to non-existing slotInstanceId:
-    // same symptom as for an existing, but not connected slotInstanceId
-
-    // reset indicators
-    disconnectSuccess = false;
-    disconnectFailed = false;
-    disconnectTimeout = false;
-    disconnectFailedMsg.clear();
-
-    // Connect again the valid ones
-    for (const SignalSlotConnection& conn : connections) {
-        CPPUNIT_ASSERT(signalerA->connect(conn.signalInstanceId, conn.signal, conn.slotInstanceId, conn.slot));
-    }
-
-    // Overwrite the wrong one by another wrong one...
-    moreConnections.back() = SignalSlotConnection("signalA_slotB", "signalA", "NOT_A_signalB_slotA", "slotA");
-
-    // Now try to disconnect all
-    signalerA->asyncDisconnect(moreConnections, disconnectSuccessHandler, disconnectFailedHandler);
-
-    // Give disconnection calls some time to travel
-    for (int i = 0; i < 200; ++i) {
-        if (disconnectSuccess || disconnectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-    };
-    CPPUNIT_ASSERT(!disconnectSuccess);
-    CPPUNIT_ASSERT(disconnectFailed);
-    CPPUNIT_ASSERT(!disconnectTimeout);
-    // connectFailedMsg is the full, formatted exception info ("Exception =====> {\n ... \n Message....")
-    // check that the original message is part of it
-    CPPUNIT_ASSERT(disconnectFailedMsg.find("failed to disconnect slot") != std::string::npos);
-    CPPUNIT_ASSERT(disconnectFailedMsg.find("was not connected") != std::string::npos);
 }
 
 void SignalSlotable_Test::testMethod() {
