@@ -7,7 +7,8 @@ import numpy as np
 from karabo.bound import (BOOL_ELEMENT, FLOAT_ELEMENT, INPUT_CHANNEL,
                           INT32_ELEMENT, KARABO_CLASSINFO, launchPythonDevice,
                           MetricPrefix, PythonDevice, Schema, State,
-                          UINT32_ELEMENT, Unit, VECTOR_STRING_ELEMENT)
+                          UINT32_ELEMENT, Unit, VECTOR_BOOL_ELEMENT,
+                          VECTOR_STRING_ELEMENT, VECTOR_UINT32_ELEMENT)
 
 
 @KARABO_CLASSINFO("PPReceiverDevice", "2.2.4")
@@ -33,6 +34,11 @@ class PPReceiverDevice(PythonDevice):
                 .description("Input channel: client")
                 .commit()
                 ,
+            INPUT_CHANNEL(expected).key("input3")
+                .displayedName("Input3")
+                .description("Input channel: client")
+                .commit()
+            ,
             BOOL_ELEMENT(expected).key("onData")
                 .displayedName("Use callback interface onData")
                 .description("If false, use callback per InputChannel, "
@@ -89,6 +95,17 @@ class PPReceiverDevice(PythonDevice):
                 .readOnly()
                 .commit()
             ,
+            VECTOR_UINT32_ELEMENT(expected).key("numSources")
+                .readOnly()
+                .commit()
+            ,
+            VECTOR_BOOL_ELEMENT(expected).key("sourcesCorrect")
+                .readOnly()
+                .commit()
+            ,
+            UINT32_ELEMENT(expected).key("numSourceLength")
+                .readOnly()
+                .commit()
         )
 
     def __init__(self, config):
@@ -103,8 +120,10 @@ class PPReceiverDevice(PythonDevice):
         else:
             self.KARABO_ON_INPUT("input", self.onInput)
         self.KARABO_ON_INPUT("input2", self.onInputProfile)
+        self.KARABO_ON_INPUT("input3", self.onInputMultiSource)
         self.KARABO_ON_EOS("input", self.onEndOfStream)
         self.KARABO_ON_EOS("input2", self.onEndOfStreamProfile)
+        self.KARABO_ON_EOS("input3", self.onEndOfStreamMultiSource)
         self.updateState(State.NORMAL)
 
     def onInput(self, input):
@@ -143,6 +162,29 @@ class PPReceiverDevice(PythonDevice):
 
     def onEndOfStreamProfile(self, channel):
         self.set("averageTransferTime", np.mean(self.transferTimes))
+
+    def onInputMultiSource(self, input):
+        numSources = self.get("numSources")
+        numSources.append(input.size())
+        self.set("numSources", numSources)
+
+        sourcesCorrect = self.get("sourcesCorrect")
+        allMeta = input.getMetaData()
+
+        for i in range(input.size()):
+            data = input.read(i)
+            meta = allMeta[i]
+            arr = data.get("array")
+            if data.get("from") == "firstWrite":
+                test = (meta["source"] == "source1") and (arr[-1] == 99)
+                sourcesCorrect.append(bool(test))
+            elif data.get("from") == "secondWrite":
+                test = (meta["source"] == "source2") and (arr[-1] == 199)
+                sourcesCorrect.append(bool(test))
+        self.set("sourcesCorrect", sourcesCorrect)
+
+    def onEndOfStreamMultiSource(self, channel):
+        self.set("numSourceLength", len(self.get("numSources")))
 
     def reset(self):
         self.transferTimes = []
