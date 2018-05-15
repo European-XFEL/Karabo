@@ -122,8 +122,9 @@ class NavigationTreeModel(QAbstractItemModel):
         data = event.data
         if sender in (KaraboEventSender.StartMonitoringDevice,
                       KaraboEventSender.StopMonitoringDevice):
-            self._needs_update()
-            return True # we are the only one listening!
+            node_id = data['device_id']
+            self._update_device_monitor(node_id)
+            return True
         elif sender is KaraboEventSender.ShowDevice:
             self.selectNodeById(data.get('deviceId'))
         elif sender is KaraboEventSender.AccessLevelChanged:
@@ -383,6 +384,15 @@ class NavigationTreeModel(QAbstractItemModel):
             item_type = 'device'
 
         self.signalItemChanged.emit(item_type, proxy)
+
+    def _update_device_monitor(self, node_id):
+        """This function is used to launch a dataChanged signal for a specific
+           device Id
+        """
+        node = self.tree.get_instance_node(node_id)
+        if node is not None:
+            index = self.createIndex(node.row(), 0, node)
+            self.dataChanged.emit(index, index)
 
     def _needs_update(self):
         """ Whenever the ``needs_update`` event of a ``SystemTree`` is changed
