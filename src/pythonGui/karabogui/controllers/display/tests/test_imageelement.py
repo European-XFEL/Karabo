@@ -1,3 +1,4 @@
+from karabo.middlelayer import EncodingType
 from karabogui.binding.api import (
     apply_configuration, build_binding, DeviceProxy, PropertyProxy)
 from karabogui.testing import GuiTestCase
@@ -32,13 +33,38 @@ class TestDisplayImageElement(GuiTestCase):
 
     def test_rgbimage(self):
         self.controller.create(None)
-        apply_configuration(get_image_hash(dimz=True, rgb=True),
-                            self.output_proxy.binding)
+        apply_configuration(
+            get_image_hash(dimZ=3, encoding=EncodingType.RGB),
+            self.output_proxy.binding)
         assert self.controller.widget.pixmap() is not None
 
     def test_3dimage(self):
         self.controller.create(None)
-        apply_configuration(get_image_hash(dimz=True),
+        apply_configuration(get_image_hash(dimZ=3),
                             self.output_proxy.binding)
+
+        # should bail
+        assert self.controller.widget.pixmap() is None
+
+    def test_yuv444image(self):
+        self.controller.create(None)
+        apply_configuration(
+            get_image_hash(dimZ=3, encoding=EncodingType.YUV),
+            self.output_proxy.binding)
+        assert self.controller.widget.pixmap() is not None
+
+    def test_yuv422image(self):
+        self.controller.create(None)
+        apply_configuration(
+            get_image_hash(dimZ=2, encoding=EncodingType.YUV),
+            self.output_proxy.binding)
+        assert self.controller.widget.pixmap() is not None
+
+    def test_yuvother(self):
+        self.controller.create(None)
+        apply_configuration(
+            get_image_hash(dimZ=1, encoding=EncodingType.YUV),
+            self.output_proxy.binding)
+
         # should bail
         assert self.controller.widget.pixmap() is None

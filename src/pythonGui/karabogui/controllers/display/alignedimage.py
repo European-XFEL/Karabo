@@ -8,14 +8,15 @@ import re
 from guiqwt.builder import make
 import numpy as np
 from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import (QComboBox, QHBoxLayout, QImage, QLabel, QSlider,
+from PyQt4.QtGui import (QComboBox, QHBoxLayout, QLabel, QSlider,
                          QSpinBox, QVBoxLayout, QWidget)
 from traits.api import Dict, Instance, Int
 
 from karabo.common.scenemodel.api import DisplayAlignedImageModel
+from karabo.middlelayer import EncodingType
 from karabogui.binding.api import ImageBinding
 from karabogui.controllers.api import (
-    BaseBindingController, KaraboImageDialog, get_dimensions_and_format,
+    BaseBindingController, KaraboImageDialog, get_dimensions_and_encoding,
     get_image_data, register_binding_controller, DIMENSIONS)
 
 
@@ -99,7 +100,9 @@ class DisplayAlignedImage(BaseBindingController):
             # this might happen for RGB image
             self._axis = DIMENSIONS['Z']
 
-        dimX, dimY, dimZ, img_format = get_dimensions_and_format(img_node)
+        dimX, dimY, dimZ, encoding = get_dimensions_and_encoding(img_node)
+        if encoding != EncodingType.GRAY:
+            return
         if dimX is not None and dimY is not None and dimZ is None:
             if self._cellWidget.isVisible():
                 self._unsetSlider()
@@ -113,12 +116,12 @@ class DisplayAlignedImage(BaseBindingController):
         else:
             return
 
-        npy = get_image_data(img_node, dimX, dimY, dimZ, img_format)
+        npy = get_image_data(img_node, dimX, dimY, dimZ)
         if npy is None:
             return
         self._npys[proxy] = npy
 
-        if img_format is not QImage.Format_Indexed8:
+        if dimZ is not None:
             if self._axis == DIMENSIONS['X']:
                 npy = self._npys[proxy][:, self._selectedCell, :]
             elif self._axis == DIMENSIONS['Y']:
