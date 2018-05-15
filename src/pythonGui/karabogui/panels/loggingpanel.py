@@ -59,7 +59,7 @@ class LoggingPanel(BasePanelWidget):
         if event.sender is KaraboEventSender.LogMessages:
             messages = event.data.get('messages', [])
             self._log_widget.onLogDataAvailable(messages)
-
+            return True  # Nobody else should handle this event!
         elif event.sender is KaraboEventSender.NetworkConnectStatus:
             data = event.data
             # on False status we only clear the logs
