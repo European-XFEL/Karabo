@@ -1679,11 +1679,10 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::asyncDisOrConnect(bool disconnect,
-                                               const std::vector<SignalSlotConnection>& signalSlotConnections,
-                                               const boost::function<void ()>& successHandler,
-                                               const SignalSlotable::AsyncErrorHandler& failureHandler,
-                                               int timeout) {
+        void SignalSlotable::asyncConnect(const std::vector<SignalSlotConnection>& signalSlotConnections,
+                                          const boost::function<void ()>& successHandler,
+                                          const SignalSlotable::AsyncErrorHandler& failureHandler,
+                                          int timeout) {
             if (signalSlotConnections.empty()) {
                 return; // Nothing to do, so don't create book keeping structure that can never be cleared.
             }
@@ -1699,17 +1698,10 @@ namespace karabo {
             // Send individual requests
             for (size_t i = 0; i < signalSlotConnections.size(); ++i) {
                 const SignalSlotConnection& con = signalSlotConnections[i];
-                if (disconnect) {
-                    asyncDisconnect(con.signalInstanceId, con.signal, con.slotInstanceId, con.slot,
-                                   bind_weak(&SignalSlotable::multiAsyncConnectSuccessHandler, this, uuid, i),
-                                   bind_weak(&SignalSlotable::multiAsyncConnectFailureHandler, this, uuid),
-                                   timeout);
-                } else {
-                    asyncConnect(con.signalInstanceId, con.signal, con.slotInstanceId, con.slot,
-                                 bind_weak(&SignalSlotable::multiAsyncConnectSuccessHandler, this, uuid, i),
-                                 bind_weak(&SignalSlotable::multiAsyncConnectFailureHandler, this, uuid),
-                                 timeout);
-                }
+                asyncConnect(con.signalInstanceId, con.signal, con.slotInstanceId, con.slot,
+                             bind_weak(&SignalSlotable::multiAsyncConnectSuccessHandler, this, uuid, i),
+                             bind_weak(&SignalSlotable::multiAsyncConnectFailureHandler, this, uuid),
+                             timeout);
             }
         }
 
