@@ -123,6 +123,7 @@ class NavigationTreeModel(QAbstractItemModel):
         if sender in (KaraboEventSender.StartMonitoringDevice,
                       KaraboEventSender.StopMonitoringDevice):
             self._needs_update()
+            return True # we are the only one listening!
         elif sender is KaraboEventSender.ShowDevice:
             self.selectNodeById(data.get('deviceId'))
         elif sender is KaraboEventSender.AccessLevelChanged:
