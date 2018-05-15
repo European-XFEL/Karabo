@@ -1,6 +1,7 @@
 import numpy as np
 from PyQt4.QtCore import Qt
 
+from karabo.middlelayer import EncodingType
 from karabogui.binding.api import (
     apply_configuration, build_binding, DeviceProxy, PropertyProxy)
 from karabogui.testing import GuiTestCase
@@ -56,10 +57,74 @@ class TestDisplayImage(GuiTestCase):
         assert controller.widget is not None
         assert controller._plot is not None
 
-        apply_configuration(get_image_hash(dimz=True, rgb=True),
-                            output_proxy.binding)
+        apply_configuration(
+            get_image_hash(dimZ=3, encoding=EncodingType.RGB),
+            output_proxy.binding)
         img_arr = np.array(controller._img_array)
         assert np.all(img_arr == np.zeros((dimY, dimX, 3)))
+        controller.destroy()
+
+    def test_yuv422image(self):
+        output_proxy = PropertyProxy(root_proxy=self.root_proxy,
+                                     path='output.data')
+        img_proxy = PropertyProxy(root_proxy=self.root_proxy,
+                                  path='output.data.image')
+        controller = DisplayImage(proxy=img_proxy)
+        controller.create(None)
+
+        # give qwt sometime to construct
+        self.process_qt_events()
+
+        assert controller.widget is not None
+        assert controller._plot is not None
+
+        apply_configuration(
+            get_image_hash(dimZ=2, encoding=EncodingType.YUV),
+            output_proxy.binding)
+        img_arr = np.array(controller._img_array)
+        assert np.all(img_arr == np.zeros((dimY, dimX)))
+        controller.destroy()
+
+    def test_yuv444image(self):
+        output_proxy = PropertyProxy(root_proxy=self.root_proxy,
+                                     path='output.data')
+        img_proxy = PropertyProxy(root_proxy=self.root_proxy,
+                                  path='output.data.image')
+        controller = DisplayImage(proxy=img_proxy)
+        controller.create(None)
+
+        # give qwt sometime to construct
+        self.process_qt_events()
+
+        assert controller.widget is not None
+        assert controller._plot is not None
+
+        apply_configuration(
+            get_image_hash(dimZ=3, encoding=EncodingType.YUV),
+            output_proxy.binding)
+        img_arr = np.array(controller._img_array)
+        assert np.all(img_arr == np.zeros((dimY, dimX)))
+        controller.destroy()
+
+    def test_yuvother_image(self):
+        output_proxy = PropertyProxy(root_proxy=self.root_proxy,
+                                     path='output.data')
+        img_proxy = PropertyProxy(root_proxy=self.root_proxy,
+                                  path='output.data.image')
+        controller = DisplayImage(proxy=img_proxy)
+        controller.create(None)
+
+        # give qwt sometime to construct
+        self.process_qt_events()
+
+        assert controller.widget is not None
+        assert controller._plot is not None
+
+        apply_configuration(
+            get_image_hash(dimZ=1, encoding=EncodingType.YUV),
+            output_proxy.binding)
+        img_arr = np.array(controller._img_array)
+        assert np.all(img_arr.size == 0)  # should bail
         controller.destroy()
 
     def test_3dimage(self):
@@ -76,7 +141,7 @@ class TestDisplayImage(GuiTestCase):
         assert controller.widget is not None
         assert controller._plot is not None
 
-        apply_configuration(get_image_hash(dimz=True), output_proxy.binding)
+        apply_configuration(get_image_hash(dimZ=2), output_proxy.binding)
         img_arr = np.array(controller._img_array)
         assert np.all(img_arr == np.zeros((dimY, dimX, 2)))
 

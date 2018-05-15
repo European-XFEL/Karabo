@@ -6,9 +6,9 @@
 import numpy as np
 from guiqwt.plot import ImageDialog, ImageWidget
 from PyQt4.QtCore import Qt, pyqtSignal
-from PyQt4.QtGui import QImage
 from PyQt4.Qwt5.Qwt import QwtPlot
 
+from karabo.middlelayer import EncodingType
 from karabogui.dialogs.dialogs import LutRangeDialog
 
 
@@ -37,9 +37,9 @@ DIMENSIONS = {
 }
 
 
-def get_image_data(image_node, dimX, dimY, dimZ, format):
+def get_image_data(image_node, dimX, dimY, dimZ):
     """ Calculate a numpy array from the given ``image_node`` depending on the
-    given dimensions and format and return it to use for image display.
+    given dimensions and return it to use for image display.
     In case no data is included, a ``NoneType`` is returned.
     """
     pixels = image_node.pixels.value
@@ -50,14 +50,7 @@ def get_image_data(image_node, dimX, dimY, dimZ, format):
 
     arr_type = REFERENCE_TYPENUM_TO_DTYPE[pixels.type.value]
     npy = np.frombuffer(pixels.data.value, dtype=arr_type)
-    if format is QImage.Format_Indexed8:
-        try:
-            npy.shape = dimY, dimX
-        except ValueError as e:
-            msg = 'Image has improper shape ({}, {}, {}) for size {}'.format(
-                dimX, dimY, dimZ, len(npy))
-            raise RuntimeError(msg)
-    elif format is QImage.Format_RGB888:
+    if dimZ:
         try:
             npy.shape = dimY, dimX, dimZ
         except ValueError as e:
@@ -66,36 +59,38 @@ def get_image_data(image_node, dimX, dimY, dimZ, format):
             raise RuntimeError(msg)
     else:
         try:
-            npy.shape = dimY, dimX, dimZ
+            npy.shape = dimY, dimX
         except ValueError as e:
             msg = 'Image has improper shape ({}, {}, {}) for size {}'.format(
                 dimX, dimY, dimZ, len(npy))
             raise RuntimeError(msg)
+
     return npy
 
 
-def get_dimensions_and_format(image_node):
-    """ The dimensions and the format of the given ``image_node`` are
+def get_dimensions_and_encoding(image_node):
+    """ The dimensions and the encoding of the given ``image_node`` are
     returned."""
     dimX = None
     dimY = None
     dimZ = None
-    format = None
+    encoding = image_node.encoding.value
+
     if len(image_node.dims.value) == 2:
         # Shape
         dimX = image_node.dims.value[DIMENSIONS['X']]
         dimY = image_node.dims.value[DIMENSIONS['Y']]
-        # Format: Grayscale
-        format = QImage.Format_Indexed8
+        if encoding == EncodingType.UNDEFINED:
+            encoding = EncodingType.GRAY  # assume it's gray
     elif len(image_node.dims.value) == 3:
         # Shape
         dimX = image_node.dims.value[DIMENSIONS['X']]
         dimY = image_node.dims.value[DIMENSIONS['Y']]
         dimZ = image_node.dims.value[DIMENSIONS['Z']]
-        if dimZ == 3:
-            # Format: RGB
-            format = QImage.Format_RGB888
-    return dimX, dimY, dimZ, format
+        if encoding == EncodingType.UNDEFINED and dimZ == 3:
+            encoding = EncodingType.RGB  # assume it's RGB
+
+    return dimX, dimY, dimZ, encoding
 
 
 class _KaraboImageMixin(object):
