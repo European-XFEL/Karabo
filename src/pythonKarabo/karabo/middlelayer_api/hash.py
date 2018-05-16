@@ -510,14 +510,6 @@ class Slot(Descriptor):
             device._ss.reply(message, msg, error=True)
             return
 
-        if (self.allowedStates is not None and
-                device.state not in self.allowedStates):
-            msg = 'Calling slot "{}" not allowed in state "{}"'.format(
-                self.key, device.state)
-            device._ss.reply(message, msg, error=True)
-            device.logger.warning(msg)
-            return
-
         func = device
         for n in name.split("."):
             func = getattr(func, n)
@@ -527,6 +519,13 @@ class Slot(Descriptor):
         @coroutine
         def wrapper():
             try:
+                if (self.allowedStates is not None and
+                        device.state not in self.allowedStates):
+                    msg = ('Calling slot "{}" not allowed in '
+                           'state "{}"'.format(self.key, device.state))
+                    device._ss.reply(message, msg, error=True)
+                    device.logger.warning(msg)
+                    return
                 device.lastCommand = self.method.__name__
                 ret = yield from coro
                 device.update()
