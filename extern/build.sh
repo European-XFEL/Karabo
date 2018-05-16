@@ -15,11 +15,11 @@ ipykernel ipython_genutils jupyter_core jupyter_client pickleshare wcwidth
 prompt_toolkit simplegeneric traitlets dill ipython pkgconfig h5py pyusb parse
 suds jsonschema ecdsa pycrypto paramiko tzlocal httplib2 pssh traits pint nbformat
 notebook ipyparallel ipcluster_tools cycler pyelftools rpathology lxml requests
-ply psutil pycodestyle pyflakes mccabe flake8 msgpack msgpack-numpy flaky )
+ply psutil pycodestyle pyflakes mccabe flake8 msgpack msgpack-numpy flaky)
 
 DEPENDENCIES_DB=(eulxml eulexist existDB)
 
-DEPENDENCIES_GUI=( qt4 pyqt4 matplotlib qtconsole pyqwt5 guidata guiqwt )
+DEPENDENCIES_GUI=( qt4 pyqt4 matplotlib qtconsole pyqwt5 guidata guiqwt pyqtgraph)
 
 DEPENDENCIES_DARWIN=( wheel pyqwt5 guidata guiqwt boost openmqc hdf5 pkgconfig h5py
 log4cpp cppunit parse snappy traits pint )
