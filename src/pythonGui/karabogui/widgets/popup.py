@@ -20,6 +20,7 @@ class PopupWidget(QWidget):
         main_layout.addWidget(self._ui_info)
 
         # default is updating the pop-up
+        self.can_freeze = can_freeze
         self.freeze = False
 
         # NOTE: The pop-up is used by the configurator and the navigation
@@ -62,6 +63,12 @@ class PopupWidget(QWidget):
         # updating the popup dialog with further information on an expected
         # parameter
         scrollBar.setValue(pos)
+
+    def closeEvent(self, event):
+        if self.can_freeze:
+            self.freeze = False
+            self.update_button_status()
+        super(PopupWidget, self).closeEvent(event)
 
 
 class TextEdit(QTextEdit):
