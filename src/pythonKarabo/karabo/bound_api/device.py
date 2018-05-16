@@ -179,19 +179,20 @@ class PythonDevice(NoFsm):
                         .assignmentOptional().defaultValue(True)
                         .commit(),
 
-            # This parameter is obsolete and should be removed.  Replaced by "timeServerId"
             BOOL_ELEMENT(expected).key("useTimeserver")
-                        .displayedName("Use Timeserver")
-                        .description("Decides whether to use time and train ID"
-                                     " from TimeServer device")
-                        .init()
-                        .expertAccess()
-                        .assignmentOptional().defaultValue(False)
-                        .commit(),
+                .displayedName("Use Timeserver")
+                .description("Unused - whether device connects to time server "
+                             "is configured via 'timeServerId'")
+                .init()
+                .adminAccess()
+                .assignmentOptional().defaultValue(True)
+                .commit(),
 
             STRING_ELEMENT(expected).key("timeServerId")
                     .displayedName("TimeServer ID")
-                    .description("The instance id uniquely identifies a TimeServer instance in the distributed system")
+                    .description("The instance id uniquely identifies a "
+                                 "TimeServer instance in the distributed"
+                                 " system")
                     .assignmentOptional().defaultValue("")
                     .commit(),
 
@@ -556,14 +557,14 @@ class PythonDevice(NoFsm):
                     h.set(key, value)
                 pars = tuple([h, stamp])
 
-            
+
             # hash args
             if len(pars) == 1:
                 h = pars[0]
                 if not isinstance(h, Hash):
                     raise TypeError("The only argument should be a Hash")
                 pars = tuple([h, self.getActualTimestamp()])   # add timestamp
-            
+
             # key, value or hash, timestamp args
             if len(pars) == 2:
                 if not isinstance(pars[0], Hash):
@@ -617,7 +618,7 @@ class PythonDevice(NoFsm):
                             changedAlarms.get("toAdd").empty():
                         self._ss.emit("signalAlarmUpdate", self.getInstanceId(),
                                       changedAlarms)
-                    
+
                 else:
                     validated = hash
                     # Add timestamps
@@ -638,7 +639,7 @@ class PythonDevice(NoFsm):
                         signal = "signalStateChanged"
 
                     self._ss.emit(signal, validated, self.deviceid)
-                    
+
 
     def _evaluateAndUpdateAlarmCondition(self, forceUpdate, prevParamsInAlarm,
                                          silent):
@@ -763,7 +764,7 @@ class PythonDevice(NoFsm):
         self._ss.reply(self.getInstanceId(), alarmsToUpdate)
 
 
-    
+
     def __setitem__(self, key, value):
         """
         Alternative to `self.set`: `self[key] = value`
@@ -771,7 +772,7 @@ class PythonDevice(NoFsm):
         """
 
         self.set(key, value, self.getActualTimestamp())
-        
+
     def writeChannel(self, channelName, data, timestamp=None):
         """
         Write data to an output channel.
@@ -807,7 +808,7 @@ class PythonDevice(NoFsm):
         """
 
         self._ss.getOutputChannel(channelName).signalEndOfStream()
-        
+
     def get(self, key):
         """
         Return a property of this device
@@ -836,7 +837,7 @@ class PythonDevice(NoFsm):
         """
 
         return self.get(key)
-    
+
     def getFullSchema(self):
         """
         Return the full schema describing this device
@@ -844,7 +845,7 @@ class PythonDevice(NoFsm):
         """
 
         return self.fullSchema
-        
+
     def updateSchema(self, schema):
         """
         Update the existing device schema by merging the argument to the static
@@ -866,7 +867,7 @@ class PythonDevice(NoFsm):
             # Instead of looping on paths of injectedSchema, could probably
             # directly loop on paths of self.parameters
             for path in self._injectedSchema.getPaths():
-                if self.parameters.has(path) and not self.staticSchema.has(path): 
+                if self.parameters.has(path) and not self.staticSchema.has(path):
                     self.parameters.erase(path)
             self._stateDependentSchema.clear()
             self._injectedSchema.copy(schema)
@@ -877,7 +878,7 @@ class PythonDevice(NoFsm):
         self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
         self.set(validated)
         self.log.INFO("Schema updated")
-    
+
     def appendSchema(self, schema):
         """
         Append to the existing device schema
@@ -1287,7 +1288,7 @@ class PythonDevice(NoFsm):
              pass
 
         where `input` is a reference to the input channel.
-        
+
         """
         self._ss.registerEndOfStreamHandler(channelName, handler)
 
@@ -1408,7 +1409,7 @@ class PythonDevice(NoFsm):
         else:
             self._ss.reply(self.fullSchema, self.deviceid)
 
-    def slotKillDevice(self):        
+    def slotKillDevice(self):
         senderid = self._ss.getSenderInfo("slotKillDevice").getInstanceIdOfSender()
         if senderid == self.serverid and self.serverid != "__none__":
             self.log.INFO("Device is going down as instructed by server")
@@ -1465,6 +1466,8 @@ class PythonDevice(NoFsm):
         Returns the actual timestamp. The Trainstamp part of Timestamp is
         extrapolated from the last values received via slotTimeTick (or zero
         if no time ticks received, i.e. timeServerId is empty).
+        To receive time ticks, the server of the device has to be connected
+        to a time server.
 
         :return: the actual timestamp
         """
@@ -1474,8 +1477,9 @@ class PythonDevice(NoFsm):
         """
         Returns the Timestamp for given Epochstamp. The Trainstamp part of
         Timestamp is extrapolated forward or backward from the last values
-        received via slotTimeTick (or zero if no time ticks received yet,
-        e.g. if useTimeserver is false).
+        received via slotTimeTick (or zero if no time ticks received yet).
+        To receive time ticks, the server of the device has to be connected
+        to a time server.
 
         :param epoch: Epochstamp for that the time stamp is searched for
         :return: the matching Timestamp, consisting of epoch and the
