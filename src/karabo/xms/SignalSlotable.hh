@@ -334,9 +334,7 @@ namespace karabo {
             void asyncConnect(const std::vector<SignalSlotConnection>& signalSlotConnections,
                               const boost::function<void ()>& successHandler = boost::function<void ()>(),
                               const AsyncErrorHandler& failureHandler = AsyncErrorHandler(),
-                              int timeout = 0) {
-                asyncDisOrConnect(false, signalSlotConnections, successHandler, failureHandler, timeout);
-            }
+                              int timeout = 0);
             /**
              * Disconnects a slot from a signal, identified both by their
              * respective instance IDs and signatures.
@@ -376,27 +374,6 @@ namespace karabo {
                                  const boost::function<void ()>& successHandler = boost::function<void ()>(),
                                  const AsyncErrorHandler& failureHandler = AsyncErrorHandler(),
                                  int timeout = 0);
-
-            /**
-             * This function tries to stop asynchronously connections between several signals and slots.
-             *
-             * One of the two handlers will be called exactly once.
-             * The failureHandler will be called if disconnecting any of the signal slot connections failed,
-             * no matter whether other disconnections succeeded or not.
-             *
-             * @param signalSlotConnections e.g. vector<SignalSlotConnection>{SignalSlotConnection("sigInst", "signal", "slotInst", "slot"), ...}
-             * @param successHandler is called when all connections are disconnected (maybe be empty [=default])
-             * @param failureHandler is called when any of the connections could not be disconnected, no matter whether
-             *                            disconnecting the others failed or not.
-             * @param timeout in milliseconds for internal async requests - non-positive (default) means the very long
-             *                            default timeout
-             */
-            void asyncDisconnect(const std::vector<SignalSlotConnection>& signalSlotConnections,
-                                 const boost::function<void ()>& successHandler = boost::function<void ()>(),
-                                 const AsyncErrorHandler& failureHandler = AsyncErrorHandler(),
-                                 int timeout = 0) {
-                asyncDisOrConnect(true, signalSlotConnections, successHandler, failureHandler, timeout);
-            }
             /**
              * Emits a signal, i.e. publishes the given payload
              * Emitting a signal is a fire-and-forget activity. The function returns immediately.
@@ -1132,13 +1109,6 @@ namespace karabo {
             ///
             /// @param message text given to the SignalSlotException
             static void callErrorHandler(const AsyncErrorHandler& handler, const std::string& message);
-
-            /// Helper to either disconnect or connect several signal slot connections in one go.
-            void asyncDisOrConnect(bool disconnect,
-                                   const std::vector<SignalSlotConnection>& signalSlotConnections,
-                                   const boost::function<void ()>& successHandler,
-                                   const AsyncErrorHandler& failureHandler,
-                                   int timeout);
 
             void multiAsyncConnectSuccessHandler(const std::string& uuid, size_t requestNum);
 
