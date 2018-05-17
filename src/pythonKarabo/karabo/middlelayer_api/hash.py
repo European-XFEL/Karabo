@@ -1584,6 +1584,10 @@ class Hash(OrderedDict):
             elem = OrderedDict.__getitem__(self, k)
             yield k, elem.data, elem.attrs
 
+    def items(self):
+        for k in self:
+            yield k, self[k]
+
     def merge(self, other, attribute_policy='merge'):
         """Merge the hash other into this hash.
 
