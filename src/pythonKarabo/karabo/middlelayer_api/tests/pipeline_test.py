@@ -229,8 +229,8 @@ class TestChannel(DeviceTest):
         self.feedRequest()
         yield from self.sleep()
         output.writeChunkNoWait(self.sample_data)
-        output.writeChunkNoWait(self.sample_data)
         with self.assertRaises(QueueFull):
+            output.writeChunkNoWait(self.sample_data)
             output.writeChunkNoWait(self.sample_data)
         self.assertChecksum(3020956469)
         self.reader.feed_eof()
