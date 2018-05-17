@@ -364,6 +364,10 @@ class SignalSlotable(Configurable):
 
     @coslot
     def slotInstanceNew(self, instanceId, info):
+        if info["type"] == "server":
+            for proxy in self._proxies.values():
+                if proxy.serverId == instanceId:
+                    proxy._notify_gone()
         self._new_device_futures[instanceId] = info
         proxy = self._proxies.get(instanceId)
         if proxy is not None:
