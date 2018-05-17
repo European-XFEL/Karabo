@@ -14,6 +14,7 @@
 
 #include <karabo/util/Factory.hh>
 #include <karabo/io/BinarySerializer.hh>
+#include <karabo/io/BufferSet.hh>
 
 #include <karabo/log/Logger.hh>
 
@@ -188,7 +189,17 @@ namespace karabo {
             static void cacheAsContiguousBlock(const size_t channelIdx, const size_t chunkIdx);
             static const SerializedChunk& readContiguousBlockCache(const size_t channelIdx, const size_t chunkIdx);
 
-            static void writeAsContiguousBlock(const karabo::io::BufferSet& buffer, const karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx, bool copyAllData=true);
+            static void writeAsContiguousBlock(const karabo::io::BufferSet& buffer,
+                                               const karabo::util::Hash& header,
+                                               const size_t channelIdx,
+                                               const size_t chunkIdx,
+                                               bool copyAllData=true);
+
+            static void writeAsContiguousBlock(const std::vector<karabo::io::BufferSet::Pointer>& buffers,
+                                               const karabo::util::Hash& header,
+                                               const size_t channelIdx,
+                                               const size_t chunkIdx,
+                                               bool copyAllData = false);
 
             static void clearContiguousBlockCache(const size_t channelIdx, const size_t chunkIdx);
 
