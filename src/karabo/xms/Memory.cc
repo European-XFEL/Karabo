@@ -42,7 +42,11 @@ namespace karabo {
             data.clear();
 
             const DataPointer& bufferPtr = m_cache[channelIdx][chunkIdx][dataIdx];
-            m_serializer->load(data, *bufferPtr);
+            try {
+                m_serializer->load(data, *bufferPtr);
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Failed de-serialization : " << e.what() << '\n' << (*bufferPtr);
+            }
         }
 
         Memory::DataPointer Memory::read(const size_t dataIdx, const size_t channelIdx, const size_t chunkIdx) {
@@ -64,7 +68,12 @@ namespace karabo {
 
         void Memory::writeChunk(const Memory::Data& chunk, const size_t channelIdx, const size_t chunkIdx, const std::vector<MetaData>& metaData) {
             if (chunk.size() != metaData.size()) {
-                throw KARABO_LOGIC_EXCEPTION("Number of data tokens and number of meta data entries must be equal!");
+                std::ostringstream oss;
+                oss << "Number of data tokens and number of meta data entries must be equal!";
+                oss << "  Data size = " << chunk.size();
+                oss << " and meta data size = " << metaData.size();
+                KARABO_LOG_FRAMEWORK_ERROR << "FAILURE  :  " << oss.str();
+                //throw KARABO_LOGIC_EXCEPTION("Number of data tokens and number of meta data entries must be equal!");
             }
             Data& src = m_cache[channelIdx][chunkIdx];
             src.insert(src.end(), chunk.begin(), chunk.end());
@@ -173,15 +182,17 @@ namespace karabo {
                 byteSizes.push_back((*it)->totalSize());                
             }
 
-            buffer.rewind();
-            for (Data::const_iterator it = data.begin(); it != data.end(); ++it) {
-                (*it)->appendTo(buffer, false);                
-            }
-            buffer.rewind();
             header.clear();
             header.set<unsigned int>("nData", data.size());
             header.set<std::vector<unsigned int> >("byteSizes", byteSizes);            
             header.set("sourceInfo", *reinterpret_cast<const std::vector<karabo::util::Hash>*>(&metaData));
+            std::vector<karabo::util::Hash>& buffersVector = header.bindReference<std::vector<karabo::util::Hash>>("bufferSetLayout");
+            buffer.rewind();
+            for (Data::const_iterator it = data.begin(); it != data.end(); ++it) {
+                buffersVector.push_back(karabo::util::Hash("sizes", (*it)->sizes(), "types", (*it)->types()));
+                (*it)->appendTo(buffer, false);
+            }
+            buffer.rewind();
         }
         
         void Memory::assureAllDataIsCopied(const size_t channelIdx, const size_t chunkIdx) {
@@ -228,6 +239,16 @@ namespace karabo {
             buffer.rewind();
             buffer.appendTo(*(chunkData[chunkDataIdx]), false);
             buffer.rewind();
+        }
+
+        void Memory::writeAsContiguousBlock(const std::vector<karabo::io::BufferSet::Pointer>& buffers, const karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx, bool copyAllData) {
+            Memory::_ensureSerializer();
+
+            const MetaDataEntries& metaData = *reinterpret_cast<const MetaDataEntries*>(&header.get<std::vector<karabo::util::Hash> >("sourceInfo"));
+            m_metaData[channelIdx][chunkIdx] = metaData;
+            Data& chunkData = m_cache[channelIdx][chunkIdx];
+            chunkData.clear();
+            chunkData.insert(chunkData.end(), buffers.begin(), buffers.end());
         }
 
         void Memory::clearContiguousBlockCache(const size_t channelIdx, const size_t chunkIdx) {
