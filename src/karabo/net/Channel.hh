@@ -46,7 +46,6 @@ namespace karabo {
             typedef boost::function<void (const boost::system::error_code&) > ReadRawHandler;
             typedef boost::function<void (const boost::system::error_code&, karabo::util::Hash&) > ReadHashRawHandler;
 
-            typedef boost::function<void (const boost::system::error_code&, const karabo::io::BufferSet&) > ReadBufferSetHandler;
             typedef boost::function<void (const boost::system::error_code&, const std::vector<karabo::io::BufferSet::Pointer>&)> ReadVectorBufferSetPointerHandler;
             typedef boost::function<void (const boost::system::error_code&, std::vector<char>&) > ReadVectorHandler;
             typedef boost::function<void (const boost::system::error_code&, std::string&) > ReadStringHandler;
