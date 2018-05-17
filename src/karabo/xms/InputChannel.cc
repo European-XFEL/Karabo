@@ -398,9 +398,6 @@ namespace karabo {
             // Debug helper (m_channelId is unique per process...):
             const std::string debugId((("INPUT " + util::toString(m_channelId) += " of '") += this->getInstanceId()) += "' ");
             KARABO_LOG_FRAMEWORK_DEBUG << debugId << "ENTRY onTcpChannelRead  header is ...\n" << header << "\nand data.size=" << data.size();
-            for (std::vector<karabo::io::BufferSet::Pointer>::const_iterator it = data.begin(); it!=data.end(); ++it) {
-                KARABO_LOG_FRAMEWORK_DEBUG << debugId << "\n" << *(*it) << "-----";
-            }
 
             try {
                 boost::mutex::scoped_lock lock(m_mutex);
@@ -430,7 +427,7 @@ namespace karabo {
                     return;
                 }
 
-                if (header.has("channelId") && header.has("chunkId")) { // Local memory
+                if (data.size() > 0 && data[0]->totalSize() == 0 && header.has("channelId") && header.has("chunkId")) { // Local memory
                     unsigned int channelId = header.get<unsigned int>("channelId");
                     unsigned int chunkId = header.get<unsigned int>("chunkId");
                     KARABO_LOG_FRAMEWORK_TRACE << debugId << "Reading from local memory [" << channelId << "][" << chunkId << "]";

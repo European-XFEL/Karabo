@@ -68,12 +68,7 @@ namespace karabo {
 
         void Memory::writeChunk(const Memory::Data& chunk, const size_t channelIdx, const size_t chunkIdx, const std::vector<MetaData>& metaData) {
             if (chunk.size() != metaData.size()) {
-                std::ostringstream oss;
-                oss << "Number of data tokens and number of meta data entries must be equal!";
-                oss << "  Data size = " << chunk.size();
-                oss << " and meta data size = " << metaData.size();
-                KARABO_LOG_FRAMEWORK_ERROR << "FAILURE  :  " << oss.str();
-                //throw KARABO_LOGIC_EXCEPTION("Number of data tokens and number of meta data entries must be equal!");
+                throw KARABO_LOGIC_EXCEPTION("Number of data tokens and number of meta data entries must be equal!");
             }
             Data& src = m_cache[channelIdx][chunkIdx];
             src.insert(src.end(), chunk.begin(), chunk.end());
@@ -197,7 +192,7 @@ namespace karabo {
         
         void Memory::assureAllDataIsCopied(const size_t channelIdx, const size_t chunkIdx) {
             const Data& data = m_cache[channelIdx][chunkIdx];
-            
+
             bool containsNonCopies = false;
             for (Data::const_iterator it = data.begin(); it != data.end(); ++it) {
                 containsNonCopies |= (*it)->containsNonCopies();
@@ -205,13 +200,14 @@ namespace karabo {
             if(!containsNonCopies) {
                 return; // all good, no need to copy
             }
-            
-            Data copiedData(1, DataPointer(new DataType(true)));
-            
-            for (Data::const_iterator it = data.begin(); it != data.end(); ++it) {
-                (*it)->appendTo(*(copiedData.front()), false);                
+
+            Data copiedData(data.size(), DataPointer(new DataType(true)));
+
+            for (size_t i = 0; i < data.size(); ++i) {
+                data[i]->appendTo(*(copiedData[i]), false);
+                copiedData[i]->rewind();
             }
-            copiedData.front()->rewind();
+
             m_cache[channelIdx][chunkIdx] = copiedData;
         }
 
