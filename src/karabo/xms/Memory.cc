@@ -42,11 +42,7 @@ namespace karabo {
             data.clear();
 
             const DataPointer& bufferPtr = m_cache[channelIdx][chunkIdx][dataIdx];
-            try {
-                m_serializer->load(data, *bufferPtr);
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Failed de-serialization : " << e.what() << '\n' << (*bufferPtr);
-            }
+            m_serializer->load(data, *bufferPtr);
         }
 
         Memory::DataPointer Memory::read(const size_t dataIdx, const size_t channelIdx, const size_t chunkIdx) {
