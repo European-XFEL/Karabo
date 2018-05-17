@@ -70,6 +70,8 @@ namespace karabo {
             };
 
         public:
+            
+            typedef boost::shared_ptr<BufferSet> Pointer;
 
             /**
              * Construct a BufferSet
@@ -81,8 +83,11 @@ namespace karabo {
             
             /**
              * Add a buffer to the BufferSet
+             * @param size =0 - add empty buffer to buffer set  (COPY type)
+             *             >0 - add buffer where space allocated in std::vector<char> (COPY type)
+             *             <0 - add buffer wgere space allocated in char array (NO_COPY_BYTEARRAY_CONTENTS type)
              */
-            void add();
+            void add(std::size_t size = 0, int type = 0);
 
             /**
              * Update the size of the current buffer to reflect the size of the vector is refers to
@@ -182,7 +187,7 @@ namespace karabo {
                         if (it->contentType == BufferContents::NO_COPY_BYTEARRAY_CONTENTS) {                                                  
                             boost_buffers.push_back(boost::asio::buffer(it->ptr.get(), it->size));
                         } else {
-                            boost_buffers.push_back(boost::asio::buffer(&(it->vec->front()), it->size));
+                            boost_buffers.push_back(boost::asio::buffer(it->vec->data(), it->size));
                         }
                     }
                 }
@@ -198,6 +203,29 @@ namespace karabo {
             }
             
             friend std::ostream& operator<<(std::ostream& os, const BufferSet& bs);
+
+            /**
+             * @return Returns vector of sizes of this BufferSet
+             */
+            std::vector<unsigned int> sizes() const {
+                std::vector<unsigned int> v;
+                for (const auto& b : m_buffers) if (b.size) v.push_back(b.size);
+                return v;
+            }
+
+            /**
+             * @return Returns vector of buffer types for this BufferSet 
+             */
+            std::vector<int> types() const {
+                std::vector<int> v;
+                for (const auto& b : m_buffers) if (b.size) v.push_back(b.contentType);
+                return v;
+            }
+        
+            template <typename BufferSequenceType>
+            static void appendTo(BufferSequenceType& boost_buffers, const std::vector<BufferSet::Pointer>& buffers) {
+                for (const auto& b : buffers) b->appendTo<BufferSequenceType>(boost_buffers);
+            }
 
         private:
 
