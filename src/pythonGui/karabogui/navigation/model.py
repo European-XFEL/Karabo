@@ -107,6 +107,7 @@ class NavigationTreeModel(QAbstractItemModel):
         self.tree.update_context = _UpdateContext(item_model=self)
         # Add listeners for ``needs_update`` change event
         self.tree.on_trait_change(self._needs_update, 'needs_update')
+        self.tree.on_trait_change(self._alarm_update, 'alarm_update')
 
         self.setSupportedDragActions(Qt.CopyAction)
         self.selectionModel = QItemSelectionModel(self, self)
@@ -123,7 +124,7 @@ class NavigationTreeModel(QAbstractItemModel):
         if sender in (KaraboEventSender.StartMonitoringDevice,
                       KaraboEventSender.StopMonitoringDevice):
             node_id = data['device_id']
-            self._update_device_monitor(node_id)
+            self._update_device_info(node_id)
             return True
         elif sender is KaraboEventSender.ShowDevice:
             self.selectNodeById(data.get('deviceId'))
@@ -385,20 +386,31 @@ class NavigationTreeModel(QAbstractItemModel):
 
         self.signalItemChanged.emit(item_type, proxy)
 
-    def _update_device_monitor(self, node_id):
-        """This function is used to launch a dataChanged signal for a specific
-           device Id
-        """
-        node = self.tree.get_instance_node(node_id)
-        if node is not None:
-            index = self.createIndex(node.row(), 0, node)
-            self.dataChanged.emit(index, index)
-
     def _needs_update(self):
         """ Whenever the ``needs_update`` event of a ``SystemTree`` is changed
         the view needs to be updated
         """
         self.layoutChanged.emit()
+
+    def _alarm_update(self, node_ids):
+        """ Whenever the ``alarm_update`` event of a ``SystemTree`` is changed
+        the view needs to be updated
+
+        :param node_ids: system topology deviceId's to be updated
+        """
+        assert isinstance(node_ids, set)
+
+        for node_id in node_ids:
+            self._update_device_info(node_id, column=2)
+
+    def _update_device_info(self, node_id, column=0):
+        """This function is used to launch a dataChanged signal for a specific
+           device Id
+        """
+        node = self.tree.get_instance_node(node_id)
+        if node is not None:
+            index = self.createIndex(node.row(), column, node)
+            self.dataChanged.emit(index, index)
 
     def _clear_tree_cache(self):
         def visitor(node):
