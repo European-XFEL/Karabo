@@ -118,6 +118,9 @@ class SystemTree(HasStrictTraits):
     # An event which is triggered whenever the tree needs to be updated
     needs_update = Event
 
+    # An event which is triggered whenenver a device has an alarm update
+    alarm_update = Event
+
     # device/server node lookup dicts
     _device_nodes = Dict
     _server_nodes = Dict
