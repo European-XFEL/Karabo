@@ -759,6 +759,26 @@ namespace karabo {
         }
 
 
+        void TcpChannel::write(const karabo::util::Hash& header, const std::vector<karabo::io::BufferSet::Pointer>& body) {
+            try {
+                size_t sizeofLength = m_connectionPointer->getSizeofLength();
+                if (sizeofLength == 0) {
+                    throw KARABO_PARAMETER_EXCEPTION("With sizeofLength=0 you cannot use this interface.  Use write(const char* data, const size_t& size) instead.");
+                }
+                if (m_textSerializer) {
+                    throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Text serialization is not implemented for BufferSets");
+                } else {
+                    std::vector<char> headerBuf;
+                    m_binarySerializer->save(header, headerBuf);
+                    write(&headerBuf[0], headerBuf.size(), body);
+
+                }
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+
         void TcpChannel::write(const karabo::util::Hash& data) {
             try {
                 if (m_textSerializer) {
@@ -895,6 +915,39 @@ namespace karabo {
                 buf.push_back(buffer(header, headerSize));
                 buf.push_back(buffer(m_outboundMessagePrefix));
                 body.appendTo(buf);
+                m_writtenBytes += boost::asio::write(m_socket, buf, transfer_all(), error);
+                if (error) {
+                    const std::string local_ep_ip = m_socket.local_endpoint().address().to_string();
+                    const std::string remote_ep_ip = m_socket.remote_endpoint().address().to_string();
+                    try {
+                        m_socket.close();
+                    } catch (...) {
+                    }
+                    throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message() + ". Channel " + local_ep_ip + "->" + remote_ep_ip + " is closed!");
+                }
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+
+        void TcpChannel::write(const char* header, const size_t& headerSize, const std::vector<karabo::io::BufferSet::Pointer>& body) {
+            try {
+                boost::system::error_code error; //in case of error
+
+                size_t sizeofLength = m_connectionPointer->getSizeofLength();
+                if (sizeofLength == 0) {
+                    throw KARABO_PARAMETER_EXCEPTION("With sizeofLength=0 you cannot use this interface.  Use write(const char* data, const size_t& size) instead.");
+                }
+                _KARABO_SIZE_TO_VECTOR(m_outboundHeaderPrefix, headerSize);
+                size_t total_size = 0;
+                for (const auto& b : body) total_size += b->totalSize(); 
+                _KARABO_SIZE_TO_VECTOR(m_outboundMessagePrefix, total_size);
+                vector<const_buffer> buf;
+                buf.push_back(buffer(m_outboundHeaderPrefix));
+                buf.push_back(buffer(header, headerSize));
+                buf.push_back(buffer(m_outboundMessagePrefix));
+                karabo::io::BufferSet::appendTo(buf, body);
                 m_writtenBytes += boost::asio::write(m_socket, buf, transfer_all(), error);
                 if (error) {
                     const std::string local_ep_ip = m_socket.local_endpoint().address().to_string();
