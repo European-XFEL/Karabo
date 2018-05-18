@@ -220,8 +220,12 @@ namespace karabo {
             void write(const karabo::util::Hash& header, const boost::shared_ptr<std::vector<char> >& body);
             
             void write(const karabo::util::Hash& header, const karabo::io::BufferSet& body);
-            
+
+            void write(const karabo::util::Hash& header, const std::vector<karabo::io::BufferSet::Pointer>& body);
+
             void write(const char* header, const size_t& headerSize, const karabo::io::BufferSet& body);
+
+            void write(const char* header, const size_t& headerSize, const std::vector<karabo::io::BufferSet::Pointer>& body);
 
             void write(const karabo::util::Hash& header, const karabo::util::Hash& body);
 
