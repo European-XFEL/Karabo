@@ -181,10 +181,7 @@ namespace karabo {
             std::vector<karabo::util::Hash>& buffersVector = header.bindReference<std::vector<karabo::util::Hash>>("bufferSetLayout");
             for (Data::const_iterator it = data.begin(); it != data.end(); ++it) {
                 buffersVector.push_back(karabo::util::Hash("sizes", (*it)->sizes(), "types", (*it)->types()));
-                karabo::io::BufferSet::Pointer buffer(new karabo::io::BufferSet(false));
-                (*it)->appendTo(*buffer, false);
-                buffer->rewind();
-                buffers.push_back(buffer);
+                buffers.push_back(*it);
             }
         }
 
