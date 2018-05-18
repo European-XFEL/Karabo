@@ -386,7 +386,16 @@ namespace karabo {
             virtual void write(const karabo::util::Hash& header, const karabo::io::BufferSet& data) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
-            
+
+            /**
+             * Synchronous write. The function blocks until all bytes are written.
+             * @param header containing metadata for the data being written and BufferSet's layout
+             * @param body vector of BufferSet pointers
+             */
+            virtual void write(const karabo::util::Hash& header, const std::vector<karabo::io::BufferSet::Pointer>& body) {
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
+            }
+
             /**
              * Synchronous write. The function blocks until all bytes are written.
              * @param header containing metadata for the data being written

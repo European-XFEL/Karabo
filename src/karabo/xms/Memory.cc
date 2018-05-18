@@ -162,7 +162,8 @@ namespace karabo {
             return m_chunkStatus[channelIdx][chunkIdx];
         }
 
-        void Memory::readAsContiguousBlock(karabo::io::BufferSet& buffer, karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {
+
+        void Memory::readAsContiguousBlock(std::vector<karabo::io::BufferSet::Pointer>& buffers, karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {
             Memory::_ensureSerializer();
 
             const Data& data = m_cache[channelIdx][chunkIdx];
@@ -178,14 +179,15 @@ namespace karabo {
             header.set<std::vector<unsigned int> >("byteSizes", byteSizes);            
             header.set("sourceInfo", *reinterpret_cast<const std::vector<karabo::util::Hash>*>(&metaData));
             std::vector<karabo::util::Hash>& buffersVector = header.bindReference<std::vector<karabo::util::Hash>>("bufferSetLayout");
-            buffer.rewind();
             for (Data::const_iterator it = data.begin(); it != data.end(); ++it) {
                 buffersVector.push_back(karabo::util::Hash("sizes", (*it)->sizes(), "types", (*it)->types()));
-                (*it)->appendTo(buffer, false);
+                karabo::io::BufferSet::Pointer buffer(new karabo::io::BufferSet(false));
+                (*it)->appendTo(*buffer, false);
+                buffer->rewind();
+                buffers.push_back(buffer);
             }
-            buffer.rewind();
         }
-        
+
         void Memory::assureAllDataIsCopied(const size_t channelIdx, const size_t chunkIdx) {
             const Data& data = m_cache[channelIdx][chunkIdx];
 
@@ -218,20 +220,6 @@ namespace karabo {
             return *(m_serializedCache[channelIdx][chunkIdx]);
         }
 
-        void Memory::writeAsContiguousBlock(const karabo::io::BufferSet& buffer, const karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx, bool copyAllData) {
-            Memory::_ensureSerializer();
-
-            const MetaDataEntries& metaData = *reinterpret_cast<const MetaDataEntries*>(&header.get<std::vector<karabo::util::Hash> >("sourceInfo"));
-            m_metaData[channelIdx][chunkIdx] = metaData;
-
-            Data& chunkData = m_cache[channelIdx][chunkIdx];
-            size_t chunkDataIdx = chunkData.size();
-            chunkData.resize(chunkData.size() + 1);
-            chunkData[chunkDataIdx] = DataPointer(new DataType(copyAllData));
-            buffer.rewind();
-            buffer.appendTo(*(chunkData[chunkDataIdx]), false);
-            buffer.rewind();
-        }
 
         void Memory::writeAsContiguousBlock(const std::vector<karabo::io::BufferSet::Pointer>& buffers, const karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx, bool copyAllData) {
             Memory::_ensureSerializer();
