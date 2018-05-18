@@ -94,7 +94,7 @@ namespace karabo {
             typedef std::vector<MetaDataEntries> ChunkMetaDataEntries;
             typedef std::vector<ChunkMetaDataEntries> ChannelMetaDataEntries;
 
-            typedef std::pair<karabo::io::BufferSet, karabo::util::Hash> SerializedChunk;
+            typedef std::pair<std::vector<karabo::io::BufferSet::Pointer>, karabo::util::Hash> SerializedChunk;
             typedef boost::shared_ptr<SerializedChunk> SerializedChunkPointer;
             typedef std::vector< SerializedChunkPointer > SerializedChunks;
             typedef std::vector< SerializedChunks > SerializedChannels;
@@ -184,16 +184,14 @@ namespace karabo {
             static void setChannelStatus(const size_t channelIdx, const int status);
             static int getChunkStatus(const size_t channelIdx, const size_t chunkIdx);
 
-            static void readAsContiguousBlock(karabo::io::BufferSet& buffer, karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx);
             static void assureAllDataIsCopied(const size_t channelIdx, const size_t chunkIdx);
             static void cacheAsContiguousBlock(const size_t channelIdx, const size_t chunkIdx);
             static const SerializedChunk& readContiguousBlockCache(const size_t channelIdx, const size_t chunkIdx);
 
-            static void writeAsContiguousBlock(const karabo::io::BufferSet& buffer,
-                                               const karabo::util::Hash& header,
-                                               const size_t channelIdx,
-                                               const size_t chunkIdx,
-                                               bool copyAllData=true);
+            static void readAsContiguousBlock(std::vector<karabo::io::BufferSet::Pointer>& buffers,
+                                              karabo::util::Hash& header,
+                                              const size_t channelIdx,
+                                              const size_t chunkIdx);
 
             static void writeAsContiguousBlock(const std::vector<karabo::io::BufferSet::Pointer>& buffers,
                                                const karabo::util::Hash& header,
