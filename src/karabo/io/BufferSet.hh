@@ -209,7 +209,11 @@ namespace karabo {
              */
             std::vector<unsigned int> sizes() const {
                 std::vector<unsigned int> v;
-                for (const auto& b : m_buffers) if (b.size) v.push_back(b.size);
+                for (const auto& b : m_buffers) {
+                    if (b.size) {
+                        v.push_back(b.size);
+                    }
+                }
                 return v;
             }
 
@@ -218,13 +222,19 @@ namespace karabo {
              */
             std::vector<int> types() const {
                 std::vector<int> v;
-                for (const auto& b : m_buffers) if (b.size) v.push_back(b.contentType);
+                for (const auto& b : m_buffers) {
+                    if (b.size) {
+                        v.push_back(b.contentType);
+                    }
+                }
                 return v;
             }
         
             template <typename BufferSequenceType>
             static void appendTo(BufferSequenceType& boost_buffers, const std::vector<BufferSet::Pointer>& buffers) {
-                for (const auto& b : buffers) b->appendTo<BufferSequenceType>(boost_buffers);
+                for (const auto& b : buffers) {
+                    b->appendTo<BufferSequenceType>(boost_buffers);
+                }
             }
 
         private:
