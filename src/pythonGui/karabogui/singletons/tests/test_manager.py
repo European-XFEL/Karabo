@@ -1,7 +1,5 @@
 from unittest.mock import ANY, Mock, call, patch
 
-from PyQt4.QtGui import QMessageBox
-
 from karabo.common.api import DeviceStatus
 from karabo.middlelayer import AccessMode, Configurable, Hash, Int32, Schema
 from karabogui.binding.api import build_binding, DeviceClassProxy, DeviceProxy
@@ -38,23 +36,26 @@ class TestManager(GuiTestCase):
             network.reset_mock()
             manager.shutdownDevice('dev', showConfirm=False)
             with patch('karabogui.singletons.manager.QMessageBox') as mb:
-                mb.question.return_value = QMessageBox.Yes
+                mb.question.return_value = mb.Yes
                 manager.shutdownDevice('dev')
                 network.onKillDevice.assert_called_with('dev')
+                network.onKillDevice.reset_mock()
                 network.reset_mock()
                 mb.reset_mock()
                 manager.shutdownDevice('dev', showConfirm=False)
-                mb.question.return_value = QMessageBox.No
+                network.onKillDevice.assert_called_with('dev')
+                network.onKillDevice.reset_mock()
+                mb.question.return_value = mb.No
                 manager.shutdownDevice('dev')
                 network.onKillDevice.assert_not_called()
 
             with patch('karabogui.singletons.manager.QMessageBox') as mb:
-                mb.question.return_value = QMessageBox.Yes
+                mb.question.return_value = mb.Yes
                 network.reset_mock()
                 manager.shutdownDevice('dev')
                 network.onKillDevice.assert_called_with('dev')
 
-                mb.question.return_value = QMessageBox.No
+                mb.question.return_value = mb.No
                 network.reset_mock()
                 manager.shutdownDevice('dev')
                 network.onKillDevice.assert_not_called()
@@ -64,15 +65,16 @@ class TestManager(GuiTestCase):
         with singletons(network=network):
             manager = Manager()
             with patch('karabogui.singletons.manager.QMessageBox') as mb:
-                mb.question.return_value = QMessageBox.Yes
+                mb.question.return_value = mb.Yes
                 manager.shutdownServer('swerver')
                 network.onKillServer.assert_called_with('swerver')
+                network.onKillServer.reset_mock()
                 mb.reset_mock()
-                mb.question.return_value = QMessageBox.No
+                mb.question.return_value = mb.No
                 manager.shutdownServer('swerver')
                 network.onKillServer.assert_not_called()
 
-                mb.question.return_value = QMessageBox.No
+                mb.question.return_value = mb.No
                 manager.shutdownServer('swerver')
                 network.onKillServer.assert_not_called()
 
