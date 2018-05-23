@@ -11,7 +11,7 @@ from dateutil.parser import parse as from_isoformat
 from pint import DimensionalityError
 
 from karabo.middlelayer import (
-    Assignment, AlarmCondition, background, Bool, Configurable, connectDevice,
+    AlarmCondition, background, Bool, Configurable, connectDevice,
     decodeBinary, Device, DeviceNode, execute, Float, getDevice, isAlive,
     isSet, Int32, KaraboError, lock, MetricPrefix, Node, Overwrite,
     Queue, setNoWait, setWait, Slot, slot, State, String, unit, Unit,
@@ -922,6 +922,21 @@ class Tests(DeviceTest):
                 yield from d
                 self.assertEqual(d.lockedBy, "local")
             yield from waitUntil(lambda: d.lockedBy == "")
+
+    @async_tst
+    def test_lock_concurrence(self):
+        with (yield from getDevice("remote")) as d:
+            yield from setWait(d, value=40, lockedBy="NoDevice")
+            self.assertEqual(d.lockedBy, "NoDevice")
+            self.assertEqual(d.value, 40)
+            with self.assertRaises(KaraboError) as e:
+                yield from setWait(d, value=50)
+                self.assertEqual(e, "Device locked by NoDevice")
+            self.assertEqual(d.value, 40)
+            yield from d.slotClearLock()
+            yield from setWait(d, value=50)
+            self.assertEqual(d.value, 50)
+            self.assertEqual(d.lockedBy, "")
 
     @async_tst
     def test_alarm(self):
