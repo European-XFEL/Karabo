@@ -193,6 +193,8 @@ class PanelWrangler(QObject):
         panel = self._project_item_panels.get(model)
         if panel is None:
             panel = ScenePanel(model, self.connected_to_server)
+        # NOTE: Only attached Scene panels are allowed to have design mode!
+        panel.ac_design_mode.setVisible(attached)
         self._show_project_item_panel(model, panel)
 
         if not attached:
