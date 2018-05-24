@@ -295,7 +295,7 @@ class NewProjectDialog(QDialog):
                 self.cbDomain.hide()
                 self.adjustSize()
             else:
-                title = 'Save project as...'
+                title = 'Create a copy of this project...'
                 text = '{}_copy'.format(model.simple_name)
             self.leTitle.setText(text)
         self.setWindowTitle(title)
