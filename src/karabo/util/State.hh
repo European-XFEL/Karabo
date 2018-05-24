@@ -168,6 +168,8 @@ namespace karabo {
             static const State IGNORING;
 
             static const State ACQUIRING;
+            static const State PROCESSING;
+
             static const State MONITORING;
 
             static const State INTERLOCK_BROKEN;
