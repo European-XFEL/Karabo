@@ -6,7 +6,7 @@
 import os.path as op
 
 from PyQt4 import uic
-from PyQt4.QtCore import QPoint, QSize, Qt, pyqtSlot
+from PyQt4.QtCore import pyqtSlot, QPoint, QSize, Qt
 from PyQt4.QtGui import (QColorDialog, QComboBox, QDialog, QDialogButtonBox,
                          QDoubleValidator, QFormLayout, QIcon, QPainter, QPen,
                          QPixmap, QTableWidgetItem)

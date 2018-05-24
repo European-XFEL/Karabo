@@ -33,10 +33,10 @@ class WidgetSceneHandler(ABCHasStrictTraits):
         """
         # The place action is always available!
         main_menu = QMenu(self.widget)
-        place_action = QAction("Move Layout", self.widget)
-        place_action.triggered.connect(partial(self._move_dialog,
-                                               scene_view))
-        main_menu.addAction(place_action)
+        move_action = QAction("Move Layout", self.widget)
+        move_action.triggered.connect(partial(self._move_dialog,
+                                              scene_view))
+        main_menu.addAction(move_action)
 
         # NOTE: Only if we don't have more items selected than a single one, we
         # are allowed to resize
