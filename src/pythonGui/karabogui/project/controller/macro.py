@@ -79,7 +79,7 @@ class MacroController(BaseProjectGroupController):
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_macro,
                                                 project_controller))
-        save_as_action = QAction('Save As...', menu)
+        save_as_action = QAction('Save as...', menu)
         save_as_action.triggered.connect(self._save_macro_to_file)
         run_action = QAction('Run', menu)
         run_action.triggered.connect(partial(run_macro, self.model))
