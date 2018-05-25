@@ -205,8 +205,6 @@ namespace karabo {
 
             void readAsyncHashVectorPointer(const ReadHashVectorPointerHandler& handler);                        
 
-            void readAsyncHashBufferSet(const ReadHashBufferSetHandler& handler);
-
             void readAsyncHashVectorBufferSetPointer(const ReadHashVectorBufferSetPointerHandler& handler);
 
             void readAsyncRaw(char* data, size_t& size, const ReadRawHandler& handler);
