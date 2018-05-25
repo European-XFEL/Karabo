@@ -66,11 +66,14 @@ class Evaluator(BaseBindingController):
         return widget
 
     def value_update(self, proxy):
+        value = get_binding_value(proxy)
+        if value is None:
+            return
+
         # update unit label
         self.widget.update_label(proxy)
-
         try:
-            disp_value = "{}".format(self.function(proxy.value))
+            disp_value = "{}".format(self.function(value))
         except Exception as e:
             disp_value = traceback.format_exception_only(type(e), e)[0]
         self._internal_widget.setText(disp_value)
