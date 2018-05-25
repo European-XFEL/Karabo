@@ -69,8 +69,9 @@ from .middlelayer_api.synchronization import (
     processEvents, sleep, synchronous
 )
 from .middlelayer_api.time_mixin import TimeMixin, get_timestamp
+from .middlelayer_api.time_utils import (
+    maximum, mean, minimum, StateSignifier)
 from .middlelayer_api.timestamp import Timestamp
-from .middlelayer_api.utils import StateSignifier
 from .middlelayer_api import numeric
 
 
