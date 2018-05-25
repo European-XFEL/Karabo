@@ -48,13 +48,13 @@ namespace karabo {
                 } else if (type == BufferContents::NO_COPY_BYTEARRAY_CONTENTS) { // allocate space as char array
                     if (!m_buffers.size() || m_buffers.back().size) {
                         m_buffers.push_back(Buffer(boost::shared_ptr<BufferType>(new BufferType()),
-                                                   boost::shared_ptr<BufferType::value_type>(new char[size]),
+                                                   boost::shared_ptr<BufferType::value_type>(new char[size], &karabo::util::byteArrayDeleter),
                                                    size,
                                                    BufferContents::NO_COPY_BYTEARRAY_CONTENTS));
                         m_currentBuffer++;
                     } else {
                         m_buffers[m_buffers.size() - 1] = Buffer(boost::shared_ptr<BufferType>(new BufferType()),
-                                                                 boost::shared_ptr<BufferType::value_type>(new char[size]),
+                                                                 boost::shared_ptr<BufferType::value_type>(new char[size], &karabo::util::byteArrayDeleter),
                                                                  size,
                                                                  BufferContents::NO_COPY_BYTEARRAY_CONTENTS);
                     }
