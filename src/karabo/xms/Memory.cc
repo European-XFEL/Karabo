@@ -170,17 +170,14 @@ namespace karabo {
             const MetaDataEntries& metaData = m_metaData[channelIdx][chunkIdx];
             std::vector<unsigned int> byteSizes;
             byteSizes.reserve(data.size());
-            for (Data::const_iterator it = data.begin(); it != data.end(); ++it) {
-                byteSizes.push_back((*it)->totalSize());                
+            for (const auto& bp : data) {
+                byteSizes.push_back(bp->totalSize());
+                buffers.push_back(bp);
             }
-
             header.clear();
             header.set<unsigned int>("nData", data.size());
             header.set<std::vector<unsigned int> >("byteSizes", byteSizes);            
             header.set("sourceInfo", *reinterpret_cast<const std::vector<karabo::util::Hash>*>(&metaData));
-            for (Data::const_iterator it = data.begin(); it != data.end(); ++it) {
-                buffers.push_back(*it);
-            }
         }
 
         void Memory::assureAllDataIsCopied(const size_t channelIdx, const size_t chunkIdx) {
