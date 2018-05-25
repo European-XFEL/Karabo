@@ -16,7 +16,7 @@ namespace karabo {
 
 
 
-#define KARABO_INIT_FIXED_STATE(X,Y) const State State::X(#X, &Y);\
+#define KARABO_INIT_FIXED_STATE(X,Y) const State State::X(#X, &Y);
                     
         KARABO_INIT_FIXED_STATE(DISABLED, KNOWN)
 
@@ -88,6 +88,7 @@ namespace karabo {
 
         KARABO_INIT_FIXED_STATE(ACQUIRING, RUNNING)
 
+        KARABO_INIT_FIXED_STATE(PROCESSING, RUNNING)
 
 
         KARABO_INIT_FIXED_STATE(HOMING, CHANGING)
@@ -195,6 +196,7 @@ namespace karabo {
                 KARABO_INSERT_STATE_TO_FACTORY(INCREASING)
 
                 KARABO_INSERT_STATE_TO_FACTORY(ACQUIRING)
+                KARABO_INSERT_STATE_TO_FACTORY(PROCESSING)
 
                 KARABO_INSERT_STATE_TO_FACTORY(INTERLOCKED)
                 KARABO_INSERT_STATE_TO_FACTORY(COOLED)
