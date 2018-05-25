@@ -178,9 +178,7 @@ namespace karabo {
             header.set<unsigned int>("nData", data.size());
             header.set<std::vector<unsigned int> >("byteSizes", byteSizes);            
             header.set("sourceInfo", *reinterpret_cast<const std::vector<karabo::util::Hash>*>(&metaData));
-            std::vector<karabo::util::Hash>& buffersVector = header.bindReference<std::vector<karabo::util::Hash>>("bufferSetLayout");
             for (Data::const_iterator it = data.begin(); it != data.end(); ++it) {
-                buffersVector.push_back(karabo::util::Hash("sizes", (*it)->sizes(), "types", (*it)->types()));
                 buffers.push_back(*it);
             }
         }

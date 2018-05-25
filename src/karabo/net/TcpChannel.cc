@@ -460,10 +460,10 @@ namespace karabo {
                     if (m_activeHandler == HASH_VECTOR_BUFFER_SET_POINTER) {
                         m_inHashHeader = boost::shared_ptr<Hash>(new Hash());
                         this->prepareHashFromHeader(*m_inHashHeader);
-                        if (m_inHashHeader->has("bufferSetLayout")) {
+                        if (m_inHashHeader->has("_bufferSetLayout_")) {
                             std::vector<karabo::io::BufferSet::Pointer> buffers;
                         
-                            for (const karabo::util::Hash& layout : m_inHashHeader->get<std::vector<karabo::util::Hash>>("bufferSetLayout")) {
+                            for (const karabo::util::Hash& layout : m_inHashHeader->get<std::vector<karabo::util::Hash>>("_bufferSetLayout_")) {
                                 if (!layout.has("sizes") || !layout.has("types")) throw KARABO_LOGIC_EXCEPTION("Pipeline Protocol violation!");
                                 const auto& sizes = layout.get<vector<unsigned int>>("sizes");
                                 const auto& types = layout.get<vector<int>>("types");
@@ -739,34 +739,21 @@ namespace karabo {
         }
 
 
-        void TcpChannel::write(const karabo::util::Hash& header, const karabo::io::BufferSet& body) {
-            try {
-                size_t sizeofLength = m_connectionPointer->getSizeofLength();
-                if (sizeofLength == 0) {
-                    throw KARABO_PARAMETER_EXCEPTION("With sizeofLength=0 you cannot use this interface.  Use write(const char* data, const size_t& size) instead.");
-                }
-                if (m_textSerializer) {
-                    throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Text serialization is not implemented for BufferSets");
-                } else {
-                    std::vector<char> headerBuf;
-                    m_binarySerializer->save(header, headerBuf);
-                    write(&headerBuf[0], headerBuf.size(), body);
-
-                }
-            } catch (...) {
-                KARABO_RETHROW
+        void TcpChannel::write(const karabo::util::Hash& hdr, const std::vector<karabo::io::BufferSet::Pointer>& body) {
+            using namespace karabo::io;
+            Hash header = hdr; // copy header
+            // Add the BufferSet layout structure into header just before serialization ...
+            std::vector<Hash>& buffersVector = header.bindReference<std::vector<Hash>>("_bufferSetLayout_");
+            for (std::vector<BufferSet::Pointer>::const_iterator it = body.begin(); it != body.end(); ++it) {
+                buffersVector.push_back(Hash("sizes", (*it)->sizes(), "types", (*it)->types()));
             }
-        }
-
-
-        void TcpChannel::write(const karabo::util::Hash& header, const std::vector<karabo::io::BufferSet::Pointer>& body) {
             try {
                 size_t sizeofLength = m_connectionPointer->getSizeofLength();
                 if (sizeofLength == 0) {
                     throw KARABO_PARAMETER_EXCEPTION("With sizeofLength=0 you cannot use this interface.  Use write(const char* data, const size_t& size) instead.");
                 }
                 if (m_textSerializer) {
-                    throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Text serialization is not implemented for BufferSets");
+                    throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Text serialization is not implemented for vectors of BufferSets");
                 } else {
                     std::vector<char> headerBuf;
                     m_binarySerializer->save(header, headerBuf);
