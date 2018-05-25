@@ -211,9 +211,7 @@ namespace karabo {
             std::vector<unsigned int> sizes() const {
                 std::vector<unsigned int> v;
                 for (const auto& b : m_buffers) {
-                    if (b.size) {
-                        v.push_back(b.size);
-                    }
+                    v.push_back(b.size);
                 }
                 return v;
             }
@@ -224,9 +222,7 @@ namespace karabo {
             std::vector<int> types() const {
                 std::vector<int> v;
                 for (const auto& b : m_buffers) {
-                    if (b.size) {
-                        v.push_back(b.contentType);
-                    }
+                    v.push_back(b.contentType);
                 }
                 return v;
             }
