@@ -14,6 +14,7 @@
 #include <boost/asio/buffer.hpp>                            //boost::asio::const_buffer
 #include <boost/core/null_deleter.hpp>                      //boost::null_delter
 #include <karabo/util/Types.hh>                             //karabo::util::ByteArray
+#include <karabo/util/ClassInfo.hh>                         //BufferSet::Pointer
 
 /**
  * The main European XFEL namespace
@@ -31,10 +32,10 @@ namespace karabo {
             
         public:
 
+            KARABO_CLASSINFO(karabo::io::BufferSet, "BufferSet", "1.0");
+
             typedef std::vector<char> BufferType;
-        private:
-            
-                        
+
             /*
             * @enum BufferContents
             * @brief An enumerator qualifying the contants of a given buffer in a BufferSet
@@ -43,7 +44,9 @@ namespace karabo {
                 COPY = 0,
                 NO_COPY_BYTEARRAY_CONTENTS
             };
-            
+
+        private:
+
             /*
             * @class Buffer
             * @brief The Buffer groups vectors, pointers, sizes and contents of a BufferSet
@@ -53,14 +56,14 @@ namespace karabo {
                 boost::shared_ptr<BufferType> vec;
                 std::size_t size;
                 int contentType;
-                
+
                 Buffer() {                    
                     vec = boost::shared_ptr<BufferType>(new BufferType());
                     ptr = boost::shared_ptr<BufferType::value_type>(vec->data(), boost::null_deleter());
                     size = 0;
                     contentType = BufferContents::COPY;
                 }
-                
+
                 Buffer(boost::shared_ptr<BufferType> v, boost::shared_ptr<BufferType::value_type> p, std::size_t s, BufferContents cType) {
                     ptr = p;
                     vec = v;
@@ -70,8 +73,6 @@ namespace karabo {
             };
 
         public:
-            
-            typedef boost::shared_ptr<BufferSet> Pointer;
 
             /**
              * Construct a BufferSet
@@ -80,14 +81,14 @@ namespace karabo {
             explicit BufferSet(bool copyAllData = false);
 
             virtual ~BufferSet();
-            
+
             /**
              * Add a buffer to the BufferSet
              * @param size =0 - add empty buffer to buffer set  (COPY type)
              *             >0 - add buffer where space allocated in std::vector<char> (COPY type)
              *             <0 - add buffer wgere space allocated in char array (NO_COPY_BYTEARRAY_CONTENTS type)
              */
-            void add(std::size_t size = 0, int type = 0);
+            void add(std::size_t size = 0, int type = BufferContents::COPY);
 
             /**
              * Update the size of the current buffer to reflect the size of the vector is refers to
@@ -161,8 +162,8 @@ namespace karabo {
              * @return 
              */
             size_t totalSize() const;
-            
-            
+
+
             /**
              * Will return true if any data in the BufferSet is a reference or a pointer to data not managed by
              * the BufferSet.
@@ -201,7 +202,7 @@ namespace karabo {
             bool currentIsByteArrayCopy() const {
                 return m_buffers[m_currentBuffer].contentType == BufferContents::COPY;
             }
-            
+
             friend std::ostream& operator<<(std::ostream& os, const BufferSet& bs);
 
             /**
@@ -229,11 +230,11 @@ namespace karabo {
                 }
                 return v;
             }
-        
+
             template <typename BufferSequenceType>
-            static void appendTo(BufferSequenceType& boost_buffers, const std::vector<BufferSet::Pointer>& buffers) {
-                for (const auto& b : buffers) {
-                    b->appendTo<BufferSequenceType>(boost_buffers);
+            static void appendTo(BufferSequenceType& boostBuffers, const std::vector<BufferSet::Pointer>& bufferSets) {
+                for (const auto& b : bufferSets) {
+                    b->appendTo<BufferSequenceType>(boostBuffers);
                 }
             }
 
