@@ -112,10 +112,13 @@ class LoadProjectDialog(QDialog):
             self.twProjects.model().add_project_manager_data(items)
             # Match only the simple name column to content
             self.twProjects.resizeColumnToContents(0)
+            return True
         elif sender is KaraboEventSender.ProjectDomainsList:
             self._domains_updated(data.get('items', []))
+            return True
         elif sender is KaraboEventSender.ProjectAttributeUpdated:
             self._is_trashed_updated(data.get('items', []))
+            return True
         return False
 
     def _domains_updated(self, domains):
@@ -218,7 +221,7 @@ class LoadProjectDialog(QDialog):
                     index, selection_flag)
             else:
                 self.twProjects.selectionModel().clearSelection()
-        enable = True if text else False
+        enable = True if text and not self.cbShowTrash.isChecked() else False
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
 
     @pyqtSlot(str)
@@ -229,6 +232,9 @@ class LoadProjectDialog(QDialog):
     def on_cbShowTrash_toggled(self, is_checked):
         model = self.twProjects.model()
         model.show_trashed = is_checked
+
+        enable = len(self.leTitle.text()) and not is_checked
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
         self.update_view()
 
     @pyqtSlot()
@@ -425,6 +431,7 @@ class TableModel(QAbstractTableModel):
 
     def sort(self, column, order=Qt.AscendingOrder):
         """ Sort table by given column number and order """
+        self.layoutAboutToBeChanged.emit()
         self.entries.sort(key=attrgetter(ProjectEntry._fields[column]),
                           reverse=bool(order))
         self.layoutChanged.emit()
