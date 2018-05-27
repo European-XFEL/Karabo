@@ -26,10 +26,6 @@ namespace karabo {
         void BufferSet::add(std::size_t size, int type) {
             updateSize();
 
-            // Use two heap-allocation: control block + managed object
-            // Do NOT use one heap-allocation via boost::make_shared...
-            // See: https://stackoverflow.com/questions/20895648/difference-in-make-shared-and-normal-shared-ptr-in-c
-
             if (size == 0) {
                 if (!m_buffers.size() || m_buffers.back().size) {
                     m_buffers.push_back(Buffer());
@@ -47,14 +43,15 @@ namespace karabo {
                     }
                 } else if (type == BufferContents::NO_COPY_BYTEARRAY_CONTENTS) { // allocate space as char array
                     if (!m_buffers.size() || m_buffers.back().size) {
+                        // See https://www.boost.org/doc/libs/1_61_0/libs/smart_ptr/sp_techniques.html#array
                         m_buffers.push_back(Buffer(boost::shared_ptr<BufferType>(new BufferType()),
-                                                   boost::shared_ptr<BufferType::value_type>(new char[size], &karabo::util::byteArrayDeleter),
+                                                   boost::shared_ptr<char>(new char[size], boost::checked_array_deleter<char>()),
                                                    size,
                                                    BufferContents::NO_COPY_BYTEARRAY_CONTENTS));
                         m_currentBuffer++;
                     } else {
                         m_buffers[m_buffers.size() - 1] = Buffer(boost::shared_ptr<BufferType>(new BufferType()),
-                                                                 boost::shared_ptr<BufferType::value_type>(new char[size], &karabo::util::byteArrayDeleter),
+                                                                 boost::shared_ptr<char>(new char[size], boost::checked_array_deleter<char>()),
                                                                  size,
                                                                  BufferContents::NO_COPY_BYTEARRAY_CONTENTS);
                     }
