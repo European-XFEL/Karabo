@@ -70,7 +70,7 @@ namespace karabo {
             boost::filesystem::path directory = filepath.parent_path();
 
             // Create the directory and any parents if not existing already
-            if (!boost::filesystem::exists(directory)) {
+            if (!directory.empty() && !boost::filesystem::exists(directory)) {
                 boost::system::error_code ec;
                 boost::filesystem::create_directories(directory, ec);
                 if (ec) {
