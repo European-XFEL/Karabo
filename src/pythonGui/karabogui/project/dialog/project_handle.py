@@ -192,14 +192,31 @@ class LoadProjectDialog(QDialog):
 
         return False
 
+    def _text_item_loadable(self, simple_name):
+        """ Return whether the entered project name is in the project table.
+        """
+        entries = self.twProjects.model().entries
+        projects = [entry.simple_name for entry in entries]
+        return simple_name in projects
+
+    def _check_button_state(self):
+        # Check if we have a preceeding selection
+        selectable = self._selected_item_loadable()
+        # If we are typing a project name
+        simple_name = self.leTitle.text()
+        project = len(simple_name) and self._text_item_loadable(simple_name)
+        trash = self.cbShowTrash.isChecked()
+
+        enable = selectable or (project and not trash)
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
+
     @pyqtSlot(object, object)
     def _selectionChanged(self, selected, deselected):
         """ Whenever an item is selected the current title and the button box
         need to be updated
         """
         # Make sure loading of trashed projects is not possible
-        enable = self._selected_item_loadable()
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
+        self._check_button_state()
 
     @pyqtSlot(object)
     def _load_item(self, index):
@@ -221,8 +238,8 @@ class LoadProjectDialog(QDialog):
                     index, selection_flag)
             else:
                 self.twProjects.selectionModel().clearSelection()
-        enable = True if text and not self.cbShowTrash.isChecked() else False
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
+
+        self._check_button_state()
 
     @pyqtSlot(str)
     def on_cbDomain_currentIndexChanged(self, domain):
@@ -233,8 +250,7 @@ class LoadProjectDialog(QDialog):
         model = self.twProjects.model()
         model.show_trashed = is_checked
 
-        enable = len(self.leTitle.text()) and not is_checked
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
+        self._check_button_state()
         self.update_view()
 
     @pyqtSlot()
