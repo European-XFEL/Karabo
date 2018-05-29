@@ -86,9 +86,6 @@ def parse_commandline():
                             default='master',
                             help='The branch/tag of the device package')
 
-    parser_chk.add_argument('-d', '--develop',
-                            action='store_true',
-                            help='Installs device in develop mode')
 
     parser_ins = sps.add_parser('install',
                                 help='Installs an existing device')
@@ -243,8 +240,6 @@ def checkout(args):
             print('done.')
             print('Device package was added to: {}'
                   .format(os.path.abspath(path)))
-    if hasattr(args, 'develop') and args.develop:
-        develop(args)
 
 
 def download(args):
@@ -286,44 +281,7 @@ def install(args):
     with pushd_popd():
         copyFlag = args.copy
         path = os.path.join('installed', args.device)
-        if os.path.isdir(path):
-            tag = run_cmd('cd {}; git tag'.format(path)).decode("utf-8").\
-                rstrip()
-            sha1 = run_cmd('cd {}; git show -s --format=%h'.format(path)).\
-                decode("utf-8").rstrip()
-            if args.no_clobber:  # abort if different version installed
-                if tag == '':  # not a tag
-                    print('{}-{} already installed: abort!'.
-                          format(args.device, sha1))
-                    sys.exit(1)
-                elif tag != args.tag:
-                    print('{}-{} already installed: abort!'.
-                          format(args.device, tag))
-                    sys.exit(1)
-                else:  # same version -> skip
-                    return
-            elif args.force:  # always overwrite
-                run_cmd('rm -rf {}'.format(path))
-            elif tag == args.tag:  # tag already installed
-                # TODO: add integrity check (git status should be ok)
-                print("Skip {}-{} installation... already installed".
-                      format(args.device, tag))
-                return
-            else:  # interactive
-                # Prompt for user's confirmation
-                if tag != '':
-                    ver = tag
-                else:  # not a tag
-                    ver = sha1
-                overwrite = input('{}-{} already installed: do you want to '
-                                  'replace it with {}-{}? [y/N]'.
-                                  format(args.device, ver, args.device,
-                                         args.tag))
-
-                if overwrite.lower() != "y":
-                    print('Abort {} installation'.format(args.device))
-                    return
-                run_cmd('rm -rf {}'.format(path))
+        clean_dir(path, args)
         os.makedirs(path, exist_ok=True)
         print('Downloading source for {}... '.format(args.device),
               end='', flush=True)
@@ -363,6 +321,53 @@ def install(args):
 
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1")
+
+
+def clean_dir(path, args):
+    if os.path.isdir(path):
+        tag = run_cmd('cd {}; git tag'.format(path)).decode("utf-8").rstrip()
+        if not hasattr(args, 'tag'):
+            # we are called by develop, the depth is more than 1
+            tag = run_cmd('cd {}; git rev-parse --abbrev-ref HEAD'
+                          ''.format(path)).decode("utf-8").rstrip()
+            new_tag = args.branch
+        else:
+            new_tag = args.tag
+        sha1 = run_cmd('cd {}; git show -s --format=%h'.format(path)).\
+            decode("utf-8").rstrip()
+        if args.no_clobber:  # abort if different version installed
+            if tag == '':  # not a tag
+                print('{}-{} already installed: abort!'
+                      ''.format(args.device, sha1))
+                sys.exit(1)
+            elif tag != new_tag:
+                print('{}-{} already installed: abort!'
+                      ''.format(args.device, tag))
+                sys.exit(1)
+            else:  # same version -> skip
+                return
+        elif args.force:  # always overwrite
+            run_cmd('rm -rf {}'.format(path))
+        elif tag == new_tag:  # tag already installed
+            # TODO: add integrity check (git status should be ok)
+            print("Skip {}-{} installation... already installed"
+                  "".format(args.device, tag))
+            return
+        else:  # interactive
+            # Prompt for user's confirmation
+            if tag != '':
+                ver = tag
+            else:  # not a tag
+                ver = sha1
+            overwrite = input(
+                '{}-{} already installed: do you want to '
+                'replace it with {}-{}? [y/N]'.format(
+                    args.device, ver, args.device, new_tag))
+
+            if overwrite.lower() != "y":
+                print('Abort {} installation'.format(args.device))
+                return
+            run_cmd('rm -rf {}'.format(path))
 
 
 def parse_configuration_file(filename):
@@ -461,11 +466,11 @@ def uninstall(args):
 def develop(args):
     with pushd_popd():
         path = os.path.join('devices', args.device)
-        if not os.path.isdir(path):
-            checkout(args)
+        clean_dir(path, args)
+        checkout(args)
         os.chdir(path)
         if os.path.exists('DEPENDS'):
-            install_dependencies(args)
+            install_dependencies(args, True)
         if os.path.exists('Makefile'):
             print('Compiling {}, please wait... '.format(args.device),
                   end='', flush=True)
@@ -482,7 +487,7 @@ def develop(args):
         print("Develop installation succeeded.")
 
 
-def install_dependencies(args):
+def install_dependencies(args, develop=False):
     """Installs dependencies as specified in the DEPENDS file.
     NOTE: This function must be run in the directory of the DEPENDS file!
     """
@@ -499,7 +504,10 @@ def install_dependencies(args):
         args_copy.device = item[0]
         args_copy.tag = item[1]
         args_copy.copy = item[2]
-        install(args_copy)
+        if develop:
+            develop(args_copy)
+        else:
+            install(args_copy)
 
 
 def undevelop(args):
