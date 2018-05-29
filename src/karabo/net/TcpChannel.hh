@@ -36,7 +36,7 @@ namespace karabo {
                 HASH_VECTOR_POINTER,
                 HASH_POINTER,
                 HASH_POINTER_HASH_POINTER,
-                HASH_VECTOR_BUFFER_SET_POINTER
+                HASH_VECTOR_BUFFERSET_POINTER
             };
 
             TcpConnection::Pointer m_connectionPointer;

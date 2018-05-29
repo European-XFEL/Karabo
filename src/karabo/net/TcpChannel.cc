@@ -342,10 +342,7 @@ namespace karabo {
         void TcpChannel::onVectorBufferSetPointerAvailable(const ErrorCode& e, size_t length,
                                                            const std::vector<karabo::io::BufferSet::Pointer>& buffers,
                                                            const ReadVectorBufferSetPointerHandler& handler) {
-            size_t messageSize;
-            _KARABO_VECTOR_TO_SIZE(m_inboundMessagePrefix, messageSize);
             if (!e) {
-                assert(messageSize == length - 4);
                 handler(e, buffers);
             } else {
                 handler(e, std::vector<karabo::io::BufferSet::Pointer>());
@@ -360,11 +357,22 @@ namespace karabo {
             std::vector<boost::asio::mutable_buffer> boostBuffers;
             boostBuffers.push_back(buffer(m_inboundMessagePrefix));
             karabo::io::BufferSet::appendTo(boostBuffers, buffers);
-            boost::asio::async_read(m_socket, boostBuffers, transfer_all(),
+
+            size_t totalSize = sizeof(unsigned int);
+            for (auto p : buffers) totalSize += p->totalSize();
+            if (m_socket.available() >= totalSize) {
+                ++m_syncCounter;
+                boost::system::error_code ec;
+                const size_t rsize = m_socket.read_some(boostBuffers, ec);
+                onVectorBufferSetPointerAvailable(boost::system::error_code(), rsize, buffers, handler);
+            } else {
+                ++m_asyncCounter;
+                boost::asio::async_read(m_socket, boostBuffers, transfer_all(),
                                     util::bind_weak(&TcpChannel::onVectorBufferSetPointerAvailable, this,
                                                     boost::asio::placeholders::error,
                                                     boost::asio::placeholders::bytes_transferred(),
                                                     buffers, handler));
+            }
         }
 
 
@@ -392,7 +400,7 @@ namespace karabo {
 
         void TcpChannel::readAsyncHashVectorBufferSetPointer(const ReadHashVectorBufferSetPointerHandler& handler) {
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
-            m_activeHandler = TcpChannel::HASH_VECTOR_BUFFER_SET_POINTER;
+            m_activeHandler = TcpChannel::HASH_VECTOR_BUFFERSET_POINTER;
             m_readHeaderFirst = true;
             m_readHandler = handler;
             // 'false' ensures that we leave the context and go via the event loop:
@@ -456,7 +464,7 @@ namespace karabo {
                 if (m_readHeaderFirst) {
                     m_readHeaderFirst = false;
                     m_inboundData.swap(m_inboundHeader);
-                    if (m_activeHandler == HASH_VECTOR_BUFFER_SET_POINTER) {
+                    if (m_activeHandler == HASH_VECTOR_BUFFERSET_POINTER) {
                         m_inHashHeader = boost::shared_ptr<Hash>(new Hash());
                         this->prepareHashFromHeader(*m_inHashHeader);
                         if (m_inHashHeader->has("_bufferSetLayout_")) {
@@ -606,7 +614,7 @@ namespace karabo {
                     break;
                 }
                 
-                case HASH_VECTOR_BUFFER_SET_POINTER:
+                case HASH_VECTOR_BUFFERSET_POINTER:
                 {
                     // we will be here only if error code is not "success": "Operation canceled", "End of file"
                     boost::any_cast<ReadHashVectorBufferSetPointerHandler>(m_readHandler) (e, Hash(), std::vector<karabo::io::BufferSet::Pointer>());
