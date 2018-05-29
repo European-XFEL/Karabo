@@ -25,6 +25,8 @@ using namespace karabo::webAuth;
 
 namespace karabo {
     namespace core {
+        const unsigned int DeviceClient::m_ageingIntervallMilliSec = 1000u;
+        const unsigned int DeviceClient::m_ageingIntervallMilliSecCtr = 200u;
 
 
         DeviceClient::DeviceClient(const std::string& instanceId)
