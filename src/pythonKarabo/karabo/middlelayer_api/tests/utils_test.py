@@ -1,7 +1,7 @@
 from unittest import TestCase, main
 
 from karabo.middlelayer import (
-    Float, maximum, mean, minimum, String, State, StateSignifier)
+    Float, maximum, minimum, String, State, StateSignifier)
 
 
 class Tests(TestCase):
@@ -108,28 +108,6 @@ class Tests(TestCase):
 
         with self.assertRaises(TypeError):
             value = minimum(v1)
-
-    def test_get_mean(self):
-        a1 = Float(defaultValue=1.0)
-        a2 = Float(defaultValue=1.0)
-        a3 = Float(defaultValue=1.0)
-        a4 = Float(defaultValue=1.0)
-
-        v1 = a1.toKaraboValue(6.0)
-        self.assertEqual(v1, 6.0)
-        v2 = a2.toKaraboValue(1.3)
-        self.assertEqual(v2, 1.3)
-        v3 = a3.toKaraboValue(1.7)
-        self.assertEqual(v3, 1.7)
-        v4 = a4.toKaraboValue(4.0)
-        self.assertEqual(v4, 4.0)
-
-        value = mean([v1, v2, v3, v4])
-        self.assertEqual(value, 3.25)
-        self.assertEqual(value.timestamp, v4.timestamp)
-
-        with self.assertRaises(TypeError):
-            value = mean(v1)
 
 
 if __name__ == "__main__":
