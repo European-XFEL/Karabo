@@ -1,8 +1,10 @@
+from collections import Iterable
 from functools import wraps
 import numpy as np
 
+from karabo.common.states import StateSignifier as SignifierBase
 from karabo.middlelayer import QuantityValue
-from karabo.middlelayer_api.basetypes import wrap_function
+from karabo.middlelayer_api.basetypes import wrap_function, wrap_methods
 
 
 @wraps(np.linspace)
@@ -48,3 +50,33 @@ def cross(a, b, *args, **kwargs):
         b = QuantityValue(b)
 
     return QuantityValue(np.cross(a.magnitude, b.magnitude), a.units * b.units)
+
+
+@wrap_function
+def maximum(iterable):
+    """Return the maximum value of the iterable
+
+    This function takes into account KaraboValues for newest timestamp
+    generation.
+    """
+    assert isinstance(iterable, Iterable)
+
+    return max(iterable)
+
+
+@wrap_function
+def minimum(iterable):
+    """Return the minimum value of the iterable
+
+    This function takes into account KaraboValues for newest timestamp
+    generation.
+    """
+    assert isinstance(iterable, Iterable)
+
+    return min(iterable)
+
+
+@wrap_methods
+class StateSignifier(SignifierBase):
+    """Wrapper of the StateSignifier to provide newest timestamp
+    """
