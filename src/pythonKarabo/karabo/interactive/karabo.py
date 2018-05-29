@@ -81,6 +81,11 @@ def parse_commandline():
                             type=str,
                             help='The name of the device package')
 
+    parser_chk.add_argument('-b', '--branch',
+                            type=str,
+                            default='master',
+                            help='The branch/tag of the device package')
+
     parser_chk.add_argument('-d', '--develop',
                             action='store_true',
                             help='Installs device in develop mode')
@@ -131,6 +136,11 @@ def parse_commandline():
     parser_dev.add_argument('device',
                             type=str,
                             help='The name of the device package')
+
+    parser_dev.add_argument('-b', '--branch',
+                            type=str,
+                            default='master',
+                            help='The branch/tag of the device package')
 
     parser_dev.add_argument('-f', '--force',
                             action='store_true',
@@ -227,9 +237,9 @@ def checkout(args):
             print('INFO The device package already exists, skipped checkout')
         else:
             print('Downloading {}... '.format(args.device), end='', flush=True)
-            run_cmd('git clone {}/karaboDevices/{}.git {}'.format(args.git,
-                                                                  args.device,
-                                                                  path))
+            git_opt = "-b {}".format(args.branch)
+            run_cmd('git clone {}/karaboDevices/{}.git {} {}'.format(
+                args.git, args.device, git_opt, path))
             print('done.')
             print('Device package was added to: {}'
                   .format(os.path.abspath(path)))
@@ -295,6 +305,7 @@ def install(args):
             elif args.force:  # always overwrite
                 run_cmd('rm -rf {}'.format(path))
             elif tag == args.tag:  # tag already installed
+                # TODO: add integrity check (git status should be ok)
                 print("Skip {}-{} installation... already installed".
                       format(args.device, tag))
                 return
