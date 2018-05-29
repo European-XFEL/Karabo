@@ -274,6 +274,7 @@ class DeviceServer(object):
     def scanPlugins(self):
         self.availableModules = {}
         while self.scanning:
+            newPlugin = False
             entrypoints = self.pluginLoader.update()
             for ep in entrypoints:
                 if ep.name in self.availableModules:
@@ -293,9 +294,9 @@ class DeviceServer(object):
                         self.availableDevices[classid] = {"mustNotify": True,
                                                           "module": ep.name,
                                                           "xsd": schema}
-                        self.newPluginAvailable()
-                        self.log.INFO('Successfully loaded plugin: "{}:{}"'
-                                      .format(ep.module_name, ep.name))
+                        newPlugin = True
+                        self.log.DEBUG('Successfully loaded plugin: "{}:{}"'
+                                       .format(ep.module_name, ep.name))
                     except (RuntimeError, AttributeError) as e:
                         m = "Failure while building schema for class {}, base "
                         "class {} and bases {} : {}".format(classid,
@@ -305,6 +306,9 @@ class DeviceServer(object):
                                                             __bases_classid__,
                                                             e.message)
                         self.log.ERROR(m)
+            if newPlugin:
+                self.newPluginAvailable()
+
             time.sleep(3)
 
     def stopDeviceServer(self):
@@ -400,7 +404,7 @@ class DeviceServer(object):
                                 hsh.set('deviceId', config.get('deviceId'))
                             self.instantiateDevice(hsh)
             visibilities.append(d['xsd'].getDefaultValue("visibility"))
-        self.log.DEBUG("Sending instance update as new device plugins are available: {}".format(deviceClasses))
+        self.log.INFO("Sending instance update as new device plugins are available: {}".format(deviceClasses))
         self.ss.updateInstanceInfo(Hash("deviceClasses", deviceClasses, "visibilities", visibilities))
 
     def noStateTransition(self):
