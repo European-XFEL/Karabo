@@ -383,7 +383,6 @@ namespace karabo {
             Hash::Pointer header = m_inHashHeader;
             m_inHashHeader.reset();
             m_activeHandler = TcpChannel::NONE;
-            // If OutputChannel is of old karabo version ...
             std::vector<karabo::io::BufferSet::Pointer> buffers;
             buffers.push_back(karabo::io::BufferSet::Pointer(new karabo::io::BufferSet(false)));
             if (!e) buffers[0]->emplaceBack(data);
@@ -474,7 +473,7 @@ namespace karabo {
                             }
                             this->readAsyncVectorBufferSetPointerImpl(buffers, util::bind_weak(&TcpChannel::onHashVectorBufferSetPointerRead, this, _1, _2));
                         } else {
-                            // OutputChannel from "old" karabo version? Then read the rest as vector of char
+                            // OutputChannel from 2.2.3 karabo version or early? Then read the rest as vector of char
                             ReadHashVectorBufferSetPointerHandler handler = boost::any_cast<ReadHashVectorBufferSetPointerHandler>(m_readHandler);
                             this->readAsyncVectorPointerImpl(util::bind_weak(&TcpChannel::onHashVectorBufferSetPointerVectorPointerRead, this, _1, _2, handler));
                         }
