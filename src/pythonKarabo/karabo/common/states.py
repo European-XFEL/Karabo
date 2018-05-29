@@ -167,6 +167,7 @@ class State(StateBase, metaclass=ParentEnumMeta):
     RUNNING = NORMAL
 
     ACQUIRING = RUNNING
+    PROCESSING = RUNNING
 
     PASSIVE = STATIC
     WARM = PASSIVE

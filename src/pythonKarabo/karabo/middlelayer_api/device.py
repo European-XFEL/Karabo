@@ -8,7 +8,7 @@ from .alarm import AlarmMixin
 from .basetypes import isSet
 from .enums import AccessLevel, AccessMode, Assignment
 from .exceptions import KaraboError
-from .hash import Bool, Hash, HashType, Int32, SchemaHashType, String
+from .hash import Bool, Hash, HashType, Int32, SchemaHashType, Slot, String
 from .logger import Logger
 from .schema import Node
 from .signalslot import SignalSlotable, Signal, slot, coslot
@@ -94,6 +94,13 @@ class Device(AlarmMixin, SignalSlotable):
         accessMode=AccessMode.RECONFIGURABLE, assignment=Assignment.OPTIONAL,
         requiredAccessLevel=AccessLevel.EXPERT, defaultValue="")
 
+    @Slot(displayedName="Clear Lock", requiredAccessLevel=AccessLevel.EXPERT,
+          description="Clear the lock on this device")
+    @coroutine
+    def slotClearLock(self):
+        """ Clear the lock on this device """
+        self.lockedBy = ""
+
     lastCommand = String(
         displayedName="Last command",
         defaultValue="",
@@ -167,8 +174,11 @@ class Device(AlarmMixin, SignalSlotable):
 
     def _checkLocked(self, message):
         """return an error message if device is locked or None if not"""
+        lock_clear = ("slotClearLock"
+                      in message.properties["slotFunctions"].decode("ascii"))
         if (self.lockedBy and self.lockedBy !=
-                message.properties["signalInstanceId"].decode("ascii")):
+                message.properties["signalInstanceId"].decode("ascii") and not
+                lock_clear):
             return 'Device locked by "{}"'.format(self.lockedBy)
 
     def slotReconfigure(self, reconfiguration, message):

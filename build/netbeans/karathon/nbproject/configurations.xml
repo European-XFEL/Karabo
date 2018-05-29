@@ -548,7 +548,7 @@
             <pElem>../../../src</pElem>
             <pElem>${KARABO}/include</pElem>
             <pElem>${KARABO}/extern/include/hdf5</pElem>
-            <pElem>${KARABO}/extern/include/python3.4</pElem>
+            <pElem>${PYTHON_HEADER_DIR}</pElem>
             <pElem>${NUMPY_HEADER_DIR}</pElem>
             <pElem>${KARABO}/extern/include</pElem>
           </incDir>

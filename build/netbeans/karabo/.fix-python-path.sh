@@ -7,12 +7,11 @@
 
 PACKAGEDIR=$1
 
-PYTHON_VERSION=3.4
+MAKEFILE=$(python -c "import sysconfig; print(sysconfig.get_makefile_filename())")
 
-OLD_PREFIX=$(cat $PACKAGEDIR/extern/lib/python${PYTHON_VERSION}/config-${PYTHON_VERSION}m/Makefile | grep '^prefix=*' | sed '1 s/prefix=//')
+OLD_PREFIX=$(cat $MAKEFILE | grep '^prefix=*' | sed '1 s/prefix=//')
 
-PYTHON_FILES=(config-${PYTHON_VERSION}m/Makefile site-packages/sipconfig.py config-${PYTHON_VERSION}m/python-config.py
-)
+PYTHON_FILES=($MAKEFILE site-packages/sipconfig.py $(dirname $MAKEFILE)/python-config.py)
 
 SED_PROGRAM='s%'$OLD_PREFIX'%'$PACKAGEDIR/extern'%g'
 count=0

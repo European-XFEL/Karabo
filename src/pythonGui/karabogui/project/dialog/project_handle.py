@@ -112,10 +112,13 @@ class LoadProjectDialog(QDialog):
             self.twProjects.model().add_project_manager_data(items)
             # Match only the simple name column to content
             self.twProjects.resizeColumnToContents(0)
+            return True
         elif sender is KaraboEventSender.ProjectDomainsList:
             self._domains_updated(data.get('items', []))
+            return True
         elif sender is KaraboEventSender.ProjectAttributeUpdated:
             self._is_trashed_updated(data.get('items', []))
+            return True
         return False
 
     def _domains_updated(self, domains):
@@ -189,14 +192,31 @@ class LoadProjectDialog(QDialog):
 
         return False
 
+    def _text_item_loadable(self, simple_name):
+        """ Return whether the entered project name is in the project table.
+        """
+        entries = self.twProjects.model().entries
+        projects = [entry.simple_name for entry in entries]
+        return simple_name in projects
+
+    def _check_button_state(self):
+        # Check if we have a preceeding selection
+        selectable = self._selected_item_loadable()
+        # If we are typing a project name
+        simple_name = self.leTitle.text()
+        project = len(simple_name) and self._text_item_loadable(simple_name)
+        trash = self.cbShowTrash.isChecked()
+
+        enable = selectable or (project and not trash)
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
+
     @pyqtSlot(object, object)
     def _selectionChanged(self, selected, deselected):
         """ Whenever an item is selected the current title and the button box
         need to be updated
         """
         # Make sure loading of trashed projects is not possible
-        enable = self._selected_item_loadable()
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
+        self._check_button_state()
 
     @pyqtSlot(object)
     def _load_item(self, index):
@@ -218,8 +238,8 @@ class LoadProjectDialog(QDialog):
                     index, selection_flag)
             else:
                 self.twProjects.selectionModel().clearSelection()
-        enable = True if text else False
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
+
+        self._check_button_state()
 
     @pyqtSlot(str)
     def on_cbDomain_currentIndexChanged(self, domain):
@@ -229,6 +249,8 @@ class LoadProjectDialog(QDialog):
     def on_cbShowTrash_toggled(self, is_checked):
         model = self.twProjects.model()
         model.show_trashed = is_checked
+
+        self._check_button_state()
         self.update_view()
 
     @pyqtSlot()
@@ -295,7 +317,7 @@ class NewProjectDialog(QDialog):
                 self.cbDomain.hide()
                 self.adjustSize()
             else:
-                title = 'Save project as...'
+                title = 'Create a copy of this project...'
                 text = '{}_copy'.format(model.simple_name)
             self.leTitle.setText(text)
         self.setWindowTitle(title)
@@ -425,6 +447,7 @@ class TableModel(QAbstractTableModel):
 
     def sort(self, column, order=Qt.AscendingOrder):
         """ Sort table by given column number and order """
+        self.layoutAboutToBeChanged.emit()
         self.entries.sort(key=attrgetter(ProjectEntry._fields[column]),
                           reverse=bool(order))
         self.layoutChanged.emit()
