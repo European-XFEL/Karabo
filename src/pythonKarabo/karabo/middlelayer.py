@@ -70,7 +70,8 @@ from .middlelayer_api.synchronization import (
 )
 from .middlelayer_api.time_mixin import TimeMixin, get_timestamp
 from .middlelayer_api.timestamp import Timestamp
-from .middlelayer_api.utils import StateSignifier
+from .middlelayer_api.unitutil import (
+    maximum, minimum, StateSignifier)
 from .middlelayer_api import numeric
 
 

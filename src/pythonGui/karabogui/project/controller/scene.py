@@ -40,7 +40,7 @@ class SceneController(BaseProjectController):
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_scene,
                                                 project_controller))
-        save_as_action = QAction('Save As...', menu)
+        save_as_action = QAction('Save as...', menu)
         save_as_action.triggered.connect(self._save_scene_to_file)
         revert_action = QAction('Revert Changes', menu)
         revert_action.triggered.connect(self._revert_changes)
