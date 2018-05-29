@@ -368,10 +368,10 @@ namespace karabo {
             } else {
                 ++m_asyncCounter;
                 boost::asio::async_read(m_socket, boostBuffers, transfer_all(),
-                                    util::bind_weak(&TcpChannel::onVectorBufferSetPointerAvailable, this,
-                                                    boost::asio::placeholders::error,
-                                                    boost::asio::placeholders::bytes_transferred(),
-                                                    buffers, handler));
+                                        util::bind_weak(&TcpChannel::onVectorBufferSetPointerAvailable, this,
+                                                        boost::asio::placeholders::error,
+                                                        boost::asio::placeholders::bytes_transferred(),
+                                                        buffers, handler));
             }
         }
 
