@@ -6,7 +6,7 @@
 import os.path as op
 
 from PyQt4 import uic
-from PyQt4.QtCore import QSize, Qt, pyqtSlot
+from PyQt4.QtCore import pyqtSlot, QPoint, QSize, Qt
 from PyQt4.QtGui import (QColorDialog, QComboBox, QDialog, QDialogButtonBox,
                          QDoubleValidator, QFormLayout, QIcon, QPainter, QPen,
                          QPixmap, QTableWidgetItem)
@@ -383,3 +383,34 @@ class SceneLinkDialog(QDialog):
     @pyqtSlot(str)
     def on_leFilter_textChanged(self, text):
         self._select_item(text, Qt.MatchStartsWith)
+
+
+class SceneItemDialog(QDialog):
+    """A dialog to modify the layout bounding rect coordinates
+    """
+    def __init__(self, x=0, y=0, title='SceneItem', max_x=1024, max_y=768,
+                 parent=None):
+        super(SceneItemDialog, self).__init__(parent)
+        filepath = op.join(op.abspath(op.dirname(__file__)),
+                           'sceneitem_dialog.ui')
+        uic.loadUi(filepath, self)
+        self.setModal(False)
+        # Fill the dialog with start values!
+        self.ui_x.setValue(x)
+        self.ui_x.setMaximum(max_x)
+        self.ui_y.setValue(y)
+        self.ui_y.setMaximum(max_y)
+        self.setWindowTitle(title)
+        if parent is not None:
+            # place dialog accordingly!
+            point = parent.rect().bottomRight()
+            global_point = parent.mapToGlobal(point)
+            self.move(global_point - QPoint(self.width(), 0))
+
+    @property
+    def x(self):
+        return self.ui_x.value()
+
+    @property
+    def y(self):
+        return self.ui_y.value()

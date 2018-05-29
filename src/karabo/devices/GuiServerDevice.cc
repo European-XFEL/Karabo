@@ -7,6 +7,7 @@
  */
 
 #include "GuiServerDevice.hh"
+#include "karabo/util/Hash.hh"
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/TcpChannel.hh"
@@ -978,12 +979,15 @@ namespace karabo {
 
         void GuiServerDevice::instanceUpdatedHandler(const karabo::util::Hash& topologyEntry) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting instance updated";
+                const std::string& type = topologyEntry.begin()->getKey();
+                const std::string& instanceId = topologyEntry.begin()->getValue<Hash>().begin()->getKey();
+                KARABO_LOG_FRAMEWORK_INFO << "instanceUpdatedHandler --> instanceId: '" << instanceId << "'"
+                        << ", type: '" << type << "'";
                 Hash h("type", "instanceUpdated", "topologyEntry", topologyEntry);
                 safeAllClientsWrite(h);
 
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in instanceUpdatedHandler(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in instanceUpdatedHandler(): " << e.what();
             }
         }
 

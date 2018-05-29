@@ -272,7 +272,7 @@ class ScenePanel(BasePanelWidget):
     def create_group_tool_actions(self):
         actions = []
         actions.append(GroupSceneAction(icon=icons.group,
-                                        text="Group without layout",
+                                        text="Group in fixed layout",
                                         tooltip="Group selected items"))
         actions.append(BoxVSceneAction(icon=icons.groupVertical,
                                        text="Group Vertically",

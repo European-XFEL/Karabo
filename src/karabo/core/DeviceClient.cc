@@ -228,17 +228,18 @@ namespace karabo {
 
 
         void DeviceClient::slotInstanceUpdated(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "slotInstanceUpdated was called for: " << instanceId;
 
-            Hash entry = prepareTopologyEntry(instanceId, instanceInfo);
+            const Hash entry(prepareTopologyEntry(instanceId, instanceInfo));
             mergeIntoRuntimeSystemDescription(entry);
 
             if (m_instanceUpdatedHandler) m_instanceUpdatedHandler(entry);
 
-            KARABO_LOG_FRAMEWORK_DEBUG << "slotInstanceUpdated was called";
         }
 
 
         void DeviceClient::_slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "_slotInstanceGone was called for: " << instanceId;
             try {
 
                 const string path(prepareTopologyPath(instanceId, instanceInfo));
