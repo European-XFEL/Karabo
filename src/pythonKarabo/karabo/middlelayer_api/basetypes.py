@@ -520,6 +520,19 @@ class QuantityValue(KaraboValue, Quantity):
             return wrap_function(ret, self.timestamp)
         return ret
 
+    @property
+    def __array_interface__(self):
+        if isinstance(self.magnitude, numpy.ndarray):
+            return super().__array_interface__
+        else:
+
+            # This is pure black magic. In functions like numpy.mean, we
+            # convert lists into arrays. This fails, as numpy first tries to
+            # convert the value into a numpy data type, but fails miserably.
+            # With the following code, we force numpy to not convert the data.
+            return numpy.asarray(
+                self.magnitude, dtype=object).__array_interface__
+
     def __array_wrap__(self, obj, context=None):
         ret = super().__array_wrap__(obj, context)
         if not isinstance(ret, QuantityValue):
