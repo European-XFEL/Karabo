@@ -3,7 +3,7 @@
 # Created on February 10, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import pyqtSignal, pyqtSlot, Qt
+from PyQt4.QtCore import pyqtSignal, pyqtSlot, QLocale, Qt
 from PyQt4.QtGui import QSpinBox
 from traits.api import Instance
 
@@ -44,6 +44,7 @@ class EditableSpinBox(BaseBindingController):
 
     def create_widget(self, parent):
         self._internal_widget = _FocusynSpinBox(parent)
+        self._internal_widget.setLocale(QLocale('en_US'))
         self._internal_widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
         self._internal_widget.focusChanged.connect(self._focus_changed)
         return add_unit_label(self.proxy, self._internal_widget, parent=parent)
