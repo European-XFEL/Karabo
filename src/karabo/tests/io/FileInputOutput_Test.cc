@@ -228,7 +228,6 @@ void FileInputOutput_Test::setUp() {
 
 
 void FileInputOutput_Test::tearDown() {
-
 }
 
 
@@ -260,8 +259,11 @@ void FileInputOutput_Test::writeTextFile() {
     saveToFile(m_unrootedHash, resourcePath("file3a.xml"), Hash("format.Xml.indentation", 0, "format.Xml.writeDataTypes", false));
 
     saveToFile(m_withSchemaHash, resourcePath("file4a.xml"), Hash("format.Xml.indentation", 0, "format.Xml.writeDataTypes", true));
-
-
+    
+    // Check different folder levels
+    saveToFile(m_rootedHash, resourcePath("folder/file5a.xml"));
+    
+    saveToFile(m_rootedHash, resourcePath("/tmp/folder/file6a.xml"));
 }
 
 
@@ -297,6 +299,12 @@ void FileInputOutput_Test::readTextFile() {
 
     Hash h4a;
     loadFromFile(h4a, resourcePath("file4a.xml"));
+    
+    Hash h5a;
+    loadFromFile(h5a, resourcePath("folder/file5a.xml"));
+    
+    Hash h6a;
+    loadFromFile(h6a, resourcePath("/tmp/folder/file6a.xml"));
 
     //    clog << "h2 (xml)\n" << h2 << endl;
 
@@ -320,7 +328,12 @@ void FileInputOutput_Test::readTextFile() {
 
     CPPUNIT_ASSERT(karabo::util::similar(h4, m_withSchemaHash));
     CPPUNIT_ASSERT(karabo::util::similar(h4, h4a));
-
+    
+    CPPUNIT_ASSERT(karabo::util::similar(h5a, m_rootedHash));
+    CPPUNIT_ASSERT(karabo::util::similar(h6a, m_rootedHash));
+    
+    boost::filesystem::remove_all(resourcePath("folder/"));
+    boost::filesystem::remove_all(resourcePath("/tmp/folder/"));
 }
 
 
