@@ -25,8 +25,6 @@
       </cc:Work>
     </rdf:RDF>
   </metadata>
-  <g
-     id="layer1">
     <g
        transform="matrix(1.605006,0,0,1.605006,-86.526483,-229.41365)"
        id="icon_pirani_inverted"
@@ -52,5 +50,4 @@
            y="153.95251"
            id="tspan24857-89-9">PIM</tspan></text>
     </g>
-  </g>
 </svg>
