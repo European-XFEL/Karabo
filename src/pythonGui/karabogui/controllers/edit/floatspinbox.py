@@ -1,5 +1,5 @@
 from numpy import log10
-from PyQt4.QtCore import pyqtSlot, Qt
+from PyQt4.QtCore import pyqtSlot, QLocale, Qt
 from PyQt4.QtGui import QAction, QDoubleSpinBox, QInputDialog
 from traits.api import Instance, on_trait_change
 
@@ -24,6 +24,7 @@ class FloatSpinBox(BaseBindingController):
 
     def create_widget(self, parent):
         self._internal_widget = QDoubleSpinBox(parent)
+        self._internal_widget.setLocale(QLocale('en_US'))
         self._internal_widget.setMinimumSize(WIDGET_MIN_WIDTH,
                                              WIDGET_MIN_HEIGHT)
         self._internal_widget.setDecimals(self.model.decimals)
