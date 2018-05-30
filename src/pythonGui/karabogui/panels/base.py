@@ -100,7 +100,7 @@ class Searchable:
             result = "{} Results".format(n_found)
             self._select_node()
         else:
-            result = "No Results"
+            result = "No results"
         self.la_result.setText(result)
 
         enable = n_found > 0
