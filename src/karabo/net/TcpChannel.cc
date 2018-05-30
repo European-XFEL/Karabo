@@ -480,6 +480,16 @@ namespace karabo {
                                 buffers.push_back(buffer);
                             }
                             this->readAsyncVectorBufferSetPointerImpl(buffers, util::bind_weak(&TcpChannel::onHashVectorBufferSetPointerRead, this, _1, _2));
+                        } else if (m_inHashHeader->has("byteSizes")) {
+                            const auto& sizes =  m_inHashHeader->get<std::vector<unsigned int>>("byteSizes");
+                            std::vector<karabo::io::BufferSet::Pointer> buffers;
+                            
+                            for (size_t ii = 0; ii < sizes.size(); ii++) {
+                                karabo::io::BufferSet::Pointer buffer(new karabo::io::BufferSet(false));
+                                buffer->add(sizes[ii], karabo::io::BufferSet::COPY);
+                                buffers.push_back(buffer);
+                            }
+                            this->readAsyncVectorBufferSetPointerImpl(buffers, util::bind_weak(&TcpChannel::onHashVectorBufferSetPointerRead, this, _1, _2));
                         } else {
                             // OutputChannel from 2.2.3 karabo version or early? Then read the rest as vector of char
                             ReadHashVectorBufferSetPointerHandler handler = boost::any_cast<ReadHashVectorBufferSetPointerHandler>(m_readHandler);
