@@ -134,9 +134,16 @@ class DeviceServerController(BaseProjectGroupController):
         """ Remove the macro associated with this item from its project
         """
         server = self.model
-        project = project_controller.model
-        if server in project.servers:
-            project.servers.remove(server)
+        ask = ('Are you sure you want to delete \"<b>{}</b>\".<br /> '
+               'Continue action?'.format(server.simple_name))
+        msg_box = QMessageBox(QMessageBox.Question, 'Delete server',
+                              ask, QMessageBox.Yes | QMessageBox.No)
+        msg_box.setModal(False)
+        msg_box.setDefaultButton(QMessageBox.No)
+        if msg_box.exec() == QMessageBox.Yes:
+            project = project_controller.model
+            if server in project.servers:
+                project.servers.remove(server)
 
     @pyqtSlot()
     def _edit_server(self):
