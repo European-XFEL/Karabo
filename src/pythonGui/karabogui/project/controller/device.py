@@ -7,7 +7,7 @@ from functools import partial
 from io import StringIO
 
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QAction, QDialog, QMenu
+from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance, Property, on_trait_change
 
 from karabo.common.api import Capabilities, NO_CONFIG_STATUSES
@@ -301,10 +301,17 @@ class DeviceInstanceController(BaseProjectGroupController):
         """ Remove the device associated with this item from its device server
         """
         device = self.model
-        server_model = find_parent_object(device, project_controller.model,
-                                          DeviceServerModel)
-        if device in server_model.devices:
-            server_model.devices.remove(device)
+        ask = ('Are you sure you want to delete \"<b>{}</b>\".<br /> '
+               'Continue action?'.format(device.instance_id))
+        msg_box = QMessageBox(QMessageBox.Question, 'Delete device',
+                              ask, QMessageBox.Yes | QMessageBox.No)
+        msg_box.setModal(False)
+        msg_box.setDefaultButton(QMessageBox.No)
+        if msg_box.exec() == QMessageBox.Yes:
+            server_model = find_parent_object(device, project_controller.model,
+                                              DeviceServerModel)
+            if device in server_model.devices:
+                server_model.devices.remove(device)
 
     def _edit_device(self, project_controller):
         # Watch for incomplete model initialization
