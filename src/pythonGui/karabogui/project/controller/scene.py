@@ -8,7 +8,7 @@ from io import StringIO
 import os.path as op
 
 from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QAction, QDialog, QMenu
+from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance
 
 from karabo.common.project.api import get_user_cache
@@ -67,12 +67,19 @@ class SceneController(BaseProjectController):
         """ Remove the scene associated with this item from its project
         """
         scene = self.model
-        project = project_controller.model
-        if scene in project.scenes:
-            project.scenes.remove(scene)
+        ask = ('Are you sure you want to delete \"<b>{}</b>\".<br /> '
+               'Continue action?'.format(scene.simple_name))
+        msg_box = QMessageBox(QMessageBox.Question, 'Delete scene',
+                              ask, QMessageBox.Yes | QMessageBox.No)
+        msg_box.setModal(False)
+        msg_box.setDefaultButton(QMessageBox.No)
+        if msg_box.exec() == QMessageBox.Yes:
+            project = project_controller.model
+            if scene in project.scenes:
+                project.scenes.remove(scene)
 
-        broadcast_event(KaraboEventSender.RemoveProjectModelViews,
-                        {'models': [scene]})
+            broadcast_event(KaraboEventSender.RemoveProjectModelViews,
+                            {'models': [scene]})
 
     @pyqtSlot()
     def _edit_scene(self):
