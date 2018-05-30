@@ -51,10 +51,6 @@
       </cc:Work>
     </rdf:RDF>
   </metadata>
-  <g
-     inkscape:label="Layer 1"
-     inkscape:groupmode="layer"
-     id="layer1">
     <g
        id="icon_pirani_gauge"
        inkscape:label="icon_pirani_gauge"
@@ -89,5 +85,4 @@
            id="tspan24857-89"
            sodipodi:role="line">P</tspan></text>
     </g>
-  </g>
 </svg>
