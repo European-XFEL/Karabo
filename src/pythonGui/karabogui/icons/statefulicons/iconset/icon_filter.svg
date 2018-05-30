@@ -51,11 +51,6 @@
       </cc:Work>
     </rdf:RDF>
   </metadata>
-  <g
-     inkscape:label="Layer 1"
-     inkscape:groupmode="layer"
-     id="layer1"
-     transform="translate(-0.02427358,-1013.6206)">
     <g
        id="icon_filter"
        inkscape:label="icon_filter">
@@ -75,5 +70,4 @@
          d="m 8.5169028,1021.7113 -0.03263,2.5937 8.7478612,7.5572 0.08471,11.1391 4.842547,-3.5897 -0.106685,-7.537 9.713707,-7.2207 0.0039,-2.9963 z"
          style="fill:#666666;stroke:#000000;stroke-width:1.26718473px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
     </g>
-  </g>
 </svg>
