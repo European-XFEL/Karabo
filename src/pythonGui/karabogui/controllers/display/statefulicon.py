@@ -88,7 +88,7 @@ class StatefulIconWidget(BaseBindingController):
 
         non_selection = ICONS["icon_default"]
         # we add all items with a preview icon
-        for key, icon in ICONS.items():
+        for key, icon in sorted(ICONS.items()):
             listItem = QStandardItem(icon.description)
             p = QPixmap()
             p.loadFromData(QByteArray(icon.with_color(WHITE)))
