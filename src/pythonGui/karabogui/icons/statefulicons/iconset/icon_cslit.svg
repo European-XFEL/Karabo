@@ -51,11 +51,6 @@
       </cc:Work>
     </rdf:RDF>
   </metadata>
-  <g
-     inkscape:label="Layer 1"
-     inkscape:groupmode="layer"
-     id="layer1"
-     transform="translate(-0.03652353,-1013.6134)">
     <g
        id="icon_cslit"
        inkscape:label="icon_cslit"
@@ -107,5 +102,4 @@
          id="path4918"
          inkscape:connector-curvature="0" />
     </g>
-  </g>
 </svg>
