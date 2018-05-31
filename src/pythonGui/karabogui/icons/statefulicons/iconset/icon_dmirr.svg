@@ -51,11 +51,6 @@
       </cc:Work>
     </rdf:RDF>
   </metadata>
-  <g
-     inkscape:label="Layer 1"
-     inkscape:groupmode="layer"
-     id="layer1"
-     transform="translate(-0.0434999,-1013.6178)">
     <g
        id="icon_dmirror"
        inkscape:label="icon_dmirror"
@@ -90,5 +85,4 @@
          id="path4900"
          inkscape:connector-curvature="0" />
     </g>
-  </g>
 </svg>
