@@ -51,11 +51,6 @@
       </cc:Work>
     </rdf:RDF>
   </metadata>
-  <g
-     inkscape:label="Layer 1"
-     inkscape:groupmode="layer"
-     id="layer1"
-     transform="translate(-0.02427358,-1013.6206)">
     <g
        id="icon_pslit"
        inkscape:label="icon_pslit">
@@ -101,5 +96,4 @@
          y="23.725431"
          transform="matrix(0,1,1,0,0,0)" />
     </g>
-  </g>
 </svg>

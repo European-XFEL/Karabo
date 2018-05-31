@@ -7,7 +7,7 @@ from functools import partial
 from io import StringIO
 
 from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QAction, QDialog, QMenu
+from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance, String, on_trait_change
 
 from karabo.common.api import DeviceStatus
@@ -173,12 +173,20 @@ class MacroController(BaseProjectGroupController):
         """ Remove the macro associated with this item from its project
         """
         macro = self.model
-        project = project_controller.model
-        if macro in project.macros:
-            project.macros.remove(macro)
 
-        broadcast_event(KaraboEventSender.RemoveProjectModelViews,
-                        {'models': [macro]})
+        ask = ('Are you sure you want to delete \"<b>{}</b>\".<br /> '
+               'Continue action?'.format(macro.simple_name))
+        msg_box = QMessageBox(QMessageBox.Question, 'Delete macro',
+                              ask, QMessageBox.Yes | QMessageBox.No)
+        msg_box.setModal(False)
+        msg_box.setDefaultButton(QMessageBox.No)
+        if msg_box.exec() == QMessageBox.Yes:
+            project = project_controller.model
+            if macro in project.macros:
+                project.macros.remove(macro)
+
+            broadcast_event(KaraboEventSender.RemoveProjectModelViews,
+                            {'models': [macro]})
 
     @pyqtSlot()
     def _edit_macro(self):

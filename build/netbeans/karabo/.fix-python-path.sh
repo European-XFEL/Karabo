@@ -7,7 +7,7 @@
 
 PACKAGEDIR=$1
 
-MAKEFILE=$(python -c "import sysconfig; print(sysconfig.get_makefile_filename())")
+MAKEFILE=$($PACKAGEDIR/extern/bin/python -c "import sysconfig; print(sysconfig.get_makefile_filename())")
 
 OLD_PREFIX=$(cat $MAKEFILE | grep '^prefix=*' | sed '1 s/prefix=//')
 
