@@ -17,22 +17,6 @@
    sodipodi:docname="clamped_flange.svg">
   <defs
      id="defs4104">
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-4-5-5-2-4-7-6"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect5500-6-2"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect3004-1-4-5-5-2-4-7-90-7"
-       is_visible="true" />
-    <inkscape:path-effect
-       effect="spiro"
-       id="path-effect5500-6-0-5"
-       is_visible="true" />
   </defs>
   <sodipodi:namedview
      id="base"
@@ -68,10 +52,6 @@
       </cc:Work>
     </rdf:RDF>
   </metadata>
-  <g
-     inkscape:label="Layer 1"
-     inkscape:groupmode="layer"
-     id="layer1">
     <g
        style="display:inline"
        id="icon_clamped_flange"
@@ -117,5 +97,4 @@
          d="M 562.61009,159.41942 L 562.61009,156.85141 L 568.77336,156.85144 L 568.77336,159.41945"
          style="fill:none;stroke:#000000;stroke-width:0.90992469;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;display:inline" />
     </g>
-  </g>
 </svg>

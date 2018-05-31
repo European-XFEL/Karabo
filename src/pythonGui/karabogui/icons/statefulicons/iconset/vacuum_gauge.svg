@@ -49,14 +49,12 @@
       </cc:Work>
     </rdf:RDF>
   </metadata>
-  <g
-     id="layer1">
     <g
        id="icon_vacuum_gauge"
        inkscape:label="icon_vacuum_gauge"
        transform="translate(-278.14514,-367.655)">
       <desc
-         id="desc4279">A standard vacuum gauge</desc>
+         id="desc4279">Vacuum gauge</desc>
       <path
          d="M 200,214.09448 A 30,30 0 1 1 140,214.09448 A 30,30 0 1 1 200,214.09448 z"
          transform="matrix(0.42372159,0,0,0.42372159,219.3959,290.21716)"
@@ -74,5 +72,4 @@
          style="fill:none;stroke:#000000;stroke-width:1.14356673;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
          inkscape:connector-curvature="0" />
     </g>
-  </g>
 </svg>
