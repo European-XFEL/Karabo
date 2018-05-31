@@ -52,7 +52,8 @@ namespace karabo {
                 boost::shared_lock<boost::shared_mutex> lock(m_instanceMapMutex);
                 auto it = m_instanceMap.find(instanceId);
                 if (it != m_instanceMap.end()) {
-                    it->second->processEvent(header, body);
+                    EventLoop::getIOService().post(bind_weak(&karabo::xms::SignalSlotable::processEvent,
+                                                             it->second, header, body, getEpochMillis()));
                     return true;
                 } else {
                     return false;
@@ -228,8 +229,6 @@ namespace karabo {
 
         SignalSlotable::SignalSlotable() :
             m_randPing(rand() + 2),
-            m_unicastEventStrand(boost::make_shared<karabo::net::Strand>(EventLoop::getIOService())),
-            m_broadcastEventStrand(boost::make_shared<karabo::net::Strand>(EventLoop::getIOService())),
             m_trackAllInstances(false),
             m_heartbeatInterval(10),
             m_trackingTimer(EventLoop::getIOService()),
@@ -357,7 +356,7 @@ namespace karabo {
 
 
         void SignalSlotable::start() {
-            m_consumerChannel->startReading(bind_weak(&SignalSlotable::processEvent, this, _1, _2),
+            m_consumerChannel->startReading(bind_weak(&SignalSlotable::onBrokerMessage, this, _1, _2),
                                             bind_weak(&SignalSlotable::consumerErrorNotifier, this,
                                                       std::string(), _1, _2));
             ensureInstanceIdIsValid(m_instanceId);
@@ -422,6 +421,14 @@ namespace karabo {
         }
 
 
+        void SignalSlotable::onBrokerMessage(const karabo::util::Hash::Pointer& header,
+                                             const karabo::util::Hash::Pointer& body) {
+            // This emulates the behavior of older karabo versions which called processEvent concurrently
+            EventLoop::getIOService().post(bind_weak(&karabo::xms::SignalSlotable::processEvent, this, header, body,
+                                                     getEpochMillis()));
+        }
+
+
         void SignalSlotable::consumerErrorNotifier(const std::string& consumer,
                                                    karabo::net::JmsConsumer::Error ec, const std::string& message) {
             const std::string fullMsg("Error " + toString(static_cast<int> (ec))
@@ -453,12 +460,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::handleReply(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body,
-                                         long long whenPostedEpochMs) {
-            // Collect performance statistics
-            if (m_updatePerformanceStatistics) {
-                updateLatencies(header, whenPostedEpochMs);
-            }
+        void SignalSlotable::handleReply(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
             boost::optional<Hash::Node&> signalIdNode = header->find("signalInstanceId");
             const std::string& signalId = (signalIdNode && signalIdNode->is<std::string>() ?
                                            signalIdNode->getValue<std::string>() : "unspecified sender");
@@ -626,8 +628,13 @@ namespace karabo {
 
 
         void SignalSlotable::processEvent(const karabo::util::Hash::Pointer& header,
-                                          const karabo::util::Hash::Pointer& body) {
+                                          const karabo::util::Hash::Pointer& body, long long whenPostedEpochMs) {
             try {
+
+                // Collect performance statistics
+                if (m_updatePerformanceStatistics) {
+                    updateLatencies(header, whenPostedEpochMs);
+                }
 
                 // If it is a broadcast message and a handler registered for that, call it:
                 if (m_broadCastHandler) {
@@ -640,8 +647,7 @@ namespace karabo {
 
                 // Check whether this message is an async reply
                 if (header->has("replyFrom")) {
-                    // replies are never broadcasted, so use normal event strand
-                    m_unicastEventStrand->post(bind_weak(&SignalSlotable::handleReply, this, header, body, getEpochMillis()));
+                    handleReply(header, body);
                     return;
                 }
                 // TODO: To check for remote errors reported after requestNoWait, do e.g.
@@ -653,7 +659,7 @@ namespace karabo {
                 // as in handleReply (or better find a unified solution)
 
                 /* The header of each event (message)
-                 * should contain all slotFunctions that must be called
+                 * should contain all slotFunctions that must be a called
                  * The formatting is like:
                  * slotFunctions -> [|<instanceId1>:<slotFunction1>[,<slotFunction2>]]
                  * Example:
@@ -688,35 +694,41 @@ namespace karabo {
                         continue;
                     }
                     const string instanceId(instanceSlots.substr(0, pos));
-                    // We should call only functions defined for our instanceId or broadcasted ("*") ones
-                    const bool isBroadcast = (instanceId == "*");
-                    if (!isBroadcast && instanceId != m_instanceId) continue;
+                    // We should call only functions defined for our instanceId or global ("*") ones
+                    const bool globalCall = (instanceId == "*");
+                    if (!globalCall && instanceId != m_instanceId) continue;
 
                     const vector<string> slotFunctions = karabo::util::fromString<string, vector>(instanceSlots.substr(pos + 1));
                     for (const string& slotFunction : slotFunctions) {
-                        // Broadcasted calls in their own Strand: massive 'attacks' of instanceNew/Gone etc. should
-                        // not introduce latencies for normal slot calls - and ordering between broadcast and normal
-                        // calls is anyway not guaranteed since broadcasts never use inner process or p2p short cuts.
-                        // To avoid that the same slot called as broadcast and directly can run in parallel (e.g.
-                        // slotPing!), there is an otherwise undesired mutex lock in Slot::callRegisteredSlotFunctions.
-                        Strand::Pointer& strand = (isBroadcast ? m_broadcastEventStrand : m_unicastEventStrand);
-                        strand->post(bind_weak(&SignalSlotable::processSingleSlot, this,
-                                               slotFunction, isBroadcast, signalInstanceId, header, body, getEpochMillis()));
+                        boost::shared_ptr<Strand> strand;
+                        {
+                            boost::mutex::scoped_lock strandLock(m_signalSlotInstancesMutex);
+                            auto strandMapIt = m_slotInstanceStrands.find(slotFunction);
+                            if (strandMapIt != m_slotInstanceStrands.end()) {
+                                strand = strandMapIt->second;
+                            }
+                        }
+                        if (strand) {
+                            strand->post(bind_weak(&SignalSlotable::processSingleSlot, this,
+                                                   slotFunction, globalCall, signalInstanceId, header, body));
+                        } else {
+                            // Currently if non-existing slot is called - but in future their might be slots that
+                            // can be run in parallel.
+                            // Could post to event loop instead to be on equal footing with non-parallel slots?
+                            processSingleSlot(slotFunction, globalCall, signalInstanceId, header, body);
+                        }
                     }
                 }
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception while processing event: " << e.what();
+            } catch (...) {
+                KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Unknown exception while processing event.";
             }
         }
 
 
         void SignalSlotable::processSingleSlot(const std::string& slotFunction, bool globalCall, const std::string& signalInstanceId,
-                                               const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body,
-                                               long long whenPostedEpochMs) {
-            // Collect performance statistics
-            if (m_updatePerformanceStatistics) {
-                updateLatencies(header, whenPostedEpochMs);
-            }
+                                               const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
             try {
                 // Check whether slot is callable
                 if (m_slotCallGuardHandler) {
@@ -1530,6 +1542,10 @@ namespace karabo {
                 throw KARABO_SIGNALSLOT_EXCEPTION("The slot \"" + funcName + "\" has been registered with two different signatures");
             } else {
                 newinstance = instance;
+                // In future their might be an option not to create a Strand here,
+                // for slots that can run in parallel with themselves.
+                m_slotInstanceStrands.emplace(std::make_pair(funcName,
+                                                             boost::make_shared<karabo::net::Strand>(EventLoop::getIOService())));
             }
         }
 
@@ -2023,6 +2039,7 @@ namespace karabo {
             
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             m_slotInstances.erase(mangledSlotFunction);
+            m_slotInstanceStrands.erase(mangledSlotFunction);
             // Will clean any associated timers to this slot
             m_receiveAsyncErrorHandles.erase(mangledSlotFunction);
         }
@@ -2555,7 +2572,7 @@ namespace karabo {
                     m_connectionStrings[signalInstanceId] = signalConnectionString;
                 }
                 m_pointToPoint->connect(signalInstanceId, m_instanceId, signalConnectionString,
-                                        bind_weak(&SignalSlotable::processEvent, this, _1, _2));
+                                        bind_weak(&SignalSlotable::onP2pMessage, this, _1, _2));
                 if (successHandler) successHandler();
             } else if (errHandler) {
                 try {
@@ -2604,8 +2621,18 @@ namespace karabo {
             if (signalConnectionString.empty()) return false;
 
             m_pointToPoint->connect(signalInstanceId, m_instanceId, signalConnectionString,
-                                    bind_weak(&SignalSlotable::processEvent, this, _1, _2));
+                                    bind_weak(&SignalSlotable::onP2pMessage, this, _1, _2));
             return true;
+        }
+
+
+        void SignalSlotable::onP2pMessage(const karabo::util::Hash::Pointer& header,
+                                          const karabo::util::Hash::Pointer& body) {
+
+            EventLoop::getIOService().post(bind_weak(&SignalSlotable::processEvent, this, header, body,
+                                                     getEpochMillis()));
+            // To be equivalent to onBrokerMessage, we would have to re-register for the next p2p message.
+            // Currently this is done in PointToPoint::Consumer::consume(...) and cannot easily be moved here.
         }
 
 

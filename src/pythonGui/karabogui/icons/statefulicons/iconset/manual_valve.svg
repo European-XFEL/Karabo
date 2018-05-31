@@ -51,10 +51,6 @@
       </cc:Work>
     </rdf:RDF>
   </metadata>
-  <g
-     inkscape:label="Layer 1"
-     inkscape:groupmode="layer"
-     id="layer1">
     <g
        transform="matrix(0,1.25,1.25,0,-192.55626,-602.37861)"
        style="display:inline"
@@ -87,5 +83,4 @@
          d="M 482.29296,164.81942 L 482.29296,173.62641"
          style="fill:none;stroke:#000000;stroke-width:0.78014666;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
     </g>
-  </g>
 </svg>

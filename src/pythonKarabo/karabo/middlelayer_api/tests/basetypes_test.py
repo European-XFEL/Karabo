@@ -435,6 +435,15 @@ class Tests(TestCase):
         b = Hash('v', (4, 5, 6))
         self.assertEqual(a, b)
 
+    def test_mean(self):
+        a = QuantityValue(3, "m", timestamp=self.t1)
+        b = QuantityValue(1000, "mm", timestamp=self.t2)
+        m = numpy.mean([a, b])
+        self.assertEqual(m, 2 * unit.m)
+        self.assertEqual(m.timestamp, self.t1)
+        m = numpy.std([a, b])
+        self.assertEqual(m, 1 * unit.m)
+        self.assertEqual(m.timestamp, self.t1)
 
 if __name__ == "__main__":
     main()
