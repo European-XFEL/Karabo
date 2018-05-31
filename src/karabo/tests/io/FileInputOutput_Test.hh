@@ -46,6 +46,7 @@ private:
     karabo::util::Hash m_bigHash;
     karabo::util::Hash m_unrootedHash;
     karabo::util::Hash m_withSchemaHash;
+    bool m_canCleanUp;
 
     void writeTextFile();
     void readTextFile();

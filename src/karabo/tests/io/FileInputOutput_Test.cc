@@ -184,6 +184,7 @@ FileInputOutput_Test::~FileInputOutput_Test() {
 
 
 void FileInputOutput_Test::setUp() {
+    m_canCleanUp = false;
     Hash rooted("dom.b.c", 1, "dom.b.d", vector<int>(5, 1), "dom.b.e", vector<Hash > (2, Hash("a", 1)), "a.d", std::complex<double>(1.2, 4.2));
     rooted.setAttribute("dom", "a1", true);
     rooted.setAttribute("dom", "a2", 3.4);
@@ -228,6 +229,14 @@ void FileInputOutput_Test::setUp() {
 
 
 void FileInputOutput_Test::tearDown() {
+    if(m_canCleanUp){
+        if (boost::filesystem::exists(resourcePath("folder"))) {
+            boost::filesystem::remove_all(resourcePath("folder"));
+        }
+        if (boost::filesystem::exists(resourcePath("/tmp/folder/"))) {
+            boost::filesystem::remove_all(resourcePath("/tmp/folder/"));
+        }
+    }
 }
 
 
@@ -261,9 +270,15 @@ void FileInputOutput_Test::writeTextFile() {
     saveToFile(m_withSchemaHash, resourcePath("file4a.xml"), Hash("format.Xml.indentation", 0, "format.Xml.writeDataTypes", true));
     
     // Check different folder levels
+    if (boost::filesystem::exists(resourcePath("folder/"))) {
+        CPPUNIT_FAIL("'folder' already exists!");
+    }
     saveToFile(m_rootedHash, resourcePath("folder/file5a.xml"));
     
-    saveToFile(m_rootedHash, resourcePath("/tmp/folder/file6a.xml"));
+    if (boost::filesystem::exists(resourcePath("/tmp/folder/"))) {
+        CPPUNIT_FAIL("'/tmp/folder' already exists!");
+    }
+    saveToFile(m_rootedHash, "/tmp/folder/file6a.xml");
 }
 
 
@@ -304,7 +319,7 @@ void FileInputOutput_Test::readTextFile() {
     loadFromFile(h5a, resourcePath("folder/file5a.xml"));
     
     Hash h6a;
-    loadFromFile(h6a, resourcePath("/tmp/folder/file6a.xml"));
+    loadFromFile(h6a, "/tmp/folder/file6a.xml");
 
     //    clog << "h2 (xml)\n" << h2 << endl;
 
@@ -331,9 +346,7 @@ void FileInputOutput_Test::readTextFile() {
     
     CPPUNIT_ASSERT(karabo::util::similar(h5a, m_rootedHash));
     CPPUNIT_ASSERT(karabo::util::similar(h6a, m_rootedHash));
-    
-    boost::filesystem::remove_all(resourcePath("folder/"));
-    boost::filesystem::remove_all(resourcePath("/tmp/folder/"));
+    m_canCleanUp = true;
 }
 
 
