@@ -22,6 +22,14 @@ CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/lib/libkarabo.so
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux-x86/package
 CND_PACKAGE_NAME_Release=libkarabo.so.tar
 CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/libkarabo.so.tar
+# Code_Coverage configuration
+CND_PLATFORM_Code_Coverage=GNU-Linux-x86
+CND_ARTIFACT_DIR_Code_Coverage=dist/Code_Coverage/GNU-Linux-x86/lib
+CND_ARTIFACT_NAME_Code_Coverage=libkarabo.so
+CND_ARTIFACT_PATH_Code_Coverage=dist/Code_Coverage/GNU-Linux-x86/lib/libkarabo.so
+CND_PACKAGE_DIR_Code_Coverage=dist/Code_Coverage/GNU-Linux-x86/package
+CND_PACKAGE_NAME_Code_Coverage=karabo.tar.gz
+CND_PACKAGE_PATH_Code_Coverage=dist/Code_Coverage/GNU-Linux-x86/package/karabo.tar.gz
 #
 # include compiler specific variables
 #

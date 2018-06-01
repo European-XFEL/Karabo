@@ -1,0 +1,5 @@
+#!/bin/bash
+find ../.. -name "*.gcda" -delete
+../../auto_build_all.sh Code_Coverage --runTests
+../../auto_build_all.sh Code_Coverage --runIntegrationTests
+
