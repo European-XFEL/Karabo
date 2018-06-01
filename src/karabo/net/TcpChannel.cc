@@ -468,6 +468,7 @@ namespace karabo {
                         m_inHashHeader = boost::shared_ptr<Hash>(new Hash());
                         this->prepareHashFromHeader(*m_inHashHeader);
                         if (m_inHashHeader->has("_bufferSetLayout_")) {
+                            // This protocol for karabo 2.2.4 and later : c++ and bound python
                             std::vector<karabo::io::BufferSet::Pointer> buffers;
                         
                             for (const karabo::util::Hash& layout : m_inHashHeader->get<std::vector<karabo::util::Hash>>("_bufferSetLayout_")) {
@@ -481,6 +482,7 @@ namespace karabo {
                             }
                             this->readAsyncVectorBufferSetPointerImpl(buffers, util::bind_weak(&TcpChannel::onHashVectorBufferSetPointerRead, this, _1, _2));
                         } else if (m_inHashHeader->has("byteSizes")) {
+                            // This is protocol for middle-layer devices and, in general, for karabo pre-2.2.4 
                             const auto& sizes =  m_inHashHeader->get<std::vector<unsigned int>>("byteSizes");
                             std::vector<karabo::io::BufferSet::Pointer> buffers;
                             
@@ -491,7 +493,7 @@ namespace karabo {
                             }
                             this->readAsyncVectorBufferSetPointerImpl(buffers, util::bind_weak(&TcpChannel::onHashVectorBufferSetPointerRead, this, _1, _2));
                         } else {
-                            // OutputChannel from 2.2.3 karabo version or early? Then read the rest as vector of char
+                            // No information from remote peer how the data should be structured .... so read it as one blob
                             ReadHashVectorBufferSetPointerHandler handler = boost::any_cast<ReadHashVectorBufferSetPointerHandler>(m_readHandler);
                             this->readAsyncVectorPointerImpl(util::bind_weak(&TcpChannel::onHashVectorBufferSetPointerVectorPointerRead, this, _1, _2, handler));
                         }
