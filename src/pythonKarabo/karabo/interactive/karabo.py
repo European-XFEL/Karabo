@@ -86,7 +86,6 @@ def parse_commandline():
                             default='master',
                             help='The branch/tag of the device package')
 
-
     parser_ins = sps.add_parser('install',
                                 help='Installs an existing device')
 
@@ -253,7 +252,8 @@ def download(args):
     with pushd_popd():
         karabo_tag = run_cmd('cat VERSION').decode("utf-8").rstrip()
         dist_name = run_cmd('lsb_release -is').decode("utf-8").rstrip()
-        dist_ver = run_cmd('lsb_release -rs').decode("utf-8").split('.')[0].rstrip()
+        dist_ver = run_cmd(
+            'lsb_release -rs').decode("utf-8").split('.')[0].rstrip()
         arch_name = os.uname().machine
         filename = '{device}-{tag}-{ktag}-{dist_name}-' \
                    '{dist_ver}-{arch}-{config}.sh'.format(device=args.device,
@@ -366,7 +366,7 @@ def clean_dir(path, args):
 
             if overwrite.lower() != "y":
                 print('Abort {} installation'.format(args.device))
-                return
+                sys.exit(1)
             run_cmd('rm -rf {}'.format(path))
 
 
