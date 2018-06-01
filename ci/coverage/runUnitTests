@@ -1,0 +1,19 @@
+#!/bin/bash
+
+get_abs_path() {
+	echo `cd "$1"; pwd`
+}
+
+BASE_PATH=$(get_abs_path "../..")
+
+find $BASE_PATH/build/netbeans/karabo/build -name "*.gcda" -delete
+
+rm -rf $BASE_PATH/build/netbeans/karabo/DeviceClient_Test
+rm -rf $BASE_PATH/build/netbeans/karabo/karaboHistory
+
+testDir=$BASE_PATH/build/netbeans/karabo
+
+rm -rf $testDir/testresults/
+
+( cd $testDir && make CONF=Code_Coverage -j1 test )
+
