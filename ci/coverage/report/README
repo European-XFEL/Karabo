@@ -1,0 +1,18 @@
+The coverage folder is intended to be outside the Karabo source tree. 
+Use the 'conf' file to define the path to the Karabo source folder and the 'lcov' tool folder.
+
+- The gen_report script makes sure that the following links are generated in the build tree:
+    /home/osboxes/karabo/build/netbeans/karabo/build/Debug
+           src -> /home/osboxes/karabo/src
+
+    /home/osboxes/karabo/build/netbeans/integrationTests/build/Debug
+           src -> /home/osboxes/karabo/src
+
+
+- Make sure that karabo (Debug) is compiled with the code coverage flags
+
+- Make sure that integrationTests (Debug) is compiled with the code coverage flags
+
+- Run the gen_initial
+
+- Run the gen_report

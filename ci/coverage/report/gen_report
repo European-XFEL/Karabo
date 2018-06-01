@@ -1,0 +1,44 @@
+#!/bin/bash
+
+SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
+. $SCRIPT_DIR/conf
+
+# remove any data from previous run
+rm -f $FILE_TEST
+rm -f $FILE_TOTAL
+rm -f $FILE_FILTERED
+rm -rf $OUT_DIR
+rm -rf ????-??-??_????_?t
+
+if [ ! -L $UT_BASE/src ]; then
+	ln -s $SRC_DIR $UT_BASE/src
+fi
+
+if [ ! -L $IT_BASE/src ]; then
+	ln -s $SRC_DIR $IT_BASE/src
+fi
+
+$UT_REPORTS
+$IT_REPORTS
+
+# capture the coverage from the test run
+$LCOV_BASE/lcov --capture --no-external --directory $BUILD_BASE --output-file $FILE_TEST
+
+# combine base and test data
+$LCOV_BASE/lcov -a $FILE_BASE -a $FILE_TEST -o $FILE_TOTAL
+
+sed -i -e 's/\/home\/osboxes\/karabo\/build\/netbeans\/integrationTests\/build\/Debug\/src/\/home\/osboxes\/karabo\/src/g' $FILE_TOTAL
+sed -i -e 's/\/home\/osboxes\/karabo\/build\/netbeans\/karabo\/build\/Debug\/src/\/home\/osboxes\/karabo\/src/g' $FILE_TOTAL
+sed -i -e 's/\/home\/osboxes\/karabo\/build\/netbeans\/src/\/home\/osboxes\/karabo\/src/g' $FILE_TOTAL
+
+# remove needless coverage reports
+$LCOV_BASE/lcov --remove $FILE_TOTAL '*/boost/*' '/usr/*' 'webAuth/*' '/home/osboxes/karabo/build/netbeans/karabo/dist/*' 'tests/*' 'integrationTests/*' 'PropertyTest.*' --output-file $FILE_FILTERED
+
+# generate a report
+$LCOV_BASE/genhtml $FILE_FILTERED --output-directory $OUT_DIR
+
+
+TIMESTAMP=`date +%F_%H%M`
+ZIP_FILE="c++_cov_report_"$TIMESTAMP".zip"
+
+zip -r $ZIP_FILE out/ ????-??-??_????_?t

@@ -146,6 +146,22 @@ runPythonIntegrationTests() {
     echo
 }
 
+produceCodeCoverageReport() {
+    echo "### Producing code coverage reports..."
+    echo
+
+    # remove any previous code coverage results
+    safeRunCommand "find . -name \"*.gcda\" -delete"
+
+    runUnitTests
+    runIntegrationTests
+
+    # produce initial coverage information
+    safeRunCommand "$scriptDir/ci/coverage/report/gen_initial"
+
+    safeRunCommand "$scriptDir/ci/coverage/report/gen_report"
+}
+
 # Make sure the script runs in the correct directory
 scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
 cd ${scriptDir}
@@ -157,12 +173,14 @@ fi
 # Parse command line
 if [[ -z "$1" ||  $1 = "help" || $1 = "-h" ||  $1 = "-help" || $1 = "--help" ]]; then
     cat <<End-of-help
-Usage: $0 Debug|Release|Dependencies|Clean|Clean-All [flags]
+Usage: $0 Debug|Release|Code_Coverage|Dependencies|Clean|Clean-All [flags]
 
 Available flags:
   --auto       - Tries to automatically install needed system packages (sudo rights required!)
   --bundle     - Installs Karabo and creates the software bundle. Default: no bundle is created!
   --pyDevelop  - Install Python packages in development mode
+  --codeCoverage
+               - Run unit and integration tests with code coverage
   --runTests   - Run unit tests after building (useful for Debug|Release)
   --runIntegrationTests
                - Run integration tests after building (for Debug|Release)
@@ -180,7 +198,7 @@ fi
 EXTERN_ONLY="n"
 
 # Fetch configuration type (Release or Debug)
-if [[ $1 = "Release" || $1 = "Debug" ]]; then
+if [[ $1 = "Release" || $1 = "Debug" || $1 = "Code_Coverage" ]]; then
     CONF=$1
 elif [[ $1 = "Clean" || $1 = "Clean-All" ]]; then
     safeRunCommand "cd $scriptDir/build/netbeans/karabo"
@@ -217,6 +235,7 @@ RUNTESTS="n"
 RUNINTEGRATIONTESTS="n"
 PYOPT="normal"
 NUM_JOBS=0
+CODECOVERAGE="n"
 while [ -n "$1" ]; do
     case "$1" in
         --bundle)
@@ -234,6 +253,12 @@ while [ -n "$1" ]; do
         --runIntegrationTests)
             # Run the integration tests
             RUNINTEGRATIONTESTS="y"
+            ;;
+        --codeCoverage)
+            # only execute this command with correct CONF
+            if [ "$CONF" = "Code_Coverage" ]; then
+                CODECOVERAGE="y"
+            fi
             ;;
         --numJobs)
             # Limit the numbers of jobs for make runs
@@ -297,6 +322,9 @@ if [ "$RUNINTEGRATIONTESTS" = "y" ]; then
     runPythonIntegrationTests
 fi
 
+if [ "$CODECOVERAGE" = "y" ]; then
+    produceCodeCoverageReport
+fi
 
 echo "### Successfully finished building and packaging of karaboFramework ###"
 echo
