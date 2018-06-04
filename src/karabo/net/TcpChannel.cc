@@ -494,6 +494,8 @@ namespace karabo {
                             this->readAsyncVectorBufferSetPointerImpl(buffers, util::bind_weak(&TcpChannel::onHashVectorBufferSetPointerRead, this, _1, _2));
                         } else {
                             // No information from remote peer how the data should be structured .... so read it as one blob
+                            KARABO_LOG_FRAMEWORK_WARN << "Received header for ReadHashVectorBufferSetPointerHandler lacks"
+                                    << " both keys '_bufferSetLayout_' and 'byteSizes' - treat data as single BufferSet.";
                             ReadHashVectorBufferSetPointerHandler handler = boost::any_cast<ReadHashVectorBufferSetPointerHandler>(m_readHandler);
                             this->readAsyncVectorPointerImpl(util::bind_weak(&TcpChannel::onHashVectorBufferSetPointerVectorPointerRead, this, _1, _2, handler));
                         }
@@ -760,12 +762,27 @@ namespace karabo {
 
         void TcpChannel::write(const karabo::util::Hash& hdr, const std::vector<karabo::io::BufferSet::Pointer>& body) {
             using namespace karabo::io;
+
+            // "byteSizes" and "nData" are kept for pre-karabo 2.2.4 backward compatibility and for middle layer
+            if (hdr.has("nData") || hdr.has("byteSizes") || hdr.has("_bufferSetLayout_")) {
+                KARABO_LOG_FRAMEWORK_WARN << "Header contains 'nData', 'byteSizes' or '_bufferSetLayout_', but these "
+                        << "will be overwritten by protocol!";
+            }
+
             Hash header = hdr; // copy header
             // Add the BufferSet layout structure into header just before serialization ...
             std::vector<Hash>& buffersVector = header.bindReference<std::vector<Hash>>("_bufferSetLayout_");
             for (std::vector<BufferSet::Pointer>::const_iterator it = body.begin(); it != body.end(); ++it) {
                 buffersVector.push_back(Hash("sizes", (*it)->sizes(), "types", (*it)->types()));
             }
+
+            header.set<unsigned int>("nData", body.size());
+            std::vector<unsigned int>& byteSizes = header.bindReference<std::vector<unsigned int>>("byteSizes");
+            byteSizes.reserve(body.size());
+            for (const auto& bufferSet : body) {
+                byteSizes.push_back(bufferSet->totalSize());
+            }
+
             try {
                 size_t sizeofLength = m_connectionPointer->getSizeofLength();
                 if (sizeofLength == 0) {
