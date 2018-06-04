@@ -204,8 +204,18 @@ namespace karabo {
         try {
             const int nData = get<unsigned int>("nData");
             const unsigned int delayInMs = get<unsigned int>("delay");
-            NDArray ndarr(Dims(256, 256, 512));
-            Hash data;
+            NDArray ndarr1(Dims(256, 256, 128), karabo::util::Types::INT64);
+            for (size_t i = 0; i < 100; ++i) ndarr1.getData<long long>()[i] = 0x0102030405060708;
+            NDArray ndarr2(Dims(256, 256, 128), karabo::util::Types::INT64);
+            for (size_t i = 0; i < 100; ++i) ndarr2.getData<long long>()[i] = 0x1112131415161718;
+            NDArray ndarr3(Dims(256, 256, 128), karabo::util::Types::INT64);
+            for (size_t i = 0; i < 100; ++i) ndarr3.getData<long long>()[i] = 0x2122232425262728;
+            NDArray ndarr4(Dims(256, 256, 128), karabo::util::Types::INT64);
+            for (size_t i = 0; i < 100; ++i) ndarr4.getData<long long>()[i] = 0x3132333435363738;
+            Hash data1;
+            Hash data2;
+            Hash data3;
+            Hash data4;
             bool copyAllData = get<bool>("copyAllData");
             auto channel = this->getOutputChannel("output2");
 
@@ -213,13 +223,29 @@ namespace karabo {
             for (int iData = 0; iData < nData; ++iData) {
 
                 // Fill the data object - for now only dataId.
-                data.set("array", ndarr);
-                data.set("inTime", (unsigned long long) boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds());
+                data1.set("array", ndarr1);
+                data1.set("inTime", (unsigned long long) boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds());
+                OutputChannel::MetaData meta1("source1", Timestamp());
+
+                data2.set("array", ndarr2);
+                data2.set("inTime", (unsigned long long) boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds());
+                OutputChannel::MetaData meta2("source2", Timestamp());
+
+                data3.set("array", ndarr3);
+                data3.set("inTime", (unsigned long long) boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds());
+                OutputChannel::MetaData meta3("source3", Timestamp());
+
+                data4.set("array", ndarr4);
+                data4.set("inTime", (unsigned long long) boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds());
+                OutputChannel::MetaData meta4("source2", Timestamp());
 
                 // Write
-                channel->write(data, copyAllData);
+                channel->write(data1, meta1, copyAllData);
+                channel->write(data2, meta2, copyAllData);
+                channel->write(data3, meta3, copyAllData);
+                channel->write(data4, meta4, copyAllData);
                 channel->update();
-                
+
                 KARABO_LOG_INFO << "Written data # " << iData;
                 set("currentDataId", iData);
 
