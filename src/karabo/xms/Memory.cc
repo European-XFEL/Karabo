@@ -162,31 +162,23 @@ namespace karabo {
             return m_chunkStatus[channelIdx][chunkIdx];
         }
 
-        void Memory::readAsContiguousBlock(karabo::io::BufferSet& buffer, karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {
+
+        void Memory::readAsContiguousBlock(std::vector<karabo::io::BufferSet::Pointer>& buffers, karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {
             Memory::_ensureSerializer();
 
             const Data& data = m_cache[channelIdx][chunkIdx];
+            for (const auto& bp : data) {
+                buffers.push_back(bp);
+            }
             const MetaDataEntries& metaData = m_metaData[channelIdx][chunkIdx];
-            std::vector<unsigned int> byteSizes;
-            byteSizes.reserve(data.size());
-            for (Data::const_iterator it = data.begin(); it != data.end(); ++it) {
-                byteSizes.push_back((*it)->totalSize());                
-            }
-
-            buffer.rewind();
-            for (Data::const_iterator it = data.begin(); it != data.end(); ++it) {
-                (*it)->appendTo(buffer, false);                
-            }
-            buffer.rewind();
             header.clear();
-            header.set<unsigned int>("nData", data.size());
-            header.set<std::vector<unsigned int> >("byteSizes", byteSizes);            
-            header.set("sourceInfo", *reinterpret_cast<const std::vector<karabo::util::Hash>*>(&metaData));
+            header.set("sourceInfo", *reinterpret_cast<const std::vector<karabo::util::Hash>*> (&metaData));
+            header.set("nData", false);
         }
-        
+
         void Memory::assureAllDataIsCopied(const size_t channelIdx, const size_t chunkIdx) {
             const Data& data = m_cache[channelIdx][chunkIdx];
-            
+
             bool containsNonCopies = false;
             for (Data::const_iterator it = data.begin(); it != data.end(); ++it) {
                 containsNonCopies |= (*it)->containsNonCopies();
@@ -194,13 +186,14 @@ namespace karabo {
             if(!containsNonCopies) {
                 return; // all good, no need to copy
             }
-            
-            Data copiedData(1, DataPointer(new DataType(true)));
-            
-            for (Data::const_iterator it = data.begin(); it != data.end(); ++it) {
-                (*it)->appendTo(*(copiedData.front()), false);                
+
+            Data copiedData(data.size(), DataPointer(new DataType(true)));
+
+            for (size_t i = 0; i < data.size(); ++i) {
+                data[i]->appendTo(*(copiedData[i]), false);
+                copiedData[i]->rewind();
             }
-            copiedData.front()->rewind();
+
             m_cache[channelIdx][chunkIdx] = copiedData;
         }
 
@@ -215,19 +208,15 @@ namespace karabo {
             return *(m_serializedCache[channelIdx][chunkIdx]);
         }
 
-        void Memory::writeAsContiguousBlock(const karabo::io::BufferSet& buffer, const karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx, bool copyAllData) {
+
+        void Memory::writeAsContiguousBlock(const std::vector<karabo::io::BufferSet::Pointer>& buffers, const karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx, bool copyAllData) {
             Memory::_ensureSerializer();
 
             const MetaDataEntries& metaData = *reinterpret_cast<const MetaDataEntries*>(&header.get<std::vector<karabo::util::Hash> >("sourceInfo"));
             m_metaData[channelIdx][chunkIdx] = metaData;
-
             Data& chunkData = m_cache[channelIdx][chunkIdx];
-            size_t chunkDataIdx = chunkData.size();
-            chunkData.resize(chunkData.size() + 1);
-            chunkData[chunkDataIdx] = DataPointer(new DataType(copyAllData));
-            buffer.rewind();
-            buffer.appendTo(*(chunkData[chunkDataIdx]), false);
-            buffer.rewind();
+            chunkData.clear();
+            chunkData.insert(chunkData.end(), buffers.begin(), buffers.end());
         }
 
         void Memory::clearContiguousBlockCache(const size_t channelIdx, const size_t chunkIdx) {

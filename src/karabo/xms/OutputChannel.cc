@@ -711,10 +711,12 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_TRACE << "OUTPUT Now distributing (local memory)";
             try {
                 if (tcpChannel->isOpen()) {
+                    using namespace karabo::io;
                     // in case of short-cutting the receiver may async. work on data the sender is already altering again.
                     // we assure that the contents in the chunk the receiver gets sent have been copied once
                     Memory::assureAllDataIsCopied(m_channelId, chunkId);
-                    tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), karabo::io::BufferSet());
+                    tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId),
+                                      std::vector<BufferSet::Pointer>(1, BufferSet::Pointer(new BufferSet)));
                 }
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::distributeLocal  :  " << e.what();
@@ -731,7 +733,7 @@ namespace karabo {
 
             if (tcpChannel) {
                 karabo::util::Hash header;
-                karabo::io::BufferSet data(false);
+                std::vector<karabo::io::BufferSet::Pointer> data;
                 Memory::readAsContiguousBlock(data, header, m_channelId, chunkId);
 
                 try {
@@ -806,10 +808,12 @@ namespace karabo {
             // Writing no data signals input to read from memory
             try {
                 if (tcpChannel->isOpen()) {
+                    using namespace karabo::io;
                     // in case of short-cutting the receiver may async. work on data the sender is already altering again.
                     // we assure that the contents in the chunk the receiver gets sent have been copied once
                     Memory::assureAllDataIsCopied(m_channelId, chunkId);
-                    tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), karabo::io::BufferSet());
+                    tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId),
+                                      std::vector<BufferSet::Pointer>(1, BufferSet::Pointer(new BufferSet)));
                 }
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::copyLocal  :  " << e.what();
@@ -828,7 +832,7 @@ namespace karabo {
 
             if (tcpChannel) {
                 karabo::util::Hash header;
-                karabo::io::BufferSet data(false);
+                std::vector<karabo::io::BufferSet::Pointer> data;
                 Memory::readAsContiguousBlock(data, header, m_channelId, chunkId);
 
                 try {

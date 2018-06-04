@@ -200,7 +200,7 @@ namespace karabo {
             void onTcpChannelError(const karabo::net::ErrorCode&, const karabo::net::Channel::Pointer&);
 
             void onTcpChannelRead(const karabo::net::ErrorCode& ec, karabo::net::Channel::Pointer channel,
-                                  const karabo::util::Hash& header, const boost::shared_ptr<std::vector<char> >& data);
+                                  const karabo::util::Hash& header, const std::vector<karabo::io::BufferSet::Pointer>& data);
 
             void swapBuffers();
 
