@@ -98,13 +98,6 @@ class BaseBindingController(HasStrictTraits):
         """Implemented by subclasses to receive alarm notifications
         """
 
-    def on_device_status_update(self, device_status):
-        """Implemented by subclasses to receive notifications that the device
-        status of the widget has been updated.
-
-        :param device_status: DeviceStatus(Enum)
-        """
-
     # -------------------------------------------------------------------------
     # Public interface
 
