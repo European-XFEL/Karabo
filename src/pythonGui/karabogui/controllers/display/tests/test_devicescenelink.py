@@ -1,8 +1,10 @@
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
+from karabo.common.enums import DeviceStatus
 from karabo.middlelayer import Configurable, VectorString
 from karabo.common.scenemodel.api import (
     DeviceSceneLinkModel, SceneTargetWindow)
+from karabogui.singletons.api import get_topology
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy)
 from ..devicescenelink import DisplayDeviceSceneLink
@@ -21,18 +23,30 @@ class TestDisplayDeviceSceneLink(GuiTestCase):
         self.controller = DisplayDeviceSceneLink(proxy=self.proxy)
         self.controller.create(None)
 
+        self.controller.model = DeviceSceneLinkModel()
+        self.controller.model.keys = ['deviceUno.availableScenes']
+        self.controller.model.target = 'Vinny'
+        self.controller.model.target_window = SceneTargetWindow.Dialog
+        self.controller._internal_widget.model = self.controller.model
+        self.target = 'karabogui.controllers.display.' + \
+                      'devicescenelink.call_device_slot'
+
     def tearDown(self):
         self.controller.destroy()
         assert self.controller.widget is None
 
     def test_clicked(self):
-        self.controller.model = DeviceSceneLinkModel()
-        self.controller.model.keys = ['deviceUno.availableScenes']
-        self.controller.model.target = 'Vinny'
-        self.controller.model.target_window = SceneTargetWindow.Dialog
-        target = 'karabogui.controllers.display.' +\
-                 'devicescenelink.call_device_slot'
-        caller = Mock()
-        with patch(target) as caller:
+        device = get_topology().get_device('deviceUno')
+        device.status = DeviceStatus.ONLINE
+
+        with patch(self.target) as caller:
             self.controller._internal_widget._handle_click()
             assert caller.call_count == 1
+
+    def test_clicked_device_off(self):
+        device = get_topology().get_device('deviceUno')
+        device.status = DeviceStatus.OFFLINE
+
+        with patch(self.target) as caller:
+            self.controller._internal_widget._handle_click()
+            assert caller.call_count == 0

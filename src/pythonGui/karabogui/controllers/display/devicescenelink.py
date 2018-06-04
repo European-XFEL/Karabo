@@ -9,6 +9,7 @@ from PyQt4.QtGui import (
     QWidget)
 from traits.api import Instance
 
+from karabo.common.enums import DeviceStatus
 from karabo.common.scenemodel.api import (
     DeviceSceneLinkModel, SceneTargetWindow)
 from karabogui.alarms.api import NORM_COLOR
@@ -18,6 +19,7 @@ from karabogui.controllers.api import (
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.request import call_device_slot
 from karabogui.sceneview.widget.label import LabelWidget
+from karabogui.singletons.api import get_topology
 from karabogui.util import handle_scene_from_server
 
 
@@ -107,6 +109,11 @@ class LinkWidget(QWidget):
     @pyqtSlot()
     def _handle_click(self):
         device_id = _get_device_id(self.model.keys)
+        device = get_topology().get_device(device_id)
+
+        if device and device.status == DeviceStatus.OFFLINE:
+            return
+
         scene_name = self.model.target
         target_window = self.model.target_window
         handler = partial(handle_scene_from_server, device_id, scene_name,
