@@ -14,7 +14,7 @@ namespace karabo {
 
 
         BufferSet::BufferSet(bool copyAllData) : m_currentBuffer(0), m_copyAllData(copyAllData) {
-              m_buffers.push_back(Buffer());          
+            m_buffers.push_back(Buffer());
         };
 
 
@@ -23,10 +23,42 @@ namespace karabo {
         }
 
 
-        void BufferSet::add() {
+        void BufferSet::add(std::size_t size, int type) {
             updateSize();
-            m_buffers.push_back(Buffer());
-            m_currentBuffer++;
+
+            if (size == 0) {
+                if (!m_buffers.size() || m_buffers.back().size) {
+                    m_buffers.push_back(Buffer());
+                    m_currentBuffer++;
+                }
+            } else {
+                if (type == BufferContents::COPY) {  // allocate space as std::vector<char>
+                    auto vec = boost::shared_ptr<BufferType>(new BufferType(size));
+                    auto ptr = boost::shared_ptr<BufferType::value_type>();
+                    if (!m_buffers.size() || m_buffers.back().size) {
+                        m_buffers.push_back(Buffer(vec, ptr, size, BufferContents::COPY));
+                        m_currentBuffer++;
+                    } else {
+                        m_buffers[m_buffers.size() - 1] = Buffer(vec, ptr, size, BufferContents::COPY);
+                    }
+                } else if (type == BufferContents::NO_COPY_BYTEARRAY_CONTENTS) { // allocate space as char array
+                    if (!m_buffers.size() || m_buffers.back().size) {
+                        // See https://www.boost.org/doc/libs/1_61_0/libs/smart_ptr/sp_techniques.html#array
+                        m_buffers.push_back(Buffer(boost::shared_ptr<BufferType>(new BufferType()),
+                                                   boost::shared_ptr<char>(new char[size], boost::checked_array_deleter<char>()),
+                                                   size,
+                                                   BufferContents::NO_COPY_BYTEARRAY_CONTENTS));
+                        m_currentBuffer++;
+                    } else {
+                        m_buffers[m_buffers.size() - 1] = Buffer(boost::shared_ptr<BufferType>(new BufferType()),
+                                                                 boost::shared_ptr<char>(new char[size], boost::checked_array_deleter<char>()),
+                                                                 size,
+                                                                 BufferContents::NO_COPY_BYTEARRAY_CONTENTS);
+                    }
+                } else {
+                    throw KARABO_LOGIC_EXCEPTION("Unknown buffer type!");
+                }
+            }
         }
 
 
@@ -41,7 +73,7 @@ namespace karabo {
 
         void BufferSet::emplaceBack(const karabo::util::ByteArray& array, bool writeSize) {
             BufferType& buffer = current();
-            if(writeSize) {
+            if (writeSize) {
                 buffer.reserve(buffer.size() + sizeof(unsigned int) + array.second);
                 {
                     unsigned int size = static_cast<unsigned int> (array.second);
@@ -63,9 +95,9 @@ namespace karabo {
             } else {
                 updateSize();
                 m_buffers.push_back(Buffer(boost::shared_ptr<BufferType>(new BufferType()),
-                                                    boost::const_pointer_cast<BufferType::value_type>(array.first),
-                                                    array.second,
-                                                    BufferContents::NO_COPY_BYTEARRAY_CONTENTS));
+                                           boost::const_pointer_cast<BufferType::value_type>(array.first),
+                                           array.second,
+                                           BufferContents::NO_COPY_BYTEARRAY_CONTENTS));
                 m_currentBuffer++;
                 add();
             }
@@ -84,23 +116,20 @@ namespace karabo {
                 const size_t pos = buffer.size();
                 buffer.resize(pos + n);
                 std::memcpy(buffer.data() + pos, src, n);
-                add();
             } else {
                 if (m_buffers.back().size == 0) {
                     Buffer & buffer = m_buffers.back();
                     buffer.vec = boost::const_pointer_cast<BufferType>(ptr);
-                    buffer.ptr = boost::shared_ptr<BufferType::value_type>(0);
+                    buffer.ptr = boost::shared_ptr<BufferType::value_type>();
                     buffer.size = ptr->size();
                     buffer.contentType = BufferContents::COPY;
-                    add();
                 } else {
                     m_buffers.push_back(Buffer(boost::const_pointer_cast<BufferType>(ptr),
-                                                        boost::shared_ptr<BufferType::value_type>(0),
-                                                        ptr->size(),
-                                                        BufferContents::COPY));
-                    
+                                               boost::shared_ptr<BufferType::value_type>(),
+                                               ptr->size(),
+                                               BufferContents::COPY));
+
                     m_currentBuffer++;
-                    add();
                 }
             }
         }
@@ -108,10 +137,11 @@ namespace karabo {
 
         void BufferSet::appendTo(BufferSet& other, bool copy) const {
             for (auto it = m_buffers.begin(); it != m_buffers.end(); ++it) {
+                if (it->size == 0) continue;
                 if (it->contentType == BufferContents::NO_COPY_BYTEARRAY_CONTENTS) {
                     //do not write the size as it is in previous buffer
                     other.emplaceBack(std::make_pair(it->ptr, it->size), false);
-                } else if (it->size) {
+                } else {
                     if (copy) {
                         const char* src = it->vec->data();
                         const size_t n = it->size;
@@ -128,7 +158,6 @@ namespace karabo {
                 }
 
             }
-            other.add();
         }
 
 
@@ -152,20 +181,21 @@ namespace karabo {
             return total;
         }
 
+
         std::ostream& operator<<(std::ostream& os, const BufferSet& bs) {
             using namespace karabo::util;
             os << "BufferSet content:\n";
             os << "\t\"copyAllData\" flag is\t" << std::boolalpha << bs.m_copyAllData << '\n';
             os << "\tCurrent buffer index is\t" << bs.m_currentBuffer << '\n';
-            
-            std::vector<decltype(bs.m_buffers.front().size)> size_vec;
-            std::vector<decltype(bs.m_buffers.front().contentType)> contentType_vec;
-            for(auto it = bs.m_buffers.begin(); it != bs.m_buffers.end(); ++it) {
+
+            std::vector < decltype(bs.m_buffers.front().size) > size_vec;
+            std::vector < decltype(bs.m_buffers.front().contentType) > contentType_vec;
+            for (auto it = bs.m_buffers.begin(); it != bs.m_buffers.end(); ++it) {
                 size_vec.push_back(it->size);
                 contentType_vec.push_back(it->contentType);
             }
             os << "\tBuffer sizes ...\t" << toString(size_vec) << '\n';
-            
+
             os << "\tNon-copied buffers...\t" << toString(contentType_vec) << '\n';
             os << "\tSize of buffer group is\t" << bs.m_buffers.size() << '\n';
             os << "\tBuffer content ...\n";
@@ -176,9 +206,9 @@ namespace karabo {
                         << " :  0x" << std::hex;
                 for (size_t j = 0; j < std::min(size_t(30), it->size); ++j) {
                     os << std::setw(2) << std::setfill('0') << int(it->contentType == BufferSet::BufferContents::NO_COPY_BYTEARRAY_CONTENTS ?
-                        it->ptr.get()[j] : it->vec->data()[j]);
+                                                                   it->ptr.get()[j] : it->vec->data()[j]);
                 }
-                os << std::dec << (it->size > 30 ? "...":"") << '\n';
+                os << std::dec << (it->size > 30 ? "..." : "") << '\n';
                 i++;
             }
             return os;

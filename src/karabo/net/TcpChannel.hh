@@ -35,7 +35,8 @@ namespace karabo {
                 VECTOR_POINTER,
                 HASH_VECTOR_POINTER,
                 HASH_POINTER,
-                HASH_POINTER_HASH_POINTER,                
+                HASH_POINTER_HASH_POINTER,
+                HASH_VECTOR_BUFFERSET_POINTER
             };
 
             TcpConnection::Pointer m_connectionPointer;
@@ -50,6 +51,7 @@ namespace karabo {
             std::vector<char> m_inboundHeaderPrefix;
             boost::shared_ptr<std::vector<char> > m_inboundData;
             boost::shared_ptr<std::vector<char> > m_inboundHeader;
+            karabo::util::Hash::Pointer m_inHashHeader;
             std::vector<char> m_outboundMessagePrefix;
             std::vector<char> m_outboundHeaderPrefix;
             boost::shared_ptr<std::vector<char> > m_outboundData;
@@ -203,6 +205,8 @@ namespace karabo {
 
             void readAsyncHashVectorPointer(const ReadHashVectorPointerHandler& handler);                        
 
+            void readAsyncHashVectorBufferSetPointer(const ReadHashVectorBufferSetPointerHandler& handler);
+
             void readAsyncRaw(char* data, size_t& size, const ReadRawHandler& handler);
 
             void write(const char* data, const size_t& size);
@@ -214,8 +218,12 @@ namespace karabo {
             void write(const karabo::util::Hash& header, const boost::shared_ptr<std::vector<char> >& body);
             
             void write(const karabo::util::Hash& header, const karabo::io::BufferSet& body);
-            
+
+            void write(const karabo::util::Hash& header, const std::vector<karabo::io::BufferSet::Pointer>& body);
+
             void write(const char* header, const size_t& headerSize, const karabo::io::BufferSet& body);
+
+            void write(const char* header, const size_t& headerSize, const std::vector<karabo::io::BufferSet::Pointer>& body);
 
             void write(const karabo::util::Hash& header, const karabo::util::Hash& body);
 
@@ -302,6 +310,29 @@ namespace karabo {
              */
             void onSizeInBytesAvailable(const ErrorCode& error, const ReadSizeInBytesHandler& handler);
 
+            /**
+             * Internal handler called after filling the buffer set
+             * @param error  error code
+             * @param length number of bytes read == total size of buffer set
+             * @param buffers vector of buffer set pointers with the data
+             * @param handler to be called
+             */
+            void onVectorBufferSetPointerAvailable(const ErrorCode& error, size_t length,
+                                                   const std::vector<karabo::io::BufferSet::Pointer>& buffers,
+                                                   const ReadVectorBufferSetPointerHandler& handler);
+
+            void onHashVectorBufferSetPointerRead(const boost::system::error_code& e,
+                                                  const std::vector<karabo::io::BufferSet::Pointer>& buffers);
+
+            void onHashVectorBufferSetPointerVectorPointerRead(const boost::system::error_code& e,
+                                                               const boost::shared_ptr<std::vector<char>>& vecptr,
+                                                               const ReadHashVectorBufferSetPointerHandler& handler);
+
+            void readAsyncVectorBufferSetPointerImpl(const std::vector<karabo::io::BufferSet::Pointer>& buffers,
+                                                     const ReadVectorBufferSetPointerHandler& handler);
+
+            void readAsyncVectorPointerImpl(const ReadVectorPointerHandler& handler);
+                        
             /**
              * Internal default handler
              * @param byteSize
