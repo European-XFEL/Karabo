@@ -191,7 +191,6 @@ class ControllerContainer(QWidget):
             self.status_symbol.show()
         else:
             self.status_symbol.hide()
-        self.widget_controller.on_device_status_update(status)
 
     def _setup_wrapped_widget(self):
         """Wrap up the alarm symbol and possible edit buttons in a layout with

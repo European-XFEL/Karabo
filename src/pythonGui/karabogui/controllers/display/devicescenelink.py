@@ -9,9 +9,9 @@ from PyQt4.QtGui import (
     QWidget)
 from traits.api import Instance
 
+from karabo.common.enums import DeviceStatus
 from karabo.common.scenemodel.api import (
     DeviceSceneLinkModel, SceneTargetWindow)
-from karabo.common.enums import ONLINE_STATUSES
 from karabogui.alarms.api import NORM_COLOR
 from karabogui.binding.api import get_binding_value, VectorStringBinding
 from karabogui.controllers.api import (
@@ -19,6 +19,7 @@ from karabogui.controllers.api import (
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.request import call_device_slot
 from karabogui.sceneview.widget.label import LabelWidget
+from karabogui.singletons.api import get_topology
 from karabogui.util import handle_scene_from_server
 
 
@@ -108,6 +109,11 @@ class LinkWidget(QWidget):
     @pyqtSlot()
     def _handle_click(self):
         device_id = _get_device_id(self.model.keys)
+        device = get_topology().get_device(device_id)
+
+        if device and device.status == DeviceStatus.OFFLINE:
+            return
+
         scene_name = self.model.target
         target_window = self.model.target_window
         handler = partial(handle_scene_from_server, device_id, scene_name,
@@ -136,14 +142,6 @@ class DisplayDeviceSceneLink(BaseBindingController):
         text_action.triggered.connect(self._edit_text)
         self._internal_widget.addAction(text_action)
         return self._internal_widget
-
-    def on_device_status_update(self, device_status):
-        """When the device_status goes to a non online status this method will
-        be called to disable the scenelink.
-
-        :param device_status: DeviceStatus(Enum)"""
-        enable_widget = (device_status in ONLINE_STATUSES)
-        self._internal_widget.setEnabled(enable_widget)
 
     @pyqtSlot()
     def _select_scene(self):
