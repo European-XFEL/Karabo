@@ -803,6 +803,33 @@ void Schema_Test::testOverwriteRestrictions() {
 }
 
 
+void Schema_Test::testOverwriteRestrictionsForOptions() {
+    Schema schema;
+    INT32_ELEMENT(schema).key("range")
+            .displayedName("Range")
+            .options("0,1")
+            .assignmentOptional().defaultValue(0)
+            .reconfigurable()
+            .commit();
+    
+    const auto& range1 = schema.getOptions<int>("range");
+    CPPUNIT_ASSERT_EQUAL(range1.size(), 2ul);
+    CPPUNIT_ASSERT_EQUAL(range1[0], 0);
+    CPPUNIT_ASSERT_EQUAL(range1[1], 1);
+   
+    CPPUNIT_ASSERT_NO_THROW(
+        OVERWRITE_ELEMENT(schema).key("range")
+            .setNewOptions("0,1,2")
+            .commit());
+
+    const auto& range2 = schema.getOptions<int>("range");
+    CPPUNIT_ASSERT_EQUAL(range2.size(), 3ul);
+    CPPUNIT_ASSERT_EQUAL(range2[0], 0);
+    CPPUNIT_ASSERT_EQUAL(range2[1], 1);
+    CPPUNIT_ASSERT_EQUAL(range2[2], 2);
+}
+
+
 void Schema_Test::testRuntimeAttributes() {
     Schema schema;
     FLOAT_ELEMENT(schema).key("floatProperty")
