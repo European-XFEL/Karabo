@@ -6,7 +6,7 @@ from karabo.bound import (
     METER, MICRO, MANDATORY, NODE_ELEMENT, READ, WRITE, INIT,
     AccessLevel, AccessType, ArchivePolicy, AssemblyRules, AssignmentType,
     Hash, Logger, MetricPrefix, NodeType, Schema, Types, Unit, Validator,
-    AlarmCondition, DaqDataType, State
+    AlarmCondition, DaqDataType, State, INT32_ELEMENT, OVERWRITE_ELEMENT
 )
 from .configuration_example_classes import (
     Base, GraphicsRenderer, GraphicsRenderer1, GraphicsRenderer2, SomeClass,
@@ -838,6 +838,32 @@ class  Schema_TestCase(unittest.TestCase):
         schema.setDaqDataType("trainData", DaqDataType.TRAIN)
         self.assertEqual(schema.hasDaqDataType("trainData"), True)
         self.assertEqual(schema.getDaqDataType("trainData"), DaqDataType.TRAIN)
+
+    def test_overwrite_restrictions_for_options(self):
+        schema = Schema()
+        (
+        INT32_ELEMENT(schema).key("range")
+                .displayedName("Range")
+                .options("0,1")
+                .assignmentOptional().defaultValue(0)
+                .reconfigurable()
+                .commit()
+        )
+        vec = schema.getOptions("range");
+        self.assertEqual(len(vec), 2)
+        self.assertEqual(vec[0], 0)
+        self.assertEqual(vec[1], 1)
+        (
+        OVERWRITE_ELEMENT(schema).key("range")
+                .setNewOptions("0,1,2")
+                .commit()
+        )
+        vec = schema.getOptions("range");
+        self.assertEqual(len(vec), 3)
+        self.assertEqual(vec[0], 0)
+        self.assertEqual(vec[1], 1)
+        self.assertEqual(vec[2], 2)
+        
 
 if __name__ == '__main__':
     unittest.main()
