@@ -58,6 +58,7 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testList);
     CPPUNIT_TEST(testInvalidNodes);
     CPPUNIT_TEST(testOverwriteRestrictions);
+    CPPUNIT_TEST(testOverwriteRestrictionsForOptions);
     CPPUNIT_TEST(testRuntimeAttributes);
     CPPUNIT_TEST(testStateAndAlarmSets);
     CPPUNIT_TEST(testSubSchema);
@@ -121,6 +122,7 @@ private: //functions
     void testInvalidNodes();
     void testRuntimeAttributes();
     void testOverwriteRestrictions();
+    void testOverwriteRestrictionsForOptions();
     void testStateAndAlarmSets();
     void testSubSchema();
     void testDaqDataType();
