@@ -258,7 +258,7 @@ namespace karabo{
 
             OverwriteElement& OverwriteElement::setNewOptions(const std::string& opts, bool protect, const std::string& sep) {
                 if (protect) checkIfRestrictionApplies(m_restrictions.options); //only protect if set from outside.
-                if (m_node) m_node->setAttribute(KARABO_SCHEMA_OPTIONS, karabo::util::fromString<std::string, std::vector > (opts, sep));
+                if (m_schema && m_node) m_schema->setOptions(m_node->getKey(), opts, sep);
                 return *this;
             }
 
