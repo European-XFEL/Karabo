@@ -9,7 +9,8 @@ from PyQt4.QtGui import (
     QWidget)
 from traits.api import Instance
 
-from karabo.common.enums import DeviceStatus
+from karabogui import messagebox
+from karabo.common.enums import ONLINE_STATUSES
 from karabo.common.scenemodel.api import (
     DeviceSceneLinkModel, SceneTargetWindow)
 from karabogui.alarms.api import NORM_COLOR
@@ -111,7 +112,8 @@ class LinkWidget(QWidget):
         device_id = _get_device_id(self.model.keys)
         device = get_topology().get_device(device_id)
 
-        if device and device.status == DeviceStatus.OFFLINE:
+        if device is not None and device.status not in ONLINE_STATUSES:
+            messagebox.show_warning("Device is not online!", "Warning", False)
             return
 
         scene_name = self.model.target
