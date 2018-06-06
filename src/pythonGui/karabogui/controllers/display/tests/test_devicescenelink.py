@@ -1,5 +1,7 @@
 from unittest.mock import patch
 
+from PyQt4.QtGui import QMessageBox
+
 from karabo.common.enums import DeviceStatus
 from karabo.middlelayer import Configurable, VectorString
 from karabo.common.scenemodel.api import (
@@ -8,6 +10,12 @@ from karabogui.singletons.api import get_topology
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy)
 from ..devicescenelink import DisplayDeviceSceneLink
+
+
+class MockBox(QMessageBox):
+
+    def show_warning(self, text, title, modal=False):
+        """Satisfy messagebox interface"""
 
 
 class Object(Configurable):
@@ -30,6 +38,7 @@ class TestDisplayDeviceSceneLink(GuiTestCase):
         self.controller._internal_widget.model = self.controller.model
         self.target = 'karabogui.controllers.display.' + \
                       'devicescenelink.call_device_slot'
+        self.mbox = 'karabogui.controllers.display.devicescenelink.messagebox'
 
     def tearDown(self):
         self.controller.destroy()
@@ -47,6 +56,6 @@ class TestDisplayDeviceSceneLink(GuiTestCase):
         device = get_topology().get_device('deviceUno')
         device.status = DeviceStatus.OFFLINE
 
-        with patch(self.target) as caller:
+        with patch(self.target) as caller, patch(self.mbox, new=MockBox):
             self.controller._internal_widget._handle_click()
             assert caller.call_count == 0
