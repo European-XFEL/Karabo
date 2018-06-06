@@ -370,6 +370,8 @@ class DeviceClientProxyFactory(ProxyFactory):
             self._alive = False
             for task in self._running_tasks:
                 task.cancel()
+            # actively set the state to UNKNOWN
+            self._onChanged(Hash("state", "UNKNOWN"))
 
         @asyncio.coroutine
         def _notify_new(self):
