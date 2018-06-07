@@ -3,7 +3,7 @@
 # Created on November 23, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtGui import QDialog, QFrame, QLabel
+from PyQt4.QtGui import QColor, QDialog, QFont, QFrame, QLabel
 
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.sceneview.utils import calc_rect_from_text
@@ -15,6 +15,7 @@ class LabelWidget(QLabel):
     def __init__(self, model, parent=None):
         super(LabelWidget, self).__init__(model.text, parent)
         self.setFrameShape(QFrame.Box)
+        self.setAutoFillBackground(True)
         self.set_model(model)
 
     def set_model(self, model):
@@ -26,13 +27,14 @@ class LabelWidget(QLabel):
         self.setToolTip(self.model.text)
         self.setLineWidth(model.frame_width)
 
-        styleSheet = []
-        styleSheet.append('qproperty-font: "{}";'.format(model.font))
-        styleSheet.append('color: "{}";'.format(model.foreground))
-        if model.background:
-            styleSheet.append('background-color: "{}";'.format(
-                model.background))
-        self.setStyleSheet("".join(styleSheet))
+        font_properties = QFont()
+        font_properties.fromString(model.font)
+        self.setFont(font_properties)
+
+        palette = self.palette()
+        palette.setColor(self.foregroundRole(), QColor(model.foreground))
+        palette.setColor(self.backgroundRole(), QColor(model.background))
+        self.setPalette(palette)
 
         _, _, model.width, model.height = calc_rect_from_text(model.font,
                                                               model.text)
