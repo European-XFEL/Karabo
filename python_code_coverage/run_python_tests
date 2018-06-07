@@ -1,0 +1,90 @@
+#!/bin/bash
+
+# Help function for checking successful execution of commands
+safeRunCommand() {
+    typeset cmnd="$*"
+    typeset ret_code
+
+    echo cmnd=$cmnd
+    eval $cmnd
+    ret_code=$?
+    if [ $ret_code != 0 ]; then
+        printf "Error : [%d] when executing command: '$cmnd'" $ret_code
+        echo
+        echo
+        # exit $ret_code # zputrle: All the test cases need to be performed.
+    fi
+}
+
+source karabo/activate
+COVERAGE="python $(which coverage)"
+NOSETESTS="python $(which nosetests)"
+
+# Clean the previous coverage date.
+coverage erase
+rm -r htmlcov*
+
+# Set coverage variables.
+COVER_COVERED_PACKAGES="--cover-package=karabo --cover-package=karathon --cover-package=karabo_gui --cover-package=karabogui"
+COVER_FLAGS="--with-coverage $COVER_COVERED_PACKAGES"
+
+echo
+echo Running Karabo Python unit tests ...
+echo
+safeRunCommand \
+    "$NOSETESTS -v $COVER_FLAGS " \
+        "-e test_authenticator_correct_login " \
+        "-e test_authenticator_incorrect_login " \
+        "-e test_authenticator_single_sign_on " \
+    "karabo.bound_api"
+safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.middlelayer_api"
+safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.common"
+safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.project_db"
+safeRunCommand \
+    "$NOSETESTS -v $COVER_FLAGS " \
+        "-e test_py_authenticator_incorrect_login " \
+        "-e test_py_authenticator_correct_login " \
+    "karabo.tests"
+# safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo_gui" # We will not focus on the older version of GUI.
+
+safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabogui"
+safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.interactive"
+#safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.usermacro_api"
+
+echo
+echo Karabo Python unit tests complete
+echo 
+
+echo
+echo Running Karabo Python integration tests ...
+echo 
+
+safeRunCommand "$COVERAGE run -a -m unittest discover -v ../src/pythonKarabo/karabo/integration_tests/device_comm_test"
+safeRunCommand "$COVERAGE run -a -m unittest discover -v ../src/pythonKarabo/karabo/integration_tests/device_provided_scenes_test"
+safeRunCommand "$COVERAGE run -a -m unittest discover -v ../src/pythonKarabo/karabo/integration_tests/run_configuration_group"
+
+echo
+echo Karabo Python integration tests complete
+echo
+
+echo
+echo Generating HTML coverage reports ...
+echo
+
+coverage html -i --include "*/site-packages/karabo/*" -d htmlcov_karabo
+
+coverage html -i --include "*/site-packages/karabo/bound_api/*" -d htmlcov_bound_api
+coverage html -i --include "*/site-packages/karabo/middlelayer_api/*" -d htmlcov_middlelayer_api
+coverage html -i --include "*/site-packages/karabo/common/*" -d htmlcov_common
+coverage html -i --include "*/site-packages/karabo/project_db/*" -d htmlcov_project_db
+coverage html -i --include "*/site-packages/karabo/tests/*" -d htmlcov_tests
+coverage html -i --include "*/site-packages/karabo/interactive/*" -d htmlcov_interactive
+coverage html -i --include "*/site-packages/karabo/usermacro_api/*" -d htmlcov_usermacro_api
+
+coverage html -i --include "*/karabogui/*" -d htmlcov_karabogui # We will not focus on the older version of GUI.
+# coverage html -i --include "*/karabo_gui/*" -d htmlcov_karabo_gui
+
+echo
+echo HTML coverage reports generated
+echo
+

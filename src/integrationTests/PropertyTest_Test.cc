@@ -9,6 +9,7 @@
 #include <karabo/net/EventLoop.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Schema.hh>
+#include <sstream>
 
 
 USING_KARABO_NAMESPACES;
@@ -533,7 +534,8 @@ void PropertyTest_Test::testVectorProperties() {
         m_deviceClient->set("testPropertyTest_0", "vectors.floatProperty", value);
         value.clear();
         m_deviceClient->get("testPropertyTest_0", "vectors.floatProperty", value);
-        CPPUNIT_ASSERT(value.size() == 3);
+        str << "Actual size: " << value.size();
+        CPPUNIT_ASSERT_MESSAGE(str.str(), value.size() == 3);
         for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT(value[i] == 76.54321F);
     }
 
