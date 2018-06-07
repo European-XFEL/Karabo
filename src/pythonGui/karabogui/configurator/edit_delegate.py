@@ -17,12 +17,14 @@ from karabo.middlelayer import DaqPolicy, MetricPrefix, Unit
 from karabogui.binding.api import (
     IntBinding, PropertyProxy, VectorHashBinding)
 from karabogui.controllers.api import get_compatible_controllers
-from .dialog.table_edit import TableEditDialog
+from .dialog.table_view import TableDialog
 from .utils import (
     ButtonState, handle_default_state, set_fill_rect, FIXED_ROW_HEIGHT)
 
-TABLE_BUTTON_TEXT = 'Edit Table'
+EDIT_TABLE = 'Edit Table'
+DISPLAY_TABLE = 'View Table'
 BUTTON_LABEL_PADDING = 5
+TABLE_BUTTON_WIDTH = 80
 
 
 def _get_table_button_rect(option):
@@ -30,8 +32,7 @@ def _get_table_button_rect(option):
     `QStyleOptionViewItem` instance
     """
     rect = QRect(option.rect)
-    font_metrics = option.fontMetrics
-    width = font_metrics.size(Qt.TextSingleLine, TABLE_BUTTON_TEXT).width()
+    width = TABLE_BUTTON_WIDTH
     rect.setWidth(width + BUTTON_LABEL_PADDING * 2)
     return rect
 
@@ -167,12 +168,13 @@ class EditDelegate(QStyledItemDelegate):
         key = proxy.key
         state = self._button_states.get(key, ButtonState.DISABLED)
         allowed = index.flags() & Qt.ItemIsEditable == Qt.ItemIsEditable
-        button_state = handle_default_state(allowed, state)
+        # always allow table button click
+        button_state = handle_default_state(True, state)
         self._button_states[key] = state
         button = QStyleOptionButton()
         button.state = button_state.value
         button.rect = _get_table_button_rect(option)
-        button.text = TABLE_BUTTON_TEXT
+        button.text = EDIT_TABLE if allowed else DISPLAY_TABLE
         button.features = QStyleOptionButton.AutoDefaultButton
         QApplication.style().drawControl(QStyle.CE_PushButton, button, painter)
 
@@ -182,21 +184,26 @@ class EditDelegate(QStyledItemDelegate):
         key = proxy.key
         state = self._button_states.get(key, ButtonState.DISABLED)
         allowed = index.flags() & Qt.ItemIsEditable == Qt.ItemIsEditable
-        if allowed:
+        is_table = isinstance(getattr(proxy, 'binding', None),
+                              VectorHashBinding)
+        # NOTE: Tables are very special, they are always clickable!
+        if allowed or is_table:
             rect = _get_table_button_rect(option)
             if rect.contains(event.pos()):
                 if event.type() == QEvent.MouseButtonPress:
                     state = ButtonState.PRESSED
                 elif state == ButtonState.PRESSED:
-                    dialog = TableEditDialog(proxy)
+                    dialog = TableDialog(proxy, allowed)
                     result = dialog.exec()
-                    if result == QDialog.Accepted:
-                        # XXX: Note that the dialog is passed as an editor here
-                        # Ensure that the dialog has a member called
-                        # `controller` to enable fetching the data of it
-                        self.setModelData(dialog, model, index)
-                    else:
-                        proxy.revert_edit()
+                    # Only for editable table elements we do actions!
+                    if allowed:
+                        if result == QDialog.Accepted:
+                            # XXX: Note that the dialog is passed as an editor
+                            # Ensure that the dialog has a member called
+                            # `controller` to enable fetching the data of it
+                            self.setModelData(dialog, model, index)
+                        else:
+                            proxy.revert_edit()
             if (state == ButtonState.PRESSED and
                     event.type() == QEvent.MouseButtonRelease):
                 state = ButtonState.ENABLED
