@@ -1,7 +1,7 @@
 import os.path as op
 
 from PyQt4 import uic
-from PyQt4.QtCore import pyqtSlot
+from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import (QColor, QColorDialog, QDialog, QFont, QFontDialog,
                          QIcon, QPixmap)
 
@@ -32,7 +32,10 @@ class TextDialog(QDialog):
             self.sbFrameWidth.setValue(self.label_model.frame_width)
 
         self.cbBackground.setChecked(
-            True if self.label_model.background else False)
+                self.label_model.background != 'transparent')
+
+        self.cbBackground.stateChanged.connect(
+            self.on_state_change_cbBackground)
 
     def set_button_colors(self):
         pixmap = QPixmap(24, 16)
@@ -40,6 +43,12 @@ class TextDialog(QDialog):
         self.pbTextColor.setIcon(QIcon(pixmap))
         pixmap.fill(QColor(self.label_model.background))
         self.pbBackground.setIcon(QIcon(pixmap))
+
+    @pyqtSlot(int)
+    def on_state_change_cbBackground(self, state):
+        if state != Qt.Checked:
+            self.label_model.background = 'transparent'
+            self.set_button_colors()
 
     @pyqtSlot(str)
     def on_leText_textChanged(self, text):
