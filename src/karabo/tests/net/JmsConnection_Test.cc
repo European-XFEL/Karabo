@@ -14,6 +14,17 @@
 
 #include <boost/thread.hpp>
 
+
+// uncomment next line if performing tests against local broker
+// #define BROKER_ADDRESS   "tcp://localhost:7777"
+
+#define BROKER_ADDRESS_SHORT   "tcp://exfl-broker:7777"
+// don't modify or remove next lines. This is the default
+#ifndef BROKER_ADDRESS
+#define BROKER_ADDRESS  "tcp://exfl-broker.desy.de:7777"
+#endif
+
+
 using namespace karabo::util;
 using namespace karabo::net;
 
@@ -43,35 +54,37 @@ unsigned int JmsConnection_Test::getMessageCount() {
 void JmsConnection_Test::testConnect() {
 
     {
+        setenv("KARABO_BROKER", BROKER_ADDRESS, true);
         m_connection = JmsConnection::Pointer(new JmsConnection());
         CPPUNIT_ASSERT(m_connection->isConnected() == false);
         m_connection->connect();
         CPPUNIT_ASSERT(m_connection->isConnected() == true);
-        CPPUNIT_ASSERT(m_connection->getBrokerUrl() == "tcp://exfl-broker.desy.de:7777" || m_connection->getBrokerUrl() == "tcp://exfl-broker:7777");
+        CPPUNIT_ASSERT(m_connection->getBrokerUrl() == BROKER_ADDRESS || m_connection->getBrokerUrl() == BROKER_ADDRESS_SHORT);
         m_connection->disconnect();
         CPPUNIT_ASSERT(m_connection->isConnected() == false);
         m_connection->connect();
         CPPUNIT_ASSERT(m_connection->isConnected() == true);
+        unsetenv("KARABO_BROKER");
     }
 
     {
-        m_connection = JmsConnection::Pointer(new JmsConnection("tcp://someBadHost:7777,tcp://exfl-broker.desy.de:7777"));
+        m_connection = JmsConnection::Pointer(new JmsConnection("tcp://someBadHost:7777," BROKER_ADDRESS));
         CPPUNIT_ASSERT(m_connection->isConnected() == false);
         m_connection->connect();
         CPPUNIT_ASSERT(m_connection->isConnected() == true);
-        CPPUNIT_ASSERT(m_connection->getBrokerUrl() == "tcp://exfl-broker.desy.de:7777" || m_connection->getBrokerUrl() == "tcp://exfl-broker:7777");
+        CPPUNIT_ASSERT(m_connection->getBrokerUrl() == BROKER_ADDRESS || m_connection->getBrokerUrl() == BROKER_ADDRESS_SHORT);
         m_connection->disconnect();
         CPPUNIT_ASSERT(m_connection->isConnected() == false);
     }
 
     {
-        char env[] = "KARABO_BROKER=tcp://exfl-broker.desy.de:7777";
-        ::putenv(env);
+        // this line should not be commented out. It is required for this test!
+        setenv("KARABO_BROKER", BROKER_ADDRESS, true);
         m_connection = JmsConnection::Pointer(new JmsConnection("tcp://someBadHost:7777"));
         CPPUNIT_ASSERT(m_connection->isConnected() == false);
         m_connection->connect();
         CPPUNIT_ASSERT(m_connection->isConnected() == true);
-        CPPUNIT_ASSERT(m_connection->getBrokerUrl() == "tcp://exfl-broker.desy.de:7777" || m_connection->getBrokerUrl() == "tcp://exfl-broker:7777");
+        CPPUNIT_ASSERT(m_connection->getBrokerUrl() == BROKER_ADDRESS || m_connection->getBrokerUrl() == BROKER_ADDRESS_SHORT);
         m_connection->disconnect();
         CPPUNIT_ASSERT(m_connection->isConnected() == false);
         unsetenv("KARABO_BROKER");
@@ -114,6 +127,7 @@ void JmsConnection_Test::readHandler1(karabo::net::JmsConsumer::Pointer consumer
 
 
 void JmsConnection_Test::testCommunication1() {
+    setenv("KARABO_BROKER", BROKER_ADDRESS, true);
 
     // Here we test e.g. switching topic in consumer and producer
     m_messageCount = 0;
@@ -158,6 +172,7 @@ void JmsConnection_Test::readHandler2(karabo::net::JmsConsumer::Pointer channel,
 
 
 void JmsConnection_Test::testCommunication2() {
+    setenv("KARABO_BROKER", BROKER_ADDRESS, true);
 
     // Here we basically test selectors for the consumer.
 
