@@ -22,14 +22,14 @@ CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/bin/karabo-brokerrates
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux-x86/package
 CND_PACKAGE_NAME_Release=brokerrates.tar
 CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/brokerrates.tar
-# Code_Coverage configuration
-CND_PLATFORM_Code_Coverage=GNU-Linux-x86
-CND_ARTIFACT_DIR_Code_Coverage=dist/Code_Coverage/GNU-Linux-x86/bin
-CND_ARTIFACT_NAME_Code_Coverage=karabo-brokerrates
-CND_ARTIFACT_PATH_Code_Coverage=dist/Code_Coverage/GNU-Linux-x86/bin/karabo-brokerrates
-CND_PACKAGE_DIR_Code_Coverage=dist/Code_Coverage/GNU-Linux-x86/package
-CND_PACKAGE_NAME_Code_Coverage=brokerrates.tar
-CND_PACKAGE_PATH_Code_Coverage=dist/Code_Coverage/GNU-Linux-x86/package/brokerrates.tar
+# CodeCoverage configuration
+CND_PLATFORM_CodeCoverage=GNU-Linux-x86
+CND_ARTIFACT_DIR_CodeCoverage=dist/CodeCoverage/GNU-Linux-x86/bin
+CND_ARTIFACT_NAME_CodeCoverage=karabo-brokerrates
+CND_ARTIFACT_PATH_CodeCoverage=dist/CodeCoverage/GNU-Linux-x86/bin/karabo-brokerrates
+CND_PACKAGE_DIR_CodeCoverage=dist/CodeCoverage/GNU-Linux-x86/package
+CND_PACKAGE_NAME_CodeCoverage=brokerrates.tar
+CND_PACKAGE_PATH_CodeCoverage=dist/CodeCoverage/GNU-Linux-x86/package/brokerrates.tar
 #
 # include compiler specific variables
 #

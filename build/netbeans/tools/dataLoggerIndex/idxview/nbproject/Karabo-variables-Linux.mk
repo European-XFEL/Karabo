@@ -22,14 +22,14 @@ CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/bin/karabo-idxview
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux-x86/package
 CND_PACKAGE_NAME_Release=idxview.tar
 CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/idxview.tar
-# Code_Coverage configuration
-CND_PLATFORM_Code_Coverage=GNU-Linux-x86
-CND_ARTIFACT_DIR_Code_Coverage=dist/Code_Coverage/GNU-Linux-x86/bin
-CND_ARTIFACT_NAME_Code_Coverage=karabo-idxview
-CND_ARTIFACT_PATH_Code_Coverage=dist/Code_Coverage/GNU-Linux-x86/bin/karabo-idxview
-CND_PACKAGE_DIR_Code_Coverage=dist/Code_Coverage/GNU-Linux-x86/package
-CND_PACKAGE_NAME_Code_Coverage=idxview.tar
-CND_PACKAGE_PATH_Code_Coverage=dist/Code_Coverage/GNU-Linux-x86/package/idxview.tar
+# CodeCoverage configuration
+CND_PLATFORM_CodeCoverage=GNU-Linux-x86
+CND_ARTIFACT_DIR_CodeCoverage=dist/CodeCoverage/GNU-Linux-x86/bin
+CND_ARTIFACT_NAME_CodeCoverage=karabo-idxview
+CND_ARTIFACT_PATH_CodeCoverage=dist/CodeCoverage/GNU-Linux-x86/bin/karabo-idxview
+CND_PACKAGE_DIR_CodeCoverage=dist/CodeCoverage/GNU-Linux-x86/package
+CND_PACKAGE_NAME_CodeCoverage=idxview.tar
+CND_PACKAGE_PATH_CodeCoverage=dist/CodeCoverage/GNU-Linux-x86/package/idxview.tar
 #
 # include compiler specific variables
 #
