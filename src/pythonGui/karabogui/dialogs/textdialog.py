@@ -34,9 +34,6 @@ class TextDialog(QDialog):
         self.cbBackground.setChecked(
                 self.label_model.background != 'transparent')
 
-        self.cbBackground.stateChanged.connect(
-            self.on_state_change_cbBackground)
-
     def set_button_colors(self):
         pixmap = QPixmap(24, 16)
         pixmap.fill(QColor(self.label_model.foreground))
@@ -45,7 +42,7 @@ class TextDialog(QDialog):
         self.pbBackground.setIcon(QIcon(pixmap))
 
     @pyqtSlot(int)
-    def on_state_change_cbBackground(self, state):
+    def on_cbBackground_stateChanged(self, state):
         if state != Qt.Checked:
             self.label_model.background = 'transparent'
             self.set_button_colors()
