@@ -37,7 +37,7 @@ class DeviceSceneLinkModel(BaseWidgetObjectData):
     # A foreground color, CSS-style
     foreground = String
     # A background color, CSS-style
-    background = String
+    background = String("transparent")
     # The line width of a frame around the text
     frame_width = Int(1)
 
