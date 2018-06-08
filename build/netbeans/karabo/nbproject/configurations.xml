@@ -4382,7 +4382,7 @@
         </ccTool>
       </folder>
     </conf>
-    <conf name="Code_Coverage" type="2">
+    <conf name="CodeCoverage" type="2">
       <toolsSet>
         <compilerSet>default</compilerSet>
         <dependencyChecking>true</dependencyChecking>

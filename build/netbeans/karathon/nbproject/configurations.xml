@@ -962,7 +962,7 @@
       <item path="tests/karathonTestRunner.cc" ex="false" tool="1" flavor2="0">
       </item>
     </conf>
-    <conf name="Code_Coverage" type="2">
+    <conf name="CodeCoverage" type="2">
       <toolsSet>
         <compilerSet>default</compilerSet>
         <dependencyChecking>true</dependencyChecking>

@@ -23,7 +23,7 @@ AS=as
 # Macros
 CND_PLATFORM=GNU-Linux-x86
 CND_DLIB_EXT=so
-CND_CONF=Code_Coverage
+CND_CONF=CodeCoverage
 CND_DISTDIR=dist
 CND_BUILDDIR=build
 
@@ -52,13 +52,13 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN/../lib -Wl,-rpath,\$$ORIGIN/../extern/lib -Wl,-rpath,${KARABO}/extern/lib -Wl,-rpath,../../karabo/dist/Code_Coverage/GNU-Linux-x86/lib -L../../karabo/dist/Code_Coverage/GNU-Linux-x86/lib -lkarabo `pkg-config --libs karaboDependencies-${CND_PLATFORM}`  
+LDLIBSOPTIONS=-L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN/../lib -Wl,-rpath,\$$ORIGIN/../extern/lib -Wl,-rpath,${KARABO}/extern/lib -Wl,-rpath,../../karabo/dist/${CND_CONF}/GNU-Linux-x86/lib -L../../karabo/dist/${CND_CONF}/GNU-Linux-x86/lib -lkarabo `pkg-config --libs karaboDependencies-${CND_PLATFORM}`  
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
 	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokerrates
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokerrates: ../../karabo/dist/Code_Coverage/GNU-Linux-x86/lib/libkarabo.so
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokerrates: ../../karabo/dist/${CND_CONF}/GNU-Linux-x86/lib/libkarabo.so
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokerrates: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin
