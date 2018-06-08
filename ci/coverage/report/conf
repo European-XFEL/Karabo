@@ -6,7 +6,7 @@ get_abs_path() {
 
 SCRIPT_BASE=$(get_abs_path $( dirname "${BASH_SOURCE[0]}" ) )
 KARABO_BASE=$(get_abs_path $SCRIPT_BASE"/../../..")
-MAKE_CONF=Code_Coverage
+MAKE_CONF=CodeCoverage
 
 LCOV_BASE=$(get_abs_path $SCRIPT_BASE"/../lcov")
 

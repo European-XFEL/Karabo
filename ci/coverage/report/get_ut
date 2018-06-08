@@ -10,7 +10,7 @@ DEST_DIR=$SCRIPT_BASE"/"$DEST_DIR"_ut"
 if [ ! -d "$DEST_DIR" ]; then
 	mkdir $DEST_DIR
 fi
-cp /home/osboxes/karabo/build/netbeans/karabo/testresults/* $DEST_DIR/
+cp $KARABO_BASE/build/netbeans/karabo/testresults/* $DEST_DIR/
 grep "<Failures>" $DEST_DIR/*
 
 
