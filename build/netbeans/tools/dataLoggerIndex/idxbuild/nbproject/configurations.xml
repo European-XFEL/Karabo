@@ -139,7 +139,7 @@
             flavor2="0">
       </item>
     </conf>
-    <conf name="Code_Coverage" type="1">
+    <conf name="CodeCoverage" type="1">
       <toolsSet>
         <compilerSet>default</compilerSet>
         <dependencyChecking>true</dependencyChecking>

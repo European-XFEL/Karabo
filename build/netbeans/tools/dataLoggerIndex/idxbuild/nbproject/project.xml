@@ -22,7 +22,7 @@
                     <type>1</type>
                 </confElem>
                 <confElem>
-                    <name>Code_Coverage</name>
+                    <name>CodeCoverage</name>
                     <type>1</type>
                 </confElem>
             </confList>

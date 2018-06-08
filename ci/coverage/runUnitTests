@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# helper scritp for running the test manually.
+
 get_abs_path() {
 	echo `cd "$1"; pwd`
 }

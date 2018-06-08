@@ -173,14 +173,15 @@ fi
 # Parse command line
 if [[ -z "$1" ||  $1 = "help" || $1 = "-h" ||  $1 = "-help" || $1 = "--help" ]]; then
     cat <<End-of-help
-Usage: $0 Debug|Release|Code_Coverage|Dependencies|Clean|Clean-All [flags]
+Usage: $0 Debug|Release|CodeCoverage|Dependencies|Clean|Clean-All [flags]
 
 Available flags:
   --auto       - Tries to automatically install needed system packages (sudo rights required!)
   --bundle     - Installs Karabo and creates the software bundle. Default: no bundle is created!
   --pyDevelop  - Install Python packages in development mode
   --codeCoverage
-               - Run unit and integration tests with code coverage
+               - Run unit and integration tests with code coverage.
+                 Specifying this flag implies --runTests and --runIntegrationTests.
   --runTests   - Run unit tests after building (useful for Debug|Release)
   --runIntegrationTests
                - Run integration tests after building (for Debug|Release)
@@ -198,7 +199,7 @@ fi
 EXTERN_ONLY="n"
 
 # Fetch configuration type (Release or Debug)
-if [[ $1 = "Release" || $1 = "Debug" || $1 = "Code_Coverage" ]]; then
+if [[ $1 = "Release" || $1 = "Debug" || $1 = "CodeCoverage" ]]; then
     CONF=$1
 elif [[ $1 = "Clean" || $1 = "Clean-All" ]]; then
     safeRunCommand "cd $scriptDir/build/netbeans/karabo"
@@ -256,8 +257,11 @@ while [ -n "$1" ]; do
             ;;
         --codeCoverage)
             # only execute this command with correct CONF
-            if [ "$CONF" = "Code_Coverage" ]; then
+            if [ "$CONF" = "CodeCoverage" ]; then
                 CODECOVERAGE="y"
+            else
+                echo "Option --codeCoverage requires 'CodeCoverage' configuration"
+                exit 2
             fi
             ;;
         --numJobs)
@@ -277,6 +281,14 @@ while [ -n "$1" ]; do
     esac
     shift
 done
+
+# specifying --codeCoverage implies --runTests and --runIntegrationTests called by the code coverage function.
+# No need to run those separately, so we turn them off to explicitly in case the user specified them.
+if [ "$CODECOVERAGE" = "y" ]; then
+    RUNTESTS="n"
+    RUNINTEGRATIONTESTS="n"
+fi
+
 
 # Get some information about our system
 OS=$(uname -s)
