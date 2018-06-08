@@ -3,6 +3,6 @@
 # helper script for running the test manually.
 
 find ../.. -name "*.gcda" -delete
-../../auto_build_all.sh Code_Coverage --runTests
-../../auto_build_all.sh Code_Coverage --runIntegrationTests
+../../auto_build_all.sh CodeCoverage --runTests
+../../auto_build_all.sh CodeCoverage --runIntegrationTests
 

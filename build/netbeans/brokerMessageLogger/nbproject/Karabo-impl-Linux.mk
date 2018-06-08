@@ -31,7 +31,7 @@ DEFAULTCONF=Debug
 CONF=${DEFAULTCONF}
 
 # All Configurations
-ALLCONFS=Debug Release Code_Coverage 
+ALLCONFS=Debug Release CodeCoverage 
 
 
 # build

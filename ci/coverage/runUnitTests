@@ -17,5 +17,5 @@ testDir=$BASE_PATH/build/netbeans/karabo
 
 rm -rf $testDir/testresults/
 
-( cd $testDir && make CONF=Code_Coverage -j1 test )
+( cd $testDir && make CONF=CodeCoverage -j1 test )
 
