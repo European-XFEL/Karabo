@@ -21,10 +21,8 @@ from .dialog.table_view import TableDialog
 from .utils import (
     ButtonState, handle_default_state, set_fill_rect, FIXED_ROW_HEIGHT)
 
-EDIT_TABLE = 'Edit Table'
-DISPLAY_TABLE = 'View Table'
+TABLE_BUTTON_TEXT = 'Table Element'
 BUTTON_LABEL_PADDING = 5
-TABLE_BUTTON_WIDTH = 80
 
 
 def _get_table_button_rect(option):
@@ -32,7 +30,8 @@ def _get_table_button_rect(option):
     `QStyleOptionViewItem` instance
     """
     rect = QRect(option.rect)
-    width = TABLE_BUTTON_WIDTH
+    font_metrics = option.fontMetrics
+    width = font_metrics.size(Qt.TextSingleLine, TABLE_BUTTON_TEXT).width()
     rect.setWidth(width + BUTTON_LABEL_PADDING * 2)
     return rect
 
@@ -163,18 +162,17 @@ class EditDelegate(QStyledItemDelegate):
     # Private interface
 
     def _draw_button(self, painter, option, index, proxy):
-        """Draw a button
+        """Draw a table button
         """
         key = proxy.key
         state = self._button_states.get(key, ButtonState.DISABLED)
-        allowed = index.flags() & Qt.ItemIsEditable == Qt.ItemIsEditable
-        # always allow table button click
+        # always allow table button click!
         button_state = handle_default_state(True, state)
         self._button_states[key] = state
         button = QStyleOptionButton()
         button.state = button_state.value
         button.rect = _get_table_button_rect(option)
-        button.text = EDIT_TABLE if allowed else DISPLAY_TABLE
+        button.text = TABLE_BUTTON_TEXT
         button.features = QStyleOptionButton.AutoDefaultButton
         QApplication.style().drawControl(QStyle.CE_PushButton, button, painter)
 
@@ -196,6 +194,7 @@ class EditDelegate(QStyledItemDelegate):
                     dialog = TableDialog(proxy, allowed)
                     result = dialog.exec()
                     # Only for editable table elements we do actions!
+                    # TODO: Find a better solution!
                     if allowed:
                         if result == QDialog.Accepted:
                             # XXX: Note that the dialog is passed as an editor
