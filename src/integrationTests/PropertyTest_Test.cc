@@ -530,6 +530,8 @@ void PropertyTest_Test::testVectorProperties() {
         CPPUNIT_ASSERT(value.size() == 9);
         for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT(value[i] == 123.456F);
 
+        std::ostringstream str;
+        
         value.assign(3, 76.54321F);
         m_deviceClient->set("testPropertyTest_0", "vectors.floatProperty", value);
         value.clear();
