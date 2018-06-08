@@ -36,4 +36,5 @@ class TableDialog(QDialog):
         layout.addWidget(self.controller.widget)
         # `empty_widget` is defined in table_edit.ui
         self.empty_widget.setLayout(layout)
-        self.buttonBox.button(QDialogButtonBox.Cancel).setVisible(editable)
+        cancel_button = self.buttonBox.button(QDialogButtonBox.Cancel)
+        cancel_button.setVisible(editable)
