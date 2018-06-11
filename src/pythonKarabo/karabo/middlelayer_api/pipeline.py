@@ -150,6 +150,11 @@ class NetworkInput(Configurable):
         print("NetworkInput close handler called by {}!".format(cls))
 
     @coroutine
+    def end_of_stream_handler(self, cls):
+        # XXX: Please keep this for the time being.
+        print("EndOfStream handler called by {}!".format(cls))
+
+    @coroutine
     def call_handler(self, data, meta):
         with (yield from self.handler_lock):
             yield from get_event_loop().run_coroutine_or_thread(
@@ -188,7 +193,7 @@ class NetworkInput(Configurable):
                 channel.writeHash(cmd)
                 cmd = Hash("reason", "update",
                            "instanceId", self.parent.deviceId)
-                while (yield from self.readChunk(channel, cls)):
+                while (yield from self.readChunk(channel, cls, output)):
                     channel.writeHash(cmd)
         finally:
             self.connected.pop(output)
@@ -198,7 +203,7 @@ class NetworkInput(Configurable):
                                   self.close_handler, output))
 
     @coroutine
-    def readChunk(self, channel, cls):
+    def readChunk(self, channel, cls, output):
         try:
             header = yield from channel.readHash()
         except IncompleteReadError as e:
@@ -210,9 +215,8 @@ class NetworkInput(Configurable):
                 return False
         data = yield from channel.readBytes()
         if "endOfStream" in header:
-            meta = PipelineMetaData()
-            meta._onChanged(Hash("source", channel.channelName))
-            yield from shield(self.call_handler(None, meta))
+            yield from shield(get_event_loop().run_coroutine_or_thread(
+                self.end_of_stream_handler, output))
             return True
         pos = 0
         for length, meta_hash in zip(header["byteSizes"],
@@ -252,12 +256,19 @@ class InputChannel(Node):
     a boolean which is always `True`, but has the timestamp of the arriving
     data.
 
-    Should it be necessary to act upon a channel closing, a close hander may be
-    installed::
+    Should it be necessary to act upon a channel closing, a close handler may
+    be installed::
 
         @input.close
         def input(self, name):
             # close the input channel `name`
+
+    Should it be necessary to act upon endOfStream, a handler may be
+    installed::
+
+        @input.endOfStream
+        def input(self, name):
+            # EndOfStream handler has been called by `name`
 
     :param raw: especially if the sender has not declared the schema of the
         data it sends, one can set `raw` to `True` in order to get the
@@ -265,6 +276,7 @@ class InputChannel(Node):
         not declared a schema.
     """
     close_handler = None
+    end_of_stream_handler = None
 
     def __init__(self, raw=False, **kwargs):
         super(InputChannel, self).__init__(NetworkInput, **kwargs)
@@ -285,10 +297,17 @@ class InputChannel(Node):
         if self.close_handler is not None:
             channel.close_handler = self.close_handler.__get__(
                 instance, type(instance))
+        if self.end_of_stream_handler is not None:
+            channel.end_of_stream_handler = self.end_of_stream_handler.__get__(
+                instance, type(instance))
         return ret
 
     def close(self, func):
         self.close_handler = func
+        return self
+
+    def endOfStream(self, func):
+        self.end_of_stream_handler = func
         return self
 
     def __call__(self, handler):
