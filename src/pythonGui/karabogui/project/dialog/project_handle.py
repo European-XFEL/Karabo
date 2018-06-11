@@ -52,8 +52,7 @@ class LoadProjectDialog(QDialog):
                            'project_handle.ui')
         uic.loadUi(filepath, self)
         # set proper window flags
-        flags = (Qt.WindowMinMaxButtonsHint | Qt.WindowCloseButtonHint)
-        self.setWindowFlags(flags)
+        self.setWindowFlags(Qt.WindowCloseButtonHint)
 
         db_conn = get_db_conn()
         self.rbFromRemote.setChecked(db_conn.ignore_local_cache)
