@@ -119,10 +119,16 @@ class NetworkInput(Configurable):
         for k in close:
             self.connected[k].cancel()
         for output in outputs:
-            if output not in self.connected:
-                task = background(self.start_channel(output))
-                self.connected[output] = task
-        self.connectedOutputChannels = list(self.connected)
+            yield from self.connectChannel(output)
+
+    @coroutine
+    def connectChannel(self, channel):
+        """Connect to a single Outputchannel
+        """
+        if channel not in self.connected:
+            task = background(self.start_channel(channel))
+            self.connected[channel] = task
+            self.connectedOutputChannels = list(self.connected)
 
     dataDistribution = String(
         displayedName="Data Distribution",
