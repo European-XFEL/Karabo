@@ -193,7 +193,7 @@ class NetworkInput(Configurable):
                 channel.writeHash(cmd)
                 cmd = Hash("reason", "update",
                            "instanceId", self.parent.deviceId)
-                while (yield from self.readChunk(channel, cls, output)):
+                while (yield from self.readChunk(channel, cls)):
                     channel.writeHash(cmd)
         finally:
             self.connected.pop(output)
@@ -203,7 +203,7 @@ class NetworkInput(Configurable):
                                   self.close_handler, output))
 
     @coroutine
-    def readChunk(self, channel, cls, output):
+    def readChunk(self, channel, cls):
         try:
             header = yield from channel.readHash()
         except IncompleteReadError as e:
@@ -216,7 +216,7 @@ class NetworkInput(Configurable):
         data = yield from channel.readBytes()
         if "endOfStream" in header:
             yield from shield(get_event_loop().run_coroutine_or_thread(
-                self.end_of_stream_handler, output))
+                self.end_of_stream_handler, channel.channelName))
             return True
         pos = 0
         for length, meta_hash in zip(header["byteSizes"],
