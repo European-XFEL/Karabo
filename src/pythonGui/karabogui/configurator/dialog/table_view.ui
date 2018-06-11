@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Edit Table</string>
+   <string>Table Element</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="margin">
