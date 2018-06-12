@@ -281,7 +281,8 @@ def install(args):
     with pushd_popd():
         copyFlag = args.copy
         path = os.path.join('installed', args.device)
-        clean_dir(path, args)
+        if not clean_dir(path, args):
+            return
         os.makedirs(path, exist_ok=True)
         print('Downloading source for {}... '.format(args.device),
               end='', flush=True)
@@ -324,6 +325,11 @@ def str2bool(v):
 
 
 def clean_dir(path, args):
+    """
+    Removes a path
+
+    :return: True if path has been removed, False otherwise
+    """
     if os.path.isdir(path):
         tag = run_cmd('cd {}; git tag'.format(path)).decode("utf-8").rstrip()
         if not hasattr(args, 'tag'):
@@ -345,14 +351,16 @@ def clean_dir(path, args):
                       ''.format(args.device, tag))
                 sys.exit(1)
             else:  # same version -> skip
-                return
+                print('{}-{} already installed: skipping'
+                      ''.format(args.device, tag))
+                return False
         elif args.force:  # always overwrite
             run_cmd('rm -rf {}'.format(path))
         elif tag == new_tag:  # tag already installed
             # TODO: add integrity check (git status should be ok)
             print("Skip {}-{} installation... already installed"
                   "".format(args.device, tag))
-            return
+            return False
         else:  # interactive
             # Prompt for user's confirmation
             if tag != '':
@@ -368,6 +376,8 @@ def clean_dir(path, args):
                 print('Abort {} installation'.format(args.device))
                 sys.exit(1)
             run_cmd('rm -rf {}'.format(path))
+
+    return True
 
 
 def parse_configuration_file(filename):
@@ -466,7 +476,8 @@ def uninstall(args):
 def develop(args):
     with pushd_popd():
         path = os.path.join('devices', args.device)
-        clean_dir(path, args)
+        if not clean_dir(path, args):
+            return
         checkout(args)
         os.chdir(path)
         if os.path.exists('DEPENDS'):
