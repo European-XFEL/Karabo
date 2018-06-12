@@ -351,6 +351,8 @@ def clean_dir(path, args):
                       ''.format(args.device, tag))
                 sys.exit(1)
             else:  # same version -> skip
+                print('{}-{} already installed: skipping'
+                      ''.format(args.device, tag))
                 return False
         elif args.force:  # always overwrite
             run_cmd('rm -rf {}'.format(path))
