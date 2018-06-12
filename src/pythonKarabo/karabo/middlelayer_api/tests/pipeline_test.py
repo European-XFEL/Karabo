@@ -35,6 +35,7 @@ class FakeTimestamp:
 class TestChannel(DeviceTest):
     sample_data = [(Hash("a", 5), FakeTimestamp()),
                    (Hash("b", 7), FakeTimestamp())]
+    eos_channel = ""
 
     def setUp(self):
         self.reader = StreamReader()
@@ -109,6 +110,10 @@ class TestChannel(DeviceTest):
         self.data.append(data)
         self.meta.append(meta)
 
+    @coroutine
+    def eos_handler(self, name):
+        self.eos_channel = name
+
     def feedTestData(self):
         encoded = encodeBinary(Hash("a", 7))
         meta = Hash("source", "a", "timestamp", False)
@@ -157,16 +162,17 @@ class TestChannel(DeviceTest):
         network = NetworkInput({})
         network.raw = True
         network.handler = self.handler
+        network.end_of_stream_handler = self.eos_handler
+        self.assertEqual(self.eos_channel, "")
         task = background(network.readChunk(self.channel, None))
         self.feedHash(Hash("endOfStream", True))
         self.reader.feed_data(b"\0\0\0\0")
         self.data = []
         self.meta = []
         self.assertTrue((yield from task))
-        self.assertEqual(self.data, [None])
-        self.assertEqual(len(self.meta), 1)
-        self.assertEqual(self.meta[0].source, "channelname")
-        self.assertFalse(self.meta[0].timestamp)
+        self.assertEqual(self.data, [])
+        self.assertEqual(self.eos_channel, "channelname")
+        self.assertEqual(len(self.meta), 0)
 
     @async_tst
     def test_readChunk_eof(self):
