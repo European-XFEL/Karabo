@@ -10,6 +10,7 @@ from .exceptions import KaraboError
 from .hash import Descriptor, Hash, Slot, Type
 from .ndarray import NDArray
 from .timestamp import Timestamp
+from .time_mixin import get_timestamp
 from .weak import Weak
 
 
@@ -371,7 +372,10 @@ class DeviceClientProxyFactory(ProxyFactory):
             for task in self._running_tasks:
                 task.cancel()
             # actively set the state to UNKNOWN
-            self._onChanged(Hash("state", "UNKNOWN"))
+            h = Hash("state", "UNKNOWN")
+            timestamp = get_timestamp()
+            timestamp.toHashAttributes(h)
+            self._onChanged(h)
 
         @asyncio.coroutine
         def _notify_new(self):
