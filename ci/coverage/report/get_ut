@@ -5,7 +5,7 @@
 SCRIPT_BASE=$(get_abs_path $( dirname "${BASH_SOURCE[0]}" ))
 
 DEST_DIR=`date +%F_%H%M`
-DEST_DIR=$SCRIPT_BASE"/"$DEST_DIR"_ut"
+DEST_DIR=$SCRIPT_BASE"/"$DEST_DIR"_unitTest"
 
 if [ ! -d "$DEST_DIR" ]; then
 	mkdir $DEST_DIR
