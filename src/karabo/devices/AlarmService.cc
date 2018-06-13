@@ -74,7 +74,7 @@ namespace karabo {
                     .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
                     .assignmentOptional().defaultValue(500)
                     .reconfigurable()
-                    .minExc(100).maxInc(1000)
+                    .minInc(100).maxInc(2000)
                     .commit();
         }
 
@@ -535,8 +535,8 @@ namespace karabo {
                 }
 
             }
+            // Immediately send out our changes after human interaction!
             boost::mutex::scoped_lock lock(m_updateMutex);
-
             if (!rowUpdates.empty()) {
                 m_updateHash.merge(rowUpdates);
                 emit("signalAlarmServiceUpdate", getInstanceId(), std::string("alarmUpdate"), m_updateHash);
