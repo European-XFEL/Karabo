@@ -124,7 +124,7 @@ def getdata(name):
 
 
 def server_up(server):
-    return (server['status'] == 'up'
+    return (server['status'].startswith('up')
             and server['duration'] > MINIMUM_UP_DURATION)
 
 
