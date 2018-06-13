@@ -192,6 +192,9 @@ class ConfigurationTreeView(QTreeView):
 
         if self.popup_widget is None:
             self.popup_widget = PopupWidget(can_freeze=True, parent=self)
+        else:
+            # NOTE: Reset pop-up widget, e.g. clean cache
+            self.popup_widget.reset()
 
         info = self._get_popup_info(index)
         self._popup_showing_index = index
