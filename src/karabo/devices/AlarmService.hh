@@ -211,10 +211,10 @@ namespace karabo {
 
             boost::thread m_flushWorker;
 
-            karabo::util::Hash m_updateHash; // our bulkset hash
             mutable boost::shared_mutex m_alarmChangeMutex;
             boost::atomic<bool> m_flushRunning;
             std::string m_flushFilePath;
+            karabo::util::Hash m_updateHash; // our bulkset hash
             boost::mutex m_updateMutex;
             boost::asio::deadline_timer m_updateTimer; // our update timer for bulksets
 
