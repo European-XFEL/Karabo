@@ -22,6 +22,7 @@ class PopupWidget(QWidget):
         # default is updating the pop-up
         self.can_freeze = can_freeze
         self.freeze = False
+        self.info_cache = None
 
         # NOTE: The pop-up is used by the configurator and the navigation
         # Configurator requires freezing!
@@ -45,10 +46,15 @@ class PopupWidget(QWidget):
     @pyqtSlot()
     def toggle_freeze(self):
         self.freeze = not self.freeze
+        if self.freeze is False and self.info_cache is not None:
+            self.setInfo(self.info_cache)
         self.update_button_status()
 
     def setInfo(self, info):
         if self.freeze:
+            # We cache the lastet update for later display when the
+            # freeze is toggled!
+            self.info_cache = info
             return
 
         scrollBar = self._ui_info.verticalScrollBar()
@@ -64,10 +70,18 @@ class PopupWidget(QWidget):
         # parameter
         scrollBar.setValue(pos)
 
+    def reset(self):
+        self.freeze = False
+        self.info_cache = None
+        self.update_button_status()
+
     def closeEvent(self, event):
+        """Reimplemented function from Qt
+
+           Erase all caching information and set the freeze to false
+        """
         if self.can_freeze:
-            self.freeze = False
-            self.update_button_status()
+            self.reset()
         super(PopupWidget, self).closeEvent(event)
 
 
