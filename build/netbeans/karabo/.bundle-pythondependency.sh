@@ -44,6 +44,11 @@ mkdir -p $DISTDIR
 
 ###### Run dependency custom code to build the wheel ##########################
 source $originalPwd/build.config
+retVal=$?
+if [ $retVal -ne 0 ]; then
+    echo "ERROR: build.config returned $retval. Exiting."
+    exit $retVal
+fi
 
 # Install the wheel which was created
 WHEELNAME=$(basename $DISTDIR/*.whl)
