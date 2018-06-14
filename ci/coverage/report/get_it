@@ -1,6 +1,7 @@
 #!/bin/bash
 
-. ./conf
+SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
+. $SCRIPT_DIR/conf
 
 SCRIPT_BASE=$(get_abs_path $( dirname "${BASH_SOURCE[0]}" ))
 
