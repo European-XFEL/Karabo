@@ -11,8 +11,9 @@
 #ifndef KARABO_TCPADAPTERDEVICE_HH
 #define KARABO_TCPADAPTERDEVICE_HH
 
-#include <karabo/karabo.hpp>
-#include <karabo/net/TcpChannel.hh>
+#include "karabo/karabo.hpp"
+#include "karabo/net/TcpChannel.hh"
+#include "karabo/util/Exception.hh"
 #include <boost/thread.hpp>
 #include <boost/lockfree/spsc_queue.hpp>
 #include <future>
@@ -72,7 +73,7 @@ namespace karabo {
             const size_t maxLoops = std::ceil(timeout/waitTime);
             size_t i = 0;
             do {
-                if(i == maxLoops) throw("Waiting on messages timed out!");
+                if (i == maxLoops) throw KARABO_TIMEOUT_EXCEPTION("Waiting on messages timed out!");
                 i++;
                 boost::this_thread::sleep(boost::posix_time::milliseconds(waitTime));
                 if (m_debug) std::clog << "Have " << m_nextMessageQueues[type]->read_available() << " of " << nMessages << " in queue!" << std::endl;
