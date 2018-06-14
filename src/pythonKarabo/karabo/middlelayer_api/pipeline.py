@@ -105,6 +105,7 @@ class NetworkInput(Configurable):
     instead you should just declare a :cls:`InputChannel`.
     """
     displayType = 'InputChannel'
+    name = None
 
     @VectorString(
         displayedName="Connected Output Channels",
@@ -151,9 +152,9 @@ class NetworkInput(Configurable):
         self.handler_lock = Lock()
 
     @coroutine
-    def close_handler(self, cls):
+    def close_handler(self, output):
         # XXX: Please keep this for the time being.
-        print("NetworkInput close handler called by {}!".format(cls))
+        print("NetworkInput close handler called by {}!".format(output))
 
     @coroutine
     def end_of_stream_handler(self, cls):
@@ -173,6 +174,8 @@ class NetworkInput(Configurable):
             # success, configuration
             ok, info = yield from self.parent._call_once_alive(
                 instance, "slotGetOutputChannelInformation", name, os.getpid())
+            # track via the signalslotable
+            self.parent._channels[instance].add((self.name, output))
             if not ok:
                 return
 
@@ -207,6 +210,17 @@ class NetworkInput(Configurable):
             with (yield from self.handler_lock):
                 yield from shield(get_event_loop().run_coroutine_or_thread(
                                   self.close_handler, output))
+
+    def notify_gone(self, instanceId):
+        """Notification that the sender is gone
+
+           This method is hooked via the SignalSlotable
+        """
+        for output in self.connected.keys():
+            instance, _ = output.split(":")
+            if instanceId == instance:
+                task = self.connected[output]
+                task.cancel()
 
     @coroutine
     def readChunk(self, channel, cls):
@@ -298,6 +312,7 @@ class InputChannel(Node):
         ret = super(InputChannel, self)._initialize(instance, value)
         channel = instance.__dict__[self.key]
         channel.raw = self.raw
+        channel.name = self.key
         channel.handler = self.handler.__get__(instance, type(instance))
         channel.parent = instance
         if self.close_handler is not None:
