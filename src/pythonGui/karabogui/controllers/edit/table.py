@@ -165,10 +165,16 @@ class _BaseTableElement(BaseBindingController):
 
     @pyqtSlot(QPoint)
     def _context_menu(self, pos):
+        """Context menu for single cells
+        """
+        # NOTE: This is a context menu for single cells, hence we bail out
+        # if the entire row has been selected via the header
+        if self.widget.selectionModel().selectedRows():
+            return
+
         idx = None
         for i in self.widget.selectionModel().selection().indexes():
             idx = i
-
         menu = QMenu()
         if idx is None or not idx.isValid():
             add_action = menu.addAction('Add Row to end')
