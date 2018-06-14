@@ -149,6 +149,7 @@ class SignalSlotable(Configurable):
                 .format(self._deviceId_))
         self.deviceId = self._deviceId_
         self._proxies = weakref.WeakValueDictionary()
+        self._channels = defaultdict(set)
         self._proxy_futures = {}
         self.__initialized = False
         self._new_device_futures = FutureDict()
@@ -372,6 +373,13 @@ class SignalSlotable(Configurable):
         proxy = self._proxies.get(instanceId)
         if proxy is not None:
             yield from proxy._notify_new()
+        channels = self._channels.get(instanceId)
+        if channels is not None:
+            for input_channel, output_channel in channels:
+                channel = self
+                for path in input_channel.split('.'):
+                    channel = getattr(channel, path)
+                yield from channel.connectChannel(output_channel)
         get_event_loop().something_changed()
 
     @coroutine
@@ -393,9 +401,16 @@ class SignalSlotable(Configurable):
 
     @slot
     def slotInstanceGone(self, instanceId, info):
-        device = self._proxies.get(instanceId)
-        if device is not None:
-            device._notify_gone()
+        proxy = self._proxies.get(instanceId)
+        if proxy is not None:
+            proxy._notify_gone()
+        channels = self._channels.get(instanceId)
+        if channels is not None:
+            for channel, _ in channels:
+                input_channel = self
+                for path in channel.split('.'):
+                    input_channel = getattr(input_channel, path)
+                input_channel.notify_gone(instanceId)
         get_event_loop().something_changed()
 
     @coroutine
