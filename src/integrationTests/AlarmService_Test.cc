@@ -87,14 +87,14 @@ void AlarmService_Test::appTestRunner() {
     CPPUNIT_ASSERT(success.first);
 
     // the actual tests
-    testDeviceRegistration();
-    testAlarmPassing();
-    testAcknowledgement();
-    testTriggerGlobalAck();
-    testTriggerGlobal();
-    testFlushing();
-    testRecovery();
-    testDeviceKilled();
+    CPPUNIT_ASSERT_NO_THROW(testDeviceRegistration());
+    CPPUNIT_ASSERT_NO_THROW(testAlarmPassing());
+    CPPUNIT_ASSERT_NO_THROW(testAcknowledgement());
+    CPPUNIT_ASSERT_NO_THROW(testTriggerGlobalAck());
+    CPPUNIT_ASSERT_NO_THROW(testTriggerGlobal());
+    CPPUNIT_ASSERT_NO_THROW(testFlushing());
+    CPPUNIT_ASSERT_NO_THROW(testRecovery());
+    CPPUNIT_ASSERT_NO_THROW(testDeviceKilled());
     // TODO: Comment in once it is figured out why the arriving Hash has
     // 'update' or 'acknowledgeable' coming from signalAlarmUpdate
     //testDeviceReappeared();
@@ -495,7 +495,7 @@ void AlarmService_Test::testRecovery() {
     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
     CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerAlarmHighAck");
 
-    success = m_deviceClient->instantiate("testServer", "AlarmTester", Hash("deviceId", "alarmTester2"), KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_NO_THROW(success = m_deviceClient->instantiate("testServer", "AlarmTester", Hash("deviceId", "alarmTester2"), KRB_TEST_MAX_TIMEOUT));
     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
     CPPUNIT_ASSERT(success.first);
 
@@ -505,9 +505,10 @@ void AlarmService_Test::testRecovery() {
     CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester2", "result") == "triggerAlarmLowAck");
     CPPUNIT_ASSERT(m_deviceClient->get<int>("alarmTester2", "intPropNeedsAck") == -5);
 
-    //now we bring the alarm service back up
+    // now we bring the alarm service back up
     std::vector<TcpAdapter::QueuePtr> messageQs(3, TcpAdapter::QueuePtr());
-    messageQs[0] = m_tcpAdapter->getNextMessages("alarmUpdate", 2, [&] {
+    // Most likely only 1 message is received due to throttling
+    messageQs[0] = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
         messageQs[1] = m_tcpAdapter->getNextMessages("alarmInit", 1, [&] {
             messageQs[2] = m_tcpAdapter->getNextMessages("instanceNew", 1, [&] {
                 success = m_deviceClient->instantiate("testServer", "AlarmService", Hash("deviceId", "testAlarmService", "flushInterval", 1, "storagePath", std::string(KARABO_TESTPATH)), KRB_TEST_MAX_TIMEOUT);
