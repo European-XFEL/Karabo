@@ -40,6 +40,6 @@ $LCOV_BASE/genhtml $FILE_FILTERED --output-directory $OUT_DIR
 
 
 TIMESTAMP=`date +%F_%H%M`
-ZIP_FILE="c++_cov_report_"$TIMESTAMP".zip"
+ZIP_FILE=$SCRIPT_BASE"/c++_cov_report_"$TIMESTAMP".zip"
 
-zip -r $ZIP_FILE out/ ????-??-??_????_?t
+zip -r $ZIP_FILE $SCRIPT_BASE/out/ $SCRIPT_BASE/????-??-??_????_unitTest $SCRIPT_BASE/????-??-??_????_integrationTest
