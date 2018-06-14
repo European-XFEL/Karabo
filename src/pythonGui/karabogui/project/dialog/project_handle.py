@@ -111,6 +111,7 @@ class LoadProjectDialog(QDialog):
             self.twProjects.model().add_project_manager_data(items)
             # Match only the simple name column to content
             self.twProjects.resizeColumnToContents(0)
+            self._titleChanged(self.leTitle.text())
             return True
         elif sender is KaraboEventSender.ProjectDomainsList:
             self._domains_updated(data.get('items', []))
