@@ -375,10 +375,7 @@ class SignalSlotable(Configurable):
             yield from proxy._notify_new()
         channels = self._channels.get(instanceId)
         if channels is not None:
-            for input_channel, output_channel in channels:
-                channel = self
-                for path in input_channel.split('.'):
-                    channel = getattr(channel, path)
+            for channel, output_channel in channels:
                 yield from channel.connectChannel(output_channel)
         get_event_loop().something_changed()
 
@@ -407,10 +404,7 @@ class SignalSlotable(Configurable):
         channels = self._channels.get(instanceId)
         if channels is not None:
             for channel, _ in channels:
-                input_channel = self
-                for path in channel.split('.'):
-                    input_channel = getattr(input_channel, path)
-                input_channel.notify_gone(instanceId)
+                channel.notify_gone(instanceId)
         get_event_loop().something_changed()
 
     @coroutine
