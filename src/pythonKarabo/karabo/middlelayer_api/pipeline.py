@@ -175,7 +175,7 @@ class NetworkInput(Configurable):
             ok, info = yield from self.parent._call_once_alive(
                 instance, "slotGetOutputChannelInformation", name, os.getpid())
             # track via the signalslotable
-            self.parent._channels[instance].add((self.name, output))
+            self.parent._channels[instance].add((self, output))
             if not ok:
                 return
 
@@ -312,7 +312,6 @@ class InputChannel(Node):
         ret = super(InputChannel, self)._initialize(instance, value)
         channel = instance.__dict__[self.key]
         channel.raw = self.raw
-        channel.name = self.key
         channel.handler = self.handler.__get__(instance, type(instance))
         channel.parent = instance
         if self.close_handler is not None:
