@@ -173,7 +173,6 @@ namespace karabo {
             const MetaDataEntries& metaData = m_metaData[channelIdx][chunkIdx];
             header.clear();
             header.set("sourceInfo", *reinterpret_cast<const std::vector<karabo::util::Hash>*> (&metaData));
-            header.set("nData", false);
         }
 
         void Memory::assureAllDataIsCopied(const size_t channelIdx, const size_t chunkIdx) {
