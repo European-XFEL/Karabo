@@ -105,7 +105,6 @@ class NetworkInput(Configurable):
     instead you should just declare a :cls:`InputChannel`.
     """
     displayType = 'InputChannel'
-    name = None
 
     @VectorString(
         displayedName="Connected Output Channels",
@@ -210,17 +209,6 @@ class NetworkInput(Configurable):
             with (yield from self.handler_lock):
                 yield from shield(get_event_loop().run_coroutine_or_thread(
                                   self.close_handler, output))
-
-    def notify_gone(self, instanceId):
-        """Notification that the sender is gone
-
-           This method is hooked via the SignalSlotable
-        """
-        for output in self.connected.keys():
-            instance, _ = output.split(":")
-            if instanceId == instance:
-                task = self.connected[output]
-                task.cancel()
 
     @coroutine
     def readChunk(self, channel, cls):
