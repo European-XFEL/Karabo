@@ -282,6 +282,7 @@ class SignalSlotable(Configurable):
             self.__initialized = False
             yield from get_event_loop().run_coroutine_or_thread(
                 self.onDestruction)
+
         yield from self._ss.stop_tasks()
 
     def __del__(self):
@@ -401,10 +402,6 @@ class SignalSlotable(Configurable):
         proxy = self._proxies.get(instanceId)
         if proxy is not None:
             proxy._notify_gone()
-        channels = self._channels.get(instanceId)
-        if channels is not None:
-            for channel, _ in channels:
-                channel.notify_gone(instanceId)
         get_event_loop().something_changed()
 
     @coroutine
