@@ -160,6 +160,14 @@ produceCodeCoverageReport() {
     safeRunCommand "$scriptDir/ci/coverage/report/gen_initial"
 
     safeRunCommand "$scriptDir/ci/coverage/report/gen_report"
+
+    local ZIP_FILE_NAME=AAAX=`ls ./ci/coverage/report/*.zip`
+
+    echo
+    echo "### The coverage results can be found at:"
+    echo "### $scriptDir/ci/coverage/report/out/index.html"
+    echo "### or in zipped form: $ZIP_FILE_NAME"
+    echo
 }
 
 # Make sure the script runs in the correct directory
