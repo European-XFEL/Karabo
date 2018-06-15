@@ -46,6 +46,12 @@ Example::
 The Karabo script will sub-sequently download the respective code from the 
 repository optionally (if C++) compile it and subsequently install it to Karabo.
 
+.. note::
+
+   The user's public ssh key has to be submitted to git.xfel.eu before, otherwise "karabo install" will fail. 
+   Adding a new ssh key to user settings is described here: 
+   https://git.xfel.eu/gitlab/profile/keys
+
 Directly after, you can start start it with the corresponding server as explained
 :ref:`here <run/server>`.
 
