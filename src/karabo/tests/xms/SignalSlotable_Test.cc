@@ -1335,6 +1335,59 @@ void SignalSlotable_Test::testUuid() {
 }
 
 
+/**
+ * This test sends an high number of requests to a slot and waits for the 
+ * replies.
+ * 
+ * If the number of processed requests or the number of received replies
+ * does not match the number of performed iterations then the test fails.
+ * 
+ * The test is interrupted after 5 replies have not been received.
+ */
+void SignalSlotable_Test::testStressReplies() {
+
+    auto instance = boost::make_shared<SignalSlotable>("instance");
+    instance->start();
+
+    std::atomic<size_t> firstCalledCounter(0);
+    auto first = [&firstCalledCounter, &instance]() {
+        firstCalledCounter++;
+        instance->reply(int(firstCalledCounter));
+    };
+    instance->registerSlot(first, "slot");
+
+
+    const size_t numIterations(1000000);
+    
+    size_t sentRequests(0);    // Count the number of sent requests
+    size_t receivedReplies(0);
+    for(size_t counter(0); counter != numIterations; ++counter)
+    {
+        ++sentRequests;
+        // Synchronous request to avoid sleeps in test - assert that no timeout happens.
+        // Our slot functions do not place any answers, so an empty one will be added.
+        int reply(0);
+        try
+        {
+            instance->request("instance", "slot").timeout(10000).receive(reply);
+            ++receivedReplies;
+        }
+        catch(const TimeoutException&)
+        {
+            if(receivedReplies + 5 < sentRequests)
+            {
+                break;
+            }
+        }
+        
+    }
+    
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+
+    CPPUNIT_ASSERT_EQUAL(sentRequests, firstCalledCounter.load());
+    CPPUNIT_ASSERT_EQUAL(sentRequests, receivedReplies);
+}
+
 void SignalSlotable_Test::waitDemoOk(const boost::shared_ptr<SignalSlotDemo>& demo, int messageCalls,
                                      int trials) {
     // trials = 10 => maximum wait for millisecondsSleep = 2 is about 2 seconds
