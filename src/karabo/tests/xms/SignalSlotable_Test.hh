@@ -33,6 +33,8 @@ class SignalSlotable_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testAutoConnectSlot);
     CPPUNIT_TEST(testRegisterSlotTwice);
     CPPUNIT_TEST(testAsyncConnectInputChannel);
+    CPPUNIT_TEST(testUuid);
+    CPPUNIT_TEST(testStressReplies);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -61,6 +63,7 @@ private:
     void testRegisterSlotTwice();
     void testAsyncConnectInputChannel();
     void testUuid();
+    void testStressReplies();
 };
 
 #endif	/* SIGNALSLOTABLE_TEST_HH */
