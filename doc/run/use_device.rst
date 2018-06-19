@@ -57,6 +57,10 @@ repository optionally (if C++) compile it and subsequently install it to Karabo.
    For this, one can use the karabo --git https://git.xfel.eu/gitlab install
    (-g flag will work as well as --git)
 
+.. note::
+
+   Command is case sensitive, therefore "dataGenerator" and "DataGenerator" as a package name will lead to different results. 
+
 Directly after, you can start start it with the corresponding server as explained
 :ref:`here <run/server>`.
 
@@ -125,6 +129,8 @@ Example::
   karabo uninstall dataGenerator
    
 
+.. note::
 
+   Command is case sensitive, therefore "dataGenerator" and "DataGenerator" as a package name will lead to different results. 
 
   
