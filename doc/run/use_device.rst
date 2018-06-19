@@ -121,8 +121,8 @@ want to use::
 
   karabo uninstall <package>
 
-This command will call pip uninstall -y {device} for python devices. 
-For CPP devices it will remove the directory and ".so" file(or symbolic link) from the plugin directory.
+This command will call ``pip uninstall -y {device}`` for python devices. 
+For C++ devices it will remove the directory and ".so" file (or symbolic link) from the plugin directory.
 
 Example::
 
