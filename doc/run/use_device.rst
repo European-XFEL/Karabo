@@ -127,10 +127,6 @@ For C++ devices it will remove the directory and ".so" file (or symbolic link) f
 Example::
 
   karabo uninstall dataGenerator
-   
-
-.. note::
-
-   Command is case sensitive, therefore "dataGenerator" and "DataGenerator" as a package name will lead to different results. 
+  
 
   
