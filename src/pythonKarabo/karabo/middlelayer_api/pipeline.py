@@ -174,7 +174,7 @@ class NetworkInput(Configurable):
             ok, info = yield from self.parent._call_once_alive(
                 instance, "slotGetOutputChannelInformation", name, os.getpid())
             # track via the signalslotable
-            self.parent._channels[instance].add((self, output))
+            self.parent._remote_output_channel[instance].add((self, output))
             if not ok:
                 return
 
