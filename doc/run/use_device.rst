@@ -47,10 +47,15 @@ The Karabo script will sub-sequently download the respective code from the
 repository optionally (if C++) compile it and subsequently install it to Karabo.
 
 .. note::
-
-   The user's public ssh key has to be submitted to git.xfel.eu before, otherwise "karabo install" will fail. 
+   By default, karabo will work with the device repositories at ssh://git@git.xfel.eu:10022/karaboDevices/<devicePackageName>.git.
+   Therefore the user's public ssh key has to be submitted to git.xfel.eu before, otherwise "karabo install" will fail. 
    Adding a new ssh key to user settings is described here: 
    https://git.xfel.eu/gitlab/profile/keys
+   
+   Alternatively, one can talk via https to the repositories at 
+   https://git.xfel.eu/gitlab/karaboDevices/<devicePackageName>.git
+   For this, one can use the karabo --git https://git.xfel.eu/gitlab install
+   (-g flag will work as well as --git)
 
 Directly after, you can start start it with the corresponding server as explained
 :ref:`here <run/server>`.
