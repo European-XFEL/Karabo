@@ -149,7 +149,7 @@ class SignalSlotable(Configurable):
                 .format(self._deviceId_))
         self.deviceId = self._deviceId_
         self._proxies = weakref.WeakValueDictionary()
-        self._channels = defaultdict(set)
+        self._remote_output_channel = defaultdict(set)
         self._proxy_futures = {}
         self.__initialized = False
         self._new_device_futures = FutureDict()
@@ -374,10 +374,10 @@ class SignalSlotable(Configurable):
         proxy = self._proxies.get(instanceId)
         if proxy is not None:
             yield from proxy._notify_new()
-        channels = self._channels.get(instanceId)
+        channels = self._remote_output_channel.get(instanceId)
         if channels is not None:
-            for channel, output_channel in channels:
-                yield from channel.connectChannel(output_channel)
+            for input_channel, output_id in channels:
+                yield from input_channel.connectChannel(output_id)
         get_event_loop().something_changed()
 
     @coroutine
