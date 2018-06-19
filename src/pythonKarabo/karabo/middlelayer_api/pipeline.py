@@ -167,14 +167,24 @@ class NetworkInput(Configurable):
                 self.handler, data, meta)
 
     @coroutine
-    def start_channel(self, output):
+    def start_channel(self, output, tracking=True):
+        """Connect to the output channel with Id 'output'
+
+           :param tracking: Defines whether this channel is tracked via the
+                            the signal slotable. Only proxies don't use
+                            tracking and hence don't reconnect the channel if
+                            the device reappears.
+        """
         try:
             instance, name = output.split(":")
             # success, configuration
             ok, info = yield from self.parent._call_once_alive(
                 instance, "slotGetOutputChannelInformation", name, os.getpid())
-            # track via the signalslotable
-            self.parent._remote_output_channel[instance].add((self, output))
+            # NOTE: Tracking via the signalslotable should be done for devices
+            # but not for proxies for the time being!
+            if tracking:
+                self.parent._remote_output_channel[instance].add(
+                    (self, output))
             if not ok:
                 return
 
@@ -381,7 +391,7 @@ class OutputProxy(SubProxyBase):
                 yield from self.networkInput._run()
                 self.initialized = True
             self.networkInput.connected[output] = self.task
-            yield from self.networkInput.start_channel(output)
+            yield from self.networkInput.start_channel(output, tracking=False)
         finally:
             self.task = None
 
