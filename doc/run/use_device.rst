@@ -109,7 +109,19 @@ it.
    ``git push -u origin master`` for adding this device to Karabo's central device
    storage.
 
+Uninstalling a device
+=============================
 
+If your intention is to uninstall a device, you
+want to use::
+
+  karabo uninstall <package>
+
+This command will call pip uninstall -y {device} for python devices. For CPP devices "karabo" script will remove the directory and ".so" file(or symbolic link) from the plugin directory.
+
+Example::
+
+  karabo uninstall dataGenerator
    
 
 
