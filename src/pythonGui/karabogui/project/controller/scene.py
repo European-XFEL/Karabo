@@ -42,7 +42,7 @@ class SceneController(BaseProjectController):
                                                 project_controller))
         save_as_action = QAction('Save as...', menu)
         save_as_action.triggered.connect(self._save_scene_to_file)
-        revert_action = QAction('Revert Changes', menu)
+        revert_action = QAction('Revert changes', menu)
         revert_action.triggered.connect(self._revert_changes)
         can_revert = not self._is_showing() and self.model.modified
         revert_action.setEnabled(can_revert)
