@@ -151,9 +151,9 @@ class NetworkInput(Configurable):
         self.handler_lock = Lock()
 
     @coroutine
-    def close_handler(self, cls):
+    def close_handler(self, output):
         # XXX: Please keep this for the time being.
-        print("NetworkInput close handler called by {}!".format(cls))
+        print("NetworkInput close handler called by {}!".format(output))
 
     @coroutine
     def end_of_stream_handler(self, cls):
@@ -173,6 +173,8 @@ class NetworkInput(Configurable):
             # success, configuration
             ok, info = yield from self.parent._call_once_alive(
                 instance, "slotGetOutputChannelInformation", name, os.getpid())
+            # track via the signalslotable
+            self.parent._remote_output_channel[instance].add((self, output))
             if not ok:
                 return
 
