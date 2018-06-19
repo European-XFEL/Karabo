@@ -22,3 +22,22 @@ These remnants are useless signal subscriptions since the restarted program
 has a new instanceId. They can potentially slow down the broker and every
 recipient of the emitted signals. If restarted with the same id as before
 (as usually is done with devices and servers), these remnants are cleaned.
+
+**************************
+What's New in Karabo 2.2.4
+**************************
+
+C++ and Bound Python
+=====================
+
+Empty Key Handling of Hash
++++++++++++++++++++++++++++
+
+Empty strings are now valid keys of a `Hash`.
+
+Before, a completely empty path (`aHash.set("", something)`) let to a crash and
+empty keys as part of a path with sub-keys were simply ignored.
+That means that `aHash.set("a..b.", something)` had the same effect as
+`aHash.set("a.b", something)`, i.e. a path with the two sub-keys `a` and `b`,
+whereas in Karabo 2.2.4 the path of the former actually differs and has four
+sub-keys of which two are empty keys.
