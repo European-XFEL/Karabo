@@ -14,9 +14,9 @@ alabaster babel snowballstemmer sphinx_rtd_theme imagesize sphinx decorator
 ipykernel ipython_genutils jupyter_core jupyter_client pickleshare wcwidth
 prompt_toolkit simplegeneric traitlets dill ipython pkgconfig h5py pyusb parse
 suds jsonschema ecdsa pycrypto paramiko tzlocal httplib2 pssh traits pint nbformat
-notebook ipyparallel ipcluster_tools cycler pyelftools rpathology lxml requests
-ply psutil pycodestyle pyflakes mccabe flake8 msgpack msgpack-numpy flaky pyyaml
-docker_pycreds websocket_client docker )
+notebook ipyparallel ipcluster_tools cycler pyelftools rpathology lxml certifi
+chardet idna urllib3 requests ply psutil pycodestyle pyflakes mccabe flake8
+msgpack msgpack-numpy flaky pyyaml docker_pycreds websocket_client docker )
 
 DEPENDENCIES_DB=(eulxml eulexist existDB)
 
