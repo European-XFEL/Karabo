@@ -1,6 +1,7 @@
 from asyncio import (
-    coroutine, Future, gather, get_event_loop, IncompleteReadError, Lock,
-    open_connection, Queue, QueueFull, shield, sleep, start_server)
+    CancelledError, coroutine, Future, gather, get_event_loop,
+    IncompleteReadError, Lock, open_connection, Queue, QueueFull, shield,
+    sleep, start_server)
 from contextlib import closing
 import os
 from struct import pack, unpack, calcsize
@@ -110,7 +111,7 @@ class NetworkInput(Configurable):
         displayedName="Connected Output Channels",
         description="A list of output channels to receive data from, format: "
                     "<instance ID>:<channel name>",
-        assignment=Assignment.OPTIONAL, accessMode=AccessMode.RECONFIGURABLE,
+        assignment=Assignment.OPTIONAL, accessMode=AccessMode.INITONLY,
         defaultValue=[])
     @coroutine
     def connectedOutputChannels(self, value):
@@ -125,17 +126,19 @@ class NetworkInput(Configurable):
     def connectChannel(self, channel):
         """Connect to a single Outputchannel
         """
-        if channel not in self.connected:
-            task = background(self.start_channel(channel))
-            self.connected[channel] = task
-            self.connectedOutputChannels = list(self.connected)
+        if channel in self.connected and not self.connected[channel].done():
+            return
+
+        task = background(self.start_channel(channel))
+        self.connected[channel] = task
+        self.connectedOutputChannels = list(self.connected)
 
     dataDistribution = String(
         displayedName="Data Distribution",
         description="The way data is fetched from the connected output "
                     "channels (shared/copy)",
         options=["shared", "copy"], assignment=Assignment.OPTIONAL,
-        defaultValue="copy", accessMode=AccessMode.RECONFIGURABLE)
+        defaultValue="copy", accessMode=AccessMode.INITONLY)
 
     onSlowness = String(
         displayedName="On Slowness",
@@ -143,7 +146,7 @@ class NetworkInput(Configurable):
                     "fed data rate (only used in copy mode)",
         options=["queue", "drop", "wait", "throw"],
         assignment=Assignment.OPTIONAL, defaultValue="wait",
-        accessMode=AccessMode.RECONFIGURABLE)
+        accessMode=AccessMode.INITONLY)
 
     def __init__(self, config):
         super().__init__(config)
@@ -213,7 +216,11 @@ class NetworkInput(Configurable):
                            "instanceId", self.parent.deviceId)
                 while (yield from self.readChunk(channel, cls)):
                     channel.writeHash(cmd)
-        finally:
+        except CancelledError:
+            # NOTE: Happens when we are destroyed
+            if tracking:
+                self.parent._remote_output_channel[instance].remove(
+                    (self, output))
             self.connected.pop(output)
             self.connectedOutputChannels = list(self.connected)
             with (yield from self.handler_lock):
