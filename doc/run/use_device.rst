@@ -49,8 +49,10 @@ repository optionally (if C++) compile it and subsequently install it to Karabo.
 .. note::
    By default, karabo will work with the device repositories at ssh://git@git.xfel.eu:10022/karaboDevices/<devicePackageName>.git.
    Therefore the user's public ssh key has to be submitted to git.xfel.eu before, otherwise command will fail. 
-   Adding a new ssh key to user settings is described here: 
+   The URL for adding a new ssh key to user settings is: 
    https://git.xfel.eu/gitlab/profile/keys
+   Instructions on how to generate the key are also linked there.
+
    
    Alternatively, one can talk via https to the repositories at 
    https://git.xfel.eu/gitlab/karaboDevices/<devicePackageName>.git
@@ -59,7 +61,8 @@ repository optionally (if C++) compile it and subsequently install it to Karabo.
 
 .. note::
 
-   Command is case sensitive, therefore "dataGenerator" and "DataGenerator" as a package name will lead to different results. 
+   Please make sure that you use the correct case for the package name, as the command is case sensitive.
+   "dataGenerator" and "DataGenerator" as a package name will lead to different results. 
 
 Directly after, you can start start it with the corresponding server as explained
 :ref:`here <run/server>`.
