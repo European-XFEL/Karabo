@@ -128,9 +128,20 @@ namespace karabo {
     std::vector<Hash> TcpAdapter::getAllMessages(const std::string& type) {
         boost::shared_lock<boost::shared_mutex> lock(m_messageAccessMutex);
         return m_messages[type];
-    };
-    
-    bool TcpAdapter::connected() const{
+    }
+
+
+    void TcpAdapter::clearAllMessages(const std::string& type) {
+        boost::shared_lock<boost::shared_mutex> lock(m_messageAccessMutex);
+        if (type.empty()) {
+            m_messages.clear();
+        } else {
+            m_messages[type].clear();
+        }
+    }
+
+
+    bool TcpAdapter::connected() const {
         return m_channel && m_channel->isOpen();
     };
     
