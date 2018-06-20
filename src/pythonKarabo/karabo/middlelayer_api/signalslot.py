@@ -375,7 +375,7 @@ class SignalSlotable(Configurable):
         if proxy is not None:
             yield from proxy._notify_new()
         channels = self._remote_output_channel.get(instanceId)
-        if channels is not None:
+        if channels:
             for input_channel, output_id in channels:
                 yield from input_channel.connectChannel(output_id)
         get_event_loop().something_changed()

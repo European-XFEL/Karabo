@@ -1,6 +1,7 @@
 from asyncio import (
-    coroutine, Future, gather, get_event_loop, IncompleteReadError, Lock,
-    open_connection, Queue, QueueFull, shield, sleep, start_server)
+    CancelledError, coroutine, Future, gather, get_event_loop,
+    IncompleteReadError, Lock, open_connection, Queue, QueueFull, shield,
+    sleep, start_server)
 from contextlib import closing
 import os
 from struct import pack, unpack, calcsize
@@ -125,10 +126,12 @@ class NetworkInput(Configurable):
     def connectChannel(self, channel):
         """Connect to a single Outputchannel
         """
-        if channel not in self.connected:
-            task = background(self.start_channel(channel))
-            self.connected[channel] = task
-            self.connectedOutputChannels = list(self.connected)
+        if channel in self.connected and not self.connected[channel].done():
+            return
+
+        task = background(self.start_channel(channel))
+        self.connected[channel] = task
+        self.connectedOutputChannels = list(self.connected)
 
     dataDistribution = String(
         displayedName="Data Distribution",
@@ -167,14 +170,24 @@ class NetworkInput(Configurable):
                 self.handler, data, meta)
 
     @coroutine
-    def start_channel(self, output):
+    def start_channel(self, output, tracking=True):
+        """Connect to the output channel with Id 'output'
+
+           :param tracking: Defines whether this channel is tracked via the
+                            the signal slotable. Only proxies don't use
+                            tracking and hence don't reconnect the channel if
+                            the device reappears.
+        """
         try:
             instance, name = output.split(":")
             # success, configuration
             ok, info = yield from self.parent._call_once_alive(
                 instance, "slotGetOutputChannelInformation", name, os.getpid())
-            # track via the signalslotable
-            self.parent._remote_output_channel[instance].add((self, output))
+            # NOTE: Tracking via the signalslotable should be done for devices
+            # but not for proxies for the time being!
+            if tracking:
+                self.parent._remote_output_channel[instance].add(
+                    (self, output))
             if not ok:
                 return
 
@@ -203,7 +216,11 @@ class NetworkInput(Configurable):
                            "instanceId", self.parent.deviceId)
                 while (yield from self.readChunk(channel, cls)):
                     channel.writeHash(cmd)
-        finally:
+        except CancelledError:
+            # NOTE: Happens when we are destroyed
+            if tracking:
+                self.parent._remote_output_channel[instance].remove(
+                    (self, output))
             self.connected.pop(output)
             self.connectedOutputChannels = list(self.connected)
             with (yield from self.handler_lock):
@@ -381,7 +398,7 @@ class OutputProxy(SubProxyBase):
                 yield from self.networkInput._run()
                 self.initialized = True
             self.networkInput.connected[output] = self.task
-            yield from self.networkInput.start_channel(output)
+            yield from self.networkInput.start_channel(output, tracking=False)
         finally:
             self.task = None
 
@@ -412,7 +429,18 @@ class NetworkOutput(Configurable):
             self.hostname = socket.gethostname()
         else:
             self.hostname = value
-        self.server = yield from start_server(self.serve, host=self.hostname,
+
+        instance = get_event_loop().instance()
+
+        def serve(reader, writer):
+            """Create a serve task on the eventloop to track instance
+
+               We need to pass the instance in order to cancel all the tasks
+               related to that instance once the instance dies.
+            """
+            get_event_loop().create_task(self.serve(reader, writer), instance)
+
+        self.server = yield from start_server(serve, host=self.hostname,
                                               port=0)
 
     def __init__(self, config):
