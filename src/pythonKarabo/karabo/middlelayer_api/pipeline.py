@@ -422,7 +422,18 @@ class NetworkOutput(Configurable):
             self.hostname = socket.gethostname()
         else:
             self.hostname = value
-        self.server = yield from start_server(self.serve, host=self.hostname,
+
+        instance = get_event_loop().instance()
+
+        def serve(reader, writer):
+            """Create a serve task on the eventloop to track instance
+
+               We need to pass the instance in order to cancel all the tasks
+               related to that instance once the instance dies.
+            """
+            get_event_loop().create_task(self.serve(reader, writer), instance)
+
+        self.server = yield from start_server(serve, host=self.hostname,
                                               port=0)
 
     def __init__(self, config):
