@@ -111,7 +111,7 @@ class NetworkInput(Configurable):
         displayedName="Connected Output Channels",
         description="A list of output channels to receive data from, format: "
                     "<instance ID>:<channel name>",
-        assignment=Assignment.OPTIONAL, accessMode=AccessMode.INITONLY,
+        assignment=Assignment.OPTIONAL, accessMode=AccessMode.RECONFIGURABLE,
         defaultValue=[])
     @coroutine
     def connectedOutputChannels(self, value):
@@ -138,7 +138,7 @@ class NetworkInput(Configurable):
         description="The way data is fetched from the connected output "
                     "channels (shared/copy)",
         options=["shared", "copy"], assignment=Assignment.OPTIONAL,
-        defaultValue="copy", accessMode=AccessMode.INITONLY)
+        defaultValue="copy", accessMode=AccessMode.RECONFIGURABLE)
 
     onSlowness = String(
         displayedName="On Slowness",
@@ -146,7 +146,7 @@ class NetworkInput(Configurable):
                     "fed data rate (only used in copy mode)",
         options=["queue", "drop", "wait", "throw"],
         assignment=Assignment.OPTIONAL, defaultValue="wait",
-        accessMode=AccessMode.INITONLY)
+        accessMode=AccessMode.RECONFIGURABLE)
 
     def __init__(self, config):
         super().__init__(config)
