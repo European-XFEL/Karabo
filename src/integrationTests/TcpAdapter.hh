@@ -48,6 +48,12 @@ namespace karabo {
         std::vector<karabo::util::Hash> getAllMessages(const std::string& type);
 
         /**
+         * Clear list of all messages of a given type received by this TcpAdapter
+         * @param type: type of message - if empty (default!), clear all types
+         */
+        void clearAllMessages(const std::string& type = "");
+
+        /**
          * Get the next nMessages messages of a given type, that this TcpAdapter receives as a queue
          * @param type: type of messages
          * @param nMessages: number of messages to wait for
@@ -58,13 +64,13 @@ namespace karabo {
         template<typename F>
         QueuePtr getNextMessages(const std::string& type, size_t nMessages, F&& triggeringFunction = []{}, size_t timeout=5000) {
 
-            
+
             {
                 boost::unique_lock<boost::shared_mutex> lock(m_queueAccessMutex);
                 m_nextMessageQueues[type] = boost::shared_ptr<boost::lockfree::spsc_queue<karabo::util::Hash> >(new boost::lockfree::spsc_queue<karabo::util::Hash>(nMessages));
                 
             }
-            
+
             //call the function which triggers the expected messages
             triggeringFunction();
             
@@ -73,10 +79,17 @@ namespace karabo {
             const size_t maxLoops = std::ceil(timeout/waitTime);
             size_t i = 0;
             do {
-                if (i == maxLoops) throw KARABO_TIMEOUT_EXCEPTION("Waiting on messages timed out!");
+                if (i == maxLoops) {
+                    const std::string msg("Waiting on " + karabo::util::toString(nMessages)
+                                          + " messages of type '" + type + "' timed out!");
+                    throw KARABO_TIMEOUT_EXCEPTION(msg);
+                }
                 i++;
                 boost::this_thread::sleep(boost::posix_time::milliseconds(waitTime));
-                if (m_debug) std::clog << "Have " << m_nextMessageQueues[type]->read_available() << " of " << nMessages << " in queue!" << std::endl;
+                if (m_debug) {
+                    std::clog << "Have " << m_nextMessageQueues[type]->read_available() << " of " << nMessages
+                            << " in queue for '" << type << "'!" << std::endl;
+                }
             } while (m_nextMessageQueues[type]->read_available() < nMessages);
             
             
