@@ -12,6 +12,7 @@
 #include "karabo/io/TextSerializer.hh"
 #include <boost/interprocess/sync/file_lock.hpp>
 #include <boost/interprocess/sync/sharable_lock.hpp>
+#include <karabo/util/Hash.hh>
 
 
 USING_KARABO_NAMESPACES;
@@ -505,38 +506,89 @@ void AlarmService_Test::testRecovery() {
     CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester2", "result") == "triggerAlarmLowAck");
     CPPUNIT_ASSERT(m_deviceClient->get<int>("alarmTester2", "intPropNeedsAck") == -5);
 
+    // Clear all messages received so far:
+    m_tcpAdapter->clearAllMessages();
     // now we bring the alarm service back up
-    std::vector<TcpAdapter::QueuePtr> messageQs(3, TcpAdapter::QueuePtr());
-    // Most likely only 1 message is received due to throttling
-    messageQs[0] = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
-        messageQs[1] = m_tcpAdapter->getNextMessages("alarmInit", 1, [&] {
-            messageQs[2] = m_tcpAdapter->getNextMessages("instanceNew", 1, [&] {
-                success = m_deviceClient->instantiate("testServer", "AlarmService", Hash("deviceId", "testAlarmService", "flushInterval", 1, "storagePath", std::string(KARABO_TESTPATH)), KRB_TEST_MAX_TIMEOUT);
-            });
-        });
-    });
-    CPPUNIT_ASSERT(success.first);
+    CPPUNIT_ASSERT(m_deviceClient->instantiate("testServer", "AlarmService",
+                                               Hash("deviceId", "testAlarmService", "flushInterval", 1,
+                                                    "storagePath", std::string(KARABO_TESTPATH)),
+                                               KRB_TEST_MAX_TIMEOUT).first);
 
-    // alarmState should now be two alarms for intPropNeedsAck, one on alarmTester and the other on alarmTester2
-    // messages are unordered as they depend on async answers from other devices
-    bool rowAdded = false;
-    bool topologyMessage = false;
+    // We expect to receive several messages on the adapter:
+    bool topologyMessage = false; // testAlarmService device has started
+    bool alarmInit = false; // alarmTester.nodeA.floatPropNeedsAck2 initial state from file storage
+    bool rowAddedTester1 = false; // alarmTester has alarm on intPropNeedsAck
+    bool rowAddedTester2 = false; // alarmTester2 has alarm on intPropNeedsAck
 
-    const int maxPops = 10;
-    int pop = 0;
-    bool popsuccess = false;
-    while (pop < maxPops) {
-        for (size_t i = 0; i < messageQs.size(); ++i) {
-            popsuccess = messageQs[i]->pop(lastMessage);
-            if (popsuccess) {
-                if (lastMessage.has("topologyEntry.device.testAlarmService")) topologyMessage = true;
-                if (lastMessage.has("rows.0.add")) rowAdded = true;
+    // We cannot use nested 'm_tcpAdapter->getNextMessages("alarmUpdate", 1,...' since we do not know whether throttling
+    // sends a single or two alarmUpdate messages - and waiting twice for one message and accepting a timeout on the
+    // second does not work either since getNextMessages(..) clears its result container...
+    // So we just look into all messages that are received.
+    int stillWaitInMs = KRB_TEST_MAX_TIMEOUT * 1000;
+    do {
+        // Give time for message travel, but give up at some point...
+        if (stillWaitInMs <= 0) {
+            break;
+        }
+        stillWaitInMs -= 50;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+        // Check testAlarmService is started
+        if (!topologyMessage) {
+            for (const Hash& msg : m_tcpAdapter->getAllMessages("instanceNew")) {
+                if (msg.has("topologyEntry.device.testAlarmService")) {
+                    topologyMessage = true; // testAlarmService is started
+                }
             }
         }
-        pop++;
-    }
+        // Check that testAlarmService provides old state from file
+        if (!alarmInit) {
+            for (const Hash& msg : m_tcpAdapter->getAllMessages("alarmInit")) {
+                if (msg.has("rows")) {
+                    const Hash& rows = msg.get<Hash>("rows");
+                    for (auto itNode = rows.begin(); itNode != rows.end(); ++itNode) {
+                        // rows contains any stringified number as key for a Hash - but key does not matter
+                        const Hash& row = itNode->getValue<Hash>();
+                        // Check whether msg contains "rows.<whateverNumber>.init.deviceId"
+                        // and "rows.<whateverNumber>.init.property" with the correct content, i.e.
+                        // alarmTester.nodeA.floatPropNeedsAck2 was in error before the alarmTester stopped
+                        if (row.has("init.deviceId") && row.get<std::string>("init.deviceId") == "alarmTester"
+                            && row.has("init.property") && row.get<std::string>("init.property") == "nodeA.floatPropNeedsAck2") {
+                            alarmInit = true;
+                        }
+                    }
+                }
+            }
+        }
+        // Check that alarmTester sends updates
+        if (!rowAddedTester1 || !rowAddedTester2) {
+            for (const Hash& msg : m_tcpAdapter->getAllMessages("alarmUpdate")) {
+                if (msg.has("rows")) {
+                    const Hash& rows = msg.get<Hash>("rows");
+                    for (auto itNode = rows.begin(); itNode != rows.end(); ++itNode) {
+                        // rows contains any stringified number as key for a Hash - but key does not matter
+                        const Hash& row = itNode->getValue<Hash>();
+                        // Check whether msg contains "rows.<whateverNumber>.add.deviceId"
+                        // and "rows.<whateverNumber>.add.property" with the correct content.
+                        if (row.has("add.deviceId") && row.has("add.property")
+                            && row.get<std::string>("add.property") == "intPropNeedsAck") {
+                            // OK - which one of our testers is it?
+                            if (row.get<std::string>("add.deviceId") == "alarmTester") {
+                                rowAddedTester1 = true;
+                            } else if (row.get<std::string>("add.deviceId") == "alarmTester2") {
+                                rowAddedTester2 = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } while (!topologyMessage || !rowAddedTester1 || !rowAddedTester2 || !alarmInit);
+
     CPPUNIT_ASSERT(topologyMessage);
-    CPPUNIT_ASSERT(rowAdded);
+    CPPUNIT_ASSERT(alarmInit);
+
+    CPPUNIT_ASSERT(rowAddedTester2);
+    CPPUNIT_ASSERT(rowAddedTester1);
 
     std::clog << "Tested service recovery.. Ok" << std::endl;
 }
