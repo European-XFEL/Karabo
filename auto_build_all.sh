@@ -99,22 +99,16 @@ runUnitTests() {
     # Parse the XML test outputs
     checkCppUnitTestResults "$testDir" "$testNames"
 
-    echo
-    echo Running pythonKarabo tests
-    echo
-    cd build/netbeans/pythonKarabo
-    safeRunCommand "nosetests -v karabo.bound_api"
-    safeRunCommand "nosetests -v karabo.common"
-    safeRunCommand "nosetests -v karabo.project_db"
-    safeRunCommand "nosetests -v karabo.tests"
-    safeRunCommand "nosetests -v karabogui"
-    safeRunCommand "nosetests -v karabo.interactive"
-    safeRunCommand "nosetests -v karabo.usermacro_api"
-    safeRunCommand "nosetests -v karabo.middlelayer_api"
+    #
+    # Running pythonKarabo tests
+    #
 
-    echo
-    echo Unit tests complete
-    echo
+    if [ $CODECOVERAGE = "y" ]; then
+        # Collect code coverage.
+        ./run_python_tests.sh --runUnitTests --collectCoverage
+    else
+        ./run_python_tests.sh --runUnitTests
+    fi
 }
 
 runPythonIntegrationTests() {
@@ -122,27 +116,44 @@ runPythonIntegrationTests() {
         source $scriptDir/karabo/activate
     fi
 
+    #
+    # Running Karabo Python integration tests ...
+    #
+
+    if [ $CODECOVERAGE = "y" ]; then
+        # Collect code coverage.
+        ./run_python_tests.sh --runIntegrationTests --collectCoverage
+    else
+        ./run_python_tests.sh --runIntegrationTests
+    fi
+}
+
+produceCodeCoverageReport() {
+    echo "### Producing code coverage reports..."
     echo
-    echo Running Karabo Python integration tests ...
+
+    # remove any previous code coverage results
+    safeRunCommand "find . -name \"*.gcda\" -delete"
+    safeRunCommand ./run_python_tests.sh --clean
+
+    runUnitTests
+    runIntegrationTests
+    runPythonIntegrationTests
+
+    # produce initial C++ coverage information
+    safeRunCommand "$scriptDir/ci/coverage/report/gen_initial"
+
+    safeRunCommand "$scriptDir/ci/coverage/report/gen_report"
+
+    local ZIP_FILE_NAME=AAAX=`ls ./ci/coverage/report/*.zip`
+
+    # produce initial Python coverage information
+    safeRunCommand ./run_python_tests.sh --generateCoverageReport
+
     echo
-    cd $scriptDir/src/pythonKarabo/karabo/integration_tests/
-    cd device_comm_test
-    safeRunCommand "python3 -m unittest discover -v"
-    cd ..
-    cd device_provided_scenes_test
-    safeRunCommand "python3 -m unittest discover -v"
-    cd ..
-    cd run_configuration_group
-    safeRunCommand "python3 -m unittest discover -v"
-    cd ..
-    cd device_cross_test
-    safeRunCommand "python3 -m unittest discover -v"
-    cd ..
-    cd pipeline_processing_test
-    safeRunCommand "python3 -m unittest discover -v"
-    cd ..
-    echo
-    echo Integration tests complete
+    echo "### The C++ coverage results can be found at:"
+    echo "### $scriptDir/ci/coverage/report/out/index.html"
+    echo "### or in zipped form: $ZIP_FILE_NAME"
     echo
 }
 
@@ -285,13 +296,14 @@ done
 
 # selecting configuration CodeCoverage implies --runTests and --runIntegrationTests called by
 # the code coverage function. Also, other options are disabled.
-# No need to run those separately, so we turn them off to explicitly in case the user specified them.
+# No need to run those separately, so we turn them off explicitly in case the user specified them.
 if [ "$CONF" = "CodeCoverage" ]; then
     CODECOVERAGE="y"
     RUNTESTS="n"
     RUNINTEGRATIONTESTS="n"
     PYOPT="normal"
 fi
+
 
 # Get some information about our system
 OS=$(uname -s)
