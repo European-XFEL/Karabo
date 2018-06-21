@@ -187,9 +187,6 @@ Available flags:
   --auto       - Tries to automatically install needed system packages (sudo rights required!)
   --bundle     - Installs Karabo and creates the software bundle. Default: no bundle is created!
   --pyDevelop  - Install Python packages in development mode
-  --codeCoverage
-               - Run unit and integration tests with code coverage.
-                 Specifying this flag implies --runTests and --runIntegrationTests.
   --runTests   - Run unit tests after building (useful for Debug|Release)
   --runIntegrationTests
                - Run integration tests after building (for Debug|Release)
@@ -198,6 +195,10 @@ Available flags:
 Note: "Dependencies" builds only the external dependencies
       "Clean" cleans all Karabo code (src folder)
       "Clean-All" additionally cleans all external dependencies (extern folder)
+      "CodeCoverage" builds the Karabo framework with CodeCoverage configuration,
+                     but also implicitly runs the unit and integration tests
+                     and produces code coverage reports. The CodeCoverage configuration
+                     also disables --pyDevelop option.
 
 End-of-help
 
@@ -263,15 +264,6 @@ while [ -n "$1" ]; do
             # Run the integration tests
             RUNINTEGRATIONTESTS="y"
             ;;
-        --codeCoverage)
-            # only execute this command with correct CONF
-            if [ "$CONF" = "CodeCoverage" ]; then
-                CODECOVERAGE="y"
-            else
-                echo "Option --codeCoverage requires 'CodeCoverage' configuration"
-                exit 2
-            fi
-            ;;
         --numJobs)
             # Limit the numbers of jobs for make runs
             if [ -n "$2" ]; then
@@ -290,13 +282,15 @@ while [ -n "$1" ]; do
     shift
 done
 
-# specifying --codeCoverage implies --runTests and --runIntegrationTests called by the code coverage function.
+# selecting configuration CodeCoverage implies --runTests and --runIntegrationTests called by 
+# the code coverage function. Also, other options are disabled.
 # No need to run those separately, so we turn them off to explicitly in case the user specified them.
-if [ "$CODECOVERAGE" = "y" ]; then
+if [ "$CONF" = "CodeCoverage" ]; then
+    CODECOVERAGE="y"
     RUNTESTS="n"
     RUNINTEGRATIONTESTS="n"
+    PYOPT="normal"
 fi
-
 
 # Get some information about our system
 OS=$(uname -s)
