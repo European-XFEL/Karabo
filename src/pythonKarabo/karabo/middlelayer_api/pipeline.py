@@ -82,19 +82,24 @@ class Channel(object):
                 future.cancel()
             raise error.popitem()[1]
         chunk = done["chunk"]
-        encoded = [encodeBinary(h[0]) for h in chunk]
-        sizes = numpy.array([len(d) for d in encoded], dtype=numpy.uint32)
+
+        encoded = []
         info = []
-        for _, timestamp in chunk:
+        for data, timestamp in chunk:
+            encoded.append(encodeBinary(data))
+            # Create the timestamp information for this packet!
             hsh = Hash("source", self.channelName, "timestamp", True)
             hsh["timestamp", ...] = timestamp.toDict()
             info.append(hsh)
-        h = Hash("nData", numpy.uint32(len(chunk)), "byteSizes", sizes,
-                 "sourceInfo", info)
+
+        nData = numpy.uint32(len(chunk))
+        sizes = numpy.array([len(d) for d in encoded], dtype=numpy.uint32)
+        h = Hash("nData", nData, "byteSizes", sizes, "sourceInfo", info)
         self.writeHash(h)
         self.writeSize(sizes.sum())
         for e in encoded:
             self.writer.write(e)
+
         message = yield from pending["read"]
         assert message["reason"] == "update"
 
