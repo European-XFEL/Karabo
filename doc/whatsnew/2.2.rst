@@ -27,9 +27,6 @@ recipient of the emitted signals. If restarted with the same id as before
 What's New in Karabo 2.2.4
 **************************
 
-The CHANGLOG FOR 2.2.4
-++++++++++++++++++++++
-
 bound/cpp core
 ==============
 - Bound: Fix bug in setNewOptions. !2829
