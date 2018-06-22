@@ -231,7 +231,7 @@ class Curve(HasStrictTraits):
 
         for i, d in enumerate(data):
             x[i] = Timestamp.fromHashAttributes(d['v', ...]).toTimestamp()
-            y[i] = d["v"]
+            y[i] = (numpy.NaN if d["v"] in (-numpy.inf, numpy.inf) else d["v"])
 
         p0 = self.x[:self.fill].searchsorted(self.t0)
         p1 = self.x[:self.fill].searchsorted(self.t1)
@@ -582,7 +582,10 @@ class DisplayTrendline(BaseBindingController):
 
         timestamp = proxy.binding.timestamp
         t = timestamp.toTimestamp()
-        self._curves[proxy].add_point(proxy.value, t)
+        # Protect against inf and NaN
+        value = proxy.value
+        value = numpy.NaN if value in (-numpy.inf, numpy.inf) else value
+        self._curves[proxy].add_point(value, t)
 
         t0 = self._plot.axisScaleDiv(QwtPlot.xBottom).lowerBound()
         t1 = self._plot.axisScaleDiv(QwtPlot.xBottom).upperBound()
