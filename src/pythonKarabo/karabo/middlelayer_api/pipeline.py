@@ -85,7 +85,6 @@ class Channel(object):
 
         encoded = []
         info = []
-        nData = 0
         for data, timestamp in chunk:
             encoded.append(encodeBinary(data))
             # Create the timestamp information for this packet!
@@ -93,11 +92,9 @@ class Channel(object):
             hsh["timestamp", ...] = timestamp.toDict()
             info.append(hsh)
 
-            nData += 1
-
+        nData = numpy.uint32(len(chunk))
         sizes = numpy.array([len(d) for d in encoded], dtype=numpy.uint32)
-        h = Hash("nData", numpy.uint32(nData), "byteSizes", sizes,
-                 "sourceInfo", info)
+        h = Hash("nData", nData, "byteSizes", sizes, "sourceInfo", info)
         self.writeHash(h)
         self.writeSize(sizes.sum())
         for e in encoded:
