@@ -27,6 +27,9 @@ recipient of the emitted signals. If restarted with the same id as before
 What's New in Karabo 2.2.4
 **************************
 
+C++ and Bound Python
+=====================
+
 Empty Key Handling of Hash
 +++++++++++++++++++++++++++
 
@@ -38,6 +41,7 @@ That means that `aHash.set("a..b.", something)` had the same effect as
 `aHash.set("a.b", something)`, i.e. a path with the two sub-keys `a` and `b`,
 whereas in Karabo 2.2.4 the path of the former actually differs and has four
 sub-keys of which two are empty keys.
+
 
 Detailed Merge-Log
 ==================
