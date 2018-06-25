@@ -27,8 +27,23 @@ recipient of the emitted signals. If restarted with the same id as before
 What's New in Karabo 2.2.4
 **************************
 
+Empty Key Handling of Hash
++++++++++++++++++++++++++++
+
+Empty strings are now valid keys of a `Hash`.
+
+Before, a completely empty path (`aHash.set("", something)`) let to a crash and
+empty keys as part of a path with sub-keys were simply ignored.
+That means that `aHash.set("a..b.", something)` had the same effect as
+`aHash.set("a.b", something)`, i.e. a path with the two sub-keys `a` and `b`,
+whereas in Karabo 2.2.4 the path of the former actually differs and has four
+sub-keys of which two are empty keys.
+
+Detailed Merge-Log
+==================
+
 bound/cpp core
-==============
+++++++++++++++
 - Bound: Fix bug in setNewOptions. !2829
 - Bound: Fix argument list for binding call, request(NoWait) and reply !2827
 - Bound: Add binding for no copy PP and unit tests !2770
@@ -51,15 +66,16 @@ bound/cpp core
 - Add ImageData binning information !2691
 - Fix integration test, alarms !2853
 
+
 core Devices
-============
+++++++++++++
 - ALARM: Alarm service throttle update !2772
 - GUISERVER: instantiate devices faster !2716
 - RunConfigurationGroup: create directory before saving configuration !2713
 
 
 Dependencies and deployment
-===========================
++++++++++++++++++++++++++++
 - DEP: upgrade guidata, ply, and setuptools dependencies !2797
 - DEP: Add pyyaml 3.12 to resources !2817
 - DEP: adding flaky to our python distribution !2780
@@ -78,7 +94,7 @@ Dependencies and deployment
 
 
 Middlelayer core
-================
+++++++++++++++++
 - MDL: Implement slotClearLock in base device !2799
 - MDL: fix slotInstanceNew in signalslotable !2798
 - MDL: Set proxy state to unknown when the underlying device is gone !2824
@@ -102,7 +118,7 @@ Middlelayer core
 
 
 Graphical user interface
-========================
+++++++++++++++++++++++++
 - GUI: Change a few context menu's to Pascal case !2862
 - GUI: Cache and display frozen updates in PopUp !2850
 - GUI: Fix device scene link background and slot binding in Label Widget !2840
@@ -154,26 +170,9 @@ Graphical user interface
 
 
 ikarabo
-=======
++++++++
 - ikarabo: getServers() accounts the visibility level of servers !2761
 - ikarabo: getDevices accounts visibility of devices !2774
 - ikarabo: Pretty Print output, especially for IKarabo !2766
 - ikarabo: add getSchema and getConfiguration !2707
 - ikarabo: Return full schema object !2720
-
-
-Detailed descriptions
-=====================
-
-
-Empty Key Handling of Hash
-+++++++++++++++++++++++++++
-
-Empty strings are now valid keys of a `Hash`.
-
-Before, a completely empty path (`aHash.set("", something)`) let to a crash and
-empty keys as part of a path with sub-keys were simply ignored.
-That means that `aHash.set("a..b.", something)` had the same effect as
-`aHash.set("a.b", something)`, i.e. a path with the two sub-keys `a` and `b`,
-whereas in Karabo 2.2.4 the path of the former actually differs and has four
-sub-keys of which two are empty keys.
