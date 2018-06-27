@@ -230,8 +230,9 @@ class Curve(HasStrictTraits):
         y = numpy.empty(arraysize, dtype=numpy.float)
 
         for i, d in enumerate(data):
+            # Protect against inf by setting numpy.NaN which is not shown
             x[i] = Timestamp.fromHashAttributes(d['v', ...]).toTimestamp()
-            y[i] = d["v"]
+            y[i] = numpy.NaN if d["v"] in (-numpy.inf, numpy.inf) else d["v"]
 
         p0 = self.x[:self.fill].searchsorted(self.t0)
         p1 = self.x[:self.fill].searchsorted(self.t1)
@@ -271,15 +272,15 @@ class Curve(HasStrictTraits):
         """ Return mean value for last ``count`` of y values."""
         if count > len(self.y):
             count = len(self.y)
-        return numpy.mean(self.y[max(self.fill-count, 0):self.fill])
+        return numpy.nanmean(self.y[max(self.fill-count, 0):self.fill])
 
     def get_min_y_value(self):
         """ Return min value of all y values."""
-        return min(self.y[:self.fill]) if self.fill else DEFAULT_MIN
+        return numpy.nanmin(self.y[:self.fill]) if self.fill else DEFAULT_MIN
 
     def get_max_y_value(self):
         """ Return max value for all y values"""
-        return max(self.y[:self.fill]) if self.fill else DEFAULT_MAX
+        return numpy.nanmax(self.y[:self.fill]) if self.fill else DEFAULT_MAX
 
 
 class DateTimeScaleDraw(QwtScaleDraw):
@@ -582,7 +583,10 @@ class DisplayTrendline(BaseBindingController):
 
         timestamp = proxy.binding.timestamp
         t = timestamp.toTimestamp()
-        self._curves[proxy].add_point(proxy.value, t)
+        # Protect against inf and NaN
+        value = proxy.value
+        value = numpy.NaN if value in (-numpy.inf, numpy.inf) else value
+        self._curves[proxy].add_point(value, t)
 
         t0 = self._plot.axisScaleDiv(QwtPlot.xBottom).lowerBound()
         t1 = self._plot.axisScaleDiv(QwtPlot.xBottom).upperBound()
