@@ -91,13 +91,13 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-L${KARABO}/lib -L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN/../../../../lib -Wl,-rpath,\$$ORIGIN/../.. -Wl,-rpath,../karabo/dist/${CND_CONF}/GNU-Linux-x86/lib -L../karabo/dist/${CND_CONF}/GNU-Linux-x86/lib -lkarabo `pkg-config --libs karathonDependencies-${CND_PLATFORM}`  
+LDLIBSOPTIONS=-L${KARABO}/lib -L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN/../../../../lib -Wl,-rpath,\$$ORIGIN/../.. -Wl,-rpath,../karabo/dist/CodeCoverage/GNU-Linux-x86/lib -L../karabo/dist/CodeCoverage/GNU-Linux-x86/lib -lkarabo `pkg-config --libs karathonDependencies-${CND_PLATFORM}`  
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
 	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/karathon.${CND_DLIB_EXT}
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/karathon.${CND_DLIB_EXT}: ../karabo/dist/${CND_CONF}/GNU-Linux-x86/lib/libkarabo.so
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/karathon.${CND_DLIB_EXT}: ../karabo/dist/CodeCoverage/GNU-Linux-x86/lib/libkarabo.so
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/karathon.${CND_DLIB_EXT}: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib

@@ -214,6 +214,7 @@ elif [[ $1 = "Clean" || $1 = "Clean-All" ]]; then
     safeRunCommand "cd $scriptDir/build/netbeans/karabo"
     safeRunCommand "make bundle-clean CONF=Debug"
     safeRunCommand "make bundle-clean CONF=Release"
+    safeRunCommand "make bundle-clean CONF=CodeCoverage"
     if [[ $1 = "Clean-All" ]]; then
         safeRunCommand "make clean-extern"
     fi
@@ -231,7 +232,7 @@ elif [[ $1 = "Dependencies" ]]; then
     EXTERN_ONLY="y"
 else
     echo
-    echo "Invalid option supplied. Allowed options: Release|Debug|Dependencies|Clean|Clean-All"
+    echo "Invalid option supplied. Allowed options: Release|Debug|CodeCoverage|Dependencies|Clean|Clean-All"
     echo
     exit 1
 fi
