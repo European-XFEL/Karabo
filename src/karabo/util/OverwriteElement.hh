@@ -496,6 +496,7 @@ namespace karabo {
 
             Schema* m_schema;
             Hash::Node* m_node;
+            std::string m_path;
             Restrictions m_restrictions;
 
         };
