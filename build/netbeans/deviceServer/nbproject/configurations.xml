@@ -63,8 +63,8 @@
                             AC="true"
                             BL="false"
                             WD="../karabo"
-                            BC="${MAKE} -f Makefile CONF=Debug"
-                            CC="${MAKE} -f Makefile CONF=Debug clean"
+                            BC="${MAKE} -f Makefile CONF=${CND_CONF}"
+                            CC="${MAKE} -f Makefile CONF=${CND_CONF} clean"
                             OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
               </makeArtifact>
             </linkerLibProjectItem>
@@ -84,7 +84,7 @@
                             group="bin"/>
           <packFileListElem type="File"
                             to="${PACKAGE_TOP_DIR}lib/libkarabo.so"
-                            from="../karabo/dist/Debug/GNU-Linux-x86/lib/libkarabo.so"
+                            from="../karabo/dist/${CND_CONF}/GNU-Linux-x86/lib/libkarabo.so"
                             perm="755"
                             owner="root"
                             group="bin"/>
@@ -144,8 +144,8 @@
                             AC="false"
                             BL="false"
                             WD="../karabo"
-                            BC="${MAKE} -j10 -f Makefile CONF=Release"
-                            CC="${MAKE} -j10 -f Makefile CONF=Release clean"
+                            BC="${MAKE} -j10 -f Makefile CONF=${CND_CONF}"
+                            CC="${MAKE} -j10 -f Makefile CONF=${CND_CONF} clean"
                             OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
               </makeArtifact>
             </linkerLibProjectItem>
@@ -199,12 +199,12 @@
             <linkerLibProjectItem>
               <makeArtifact PL="../karabo"
                             CT="2"
-                            CN="Debug"
+                            CN="CodeCoverage"
                             AC="true"
                             BL="false"
                             WD="../karabo"
-                            BC="${MAKE} -f Makefile CONF=Debug"
-                            CC="${MAKE} -f Makefile CONF=Debug clean"
+                            BC="${MAKE} -f Makefile CONF=${CND_CONF}"
+                            CC="${MAKE} -f Makefile CONF=${CND_CONF} clean"
                             OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
               </makeArtifact>
             </linkerLibProjectItem>
@@ -224,7 +224,7 @@
                             group="bin"/>
           <packFileListElem type="File"
                             to="${PACKAGE_TOP_DIR}lib/libkarabo.so"
-                            from="../karabo/dist/Debug/GNU-Linux-x86/lib/libkarabo.so"
+                            from="../karabo/dist/${CND_CONF}/GNU-Linux-x86/lib/libkarabo.so"
                             perm="755"
                             owner="root"
                             group="bin"/>
