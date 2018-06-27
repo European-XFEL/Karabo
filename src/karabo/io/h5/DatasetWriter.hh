@@ -89,7 +89,7 @@ namespace karabo {
                 }
 
                 virtual ~DatasetWriter() {
-                    KARABO_CHECK_HDF5_STATUS(H5Sclose(m_memoryDataSpace))
+                    KARABO_CHECK_HDF5_STATUS_NO_THROW(H5Sclose(m_memoryDataSpace))
                 }
                 
                 /**
