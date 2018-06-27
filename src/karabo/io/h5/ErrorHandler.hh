@@ -32,6 +32,7 @@ namespace karabo {
              */
             herr_t karaboH5Errorhandler(unsigned n, const H5E_error2_t *err_desc, void* client_data);
 
+            // Use this macro if you want to throw exception
 #define KARABO_CHECK_HDF5_STATUS(status)\
                 if(status < 0){\
                 karabo::util::HdfIOException ex("","","",0);\
@@ -39,6 +40,13 @@ namespace karabo {
                 throw ex;\
             }
 
+            // Use this macro just for reporting, for example,  in destructors 
+#define KARABO_CHECK_HDF5_STATUS_NO_THROW(status)\
+                if(status < 0){\
+                karabo::util::HdfIOException ex("","","",0);\
+                H5Ewalk2(H5E_DEFAULT, H5E_WALK_DOWNWARD, karabo::io::h5::karaboH5Errorhandler, &ex);\
+                std::cerr << "*** HDF IO Exception: " << ex.detailedMsg() << std::endl;\
+            }
 
 
         }
