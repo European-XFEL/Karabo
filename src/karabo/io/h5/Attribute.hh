@@ -72,11 +72,7 @@ namespace karabo {
                     m_standardTypeId = Derived::getStandardTypeId();
                 }
 
-                virtual ~Attribute() {
-                    KARABO_CHECK_HDF5_STATUS(H5Tclose(m_nativeTypeId))
-                    KARABO_CHECK_HDF5_STATUS(H5Tclose(m_standardTypeId))
-                }
-
+                virtual ~Attribute();
 
                 /**
                  * Write the attributes in data as defined by configuration to HDF5
