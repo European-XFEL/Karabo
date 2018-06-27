@@ -514,7 +514,7 @@ def develop(args):
         print("Develop installation succeeded.")
 
 
-def install_dependencies(args, develop=False):
+def install_dependencies(args, is_develop=False):
     """Installs dependencies as specified in the DEPENDS file.
     NOTE: This function must be run in the directory of the DEPENDS file!
     """
@@ -531,7 +531,7 @@ def install_dependencies(args, develop=False):
         args_copy.device = item[0]
         args_copy.tag = item[1]
         args_copy.copy = item[2]
-        if develop:
+        if is_develop:
             develop(args_copy)
         else:
             install(args_copy)
