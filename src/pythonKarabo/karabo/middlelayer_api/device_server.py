@@ -376,7 +376,7 @@ class MiddleLayerDeviceServer(DeviceServerBase):
     @coslot
     def slotInstanceNew(self, id, info):
         yield from super(DeviceServerBase, self).slotInstanceNew(id, info)
-        if info.get('classId') == "TimeServer" and id == self.timeServerId:
+        if info.get("classId") == "TimeServer" and id == self.timeServerId:
             self._ss.connect(self.timeServerId, "signalTimeTick",
                              self.slotTimeTick)
 
