@@ -373,6 +373,13 @@ class MiddleLayerDeviceServer(DeviceServerBase):
     def addChild(self, deviceId, child):
         self.deviceInstanceMap[deviceId] = child
 
+    @coslot
+    def slotInstanceNew(self, id, info):
+        yield from super(DeviceServerBase, self).slotInstanceNew(id, info)
+        if info.get('classId') == "TimeServer" and id == self.timeServerId:
+            self._ss.connect(self.timeServerId, "signalTimeTick",
+                             self.slotTimeTick)
+
     @slot
     def slotInstanceGone(self, id, info):
         self.deviceInstanceMap.pop(id, None)
