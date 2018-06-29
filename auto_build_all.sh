@@ -155,8 +155,8 @@ produceCodeCoverageReport() {
 
     safeRunCommand "$scriptDir/ci/coverage/report/gen_report"
 
-    local ZIP_FILE_NAME=AAAX=`ls ./ci/coverage/report/*.zip`
-
+    # Most recent zip file - there mightbe others from previous runs
+    local ZIP_FILE_NAME=`ls -t ./ci/coverage/report/*.zip | head -1`
     # produce initial Python coverage information
     safeRunCommand $scriptDir/run_python_tests.sh \
         --generateCoverageReport \
