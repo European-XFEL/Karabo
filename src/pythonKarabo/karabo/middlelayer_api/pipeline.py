@@ -416,6 +416,8 @@ class OutputProxy(SubProxyBase):
 class NetworkOutput(Configurable):
     displayType = 'OutputChannel'
 
+    server = None
+
     noInputShared = String(
         displayedName="No Input (Shared)",
         description="What to do if currently no share-input channel is "
@@ -567,6 +569,14 @@ class NetworkOutput(Configurable):
 
         Overwrite the method of Configurable to prevent sending values.
         """
+
+    @coroutine
+    def close(self):
+        """ Close listening sockets
+        """
+        if self.server is not None:
+            self.server.close()
+            yield from self.server.wait_closed()
 
 
 class OutputChannel(Node):
