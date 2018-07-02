@@ -25,11 +25,46 @@ Usage: $0 [flags]
 
 Available flags:
   --help, -h - Display help.
+  --rootDir <path> - Path to the root directory of the Karabo project.
   --runUnitTests - Run Python unit tests.
   --runIntegrationTests - Run Python integration tests.
   --collectCoverage - Collect Python code coverage.
-  --generateCoverageReport - Collect Python code coverage and generate coverage report.
-  --rootDir <path> - Path to the root directory of the Karabo project.
+  --generateCoverageReport - Collect Python code coverage and generate coverage
+        report.
+  --clean - Remove all the code coverage information collected in the previous
+        tests.
+
+What combination of flags you usually want to use:
+$ ./run_python_tests.sh --clean --runUnitTests --runIntegrationTests \\
+$       --collectCoverage --generateCoverageReport --rootDir <path>
+This will run the tests, collect the code coverage and generate a html code
+coverage report in '<root_dir_path>/$CODE_COVERAGE_DIR_NAME' directory.
+
+The --rootDir <path> needs to point to a root directory of Karabo project. The
+provided path is used to find files needed by the code coverage tools.
+
+The --runUnitTests and --runIntegrationTests flags only run the unit and
+integration tests. So, if you want to only run the tests, run:
+$ ./run_python_tests.sh --runUnitTests --runIntegrationTests --rootDir <path>
+
+To collect the code coverage, the --collectCoverage flag can be used.
+$ ./run_python_tests.sh --clean --runUnitTests --runIntegrationTests \\
+$       --collectCoverage --rootDir <path> 
+This command will run the tests, collect the code coverage and store the
+code coverage into a .coverage file in the directory where the script was
+executed. This command might come in handy if you want to generate a coverage
+report with a specific tool and for that you need only the .coverage file.
+
+The --clean flag is used to remove all the previously collected code coverage
+data. Usually, you want to use this every time when collecting the code
+coverage because you wan to have a clean start (i.e. no data from the previous
+cases when you collected the code coverage), but there are cases when you do
+not want to do that. For example: When you writing another script that collect
+the code coverage data in several places and needs to be a bit more dynamic.
+
+
+The order in which you call the flags is not important. If a flag is repeated,
+the script behaves as it would if the flag was only called once.
 "
 }
 
@@ -73,7 +108,9 @@ setupCoverageTool() {
     # in the following tests.
     export COVERAGE_PROCESS_START=$(pwd)/.coveragerc
     # Instruct 'coverage' to display a message when creating a data file.
-    export COVERAGE_DEBUG=dataio
+    # This is extremely useful when debugging problems related to the
+    # multi-process code coverage collecting process.
+    # export COVERAGE_DEBUG=dataio
 }
 
 # Tear-down the configurations made by the 'setupCoverageTool' function.
