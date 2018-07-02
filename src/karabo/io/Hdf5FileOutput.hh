@@ -111,7 +111,11 @@ namespace karabo {
             }
 
             ~Hdf5FileOutput() {
-                closeFile();
+                if (m_h5file >= 0) {
+                    m_serializer->onCloseFile();
+                    KARABO_CHECK_HDF5_STATUS_NO_THROW(H5Fclose(m_h5file));
+                    m_h5file = -1;
+                }
             }
 
             void configureWriteMode(const karabo::util::Hash& config) {

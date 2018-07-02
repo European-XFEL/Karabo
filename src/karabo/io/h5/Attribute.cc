@@ -54,6 +54,12 @@ namespace karabo {
             }
 
 
+            Attribute::~Attribute() {
+                KARABO_CHECK_HDF5_STATUS_NO_THROW(H5Tclose(m_nativeTypeId))
+                KARABO_CHECK_HDF5_STATUS_NO_THROW(H5Tclose(m_standardTypeId))
+            }
+
+
             void Attribute::configureDataDimensions(const karabo::util::Hash& input, const Dims& singleValueDims) {
 
                 size_t singleValueRank = singleValueDims.rank();
