@@ -13,7 +13,10 @@ NOSETESTS="python $(which nosetests)"
 COVERAGE_CONF_FILE=".coveragerc"
 
 # A directory to which the code coverage will be stored.
-CODE_COVERAGE_DIR="python_code_coverage_reports"
+CODE_COVERAGE_DIR_NAME="python_code_coverage_reports"
+
+# A flag that indicates if sitecustomize.py file was created.
+SITE_CUSTOMIZE_FILE_CREATED=false
 
 displayHelp()
 {
@@ -26,6 +29,7 @@ Available flags:
   --runIntegrationTests - Run Python integration tests.
   --collectCoverage - Collect Python code coverage.
   --generateCoverageReport - Collect Python code coverage and generate coverage report.
+  --rootDir <path> - Path to the root directory of the Karabo project.
 "
 }
 
@@ -42,15 +46,15 @@ setupCoverageTool() {
     COVER_FLAGS="--with-coverage $COVER_COVERED_PACKAGES"
 
     # Path to the sitecustomize.py file.
-    SITE_PACKAGES_DIR=$(pwd)/karabo/extern/lib/python3.4/site-packages
+    SITE_PACKAGES_DIR=$KARABO_PROJECT_ROOT_DIR/karabo/extern/lib/python3.4/site-packages
     SITE_CUSTOMIZE_FILE_PATH=$SITE_PACKAGES_DIR/sitecustomize.py
 
-    export SITE_CUSTOMIZE_FILE_CREATED=false
+    SITE_CUSTOMIZE_FILE_CREATED=false
 
     # Create '.coveragerc' file.
     echo "
 [run]
-  source = $(pwd)/package/Debug/Ubuntu/16/x86_64/karabo/
+  source = $KARABO_PROJECT_ROOT_DIR/karabo
   parallel = True
   data_file = $(pwd)/.coverage
 " > $COVERAGE_CONF_FILE
@@ -58,7 +62,7 @@ setupCoverageTool() {
     if [ ! -f $SITE_CUSTOMIZE_FILE_PATH ]; then
         # Create the sitecustomize.py script.
 
-        export SITE_CUSTOMIZE_FILE_CREATED=true
+        SITE_CUSTOMIZE_FILE_CREATED=true
 
         echo "Creating the sitecustomize.py file. path = '$SITE_CUSTOMIZE_FILE_PATH'"
 
@@ -76,6 +80,8 @@ setupCoverageTool() {
 # Tear-down the configurations made by the 'setupCoverageTool' function.
 teardownCoverageTool() {
     if $SITE_CUSTOMIZE_FILE_CREATED; then
+
+        echo "$SITE_CUSTOMIZE_FILE_CREATED"
 
         echo "Removing the sitecustomize.py file. path = '$SITE_CUSTOMIZE_FILE_PATH'"
 
@@ -139,8 +145,7 @@ runPythonUnitTests() {
             "-e test_py_authenticator_incorrect_login " \
             "-e test_py_authenticator_correct_login " \
         "karabo.tests"
-    # We will not focus on the older version of GUI.
-    # safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo_gui"
+    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo_gui"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabogui"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.interactive"
 
@@ -154,7 +159,8 @@ runPythonIntegrationTests() {
     echo Running Karabo Python integration tests ...
     echo 
 
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.bound_device_test"
+    # TODO: Needs to be uncommented when the bound_device_test integration test is added.  
+    #safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.bound_device_test"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_comm_test"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_provided_scenes_test"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.run_configuration_group"
@@ -176,27 +182,25 @@ generateCodeCoverageReport() {
     coverage combine
 
     # Remove code coverage directory if it exists.
-    rm -rf $CODE_COVERAGE_DIR
+    rm -rf $CODE_COVERAGE_DIR_PATH
 
     # Generate coverage for the following modules.
-    safeRunCommand coverage html -i --include "*/site-packages/karabo/*" --omit $OMIT -d "$CODE_COVERAGE_DIR/htmlcov_karabo"
-    safeRunCommand coverage html -i --include "*/site-packages/karabo/bound_api/*" --omit $OMIT -d "$CODE_COVERAGE_DIR/htmlcov_bound_api"
-    safeRunCommand coverage html -i --include "*/site-packages/karabo/middlelayer_api/*" --omit $OMIT -d "$CODE_COVERAGE_DIR/htmlcov_middlelayer_api"
-    safeRunCommand coverage html -i --include "*/site-packages/karabo/common/*" --omit $OMIT -d "$CODE_COVERAGE_DIR/htmlcov_common"
-    safeRunCommand coverage html -i --include "*/site-packages/karabo/project_db/*" --omit $OMIT -d "$CODE_COVERAGE_DIR/htmlcov_project_db"
-    safeRunCommand coverage html -i --include "*/site-packages/karabo/interactive/*" --omit $OMIT -d "$CODE_COVERAGE_DIR/htmlcov_interactive"
-    safeRunCommand coverage html -i --include "*/site-packages/karabo/usermacro_api/*" --omit $OMIT -d "$CODE_COVERAGE_DIR/htmlcov_usermacro_api"
-    # We will not focus on the older version of GUI.
-    safeRunCommand coverage html -i --include "*/karabogui/*" --omit $OMIT -d htmlcov_karabogui
-    # safeRunCommand coverage html -i --include "*/karabo_gui/*" $OMIT -d htmlcov_karabo_gui # older version
-    safeRunCommand coverage html -i --include "*/site-packages/karabo/bound_devices/*" --omit $OMIT -d htmlcov_bound_devices
+    coverage html -i --include "*/site-packages/karabo/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_karabo"
+    coverage html -i --include "*/site-packages/karabo/bound_api/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_bound_api"
+    coverage html -i --include "*/site-packages/karabo/middlelayer_api/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_middlelayer_api"
+    coverage html -i --include "*/site-packages/karabo/common/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_common"
+    coverage html -i --include "*/site-packages/karabo/project_db/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_project_db"
+    coverage html -i --include "*/site-packages/karabo/interactive/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_interactive"
+    coverage html -i --include "*/site-packages/karabo/usermacro_api/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_usermacro_api"
+    coverage html -i --include "*/karabogui/*" --omit $OMIT -d htmlcov_karabogui
+    coverage html -i --include "*/site-packages/karabo/bound_devices/*" --omit $OMIT -d htmlcov_bound_devices
 
     echo
     echo HTML coverage reports generation complete
     echo
 
     echo
-    echo "### The Python coverage report can be found at $(pwd)/$CODE_COVERAGE_DIR/htmlcov_karabo/index.html."
+    echo "### The Python coverage report can be found at $CODE_COVERAGE_DIR_PATH/htmlcov_karabo/index.html."
     echo
 }
 
@@ -213,7 +217,7 @@ clean() {
     rm -rf $COVERAGE_CONF_FILE
 
     # Remove code coverage directory if it exists.
-    rm -rf $CODE_COVERAGE_DIR
+    rm -rf $CODE_COVERAGE_DIR_PATH
 }
 
 # Main
@@ -247,6 +251,17 @@ else
             --clean)
                 CLEAN=true
                 ;;
+            --rootDir)
+                if ! [ -n "$2" ]; then
+                    echo "Error: The '--rootDir' flag was used but the path was not specified."
+                    echo "Specify the path."
+
+                    exit 1
+                fi
+
+                KARABO_PROJECT_ROOT_DIR=$2
+                shift
+                ;;
             --help)
                 DISPLAY_HELP=true
                 ;;
@@ -266,6 +281,16 @@ if $DISPLAY_HELP; then
     displayHelp
     exit 1
 fi
+
+if [ -z $KARABO_PROJECT_ROOT_DIR ]; then
+    echo "Error: The path to the root directory of Karabo project was not specified."
+    echo "Use the '--rootDir <path>' flag."
+    echo ""
+    exit 1
+fi
+
+# full path to the test coverage report
+CODE_COVERAGE_DIR_PATH=$KARABO_PROJECT_ROOT_DIR/$CODE_COVERAGE_DIR_NAME
 
 if $CLEAN; then
     clean
