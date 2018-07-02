@@ -586,6 +586,11 @@ class Type(Descriptor, Registry):
             else:
                 self.options = [self.toKaraboValue(o, strict=strict).enum
                                 for o in options]
+                # NOTE: The state UNKNOWN for property 'state' is always
+                # allowed due to the proxy setting!
+                if self.enum is State and State.UNKNOWN not in self.options:
+                    self.options.append(
+                        self.toKaraboValue(State.UNKNOWN, strict=strict).enum)
 
     def toKaraboValue(self, data, strict=True):
         """Convert data into a KaraboValue
