@@ -1,0 +1,27 @@
+#!/bin/bash
+
+get_abs_path() {
+	echo `cd "$1"; pwd`
+}
+
+SCRIPT_BASE=$(get_abs_path $( dirname "${BASH_SOURCE[0]}" ) )
+KARABO_BASE=$(get_abs_path $SCRIPT_BASE"/../../..")
+MAKE_CONF=CodeCoverage
+
+LCOV_BASE=$(get_abs_path $SCRIPT_BASE"/../lcov")
+
+FILE_BASE=$SCRIPT_BASE/coverage_base.info
+FILE_BASE_UT=$SCRIPT_BASE/cov_base_ut.info
+FILE_BASE_IT=$SCRIPT_BASE/cov_base_it.info
+FILE_TEST=$SCRIPT_BASE/coverage.info
+FILE_TOTAL=$SCRIPT_BASE/coverage_total.info
+FILE_FILTERED=$SCRIPT_BASE/coverage_filtered.info
+SRC_DIR=$KARABO_BASE/src
+PROJECT_BASE=$SRC_DIR/karabo
+BUILD_BASE=$KARABO_BASE/build/netbeans
+UT_BASE=$KARABO_BASE/build/netbeans/karabo/build/$MAKE_CONF
+IT_BASE=$KARABO_BASE/build/netbeans/integrationTests/build/$MAKE_CONF
+OUT_DIR=$SCRIPT_BASE/out
+IT_REPORTS=$SCRIPT_BASE/get_it
+UT_REPORTS=$SCRIPT_BASE/get_ut
+
