@@ -40,7 +40,6 @@ setupCoverageTool() {
     # Set coverage variables.
     COVER_COVERED_PACKAGES=""
     COVER_COVERED_PACKAGES+="--cover-package=karabo "
-    COVER_COVERED_PACKAGES+="--cover-package=karabo_gui "
     COVER_COVERED_PACKAGES+="--cover-package=karabogui "
     COVER_COVERED_PACKAGES+="--cover-inclusive"
     COVER_FLAGS="--with-coverage $COVER_COVERED_PACKAGES"
@@ -145,7 +144,6 @@ runPythonUnitTests() {
             "-e test_py_authenticator_incorrect_login " \
             "-e test_py_authenticator_correct_login " \
         "karabo.tests"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo_gui"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabogui"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.interactive"
 
