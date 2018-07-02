@@ -22,6 +22,14 @@ CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/bin/karabo-brokermessagelog
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux-x86/package
 CND_PACKAGE_NAME_Release=brokermessagelogger.tar
 CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/brokermessagelogger.tar
+# CodeCoverage configuration
+CND_PLATFORM_CodeCoverage=GNU-Linux-x86
+CND_ARTIFACT_DIR_CodeCoverage=dist/CodeCoverage/GNU-Linux-x86/bin
+CND_ARTIFACT_NAME_CodeCoverage=karabo-brokermessagelogger
+CND_ARTIFACT_PATH_CodeCoverage=dist/CodeCoverage/GNU-Linux-x86/bin/karabo-brokermessagelogger
+CND_PACKAGE_DIR_CodeCoverage=dist/CodeCoverage/GNU-Linux-x86/package
+CND_PACKAGE_NAME_CodeCoverage=brokermessagelogger.tar
+CND_PACKAGE_PATH_CodeCoverage=dist/CodeCoverage/GNU-Linux-x86/package/brokermessagelogger.tar
 #
 # include compiler specific variables
 #
