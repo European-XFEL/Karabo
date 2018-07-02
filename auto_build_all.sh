@@ -105,9 +105,14 @@ runUnitTests() {
 
     if [ $CODECOVERAGE = "y" ]; then
         # Collect code coverage.
-        ./run_python_tests.sh --runUnitTests --collectCoverage
+        safeRunCommand $scriptDir/run_python_tests.sh \
+            --runUnitTests \
+            --collectCoverage \
+            --rootDir $scriptDir
     else
-        ./run_python_tests.sh --runUnitTests
+        safeRunCommand $scriptDir/run_python_tests.sh \
+            --runUnitTests \
+            --rootDir $scriptDir
     fi
 }
 
@@ -122,9 +127,14 @@ runPythonIntegrationTests() {
 
     if [ $CODECOVERAGE = "y" ]; then
         # Collect code coverage.
-        ./run_python_tests.sh --runIntegrationTests --collectCoverage
+        safeRunCommand $scriptDir/run_python_tests.sh \
+            --runIntegrationTests \
+            --collectCoverage \
+            --rootDir $scriptDir
     else
-        ./run_python_tests.sh --runIntegrationTests
+        safeRunCommand $scriptDir/run_python_tests.sh \
+            --runIntegrationTests \
+            --rootDir $scriptDir
     fi
 }
 
@@ -134,7 +144,7 @@ produceCodeCoverageReport() {
 
     # remove any previous code coverage results
     safeRunCommand "find . -name \"*.gcda\" -delete"
-    safeRunCommand ./run_python_tests.sh --clean
+    safeRunCommand $scriptDir/run_python_tests.sh --clean --rootDir $scriptDir
 
     runUnitTests
     runIntegrationTests
@@ -148,34 +158,12 @@ produceCodeCoverageReport() {
     local ZIP_FILE_NAME=AAAX=`ls ./ci/coverage/report/*.zip`
 
     # produce initial Python coverage information
-    safeRunCommand ./run_python_tests.sh --generateCoverageReport
+    safeRunCommand $scriptDir/run_python_tests.sh \
+        --generateCoverageReport \
+        --rootDir $scriptDir
 
     echo
     echo "### The C++ coverage results can be found at:"
-    echo "### $scriptDir/ci/coverage/report/out/index.html"
-    echo "### or in zipped form: $ZIP_FILE_NAME"
-    echo
-}
-
-produceCodeCoverageReport() {
-    echo "### Producing code coverage reports..."
-    echo
-
-    # remove any previous code coverage results
-    safeRunCommand "find . -name \"*.gcda\" -delete"
-
-    runUnitTests
-    runIntegrationTests
-
-    # produce initial coverage information
-    safeRunCommand "$scriptDir/ci/coverage/report/gen_initial"
-
-    safeRunCommand "$scriptDir/ci/coverage/report/gen_report"
-
-    local ZIP_FILE_NAME=AAAX=`ls ./ci/coverage/report/*.zip`
-
-    echo
-    echo "### The coverage results can be found at:"
     echo "### $scriptDir/ci/coverage/report/out/index.html"
     echo "### or in zipped form: $ZIP_FILE_NAME"
     echo
