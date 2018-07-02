@@ -1,0 +1,17 @@
+#!/bin/bash
+
+SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
+. $SCRIPT_DIR/conf
+
+SCRIPT_BASE=$(get_abs_path $( dirname "${BASH_SOURCE[0]}" ))
+
+DEST_DIR=`date +%F_%H%M`
+DEST_DIR=$SCRIPT_BASE"/"$DEST_DIR"_unitTest"
+
+if [ ! -d "$DEST_DIR" ]; then
+	mkdir $DEST_DIR
+fi
+cp $KARABO_BASE/build/netbeans/karabo/testresults/* $DEST_DIR/
+grep "<Failures>" $DEST_DIR/*
+
+
