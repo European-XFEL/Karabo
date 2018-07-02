@@ -106,14 +106,15 @@ class PanelContainer(QTabWidget):
 
     def undock(self, panel):
         if panel.parent() is not None:
-            panel.is_docked = False
+            # NOTE: If panel is maximized, parents for links appear to be None!
             panel.setParent(None)
-            panel.move(QCursor.pos())
-            panel.show()
+        panel.is_docked = False
+        panel.move(QCursor.pos())
+        panel.show()
 
-            self._add_placeholder()
-            if self.count() == 0:
-                self.hide()
+        self._add_placeholder()
+        if self.count() == 0:
+            self.hide()
 
     def insert_panels_after_maximize(self, current_index):
         """When maximized, all panels are removed except for the selected one.
