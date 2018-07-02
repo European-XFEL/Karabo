@@ -159,28 +159,14 @@ runPythonUnitTests() {
     echo Running Karabo Python unit tests ...
     echo
 
-    # WARNING: The authenticator tests are excluded because services used by
-    # the tests are not available. Remove the exclusion flags when the services
-    # are available.
-
     # Pass the bound_api/launcher.py file. If the file is imported, a
     # part of its code is executed. That results in an error.
-    safeRunCommand \
-        "$NOSETESTS -v $COVER_FLAGS " \
-            "-I launcher.py " \
-            "-e test_authenticator_correct_login " \
-            "-e test_authenticator_incorrect_login " \
-            "-e test_authenticator_single_sign_on " \
-        "karabo.bound_api"
+    safeRunCommand "$NOSETESTS -v $COVER_FLAGS -I launcher.py karabo.bound_api"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.middlelayer_api"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.common"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.project_db"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.usermacro_api"
-    safeRunCommand \
-        "$NOSETESTS -v $COVER_FLAGS " \
-            "-e test_py_authenticator_incorrect_login " \
-            "-e test_py_authenticator_correct_login " \
-        "karabo.tests"
+    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.tests"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabogui"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.interactive"
 
