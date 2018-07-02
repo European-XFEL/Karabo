@@ -12,6 +12,7 @@
 
 #include <string>
 #include <hdf5/hdf5.h>
+#include "karabo/log.hpp"
 
 
 
@@ -45,7 +46,7 @@ namespace karabo {
                 if(status < 0){\
                 karabo::util::HdfIOException ex("","","",0);\
                 H5Ewalk2(H5E_DEFAULT, H5E_WALK_DOWNWARD, karabo::io::h5::karaboH5Errorhandler, &ex);\
-                std::cerr << "*** HDF IO Exception: " << ex.detailedMsg() << std::endl;\
+                KARABO_LOG_FRAMEWORK_ERROR << "*** HDF IO Exception: " << ex.detailedMsg();\
             }
 
 
