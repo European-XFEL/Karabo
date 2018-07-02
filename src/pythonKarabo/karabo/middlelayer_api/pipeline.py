@@ -228,6 +228,8 @@ class NetworkInput(Configurable):
                     (self, output))
             self.connected.pop(output)
             self.connectedOutputChannels = list(self.connected)
+        finally:
+            # We still inform when the connection has been closed!
             with (yield from self.handler_lock):
                 yield from shield(get_event_loop().run_coroutine_or_thread(
                                   self.close_handler, output))
