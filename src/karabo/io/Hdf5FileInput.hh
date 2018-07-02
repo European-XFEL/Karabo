@@ -79,7 +79,7 @@ namespace karabo {
 
             virtual ~Hdf5FileInput() {
                 if (m_h5file >= 0) {
-                    KARABO_CHECK_HDF5_STATUS(H5Fclose(m_h5file));
+                    KARABO_CHECK_HDF5_STATUS_NO_THROW(H5Fclose(m_h5file));
                 }
             }
 
