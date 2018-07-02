@@ -144,8 +144,8 @@
                             AC="true"
                             BL="false"
                             WD="../karabo"
-                            BC="${MAKE} -j10 -f Makefile CONF=Debug"
-                            CC="${MAKE} -j10 -f Makefile CONF=Debug clean"
+                            BC="${MAKE} -j10 -f Makefile CONF=${CND_CONF}"
+                            CC="${MAKE} -j10 -f Makefile CONF=${CND_CONF} clean"
                             OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
               </makeArtifact>
             </linkerLibProjectItem>
@@ -579,8 +579,8 @@
                             AC="false"
                             BL="false"
                             WD="../karabo"
-                            BC="${MAKE} -j10 -f Makefile CONF=Release"
-                            CC="${MAKE} -j10 -f Makefile CONF=Release clean"
+                            BC="${MAKE} -j10 -f Makefile CONF=${CND_CONF}"
+                            CC="${MAKE} -j10 -f Makefile CONF=${CND_CONF} clean"
                             OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
               </makeArtifact>
             </linkerLibProjectItem>
@@ -939,6 +939,431 @@
             <pElem>${KARATHON}/karabo</pElem>
             <pElem>${KARATHON}</pElem>
           </linkerDynSerch>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f1">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <ccTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f1</output>
+          <linkerLibItems>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <item path="tests/HashWrap_Test.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="tests/HashWrap_Test.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="tests/karathonTestRunner.cc" ex="false" tool="1" flavor2="0">
+      </item>
+    </conf>
+    <conf name="CodeCoverage" type="2">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+        <ccTool>
+          <standard>8</standard>
+          <incDir>
+            <pElem>../../../src</pElem>
+            <pElem>${KARABO}/include</pElem>
+            <pElem>${KARABO}/extern/include/hdf5</pElem>
+            <pElem>${PYTHON_HEADER_DIR}</pElem>
+            <pElem>${NUMPY_HEADER_DIR}</pElem>
+            <pElem>${KARABO}/extern/include</pElem>
+          </incDir>
+          <commandLine>-Wfatal-errors -Wno-unused-local-typedefs</commandLine>
+          <warningLevel>2</warningLevel>
+        </ccTool>
+        <linkerTool>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/karathon.${CND_DLIB_EXT}</output>
+          <linkerAddLib>
+            <pElem>${KARABO}/lib</pElem>
+            <pElem>${KARABO}/extern/lib</pElem>
+          </linkerAddLib>
+          <linkerDynSerch>
+            <pElem>\$$ORIGIN/../../../../lib</pElem>
+            <pElem>\$$ORIGIN/../..</pElem>
+          </linkerDynSerch>
+          <linkerLibItems>
+            <linkerLibProjectItem>
+              <makeArtifact PL="../karabo"
+                            CT="2"
+                            CN="CodeCoverage"
+                            AC="true"
+                            BL="false"
+                            WD="../karabo"
+                            BC="${MAKE} -j10 -f Makefile CONF=${CND_CONF}"
+                            CC="${MAKE} -j10 -f Makefile CONF=${CND_CONF} clean"
+                            OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}">
+              </makeArtifact>
+            </linkerLibProjectItem>
+            <linkerOptionItem>`pkg-config --libs karathonDependencies-${CND_PLATFORM}`</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+      <item path="../../../src/karathon/AttributesNodeWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/AttributesWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ChannelWrap.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ChannelWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ConnectionWrap.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ConnectionWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/DeviceClientWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/DimsWrap.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/FromNumpy.cc" ex="false" tool="1" flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="../../../src/karathon/FromNumpy.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/HashWrap.cc" ex="false" tool="1" flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="../../../src/karathon/HashWrap.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/NodeWrap.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyCoreDeviceClient.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="../../../src/karathon/PyCoreLockWrap.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyCoreLockWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyH5Tools.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyIoFileTools.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="../../../src/karathon/PyLogLogger.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilAlarmElement.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="../../../src/karathon/PyUtilClassInfo.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilDateTimeString.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilDetectorGeometry.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="../../../src/karathon/PyUtilDims.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="../../../src/karathon/PyUtilEpochstamp.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilHash.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+        <ccTool>
+          <developmentMode>1</developmentMode>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="../../../src/karathon/PyUtilNDArray.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="../../../src/karathon/PyUtilRollingWindowStatistics.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilSchema.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="../../../src/karathon/PyUtilStateElement.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="../../../src/karathon/PyUtilTimeDuration.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilTimestamp.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilTrainstamp.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyWebAuthenticator.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyXmsInputOutputChannel.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="../../../src/karathon/PyXmsInputOutputChannel.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyXmsSignalSlotable.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="../../../src/karathon/PyXmsSlotElement.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="../../../src/karathon/PythonFactoryMacros.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PythonInputHandler.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="../../../src/karathon/PythonInputHandler.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PythonMacros.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PythonOutputHandler.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="../../../src/karathon/PythonOutputHandler.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ScopedGILAcquire.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ScopedGILRelease.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/SignalSlotableWrap.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="../../../src/karathon/SignalSlotableWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/SignalWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/SlotWrap.cc" ex="false" tool="1" flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="../../../src/karathon/SlotWrap.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ToNumpy.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/Wrapper.cc" ex="false" tool="1" flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="../../../src/karathon/Wrapper.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/karathon.cc" ex="false" tool="1" flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="../../../src/karathon/p2pbinding.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <folder path="TestFiles">
+        <linkerTool>
+          <linkerAddLib>
+            <pElem>${KARABO}/extern/lib</pElem>
+          </linkerAddLib>
+          <linkerDynSerch>
+            <pElem>${KARATHON}/karabo</pElem>
+            <pElem>${KARATHON}</pElem>
+            <pElem>${KARATHON}/karabo/extern/lib</pElem>
+          </linkerDynSerch>
+          <linkerLibItems>
+            <linkerLibLibItem>cppunit</linkerLibLibItem>
+          </linkerLibItems>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f1">
