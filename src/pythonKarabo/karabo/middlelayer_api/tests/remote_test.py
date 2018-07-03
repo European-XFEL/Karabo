@@ -50,6 +50,11 @@ class Nested(Configurable):
 
 
 class Remote(Injectable, Device):
+
+    # The state is explicitly overwritten, State UNKNOWN is always possible by
+    # default!
+    state = Overwrite(options=[State.ON])
+
     done = Bool()
     value = Int32(description="The Value", defaultValue=7, tags={"whatever"})
     counter = Int32(defaultValue=-1)
@@ -163,6 +168,9 @@ class Local(Device):
         self.alarm_future.set_result(None)
         self.alarmhash = alarms
 
+    @coroutine
+    def onInitialization(self):
+        self.state = State.ON
 
 class Tests(DeviceTest):
     """The tests in this class run on behalf of the device "local".
@@ -489,9 +497,22 @@ class Tests(DeviceTest):
         moriturus = Local({"_deviceId_": "moriturus"})
         yield from moriturus.startInstance()
         yield from waitUntil(lambda: isAlive(proxy))
-        self.assertTrue(isAlive(proxy))
         yield from moriturus.slotKillDevice()
         self.assertFalse(isAlive(proxy))
+
+    @async_tst
+    def test_isAlive_state(self):
+        moriturus = Local({"_deviceId_": "moriturus"})
+        yield from moriturus.startInstance()
+        proxy = yield from getDevice("moriturus")
+        yield from waitUntil(lambda: isAlive(proxy))
+        self.assertTrue(isAlive(proxy))
+        self.assertEqual(moriturus.state, State.ON)
+        self.assertEqual(proxy.state, State.ON)
+        # We kill the device to see the desired state transition
+        yield from moriturus.slotKillDevice()
+        self.assertFalse(isAlive(proxy))
+        self.assertEqual(proxy.state, State.UNKNOWN)
 
     @async_tst
     def test_waituntilnew(self):
