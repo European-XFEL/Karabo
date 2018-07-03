@@ -207,15 +207,15 @@ generateCodeCoverageReport() {
     rm -rf $CODE_COVERAGE_DIR_PATH
 
     # Generate coverage for the following modules.
-    coverage html -i --include "*/site-packages/karabo/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_karabo"
-    coverage html -i --include "*/site-packages/karabo/bound_api/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_bound_api"
-    coverage html -i --include "*/site-packages/karabo/middlelayer_api/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_middlelayer_api"
-    coverage html -i --include "*/site-packages/karabo/common/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_common"
-    coverage html -i --include "*/site-packages/karabo/project_db/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_project_db"
-    coverage html -i --include "*/site-packages/karabo/interactive/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_interactive"
-    coverage html -i --include "*/site-packages/karabo/usermacro_api/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_usermacro_api"
-    coverage html -i --include "*/karabogui/*" --omit $OMIT -d htmlcov_karabogui
-    coverage html -i --include "*/site-packages/karabo/bound_devices/*" --omit $OMIT -d htmlcov_bound_devices
+    safeRunCommand coverage html -i --include "*/site-packages/karabo/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_karabo"
+    safeRunCommand coverage html -i --include "*/site-packages/karabo/bound_api/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_bound_api"
+    safeRunCommand coverage html -i --include "*/site-packages/karabo/middlelayer_api/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_middlelayer_api"
+    safeRunCommand coverage html -i --include "*/site-packages/karabo/common/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_common"
+    safeRunCommand coverage html -i --include "*/site-packages/karabo/project_db/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_project_db"
+    safeRunCommand coverage html -i --include "*/site-packages/karabo/interactive/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_interactive"
+    safeRunCommand coverage html -i --include "*/site-packages/karabo/usermacro_api/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_usermacro_api"
+    safeRunCommand coverage html -i --include "*/karabogui/*" --omit $OMIT -d htmlcov_karabogui
+    safeRunCommand coverage html -i --include "*/site-packages/karabo/bound_devices/*" --omit $OMIT -d htmlcov_bound_devices
 
     echo
     echo HTML coverage reports generation complete
