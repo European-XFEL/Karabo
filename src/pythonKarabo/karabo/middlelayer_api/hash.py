@@ -93,7 +93,7 @@ class Enumable(object):
 
     def check(self, data):
         # NOTE: The State.UNKNOWN is by default allowed for a state property!
-        if self.enum is State and data is State.UNKNOWN:
+        if self.enum is State and data == State.UNKNOWN:
             return
         super().check(data)
 
