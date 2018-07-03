@@ -765,7 +765,10 @@ class Tests(DeviceTest):
                                                   "other": "othr"}],
                             commands=[{"doit": "do_it"}, "changeit"])
 
-        a = A({"_deviceId_": "devicenode", "dn": "remote"})
+            dnEmpty = DeviceNode()
+
+        a = A({"_deviceId_": "devicenode", "dn": "remote",
+               "dnEmpty": "remote"})
 
         yield from a.startInstance()
         try:
@@ -787,6 +790,17 @@ class Tests(DeviceTest):
                 self.assertEqual(a.dn.value, 8)
                 self.assertEqual(a.dn.counter, 12)
                 self.assertEqual(a.dn.state, State.UNKNOWN)
+
+                # Test here for timestamp behavior
+                self.assertIsNotNone(a.dn.state.timestamp)
+                self.assertIsNotNone(a.dn.counter.timestamp)
+                self.assertIsNotNone(a.dn.value.timestamp)
+                self.assertIsNotNone(d.dn.cntr.timestamp)
+
+                self.assertEqual(d.dnEmpty, "remote")
+                self.assertIsNotNone(d.dnEmpty.timestamp)
+
+
                 self.assertEqual(a.dn.alarmCondition, AlarmCondition.NONE)
                 self.assertTrue(self.remote.done)
                 d.dn.value = 22
