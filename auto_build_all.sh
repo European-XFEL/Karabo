@@ -283,7 +283,7 @@ while [ -n "$1" ]; do
     shift
 done
 
-# selecting configuration CodeCoverage implies --runTests and --runIntegrationTests called by 
+# selecting configuration CodeCoverage implies --runTests and --runIntegrationTests called by
 # the code coverage function. Also, other options are disabled.
 # No need to run those separately, so we turn them off to explicitly in case the user specified them.
 if [ "$CONF" = "CodeCoverage" ]; then
