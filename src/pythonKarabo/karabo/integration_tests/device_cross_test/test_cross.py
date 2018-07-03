@@ -26,7 +26,6 @@ class Child(Configurable):
 class MiddlelayerDevice(DeviceClientBase):
     channelcount = 0
     rawchannelcount = 0
-
     value = Int32()
 
     child = Node(Child)
@@ -213,14 +212,15 @@ class Tests(DeviceTest):
         yield from proxy.send()
         self.assertEqual(self.device.channelcount, 2)
         yield from proxy.end()
-        self.assertIsNone(self.device.channeldata)
+        # The end of stream is no longer setting the data to None
+        self.assertEqual(self.device.channeldata.s, "hallo")
         self.assertEqual(self.device.channelmeta.source,
                          "boundDevice:output1")
-        self.assertEqual(self.device.channelcount, 3)
+        self.assertEqual(self.device.channelcount, 2)
         yield from proxy.send()
         self.assertEqual(self.device.channeldata.s, "hallo")
         self.assertEqual(self.device.channelmeta.source, "boundDevice:output1")
-        self.assertEqual(self.device.channelcount, 4)
+        self.assertEqual(self.device.channelcount, 3)
 
         proxy.output1.connect()
         task = background(waitUntilNew(proxy.output1.schema.s))
