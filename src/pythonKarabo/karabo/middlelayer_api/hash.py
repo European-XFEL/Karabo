@@ -91,6 +91,12 @@ class Enumable(object):
 
         return schema, attrs
 
+    def check(self, data):
+        # NOTE: The State.UNKNOWN is by default allowed for a state property!
+        if self.enum is State and data is State.UNKNOWN:
+            return
+        super().check(data)
+
     def toKaraboValue(self, data, strict=True):
         if not strict and not isinstance(data, self.enum):
             data = self.enum(data)
@@ -586,11 +592,6 @@ class Type(Descriptor, Registry):
             else:
                 self.options = [self.toKaraboValue(o, strict=strict).enum
                                 for o in options]
-                # NOTE: The state UNKNOWN for property 'state' is always
-                # allowed due to the proxy setting!
-                if self.enum is State and State.UNKNOWN not in self.options:
-                    self.options.append(
-                        self.toKaraboValue(State.UNKNOWN, strict=strict).enum)
 
     def toKaraboValue(self, data, strict=True):
         """Convert data into a KaraboValue
