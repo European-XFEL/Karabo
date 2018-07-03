@@ -65,7 +65,10 @@ class DeviceNode(String):
         if self.properties or self.commands:
             return proxy._current, {}
         else:
-            return proxy._deviceId, {}
+            deviceId = proxy.deviceId
+            data, attrs = super().toDataAndAttrs(deviceId)
+
+            return data, attrs
 
     def _copy_properties(self, data, swapped):
         """return a Hash that contains our properties in Hash data"""
@@ -75,7 +78,10 @@ class DeviceNode(String):
                 name, rename = rename, name
             val = data.get(rename)
             if val is not None:
+                attrs = data[rename, ...]
                 ret[name] = val
+                ret[name, ...].update(attrs)
+
         return ret
 
     def _setter(self, instance, value):
