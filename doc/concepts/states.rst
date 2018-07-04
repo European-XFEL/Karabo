@@ -32,6 +32,10 @@ or inheritance as given in the below diagram:
     "NORMAL" -> "STATIC"
     "NORMAL" -> "RUNNING"
     "RUNNING"[shape = box style=filled, fillcolor="#99CCFF"]
+    "ACQUIRING"[shape = box style=filled, fillcolor="#99CCFF"]
+    "RUNNING" -> "ACQUIRING"
+    "PROCESSING"[shape = box style=filled, fillcolor="#99CCFF"]
+    "RUNNING" -> "PROCESSING"
     "PASSIVE"[shape = box style=filled, fillcolor="#CCCCFF"]
     "STATIC" -> "PASSIVE"
     "ACTIVE"[shape = box style=filled, fillcolor="#78FF00"]
