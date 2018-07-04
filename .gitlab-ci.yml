@@ -47,6 +47,11 @@ before_script:
     - schedules
     - /^deps-mr-.+$/
 
+.converage_tests: &coverage-tests
+  <<: *test
+  only:
+    - schedules
+
 .deps_build_tests: &deps-build-tests
   script:
     - source ci/build "$CI_BUILD_NAME"
@@ -150,3 +155,10 @@ integration tests ubuntu16:
 integration tests ubuntu14:
   image: europeanxfel/karabo-ci:ubuntu-14
   <<: *integration-tests
+
+# code coverage build
+
+coverage tests centos7:
+  image: europeanxfel/karabo-ci:centos-7
+  <<: *coverage-tests
+
