@@ -375,7 +375,8 @@ class MiddleLayerDeviceServer(DeviceServerBase):
 
     @coslot
     def slotInstanceNew(self, id, info):
-        yield from super(DeviceServerBase, self).slotInstanceNew(id, info)
+        yield from super(MiddleLayerDeviceServer, self).slotInstanceNew(
+            id, info)
         if info.get("classId") == "TimeServer" and id == self.timeServerId:
             self._ss.connect(self.timeServerId, "signalTimeTick",
                              self.slotTimeTick)
@@ -383,7 +384,7 @@ class MiddleLayerDeviceServer(DeviceServerBase):
     @slot
     def slotInstanceGone(self, id, info):
         self.deviceInstanceMap.pop(id, None)
-        super(DeviceServerBase, self).slotInstanceGone(id, info)
+        super(MiddleLayerDeviceServer, self).slotInstanceGone(id, info)
 
 
 class BoundDeviceServer(DeviceServerBase):
