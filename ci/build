@@ -84,7 +84,6 @@ __deps_build() {
     popd
 }
 
-
 echo "Start building job: {$1}"
 
 JOB_SCOPE=$(echo $1 | cut -f1 -d' ')
