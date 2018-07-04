@@ -12,6 +12,23 @@ __integration_tests() {
     bash ./auto_build_all.sh Debug --runIntegrationTests
 }
 
+__coverage_tests() {
+    export SSH_USER_HOST=xdata@exflserv05
+    export SSH_KARABO_DIR=/var/www/html/karabo
+    export SSH_PREFIX=$SSH_USER_HOST:$SSH_KARABO_DIR
+    export CURL_PREFIX=http://exflserv05.desy.de/karabo
+    export REL_TAG=$CI_COMMIT_REF_NAME
+    export FRAMEWORK_DEST_DIR=karaboCoverageReport/$REL_TAG
+    export REL_OS_NAME=$(lsb_release -is)
+    export REL_OS_VERS_LONG=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
+    export REL_ARTIFACT_NAME=coverage_report_$REL_TAG.tar.gz
+    bash ./auto_build_all.sh CodeCoverage
+    cd ci/coverage/report
+    tar cfz $REL_ARTIFACT_NAME *report*.zip
+    sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_USER_HOST "mkdir -p $SSH_KARABO_DIR/$FRAMEWORK_DEST_DIR"
+    sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $REL_ARTIFACT_NAME $SSH_PREFIX/$FRAMEWORK_DEST_DIR
+}
+
 
 echo "Start to testing job: {$1}"
 
@@ -25,5 +42,6 @@ case "$JOB_SCOPE" in
     deps) __deps_build_tests ;;
     unit) __unit_tests ;;
     integration) __integration_tests ;;
+    coverage) __coverage_tests ;;
     *) echo "unknown job scope: $JOB_SCOPE" ;;
 esac
