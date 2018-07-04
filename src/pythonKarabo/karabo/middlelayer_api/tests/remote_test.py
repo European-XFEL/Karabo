@@ -51,8 +51,11 @@ class Nested(Configurable):
 
 class Remote(Injectable, Device):
 
-    # The state is explicitly overwritten, State UNKNOWN is always possible by
+    # The state is explicitly overwritten, State.UNKNOWN is always possible by
     # default!
+    # We test that a proxy can reach State.UNKNOWN even if it is removed
+    # from the allowed options
+
     state = Overwrite(options=[State.ON])
 
     done = Bool()
