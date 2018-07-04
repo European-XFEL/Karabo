@@ -13,10 +13,7 @@ as set of more general states, and *device type states*, which map closer
 to the type of hardware being controlled or to certain types
 of software devices, but also always map to a base state. Each base state has a
 assigned color coding, making it easy to view are devices state at first
-glance. The color coding has been chosen to match that
-of `Tango<www.tango-controls.org>` where appropriate, as users may already
-be familiar with this color scheme.
-
+glance.
 Device, type, base and meta states connections can be seen as a form
 or inheritance as given in the below diagram:
 
@@ -33,6 +30,8 @@ or inheritance as given in the below diagram:
     "KNOWN" -> "ERROR"
     "KNOWN" -> "DISABLED"
     "NORMAL" -> "STATIC"
+    "NORMAL" -> "RUNNING"
+    "RUNNING"[shape = box style=filled, fillcolor="#99CCFF"]
     "PASSIVE"[shape = box style=filled, fillcolor="#CCCCFF"]
     "STATIC" -> "PASSIVE"
     "ACTIVE"[shape = box style=filled, fillcolor="#78FF00"]
@@ -151,9 +150,20 @@ device state derived from it. It is the counterpart to ``ACTIVE``.
 
 .. graphviz::
 
+    digraph running {RUNNING [shape=box, style=filled, fillcolor="#99CCFF"]}
+
+The state ``RUNNING`` is a base state is related to data acquisition devices.
+This base state has two children, ``ACQUIRING`` and ``PROCESSING`` and is
+colored blueish to indicate that data is flowing.
+The ``ACQUIRING`` state is essentially used for detector devices when the data
+acquisition is active, while the ``PROCESSING`` state is present in downstream
+pipeline devices to show they are receiving and processing the detector data.
+
+.. graphviz::
+
     digraph changing {CHANGING [shape=box, style=filled, fillcolor="#00AAFF"]}
 
-The state ``CHANGING`` itself is a base state to the ``INCREASING`` and
+The state ``CHANGING`` is a base state to the ``INCREASING`` and
 ``DECREASING`` states. It may however  also directly be used, e.g. if a device
 is changing in a way that a directional indication does not make sense. It is
 the counterpart to the ``STATIC`` state. ``CHANGING`` and derived states should
@@ -371,6 +381,14 @@ in *trump* evaluation, where ``DISABLED`` is trumped by all other states and
 
         }
 
+        running
+        [
+            shape = box
+            style = filled
+            fillcolor = "#99CCFF"
+            label = "RUNNING"
+        ]
+
         subgraph cluster1 {
             label = "CHANGING";
             style = filled
@@ -429,7 +447,8 @@ in *trump* evaluation, where ``DISABLED`` is trumped by all other states and
         ]
 
         disabled -> active [lhead=cluster0]
-        increasing -> active [ltail=cluster1, lhead=cluster0, dir=back]
+        active  -> running [ltail=cluster0]
+        running -> increasing [lhead=cluster1]
         decreasing -> interlocked [ltail=cluster1]
         interlocked -> error
         error -> init
