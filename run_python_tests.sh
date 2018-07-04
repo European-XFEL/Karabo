@@ -13,7 +13,7 @@ NOSETESTS="python $(which nosetests)"
 COVERAGE_CONF_FILE=".coveragerc"
 
 # A directory to which the code coverage will be stored.
-CODE_COVERAGE_DIR_NAME="python_code_coverage_reports"
+CODE_COVERAGE_DIR_NAME="python_code_coverage_report"
 
 # A flag that indicates if sitecustomize.py file was created.
 SITE_CUSTOMIZE_FILE_CREATED=false
@@ -31,17 +31,25 @@ Available flags:
   --collectCoverage - Collect Python code coverage.
   --generateCoverageReport - Collect Python code coverage and generate coverage
         report.
+  --reportDir - A path where the code coverage report will be stored. If the
+        flag is not present, the report will be stored in project's root
+        directory (--rootDir).
   --clean - Remove all the code coverage information collected in the previous
         tests.
 
 What combination of flags you usually want to use:
 $ ./run_python_tests.sh --clean --runUnitTests --runIntegrationTests \\
 $       --collectCoverage --generateCoverageReport --rootDir <path>
-This will run the tests, collect the code coverage and generate a html code
-coverage report in '<root_dir_path>/$CODE_COVERAGE_DIR_NAME' directory.
+This will run the tests, collect the code coverage, generate a html code
+coverage report and store it to '<root_dir_path>/$CODE_COVERAGE_DIR_NAME'
+directory.
 
 The --rootDir <path> needs to point to a root directory of Karabo project. The
 provided path is used to find files needed by the code coverage tools.
+
+To specify where the report should be stored, the '--reportDir <path>' flag
+can be used. If the flag is not present, the report will be stored to
+the root directory of Karabo project.
 
 The --runUnitTests and --runIntegrationTests flags only run the unit and
 integration tests. So, if you want to only run the tests, run:
@@ -221,8 +229,23 @@ generateCodeCoverageReport() {
     echo HTML coverage reports generation complete
     echo
 
+    # Zip the report.
+
+    TIMESTAMP=$(date +%F_%H%M%S)
+    ZIP_CODE_COVERAGE_DIR_PATH=$CODE_COVERAGE_DIR_PATH'_'$TIMESTAMP'.zip'
+
+    PREV_DIR=$(pwd)
+    cd $CODE_COVERAGE_BASE_DIR
+
+    safeRunCommand zip -q -r $ZIP_CODE_COVERAGE_DIR_PATH $CODE_COVERAGE_DIR_NAME 
+
+    cd $(pwd)
+
+    # Remove code coverage directory, but not the zipped ones.
+    rm -rf $CODE_COVERAGE_DIR_PATH
+
     echo
-    echo "### The Python coverage report can be found at $CODE_COVERAGE_DIR_PATH/htmlcov_karabo/index.html."
+    echo "### The Python coverage report can be found at $ZIP_CODE_COVERAGE_DIR_PATH"
     echo
 }
 
@@ -284,6 +307,18 @@ else
                 KARABO_PROJECT_ROOT_DIR=$2
                 shift
                 ;;
+            --reportDir)
+                if ! [ -n "$2" ]; then
+                    echo "Error: The '--reportDir' flag was used but the path was not specified."
+                    echo "Specify the path."
+
+                    exit 1
+                fi
+
+                CODE_COVERAGE_BASE_DIR=$2
+                shift
+                ;;
+
             --help)
                 DISPLAY_HELP=true
                 ;;
@@ -311,8 +346,11 @@ if [ -z $KARABO_PROJECT_ROOT_DIR ]; then
     exit 1
 fi
 
-# full path to the test coverage report
-CODE_COVERAGE_DIR_PATH=$KARABO_PROJECT_ROOT_DIR/$CODE_COVERAGE_DIR_NAME
+if [ -z $CODE_COVERAGE_BASE_DIR ]; then
+    # If the --reportDir flag is not specified, then project's root directory is used.
+    CODE_COVERAGE_BASE_DIR=$KARABO_PROJECT_ROOT_DIR
+fi
+CODE_COVERAGE_DIR_PATH=$CODE_COVERAGE_BASE_DIR/$CODE_COVERAGE_DIR_NAME
 
 if $CLEAN; then
     clean

@@ -157,10 +157,12 @@ produceCodeCoverageReport() {
 
     # Most recent zip file - there mightbe others from previous runs
     local ZIP_FILE_NAME=`ls -t ./ci/coverage/report/*.zip | head -1`
+
     # produce initial Python coverage information
     safeRunCommand $scriptDir/run_python_tests.sh \
         --generateCoverageReport \
         --rootDir $scriptDir
+        --reportDir $scriptDir/ci/coverage/pyReport/python_code_coverage_report
 
     echo
     echo "### The C++ coverage results can be found at:"
