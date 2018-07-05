@@ -241,11 +241,9 @@ generateCodeCoverageReport() {
 
     cd $(pwd)
 
-    # Remove code coverage directory, but not the zipped ones.
-    rm -rf $CODE_COVERAGE_DIR_PATH
-
     echo
-    echo "### The Python coverage report can be found at $ZIP_CODE_COVERAGE_DIR_PATH"
+    echo "### The Python coverage report can be found at: $CODE_COVERAGE_DIR_PATH/htmlcov_karabo/index.html"
+    echo "### or in zipped form at: $ZIP_CODE_COVERAGE_DIR_PATH."
     echo
 }
 
