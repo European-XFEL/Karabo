@@ -2169,7 +2169,10 @@ void exportPyUtilSchema() {
                 .def("shape"
                      , &NDArrayElementWrap::shape, bp::arg("shape")
                      , bp::return_internal_reference<> ())
-
+                .def("unit", &NDArrayElement::unit
+                     , bp::return_internal_reference<> ())
+                .def("metricPrefix", &NDArrayElement::metricPrefix
+                     , bp::return_internal_reference<> ())
                 .def("observerAccess", &NDArrayElement::observerAccess
                      , bp::return_internal_reference<> ())
                 .def("userAccess", &NDArrayElement::userAccess

@@ -591,6 +591,9 @@ class  Schema_TestCase(unittest.TestCase):
         assert schema.getDefaultValue("exampleKey17.shape") == [2, 5, 0]
         assert schema.getDefaultValue("exampleKey18.shape") == [3, 2, 1]
 
+        assert schema.getUnit("exampleKey16.data") == Unit.DEGREE_CELSIUS
+        assert schema.getMetricPrefix("exampleKey16.data") == MetricPrefix.CENTI
+
         assert schema.isAccessReadOnly("exampleKey16")
         assert schema.isAccessReadOnly("exampleKey17")
         assert schema.isAccessReadOnly("exampleKey18")
