@@ -13,7 +13,7 @@ NOSETESTS="python $(which nosetests)"
 COVERAGE_CONF_FILE=".coveragerc"
 
 # A directory to which the code coverage will be stored.
-CODE_COVERAGE_DIR_NAME="python_code_coverage_report"
+CODE_COVERAGE_DIR_NAME="pyReport"
 
 # A flag that indicates if sitecustomize.py file was created.
 SITE_CUSTOMIZE_FILE_CREATED=false
@@ -201,7 +201,7 @@ runPythonIntegrationTests() {
 }
 
 generateCodeCoverageReport() {
-    # What to omit when generating html coverage reports reports.
+    # What to omit when generating html coverage reports.
     OMIT="*/site-packages/karabo/*tests*","*/site-packages/karabo/*_test.py"
 
     echo
@@ -232,18 +232,20 @@ generateCodeCoverageReport() {
     # Zip the report.
 
     TIMESTAMP=$(date +%F_%H%M%S)
-    ZIP_CODE_COVERAGE_DIR_PATH=$CODE_COVERAGE_DIR_PATH'_'$TIMESTAMP'.zip'
+    ZIP_FILE=$CODE_COVERAGE_DIR_NAME'_'$TIMESTAMP'.zip'
 
     PREV_DIR=$(pwd)
     cd $CODE_COVERAGE_BASE_DIR
 
-    safeRunCommand zip -q -r $ZIP_CODE_COVERAGE_DIR_PATH $CODE_COVERAGE_DIR_NAME 
+    safeRunCommand zip -q -r $ZIP_FILE $CODE_COVERAGE_DIR_NAME
+    safeRunCommand mv $ZIP_FILE $CODE_COVERAGE_DIR_NAME
 
-    cd $(pwd)
+    cd $PREV_DIR
 
     echo
-    echo "### The Python coverage report can be found at: $CODE_COVERAGE_DIR_PATH/htmlcov_karabo/index.html"
-    echo "### or in zipped form at: $ZIP_CODE_COVERAGE_DIR_PATH."
+    echo "### The Python coverage report can be found at:"
+    echo "### $CODE_COVERAGE_DIR_PATH/htmlcov_karabo/index.html"
+    echo "### or in zipped form at: $CODE_COVERAGE_DIR_PATH/$ZIP_FILE."
     echo
 }
 
