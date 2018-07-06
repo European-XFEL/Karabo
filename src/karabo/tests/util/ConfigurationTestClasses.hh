@@ -405,6 +405,14 @@ namespace configurationTest {
                     .readOnly().initialValue(std::vector<std::string>({"Hallo", "World"}))
                     .commit();
 
+            NDARRAY_ELEMENT(expected).key("exampleKey10")
+                    .displayedName("Example key 10")
+                    .dtype(karabo::util::Types::UINT16)
+                    .unit(Unit::DEGREE_CELSIUS)
+                    .metricPrefix(MetricPrefix::CENTI)
+                    .shape("3,2")
+                    .commit();
+
             INT32_ELEMENT(expected).key("sampleKey")
                     .assignmentOptional().defaultValueFromString("10")
                     .reconfigurable()
@@ -431,7 +439,7 @@ namespace configurationTest {
                     .commit();
 
             OVERWRITE_ELEMENT(schema).key("exampleKey3")
-                    .setNewAlias<int>(20)
+                    .setNewAlias<int>(30)
                     .commit();
 
 

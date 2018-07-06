@@ -35,6 +35,17 @@ namespace karabo {
                 m_node->setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
                 m_node->setAttribute<int>(KARABO_SCHEMA_ARCHIVE_POLICY, Schema::EVERY_EVENT);
 
+                const UnitType unit = Unit::NOT_ASSIGNED;
+                std::pair<std::string, std::string> names = getUnit(unit);
+                m_node->template setAttribute<int>(KARABO_SCHEMA_UNIT_ENUM, unit);
+                m_node->setAttribute(KARABO_SCHEMA_UNIT_NAME, names.first);
+                m_node->setAttribute(KARABO_SCHEMA_UNIT_SYMBOL, names.second);
+
+                const MetricPrefixType metricPrefix = MetricPrefix::NONE;
+                names = getMetricPrefix(metricPrefix);
+                m_node->template setAttribute<int>(KARABO_SCHEMA_METRIC_PREFIX_ENUM, metricPrefix);
+                m_node->setAttribute(KARABO_SCHEMA_METRIC_PREFIX_NAME, names.first);
+                m_node->setAttribute(KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, names.second);
             }
         };
 
