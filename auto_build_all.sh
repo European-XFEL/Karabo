@@ -162,7 +162,7 @@ produceCodeCoverageReport() {
     safeRunCommand $scriptDir/run_python_tests.sh \
         --generateCoverageReport \
         --rootDir $scriptDir \
-        --reportDir $scriptDir/ci/coverage/pyReport/python_code_coverage_report
+        --reportDir $scriptDir/ci/coverage
 
     echo
     echo "### The C++ coverage results can be found at:"
