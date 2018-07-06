@@ -161,7 +161,7 @@ produceCodeCoverageReport() {
     # produce initial Python coverage information
     safeRunCommand $scriptDir/run_python_tests.sh \
         --generateCoverageReport \
-        --rootDir $scriptDir
+        --rootDir $scriptDir \
         --reportDir $scriptDir/ci/coverage/pyReport/python_code_coverage_report
 
     echo
