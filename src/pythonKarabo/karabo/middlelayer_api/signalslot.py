@@ -215,11 +215,12 @@ class SignalSlotable(Configurable):
     def slotStopTrackingExistenceOfConnection(self, *args):
         print('received stopTracking...', args)
 
-    @slot
+    @coslot
     def slotGetOutputChannelInformation(self, ioChannelId, processId):
         ch = getattr(self, ioChannelId, None)
         if isinstance(ch, NetworkOutput):
-            ret = ch.getInformation("{}:{}".format(self.deviceId, ioChannelId))
+            ret = yield from ch.getInformation("{}:{}".format(
+                self.deviceId, ioChannelId))
             ret["memoryLocation"] = "remote"
             return True, ret
         else:
