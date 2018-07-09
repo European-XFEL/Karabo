@@ -24,11 +24,151 @@ recipient of the emitted signals. If restarted with the same id as before
 (as usually is done with devices and servers), these remnants are cleaned.
 
 **************************
+What's New in Karabo 2.2.3
+**************************
+
+Detailed Merge-Log
+==================
+
+bound/cpp core
+++++++++++++++
+Fix integer overflow in TimeDuration::operator*=(factor) !2605
+C++: Fixes in exception trace handling (race and leakage) !2600
+Add SignalSlotable::asyncDisconnect, with tests !2611
+Use asyncDisconnect in DeviceClient's ageing !2616
+Fix SEGV in EventLoop !2609
+Fix typo InGetAlarmCondition !2626
+C++ device server process receives each broadcast message only once. !2613
+Shorten message time to live to 2 minutes, some C++/bound clean-up. !2638
+FEAT: added setSpecialDisplayType to bound Vectors !2629
+DeviceClient: always postpone device disconnection by 15 s !2659
+Openmqc: Increase lengths of JMS queues before messages are dropped. !2654
+Make SignalSlotable::AsyncReply public !2673
+FW: Test runtime attrs !2677
+
+
+core Devices
+++++++++++++
+Correct scene of run configurator !2601
+Temporary disable daqPolicy feature in RunConfigurationGroup !2603
+Macro capability --- Devices that provide Macro's !2594
+FIX: Runconfigurator, groupId not present and None sources protection at start !2622
+RunConfigurationGroup: add group owner information !2631
+Update RunconfigurationGroup tests !2646
+
+
+Dependencies and deployment
++++++++++++++++++++++++++++
+Matplotlib library update !2562
+fix karabo-xterm following current file !2599
+Update to boost166 !2607
+Fix compilation/linking after move to Boost 1.66 !2647
+Make compiler happy by adding returns after throwing an exception. !2650
+Deps mr msgpack 0.5.6 !2653
+FW: Declare cross_test boundpy-mdl as integration test !2637
+
+
+Middlelayer core
+++++++++++++++++
+
+MDL: Feature vector min and max size !2606
+MDL: Add timestamp, log level and id to MDL logs !2643
+MDL: Move global alarm condition to ADMIN !2645
+MDL: Notify outer world of our schema changes after attr setting !2689
+
+
+Graphical user interface
+++++++++++++++++++++++++
+GUI: Open Device Scene from project dialog !2592
+GUI: Scene check fix !2602
+GUI: Store Multiple GUI servers !2615
+GUI: Searchable Project Panel !2621
+GUI: Replace walking traits with a recursion on children !2624
+GUI: manually validate floats only in standard notation !2610
+GUI: added filename to scene runner !2625
+GUI: Fix/remove float recasting as they disturb !2627
+FIX: Check colorbool action accordingly !2632
+GUI: Device Scene Links !2617
+GUI: fix progressbar context menu !2633
+GUI: put forgotten pyqtSlots in network and pep a bit !2635
+Implement forgotten pyqtSlots !2634
+FEAT: Added a panel runner for device scene links !2639
+GUI: Combobox should not insert Hostname on Enter Key Press !2640
+GUI: No reupdate also for vector floats !2641
+GUI: Save and fix the username for the time being !2649
+GUI: Show state color in configurator !2642
+GUI: Fix accesslevel switch !2648
+Refactor login for a cleaner code !2652
+GUI: Singlebit resizable !2630
+GUI: Fix the hostname in login and provide first unit test for network !2655
+GUI: setting relative error as default (#24284) !2608
+Revamp Windows Instructions !2657
+GUI: Precision validation with own validator for floating numbers !2656
+GUI: Change priority of state color widget and test !2658
+GUI: Remove obsolete code !2663
+GUI: Slot Confirmation dialog !2636
+GUI: Fix settings of values although invalid !2665
+GUI: Act correctly on decline - e.g. palette color !2666
+GUI: FIX revert globally on scene !2667
+Fix/do not accept invalid values !2662
+GUI: Improve list controller validation, no setting of invalid values and color setting !2671
+GUI: Fix Project Filter status !2674
+GUI: Show global alarm colors in configurator !2672
+GUI: Fix configurator collapsing after value update !2678
+GUI: Remove alarmIcon from state fields !2680
+GUI: Use property alarm colors for global condition in configurator !2681
+GUI: Introduce alarm widget !2679
+GUI: Close project - default save project is NO !2683
+GUI: FIX toolbar in configurator !2684
+GUI: Fix schema injection for command widgets !2676
+GUI: FIX configuration name edit/add in projects !2682
+GUI: move command widget from simple to complex !2687
+GUI: FIX Asynchronous value updates in configurator !2686
+GUI: Fix pipeline connections after device restart while monitoring !2688
+GUI: Fix  full range trendline !2685
+
+
+**************************
 What's New in Karabo 2.2.4
 **************************
 
-C++ and Bound Python
-=====================
+The **most relevant improvements** and fixes are:
+
+ikarabo enhancements
+++++++++++++++++++++
+
+- getServers() and getDevices() account for visibility (!2761, !2774)
+- Pretty Print output (!2766)
+- Add getSchema and getConfiguration (!2707, !2720)
+
+
+Karabo Core
++++++++++++
+
+MDL: Harmonize device interface with C++/bound - slotClearLock, lastCommand, process id, input channel EndOfStream handler (!2799, !2744 !2845, !2742)
+MDL: Pipelines automatically reconnect (!2855, !2867)
+MDL: Full trainID integration (!2694)
+C++, bound: Speed up NDArray (de-) serialization for pipelines processing (!2725, !2783, !2775)
+C++, bound: Fix runtime attribute setting for reconfigurable parameters (!2717, !2726)
+C++, bound: Do not ignore empty keys in Hash (!2706)
+C++, bound: Hash printing suppresses content of long vectors/NDArrays (!2698, !2739)
+Add State.PROCESSING to Karabo (!2806)
+Add binning information to ImageData (!2691)
+Bound: Fix setting of timestamp (!2722)
+
+
+Karabo GUI
+++++++++++
+
+- GUI: Fix that sometimes project data was stored in wrong domain (!2757)
+- Flickering alarms do not block GUI anymore (!2772)
+- GUI: Implement macro code editor with line numbers and highlight (!2779)
+- GUI: Pop-up for properties in the configurator can be freezed to allow copy/paste from it (!2850)
+- GUI: Clean-up icons, add new ones (!2751, !2750,!2749, !2718)
+- GUI: Easier precision placement of scene items (!2745, !2723)
+- GUI: Display YUV images (!2661)
+
+
 
 Empty Key Handling of Hash
 +++++++++++++++++++++++++++
