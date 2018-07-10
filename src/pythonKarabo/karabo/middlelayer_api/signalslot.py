@@ -390,6 +390,9 @@ class SignalSlotable(Configurable):
             return done["call"]
         elif "newdevice" in done:
             return (yield from self.call(deviceId, slot, *args))
+        elif error.items():
+            raise RuntimeError("Call {} failed on device {}".format(
+                slot, deviceId))
         else:
             raise AssertionError("this should not happen")
 
