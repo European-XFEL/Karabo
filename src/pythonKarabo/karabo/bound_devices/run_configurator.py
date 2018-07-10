@@ -16,7 +16,7 @@ from karabo.common.api import (
     KARABO_SCHEMA_DISPLAY_TYPE_SCENES as DT_SCENES)
 from karabo.common.scenemodel.api import (
     BoxLayoutModel, DeviceSceneLinkModel, DisplayCommandModel,
-    FixedLayoutModel, LabelModel, RunConfiguratorModel, SceneModel, 
+    FixedLayoutModel, LabelModel, RunConfiguratorModel, SceneModel,
     SceneTargetWindow, write_scene
 )
 from .run_configuration_group import RunControlDataSource
@@ -84,7 +84,7 @@ class _RunConfiguratorGroup(object):
             .description('Overall list of data sources and their attributes')
             .setColumns(sourceRow)
             .assignmentOptional().defaultValue([])
-            .commit(),
+            .reconfigurable().commit(),
         )
 
 
