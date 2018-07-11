@@ -12,8 +12,8 @@ from pint import DimensionalityError
 
 from karabo.middlelayer import (
     AlarmCondition, background, Bool, Configurable, connectDevice,
-    decodeBinary, Device, DeviceNode, execute, Float, getDevice, isAlive,
-    isSet, Int32, KaraboError, lock, MetricPrefix, Node, Overwrite,
+    decodeBinary, Device, DeviceNode, execute, filterByTags, Float, getDevice,
+    isAlive, isSet, Int32, KaraboError, lock, MetricPrefix, Node, Overwrite,
     Queue, setNoWait, setWait, Slot, slot, State, String, unit, Unit,
     VectorChar, VectorInt16, VectorString, VectorFloat, waitUntil,
     waitUntilNew)
@@ -65,7 +65,7 @@ class Remote(Injectable, Device):
     unit_int = Int32(unitSymbol=Unit.METER)
     unit_float = Float(unitSymbol=Unit.SECOND,
                        metricPrefixSymbol=MetricPrefix.MILLI)
-    string = String()
+    string = String(tags=["AString"])
 
     unit_vector_int = VectorInt16(unitSymbol=Unit.METER_PER_SECOND)
     unit_vector_float = VectorFloat(unitSymbol=Unit.DEGREE)
@@ -174,6 +174,7 @@ class Local(Device):
     @coroutine
     def onInitialization(self):
         self.state = State.ON
+
 
 class Tests(DeviceTest):
     """The tests in this class run on behalf of the device "local".
@@ -368,6 +369,13 @@ class Tests(DeviceTest):
         with (yield from getDevice("remote")) as d:
             self.assertEqual(d.state, State.UNKNOWN)
             self.assertEqual(d.alarmCondition, AlarmCondition.NONE)
+
+    @async_tst
+    def test_remotetag_proxy(self):
+        with (yield from getDevice("remote")) as d:
+            descriptors = filterByTags(d, "AString")
+            paths = [k.longkey for k in descriptors]
+            self.assertEqual(["string"], paths)
 
     @async_tst
     def test_disconnect(self):
@@ -823,7 +831,6 @@ class Tests(DeviceTest):
 
                 self.assertEqual(d.dnEmpty, "remote")
                 self.assertIsNotNone(d.dnEmpty.timestamp)
-
 
                 self.assertEqual(a.dn.alarmCondition, AlarmCondition.NONE)
                 self.assertTrue(self.remote.done)
