@@ -386,7 +386,9 @@ class SignalSlotable(Configurable):
         done, pending, error = yield from firstCompleted(
             newdevice=self._new_device_futures[deviceId],
             call=self.call(deviceId, slot, *args))
-        if "call" in done:
+        if error:
+            raise error.popitem()[1]
+        elif "call" in done:
             return done["call"]
         elif "newdevice" in done:
             return (yield from self.call(deviceId, slot, *args))
