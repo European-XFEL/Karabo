@@ -760,7 +760,11 @@ def getDescriptors(proxy):
     def recurse(proxy):
         klass = proxy.__class__
         for key in proxy._allattrs:
-            descr = getattr(klass, key)
+            descr = getattr(klass, key, None)
+            if descr is None:
+                # NOTE: This protection is solely for the unsupported
+                # NodeTypes, e.g. ListOfNodes
+                continue
             if isinstance(descr, ProxyNodeBase):  # recurse Nodes
                 yield from recurse(getattr(proxy, descr.key))
             else:
