@@ -1,27 +1,210 @@
-************************
-What's New in Karabo 2.2
-************************
+
+****************************
+What's New in Karabo 2.2.4.1
+****************************
+
+A hotfix release for the middlelayer api. Timestamp behavior was fixed for
+device node. Servers reconnect now to the timeserver.
+UNKNOWN state is always allowed for proxies, which is required since the state
+is set to UNKNOWN if the underlying device is gone.
 
 
-C++ and Bound Python
-======================
+Detailed Merge-Log
+==================
 
-Standalone DeviceClient
-+++++++++++++++++++++++++
+Middlelayer core
+++++++++++++++++
+- FIX bound mdl pipeline integration test !2883
+- MDL: Always allow State UNKNOWN for state property in descriptor !2882
+- MDL: Fix device node timestamp handling !2878
+- MDL: Reconnect device server to timeServer !2877
+- MDL: Provide possiblity to explicitly close outputchannel !2874
 
-The constructors to create a standalone `DeviceClient` do not take anymore
-arguments about the broker connection. They always use the default behaviour.
+Graphical user interface
+++++++++++++++++++++++++
+- GUI: Protect trendlines against -np.inf and np.inf !2870
 
-Instead, one can now specify the instanceId of the `DeviceClient` object
-instead of getting a default one generated: `DeviceClient(instanceId)`.
-In fact, that is the recommended
-way since otherwise a program that crashes after creating a standalone
-`DeviceClient` may leave remnants in the system, even if restarted.
 
-These remnants are useless signal subscriptions since the restarted program
-has a new instanceId. They can potentially slow down the broker and every
-recipient of the emitted signals. If restarted with the same id as before
-(as usually is done with devices and servers), these remnants are cleaned.
+**************************
+What's New in Karabo 2.2.4
+**************************
+
+The **most relevant improvements** and fixes are:
+
+ikarabo enhancements
+++++++++++++++++++++
+- getServers() and getDevices() account for visibility (!2761, !2774)
+- Pretty Print output (!2766)
+- Add getSchema and getConfiguration (!2707, !2720)
+
+Karabo Core
++++++++++++
+- MDL: Harmonize device interface with C++/bound - slotClearLock, lastCommand, process id, input channel EndOfStream handler (!2799, !2744 !2845, !2742)
+- MDL: Pipelines automatically reconnect (!2855, !2867)
+- MDL: Full trainID integration (!2694)
+- C++, bound: Speed up NDArray (de-) serialization for pipelines processing (!2725, !2783, !2775)
+- C++, bound: Fix runtime attribute setting for reconfigurable parameters (!2717, !2726)
+- C++, bound: Do not ignore empty keys in Hash (!2706)
+- C++, bound: Hash printing suppresses content of long vectors/NDArrays (!2698, !2739)
+- Add State.PROCESSING to Karabo (!2806)
+- Add binning information to ImageData (!2691)
+- Bound: Fix setting of timestamp (!2722)
+
+Karabo GUI
+++++++++++
+- GUI: Fix that sometimes project data was stored in wrong domain (!2757)
+- Flickering alarms do not block GUI anymore (!2772)
+- GUI: Implement macro code editor with line numbers and highlight (!2779)
+- GUI: Pop-up for properties in the configurator can be freezed to allow copy/paste from it (!2850)
+- GUI: Clean-up icons, add new ones (!2751, !2750,!2749, !2718)
+- GUI: Easier precision placement of scene items (!2745, !2723)
+- GUI: Display YUV images (!2661)
+
+
+Empty Key Handling of Hash
++++++++++++++++++++++++++++
+
+Empty strings are now valid keys of a `Hash`.
+
+Before, a completely empty path (`aHash.set("", something)`) let to a crash and
+empty keys as part of a path with sub-keys were simply ignored.
+That means that `aHash.set("a..b.", something)` had the same effect as
+`aHash.set("a.b", something)`, i.e. a path with the two sub-keys `a` and `b`,
+whereas in Karabo 2.2.4 the path of the former actually differs and has four
+sub-keys of which two are empty keys.
+
+
+Detailed Merge-Log
+==================
+
+bound/cpp core
+++++++++++++++
+- Bound: Fix bug in setNewOptions. !2829
+- Bound: Fix argument list for binding call, request(NoWait) and reply !2827
+- Bound: Add binding for no copy PP and unit tests !2770
+- Bound: fix device class factory for multiple inheritance !2778
+- Bound: Fix runtime attribute setting for reconfigurable parameters !2726
+- C++: Fix runtime attribute setting for reconfigurable parameters !2717
+- C++: Do not ignore empty keys inHash !2706
+- C++: Fix static const casting !2814
+- C++: Fixing the conversion of Time attributes to Timestamp !2722
+- Avoid exact float comparison in unit test of DeviceClient !2753
+- Stream line pipeline integration tests !2771
+- Add State.PROCESSING to Karabo !2806
+- Check whether to create a parent dir in saveToFile !2816
+- Suppress content of long vectors (size > 100) when printing Hash !2698
+- speed up large array serialization and pipelines processing !2725
+- Multiple OutputChannel::write should reflect in multiple sources !2783
+- Avoid one copy when reading (pipeline) !2775
+- Improve visual representation of ByteArray !2739
+- Make useTimeServer obsolete !2765
+- Add ImageData binning information !2691
+- Fix integration test, alarms !2853
+
+core Devices
+++++++++++++
+- ALARM: Alarm service throttle update !2772
+- GUISERVER: instantiate devices faster !2716
+- RunConfigurationGroup: create directory before saving configuration !2713
+
+Dependencies and deployment
++++++++++++++++++++++++++++
+- DEP: upgrade guidata, ply, and setuptools dependencies !2797
+- DEP: Add pyyaml 3.12 to resources !2817
+- DEP: adding flaky to our python distribution !2780
+- DEP: improve karathon Python linking !2784
+- DEP: Add pyqtgraph as dependency package !2791
+- Make build more robust !2803
+- Delete slipped in files !2795
+- prepare Karabo for Python 3.6 !2794
+- FEAT: add branch option to develop mode !2815
+- FIX: aborted installation exits process !2823
+- FIX: small change in webserver up definition !2851
+- FIX: python dependency bundle return value !2849
+- Fix "karabo install" with no-clobber option !2848
+- karabo.py's run_cmd prints error message in case of failure !2695
+- Add zmq to extern/resources !2703
+
+Middlelayer core
+++++++++++++++++
+- MDL: Implement slotClearLock in base device !2799
+- MDL: fix slotInstanceNew in signalslotable !2798
+- MDL: Set proxy state to unknown when the underlying device is gone !2824
+- MDL: EndOfStream handler for input channel !2845
+- MDL: Fix utils for timestamp !2844
+- MDL: fix allowedStates slot protection !2769
+- MDL: print traceback if server gets stuck !2768
+- MDL: Update instanceInfo hash with device status !2767
+- MDL: fix pretty display formatting on cmd line !2777
+- MDL: Acknowledge server shutdown with serverId !2764
+- MDL: Provide slotDeviceGone for boundServers !2756
+- MDL: add lastCommand to base device !2744
+- MDL: StateSignifier Wrapper for newest timestamp !2752
+- MDL: Add process ID to devices !2742
+- MDL: Provide karabo version of the device server !2741
+- MDL: FIX table clear and pop from external device, proxy !2732
+- MDL: Cleanup the leafType situation !2714
+- MDL: Extend time Mixin test !2719
+- MDL: Automatic pipeline reconnect !2855
+- MDL: Proxies don't track outputchannels and thus don't reconnect !2867
+
+Graphical user interface
+++++++++++++++++++++++++
+- GUI: Change a few context menu's to Pascal case !2862
+- GUI: Cache and display frozen updates in PopUp !2850
+- GUI: Fix device scene link background and slot binding in Label Widget !2840
+- GUI: TableView for ReadOnly Tables in Configurator !2835
+- GUI: Fix bug regarding #25188 - hints and dropdown were black !2833
+- GUI: Fix spinbox and double spinbox locale !2821
+- GUI: Add several confirmation dialogs for deleting project elements !2818
+- GUI: Change text of 'Save project as..' !2805
+- GUI: Fix scattered bugs in project dialog !2810
+- GUI: Save As -> Save as !2808
+- GUI: Fix, eval widget can handle Undefined !2807
+- GUI: Speed up start/stop monitoring event - don't erase topology layout on event !2786
+- GUI: Log messages broadcast are optimized !2785
+- GUI: fix the GUI manager test !2802
+- GUI: Disable scene editing when the scene is not attached to project !2800
+- GUI: Performance update topology alarms !2790
+- GUI: Reset freeze on new popup !2789
+- GUI: Implement macro code editor with line numbers and highlight !2779
+- GUI: Fix alarm system behavior in topology and project panel !2763
+- GUI: Performance update topology !2759
+- GUI: Fix: Cache the loaded domain for the entire GUI session !2757
+- GUI: Add missing vacuum icons: Valve with motor, mass flow control, gas… !2751
+- GUI: Cleanup standard icons part 2 !2750
+- GUI: Cleanup standard icons part 1 !2749
+- GUI: Ignore corrupted project devices !2747
+- GUI: Fine-tune the margins of displaywidgets !2746
+- GUI: Enable to move and resize scene items by dialog !2745
+- GUI: Improve (fix) display tablelement and more on invalid indices !2740
+- GUI: Handle broker topic information !2743
+- GUI: validator for DeviceID !2738
+- GUI: Better context text when shutting down server/device in navigation panel !2736
+- GUI: Set window flags for project dialog !2735
+- GUI: Refactor server dialog !2731
+- GUI: Give pop-up a chance to freeze information !2730
+- GUI: Don't create devices without classId !2729
+- GUI: Set initial stylesheet of eval and label !2727
+- GUI: Bug fix. DeviceLink opens a scene when not instantiated the device !2690
+- GUI: Implement alarm background for widgets !2693
+- GUI: YUV images are displayed as Monochromatic instead of silently discarded !2661
+- GUI: Change stylesheet of command widget !2705
+- GUI: FINE_COLOR -> ALL_OK_COLOR !2699
+- GUI: Add missing vacuum pump icons to standard icons !2718
+- GUI: Make items movable on scene by actions !2723
+- GUI: Add min and max size AND Train Id to pop-up in configurator !2701
+- Update documentation for the GUI !2614
+- FW: Remove old GUI from Karabo !2715
+
+ikarabo
++++++++
+- ikarabo: getServers() accounts the visibility level of servers !2761
+- ikarabo: getDevices accounts visibility of devices !2774
+- ikarabo: Pretty Print output, especially for IKarabo !2766
+- ikarabo: add getSchema and getConfiguration !2707
+- ikarabo: Return full schema object !2720
+
 
 **************************
 What's New in Karabo 2.2.3
@@ -46,7 +229,6 @@ bound/cpp core
 - Make SignalSlotable::AsyncReply public !2673
 - FW: Test runtime attrs !2677
 
-
 core Devices
 ++++++++++++
 - Correct scene of run configurator !2601
@@ -55,7 +237,6 @@ core Devices
 - FIX: Runconfigurator, groupId not present and None sources protection at start !2622
 - RunConfigurationGroup: add group owner information !2631
 - Update RunconfigurationGroup tests !2646
-
 
 Dependencies and deployment
 +++++++++++++++++++++++++++
@@ -67,15 +248,12 @@ Dependencies and deployment
 - Deps mr msgpack 0.5.6 !2653
 - FW: Declare cross_test boundpy-mdl as integration test !2637
 
-
 Middlelayer core
 ++++++++++++++++
-
 - MDL: Feature vector min and max size !2606
 - MDL: Add timestamp, log level and id to MDL logs !2643
 - MDL: Move global alarm condition to ADMIN !2645
 - MDL: Notify outer world of our schema changes after attr setting !2689
-
 
 Graphical user interface
 ++++++++++++++++++++++++
@@ -127,222 +305,25 @@ Graphical user interface
 - GUI: Fix pipeline connections after device restart while monitoring !2688
 - GUI: Fix  full range trendline !2685
 
+************************
+What's New in Karabo 2.2
+************************
 
-**************************
-What's New in Karabo 2.2.4
-**************************
+C++ and Bound Python
+======================
 
-The **most relevant improvements** and fixes are:
+Standalone DeviceClient
++++++++++++++++++++++++++
+The constructors to create a standalone `DeviceClient` do not take anymore
+arguments about the broker connection. They always use the default behaviour.
 
-ikarabo enhancements
-++++++++++++++++++++
+Instead, one can now specify the instanceId of the `DeviceClient` object
+instead of getting a default one generated: `DeviceClient(instanceId)`.
+In fact, that is the recommended
+way since otherwise a program that crashes after creating a standalone
+`DeviceClient` may leave remnants in the system, even if restarted.
 
-- getServers() and getDevices() account for visibility (!2761, !2774)
-- Pretty Print output (!2766)
-- Add getSchema and getConfiguration (!2707, !2720)
-
-
-Karabo Core
-+++++++++++
-
-MDL: Harmonize device interface with C++/bound - slotClearLock, lastCommand, process id, input channel EndOfStream handler (!2799, !2744 !2845, !2742)
-MDL: Pipelines automatically reconnect (!2855, !2867)
-MDL: Full trainID integration (!2694)
-C++, bound: Speed up NDArray (de-) serialization for pipelines processing (!2725, !2783, !2775)
-C++, bound: Fix runtime attribute setting for reconfigurable parameters (!2717, !2726)
-C++, bound: Do not ignore empty keys in Hash (!2706)
-C++, bound: Hash printing suppresses content of long vectors/NDArrays (!2698, !2739)
-Add State.PROCESSING to Karabo (!2806)
-Add binning information to ImageData (!2691)
-Bound: Fix setting of timestamp (!2722)
-
-
-Karabo GUI
-++++++++++
-
-- GUI: Fix that sometimes project data was stored in wrong domain (!2757)
-- Flickering alarms do not block GUI anymore (!2772)
-- GUI: Implement macro code editor with line numbers and highlight (!2779)
-- GUI: Pop-up for properties in the configurator can be freezed to allow copy/paste from it (!2850)
-- GUI: Clean-up icons, add new ones (!2751, !2750,!2749, !2718)
-- GUI: Easier precision placement of scene items (!2745, !2723)
-- GUI: Display YUV images (!2661)
-
-
-
-Empty Key Handling of Hash
-+++++++++++++++++++++++++++
-
-Empty strings are now valid keys of a `Hash`.
-
-Before, a completely empty path (`aHash.set("", something)`) let to a crash and
-empty keys as part of a path with sub-keys were simply ignored.
-That means that `aHash.set("a..b.", something)` had the same effect as
-`aHash.set("a.b", something)`, i.e. a path with the two sub-keys `a` and `b`,
-whereas in Karabo 2.2.4 the path of the former actually differs and has four
-sub-keys of which two are empty keys.
-
-
-Detailed Merge-Log
-==================
-
-bound/cpp core
-++++++++++++++
-- Bound: Fix bug in setNewOptions. !2829
-- Bound: Fix argument list for binding call, request(NoWait) and reply !2827
-- Bound: Add binding for no copy PP and unit tests !2770
-- Bound: fix device class factory for multiple inheritance !2778
-- Bound: Fix runtime attribute setting for reconfigurable parameters !2726
-- C++: Fix runtime attribute setting for reconfigurable parameters !2717
-- C++: Do not ignore empty keys inHash !2706
-- C++: Fix static const casting !2814
-- C++: Fixing the conversion of Time attributes to Timestamp !2722
-- Avoid exact float comparison in unit test of DeviceClient !2753
-- Stream line pipeline integration tests !2771
-- Add State.PROCESSING to Karabo !2806
-- Check whether to create a parent dir in saveToFile !2816
-- Suppress content of long vectors (size > 100) when printing Hash !2698
-- speed up large array serialization and pipelines processing !2725
-- Multiple OutputChannel::write should reflect in multiple sources !2783
-- Avoid one copy when reading (pipeline) !2775
-- Improve visual representation of ByteArray !2739
-- Make useTimeServer obsolete !2765
-- Add ImageData binning information !2691
-- Fix integration test, alarms !2853
-
-
-core Devices
-++++++++++++
-- ALARM: Alarm service throttle update !2772
-- GUISERVER: instantiate devices faster !2716
-- RunConfigurationGroup: create directory before saving configuration !2713
-
-
-Dependencies and deployment
-+++++++++++++++++++++++++++
-- DEP: upgrade guidata, ply, and setuptools dependencies !2797
-- DEP: Add pyyaml 3.12 to resources !2817
-- DEP: adding flaky to our python distribution !2780
-- DEP: improve karathon Python linking !2784
-- DEP: Add pyqtgraph as dependency package !2791
-- Make build more robust !2803
-- Delete slipped in files !2795
-- prepare Karabo for Python 3.6 !2794
-- FEAT: add branch option to develop mode !2815
-- FIX: aborted installation exits process !2823
-- FIX: small change in webserver up definition !2851
-- FIX: python dependency bundle return value !2849
-- Fix "karabo install" with no-clobber option !2848
-- karabo.py's run_cmd prints error message in case of failure !2695
-- Add zmq to extern/resources !2703
-
-
-Middlelayer core
-++++++++++++++++
-- MDL: Implement slotClearLock in base device !2799
-- MDL: fix slotInstanceNew in signalslotable !2798
-- MDL: Set proxy state to unknown when the underlying device is gone !2824
-- MDL: EndOfStream handler for input channel !2845
-- MDL: Fix utils for timestamp !2844
-- MDL: fix allowedStates slot protection !2769
-- MDL: print traceback if server gets stuck !2768
-- MDL: Update instanceInfo hash with device status !2767
-- MDL: fix pretty display formatting on cmd line !2777
-- MDL: Acknowledge server shutdown with serverId !2764
-- MDL: Provide slotDeviceGone for boundServers !2756
-- MDL: add lastCommand to base device !2744
-- MDL: StateSignifier Wrapper for newest timestamp !2752
-- MDL: Add process ID to devices !2742
-- MDL: Provide karabo version of the device server !2741
-- MDL: FIX table clear and pop from external device, proxy !2732
-- MDL: Cleanup the leafType situation !2714
-- MDL: Extend time Mixin test !2719
-- MDL: Automatic pipeline reconnect !2855
-- MDL: Proxies don't track outputchannels and thus don't reconnect !2867
-
-
-Graphical user interface
-++++++++++++++++++++++++
-- GUI: Change a few context menu's to Pascal case !2862
-- GUI: Cache and display frozen updates in PopUp !2850
-- GUI: Fix device scene link background and slot binding in Label Widget !2840
-- GUI: TableView for ReadOnly Tables in Configurator !2835
-- GUI: Fix bug regarding #25188 - hints and dropdown were black !2833
-- GUI: Fix spinbox and double spinbox locale !2821
-- GUI: Add several confirmation dialogs for deleting project elements !2818
-- GUI: Change text of 'Save project as..' !2805
-- GUI: Fix scattered bugs in project dialog !2810
-- GUI: Save As -> Save as !2808
-- GUI: Fix, eval widget can handle Undefined !2807
-- GUI: Speed up start/stop monitoring event - don't erase topology layout on event !2786
-- GUI: Log messages broadcast are optimized !2785
-- GUI: fix the GUI manager test !2802
-- GUI: Disable scene editing when the scene is not attached to project !2800
-- GUI: Performance update topology alarms !2790
-- GUI: Reset freeze on new popup !2789
-- GUI: Implement macro code editor with line numbers and highlight !2779
-- GUI: Fix alarm system behavior in topology and project panel !2763
-- GUI: Performance update topology !2759
-- GUI: Fix: Cache the loaded domain for the entire GUI session !2757
-- GUI: Add missing vacuum icons: Valve with motor, mass flow control, gas… !2751
-- GUI: Cleanup standard icons part 2 !2750
-- GUI: Cleanup standard icons part 1 !2749
-- GUI: Ignore corrupted project devices !2747
-- GUI: Fine-tune the margins of displaywidgets !2746
-- GUI: Enable to move and resize scene items by dialog !2745
-- GUI: Improve (fix) display tablelement and more on invalid indices !2740
-- GUI: Handle broker topic information !2743
-- GUI: validator for DeviceID !2738
-- GUI: Better context text when shutting down server/device in navigation panel !2736
-- GUI: Set window flags for project dialog !2735
-- GUI: Refactor server dialog !2731
-- GUI: Give pop-up a chance to freeze information !2730
-- GUI: Don't create devices without classId !2729
-- GUI: Set initial stylesheet of eval and label !2727
-- GUI: Bug fix. DeviceLink opens a scene when not instantiated the device !2690
-- GUI: Implement alarm background for widgets !2693
-- GUI: YUV images are displayed as Monochromatic instead of silently discarded !2661
-- GUI: Change stylesheet of command widget !2705
-- GUI: FINE_COLOR -> ALL_OK_COLOR !2699
-- GUI: Add missing vacuum pump icons to standard icons !2718
-- GUI: Make items movable on scene by actions !2723
-- GUI: Add min and max size AND Train Id to pop-up in configurator !2701
-
-- Update documentation for the GUI !2614
-
-- FW: Remove old GUI from Karabo !2715
-
-
-ikarabo
-+++++++
-- ikarabo: getServers() accounts the visibility level of servers !2761
-- ikarabo: getDevices accounts visibility of devices !2774
-- ikarabo: Pretty Print output, especially for IKarabo !2766
-- ikarabo: add getSchema and getConfiguration !2707
-- ikarabo: Return full schema object !2720
-
-
-****************************
-What's New in Karabo 2.2.4.1
-****************************
-
-A hotfix release for the middlelayer api. Timestamp behavior was fixed for
-device node. Servers reconnect now to the timeserver.
-UNKNOWN state is always allowed for proxies, which is required since the state
-is set to UNKNOWN if the underlying device is gone.
-
-
-Detailed Merge-Log
-==================
-
-Middlelayer core
-++++++++++++++++
-- FIX bound mdl pipeline integration test !2883
-- MDL: Always allow State UNKNOWN for state property in descriptor !2882
-- MDL: Fix device node timestamp handling !2878
-- MDL: Reconnect device server to timeServer !2877
-- MDL: Provide possiblity to explicitly close outputchannel !2874
-
-Graphical user interface
-++++++++++++++++++++++++
-- GUI: Protect trendlines against -np.inf and np.inf !2870
+These remnants are useless signal subscriptions since the restarted program
+has a new instanceId. They can potentially slow down the broker and every
+recipient of the emitted signals. If restarted with the same id as before
+(as usually is done with devices and servers), these remnants are cleaned.
