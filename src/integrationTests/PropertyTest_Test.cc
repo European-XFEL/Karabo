@@ -531,13 +531,13 @@ void PropertyTest_Test::testVectorProperties() {
         for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT(value[i] == 123.456F);
 
         std::ostringstream str;
-        
+
         value.assign(3, 76.54321F);
         m_deviceClient->set("testPropertyTest_0", "vectors.floatProperty", value);
         value.clear();
         m_deviceClient->get("testPropertyTest_0", "vectors.floatProperty", value);
         str << "Actual size: " << value.size();
-        CPPUNIT_ASSERT_MESSAGE(str.str(), value.size() == 3);
+        CPPUNIT_ASSERT_EQUAL(3ul, value.size());
         for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT(value[i] == 76.54321F);
     }
 
