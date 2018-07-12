@@ -57,3 +57,11 @@ build/python/*.exe
 /build/netbeans/deviceServer/build/
 /build/netbeans/brokerMessageLogger/build/
 /build/netbeans/integrationTests/build/
+/build/netbeans/tools/brokerRates/build/
+/build/netbeans/tools/dataLoggerIndex/idxview/build/
+/build/netbeans/tools/dataLoggerIndex/idxbuild/build/
+/ci/coverage/report/*.info
+/ci/coverage/report/out/
+/ci/coverage/report/????-??-??_????_unitTest
+/ci/coverage/report/????-??-??_????_integrationTest
+/ci/coverage/report/*.zip

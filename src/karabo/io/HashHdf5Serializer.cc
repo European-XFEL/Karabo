@@ -42,11 +42,11 @@ namespace karabo {
 
 
         HashHdf5Serializer::~HashHdf5Serializer() {
-            KARABO_CHECK_HDF5_STATUS(H5Pclose(m_gcpl));
-            KARABO_CHECK_HDF5_STATUS(H5Pclose(m_dcpl));
-            KARABO_CHECK_HDF5_STATUS(H5Sclose(m_spaceId));
-            KARABO_CHECK_HDF5_STATUS(H5Tclose(m_stringNtid));
-            KARABO_CHECK_HDF5_STATUS(H5Tclose(m_stringStid));
+            KARABO_CHECK_HDF5_STATUS_NO_THROW(H5Pclose(m_gcpl));
+            KARABO_CHECK_HDF5_STATUS_NO_THROW(H5Pclose(m_dcpl));
+            KARABO_CHECK_HDF5_STATUS_NO_THROW(H5Sclose(m_spaceId));
+            KARABO_CHECK_HDF5_STATUS_NO_THROW(H5Tclose(m_stringNtid));
+            KARABO_CHECK_HDF5_STATUS_NO_THROW(H5Tclose(m_stringStid));
         }
 
 

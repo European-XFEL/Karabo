@@ -12,8 +12,8 @@ from pint import DimensionalityError
 
 from karabo.middlelayer import (
     AlarmCondition, background, Bool, Configurable, connectDevice,
-    decodeBinary, Device, DeviceNode, execute, Float, getDevice, isAlive,
-    isSet, Int32, KaraboError, lock, MetricPrefix, Node, Overwrite,
+    decodeBinary, Device, DeviceNode, execute, filterByTags, Float, getDevice,
+    isAlive, isSet, Int32, KaraboError, lock, MetricPrefix, Node, Overwrite,
     Queue, setNoWait, setWait, Slot, slot, State, String, unit, Unit,
     VectorChar, VectorInt16, VectorString, VectorFloat, waitUntil,
     waitUntilNew)
@@ -50,6 +50,14 @@ class Nested(Configurable):
 
 
 class Remote(Injectable, Device):
+
+    # The state is explicitly overwritten, State.UNKNOWN is always possible by
+    # default!
+    # We test that a proxy can reach State.UNKNOWN even if it is removed
+    # from the allowed options
+
+    state = Overwrite(options=[State.ON])
+
     done = Bool()
     value = Int32(description="The Value", defaultValue=7, tags={"whatever"})
     counter = Int32(defaultValue=-1)
@@ -57,7 +65,7 @@ class Remote(Injectable, Device):
     unit_int = Int32(unitSymbol=Unit.METER)
     unit_float = Float(unitSymbol=Unit.SECOND,
                        metricPrefixSymbol=MetricPrefix.MILLI)
-    string = String()
+    string = String(tags=["AString"])
 
     unit_vector_int = VectorInt16(unitSymbol=Unit.METER_PER_SECOND)
     unit_vector_float = VectorFloat(unitSymbol=Unit.DEGREE)
@@ -162,6 +170,10 @@ class Local(Device):
     def slotAlarmUpdate(self, deviceId, alarms):
         self.alarm_future.set_result(None)
         self.alarmhash = alarms
+
+    @coroutine
+    def onInitialization(self):
+        self.state = State.ON
 
 
 class Tests(DeviceTest):
@@ -359,6 +371,13 @@ class Tests(DeviceTest):
             self.assertEqual(d.alarmCondition, AlarmCondition.NONE)
 
     @async_tst
+    def test_remotetag_proxy(self):
+        with (yield from getDevice("remote")) as d:
+            descriptors = filterByTags(d, "AString")
+            paths = [k.longkey for k in descriptors]
+            self.assertEqual(["string"], paths)
+
+    @async_tst
     def test_disconnect(self):
         """test values are not updating when disconnected"""
         self.remote.counter = -1
@@ -489,9 +508,22 @@ class Tests(DeviceTest):
         moriturus = Local({"_deviceId_": "moriturus"})
         yield from moriturus.startInstance()
         yield from waitUntil(lambda: isAlive(proxy))
-        self.assertTrue(isAlive(proxy))
         yield from moriturus.slotKillDevice()
         self.assertFalse(isAlive(proxy))
+
+    @async_tst
+    def test_isAlive_state(self):
+        moriturus = Local({"_deviceId_": "moriturus"})
+        yield from moriturus.startInstance()
+        proxy = yield from getDevice("moriturus")
+        yield from waitUntil(lambda: isAlive(proxy))
+        self.assertTrue(isAlive(proxy))
+        self.assertEqual(moriturus.state, State.ON)
+        self.assertEqual(proxy.state, State.ON)
+        # We kill the device to see the desired state transition
+        yield from moriturus.slotKillDevice()
+        self.assertFalse(isAlive(proxy))
+        self.assertEqual(proxy.state, State.UNKNOWN)
 
     @async_tst
     def test_waituntilnew(self):
@@ -765,7 +797,10 @@ class Tests(DeviceTest):
                                                   "other": "othr"}],
                             commands=[{"doit": "do_it"}, "changeit"])
 
-        a = A({"_deviceId_": "devicenode", "dn": "remote"})
+            dnEmpty = DeviceNode()
+
+        a = A({"_deviceId_": "devicenode", "dn": "remote",
+               "dnEmpty": "remote"})
 
         yield from a.startInstance()
         try:
@@ -787,6 +822,16 @@ class Tests(DeviceTest):
                 self.assertEqual(a.dn.value, 8)
                 self.assertEqual(a.dn.counter, 12)
                 self.assertEqual(a.dn.state, State.UNKNOWN)
+
+                # Test here for timestamp behavior
+                self.assertIsNotNone(a.dn.state.timestamp)
+                self.assertIsNotNone(a.dn.counter.timestamp)
+                self.assertIsNotNone(a.dn.value.timestamp)
+                self.assertIsNotNone(d.dn.cntr.timestamp)
+
+                self.assertEqual(d.dnEmpty, "remote")
+                self.assertIsNotNone(d.dnEmpty.timestamp)
+
                 self.assertEqual(a.dn.alarmCondition, AlarmCondition.NONE)
                 self.assertTrue(self.remote.done)
                 d.dn.value = 22
