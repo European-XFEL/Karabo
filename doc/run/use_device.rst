@@ -46,6 +46,24 @@ Example::
 The Karabo script will sub-sequently download the respective code from the 
 repository optionally (if C++) compile it and subsequently install it to Karabo.
 
+.. note::
+   By default, karabo will work with the device repositories at ssh://git@git.xfel.eu:10022/karaboDevices/<devicePackageName>.git.
+   Therefore the user's public ssh key has to be submitted to git.xfel.eu before, otherwise command will fail. 
+   The URL for adding a new ssh key to user settings is: 
+   https://git.xfel.eu/gitlab/profile/keys
+   Instructions on how to generate the key are also linked there.
+
+   
+   Alternatively, one can talk via https to the repositories at 
+   https://git.xfel.eu/gitlab/karaboDevices/<devicePackageName>.git
+   For this, one can use the ``karabo --git https://git.xfel.eu/gitlab install``
+   (-g flag will work as well as --git)
+
+.. note::
+
+   Please make sure that you use the correct case for the package name, as the command is case sensitive.
+   "dataGenerator" and "DataGenerator" as a package name will lead to different results. 
+
 Directly after, you can start start it with the corresponding server as explained
 :ref:`here <run/server>`.
 
@@ -98,9 +116,20 @@ it.
    ``git push -u origin master`` for adding this device to Karabo's central device
    storage.
 
+Uninstalling a device
+=============================
 
-   
+If your intention is to uninstall a device, you
+want to use::
 
+  karabo uninstall <package>
 
+This command will call ``pip uninstall -y {device}`` for python devices. 
+For C++ devices it will remove the directory and ".so" file (or symbolic link) from the plugin directory.
+
+Example::
+
+  karabo uninstall dataGenerator
+  
 
   

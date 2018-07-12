@@ -146,6 +146,30 @@ runPythonIntegrationTests() {
     echo
 }
 
+produceCodeCoverageReport() {
+    echo "### Producing code coverage reports..."
+    echo
+
+    # remove any previous code coverage results
+    safeRunCommand "find . -name \"*.gcda\" -delete"
+
+    runUnitTests
+    runIntegrationTests
+
+    # produce initial coverage information
+    safeRunCommand "$scriptDir/ci/coverage/report/gen_initial"
+
+    safeRunCommand "$scriptDir/ci/coverage/report/gen_report"
+
+    local ZIP_FILE_NAME=AAAX=`ls ./ci/coverage/report/*.zip`
+
+    echo
+    echo "### The coverage results can be found at:"
+    echo "### $scriptDir/ci/coverage/report/out/index.html"
+    echo "### or in zipped form: $ZIP_FILE_NAME"
+    echo
+}
+
 # Make sure the script runs in the correct directory
 scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
 cd ${scriptDir}
@@ -157,7 +181,7 @@ fi
 # Parse command line
 if [[ -z "$1" ||  $1 = "help" || $1 = "-h" ||  $1 = "-help" || $1 = "--help" ]]; then
     cat <<End-of-help
-Usage: $0 Debug|Release|Dependencies|Clean|Clean-All [flags]
+Usage: $0 Debug|Release|CodeCoverage|Dependencies|Clean|Clean-All [flags]
 
 Available flags:
   --auto       - Tries to automatically install needed system packages (sudo rights required!)
@@ -171,6 +195,10 @@ Available flags:
 Note: "Dependencies" builds only the external dependencies
       "Clean" cleans all Karabo code (src folder)
       "Clean-All" additionally cleans all external dependencies (extern folder)
+      "CodeCoverage" builds the Karabo framework with CodeCoverage configuration,
+                     but also implicitly runs the unit and integration tests
+                     and produces code coverage reports. The CodeCoverage configuration
+                     also disables --pyDevelop option.
 
 End-of-help
 
@@ -180,12 +208,13 @@ fi
 EXTERN_ONLY="n"
 
 # Fetch configuration type (Release or Debug)
-if [[ $1 = "Release" || $1 = "Debug" ]]; then
+if [[ $1 = "Release" || $1 = "Debug" || $1 = "CodeCoverage" ]]; then
     CONF=$1
 elif [[ $1 = "Clean" || $1 = "Clean-All" ]]; then
     safeRunCommand "cd $scriptDir/build/netbeans/karabo"
     safeRunCommand "make bundle-clean CONF=Debug"
     safeRunCommand "make bundle-clean CONF=Release"
+    safeRunCommand "make bundle-clean CONF=CodeCoverage"
     if [[ $1 = "Clean-All" ]]; then
         safeRunCommand "make clean-extern"
     fi
@@ -203,7 +232,7 @@ elif [[ $1 = "Dependencies" ]]; then
     EXTERN_ONLY="y"
 else
     echo
-    echo "Invalid option supplied. Allowed options: Release|Debug|Dependencies|Clean|Clean-All"
+    echo "Invalid option supplied. Allowed options: Release|Debug|CodeCoverage|Dependencies|Clean|Clean-All"
     echo
     exit 1
 fi
@@ -217,6 +246,7 @@ RUNTESTS="n"
 RUNINTEGRATIONTESTS="n"
 PYOPT="normal"
 NUM_JOBS=0
+CODECOVERAGE="n"
 while [ -n "$1" ]; do
     case "$1" in
         --bundle)
@@ -252,6 +282,16 @@ while [ -n "$1" ]; do
     esac
     shift
 done
+
+# selecting configuration CodeCoverage implies --runTests and --runIntegrationTests called by
+# the code coverage function. Also, other options are disabled.
+# No need to run those separately, so we turn them off to explicitly in case the user specified them.
+if [ "$CONF" = "CodeCoverage" ]; then
+    CODECOVERAGE="y"
+    RUNTESTS="n"
+    RUNINTEGRATIONTESTS="n"
+    PYOPT="normal"
+fi
 
 # Get some information about our system
 OS=$(uname -s)
@@ -297,6 +337,9 @@ if [ "$RUNINTEGRATIONTESTS" = "y" ]; then
     runPythonIntegrationTests
 fi
 
+if [ "$CODECOVERAGE" = "y" ]; then
+    produceCodeCoverageReport
+fi
 
 echo "### Successfully finished building and packaging of karaboFramework ###"
 echo
