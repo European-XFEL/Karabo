@@ -2,13 +2,13 @@
 
 namespace karabo{
     namespace util{
-        OverwriteElement::OverwriteElement(Schema& expected) : m_schema(&expected) {
+        OverwriteElement::OverwriteElement(Schema& expected) : m_schema(&expected), m_path("") {
             }
 
           
             OverwriteElement& OverwriteElement::key(std::string const& name) {
 
-
+                m_path = name;
                 boost::optional<Hash::Node&> node = m_schema->getParameterHash().find(name);
                 if (node) { // exists
                     m_node = node.get_ptr();
@@ -258,7 +258,7 @@ namespace karabo{
 
             OverwriteElement& OverwriteElement::setNewOptions(const std::string& opts, bool protect, const std::string& sep) {
                 if (protect) checkIfRestrictionApplies(m_restrictions.options); //only protect if set from outside.
-                if (m_schema && m_node) m_schema->setOptions(m_node->getKey(), opts, sep);
+                if (!m_path.empty()) m_schema->setOptions(m_path, opts, sep);
                 return *this;
             }
 

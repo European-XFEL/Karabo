@@ -1,6 +1,7 @@
 from asyncio import (
-    coroutine, Future, gather, get_event_loop, IncompleteReadError, Lock,
-    open_connection, Queue, QueueFull, shield, sleep, start_server)
+    CancelledError, coroutine, Future, gather, get_event_loop,
+    IncompleteReadError, Lock, open_connection, Queue, QueueFull, shield,
+    sleep, start_server)
 from contextlib import closing
 import os
 from struct import pack, unpack, calcsize
@@ -81,19 +82,24 @@ class Channel(object):
                 future.cancel()
             raise error.popitem()[1]
         chunk = done["chunk"]
-        encoded = [encodeBinary(h[0]) for h in chunk]
-        sizes = numpy.array([len(d) for d in encoded], dtype=numpy.uint32)
+
+        encoded = []
         info = []
-        for _, timestamp in chunk:
+        for data, timestamp in chunk:
+            encoded.append(encodeBinary(data))
+            # Create the timestamp information for this packet!
             hsh = Hash("source", self.channelName, "timestamp", True)
             hsh["timestamp", ...] = timestamp.toDict()
             info.append(hsh)
-        h = Hash("nData", numpy.uint32(len(chunk)), "byteSizes", sizes,
-                 "sourceInfo", info)
+
+        nData = numpy.uint32(len(chunk))
+        sizes = numpy.array([len(d) for d in encoded], dtype=numpy.uint32)
+        h = Hash("nData", nData, "byteSizes", sizes, "sourceInfo", info)
         self.writeHash(h)
         self.writeSize(sizes.sum())
         for e in encoded:
             self.writer.write(e)
+
         message = yield from pending["read"]
         assert message["reason"] == "update"
 
@@ -125,10 +131,12 @@ class NetworkInput(Configurable):
     def connectChannel(self, channel):
         """Connect to a single Outputchannel
         """
-        if channel not in self.connected:
-            task = background(self.start_channel(channel))
-            self.connected[channel] = task
-            self.connectedOutputChannels = list(self.connected)
+        if channel in self.connected and not self.connected[channel].done():
+            return
+
+        task = background(self.start_channel(channel))
+        self.connected[channel] = task
+        self.connectedOutputChannels = list(self.connected)
 
     dataDistribution = String(
         displayedName="Data Distribution",
@@ -151,9 +159,9 @@ class NetworkInput(Configurable):
         self.handler_lock = Lock()
 
     @coroutine
-    def close_handler(self, cls):
+    def close_handler(self, output):
         # XXX: Please keep this for the time being.
-        print("NetworkInput close handler called by {}!".format(cls))
+        print("NetworkInput close handler called by {}!".format(output))
 
     @coroutine
     def end_of_stream_handler(self, cls):
@@ -167,12 +175,24 @@ class NetworkInput(Configurable):
                 self.handler, data, meta)
 
     @coroutine
-    def start_channel(self, output):
+    def start_channel(self, output, tracking=True):
+        """Connect to the output channel with Id 'output'
+
+           :param tracking: Defines whether this channel is tracked via the
+                            the signal slotable. Only proxies don't use
+                            tracking and hence don't reconnect the channel if
+                            the device reappears.
+        """
         try:
             instance, name = output.split(":")
             # success, configuration
             ok, info = yield from self.parent._call_once_alive(
                 instance, "slotGetOutputChannelInformation", name, os.getpid())
+            # NOTE: Tracking via the signalslotable should be done for devices
+            # but not for proxies for the time being!
+            if tracking:
+                self.parent._remote_output_channel[instance].add(
+                    (self, output))
             if not ok:
                 return
 
@@ -201,9 +221,15 @@ class NetworkInput(Configurable):
                            "instanceId", self.parent.deviceId)
                 while (yield from self.readChunk(channel, cls)):
                     channel.writeHash(cmd)
-        finally:
+        except CancelledError:
+            # NOTE: Happens when we are destroyed
+            if tracking:
+                self.parent._remote_output_channel[instance].remove(
+                    (self, output))
             self.connected.pop(output)
             self.connectedOutputChannels = list(self.connected)
+        finally:
+            # We still inform when the connection has been closed!
             with (yield from self.handler_lock):
                 yield from shield(get_event_loop().run_coroutine_or_thread(
                                   self.close_handler, output))
@@ -379,7 +405,7 @@ class OutputProxy(SubProxyBase):
                 yield from self.networkInput._run()
                 self.initialized = True
             self.networkInput.connected[output] = self.task
-            yield from self.networkInput.start_channel(output)
+            yield from self.networkInput.start_channel(output, tracking=False)
         finally:
             self.task = None
 
@@ -391,6 +417,8 @@ class OutputProxy(SubProxyBase):
 
 class NetworkOutput(Configurable):
     displayType = 'OutputChannel'
+
+    server = None
 
     noInputShared = String(
         displayedName="No Input (Shared)",
@@ -410,7 +438,18 @@ class NetworkOutput(Configurable):
             self.hostname = socket.gethostname()
         else:
             self.hostname = value
-        self.server = yield from start_server(self.serve, host=self.hostname,
+
+        instance = get_event_loop().instance()
+
+        def serve(reader, writer):
+            """Create a serve task on the eventloop to track instance
+
+               We need to pass the instance in order to cancel all the tasks
+               related to that instance once the instance dies.
+            """
+            get_event_loop().create_task(self.serve(reader, writer), instance)
+
+        self.server = yield from start_server(serve, host=self.hostname,
                                               port=0)
 
     def __init__(self, config):
@@ -532,6 +571,14 @@ class NetworkOutput(Configurable):
 
         Overwrite the method of Configurable to prevent sending values.
         """
+
+    @coroutine
+    def close(self):
+        """ Close listening sockets
+        """
+        if self.server is not None:
+            self.server.close()
+            yield from self.server.wait_closed()
 
 
 class OutputChannel(Node):

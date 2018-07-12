@@ -16,7 +16,8 @@ prompt_toolkit simplegeneric traitlets dill ipython pkgconfig h5py pyusb parse
 suds jsonschema ecdsa pycrypto paramiko tzlocal httplib2 pssh traits pint nbformat
 notebook ipyparallel ipcluster_tools cycler pyelftools rpathology lxml certifi
 chardet idna urllib3 requests ply psutil pycodestyle pyflakes mccabe flake8
-msgpack msgpack-numpy flaky pyyaml docker_pycreds websocket_client docker )
+msgpack msgpack-numpy flaky pyyaml docker_pycreds websocket_client docker
+coverage )
 
 DEPENDENCIES_DB=(eulxml eulexist existDB)
 

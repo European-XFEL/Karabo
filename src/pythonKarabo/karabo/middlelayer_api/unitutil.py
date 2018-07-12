@@ -4,9 +4,8 @@ from functools import wraps
 import numpy as np
 
 from karabo.common.states import StateSignifier as SignifierBase
-from karabo.middlelayer import QuantityValue
 from karabo.middlelayer_api.basetypes import (
-    newest_timestamp, wrap, wrap_function)
+    newest_timestamp, QuantityValue, wrap, wrap_function)
 
 
 @wraps(np.linspace)

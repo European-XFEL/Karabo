@@ -44,7 +44,7 @@ namespace karabo {
                 KARABO_CONFIGURATION_BASE_CLASS
 
                 virtual ~DatasetReader() {
-                    KARABO_CHECK_HDF5_STATUS(H5Sclose(m_memoryDataSpace));
+                    KARABO_CHECK_HDF5_STATUS_NO_THROW(H5Sclose(m_memoryDataSpace));
                 }
 
                 static void expectedParameters(karabo::util::Schema& expected) {

@@ -157,6 +157,12 @@ class Tests(DeviceTest):
             success = np.array_equal(d.table.value, empty_table)
             self.assertTrue(success)
 
+    @async_tst
+    def test_output_close(self):
+        self.assertIsNotNone(self.myDevice.output.server.sockets)
+        yield from self.myDevice.output.close()
+        self.assertIsNone(self.myDevice.output.server.sockets)
+
 
 if __name__ == '__main__':
     main()
