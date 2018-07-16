@@ -176,7 +176,7 @@ class BasePanelWidget(QFrame):
         """Called before this panel is docked into the main window.
         """
 
-    def undock(self):
+    def undock(self, maximized=False):
         """Called before this panel is undocked from the main window.
         """
 
@@ -240,7 +240,8 @@ class BasePanelWidget(QFrame):
 
     def onUndock(self):
         self._update_toolbar_buttons(PanelActions.Undock)
-        self.undock()
+        is_maximized = self.panel_container.maximized
+        self.undock(is_maximized)
         self.panel_container.undock(self)
 
     def onDock(self):
