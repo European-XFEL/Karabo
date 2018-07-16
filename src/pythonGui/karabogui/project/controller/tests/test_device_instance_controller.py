@@ -53,8 +53,7 @@ class test_device_instance_controller(TestCase):
                 self.assertTrue('test1' in config2.configuration)
                 self.assertEqual(config2.configuration['test1'], 'diff_value1')
 
-                self.assertTrue('test2' in config2.configuration)
-                self.assertEqual(config2.configuration['test2'], '')
+                self.assertFalse('test2' in config2.configuration)
 
             controller = DeviceInstanceController(model=model)
             controller.active_config_changed(config2)
