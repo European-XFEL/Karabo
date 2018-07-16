@@ -1,4 +1,3 @@
-from traits.traits import Trait
 from xml.etree.ElementTree import SubElement
 
 from traits.api import Enum, Int, String, Bool
