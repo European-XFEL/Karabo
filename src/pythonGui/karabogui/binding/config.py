@@ -80,6 +80,11 @@ def apply_default_configuration(binding):
             node.value = default_value
         elif len(node.options) > 0:
             node.value = node.options[0]
+        else:
+            # XXX: Nodes either don't have a value or are not designed!
+            if not isinstance(node, (ChoiceOfNodesBinding,
+                                     ListOfNodesBinding, NodeBinding)):
+                node.value = Undefined
 
 
 def extract_attribute_modifications(schema, binding):
