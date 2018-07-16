@@ -130,11 +130,13 @@ def test_default_values():
 
     assert binding.value.a.value is Undefined
     assert binding.value.b.value is Undefined
+    assert binding.value.c.value is Undefined
 
     apply_default_configuration(binding)
 
     assert binding.value.a.value
     assert binding.value.b.value == 'c'
+    assert binding.value.c.value is Undefined
 
     # Make sure the extracted default conversion is minimal
     # It should include properties with default values, options, or node types
