@@ -223,48 +223,11 @@ class DeviceInstanceController(BaseProjectGroupController):
             return
 
         device = self.model
-        old_config_uuid = device.active_config_ref
-
-        def _get_configuration_by_uuid(device, uuid):
-            for conf in device.configs:
-                if conf.uuid == uuid:
-                    return conf
-
-        old_conf = _get_configuration_by_uuid(device, old_config_uuid)
-        self._add_missing_values(old_conf.configuration,
-                                 config_model.configuration)
-
         # changing model's active_config_ref will trigger trait change handler
         device.active_config_ref = config_model.uuid
         # Notify configurator to display the new configuration,
         # ProjectDeviceInstance doesn't broadcast anything to configurator
         self._broadcast_item_click()
-
-    def _add_missing_values(self, old_hash, new_hash, prefix=''):
-        """Add missing values to a new hash from an old one
-
-        This is an auxiliary method that adds the completes a new hash with
-        data present in an old one.
-
-        :param old_hash: A Hash type which will be search for extra parameters
-        in the new_hash variable
-        :param new_hash: The new configuration which will be add the missing
-        attributes.
-        :param prefix: This is an auxiliary parameter to the recursive method
-        to enter into the others hash which may exists, like nodes."""
-        for key, val in old_hash.items():
-            key = prefix + key
-
-            is_hash_type = isinstance(val, Hash)
-            if key in new_hash and not is_hash_type:
-                continue
-
-            if is_hash_type:
-                prefix = key + '.'
-                self._add_missing_values(old_hash[key], new_hash, prefix)
-            else:
-                type_val = type(val)
-                new_hash[key] = type_val()
 
     def _broadcast_item_click(self):
         broadcast_event(KaraboEventSender.ShowConfiguration,
