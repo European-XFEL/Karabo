@@ -73,7 +73,7 @@ class ScenePanel(BasePanelWidget):
             # hidden.
             self._temporary_hide_flag = True
 
-    def undock(self):
+    def undock(self, maximized=False):
         """Called before this panel is undocked from the main window.
         """
         width, height = self._compute_panel_size()
@@ -89,7 +89,8 @@ class ScenePanel(BasePanelWidget):
         scene_view.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         # Avoid scene_view.set_tab_visible()
-        self._temporary_hide_flag = True
+        if not maximized:
+            self._temporary_hide_flag = True
 
     def minimize(self):
         """Called before this panel is minimized after filling the main window.
