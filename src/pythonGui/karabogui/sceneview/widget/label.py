@@ -3,7 +3,7 @@
 # Created on November 23, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtGui import QColor, QDialog, QFont, QFrame, QLabel
+from PyQt4.QtGui import QColor, QDialog, QFont, QFrame, QLabel, QAction
 
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.sceneview.utils import calc_rect_from_text
@@ -25,10 +25,10 @@ class LabelWidget(QLabel):
 
         self.setText(self.model.text)
         self.setToolTip(self.model.text)
-        self.setLineWidth(model.frame_width)
+        self.setLineWidth(self.model.frame_width)
 
         font_properties = QFont()
-        font_properties.fromString(model.font)
+        font_properties.fromString(self.model.font)
         self.setFont(font_properties)
 
         palette = self.palette()
@@ -70,6 +70,18 @@ class LabelWidget(QLabel):
         new_pos = self.pos() + offset
         self.model.set(x=new_pos.x(), y=new_pos.y())
         self.move(new_pos)
+
+    def widget_handler_menu(self, event, menu_action):
+        """This method is the handler which will be triggered when the user do
+        a right click on the widget.
+
+        :param event: Qt event to be received
+        :param menu_action: the QMenuAction to manage the menu
+        """
+        edit_label = QAction("Edit Label", self)
+        edit_label.triggered.connect(self.edit)
+        menu_action.addAction(edit_label)
+        menu_action.addSeparator()
 
     def edit(self, scene_view):
         dialog = TextDialog(self.model)

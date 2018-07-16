@@ -1,6 +1,7 @@
+from traits.traits import Trait
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Bool, Enum, Int, String
+from traits.api import Enum, Int, String, Bool
 
 from karabo.common.scenemodel.bases import (
     BaseDisplayEditableWidget, BaseEditWidget, BaseWidgetObjectData)
@@ -111,11 +112,11 @@ class LabelModel(BaseWidgetObjectData):
     """ A fragment of text which is shown in a scene.
     """
     # The text to be displayed
-    text = String
+    text = String('')
     # A string describing the font
-    font = String
+    font = String('')
     # A foreground color, CSS-style
-    foreground = String
+    foreground = String('black')
     # A background color, CSS-style
     background = String('transparent')
     # The line width of a frame around the text
@@ -154,6 +155,16 @@ class SceneLinkModel(BaseWidgetObjectData):
     target = String
     # Where should the target be opened?
     target_window = Enum(*list(SceneTargetWindow))
+    # The text to be displayed
+    text = String('')
+    # A string describing the font
+    font = String('')
+    # A foreground color, CSS-style
+    foreground = String('black')
+    # A background color, CSS-style
+    background = String('transparent')
+    # The line width of a frame around the text
+    frame_width = Int(0)
 
 
 class SliderModel(BaseEditWidget):
@@ -193,8 +204,8 @@ def __label_reader(read_func, element):
     """ A reader for Label objects in Version 1 scenes
     """
     traits = _read_geometry_data(element)
-    traits['text'] = element.get(NS_KARABO + 'text')
-    traits['font'] = element.get(NS_KARABO + 'font')
+    traits['text'] = element.get(NS_KARABO + 'text', '')
+    traits['font'] = element.get(NS_KARABO + 'font', '')
     traits['foreground'] = element.get(NS_KARABO + 'foreground', 'black')
 
     bg = element.get(NS_KARABO + 'background')
@@ -207,10 +218,12 @@ def __label_reader(read_func, element):
 
 
 @register_scene_writer(LabelModel)
-def __label_writer(write_func, model, parent):
+def __label_writer(write_func, model, parent, element=None):
     """ A writer for LabelModel objects
     """
-    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    if not element:
+        element = SubElement(parent, WIDGET_ELEMENT_TAG)
+
     _write_class_and_geometry(model, element, 'Label')
 
     for name in ('text', 'font', 'foreground'):
@@ -230,6 +243,18 @@ def __scene_link_reader(read_func, element):
     # If unspecified, the default is 'mainwin'
     target_window = element.get(NS_KARABO + 'target_window', 'mainwin')
     traits['target_window'] = SceneTargetWindow(target_window)
+
+    traits['text'] = element.get(NS_KARABO + 'text', '')
+    traits['font'] = element.get(NS_KARABO + 'font', '')
+    traits['foreground'] = element.get(NS_KARABO + 'foreground', 'black')
+
+    bg = element.get(NS_KARABO + 'background')
+    if bg is not None:
+        traits['background'] = bg
+    fw = element.get(NS_KARABO + 'frameWidth')
+    if fw is not None:
+        traits['frame_width'] = int(fw)
+
     return SceneLinkModel(**traits)
 
 
@@ -239,6 +264,14 @@ def __scene_link_writer(write_func, model, parent):
     _write_class_and_geometry(model, element, 'SceneLink')
     element.set(NS_KARABO + 'target', model.target)
     element.set(NS_KARABO + 'target_window', model.target_window.value)
+
+    for name in ('text', 'font', 'foreground'):
+        element.set(NS_KARABO + name, getattr(model, name))
+
+    element.set(NS_KARABO + 'frameWidth', str(model.frame_width))
+    if model.background != '':
+        element.set(NS_KARABO + 'background', model.background)
+
     return element
 
 
