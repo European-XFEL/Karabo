@@ -10,6 +10,7 @@
 #include "ImageData.hh"
 #include "karabo/util/ToSize.hh"
 #include "karabo/util/Types.hh"
+#include "karabo/util/Units.hh"
 
 #include <climits>
 
@@ -90,6 +91,23 @@ namespace karabo {
                     "are reported out of the camera as a single pixel.")
                     .readOnly()
                     .commit();
+            INT32_ELEMENT(s).key("rotation")
+                    .displayedName("Rotation")
+                    .description("The image counterclockwise rotation.")
+                    .options("0,90,180,270")
+                    .unit(Unit::DEGREE)
+                    .readOnly()
+                    .commit();
+            BOOL_ELEMENT(s).key("flipX")
+                    .displayedName("Flip X")
+                    .description("Image horizontal flip.")
+                    .readOnly()
+                    .commit();
+            BOOL_ELEMENT(s).key("flipY")
+                    .displayedName("Flip Y")
+                    .description("Image vertical flip.")
+                    .readOnly()
+                    .commit();
             // TODO Convert into a serializable object later
             // Will then read: GEOMETRY_ELEMENT(s).key("geometry") [...]
             NODE_ELEMENT(s).key("geometry")
@@ -158,6 +176,11 @@ namespace karabo {
             const std::vector<unsigned long long> binning(dataDims.rank(), 1ull);
             setBinning(karabo::util::Dims(binning));
 
+            setRotation(Rotation::ROT_0);
+
+            setFlipX(false);
+            setFlipY(false);
+
             setDimensionScales(std::string());
         }
 
@@ -179,6 +202,36 @@ namespace karabo {
 
         void ImageData::setBinning(const karabo::util::Dims& binning) {
             set<std::vector<unsigned long long> >("binning", binning.toVector());
+        }
+
+
+        int ImageData::getRotation() const {
+            return get<int>("rotation");
+        }
+
+
+        void ImageData::setRotation(const RotationType rotation) {
+            set<int>("rotation", rotation);
+        }
+
+
+        bool ImageData::getFlipX() const {
+            return get<bool>("flipX");
+        }
+
+
+        bool ImageData::getFlipY() const {
+            return get<bool>("flipY");
+        }
+
+
+        void ImageData::setFlipX(const bool flipX) {
+            set<bool>("flipX", flipX);
+        }
+
+
+        void ImageData::setFlipY(const bool flipY) {
+            set<bool>("flipY", flipY);
         }
 
 
