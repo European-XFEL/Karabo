@@ -47,14 +47,13 @@ class SceneLinkWidget(QPushButton):
             painter.setPen(pen)
             painter.drawLine(pt + QPoint(4, 4), pt + QPoint(15, 4))
 
-    def widget_handler_menu(self, event, menu_action):
+    def add_custom_action(self, main_menu):
         """This method is the handler which will be triggered when the user do
         a right click on the widget.
 
-        :param event: Qt event to be received
-        :param menu_action: the QMenuAction to manage the menu
+        :param main_menu: the QMenuAction to manage the menu
         """
-        self._label.widget_handler_menu(event, menu_action)
+        self._label.add_custom_action(main_menu)
 
     def _handle_click(self):
         if len(self.model.target) > 0:
