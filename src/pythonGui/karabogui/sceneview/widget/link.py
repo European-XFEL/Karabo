@@ -3,11 +3,12 @@
 # Created on November 23, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import QPoint, QRect, QSize, Qt
-from PyQt4.QtGui import QDialog, QPainter, QPen, QPushButton
+from PyQt4.QtCore import QMargins, QPoint, QRect, QSize, Qt
+from PyQt4.QtGui import QDialog, QHBoxLayout, QPainter, QPen, QPushButton
 
 from karabogui.dialogs.dialogs import SceneLinkDialog
 from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.sceneview.widget.label import LabelWidget
 
 
 class SceneLinkWidget(QPushButton):
@@ -17,10 +18,19 @@ class SceneLinkWidget(QPushButton):
         super(SceneLinkWidget, self).__init__(parent)
         self.model = model
 
+        self._layout = QHBoxLayout(self)
         self.setToolTip(self.model.target)
         self.setCursor(Qt.PointingHandCursor)
         self.clicked.connect(self._handle_click)
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
+        self._label = LabelWidget(self.model, parent=self, embedded=True)
+        self._label.setAlignment(Qt.AlignCenter)
+        self._layout.addWidget(self._label)
+        self.setContentsMargins(QMargins(0, 0, 0, 0))
+        self._label.setContentsMargins(QMargins(0, 0, 0, 0))
+        self._layout.setContentsMargins(QMargins(4, 12, 4, 4))
+        self.setAutoFillBackground(True)
+        self._label.setAutoFillBackground(True)
 
     def paintEvent(self, event):
         with QPainter(self) as painter:
@@ -38,6 +48,14 @@ class SceneLinkWidget(QPushButton):
             pen.setColor(Qt.lightGray)
             painter.setPen(pen)
             painter.drawLine(pt + QPoint(4, 4), pt + QPoint(15, 4))
+
+    def add_custom_action(self, main_menu):
+        """This method is the handler which will be triggered when the user do
+        a right click on the widget.
+
+        :param main_menu: the QMenuAction to manage the menu
+        """
+        self._label.add_custom_action(main_menu)
 
     def _handle_click(self):
         if len(self.model.target) > 0:
