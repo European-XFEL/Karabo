@@ -3,7 +3,7 @@
 # Created on November 23, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtGui import QColor, QDialog, QFont, QFrame, QLabel
+from PyQt4.QtGui import QAction, QColor, QDialog, QFont, QFrame, QLabel
 
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.sceneview.utils import calc_rect_from_text
@@ -12,10 +12,11 @@ from karabogui.sceneview.utils import calc_rect_from_text
 class LabelWidget(QLabel):
     """A label which can appear in a scene
     """
-    def __init__(self, model, parent=None):
+    def __init__(self, model, parent=None, embedded=False):
         super(LabelWidget, self).__init__(model.text, parent)
         self.setFrameShape(QFrame.Box)
         self.setAutoFillBackground(True)
+        self._embedded = embedded
         self.set_model(model)
 
     def set_model(self, model):
@@ -25,10 +26,10 @@ class LabelWidget(QLabel):
 
         self.setText(self.model.text)
         self.setToolTip(self.model.text)
-        self.setLineWidth(model.frame_width)
+        self.setLineWidth(self.model.frame_width)
 
         font_properties = QFont()
-        font_properties.fromString(model.font)
+        font_properties.fromString(self.model.font)
         self.setFont(font_properties)
 
         palette = self.palette()
@@ -36,9 +37,10 @@ class LabelWidget(QLabel):
         palette.setColor(self.backgroundRole(), QColor(model.background))
         self.setPalette(palette)
 
-        _, _, model.width, model.height = calc_rect_from_text(model.font,
-                                                              model.text)
-        self.setGeometry(model.x, model.y, model.width, model.height)
+        if not self._embedded:
+            _, _, model.width, model.height = calc_rect_from_text(model.font,
+                                                                  model.text)
+            self.setGeometry(model.x, model.y, model.width, model.height)
 
     def add_proxies(self, proxies):
         """Satisfy the informal widget interface."""
@@ -62,6 +64,8 @@ class LabelWidget(QLabel):
         """Satisfy the informal widget interface."""
 
     def set_geometry(self, rect):
+        if self._embedded:
+            return
         self.model.set(x=rect.x(), y=rect.y(),
                        width=rect.width(), height=rect.height())
         self.setGeometry(rect)
@@ -70,6 +74,17 @@ class LabelWidget(QLabel):
         new_pos = self.pos() + offset
         self.model.set(x=new_pos.x(), y=new_pos.y())
         self.move(new_pos)
+
+    def add_custom_action(self, main_menu):
+        """This method is the handler which will be triggered when the user do
+        a right click on the widget.
+
+        :param menu_action: the QMenuAction to manage the menu
+        """
+        edit_label = QAction("Edit Label", self)
+        edit_label.triggered.connect(self.edit)
+        main_menu.addAction(edit_label)
+        main_menu.addSeparator()
 
     def edit(self, scene_view):
         dialog = TextDialog(self.model)
