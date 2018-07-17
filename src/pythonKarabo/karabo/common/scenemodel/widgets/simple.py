@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Enum, Int, String, Bool
+from traits.api import Enum, Int, String
 
 from karabo.common.scenemodel.bases import (
     BaseDisplayEditableWidget, BaseEditWidget, BaseWidgetObjectData)
@@ -217,11 +217,10 @@ def __label_reader(read_func, element):
 
 
 @register_scene_writer(LabelModel)
-def __label_writer(write_func, model, parent, element=None):
+def __label_writer(write_func, model, parent):
     """ A writer for LabelModel objects
     """
-    if not element:
-        element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
 
     _write_class_and_geometry(model, element, 'Label')
 
