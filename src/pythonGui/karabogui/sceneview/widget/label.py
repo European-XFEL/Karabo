@@ -12,10 +12,11 @@ from karabogui.sceneview.utils import calc_rect_from_text
 class LabelWidget(QLabel):
     """A label which can appear in a scene
     """
-    def __init__(self, model, parent=None):
+    def __init__(self, model, parent=None, embedded=False):
         super(LabelWidget, self).__init__(model.text, parent)
         self.setFrameShape(QFrame.Box)
         self.setAutoFillBackground(True)
+        self._embedded = embedded
         self.set_model(model)
 
     def set_model(self, model):
@@ -36,9 +37,10 @@ class LabelWidget(QLabel):
         palette.setColor(self.backgroundRole(), QColor(model.background))
         self.setPalette(palette)
 
-        _, _, model.width, model.height = calc_rect_from_text(model.font,
-                                                              model.text)
-        self.setGeometry(model.x, model.y, model.width, model.height)
+        if not self._embedded:
+            _, _, model.width, model.height = calc_rect_from_text(model.font,
+                                                                  model.text)
+            self.setGeometry(model.x, model.y, model.width, model.height)
 
     def add_proxies(self, proxies):
         """Satisfy the informal widget interface."""
@@ -62,6 +64,8 @@ class LabelWidget(QLabel):
         """Satisfy the informal widget interface."""
 
     def set_geometry(self, rect):
+        if self._embedded:
+            return
         self.model.set(x=rect.x(), y=rect.y(),
                        width=rect.width(), height=rect.height())
         self.setGeometry(rect)
