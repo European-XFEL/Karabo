@@ -33,6 +33,11 @@ class WidgetSceneHandler(ABCHasStrictTraits):
         """
         # The place action is always available!
         main_menu = QMenu(self.widget)
+
+        add_custom_action = getattr(self.widget, "add_custom_action", None)
+        if callable(add_custom_action):
+            add_custom_action(main_menu)
+
         move_action = QAction("Move Layout", self.widget)
         move_action.triggered.connect(partial(self._move_dialog,
                                               scene_view))
