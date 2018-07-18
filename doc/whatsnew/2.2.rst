@@ -1,3 +1,17 @@
+****************************
+What's New in Karabo 2.2.4.2
+****************************
+
+A hotfix release run configurator due to the correct validation of readonly
+and reconfigurable parameters introduced in 2.2.4.
+
+Detailed Merge-Log
+==================
+
+core Devices
+++++++++++++
+- Make _RunConfigurator sources reconfigurable !2893
+
 
 ****************************
 What's New in Karabo 2.2.4.1
