@@ -35,9 +35,8 @@ void ImageData_Test::tearDown() {
 
 
 void ImageData_Test::testConstructor() {
-
-    NDArray arr(Dims(200, 100), 2); // filled with 2s (which are int and thus ReferenceType INT32)
     {
+        NDArray arr(Dims(200, 100), 2); // filled with 2s (which are int and thus ReferenceType INT32)
         ImageData image(arr);
 
         Dims imageDims = image.getDimensions();
@@ -74,6 +73,36 @@ void ImageData_Test::testConstructor() {
 
         // Don't care about what kind of geometry - but it must not throw...
         CPPUNIT_ASSERT_NO_THROW(image.getGeometry());
+    }
+    {
+        Dims dims(200, 100, 3);
+        NDArray arr(dims, 2); // Will be interpreted by default as RGB
+
+        ImageData image1(arr, Encoding::UNDEFINED);
+        CPPUNIT_ASSERT(image1.getEncoding() == Encoding::RGB);
+
+        ImageData image2(arr, dims, Encoding::UNDEFINED);
+        CPPUNIT_ASSERT(image2.getEncoding() == Encoding::RGB);
+    }
+    {
+        Dims dims(200, 100, 4);
+        NDArray arr(dims, 2); // Will be interpreted by default as RGBA
+
+        ImageData image1(arr, Encoding::UNDEFINED);
+        CPPUNIT_ASSERT(image1.getEncoding() == Encoding::RGBA);
+
+        ImageData image2(arr, dims, Encoding::UNDEFINED);
+        CPPUNIT_ASSERT(image2.getEncoding() == Encoding::RGBA);
+    }
+    {
+        Dims dims(200, 100, 11);
+        NDArray arr(dims, 2); // Will be interpreted by default as a stack of GRAY images
+
+        ImageData image1(arr, Encoding::UNDEFINED);
+        CPPUNIT_ASSERT(image1.getEncoding() == Encoding::GRAY);
+
+        ImageData image2(arr, dims, Encoding::UNDEFINED);
+        CPPUNIT_ASSERT(image2.getEncoding() == Encoding::GRAY);
     }
     {
         // Default constructor - we do not mind values, but all getters must not throw!
