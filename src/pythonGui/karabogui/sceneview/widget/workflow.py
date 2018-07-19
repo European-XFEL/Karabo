@@ -66,6 +66,10 @@ class WorkflowItemWidget(QWidget):
     def update_global_access_level(self, level):
         """Satisfy the informal widget interface."""
 
+    def get_actions(self):
+        """Satisfy the informal widget interface."""
+        return []
+
     def set_geometry(self, rect):
         self.model.set(x=rect.x(), y=rect.y(),
                        width=rect.width(), height=rect.height())

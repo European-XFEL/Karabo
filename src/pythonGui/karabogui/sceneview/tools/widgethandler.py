@@ -33,11 +33,6 @@ class WidgetSceneHandler(ABCHasStrictTraits):
         """
         # The place action is always available!
         main_menu = QMenu(self.widget)
-
-        add_custom_action = getattr(self.widget, "add_custom_action", None)
-        if callable(add_custom_action):
-            add_custom_action(main_menu)
-
         move_action = QAction("Move Layout", self.widget)
         move_action.triggered.connect(partial(self._move_dialog,
                                               scene_view))
@@ -52,7 +47,12 @@ class WidgetSceneHandler(ABCHasStrictTraits):
             main_menu.addAction(resize_action)
 
         if not isinstance(self.widget, ControllerContainer):
-            # Not further actions are required!
+            # The non-controller widget might have some actions for us!
+            widget_actions = self.widget.get_actions()
+            if widget_actions:
+                main_menu.addSeparator()
+                for action in widget_actions:
+                    main_menu.addAction(action)
             main_menu.exec_(event.globalPos())
             return
 
