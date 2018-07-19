@@ -111,11 +111,11 @@ class LabelModel(BaseWidgetObjectData):
     """ A fragment of text which is shown in a scene.
     """
     # The text to be displayed
-    text = String('')
+    text = String
     # A string describing the font
-    font = String('')
+    font = String
     # A foreground color, CSS-style
-    foreground = String('black')
+    foreground = String
     # A background color, CSS-style
     background = String('transparent')
     # The line width of a frame around the text
@@ -155,11 +155,11 @@ class SceneLinkModel(BaseWidgetObjectData):
     # Where should the target be opened?
     target_window = Enum(*list(SceneTargetWindow))
     # The text to be displayed
-    text = String('')
+    text = String
     # A string describing the font
-    font = String('')
+    font = String
     # A foreground color, CSS-style
-    foreground = String('black')
+    foreground = String
     # A background color, CSS-style
     background = String('transparent')
     # The line width of a frame around the text
@@ -241,7 +241,6 @@ def __scene_link_reader(read_func, element):
     # If unspecified, the default is 'mainwin'
     target_window = element.get(NS_KARABO + 'target_window', 'mainwin')
     traits['target_window'] = SceneTargetWindow(target_window)
-
     traits['text'] = element.get(NS_KARABO + 'text', '')
     traits['font'] = element.get(NS_KARABO + 'font', '')
     traits['foreground'] = element.get(NS_KARABO + 'foreground', 'black')
