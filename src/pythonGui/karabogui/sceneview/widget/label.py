@@ -3,6 +3,7 @@
 # Created on November 23, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QAction, QColor, QDialog, QFont, QFrame, QLabel
 
 from karabogui.dialogs.textdialog import TextDialog
@@ -12,11 +13,10 @@ from karabogui.sceneview.utils import calc_rect_from_text
 class LabelWidget(QLabel):
     """A label which can appear in a scene
     """
-    def __init__(self, model, parent=None, embedded=False):
+    def __init__(self, model, parent=None):
         super(LabelWidget, self).__init__(model.text, parent)
         self.setFrameShape(QFrame.Box)
         self.setAutoFillBackground(True)
-        self._embedded = embedded
         self.set_model(model)
 
     def set_model(self, model):
@@ -37,10 +37,9 @@ class LabelWidget(QLabel):
         palette.setColor(self.backgroundRole(), QColor(model.background))
         self.setPalette(palette)
 
-        if not self._embedded:
-            _, _, model.width, model.height = calc_rect_from_text(model.font,
-                                                                  model.text)
-            self.setGeometry(model.x, model.y, model.width, model.height)
+        _, _, model.width, model.height = calc_rect_from_text(model.font,
+                                                              model.text)
+        self.setGeometry(model.x, model.y, model.width, model.height)
 
     def add_proxies(self, proxies):
         """Satisfy the informal widget interface."""
@@ -64,8 +63,6 @@ class LabelWidget(QLabel):
         """Satisfy the informal widget interface."""
 
     def set_geometry(self, rect):
-        if self._embedded:
-            return
         self.model.set(x=rect.x(), y=rect.y(),
                        width=rect.width(), height=rect.height())
         self.setGeometry(rect)
@@ -75,16 +72,18 @@ class LabelWidget(QLabel):
         self.model.set(x=new_pos.x(), y=new_pos.y())
         self.move(new_pos)
 
-    def add_custom_action(self, main_menu):
-        """This method is the handler which will be triggered when the user do
-        a right click on the widget.
-
-        :param menu_action: the QMenuAction to manage the menu
+    def get_actions(self):
+        """Provide custom actions for the scene widget handler
         """
-        edit_label = QAction("Edit Label", self)
-        edit_label.triggered.connect(self.edit)
-        main_menu.addAction(edit_label)
-        main_menu.addSeparator()
+        edit_action = QAction("Edit Label", self)
+        edit_action.triggered.connect(self.edit_colors_text)
+
+        return [edit_action]
+
+    @pyqtSlot()
+    def edit_colors_text(self):
+        self.edit(scene_view=None)
+        self.update()
 
     def edit(self, scene_view):
         dialog = TextDialog(self.model)

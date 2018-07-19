@@ -3,12 +3,14 @@
 # Created on November 23, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import QMargins, QPoint, QRect, QSize, Qt
-from PyQt4.QtGui import QDialog, QHBoxLayout, QPainter, QPen, QPushButton
+from PyQt4.QtCore import pyqtSlot, QMargins, QPoint, QRect, QSize, Qt
+from PyQt4.QtGui import (
+    QAction, QColor, QDialog, QHBoxLayout, QLabel, QFont, QPainter,
+    QPen, QPushButton)
 
 from karabogui.dialogs.dialogs import SceneLinkDialog
+from karabogui.dialogs.textdialog import TextDialog
 from karabogui.events import broadcast_event, KaraboEventSender
-from karabogui.sceneview.widget.label import LabelWidget
 
 
 class SceneLinkWidget(QPushButton):
@@ -23,14 +25,15 @@ class SceneLinkWidget(QPushButton):
         self.setCursor(Qt.PointingHandCursor)
         self.clicked.connect(self._handle_click)
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
-        self._label = LabelWidget(self.model, parent=self, embedded=True)
+        self._label = QLabel(parent=self)
         self._label.setAlignment(Qt.AlignCenter)
-        self._layout.addWidget(self._label)
-        self.setContentsMargins(QMargins(0, 0, 0, 0))
         self._label.setContentsMargins(QMargins(0, 0, 0, 0))
-        self._layout.setContentsMargins(QMargins(4, 12, 4, 4))
-        self.setAutoFillBackground(True)
         self._label.setAutoFillBackground(True)
+        self._layout.addWidget(self._label)
+        self._layout.setContentsMargins(QMargins(4, 12, 4, 4))
+
+        # Apply initial model values!
+        self.set_model(model)
 
     def paintEvent(self, event):
         with QPainter(self) as painter:
@@ -49,14 +52,7 @@ class SceneLinkWidget(QPushButton):
             painter.setPen(pen)
             painter.drawLine(pt + QPoint(4, 4), pt + QPoint(15, 4))
 
-    def add_custom_action(self, main_menu):
-        """This method is the handler which will be triggered when the user do
-        a right click on the widget.
-
-        :param main_menu: the QMenuAction to manage the menu
-        """
-        self._label.add_custom_action(main_menu)
-
+    @pyqtSlot()
     def _handle_click(self):
         if len(self.model.target) > 0:
             parts = self.model.target.split(':')
@@ -100,6 +96,39 @@ class SceneLinkWidget(QPushButton):
         new_pos = self.pos() + offset
         self.model.set(x=new_pos.x(), y=new_pos.y())
         self.move(new_pos)
+
+    def get_actions(self):
+        """Return an action for the scene widget handler
+        """
+        edit_action = QAction("Edit Label", self)
+        edit_action.triggered.connect(self.edit_colors_text)
+
+        return [edit_action]
+
+    @pyqtSlot()
+    def edit_colors_text(self):
+        dialog = TextDialog(self.model)
+        if dialog.exec() == QDialog.Rejected:
+            return
+
+        self.set_model(dialog.label_model)
+
+    def set_model(self, model):
+
+        self.model = model
+        self._label.setText(self.model.text)
+        self._label.setLineWidth(self.model.frame_width)
+
+        font_properties = QFont()
+        font_properties.fromString(self.model.font)
+        self._label.setFont(font_properties)
+
+        palette = self._label.palette()
+        palette.setColor(self._label.foregroundRole(),
+                         QColor(self.model.foreground))
+        palette.setColor(self._label.backgroundRole(),
+                         QColor(self.model.background))
+        self._label.setPalette(palette)
 
     def edit(self, scene_view):
         dialog = SceneLinkDialog(self.model, parent=scene_view)
