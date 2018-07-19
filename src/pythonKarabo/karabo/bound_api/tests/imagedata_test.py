@@ -55,6 +55,17 @@ def test_imagedata_from_ndarray():
     assert imageData.getROIOffsets() == (0, 0, 0)
     assert imageData.getBinning() == (1, 1, 1)
 
+    arr = np.arange(220000, dtype='uint8').reshape(100, 200, 11)
+    imageData = ImageData(arr)
+    assert np.all(imageData.getData() == arr)
+    assert compare_ndarray_data_ptrs(imageData.getData(), arr)
+
+    assert imageData.getDimensionTypes() == (0, 0, 0)
+    assert imageData.getDimensions() == (100, 200, 11)
+    assert imageData.getEncoding() == Encoding.GRAY
+    assert imageData.getROIOffsets() == (0, 0, 0)
+    assert imageData.getBinning() == (1, 1, 1)
+
 
 def test_ndarry_refcounting():
     arr = np.arange(20000, dtype='uint8').reshape(100, 200)
