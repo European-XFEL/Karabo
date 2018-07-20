@@ -425,7 +425,7 @@ class NetworkOutput(Configurable):
         description="What to do if currently no share-input channel is "
                     "available for writing to",
         options=["queue", "drop", "wait", "throw"],
-        assignment=Assignment.OPTIONAL, defaultValue="wait",
+        assignment=Assignment.OPTIONAL, defaultValue="drop",
         accessMode=AccessMode.INITONLY)
 
     @String(
