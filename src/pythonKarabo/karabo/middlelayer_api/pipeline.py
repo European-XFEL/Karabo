@@ -433,11 +433,12 @@ class NetworkOutput(Configurable):
         description="The hostname which connecting clients will be routed to",
         assignment=Assignment.OPTIONAL, defaultValue="default",
         accessMode=AccessMode.INITONLY)
+    @coroutine
     def hostname(self, value):
         if value == "default":
-            self.hostname = socket.gethostname()
+            hostname = socket.gethostname()
         else:
-            self.hostname = value
+            hostname = value
 
         instance = get_event_loop().instance()
 
@@ -449,8 +450,8 @@ class NetworkOutput(Configurable):
             """
             get_event_loop().create_task(self.serve(reader, writer), instance)
 
-        self.server = yield from start_server(serve, host=self.hostname,
-                                              port=0)
+        self.server = yield from start_server(serve, host=hostname, port=0)
+        self.hostname = hostname
 
     def __init__(self, config):
         super().__init__(config)
@@ -459,8 +460,16 @@ class NetworkOutput(Configurable):
         self.copy_futures = []
         self.shared_queue = Queue(0 if self.noInputShared == "queue" else 1)
 
+    @coroutine
     def getInformation(self, channelName):
         self.channelName = channelName
+        if self.server is None:
+            # We are called when we just started, hence we wait for our
+            # server to come online!
+            loop = get_event_loop()
+            while self.server is None:
+                yield from loop.waitForChanges()
+
         host, port = self.server.sockets[0].getsockname()
         return Hash("connectionType", "tcp", "hostname", self.hostname,
                     "port", numpy.uint32(port))
