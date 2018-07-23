@@ -82,7 +82,6 @@ class Channel(object):
                 future.cancel()
             raise error.popitem()[1]
         chunk = done["chunk"]
-
         encoded = []
         info = []
         for data, timestamp in chunk:
@@ -458,6 +457,7 @@ class NetworkOutput(Configurable):
         self.copy_queues = []
         self.wait_queues = []
         self.copy_futures = []
+        self.has_shared = False
         self.shared_queue = Queue(0 if self.noInputShared == "queue" else 1)
 
     @coroutine
@@ -484,6 +484,7 @@ class NetworkOutput(Configurable):
 
             assert message["dataDistribution"] in {"shared", "copy"}
             if message["dataDistribution"] == "shared":
+                self.has_shared = True
                 while True:
                     yield from channel.nextChunk(self.shared_queue.get())
             elif message["onSlowness"] == "drop":
@@ -515,7 +516,8 @@ class NetworkOutput(Configurable):
             channel.close()
 
     def writeChunkNoWait(self, chunk):
-        if self.noInputShared != "wait" and not self.shared_queue.full():
+        if (self.has_shared and self.noInputShared != "wait"
+                and not self.shared_queue.full()):
             self.shared_queue.put_nowait(chunk)
         elif self.noInputShared == "throw":
             raise QueueFull()
@@ -531,7 +533,7 @@ class NetworkOutput(Configurable):
         tasks = [sleep(0)]
         try:
             self.writeChunkNoWait(chunk)
-            if self.noInputShared == "wait":
+            if self.has_shared and self.noInputShared == "wait":
                 tasks.append(self.shared_queue.put(chunk))
             for queue in self.wait_queues:
                 tasks.append(queue.put(chunk))
