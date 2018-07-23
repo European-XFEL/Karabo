@@ -89,6 +89,16 @@ class ProjectDatabaseConnection(QObject):
             self._items_saved(items)
         elif sender is KaraboEventSender.NetworkConnectStatus:
             self._have_logged_in = False
+        elif sender is KaraboEventSender.ProjectDBConnect:
+            # NOTE: The ProjectDB came online after we have logged into the
+            # GUI server. Hence we have to reestablish our connection to
+            # the project database.
+            instance_id = data.get('device', '')
+            if instance_id == self.project_manager:
+                self._have_logged_in = False
+                self._ensure_login()
+            return True
+
         return False
 
     # -------------------------------------------------------------------
