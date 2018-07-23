@@ -130,6 +130,9 @@ namespace karabo {
                     finalEncoding = Encoding::RGB;
                 } else if (rank == 3 && dataDims.x3() == 4) {
                     finalEncoding = Encoding::RGBA;
+                } else if (rank == 3) {
+                    // Assume it is a stack of GRAY images
+                    finalEncoding = Encoding::GRAY;
                 }
             }
             setEncoding(finalEncoding);
