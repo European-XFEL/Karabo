@@ -87,8 +87,13 @@ def get_dimensions_and_encoding(image_node):
         dimX = image_node.dims.value[DIMENSIONS['X']]
         dimY = image_node.dims.value[DIMENSIONS['Y']]
         dimZ = image_node.dims.value[DIMENSIONS['Z']]
-        if encoding == EncodingType.UNDEFINED and dimZ == 3:
-            encoding = EncodingType.RGB  # assume it's RGB
+        if encoding == EncodingType.UNDEFINED:
+            if dimZ == 3:
+                encoding = EncodingType.RGB  # assume it's RGB
+            elif dimZ == 4:
+                encoding = EncodingType.RGBA  # assume it's RGBA
+            else:
+                encoding = EncodingType.GRAY  # assume it's a stack of GRAY
 
     return dimX, dimY, dimZ, encoding
 
