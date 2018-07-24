@@ -248,6 +248,9 @@ class Manager(QObject):
         for instance_id, class_id, _ in devices:
             if class_id == 'AlarmService':
                 self._announce_alarm_services([instance_id])
+            elif class_id == 'ProjectManager':
+                broadcast_event(KaraboEventSender.ProjectDBConnect,
+                                {'device': instance_id})
 
     def handle_instanceUpdated(self, topologyEntry):
         self._topology.instance_updated(topologyEntry)
