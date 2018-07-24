@@ -230,6 +230,7 @@ class TestChannel(DeviceTest):
         output.channelName = "channelname"
         task = background(output.serve(self.reader, self.writer))
         self.feedHash(Hash("reason", "hello", "dataDistribution", "shared"))
+        yield from self.sleep()
         output.writeChunkNoWait(self.sample_data)
         yield from self.sleep()
         self.feedRequest()
@@ -249,6 +250,7 @@ class TestChannel(DeviceTest):
         output.channelName = "channelname"
         task = background(output.serve(self.reader, self.writer))
         self.feedHash(Hash("reason", "hello", "dataDistribution", "shared"))
+        yield from self.sleep()
         yield from output.writeChunk([(Hash("a", 5), FakeTimestamp())])
         yield from self.sleep()
         self.feedRequest()
