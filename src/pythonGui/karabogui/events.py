@@ -30,6 +30,7 @@ class KaraboEventSender(Enum):
     ProcessingDelay = "Delay"
     RemoveAlarmServices = "Remove alarm services"
     RemoveProjectModelViews = "Remove scene or macro views"
+    ProjectDBConnect = "Reestablish connection to project db"
     ProjectDomainsList = "Project domains list"
     ProjectAttributeUpdated = "Project attribute updated"
     ProjectFilterUpdated = "Project filter updated"
