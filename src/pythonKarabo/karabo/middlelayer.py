@@ -53,7 +53,7 @@ from .middlelayer_api.pipeline import (
 from .middlelayer_api.project.api import (
     convert_old_project, OldProject, read_project_model, write_project_model
 )
-from .middlelayer_api.macro import Macro, Monitor
+from .middlelayer_api.macro import Macro, Monitor, RemoteDevice
 from .middlelayer_api.device import Device
 from .middlelayer_api.registry import MetaRegistry, Registry
 from .middlelayer_api.schema import (
