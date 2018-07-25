@@ -1,4 +1,19 @@
 ****************************
+What's New in Karabo 2.2.4.3
+****************************
+
+Hotfix release regarding a missing specification of ImageData encoding in devices
+for detector images (stack of images).
+
+Detailed Merge-Log
+==================
+
+bound/cpp core and GUI
+++++++++++++++++++++++
+-  FIX ImageData and GUI for detector images (stack of GRAY images) !2906
+
+
+****************************
 What's New in Karabo 2.2.4.2
 ****************************
 
