@@ -56,6 +56,20 @@ namespace karabo {
 
         typedef Encoding::EncodingType EncodingType;
 
+        namespace Rotation {
+
+            enum RotationType {
+
+                UNDEFINED = -1,
+                ROT_0 = 0,
+                ROT_90 = 90,
+                ROT_180 = 180,
+                ROT_270 = 270,
+            };
+        }
+
+        typedef Rotation::RotationType RotationType;
+
         class ImageData : protected karabo::util::Hash {
 
         public:
@@ -131,6 +145,16 @@ namespace karabo {
             karabo::util::Dims getBinning() const;
 
             void setBinning(const karabo::util::Dims& binning);
+
+            int getRotation() const;
+
+            void setRotation(const RotationType rotation);
+
+            bool getFlipX() const;
+            bool getFlipY() const;
+
+            void setFlipX(const bool flipX);
+            void setFlipY(const bool flipY);
 
             /**
              * Get number of bits per pixel used to achieve the image data.
