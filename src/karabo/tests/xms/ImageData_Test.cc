@@ -61,6 +61,11 @@ void ImageData_Test::testConstructor() {
         CPPUNIT_ASSERT(imageBinning.x1() == 1);
         CPPUNIT_ASSERT(imageBinning.x2() == 1);
 
+        CPPUNIT_ASSERT(image.getRotation() == Rotation::ROT_0);
+
+        CPPUNIT_ASSERT_EQUAL(image.getFlipX(), false);
+        CPPUNIT_ASSERT_EQUAL(image.getFlipY(), false);
+
         CPPUNIT_ASSERT_EQUAL(32, image.getBitsPerPixel());
 
         CPPUNIT_ASSERT_EQUAL(std::string(), image.getDimensionScales());
@@ -117,6 +122,9 @@ void ImageData_Test::testConstructor() {
         CPPUNIT_ASSERT_NO_THROW(image.getHeader());
         CPPUNIT_ASSERT_NO_THROW(image.getROIOffsets());
         CPPUNIT_ASSERT_NO_THROW(image.getBinning());
+        CPPUNIT_ASSERT_NO_THROW(image.getRotation());
+        CPPUNIT_ASSERT_NO_THROW(image.getFlipX());
+        CPPUNIT_ASSERT_NO_THROW(image.getFlipY());
     }
 }
 
@@ -138,6 +146,10 @@ void ImageData_Test::testSetAndGetMethods() {
         image.setDimensions(dims);
         image.setROIOffsets(offsets);
         image.setBinning(binning);
+        image.setRotation(Rotation::ROT_90);
+        // false/true flip is tested in bound_api
+        image.setFlipX(true);
+        image.setFlipY(false);
         image.setDimensionTypes(dimTypes);
         image.setHeader(Hash("one", 1));
 
@@ -158,6 +170,11 @@ void ImageData_Test::testSetAndGetMethods() {
         CPPUNIT_ASSERT(imageBinning.rank() == 2);
         CPPUNIT_ASSERT(imageBinning.x1() == 3);
         CPPUNIT_ASSERT(imageBinning.x2() == 8);
+
+        CPPUNIT_ASSERT(image.getRotation() == Rotation::ROT_90);
+
+        CPPUNIT_ASSERT_EQUAL(image.getFlipX(), true);
+        CPPUNIT_ASSERT_EQUAL(image.getFlipY(), false);
 
         CPPUNIT_ASSERT(imageDimTypes.size() == 2);
         CPPUNIT_ASSERT(imageDimTypes[0] == Dimension::DATA);

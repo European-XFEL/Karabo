@@ -336,6 +336,17 @@ void exportPyXmsInputOutputChannel() {
     }
 
     {
+        bp::enum_< karabo::xms::Rotation::RotationType>("Rotation")
+                .value("UNDEFINED", karabo::xms::Rotation::UNDEFINED)
+                .value("ROT_0", karabo::xms::Rotation::ROT_0)
+                .value("ROT_90", karabo::xms::Rotation::ROT_90)
+                .value("ROT_180", karabo::xms::Rotation::ROT_180)
+                .value("ROT_270", karabo::xms::Rotation::ROT_270)
+                .export_values()
+                ;
+    }
+
+    {
         bp::class_<karabo::xms::ImageData, boost::shared_ptr<karabo::xms::ImageData > >("ImageData", bp::init<>())
 
                 .def("__init__", bp::make_constructor(&karathon::ImageDataWrap::make5,
@@ -364,6 +375,18 @@ void exportPyXmsInputOutputChannel() {
                 .def("getBinning", &karathon::ImageDataWrap::getBinningPy)
 
                 .def("setBinning", &karathon::ImageDataWrap::setBinningPy, (bp::arg("binning")))
+
+                .def("getRotation", &karabo::xms::ImageData::getRotation)
+
+                .def("setRotation", &karabo::xms::ImageData::setRotation, (bp::arg("rotation")))
+
+                .def("getFlipX", &karabo::xms::ImageData::getFlipX)
+
+                .def("setFlipX", &karabo::xms::ImageData::setFlipX, (bp::arg("flipX")))
+
+                .def("getFlipY", &karabo::xms::ImageData::getFlipY)
+
+                .def("setFlipY", &karabo::xms::ImageData::setFlipY, (bp::arg("flipY")))
 
                 .def("getBitsPerPixel", &karabo::xms::ImageData::getBitsPerPixel)
 
