@@ -2,7 +2,7 @@ import weakref
 
 import numpy as np
 
-from karabo.bound import Encoding, Hash, ImageData
+from karabo.bound import Encoding, Hash, ImageData, Rotation
 from karabo.testing.utils import compare_ndarray_data_ptrs
 
 
@@ -18,6 +18,9 @@ def test_imagedata_from_ndarray():
     assert imageData.isIndexable()
     assert imageData.getROIOffsets() == (0, 0)
     assert imageData.getBinning() == (1, 1)
+    assert imageData.getRotation() == Rotation.ROT_0
+    assert imageData.getFlipX() == False
+    assert imageData.getFlipY() == False
 
     # Two additional tests on bitsPerPixel
     # 1. set it in constructor
@@ -107,6 +110,11 @@ def test_imagedata_set_and_get():
     imageData.setEncoding(Encoding.GRAY)
     imageData.setROIOffsets((20, 10))  # y, x
     imageData.setBinning((8, 3))
+    imageData.setRotation(Rotation.ROT_180)
+    # True/False combination is tested in C++
+    imageData.setFlipX(False)
+    imageData.setFlipY(True)
+
     assert np.all(imageData.getData() == a)
     # Now we set dimensions which trickle down to getData.
     # Before doing so, dimensions are undefined/empty (NOT taken from a!).
@@ -119,6 +127,9 @@ def test_imagedata_set_and_get():
     assert imageData.getEncoding() == Encoding.GRAY
     assert imageData.getROIOffsets() == (20, 10)
     assert imageData.getBinning() == (8, 3)
+    assert imageData.getRotation() == Rotation.ROT_180
+    assert imageData.getFlipX() is False
+    assert imageData.getFlipY() is True
 
 
 def test_imagedata_in_hash():
