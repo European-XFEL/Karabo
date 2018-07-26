@@ -302,6 +302,14 @@ namespace karabo {
                 return setDefaultValue("shape", tmp);
             }
 
+            NDArrayElement& unit(const UnitType& unit) {
+                return setUnit("data", unit);
+            }
+
+            NDArrayElement& metricPrefix(const MetricPrefixType& metricPrefix) {
+                return setMetricPrefix("data", metricPrefix);
+            }
+
             void commit() {
                 // As NDArrayElement is only used for channel descriptions, it should always be read only.
                 readOnly();

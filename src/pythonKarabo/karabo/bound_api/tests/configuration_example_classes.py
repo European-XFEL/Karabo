@@ -647,6 +647,8 @@ class ArrayContainer(Base):
         NDARRAY_ELEMENT(expected).key("exampleKey16")
                 .dtype("BOOL")
                 .shape([2, 3])
+                .unit(Unit.DEGREE_CELSIUS)
+                .metricPrefix(MetricPrefix.CENTI)
                 .skipValidation()
                 .commit()
                 ,

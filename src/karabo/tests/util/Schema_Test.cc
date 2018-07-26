@@ -317,14 +317,13 @@ void Schema_Test::testGetAllowedStates() {
 
 
 void Schema_Test::testGetUnit() {
-    int units = m_schema.getUnit("exampleKey2");
-    CPPUNIT_ASSERT(units == Unit::METER);
+    CPPUNIT_ASSERT(m_schema.getUnit("exampleKey2") == Unit::METER);
+    CPPUNIT_ASSERT(m_schema.getUnitName("exampleKey2") == "meter");
+    CPPUNIT_ASSERT(m_schema.getUnitSymbol("exampleKey2") == "m");
 
-    string unitName = m_schema.getUnitName("exampleKey2");
-    CPPUNIT_ASSERT(unitName == "meter");
-
-    string unitSymbol = m_schema.getUnitSymbol("exampleKey2");
-    CPPUNIT_ASSERT(unitSymbol == "m");
+    CPPUNIT_ASSERT(m_schema.getUnit("exampleKey10.data") == Unit::DEGREE_CELSIUS);
+    CPPUNIT_ASSERT(m_schema.getUnitName("exampleKey10.data") == "degree_celsius");
+    CPPUNIT_ASSERT(m_schema.getUnitSymbol("exampleKey10.data") == "degC");
 }
 
 
@@ -332,6 +331,10 @@ void Schema_Test::testGetMetricPrefix() {
     CPPUNIT_ASSERT(m_schema.getMetricPrefix("exampleKey2") == MetricPrefix::MILLI);
     CPPUNIT_ASSERT(m_schema.getMetricPrefixName("exampleKey2") == "milli");
     CPPUNIT_ASSERT(m_schema.getMetricPrefixSymbol("exampleKey2") == "m");
+
+    CPPUNIT_ASSERT(m_schema.getMetricPrefix("exampleKey10.data") == MetricPrefix::CENTI);
+    CPPUNIT_ASSERT(m_schema.getMetricPrefixName("exampleKey10.data") == "centi");
+    CPPUNIT_ASSERT(m_schema.getMetricPrefixSymbol("exampleKey10.data") == "c");
 }
 
 
@@ -716,10 +719,9 @@ void Schema_Test::testHelpFunction() {
 
 void Schema_Test::testOverwriteElement() {
     Schema schema = Configurator<TestStruct1>::getSchema("TestStruct2");
-    CPPUNIT_ASSERT(schema.getAliasFromKey<int>("exampleKey2") == 20);
 
-    schema = Configurator<TestStruct1>::getSchema("TestStruct2", Schema::AssemblyRules(WRITE));
-    CPPUNIT_ASSERT(schema.getAliasFromKey<int>("exampleKey3") == 20);
+    CPPUNIT_ASSERT(schema.getAliasFromKey<int>("exampleKey2") == 20);
+    CPPUNIT_ASSERT(schema.getAliasFromKey<int>("exampleKey3") == 30);
 }
 
 
