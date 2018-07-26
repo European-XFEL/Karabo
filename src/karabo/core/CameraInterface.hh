@@ -65,7 +65,12 @@ namespace karabo {
                         .commit();
 
                 Schema data;
-                IMAGEDATA_ELEMENT(data).key("image")
+                NODE_ELEMENT(data).key("data")
+                        .displayedName("Data")
+                        .setDaqDataType(DaqDataType::TRAIN)
+                        .commit();
+
+                IMAGEDATA_ELEMENT(data).key("data.image")
                         .commit();
 
                 OUTPUT_CHANNEL(expected).key("output")
