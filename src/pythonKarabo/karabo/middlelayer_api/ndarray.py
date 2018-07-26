@@ -1,6 +1,7 @@
 import numpy
 
 from .basetypes import NoneValue, QuantityValue
+from .enums import MetricPrefix, Unit
 from .hash import Attribute, Descriptor, Hash, Simple, Type
 
 
@@ -11,6 +12,9 @@ class NDArray(Type):
         if node is not None:
             dtype = Type.types[node["type", "defaultValue"]].numpy
             shape = node["shape", "defaultValue"]
+            kwargs['unitSymbol'] = Unit(node["data", "unitSymbol"])
+            kwargs['metricPrefixSymbol'] = MetricPrefix(
+                node["data", "metricPrefixSymbol"])
         if isinstance(dtype, type) and issubclass(dtype, Simple):
             dtype = dtype.numpy
         self.dtype = numpy.dtype(dtype)

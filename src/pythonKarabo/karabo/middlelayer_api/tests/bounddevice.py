@@ -89,6 +89,8 @@ class TestDevice(PythonDevice):
 
             NDARRAY_ELEMENT(expected).key("ndarray")
             .shape("3,2")
+            .unit(METER)
+            .metricPrefix(KILO)
             .dtype("FLOAT")
             .commit(),
 
