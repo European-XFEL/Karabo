@@ -264,6 +264,28 @@ namespace karabo {
             }
 
             /**
+             * Set the unit for a subkey of the CustomNodeElement
+             * @param subKey
+             * @param unit
+             * @return 
+             */
+            Derived& setUnit(const std::string& subKey, const UnitType& unit) {
+                m_schema.setUnit(m_key + "." + subKey, unit);
+                return *(static_cast<Derived*> (this));
+            }
+
+            /**
+             * Set the metric prefix for a subkey of the CustomNodeElement
+             * @param subKey
+             * @param metricPrefix
+             * @return 
+             */
+            Derived& setMetricPrefix(const std::string& subKey, const MetricPrefixType& metricPrefix) {
+                m_schema.setMetricPrefix(m_key + "." + subKey, metricPrefix);
+                return *(static_cast<Derived*> (this));
+            }
+
+            /**
              * Registers this element into the Schema
              */
             void commit() {
