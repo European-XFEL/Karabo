@@ -11,6 +11,8 @@ class NDArray(Type):
         if node is not None:
             dtype = Type.types[node["type", "defaultValue"]].numpy
             shape = node["shape", "defaultValue"]
+            kwargs['unitSymbol'] = node["data", "unitSymbol"]
+            kwargs['metricPrefixSymbol'] = node["data", "metricPrefixSymbol"]
         if isinstance(dtype, type) and issubclass(dtype, Simple):
             dtype = dtype.numpy
         self.dtype = numpy.dtype(dtype)
