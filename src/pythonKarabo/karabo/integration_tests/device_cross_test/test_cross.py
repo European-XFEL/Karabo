@@ -146,8 +146,11 @@ class Tests(DeviceTest):
             self.assertEqual(proxy.state, State.UNKNOWN)
             self.assertEqual(proxy.alarmCondition, AlarmCondition.NONE)
 
-            self.assertEqual(proxy.ndarray[0, 1], 2)
+            self.assertEqual(proxy.ndarray[0, 1], 2 * unit.kilometer)
             self.assertEqual(proxy.ndarray.shape, (2, 3))
+            self.assertEqual(proxy.ndarray.descriptor.unitSymbol, Unit.METER)
+            self.assertEqual(proxy.ndarray.descriptor.metricPrefixSymbol,
+                             MetricPrefix.KILO)
             self.assertEqual(proxy.ndarray.dtype.str, "<i8")
 
             with self.assertRaises(ValueError):
