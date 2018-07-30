@@ -3,7 +3,7 @@ from abc import ABCMeta, abstractmethod
 from karathon import (
     OVERWRITE_ELEMENT, SLOT_ELEMENT, IMAGEDATA_ELEMENT, OUTPUT_CHANNEL,
     DOUBLE_ELEMENT, NODE_ELEMENT, BOOL_ELEMENT, PATH_ELEMENT,
-    STRING_ELEMENT, INT32_ELEMENT, Schema, SignalSlotable, Unit)
+    STRING_ELEMENT, INT32_ELEMENT, DaqDataType, Schema, SignalSlotable, Unit)
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from .no_fsm import NoFsm
 from karabo.common.states import State
@@ -58,7 +58,12 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
         data = Schema()
         
         (
-        IMAGEDATA_ELEMENT(data).key("image")
+        NODE_ELEMENT(data).key("data")
+                .displayedName("Data")
+                .setDaqDataType(DaqDataType.TRAIN)
+                .commit(),
+
+        IMAGEDATA_ELEMENT(data).key("data.image")
                 .commit(),
 
         OUTPUT_CHANNEL(expected).key("output")
