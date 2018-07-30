@@ -344,11 +344,12 @@ class Manager(QObject):
         d = {'success': success, 'items': reply.get('items', [])}
         broadcast_event(KaraboEventSender.ProjectItemsLoaded, d)
 
-    @project_db_handler()
+    @project_db_handler(fall_through=True)
     def handle_projectSaveItems(self, reply):
         # ``reply`` is a Hash containing a list of item hashes
-        broadcast_event(KaraboEventSender.ProjectItemsSaved,
-                        {'items': reply['items']})
+        success = reply.get('success', True)
+        d = {'success': success, 'items': reply.get('items', [])}
+        broadcast_event(KaraboEventSender.ProjectItemsSaved, d)
 
     @project_db_handler()
     def handle_projectUpdateAttribute(self, reply):
