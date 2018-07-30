@@ -59,7 +59,7 @@ class Camera_interface_TestCase(unittest.TestCase):
         self.assertTrue(expected.has('trigger'))
         self.assertTrue(expected.has('stop'))
         self.assertTrue(expected.has('resetHardware'))
-        self.assertTrue(expected.has('output.schema.image'))
+        self.assertTrue(expected.has('output.schema.data.image'))
         self.assertTrue(expected.has('exposureTime'))
         self.assertTrue(expected.has('imageStorage'))
 
