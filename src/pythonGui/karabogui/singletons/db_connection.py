@@ -85,8 +85,9 @@ class ProjectDatabaseConnection(QObject):
             items = data.get('items', [])
             self._items_loaded(items, success)
         elif sender is KaraboEventSender.ProjectItemsSaved:
+            success = data.get('success')
             items = data.get('items', [])
-            self._items_saved(items)
+            self._items_saved(items, success)
         elif sender is KaraboEventSender.NetworkConnectStatus:
             self._have_logged_in = False
         elif sender is KaraboEventSender.ProjectDBConnect:
@@ -225,7 +226,8 @@ class ProjectDatabaseConnection(QObject):
             # Project loading failed, use the fast track to tell the world
             self._waiting_for_read.clear()
             self._read_items_buffer = []
-            self._broadcast_is_processing(False, bail=True)
+            self._broadcast_is_processing(False, bail=True,
+                                          loading_failed=True)
             return
 
         # Then go back through and load any waiting objects
@@ -237,18 +239,24 @@ class ProjectDatabaseConnection(QObject):
         # Make a single request to the GUI server
         self.flush()
 
-    def _items_saved(self, items):
+    def _items_saved(self, items, success):
         """ A bunch of items were just saved
         """
-        for item in items:
-            domain = item['domain']
-            uuid = item['uuid']
-            entry = item['entry']
-            date = entry.get('date', '') if entry is not None else ''
-            success = item['success']
-            if not success:
-                messagebox.show_error(item['reason'])
-            self._pop_writing(domain, uuid, date, success)
+        if success:
+            for item in items:
+                domain = item['domain']
+                uuid = item['uuid']
+                entry = item['entry']
+                date = entry.get('date', '') if entry is not None else ''
+                success = item['success']
+                if not success:
+                    messagebox.show_error(item['reason'])
+                self._pop_writing(domain, uuid, date, success)
+        else:
+            # Project writing failed, use the fast track to tell the world
+            self._waiting_for_write.clear()
+            self._write_items_buffer = []
+            self._broadcast_is_processing(False, bail=True)
 
     # -------------------------------------------------------------------
     # private interface
@@ -265,13 +273,15 @@ class ProjectDatabaseConnection(QObject):
             self.network.onProjectBeginSession(self.project_manager)
             self._have_logged_in = True
 
-    def _broadcast_is_processing(self, previous_processing, *, bail=False):
+    def _broadcast_is_processing(self, previous_processing, *,
+                                 bail=False, loading_failed=False):
         """Create broadcast event and send to all registered ``QObjects``
         """
         if bail:
-            # Tell the world reading project failed
+            # Tell the world reading or writing project failed
             broadcast_event(KaraboEventSender.DatabaseIsBusy,
-                            {'is_processing': False, 'bail': True})
+                            {'is_processing': False,
+                             'loading_failed': loading_failed})
 
         # Check current processing state against previous one
         if self.is_processing() == previous_processing:
