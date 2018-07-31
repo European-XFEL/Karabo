@@ -10,6 +10,7 @@ from PyQt4.QtCore import pyqtSlot, QCoreApplication, Qt
 from PyQt4.QtGui import (QDialog, QPushButton, QListWidget, QListWidgetItem,
                          QInputDialog, QHBoxLayout, QVBoxLayout,
                          QFontMetrics)
+
 from karabo.common.api import (KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_MIN_SIZE)
 from karabogui.binding.api import (
     VectorBoolBinding, VectorDoubleBinding, VectorFloatBinding,
