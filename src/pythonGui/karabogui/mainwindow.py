@@ -102,6 +102,7 @@ class MainWindow(QMainWindow):
 
         event.accept()
         QMainWindow.closeEvent(self, event)
+        qApp.quit()
 
     def karaboBroadcastEvent(self, event):
         sender = event.sender
