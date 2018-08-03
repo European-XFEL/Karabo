@@ -1,3 +1,4 @@
+import os
 from struct import calcsize, unpack
 import warnings
 from xml.sax import make_parser
@@ -105,6 +106,23 @@ class EndElement(Exception):
 
 
 class XMLParser(ContentHandler):
+    """Convert a valid Karabo XML string into its middlelayer representation
+
+    Converting a given string back to a hash, for instance, is done so:
+
+        >>> s = ('<root KRB_Artificial=""><a KRB_Type="INT32" >1</a>'
+                 '<b KRB_Type="INT32" >2</b></root>"')
+        >>> h = XMLParser.read(s)
+        >>> isinstance(h, Hash)
+        True
+
+    Reading from a file can be done as follows:
+
+        >>> with open("file.xml") as fin:
+                h = XMLParser.read(fin.read())
+        >>> isinstance(h, Hash)
+        True
+    """
     def __init__(self):
         super().__init__()
         self.parser = self.parseAll()
@@ -166,6 +184,31 @@ def encodeXML(data):
 def writeXML(data, file):
     for d in yieldXML(data):
         file.write(d)
+
+
+def saveToFile(hash_, filename):
+    """Write a Hash to XML
+
+    If the file already exists, it gets overwritten
+    """
+    directory = os.path.dirname(filename)
+    os.makedirs(directory, exist_ok=True)
+
+    with open(filename, "w") as fout:
+        fout.write(encodeXML(hash_))
+
+
+def loadFromFile(filename):
+    """Load a Hash from file.
+
+    If the file does not exist, then return None
+    """
+    if not os.path.exists(filename):
+        return
+
+    with open(filename) as fin:
+        hash_ = decodeXML(fin.read())
+        return hash_
 
 
 # legacy API
