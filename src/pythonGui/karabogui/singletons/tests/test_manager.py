@@ -371,7 +371,7 @@ class TestManager(GuiTestCase):
             manager.handle_projectSaveItems(h)
             broadcast_event.assert_called_with(
                 KaraboEventSender.ProjectItemsSaved,
-                {'items': ['remember_this']}
+                {'items': ['remember_this'], 'success': True}
             )
 
     def test_handle_project_update_attribute(self):
