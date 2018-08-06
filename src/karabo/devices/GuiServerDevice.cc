@@ -1028,7 +1028,7 @@ namespace karabo {
                 }
 
                 {
-                    // Erase all bookmarks (InputChannel pointers) associated with instance that gone 
+                    // Erase all bookmarks (InputChannel pointers) associated with instance that gone
                     NetworkMap::iterator iter;
                     boost::mutex::scoped_lock lock(m_networkMutex);
 
@@ -1319,7 +1319,7 @@ namespace karabo {
                 if(!response.get<bool>("success")) {
                     KARABO_LOG_ERROR<<"Schema attribute update failed for device: "<< deviceId;
                 }
-                
+
                 boost::mutex::scoped_lock(m_pendingAttributesMutex);
                 if (m_pendingAttributeUpdates.erase(deviceId) == 0) {
                    KARABO_LOG_ERROR<<"Received non-requested attribute update response from: "<< deviceId;
@@ -1588,7 +1588,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in forwarding reply of type '" << replyType << "': " << e;
             }
         }
-        
+
         void GuiServerDevice::forwardRequestReply(WeakChannelPointer channel, const karabo::util::Hash& reply, const std::string& token) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "forwardRequestReply for token : "<< token;
@@ -1603,8 +1603,8 @@ namespace karabo {
         bool GuiServerDevice::checkProjectManagerId(WeakChannelPointer channel, const std::string& deviceId, const std::string & type) {
             boost::shared_lock<boost::shared_mutex> lk(m_projectManagerMutex);
             if (m_projectManagers.find(deviceId) != m_projectManagers.end()) return true;
-
-            Hash h("type", type, "reply", Hash("success", false, "reason", "Project manager doesn't exist"));
+            const std::string reason = "Project manager doesn't exist: " + type;
+            Hash h("type", type, "reply", Hash("success", false, "reason", reason));
             safeClientWrite(channel, h, LOSSLESS);
             return false;
 
@@ -1634,7 +1634,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in broad config group update: " << e.userFriendlyMsg();
             }
         }
-        
+
         void GuiServerDevice::onRequestFromSlot(WeakChannelPointer channel, const karabo::util::Hash& hash) {
             Hash failureInfo;
             try {
@@ -1657,7 +1657,7 @@ namespace karabo {
                 safeClientWrite(channel, reply, LOSSLESS);
             }
         }
-        
+
         void GuiServerDevice::onRequestFromSlotErrorHandler(WeakChannelPointer channel, const karabo::util::Hash& info, const std::string& token) {
             try {
                 throw;
