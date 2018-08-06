@@ -1,7 +1,7 @@
 import os
 from struct import calcsize, unpack
 import warnings
-from xml.sax import make_parser
+from xml.sax import make_parser, SAXException
 from xml.sax.saxutils import unescape
 from xml.sax.handler import ContentHandler
 
@@ -191,6 +191,8 @@ def saveToFile(hash_, filename):
 
     If the file already exists, it gets overwritten
     """
+
+    assert isinstance(hash_, Hash), "Expected Hash, not {}".format(type(hash_))
     directory = os.path.dirname(filename)
     os.makedirs(directory, exist_ok=True)
 
@@ -207,8 +209,11 @@ def loadFromFile(filename):
         return
 
     with open(filename) as fin:
-        hash_ = decodeXML(fin.read())
-        return hash_
+        try:
+            hash_ = decodeXML(fin.read())
+            return hash_
+        except SAXException:
+            raise "{} malformatted".format(filename)
 
 
 # legacy API

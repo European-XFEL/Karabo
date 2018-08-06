@@ -64,12 +64,25 @@ class TestSerializers(TestCase):
         except Exception as e:
             self.fail("Failed as file already exists")
 
+        # Test with non-Hash value
+        with self.assertRaises(Exception):
+            staveToFile(None, FILENAME)
+
     def test_loadFromFile(self):
+        # Test valid xml
         with open("hash.xml", "w") as fout:
             fout.write(encodeXML(HASH))
 
         h = loadFromFile("hash.xml")
         self.assertEqual(h, HASH)
+
+        # Test malformatted xml
+        with open("bad.xml", "w") as fout:
+            fout.write(MDL_HASH_XML[:-5])
+
+        with self.assertRaises(Exception):
+            loadFromFile("bad.xml")
+
 
     def test_load_bound_hash_xml(self):
         with open("bash.xml", "w") as fout:
