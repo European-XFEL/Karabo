@@ -11,12 +11,14 @@ from PyQt4.QtGui import (QDialog, QPushButton, QListWidget, QListWidgetItem,
                          QInputDialog, QHBoxLayout, QVBoxLayout,
                          QFontMetrics)
 
+from karabo.common.api import (KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_MIN_SIZE)
 from karabogui.binding.api import (
     VectorBoolBinding, VectorDoubleBinding, VectorFloatBinding,
     VectorInt8Binding, VectorInt16Binding, VectorInt32Binding,
     VectorInt64Binding, VectorUint8Binding, VectorUint16Binding,
     VectorUint32Binding, VectorUint64Binding, get_editor_value
 )
+from karabogui import messagebox
 
 FLOAT_BINDINGS = (VectorDoubleBinding, VectorFloatBinding)
 INT_BINDINGS = (VectorInt8Binding, VectorInt16Binding, VectorInt32Binding,
@@ -35,6 +37,11 @@ class ListEdit(QDialog):
         if isinstance(self._proxy.binding, VectorBoolBinding):
             self._allowed_choices['0'] = 0
             self._allowed_choices['1'] = 1
+
+        # Check for possible size limitations!
+        attrs = proxy.binding.attributes
+        self._minSize = attrs.get(KARABO_SCHEMA_MIN_SIZE, None)
+        self._maxSize = attrs.get(KARABO_SCHEMA_MAX_SIZE, None)
 
         self.setWindowTitle('Edit list')
 
@@ -179,6 +186,12 @@ class ListEdit(QDialog):
 
     @pyqtSlot()
     def _on_add_clicked(self):
+        if (self._maxSize is not None
+                and self._list_widget.count() == self._maxSize):
+            messagebox.show_error("The vector size cannot be greater than {}!"
+                                  .format(self._maxSize), modal=False)
+            return
+
         if len(self._allowed_choices) < 1:
             value = self._retrieve_any_string(
                 self._add_caption, self._add_label)
@@ -214,6 +227,11 @@ class ListEdit(QDialog):
 
     @pyqtSlot()
     def _on_remove_clicked(self):
+        if (self._minSize is not None
+                and self._list_widget.count() == self._minSize):
+            messagebox.show_error("The vector size cannot be smaller than {}!"
+                                  .format(self._minSize), modal=False)
+            return
         self._list_widget.takeItem(self._list_widget.currentRow())
         self._on_update_buttons()
 
