@@ -130,9 +130,9 @@ class ProjectPanel(Searchable, BasePanelWidget):
             self._init_search_filter(status)
 
     def _handle_database_is_busy(self, data):
-        bail = data.get('bail', False)
+        loading_failed = data.get('loading_failed', False)
         is_processing = data['is_processing']
-        if bail:
+        if loading_failed:
             self._enable_partial_toolbar()
         else:
             self._enable_toolbar(not is_processing)
@@ -144,7 +144,7 @@ class ProjectPanel(Searchable, BasePanelWidget):
             qaction.setEnabled(enable)
 
     def _enable_partial_toolbar(self):
-        """ Project loading failed, only enable new project and load project
+        """ Project loading failed, restrict options
         """
         for qaction in self._toolbar_actions:
             if qaction.objectName() in ("new", "load"):
