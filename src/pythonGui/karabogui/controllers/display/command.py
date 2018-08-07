@@ -8,7 +8,7 @@ from traits.api import Instance, List
 
 from karabo.common.api import State, KARABO_SCHEMA_DISPLAYED_NAME
 from karabo.common.scenemodel.api import DisplayCommandModel
-from karabogui.const import CMD_LATCH
+from karabogui.const import LOCKED_COLOR
 from karabogui import globals as krb_globals
 from karabogui.binding.api import get_binding_value, SlotBinding
 from karabogui.controllers.api import (
@@ -72,7 +72,7 @@ class DisplayCommand(BaseBindingController):
         :param widget: QWidget
         """
         if self.model.requires_confirmation:
-            rgb = ("rgb({0}, {1}, {2})").format(*CMD_LATCH)
+            rgb = ("rgb({0}, {1}, {2})").format(*LOCKED_COLOR)
             widget.setStyleSheet(
                 'QToolButton {{ font: bold; color: {} }}'.format(rgb))
         else:
