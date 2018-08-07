@@ -105,6 +105,15 @@ def get_device_state_string(device_proxy):
     return get_binding_value(state_binding, '')
 
 
+def get_device_locked_string(device_proxy):
+    """Return a check if a device proxy is locked!
+    """
+    locked_binding = device_proxy.locked_binding
+    if locked_binding is None:
+        return ''
+    return get_binding_value(locked_binding, '')
+
+
 def get_icon(binding):
     """Get the proper icon to show next to a property in the configurator
     """

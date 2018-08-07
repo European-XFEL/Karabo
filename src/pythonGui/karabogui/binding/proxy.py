@@ -25,6 +25,8 @@ class BaseDeviceProxy(HasStrictTraits):
     binding = Instance(BindingRoot)
     # The root's `state` property, if existent
     state_binding = Instance(BaseBinding)
+    # The root's `lockedBy` property, if existent
+    locked_binding = Instance(BaseBinding)
     # ID of the server hosting this class
     server_id = String
     # True when the device is online
@@ -40,6 +42,7 @@ class BaseDeviceProxy(HasStrictTraits):
         `state_binding`
         """
         self.state_binding = self.get_property_binding('state')
+        self.locked_binding = self.get_property_binding('lockedBy')
 
     def _get_online(self):
         return self.status in ONLINE_STATUSES
