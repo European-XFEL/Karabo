@@ -19,7 +19,7 @@ from karabogui.binding.api import (
     ProjectDeviceProxy, PropertyProxy, SlotBinding, get_binding_value,
     has_changes)
 from karabogui.const import (
-    CMD_LATCH, OK_COLOR, ERROR_COLOR_ALPHA, PROPERTY_ALARM_COLOR,
+    OK_COLOR, ERROR_COLOR_ALPHA, LOCKED_COLOR, PROPERTY_ALARM_COLOR,
     PROPERTY_ALARM_COLOR_MAP, PROPERTY_WARN_COLOR)
 from karabogui.indicators import get_state_color, STATE_COLORS
 from karabogui.request import send_property_changes
@@ -296,7 +296,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 # Use device state and locking information for color
                 is_locked = get_device_locked_string(self.root)
                 if is_locked:
-                    color = CMD_LATCH
+                    color = LOCKED_COLOR
                 else:
                     in_error = State(state) == State.ERROR
                     color = ERROR_COLOR_ALPHA if in_error else OK_COLOR
