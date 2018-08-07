@@ -1469,7 +1469,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectBeginUserSession : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
-                if (!checkProjectManagerId(channel, projectManager, "projectBeginUserSession")) return;
+                if (!checkProjectManagerId(channel, projectManager, "projectBeginUserSession", "Project manager does not exist: Begin User Session failed.")) return;
                 const std::string& token = info.get<std::string>("token");
                 request(projectManager, "slotBeginUserSession", token)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectBeginUserSession", _1));
@@ -1483,7 +1483,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectEndUserSession : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
-                if (!checkProjectManagerId(channel, projectManager, "projectEndUserSession")) return;
+                if (!checkProjectManagerId(channel, projectManager, "projectEndUserSession", "Project manager does not exist: End User Session failed.")) return;
                 const std::string& token = info.get<std::string>("token");
                 request(projectManager, "slotEndUserSession", token)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectEndUserSession", _1));
@@ -1497,7 +1497,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectSaveItems : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
-                if (!checkProjectManagerId(channel, projectManager, "projectSaveItems")) return;
+                if (!checkProjectManagerId(channel, projectManager, "projectSaveItems", "Project manager does not exist: Project items cannot be saved.")) return;
                 const std::string& token = info.get<std::string>("token");
                 const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
                 request(projectManager, "slotSaveItems", token, items)
@@ -1512,7 +1512,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectLoadItems : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
-                if (!checkProjectManagerId(channel, projectManager, "projectLoadItems")) return;
+                if (!checkProjectManagerId(channel, projectManager, "projectLoadItems", "Project manager does not exist: Project items cannot be loaded.")) return;
                 const std::string& token = info.get<std::string>("token");
                 const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
                 request(projectManager, "slotLoadItems", token, items)
@@ -1537,7 +1537,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectListItems : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
-                if (!checkProjectManagerId(channel, projectManager, "projectListItems")) return;
+                if (!checkProjectManagerId(channel, projectManager, "projectListItems", "Project manager does not exist: Project list cannot be retrieved.")) return;
                 const std::string& token = info.get<std::string>("token");
                 const std::string& domain = info.get<std::string>("domain");
                 const std::vector<std::string>& item_types = info.get<std::vector < std::string >> ("item_types");
@@ -1553,7 +1553,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectListDomains : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
-                if (!checkProjectManagerId(channel, projectManager, "projectListDomains")) return;
+                if (!checkProjectManagerId(channel, projectManager, "projectListDomains", "Project manager does not exist: Domain list cannot be retrieved.")) return;
                 const std::string& token = info.get<std::string>("token");
                 request(projectManager, "slotListDomains", token)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectListDomains", _1));
@@ -1567,7 +1567,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectUpdateAttribute : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
-                if (!checkProjectManagerId(channel, projectManager, "projectUpdateAttribute")) return;
+                if (!checkProjectManagerId(channel, projectManager, "projectUpdateAttribute", "Project manager does not exist: Cannot update project attribute (trash).")) return;
                 const std::string& token = info.get<std::string>("token");
                 const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
                 request(projectManager, "slotUpdateAttribute", token, items)
@@ -1600,10 +1600,9 @@ namespace karabo {
         }
 
 
-        bool GuiServerDevice::checkProjectManagerId(WeakChannelPointer channel, const std::string& deviceId, const std::string & type) {
+        bool GuiServerDevice::checkProjectManagerId(WeakChannelPointer channel, const std::string& deviceId, const std::string & type, const std::string & reason) {
             boost::shared_lock<boost::shared_mutex> lk(m_projectManagerMutex);
             if (m_projectManagers.find(deviceId) != m_projectManagers.end()) return true;
-            const std::string reason = "Project manager doesn't exist: " + type;
             Hash h("type", type, "reply", Hash("success", false, "reason", reason));
             safeClientWrite(channel, h, LOSSLESS);
             return false;
