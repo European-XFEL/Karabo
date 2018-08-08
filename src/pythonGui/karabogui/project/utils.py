@@ -202,10 +202,9 @@ def save_as_object(obj):
             if old_uuid in scene_uuids:
                 new_uuid = scene_uuids[old_uuid]
                 target = "{}:{}".format(simple_name, new_uuid)
-                link.target = target
             else:
                 target = "{}:{}".format(simple_name, old_uuid)
-                link.target = target
+            link.target = target
 
     assert isinstance(obj, ProjectModel)
     dialog = NewProjectDialog(model=obj)
