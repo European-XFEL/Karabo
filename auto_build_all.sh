@@ -105,12 +105,12 @@ runUnitTests() {
 
     if [ $CODECOVERAGE = "y" ]; then
         # Collect code coverage.
-        #safeRunCommand
-        $scriptDir/run_python_tests.sh \
+        # Could force completion despite of test failures by not using
+        # safeRunCommand and adding option --force.
+        safeRunCommand $scriptDir/run_python_tests.sh \
             --runUnitTests \
             --collectCoverage \
-            --rootDir $scriptDir \
-            --force
+            --rootDir $scriptDir
     else
         safeRunCommand $scriptDir/run_python_tests.sh \
             --runUnitTests \
@@ -129,12 +129,12 @@ runPythonIntegrationTests() {
 
     if [ $CODECOVERAGE = "y" ]; then
         # Collect code coverage.
-        #safeRunCommand
-        $scriptDir/run_python_tests.sh \
+        # Could force completion despite of test failures by not using
+        # safeRunCommand and adding option --force.
+        safeRunCommand $scriptDir/run_python_tests.sh \
             --runIntegrationTests \
             --collectCoverage \
-            --rootDir $scriptDir \
-            --force
+            --rootDir $scriptDir
     else
         safeRunCommand $scriptDir/run_python_tests.sh \
             --runIntegrationTests \
@@ -146,7 +146,7 @@ produceCodeCoverageReport() {
     echo "### Producing code coverage reports..."
     echo
 
-    # Needed for run_python_tests.sh --clean...:
+    # Needed for 'run_python_tests.sh --clean ...':
     if [ -z "$KARABO" ]; then
         source $scriptDir/karabo/activate
     fi
@@ -220,10 +220,6 @@ EXTERN_ONLY="n"
 # Fetch configuration type (Release or Debug)
 if [[ $1 = "Release" || $1 = "Debug" || $1 = "CodeCoverage" ]]; then
     CONF=$1
-    echo '###'
-    echo '### Force CodeCoverage type!'
-    echo '###'
-    CONF=CodeCoverage
 elif [[ $1 = "Clean" || $1 = "Clean-All" ]]; then
     safeRunCommand "cd $scriptDir/build/netbeans/karabo"
     safeRunCommand "make bundle-clean CONF=Debug"
