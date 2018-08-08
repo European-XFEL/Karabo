@@ -105,10 +105,12 @@ runUnitTests() {
 
     if [ $CODECOVERAGE = "y" ]; then
         # Collect code coverage.
-        safeRunCommand $scriptDir/run_python_tests.sh \
+        #safeRunCommand
+        $scriptDir/run_python_tests.sh \
             --runUnitTests \
             --collectCoverage \
-            --rootDir $scriptDir
+            --rootDir $scriptDir \
+            --force
     else
         safeRunCommand $scriptDir/run_python_tests.sh \
             --runUnitTests \
@@ -127,10 +129,12 @@ runPythonIntegrationTests() {
 
     if [ $CODECOVERAGE = "y" ]; then
         # Collect code coverage.
-        safeRunCommand $scriptDir/run_python_tests.sh \
+        #safeRunCommand
+        $scriptDir/run_python_tests.sh \
             --runIntegrationTests \
             --collectCoverage \
-            --rootDir $scriptDir
+            --rootDir $scriptDir \
+            --force
     else
         safeRunCommand $scriptDir/run_python_tests.sh \
             --runIntegrationTests \
@@ -211,6 +215,10 @@ EXTERN_ONLY="n"
 # Fetch configuration type (Release or Debug)
 if [[ $1 = "Release" || $1 = "Debug" || $1 = "CodeCoverage" ]]; then
     CONF=$1
+    echo '###'
+    echo '### Force CodeCoverage type!'
+    echo '###'
+    CONF=CodeCoverage
 elif [[ $1 = "Clean" || $1 = "Clean-All" ]]; then
     safeRunCommand "cd $scriptDir/build/netbeans/karabo"
     safeRunCommand "make bundle-clean CONF=Debug"
