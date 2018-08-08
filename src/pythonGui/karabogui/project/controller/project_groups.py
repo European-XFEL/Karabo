@@ -132,7 +132,8 @@ def _add_macro(project_controller):
         classname = dialog.simple_name.title()
         classname = "".join(c for c in classname if c.isalpha())
         # XXX: TODO check for existing
-        macro = MacroModel(simple_name=dialog.simple_name,
+        simple_name = dialog.simple_name.replace(" ", "_")
+        macro = MacroModel(simple_name=simple_name,
                            code=_macro_template.format(classname))
         # Set initialized and modified last
         macro.initialized = macro.modified = True
