@@ -12,8 +12,7 @@ from karabo.common.project.api import find_parent_object
 from karabogui.events import KaraboEventSender, broadcast_event
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.utils import (
-    maybe_save_modified_project, save_as_object, save_object,
-    show_trash_project_message)
+    maybe_save_modified_project, save_as_object, save_object)
 from karabogui.singletons.api import (get_db_conn, get_project_model,
                                       get_selection_tracker)
 from karabogui.util import is_database_processing, set_treeview_header
@@ -219,13 +218,8 @@ class ProjectView(QTreeView):
     def update_is_trashed(self, project, project_controller):
         """ Mark the given `project` as (un-)trashed
         """
-        if show_trash_project_message(project.is_trashed, project.simple_name):
-            project.is_trashed = not project.is_trashed
-            db_conn = get_db_conn()
-            db_conn.update_attribute(db_conn.default_domain, 'project',
-                                     project.uuid, 'is_trashed',
-                                     str(project.is_trashed).lower())
-            if project.is_trashed:
-                # Close project
-                self._close_project(project, project_controller,
-                                    show_dialog=False)
+        project.is_trashed = not project.is_trashed
+        db_conn = get_db_conn()
+        db_conn.update_attribute(db_conn.default_domain, 'project',
+                                 project.uuid, 'is_trashed',
+                                 str(project.is_trashed).lower())
