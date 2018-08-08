@@ -204,9 +204,8 @@ def save_as_object(obj):
                 target = "{}:{}".format(simple_name, new_uuid)
                 link.target = target
             else:
-                msg = "Linked scene <br><b>{}</b><br> not found.".format(
-                    link.target)
-                messagebox.show_warning(msg, "Broken scene link")
+                target = "{}:{}".format(simple_name, old_uuid)
+                link.target = target
 
     assert isinstance(obj, ProjectModel)
     dialog = NewProjectDialog(model=obj)
