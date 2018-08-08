@@ -286,7 +286,8 @@ class LoadProjectDialog(QDialog):
             db_conn = get_db_conn()
             db_conn.update_attribute(domain, 'project', uuid, 'is_trashed',
                                      str(not current_is_trashed).lower())
-            self.update_view()
+            # NOTE: The view update is happening asynchronously. Once we get
+            # a reply from the GUI server, we request a new view
 
     @pyqtSlot(object)
     def _openFromChanged(self, button):
