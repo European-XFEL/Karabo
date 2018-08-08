@@ -18,6 +18,10 @@ CODE_COVERAGE_DIR_NAME="pyReport"
 # A flag that indicates if sitecustomize.py file was created.
 SITE_CUSTOMIZE_FILE_CREATED=false
 
+ACCEPT_FAILURES=false
+FAILED_TESTS=
+typeset -i NUM_FAILED_TESTS=0
+
 displayHelp()
 {
     echo "
@@ -36,6 +40,8 @@ Available flags:
         directory (--rootDir).
   --clean - Remove all the code coverage information collected in the previous
         tests.
+  --force - Go on even if some tests fail. The script's return code will
+            indicate how many test commands failed.
 
 What combination of flags you usually want to use:
 $ ./run_python_tests.sh --clean --runUnitTests --runIntegrationTests \\
@@ -125,8 +131,6 @@ setupCoverageTool() {
 teardownCoverageTool() {
     if $SITE_CUSTOMIZE_FILE_CREATED; then
 
-        echo "$SITE_CUSTOMIZE_FILE_CREATED"
-
         echo "Removing the sitecustomize.py file. path = '$SITE_CUSTOMIZE_FILE_PATH'"
 
         # Remove the sitecustomize.py file if created by this script.
@@ -157,8 +161,12 @@ safeRunCommand() {
         printf "Error : [%d] when executing command: '$cmnd'" $ret_code
         echo
         echo
-        onExit
-        exit $ret_code
+        if ! $ACCEPT_FAILURES; then
+            onExit
+            exit $ret_code
+        fi
+        FAILED_TESTS+="'$cmnd'\n"
+        ((NUM_FAILED_TESTS+=1))
     fi
 }
 
@@ -191,7 +199,7 @@ runPythonIntegrationTests() {
     # TODO: Needs to be uncommented when the bound_device_test integration test is added.  
     #safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.bound_device_test"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_comm_test"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_provided_scenes_test"
+    #safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_provided_scenes_test"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.run_configuration_group"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.pipeline_processing_test"
 
@@ -296,6 +304,9 @@ else
             --clean)
                 CLEAN=true
                 ;;
+            --force)
+                ACCEPT_FAILURES=true
+                ;;
             --rootDir)
                 if ! [ -n "$2" ]; then
                     echo "Error: The '--rootDir' flag was used but the path was not specified."
@@ -390,3 +401,11 @@ if $GENERATE_COVERAGE_REPORT; then
     generateCodeCoverageReport
 fi
 
+if $ACCEPT_FAILURES; then
+    echo
+    echo "Following $NUM_FAILED_TESTS commands failed:"
+    echo
+    echo -e $FAILED_TESTS  # -e to interpete \n as newline
+
+    exit $NUM_FAILED_TESTS
+fi
