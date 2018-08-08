@@ -146,6 +146,11 @@ produceCodeCoverageReport() {
     echo "### Producing code coverage reports..."
     echo
 
+    # Needed for run_python_tests.sh --clean...:
+    if [ -z "$KARABO" ]; then
+        source $scriptDir/karabo/activate
+    fi
+
     # remove any previous code coverage results
     safeRunCommand "find . -name \"*.gcda\" -delete"
     safeRunCommand $scriptDir/run_python_tests.sh --clean --rootDir $scriptDir
