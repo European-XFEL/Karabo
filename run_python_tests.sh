@@ -27,6 +27,8 @@ displayHelp()
     echo "
 Usage: $0 [flags]
 
+Needs an activated Karabo environment.
+
 Available flags:
   --help, -h - Display help.
   --rootDir <path> - Path to the root directory of the Karabo project.
@@ -165,6 +167,7 @@ safeRunCommand() {
             onExit
             exit $ret_code
         fi
+        # Append failed command and increase counter
         FAILED_TESTS+="'$cmnd'\n"
         ((NUM_FAILED_TESTS+=1))
     fi
@@ -199,7 +202,7 @@ runPythonIntegrationTests() {
     # TODO: Needs to be uncommented when the bound_device_test integration test is added.  
     #safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.bound_device_test"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_comm_test"
-    #safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_provided_scenes_test"
+    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_provided_scenes_test"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.run_configuration_group"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.pipeline_processing_test"
 
@@ -401,7 +404,7 @@ if $GENERATE_COVERAGE_REPORT; then
     generateCodeCoverageReport
 fi
 
-if $ACCEPT_FAILURES; then
+ if [ $NUM_FAILED_TESTS -gt 0 ] ; then
     echo
     echo "Following $NUM_FAILED_TESTS commands failed:"
     echo
