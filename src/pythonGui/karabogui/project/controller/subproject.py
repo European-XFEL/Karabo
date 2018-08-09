@@ -43,7 +43,7 @@ class SubprojectController(ProjectSubgroupController):
     def _add_project(self):
         """ Add a new subproject to the associated project
         """
-        dialog = NewProjectDialog()
+        dialog = NewProjectDialog(default=True)
         if dialog.exec() == QDialog.Accepted:
             # XXX: TODO check for existing
             project = ProjectModel(simple_name=dialog.simple_name)
