@@ -34,7 +34,10 @@ class NumberLineEdit(BaseBindingController):
         self._normal_palette = self._internal_widget.palette()
         self._error_palette = QPalette(self._normal_palette)
         self._error_palette.setColor(QPalette.Text, Qt.red)
-        return add_unit_label(self.proxy, self._internal_widget, parent=parent)
+        widget = add_unit_label(self.proxy, self._internal_widget,
+                                parent=parent)
+        widget.setFocusProxy(self._internal_widget)
+        return widget
 
     def set_read_only(self, ro):
         self._internal_widget.setReadOnly(ro)
