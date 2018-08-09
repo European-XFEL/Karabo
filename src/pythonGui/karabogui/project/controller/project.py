@@ -9,7 +9,6 @@ from traits.api import Instance, List, on_trait_change
 from karabo.common.project.api import ProjectModel
 from karabogui import icons
 from karabogui import messagebox
-
 from .bases import BaseProjectController
 from .project_groups import ProjectSubgroupController, ProjectControllerUiData
 
