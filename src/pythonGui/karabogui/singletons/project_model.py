@@ -271,6 +271,8 @@ class ProjectViewItemModel(QAbstractItemModel):
         if column == PROJECT_COLUMN:
             if role == Qt.DisplayRole:
                 return controller.ui_item_text()
+            if role == Qt.ToolTipRole:
+                return controller.model.uuid
             elif role == Qt.DecorationRole:
                 return ui_data.icon
             elif role == Qt.ForegroundRole:
