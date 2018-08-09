@@ -499,7 +499,7 @@ class PythonDevice(NoFsm):
 
     def __del__(self):
         """ PythonDevice destructor """
-        os._exit(0)
+        sys.exit(0)
 
     def remote(self):
         """
