@@ -60,10 +60,12 @@ class SceneLinkWidget(QPushButton):
                 return
 
             # target format => "simple_name:UUID"
+            name = parts[0]
             target = parts[1]
             target_window = self.model.target_window
             # Broadcast an event
-            data = {'target': target, 'target_window': target_window}
+            data = {'name': name, 'target': target,
+                    'target_window': target_window}
             broadcast_event(KaraboEventSender.OpenSceneLink, data)
 
     def add_proxies(self, proxies):
