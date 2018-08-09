@@ -223,3 +223,5 @@ class ProjectView(QTreeView):
         db_conn.update_attribute(db_conn.default_domain, 'project',
                                  project.uuid, 'is_trashed',
                                  str(project.is_trashed).lower())
+        # We directly save on attribute update!
+        save_object(project)
