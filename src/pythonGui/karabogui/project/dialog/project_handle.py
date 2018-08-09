@@ -20,7 +20,7 @@ from karabogui.events import (
 )
 from karabogui.project.utils import show_trash_project_message
 from karabogui.singletons.api import get_db_conn
-from karabogui.util import SignalBlocker, utc_to_local
+from karabogui.util import InputValidator, SignalBlocker, utc_to_local
 
 SIMPLE_NAME = 'simple_name'
 LAST_MODIFIED = 'last_modified'
@@ -301,6 +301,8 @@ class NewProjectDialog(QDialog):
                            'project_new.ui')
         uic.loadUi(filepath, self)
 
+        validator = InputValidator()
+
         # Domain combobox
         db_conn = get_db_conn()
         self.default_domain = db_conn.default_domain
@@ -323,6 +325,7 @@ class NewProjectDialog(QDialog):
         self.setWindowTitle(title)
         self.leTitle.setFocus()
         self.leTitle.selectAll()
+        self.leTitle.setValidator(validator)
 
         register_for_broadcasts(self)
 
