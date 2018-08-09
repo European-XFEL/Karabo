@@ -47,10 +47,10 @@ class ProjectDatabase(ContextDecorator):
                      self.settings.root_collection_test)
 
     def __enter__(self):
-            # assure there is a database running where we assume one would be
-            assure_running(self.settings.server, self.settings.port)
-            self.dbhandle = ExistDB(self.settings.server_url)
-            return self
+        # assure there is a database running where we assume one would be
+        assure_running(self.settings.server, self.settings.port)
+        self.dbhandle = ExistDB(self.settings.server_url)
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
