@@ -1,4 +1,27 @@
 ****************************
+What's New in Karabo 2.2.4.4
+****************************
+
+Hotfix release regarding GUI fixes for trashed projects. A loaded trashed project
+will appear in **pink** color and the operator will get a pop-up.
+Scene links are blindly copied if only the subproject is 'saved as ..' and
+the uuid's are shown in tooltip fashion for projects and scenes.
+
+In addition, the focus behavior in the Configurator was corrected.
+
+Detailed Merge-Log
+==================
+
+Graphical user interface
+++++++++++++++++++++++++
+- GUI: Restrict domain selection for subprojects !2927
+- GUI: Add uuid tooltip to project !2926
+- GUI: Correct focus on edits in configurator !2928
+- GUI: Blindly copy old scene link target if unknown scene uuid !2924
+- GUI: Show trashed project in project panel !2923
+
+
+****************************
 What's New in Karabo 2.2.4.3
 ****************************
 
@@ -10,7 +33,7 @@ Detailed Merge-Log
 
 bound/cpp core and GUI
 ++++++++++++++++++++++
--  FIX ImageData and GUI for detector images (stack of GRAY images) !2906
+- FIX ImageData and GUI for detector images (stack of GRAY images) !2906
 
 
 ****************************
