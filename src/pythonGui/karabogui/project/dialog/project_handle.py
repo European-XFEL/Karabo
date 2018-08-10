@@ -296,7 +296,8 @@ class LoadProjectDialog(QDialog):
 
 
 class NewProjectDialog(QDialog):
-    def __init__(self, model=None, is_rename=False, parent=None):
+    def __init__(self, model=None, is_rename=False, default=False,
+                 parent=None):
         super(NewProjectDialog, self).__init__(parent)
         filepath = op.join(op.abspath(op.dirname(__file__)),
                            'project_new.ui')
@@ -305,7 +306,11 @@ class NewProjectDialog(QDialog):
         # Domain combobox
         db_conn = get_db_conn()
         self.default_domain = db_conn.default_domain
+
         self._fill_domain_combo_box(db_conn.get_available_domains())
+        # Subprojects reside in the domain of the parent project, only allow
+        # the default!
+        self.cbDomain.setEnabled(not default)
 
         if model is None:
             title = 'New project'
