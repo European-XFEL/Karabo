@@ -59,7 +59,9 @@ namespace karabo {
             DataLoggerManager(const karabo::util::Hash& input);
 
             virtual ~DataLoggerManager();
-
+            
+            void preDestruction() final;
+            
         private: // Functions
 
             void initialize();
@@ -80,7 +82,17 @@ namespace karabo {
             void instantiateReaders(const std::string& serverId);
 
             void restartReadersAndLoggers();
-            
+
+            void delayedInstantiation(const std::string serverId, const karabo::util::Hash& hash);
+
+            void doInstantiateHandler(const boost::system::error_code& error, std::unordered_map<std::string, std::deque<karabo::util::Hash>>::iterator queueMapIter);
+
+            unsigned int calcInstantiationTimerDelay();
+            /**
+             * returns the delay between one instantiation and the next on the next server,
+             * in a round-robin pattern
+             **/
+           
             /**
              * This device may not be locked
              * @return false
@@ -95,6 +107,13 @@ namespace karabo {
             boost::mutex m_loggerMapMutex;
             karabo::util::Hash m_loggerMap;
             const std::string m_loggerMapFile;
+
+            // we make use of a std::deque object per dataloggerserver. These are not strictly FIFOs as queued elements must
+            // be erased when a device dies while its datalogger is not yet instantiated. Thus we cannote use std::queue
+            std::unordered_map<std::string, std::deque<karabo::util::Hash>> m_instantiationQueues;
+
+            boost::asio::deadline_timer m_instantiateDelayTimer;
+            boost::mutex m_instantiateMutex;
         };
     }
 }
