@@ -21,7 +21,7 @@ namespace karabo {
     using util::INT32_ELEMENT;
     using util::UINT32_ELEMENT;
     using util::VECTOR_STRING_ELEMENT;
-    using xms::INPUT_CHANNEL_ELEMENT;
+    using xms::INPUT_CHANNEL;
     using util::FLOAT_ELEMENT;
     
     KARABO_REGISTER_FOR_CONFIGURATION(core::BaseDevice, core::Device<>, PipeReceiverDevice)
@@ -33,13 +33,13 @@ namespace karabo {
                 .readOnly()
                 .commit();
 
-        INPUT_CHANNEL_ELEMENT(expected).key("input")
+        INPUT_CHANNEL(expected).key("input")
                 .displayedName("Input")
                 .description("Input channel: client")
                 .dataSchema(data)
                 .commit();
         
-        INPUT_CHANNEL_ELEMENT(expected).key("input2")
+        INPUT_CHANNEL(expected).key("input2")
                 .displayedName("Input2")
                 .description("Input channel: client")
                 .commit();
