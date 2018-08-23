@@ -1,6 +1,8 @@
 /*
- * File:   GetOutputChannelSchema_Test.cc
+ * File:   PipelineProcessing_Test.cc
  * Author: haufs
+ *
+ * Modified by J. Zhu
  *
  * Created on Sep 20, 2016, 3:40:34 PM
  */
@@ -14,56 +16,66 @@ USING_KARABO_NAMESPACES;
 CPPUNIT_TEST_SUITE_REGISTRATION(PipelinedProcessing_Test);
 
 #define KRB_TEST_MAX_TIMEOUT 20
+#define N_RUNS_PER_TEST 5
 
 
-PipelinedProcessing_Test::PipelinedProcessing_Test() {
+PipelinedProcessing_Test::PipelinedProcessing_Test() = default;
 
-}
+
+PipelinedProcessing_Test::~PipelinedProcessing_Test() = default;
 
 
 void PipelinedProcessing_Test::setUp() {
+
     // set broker
     //putenv("KARABO_BROKER=tcp://localhost:7777");
-    
+
     // Start central event-loop
     m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
-    // Create and start server
-    Hash config("serverId", "testServerPP", "scanPlugins", false, "Logger.priority", "ERROR");
-    m_deviceServer = DeviceServer::create("DeviceServer", config);
-    m_deviceServer->finalizeInternalInitialization();
 
     // Create client
-    m_deviceClient = boost::shared_ptr<DeviceClient>(new DeviceClient());
+    m_deviceClient = boost::make_shared<DeviceClient>();
+
+    // Create and start server
+    // There could be running server from previous failed or killed tests.
+    if (!m_deviceClient->exists(m_serverId).first) {
+        Hash config("serverId", m_serverId, "scanPlugins", false, "Logger.priority", "ERROR");
+        m_deviceServer = DeviceServer::create("DeviceServer", config);
+        m_deviceServer->finalizeInternalInitialization();
+    }
+
+    // Instantiate the sender on the server
+    const Hash cfg("deviceId", m_sender);
+    CPPUNIT_ASSERT(m_deviceClient->instantiate(m_serverId, "P2PSenderDevice", cfg).first);
+    m_nDataPerRun = m_deviceClient->get<unsigned int>(m_sender, "nData");
+    CPPUNIT_ASSERT_EQUAL(m_nDataPerRun, 12u);
+
+    // Create the base configuration for the receiver
+    m_receiverConfig = Hash("deviceId", m_receiver,
+                            "input.connectedOutputChannels", m_sender + ":output1",
+                            "input2.connectedOutputChannels", m_sender + ":output2");
 }
 
 
 void PipelinedProcessing_Test::tearDown() {
+    // we need to check here because testGetOutputChannelSchema does not start a PipeReceiverDevice.
+    if (m_deviceClient->exists(m_receiver).first) CPPUNIT_ASSERT(m_deviceClient->killDevice(m_receiver).first);
+    CPPUNIT_ASSERT(m_deviceClient->killDevice(m_sender).first);
+
+    m_deviceClient.reset();
+    CPPUNIT_ASSERT(m_deviceClient.use_count() == 0);
+
     m_deviceServer.reset();
+    CPPUNIT_ASSERT(m_deviceServer.use_count() == 0);
 
     EventLoop::stop();
-    m_eventLoopThread.join();    
-}
-
-
-void PipelinedProcessing_Test::appTestRunner() {
-
-    // in order to avoid recurring setup and tear down calls, all tests are run in a single runner
-    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerPP", "P2PSenderDevice", Hash("deviceId", "p2pTestSender"), KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT(success.first);
-
-    testGetOutputChannelSchema();
-    // Order of the next three matters :-( :
-    // testPipe instantiates "pipeTestReceiver",
-    // testProfileTransferTimes(false) makes use of its existence,
-    // and testProfileTransferTimes(true) kills it and instantiates a "pipeTestReceiver2" device instead.
-    testPipe();
-    testProfileTransferTimes(false); // allows local short-cutting on PP
-    testProfileTransferTimes(true); // forces PP data to go via loopback TCP
+    m_eventLoopThread.join();
 }
 
 
 void PipelinedProcessing_Test::testGetOutputChannelSchema() {
-    karabo::util::Hash dataSchema = m_deviceClient->getOutputChannelSchema("p2pTestSender", "output1");
+
+    karabo::util::Hash dataSchema = m_deviceClient->getOutputChannelSchema(m_sender, "output1");
 
 //    clog << "\nPipelinedProcessing_Test::testGetOutputChannelSchema() : dataSchema => \n" << dataSchema << endl;
 
@@ -90,122 +102,154 @@ void PipelinedProcessing_Test::testGetOutputChannelSchema() {
 }
 
 
-void PipelinedProcessing_Test::testPipe() {
+void PipelinedProcessing_Test::testPipeWait() {
+    CPPUNIT_ASSERT(m_deviceClient->instantiate(m_serverId, "PipeReceiverDevice", m_receiverConfig).first);
+    CPPUNIT_ASSERT_EQUAL(m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"), std::string("wait"));
+    CPPUNIT_ASSERT_EQUAL(m_deviceClient->get<std::string>(m_receiver, "input2.onSlowness"), std::string("wait"));
 
-    const std::string receiver("pipeTestReceiver");
-    const Hash cfg("deviceId", receiver, "processingTime", 0,
-                   "input.connectedOutputChannels", "p2pTestSender:output1",
-                   "input2.connectedOutputChannels", "p2pTestSender:output2");
+    testPipeWait(0, 0);
+    testPipeWait(100, 0);
+    testPipeWait(0, 100);
+}
 
-    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerPP", "PipeReceiverDevice",
-                                                                       cfg, KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
-    const unsigned int nDataPerRun = m_deviceClient->get<unsigned int>("p2pTestSender", "nData");
+void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigned int delayTime) {
+
+    std::clog << "Test with onSlowness = 'wait', processingTime = " << processingTime << ", delayTime = " << delayTime << "\n";
+
+    m_deviceClient->set(m_receiver, "processingTime", processingTime);
+    m_deviceClient->set(m_sender, "delay", delayTime);
 
     int64_t elapsedTimeIn_microseconds = 0ll;
-    const unsigned int nRuns = 10;
-    for (unsigned int nRun = 0; nRun < nRuns; ++nRun) {
-
+    auto nDataExpected = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
+    for (unsigned int nRun = 0; nRun < N_RUNS_PER_TEST; ++nRun) {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
         // Then call its slot
-        m_deviceClient->execute("p2pTestSender", "write", KRB_TEST_MAX_TIMEOUT);
+        m_deviceClient->execute(m_sender, "write", KRB_TEST_MAX_TIMEOUT);
+
+        nDataExpected += m_nDataPerRun;
 
         // And poll for the correct answer
-        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(receiver, "nTotalData", nDataPerRun * (nRun + 1), KRB_TEST_MAX_TIMEOUT));
+        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", nDataExpected, KRB_TEST_MAX_TIMEOUT));
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         // Note that duration contains overhead from message travel time and polling interval in pollDeviceProperty!
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
 
         // Check that EOS handling is not called too early
         // (EOS comes a bit later, so we have to poll client again to be sure...)
-        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(receiver, "nTotalOnEos", nDataPerRun * (nRun + 1), KRB_TEST_MAX_TIMEOUT));
+        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalOnEos", nDataExpected, KRB_TEST_MAX_TIMEOUT));
 
         // Test if data source was correctly passed
-        std::vector<std::string> sources = m_deviceClient->get<std::vector<std::string> >(receiver, "dataSources");
+        auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSources");
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (1u), sources.size());
-        CPPUNIT_ASSERT_EQUAL(std::string("p2pTestSender:output1"), sources[0]);
+        CPPUNIT_ASSERT_EQUAL(m_sender + ":output1", sources[0]);
 
         // This only can be tested if we used an input handler and not onData
         // FIXME: This fails in DeviceClient::get: "Key 'onData' does not exist" - due to DeviceClient caching bug?
-        if (false && !m_deviceClient->get<bool>(receiver, "onData")) {
-            std::vector<std::string> sources = m_deviceClient->get<std::vector<std::string> >(receiver, "dataSourcesFromIndex");
-            CPPUNIT_ASSERT_EQUAL(std::string("p2pTestSender:output1"), sources[0]);
+        if (false && !m_deviceClient->get<bool>(m_receiver, "onData")) {
+            auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSourcesFromIndex");
+            CPPUNIT_ASSERT_EQUAL(m_sender + ":output1", sources[0]);
         }
     }
 
-    const unsigned int dataItemSize = m_deviceClient->get<unsigned int>(receiver, "dataItemSize");
-    unsigned int nTotalOnEos = m_deviceClient->get<unsigned int>(receiver, "nTotalOnEos");
+    auto dataItemSize = m_deviceClient->get<unsigned int>(m_receiver, "dataItemSize");
+    auto nTotalOnEos = m_deviceClient->get<unsigned int>(m_receiver, "nTotalOnEos");
     double mbps = double(dataItemSize) * double(nTotalOnEos) / double(elapsedTimeIn_microseconds);
     // Note that this measurement checks the inner-process shortcut - and includes timing overhead e.g. pollDeviceProperty
     std::clog << "testPipe: Megabytes per sec : " << mbps
             << ", elapsedTimeIn_microseconds = " << elapsedTimeIn_microseconds
             << ", dataItemSize = " << dataItemSize << ", nTotalOnEos=" << nTotalOnEos << std::endl;
-    CPPUNIT_ASSERT_EQUAL(nDataPerRun * nRuns, nTotalOnEos);
+    CPPUNIT_ASSERT_EQUAL(nDataExpected, nTotalOnEos); // TODO: redundant?
 }
 
 
-void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut) {
-    std::string receiver = "pipeTestReceiver";
-    if(noShortCut) {
+void PipelinedProcessing_Test::testPipeDrop() {
+    m_receiverConfig += Hash("input.onSlowness", "drop", "input2.onSlowness", "drop");
+    CPPUNIT_ASSERT(m_deviceClient->instantiate(m_serverId, "PipeReceiverDevice", m_receiverConfig).first);
+    CPPUNIT_ASSERT_EQUAL(m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"), std::string("drop"));
+    CPPUNIT_ASSERT_EQUAL(m_deviceClient->get<std::string>(m_receiver, "input2.onSlowness"), std::string("drop"));
 
-        setenv("KARABO_NO_PIPELINE_SHORTCUT", "1", 1);
+    testPipeDrop(0, 0);
+    testPipeDrop(100, 0);
+    testPipeDrop(0, 100);
+}
 
-        // Looks like to get "KARABO_NO_PIPELINE_SHORTCUT" active (some caching?),
-        // we have to re-instantiate the receiver.
-        // Problems with bad caching in the DeviceClient makes the test safer if we use a new deviceId...
-        std::pair<bool, std::string> success = m_deviceClient->killDevice(receiver, KRB_TEST_MAX_TIMEOUT);
-        CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
-        receiver = "pipeTestReceiver2";
+void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigned int delayTime) {
 
-        const Hash cfg("deviceId", receiver, "processingTime", 0,
-                   "input.connectedOutputChannels", "p2pTestSender:output1",
-                   "input2.connectedOutputChannels", "p2pTestSender:output2");
-        success = m_deviceClient->instantiate("testServerPP", "PipeReceiverDevice", cfg, KRB_TEST_MAX_TIMEOUT);
-        CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    std::clog << "Test with onSlowness = 'drop', processingTime = " << processingTime << ", delayTime = " << delayTime << "\n";
+
+    m_deviceClient->set(m_receiver, "processingTime", processingTime);
+    m_deviceClient->set(m_sender, "delay", delayTime);
+
+    int64_t elapsedTimeIn_microseconds = 0ll;
+    auto nDataExpected = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
+    for (unsigned int nRun = 0; nRun < N_RUNS_PER_TEST; ++nRun) {
+
+        auto startTimepoint = std::chrono::high_resolution_clock::now();
+        // Then call its slot
+        m_deviceClient->execute(m_sender, "write", KRB_TEST_MAX_TIMEOUT);
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5 * processingTime));
+
+        nDataExpected += m_nDataPerRun;
+
+        CPPUNIT_ASSERT(m_deviceClient->get<unsigned int>(m_receiver, "nTotalData") < nDataExpected);
+        CPPUNIT_ASSERT(m_deviceClient->get<unsigned int>(m_receiver, "nTotalOnEos") < nDataExpected);
+
+        auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        // Note that duration contains overhead from message travel time and polling interval in pollDeviceProperty!
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        // Test if data source was correctly passed
+        auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSources");
+        CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (1u), sources.size());
+        CPPUNIT_ASSERT_EQUAL(m_sender + ":output1", sources[0]);
     }
 
-    m_deviceClient->execute(receiver, "reset", KRB_TEST_MAX_TIMEOUT);
-    m_deviceClient->set(receiver, "processingTime", 100);
+    auto dataItemSize = m_deviceClient->get<unsigned int>(m_receiver, "dataItemSize");
+    auto nTotalOnEos = m_deviceClient->get<unsigned int>(m_receiver, "nTotalOnEos");
+    double mbps = double(dataItemSize) * double(nTotalOnEos) / double(elapsedTimeIn_microseconds);
+    // Note that this measurement checks the inner-process shortcut - and includes timing overhead e.g. pollDeviceProperty
+    std::clog << "testPipe: Megabytes per sec : " << mbps
+            << ", elapsedTimeIn_microseconds = " << elapsedTimeIn_microseconds
+            << ", dataItemSize = " << dataItemSize << ", nTotalOnEos=" << nTotalOnEos << std::endl;
+}
 
-    const unsigned int nDataPerRun = m_deviceClient->get<unsigned int>("p2pTestSender", "nData");
 
-    // set the scenario
-    m_deviceClient->set("p2pTestSender", "scenario", "profile");
-    // Then call its slot
-    m_deviceClient->execute("p2pTestSender", "write", KRB_TEST_MAX_TIMEOUT);
+void PipelinedProcessing_Test::testProfileTransferTimes() {
+    testProfileTransferTimes(false, true);
+    testProfileTransferTimes(false, false);
+    testProfileTransferTimes(true, true);
+    testProfileTransferTimes(true, false);
+}
+
+
+void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool copy) {
+    if (noShortCut) setenv("KARABO_NO_PIPELINE_SHORTCUT", "1", 1);
+
+    // Looks like to get "KARABO_NO_PIPELINE_SHORTCUT" active (some caching?),
+    // we have to re-instantiate the receiver.
+    CPPUNIT_ASSERT(m_deviceClient->instantiate(m_serverId, "PipeReceiverDevice", m_receiverConfig).first);
+    m_deviceClient->set(m_receiver, "processingTime", 100); // why we need this setup here?
+
+    m_deviceClient->set(m_sender, "scenario", "profile");
+    m_deviceClient->set(m_sender, "copyAllData", copy);
+    m_deviceClient->execute(m_sender, "write", KRB_TEST_MAX_TIMEOUT);
     
     // And poll for the correct answer
-    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(receiver, "nTotalData", nDataPerRun, KRB_TEST_MAX_TIMEOUT));
+    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", m_nDataPerRun, KRB_TEST_MAX_TIMEOUT));
 
-    pollDeviceProperty<float>(receiver, "averageTransferTime", 0.f, KRB_TEST_MAX_TIMEOUT, false); // until not zero anymore!
-    float transferTime = m_deviceClient->get<float>(receiver, "averageTransferTime") / 1000;
+    pollDeviceProperty<float>(m_receiver, "averageTransferTime", 0.f, KRB_TEST_MAX_TIMEOUT, false); // until not zero anymore!
+    auto transferTime = m_deviceClient->get<float>(m_receiver, "averageTransferTime") / 1000;
 
-    std::clog << "testProfileTransferTimes (copy, " << (noShortCut ? "no short cut" : "short cut")
+    std::clog << "testProfileTransferTimes ("
+            << (copy ? "copy" : "no copy") << ", " << (noShortCut ? "no short cut" : "short cut")
             << "): " << transferTime << " milliseconds average transfer time" << std::endl;
 
-    // Reset receiver and ask sender "not to copy"
-    m_deviceClient->execute(receiver, "reset", KRB_TEST_MAX_TIMEOUT);
-    m_deviceClient->set("p2pTestSender", "copyAllData", false);
-    
-    // Then call its slot
-    m_deviceClient->execute("p2pTestSender", "write", KRB_TEST_MAX_TIMEOUT);
-    
-    // And poll for the correct answer
-    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(receiver, "nTotalData", nDataPerRun, KRB_TEST_MAX_TIMEOUT));
+    if (noShortCut) unsetenv("KARABO_NO_PIPELINE_SHORTCUT");
 
-    pollDeviceProperty<float>(receiver, "averageTransferTime", 0.f, KRB_TEST_MAX_TIMEOUT, false); // until not zero anymore!
-    float transferTime2 = m_deviceClient->get<float>(receiver, "averageTransferTime") / 1000;
-
-    std::clog << "testProfileTransferTimes (no copy, " << (noShortCut ? "no short cut" : "short cut")
-            << "): " << transferTime2 << " milliseconds average transfer time" << std::endl;
-
-    if(noShortCut) {
-        unsetenv("KARABO_NO_PIPELINE_SHORTCUT");
-    }
+    CPPUNIT_ASSERT(m_deviceClient->killDevice(m_receiver).first);
 }
-
 
 
 template <typename T>
@@ -220,8 +264,7 @@ bool PipelinedProcessing_Test::pollDeviceProperty(const std::string& deviceId,
     while (pollWaitTimeInMs * pollCounter <= maxTimeoutInSec * 1000) {
         boost::this_thread::sleep(boost::posix_time::milliseconds(pollWaitTimeInMs));
         const T nReceived = m_deviceClient->get<T>(deviceId, propertyName);
-        if ((checkForEqual && nReceived == expected)
-            || (!checkForEqual && nReceived != expected)) {
+        if ((checkForEqual && nReceived == expected) || (!checkForEqual && nReceived != expected)) {
             return true;
         }
         ++pollCounter;

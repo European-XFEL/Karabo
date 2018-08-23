@@ -1,6 +1,8 @@
 /*
- * File:   GetOutputChannelSchema_Test.hh
+ * File:   PipelineProcessing_Test.hh
  * Author: haufs
+ * 
+ * Modified by J. Zhu
  *
  * Created on Sep 20, 2016, 3:40:33 PM
  */
@@ -18,23 +20,29 @@ class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(PipelinedProcessing_Test);
 
-    CPPUNIT_TEST(appTestRunner);
+    CPPUNIT_TEST(testGetOutputChannelSchema);
+    CPPUNIT_TEST(testPipeWait);
+    CPPUNIT_TEST(testPipeDrop);
+    CPPUNIT_TEST(testProfileTransferTimes);
 
     CPPUNIT_TEST_SUITE_END();
 
 public:
     PipelinedProcessing_Test();
-    virtual ~PipelinedProcessing_Test() {}
+    virtual ~PipelinedProcessing_Test();
 
     void setUp();
     void tearDown();
 
-private:
-
-    void appTestRunner();
     void testGetOutputChannelSchema();
-    void testPipe();
-    void testProfileTransferTimes(bool noShortCut=false);
+    void testPipeWait();
+    void testPipeDrop();
+    void testProfileTransferTimes();
+
+private:
+    void testPipeWait(unsigned int processingTime, unsigned int delayTime);
+    void testPipeDrop(unsigned int processingTime, unsigned int delayTime);
+    void testProfileTransferTimes(bool noShortCut, bool copy);
 
     template <typename T>
     bool pollDeviceProperty(const std::string& deviceId,
@@ -43,12 +51,17 @@ private:
                             const int maxTimeout,
                             bool checkForEqual = true) const; // if false, wait until not equal anymore
 
+    karabo::core::DeviceClient::Pointer m_deviceClient;
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_eventLoopThread;
 
-    karabo::core::DeviceClient::Pointer m_deviceClient;
+    unsigned int m_nDataPerRun;
 
+    karabo::util::Hash m_receiverConfig;
+
+    const std::string m_serverId = "testServerPP";
+    const std::string m_receiver = "pipeTestReceiver";
+    const std::string m_sender = "p2pTestSender";
 };
 
 #endif	/* PIPELINEDPROCESSING_TEST_HH */
-

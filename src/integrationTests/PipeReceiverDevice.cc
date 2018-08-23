@@ -129,7 +129,7 @@ namespace karabo {
         std::vector<std::string> sources;
         util::Hash data;
         for (size_t i = 0; i < input->size(); ++i) {
-            input->read(data, i); // clears data before filling
+            input->read(data, i); // calls Memory:read, which calls data.clear() before filling it
             sources.push_back(input->indexToMetaData(i).getSource());
             onData(data, input->indexToMetaData(i));
         }
@@ -138,17 +138,15 @@ namespace karabo {
 
 
     void PipeReceiverDevice::onData(const util::Hash& data, const xms::InputChannel::MetaData& metaData) {
-        
         set("dataSources", std::vector<std::string>(1, metaData.getSource()));
         set("currentDataId", data.get<int>("dataId"));
-        const auto& v = data.get<std::vector<long long>>("data");
+        const auto v = data.get<std::vector<long long>>("data");
         unsigned int bytes = v.size() * sizeof(long long);
         set<unsigned int>("dataItemSize", bytes);
 
         // Sum total number of data
         set("nTotalData", get<unsigned int>("nTotalData") + 1);
-        unsigned int processingTime = get<unsigned int>("processingTime");
-        if (processingTime > 0) boost::this_thread::sleep(boost::posix_time::milliseconds(processingTime));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(get<unsigned int>("processingTime")));
     }
 
 
