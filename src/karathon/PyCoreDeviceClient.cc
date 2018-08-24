@@ -50,6 +50,7 @@ void exportPyCoreDeviceClient() {
             .def("getDevices", (bp::object(DeviceClientWrap::*)())(&DeviceClientWrap::getDevicesPy))
             .def("getDevices", (bp::object(DeviceClientWrap::*)(const string&))(&DeviceClientWrap::getDevicesPy), (bp::arg("serverId")))
             .def("getDeviceSchema", (karabo::util::Schema(DeviceClientWrap::*)(const string&))(&DeviceClientWrap::getDeviceSchema), (bp::arg("instanceId")))
+            .def("getDeviceSchemaNoWait", (karabo::util::Schema(DeviceClientWrap::*)(const string&))(&DeviceClientWrap::getDeviceSchemaNoWait), (bp::arg("instanceId")))
             .def("getActiveSchema", (Schema(DeviceClientWrap::*)(const string&))(&DeviceClientWrap::getActiveSchema), (bp::arg("instanceId")))
             .def("getClassSchema", (Schema(DeviceClientWrap::*)(const string&, const string&))(&DeviceClientWrap::getClassSchema), (bp::arg("serverId"), bp::arg("classId")))
             .def("getProperties", &DeviceClientWrap::getPropertiesPy, (bp::arg("deviceId")))
@@ -80,6 +81,11 @@ void exportPyCoreDeviceClient() {
                  "The handler function should have the signature handler(instanceId, instanceInfo) where:\n"
                  "\"instanceId\" is a string containing name of the device which went offline\n"
                  "\"instanceInfo\" is a Hash")
+            .def("registerSchemaUpdatedMonitor", &DeviceClientWrap::registerSchemaUpdatedMonitor, bp::arg("callbackFunction"),
+                 "registerSchemaUpdatedMonitor(handler): Register a callback handler \"handler\" to be triggered if an instance receives a schema update from the distributed system\n"
+                 "The handler function should have the signature handler(instanceId, schema) where:\n"
+                 "\"instanceId\" is a string containing name of the device which updated schema\n"
+                 "\"schema\" is the updated schema")
             .def("registerPropertyMonitor", (bool (DeviceClientWrap::*)(const string&, const string&, const bp::object&, const bp::object&))(&DeviceClientWrap::registerPropertyMonitor), (bp::arg("instanceId"), bp::arg("key"), bp::arg("callbackFunction"), bp::arg("userData") = bp::object()))
             .def("registerDeviceMonitor", (void (DeviceClientWrap::*)(const string&, const bp::object&, const bp::object&))(&DeviceClientWrap::registerDeviceMonitor), (bp::arg("instanceId"), bp::arg("callbackFunction"), bp::arg("userData") = bp::object()))
             .def("setDeviceMonitorInterval", (void (DeviceClient::*)(long int))(&DeviceClient::setDeviceMonitorInterval), bp::arg("milliseconds"))
