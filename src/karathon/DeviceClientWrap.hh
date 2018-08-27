@@ -136,6 +136,7 @@ namespace karathon {
         }
 
         karabo::util::Schema getDeviceSchemaNoWait(const std::string& instanceId) {
+            ScopedGILRelease nogil;
             return this->DeviceClient::getDeviceSchemaNoWait(instanceId);
         }
 
