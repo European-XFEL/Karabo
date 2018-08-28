@@ -125,7 +125,8 @@ void PipelinedProcessing_Test::testPipe() {
         std::vector<std::string> sources = m_deviceClient->get<std::vector<std::string> >(receiver, "dataSources");
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (1u), sources.size());
         CPPUNIT_ASSERT_EQUAL(std::string("p2pTestSender:output1"), sources[0]);
-
+        // Check that receiver did not post any problem on status:
+        CPPUNIT_ASSERT_EQUAL(std::string(), m_deviceClient->get<std::string>(receiver, "status"));
         // This only can be tested if we used an input handler and not onData
         // FIXME: This fails in DeviceClient::get: "Key 'onData' does not exist" - due to DeviceClient caching bug?
         if (false && !m_deviceClient->get<bool>(receiver, "onData")) {
