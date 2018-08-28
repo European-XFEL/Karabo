@@ -15,6 +15,7 @@
 #include <boost/core/null_deleter.hpp>                      //boost::null_delter
 #include <karabo/util/Types.hh>                             //karabo::util::ByteArray
 #include <karabo/util/ClassInfo.hh>                         //BufferSet::Pointer
+#include <karabo/util/Exception.hh>                         //KARABO_LOGIC_EXCEPTION
 
 /**
  * The main European XFEL namespace
@@ -185,11 +186,13 @@ namespace karabo {
             void appendTo(BufferSequenceType& boost_buffers) const {
                 for (auto it = m_buffers.begin(); it != m_buffers.end(); ++it) {
                     if (it->size) {
-                        if (it->contentType == BufferContents::NO_COPY_BYTEARRAY_CONTENTS) {                                                  
+                        if (it->contentType == BufferContents::NO_COPY_BYTEARRAY_CONTENTS) {
                             boost_buffers.push_back(boost::asio::buffer(it->ptr.get(), it->size));
                         } else {
                             boost_buffers.push_back(boost::asio::buffer(it->vec->data(), it->size));
                         }
+                    } else if (it->vec && !it->vec->empty()) {
+                        throw KARABO_LOGIC_EXCEPTION("Buffer size zero, but vector not empty.");
                     }
                 }
             }
