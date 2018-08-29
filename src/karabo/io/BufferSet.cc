@@ -23,41 +23,44 @@ namespace karabo {
         }
 
 
+        void BufferSet::add() {
+            updateSize();
+            if (!m_buffers.size() || m_buffers.back().size
+                || m_buffers.back().contentType == BufferSet::NO_COPY_BYTEARRAY_CONTENTS) { // empty ByteArray
+                m_buffers.push_back(Buffer());
+                m_currentBuffer++;
+            }
+        }
+
+
         void BufferSet::add(std::size_t size, int type) {
             updateSize();
 
-            if (size == 0) {
+            if (type == BufferContents::COPY) { // allocate space as std::vector<char>
+                auto vec = boost::shared_ptr<BufferType>(new BufferType(size));
+                auto ptr = boost::shared_ptr<BufferType::value_type>();
                 if (!m_buffers.size() || m_buffers.back().size) {
-                    m_buffers.push_back(Buffer());
+                    m_buffers.push_back(Buffer(vec, ptr, size, BufferContents::COPY));
                     m_currentBuffer++;
+                } else {
+                    m_buffers[m_buffers.size() - 1] = Buffer(vec, ptr, size, BufferContents::COPY);
+                }
+            } else if (type == BufferContents::NO_COPY_BYTEARRAY_CONTENTS) { // allocate space as char array
+                if (!m_buffers.size() || m_buffers.back().size) {
+                    // See https://www.boost.org/doc/libs/1_61_0/libs/smart_ptr/sp_techniques.html#array
+                    m_buffers.push_back(Buffer(boost::shared_ptr<BufferType>(new BufferType()),
+                                               boost::shared_ptr<char>(new char[size], boost::checked_array_deleter<char>()),
+                                               size,
+                                               BufferContents::NO_COPY_BYTEARRAY_CONTENTS));
+                    m_currentBuffer++;
+                } else {
+                    m_buffers[m_buffers.size() - 1] = Buffer(boost::shared_ptr<BufferType>(new BufferType()),
+                                                             boost::shared_ptr<char>(new char[size], boost::checked_array_deleter<char>()),
+                                                             size,
+                                                             BufferContents::NO_COPY_BYTEARRAY_CONTENTS);
                 }
             } else {
-                if (type == BufferContents::COPY) {  // allocate space as std::vector<char>
-                    auto vec = boost::shared_ptr<BufferType>(new BufferType(size));
-                    auto ptr = boost::shared_ptr<BufferType::value_type>();
-                    if (!m_buffers.size() || m_buffers.back().size) {
-                        m_buffers.push_back(Buffer(vec, ptr, size, BufferContents::COPY));
-                        m_currentBuffer++;
-                    } else {
-                        m_buffers[m_buffers.size() - 1] = Buffer(vec, ptr, size, BufferContents::COPY);
-                    }
-                } else if (type == BufferContents::NO_COPY_BYTEARRAY_CONTENTS) { // allocate space as char array
-                    if (!m_buffers.size() || m_buffers.back().size) {
-                        // See https://www.boost.org/doc/libs/1_61_0/libs/smart_ptr/sp_techniques.html#array
-                        m_buffers.push_back(Buffer(boost::shared_ptr<BufferType>(new BufferType()),
-                                                   boost::shared_ptr<char>(new char[size], boost::checked_array_deleter<char>()),
-                                                   size,
-                                                   BufferContents::NO_COPY_BYTEARRAY_CONTENTS));
-                        m_currentBuffer++;
-                    } else {
-                        m_buffers[m_buffers.size() - 1] = Buffer(boost::shared_ptr<BufferType>(new BufferType()),
-                                                                 boost::shared_ptr<char>(new char[size], boost::checked_array_deleter<char>()),
-                                                                 size,
-                                                                 BufferContents::NO_COPY_BYTEARRAY_CONTENTS);
-                    }
-                } else {
-                    throw KARABO_LOGIC_EXCEPTION("Unknown buffer type!");
-                }
+                throw KARABO_LOGIC_EXCEPTION("Unknown buffer type!");
             }
         }
 
