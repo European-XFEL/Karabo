@@ -5,6 +5,8 @@
  * Created on February 25, 2013, 6:03 PM
  */
 
+#include <algorithm>
+
 #include <karabo/io/HashBinarySerializer.hh>
 #include "HashBinarySerializer_Test.hh"
 #include "karabo/io/BinarySerializer.hh"
@@ -146,9 +148,12 @@ void HashBinarySerializer_Test::testSerialization() {
     karabo::io::BufferSet archiveBuf1(true); // allCopy
     CPPUNIT_ASSERT_NO_THROW(p->save(m_hash, archiveBuf1));
     //    std::clog << "BufferSet(true)\n" << archiveBuf1 << std::endl;
-    // Just check that it can be converted to boost buffers
+    // Check that it can be converted to boost buffers - and that there is one asio buffer per non-empty BufferSet buffer
     vector<boost::asio::const_buffer> asioBuf1;
     CPPUNIT_ASSERT_NO_THROW(archiveBuf1.appendTo(asioBuf1));
+    const std::vector<unsigned int> sizes1(archiveBuf1.sizes());
+    CPPUNIT_ASSERT_EQUAL(sizes1.size() - std::count(sizes1.begin(), sizes1.end(), 0u), asioBuf1.size());
+
     Hash hashArchive1;
     CPPUNIT_ASSERT_NO_THROW(p->load(hashArchive1, archiveBuf1));
     CPPUNIT_ASSERT(karabo::util::similar(hashArchive1, m_hash));
@@ -168,9 +173,12 @@ void HashBinarySerializer_Test::testSerialization() {
     Hash hashArchive2;
     CPPUNIT_ASSERT_NO_THROW(p->save(m_hash, archiveBuf2));
     //    std::clog << "BufferSet(false)\n" << archiveBuf2 << std::endl;
-    // Just check that it can be converted to boost buffers
+    // Check that it can be converted to boost buffers - and that there is one asio buffer per non-empty BufferSet buffer
     vector<boost::asio::const_buffer> asioBuf2;
     CPPUNIT_ASSERT_NO_THROW(archiveBuf2.appendTo(asioBuf2));
+    const std::vector<unsigned int> sizes2(archiveBuf2.sizes());
+    CPPUNIT_ASSERT_EQUAL(sizes2.size() - std::count(sizes2.begin(), sizes2.end(), 0u), asioBuf2.size());
+
     CPPUNIT_ASSERT_NO_THROW(p->load(hashArchive2, archiveBuf2));
     CPPUNIT_ASSERT(karabo::util::similar(hashArchive2, m_hash));
     CPPUNIT_ASSERT_NO_THROW(hashContentTest(hashArchive2.get<Hash>("hash"), "BufferSet(false)"));
