@@ -240,6 +240,10 @@ def gnometermlog():
     All this only works for device servers where logging is
     enabled.
     """
+    if shutil.which("gnome-terminal") is None:
+        print("'gnome-terminal' cannot be found - abort!")
+        print("Try to use 'karabo-xterm' instead.")
+        return 1
     servers = [fn for fn in defaultall()
                if isexecutable(osp.join(fn, "log", "run"))]
     cmd = sum((["--tab", "-e",
@@ -261,6 +265,9 @@ def xtermlog():
     If no device server is given, the logs of all device servers
     are shown in their xterms.
     """
+    if shutil.which("xterm") is None:
+        print("'xterm' cannot be found - abort!")
+        return 1
     servers = [fn for fn in defaultall()
                if isexecutable(osp.join(fn, "log", "run"))]
     for server in servers:
