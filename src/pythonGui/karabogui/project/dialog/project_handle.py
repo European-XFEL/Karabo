@@ -15,13 +15,12 @@ from PyQt4.QtGui import (QAction, QButtonGroup, QCursor, QDialog,
                          QMenu)
 
 from karabogui import messagebox
-from karabogui.enums import KaraboSettings
 from karabogui.events import (
     register_for_broadcasts, unregister_from_broadcasts, KaraboEventSender,
 )
 from karabogui.project.utils import show_trash_project_message
-from karabogui.singletons.api import get_db_conn
-from karabogui.util import get_setting, SignalBlocker, utc_to_local
+from karabogui.singletons.api import get_db_conn, get_network
+from karabogui.util import SignalBlocker, utc_to_local
 
 SIMPLE_NAME = 'simple_name'
 LAST_MODIFIED = 'last_modified'
@@ -56,6 +55,7 @@ class LoadProjectDialog(QDialog):
         self.setWindowFlags(Qt.WindowCloseButtonHint)
 
         db_conn = get_db_conn()
+        network = get_network()
         self.rbFromRemote.setChecked(db_conn.ignore_local_cache)
         self.rbFromCache.setChecked(not db_conn.ignore_local_cache)
         self.load_from_group = QButtonGroup(self)
@@ -83,12 +83,11 @@ class LoadProjectDialog(QDialog):
 
         # Domain is not selectable for subprojects - only master projects
         self.cbDomain.setEnabled(not is_subproject)
-        # Domain combobox
-        self.default_domain = db_conn.default_domain
         # ... request the domains list
         domains = db_conn.get_available_domains()
+
         # Domain combobox
-        topic = get_setting(KaraboSettings.BROKER_TOPIC)
+        topic = network.brokerTopic
         default_domain = topic if topic in domains else db_conn.default_domain
         self.default_domain = default_domain
 
