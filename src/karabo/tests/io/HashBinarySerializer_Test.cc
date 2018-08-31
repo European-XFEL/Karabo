@@ -83,7 +83,7 @@ void HashBinarySerializer_Test::testSerialization() {
     h.set("ndarr", ndarr);
     // Also test an empty NDArray:
     const int noData[] = {};
-    NDArray ndarrEmpty(noData, sizeof (noData) / sizeof (noData[0]));
+    NDArray ndarrEmpty(noData, sizeof (noData) / sizeof (int));
     h.set("ndarrEmpty", ndarrEmpty);
     h.setAttribute < vector<bool> >("vec_bool", "vec_bool", vector<bool>(1000, true));
     h.setAttribute<vector<char> >("vec_char", "vec_char", vector<char>(1000, 'c'));
