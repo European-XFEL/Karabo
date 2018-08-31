@@ -83,8 +83,8 @@ class ProjectManager(PythonDevice):
         try:
             assure_running(self.get("host"), self.get("port"))
             self.updateState(State.NORMAL)
-        except ProjectDBError e:
-            self.log.ERROR("ProjectDBError : {}".format(e))
+        except ProjectDBError as e:
+            self.log.ERROR("ProjectDBError : {}".format(str(e)))
             self.updateState(State.ERROR)
 
     def allowLock(self):
