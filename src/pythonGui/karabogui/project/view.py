@@ -6,7 +6,9 @@
 from functools import partial
 
 from PyQt4.QtCore import pyqtSlot, Qt
-from PyQt4.QtGui import QAction, QDialog, QCursor, QMessageBox, QTreeView
+from PyQt4.QtGui import (
+    QApplication, QAction, QClipboard, QDialog, QCursor, QKeySequence,
+    QMessageBox, QTreeView)
 
 from karabo.common.project.api import find_parent_object
 from karabogui.events import KaraboEventSender, broadcast_event
@@ -57,6 +59,20 @@ class ProjectView(QTreeView):
     def closeEvent(self, event):
         self.destroy()
         event.accept()
+
+    def keyPressEvent(self, event):
+        if event.matches(QKeySequence.Copy):
+            controller = self._get_selected_controller()
+            if controller is not None:
+                clipboard = QApplication.clipboard()
+                # Erase selection clipboard first!
+                clipboard.clear(mode=QClipboard.Selection)
+                clipboard.setText(controller.model.uuid,
+                                  mode=QClipboard.Selection)
+                event.accept()
+                return
+
+        super(ProjectView, self).keyPressEvent(event)
 
     def mouseDoubleClickEvent(self, event):
         selected_controller = self._get_selected_controller()
