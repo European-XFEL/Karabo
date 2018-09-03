@@ -182,13 +182,11 @@ class LoadProjectDialog(QDialog):
         return self.cbDomain.currentText()
 
     def _selected_item_loadable(self):
-        """ Return whether the currently selected project loadable.
+        """ Return whether the currently selected is project loadable.
         """
         col_index = get_column_index(UUID)
-        rows = self.twProjects.selectionModel().selectedRows(col_index)
-        if rows:
-            _, is_trashed = rows[0].data(Qt.UserRole)
-            return not is_trashed
+        if self.twProjects.selectionModel().selectedRows(col_index):
+            return True
 
         return False
 
@@ -200,14 +198,13 @@ class LoadProjectDialog(QDialog):
         return simple_name in projects
 
     def _check_button_state(self):
-        # Check if we have a preceeding selection
-        selectable = self._selected_item_loadable()
-        # If we are typing a project name
+        # Check if we have a preceeding valid selection
+        selected = self._selected_item_loadable()
+        # Or if we are typing a project name
         simple_name = self.leTitle.text()
         project = len(simple_name) and self._text_item_loadable(simple_name)
-        trash = self.cbShowTrash.isChecked()
 
-        enable = selectable or (project and not trash)
+        enable = selected or project
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
 
     @pyqtSlot(object, object)
