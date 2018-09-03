@@ -87,3 +87,13 @@ class TestEditableList(GuiTestCase):
         assert self.size_proxy.edit_value is None
         self.size_controller._internal_widget.setText('')
         assert self.size_proxy.edit_value is None
+
+    def test_trailing_zeros(self):
+        assert get_min_max_size(self.size_proxy.binding) == (1, 3)
+        self.size_controller.set_read_only(False)
+        self.size_controller._internal_widget.setText('03,4')
+        assert self.size_proxy.edit_value is None
+        self.size_controller._internal_widget.setText('3,4')
+        assert all(self.size_proxy.edit_value == [3, 4])
+        self.size_controller._internal_widget.setText('000000,4')
+        assert all(self.size_proxy.edit_value == [0, 4])
