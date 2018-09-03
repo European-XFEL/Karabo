@@ -4,15 +4,13 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from collections import OrderedDict, namedtuple
-from functools import partial
 from operator import attrgetter
 import os.path as op
 
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot, QAbstractTableModel, Qt
-from PyQt4.QtGui import (QAction, QButtonGroup, QCursor, QDialog,
-                         QDialogButtonBox, QHeaderView, QItemSelectionModel,
-                         QMenu)
+from PyQt4.QtGui import (QButtonGroup, QDialog,
+                         QDialogButtonBox, QHeaderView, QItemSelectionModel)
 
 from karabogui import messagebox
 from karabogui.events import (
@@ -76,9 +74,6 @@ class LoadProjectDialog(QDialog):
         self.twProjects.selectionModel().selectionChanged.connect(
             self._selectionChanged)
         self.twProjects.doubleClicked.connect(self._load_item)
-        self.twProjects.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.twProjects.customContextMenuRequested.connect(
-            self._show_context_menu)
 
         # Domain is not selectable for subprojects - only master projects
         self.cbDomain.setEnabled(not is_subproject)
@@ -252,28 +247,6 @@ class LoadProjectDialog(QDialog):
 
         self._check_button_state()
         self.update_view()
-
-    @pyqtSlot()
-    def _show_context_menu(self):
-        """ Show a context menu for the currently selected project
-        """
-        selection_model = self.twProjects.selectionModel()
-        # Get all indexes for selected row (single selection)
-        indexes = selection_model.selectedIndexes()
-        if indexes:
-            col_index = get_column_index(UUID)
-            uuid, is_trashed = indexes[col_index].data(Qt.UserRole)
-            if is_trashed:
-                text = 'Restore from trash'
-            else:
-                text = 'Move to trash'
-            menu = QMenu(self)
-            trash_action = QAction(text, menu)
-            trash_action.triggered.connect(partial(self._update_is_trashed,
-                                                   self.domain, uuid,
-                                                   is_trashed))
-            menu.addAction(trash_action)
-            menu.exec(QCursor.pos())
 
     @pyqtSlot(str, str, bool)
     def _update_is_trashed(self, domain, uuid, current_is_trashed):
