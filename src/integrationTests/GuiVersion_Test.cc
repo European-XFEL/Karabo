@@ -57,13 +57,6 @@ void GuiVersion_Test::appTestRunner() {
         KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
     boost::this_thread::sleep(boost::posix_time::milliseconds(3000));
-    m_tcpAdapter = boost::shared_ptr<karabo::TcpAdapter>(new karabo::TcpAdapter(Hash("port", 44450u/*, "debug", true*/)));
-    int timeout = 5000;
-    while (!m_tcpAdapter->connected() && timeout > 0) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-        timeout -= 5;
-    }
-    CPPUNIT_ASSERT(m_tcpAdapter->connected());
 
     testVersionControl();
     
@@ -73,10 +66,31 @@ void GuiVersion_Test::appTestRunner() {
 
 }
 
+void GuiVersion_Test::resetClientConnection() {
+    int timeout = 5000;
+    if (m_tcpAdapter){
+        if (m_tcpAdapter->connected()){
+            m_tcpAdapter->disconnect();
+        }
+        while (m_tcpAdapter->connected() && timeout > 0) {
+            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+            timeout -= 5;
+        }
+    }
+    m_tcpAdapter = boost::shared_ptr<karabo::TcpAdapter>(new karabo::TcpAdapter(Hash("port", 44450u/*, "debug", true*/)));
+    timeout = 5000;
+    while (!m_tcpAdapter->connected() && timeout > 0) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        timeout -= 5;
+    }
+    CPPUNIT_ASSERT(m_tcpAdapter->connected());
+}
+
 void GuiVersion_Test::testVersionControl() {
     // Tests if the instance info correctly reports scene availability
+    resetClientConnection();
     Hash loginInfo("type", "login", "username", "mrusp", "password", "12345", "version", "100.1.0");
-    int timeout = 500;
+    int timeout = 5000;
     m_tcpAdapter->sendMessage(loginInfo);
     while (m_tcpAdapter->connected() && timeout > 0) {
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
@@ -85,21 +99,11 @@ void GuiVersion_Test::testVersionControl() {
     // Should be still connected!
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
 
-    std::clog << std::endl << "Tested version control Correct Version.. Ok" << std::endl;
-    boost::this_thread::sleep(boost::posix_time::milliseconds(500));
-
-    // disconnect
-    CPPUNIT_ASSERT_THROW(m_tcpAdapter->disconnect(), std::exception);;
-    CPPUNIT_ASSERT(!m_tcpAdapter->connected());
-    std::clog << std::endl << "disconnected.. Ok" << std::endl;
+    std::clog << "Tested version control Correct Version.. Ok" << std::endl;
 
     // connect again
-    m_tcpAdapter = boost::shared_ptr<karabo::TcpAdapter>(new karabo::TcpAdapter(Hash("port", 44450u/*, "debug", true*/)));
-    timeout = 500;
-    while (!m_tcpAdapter->connected() && timeout > 0) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-        timeout -= 5;
-    }
+    resetClientConnection();
+
     // still connected
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
 
@@ -115,15 +119,11 @@ void GuiVersion_Test::testVersionControl() {
 
     // the GUI server will log us out
     CPPUNIT_ASSERT(!m_tcpAdapter->connected());
-    std::clog << std::endl << "Tested version control Unsupported Version.. Ok" << std::endl;
+    std::clog << "Tested version control Unsupported Version.. Ok" << std::endl;
 
     // connect again
-    m_tcpAdapter = boost::shared_ptr<karabo::TcpAdapter>(new karabo::TcpAdapter(Hash("port", 44450u/*, "debug", true*/)));
-    timeout = 500;
-    while (!m_tcpAdapter->connected() && timeout > 0) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-        timeout -= 5;
-    }
+    resetClientConnection();
+
     // check if still connected
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
 
@@ -137,6 +137,78 @@ void GuiVersion_Test::testVersionControl() {
     }
     // the GUI server will log us out
     CPPUNIT_ASSERT(!m_tcpAdapter->connected());
-    std::clog << std::endl << "Tested version control malformatted Version.. Ok" << std::endl;
+    std::clog << "Tested version control malformatted Version.. Ok" << std::endl;
 
+    // connect again
+    resetClientConnection();
+
+    // check if still connected
+    CPPUNIT_ASSERT(m_tcpAdapter->connected());
+
+    // send sha1-like shtuff
+    loginInfo.set("version", "2f1c169");
+    m_tcpAdapter->sendMessage(loginInfo);
+    timeout = 500;
+    while (m_tcpAdapter->connected() && timeout > 0) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        timeout -= 5;
+    }
+    // the GUI server will log us out
+    CPPUNIT_ASSERT(!m_tcpAdapter->connected());
+    std::clog << "Tested SHA1-like Version.. Ok" << std::endl;
+
+    // connect again
+    resetClientConnection();
+
+    // check if still connected
+    CPPUNIT_ASSERT(m_tcpAdapter->connected());
+
+    // send overspecified versions
+    loginInfo.set("version", "2.2.3.5");
+    m_tcpAdapter->sendMessage(loginInfo);
+    timeout = 500;
+    while (m_tcpAdapter->connected() && timeout > 0) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        timeout -= 5;
+    }
+    // the GUI server will not log us out
+    CPPUNIT_ASSERT(m_tcpAdapter->connected());
+    std::clog << "Tested overspecified Version.. Ok" << std::endl;
+
+    // connect again
+    resetClientConnection();
+
+    // check if still connected
+    CPPUNIT_ASSERT(m_tcpAdapter->connected());
+
+
+    // send pre-released versions
+    loginInfo.set("version", "2.2.3a5");
+    m_tcpAdapter->sendMessage(loginInfo);
+    timeout = 500;
+    while (m_tcpAdapter->connected() && timeout > 0) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        timeout -= 5;
+    }
+    // the GUI server will not log us out
+    CPPUNIT_ASSERT(m_tcpAdapter->connected());
+    std::clog << "Tested alpha Version.. Ok" << std::endl;
+
+    // connect again
+    resetClientConnection();
+
+    // check if still connected
+    CPPUNIT_ASSERT(m_tcpAdapter->connected());
+    // send overspecified development versions
+    loginInfo.set("version", "2.2.3dev5");
+    m_tcpAdapter->sendMessage(loginInfo);
+    timeout = 500;
+    while (m_tcpAdapter->connected() && timeout > 0) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        timeout -= 5;
+    }
+    // the GUI server will not log us out
+    CPPUNIT_ASSERT(m_tcpAdapter->connected());
+    std::clog << "Tested dev Version.. Ok" << std::endl;
+    
 }

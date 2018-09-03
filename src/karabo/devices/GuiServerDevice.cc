@@ -497,7 +497,9 @@ namespace karabo {
                 KARABO_LOG_INFO << "Login request of user: " << hash.get<string > ("username");
 
                 const vector<unsigned int> versionParts = karabo::util::fromString<unsigned int, vector>(hash.get<string>("version"), ".");
+
                 if (versionParts.size() >= 2) {
+
                     unsigned int major = versionParts[0];
                     unsigned int minor = versionParts[1];
                     // Versions earlier than 1.5.0 of the GUI don't understand a systemVersion message.
@@ -507,15 +509,20 @@ namespace karabo {
                 bool versionOk = true;
                 if (get<bool>("strictClientVersion")) {
                     const vector<unsigned int> minVersionParts = karabo::util::fromString<unsigned int, vector>(get<string>("minClientVersion"), ".");
-                    for (unsigned int idx = 0; idx < minVersionParts.size(); idx++) {
-                        if (versionParts.size() <= idx) {
+                    if (versionParts.size() < minVersionParts.size()) {
+                        // under specified versions are bad.
+                        versionOk = false;
+                    }
+                    unsigned int idx = 0;
+                    while (versionOk && idx < minVersionParts.size()){
+                        if (versionParts[idx] < minVersionParts[idx]) {
                             versionOk = false;
                             break;
                         }
-                        if (minVersionParts[idx] > versionParts[idx]) {
-                            versionOk = false;
+                        if (versionParts[idx] > minVersionParts[idx]) {
                             break;
                         }
+                        idx ++;
                     }
                 }
 
