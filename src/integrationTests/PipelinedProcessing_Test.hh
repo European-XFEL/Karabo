@@ -16,6 +16,12 @@
 #include <boost/shared_ptr.hpp>
 #include <cppunit/extensions/HelperMacros.h>
 
+// NONE: processingTime << delayTime;
+// MOST: processingTime >> delayTime;
+// RANDOM: processingTime ~ delayTime;
+enum class DataLoss {NONE, RANDOM, MOST};
+
+
 class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(PipelinedProcessing_Test);
@@ -29,7 +35,7 @@ class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
 
 public:
     PipelinedProcessing_Test();
-    virtual ~PipelinedProcessing_Test();
+    ~PipelinedProcessing_Test();
 
     void setUp();
     void tearDown();
@@ -41,7 +47,7 @@ public:
 
 private:
     void testPipeWait(unsigned int processingTime, unsigned int delayTime);
-    void testPipeDrop(unsigned int processingTime, unsigned int delayTime);
+    void testPipeDrop(unsigned int processingTime, unsigned int delayTime, DataLoss dataLoss);
     void testProfileTransferTimes(bool noShortCut, bool copy);
 
     template <typename T>
@@ -50,7 +56,7 @@ private:
                             const T& expected,
                             const int maxTimeout,
                             bool checkForEqual = true) const; // if false, wait until not equal anymore
-
+    
     karabo::core::DeviceClient::Pointer m_deviceClient;
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_eventLoopThread;

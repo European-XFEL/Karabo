@@ -151,8 +151,7 @@ namespace karabo {
 
 
     void PipeReceiverDevice::onEndOfStream(const xms::InputChannel::Pointer& input) {
-
-        set<unsigned int>("nTotalOnEos", get<unsigned int>("nTotalData"));
+        set("nTotalOnEos", get<unsigned int>("nTotalOnEos") + 1);
     }
 
     void PipeReceiverDevice::onInputProfile(const xms::InputChannel::Pointer& input) {

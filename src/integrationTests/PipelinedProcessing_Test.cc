@@ -104,8 +104,8 @@ void PipelinedProcessing_Test::testGetOutputChannelSchema() {
 
 void PipelinedProcessing_Test::testPipeWait() {
     CPPUNIT_ASSERT(m_deviceClient->instantiate(m_serverId, "PipeReceiverDevice", m_receiverConfig).first);
-    CPPUNIT_ASSERT_EQUAL(m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"), std::string("wait"));
-    CPPUNIT_ASSERT_EQUAL(m_deviceClient->get<std::string>(m_receiver, "input2.onSlowness"), std::string("wait"));
+    CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
+    CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_receiver, "input2.onSlowness"));
 
     testPipeWait(0, 0);
     testPipeWait(100, 0);
@@ -115,29 +115,36 @@ void PipelinedProcessing_Test::testPipeWait() {
 
 void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigned int delayTime) {
 
-    std::clog << "Test with onSlowness = 'wait', processingTime = " << processingTime << ", delayTime = " << delayTime << "\n";
+    std::clog << "Test with onSlowness = 'wait', processingTime = " 
+              << processingTime << ", delayTime = " << delayTime << "\n";
 
     m_deviceClient->set(m_receiver, "processingTime", processingTime);
     m_deviceClient->set(m_sender, "delay", delayTime);
 
-    int64_t elapsedTimeIn_microseconds = 0ll;
-    auto nDataExpected = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
-    for (unsigned int nRun = 0; nRun < N_RUNS_PER_TEST; ++nRun) {
+    std::size_t elapsedTimeIn_microseconds = 0;
+    auto nTotalData0 = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
+    auto nTotalOnEos0 = m_deviceClient->get<unsigned int>(m_receiver, "nTotalOnEos");
+    auto nDataExpected = nTotalData0;
+    auto nOnEosExpected = nTotalOnEos0;    for (unsigned int nRun = 0; nRun < N_RUNS_PER_TEST; ++nRun) {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
         // Then call its slot
         m_deviceClient->execute(m_sender, "write", KRB_TEST_MAX_TIMEOUT);
 
         nDataExpected += m_nDataPerRun;
-
         // And poll for the correct answer
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", nDataExpected, KRB_TEST_MAX_TIMEOUT));
+
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         // Note that duration contains overhead from message travel time and polling interval in pollDeviceProperty!
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
 
-        // Check that EOS handling is not called too early
-        // (EOS comes a bit later, so we have to poll client again to be sure...)
-        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalOnEos", nDataExpected, KRB_TEST_MAX_TIMEOUT));
+        // Check that EOS handling is not called too early (how?)
+
+        ++nOnEosExpected;
+        // EOS comes a bit later, so we have to poll client again to be sure...
+        // Note: only one EOS arrives after receiving a train of data!
+        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(
+                m_receiver, "nTotalOnEos", nOnEosExpected, KRB_TEST_MAX_TIMEOUT));
 
         // Test if data source was correctly passed
         auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSources");
@@ -153,52 +160,81 @@ void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigne
     }
 
     auto dataItemSize = m_deviceClient->get<unsigned int>(m_receiver, "dataItemSize");
-    auto nTotalOnEos = m_deviceClient->get<unsigned int>(m_receiver, "nTotalOnEos");
-    double mbps = double(dataItemSize) * double(nTotalOnEos) / double(elapsedTimeIn_microseconds);
+    double mbps = double(dataItemSize) * double(nDataExpected - nTotalData0) / double(elapsedTimeIn_microseconds);
     // Note that this measurement checks the inner-process shortcut - and includes timing overhead e.g. pollDeviceProperty
-    std::clog << "testPipe: Megabytes per sec : " << mbps
-            << ", elapsedTimeIn_microseconds = " << elapsedTimeIn_microseconds
-            << ", dataItemSize = " << dataItemSize << ", nTotalOnEos=" << nTotalOnEos << std::endl;
-    CPPUNIT_ASSERT_EQUAL(nDataExpected, nTotalOnEos); // TODO: redundant?
+    // In addition, the process and delay times also affect mbps.
+    std::clog << "testPipe: Megabytes per sec : " << mbps 
+              << ", elapsedTimeIn_microseconds = " << elapsedTimeIn_microseconds
+              << ", dataItemSize = " << dataItemSize 
+              << ", nTotalData = " << nDataExpected - nTotalData0
+              << ", nTotalOnEos = " << nOnEosExpected - nTotalOnEos0 << std::endl;
 }
 
 
 void PipelinedProcessing_Test::testPipeDrop() {
     m_receiverConfig += Hash("input.onSlowness", "drop", "input2.onSlowness", "drop");
     CPPUNIT_ASSERT(m_deviceClient->instantiate(m_serverId, "PipeReceiverDevice", m_receiverConfig).first);
-    CPPUNIT_ASSERT_EQUAL(m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"), std::string("drop"));
-    CPPUNIT_ASSERT_EQUAL(m_deviceClient->get<std::string>(m_receiver, "input2.onSlowness"), std::string("drop"));
+    CPPUNIT_ASSERT_EQUAL(std::string("drop"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
+    CPPUNIT_ASSERT_EQUAL(std::string("drop"), m_deviceClient->get<std::string>(m_receiver, "input2.onSlowness"));
 
-    testPipeDrop(0, 0);
-    testPipeDrop(100, 0);
-    testPipeDrop(0, 100);
+    testPipeDrop(0, 0, DataLoss::RANDOM);
+    testPipeDrop(0, 100, DataLoss::NONE);
+    testPipeDrop(100, 0, DataLoss::MOST);
 }
 
 
-void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigned int delayTime) {
-
-    std::clog << "Test with onSlowness = 'drop', processingTime = " << processingTime << ", delayTime = " << delayTime << "\n";
-
+void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigned int delayTime, DataLoss dataLoss) {
+    
+    std::clog << "Test with onSlowness = 'drop', processingTime = " 
+              << processingTime << ", delayTime = " << delayTime << "\n";
+    
+    // The error message 'Command "write" is not allowed in current state "ACTIVE" of device "p2pTestSender"' 
+    // has been observed during testing with local "glassfish" broker.
+    CPPUNIT_ASSERT_EQUAL(std::string("NORMAL"), m_deviceClient->get<karabo::util::State>(m_sender, "state").name());
+    
     m_deviceClient->set(m_receiver, "processingTime", processingTime);
     m_deviceClient->set(m_sender, "delay", delayTime);
 
-    int64_t elapsedTimeIn_microseconds = 0ll;
-    auto nDataExpected = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
+    std::size_t elapsedTimeIn_microseconds = 0;
+    auto nTotalData0 = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
+    auto nTotalOnEos0 = m_deviceClient->get<unsigned int>(m_receiver, "nTotalOnEos");
+    auto nDataExpected = nTotalData0;
+    auto nOnEosExpected = nTotalOnEos0;
     for (unsigned int nRun = 0; nRun < N_RUNS_PER_TEST; ++nRun) {
-
         auto startTimepoint = std::chrono::high_resolution_clock::now();
-        // Then call its slot
         m_deviceClient->execute(m_sender, "write", KRB_TEST_MAX_TIMEOUT);
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5 * processingTime));
 
-        nDataExpected += m_nDataPerRun;
-
-        CPPUNIT_ASSERT(m_deviceClient->get<unsigned int>(m_receiver, "nTotalData") < nDataExpected);
-        CPPUNIT_ASSERT(m_deviceClient->get<unsigned int>(m_receiver, "nTotalOnEos") < nDataExpected);
+        // test data
+        if (dataLoss == DataLoss::NONE) {
+            nDataExpected += m_nDataPerRun;
+            CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(
+                    m_receiver, "nTotalData", nDataExpected, KRB_TEST_MAX_TIMEOUT));
+        } else if (dataLoss == DataLoss::MOST) {
+            // if the processing time is much longer than the delay time, 
+            // only two data are expected to be received: the first and the last?
+            nDataExpected += 2;
+            // better way?
+            boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+            CPPUNIT_ASSERT_EQUAL(nDataExpected, m_deviceClient->get<unsigned int>(m_receiver, "nTotalData"));
+        } else if (dataLoss == DataLoss::RANDOM) {
+            // better way?
+            boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+            // if the processing time is comparable to the delay time, the number of received data is random.
+            auto nTotalData = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
+            CPPUNIT_ASSERT(nTotalData <= nDataExpected + m_nDataPerRun && nTotalData > nDataExpected);
+            nDataExpected = nTotalData;
+        } else {
+            std::clog << "Unknown DataLoss!" << std::endl;
+            CPPUNIT_ASSERT(false);
+        }
 
         auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
-        // Note that duration contains overhead from message travel time and polling interval in pollDeviceProperty!
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+        // test EOS
+        ++nOnEosExpected;
+        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(
+            m_receiver, "nTotalOnEos", nOnEosExpected, KRB_TEST_MAX_TIMEOUT));
 
         // Test if data source was correctly passed
         auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSources");
@@ -207,12 +243,12 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
     }
 
     auto dataItemSize = m_deviceClient->get<unsigned int>(m_receiver, "dataItemSize");
-    auto nTotalOnEos = m_deviceClient->get<unsigned int>(m_receiver, "nTotalOnEos");
-    double mbps = double(dataItemSize) * double(nTotalOnEos) / double(elapsedTimeIn_microseconds);
-    // Note that this measurement checks the inner-process shortcut - and includes timing overhead e.g. pollDeviceProperty
-    std::clog << "testPipe: Megabytes per sec : " << mbps
-            << ", elapsedTimeIn_microseconds = " << elapsedTimeIn_microseconds
-            << ", dataItemSize = " << dataItemSize << ", nTotalOnEos=" << nTotalOnEos << std::endl;
+    auto mbps = double(dataItemSize) * double(nDataExpected - nTotalData0) / double(elapsedTimeIn_microseconds);
+    std::clog << "testPipe: Megabytes per sec : " << mbps 
+              << ", elapsedTimeIn_microseconds = " << elapsedTimeIn_microseconds
+              << ", dataItemSize = " << dataItemSize 
+              << ", nTotalData = " << nDataExpected - nTotalData0
+              << ", nTotalOnEos = " << nOnEosExpected - nTotalOnEos0 << std::endl;
 }
 
 
@@ -230,7 +266,7 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool co
     // Looks like to get "KARABO_NO_PIPELINE_SHORTCUT" active (some caching?),
     // we have to re-instantiate the receiver.
     CPPUNIT_ASSERT(m_deviceClient->instantiate(m_serverId, "PipeReceiverDevice", m_receiverConfig).first);
-    m_deviceClient->set(m_receiver, "processingTime", 100); // why we need this setup here?
+    m_deviceClient->set(m_receiver, "processingTime", 100); // why do we need this setup here?
 
     m_deviceClient->set(m_sender, "scenario", "profile");
     m_deviceClient->set(m_sender, "copyAllData", copy);
