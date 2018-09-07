@@ -30,6 +30,11 @@ namespace karabo {
 
         void CentralLogging::expectedParameters(Schema& expected) {
 
+            OVERWRITE_ELEMENT(expected).key("state")
+                    .setNewOptions(State::INIT, State::NORMAL, State::ERROR)
+                    .setNewDefaultValue(State::INIT)
+                    .commit();
+
             OVERWRITE_ELEMENT(expected).key("deviceId")
                     .setNewDefaultValue("clog_0")
                     .commit();
@@ -68,24 +73,17 @@ namespace karabo {
         }
 
 
-        CentralLogging::CentralLogging(const karabo::util::Hash& input) : Device<>(input), m_svc(new boost::asio::io_service()), m_timer(*m_svc) {
+        CentralLogging::CentralLogging(const karabo::util::Hash& input) : Device<>(input), m_timer(karabo::net::EventLoop::getIOService()) {
 
             KARABO_INITIAL_FUNCTION(initialize)
-            m_loggerInput = input;
         }
 
 
         CentralLogging::~CentralLogging() {
-            m_svc->stop();
-            if (m_svcThread.get_id() != boost::this_thread::get_id())
-                m_svcThread.join();
         }
 
 
         void CentralLogging::initialize() {
-
-            m_loggerConsumer = getConnection()->createConsumer(m_topic, "target = 'log'");
-            m_loggerConsumer->startReading(bind_weak(&karabo::devices::CentralLogging::logHandler, this, _1, _2));
 
             try {
                 if (!boost::filesystem::exists(get<string>("directory"))) {
@@ -94,15 +92,18 @@ namespace karabo {
 
                 m_lastIndex = determineLastIndex();
 
+                m_loggerConsumer = getConnection()->createConsumer(m_topic, "target = 'log'");
+                m_loggerConsumer->startReading(bind_weak(&karabo::devices::CentralLogging::logHandler, this, _1, _2));
+
                 m_timer.expires_from_now(boost::posix_time::seconds(get<int>("flushInterval")));
                 m_timer.async_wait(bind_weak(&CentralLogging::flushHandler, this, boost::asio::placeholders::error));
-                m_svcThread = boost::thread(boost::bind(&karabo::net::runProtected, m_svc, this->getInstanceId(),
-                                                        "for flushing to file", 100));
                 // Produce some information
                 KARABO_LOG_INFO << "Central Logging service started listening all log messages ...";
 
+                updateState(State::NORMAL);
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in initialize(): " << e.userFriendlyMsg();
+                updateState(State::ERROR);
             }
 
 
@@ -142,6 +143,7 @@ namespace karabo {
                         m_loggerConsumer.reset();
                         return;        
                     } else {
+                        KARABO_LOG_INFO << "Opened \"" << logname << "\" for writing";
                         if (m_logstream.tellp() > 0) m_logstream << "\n";
                     }
                 }
