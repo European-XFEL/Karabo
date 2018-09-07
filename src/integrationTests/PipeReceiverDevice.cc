@@ -149,7 +149,7 @@ namespace karabo {
         unsigned int bytes = v.size() * sizeof(long long);
         set<unsigned int>("dataItemSize", bytes);
         const auto& emptyArr = data.get<NDArray>("emptyArray");
-        if (emptyArr.size() == 0) {
+        if (emptyArr.size() != 0) {
             std::string status = get<std::string>("status");
             if (!status.empty()) status += "\n";
             set("status", status += "dataId " + toString(data.get<int>("dataId")) += " has size " + toString(emptyArr.size()));
