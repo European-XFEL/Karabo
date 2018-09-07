@@ -121,11 +121,12 @@ void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigne
     m_deviceClient->set(m_receiver, "processingTime", processingTime);
     m_deviceClient->set(m_sender, "delay", delayTime);
 
-    std::size_t elapsedTimeIn_microseconds = 0;
+    int64_t elapsedTimeIn_microseconds = 0ll;
     auto nTotalData0 = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
     auto nTotalOnEos0 = m_deviceClient->get<unsigned int>(m_receiver, "nTotalOnEos");
     auto nDataExpected = nTotalData0;
-    auto nOnEosExpected = nTotalOnEos0;    for (unsigned int nRun = 0; nRun < N_RUNS_PER_TEST; ++nRun) {
+    auto nOnEosExpected = nTotalOnEos0;
+    for (unsigned int nRun = 0; nRun < N_RUNS_PER_TEST; ++nRun) {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
         // Then call its slot
         m_deviceClient->execute(m_sender, "write", KRB_TEST_MAX_TIMEOUT);
@@ -140,14 +141,14 @@ void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigne
 
         // Check that EOS handling is not called too early (how?)
 
-        ++nOnEosExpected;
+        nOnEosExpected++;
         // EOS comes a bit later, so we have to poll client again to be sure...
         // Note: only one EOS arrives after receiving a train of data!
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(
                 m_receiver, "nTotalOnEos", nOnEosExpected, KRB_TEST_MAX_TIMEOUT));
 
         // Test if data source was correctly passed
-        auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSources");
+        std::vector<std::string> sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSources");
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (1u), sources.size());
         CPPUNIT_ASSERT_EQUAL(m_sender + ":output1", sources[0]);
 
@@ -159,7 +160,7 @@ void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigne
         }
     }
 
-    auto dataItemSize = m_deviceClient->get<unsigned int>(m_receiver, "dataItemSize");
+    const unsigned int dataItemSize = m_deviceClient->get<unsigned int>(m_receiver, "dataItemSize");
     double mbps = double(dataItemSize) * double(nDataExpected - nTotalData0) / double(elapsedTimeIn_microseconds);
     // Note that this measurement checks the inner-process shortcut - and includes timing overhead e.g. pollDeviceProperty
     // In addition, the process and delay times also affect mbps.
@@ -232,7 +233,7 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
 
         // test EOS
-        ++nOnEosExpected;
+        nOnEosExpected++;
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(
             m_receiver, "nTotalOnEos", nOnEosExpected, KRB_TEST_MAX_TIMEOUT));
 
@@ -243,7 +244,7 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
     }
 
     auto dataItemSize = m_deviceClient->get<unsigned int>(m_receiver, "dataItemSize");
-    auto mbps = double(dataItemSize) * double(nDataExpected - nTotalData0) / double(elapsedTimeIn_microseconds);
+    double mbps = double(dataItemSize) * double(nDataExpected - nTotalData0) / double(elapsedTimeIn_microseconds);
     std::clog << "testPipe: Megabytes per sec : " << mbps 
               << ", elapsedTimeIn_microseconds = " << elapsedTimeIn_microseconds
               << ", dataItemSize = " << dataItemSize 
@@ -261,8 +262,9 @@ void PipelinedProcessing_Test::testProfileTransferTimes() {
 
 
 void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool copy) {
-    if (noShortCut) setenv("KARABO_NO_PIPELINE_SHORTCUT", "1", 1);
-
+    if (noShortCut) {
+        setenv("KARABO_NO_PIPELINE_SHORTCUT", "1", 1);
+    }
     // Looks like to get "KARABO_NO_PIPELINE_SHORTCUT" active (some caching?),
     // we have to re-instantiate the receiver.
     CPPUNIT_ASSERT(m_deviceClient->instantiate(m_serverId, "PipeReceiverDevice", m_receiverConfig).first);
@@ -282,8 +284,9 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool co
             << (copy ? "copy" : "no copy") << ", " << (noShortCut ? "no short cut" : "short cut")
             << "): " << transferTime << " milliseconds average transfer time" << std::endl;
 
-    if (noShortCut) unsetenv("KARABO_NO_PIPELINE_SHORTCUT");
-
+    if (noShortCut) {
+        unsetenv("KARABO_NO_PIPELINE_SHORTCUT");
+    }
     CPPUNIT_ASSERT(m_deviceClient->killDevice(m_receiver).first);
 }
 
