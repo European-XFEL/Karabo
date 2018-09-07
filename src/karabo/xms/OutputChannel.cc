@@ -547,7 +547,7 @@ namespace karabo {
 
                 try {
                     if (tcpChannel->isOpen()) {
-                        tcpChannel->write(karabo::util::Hash("endOfStream", true), std::vector<char>());
+                        tcpChannel->write(karabo::util::Hash("endOfStream", true), std::vector<BufferSet::Pointer>());
                     }
                 } catch (const std::exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::signalEndOfStream (shared) :  " << e.what();
@@ -561,7 +561,7 @@ namespace karabo {
 
                 try {
                     if (tcpChannel->isOpen()) {
-                        tcpChannel->write(karabo::util::Hash("endOfStream", true), std::vector<char>());
+                        tcpChannel->write(karabo::util::Hash("endOfStream", true), std::vector<BufferSet::Pointer>());
                     }
                 } catch (const std::exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::signalEndOfStream (copy) :  " << e.what();
@@ -716,6 +716,8 @@ namespace karabo {
                     // we assure that the contents in the chunk the receiver gets sent have been copied once
                     Memory::assureAllDataIsCopied(m_channelId, chunkId);
                     tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId),
+                                      // To allow old versions <= 2.2.4.4 to read our data, send vector with one
+                                      // empty BufferSet instead of an empty vector:
                                       std::vector<BufferSet::Pointer>(1, BufferSet::Pointer(new BufferSet)));
                 }
             } catch (const std::exception& e) {
@@ -813,6 +815,8 @@ namespace karabo {
                     // we assure that the contents in the chunk the receiver gets sent have been copied once
                     Memory::assureAllDataIsCopied(m_channelId, chunkId);
                     tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId),
+                                      // To allow old versions <= 2.2.4.4 to read our data, send vector with one
+                                      // empty BufferSet instead of an empty vector:
                                       std::vector<BufferSet::Pointer>(1, BufferSet::Pointer(new BufferSet)));
                 }
             } catch (const std::exception& e) {
