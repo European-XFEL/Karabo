@@ -6,6 +6,7 @@ from asyncio import (
     SelectorEventLoop, shield, sleep, Task, TimeoutError, wait_for)
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing, ExitStack
+import faulthandler
 from functools import wraps
 import getpass
 import inspect
@@ -13,7 +14,10 @@ from itertools import count
 import logging
 import os
 import queue
+import selectors
+import signal
 import socket
+import sys
 import time
 import threading
 import traceback
@@ -501,13 +505,23 @@ class NoEventLoop(AbstractEventLoop):
         return self._instance
 
 
+class AlarmSelector(selectors.DefaultSelector):
+    """A selector that assures no SIGALRM is sent during selecting"""
+    def select(self, timeout=None):
+        lastalarm = signal.alarm(0)
+        try:
+            return super().select(timeout)
+        finally:
+            signal.alarm(lastalarm)
+
+
 class EventLoop(SelectorEventLoop):
     Queue = Queue
     sync_set = False
     global_loop = None
 
     def __init__(self, topic=None):
-        super().__init__()
+        super().__init__(selector=AlarmSelector())
         if EventLoop.global_loop is not None:
             raise RuntimeError("there can only be one Karabo event loop")
         EventLoop.global_loop = self
@@ -521,6 +535,8 @@ class EventLoop(SelectorEventLoop):
         self.changedFutures = set()  # call if some property changes
         self.set_default_executor(ThreadPoolExecutor(200))
         self.set_exception_handler(EventLoop.exceptionHandler)
+        # we overwrite sys.stderr for macros, so sys.__stderr__ it is
+        faulthandler.register(signal.SIGALRM, file=sys.__stderr__)
 
     def exceptionHandler(self, context):
         try:
@@ -617,6 +633,21 @@ class EventLoop(SelectorEventLoop):
                         raise
                     else:
                         loop.cancel()
+
+    def _run_once(self):
+        """Run all the currently scheduled events
+
+        We overwrite this method so that we can detect stuck device servers.
+        The events are typically all handled within less than 100 ms. If we
+        are still not done after 10 s, a SIGALRM will be sent, and we
+        installed a signal handler that will dump a stack trace so we can
+        find out where we got stuck.
+        """
+        signal.alarm(10)
+        try:
+            super()._run_once()
+        finally:
+            signal.alarm(0)
 
     def start_device(self, device):
         lock = threading.Lock()
