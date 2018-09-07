@@ -427,42 +427,39 @@ namespace karabo {
                     return;
                 }
 
-                if (data.size() > 0) {
-                    if (data[0]->totalSize() == 0 && header.has("channelId") && header.has("chunkId")) { // Local memory
-                        unsigned int channelId = header.get<unsigned int>("channelId");
-                        unsigned int chunkId = header.get<unsigned int>("chunkId");
-                        KARABO_LOG_FRAMEWORK_TRACE << debugId << "Reading from local memory [" << channelId << "][" << chunkId << "]";
-                        Memory::writeChunk(Memory::readChunk(channelId, chunkId), m_channelId, m_inactiveChunk, Memory::getMetaData(channelId, chunkId));
-                        Memory::decrementChunkUsage(channelId, chunkId);
-                    } else { // TCP data
-                        KARABO_LOG_FRAMEWORK_TRACE << debugId << "Reading from remote memory (over tcp)";
-                        Memory::writeAsContiguousBlock(data, header, m_channelId, m_inactiveChunk);
-                    }
-                    
-                    size_t nInactiveData = Memory::size(m_channelId, m_inactiveChunk);
-                    size_t nActiveData = Memory::size(m_channelId, m_activeChunk);
-
-                    if ((this->getMinimumNumberOfData()) <= 0 || (nInactiveData < this->getMinimumNumberOfData())) { // Not enough data, yet
-                        KARABO_LOG_FRAMEWORK_TRACE << debugId << "Can read more data";
-                        notifyOutputChannelForPossibleRead(channel);
-                    } else if (nActiveData == 0) { // Data complete, second pot still empty     
-                        this->swapBuffers();
-                        // Ask to fill second pot...
-                        notifyOutputChannelForPossibleRead(channel);
-
-                        // ...and in parallel process first one.
-                        // No mutex under callback
-                        KARABO_LOG_FRAMEWORK_TRACE << debugId << "Triggering IOEvent";
-                        m_strand->post(util::bind_weak(&InputChannel::triggerIOEvent, this));
-                    }
-                    //else { // Data complete on both pots now
-                    // triggerIOEvent will be called by the update of the triggerIOEvent
-                    // that is processing the active pot now
-                    //}
-                } else {
-                    // data.size() == 0 && no errors?
-                    notifyOutputChannelForPossibleRead(channel);
+                // Note: data[0]->totalSize() is kept to be able to read from old versions <= 2.2.4.4
+                if ((data.empty() || data[0]->totalSize() == 0) && header.has("channelId") && header.has("chunkId")) {
+                    // Local memory
+                    unsigned int channelId = header.get<unsigned int>("channelId");
+                    unsigned int chunkId = header.get<unsigned int>("chunkId");
+                    KARABO_LOG_FRAMEWORK_TRACE << debugId << "Reading from local memory [" << channelId << "][" << chunkId << "]";
+                    Memory::writeChunk(Memory::readChunk(channelId, chunkId), m_channelId, m_inactiveChunk, Memory::getMetaData(channelId, chunkId));
+                    Memory::decrementChunkUsage(channelId, chunkId);
+                } else { // TCP data
+                    KARABO_LOG_FRAMEWORK_TRACE << debugId << "Reading from remote memory (over tcp)";
+                    Memory::writeAsContiguousBlock(data, header, m_channelId, m_inactiveChunk);
                 }
+
+                size_t nInactiveData = Memory::size(m_channelId, m_inactiveChunk);
+                size_t nActiveData = Memory::size(m_channelId, m_activeChunk);
+
+                if ((this->getMinimumNumberOfData()) <= 0 || (nInactiveData < this->getMinimumNumberOfData())) { // Not enough data, yet
+                    KARABO_LOG_FRAMEWORK_TRACE << debugId << "Can read more data";
+                    notifyOutputChannelForPossibleRead(channel);
+                } else if (nActiveData == 0) { // Data complete, second pot still empty
+                    this->swapBuffers();
+                    // Ask to fill second pot...
+                    notifyOutputChannelForPossibleRead(channel);
+
+                    // ...and in parallel process first one.
+                    // No mutex under callback
+                    KARABO_LOG_FRAMEWORK_TRACE << debugId << "Triggering IOEvent";
+                    m_strand->post(util::bind_weak(&InputChannel::triggerIOEvent, this));
+                }
+                //else { // Data complete on both pots now
+                // triggerIOEvent will be called by the update of the triggerIOEvent
+                // that is processing the active pot now
+                //}
                 channel->readAsyncHashVectorBufferSetPointer(util::bind_weak(&karabo::xms::InputChannel::onTcpChannelRead, this, _1, channel, _2, _3));
             } catch (const karabo::util::Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onTcpChannelRead " << e;
