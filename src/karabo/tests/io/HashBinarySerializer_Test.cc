@@ -147,7 +147,7 @@ void HashBinarySerializer_Test::testSerialization() {
     // Now content test with BufferSet - allCopy
     karabo::io::BufferSet archiveBuf1(true); // allCopy
     CPPUNIT_ASSERT_NO_THROW(p->save(m_hash, archiveBuf1));
-    //    std::clog << "BufferSet(true)\n" << archiveBuf1 << std::endl;
+
     // Check that it can be converted to boost buffers - and that there is one asio buffer per non-empty BufferSet buffer
     vector<boost::asio::const_buffer> asioBuf1;
     CPPUNIT_ASSERT_NO_THROW(archiveBuf1.appendTo(asioBuf1));
@@ -172,7 +172,7 @@ void HashBinarySerializer_Test::testSerialization() {
     karabo::io::BufferSet archiveBuf2(false); // avoid copy if possible
     Hash hashArchive2;
     CPPUNIT_ASSERT_NO_THROW(p->save(m_hash, archiveBuf2));
-    //    std::clog << "BufferSet(false)\n" << archiveBuf2 << std::endl;
+
     // Check that it can be converted to boost buffers - and that there is one asio buffer per non-empty BufferSet buffer
     vector<boost::asio::const_buffer> asioBuf2;
     CPPUNIT_ASSERT_NO_THROW(archiveBuf2.appendTo(asioBuf2));
