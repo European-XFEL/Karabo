@@ -154,7 +154,7 @@ namespace karabo {
                 if (get<int>("type") == karabo::util::Types::from<T>()) {
                     return reinterpret_cast<T*> (get<ByteArray>("data").first.get());
                 } else {
-                    throw KARABO_CAST_EXCEPTION("Bad cast");
+                    throw KARABO_CAST_EXCEPTION("NDArray::getData() const: Bad cast");
                 }
             }
 
@@ -163,7 +163,7 @@ namespace karabo {
                 if (get<int>("type") == karabo::util::Types::from<T>()) {
                     return reinterpret_cast<T*> (get<ByteArray>("data").first.get());
                 } else {
-                    throw KARABO_CAST_EXCEPTION("Bad cast");
+                    throw KARABO_CAST_EXCEPTION("NDArray::getData(): Bad cast");
                 }
             }
 
