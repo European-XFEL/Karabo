@@ -73,6 +73,8 @@ class Network(QObject):
 
         # Update MainWindow toolbar
         self.signalServerConnectionChanged.emit(isConnected)
+        # Allow external runner to see the status of the connection!
+        return isConnected
 
     def load_login_settings(self):
         # Maximum number of GUI servers to be stored, 5 by default
