@@ -31,7 +31,7 @@ namespace karabo {
         void CentralLogging::expectedParameters(Schema& expected) {
 
             OVERWRITE_ELEMENT(expected).key("state")
-                    .setNewOptions(State::INIT, State::NORMAL, State::ERROR)
+                    .setNewOptions(State::INIT, State::ON, State::ERROR)
                     .setNewDefaultValue(State::INIT)
                     .commit();
 
@@ -100,7 +100,7 @@ namespace karabo {
                 // Produce some information
                 KARABO_LOG_INFO << "Central Logging service started listening all log messages ...";
 
-                updateState(State::NORMAL);
+                updateState(State::ON);
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in initialize(): " << e.userFriendlyMsg();
                 updateState(State::ERROR);
