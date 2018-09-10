@@ -1,7 +1,12 @@
+from io import StringIO
+from lxml import etree
+
 from karabo.bound import (AccessLevel, BOOL_ELEMENT, Hash, KARABO_CLASSINFO,
                           OVERWRITE_ELEMENT, PythonDevice,
                           SLOT_ELEMENT, STRING_ELEMENT, UINT32_ELEMENT)
+from karabo.common.scenemodel.api import write_scene
 from karabo.common.states import State
+from karabo.middlelayer import read_project_model
 from karabo.project_db.project_database import ProjectDatabase
 from karabo.project_db.util import assure_running, ProjectDBError
 
@@ -68,6 +73,7 @@ class ProjectManager(PythonDevice):
         self.registerSlot(self.slotListItems)
         self.registerSlot(self.slotListDomains)
         self.registerSlot(self.slotUpdateAttribute)
+        self.registerSlot(self.slotGetScene)
         self.registerInitialFunction(self.initialization)
         self.user_db_sessions = {}
 
@@ -106,6 +112,50 @@ class ProjectManager(PythonDevice):
         :return: at tuple of host, port
         """
         return self.get("host"), self.get("port")
+
+    def slotGetScene(self, params):
+        """Request a scene directly from the database in the correct format
+
+        This protocol is in the style of the capability protocol and expects
+        a Hash with parameters:
+
+            name: Name of scene --optional
+            domain: Domain to look for the scene item
+            uuid: UUID of the scene item
+            db_token: db token of the running instance
+
+        :param params: A `Hash` containing the method parameters
+        """
+        self.log.DEBUG('Requesting scene directly from database!')
+
+        name = params.get('name', default='')
+        token = params.get('db_token')
+        domain = params.get('domain')
+        uuid = [params.get('uuid')]
+
+        # Check if we are already initialized!
+        self._checkDbInitialized(token)
+
+        # Start filling the payload Hash
+        # ----------------------------------------
+        payload = Hash('success', False)
+        payload.set('name', name)
+        with self.user_db_sessions[token] as db_session:
+            try:
+                item = db_session.load_item(domain, uuid)[0]
+                xml = item['xml']
+                item_type = etree.fromstring(xml).get('item_type')
+                if item_type == 'scene':
+                    scene = read_project_model(StringIO(xml))
+                    payload.set('data', write_scene(scene))
+                    payload.set('success', True)
+            except ProjectDBError as e:
+                self.log.INFO('ProjectDBError in directly loading database '
+                              'scene: {}'.format(e))
+
+        self.reply(Hash('type', 'deviceScene',
+                        'origin', self.getInstanceId(),
+                        'payload', payload))
 
     def slotBeginUserSession(self, token):
         """
