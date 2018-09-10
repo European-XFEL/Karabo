@@ -15,6 +15,8 @@ class Version_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(Version_Test);
     CPPUNIT_TEST(testVersion);
+    CPPUNIT_TEST(testVersionFromString);
+    CPPUNIT_TEST(testVersionComparison);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -24,6 +26,8 @@ public:
 private:
 
     void testVersion();
+    void testVersionFromString();
+    void testVersionComparison();
 
 };
 

@@ -8,6 +8,7 @@
 
 #include <iosfwd>
 #include <fstream>
+#include <regex>
 #include <sstream>
 #include <boost/filesystem/operations.hpp>
 #include "Version.hh"
@@ -19,7 +20,7 @@ namespace karabo {
     namespace util {
 
 
-        Version::Version() : m_major(-1), m_minor(-1), m_patch(-1), m_revision(-1) {
+        Version::Version() : m_major(-1), m_minor(-1), m_patch(-1), m_postType(PostfixType::NONE), m_post(-1), m_dev(-1) {
 
             boost::filesystem::path versionFile = getPathToVersionFile();
             if (boost::filesystem::exists(versionFile)) {
@@ -33,19 +34,50 @@ namespace karabo {
                 }
                 m_versionString = buffer.str();
                 m_versionString = m_versionString.substr(0, m_versionString.size() - 1); // Cut away newline character
-                if (m_versionString.empty()) {
-                    if (m_versionString[0] == 'r') {
-                        m_revision = fromString<int>(m_versionString.substr(1));
-                    } else {
-                        std::vector<int> v = fromString<int, std::vector>(m_versionString, ".");
-                        if (v.size() > 0) m_major = v[0];
-                        if (v.size() > 1) m_minor = v[1];
-                        if (v.size() > 2) m_patch = v[2];
-                    }
+                if (!m_versionString.empty()) {
+                    std::vector<int> v = fromString<int, std::vector>(m_versionString, ".");
+                    if (v.size() > 0) m_major = v[0];
+                    if (v.size() > 1) m_minor = v[1];
+                    if (v.size() > 2) m_patch = v[2];
                 }
             }
         }
 
+        Version::Version(const std::string &version) : m_major(-1), m_minor(-1), m_patch(-1), 
+            m_postType(PostfixType::NONE), m_post(-1), m_dev(-1) {
+            std::regex versionRegex("(\\d+)\\.(\\d+)\\.(\\d+)(a|b|rc|\\.post)?(\\d+)?(\\.dev)?(\\d+)?");
+            std::smatch versionParts;
+            if (std::regex_search(version, versionParts, versionRegex)) {
+
+                m_major = fromString<unsigned int>(versionParts[1]);
+                m_minor = fromString<unsigned int>(versionParts[2]);
+                m_patch = fromString<unsigned int>(versionParts[3]);
+                const std::string separator = versionParts[4];
+                const unsigned int postVersion = fromString<unsigned int>(versionParts[5]);
+                const std::string devSeparator = versionParts[6];
+                const unsigned int devVersion = fromString<unsigned int>(versionParts[7]);
+                if (separator ==  "a" ){
+                    m_postType = PostfixType::ALPHA;
+                    m_post = postVersion;
+                } else if (separator ==  "b") {
+                    m_postType = PostfixType::BETA; 
+                    m_post = postVersion;
+                } else if (separator ==  "rc") {
+                    m_postType = PostfixType::RC;
+                    m_post = postVersion;
+                } else if (separator ==  ".post") {
+                    m_postType = PostfixType::POST;
+                    m_post = postVersion;
+                } else if (separator ==  "") {
+                    m_postType = PostfixType::NONE;
+                    m_post = 0;
+                }
+                if (devSeparator ==  ".dev") {
+                    // development release
+                    m_dev = devVersion;
+                }
+            }
+        }
 
         std::string Version::getPathToVersionFile() {
             return getPathToKaraboInstallation() += "/VERSION";
@@ -80,24 +112,87 @@ namespace karabo {
             return getInstance().m_versionString;
         }
 
-
         int Version::getMajor() {
-            return getInstance().m_major;
+            return m_major;
         }
-
 
         int Version::getMinor() {
-            return getInstance().m_minor;
+            return m_minor;
         }
-
 
         int Version::getPatch() {
-            return getInstance().m_patch;
+            return m_patch;
         }
 
+        bool Version::isDevRelease(){
+            return m_dev != -1;
+        }
 
-        int Version::getRevision() {
-            return getInstance().m_revision;
+        bool Version::isPreRelease(){
+            return (m_postType == PostfixType::ALPHA ||m_postType == PostfixType::BETA ||m_postType == PostfixType::RC);
+        }
+
+        bool Version::isPostRelease(){
+            return m_postType == PostfixType::POST;
+        }
+        
+        bool operator== (const karabo::util::Version &v1, const karabo::util::Version &v2){
+            if ( v1.m_major == v2.m_major && v1.m_minor == v2.m_minor && \
+                v1.m_patch == v2.m_patch && v1.m_postType == v2.m_postType && \
+                v1.m_post == v2.m_post && v1.m_dev == v2.m_dev) {
+                return true;
+            }
+            return false;
+        }
+
+        bool operator!= (const karabo::util::Version &v1, const karabo::util::Version &v2){
+            return !( v1 == v2);
+        }
+
+        bool operator>= (const karabo::util::Version &v1, const karabo::util::Version &v2){
+            if ( v1 == v2 ){
+                return true;
+            }
+            if ( v1.m_major < v2.m_major ) {
+                return false;
+            } else if ( v1.m_major > v2.m_major ) {
+                return true;
+            } else if (v1.m_minor < v2.m_minor ) {
+                return false;
+            } else if (v1.m_minor > v2.m_minor ) {
+                return true;
+            } else if (v1.m_patch < v2.m_patch) {
+                return false;
+            } else if (v1.m_patch > v2.m_patch) {
+                return true;
+            } else if (v1.m_postType < v2.m_postType ) {
+                return false;
+            } else if (v1.m_postType > v2.m_postType ) {
+                return true;
+            } else if (v1.m_post < v2.m_post) {
+                return false;
+            } else if (v1.m_post > v2.m_post) {
+                return true;
+            } else if (v1.m_dev == -1 && v2.m_dev != -1 ) { // development versions are behind
+                return true;
+            } else if (v1.m_dev != -1 && v2.m_dev == -1 ) {
+                return false;
+            } else if (v1.m_dev < v2.m_dev) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        bool operator< (const karabo::util::Version &v1, const karabo::util::Version &v2){
+            return !(v1 >= v2);
+        }
+
+        bool operator> (const karabo::util::Version &v1, const karabo::util::Version &v2){
+            return (v1 >= v2) && !(v1!= v2);
+        }
+        bool operator<= (const karabo::util::Version &v1, const karabo::util::Version &v2){
+            return (v1 < v2) && (v1 == v2) ;
         }
 
     }
