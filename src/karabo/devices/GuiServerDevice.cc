@@ -30,7 +30,7 @@ namespace karabo {
         void GuiServerDevice::expectedParameters(Schema& expected) {
 
             OVERWRITE_ELEMENT(expected).key("state")
-                    .setNewOptions(State::INIT, State::NORMAL, State::ERROR)
+                    .setNewOptions(State::INIT, State::ON, State::ERROR)
                     .setNewDefaultValue(State::INIT)
                     .commit();
 
@@ -250,7 +250,7 @@ namespace karabo {
                 startDeviceInstantiation();
                 startNetworkMonitor();
 
-                updateState(State::NORMAL);
+                updateState(State::ON);
 
                 // Produce some information
                 KARABO_LOG_INFO << "GUI Server is up and listening on port: " << get<unsigned int>("port");
