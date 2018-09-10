@@ -19,6 +19,9 @@ namespace karabo {
          */
         class Version {
 
+        private:
+
+            enum PostfixType { ALPHA=-3, BETA=-2, RC=-1 , NONE=0, POST=1};
 
             std::string m_versionString;
 
@@ -28,12 +31,11 @@ namespace karabo {
 
             int m_patch;
 
-            int m_revision;
+            PostfixType m_postType;
 
-            Version();
+            int m_post;
 
-            virtual ~Version() {
-            };
+            int m_dev;
 
             static Version& getInstance();
 
@@ -41,20 +43,37 @@ namespace karabo {
 
         public:
 
+            Version();
+
+            Version(const std::string &version);
+
+            virtual ~Version() {
+            };
+
             static std::string getPathToKaraboInstallation();
 
             static std::string getVersion();
 
-            static int getMajor();
+            int getMajor();
 
-            static int getMinor();
+            int getMinor();
 
-            static int getPatch();
+            int getPatch();
 
-            static int getRevision();
+            bool isDevRelease();
+            
+            bool isPreRelease();
+            
+            bool isPostRelease();
+
+            friend bool operator== (const Version &v1, const Version &v2);
+            friend bool operator!= (const Version &v1, const Version &v2);
+            friend bool operator> (const Version &v1, const Version &v2);
+            friend bool operator<= (const Version &v1, const Version &v2);
+            friend bool operator< (const Version &v1, const Version &v2);
+            friend bool operator>= (const Version &v1, const Version &v2);
 
         };
-    }
+    }    
 }
 #endif
-

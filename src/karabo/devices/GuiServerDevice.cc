@@ -11,6 +11,7 @@
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/TcpChannel.hh"
+#include "karabo/util/Version.hh"
 
 using namespace std;
 using namespace karabo::util;
@@ -156,17 +157,11 @@ namespace karabo {
                     .readOnly().initialValue(0)
                     .commit();
 
-            BOOL_ELEMENT(expected).key("strictClientVersion")
-                    .displayedName("Block Unsupported Clients")
-                    .description("If set to true, the GUI servers will refuse connections from Clients older than `minClientVersion`")
-                    .assignmentOptional().defaultValue(false)
-                    .reconfigurable()
-                    .commit();
-
             STRING_ELEMENT(expected).key("minClientVersion")
                     .displayedName("Minimum Client Version")
-                    .description("")
-                    .assignmentOptional().defaultValue("2.2.4")
+                    .description("If this variable does not respect the N.N.N(.N) convention,"
+                                 " the Server will not enforce a version check")
+                    .assignmentOptional().defaultValue("")
                     .reconfigurable()
                     .commit();
         }
@@ -495,42 +490,18 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onLogin";
                 // Check valid login
                 KARABO_LOG_INFO << "Login request of user: " << hash.get<string > ("username");
-
-                const vector<unsigned int> versionParts = karabo::util::fromString<unsigned int, vector>(hash.get<string>("version"), ".");
-
-                if (versionParts.size() >= 2) {
-
-                    unsigned int major = versionParts[0];
-                    unsigned int minor = versionParts[1];
-                    // Versions earlier than 1.5.0 of the GUI don't understand a systemVersion message.
-                    if ((major >= 1 && minor >= 5) || major >= 2) sendSystemVersion(channel);
+                Version clientVersion(hash.get<string>("version"));
+                Version minVersion(get<std::string>("minClientVersion"));
+                Version systemProtocolVersion("1.5.0");
+                if (clientVersion >= systemProtocolVersion) {
+                    sendSystemVersion(channel);
                 }
-
-                bool versionOk = true;
-                if (get<bool>("strictClientVersion")) {
-                    const vector<unsigned int> minVersionParts = karabo::util::fromString<unsigned int, vector>(get<string>("minClientVersion"), ".");
-                    if (versionParts.size() < minVersionParts.size()) {
-                        // under specified versions are bad.
-                        versionOk = false;
-                    }
-                    unsigned int idx = 0;
-                    while (versionOk && idx < minVersionParts.size()){
-                        if (versionParts[idx] < minVersionParts[idx]) {
-                            versionOk = false;
-                            break;
-                        }
-                        if (versionParts[idx] > minVersionParts[idx]) {
-                            break;
-                        }
-                        idx ++;
-                    }
-                }
-
-                if (versionOk) {
+                
+                if (clientVersion >= minVersion) {
                     sendSystemTopology(channel);
-                } else {
-                    disconnectChannel(channel);
+                    return;
                 }
+                disconnectChannel(channel);
                 // TODO: check valid login.
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onLogin(): " << e.userFriendlyMsg();
@@ -1186,8 +1157,8 @@ namespace karabo {
 
         void GuiServerDevice::onError(const karabo::net::ErrorCode& errorCode, WeakChannelPointer channel) {
             try {
-
                 KARABO_LOG_INFO << "onError : TCP socket got error : " << errorCode.value() << " -- \"" << errorCode.message() << "\",  Close connection to a client";
+                disconnectChannel(channel);
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onError(): " << e.what();
             }
