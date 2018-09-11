@@ -8,8 +8,8 @@
 
 #include <iosfwd>
 #include <fstream>
-#include <regex>
 #include <sstream>
+#include <boost/regex.hpp>
 #include <boost/filesystem/operations.hpp>
 #include "Version.hh"
 #include "Exception.hh"
@@ -33,32 +33,32 @@ namespace karabo {
                     throw KARABO_IO_EXCEPTION("Cannot open file: " + versionFile.string());
                 }
                 m_versionString = buffer.str();
-                m_versionString = m_versionString.substr(0, m_versionString.size() - 1); // Cut away newline character
-                if (!m_versionString.empty()) {
-                    std::vector<int> v = fromString<int, std::vector>(m_versionString, ".");
-                    if (v.size() > 0) m_major = v[0];
-                    if (v.size() > 1) m_minor = v[1];
-                    if (v.size() > 2) m_patch = v[2];
-                }
+                processString(m_versionString);
             }
         }
 
         Version::Version(const std::string &version) : m_major(-1), m_minor(-1), m_patch(-1), 
             m_postType(PostfixType::NONE), m_post(-1), m_dev(-1) {
+            processString(version);
+        }
+
+        void Version::processString(const std::string &version) {
             //                       MANDATORY FIELDS       |OPTIONAL FIELDS                        |
-            //                       Major   .Minor   .Patch(suffix         )(suf_n )(dev_suf)(dev_n)
-            std::regex versionRegex("(\\d+)\\.(\\d+)\\.(\\d+)(a|b|rc|\\.post)?(\\d+)?(\\.dev)?(\\d+)?");
-            std::smatch versionParts;
-            if (std::regex_search(version, versionParts, versionRegex)) {
+            //                         Major   .Minor   .Patch(suffix         )(suf_n )(dev_suf)(dev_n)
+            boost::regex versionRegex("(\\d+)\\.(\\d+)\\.(\\d+)(a|b|rc|\\.post)?(\\d+)?(\\.dev)?(\\d+)?");
+            boost::smatch versionParts;
+            // could not use std::regex because some legacy hardware uses gcc 4.8
+            bool result = boost::regex_search(version, versionParts, versionRegex);
+            if (result && versionParts.size() == 8) {
                 // versionParts[0] is the full matched string.
-                m_major = fromString<unsigned int>(versionParts[1]);
-                m_minor = fromString<unsigned int>(versionParts[2]);
-                m_patch = fromString<unsigned int>(versionParts[3]);
+                m_major = fromString<unsigned int>(versionParts.str(1));
+                m_minor = fromString<unsigned int>(versionParts.str(2));
+                m_patch = fromString<unsigned int>(versionParts.str(3));
                 // the strings below here might be empty since they belong to optional fields
-                const std::string &separator = versionParts[4];
-                const std::string &postVersion = versionParts[5];
-                const std::string &devSeparator = versionParts[6];
-                const std::string &devVersion = versionParts[7];
+                const std::string &separator = versionParts.str(4);
+                const std::string &postVersion = versionParts.str(5);
+                const std::string &devSeparator = versionParts.str(6);
+                const std::string &devVersion = versionParts.str(7);
                 if (separator ==  "a" && postVersion.size() > 0){
                     m_postType = PostfixType::ALPHA;
                     m_post = fromString<unsigned int>(postVersion);
@@ -105,14 +105,14 @@ namespace karabo {
         }
 
 
-        Version& Version::getInstance() {
-            static Version v;
+        const Version& Version::getKaraboVersion() {
+            static const Version v;
             return v;
         }
 
 
         std::string Version::getVersion() {
-            return getInstance().m_versionString;
+            return getKaraboVersion().m_versionString;
         }
 
         int Version::getMajor() {
