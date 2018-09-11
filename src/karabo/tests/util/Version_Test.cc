@@ -56,8 +56,10 @@ void Version_Test::testVersionFromString(){
 }
 
 void Version_Test::testVersionComparison(){
-    std::vector<std::tuple<std::string, std::string, bool>> tests;
-    // test if the 1st version is equal or more recent than the 2nd
+    std::vector<std::tuple<std::string /* v1 */, std::string /* v2 */, bool /* v1>=v2 */>> tests;
+
+
+
     tests.push_back(std::tuple<std::string, std::string, bool>(
         "99.1.1", "100.1.0", false ));
     tests.push_back(std::tuple<std::string, std::string, bool>(
@@ -67,6 +69,12 @@ void Version_Test::testVersionComparison(){
     tests.push_back(std::tuple<std::string, std::string, bool>(
         "100.1.0", "100.1.0", true ));
     tests.push_back(std::tuple<std::string, std::string, bool>(
+        "100.1.0.dev1", "100.1.0", true ));
+    tests.push_back(std::tuple<std::string, std::string, bool>(
+        "100.1.0", "100.1.0.dev1", false ));
+    tests.push_back(std::tuple<std::string, std::string, bool>(
+        "100.1.0.dev2", "100.1.0.dev1", true ));
+    tests.push_back(std::tuple<std::string, std::string, bool>(
         "100.1.1", "100.1.0", true ));
     tests.push_back(std::tuple<std::string, std::string, bool>(
         "100.1.0.post1", "100.1.0", true ));
@@ -75,11 +83,19 @@ void Version_Test::testVersionComparison(){
     tests.push_back(std::tuple<std::string, std::string, bool>(
         "100.1.1rc0", "100.1.0", true ));
     tests.push_back(std::tuple<std::string, std::string, bool>(
+        "100.1.1rc1", "100.1.1rc1", true ));
+    tests.push_back(std::tuple<std::string, std::string, bool>(
+        "100.1.1rc1.dev1", "100.1.1rc1", true ));
+    tests.push_back(std::tuple<std::string, std::string, bool>(
+        "100.1.1rc1", "100.1.1rc1.dev1", false ));
+    tests.push_back(std::tuple<std::string, std::string, bool>(
         "100.1.0rc0", "100.1.0", false ));
     tests.push_back(std::tuple<std::string, std::string, bool>(
-        "100.1.0.dev0", "100.1.0", false ));
+        "100.1.0.dev0", "100.1.0", true ));
     tests.push_back(std::tuple<std::string, std::string, bool>(
         "100.1.0a1", "100.1.0a2", false ));
+    tests.push_back(std::tuple<std::string, std::string, bool>(
+        "100.1.0a2", "100.1.0a1", true ));
     tests.push_back(std::tuple<std::string, std::string, bool>(
         "100.1.0a21", "100.1.0b1", false ));
     tests.push_back(std::tuple<std::string, std::string, bool>(
@@ -90,12 +106,18 @@ void Version_Test::testVersionComparison(){
         "100.1.0.post1", "100.1.0b12", true ));
     tests.push_back(std::tuple<std::string, std::string, bool>(
         "100.1.0.post1", "100.1.0rc42", true ));
+    tests.push_back(std::tuple<std::string, std::string, bool>(
+        "100.1.0.post1", "100.1.0", true ));
+    tests.push_back(std::tuple<std::string, std::string, bool>(
+        "100.1.0.post1", "100.1.0.post0", true ));
+    tests.push_back(std::tuple<std::string, std::string, bool>(
+        "100.1.0.post1", "100.1.0.post2", false ));
     // Tests if the instance info correctly reports scene availability
-    for (auto test : tests){
-        const std::string version1 = std::get<0>(test);
-        const std::string version2 = std::get<1>(test);
+    for (const auto& test : tests){
+        const std::string &version1 = std::get<0>(test);
+        const std::string &version2 = std::get<1>(test);
         const bool lte = std::get<2>(test);
-        std::string message = "comparing '" + version1 + "' and '" + version2 + "'";
+        std::string message = "Failed calculating '" + version1 + "' >= '" + version2 + "'";
         karabo::util::Version v1(version1);
         karabo::util::Version v2(version2);
         CPPUNIT_ASSERT_EQUAL_MESSAGE(message, lte, (v1 >= v2));
