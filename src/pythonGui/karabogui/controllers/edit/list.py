@@ -146,13 +146,15 @@ class DisplayList(_BaseListController):
 
 INT_REGEX = r"^[-+]?\d+$"
 UINT_REGEX = r"^[+]?\d+$"
+DOUBLE_REGEX = r"^[-+]?\d*[\.]\d*$|^[-+]?\d+$"
+
 
 REGEX_MAP = {
     VectorBoolBinding: r"(0|1|[T]rue|[F]alse)",
-    VectorComplexDoubleBinding: r"^[-+]?\d*[\.]\d*$|^[-+]?\d+$",  # X
-    VectorComplexFloatBinding: r"^[-+]?\d*[\.]\d*$|^[-+]?\d+$",  # X
-    VectorDoubleBinding: r"^[-+]?\d*[\.]\d*$|^[-+]?\d+$",
-    VectorFloatBinding: r"^[-+]?\d*[\.]\d*$|^[-+]?\d+$",
+    VectorComplexDoubleBinding: DOUBLE_REGEX,  # XXX
+    VectorComplexFloatBinding: DOUBLE_REGEX,  # XXX
+    VectorDoubleBinding: DOUBLE_REGEX,
+    VectorFloatBinding: DOUBLE_REGEX,
     VectorInt8Binding: INT_REGEX,
     VectorInt16Binding: INT_REGEX,
     VectorInt32Binding: INT_REGEX,
