@@ -10,6 +10,7 @@
 #include "karabo/core/Device.hh"
 #include "karabo/util/Hash.hh"
 #include "karabo/util/Schema.hh"
+#include "karabo/util/State.hh"
 #include "karabo/util/Exception.hh"
 #include "karabo/util/MetaTools.hh"
 
