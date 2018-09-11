@@ -11,10 +11,10 @@ from karabogui.singletons.api import get_network, get_topology
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .types import (
     BaseBinding, BindingRoot, FloatBinding, PipelineOutputBinding,
-    VectorDoubleBinding, VectorFloatBinding, SlotBinding)
+    VectorBinding, SlotBinding)
 
 _RECURSIVE_BINDINGS = (ChoiceOfNodesBinding, ListOfNodesBinding)
-_NOCAST_BINDINGS = (FloatBinding, VectorDoubleBinding, VectorFloatBinding)
+_NOCAST_BINDINGS = (FloatBinding, VectorBinding)
 
 
 class BaseDeviceProxy(HasStrictTraits):
