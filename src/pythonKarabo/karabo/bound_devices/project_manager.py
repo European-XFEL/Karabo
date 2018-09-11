@@ -33,6 +33,10 @@ class ProjectManager(PythonDevice):
     def expectedParameters(expected):
 
         (
+            OVERWRITE_ELEMENT(expected).key("state")
+            .setNewOptions(State.ERROR, State.ON, State.INIT)
+            .setNewDefaultValue(State.INIT)
+            .commit(),
             OVERWRITE_ELEMENT(expected).key('_deviceId_')
             .setNewDefaultValue("ProjectService")
             .commit(),
@@ -82,13 +86,13 @@ class ProjectManager(PythonDevice):
         Initialization function of this device. Checks that the configured
         database is indeed reachable and accessible
 
-        If the database is reachable updates the device state to NORMAL,
+        If the database is reachable updates the device state to ON,
         otherwise brings the device into ERROR
         """
         # check if we can connect to the database
         try:
             assure_running(self.get("host"), self.get("port"))
-            self.updateState(State.NORMAL)
+            self.updateState(State.ON)
         except ProjectDBError as e:
             self.log.ERROR("ProjectDBError : {}".format(str(e)))
             self.updateState(State.ERROR)
