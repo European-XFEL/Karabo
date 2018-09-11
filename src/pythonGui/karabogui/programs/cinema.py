@@ -43,7 +43,7 @@ def run_cinema(ns):
         sys.exit(app.exec_())
     else:
         # If we are not successful in connection, we don't leave a remnant!
-        QApplication.quit()
+        app.quit()
 
 
 def main():
