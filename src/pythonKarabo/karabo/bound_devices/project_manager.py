@@ -142,13 +142,14 @@ class ProjectManager(PythonDevice):
         payload.set('name', name)
         with self.user_db_sessions[token] as db_session:
             try:
-                item = db_session.load_item(domain, uuid)[0]
-                xml = item['xml']
-                item_type = etree.fromstring(xml).get('item_type')
-                if item_type == 'scene':
-                    scene = read_project_model(StringIO(xml))
-                    payload.set('data', write_scene(scene))
-                    payload.set('success', True)
+                items = db_session.load_item(domain, uuid)
+                for item in items:
+                    xml = item['xml']
+                    item_type = etree.fromstring(xml).get('item_type')
+                    if item_type == 'scene':
+                        scene = read_project_model(StringIO(xml))
+                        payload.set('data', write_scene(scene))
+                        payload.set('success', True)
             except ProjectDBError as e:
                 self.log.INFO('ProjectDBError in directly loading database '
                               'scene: {}'.format(e))
