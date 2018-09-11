@@ -95,11 +95,10 @@ void GuiVersion_Test::testVersionControl() {
     tests.push_back(std::tuple<std::string, std::string, bool>(
         "version control unsupported", "0.1.0", false ));
     // Tests if the instance info correctly reports scene availability
-    for (auto test : tests){
-        const std::string testName = std::get<0>(test);
-        const std::string version = std::get<1>(test);
+    for (const auto &test : tests){
+        const std::string& testName = std::get<0>(test);
+        const std::string& version = std::get<1>(test);
         const bool connected = std::get<2>(test);
-        std::clog << "Test " << testName << "... ";
         resetClientConnection();
         int timeout = 5000;
         loginInfo.set("version", version);
@@ -108,9 +107,7 @@ void GuiVersion_Test::testVersionControl() {
             boost::this_thread::sleep(boost::posix_time::milliseconds(5));
             timeout -= 5;
         }
-        CPPUNIT_ASSERT_EQUAL(connected, m_tcpAdapter->connected());
-        std::clog << "Ok" << std::endl;
-            
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("Failed :" + testName, connected, m_tcpAdapter->connected());
     }
  
     std::clog << "Test no Version control.. ";

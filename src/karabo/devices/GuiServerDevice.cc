@@ -1156,16 +1156,13 @@ namespace karabo {
 
 
         void GuiServerDevice::onError(const karabo::net::ErrorCode& errorCode, WeakChannelPointer channel) {
-            try {
-                KARABO_LOG_INFO << "onError : TCP socket got error : " << errorCode.value() << " -- \"" << errorCode.message() << "\",  Close connection to a client";
-                disconnectChannel(channel);
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onError(): " << e.what();
-            }
+            KARABO_LOG_INFO << "onError : TCP socket got error : " << errorCode.value() << " -- \"" << errorCode.message() << "\",  Close connection to a client";
+            disconnectChannel(channel);
         }
 
 
         void GuiServerDevice::disconnectChannel(WeakChannelPointer channel) {
+            try {
                 // TODO Fork on error message
                 karabo::net::Channel::Pointer chan = channel.lock();
                 std::set<std::string> deviceIds; // empty set
@@ -1219,6 +1216,9 @@ namespace karabo {
                     }
                     KARABO_LOG_FRAMEWORK_INFO << m_networkConnections.size() << " pipeline channel(s) left.";
                 }
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in disconnectChannel(): " << e.what();
+            }
         }
 
 
