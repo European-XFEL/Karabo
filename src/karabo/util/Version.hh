@@ -66,6 +66,10 @@ namespace karabo {
             
             bool isPostRelease();
 
+            // the comparison operators implemented follow the guidelines of 
+            // PEP440 https://www.python.org/dev/peps/pep-0440/
+            // When in doubt, the implementation of `distutils.version.LooseVersion`
+            // was followed.
             friend bool operator== (const Version &v1, const Version &v2);
             friend bool operator!= (const Version &v1, const Version &v2);
             friend bool operator> (const Version &v1, const Version &v2);
