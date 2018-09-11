@@ -41,10 +41,28 @@ namespace karabo {
 
             static std::string getPathToVersionFile();
 
-        public:
+            void processString(const std::string &version);
 
             Version();
 
+        public:
+
+            /**
+             * Gets a Version object of the curent Karabo's Framework
+             * 
+             * @return Version object
+             */
+            static const Version& getKaraboVersion();
+
+            /**
+             * Creates an Version object from a string.
+             * 
+             * The version string should match a Major.Minor.Patch flavor
+             * Alpha, Beta, Release Candidates and Post-releases should be labeled
+             * following the PEP440 guidelines.
+             * 
+             * @param version
+             */
             Version(const std::string &version);
 
             virtual ~Version() {

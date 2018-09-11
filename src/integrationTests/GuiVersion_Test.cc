@@ -110,7 +110,6 @@ void GuiVersion_Test::testVersionControl() {
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Failed :" + testName, connected, m_tcpAdapter->connected());
     }
  
-    std::clog << "Test no Version control.. ";
     // change the minVersion
     m_deviceClient->set<std::string>("testGuiServerDevice","minClientVersion", "");
     // connect again
@@ -127,6 +126,6 @@ void GuiVersion_Test::testVersionControl() {
         timeout -= 5;
     }
     // the GUI server will not log us out
-    CPPUNIT_ASSERT(m_tcpAdapter->connected());
+    CPPUNIT_ASSERT_MESSAGE("GUIServer disconnects client if no version control is enabled", m_tcpAdapter->connected());
     std::clog << "Ok" << std::endl;
 }
