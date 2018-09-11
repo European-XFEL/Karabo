@@ -113,7 +113,7 @@ class TestProjectManager(TestCase):
         # wait for device to init
         state = None
         nTries = 0
-        while state != State.NORMAL:
+        while state != State.ON:
             try:
                 state = self.dc.get("projManTest", "state")
                 break
