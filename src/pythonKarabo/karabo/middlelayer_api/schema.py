@@ -261,6 +261,7 @@ class Overwrite(object):
             ret.method = original.method
         else:
             ret = original.__class__(strict=False, enum=original.enum, **attrs)
+            ret.setter = original.setter
         ret.__init__(key=original.key, **self.kwargs)
         return ret
 
