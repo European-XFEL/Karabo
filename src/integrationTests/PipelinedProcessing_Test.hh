@@ -26,10 +26,7 @@ class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(PipelinedProcessing_Test);
 
-    CPPUNIT_TEST(testGetOutputChannelSchema);
-    CPPUNIT_TEST(testPipeWait);
-    CPPUNIT_TEST(testPipeDrop);
-    CPPUNIT_TEST(testProfileTransferTimes);
+    CPPUNIT_TEST(appTestRunner);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -40,12 +37,15 @@ public:
     void setUp();
     void tearDown();
 
+private:
+
+    void appTestRunner();
+
     void testGetOutputChannelSchema();
     void testPipeWait();
     void testPipeDrop();
     void testProfileTransferTimes();
 
-private:
     void testPipeWait(unsigned int processingTime, unsigned int delayTime);
     void testPipeDrop(unsigned int processingTime, unsigned int delayTime, DataLoss dataLoss);
     void testProfileTransferTimes(bool noShortCut, bool copy);
@@ -68,6 +68,8 @@ private:
     const std::string m_serverId = "testServerPP";
     const std::string m_receiver = "pipeTestReceiver";
     const std::string m_sender = "p2pTestSender";
+    const std::string m_outputChannel1 = "p2pTestSender:output1";
+    const std::string m_outputChannel2 = "p2pTestSender:output2";
 };
 
 #endif	/* PIPELINEDPROCESSING_TEST_HH */
