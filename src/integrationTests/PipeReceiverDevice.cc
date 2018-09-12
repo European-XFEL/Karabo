@@ -138,6 +138,7 @@ namespace karabo {
 
 
     void PipeReceiverDevice::onData(const util::Hash& data, const xms::InputChannel::MetaData& metaData) {
+
         set("dataSources", std::vector<std::string>(1, metaData.getSource()));
         set("currentDataId", data.get<int>("dataId"));
         const auto& v = data.get<std::vector<long long>>("data");
