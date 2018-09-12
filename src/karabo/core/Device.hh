@@ -51,9 +51,22 @@ namespace karabo {
 
             PROVIDES_SCENES = (1u << 0),
             PROVIDES_MACROS = (1u << 1),
+            PROVIDES_INTERFACES = (1u << 2),
             // add future capabilities as bitmask:
-            // SOME_OTHER_FUTURE_CAPABILITY = (1u << 2),
+            // SOME_OTHER_FUTURE_CAPABILITY = (1u << 3),
         };
+
+        enum Interfaces {
+
+            Motor = (1u << 0),
+            MultiAxisMotor = (1u << 1),
+            Trigger = (1u << 2),
+            Camera = (1u << 3),
+
+            // add future interfaces as bitmask:
+            // SOME_OTHER_INTERFACE = (1u << 4),
+        };
+
 
         /**
          * @class BaseDevice
@@ -72,7 +85,7 @@ namespace karabo {
             }
 
             /**
-             * This method is called to finalize initialization of a device. It is needed to allow user 
+             * This method is called to finalize initialization of a device. It is needed to allow user
              * code to hook in after the base device constructor, but before the device is fully initialized.
              *
              * It will typically be called by the DeviceServer.
@@ -105,7 +118,7 @@ namespace karabo {
             virtual void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) = 0;
 
             /**
-             * A hook which is called if the device receives external time-server update, i.e. if slotTimeTick on the 
+             * A hook which is called if the device receives external time-server update, i.e. if slotTimeTick on the
              * device server is called.
              * Can be overwritten by derived classes.
              *
@@ -325,7 +338,7 @@ namespace karabo {
                         .adminAccess()
                         .assignmentOptional().defaultValue(true)
                         .commit();
-                
+
                 INT32_ELEMENT(expected).key("progress")
                         .displayedName("Progress")
                         .description("The progress of the current action")
@@ -1410,8 +1423,9 @@ namespace karabo {
 
                 bool hasAvailableScenes = false;
                 bool hasAvailableMacros = false;
-                int  heartbeatInterval = 0;
+                bool hasAvailableInterfaces = false;
 
+                int heartbeatInterval = 0;
                 {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                     // ClassId
@@ -1430,6 +1444,8 @@ namespace karabo {
                     // Do this under mutex protection
                     hasAvailableScenes = m_parameters.has("availableScenes");
                     hasAvailableMacros = m_parameters.has("availableMacros");
+                    hasAvailableInterfaces = m_parameters.has("interfaces");
+
                     heartbeatInterval  = m_parameters.get<int>("heartbeatInterval");
                 }
 
@@ -1446,9 +1462,26 @@ namespace karabo {
 
                 // the capabilities field specifies the optional capabilities a device provides.
                 unsigned int capabilities = 0;
+
                 if (hasAvailableScenes) capabilities |= Capabilities::PROVIDES_SCENES;
                 if (hasAvailableMacros) capabilities |= Capabilities::PROVIDES_MACROS;
+                if (hasAvailableInterfaces) capabilities |= Capabilities::PROVIDES_INTERFACES;
+
                 instanceInfo.set("capabilities", capabilities);
+
+                unsigned int interfaces = 0;
+                if (hasAvailableInterfaces) {
+                    const std::vector < std::string >& availableInterfaces = get<std::vector < std::string >> ("interfaces");
+                    for (const std::string& desc : availableInterfaces)
+                        if (desc == "Motor") interfaces |= Interfaces::Motor;
+                        else if (desc == "MultiAxisMotor") interfaces |= Interfaces::MultiAxisMotor;
+                        else if (desc == "Trigger") interfaces |= Interfaces::Trigger;
+                        else if (desc == "Camera") interfaces |= Interfaces::Camera;
+                        else {
+                            throw KARABO_LOGIC_EXCEPTION("Provided interface is not supported: " + desc);
+                        }
+                    instanceInfo.set("interfaces", interfaces);
+                }
 
                 init(m_deviceId, m_connection, heartbeatInterval, instanceInfo, consumeBroadcasts);
 
@@ -1890,7 +1923,7 @@ namespace karabo {
                         Hash& entry = entryNode.getValue<Hash>();
 
                         entry.set("type", conditionString);
-                        // We expect to be protected by locking of m_objectStateChangeMutex outside of the current function 
+                        // We expect to be protected by locking of m_objectStateChangeMutex outside of the current function
                         entry.set("description", m_fullSchema.getInfoForAlarm(propertyDotSep, condition));
                         entry.set("needsAcknowledging", m_fullSchema.doesAlarmNeedAcknowledging(propertyDotSep, condition));
                         const Timestamp& occuredAt = Timestamp::fromHashAttributes(it->getAttributes());
