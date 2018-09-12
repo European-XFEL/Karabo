@@ -1,7 +1,8 @@
 import argparse
+import os.path as op
 import sys
 
-from PyQt4.QtGui import QApplication
+from PyQt4.QtGui import QApplication, QIcon
 
 from karabo.common.scenemodel.api import SceneTargetWindow
 from karabogui import icons
@@ -20,6 +21,15 @@ def run_cinema(ns):
     All scenes have the name ProjectDB|SceneName and are not editable!
     """
     app = QApplication(sys.argv)
+    # set a nice app logo
+    logo_path = op.join(op.dirname(__file__), '..', "icons", "app_logo.png")
+    app.setWindowIcon(QIcon(logo_path))
+
+    # These should be set to simplify QSettings usage
+    app.setOrganizationName('XFEL')
+    app.setOrganizationDomain('xfel.eu')
+    app.setApplicationName('KaraboGUI')
+
     # Run the lazy initializers (icons, widget controllers)
     icons.init()
     populate_controller_registry()
