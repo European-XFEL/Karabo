@@ -32,7 +32,7 @@ class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
 
 public:
     PipelinedProcessing_Test();
-    ~PipelinedProcessing_Test();
+    virtual ~PipelinedProcessing_Test();
 
     void setUp();
     void tearDown();
@@ -56,20 +56,17 @@ private:
                             const T& expected,
                             const int maxTimeout,
                             bool checkForEqual = true) const; // if false, wait until not equal anymore
-    
-    karabo::core::DeviceClient::Pointer m_deviceClient;
+
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_eventLoopThread;
+
+    karabo::core::DeviceClient::Pointer m_deviceClient;
 
     unsigned int m_nDataPerRun;
 
     karabo::util::Hash m_receiverConfig;
 
-    const std::string m_serverId = "testServerPP";
-    const std::string m_receiver = "pipeTestReceiver";
-    const std::string m_sender = "p2pTestSender";
-    const std::string m_outputChannel1 = "p2pTestSender:output1";
-    const std::string m_outputChannel2 = "p2pTestSender:output2";
+    const std::string m_receiver("pipeTestReceiver");
 };
 
 #endif	/* PIPELINEDPROCESSING_TEST_HH */
