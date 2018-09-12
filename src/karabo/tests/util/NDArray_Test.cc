@@ -128,7 +128,8 @@ void NDArray_Test::testDataTypeException() {
     } catch (...) {
         exceptionMsg = "not a cast exception";
     }
-    CPPUNIT_ASSERT_MESSAGE(exceptionMsg, exceptionMsg.find("from _invalid_") != std::string::npos);
-    CPPUNIT_ASSERT_MESSAGE(exceptionMsg, exceptionMsg.find(toString(12345678)) != std::string::npos);
-    CPPUNIT_ASSERT_MESSAGE(exceptionMsg, exceptionMsg.find("to INT16") != std::string::npos);
+    const std::string msg(" missing from exception message: ");
+    CPPUNIT_ASSERT_MESSAGE("'from _invalid_'" + msg + exceptionMsg, exceptionMsg.find("from _invalid_") != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE("'12345678'" + msg + exceptionMsg, exceptionMsg.find(toString(12345678)) != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE("'to INT16'" + msg + exceptionMsg, exceptionMsg.find("to INT16") != std::string::npos);
 }
