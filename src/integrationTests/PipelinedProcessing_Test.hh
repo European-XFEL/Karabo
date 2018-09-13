@@ -16,11 +16,6 @@
 #include <boost/shared_ptr.hpp>
 #include <cppunit/extensions/HelperMacros.h>
 
-// NONE: processingTime << delayTime;
-// MOST: processingTime >> delayTime;
-// RANDOM: processingTime ~ delayTime;
-enum class DataLoss {NONE, RANDOM, MOST};
-
 
 class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
 
@@ -47,7 +42,7 @@ private:
     void testProfileTransferTimes();
 
     void testPipeWait(unsigned int processingTime, unsigned int delayTime);
-    void testPipeDrop(unsigned int processingTime, unsigned int delayTime, DataLoss dataLoss);
+    void testPipeDrop(unsigned int processingTime, unsigned int delayTime, bool dataLoss);
     void testProfileTransferTimes(bool noShortCut, bool copy);
 
     template <typename T>
