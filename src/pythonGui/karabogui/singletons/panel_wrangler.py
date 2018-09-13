@@ -11,7 +11,7 @@ from karabogui import messagebox
 from karabogui.events import KaraboEventSender, register_for_broadcasts
 from karabogui.mainwindow import MainWindow, PanelAreaEnum
 from karabogui.panels.api import AlarmPanel, MacroPanel, ScenePanel
-from karabogui.singletons.api import get_project_model
+from karabogui.singletons.api import get_project_model, get_db_conn
 
 
 class PanelWrangler(QObject):
@@ -77,9 +77,16 @@ class PanelWrangler(QObject):
             self._open_scene(model, target_window, attached=attached)
 
         elif sender is KaraboEventSender.OpenSceneLink:
+            name = data.get('name', '')
             target_window = data.get('target_window')
-            model = _find_scene_model(data.get('target'))
-            self._open_scene(model, target_window)
+            uuid = data.get('target')
+            model = _find_scene_model(uuid)
+            if model is not None:
+                # We found the scene in our project!
+                self._open_scene(model, target_window)
+            else:
+                get_db_conn()._get_database_scene(name, uuid, target_window)
+            return True
 
         elif sender is KaraboEventSender.RemoveProjectModelViews:
             self._close_project_item_panels(data.get('models'))
