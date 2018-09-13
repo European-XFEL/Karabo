@@ -96,3 +96,40 @@ void NDArray_Test::testShapeException() {
         CPPUNIT_ASSERT_THROW(NDArray(&data[0], data.size(), badShape), karabo::util::ParameterException);
     }
 }
+
+
+void NDArray_Test::testDataTypeException() {
+    const int data[] = {1, 2, 3, 4};
+    NDArray arr(data, sizeof (data) / sizeof (data[0]));
+
+    std::string exceptionMsg;
+    try {
+        // cannot cast int to double
+        arr.getData<double>();
+    } catch (const karabo::util::CastException& e) {
+        exceptionMsg = e.what();
+    } catch (...) {
+        exceptionMsg = "not a cast exception";
+    }
+    CPPUNIT_ASSERT_MESSAGE(exceptionMsg, exceptionMsg.find("from INT32") != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE(exceptionMsg, exceptionMsg.find("to DOUBLE") != std::string::npos);
+
+    // Non-supported types do not compile since Types::from<T> works only for template specialisations:
+    // class AnUnknown {};
+    // arr.getData<AnUnknown>();
+
+    // Manipulate internals as if NDArray was corrupted:
+    reinterpret_cast<Hash*> (&arr)->set("type", 12345678);
+    exceptionMsg.clear();
+    try {
+        arr.getData<short>();
+    } catch (const karabo::util::CastException& e) {
+        exceptionMsg = e.what();
+    } catch (...) {
+        exceptionMsg = "not a cast exception";
+    }
+    const std::string msg(" missing from exception message: ");
+    CPPUNIT_ASSERT_MESSAGE("'from _invalid_'" + msg + exceptionMsg, exceptionMsg.find("from _invalid_") != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE("'12345678'" + msg + exceptionMsg, exceptionMsg.find(toString(12345678)) != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE("'to INT16'" + msg + exceptionMsg, exceptionMsg.find("to INT16") != std::string::npos);
+}
