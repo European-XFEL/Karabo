@@ -14,7 +14,7 @@ from karabo.middlelayer import (
     DeviceClientBase, getDevice, getHistory, isSet, InputChannel, Int32,
     KaraboError, MetricPrefix, Node,
     OutputChannel, setWait, shutdown, sleep, Slot, State, unit, Unit,
-    waitUntil, waitUntilNew)
+    VectorDouble, waitUntil, waitUntilNew)
 
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 
@@ -29,6 +29,9 @@ class MiddlelayerDevice(DeviceClientBase):
     value = Int32()
 
     child = Node(Child)
+
+    vectorMaxSize = VectorDouble(defaultValue=[2.0, 2.0],
+                                 minSize=2, maxSize=4)
 
     @Slot()
     def slot(self):
@@ -71,9 +74,11 @@ class Tests(DeviceTest):
     def setUp(self):
         self.__starting_dir = os.curdir
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
+        # Test the middlelayer - bound pipeline interface
         self.process = None
 
     def tearDown(self):
+        # Tear down our started bound devices
         had_to_kill = False
         if self.process is not None and self.process.returncode is None:
             self.process.kill()
@@ -135,6 +140,12 @@ class Tests(DeviceTest):
         self.assertEqual(proxy.table[0]["d"], 5 * unit.meter)
 
         with proxy:
+            self.assertEqual(proxy.maxSizeSchema, 0)
+            # Test the maxSize from a vector property!
+            proxy.deviceString = "middlelayerDevice"
+            yield from proxy.compareSchema()
+            self.assertEqual(proxy.maxSizeSchema, 4)
+
             yield from proxy.setA()
             self.assertEqual(proxy.a, 22.7 * unit.milliampere,
                              "didn't receive change from bound device")
@@ -160,7 +171,7 @@ class Tests(DeviceTest):
             # Following test does not yet work, but in fact the request to
             # change readonly goes over the wire (but shouldn't) and is refused
             # on the other end which sends back an error...
-            #with self.assertRaises(ValueError):  # or KaraboError?
+            # with self.assertRaises(ValueError):  # or KaraboError?
             #    proxy.readonly = 1  # not allowed!
             with self.assertRaises(KaraboError):
                 yield from setWait("boundDevice", readonly=1)  # not allowed
@@ -169,6 +180,7 @@ class Tests(DeviceTest):
             def setter():
                 proxy.a = 22.3 * unit.milliampere
                 self.assertEqual(proxy.a, 22.3 * unit.milliampere)
+
             yield from background(setter)
 
             proxy.a = 0.0228 * unit.ampere
@@ -266,6 +278,7 @@ class Tests(DeviceTest):
             while not self.process.stdout.at_eof():
                 line = yield from self.process.stdout.readline()
                 print(line.decode("ascii"), end="")
+
         async(print_stdout())
 
         with (yield from getDevice("DataLogger-middlelayerDevice")) as logger:
@@ -327,6 +340,7 @@ class Tests(DeviceTest):
         yield from get_event_loop().instance()._ss.request(
             "karabo/dataLogger", "slotKillServer")
         yield from self.process.wait()
+
     test_history.slow = True
 
 
