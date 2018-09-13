@@ -138,10 +138,10 @@ void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigne
     m_deviceClient->set("p2pTestSender", "delay", delayTime);
 
     int64_t elapsedTimeIn_microseconds = 0ll;
+    // we use a single receiver device for several successive tests.
     unsigned int nTotalData0 = m_deviceClient->get<unsigned int>(receiver, "nTotalData");
-    unsigned int nTotalOnEos0 = m_deviceClient->get<unsigned int>(receiver, "nTotalOnEos");
+    unsigned int nTotalDataOnEos0 = m_deviceClient->get<unsigned int>(m_receiver, "nTotalDataOnEos");
     unsigned int nDataExpected = nTotalData0;
-    unsigned int nOnEosExpected = nTotalOnEos0;
     for (unsigned int nRun = 0; nRun < N_RUNS_PER_TEST; ++nRun) {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
         // Then call its slot
@@ -155,12 +155,11 @@ void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigne
         // Note that duration contains overhead from message travel time and polling interval in pollDeviceProperty!
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
 
-        // Check that EOS handling is not called too early (how?)
-
-        nOnEosExpected++;
+        // Check that EOS handling is not called too early
+        
         // EOS comes a bit later, so we have to poll client again to be sure...
         // Note: only one EOS arrives after receiving a train of data!
-        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(receiver, "nTotalOnEos", nOnEosExpected, KRB_TEST_MAX_TIMEOUT));
+        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(receiver, "nTotalDataOnEos", nDataExpected, KRB_TEST_MAX_TIMEOUT));
 
         // Test if data source was correctly passed
         std::vector<std::string> sources = m_deviceClient->get<std::vector<std::string> >(receiver, "dataSources");
@@ -184,7 +183,7 @@ void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigne
               << ", elapsedTimeIn_microseconds = " << elapsedTimeIn_microseconds
               << ", dataItemSize = " << dataItemSize 
               << ", nTotalData = " << nDataExpected - nTotalData0
-              << ", nTotalOnEos = " << nOnEosExpected - nTotalOnEos0 << std::endl;
+              << ", nTotalDataOnEos = " << nDataExpected - nTotalDataOnEos0 << std::endl;
 }
 
 
@@ -218,9 +217,8 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
 
     size_t elapsedTimeIn_microseconds = 0;
     unsigned int nTotalData0 = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
-    unsigned int nTotalOnEos0 = m_deviceClient->get<unsigned int>(m_receiver, "nTotalOnEos");
+    unsigned int nTotalDataOnEos0 = m_deviceClient->get<unsigned int>(m_receiver, "nTotalDataOnEos");
     unsigned int nDataExpected = nTotalData0;
-    unsigned int nOnEosExpected = nTotalOnEos0;
     for (unsigned int nRun = 0; nRun < N_RUNS_PER_TEST; ++nRun) {
         auto startTimepoint = std::chrono::high_resolution_clock::now();
         m_deviceClient->execute("p2pTestSender", "write", KRB_TEST_MAX_TIMEOUT);
@@ -252,8 +250,7 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
 
         // test EOS
-        nOnEosExpected++;
-        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalOnEos", nOnEosExpected, KRB_TEST_MAX_TIMEOUT));
+        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nDataExpected, KRB_TEST_MAX_TIMEOUT));
 
         // Test if data source was correctly passed
         auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSources");
@@ -267,7 +264,7 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
               << ", elapsedTimeIn_microseconds = " << elapsedTimeIn_microseconds
               << ", dataItemSize = " << dataItemSize 
               << ", nTotalData = " << nDataExpected - nTotalData0
-              << ", nTotalOnEos = " << nOnEosExpected - nTotalOnEos0 << std::endl;
+              << ", nTotalDataOnEos = " << nDataExpected - nTotalDataOnEos0 << std::endl;
 }
 
 
@@ -289,7 +286,7 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool co
     CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>("p2pTestSender", "state", karabo::util::State::NORMAL, KRB_TEST_MAX_TIMEOUT));
 
     std::string receiver = "pipeTestReceiver";
-    if(noShortCut) {
+    if (noShortCut) {
         setenv("KARABO_NO_PIPELINE_SHORTCUT", "1", 1);
     }
     // Looks like to get "KARABO_NO_PIPELINE_SHORTCUT" active (some caching?),
