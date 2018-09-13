@@ -113,6 +113,7 @@ void PipelinedProcessing_Test::testGetOutputChannelSchema() {
 void PipelinedProcessing_Test::testPipeWait() {
     std::clog << "---\ntestPipeWait\n";
 
+    // use only one receiver for a group of tests
     CPPUNIT_ASSERT(m_deviceClient->instantiate("testServerPP", "PipeReceiverDevice", m_receiverConfig).first);
     CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
     CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_receiver, "input2.onSlowness"));
@@ -130,6 +131,9 @@ void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigne
 
     std::clog << "Test with onSlowness = 'wait', processingTime = " 
               << processingTime << ", delayTime = " << delayTime << "\n";
+
+    // make sure the sender has stopped sending data
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>("p2pTestSender", "state", karabo::util::State::NORMAL, KRB_TEST_MAX_TIMEOUT));
 
     const std::string receiver("pipeTestReceiver");
 
@@ -208,10 +212,9 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
     
     std::clog << "Test with onSlowness = 'drop', processingTime = " 
               << processingTime << ", delayTime = " << delayTime << "\n";
-    
-    // The error message 'Command "write" is not allowed in current state "ACTIVE" of device "p2pTestSender"' 
-    // has been observed during testing with local "glassfish" broker.
-    CPPUNIT_ASSERT_EQUAL(std::string("NORMAL"), m_deviceClient->get<karabo::util::State>("p2pTestSender", "state").name());
+
+    // make sure the sender has stopped sending data
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>("p2pTestSender", "state", karabo::util::State::NORMAL, KRB_TEST_MAX_TIMEOUT));
 
     m_deviceClient->set(m_receiver, "processingTime", processingTime);
     m_deviceClient->set("p2pTestSender", "delay", delayTime);
@@ -284,6 +287,10 @@ void PipelinedProcessing_Test::testProfileTransferTimes() {
 
 
 void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool copy) {
+
+    // make sure the sender has stopped sending data
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>("p2pTestSender", "state", karabo::util::State::NORMAL, KRB_TEST_MAX_TIMEOUT));
+
     std::string receiver = "pipeTestReceiver";
     if(noShortCut) {
         setenv("KARABO_NO_PIPELINE_SHORTCUT", "1", 1);
