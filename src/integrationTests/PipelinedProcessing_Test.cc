@@ -195,16 +195,16 @@ void PipelinedProcessing_Test::testPipeDrop() {
     CPPUNIT_ASSERT_EQUAL(std::string("drop"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
     CPPUNIT_ASSERT_EQUAL(std::string("drop"), m_deviceClient->get<std::string>(m_receiver, "input2.onSlowness"));
 
-    testPipeDrop(0, 0, DataLoss::RANDOM);
-    testPipeDrop(0, 100, DataLoss::NONE);
-    testPipeDrop(100, 0, DataLoss::MOST);
+    testPipeDrop(0, 0, true);
+    testPipeDrop(100, 0, true);
+    testPipeDrop(0, 100, false);
 
     CPPUNIT_ASSERT(m_deviceClient->killDevice(m_receiver).first);
     std::clog << "Passed!\n\n";
 }
 
 
-void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigned int delayTime, DataLoss dataLoss) {
+void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigned int delayTime, bool dataLoss) {
     
     std::clog << "Test with onSlowness = 'drop', processingTime = " 
               << processingTime << ", delayTime = " << delayTime << "\n";
@@ -224,26 +224,17 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
         m_deviceClient->execute("p2pTestSender", "write", KRB_TEST_MAX_TIMEOUT);
 
         // test data
-        if (dataLoss == DataLoss::NONE) {
+        if (!dataLoss) {
             nDataExpected += m_nDataPerRun;
             CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", nDataExpected, KRB_TEST_MAX_TIMEOUT));
-        } else if (dataLoss == DataLoss::MOST) {
-            // if the processing time is much longer than the delay time, 
-            // only two data are expected to be received: the first and the last?
-            nDataExpected += 2;
-            // better way?
-            boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
-            CPPUNIT_ASSERT_EQUAL(nDataExpected, m_deviceClient->get<unsigned int>(m_receiver, "nTotalData"));
-        } else if (dataLoss == DataLoss::RANDOM) {
+        } else {
             // better way?
             boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
             // if the processing time is comparable to the delay time, the number of received data is random.
             unsigned int nTotalData = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
-            CPPUNIT_ASSERT(nTotalData <= nDataExpected + m_nDataPerRun && nTotalData > nDataExpected);
+            CPPUNIT_ASSERT(nTotalData <= nDataExpected + m_nDataPerRun);
+            CPPUNIT_ASSERT(nTotalData >= nDataExpected + 2);
             nDataExpected = nTotalData;
-        } else {
-            std::clog << "Unknown DataLoss!" << std::endl;
-            CPPUNIT_ASSERT(false);
         }
 
         auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
