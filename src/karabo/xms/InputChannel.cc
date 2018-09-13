@@ -427,8 +427,7 @@ namespace karabo {
                     return;
                 }
 
-                // Note: data[0]->totalSize() is kept to be able to read from old versions <= 2.2.4.4
-                if ((data.empty() || data[0]->totalSize() == 0) && header.has("channelId") && header.has("chunkId")) {
+                if (header.has("channelId") && header.has("chunkId")) {
                     // Local memory
                     unsigned int channelId = header.get<unsigned int>("channelId");
                     unsigned int chunkId = header.get<unsigned int>("chunkId");
