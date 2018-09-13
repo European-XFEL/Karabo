@@ -14,7 +14,7 @@ from karabo.common.project.api import find_parent_object
 from karabogui.events import KaraboEventSender, broadcast_event
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.utils import (
-    maybe_save_modified_project, save_as_object, save_object)
+    maybe_save_modified_project, save_object)
 from karabogui.singletons.api import (get_db_conn, get_project_model,
                                       get_selection_tracker)
 from karabogui.util import is_database_processing, set_treeview_header
@@ -145,9 +145,6 @@ class ProjectView(QTreeView):
                 save_action.triggered.connect(partial(save_object,
                                                       selected_project,
                                                       domain=None))
-                save_as_action = QAction('Save as...', menu)
-                save_as_action.triggered.connect(partial(save_as_object,
-                                                         selected_project))
                 close_action = QAction('Close project', menu)
                 close_action.triggered.connect(partial(self._close_project,
                                                        selected_project,
@@ -165,7 +162,6 @@ class ProjectView(QTreeView):
                 menu.addAction(rename_action)
                 menu.addSeparator()
                 menu.addAction(save_action)
-                menu.addAction(save_as_action)
                 menu.addAction(close_action)
                 menu.addSeparator()
                 menu.addAction(trash_action)

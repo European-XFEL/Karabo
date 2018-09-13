@@ -14,7 +14,7 @@ from karabogui.actions import build_qaction, KaraboAction
 from karabogui.events import KaraboEventSender, register_for_broadcasts
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.utils import (
-    load_project, maybe_save_modified_project, save_as_object, save_object)
+    load_project, maybe_save_modified_project, save_object)
 from karabogui.project.view import ProjectView
 from karabogui.singletons.api import get_db_conn
 from karabogui.util import get_spin_widget
@@ -70,12 +70,6 @@ class ProjectPanel(Searchable, BasePanelWidget):
             triggered=_project_save_handler,
             name="save"
         )
-        save_as = KaraboAction(
-            icon=icons.saveAs, text="&Save Project as",
-            tooltip="Create a copy of the project",
-            triggered=_project_save_as_handler,
-            name="saveas"
-        )
         trash = KaraboAction(
             icon=icons.delete, text="&Move to trash",
             tooltip=("Move the current project to trash. This option can be "
@@ -84,7 +78,7 @@ class ProjectPanel(Searchable, BasePanelWidget):
             name="delete"
         )
 
-        for k_action in (new, load, save, save_as, trash):
+        for k_action in (new, load, save, trash):
             q_ac = build_qaction(k_action, self)
             q_ac.setEnabled(False)
             project_view = self.project_view
@@ -203,18 +197,6 @@ def _project_save_handler(project_view):
     root_model = item_model.root_model
     if root_model is not None:
         save_object(root_model)
-
-
-def _project_save_as_handler(project_view):
-    """ Save the project model (`ProjectViewItemModel`) of the given
-    `project_view` as a copy
-
-    :param project_view: The `ProjectView` of the panel
-    """
-    item_model = project_view.model()
-    root_model = item_model.root_model
-    if root_model is not None:
-        save_as_object(root_model)
 
 
 def _project_trash_handler(project_view):
