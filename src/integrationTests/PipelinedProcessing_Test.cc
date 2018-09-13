@@ -45,10 +45,7 @@ void PipelinedProcessing_Test::setUp() {
 
 void PipelinedProcessing_Test::tearDown() {
     m_deviceClient.reset();
-    CPPUNIT_ASSERT(m_deviceClient.use_count() == 0);
-
     m_deviceServer.reset();
-    CPPUNIT_ASSERT(m_deviceServer.use_count() == 0);
 
     EventLoop::stop();
     m_eventLoopThread.join();
