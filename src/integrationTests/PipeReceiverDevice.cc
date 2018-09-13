@@ -83,8 +83,8 @@ namespace karabo {
                 .initialValue(0u)
                 .commit();
 
-        UINT32_ELEMENT(expected).key("nTotalOnEos")
-                .displayedName("Total on Eos ")
+        UINT32_ELEMENT(expected).key("nTotalDataOnEos")
+                .displayedName("Total data on EOS")
                 .description("The total number of data received when End of Stream was received")
                 .readOnly()
                 .initialValue(0u)
@@ -163,7 +163,8 @@ namespace karabo {
 
 
     void PipeReceiverDevice::onEndOfStream(const xms::InputChannel::Pointer& input) {
-        set("nTotalOnEos", get<unsigned int>("nTotalOnEos") + 1);
+
+        set<unsigned int>("nTotalDataOnEos", get<unsigned int>("nTotalData"));
     }
 
     void PipeReceiverDevice::onInputProfile(const xms::InputChannel::Pointer& input) {
@@ -194,7 +195,7 @@ namespace karabo {
         m_transferTimes.clear();
 
         set(karabo::util::Hash("nTotalData", 0u,
-                               "nTotalOnEos", 0u,
+                               "nTotalDataOnEos", 0u,
                                "averageTransferTime", 0.f));
     }
 
