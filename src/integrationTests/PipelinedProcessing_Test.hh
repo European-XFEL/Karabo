@@ -66,7 +66,7 @@ private:
 
     karabo::util::Hash m_receiverConfig;
 
-    const std::string m_receiver("pipeTestReceiver");
+    const std::string m_receiver = "pipeTestReceiver";
 };
 
 #endif	/* PIPELINEDPROCESSING_TEST_HH */
