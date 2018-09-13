@@ -3,6 +3,8 @@
 # Created on November 3, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from functools import partial
+
 from PyQt4.QtCore import QObject
 
 from karabo.common.project.api import (
@@ -16,7 +18,8 @@ from karabogui.events import (
 )
 from karabogui.enums import KaraboSettings
 from karabogui.singletons.api import get_network
-from karabogui.util import get_setting, set_setting
+from karabogui.util import handle_scene_from_server, get_setting, set_setting
+from karabogui.request import call_device_slot
 
 # This matches the batch size used in the project database
 MAX_BUFFER_ITEMS = 50
@@ -352,3 +355,14 @@ class ProjectDatabaseConnection(QObject):
             obj.modified = False
 
         self._broadcast_is_processing(is_processing)
+
+    def _get_database_scene(self, name, uuid, target_window):
+        """Directly ask for a scene from the project database
+        """
+        device_id = self.project_manager
+        domain = self._default_domain
+        db_token = 'admin'
+        handler = partial(handle_scene_from_server, device_id, name, None,
+                          target_window)
+        call_device_slot(handler, device_id, 'slotGetScene',
+                         uuid=uuid, domain=domain, db_token=db_token)

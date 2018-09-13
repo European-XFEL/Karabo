@@ -8,6 +8,7 @@
 
 #include "GuiServerDevice.hh"
 #include "karabo/util/Hash.hh"
+#include "karabo/util/State.hh"
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/TcpChannel.hh"
@@ -27,6 +28,11 @@ namespace karabo {
         KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, GuiServerDevice)
 
         void GuiServerDevice::expectedParameters(Schema& expected) {
+
+            OVERWRITE_ELEMENT(expected).key("state")
+                    .setNewOptions(State::INIT, State::ON, State::ERROR)
+                    .setNewDefaultValue(State::INIT)
+                    .commit();
 
             UINT32_ELEMENT(expected)
                     .key("port")
@@ -244,10 +250,14 @@ namespace karabo {
                 startDeviceInstantiation();
                 startNetworkMonitor();
 
+                updateState(State::ON);
+
                 // Produce some information
                 KARABO_LOG_INFO << "GUI Server is up and listening on port: " << get<unsigned int>("port");
 
             } catch (const Exception& e) {
+                updateState(State::ERROR);
+
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in initialize(): " << e.userFriendlyMsg();
             }
         }

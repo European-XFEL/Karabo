@@ -80,10 +80,6 @@ class _BaseListController(BaseBindingController):
         if self.proxy.binding is None:
             return
 
-        if not text:
-            self.proxy.edit_value = self._validate_empty()
-            return
-
         acceptable_input = self._internal_widget.hasAcceptableInput()
         self.last_cursor_position = self._internal_widget.cursorPosition()
         if acceptable_input:
@@ -148,21 +144,26 @@ class DisplayList(_BaseListController):
     model = Instance(DisplayListModel, args=())
 
 
+INT_REGEX = r"^[-+]?\d+$"
+UINT_REGEX = r"^[+]?\d+$"
+DOUBLE_REGEX = r"^[-+]?\d*[\.]\d*$|^[-+]?\d+$"
+
+
 REGEX_MAP = {
     VectorBoolBinding: r"(0|1|[T]rue|[F]alse)",
-    VectorComplexDoubleBinding: r"^[-+]?\d*[\.]\d*$|^[-+]?\d+$",  # X
-    VectorComplexFloatBinding: r"^[-+]?\d*[\.]\d*$|^[-+]?\d+$",  # X
-    VectorDoubleBinding: r"^[-+]?\d*[\.]\d*$|^[-+]?\d+$",
-    VectorFloatBinding: r"^[-+]?\d*[\.]\d*$|^[-+]?\d+$",
-    VectorInt8Binding: r"^[-+]?\d+$",
-    VectorInt16Binding: r"^[-+]?\d+$",
-    VectorInt32Binding: r"^[-+]?\d+$",
-    VectorInt64Binding: r"^[-+]?\d+$",
+    VectorComplexDoubleBinding: DOUBLE_REGEX,  # XXX
+    VectorComplexFloatBinding: DOUBLE_REGEX,  # XXX
+    VectorDoubleBinding: DOUBLE_REGEX,
+    VectorFloatBinding: DOUBLE_REGEX,
+    VectorInt8Binding: INT_REGEX,
+    VectorInt16Binding: INT_REGEX,
+    VectorInt32Binding: INT_REGEX,
+    VectorInt64Binding: INT_REGEX,
     VectorStringBinding: r"^.+$",
-    VectorUint8Binding: r"^[+]?\d+$",
-    VectorUint16Binding: r"^[+]?\d+$",
-    VectorUint32Binding: r"^[+]?\d+$",
-    VectorUint64Binding: r"^[+]?\d+$",
+    VectorUint8Binding: UINT_REGEX,
+    VectorUint16Binding: UINT_REGEX,
+    VectorUint32Binding: UINT_REGEX,
+    VectorUint64Binding: UINT_REGEX,
 }
 
 MEDIATE_MAP = {
@@ -191,6 +192,7 @@ class ListValidator(QValidator):
         super(ListValidator, self).__init__()
         self.pattern = re.compile(REGEX_MAP.get(type(binding), ''))
         self.intermediate = MEDIATE_MAP.get(type(binding), ())
+        self.try_literal = not isinstance(binding, VectorStringBinding)
         self.min_size = min_size
         self.max_size = max_size
 
@@ -202,14 +204,14 @@ class ListValidator(QValidator):
             return self.Acceptable, input, pos
         elif (input in ('', []) and self.min_size is not None
                 and self.min_size > 0):
-            return self.Invalid, input, pos
+            return self.Intermediate, input, pos
 
         # check for size first
         values = [val for val in input.split(',')]
         if self.min_size is not None and len(values) < self.min_size:
-            return self.Invalid, input, pos
+            return self.Intermediate, input, pos
         if self.max_size is not None and len(values) > self.max_size:
-            return self.Invalid, input, pos
+            return self.Intermediate, input, pos
 
         # intermediate positions
         if input[-1] in self.intermediate:
@@ -219,5 +221,12 @@ class ListValidator(QValidator):
         for value in values:
             if not self.pattern.match(value):
                 return self.Invalid, input, pos
+            # If we do not have a string binding, we have to check other
+            # behavior, e.g. leading zeros, and see if we can cast it
+            if self.try_literal:
+                try:
+                    literal_eval(value)
+                except SyntaxError:
+                    return self.Intermediate, input, pos
 
         return self.Acceptable, input, pos

@@ -164,22 +164,21 @@ namespace karabo {
         try {
             const int nData = get<unsigned int>("nData");
             const unsigned int delayInMs = get<unsigned int>("delay");
-            std::vector<long long> vec(TEST_VECTOR_SIZE);
-            Hash data;
+            const int noData[] = {}; // Also test an empty NDArray:
+            Hash data("data", std::vector<long long> (TEST_VECTOR_SIZE),
+                      "emptyArray", NDArray(noData, sizeof (noData) / sizeof (noData[0])));
+            auto& vec = data.get<std::vector<long long> >("data");
 
             KARABO_LOG_FRAMEWORK_DEBUG << "P2PSenderDevice::writing : nData = " << nData
                     << ", delay in ms = " << delayInMs << ", vector<long long>.size = " << vec.size();
-
-            for (size_t i = 1; i <= vec.size(); ++i) vec[i-1] = i;
+            for (size_t i = 1; i <= vec.size(); ++i) vec[i - 1] = i;
 
             // Loop all the data to be send
             for (int iData = 0; iData < nData; ++iData) {
 
-                // Fill the data object - for now only dataId.
+                // Fill the data object
                 data.set("dataId", iData);
-
                 vec[0] = -iData;
-                data.set("data", vec);
 
                 // Write
                 writeChannel("output1", data);
