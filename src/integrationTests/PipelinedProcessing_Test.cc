@@ -195,7 +195,7 @@ void PipelinedProcessing_Test::testPipeDrop() {
     CPPUNIT_ASSERT_EQUAL(std::string("drop"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
     CPPUNIT_ASSERT_EQUAL(std::string("drop"), m_deviceClient->get<std::string>(m_receiver, "input2.onSlowness"));
 
-    testPipeDrop(0, 0, true);
+    testPipeDrop(10, 0, true);
     testPipeDrop(100, 0, true);
     testPipeDrop(0, 100, false);
 
@@ -227,9 +227,12 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
             nDataExpected += m_nDataPerRun;
             CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", nDataExpected, KRB_TEST_MAX_TIMEOUT));
         } else {
-            // better way?
-            boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
-            // if the processing time is comparable to the delay time, the number of received data is random.
+            // poll until nTotalDataOnEos changes (increases)
+            CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nDataExpected, KRB_TEST_MAX_TIMEOUT, false));
+            
+            // if the processing time is comparable to or larger than the delay time, 
+            // the number of received data is random, but should be larger than the 
+            // number of local buffers (currently one 'active' and one 'inactive')
             unsigned int nTotalData = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
             CPPUNIT_ASSERT(nTotalData <= nDataExpected + m_nDataPerRun);
             CPPUNIT_ASSERT(nTotalData >= nDataExpected + 2);
