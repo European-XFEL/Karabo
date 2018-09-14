@@ -129,9 +129,6 @@ void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigne
     std::clog << "Test with onSlowness = 'wait', processingTime = " 
               << processingTime << ", delayTime = " << delayTime << "\n";
 
-    // make sure the sender has stopped sending data
-    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>("p2pTestSender", "state", karabo::util::State::NORMAL, KRB_TEST_MAX_TIMEOUT));
-
     const std::string receiver("pipeTestReceiver");
 
     m_deviceClient->set(receiver, "processingTime", processingTime);
@@ -144,6 +141,9 @@ void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigne
     unsigned int nDataExpected = nTotalData0;
     for (unsigned int nRun = 0; nRun < N_RUNS_PER_TEST; ++nRun) {
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
+        
+        // make sure the sender has stopped sending data
+        CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>("p2pTestSender", "state", karabo::util::State::NORMAL, KRB_TEST_MAX_TIMEOUT));
         // Then call its slot
         m_deviceClient->execute("p2pTestSender", "write", KRB_TEST_MAX_TIMEOUT);
 
@@ -209,9 +209,6 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
     std::clog << "Test with onSlowness = 'drop', processingTime = " 
               << processingTime << ", delayTime = " << delayTime << "\n";
 
-    // make sure the sender has stopped sending data
-    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>("p2pTestSender", "state", karabo::util::State::NORMAL, KRB_TEST_MAX_TIMEOUT));
-
     m_deviceClient->set(m_receiver, "processingTime", processingTime);
     m_deviceClient->set("p2pTestSender", "delay", delayTime);
 
@@ -221,6 +218,8 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
     unsigned int nDataExpected = nTotalData0;
     for (unsigned int nRun = 0; nRun < N_RUNS_PER_TEST; ++nRun) {
         auto startTimepoint = std::chrono::high_resolution_clock::now();
+        // make sure the sender has stopped sending data
+        CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>("p2pTestSender", "state", karabo::util::State::NORMAL, KRB_TEST_MAX_TIMEOUT));
         m_deviceClient->execute("p2pTestSender", "write", KRB_TEST_MAX_TIMEOUT);
 
         // test data
@@ -273,9 +272,6 @@ void PipelinedProcessing_Test::testProfileTransferTimes() {
 
 void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool copy) {
 
-    // make sure the sender has stopped sending data
-    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>("p2pTestSender", "state", karabo::util::State::NORMAL, KRB_TEST_MAX_TIMEOUT));
-
     std::string receiver = "pipeTestReceiver";
     if (noShortCut) {
         setenv("KARABO_NO_PIPELINE_SHORTCUT", "1", 1);
@@ -290,6 +286,8 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool co
     // set the scenario
     m_deviceClient->set("p2pTestSender", "scenario", "profile");
     m_deviceClient->set("p2pTestSender", "copyAllData", copy);
+    // make sure the sender has stopped sending data
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>("p2pTestSender", "state", karabo::util::State::NORMAL, KRB_TEST_MAX_TIMEOUT));
     // Then call its slot
     m_deviceClient->execute("p2pTestSender", "write", KRB_TEST_MAX_TIMEOUT);
     
