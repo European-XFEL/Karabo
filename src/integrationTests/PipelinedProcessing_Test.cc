@@ -281,7 +281,8 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool co
     }
     // Looks like to get "KARABO_NO_PIPELINE_SHORTCUT" active (some caching?),
     // we have to re-instantiate the receiver.
-    CPPUNIT_ASSERT(m_deviceClient->instantiate("testServerPP", "PipeReceiverDevice", m_receiverConfig).first);
+    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerPP", "PipeReceiverDevice", m_receiverConfig, KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
     m_deviceClient->set(receiver, "processingTime", 100); // why do we need this setup here?
 
     const unsigned int nDataPerRun = m_deviceClient->get<unsigned int>("p2pTestSender", "nData");
