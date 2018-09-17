@@ -17,6 +17,10 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 
+#define KRB_TEST_MAX_TIMEOUT 20
+#define N_RUNS_PER_TEST 5
+
+
 class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(PipelinedProcessing_Test);
@@ -49,8 +53,8 @@ private:
     bool pollDeviceProperty(const std::string& deviceId,
                             const std::string& propertyName,
                             const T& expected,
-                            const int maxTimeout,
-                            bool checkForEqual = true) const; // if false, wait until not equal anymore
+                            bool checkForEqual = true,
+                            const int maxTimeout = KRB_TEST_MAX_TIMEOUT) const; // if false, wait until not equal anymore
 
     void instantiateDeviceWithAssert(const std::string& classId, const karabo::util::Hash& configuration);
     void killDeviceWithAssert(const std::string& classId);
