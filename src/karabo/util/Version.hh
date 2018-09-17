@@ -73,7 +73,7 @@ namespace karabo {
             /**
              * Returns a string describing the current version of the Framework
              * Equivalent of calling.
-             * karabo::util::Version::getKaraboVersion().getVersionString();
+             * karabo::util::Version::getKaraboVersion().getString();
              * 
              * @returns std::string 
              */
