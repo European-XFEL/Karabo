@@ -12,6 +12,7 @@
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/TcpChannel.hh"
+#include "karabo/util/Version.hh"
 
 using namespace std;
 using namespace karabo::util;
@@ -162,7 +163,13 @@ namespace karabo {
                     .readOnly().initialValue(0)
                     .commit();
 
-
+            STRING_ELEMENT(expected).key("minClientVersion")
+                    .displayedName("Minimum Client Version")
+                    .description("If this variable does not respect the N.N.N(.N) convention,"
+                                 " the Server will not enforce a version check")
+                    .assignmentOptional().defaultValue("")
+                    .reconfigurable()
+                    .commit();
         }
 
 
@@ -493,18 +500,19 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onLogin";
                 // Check valid login
                 KARABO_LOG_INFO << "Login request of user: " << hash.get<string > ("username");
-
-                vector<unsigned int> versionParts = karabo::util::fromString<unsigned int, vector>(hash.get<string>("version"), ".");
-                if (versionParts.size() >= 2) {
-                    unsigned int major = versionParts[0];
-                    unsigned int minor = versionParts[1];
-                    // Versions earlier than 1.5.0 of the GUI don't understand a systemVersion message.
-                    if ((major >= 1 && minor >= 5) || major >= 2) sendSystemVersion(channel);
+                Version clientVersion(hash.get<string>("version"));
+                Version minVersion(get<std::string>("minClientVersion"));
+                Version systemProtocolVersion("1.5.0");
+                if (clientVersion >= systemProtocolVersion) {
+                    sendSystemVersion(channel);
                 }
-
-                // if ok
-                sendSystemTopology(channel);
-                // else sendBadLogin
+                
+                if (clientVersion >= minVersion) {
+                    sendSystemTopology(channel);
+                    return;
+                }
+                disconnectChannel(channel);
+                // TODO: check valid login.
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onLogin(): " << e.userFriendlyMsg();
             }
@@ -916,7 +924,6 @@ namespace karabo {
             }
         }
 
-
         void GuiServerDevice::sendSystemVersion(WeakChannelPointer channel) {
             try {
                 string const version = karabo::util::Version::getVersion();
@@ -1159,10 +1166,13 @@ namespace karabo {
 
 
         void GuiServerDevice::onError(const karabo::net::ErrorCode& errorCode, WeakChannelPointer channel) {
+            KARABO_LOG_INFO << "onError : TCP socket got error : " << errorCode.value() << " -- \"" << errorCode.message() << "\",  Close connection to a client";
+            disconnectChannel(channel);
+        }
+
+
+        void GuiServerDevice::disconnectChannel(WeakChannelPointer channel) {
             try {
-
-                KARABO_LOG_INFO << "onError : TCP socket got error : " << errorCode.value() << " -- \"" << errorCode.message() << "\",  Close connection to a client";
-
                 // TODO Fork on error message
                 karabo::net::Channel::Pointer chan = channel.lock();
                 std::set<std::string> deviceIds; // empty set
@@ -1216,9 +1226,8 @@ namespace karabo {
                     }
                     KARABO_LOG_FRAMEWORK_INFO << m_networkConnections.size() << " pipeline channel(s) left.";
                 }
-
             } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onError(): " << e.what();
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in disconnectChannel(): " << e.what();
             }
         }
 
