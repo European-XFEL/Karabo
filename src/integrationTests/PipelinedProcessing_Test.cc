@@ -34,7 +34,7 @@ void PipelinedProcessing_Test::setUp() {
     m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
 
     // Create and start server
-    Hash config("serverId", "testServerPP", "scanPlugins", false, "Logger.priority", "ERROR");
+    Hash config("serverId", m_server, "scanPlugins", false, "Logger.priority", "ERROR");
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
 
@@ -55,7 +55,7 @@ void PipelinedProcessing_Test::tearDown() {
 void PipelinedProcessing_Test::appTestRunner() {
 
     // in order to avoid recurring setup and tear down calls, all tests are run in a single runner
-    instantiateDeviceWithAssert("testServerPP", "P2PSenderDevice", Hash("deviceId", m_sender));
+    instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", m_sender));
     m_nDataPerRun = m_deviceClient->get<unsigned int>(m_sender, "nData");
 
     // Create the base configuration for the receiver
@@ -111,7 +111,7 @@ void PipelinedProcessing_Test::testPipeWait() {
     std::clog << "---\ntestPipeWait\n";
 
     // use only one receiver for a group of tests
-    instantiateDeviceWithAssert("testServerPP", "PipeReceiverDevice", m_receiverConfig);
+    instantiateDeviceWithAssert("PipeReceiverDevice", m_receiverConfig);
     CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
     CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_receiver, "input2.onSlowness"));
 
@@ -189,7 +189,7 @@ void PipelinedProcessing_Test::testPipeDrop() {
     std::clog << "---\ntestPipeDrop\n";
 
     m_receiverConfig += Hash("input.onSlowness", "drop", "input2.onSlowness", "drop");
-    instantiateDeviceWithAssert("testServerPP", "PipeReceiverDevice", m_receiverConfig);
+    instantiateDeviceWithAssert("PipeReceiverDevice", m_receiverConfig);
     CPPUNIT_ASSERT_EQUAL(std::string("drop"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
     CPPUNIT_ASSERT_EQUAL(std::string("drop"), m_deviceClient->get<std::string>(m_receiver, "input2.onSlowness"));
 
@@ -278,7 +278,7 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool co
     }
     // Looks like to get "KARABO_NO_PIPELINE_SHORTCUT" active (some caching?),
     // we have to re-instantiate the receiver.
-    instantiateDeviceWithAssert("testServerPP", "PipeReceiverDevice", m_receiverConfig);
+    instantiateDeviceWithAssert("PipeReceiverDevice", m_receiverConfig);
 
     const unsigned int nDataPerRun = m_deviceClient->get<unsigned int>(m_sender, "nData");
 
@@ -330,10 +330,9 @@ bool PipelinedProcessing_Test::pollDeviceProperty(const std::string& deviceId,
 }
 
 
-void PipelinedProcessing_Test::instantiateDeviceWithAssert(const std::string& serverInstanceId, 
-                                                           const std::string& classId,
+void PipelinedProcessing_Test::instantiateDeviceWithAssert(const std::string& classId,
                                                            const karabo::util::Hash& configuration) {
-    std::pair<bool, std::string> success = m_deviceClient->instantiate(serverInstanceId, classId, configuration, KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success = m_deviceClient->instantiate(m_server, classId, configuration, KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 }
 

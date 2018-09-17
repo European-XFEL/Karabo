@@ -52,9 +52,7 @@ private:
                             const int maxTimeout,
                             bool checkForEqual = true) const; // if false, wait until not equal anymore
 
-    void instantiateDeviceWithAssert(const std::string& serverInstanceId, 
-                                     const std::string& classId, 
-                                     const karabo::util::Hash& configuration);
+    void instantiateDeviceWithAssert(const std::string& classId, const karabo::util::Hash& configuration);
     void killDeviceWithAssert(const std::string& classId);
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
@@ -66,10 +64,11 @@ private:
 
     karabo::util::Hash m_receiverConfig;
 
-    const std::string m_receiver = "pipeTestReceiver";
-    const std::string m_sender = "p2pTestSender";
-    const std::string m_senderOutput1 = "p2pTestSender:output1";
-    const std::string m_senderOutput2 = "p2pTestSender:output2";
+    const std::string m_server = "testServerPP"; // server instance ID
+    const std::string m_receiver = "pipeTestReceiver"; // receiver instance ID
+    const std::string m_sender = "p2pTestSender"; // sender instance ID
+    const std::string m_senderOutput1 = "p2pTestSender:output1"; // sender output channel 1
+    const std::string m_senderOutput2 = "p2pTestSender:output2"; // sender output channel 2
 };
 
 #endif	/* PIPELINEDPROCESSING_TEST_HH */
