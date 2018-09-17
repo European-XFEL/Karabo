@@ -154,12 +154,19 @@ namespace karabo {
 
             /**
              * an error specified by ErrorCode e occurred on the given channel.
-             * After an error the GUI-server will attempt to close the connection on this
-             * channels, and perform a clean-up of members related to this channel.
+             * After an error the GUI-server will attempt to disconnect this channel.
              * @param e
              * @param channel
              */
             void onError(const karabo::net::ErrorCode& e, WeakChannelPointer channel);
+
+            /**
+             * The GUI-server will attempt to close the connection on this channels,
+             * and perform a clean-up of members related to this channel.
+             * 
+             * @param channel
+             */
+            void disconnectChannel(WeakChannelPointer channel);
 
             /**
              * an error further specified by hash occurred on a connection to a GUI
