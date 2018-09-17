@@ -52,6 +52,11 @@ private:
                             const int maxTimeout,
                             bool checkForEqual = true) const; // if false, wait until not equal anymore
 
+    void instantiateDeviceWithAssert(const std::string& serverInstanceId, 
+                                     const std::string& classId, 
+                                     const karabo::util::Hash& configuration);
+    void killDeviceWithAssert(const std::string& classId);
+
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_eventLoopThread;
 
