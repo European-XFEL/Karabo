@@ -7,11 +7,12 @@ from itertools import cycle
 
 from guiqwt.plot import CurveDialog
 from guiqwt.builder import make
-from numpy import arange
+import numpy as np
 from traits.api import Dict, Instance
 
 from karabo.common.api import KARABO_SCHEMA_DISPLAYED_NAME
 from karabo.common.scenemodel.api import DisplayPlotModel
+from karabogui.const import MAX_NUMBER_LIMIT
 from karabogui.binding.api import VectorNumberBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
@@ -57,7 +58,22 @@ class DisplayPlot(BaseBindingController):
         if self._plot is None:
             return
         value = proxy.value
-        self._curves[proxy].set_data(arange(len(value)), value)
+
+        # XXX: We have to do some gymnastics for np.arrays and have to copy
+        # due to ndarray read-only specifier. Investigate later if we can
+        # set the write flag without harming our proxies
+
+        # We return tuples as we specify condition only
+        above, = np.where(value > MAX_NUMBER_LIMIT)
+        below, = np.where(value < -MAX_NUMBER_LIMIT)
+
+        if above.size or below.size:
+            value = value.copy()
+        if above.size:
+            value[above] = MAX_NUMBER_LIMIT
+        if below.size:
+            value[below] = -MAX_NUMBER_LIMIT
+        self._curves[proxy].set_data(np.arange(len(value)), value)
         self._plot.replot()
 
     def __line_colors_default(self):
