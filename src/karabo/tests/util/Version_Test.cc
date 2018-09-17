@@ -117,10 +117,10 @@ void Version_Test::testVersionComparison(){
                 CPPUNIT_ASSERT_EQUAL_MESSAGE(message, true, (v1 <= v2));
                 CPPUNIT_ASSERT_EQUAL_MESSAGE(message, false, (v1 > v2));
             }
-            if (i1 < i2) {
-                std::string message = "Failed calculating '" + version1 + "' < '" + version2 + "'";
-                CPPUNIT_ASSERT_EQUAL_MESSAGE(message, true, (v1 < v2));
-                CPPUNIT_ASSERT_EQUAL_MESSAGE(message, false, (v1 >= v2));
+            if (i1 > i2) {
+                std::string message = "Failed calculating '" + version1 + "' > '" + version2 + "'";
+                CPPUNIT_ASSERT_EQUAL_MESSAGE(message, true, (v1 > v2));
+                CPPUNIT_ASSERT_EQUAL_MESSAGE(message, false, (v1 <= v2));
             }
             if (i1 != i2) {
                 std::string message = "Failed calculating '" + version1 + "' != '" + version2 + "'";
