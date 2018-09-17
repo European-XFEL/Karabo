@@ -41,9 +41,9 @@ namespace karabo {
          * 
          * Hash container:
          * - The Hash is a heterogeneous generic key/value container that associates a string key to a value of any type.<br>
-         * - The Hash is a core data structure in Karabo software framework, and is widly used in the karabo system.<br>
+         * - The Hash is a core data structure in Karabo software framework, and is widely used in the karabo system.<br>
          * - For instance, exchanging data and configurations between two or more entities (devices, GUI),
-         * database interface (store and retrival ), meta-data handling, etc.<br>
+         * database interface (store and retrieval ), meta-data handling, etc.<br>
          * - The Hash class is much like a XML-DOM container with the difference of
          * allowing only unique keys on a given tree-level.<br>
          * - Like and XML DOM object, the Hash provides a multi-level (recursive) key-value associative container,
