@@ -55,7 +55,7 @@ void PipelinedProcessing_Test::tearDown() {
 void PipelinedProcessing_Test::appTestRunner() {
 
     // in order to avoid recurring setup and tear down calls, all tests are run in a single runner
-    CPPUNIT_ASSERT(m_deviceClient->instantiate("testServerPP", "P2PSenderDevice", Hash("deviceId", m_sender), KRB_TEST_MAX_TIMEOUT).first);
+    instantiateDeviceWithAssert("testServerPP", "P2PSenderDevice", Hash("deviceId", m_sender));
     m_nDataPerRun = m_deviceClient->get<unsigned int>(m_sender, "nData");
 
     // Create the base configuration for the receiver
@@ -71,7 +71,7 @@ void PipelinedProcessing_Test::appTestRunner() {
 
     testProfileTransferTimes();
 
-    CPPUNIT_ASSERT(m_deviceClient->killDevice(m_sender).first);
+    killDeviceWithAssert(m_sender);
 }
 
 
@@ -111,7 +111,7 @@ void PipelinedProcessing_Test::testPipeWait() {
     std::clog << "---\ntestPipeWait\n";
 
     // use only one receiver for a group of tests
-    CPPUNIT_ASSERT(m_deviceClient->instantiate("testServerPP", "PipeReceiverDevice", m_receiverConfig).first);
+    instantiateDeviceWithAssert("testServerPP", "PipeReceiverDevice", m_receiverConfig);
     CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
     CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_receiver, "input2.onSlowness"));
 
@@ -119,7 +119,7 @@ void PipelinedProcessing_Test::testPipeWait() {
     testPipeWait(100, 0);
     testPipeWait(0, 100);
 
-    CPPUNIT_ASSERT(m_deviceClient->killDevice(m_receiver).first);
+    killDeviceWithAssert(m_receiver);
     std::clog << "Passed!\n\n";
 }
 
@@ -189,7 +189,7 @@ void PipelinedProcessing_Test::testPipeDrop() {
     std::clog << "---\ntestPipeDrop\n";
 
     m_receiverConfig += Hash("input.onSlowness", "drop", "input2.onSlowness", "drop");
-    CPPUNIT_ASSERT(m_deviceClient->instantiate("testServerPP", "PipeReceiverDevice", m_receiverConfig).first);
+    instantiateDeviceWithAssert("testServerPP", "PipeReceiverDevice", m_receiverConfig);
     CPPUNIT_ASSERT_EQUAL(std::string("drop"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
     CPPUNIT_ASSERT_EQUAL(std::string("drop"), m_deviceClient->get<std::string>(m_receiver, "input2.onSlowness"));
 
@@ -197,7 +197,7 @@ void PipelinedProcessing_Test::testPipeDrop() {
     testPipeDrop(100, 0, true);
     testPipeDrop(0, 100, false);
 
-    CPPUNIT_ASSERT(m_deviceClient->killDevice(m_receiver).first);
+    killDeviceWithAssert(m_receiver);
     std::clog << "Passed!\n\n";
 }
 
@@ -278,8 +278,7 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool co
     }
     // Looks like to get "KARABO_NO_PIPELINE_SHORTCUT" active (some caching?),
     // we have to re-instantiate the receiver.
-    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerPP", "PipeReceiverDevice", m_receiverConfig, KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    instantiateDeviceWithAssert("testServerPP", "PipeReceiverDevice", m_receiverConfig);
 
     const unsigned int nDataPerRun = m_deviceClient->get<unsigned int>(m_sender, "nData");
 
@@ -304,7 +303,7 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool co
     if (noShortCut) {
         unsetenv("KARABO_NO_PIPELINE_SHORTCUT");
     }
-    CPPUNIT_ASSERT(m_deviceClient->killDevice(m_receiver).first);
+    killDeviceWithAssert(m_receiver);
 }
 
 
@@ -328,4 +327,18 @@ bool PipelinedProcessing_Test::pollDeviceProperty(const std::string& deviceId,
     }
 
     return false;
+}
+
+
+void PipelinedProcessing_Test::instantiateDeviceWithAssert(const std::string& serverInstanceId, 
+                                                           const std::string& classId,
+                                                           const karabo::util::Hash& configuration) {
+    std::pair<bool, std::string> success = m_deviceClient->instantiate(serverInstanceId, classId, configuration, KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+}
+
+
+void PipelinedProcessing_Test::killDeviceWithAssert(const std::string& classId) {
+    std::pair<bool, std::string> success = m_deviceClient->killDevice(classId);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 }
