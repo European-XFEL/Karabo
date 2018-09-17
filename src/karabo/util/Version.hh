@@ -70,19 +70,28 @@ namespace karabo {
 
             static std::string getPathToKaraboInstallation();
 
+            /**
+             * Returns a string describing the current version of the Framework
+             * Equivalent of calling.
+             * karabo::util::Version::getKaraboVersion().getVersionString();
+             * 
+             * @returns std::string 
+             */
             static std::string getVersion();
 
-            int getMajor();
+            int getMajor() const;
 
-            int getMinor();
+            int getMinor() const;
 
-            int getPatch();
+            int getPatch() const;
 
-            bool isDevRelease();
+            const std::string& getString() const;
+
+            bool isDevRelease() const;
             
-            bool isPreRelease();
+            bool isPreRelease() const;
             
-            bool isPostRelease();
+            bool isPostRelease() const;
 
             // the comparison operators implemented follow the guidelines of 
             // PEP440 https://www.python.org/dev/peps/pep-0440/
