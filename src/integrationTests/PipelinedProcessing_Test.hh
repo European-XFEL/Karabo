@@ -62,6 +62,9 @@ private:
     karabo::util::Hash m_receiverConfig;
 
     const std::string m_receiver = "pipeTestReceiver";
+    const std::string m_sender = "p2pTestSender";
+    const std::string m_senderOutput1 = "p2pTestSender:output1";
+    const std::string m_senderOutput2 = "p2pTestSender:output2";
 };
 
 #endif	/* PIPELINEDPROCESSING_TEST_HH */
