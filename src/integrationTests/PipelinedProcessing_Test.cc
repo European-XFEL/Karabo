@@ -15,9 +15,6 @@ USING_KARABO_NAMESPACES;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(PipelinedProcessing_Test);
 
-#define KRB_TEST_MAX_TIMEOUT 20
-#define N_RUNS_PER_TEST 5
-
 
 PipelinedProcessing_Test::PipelinedProcessing_Test() = default;
 
@@ -141,13 +138,13 @@ void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigne
         const auto startTimepoint = std::chrono::high_resolution_clock::now();
         
         // make sure the sender has stopped sending data
-        CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL, KRB_TEST_MAX_TIMEOUT));
+        CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
         // Then call its slot
         m_deviceClient->execute(m_sender, "write", KRB_TEST_MAX_TIMEOUT);
 
         nDataExpected += m_nDataPerRun;
         // And poll for the correct answer
-        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", nDataExpected, KRB_TEST_MAX_TIMEOUT));
+        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", nDataExpected));
 
         const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
         // Note that duration contains overhead from message travel time and polling interval in pollDeviceProperty!
@@ -157,7 +154,7 @@ void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigne
         
         // EOS comes a bit later, so we have to poll client again to be sure...
         // Note: only one EOS arrives after receiving a train of data!
-        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nDataExpected, KRB_TEST_MAX_TIMEOUT));
+        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nDataExpected));
 
         // Test if data source was correctly passed
         std::vector<std::string> sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSources");
@@ -217,16 +214,16 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
     for (unsigned int nRun = 0; nRun < N_RUNS_PER_TEST; ++nRun) {
         auto startTimepoint = std::chrono::high_resolution_clock::now();
         // make sure the sender has stopped sending data
-        CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL, KRB_TEST_MAX_TIMEOUT));
+        CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
         m_deviceClient->execute(m_sender, "write", KRB_TEST_MAX_TIMEOUT);
 
         // test data
         if (!dataLoss) {
             nDataExpected += m_nDataPerRun;
-            CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", nDataExpected, KRB_TEST_MAX_TIMEOUT));
+            CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", nDataExpected));
         } else {
             // poll until nTotalDataOnEos changes (increases)
-            CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nDataExpected, KRB_TEST_MAX_TIMEOUT, false));
+            CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nDataExpected, false));
             
             // if the processing time is comparable to or larger than the delay time, 
             // the number of received data is random, but should be larger than the 
@@ -241,7 +238,7 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
         elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
 
         // test EOS
-        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nDataExpected, KRB_TEST_MAX_TIMEOUT));
+        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nDataExpected));
 
         // Test if data source was correctly passed
         auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSources");
@@ -286,19 +283,19 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool co
     m_deviceClient->set(m_sender, "scenario", "profile");
     m_deviceClient->set(m_sender, "copyAllData", copy);
     // make sure the sender has stopped sending data
-    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL, KRB_TEST_MAX_TIMEOUT));
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
     // Then call its slot
     m_deviceClient->execute(m_sender, "write", KRB_TEST_MAX_TIMEOUT);
     
     // And poll for the correct answer
-    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", nDataPerRun, KRB_TEST_MAX_TIMEOUT));
+    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", nDataPerRun));
 
-    pollDeviceProperty<float>(m_receiver, "averageTransferTime", 0.f, KRB_TEST_MAX_TIMEOUT, false); // until not zero anymore!
+    pollDeviceProperty<float>(m_receiver, "averageTransferTime", 0.f, false); // until not zero anymore!
     float transferTime = m_deviceClient->get<float>(m_receiver, "averageTransferTime") / 1000;
 
     std::clog << "testProfileTransferTimes ("
-            << (copy ? "copy" : "no copy") << ", " << (noShortCut ? "no short cut" : "short cut")
-            << "): " << transferTime << " milliseconds average transfer time" << std::endl;
+              << (copy ? "copy" : "no copy") << ", " << (noShortCut ? "no short cut" : "short cut")
+              << "): " << transferTime << " milliseconds average transfer time" << std::endl;
 
     if (noShortCut) {
         unsetenv("KARABO_NO_PIPELINE_SHORTCUT");
@@ -309,8 +306,8 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool co
 
 template <typename T>
 bool PipelinedProcessing_Test::pollDeviceProperty(const std::string& deviceId,
-                                                  const std::string& propertyName, const T& expected, const int maxTimeoutInSec,
-                                                  bool checkForEqual) const {
+                                                  const std::string& propertyName, const T& expected, bool checkForEqual, 
+                                                  const int maxTimeoutInSec) const {
 
     const int pollWaitTimeInMs = 5;
     int pollCounter = 0;
@@ -319,8 +316,7 @@ bool PipelinedProcessing_Test::pollDeviceProperty(const std::string& deviceId,
     while (pollWaitTimeInMs * pollCounter <= maxTimeoutInSec * 1000) {
         boost::this_thread::sleep(boost::posix_time::milliseconds(pollWaitTimeInMs));
         const T nReceived = m_deviceClient->get<T>(deviceId, propertyName);
-        if ((checkForEqual && nReceived == expected)
-            || (!checkForEqual && nReceived != expected)) {
+        if ((checkForEqual && nReceived == expected) || (!checkForEqual && nReceived != expected)) {
             return true;
         }
         ++pollCounter;
@@ -338,6 +334,6 @@ void PipelinedProcessing_Test::instantiateDeviceWithAssert(const std::string& cl
 
 
 void PipelinedProcessing_Test::killDeviceWithAssert(const std::string& classId) {
-    std::pair<bool, std::string> success = m_deviceClient->killDevice(classId);
+    std::pair<bool, std::string> success = m_deviceClient->killDevice(classId, KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 }
