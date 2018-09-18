@@ -3,8 +3,8 @@ from lxml import etree
 
 from karabo.bound import (AccessLevel, BOOL_ELEMENT, Hash, KARABO_CLASSINFO,
                           OVERWRITE_ELEMENT, PythonDevice,
-                          SLOT_ELEMENT, STRING_ELEMENT, UINT32_ELEMENT)
-from karabo.common.scenemodel.api import write_scene
+                          SLOT_ELEMENT, STRING_ELEMENT, UINT32_ELEMENT,
+                          VECTOR_STRING_ELEMENT)
 from karabo.common.states import State
 from karabo.middlelayer import read_project_model
 from karabo.project_db.project_database import ProjectDatabase
@@ -63,6 +63,14 @@ class ProjectManager(PythonDevice):
             BOOL_ELEMENT(expected).key('testMode')
             .displayedName("Test Mode")
             .assignmentOptional().defaultValue(False)
+            .adminAccess()
+            .commit(),
+            VECTOR_STRING_ELEMENT(expected).key('domainList')
+            .displayedName("Domain List")
+            .description("List of allowed project DB domains. "
+                         "Empty list means no restrictions.")
+            .init()
+            .assignmentOptional().defaultValue([])
             .adminAccess()
             .commit(),
         )
@@ -340,6 +348,9 @@ class ProjectManager(PythonDevice):
 
         with self.user_db_sessions[token] as db_session:
             res = db_session.list_domains()
+            if len(self.get('domainList')):
+                res = [domain for domain in res
+                       if domain in self.get('domainList')]
             self.reply(Hash('domains', res))
 
     def slotUpdateAttribute(self, token, items):
