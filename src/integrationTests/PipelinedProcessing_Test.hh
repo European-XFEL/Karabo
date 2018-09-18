@@ -1,6 +1,8 @@
 /*
- * File:   GetOutputChannelSchema_Test.hh
+ * File:   PipelineProcessing_Test.hh
  * Author: haufs
+ * 
+ * Modified by J. Zhu
  *
  * Created on Sep 20, 2016, 3:40:33 PM
  */
@@ -14,6 +16,7 @@
 #include <boost/shared_ptr.hpp>
 #include <cppunit/extensions/HelperMacros.h>
 
+
 class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(PipelinedProcessing_Test);
@@ -24,7 +27,7 @@ class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
 
 public:
     PipelinedProcessing_Test();
-    virtual ~PipelinedProcessing_Test() {}
+    virtual ~PipelinedProcessing_Test();
 
     void setUp();
     void tearDown();
@@ -32,9 +35,15 @@ public:
 private:
 
     void appTestRunner();
+
     void testGetOutputChannelSchema();
-    void testPipe();
-    void testProfileTransferTimes(bool noShortCut=false);
+    void testPipeWait();
+    void testPipeDrop();
+    void testProfileTransferTimes();
+
+    void testPipeWait(unsigned int processingTime, unsigned int delayTime);
+    void testPipeDrop(unsigned int processingTime, unsigned int delayTime, bool dataLoss);
+    void testProfileTransferTimes(bool noShortCut, bool copy);
 
     template <typename T>
     bool pollDeviceProperty(const std::string& deviceId,
@@ -48,7 +57,11 @@ private:
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
 
+    unsigned int m_nDataPerRun;
+
+    karabo::util::Hash m_receiverConfig;
+
+    const std::string m_receiver = "pipeTestReceiver";
 };
 
 #endif	/* PIPELINEDPROCESSING_TEST_HH */
-
