@@ -65,7 +65,7 @@ $ ./run_python_tests.sh --runUnitTests --runIntegrationTests --rootDir <path>
 
 To collect the code coverage, the --collectCoverage flag can be used.
 $ ./run_python_tests.sh --clean --runUnitTests --runIntegrationTests \\
-$       --collectCoverage --rootDir <path> 
+$       --collectCoverage --rootDir <path>
 This command will run the tests, collect the code coverage and store the
 code coverage into a .coverage file in the directory where the script was
 executed. This command might come in handy if you want to generate a coverage
@@ -96,7 +96,7 @@ setupCoverageTool() {
     COVER_FLAGS="--with-coverage $COVER_COVERED_PACKAGES"
 
     # Path to the sitecustomize.py file.
-    SITE_PACKAGES_DIR=$KARABO_PROJECT_ROOT_DIR/karabo/extern/lib/python3.4/site-packages
+    SITE_PACKAGES_DIR=$KARABO_PROJECT_ROOT_DIR/karabo/extern/lib/python3.6/site-packages
     SITE_CUSTOMIZE_FILE_PATH=$SITE_PACKAGES_DIR/sitecustomize.py
 
     SITE_CUSTOMIZE_FILE_CREATED=false
@@ -197,9 +197,9 @@ runPythonUnitTests() {
 runPythonIntegrationTests() {
     echo
     echo Running Karabo Python integration tests ...
-    echo 
+    echo
 
-    # TODO: Needs to be uncommented when the bound_device_test integration test is added.  
+    # TODO: Needs to be uncommented when the bound_device_test integration test is added.
     #safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.bound_device_test"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_comm_test"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_provided_scenes_test"
