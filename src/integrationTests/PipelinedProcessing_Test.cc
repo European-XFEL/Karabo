@@ -55,16 +55,21 @@ void PipelinedProcessing_Test::appTestRunner() {
     instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", m_sender));
     m_nDataPerRun = m_deviceClient->get<unsigned int>(m_sender, "nData");
 
-    // Create the base configuration for the receiver
+    // Create the base configuration for the two receivers
     m_receiverConfig = Hash("deviceId", m_receiver,
                             "input.connectedOutputChannels", m_senderOutput1,
                             "input2.connectedOutputChannels", m_senderOutput2);
+    m_receiver2Config = Hash("deviceId", m_receiver2,
+                             "input.connectedOutputChannels", m_senderOutput1,
+                             "input2.connectedOutputChannels", m_senderOutput2);
 
     testGetOutputChannelSchema();
 
     testPipeWait();
 
     testPipeDrop();
+
+    testPipeTwoSharedReceiversWait();
 
     testProfileTransferTimes();
 
@@ -253,6 +258,91 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
               << ", dataItemSize = " << dataItemSize 
               << ", nTotalData = " << nDataExpected - nTotalData0
               << ", nTotalDataOnEos = " << nDataExpected - nTotalDataOnEos0 << std::endl;
+}
+
+
+void PipelinedProcessing_Test::testPipeTwoSharedReceiversWait() {
+    std::clog << "---\ntestPipeTwoReceiversWait\n";
+
+    auto moreConfig = Hash("input.onSlowness", "wait", "input.dataDistribution", "shared");
+
+    m_receiverConfig += moreConfig;
+    m_receiver2Config += moreConfig;
+
+    instantiateDeviceWithAssert("PipeReceiverDevice", m_receiverConfig);
+    instantiateDeviceWithAssert("PipeReceiverDevice", m_receiver2Config);
+
+    CPPUNIT_ASSERT_EQUAL(std::string("shared"), m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
+    CPPUNIT_ASSERT_EQUAL(std::string("shared"), m_deviceClient->get<std::string>(m_receiver2, "input.dataDistribution"));
+
+    testPipeTwoSharedReceiversWait(0, 0, 0);
+    testPipeTwoSharedReceiversWait(0, 100, 0);
+    testPipeTwoSharedReceiversWait(100, 0, 100);
+    
+    killDeviceWithAssert(m_receiver);
+    killDeviceWithAssert(m_receiver2);
+    std::clog << "Passed!\n\n";
+}
+
+
+void PipelinedProcessing_Test::testPipeTwoSharedReceiversWait(unsigned int processingTime, 
+                                                              unsigned int processingTime2, 
+                                                              unsigned int delayTime) {
+
+    std::clog << "Test with onSlowness = 'wait', processingTime = " 
+              << processingTime << ", processingTime2 = " 
+              << processingTime2 << ", delayTime = " 
+              << delayTime << "\n";
+
+    m_deviceClient->set(m_receiver, "processingTime", processingTime);
+    m_deviceClient->set(m_receiver2, "processingTime", processingTime2);
+    m_deviceClient->set(m_sender, "delay", delayTime);
+
+    int64_t elapsedTimeIn_microseconds = 0ll;
+    // we use a single receiver device for several successive tests.
+    unsigned int nTotalData0 = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
+    unsigned int nTotalData02 = m_deviceClient->get<unsigned int>(m_receiver2, "nTotalData");
+    unsigned int nTotalData = nTotalData0;
+    unsigned int nTotalData2 = nTotalData02;
+    unsigned int nDataExpected = nTotalData0 + nTotalData02;
+    CPPUNIT_ASSERT_EQUAL(nTotalData, m_deviceClient->get<unsigned int>(m_receiver, "nTotalDataOnEos"));
+    CPPUNIT_ASSERT_EQUAL(nTotalData2, m_deviceClient->get<unsigned int>(m_receiver2, "nTotalDataOnEos"));
+    for (unsigned int nRun = 0; nRun < m_numRunsPerTest; ++nRun) {
+        // make sure the sender has stopped sending data
+        CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+        // Then call its slot
+        m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
+
+        // poll until nTotalDataOnEos(s) of both receivers change (increase)
+        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nTotalData, false));
+        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver2, "nTotalDataOnEos", nTotalData2, false));
+        // update nTotalData
+        nTotalData = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
+        nTotalData2 = m_deviceClient->get<unsigned int>(m_receiver2, "nTotalData");
+        // test nTotalDataOnEos == nTotalData
+        CPPUNIT_ASSERT_EQUAL(nTotalData, m_deviceClient->get<unsigned int>(m_receiver, "nTotalDataOnEos"));
+        CPPUNIT_ASSERT_EQUAL(nTotalData2, m_deviceClient->get<unsigned int>(m_receiver2, "nTotalDataOnEos"));
+        // test the total data received
+        nDataExpected += m_nDataPerRun;
+        CPPUNIT_ASSERT_EQUAL(nDataExpected, nTotalData + nTotalData2);
+
+        // Test if data source was correctly passed
+        auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSources");
+        CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (1u), sources.size());
+        CPPUNIT_ASSERT_EQUAL(m_senderOutput1, sources[0]);
+        auto sources2 = m_deviceClient->get<std::vector<std::string> >(m_receiver2, "dataSources");
+        CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (1u), sources2.size());
+        CPPUNIT_ASSERT_EQUAL(m_senderOutput1, sources2[0]);
+        // Check that receiver did not post any problem on status:
+        CPPUNIT_ASSERT_EQUAL(std::string(), m_deviceClient->get<std::string>(m_receiver, "status"));
+        CPPUNIT_ASSERT_EQUAL(std::string(), m_deviceClient->get<std::string>(m_receiver2, "status"));
+    }
+
+    const unsigned int dataItemSize = m_deviceClient->get<unsigned int>(m_receiver, "dataItemSize");
+    const unsigned int dataItemSize2 =  m_deviceClient->get<unsigned int>(m_receiver2, "dataItemSize");
+
+    std::clog << ", dataItemSizes = " << dataItemSize << ", " << dataItemSize2
+              << ", nTotalData = " << nTotalData - nTotalData0 << ", " << nTotalData2 - nTotalData02 << std::endl;
 }
 
 

@@ -43,10 +43,12 @@ private:
     void testGetOutputChannelSchema();
     void testPipeWait();
     void testPipeDrop();
+    void testPipeTwoSharedReceiversWait();
     void testProfileTransferTimes();
 
     void testPipeWait(unsigned int processingTime, unsigned int delayTime);
     void testPipeDrop(unsigned int processingTime, unsigned int delayTime, bool dataLoss);
+    void testPipeTwoSharedReceiversWait(unsigned int processingTime, unsigned int processingTime2, unsigned int delayTime);
     void testProfileTransferTimes(bool noShortCut, bool copy);
 
     template <typename T>
@@ -67,9 +69,11 @@ private:
     unsigned int m_nDataPerRun;
 
     karabo::util::Hash m_receiverConfig;
+    karabo::util::Hash m_receiver2Config;
 
     const std::string m_server = "testServerPP"; // server instance ID
     const std::string m_receiver = "pipeTestReceiver"; // receiver instance ID
+    const std::string m_receiver2 = "pipeTestReceiver2";
     const std::string m_sender = "p2pTestSender"; // sender instance ID
     const std::string m_senderOutput1 = "p2pTestSender:output1"; // sender output channel 1
     const std::string m_senderOutput2 = "p2pTestSender:output2"; // sender output channel 2
