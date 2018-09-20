@@ -17,6 +17,10 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 
+static const int m_numRunsPerTest = 5;
+static const int m_maxTestTimeOut = 20;
+
+
 class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(PipelinedProcessing_Test);
@@ -49,8 +53,11 @@ private:
     bool pollDeviceProperty(const std::string& deviceId,
                             const std::string& propertyName,
                             const T& expected,
-                            const int maxTimeout,
-                            bool checkForEqual = true) const; // if false, wait until not equal anymore
+                            bool checkForEqual = true, // if false, wait until not equal anymore
+                            const int maxTimeout = m_maxTestTimeOut) const;
+
+    void instantiateDeviceWithAssert(const std::string& classId, const karabo::util::Hash& configuration);
+    void killDeviceWithAssert(const std::string& deviceId);
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_eventLoopThread;
@@ -61,7 +68,11 @@ private:
 
     karabo::util::Hash m_receiverConfig;
 
-    const std::string m_receiver = "pipeTestReceiver";
+    const std::string m_server = "testServerPP"; // server instance ID
+    const std::string m_receiver = "pipeTestReceiver"; // receiver instance ID
+    const std::string m_sender = "p2pTestSender"; // sender instance ID
+    const std::string m_senderOutput1 = "p2pTestSender:output1"; // sender output channel 1
+    const std::string m_senderOutput2 = "p2pTestSender:output2"; // sender output channel 2
 };
 
 #endif	/* PIPELINEDPROCESSING_TEST_HH */
