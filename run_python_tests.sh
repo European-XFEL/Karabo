@@ -184,7 +184,6 @@ runPythonUnitTests() {
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.middlelayer_api"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.common"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.project_db"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.usermacro_api"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.tests"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabogui"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.interactive"
@@ -232,7 +231,6 @@ generateCodeCoverageReport() {
     safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/common/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_common"
     safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/project_db/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_project_db"
     safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/interactive/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_interactive"
-    safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/usermacro_api/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_usermacro_api"
     safeRunCommand $COVERAGE html -i --include "*/karabogui/*" --omit $OMIT -d htmlcov_karabogui
     safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/bound_devices/*" --omit $OMIT -d htmlcov_bound_devices
 
