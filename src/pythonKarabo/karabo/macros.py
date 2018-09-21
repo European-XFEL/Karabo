@@ -1,5 +1,5 @@
 
-from .macro_api.alarms import showAlarms
+from .macro_api.alarms import showAlarms, showInterlocks
 
 
 def _create_cli_submodule():
@@ -8,7 +8,7 @@ def _create_cli_submodule():
 
     # NOTE: This is the macro api part of the ikarabo namespace
     symbols = (
-        showAlarms,
+        showAlarms, showInterlocks
     )
     module = create_module('karabo.macros.cli', *symbols)
     module.__file__ = __file__  # looks nicer when repr(cli) is used
