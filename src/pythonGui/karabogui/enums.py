@@ -23,3 +23,4 @@ class KaraboSettings(Enum):
     USERNAME = "Login/LastUsername"
     GUI_SERVERS = "Login/LastConnectionAddresses"
     MAX_GUI_SERVERS = "Login/MaxConnectionAddresses"
+    BROKER_TOPIC = "Login/Topic"
