@@ -1,7 +1,12 @@
+from io import StringIO
+from lxml import etree
+
 from karabo.bound import (AccessLevel, BOOL_ELEMENT, Hash, KARABO_CLASSINFO,
                           OVERWRITE_ELEMENT, PythonDevice,
-                          SLOT_ELEMENT, STRING_ELEMENT, UINT32_ELEMENT)
+                          SLOT_ELEMENT, STRING_ELEMENT, UINT32_ELEMENT,
+                          VECTOR_STRING_ELEMENT)
 from karabo.common.states import State
+from karabo.middlelayer import read_project_model
 from karabo.project_db.project_database import ProjectDatabase
 from karabo.project_db.util import assure_running, ProjectDBError
 
@@ -28,6 +33,10 @@ class ProjectManager(PythonDevice):
     def expectedParameters(expected):
 
         (
+            OVERWRITE_ELEMENT(expected).key("state")
+            .setNewOptions(State.ERROR, State.ON, State.INIT)
+            .setNewDefaultValue(State.INIT)
+            .commit(),
             OVERWRITE_ELEMENT(expected).key('_deviceId_')
             .setNewDefaultValue("ProjectService")
             .commit(),
@@ -56,6 +65,14 @@ class ProjectManager(PythonDevice):
             .assignmentOptional().defaultValue(False)
             .adminAccess()
             .commit(),
+            VECTOR_STRING_ELEMENT(expected).key('domainList')
+            .displayedName("Domain List")
+            .description("List of allowed project DB domains. "
+                         "Empty list means no restrictions.")
+            .init()
+            .assignmentOptional().defaultValue([])
+            .adminAccess()
+            .commit(),
         )
 
     def __init__(self, config):
@@ -68,6 +85,7 @@ class ProjectManager(PythonDevice):
         self.registerSlot(self.slotListItems)
         self.registerSlot(self.slotListDomains)
         self.registerSlot(self.slotUpdateAttribute)
+        self.registerSlot(self.slotGetScene)
         self.registerInitialFunction(self.initialization)
         self.user_db_sessions = {}
 
@@ -76,14 +94,15 @@ class ProjectManager(PythonDevice):
         Initialization function of this device. Checks that the configured
         database is indeed reachable and accessible
 
-        If the database is reachable updates the device state to NORMAL,
+        If the database is reachable updates the device state to ON,
         otherwise brings the device into ERROR
         """
         # check if we can connect to the database
         try:
             assure_running(self.get("host"), self.get("port"))
-            self.updateState(State.NORMAL)
-        except ProjectDBError:
+            self.updateState(State.ON)
+        except ProjectDBError as e:
+            self.log.ERROR("ProjectDBError : {}".format(str(e)))
             self.updateState(State.ERROR)
 
     def allowLock(self):
@@ -105,6 +124,51 @@ class ProjectManager(PythonDevice):
         :return: at tuple of host, port
         """
         return self.get("host"), self.get("port")
+
+    def slotGetScene(self, params):
+        """Request a scene directly from the database in the correct format
+
+        This protocol is in the style of the capability protocol and expects
+        a Hash with parameters:
+
+            name: Name of scene --optional
+            domain: Domain to look for the scene item
+            uuid: UUID of the scene item
+            db_token: db token of the running instance
+
+        :param params: A `Hash` containing the method parameters
+        """
+        self.log.DEBUG('Requesting scene directly from database!')
+
+        name = params.get('name', default='')
+        token = params.get('db_token')
+        domain = params.get('domain')
+        uuid = [params.get('uuid')]
+
+        # Check if we are already initialized!
+        self._checkDbInitialized(token)
+
+        # Start filling the payload Hash
+        # ----------------------------------------
+        payload = Hash('success', False)
+        payload.set('name', name)
+        with self.user_db_sessions[token] as db_session:
+            try:
+                items = db_session.load_item(domain, uuid)
+                for item in items:
+                    xml = item['xml']
+                    item_type = etree.fromstring(xml).get('item_type')
+                    if item_type == 'scene':
+                        scene = read_project_model(StringIO(xml))
+                        payload.set('data', write_scene(scene))
+                        payload.set('success', True)
+            except ProjectDBError as e:
+                self.log.INFO('ProjectDBError in directly loading database '
+                              'scene: {}'.format(e))
+
+        self.reply(Hash('type', 'deviceScene',
+                        'origin', self.getInstanceId(),
+                        'payload', payload))
 
     def slotBeginUserSession(self, token):
         """
@@ -285,6 +349,9 @@ class ProjectManager(PythonDevice):
 
         with self.user_db_sessions[token] as db_session:
             res = db_session.list_domains()
+            if len(self.get('domainList')):
+                res = [domain for domain in res
+                       if domain in self.get('domainList')]
             self.reply(Hash('domains', res))
 
     def slotUpdateAttribute(self, token, items):

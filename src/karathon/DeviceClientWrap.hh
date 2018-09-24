@@ -135,6 +135,11 @@ namespace karathon {
             return this->DeviceClient::getDeviceSchema(instanceId);
         }
 
+        karabo::util::Schema getDeviceSchemaNoWait(const std::string& instanceId) {
+            ScopedGILRelease nogil;
+            return this->DeviceClient::getDeviceSchemaNoWait(instanceId);
+        }
+
         karabo::util::Schema getActiveSchema(const std::string& instanceId) {
             ScopedGILRelease nogil;
             return this->DeviceClient::getActiveSchema(instanceId);
@@ -169,6 +174,13 @@ namespace karathon {
             // directly and not via the event loop
             this->DeviceClient::registerInstanceGoneMonitor(
                 boost::bind(&DeviceClientWrap::proxyPythonCallbackStringHash, this, handler, _1, _2));
+        }
+
+        void registerSchemaUpdatedMonitor(const bp::object& handler) {
+            // boost::bind is safe here because the handler is dispatched
+            // directly and not via the event loop
+            this->DeviceClient::registerSchemaUpdatedMonitor(
+                boost::bind(&DeviceClientWrap::proxyPythonCallbackStringSchema, this, handler, _1, _2));
         }
 
         void registerDeviceMonitor(const std::string& instanceId, const bp::object& handler, const bp::object& userData = bp::object()) {
@@ -381,7 +393,8 @@ namespace karathon {
                 if (handler) handler(bp::object(arg1));
             } catch (const bp::error_already_set& e) {
                 if (PyErr_Occurred()) PyErr_Print();
-                throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
+                std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
+                throw KARABO_PYTHON_EXCEPTION("Python handler '" + funcName + "' has thrown an exception.");
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -393,7 +406,21 @@ namespace karathon {
                 if (handler) handler(bp::object(arg1), bp::object(arg2));
             } catch (const bp::error_already_set& e) {
                 if (PyErr_Occurred()) PyErr_Print();
-                throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
+                std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
+                throw KARABO_PYTHON_EXCEPTION("Python handler '" + funcName + "' has thrown an exception.");
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+        void proxyPythonCallbackStringSchema(const bp::object& handler, const std::string& arg1, const karabo::util::Schema& arg2) {
+            ScopedGILAcquire gil;
+            try {
+                if (handler) handler(bp::object(arg1), bp::object(arg2));
+            } catch (const bp::error_already_set& e) {
+                if (PyErr_Occurred()) PyErr_Print();
+                std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
+                throw KARABO_PYTHON_EXCEPTION("Python handler '" + funcName + "' has thrown an exception.");
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -405,7 +432,8 @@ namespace karathon {
                 if (handler) handler(bp::object(arg1), bp::object(arg2), boost::any_cast<const bp::object&>(arg3));
             } catch (const bp::error_already_set& e) {
                 if (PyErr_Occurred()) PyErr_Print();
-                throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
+                std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
+                throw KARABO_PYTHON_EXCEPTION("Python handler '" + funcName + "' has thrown an exception.");
             } catch (...) {
                 KARABO_RETHROW
             }

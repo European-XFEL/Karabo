@@ -10,6 +10,8 @@
 #include "karabo/util/Hash.hh"
 #include "karabo/util/Schema.hh"
 #include "karabo/util/Units.hh"
+#include "karabo/util/NDArray.hh"
+#include "karabo/util/StringTools.hh"
 #include "karabo/xms/InputChannel.hh"
 
 #include "karabo/util/SimpleElement.hh"
@@ -21,8 +23,10 @@ namespace karabo {
     using util::INT32_ELEMENT;
     using util::UINT32_ELEMENT;
     using util::VECTOR_STRING_ELEMENT;
-    using xms::INPUT_CHANNEL_ELEMENT;
+    using xms::INPUT_CHANNEL;
     using util::FLOAT_ELEMENT;
+    using util::NDArray;
+    using util::toString;
     
     KARABO_REGISTER_FOR_CONFIGURATION(core::BaseDevice, core::Device<>, PipeReceiverDevice)
 
@@ -33,13 +37,13 @@ namespace karabo {
                 .readOnly()
                 .commit();
 
-        INPUT_CHANNEL_ELEMENT(expected).key("input")
+        INPUT_CHANNEL(expected).key("input")
                 .displayedName("Input")
                 .description("Input channel: client")
                 .dataSchema(data)
                 .commit();
         
-        INPUT_CHANNEL_ELEMENT(expected).key("input2")
+        INPUT_CHANNEL(expected).key("input2")
                 .displayedName("Input2")
                 .description("Input channel: client")
                 .commit();
@@ -79,8 +83,8 @@ namespace karabo {
                 .initialValue(0u)
                 .commit();
 
-        UINT32_ELEMENT(expected).key("nTotalOnEos")
-                .displayedName("Total on Eos ")
+        UINT32_ELEMENT(expected).key("nTotalDataOnEos")
+                .displayedName("Total data on EOS")
                 .description("The total number of data received when End of Stream was received")
                 .readOnly()
                 .initialValue(0u)
@@ -129,7 +133,7 @@ namespace karabo {
         std::vector<std::string> sources;
         util::Hash data;
         for (size_t i = 0; i < input->size(); ++i) {
-            input->read(data, i); // clears data before filling
+            input->read(data, i); // calls Memory:read, which calls data.clear() before filling it
             sources.push_back(input->indexToMetaData(i).getSource());
             onData(data, input->indexToMetaData(i));
         }
@@ -138,12 +142,18 @@ namespace karabo {
 
 
     void PipeReceiverDevice::onData(const util::Hash& data, const xms::InputChannel::MetaData& metaData) {
-        
+
         set("dataSources", std::vector<std::string>(1, metaData.getSource()));
         set("currentDataId", data.get<int>("dataId"));
         const auto& v = data.get<std::vector<long long>>("data");
         unsigned int bytes = v.size() * sizeof(long long);
         set<unsigned int>("dataItemSize", bytes);
+        const auto& emptyArr = data.get<NDArray>("emptyArray");
+        if (emptyArr.size() != 0) {
+            std::string status = get<std::string>("status");
+            if (!status.empty()) status += "\n";
+            set("status", status += "dataId " + toString(data.get<int>("dataId")) += " has size " + toString(emptyArr.size()));
+        }
 
         // Sum total number of data
         set("nTotalData", get<unsigned int>("nTotalData") + 1);
@@ -154,14 +164,14 @@ namespace karabo {
 
     void PipeReceiverDevice::onEndOfStream(const xms::InputChannel::Pointer& input) {
 
-        set<unsigned int>("nTotalOnEos", get<unsigned int>("nTotalData"));
+        set<unsigned int>("nTotalDataOnEos", get<unsigned int>("nTotalData"));
     }
 
     void PipeReceiverDevice::onInputProfile(const xms::InputChannel::Pointer& input) {
         util::Hash data;
         
         for (size_t i = 0; i < input->size(); ++i) {
-            input->read(data, i); // clears data before filling        
+            input->read(data, i); // clears data before filling
             unsigned long long transferTime = boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds() - data.get<unsigned long long>("inTime");
             m_transferTimes.push_back(transferTime);
             set("nTotalData", get<unsigned int>("nTotalData") + 1);
@@ -185,7 +195,7 @@ namespace karabo {
         m_transferTimes.clear();
 
         set(karabo::util::Hash("nTotalData", 0u,
-                               "nTotalOnEos", 0u,
+                               "nTotalDataOnEos", 0u,
                                "averageTransferTime", 0.f));
     }
 

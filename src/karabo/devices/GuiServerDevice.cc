@@ -8,9 +8,11 @@
 
 #include "GuiServerDevice.hh"
 #include "karabo/util/Hash.hh"
+#include "karabo/util/State.hh"
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/TcpChannel.hh"
+#include "karabo/util/Version.hh"
 
 using namespace std;
 using namespace karabo::util;
@@ -27,6 +29,11 @@ namespace karabo {
         KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, GuiServerDevice)
 
         void GuiServerDevice::expectedParameters(Schema& expected) {
+
+            OVERWRITE_ELEMENT(expected).key("state")
+                    .setNewOptions(State::INIT, State::ON, State::ERROR)
+                    .setNewDefaultValue(State::INIT)
+                    .commit();
 
             UINT32_ELEMENT(expected)
                     .key("port")
@@ -156,7 +163,13 @@ namespace karabo {
                     .readOnly().initialValue(0)
                     .commit();
 
-
+            STRING_ELEMENT(expected).key("minClientVersion")
+                    .displayedName("Minimum Client Version")
+                    .description("If this variable does not respect the N.N.N(.N) convention,"
+                                 " the Server will not enforce a version check")
+                    .assignmentOptional().defaultValue("")
+                    .reconfigurable()
+                    .commit();
         }
 
 
@@ -244,10 +257,14 @@ namespace karabo {
                 startDeviceInstantiation();
                 startNetworkMonitor();
 
+                updateState(State::ON);
+
                 // Produce some information
                 KARABO_LOG_INFO << "GUI Server is up and listening on port: " << get<unsigned int>("port");
 
             } catch (const Exception& e) {
+                updateState(State::ERROR);
+
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in initialize(): " << e.userFriendlyMsg();
             }
         }
@@ -483,18 +500,19 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onLogin";
                 // Check valid login
                 KARABO_LOG_INFO << "Login request of user: " << hash.get<string > ("username");
-
-                vector<unsigned int> versionParts = karabo::util::fromString<unsigned int, vector>(hash.get<string>("version"), ".");
-                if (versionParts.size() >= 2) {
-                    unsigned int major = versionParts[0];
-                    unsigned int minor = versionParts[1];
-                    // Versions earlier than 1.5.0 of the GUI don't understand a systemVersion message.
-                    if ((major >= 1 && minor >= 5) || major >= 2) sendSystemVersion(channel);
+                Version clientVersion(hash.get<string>("version"));
+                Version minVersion(get<std::string>("minClientVersion"));
+                Version systemProtocolVersion("1.5.0");
+                if (clientVersion >= systemProtocolVersion) {
+                    sendSystemVersion(channel);
                 }
-
-                // if ok
-                sendSystemTopology(channel);
-                // else sendBadLogin
+                
+                if (clientVersion >= minVersion) {
+                    sendSystemTopology(channel);
+                    return;
+                }
+                disconnectChannel(channel);
+                // TODO: check valid login.
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onLogin(): " << e.userFriendlyMsg();
             }
@@ -906,7 +924,6 @@ namespace karabo {
             }
         }
 
-
         void GuiServerDevice::sendSystemVersion(WeakChannelPointer channel) {
             try {
                 string const version = karabo::util::Version::getVersion();
@@ -1028,7 +1045,7 @@ namespace karabo {
                 }
 
                 {
-                    // Erase all bookmarks (InputChannel pointers) associated with instance that gone 
+                    // Erase all bookmarks (InputChannel pointers) associated with instance that gone
                     NetworkMap::iterator iter;
                     boost::mutex::scoped_lock lock(m_networkMutex);
 
@@ -1149,10 +1166,13 @@ namespace karabo {
 
 
         void GuiServerDevice::onError(const karabo::net::ErrorCode& errorCode, WeakChannelPointer channel) {
+            KARABO_LOG_INFO << "onError : TCP socket got error : " << errorCode.value() << " -- \"" << errorCode.message() << "\",  Close connection to a client";
+            disconnectChannel(channel);
+        }
+
+
+        void GuiServerDevice::disconnectChannel(WeakChannelPointer channel) {
             try {
-
-                KARABO_LOG_INFO << "onError : TCP socket got error : " << errorCode.value() << " -- \"" << errorCode.message() << "\",  Close connection to a client";
-
                 // TODO Fork on error message
                 karabo::net::Channel::Pointer chan = channel.lock();
                 std::set<std::string> deviceIds; // empty set
@@ -1206,9 +1226,8 @@ namespace karabo {
                     }
                     KARABO_LOG_FRAMEWORK_INFO << m_networkConnections.size() << " pipeline channel(s) left.";
                 }
-
             } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onError(): " << e.what();
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in disconnectChannel(): " << e.what();
             }
         }
 
@@ -1319,7 +1338,7 @@ namespace karabo {
                 if(!response.get<bool>("success")) {
                     KARABO_LOG_ERROR<<"Schema attribute update failed for device: "<< deviceId;
                 }
-                
+
                 boost::mutex::scoped_lock(m_pendingAttributesMutex);
                 if (m_pendingAttributeUpdates.erase(deviceId) == 0) {
                    KARABO_LOG_ERROR<<"Received non-requested attribute update response from: "<< deviceId;
@@ -1469,7 +1488,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectBeginUserSession : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
-                if (!checkProjectManagerId(channel, projectManager, "projectBeginUserSession")) return;
+                if (!checkProjectManagerId(channel, projectManager, "projectBeginUserSession", "Project manager does not exist: Begin User Session failed.")) return;
                 const std::string& token = info.get<std::string>("token");
                 request(projectManager, "slotBeginUserSession", token)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectBeginUserSession", _1));
@@ -1483,7 +1502,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectEndUserSession : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
-                if (!checkProjectManagerId(channel, projectManager, "projectEndUserSession")) return;
+                if (!checkProjectManagerId(channel, projectManager, "projectEndUserSession", "Project manager does not exist: End User Session failed.")) return;
                 const std::string& token = info.get<std::string>("token");
                 request(projectManager, "slotEndUserSession", token)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectEndUserSession", _1));
@@ -1497,7 +1516,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectSaveItems : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
-                if (!checkProjectManagerId(channel, projectManager, "projectSaveItems")) return;
+                if (!checkProjectManagerId(channel, projectManager, "projectSaveItems", "Project manager does not exist: Project items cannot be saved.")) return;
                 const std::string& token = info.get<std::string>("token");
                 const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
                 request(projectManager, "slotSaveItems", token, items)
@@ -1512,7 +1531,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectLoadItems : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
-                if (!checkProjectManagerId(channel, projectManager, "projectLoadItems")) return;
+                if (!checkProjectManagerId(channel, projectManager, "projectLoadItems", "Project manager does not exist: Project items cannot be loaded.")) return;
                 const std::string& token = info.get<std::string>("token");
                 const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
                 request(projectManager, "slotLoadItems", token, items)
@@ -1537,7 +1556,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectListItems : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
-                if (!checkProjectManagerId(channel, projectManager, "projectListItems")) return;
+                if (!checkProjectManagerId(channel, projectManager, "projectListItems", "Project manager does not exist: Project list cannot be retrieved.")) return;
                 const std::string& token = info.get<std::string>("token");
                 const std::string& domain = info.get<std::string>("domain");
                 const std::vector<std::string>& item_types = info.get<std::vector < std::string >> ("item_types");
@@ -1553,7 +1572,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectListDomains : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
-                if (!checkProjectManagerId(channel, projectManager, "projectListDomains")) return;
+                if (!checkProjectManagerId(channel, projectManager, "projectListDomains", "Project manager does not exist: Domain list cannot be retrieved.")) return;
                 const std::string& token = info.get<std::string>("token");
                 request(projectManager, "slotListDomains", token)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectListDomains", _1));
@@ -1567,7 +1586,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onProjectUpdateAttribute : info ...\n" << info;
                 const std::string& projectManager = info.get<std::string>("projectManager");
-                if (!checkProjectManagerId(channel, projectManager, "projectUpdateAttribute")) return;
+                if (!checkProjectManagerId(channel, projectManager, "projectUpdateAttribute", "Project manager does not exist: Cannot update project attribute (trash).")) return;
                 const std::string& token = info.get<std::string>("token");
                 const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
                 request(projectManager, "slotUpdateAttribute", token, items)
@@ -1588,7 +1607,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in forwarding reply of type '" << replyType << "': " << e;
             }
         }
-        
+
         void GuiServerDevice::forwardRequestReply(WeakChannelPointer channel, const karabo::util::Hash& reply, const std::string& token) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "forwardRequestReply for token : "<< token;
@@ -1600,11 +1619,10 @@ namespace karabo {
         }
 
 
-        bool GuiServerDevice::checkProjectManagerId(WeakChannelPointer channel, const std::string& deviceId, const std::string & type) {
+        bool GuiServerDevice::checkProjectManagerId(WeakChannelPointer channel, const std::string& deviceId, const std::string & type, const std::string & reason) {
             boost::shared_lock<boost::shared_mutex> lk(m_projectManagerMutex);
             if (m_projectManagers.find(deviceId) != m_projectManagers.end()) return true;
-
-            Hash h("type", type, "reply", Hash("success", false, "reason", "Project manager doesn't exist"));
+            Hash h("type", type, "reply", Hash("success", false, "reason", reason));
             safeClientWrite(channel, h, LOSSLESS);
             return false;
 
@@ -1634,7 +1652,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in broad config group update: " << e.userFriendlyMsg();
             }
         }
-        
+
         void GuiServerDevice::onRequestFromSlot(WeakChannelPointer channel, const karabo::util::Hash& hash) {
             Hash failureInfo;
             try {
@@ -1657,7 +1675,7 @@ namespace karabo {
                 safeClientWrite(channel, reply, LOSSLESS);
             }
         }
-        
+
         void GuiServerDevice::onRequestFromSlotErrorHandler(WeakChannelPointer channel, const karabo::util::Hash& info, const std::string& token) {
             try {
                 throw;

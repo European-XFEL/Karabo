@@ -23,41 +23,44 @@ namespace karabo {
         }
 
 
+        void BufferSet::add() {
+            updateSize();
+            if (!m_buffers.size() || m_buffers.back().size
+                || m_buffers.back().contentType == BufferSet::NO_COPY_BYTEARRAY_CONTENTS) { // empty ByteArray
+                m_buffers.push_back(Buffer());
+                m_currentBuffer++;
+            }
+        }
+
+
         void BufferSet::add(std::size_t size, int type) {
             updateSize();
 
-            if (size == 0) {
+            if (type == BufferContents::COPY) { // allocate space as std::vector<char>
+                auto vec = boost::shared_ptr<BufferType>(new BufferType(size));
+                auto ptr = boost::shared_ptr<BufferType::value_type>();
                 if (!m_buffers.size() || m_buffers.back().size) {
-                    m_buffers.push_back(Buffer());
+                    m_buffers.push_back(Buffer(vec, ptr, size, BufferContents::COPY));
                     m_currentBuffer++;
+                } else {
+                    m_buffers[m_buffers.size() - 1] = Buffer(vec, ptr, size, BufferContents::COPY);
+                }
+            } else if (type == BufferContents::NO_COPY_BYTEARRAY_CONTENTS) { // allocate space as char array
+                if (!m_buffers.size() || m_buffers.back().size) {
+                    // See https://www.boost.org/doc/libs/1_61_0/libs/smart_ptr/sp_techniques.html#array
+                    m_buffers.push_back(Buffer(boost::shared_ptr<BufferType>(new BufferType()),
+                                               boost::shared_ptr<char>(new char[size], boost::checked_array_deleter<char>()),
+                                               size,
+                                               BufferContents::NO_COPY_BYTEARRAY_CONTENTS));
+                    m_currentBuffer++;
+                } else {
+                    m_buffers[m_buffers.size() - 1] = Buffer(boost::shared_ptr<BufferType>(new BufferType()),
+                                                             boost::shared_ptr<char>(new char[size], boost::checked_array_deleter<char>()),
+                                                             size,
+                                                             BufferContents::NO_COPY_BYTEARRAY_CONTENTS);
                 }
             } else {
-                if (type == BufferContents::COPY) {  // allocate space as std::vector<char>
-                    auto vec = boost::shared_ptr<BufferType>(new BufferType(size));
-                    auto ptr = boost::shared_ptr<BufferType::value_type>();
-                    if (!m_buffers.size() || m_buffers.back().size) {
-                        m_buffers.push_back(Buffer(vec, ptr, size, BufferContents::COPY));
-                        m_currentBuffer++;
-                    } else {
-                        m_buffers[m_buffers.size() - 1] = Buffer(vec, ptr, size, BufferContents::COPY);
-                    }
-                } else if (type == BufferContents::NO_COPY_BYTEARRAY_CONTENTS) { // allocate space as char array
-                    if (!m_buffers.size() || m_buffers.back().size) {
-                        // See https://www.boost.org/doc/libs/1_61_0/libs/smart_ptr/sp_techniques.html#array
-                        m_buffers.push_back(Buffer(boost::shared_ptr<BufferType>(new BufferType()),
-                                                   boost::shared_ptr<char>(new char[size], boost::checked_array_deleter<char>()),
-                                                   size,
-                                                   BufferContents::NO_COPY_BYTEARRAY_CONTENTS));
-                        m_currentBuffer++;
-                    } else {
-                        m_buffers[m_buffers.size() - 1] = Buffer(boost::shared_ptr<BufferType>(new BufferType()),
-                                                                 boost::shared_ptr<char>(new char[size], boost::checked_array_deleter<char>()),
-                                                                 size,
-                                                                 BufferContents::NO_COPY_BYTEARRAY_CONTENTS);
-                    }
-                } else {
-                    throw KARABO_LOGIC_EXCEPTION("Unknown buffer type!");
-                }
+                throw KARABO_LOGIC_EXCEPTION("Unknown buffer type!");
             }
         }
 
@@ -137,7 +140,12 @@ namespace karabo {
 
         void BufferSet::appendTo(BufferSet& other, bool copy) const {
             for (auto it = m_buffers.begin(); it != m_buffers.end(); ++it) {
-                if (it->size == 0) continue;
+                if (it->size == 0) {
+                    if (it->vec && it->vec->size()) { // Buffer is inconsistent - how/where to catch earlier?
+                        throw KARABO_LOGIC_EXCEPTION("Buffer size zero, but vector not empty.");
+                    }
+                    continue; // Empty buffer can be skipped.
+                }
                 if (it->contentType == BufferContents::NO_COPY_BYTEARRAY_CONTENTS) {
                     //do not write the size as it is in previous buffer
                     other.emplaceBack(std::make_pair(it->ptr, it->size), false);
@@ -199,17 +207,31 @@ namespace karabo {
             os << "\tNon-copied buffers...\t" << toString(contentType_vec) << '\n';
             os << "\tSize of buffer group is\t" << bs.m_buffers.size() << '\n';
             os << "\tBuffer content ...\n";
+            std::vector<size_t> badBuffers;
             size_t i = 0;
             for (auto it = bs.m_buffers.begin(); it != bs.m_buffers.end(); ++it) {
-                os << "\t\t" << std::dec << i << "\t" << (it->contentType == BufferSet::NO_COPY_BYTEARRAY_CONTENTS ? "nocopy" : "copy")
-                        << "\t size=" << std::setw(12) << std::setfill(' ') << it->size
-                        << " :  0x" << std::hex;
+                bool localOk = true;
+                if (it->vec && !it->vec->empty() && it->vec->size() != it->size) {
+                    localOk = false;
+                    badBuffers.push_back(i);
+                }
+                os << "\t\t" << std::dec << i << "\t" << (it->contentType == BufferSet::NO_COPY_BYTEARRAY_CONTENTS ? "nocopy" : "copy");
+                if (localOk) {
+                    os << "\t size=" << std::setw(12) << std::setfill(' ') << it->size;
+                } else {// Print both of the inconsistent sizes...
+                    os << "\t size=" << std::setw(5) << std::setfill(' ') << it->size
+                            << "/" << std::setw(5) << std::setfill(' ') << it->vec->size();
+                }
+                os << " :  0x" << std::hex;
                 for (size_t j = 0; j < std::min(size_t(30), it->size); ++j) {
                     os << std::setw(2) << std::setfill('0') << int(it->contentType == BufferSet::BufferContents::NO_COPY_BYTEARRAY_CONTENTS ?
                                                                    it->ptr.get()[j] : it->vec->data()[j]);
                 }
                 os << std::dec << (it->size > 30 ? "..." : "") << '\n';
                 i++;
+            }
+            if (!badBuffers.empty()) {
+                os << "\t Bad BufferSet: buffers " << toString(badBuffers) << " have inconsistent sizes!\n";
             }
             return os;
         }
