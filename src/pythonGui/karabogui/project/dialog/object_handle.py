@@ -9,7 +9,7 @@ from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QDialog
 
-from karabogui.util import SignalBlocker
+from karabogui.util import InputValidator, SignalBlocker
 
 
 class ObjectDuplicateDialog(QDialog):
@@ -25,6 +25,9 @@ class ObjectDuplicateDialog(QDialog):
                            'object_duplicate.ui')
         uic.loadUi(filepath, self)
         self.setWindowTitle('Duplicate object {}'.format(simple_name))
+
+        validator = InputValidator()
+        self.leTitle.setValidator(validator)
 
         self.leTitle.setText(simple_name)
         self._update_text()
@@ -73,6 +76,10 @@ class ObjectEditDialog(QDialog):
         else:
             title = 'Edit {}'.format(object_type)
             self.leTitle.setText(model.simple_name)
+
+        validator = InputValidator()
+        self.leTitle.setValidator(validator)
+
         self.setWindowTitle(title)
 
     @property

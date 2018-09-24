@@ -1,8 +1,9 @@
 from contextlib import contextmanager
 from datetime import datetime
+from io import StringIO
 import os
 import os.path as op
-from io import StringIO
+import re
 from tempfile import mkstemp
 from types import MethodType
 from uuid import uuid4
@@ -10,7 +11,9 @@ import weakref
 
 from dateutil.tz import tzlocal, tzutc
 from PyQt4.QtCore import QEvent, QObject, QSize, QSettings
-from PyQt4.QtGui import QDialog, QFileDialog, QHeaderView, QLabel, QMovie
+from PyQt4.QtGui import (
+    QDialog, QFileDialog, QHeaderView, QLabel, QMovie, QValidator
+)
 
 from karabo.common.project.api import read_macro
 from karabo.common.scenemodel.api import SceneTargetWindow, read_scene
@@ -325,3 +328,26 @@ def utc_to_local(utc_str, format='%Y-%m-%d %H:%M:%S'):
     utc_ts = datetime.strptime(utc_str, format)
     local_ts = utc_ts.replace(tzinfo=tzutc()).astimezone(tzlocal())
     return datetime.strftime(local_ts, format)
+
+
+class InputValidator(QValidator):
+    """ This class provides validation of user inputs within projects, whether
+        it is about deviceIds, macro names, or scene names.
+
+        The naming convention is as follows:
+        part_one[/optional_part_two[/optional_part_three[/and_so_on]]]
+        '-' sign is also allowed
+    """
+    def __init__(self, parent=None):
+        QValidator.__init__(self, parent)
+
+    pattern = re.compile('^[\w-]+(/[\w-]+)*$')
+
+    def validate(self, input, pos):
+        if not input or input.endswith('/'):
+            return self.Intermediate, input, pos
+
+        if not self.pattern.match(input):
+            return self.Invalid, input, pos
+
+        return self.Acceptable, input, pos
