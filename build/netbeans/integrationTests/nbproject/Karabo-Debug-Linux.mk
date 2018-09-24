@@ -44,6 +44,7 @@ TESTFILES= \
 	${TESTDIR}/TestFiles/alarmservice_test \
 	${TESTDIR}/TestFiles/f9 \
 	${TESTDIR}/TestFiles/devicelocking_test \
+	${TESTDIR}/TestFiles/f6 \
 	${TESTDIR}/TestFiles/pipelinedprocessing_test \
 	${TESTDIR}/TestFiles/property_test \
 	${TESTDIR}/TestFiles/runtimeschemaattributes_test \
@@ -90,6 +91,10 @@ ${TESTDIR}/TestFiles/f9: ${TESTDIR}/_ext/567603001/Device_Test.o ${TESTDIR}/_ext
 ${TESTDIR}/TestFiles/devicelocking_test: ${TESTDIR}/_ext/567603001/LockTestDevice.o ${TESTDIR}/_ext/567603001/LockTest_Test.o ${TESTDIR}/_ext/567603001/integrationRunner_5.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/devicelocking_test $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
+
+${TESTDIR}/TestFiles/f6: ${TESTDIR}/_ext/567603001/GuiVersion_Test.o ${TESTDIR}/_ext/567603001/TcpAdapter_5.o ${TESTDIR}/_ext/567603001/integrationRunner_10.o ${OBJECTFILES:%.o=%_nomain.o}
+	${MKDIR} -p ${TESTDIR}/TestFiles
+	${LINK.cc}   -o ${TESTDIR}/TestFiles/f6 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
 
 ${TESTDIR}/TestFiles/pipelinedprocessing_test: ${TESTDIR}/_ext/567603001/P2PSenderDevice.o ${TESTDIR}/_ext/567603001/PipeReceiverDevice.o ${TESTDIR}/_ext/567603001/PipelinedProcessing_Test.o ${TESTDIR}/_ext/567603001/integrationRunner_4.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
@@ -164,6 +169,24 @@ ${TESTDIR}/_ext/567603001/integrationRunner_5.o: ../../../src/integrationTests/i
 	${MKDIR} -p ${TESTDIR}/_ext/567603001
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/integrationTests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/567603001/integrationRunner_5.o ../../../src/integrationTests/integrationRunner_5.cc
+
+
+${TESTDIR}/_ext/567603001/GuiVersion_Test.o: ../../../src/integrationTests/GuiVersion_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/567603001
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/integrationTests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/567603001/GuiVersion_Test.o ../../../src/integrationTests/GuiVersion_Test.cc
+
+
+${TESTDIR}/_ext/567603001/TcpAdapter_5.o: ../../../src/integrationTests/TcpAdapter_5.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/567603001
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/integrationTests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/567603001/TcpAdapter_5.o ../../../src/integrationTests/TcpAdapter_5.cc
+
+
+${TESTDIR}/_ext/567603001/integrationRunner_10.o: ../../../src/integrationTests/integrationRunner_10.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/567603001
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/integrationTests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/567603001/integrationRunner_10.o ../../../src/integrationTests/integrationRunner_10.cc
 
 
 ${TESTDIR}/_ext/567603001/P2PSenderDevice.o: ../../../src/integrationTests/P2PSenderDevice.cc 
@@ -287,6 +310,7 @@ ${TESTDIR}/_ext/567603001/integrationRunner_8.o: ../../../src/integrationTests/i
 	    ${TESTDIR}/TestFiles/alarmservice_test || true; \
 	    ${TESTDIR}/TestFiles/f9 || true; \
 	    ${TESTDIR}/TestFiles/devicelocking_test || true; \
+	    ${TESTDIR}/TestFiles/f6 || true; \
 	    ${TESTDIR}/TestFiles/pipelinedprocessing_test || true; \
 	    ${TESTDIR}/TestFiles/property_test || true; \
 	    ${TESTDIR}/TestFiles/runtimeschemaattributes_test || true; \

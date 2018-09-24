@@ -14,6 +14,7 @@
 #include "ByteSwap.hh"
 #include "CustomNodeElement.hh"
 #include "ToSize.hh"
+#include "FromInt.hh"
 
 
 namespace karabo {
@@ -151,20 +152,32 @@ namespace karabo {
              */
             template <typename T>
             const T* getData() const {
-                if (get<int>("type") == karabo::util::Types::from<T>()) {
+                if (get<int>("type") == Types::from<T>()) {
                     return reinterpret_cast<T*> (get<ByteArray>("data").first.get());
                 } else {
-                    throw KARABO_CAST_EXCEPTION("Bad cast");
+                    const int fromType = get<int>("type");
+                    // If fromType is invalid (e.g. since corrupted NDArray), we cannot get a string literal...
+                    std::string fromTypeStr("_invalid_");
+                    try {
+                        fromTypeStr = Types::convert<FromInt, ToLiteral>(fromType);
+                    } catch (const karabo::util::Exception& e) {
+                        karabo::util::Exception::clearTrace();
+                    }
+                    // For unsupported types T, Types::from<T>() does not even compile and we always get a valid toTypeStr
+                    const Types::ReferenceType toType = Types::from<T>();
+                    const std::string toTypeStr = Types::convert<FromInt, ToLiteral>(toType);
+                    throw KARABO_CAST_EXCEPTION("NDArray::getData(): Failed to cast "
+                                                "from " + fromTypeStr + " (" + toString(fromType) += ") "
+                                                "to " + toTypeStr + " (" + toString(toType) += ")");
                 }
             }
 
             template <typename T>
             T* getData() {
-                if (get<int>("type") == karabo::util::Types::from<T>()) {
-                    return reinterpret_cast<T*> (get<ByteArray>("data").first.get());
-                } else {
-                    throw KARABO_CAST_EXCEPTION("Bad cast");
-                }
+                // Call the const version of getData:
+                const T* data = const_cast<const NDArray*> (this)->getData<T>();
+                // Convert back result to non-const:
+                return const_cast<T*> (data);
             }
 
             /**

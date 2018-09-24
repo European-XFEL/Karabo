@@ -4,22 +4,20 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from collections import OrderedDict, namedtuple
-from functools import partial
 from operator import attrgetter
 import os.path as op
 
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot, QAbstractTableModel, Qt
-from PyQt4.QtGui import (QAction, QButtonGroup, QCursor, QDialog,
-                         QDialogButtonBox, QHeaderView, QItemSelectionModel,
-                         QMenu)
+from PyQt4.QtGui import (QButtonGroup, QDialog,
+                         QDialogButtonBox, QHeaderView, QItemSelectionModel)
 
 from karabogui import messagebox
 from karabogui.events import (
     register_for_broadcasts, unregister_from_broadcasts, KaraboEventSender,
 )
 from karabogui.project.utils import show_trash_project_message
-from karabogui.singletons.api import get_db_conn
+from karabogui.singletons.api import get_db_conn, get_network
 from karabogui.util import InputValidator, SignalBlocker, utc_to_local
 
 SIMPLE_NAME = 'simple_name'
@@ -55,6 +53,7 @@ class LoadProjectDialog(QDialog):
         self.setWindowFlags(Qt.WindowCloseButtonHint)
 
         db_conn = get_db_conn()
+        network = get_network()
         self.rbFromRemote.setChecked(db_conn.ignore_local_cache)
         self.rbFromCache.setChecked(not db_conn.ignore_local_cache)
         self.load_from_group = QButtonGroup(self)
@@ -76,16 +75,17 @@ class LoadProjectDialog(QDialog):
         self.twProjects.selectionModel().selectionChanged.connect(
             self._selectionChanged)
         self.twProjects.doubleClicked.connect(self._load_item)
-        self.twProjects.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.twProjects.customContextMenuRequested.connect(
-            self._show_context_menu)
 
         # Domain is not selectable for subprojects - only master projects
         self.cbDomain.setEnabled(not is_subproject)
-        # Domain combobox
-        self.default_domain = db_conn.default_domain
         # ... request the domains list
         domains = db_conn.get_available_domains()
+
+        # Domain combobox
+        topic = network.brokerTopic
+        default_domain = topic if topic in domains else db_conn.default_domain
+        self.default_domain = default_domain
+
         if not self.ignore_cache:
             # Only fill with the cache domains if the user has requested it!
             self._domains_updated(domains)
@@ -182,13 +182,11 @@ class LoadProjectDialog(QDialog):
         return self.cbDomain.currentText()
 
     def _selected_item_loadable(self):
-        """ Return whether the currently selected project loadable.
+        """ Return whether the currently selected is project loadable.
         """
         col_index = get_column_index(UUID)
-        rows = self.twProjects.selectionModel().selectedRows(col_index)
-        if rows:
-            _, is_trashed = rows[0].data(Qt.UserRole)
-            return not is_trashed
+        if self.twProjects.selectionModel().selectedRows(col_index):
+            return True
 
         return False
 
@@ -200,14 +198,13 @@ class LoadProjectDialog(QDialog):
         return simple_name in projects
 
     def _check_button_state(self):
-        # Check if we have a preceeding selection
-        selectable = self._selected_item_loadable()
-        # If we are typing a project name
+        # Check if we have a preceeding valid selection
+        selected = self._selected_item_loadable()
+        # Or if we are typing a project name
         simple_name = self.leTitle.text()
         project = len(simple_name) and self._text_item_loadable(simple_name)
-        trash = self.cbShowTrash.isChecked()
 
-        enable = selectable or (project and not trash)
+        enable = selected or project
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
 
     @pyqtSlot(object, object)
@@ -253,28 +250,6 @@ class LoadProjectDialog(QDialog):
         self._check_button_state()
         self.update_view()
 
-    @pyqtSlot()
-    def _show_context_menu(self):
-        """ Show a context menu for the currently selected project
-        """
-        selection_model = self.twProjects.selectionModel()
-        # Get all indexes for selected row (single selection)
-        indexes = selection_model.selectedIndexes()
-        if indexes:
-            col_index = get_column_index(UUID)
-            uuid, is_trashed = indexes[col_index].data(Qt.UserRole)
-            if is_trashed:
-                text = 'Restore from trash'
-            else:
-                text = 'Move to trash'
-            menu = QMenu(self)
-            trash_action = QAction(text, menu)
-            trash_action.triggered.connect(partial(self._update_is_trashed,
-                                                   self.domain, uuid,
-                                                   is_trashed))
-            menu.addAction(trash_action)
-            menu.exec(QCursor.pos())
-
     @pyqtSlot(str, str, bool)
     def _update_is_trashed(self, domain, uuid, current_is_trashed):
         """ Change ``is_trashed`` attribute of project with given ``uuid``
@@ -286,7 +261,8 @@ class LoadProjectDialog(QDialog):
             db_conn = get_db_conn()
             db_conn.update_attribute(domain, 'project', uuid, 'is_trashed',
                                      str(not current_is_trashed).lower())
-            self.update_view()
+            # NOTE: The view update is happening asynchronously. Once we get
+            # a reply from the GUI server, we request a new view
 
     @pyqtSlot(object)
     def _openFromChanged(self, button):
@@ -295,7 +271,8 @@ class LoadProjectDialog(QDialog):
 
 
 class NewProjectDialog(QDialog):
-    def __init__(self, model=None, is_rename=False, parent=None):
+    def __init__(self, model=None, is_rename=False, default=False,
+                 parent=None):
         super(NewProjectDialog, self).__init__(parent)
         filepath = op.join(op.abspath(op.dirname(__file__)),
                            'project_new.ui')
@@ -306,7 +283,11 @@ class NewProjectDialog(QDialog):
         # Domain combobox
         db_conn = get_db_conn()
         self.default_domain = db_conn.default_domain
+
         self._fill_domain_combo_box(db_conn.get_available_domains())
+        # Subprojects reside in the domain of the parent project, only allow
+        # the default!
+        self.cbDomain.setEnabled(not default)
 
         if model is None:
             title = 'New project'
