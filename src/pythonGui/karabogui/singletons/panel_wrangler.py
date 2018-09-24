@@ -90,6 +90,7 @@ class PanelWrangler(QObject):
 
         elif sender is KaraboEventSender.RemoveProjectModelViews:
             self._close_project_item_panels(data.get('models'))
+            return True
 
         elif sender is KaraboEventSender.MiddlePanelClosed:
             model = data.get('model')
