@@ -8,10 +8,12 @@ from PyQt4.QtGui import QDialog, QMessageBox
 from karabo.common.api import set_modified_flag, walk_traits_object
 from karabo.common.project.api import (
     BaseProjectObjectModel, DeviceConfigurationModel, DeviceInstanceModel,
-    DeviceServerModel, ProjectModel, device_config_exists,
+    DeviceServerModel, MacroModel, ProjectModel, device_config_exists,
     device_instance_exists, recursive_save_object, read_lazy_object
 )
-from karabo.common.scenemodel.api import SceneLinkModel, SceneModel
+from karabo.common.scenemodel.api import (
+    BaseWidgetObjectData, SceneLinkModel, SceneModel
+)
 from karabo.middlelayer import Hash, read_project_model
 from karabogui import globals as krb_globals, messagebox
 from karabogui.enums import KaraboSettings
@@ -178,8 +180,12 @@ def save_as_object(obj):
     from karabogui.project.dialog.project_handle import NewProjectDialog
     # Map old scene UUIDs to new UUIDs
     scene_uuids = {}
+    # Map old macro UUIDs to new UUIDs
+    macro_uuids = {}
     # Store all scene link references
     scene_links = []
+    # Store all models that link to macros
+    macro_models = []
 
     def _visitor(model):
         if isinstance(model, BaseProjectObjectModel):
@@ -188,8 +194,18 @@ def save_as_object(obj):
             if isinstance(model, SceneModel):
                 # Keep track of new UUIDs
                 scene_uuids[old_uuid] = model.uuid
+            if isinstance(model, MacroModel):
+                # Keep track of new UUIDs
+                macro_uuids[old_uuid] = model.uuid
         elif isinstance(model, SceneLinkModel):
             scene_links.append(model)
+        elif isinstance(model, BaseWidgetObjectData):
+            for key in model.keys:
+                # optimize out non macros
+                if key.startswith("Macro-"):
+                    # key will be => Macro-module-UUID-Classname.keyname
+                    uuid = '-'.join(key.split('-')[2:-1])
+                    macro_models.append((model, uuid))
 
     def _replace_scene_link_uuids():
         for link in scene_links:
@@ -202,20 +218,38 @@ def save_as_object(obj):
             if old_uuid in scene_uuids:
                 new_uuid = scene_uuids[old_uuid]
                 target = "{}:{}".format(simple_name, new_uuid)
-                link.target = target
             else:
-                msg = "Linked scene <br><b>{}</b><br> not found.".format(
-                    link.target)
-                messagebox.show_warning(msg, "Broken scene link")
+                target = "{}:{}".format(simple_name, old_uuid)
+            link.target = target
+
+    def _replace_macro_uuids():
+        for widget, old_uuid in macro_models:
+            new_keys = []
+            for key in widget.keys:
+                if old_uuid in key:
+                    # replace old uuid with new uuid
+                    new_uuid = macro_uuids[old_uuid]
+                    key = key.replace(old_uuid, new_uuid)
+                new_keys.append(key)
+            widget.keys = new_keys
 
     assert isinstance(obj, ProjectModel)
     dialog = NewProjectDialog(model=obj)
     if dialog.exec() == QDialog.Accepted:
+        if obj.simple_name == dialog.simple_name:
+            # Throw a tantrum
+            messagebox.show_error(
+                "Please choose a different name."
+                " Projects with the same name should be avoided.",
+                modal=False)
+            return
         obj.simple_name = dialog.simple_name
-        # Reset UUIDs and take proper care of scene links
+        # Reset UUIDs and map scene and macro models
         walk_traits_object(obj, _visitor)
         # Replace old scene link UUIDs with new ones
         _replace_scene_link_uuids()
+        # Replace old macro UUIDs keys with new ones
+        _replace_macro_uuids()
         # Set all child object of the given ``obj`` to modified to actually
         # save the complete tree to the new domain
         set_modified_flag(obj, value=True)
