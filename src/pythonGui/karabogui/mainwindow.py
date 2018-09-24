@@ -18,6 +18,7 @@ from karabo.middlelayer import AccessLevel
 from karabogui import globals as krb_globals
 from karabogui import icons
 from karabogui.dialogs.dialogs import AboutDialog
+from karabogui.enums import KaraboSettings
 from karabogui.events import (
     KaraboEventSender, broadcast_event, register_for_broadcasts)
 from karabogui.panels.api import (
@@ -25,6 +26,7 @@ from karabogui.panels.api import (
     ProjectPanel, ScriptingPanel)
 from karabogui.singletons.api import (
     get_db_conn, get_network, get_project_model)
+from karabogui.util import set_setting
 
 ACCESS_LEVELS = OrderedDict()
 ACCESS_LEVELS['Admin'] = AccessLevel.ADMIN
@@ -393,6 +395,7 @@ class MainWindow(QMainWindow):
         if data is not None:
             info = ('KARABO TOPIC: <b>{}</b>'.format(data['topic']))
             self.brokerInformation.setText(info)
+            set_setting(KaraboSettings.BROKER_TOPIC, data['topic'])
         else:
             self.brokerInformation.setText("")
     # --------------------------------------
