@@ -19,6 +19,9 @@ namespace karabo {
          */
         class Version {
 
+        private:
+
+            enum PostfixType { ALPHA=-3, BETA=-2, RC=-1 , NONE=0, POST=1};
 
             std::string m_versionString;
 
@@ -28,33 +31,80 @@ namespace karabo {
 
             int m_patch;
 
-            int m_revision;
+            PostfixType m_postType;
 
-            Version();
+            int m_post;
 
-            virtual ~Version() {
-            };
+            int m_dev;
 
             static Version& getInstance();
 
             static std::string getPathToVersionFile();
 
+            void processString(const std::string &version);
+
+            Version();
+
         public:
+
+            /**
+             * Gets a Version object of the curent Karabo's Framework
+             * 
+             * @return Version object
+             */
+            static const Version& getKaraboVersion();
+
+            /**
+             * Creates an Version object from a string.
+             * 
+             * The version string should match a Major.Minor.Patch flavor
+             * Alpha, Beta, Release Candidates and Post-releases should be labeled
+             * following the PEP440 guidelines.
+             * 
+             * @param version
+             */
+            Version(const std::string &version);
+
+            virtual ~Version() {
+            };
 
             static std::string getPathToKaraboInstallation();
 
+            /**
+             * Returns a string describing the current version of the Framework
+             * Equivalent of calling.
+             * karabo::util::Version::getKaraboVersion().getString();
+             * 
+             * @returns std::string 
+             */
             static std::string getVersion();
 
-            static int getMajor();
+            int getMajor() const;
 
-            static int getMinor();
+            int getMinor() const;
 
-            static int getPatch();
+            int getPatch() const;
 
-            static int getRevision();
+            const std::string& getString() const;
+
+            bool isDevRelease() const;
+            
+            bool isPreRelease() const;
+            
+            bool isPostRelease() const;
+
+            // the comparison operators implemented follow the guidelines of 
+            // PEP440 https://www.python.org/dev/peps/pep-0440/
+            // When in doubt, the implementation of `distutils.version.LooseVersion`
+            // was followed.
+            friend bool operator== (const Version &v1, const Version &v2);
+            friend bool operator!= (const Version &v1, const Version &v2);
+            friend bool operator> (const Version &v1, const Version &v2);
+            friend bool operator<= (const Version &v1, const Version &v2);
+            friend bool operator< (const Version &v1, const Version &v2);
+            friend bool operator>= (const Version &v1, const Version &v2);
 
         };
-    }
+    }    
 }
 #endif
-

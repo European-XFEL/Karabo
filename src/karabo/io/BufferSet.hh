@@ -15,6 +15,7 @@
 #include <boost/core/null_deleter.hpp>                      //boost::null_delter
 #include <karabo/util/Types.hh>                             //karabo::util::ByteArray
 #include <karabo/util/ClassInfo.hh>                         //BufferSet::Pointer
+#include <karabo/util/Exception.hh>                         //KARABO_LOGIC_EXCEPTION
 
 /**
  * The main European XFEL namespace
@@ -83,12 +84,19 @@ namespace karabo {
             virtual ~BufferSet();
 
             /**
-             * Add a buffer to the BufferSet
-             * @param size =0 - add empty buffer to buffer set  (COPY type)
-             *             >0 - add buffer where space allocated in std::vector<char> (COPY type)
-             *             <0 - add buffer wgere space allocated in char array (NO_COPY_BYTEARRAY_CONTENTS type)
+             * Add empty buffer (COPY type) to the BufferSet.
+             *
+             * No new buffer is added if the last buffer is still empty and of COPY type.
+             * Also makes internal information about size of last buffer (before adding a new one) consistent.
              */
-            void add(std::size_t size = 0, int type = BufferContents::COPY);
+            void add();
+            /**
+             * Add a buffer to the BufferSet
+             * @param size - size of buffer
+             * @param type - BufferContents::COPY means buffer is COPY type
+             *               BufferContents::NO_COPY_BYTEARRAY_CONTENTS means buffer where space allocated in char array (NO_COPY_BYTEARRAY_CONTENTS type)
+             */
+            void add(std::size_t size, int type);
 
             /**
              * Update the size of the current buffer to reflect the size of the vector is refers to
@@ -185,11 +193,13 @@ namespace karabo {
             void appendTo(BufferSequenceType& boost_buffers) const {
                 for (auto it = m_buffers.begin(); it != m_buffers.end(); ++it) {
                     if (it->size) {
-                        if (it->contentType == BufferContents::NO_COPY_BYTEARRAY_CONTENTS) {                                                  
+                        if (it->contentType == BufferContents::NO_COPY_BYTEARRAY_CONTENTS) {
                             boost_buffers.push_back(boost::asio::buffer(it->ptr.get(), it->size));
                         } else {
                             boost_buffers.push_back(boost::asio::buffer(it->vec->data(), it->size));
                         }
+                    } else if (it->vec && !it->vec->empty()) {
+                        throw KARABO_LOGIC_EXCEPTION("Buffer size zero, but vector not empty.");
                     }
                 }
             }

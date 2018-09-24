@@ -55,13 +55,10 @@ namespace karabo {
 
         private:
 
-            karabo::util::Hash m_loggerInput;
             unsigned int m_lastIndex;
             std::fstream m_logstream;
             boost::mutex m_streamMutex;
             karabo::net::JmsConsumer::Pointer m_loggerConsumer;
-            boost::thread m_svcThread;
-            boost::shared_ptr<boost::asio::io_service> m_svc;
             boost::asio::deadline_timer m_timer;
         };
     }

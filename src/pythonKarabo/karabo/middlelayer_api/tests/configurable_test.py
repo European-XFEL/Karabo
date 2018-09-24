@@ -801,6 +801,7 @@ class Tests(TestCase):
                 pass
 
         mandy = Mandy()
+        setter_before_inject = mandy.__class__.number.setter
         mandy.__class__.number = Overwrite(
             minExc=3, allowedStates={State.OFF},
             accessMode=AccessMode.INITONLY,
@@ -810,7 +811,7 @@ class Tests(TestCase):
             displayedName="NoMandy", allowedStates=[State.ON]
         )
         run_coro(mandy.publishInjectedParameters())
-
+        setter_after_inject = mandy.__class__.number.setter
         self.assertEqual(mandy.number.descriptor.key, "number")
         self.assertEqual(Mandy.number.minExc, 7)
         self.assertEqual(mandy.number.descriptor.minExc, 3)
@@ -831,6 +832,7 @@ class Tests(TestCase):
         self.assertIs(mandy.randyMandy.descriptor.displayedName, "NoMandy")
         self.assertEqual(mandy.randyMandy.descriptor.allowedStates,
                          {State.ON})
+        self.assertEqual(setter_before_inject, setter_after_inject)
 
     def test_slot(self):
         class A(Configurable):

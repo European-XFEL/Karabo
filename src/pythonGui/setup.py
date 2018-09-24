@@ -107,7 +107,8 @@ if __name__ == '__main__':
     setup(entry_points={'console_scripts': [
                 'karabo-gui=karabogui.programs.gui_runner:main',
                 'panel-runner=karabogui.programs.panel_runner:main',
-            ]},
+                'karabo-cinema=karabogui.programs.cinema:main',
+    ]},
           # Add an alias for 'build' so we can prepare data for Windows
           cmdclass={WINDOWS_BUILDER: distutils.command.build.build},
           **metadata)

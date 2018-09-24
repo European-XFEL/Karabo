@@ -41,6 +41,16 @@
         <itemPath>../../../src/integrationTests/LockTest_Test.hh</itemPath>
         <itemPath>../../../src/integrationTests/integrationRunner_5.cc</itemPath>
       </logicalFolder>
+      <logicalFolder name="f6"
+                     displayName="GuiVersion_Test"
+                     projectFiles="true"
+                     kind="TEST">
+        <itemPath>../../../src/integrationTests/GuiVersion_Test.cc</itemPath>
+        <itemPath>../../../src/integrationTests/GuiVersion_Test.hh</itemPath>
+        <itemPath>../../../src/integrationTests/TcpAdapter_5.cc</itemPath>
+        <itemPath>../../../src/integrationTests/TcpAdapter_5.hh</itemPath>
+        <itemPath>../../../src/integrationTests/integrationRunner_10.cc</itemPath>
+      </logicalFolder>
       <logicalFolder name="f2"
                      displayName="PipelinedProcessing_Test"
                      projectFiles="true"
@@ -183,6 +193,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/integrationTests/GuiVersion_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/GuiVersion_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/integrationTests/LockTestDevice.cc"
             ex="false"
             tool="1"
@@ -323,6 +343,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/integrationTests/TcpAdapter_5.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/TcpAdapter_5.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/integrationTests/TimingTestDevice.cc"
             ex="false"
             tool="1"
@@ -344,6 +374,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/integrationTests/integrationRunner.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/integrationRunner_10.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -476,6 +511,21 @@
           <linkerLibItems>
             <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
           </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f6">
+        <cTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </cTool>
+        <ccTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f6</output>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f7">
@@ -611,6 +661,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/integrationTests/GuiVersion_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/GuiVersion_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/integrationTests/LockTestDevice.cc"
             ex="false"
             tool="1"
@@ -751,6 +811,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/integrationTests/TcpAdapter_5.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/TcpAdapter_5.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/integrationTests/TimingTestDevice.cc"
             ex="false"
             tool="1"
@@ -772,6 +842,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/integrationTests/integrationRunner.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/integrationRunner_10.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -907,6 +982,21 @@
           <linkerLibItems>
             <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
           </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f6">
+        <cTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </cTool>
+        <ccTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f6</output>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f7">
@@ -1032,6 +1122,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/integrationTests/GuiVersion_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/GuiVersion_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/integrationTests/LockTestDevice.cc"
             ex="false"
             tool="1"
@@ -1172,6 +1272,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/integrationTests/TcpAdapter_5.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/TcpAdapter_5.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/integrationTests/TimingTestDevice.cc"
             ex="false"
             tool="1"
@@ -1193,6 +1303,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/integrationTests/integrationRunner.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/integrationRunner_10.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -1325,6 +1440,21 @@
           <linkerLibItems>
             <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
           </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f6">
+        <cTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </cTool>
+        <ccTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f6</output>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f7">

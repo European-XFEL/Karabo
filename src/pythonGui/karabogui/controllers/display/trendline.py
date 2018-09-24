@@ -27,6 +27,7 @@ from karabogui import globals as krb_globals
 from karabogui.binding.api import (
     BoolBinding, FloatBinding, IntBinding, PropertyProxy
 )
+from karabogui.const import MAX_NUMBER_LIMIT
 from karabogui.controllers.api import (
     BaseBindingController, axis_label, register_binding_controller)
 from karabogui.util import SignalBlocker
@@ -55,6 +56,13 @@ PLOTTABLE_TYPES = (BoolBinding, FloatBinding, IntBinding)
 
 DEFAULT_MIN = -0.5
 DEFAULT_MAX = 0.5
+
+# XXX: We might deal with NaN values only, hence we disable all the warnings
+# as Qwt will handle nicely!
+IGNORE_NAN_WARN = [r'Mean of empty slice', r'All-NaN slice encountered',
+                   r'All-NaN axis encountered']
+for warn in IGNORE_NAN_WARN:
+    numpy.warnings.filterwarnings('ignore', warn)
 
 
 def get_start_end_date_time(selected_time_span):
@@ -232,7 +240,11 @@ class Curve(HasStrictTraits):
         for i, d in enumerate(data):
             # Protect against inf by setting numpy.NaN which is not shown
             x[i] = Timestamp.fromHashAttributes(d['v', ...]).toTimestamp()
-            y[i] = numpy.NaN if d["v"] in (-numpy.inf, numpy.inf) else d["v"]
+            # Do some gymnastics for crazy values!
+            value = d["v"]
+            if abs(value) >= MAX_NUMBER_LIMIT:
+                value = numpy.NaN
+            y[i] = value
 
         p0 = self.x[:self.fill].searchsorted(self.t0)
         p1 = self.x[:self.fill].searchsorted(self.t1)
@@ -583,9 +595,10 @@ class DisplayTrendline(BaseBindingController):
 
         timestamp = proxy.binding.timestamp
         t = timestamp.toTimestamp()
-        # Protect against inf and NaN
+        # Protect with gymnastics against inf and NaN
         value = proxy.value
-        value = numpy.NaN if value in (-numpy.inf, numpy.inf) else value
+        if abs(value) >= MAX_NUMBER_LIMIT:
+            value = numpy.NaN
         self._curves[proxy].add_point(value, t)
 
         t0 = self._plot.axisScaleDiv(QwtPlot.xBottom).lowerBound()

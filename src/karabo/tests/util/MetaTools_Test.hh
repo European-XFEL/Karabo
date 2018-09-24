@@ -54,6 +54,15 @@ struct PointerTest {
     }
 };
 
+struct BindWeakTest : public boost::enable_shared_from_this<BindWeakTest>{
+    int add(const int a, const int b) {
+	return a+b;
+    }
+    int dummyFunction(const int a) const {
+	return a;
+    }
+};
+
 struct Test_SignalSlotable : public boost::enable_shared_from_this<Test_SignalSlotable> {
 
     virtual ~Test_SignalSlotable() {
@@ -79,6 +88,38 @@ struct Test_Device : public virtual Test_SignalSlotable {
                                                    const_cast<const Test_Device*> (this), 0, _1));
         m_timer.cancel();
 
+	// This is just testing that binding a member function that returns a value works
+	{
+	    boost::shared_ptr<BindWeakTest> bindWeakTest = boost::make_shared<BindWeakTest>();
+	    
+	    auto f1 = karabo::util::bind_weak(&BindWeakTest::add, bindWeakTest.get(), _1, _2);
+	    int v = f1(1,1);
+	    CPPUNIT_ASSERT(v==2);
+	    
+	    auto f2 = karabo::util::bind_weak(&BindWeakTest::add, bindWeakTest.get(), 1, _1);
+	    v = f2(1);
+	    CPPUNIT_ASSERT(v==2);
+	    
+	    auto f3 = karabo::util::bind_weak(&BindWeakTest::add, bindWeakTest.get(), _1, 1);
+	    v = f3(1);
+	    CPPUNIT_ASSERT(v==2);
+
+	    auto f4 = karabo::util::bind_weak(&BindWeakTest::dummyFunction, 
+					     const_cast<const BindWeakTest*>(bindWeakTest.get()), _1);
+	    v = f4(1);
+	    CPPUNIT_ASSERT(v==1);
+
+	    auto f5 = karabo::util::bind_weak(&BindWeakTest::add, bindWeakTest.get(), 1, 1);
+	    v = f5();
+	    CPPUNIT_ASSERT(v==2);
+
+	    // Since the object was destroyed, the f5 return value should be the function return type default value
+	    // (in this case 0, since the return type is int)
+	    bindWeakTest.reset();
+	    v = f5();
+	    CPPUNIT_ASSERT(v==0);
+	}
+	
         // Now the real test starts:
         m_timer.expires_from_now(boost::posix_time::millisec(100));
         m_timer.async_wait(karabo::util::bind_weak(&Test_Device::executeStepFunction, this, 5, _1));

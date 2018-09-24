@@ -519,11 +519,36 @@ class DeviceClient(object):
     def getClassSchema(self, serverId, classId):
         return self.__client.getClassSchema(serverId, classId)
     
-    
+
     def getDeviceSchema(self, deviceId):
         return self.__client.getDeviceSchema(deviceId)
-    
-        
+
+
+    def getDeviceSchemaNoWait(self, deviceId):
+        return self.__client.getDeviceSchemaNoWait(deviceId)
+
+
+    def registerSchemaUpdatedMonitor(self, callbackFunction):
+        """
+        This function can be used to register an asynchronous call-back on
+        schema update from the distributed system.
+
+        Args:
+            callbackFunction: the call-back function to be registered.
+                It must have the following signature: f(str, Schema)
+
+        Example:
+
+        def onSchemaUpdate(deviceId, schema):
+            print("{}: {}".format(deviceId, schema))
+
+        c = DeviceClient()
+        c.registerSchemaUpdatedMonitor(onSchemaUpdate)
+
+        """
+        return self.__client.registerSchemaUpdatedMonitor(callbackFunction)
+
+
     def registerDeviceMonitor(self, instanceId, callbackFunction, userData = None):
         """
         This function can be used to register an asynchronous call-back on change of any device property.

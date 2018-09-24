@@ -28,11 +28,11 @@ namespace karabo {
         /**
          * @class GuiServerDevice
          * @brief The GuiServerDevice mediates between GUI clients and the distributed system.
-         * 
-         * The GuiServerDevice acts as a mediator between the distributed system and GUI clients, 
+         *
+         * The GuiServerDevice acts as a mediator between the distributed system and GUI clients,
          * which connect to it through p2p channels. The device centrally manages updates from
          * the distributed system and pushes them to the clients. Conversly, it handles requests
-         * by clients and passes them on to devices in the distributed system. 
+         * by clients and passes them on to devices in the distributed system.
          */
         class GuiServerDevice : public karabo::core::Device<> {
 
@@ -154,12 +154,19 @@ namespace karabo {
 
             /**
              * an error specified by ErrorCode e occurred on the given channel.
-             * After an error the GUI-server will attempt to close the connection on this
-             * channels, and perform a clean-up of members related to this channel.
+             * After an error the GUI-server will attempt to disconnect this channel.
              * @param e
              * @param channel
              */
             void onError(const karabo::net::ErrorCode& e, WeakChannelPointer channel);
+
+            /**
+             * The GUI-server will attempt to close the connection on this channels,
+             * and perform a clean-up of members related to this channel.
+             * 
+             * @param channel
+             */
+            void disconnectChannel(WeakChannelPointer channel);
 
             /**
              * an error further specified by hash occurred on a connection to a GUI
@@ -188,11 +195,11 @@ namespace karabo {
              * The further actions are determined by the contents of the ``type`` property
              * in ``info``. Valid types and there mapping to methods are given in the
              * following table:
-             * 
+             *
              *  \verbatim embed:rst:leading-asterisk
-             * 
+             *
              * .. table:: ``onRead`` allowed types
-             * 
+             *
              *      =======================     =========================
              *      type                        resulting method call
              *      -----------------------     -------------------------
@@ -227,9 +234,9 @@ namespace karabo {
              *      projectListItems            onProjectListItems
              *      projectListDomains          onProjectListDomains
              *      =======================     =========================
-             * 
+             *
              * \endverbatim
-             * 
+             *
              * Both upon successful completion of the request or in case of an exception
              * the onRead function is bound to the channel again, maintaining the connection
              * of the client to the gui-server.
@@ -324,7 +331,7 @@ namespace karabo {
              * to ``channel`` from this handler. Only one channel per client is maintained
              * for passing monitoring information and only on monitor is registered by
              * the gui-server for any number of clients monitoring ``deviceId``.
-             * 
+             *
              * After successful registration the current device configuration is returned
              * by calling ``onGetDeviceConfiguration`` for ``channel``.
              * @param channel
@@ -337,7 +344,7 @@ namespace karabo {
              * by ``deviceId`` in ``info``. If this is the last channel monitoring
              * ``deviceId`` the corresponding monitor is also de-registered from the
              * device-client.
-             * 
+             *
              * @param channel
              * @param info
              */
@@ -348,7 +355,7 @@ namespace karabo {
              * ``serverId`` in ``info``. This is done through the device client. A
              * hash reply is sent out over ``channel`` containing ``type=classSchema``,
              * ``serverId``, ``classId`` and ``schema``.
-             * 
+             *
              * @param channel
              * @param info
              */
@@ -397,14 +404,14 @@ namespace karabo {
              * with a maximum update frequency as defined by the ``delayOnInput`` property
              * of the gui server. Network data from the pipe-lined processing connection
              * is handled by the ``onNetworkData`` callback.
-             * 
+             *
              * In this way only one connection to a given pipe-lined processing channel
              * is maintained, even if multiple gui-clients listen to it. The gui-server
              * thus acts as a kind of hub for pipe-lined processing onto gui-clients.
-             * 
+             *
              * If subscribe is set to False, the connection is removed from the list of
              * registered connections, but is kept open.
-             * 
+             *
              * @param channel
              * @param info
              */
@@ -417,7 +424,7 @@ namespace karabo {
              * to all channels connected to this pipe-lined processing channels using
              * the following hash message format: ``type=networkData``, ``name`` is the
              * channel name and ``data`` holding ``input``.
-             * 
+             *
              * @param input
              */
             void onNetworkData(const karabo::xms::InputChannel::Pointer& input);
@@ -428,11 +435,11 @@ namespace karabo {
              * @param channel
              */
             void sendSystemTopology(WeakChannelPointer channel);
-            
+
             /**
              * sends the current system topology to the client connected on ``channel``.
              * The hash reply contains ``type=systemVersion`` and the ``systemVersion``.
-             * 
+             *
              * @param channel
              */
             void sendSystemVersion(WeakChannelPointer channel);
@@ -450,7 +457,7 @@ namespace karabo {
              * monitor by ``onStartMonitoringDevice``. The message format of the hash
              * sent out is ``type=deviceConfiguration``, ``deviceId`` and ``configuration``,
              * the latter containing ``what``.
-             * 
+             *
              * @param channel
              * @param info
              */
@@ -564,7 +571,7 @@ namespace karabo {
              * @param topologyEntry: the topology Hash, from which the class of instanceId will be deduced
              */
             void connectPotentialAlarmService(const karabo::util::Hash& topologyEntry);
-            
+
             /**
              * Checks if an instance at instanceId is a run configurator and connects to its signals if it is.
              * @param topologyEntry: the topology Hash, from which the class of instanceId will be deduced
@@ -721,7 +728,7 @@ namespace karabo {
              * @param token generated by the calling client
              */
             void forwardRequestReply(WeakChannelPointer channel, const karabo::util::Hash& reply, const std::string& origin);
-            
+
             /**
              * Check if a given project manager identified by id is known in the distributed system
              * @param channel to forward a failure message to if not
@@ -729,22 +736,22 @@ namespace karabo {
              * @param type of the request
              * @return true if the project manager id exists in the distributed system
              */
-            bool checkProjectManagerId(WeakChannelPointer channel, const std::string& deviceId, const std::string & type);
-            
+            bool checkProjectManagerId(WeakChannelPointer channel, const std::string& deviceId, const std::string & type, const std::string & reason);
+
             /**
              * Request sources for a run configuration group
              * @param channel to forward reply to
              * @param info is a Hash that shoudl contain the deviceId of the run configurator and the group id to request sources for
              */
             void onRunConfigSourcesInGroup(WeakChannelPointer channel, const karabo::util::Hash& info);
-            
+
             /**
              * Slot to be called upon signal from run configurator that an update was received.
              * @param info
              * @param deviceId
              */
             void slotRunConfigSourcesUpdate(const karabo::util::Hash& info, const std::string& deviceId);
-            
+
             /**
              * Calls the ``request`` slot on the device specified by ``deviceId``
              * in ``info`` with args given in ``info.args`` and returns its reply.

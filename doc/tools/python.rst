@@ -15,7 +15,7 @@ order to apply pep8 settings go to::
 
     File -> Settings -> Editor -> Code Style
 
-and set the right margin to 79 characters.
+and set the right margin to 79 characters (or "Hard wrap at <put 79 here> columns", depending on pycharm version).
 
 * Trailing white spaces
 
@@ -24,8 +24,39 @@ have two options to deal with them. You can go either to::
 
     File -> Settings -> Editor -> General
 
-and look in *Other* to *Strip trailing on save* or you can change your
-IDE appearance::
+and look in *Other* to *Strip trailing on save* (choose "All" or "Modified lines" here).
+
+.. note::
+
+   You might encounter two issues related to 'Always keep trailing space on caret line' checkbox. 
+
+   - If you keep this checkbox ticked, white spaces won't be stripped from the current line. 
+
+   - If you uncheck it, annoying disappearing of your whitespaces might happen, when you type your text and make a pause.
+
+     That is because of default autosaving.
+     Possible solution: disable autosaving and save file in a traditional "Ctrl+S" way:
+
+     Go to File > Settings (Ctrl+Alt+S).
+     Go to Appearance & Behavior > System Settings > Synchronization.
+     Make sure the two are unchecked:
+
+        -Save files on frame deactivation
+
+        -Save files automatically if application is idle for x sec
+      
+     After auto-saving is disabled, also it could be useful to apply the next settings:
+
+     Go to Editor > General > Editor Tabs, put a checkmark on "Mark modified files with asterisk"
+
+     (Optional but recommended) 
+     Under "Tab Closing Policy", select "Close unchanged" option of "When tabs exceed the limit" radiobox. 
+
+     You may also want to increase the number of allowed tabs.
+
+     Click Apply > OK.
+
+Or, as an alternative way, you can change your IDE appearance::
 
     File -> Settings -> Editor -> General -> Appearance
 

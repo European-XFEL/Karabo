@@ -147,10 +147,10 @@ namespace karabo {
     
     void TcpAdapter::sendMessage(const karabo::util::Hash & message, bool block){
         if (!connected()) return;
+        boost::unique_lock<boost::mutex> lock(m_writeConditionMutex);
         m_writeWaitForId = ++m_MessageId;
         m_channel->writeAsyncHash(message, boost::bind(&karabo::TcpAdapter::onWriteComplete, this, _1, m_channel, m_MessageId));
         if(block){
-            boost::unique_lock<boost::mutex> lock(m_writeConditionMutex);
             m_writeCondition.wait(lock);
         }
     }
