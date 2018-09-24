@@ -444,6 +444,14 @@ namespace karabo {
                             }
                         }
                     }
+                } else if (type == "server") {
+                    boost::mutex::scoped_lock lock(m_instantiateMutex);
+
+                    const auto& mapIter = m_instantiationQueues.find(instanceId);
+                    if (mapIter != m_instantiationQueues.end()) {
+                        // a data logger server went down - clear pending instantiations
+                        mapIter->second.clear();
+                    }
                 }
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "In instanceGoneHandler: " << e.what();
