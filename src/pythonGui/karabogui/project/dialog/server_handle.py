@@ -12,6 +12,7 @@ from PyQt4.QtGui import QDialog, QDialogButtonBox
 from karabo.middlelayer import AccessLevel
 from karabogui import globals as krb_globals
 from karabogui.singletons.api import get_topology
+from karabogui.util import InputValidator
 
 
 class ServerHandleDialog(QDialog):
@@ -47,6 +48,10 @@ class ServerHandleDialog(QDialog):
                 self.ui_host.setCurrentIndex(index)
             self.ui_description.setPlainText(model.description)
         self.setWindowTitle(title)
+
+        validator = InputValidator()
+        self.ui_server_id.setValidator(validator)
+        self.ui_host.setValidator(validator)
 
         self.ui_server_id.currentIndexChanged.connect(self._update_button_box)
         self.ui_server_id.editTextChanged.connect(self._update_button_box)
