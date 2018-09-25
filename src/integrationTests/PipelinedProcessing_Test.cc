@@ -74,6 +74,8 @@ void PipelinedProcessing_Test::appTestRunner() {
     testPipeTwoSharedReceiversWait();
 
     testPipeTwoSharedReceiversDrop();
+    
+    testTwoPots();
 
     testProfileTransferTimes();
 
@@ -234,7 +236,7 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
             // number of local buffers (currently one 'active' and one 'inactive')
             unsigned int nTotalData = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
             CPPUNIT_ASSERT(nTotalData < nDataExpected + m_nDataPerRun);
-            CPPUNIT_ASSERT(nTotalData >= nDataExpected + 2);
+            CPPUNIT_ASSERT(nTotalData >= nDataExpected + m_nPots);
             nDataExpected = nTotalData;
         }
 
@@ -277,8 +279,8 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversWait() {
     CPPUNIT_ASSERT_EQUAL(std::string("copy"), m_deviceClient->get<std::string>(m_receiver, "input2.dataDistribution"));
 
     testPipeTwoSharedReceivers(0, 0, 0, false);
-    testPipeTwoSharedReceivers(0, 100, 0, false);
-    testPipeTwoSharedReceivers(100, 0, 0, false);
+    testPipeTwoSharedReceivers(0, 300, 0, false);
+    testPipeTwoSharedReceivers(300, 0, 0, false);
     
     killDeviceWithAssert(m_receiver);
     killDeviceWithAssert(m_receiver2);
@@ -328,7 +330,6 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processin
     unsigned int nTotalData02 = m_deviceClient->get<unsigned int>(m_receiver2, "nTotalData");
     unsigned int nTotalData = nTotalData0;
     unsigned int nTotalData2 = nTotalData02;
-    unsigned int nDataExpected = nTotalData0 + nTotalData02;
     CPPUNIT_ASSERT_EQUAL(nTotalData, m_deviceClient->get<unsigned int>(m_receiver, "nTotalDataOnEos"));
     CPPUNIT_ASSERT_EQUAL(nTotalData2, m_deviceClient->get<unsigned int>(m_receiver2, "nTotalDataOnEos"));
     for (unsigned int nRun = 0; nRun < m_numRunsPerTest; ++nRun) {
@@ -341,25 +342,27 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processin
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nTotalData, false));
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver2, "nTotalDataOnEos", nTotalData2, false));
 
-        // update nTotalData
-        nTotalData = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
-        nTotalData2 = m_deviceClient->get<unsigned int>(m_receiver2, "nTotalData");
+        unsigned int nTotalDataNew = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
+        unsigned int nTotalData2New = m_deviceClient->get<unsigned int>(m_receiver2, "nTotalData");
 
         // test nTotalDataOnEos == nTotalData
-        CPPUNIT_ASSERT_EQUAL(nTotalData, m_deviceClient->get<unsigned int>(m_receiver, "nTotalDataOnEos"));
-        CPPUNIT_ASSERT_EQUAL(nTotalData2, m_deviceClient->get<unsigned int>(m_receiver2, "nTotalDataOnEos"));
+        CPPUNIT_ASSERT_EQUAL(nTotalDataNew, m_deviceClient->get<unsigned int>(m_receiver, "nTotalDataOnEos"));
+        CPPUNIT_ASSERT_EQUAL(nTotalData2New, m_deviceClient->get<unsigned int>(m_receiver2, "nTotalDataOnEos"));
 
         // test the total data received
+        // A receiver should receive at least m_nPots data no mater how long the processingTime is.
+        CPPUNIT_ASSERT(nTotalDataNew >= nTotalData + m_nPots);
+        CPPUNIT_ASSERT(nTotalData2New >= nTotalData2 + m_nPots);
         if (!dataLoss) {
-            CPPUNIT_ASSERT_EQUAL(nDataExpected + m_nDataPerRun, nTotalData + nTotalData2);
+            CPPUNIT_ASSERT_EQUAL(nTotalData + nTotalData2 + m_nDataPerRun, nTotalDataNew + nTotalData2New);
         } else {
-            CPPUNIT_ASSERT(nTotalData + nTotalData2 >= nDataExpected + 4);
-            CPPUNIT_ASSERT(nTotalData + nTotalData2 < nDataExpected + m_nDataPerRun);
+            CPPUNIT_ASSERT(nTotalDataNew + nTotalData2New < nTotalData + nTotalData2 + m_nDataPerRun);
         }
 
-        // update nDataExpected
-        nDataExpected = nTotalData + nTotalData2;
-
+        // update nTotalData
+        nTotalData = nTotalDataNew;
+        nTotalData2 = nTotalData2New;
+        
         // Test if data source was correctly passed
         auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSources");
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (1u), sources.size());
@@ -374,6 +377,37 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processin
     }
 
     std::clog << "  summary: nTotalData = " << nTotalData - nTotalData0 << ", " << nTotalData2 - nTotalData02 << std::endl;
+}
+
+
+void PipelinedProcessing_Test::testTwoPots() {
+    std::clog << "---\ntestTwoPots\n";
+
+    // start a new sender with a long delay time
+    const std::string sender = "potTestSender";
+    instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", sender));
+    unsigned int nDataExpected = m_deviceClient->get<unsigned int>(m_sender, "nData");
+
+    // start a receiver
+    m_receiverConfig += Hash("input.onSlowness", "wait", "input.dataDistribution", "copy", "processingTime", 0);
+    instantiateDeviceWithAssert("PipeReceiverDevice", m_receiverConfig);
+
+    // write data asynchronously
+    m_deviceClient->execute(m_sender, "write");
+
+    unsigned int nDataWhenStop = 6;
+    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", nDataWhenStop));
+    // stop sending data after receiving nDataWhenStop data!
+    m_deviceClient->execute(m_sender, "stop");
+    // make sure only nDataWhenStop data have been received up to now
+    CPPUNIT_ASSERT_EQUAL(nDataWhenStop, m_deviceClient->get<unsigned int>(m_receiver, "nTotalData"));
+    // The receiver is expected to get two more data when EOS arrives. One is the data being sending 
+    // during the "stop" slot is called (the active pot). Another comes from the inactive pot.
+    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nDataWhenStop + 2));
+
+    killDeviceWithAssert(sender);
+    killDeviceWithAssert(m_receiver);
+    std::clog << "Passed!\n\n";
 }
 
 
