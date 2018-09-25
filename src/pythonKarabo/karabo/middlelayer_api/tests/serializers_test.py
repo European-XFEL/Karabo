@@ -1,9 +1,11 @@
+from lxml import etree
 import os
 import shutil
 from unittest import TestCase, main
 
 from karabo.middlelayer import (
-    encodeXML, decodeXML, Hash, loadFromFile, saveToFile
+    Configurable, encodeXML, decodeXML, Hash, loadFromFile, VectorDouble,
+    saveToFile
 )
 
 TST_WORKING_DIR = "/tmp/serializers_tests"
@@ -62,11 +64,11 @@ class TestSerializers(TestCase):
         try:
             saveToFile(HASH, FILENAME)
         except Exception as e:
-            self.fail("Failed as file already exists")
+            self.fail("Failed as file already exists: {}".format(e))
 
         # Test with non-Hash value
         with self.assertRaises(Exception):
-            staveToFile(None, FILENAME)
+            saveToFile(None, FILENAME)
 
     def test_loadFromFile(self):
         # Test valid xml
@@ -83,13 +85,33 @@ class TestSerializers(TestCase):
         with self.assertRaises(Exception):
             loadFromFile("bad.xml")
 
-
     def test_load_bound_hash_xml(self):
         with open("bash.xml", "w") as fout:
             fout.write(BOUND_HASH_XML)
 
         h = loadFromFile("bash.xml")
         self.assertEqual(h, HASH)
+
+    def test_device_hash(self):
+        class A(Configurable):
+            vector = VectorDouble(defaultValue=[1.0, 2.0], minSize=1,
+                                  maxSize=2)
+
+        a = A()
+        schema = a.getClassSchema()
+        self.assertEqual(schema.hash['vector', 'minSize'], 1)
+        self.assertEqual(schema.hash['vector', 'maxSize'], 2)
+
+        encoded = encodeXML(schema.hash)
+        root = etree.fromstring(encoded)
+        self.assertEqual(root.tag, 'root')
+        for child in root.iter('vector'):
+            self.assertEqual(child.attrib['minSize'], 'KRB_UINT32:1')
+            self.assertEqual(child.attrib['maxSize'], 'KRB_UINT32:2')
+
+        decoded = decodeXML(encoded)
+        self.assertEqual(decoded['vector', 'minSize'], 1)
+        self.assertEqual(decoded['vector', 'maxSize'], 2)
 
 
 if __name__ == "__main__":
