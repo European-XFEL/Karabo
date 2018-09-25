@@ -44,11 +44,15 @@ private:
     void testPipeWait();
     void testPipeDrop();
     void testPipeTwoSharedReceiversWait();
+    void testPipeTwoSharedReceiversDrop();
     void testProfileTransferTimes();
 
     void testPipeWait(unsigned int processingTime, unsigned int delayTime);
     void testPipeDrop(unsigned int processingTime, unsigned int delayTime, bool dataLoss);
-    void testPipeTwoSharedReceiversWait(unsigned int processingTime, unsigned int processingTime2, unsigned int delayTime);
+    void testPipeTwoSharedReceivers(unsigned int processingTime,
+                                    unsigned int processingTime2,
+                                    unsigned int delayTime,
+                                    bool dataLoss);
     void testProfileTransferTimes(bool noShortCut, bool copy);
 
     template <typename T>
