@@ -228,13 +228,6 @@ namespace karabo {
              */
             Hash& operator-=(const Hash& other);
 
-            /**
-             * Merge two Hases and assign the result to a third one.
-             * @param other Hash object
-             */
-            friend
-            Hash& operator+(const Hash& hash1, const Hash& hash2);
-
             /*******************************************************************
              * Provide same interface as STL
              *******************************************************************/
