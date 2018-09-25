@@ -64,6 +64,16 @@ class TestDevice(PythonDevice):
             .defaultValue(33)
             .commit(),
 
+            STRING_ELEMENT(expected).key("deviceString")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit(),
+
+            INT32_ELEMENT(expected).key("maxSizeSchema")
+            .assignmentOptional()
+            .defaultValue(0)
+            .commit(),
+
             SLOT_ELEMENT(expected).key("setA")
             .commit(),
 
@@ -77,6 +87,9 @@ class TestDevice(PythonDevice):
             .commit(),
 
             SLOT_ELEMENT(expected).key("end")
+            .commit(),
+
+            SLOT_ELEMENT(expected).key("compareSchema")
             .commit(),
 
             TABLE_ELEMENT(expected).key("table")
@@ -115,6 +128,7 @@ class TestDevice(PythonDevice):
         self.registerSlot(self.injectSchema)
         self.registerSlot(self.send)
         self.registerSlot(self.end)
+        self.registerSlot(self.compareSchema)
         self.KARABO_ON_DATA("input", self.onData)
         self.KARABO_ON_EOS("input", self.onEndOfStream)
         self.word_no = 1
@@ -182,3 +196,12 @@ class TestDevice(PythonDevice):
 
     def onEndOfStream(self):
         self.set("a", 0)
+
+    def compareSchema(self):
+        """This function tries to get the maxSize of a middlelayer device
+        """
+        instance_id = self.get("deviceString")
+        remote = self.remote()
+        schema = remote.getDeviceSchema(instance_id)
+        max_size = schema.getMaxSize("vectorMaxSize")
+        self.set("maxSizeSchema", max_size)
