@@ -639,11 +639,13 @@ class EventLoop(SelectorEventLoop):
 
         We overwrite this method so that we can detect stuck device servers.
         The events are typically all handled within less than 100 ms. If we
-        are still not done after 10 s, a SIGALRM will be sent, and we
+        are still not done after 30 s, a SIGALRM will be sent, and we
         installed a signal handler that will dump a stack trace so we can
         find out where we got stuck.
         """
-        signal.alarm(10)
+        # NOTE: Temporarily set the timeout to 30 secs due to broker
+        # performance when starting ikarabo
+        signal.alarm(30)
         try:
             super()._run_once()
         finally:
