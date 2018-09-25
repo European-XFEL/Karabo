@@ -65,11 +65,15 @@ void PipelinedProcessing_Test::appTestRunner() {
 
     testGetOutputChannelSchema();
 
+    // do not change the order of the following tests
+
     testPipeWait();
 
     testPipeDrop();
 
     testPipeTwoSharedReceiversWait();
+
+    testPipeTwoSharedReceiversDrop();
 
     testProfileTransferTimes();
 
@@ -110,12 +114,10 @@ void PipelinedProcessing_Test::testGetOutputChannelSchema() {
 
 
 void PipelinedProcessing_Test::testPipeWait() {
-    std::clog << "---\ntestPipeWait\n";
-
+    std::clog << "---\ntestPipeWait (onSlowness = 'wait')\n";
     // use only one receiver for a group of tests
     instantiateDeviceWithAssert("PipeReceiverDevice", m_receiverConfig);
     CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
-    CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_receiver, "input2.onSlowness"));
 
     testPipeWait(0, 0);
     testPipeWait(100, 0);
@@ -128,8 +130,7 @@ void PipelinedProcessing_Test::testPipeWait() {
 
 void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigned int delayTime) {
 
-    std::clog << "Test with onSlowness = 'wait', processingTime = " 
-              << processingTime << ", delayTime = " << delayTime << "\n";
+    std::clog << "- processingTime = " << processingTime << " ms, delayTime = " << delayTime << " ms\n";
 
     m_deviceClient->set(m_receiver, "processingTime", processingTime);
     m_deviceClient->set(m_sender, "delay", delayTime);
@@ -179,7 +180,7 @@ void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigne
     double mbps = double(dataItemSize) * double(nDataExpected - nTotalData0) / double(elapsedTimeIn_microseconds);
     // Note that this measurement checks the inner-process shortcut - and includes timing overhead e.g. pollDeviceProperty
     // In addition, the process and delay times also affect mbps.
-    std::clog << "testPipe: Megabytes per sec : " << mbps 
+    std::clog << "  summary: Megabytes per sec : " << mbps
               << ", elapsedTimeIn_microseconds = " << elapsedTimeIn_microseconds
               << ", dataItemSize = " << dataItemSize 
               << ", nTotalData = " << nDataExpected - nTotalData0
@@ -188,12 +189,11 @@ void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigne
 
 
 void PipelinedProcessing_Test::testPipeDrop() {
-    std::clog << "---\ntestPipeDrop\n";
+    std::clog << "---\ntestPipeDrop (onSlowness = 'drop')\n";
 
-    m_receiverConfig += Hash("input.onSlowness", "drop", "input2.onSlowness", "drop");
+    m_receiverConfig += Hash("input.onSlowness", "drop");
     instantiateDeviceWithAssert("PipeReceiverDevice", m_receiverConfig);
     CPPUNIT_ASSERT_EQUAL(std::string("drop"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
-    CPPUNIT_ASSERT_EQUAL(std::string("drop"), m_deviceClient->get<std::string>(m_receiver, "input2.onSlowness"));
 
     testPipeDrop(10, 0, true);
     testPipeDrop(100, 0, true);
@@ -205,9 +205,8 @@ void PipelinedProcessing_Test::testPipeDrop() {
 
 
 void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigned int delayTime, bool dataLoss) {
-    
-    std::clog << "Test with onSlowness = 'drop', processingTime = " 
-              << processingTime << ", delayTime = " << delayTime << "\n";
+
+    std::clog << "- processingTime = " << processingTime << " ms, delayTime = " << delayTime << " ms\n";
 
     m_deviceClient->set(m_receiver, "processingTime", processingTime);
     m_deviceClient->set(m_sender, "delay", delayTime);
@@ -234,7 +233,7 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
             // the number of received data is random, but should be larger than the 
             // number of local buffers (currently one 'active' and one 'inactive')
             unsigned int nTotalData = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
-            CPPUNIT_ASSERT(nTotalData <= nDataExpected + m_nDataPerRun);
+            CPPUNIT_ASSERT(nTotalData < nDataExpected + m_nDataPerRun);
             CPPUNIT_ASSERT(nTotalData >= nDataExpected + 2);
             nDataExpected = nTotalData;
         }
@@ -253,7 +252,7 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
 
     unsigned int dataItemSize = m_deviceClient->get<unsigned int>(m_receiver, "dataItemSize");
     double mbps = double(dataItemSize) * double(nDataExpected - nTotalData0) / double(elapsedTimeIn_microseconds);
-    std::clog << "testPipe: Megabytes per sec : " << mbps 
+    std::clog << "  summary: Megabytes per sec : " << mbps
               << ", elapsedTimeIn_microseconds = " << elapsedTimeIn_microseconds
               << ", dataItemSize = " << dataItemSize 
               << ", nTotalData = " << nDataExpected - nTotalData0
@@ -262,22 +261,24 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
 
 
 void PipelinedProcessing_Test::testPipeTwoSharedReceiversWait() {
-    std::clog << "---\ntestPipeTwoReceiversWait\n";
+    std::clog << "---\ntestPipeTwoSharedReceiversWait (onSlowness = 'wait', dataDistribution = 'shared')\n";
 
-    auto moreConfig = Hash("input.onSlowness", "wait", "input.dataDistribution", "shared");
-
-    m_receiverConfig += moreConfig;
-    m_receiver2Config += moreConfig;
+    m_receiverConfig += Hash("input.onSlowness", "wait", "input.dataDistribution", "shared");
+    m_receiver2Config += Hash("input.onSlowness", "wait", "input.dataDistribution", "shared");
 
     instantiateDeviceWithAssert("PipeReceiverDevice", m_receiverConfig);
     instantiateDeviceWithAssert("PipeReceiverDevice", m_receiver2Config);
 
+    CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
+    CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_receiver2, "input.onSlowness"));
     CPPUNIT_ASSERT_EQUAL(std::string("shared"), m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
     CPPUNIT_ASSERT_EQUAL(std::string("shared"), m_deviceClient->get<std::string>(m_receiver2, "input.dataDistribution"));
+    // check that the default value is "copy"
+    CPPUNIT_ASSERT_EQUAL(std::string("copy"), m_deviceClient->get<std::string>(m_receiver, "input2.dataDistribution"));
 
-    testPipeTwoSharedReceiversWait(0, 0, 0);
-    testPipeTwoSharedReceiversWait(0, 100, 0);
-    testPipeTwoSharedReceiversWait(100, 0, 100);
+    testPipeTwoSharedReceivers(0, 0, 0, false);
+    testPipeTwoSharedReceivers(0, 100, 0, false);
+    testPipeTwoSharedReceivers(100, 0, 0, false);
     
     killDeviceWithAssert(m_receiver);
     killDeviceWithAssert(m_receiver2);
@@ -285,21 +286,44 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversWait() {
 }
 
 
-void PipelinedProcessing_Test::testPipeTwoSharedReceiversWait(unsigned int processingTime, 
-                                                              unsigned int processingTime2, 
-                                                              unsigned int delayTime) {
+void PipelinedProcessing_Test::testPipeTwoSharedReceiversDrop() {
+    std::clog << "---\ntestPipeTwoSharedReceiversDrop (onSlowness = 'drop', dataDistribution = 'shared')\n";
 
-    std::clog << "Test with onSlowness = 'wait', processingTime = " 
-              << processingTime << ", processingTime2 = " 
-              << processingTime2 << ", delayTime = " 
-              << delayTime << "\n";
+    m_receiverConfig += Hash("input.onSlowness", "drop", "input.dataDistribution", "shared");
+    m_receiver2Config += Hash("input.onSlowness", "drop", "input.dataDistribution", "shared");
+
+    instantiateDeviceWithAssert("PipeReceiverDevice", m_receiverConfig);
+    instantiateDeviceWithAssert("PipeReceiverDevice", m_receiver2Config);
+
+    CPPUNIT_ASSERT_EQUAL(std::string("drop"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
+    CPPUNIT_ASSERT_EQUAL(std::string("drop"), m_deviceClient->get<std::string>(m_receiver2, "input.onSlowness"));
+    CPPUNIT_ASSERT_EQUAL(std::string("shared"), m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
+    CPPUNIT_ASSERT_EQUAL(std::string("shared"), m_deviceClient->get<std::string>(m_receiver2, "input.dataDistribution"));
+
+    testPipeTwoSharedReceivers(0, 0, 0, false);
+    // TODO: we should expect to see data loss in the following two cases, however ...
+    testPipeTwoSharedReceivers(100, 0, 0, false);
+    testPipeTwoSharedReceivers(300, 300, 0, false);
+
+    killDeviceWithAssert(m_receiver);
+    killDeviceWithAssert(m_receiver2);
+    std::clog << "Passed!\n\n";
+}
+
+
+void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processingTime, 
+                                                          unsigned int processingTime2,
+                                                          unsigned int delayTime,
+                                                          bool dataLoss) {
+
+    std::clog << "- processingTime = " << processingTime
+            << " ms, processingTime2 = " << processingTime2
+            << " ms, delayTime = " << delayTime << " ms\n";
 
     m_deviceClient->set(m_receiver, "processingTime", processingTime);
     m_deviceClient->set(m_receiver2, "processingTime", processingTime2);
     m_deviceClient->set(m_sender, "delay", delayTime);
-
-    int64_t elapsedTimeIn_microseconds = 0ll;
-    // we use a single receiver device for several successive tests.
+    // we use the same two receiver devices for several successive tests.
     unsigned int nTotalData0 = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
     unsigned int nTotalData02 = m_deviceClient->get<unsigned int>(m_receiver2, "nTotalData");
     unsigned int nTotalData = nTotalData0;
@@ -316,15 +340,25 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversWait(unsigned int proce
         // poll until nTotalDataOnEos(s) of both receivers change (increase)
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nTotalData, false));
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver2, "nTotalDataOnEos", nTotalData2, false));
+
         // update nTotalData
         nTotalData = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
         nTotalData2 = m_deviceClient->get<unsigned int>(m_receiver2, "nTotalData");
+
         // test nTotalDataOnEos == nTotalData
         CPPUNIT_ASSERT_EQUAL(nTotalData, m_deviceClient->get<unsigned int>(m_receiver, "nTotalDataOnEos"));
         CPPUNIT_ASSERT_EQUAL(nTotalData2, m_deviceClient->get<unsigned int>(m_receiver2, "nTotalDataOnEos"));
+
         // test the total data received
-        nDataExpected += m_nDataPerRun;
-        CPPUNIT_ASSERT_EQUAL(nDataExpected, nTotalData + nTotalData2);
+        if (!dataLoss) {
+            CPPUNIT_ASSERT_EQUAL(nDataExpected + m_nDataPerRun, nTotalData + nTotalData2);
+        } else {
+            CPPUNIT_ASSERT(nTotalData + nTotalData2 >= nDataExpected + 4);
+            CPPUNIT_ASSERT(nTotalData + nTotalData2 < nDataExpected + m_nDataPerRun);
+        }
+
+        // update nDataExpected
+        nDataExpected = nTotalData + nTotalData2;
 
         // Test if data source was correctly passed
         auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSources");
@@ -333,16 +367,13 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversWait(unsigned int proce
         auto sources2 = m_deviceClient->get<std::vector<std::string> >(m_receiver2, "dataSources");
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (1u), sources2.size());
         CPPUNIT_ASSERT_EQUAL(m_senderOutput1, sources2[0]);
+
         // Check that receiver did not post any problem on status:
         CPPUNIT_ASSERT_EQUAL(std::string(), m_deviceClient->get<std::string>(m_receiver, "status"));
         CPPUNIT_ASSERT_EQUAL(std::string(), m_deviceClient->get<std::string>(m_receiver2, "status"));
     }
 
-    const unsigned int dataItemSize = m_deviceClient->get<unsigned int>(m_receiver, "dataItemSize");
-    const unsigned int dataItemSize2 =  m_deviceClient->get<unsigned int>(m_receiver2, "dataItemSize");
-
-    std::clog << ", dataItemSizes = " << dataItemSize << ", " << dataItemSize2
-              << ", nTotalData = " << nTotalData - nTotalData0 << ", " << nTotalData2 - nTotalData02 << std::endl;
+    std::clog << "  summary: nTotalData = " << nTotalData - nTotalData0 << ", " << nTotalData2 - nTotalData02 << std::endl;
 }
 
 
@@ -383,7 +414,7 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool co
     pollDeviceProperty<float>(m_receiver, "averageTransferTime", 0.f, false); // until not zero anymore!
     float transferTime = m_deviceClient->get<float>(m_receiver, "averageTransferTime") / 1000;
 
-    std::clog << "testProfileTransferTimes ("
+    std::clog << "- ("
               << (copy ? "copy" : "no copy") << ", " << (noShortCut ? "no short cut" : "short cut")
               << "): " << transferTime << " milliseconds average transfer time" << std::endl;
 
