@@ -545,9 +545,7 @@ def findDevices(reg_exp=None, visibility=3):
     :param visibility: Integer specifying the visibility of desired devices.
                        Default visibility level is 3.
     """
-    instance = get_instance()
-    ret = [k for k, v, a in instance.systemTopology["device"].iterall()
-           if a["visibility"] <= visibility]
+    ret = getDevices(visibility=visibility)
 
     if reg_exp is not None:
         regex = re.compile(reg_exp)
