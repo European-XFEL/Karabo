@@ -9,8 +9,8 @@ import os.path as op
 
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot, QAbstractTableModel, Qt
-from PyQt4.QtGui import (QButtonGroup, QDialog,
-                         QDialogButtonBox, QHeaderView, QItemSelectionModel)
+from PyQt4.QtGui import (
+    QButtonGroup, QDialog, QDialogButtonBox, QItemSelectionModel)
 
 from karabogui import messagebox
 from karabogui.events import (
@@ -69,8 +69,6 @@ class LoadProjectDialog(QDialog):
         self.buttonBox.button(QDialogButtonBox.Ok).setText('Load')
 
         # QTableview in ui file
-        self.twProjects.horizontalHeader().setResizeMode(
-            QHeaderView.ResizeToContents)
         self.twProjects.setModel(TableModel(parent=self))
         self.twProjects.selectionModel().selectionChanged.connect(
             self._selectionChanged)
@@ -109,8 +107,8 @@ class LoadProjectDialog(QDialog):
         if sender is KaraboEventSender.ProjectItemsList:
             items = data.get('items', [])
             self.twProjects.model().add_project_manager_data(items)
-            # Match only the simple name column to content
-            self.twProjects.resizeColumnToContents(0)
+            # NOTE: Resize all columns until PyQt5
+            self.twProjects.resizeColumnsToContents()
             self._titleChanged(self.leTitle.text())
             return True
         elif sender is KaraboEventSender.ProjectDomainsList:
