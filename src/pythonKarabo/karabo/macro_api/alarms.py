@@ -1,3 +1,4 @@
+from asyncio import wait_for, TimeoutError
 from collections import OrderedDict, namedtuple
 
 from .middlelayer import call, get_instance, synchronize, Timestamp
@@ -26,13 +27,14 @@ ALARM_DATA[ACKNOWLEDGE] = 'Acknowledge'
 
 AlarmEntry = namedtuple('AlarmEntry', [key for key in ALARM_DATA.keys()])
 
+#
 # ---------------------------
 
 KARABO_ALARMSERVICE_CLASS = "AlarmService"
 __ALARM_SERVICE = None
 
 
-def getAlarmService():
+def _get_alarm_service():
     """Return the deviceId of the alarm service singleton
     """
     global __ALARM_SERVICE
@@ -48,47 +50,84 @@ def getAlarmService():
 
 
 @synchronize
+def _get_service_information(interlock_only=False):
+    """Gather the alarm service information
+    """
+    service = _get_alarm_service()
+    if service is not None:
+        try:
+            reply = yield from wait_for(call(service, 'slotRequestAlarmDump'),
+                                        timeout=5)
+        except TimeoutError:
+            return None
+
+        service_hash = reply['alarms']
+        entries = []
+        for update_type, hsh in service_hash.items():
+            # Get data of hash
+            for _, info_hsh in hsh.items():
+                _type = info_hsh.get(ALARM_TYPE)
+                if (_type == 'none'
+                        or (interlock_only and _type != 'interlock')):
+                    # No need to add an entry
+                    continue
+                params = {k: str(info_hsh.get(k))
+                          for k in ALARM_DATA.keys() if k in info_hsh}
+                # Time of first occurence
+                params[TIME_OF_FIRST_OCCURENCE] = Timestamp(
+                    params[TIME_OF_FIRST_OCCURENCE]).toLocal()
+                # Time of occurence
+                params[TIME_OF_OCCURENCE] = Timestamp(
+                    params[TIME_OF_OCCURENCE]).toLocal()
+                needs_ack = info_hsh.get(NEEDS_ACKNOWLEDGING)
+                ack = info_hsh.get(ACKNOWLEDGEABLE)
+                acknowledge = needs_ack and ack
+                # Create namedtuple
+                entry = AlarmEntry(acknowledge="{}".format(acknowledge), **params)
+                entries.append(entry)
+
+        return entries
+
+
+@synchronize
 def showAlarms():
     """Show the alarm overview in the command line interface
     """
-    service = getAlarmService()
-    if service is not None:
-        reply = yield from call(service, 'slotRequestAlarmDump')
 
-        alarm_hash = reply['alarms']
-        alarm_entries = []
-        for update_type, hsh in alarm_hash.items():
-            # Get data of hash
-            for _, alarm_hsh in hsh.items():
-                if alarm_hsh.get(ALARM_TYPE) == 'none':
-                    # No need to add an entry
-                    continue
-                params = {k: str(alarm_hsh.get(k))
-                          for k in ALARM_DATA.keys() if k in alarm_hsh}
-                # Time of first occurence
-                params[TIME_OF_FIRST_OCCURENCE] = Timestamp(
-                    params[TIME_OF_FIRST_OCCURENCE]).toTimestamp()
-                # Time of occurence
-                params[TIME_OF_OCCURENCE] = Timestamp(
-                    params[TIME_OF_OCCURENCE]).toTimestamp()
-                needs_ack = alarm_hsh.get(NEEDS_ACKNOWLEDGING)
-                ack = alarm_hsh.get(ACKNOWLEDGEABLE)
-                # Create namedtuple
-                entry = AlarmEntry(acknowledge="{}/{}".format(needs_ack, ack),
-                                   **params)
-                alarm_entries.append(entry)
-
+    entries = yield from _get_service_information()
+    if entries is not None:
         TEMPLATE = ("|{:^4}|{:^45}|{:^15}|{:^35}|{:^15}|")
         size = len(TEMPLATE.format(*([" "] * (TEMPLATE.count("|") - 1))))
 
-        print("Alarm information requested from Alarm service "
-              "device: {}".format(service))
+        print("Alarm information requested from Alarm service!")
         print('=' * size)
         print(TEMPLATE.format(
-            "ID", "DeviceID", "TYPE", "PROPERTY", "LATCH/CAN ACK"))
+            "ID", "DeviceID", "TYPE", "PROPERTY", "CAN ACK"))
         print('=' * size)
-        for entry in alarm_entries:
+        for entry in entries:
             print(TEMPLATE.format(entry.id, entry.deviceId,
                                   entry.type, entry.property,
                                   entry.acknowledge))
+        print('=' * size)
+
+
+@synchronize
+def showInterlocks():
+    """Show the interlock overview in the command line interface
+    """
+
+    entries = yield from _get_service_information(interlock_only=True)
+    if entries is not None:
+        TEMPLATE = ("|{:^4}|{:^45}|{:^30}|{:^30}|")
+        size = len(TEMPLATE.format(*([" "] * (TEMPLATE.count("|") - 1))))
+
+        print("Interlock information requested from Alarm service!")
+        print('=' * size)
+        print(TEMPLATE.format(
+            "ID", "DeviceID", "FIRST OCCURENCE", "OCCURENCE"))
+        print('=' * size)
+        for entry in entries:
+            print(TEMPLATE.format(entry.id, entry.deviceId,
+                                  entry.timeOfFirstOccurrence,
+                                  entry.timeOfOccurrence))
         print('=' * size)
