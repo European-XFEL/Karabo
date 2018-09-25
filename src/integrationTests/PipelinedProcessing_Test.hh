@@ -45,6 +45,7 @@ private:
     void testPipeDrop();
     void testPipeTwoSharedReceiversWait();
     void testPipeTwoSharedReceiversDrop();
+    void testTwoPots();
     void testProfileTransferTimes();
 
     void testPipeWait(unsigned int processingTime, unsigned int delayTime);
@@ -70,6 +71,7 @@ private:
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
 
+    const unsigned int m_nPots = 2; // number of local buffers
     unsigned int m_nDataPerRun;
 
     karabo::util::Hash m_receiverConfig;

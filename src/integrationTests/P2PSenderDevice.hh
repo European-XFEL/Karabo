@@ -32,12 +32,16 @@ namespace karabo {
 
         // slot for write command
         void write();
+        // slot for stopping the writing activity
+        void stop();
 
         /// method for writing thread
         void writing();
         void writingProfile();
 
         boost::thread m_writingThread;
+
+        bool m_stopSending;
 
     };
 }
