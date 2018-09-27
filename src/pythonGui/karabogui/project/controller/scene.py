@@ -20,7 +20,8 @@ from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.project.dialog.object_handle import (
     ObjectDuplicateDialog, ObjectEditDialog)
 from karabogui.singletons.api import get_db_conn, get_panel_wrangler
-from karabogui.util import getSaveFileName, get_setting, set_setting
+from karabogui.util import (
+    getOpenFileName, getSaveFileName, get_setting, set_setting)
 from .bases import BaseProjectController, ProjectControllerUiData
 
 
@@ -40,8 +41,11 @@ class SceneController(BaseProjectController):
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_scene,
                                                 project_controller))
-        save_as_action = QAction('Save as...', menu)
+        save_as_action = QAction('Save to file', menu)
         save_as_action.triggered.connect(self._save_scene_to_file)
+        replace_action = QAction('Replace from file', menu)
+        replace_action.triggered.connect(partial(self._replace_scene,
+                                                 project_controller))
         revert_action = QAction('Revert changes', menu)
         revert_action.triggered.connect(self._revert_changes)
         can_revert = not self._is_showing() and self.model.modified
@@ -51,7 +55,9 @@ class SceneController(BaseProjectController):
         menu.addAction(delete_action)
         menu.addSeparator()
         menu.addAction(save_as_action)
+        menu.addAction(replace_action)
         menu.addAction(revert_action)
+
         return menu
 
     def create_ui_data(self):
@@ -62,6 +68,42 @@ class SceneController(BaseProjectController):
 
     # ----------------------------------------------------------------------
     # action handlers
+
+    def _replace_scene(self, project_controller):
+        """ Replace a scene from local disk
+        """
+        # Make sure scene is closed before!
+        scene = self.model
+
+        path = get_setting(KaraboSettings.SCENE_DIR)
+        directory = path if path and op.isdir(path) else ""
+
+        fn = getOpenFileName(caption='Replace scene',
+                             filter='SVG Files (*.svg)',
+                             directory=directory)
+        if not fn:
+            return
+
+        # Store scene dir path
+        set_setting(KaraboSettings.SCENE_DIR, op.dirname(fn))
+
+        project = project_controller.model
+        if scene in project.scenes:
+            # Read SceneModel for information to replace with! We catch all
+            # errors because we can have wrong user input.
+            try:
+                new_scene = read_scene(fn)
+            except Exception:
+                messagebox.show_error("Scene file could not be read!", "Error")
+                return
+
+            # NOTE: We can successfully read the scene, now close the old one
+            broadcast_event(KaraboEventSender.RemoveProjectModelViews,
+                            {'models': [scene]})
+            # Only use copyable traits
+            scene.copy_traits(new_scene, traits=['width', 'height',
+                                                 'children', 'description'])
+            scene.modified = True
 
     def _delete_scene(self, project_controller):
         """ Remove the scene associated with this item from its project
