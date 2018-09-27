@@ -71,12 +71,14 @@ void PipelinedProcessing_Test::appTestRunner() {
 
     testPipeDrop();
 
-    testPipeTwoSharedReceiversWait();
-
-    testPipeTwoSharedReceiversDrop();
-    
     testTwoPots();
 
+    testPipeTwoSharedReceiversWait();
+
+    // from here on, the sender has "output1.noInputShared == drop"
+    testPipeTwoSharedReceiversDrop();
+    
+    // this test uses output2 channel of the sender
     testProfileTransferTimes();
 
     killDeviceWithAssert(m_sender);
@@ -271,16 +273,14 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversWait() {
     instantiateDeviceWithAssert("PipeReceiverDevice", m_receiverConfig);
     instantiateDeviceWithAssert("PipeReceiverDevice", m_receiver2Config);
 
-    CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
-    CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_receiver2, "input.onSlowness"));
-    CPPUNIT_ASSERT_EQUAL(std::string("shared"), m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
-    CPPUNIT_ASSERT_EQUAL(std::string("shared"), m_deviceClient->get<std::string>(m_receiver2, "input.dataDistribution"));
-    // check that the default value is "copy"
+    // check that the default value of dataDistribution is "copy"
     CPPUNIT_ASSERT_EQUAL(std::string("copy"), m_deviceClient->get<std::string>(m_receiver, "input2.dataDistribution"));
+    // check that the default value of noInputShared is "wait"
+    CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_sender, "output1.noInputShared"));
 
     testPipeTwoSharedReceivers(0, 0, 0, false);
-    testPipeTwoSharedReceivers(0, 300, 0, false);
-    testPipeTwoSharedReceivers(300, 0, 0, false);
+    testPipeTwoSharedReceivers(200, 0, 0, false);
+    testPipeTwoSharedReceivers(100, 100, 0, false);
     
     killDeviceWithAssert(m_receiver);
     killDeviceWithAssert(m_receiver2);
@@ -290,25 +290,29 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversWait() {
 
 void PipelinedProcessing_Test::testPipeTwoSharedReceiversDrop() {
     std::clog << "---\ntestPipeTwoSharedReceiversDrop (onSlowness = 'drop', dataDistribution = 'shared')\n";
-
+    
     m_receiverConfig += Hash("input.onSlowness", "drop", "input.dataDistribution", "shared");
     m_receiver2Config += Hash("input.onSlowness", "drop", "input.dataDistribution", "shared");
 
     instantiateDeviceWithAssert("PipeReceiverDevice", m_receiverConfig);
     instantiateDeviceWithAssert("PipeReceiverDevice", m_receiver2Config);
 
-    CPPUNIT_ASSERT_EQUAL(std::string("drop"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
-    CPPUNIT_ASSERT_EQUAL(std::string("drop"), m_deviceClient->get<std::string>(m_receiver2, "input.onSlowness"));
-    CPPUNIT_ASSERT_EQUAL(std::string("shared"), m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
-    CPPUNIT_ASSERT_EQUAL(std::string("shared"), m_deviceClient->get<std::string>(m_receiver2, "input.dataDistribution"));
+    // check that even if the receiver has "onSlowness == drop", all data will still be received by shared
+    // receivers if "onInputShared" from the output channel of the sender is "wait"!
+    CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_sender, "output1.noInputShared"));
+    testPipeTwoSharedReceivers(100, 100, 0, false);
 
-    testPipeTwoSharedReceivers(0, 0, 0, false);
-    // TODO: we should expect to see data loss in the following two cases, however ...
-    testPipeTwoSharedReceivers(100, 0, 0, false);
-    testPipeTwoSharedReceivers(300, 300, 0, false);
+    // restart the sender with "output1.noInputShared == drop"
+    killDeviceWithAssert(m_sender);
+    instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", m_sender, "output1.noInputShared", "drop"));
+
+    testPipeTwoSharedReceivers(200, 0, 0, false);
+    // We expect to see data loss in the following case.
+    testPipeTwoSharedReceivers(100, 100, 0, true);
 
     killDeviceWithAssert(m_receiver);
     killDeviceWithAssert(m_receiver2);
+
     std::clog << "Passed!\n\n";
 }
 
@@ -319,8 +323,8 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processin
                                                           bool dataLoss) {
 
     std::clog << "- processingTime = " << processingTime
-            << " ms, processingTime2 = " << processingTime2
-            << " ms, delayTime = " << delayTime << " ms\n";
+              << " ms, processingTime2 = " << processingTime2
+              << " ms, delayTime = " << delayTime << " ms\n";
 
     m_deviceClient->set(m_receiver, "processingTime", processingTime);
     m_deviceClient->set(m_receiver2, "processingTime", processingTime2);
@@ -383,14 +387,12 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processin
 void PipelinedProcessing_Test::testTwoPots() {
     std::clog << "---\ntestTwoPots\n";
 
-    // start a new sender with a long delay time
-    const std::string sender = "potTestSender";
-    instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", sender));
-    unsigned int nDataExpected = m_deviceClient->get<unsigned int>(m_sender, "nData");
-
     // start a receiver
     m_receiverConfig += Hash("input.onSlowness", "wait", "input.dataDistribution", "copy", "processingTime", 0);
     instantiateDeviceWithAssert("PipeReceiverDevice", m_receiverConfig);
+
+    // make sure the sender has stopped sending data
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
 
     // write data asynchronously
     m_deviceClient->execute(m_sender, "write");
@@ -405,7 +407,6 @@ void PipelinedProcessing_Test::testTwoPots() {
     // during the "stop" slot is called (the active pot). Another comes from the inactive pot.
     CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nDataWhenStop + 2));
 
-    killDeviceWithAssert(sender);
     killDeviceWithAssert(m_receiver);
     std::clog << "Passed!\n\n";
 }
