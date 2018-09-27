@@ -57,8 +57,6 @@ void PipelinedProcessing_Test::appTestRunner() {
 
     testGetOutputChannelSchema();
 
-    // do not change the order of the following tests
-
     testPipeWait();
 
     testPipeDrop();
@@ -69,7 +67,7 @@ void PipelinedProcessing_Test::appTestRunner() {
 
     testPipeTwoSharedReceiversWait();
 
-    // from here on, the sender has "output1.noInputShared == drop"
+    // from here on, the sender has "output1.noInputShared == drop". Do not move this test up!
     testPipeTwoSharedReceiversDrop();
 
     // this test uses output2 channel of the sender
@@ -169,8 +167,7 @@ void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigne
         // Check that receiver did not post any problem on status:
         CPPUNIT_ASSERT_EQUAL(std::string(), m_deviceClient->get<std::string>(m_receiver, "status"));
         // This only can be tested if we used an input handler and not onData
-        // FIXME: This fails in DeviceClient::get: "Key 'onData' does not exist" - due to DeviceClient caching bug?
-        if (false && !m_deviceClient->get<bool>(m_receiver, "onData")) {
+        if (!m_deviceClient->get<bool>(m_receiver, "onData")) {
             auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSourcesFromIndex");
             CPPUNIT_ASSERT_EQUAL(m_senderOutput1, sources[0]);
         }
@@ -379,9 +376,9 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversDrop() {
     killDeviceWithAssert(m_sender);
     instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", m_sender, "output1.noInputShared", "drop"));
 
-    // It is expected to have no data loss in the following test. But the result is undeterministic. Sometime
-    // there is data loss, sometime there is no data loss, and sometime segmentation fault occurs!
-//    testPipeTwoSharedReceivers(200, 0, 0, false);
+    // TODO:: It is expected to have no data loss in the following test. But the result is undeterministic.
+    // Sometime there is data loss, sometime there is no data loss, and sometime segmentation fault occurs!
+    testPipeTwoSharedReceivers(200, 0, 0, true);
     // We expect to see data loss in the following case.
     testPipeTwoSharedReceivers(100, 100, 0, true);
 
