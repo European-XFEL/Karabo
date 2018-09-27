@@ -92,8 +92,6 @@ namespace karabo {
 
             typedef std::deque< std::string > InputChannelQueue;
 
-            typedef std::map<unsigned int, int> CurrentWritersCount;
-
             // Callback on available input
             boost::function<void (const boost::shared_ptr<OutputChannel>&) > m_ioEventHandler;
 
@@ -110,6 +108,7 @@ namespace karabo {
             std::string m_onNoSharedInputChannelAvailable;
             std::string m_distributionMode;
 
+            mutable boost::mutex m_registeredInputsMutex;
             InputChannels m_registeredSharedInputs;
             InputChannels m_registeredCopyInputs;
 
@@ -118,21 +117,10 @@ namespace karabo {
             InputChannelQueue m_shareNext;
             InputChannelQueue m_copyNext;
 
-            boost::mutex m_nextInputMutex;
-            boost::mutex m_chunkIdsMutex;
-            boost::mutex m_currentWritersCountMutex;
-            boost::mutex m_onTcpReadMutex;
-            //boost::mutex m_updateMutex;
-
-
-            // Async out
-            CurrentWritersCount m_currentWritersCount;
-            CurrentWritersCount m_maxWritersCount;
+            mutable boost::mutex m_nextInputMutex;
 
             unsigned int m_channelId;
             unsigned int m_chunkId;
-
-            std::map<int, int> m_writersOnChunk;
 
         public:
             typedef Memory::MetaData MetaData;
@@ -158,6 +146,13 @@ namespace karabo {
             void setInstanceIdAndName(const std::string& instanceId, const std::string& name);
 
             const std::string& getInstanceId() const;
+
+            /**
+             * Get ids of all input channels currently connected
+             *
+             * @return vector of strings with the ids
+             */
+            std::vector<std::string> getRegisteredInputChannels() const;
 
             void registerIOEventHandler(const boost::function<void (const OutputChannel::Pointer&)>& ioEventHandler);
 
@@ -202,6 +197,10 @@ namespace karabo {
              */
             KARABO_DEPRECATED void write(const karabo::util::Hash::Pointer& data);
 
+            /**
+             * Update the output channel, i.e. send all data over the wire that was previously written
+             * by calling write(...).
+             */
             void update();
 
             void signalEndOfStream();
@@ -226,13 +225,17 @@ namespace karabo {
 
             void onInputGone(const karabo::net::Channel::Pointer& channel);
 
+            /// Requires protection of m_registeredInputsMutex
             void distributeQueue(karabo::util::Hash& channelInfo);
 
+            /// Requires protection of m_registeredInputsMutex
             void copyQueue(karabo::util::Hash& channelInfo);
 
             void pushShareNext(const std::string& instanceId);
 
             std::string popShareNext();
+
+            bool isShareNextEmpty() const;
 
             bool hasSharedInput(const std::string& instanceId);
 
@@ -255,16 +258,25 @@ namespace karabo {
 
             void distribute(unsigned int chunkId);
 
+            /**
+             * Get index of next one of the shared inputs.
+             *
+             * Requires protection of m_registeredInputsMutex
+             */
             unsigned int getNextSharedInputIdx();
 
+            /// Requires protection of m_registeredInputsMutex
             void distributeLocal(unsigned int chunkId, const InputChannelInfo & channelInfo);
 
+            /// Requires protection of m_registeredInputsMutex
             void distributeRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo);
 
             void copy(unsigned int chunkId);
 
+            /// Requires protection of m_registeredInputsMutex
             void copyLocal(const unsigned int& chunkId, const InputChannelInfo & channelInfo);
 
+            /// Requires protection of m_registeredInputsMutex
             void copyRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo);
 
             /// Provide a string identifying this output channel (useful in DEBUG logging)
