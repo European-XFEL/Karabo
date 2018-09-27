@@ -365,17 +365,22 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processin
     m_deviceClient->set(m_receiver1, "processingTime", processingTime1);
     m_deviceClient->set(m_receiver2, "processingTime", processingTime2);
     m_deviceClient->set(m_sender, "delay", delayTime);
-    // we use the same two receiver devices for several successive tests.
-    unsigned int nTotalData01 = m_deviceClient->get<unsigned int>(m_receiver1, "nTotalData");
-    unsigned int nTotalData02 = m_deviceClient->get<unsigned int>(m_receiver2, "nTotalData");
-    unsigned int nTotalData1 = nTotalData01;
-    unsigned int nTotalData2 = nTotalData02;
+
+    // We use the same two receiver devices for several successive tests.
+    // reset nTotalData and nTotalDataOnEos
+    m_deviceClient->execute(m_receiver1, "reset");
+    m_deviceClient->execute(m_receiver2, "reset");
+    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver1, "nTotalData", 0));
+    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver2, "nTotalData", 0));
+    unsigned int nTotalData1 = 0;
+    unsigned int nTotalData2 = 0;
+
     CPPUNIT_ASSERT_EQUAL(nTotalData1, m_deviceClient->get<unsigned int>(m_receiver1, "nTotalDataOnEos"));
     CPPUNIT_ASSERT_EQUAL(nTotalData2, m_deviceClient->get<unsigned int>(m_receiver2, "nTotalDataOnEos"));
     for (unsigned int nRun = 0; nRun < m_numRunsPerTest; ++nRun) {
         // make sure the sender has stopped sending data
         CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
-        // Then call its slot
+        // then call its slot
         m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
 
         // poll until nTotalDataOnEos(s) of both receivers change (increase)
@@ -402,8 +407,8 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processin
         // update nTotalData
         nTotalData1 = nTotalData1New;
         nTotalData2 = nTotalData2New;
-        
-        // Test if data source was correctly passed
+
+        // test if data source was correctly passed
         auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver1, "dataSources");
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (1u), sources.size());
         CPPUNIT_ASSERT_EQUAL(m_senderOutput1, sources[0]);
@@ -411,12 +416,12 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processin
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (1u), sources2.size());
         CPPUNIT_ASSERT_EQUAL(m_senderOutput1, sources2[0]);
 
-        // Check that receiver did not post any problem on status:
+        // check that receiver did not post any problem on status:
         CPPUNIT_ASSERT_EQUAL(std::string(), m_deviceClient->get<std::string>(m_receiver1, "status"));
         CPPUNIT_ASSERT_EQUAL(std::string(), m_deviceClient->get<std::string>(m_receiver2, "status"));
     }
 
-    std::clog << "  summary: nTotalData = " << nTotalData1 - nTotalData01 << ", " << nTotalData2 - nTotalData02 << std::endl;
+    std::clog << "  summary: nTotalData = " << nTotalData1 << ", " << nTotalData2 << std::endl;
 }
 
 
