@@ -267,20 +267,25 @@ void PipelinedProcessing_Test::testPipeTwoPots() {
     config += Hash("deviceId", m_receiver, "processingTime", 200);
     instantiateDeviceWithAssert("PipeReceiverDevice", config);
 
-    // make sure the sender has stopped sending data
-    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+    for (unsigned int nDataWhenStop = 3; nDataWhenStop < 8; ++nDataWhenStop) {
+        // make sure the sender has stopped sending data
+        CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
 
-    // write data asynchronously
-    m_deviceClient->execute(m_sender, "write");
+        // write data asynchronously
+        m_deviceClient->execute(m_sender, "write");
 
-    unsigned int nDataWhenStop = 6;
-    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", nDataWhenStop));
-    // stop sending data after receiving nDataWhenStop data!
-    m_deviceClient->execute(m_sender, "stop");
-    // The receiver is expected to get one more data when EOS arrives: the one which is being written
-    // into the inactive pot when the "stop" slot is called.
-    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", 0, false));
-    CPPUNIT_ASSERT_EQUAL(nDataWhenStop + 1, m_deviceClient->get<unsigned int>(m_receiver, "nTotalDataOnEos"));
+        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", nDataWhenStop));
+        // stop sending data after receiving nDataWhenStop data!
+        m_deviceClient->execute(m_sender, "stop");
+        // The receiver is expected to get one more data when EOS arrives: the one which is being written
+        // into the inactive pot when the "stop" slot is called.
+        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", 0, false));
+        CPPUNIT_ASSERT_EQUAL(nDataWhenStop + 1, m_deviceClient->get<unsigned int>(m_receiver, "nTotalDataOnEos"));
+        
+        // reset nTotalData and nTotalDataOnEos
+        m_deviceClient->execute(m_receiver, "reset");
+        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", 0));
+    }
 
     killDeviceWithAssert(m_receiver);
     std::clog << "Passed!\n\n";
