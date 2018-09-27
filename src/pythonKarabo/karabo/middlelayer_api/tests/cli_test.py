@@ -13,7 +13,7 @@ import weakref
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.devicenode import DeviceNode
 from karabo.middlelayer_api.device_client import (
-    getDevice, shutdown, getDevices)
+    findDevices, getDevice, shutdown, getDevices)
 from karabo.middlelayer_api.device_server import DeviceServer
 from karabo.middlelayer_api.eventloop import NoEventLoop
 from karabo.middlelayer_api.exceptions import KaraboError
@@ -211,6 +211,8 @@ class Tests(TestCase):
         yield from sleep(0.1)
         self.assertIn("other", getDevices())
         self.assertIn("other", getDevices("tserver"))
+        self.assertNotIn("other", findDevices("beep"))
+        self.assertIn("other", findDevices("other"))
         self.assertNotIn("other", getDevices("bserver"))
 
         double = Other(dict(_deviceId_="other", _serverId_="bserver"))
