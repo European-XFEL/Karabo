@@ -256,7 +256,7 @@ class SparkRenderer(QWidget):
                                   / self.ycnts[-iws:][c_idx_nz])
             test_avg = np.mean(self.yvals[-2*iws:-iws][t_idx_nz]
                                / self.ycnts[-2*iws:-iws][t_idx_nz])
-            delta = (current_avg-test_avg)/test_avg
+            delta = (current_avg-test_avg)/test_avg if test_avg else 0.
             if abs(delta) <= self._tendency_eps or not np.isfinite(delta):
                 self.tendency = 0
             else:
