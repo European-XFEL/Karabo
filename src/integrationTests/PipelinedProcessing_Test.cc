@@ -63,13 +63,15 @@ void PipelinedProcessing_Test::appTestRunner() {
 
     testPipeDrop();
 
+    testPipeMinData();
+
     testPipeTwoPots();
 
     testPipeTwoSharedReceiversWait();
 
     // from here on, the sender has "output1.noInputShared == drop"
     testPipeTwoSharedReceiversDrop();
-    
+
     // this test uses output2 channel of the sender
     testProfileTransferTimes();
 
@@ -256,6 +258,43 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
               << ", dataItemSize = " << dataItemSize 
               << ", nTotalData = " << nDataExpected - nTotalData0
               << ", nTotalDataOnEos = " << nDataExpected - nTotalDataOnEos0 << std::endl;
+}
+
+
+void PipelinedProcessing_Test::testPipeMinData() {
+    std::clog << "---\ntestPipeWaitOnData\n";
+
+    // input.minData = 1 by default
+    unsigned int minData = 5;
+
+    // start a receiver with "input.onData = false", i.e. call PipeReceiverDevice::onInput while reading data,
+    // and "minData > 1"
+    karabo::util::Hash config(m_receiverBaseConfig);
+    config += Hash("deviceId", m_receiver, "input.minData", minData);
+    instantiateDeviceWithAssert("PipeReceiverDevice", config);
+
+    // make sure the sender has stopped sending data
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+
+    // write data asynchronously
+    m_deviceClient->execute(m_sender, "write");
+
+    // poll until nTotalDataOnEos changes
+    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", 0, false));
+
+    // Test if data source was correctly passed
+    auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSourcesFromIndex");
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(minData), sources.size());
+    for (auto& src : sources) {
+        CPPUNIT_ASSERT_EQUAL(m_senderOutput1, src);
+    }
+
+    // in this case, only 10 data out of 12 are expected to be received
+    unsigned int nDataExpected = m_nDataPerRun - m_nDataPerRun % minData;
+    CPPUNIT_ASSERT_EQUAL(nDataExpected, m_deviceClient->get<unsigned int>(m_receiver, "nTotalData"));
+
+    killDeviceWithAssert(m_receiver);
+    std::clog << "Passed!\n\n";
 }
 
 
