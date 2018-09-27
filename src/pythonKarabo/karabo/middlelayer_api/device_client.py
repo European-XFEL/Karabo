@@ -13,7 +13,6 @@ from asyncio import get_event_loop, sleep
 from contextlib import contextmanager
 from decimal import Decimal
 from functools import partial
-import re
 from weakref import ref
 
 import dateutil.parser
@@ -537,38 +536,40 @@ def lock(proxy, wait_for_release=None):
     return context()
 
 
-def findDevices(reg_exp=None, visibility=3):
-    """Return a list of found device instance id's
+def findDevices(matchPattern, visibility=3):
+    """Return a list of found deviceId's.
 
-    :param reg_exp: Optional regular expression, string word, to find the
-                    corresponding instance id's.
+    This function is a shortcut to find deviceIds with `getDevices`
+
+    :param matchPattern: String pattern, to find the deviceId's containing
+                         the matchPattern.
     :param visibility: Integer specifying the visibility of desired devices.
                        Default visibility level is 3.
     """
-    ret = getDevices(visibility=visibility)
-
-    if reg_exp is not None:
-        regex = re.compile(reg_exp)
-        ret = list(filter(regex.match, ret))
-
-    return ret
+    return getDevices(matchPattern=matchPattern, visibility=visibility)
 
 
-def getDevices(serverId=None, visibility=3):
+def getDevices(serverId=None, visibility=3, matchPattern=None):
     """Return a list of currently running devices
 
     :param serverId: Optional serverId, so that only devices are returned
-                     running on device server
+                     running on device server.
     :param visibility: Integer specifying the visibility of desired devices.
                        Default visibility level is 3.
+    :param matchPattern: Optional string pattern, to find deviceId's containing
+                         the matchPattern.
     """
     instance = get_instance()
     if serverId is None:
-        return [k for k, v, a in instance.systemTopology["device"].iterall()
-                if a["visibility"] <= visibility]
+        ret = [k for k, v, a in instance.systemTopology["device"].iterall()
+               if a["visibility"] <= visibility]
     else:
-        return [k for k, v, a in instance.systemTopology["device"].iterall()
-                if a["serverId"] == serverId and a["visibility"] <= visibility]
+        ret = [k for k, v, a in instance.systemTopology["device"].iterall()
+               if a["serverId"] == serverId and a["visibility"] <= visibility]
+    if matchPattern is not None:
+        ret = [dev for dev in ret if matchPattern in dev]
+
+    return ret
 
 
 def getServers(visibility=3):
