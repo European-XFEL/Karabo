@@ -43,6 +43,7 @@ private:
     void testGetOutputChannelSchema();
     void testPipeWait();
     void testPipeDrop();
+    void testPipeMinData();
     void testPipeTwoSharedReceiversWait();
     void testPipeTwoSharedReceiversDrop();
     void testPipeTwoPots();
