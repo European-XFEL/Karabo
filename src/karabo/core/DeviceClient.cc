@@ -1214,6 +1214,9 @@ namespace karabo {
             // Create InputChannel with handlers (this also enables auto-reconnect):
             InputChannel::Pointer input = sigSlotPtr->createInputChannel(channelName, masterCfg, dataHandler,
                                                                          SignalSlotable::InputHandler(), eosHandler);
+            // Set an id for the input channel - since we do not allow to connect more than once to the same
+            // output channel, our instance id is sufficient.
+            input->setInstanceId(sigSlotPtr->getInstanceId());
             // Asynchronously connect to OutputChannel:
             sigSlotPtr->connectInputChannel(input);
 
