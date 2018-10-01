@@ -29,6 +29,12 @@ class DeviceClient(Macro, DeviceClientBase):
             else:
                 raise AttributeError('Unknown device "{}"'.format(name))
 
+    def _initInfo(self):
+        info = super(Macro, self)._initInfo()
+        info["lang"] = "python"
+        info["type"] = "client"
+        return info
+
 
 @functools.wraps(device_client.connectDevice)
 def connectDevice(device, *, autodisconnect=15, **kwargs):
