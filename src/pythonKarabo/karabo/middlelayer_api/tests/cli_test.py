@@ -13,7 +13,7 @@ import weakref
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.devicenode import DeviceNode
 from karabo.middlelayer_api.device_client import (
-    findDevices, getDevice, shutdown, getDevices)
+    getDevice, findDevices, shutdown, getClients, getDevices)
 from karabo.middlelayer_api.device_server import DeviceServer
 from karabo.middlelayer_api.eventloop import NoEventLoop
 from karabo.middlelayer_api.exceptions import KaraboError
@@ -206,6 +206,7 @@ class Tests(TestCase):
     def init_topo(self, dc):
         other = Other(dict(_deviceId_="other", _serverId_="tserver"))
         self.assertNotIn("other", getDevices())
+        self.assertNotIn("other", getClients())
         self.assertNotIn("other", getDevices("tserver"))
         yield from other.startInstance()
         yield from sleep(0.1)
