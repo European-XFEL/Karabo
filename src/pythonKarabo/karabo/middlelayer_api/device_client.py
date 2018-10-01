@@ -579,6 +579,12 @@ def getClients():
     return list(instance.systemTopology["client"])
 
 
+def getTopology():
+    """Return the full topology Hash of the DeviceClient
+    """
+    return get_instance().systemTopology
+
+
 def findServers(matchPattern, visibility=3):
     """Return a list of found serverId's
 
