@@ -217,7 +217,8 @@ class Macro(Device):
 
     def printToConsole(self, data):
         self.print = data
-        self.doNotCompressEvents += 1
+        # Make sure a new timestamp gets attached!
+        self.doNotCompressEvents = self.doNotCompressEvents.value + 1
         self.update()
 
     @classmethod
