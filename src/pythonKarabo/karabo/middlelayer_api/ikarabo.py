@@ -30,7 +30,7 @@ class DeviceClient(Macro, DeviceClientBase):
                 raise AttributeError('Unknown device "{}"'.format(name))
 
     def _initInfo(self):
-        info = super(Macro, self)._initInfo()
+        info = super(DeviceClient, self)._initInfo()
         info["lang"] = "python"
         info["type"] = "client"
         return info
