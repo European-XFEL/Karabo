@@ -5,4 +5,3 @@ from karabo.middlelayer import (
 from karabo.middlelayer_api.device_client import (
     call, get_instance)
 from karabo.middlelayer_api.eventloop import synchronize
-from karabo.middlelayer_api.tests.eventloop import DeviceTest, sync_tst
