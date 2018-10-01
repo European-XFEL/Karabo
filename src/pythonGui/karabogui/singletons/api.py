@@ -69,6 +69,8 @@ get_selection_tracker = _build_getter('selection_tracker',
 get_project_model = _build_getter('project_model', '.singletons.project_model',
                                   'ProjectViewItemModel')
 get_topology = _build_getter('topology', '.topology.api', 'SystemTopology')
+get_config = _build_getter('configuration', '.singletons.configuration',
+                           'Configuration')
 
 # Hide our implementation detail
 del _build_getter
