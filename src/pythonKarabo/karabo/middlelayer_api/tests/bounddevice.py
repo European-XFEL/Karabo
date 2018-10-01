@@ -6,8 +6,8 @@ import numpy
 
 from karabo.bound import (
     AMPERE, AlarmCondition, Hash, DOUBLE_ELEMENT, Epochstamp, INPUT_CHANNEL,
-    INT32_ELEMENT,
-    KARABO_CLASSINFO, KILO, METER, MILLI, MICRO, NDARRAY_ELEMENT, NODE_ELEMENT,
+    INT32_ELEMENT, VECTOR_STRING_ELEMENT,
+    KARABO_CLASSINFO, KILO, METER, MILLI, NDARRAY_ELEMENT, NODE_ELEMENT,
     OUTPUT_CHANNEL, PythonDevice, Schema, SLOT_ELEMENT, State, STRING_ELEMENT,
     TABLE_ELEMENT, Timestamp, Trainstamp)
 
@@ -64,7 +64,7 @@ class TestDevice(PythonDevice):
             .defaultValue(33)
             .commit(),
 
-            STRING_ELEMENT(expected).key("deviceString")
+            STRING_ELEMENT(expected).key("middlelayerDevice")
             .assignmentOptional().noDefaultValue()
             .reconfigurable()
             .commit(),
@@ -117,6 +117,11 @@ class TestDevice(PythonDevice):
 
             INPUT_CHANNEL(expected).key("input")
             .dataSchema(Schema())
+            .commit(),
+
+            VECTOR_STRING_ELEMENT(expected).key("interfaces")
+            .displayedName("Interfaces")
+            .assignmentOptional().defaultValue(["Motor", "Camera"])
             .commit(),
         )
 
@@ -200,7 +205,7 @@ class TestDevice(PythonDevice):
     def compareSchema(self):
         """This function tries to get the maxSize of a middlelayer device
         """
-        instance_id = self.get("deviceString")
+        instance_id = self.get("middlelayerDevice")
         remote = self.remote()
         schema = remote.getDeviceSchema(instance_id)
         max_size = schema.getMaxSize("vectorMaxSize")
