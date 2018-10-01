@@ -121,7 +121,7 @@ class DeviceNode(String):
             instance.__dict__[self.key] = None
             return
         proxy = yield from getDevice(value)
-        proxy._datahash = Hash()
+        proxy._current = Hash()
         instance.__dict__[self.key] = proxy
         instance._notifyNewSchema()
 
