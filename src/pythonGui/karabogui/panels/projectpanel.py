@@ -71,11 +71,11 @@ class ProjectPanel(Searchable, BasePanelWidget):
             name="save"
         )
         trash = KaraboAction(
-            icon=icons.delete, text="&Move to trash",
-            tooltip=("Move the current project to trash. This option can be "
-                     "reverted"),
+            icon=icons.delete, text="&Declare as trashed or untrashed",
+            tooltip=("Mark a project as trashed or untrashed depending on "
+                     "the project state."),
             triggered=_project_trash_handler,
-            name="delete"
+            name="declare"
         )
 
         for k_action in (new, load, save, trash):
