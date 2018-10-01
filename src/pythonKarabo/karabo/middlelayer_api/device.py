@@ -2,7 +2,7 @@ from asyncio import coroutine
 import os
 import socket
 
-from karabo.common.enums import Capabilities
+from karabo.common.enums import Capabilities, Interfaces
 from karabo.common.states import State
 from .alarm import AlarmMixin
 from .basetypes import isSet
@@ -159,7 +159,22 @@ class Device(AlarmMixin, SignalSlotable):
             capabilities |= Capabilities.PROVIDES_SCENES
         if hasattr(self, "availableMacros"):
             capabilities |= Capabilities.PROVIDES_MACROS
+        if hasattr(self, "interfaces"):
+            capabilities |= Capabilities.PROVIDES_INTERFACES
+
         info["capabilities"] = capabilities
+
+        interfaces = 0
+        if hasattr(self, "interfaces"):
+            for description in self.interfaces.value:
+                if description in Interfaces.__members__:
+                    interfaces |= Interfaces[description]
+                else:
+                    raise NotImplementedError(
+                        "Provided interface is not supported: {}".format(
+                            description))
+
+            info["interfaces"] = interfaces
 
         return info
 

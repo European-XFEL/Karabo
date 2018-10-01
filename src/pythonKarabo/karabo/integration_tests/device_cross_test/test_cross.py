@@ -1,6 +1,7 @@
 """This tests the communication between bound API and middlelayer API"""
 
-from asyncio import async, coroutine, create_subprocess_exec, get_event_loop
+from asyncio import (
+    async, coroutine, create_subprocess_exec, get_event_loop)
 from contextlib import contextmanager
 from datetime import datetime
 import os
@@ -9,11 +10,12 @@ from subprocess import PIPE
 import sys
 from unittest import main
 
+from karabo.common.enums import Capabilities, Interfaces
 from karabo.middlelayer import (
     AccessLevel, AlarmCondition, Assignment, background, Configurable,
-    DeviceClientBase, getDevice, getHistory, isSet, InputChannel, Int32,
-    KaraboError, MetricPrefix, Node,
-    OutputChannel, setWait, shutdown, sleep, Slot, State, unit, Unit,
+    DeviceClientBase, getDevice, getHistory, isSet, InputChannel,
+    Int32, KaraboError, MetricPrefix, Node,
+    OutputChannel, setWait, shutdown, sleep, Slot, State, String, unit, Unit,
     VectorDouble, waitUntil, waitUntilNew)
 
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
@@ -28,12 +30,20 @@ class MiddlelayerDevice(DeviceClientBase):
     rawchannelcount = 0
     value = Int32()
 
+    boundDevice = String(defaultValue="")
     child = Node(Child)
 
     vectorMaxSize = VectorDouble(defaultValue=[2.0, 2.0],
                                  minSize=2, maxSize=4)
 
+    foundCapabilities = Int32(
+        defaultValue=0)
+
+    foundInterfaces = Int32(
+        defaultValue=0)
+
     @Slot()
+    @coroutine
     def slot(self):
         self.marker = True
 
@@ -57,6 +67,18 @@ class MiddlelayerDevice(DeviceClientBase):
 
     output = OutputChannel(Child)
     rawoutput = OutputChannel()
+
+    @Slot()
+    @coroutine
+    def retrieveInterfaces(self):
+        # Get the device topology
+        device_topology = self.systemTopology["device"]
+        capa = device_topology[self.boundDevice, "capabilities"]
+        interfaces = device_topology[self.boundDevice, "interfaces"]
+        # Add to our device and immediately update!
+        self.foundCapabilities = capa
+        self.foundInterfaces = interfaces
+        self.update()
 
 
 class Tests(DeviceTest):
@@ -115,11 +137,36 @@ class Tests(DeviceTest):
                 </input>
             </root>""")
         self.process.stdin.close()
+
         proxy = yield from getDevice("boundDevice")
         self.assertEqual(proxy.a, 22.5 * unit.milliampere,
                          "didn't receive inital value from bound device")
         self.assertEqual(proxy.readonly, 2,
                          "didn't receive initial value from bound device")
+
+        # Basic Interfaces Check AFTER bound device is up
+        # -----------------------------------------------
+
+        with (yield from getDevice("middlelayerDevice")) as mdl_proxy:
+            yield from setWait(mdl_proxy, boundDevice="boundDevice")
+            self.assertEqual(mdl_proxy.boundDevice, "boundDevice")
+            yield from mdl_proxy.retrieveInterfaces()
+            capas = mdl_proxy.foundCapabilities.value
+            interfaces = mdl_proxy.foundInterfaces.value
+            self.assertEqual(capas, Capabilities.PROVIDES_INTERFACES)
+            self.assertEqual(interfaces, Interfaces.Motor + Interfaces.Camera)
+
+            def _test_mask(mask, bit):
+                return (mask & bit) == bit
+
+            has_interfaces = _test_mask(capas,
+                                        Capabilities.PROVIDES_INTERFACES)
+            self.assertTrue(has_interfaces)
+
+            has_motor = _test_mask(interfaces, Interfaces.Motor)
+            self.assertTrue(has_motor)
+            has_camera = _test_mask(interfaces, Interfaces.Camera)
+            self.assertTrue(has_camera)
 
         a_desc = type(proxy).a
         self.assertIs(a_desc.unitSymbol, Unit.AMPERE)
@@ -142,7 +189,7 @@ class Tests(DeviceTest):
         with proxy:
             self.assertEqual(proxy.maxSizeSchema, 0)
             # Test the maxSize from a vector property!
-            proxy.deviceString = "middlelayerDevice"
+            proxy.middlelayerDevice = "middlelayerDevice"
             yield from proxy.compareSchema()
             self.assertEqual(proxy.maxSizeSchema, 4)
 
