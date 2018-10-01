@@ -8,8 +8,6 @@ from karabo.macros.cli import *
 # This initializes everything
 from karabo.middlelayer_api import ikarabo
 ikarabo.start_ikarabo()
-# get the devices global which is lazily initialized in the ikarabo module
-devices = ikarabo.devices
 del ikarabo
 """
 
