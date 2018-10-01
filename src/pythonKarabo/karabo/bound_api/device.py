@@ -21,7 +21,7 @@ from karathon import (
     Schema, SignalSlotable, Timestamp, Trainstamp, Unit, Validator,
     ValidatorValidationRules
 )
-from karabo.common.api import (AlarmCondition, Capabilities, State,
+from karabo.common.api import (AlarmCondition, Capabilities, Interfaces, State,
                                karabo_deprecated)
 # Use patched DeviceClient, not the one directly from karathon:
 from .device_client import DeviceClient
@@ -400,7 +400,22 @@ class PythonDevice(NoFsm):
             capabilities |= Capabilities.PROVIDES_SCENES
         if configuration.has("availableMacros"):
             capabilities |= Capabilities.PROVIDES_MACROS
+        if configuration.has("interfaces"):
+            capabilities |= Capabilities.PROVIDES_INTERFACES
+
         info["capabilities"] = capabilities
+
+        interfaces = 0
+        if configuration.has("interfaces"):
+            for description in self.get("interfaces"):
+                if description in Interfaces.__members__:
+                    interfaces |= Interfaces[description]
+                else:
+                    raise NotImplementedError(
+                        "Provided interface is not supported: {}".format(
+                            description))
+
+            info["interfaces"] = interfaces
 
         # Instantiate SignalSlotable object
         self._ss = SignalSlotable(self.deviceid, "JmsConnection",

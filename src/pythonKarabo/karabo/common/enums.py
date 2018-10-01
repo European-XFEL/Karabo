@@ -4,9 +4,21 @@ from enum import Enum, IntEnum
 class Capabilities(IntEnum):
     PROVIDES_SCENES = 1
     PROVIDES_MACROS = 2
+    PROVIDES_INTERFACES = 4
     # add future capabilities as bit maskable properties:
-    # FUTURE_CAPABILITY = 2
-    # SOME_OTHER_CAPABILITY = 4
+    # FUTURE_CAPABILITY = 8
+    # SOME_OTHER_CAPABILITY = 16
+    # ...
+
+
+class Interfaces(IntEnum):
+    Motor = 1
+    MultiAxisMotor = 2
+    Trigger = 4
+    Camera = 8
+    # add future interfaces as bit maskable properties:
+    # FUTURE_INTERFACE = 16
+    # SOME_OTHER_INTERFACE = 32
     # ...
 
 

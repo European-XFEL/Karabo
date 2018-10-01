@@ -31,10 +31,11 @@ from .display_types import(
     KARABO_SCHEMA_DISPLAY_TYPE_HEX, KARABO_SCHEMA_DISPLAY_TYPE_BIN,
     KARABO_SCHEMA_DISPLAY_TYPE_BITSET, KARABO_SCHEMA_DISPLAY_TYPE_FILEOUT,
     KARABO_SCHEMA_DISPLAY_TYPE_FILEIN, KARABO_SCHEMA_DISPLAY_TYPE_IMAGEDATA,
-    KARABO_SCHEMA_DISPLAY_TYPE_CURVE, KARABO_SCHEMA_DISPLAY_TYPE_SCENES, 
+    KARABO_SCHEMA_DISPLAY_TYPE_CURVE, KARABO_SCHEMA_DISPLAY_TYPE_SCENES,
     KARABO_SCHEMA_DISPLAY_TYPE_RUNCONFIGURATOR,
 )
-from .enums import Capabilities, DeviceStatus, ONLINE_STATUSES, NO_CONFIG_STATUSES
+from .enums import (Capabilities, DeviceStatus, Interfaces, ONLINE_STATUSES,
+                    NO_CONFIG_STATUSES)
 from .module import create_module
 from .savable import BaseSavableModel, set_modified_flag
 from .states import State, StateSignifier
