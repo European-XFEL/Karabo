@@ -67,12 +67,10 @@ class Configuration(QObject):
 
     def __new__(cls, *args, **kwargs):
         instance = super(Configuration, cls).__new__(cls, *args, **kwargs)
-
         # Memory filling avoiding __setattr__!
         memory = [getattr(cls, attr).name for attr in dir(cls)
                   if isinstance(getattr(cls, attr), Item)]
         instance.__dict__['_memory'] = memory
-
         return instance
 
     def __init__(self, parent=None):
