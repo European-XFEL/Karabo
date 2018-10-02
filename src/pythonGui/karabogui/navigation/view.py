@@ -10,6 +10,7 @@ from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog, QMenu,
                          QTreeView)
 
 from karabo.common.api import Capabilities
+from karabo.common.scenemodel.api import SceneTargetWindow
 from karabogui import icons
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.enums import NavigationItemTypes
@@ -129,6 +130,32 @@ class NavigationTreeView(QTreeView):
         """
         self.setExpanded(index, True)
         super(NavigationTreeView, self).scrollTo(index)
+
+    # ----------------------------
+    # Events
+
+    def mouseDoubleClickEvent(self, event):
+        index = self.currentIndex()
+        node = self.model().index_ref(index)
+        if node is None:
+            return
+
+        device_id = node.node_id
+        capabilities = node.capabilities
+
+        def _test_mask(mask, bit):
+            return (mask & bit) == bit
+
+        has_scene = _test_mask(capabilities, Capabilities.PROVIDES_SCENES)
+        if not has_scene:
+            return
+
+        scene_name = 'scene'
+        target_window = SceneTargetWindow.Dialog
+        handler = partial(handle_scene_from_server, device_id, scene_name,
+                          None, target_window)
+        call_device_slot(handler, device_id, 'requestScene',
+                         name=scene_name)
 
     # ----------------------------
     # Slots
