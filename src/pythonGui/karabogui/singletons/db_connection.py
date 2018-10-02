@@ -17,7 +17,7 @@ from karabogui.events import (
     broadcast_event, KaraboEventSender, register_for_broadcasts
 )
 from karabogui.enums import KaraboSettings
-from karabogui.singletons.api import get_network
+from karabogui.singletons.api import get_config, get_network
 from karabogui.util import handle_scene_from_server, get_setting, set_setting
 from karabogui.request import call_device_slot
 
@@ -361,7 +361,7 @@ class ProjectDatabaseConnection(QObject):
         """
         device_id = self.project_manager
         domain = self._default_domain
-        db_token = 'admin'
+        db_token = get_config()['db_token']
         handler = partial(handle_scene_from_server, device_id, name, None,
                           target_window)
         call_device_slot(handler, device_id, 'slotGetScene',
