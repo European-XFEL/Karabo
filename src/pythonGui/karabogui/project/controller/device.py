@@ -13,8 +13,8 @@ from traits.api import Instance, Property, on_trait_change
 from karabo.common.api import Capabilities, NO_CONFIG_STATUSES
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
-    find_parent_object
-)
+    find_parent_object)
+from karabo.common.scenemodel.api import SceneTargetWindow
 from karabo.middlelayer import Hash
 from karabo.middlelayer_api.project.api import (read_project_model,
                                                 write_project_model)
@@ -119,6 +119,30 @@ class DeviceInstanceController(BaseProjectGroupController):
             return
 
         self._broadcast_item_click()
+
+    def double_click(self, project_controller, parent=None):
+        project_device = self.project_device
+        device_id = project_device.device_id
+        # Check first if we are online!
+        if project_device is None or not project_device.online:
+            return
+
+        topology_node = self.project_device.device_node
+        capabilities = topology_node.capabilities if topology_node else 0
+
+        def _test_mask(mask, bit):
+            return (mask & bit) == bit
+
+        has_scene = _test_mask(capabilities, Capabilities.PROVIDES_SCENES)
+        if not has_scene:
+            return
+
+        scene_name = 'scene'
+        target_window = SceneTargetWindow.Dialog
+        handler = partial(handle_scene_from_server, device_id, scene_name,
+                          None, target_window)
+        call_device_slot(handler, device_id, 'requestScene',
+                         name=scene_name)
 
     def _get_display_name(self):
         """Traits property getter for ``display_name``
