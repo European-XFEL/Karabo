@@ -4,13 +4,12 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt4.QtCore import QObject
+import karabogui.globals as krb_globals
 
-from karabogui.enums import KaraboSettings
-from karabogui.util import get_setting, set_setting
+from PyQt4.QtCore import QObject, QSettings
 
 
-class Item:
+class Item(object):
     __slots__ = ["name", "default", "q_set"]
 
     def __init__(self, name, default=None, q_set=None):
@@ -18,7 +17,7 @@ class Item:
         self.name = name
         self.q_set = q_set
         if self.q_set is not None:
-            self.default = get_setting(self.q_set) or default
+            self.default = QSettings().value(self.q_set) or default
         else:
             self.default = default
 
@@ -31,7 +30,7 @@ class Item:
     def __set__(self, instance, value):
         instance.__dict__[self.name] = value
         if self.q_set:
-            set_setting(self.q_set, value)
+            QSettings().setValue(self.q_set, value)
 
     def __str__(self):
         return self.name
@@ -41,29 +40,29 @@ class Configuration(QObject):
     """The main dispatch point for Karabo Configurations and QSettings.
     """
 
-    broker_topic = Item('broker_topic', q_set=KaraboSettings.BROKER_TOPIC)
-    macro_server = Item('macro_server', default='karabo/macroServer',
-                        q_set=KaraboSettings.MACRO_SERVER)
+    broker_topic = Item('broker_topic', q_set="BROKER_TOPIC")
+    macro_server = Item('macro_server', default=krb_globals.MACRO_SERVER,
+                        q_set="MACRO_SERVER")
 
     # ----------------------------------------------
     # Last directories stored and used
 
-    config_dir = Item('config_dir', q_set=KaraboSettings.CONFIG_DIR)
-    macro_dir = Item('macro_dir', q_set=KaraboSettings.MACRO_DIR)
-    scene_dir = Item('scene_dir', q_set=KaraboSettings.SCENE_DIR)
+    config_dir = Item('config_dir', q_set="CONFIG_DIR")
+    macro_dir = Item('macro_dir', q_set="MACRO_DIR")
+    scene_dir = Item('scene_dir', q_set="SCENE_DIR")
 
     # ----------------------------------------------
     # Project db interface
 
     db_token = Item('db_token', default='admin')
-    domain = Item('domain', default='CAS_INTERNAL',
-                  q_set=KaraboSettings.PROJECT_DOMAIN)
+    domain = Item('domain', default='CAS_INTERNAL', q_set="PROJECT_DOMAIN")
 
     # ----------------------------------------------
     # GUI Server network connection
 
-    username = Item('username', q_set=KaraboSettings.USERNAME)
-    guiServers = Item('guiServers', q_set=KaraboSettings.GUI_SERVERS)
+    username = Item('username', default=krb_globals.DEFAULT_USER,
+                    q_set="USERNAME")
+    guiServers = Item('guiServers', default=(), q_set="GUI_SERVERS")
 
     def __new__(cls, *args, **kwargs):
         instance = super(Configuration, cls).__new__(cls, *args, **kwargs)

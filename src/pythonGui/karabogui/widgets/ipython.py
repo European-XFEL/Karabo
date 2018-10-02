@@ -18,13 +18,11 @@ except ImportError:
     from IPython.qt import kernel_mixins, inprocess
 
 from karabo.middlelayer import Hash, State
-from karabogui import globals as krb_globals, messagebox
+from karabogui import messagebox
 from karabogui.binding.api import get_binding_value, PropertyProxy
-from karabogui.enums import KaraboSettings
 from karabogui.request import send_property_changes
-from karabogui.singletons.api import get_network, get_topology
+from karabogui.singletons.api import get_config, get_network, get_topology
 from karabogui.topology.api import is_server_online
-from karabogui.util import get_setting
 
 
 class IPythonWidget(RichJupyterWidget):
@@ -70,8 +68,7 @@ class KernelManager(kernel_mixins.QtKernelManagerMixin):
     __client = None
 
     def start_kernel(self):
-        serverId = get_setting(KaraboSettings.MACRO_SERVER)
-        serverId = serverId or krb_globals.MACRO_SERVER
+        serverId = get_config()['macro_server']
 
         success = is_server_online(serverId)
         if not success:

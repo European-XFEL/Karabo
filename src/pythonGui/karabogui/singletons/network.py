@@ -12,10 +12,9 @@ from karabo.middlelayer import (
     Hash, decodeBinary, encodeBinary, AccessLevel, Timestamp)
 from karabogui import background
 from karabogui.dialogs.logindialog import LoginDialog
-from karabogui.enums import KaraboSettings
 from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.singletons.api import get_config
 import karabogui.globals as krb_globals
-from karabogui.util import get_setting, set_setting
 
 
 class Network(QObject):
@@ -79,12 +78,11 @@ class Network(QObject):
     def load_login_settings(self):
         # Maximum number of GUI servers to be stored, 5 by default
 
-        # Load from QSettings
-        self.username = (get_setting(KaraboSettings.USERNAME)
-                         or krb_globals.DEFAULT_USER)
-        self.guiservers = get_setting(KaraboSettings.GUI_SERVERS) or []
-        self.max_servers = (get_setting(KaraboSettings.MAX_GUI_SERVERS)
-                            or self.max_servers)
+        # Load from configuration singleton
+        config = get_config()
+        self.username = config['username']
+        self.guiservers = config['guiServers']
+
         if self.guiservers:
             self.hostname, self.port = self.guiservers[0].split(':')
 
@@ -307,9 +305,9 @@ class Network(QObject):
         self.guiservers = _least_recently_used(server, self.guiservers,
                                                int(self.max_servers))
 
-        set_setting(KaraboSettings.USERNAME, self.username)
-        set_setting(KaraboSettings.GUI_SERVERS, self.guiservers)
-        set_setting(KaraboSettings.MAX_GUI_SERVERS, self.max_servers)
+        config = get_config()
+        config['username'] = self.username
+        config['guiServers'] = self.guiservers
 
         # If some requests got piled up, because of no server connection,
         # now these get handled
