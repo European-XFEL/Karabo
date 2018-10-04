@@ -1,5 +1,5 @@
 from karabo.common.enums import Capabilities, Interfaces
-from .middlelayer import get_instance
+from karabo.middlelayer_api.device_client import get_instance
 
 DEVICE = "device"
 

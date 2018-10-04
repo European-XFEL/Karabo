@@ -187,6 +187,7 @@ runPythonUnitTests() {
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.tests"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabogui"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.interactive"
+    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.macro_api"
 
     echo
     echo Karabo Python unit tests complete
