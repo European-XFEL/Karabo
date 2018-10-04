@@ -1,3 +1,43 @@
+**************************
+What's New in Karabo 2.2.5
+**************************
+
+Hotfix release regarding **cpp pipelining** and **GUI fixes** for trashed projects.
+In summary, the trashing design follows now in the direction of the meta data
+catalogue, where one can declare a RUN quality. The trashing attribute is used
+in exactly the same transparent way. Trashing should be exceptional!
+
+- **Save as** is **NOT** possible anymore
+- GUI server can refuse old clients to enforce GUI client version
+- Trashing a project will not close the project
+- Trashing from 'Load Dialog' is not possible anymore
+- The operator is allowed to load trashed project, it might still contain valid data
+- Trashed projects will appear in pink in the project view and operator gets a notify dialog (2.2.4.4)
+
+The datalogger instantiation is slowed down, to make the establish signal
+connection reliably and the cpp pipelining was corrected for empty detector data.
+
+Detailed Merge-Log
+==================
+
+core Devices
+++++++++++++
+- Slow down DataLoggers instantiation !2935
+- FEAT: GUI server can refuse old GUI clients !2947
+
+Karabo Core
++++++++++++
+- Fix C++ pipeline integration test !2958
+- Fix pipeline with empty NDArray !2937
+
+Graphical user interface
+++++++++++++++++++++++++
+- GUI: Protect plots from awkwardly high or low values !2964
+- GUI: Make trashed projects loadable !2946
+- GUI: Remove trashing option from Load Project dialog !2945
+- GUI: Remove 'Save as' for projects ... !2944
+
+
 ****************************
 What's New in Karabo 2.2.4.4
 ****************************
