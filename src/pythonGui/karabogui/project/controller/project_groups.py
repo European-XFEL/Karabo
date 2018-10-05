@@ -15,13 +15,12 @@ from karabo.common.project.api import (
 from karabo.common.scenemodel.api import SceneModel, read_scene
 from karabogui import icons, messagebox
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
-from karabogui.enums import KaraboSettings
 from karabogui.project.dialog.object_handle import ObjectEditDialog
 from karabogui.project.dialog.server_handle import ServerHandleDialog
 from karabogui.request import call_device_slot
+from karabogui.singletons.api import get_config
 from karabogui.util import (
-    getOpenFileName, get_setting, set_setting, handle_macro_from_server,
-    handle_scene_from_server)
+    getOpenFileName, handle_macro_from_server, handle_scene_from_server)
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 
 
@@ -140,7 +139,8 @@ def _add_macro(project_controller):
 
 
 def _load_macro(project_controller):
-    path = get_setting(KaraboSettings.MACRO_DIR)
+    config = get_config()
+    path = config['macro_dir']
     directory = path if path and op.isdir(path) else ""
 
     fn = getOpenFileName(caption='Load macro', filter='Python Macros (*.py)',
@@ -149,7 +149,7 @@ def _load_macro(project_controller):
         return
 
     # Store old macro dialog path
-    set_setting(KaraboSettings.MACRO_DIR, op.dirname(fn))
+    config['macro_dir'] = op.dirname(fn)
 
     project = project_controller.model
     # Read MacroModel
@@ -196,7 +196,8 @@ def _add_scene(project_controller):
 def _load_scene(project_controller):
     """ Load a scene from local disk
     """
-    path = get_setting(KaraboSettings.SCENE_DIR)
+    config = get_config()
+    path = config['scene_dir']
     directory = path if path and op.isdir(path) else ""
 
     fn = getOpenFileName(caption='Load scene', filter='SVG Files (*.svg)',
@@ -205,7 +206,7 @@ def _load_scene(project_controller):
         return
 
     # Store old scene dialog path
-    set_setting(KaraboSettings.SCENE_DIR, op.dirname(fn))
+    config['scene_dir'] = op.dirname(fn)
 
     project = project_controller.model
     # Read SceneModel

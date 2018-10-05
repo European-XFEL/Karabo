@@ -10,7 +10,7 @@ from uuid import uuid4
 import weakref
 
 from dateutil.tz import tzlocal, tzutc
-from PyQt4.QtCore import QEvent, QObject, QSize, QSettings
+from PyQt4.QtCore import QEvent, QObject, QSize
 from PyQt4.QtGui import (
     QDialog, QFileDialog, QHeaderView, QLabel, QMovie, QValidator
 )
@@ -21,9 +21,8 @@ from karabo.middlelayer import decodeXML, Hash, writeXML
 from karabogui import globals as krb_globals, icons, messagebox
 from karabogui.binding.api import (
     DeviceClassProxy, DeviceProxy, extract_configuration)
-from karabogui.enums import KaraboSettings
 from karabogui.events import broadcast_event, KaraboEventSender
-from karabogui.singletons.api import get_db_conn
+from karabogui.singletons.api import get_config, get_db_conn
 
 
 class MouseWheelEventBlocker(QObject):
@@ -124,8 +123,8 @@ def load_configuration_from_file(device_proxy):
         is_class = isinstance(device_proxy, DeviceClassProxy)
         messagebox.show_error(msg.format('class' if is_class else 'device'))
         return
-
-    path = get_setting(KaraboSettings.CONFIG_DIR)
+    config = get_config()
+    path = config['config_dir']
     directory = path if path and op.isdir(path) else ""
 
     filename = getOpenFileName(caption="Open configuration",
@@ -138,7 +137,7 @@ def load_configuration_from_file(device_proxy):
         config = decodeXML(fp.read())
 
     # Save the directory information
-    set_setting(KaraboSettings.CONFIG_DIR, op.dirname(filename))
+    config['config_dir'] = op.dirname(filename)
 
     # Broadcast so the configurator can handle the complexities of applying
     # a configuration.
@@ -152,8 +151,8 @@ def save_configuration_to_file(device_proxy):
     if device_proxy is None or device_proxy.binding is None:
         messagebox.show_error("No configuration available. Saving failed.")
         return
-
-    path = get_setting(KaraboSettings.CONFIG_DIR)
+    config = get_config()
+    path = config['config_dir']
     directory = path if path and op.isdir(path) else ""
 
     class_id = device_proxy.binding.class_id
@@ -180,7 +179,7 @@ def save_configuration_to_file(device_proxy):
         writeXML(config, fp)
 
     # save the last config directory
-    set_setting(KaraboSettings.CONFIG_DIR, op.dirname(filename))
+    config['config_dir'] = op.dirname(filename)
 
 
 @contextmanager
@@ -305,18 +304,6 @@ def set_treeview_header(tree_view):
 
     # Prevent drag reorder of the header
     tree_view.header().setMovable(False)
-
-
-def get_setting(attr):
-    """ This function is used to retrieve a value from the QSettings file """
-    assert isinstance(attr, KaraboSettings)
-    return QSettings().value(attr.name)
-
-
-def set_setting(attr, value):
-    """ This function is used to set an attribute in the QSettings file """
-    assert isinstance(attr, KaraboSettings)
-    QSettings().setValue(attr.name, value)
 
 
 def utc_to_local(utc_str, format='%Y-%m-%d %H:%M:%S'):
