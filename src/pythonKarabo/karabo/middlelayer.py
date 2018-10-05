@@ -12,11 +12,11 @@ from .common.states import State
 
 from .middlelayer_api.device_client import (
     call, connectDevice, DeviceClientBase, disconnectDevice, execute,
-    executeNoWait, findDevices, filterByTags, getClasses, getConfiguration,
-    getConfigurationFromPast, getDevice, getDevices, getDescriptors, getSchema,
-    getServers, getHistory, isAlive, instantiate, instantiateNoWait, lock,
-    waitUntilNew, waitUntil, waitWhile, setWait, shutdown, shutdownNoWait,
-    setNoWait, updateDevice, Queue
+    executeNoWait, findDevices, filterByTags, getClasses, getClients,
+    getConfiguration, getConfigurationFromPast, getDevice, getDevices,
+    getDescriptors, getSchema, getServers, getHistory, isAlive, instantiate,
+    instantiateNoWait, lock, waitUntilNew, waitUntil, waitWhile, setWait,
+    shutdown, shutdownNoWait, setNoWait, updateDevice, Queue
 )
 from .middlelayer_api.proxy import (
     ProxyBase as Proxy, ProxySlotBase as ProxySlot,
@@ -85,10 +85,10 @@ def _create_cli_submodule():
     # NOTE: This is the middlelayer part of the ikarabo namespace
     symbols = (
         call, connectDevice, disconnectDevice, execute, executeNoWait,
-        findDevices, getClasses, getConfiguration, getDevice, getDevices,
-        getHistory, getSchema, getServers, instantiate, instantiateNoWait,
-        karabo, setWait, setNoWait, shutdown, shutdownNoWait, sleep, State,
-        waitUntil, waitUntilNew
+        findDevices, getClasses, getClients, getConfiguration, getDevice,
+        getDevices, getHistory, getSchema, getServers, instantiate,
+        instantiateNoWait, karabo, setWait, setNoWait, shutdown,
+        shutdownNoWait, sleep, State, waitUntil, waitUntilNew
     )
     module = create_module('karabo.middlelayer.cli', *symbols)
     module.__file__ = __file__  # looks nicer when repr(cli) is used
