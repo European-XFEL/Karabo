@@ -39,7 +39,7 @@ class DeviceClientBase(Device):
 
     def __init__(self, configuration):
         self.systemTopology = Hash("device", Hash(), "server", Hash(),
-                                   "macro", Hash())
+                                   "macro", Hash(), "client", Hash())
         self.loggerMap = Hash()
         super().__init__(configuration)
 
@@ -570,6 +570,13 @@ def getDevices(serverId=None, visibility=3, matchPattern=None):
         ret = [dev for dev in ret if matchPattern in dev]
 
     return ret
+
+
+def getClients():
+    """Return a list of currently running external clients
+    """
+    instance = get_instance()
+    return list(instance.systemTopology["client"])
 
 
 def getServers(visibility=3):
