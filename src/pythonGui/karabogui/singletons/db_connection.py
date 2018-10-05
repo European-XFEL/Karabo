@@ -68,7 +68,7 @@ class ProjectDatabaseConnection(QObject):
         self._read_items_buffer = []
         self._write_items_buffer = []
 
-        self.project_manager = 'KaraboProjectDB'  # XXX: Temporary
+        self.project_manager = get_config()['project_manager']
         self._ignore_cache = True
 
         # XXX: This is really asinine right now!
