@@ -3,21 +3,23 @@
 # Created on September 16, 2018
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
-import karabogui.globals as krb_globals
+from collections import defaultdict
 
 from PyQt4.QtCore import QObject, QSettings
 
 
-class Item(object):
-    __slots__ = ["name", "default", "q_set"]
+class Item:
+    __slots__ = ["name", "default", "q_set", "group", "path"]
 
-    def __init__(self, name, default=None, q_set=None):
+    def __init__(self, name, default=None, q_set=False, group=None):
         # XXX: Once we have the new descriptor protocol, name gets removed!
         self.name = name
+
         self.q_set = q_set
-        if self.q_set is not None:
-            self.default = QSettings().value(self.q_set) or default
+        self.group = group
+        self.path = "{group}/{name}".format(group=group, name=name)
+        if self.q_set:
+            self.default = QSettings().value(self.path) or default
         else:
             self.default = default
 
@@ -30,39 +32,49 @@ class Item(object):
     def __set__(self, instance, value):
         instance.__dict__[self.name] = value
         if self.q_set:
-            QSettings().setValue(self.q_set, value)
+            QSettings().setValue(self.path, value)
 
     def __str__(self):
         return self.name
+
+
+NETWORK = "network"
+PROJECT = "project"
+ECOSYSTEM = "ecosystem"
+DIR = "dir"
 
 
 class Configuration(QObject):
     """The main dispatch point for Karabo Configurations and QSettings.
     """
 
-    broker_topic = Item('broker_topic', q_set="BROKER_TOPIC")
-    macro_server = Item('macro_server', default=krb_globals.MACRO_SERVER,
-                        q_set="MACRO_SERVER")
+    broker_topic = Item('broker_topic', q_set=False, group=ECOSYSTEM)
+    macro_server = Item('macro_server', default='karabo/macroServer',
+                        q_set=True, group=ECOSYSTEM)
+    project_manager = Item('project_manager', default='KaraboProjectDB',
+                           q_set=False, group=ECOSYSTEM)
 
     # ----------------------------------------------
     # Last directories stored and used
 
-    config_dir = Item('config_dir', q_set="CONFIG_DIR")
-    macro_dir = Item('macro_dir', q_set="MACRO_DIR")
-    scene_dir = Item('scene_dir', q_set="SCENE_DIR")
+    config_dir = Item('config_dir', q_set=True, group=DIR)
+    macro_dir = Item('macro_dir', q_set=True, group=DIR)
+    scene_dir = Item('scene_dir', q_set=True, group=DIR)
 
     # ----------------------------------------------
     # Project db interface
 
-    db_token = Item('db_token', default='admin')
-    domain = Item('domain', default='CAS_INTERNAL', q_set="PROJECT_DOMAIN")
+    db_token = Item('db_token', default='admin', group=PROJECT)
+    domain = Item('domain', default='CAS_INTERNAL', q_set=True,
+                  group=PROJECT)
 
     # ----------------------------------------------
     # GUI Server network connection
 
-    username = Item('username', default=krb_globals.DEFAULT_USER,
-                    q_set="USERNAME")
-    guiServers = Item('guiServers', default=(), q_set="GUI_SERVERS")
+    username = Item('username', default='operator', q_set=True,
+                    group=NETWORK)
+    gui_servers = Item('gui_servers', default=(), q_set=True,
+                       group=NETWORK)
 
     def __new__(cls, *args, **kwargs):
         instance = super(Configuration, cls).__new__(cls, *args, **kwargs)
@@ -103,6 +115,15 @@ class Configuration(QObject):
     def keys(self):
         for key in self._memory:
             yield key
+
+    def groups(self):
+        """Return a dictionary with groups as keys and config keys as values
+        """
+        ret = defaultdict(set)
+        for key in self._memory:
+            group = getattr(self.__class__, key).group
+            ret[group].add(key)
+        return ret
 
     def __len__(self):
         return len(self._memory)
