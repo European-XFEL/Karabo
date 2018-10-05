@@ -1,7 +1,9 @@
 from asyncio import wait_for, TimeoutError
 from collections import OrderedDict, namedtuple
 
-from .middlelayer import call, get_instance, synchronize, Timestamp
+from karabo.middlelayer_api.device_client import call, get_instance
+from karabo.middlelayer_api.eventloop import synchronize
+from karabo.middlelayer_api.timestamp import Timestamp
 
 # Alarm basic definitions
 # ---------------------------
@@ -83,7 +85,8 @@ def _get_service_information(interlock_only=False):
                 ack = info_hsh.get(ACKNOWLEDGEABLE)
                 acknowledge = needs_ack and ack
                 # Create namedtuple
-                entry = AlarmEntry(acknowledge="{}".format(acknowledge), **params)
+                entry = AlarmEntry(acknowledge="{}".format(acknowledge),
+                                   **params)
                 entries.append(entry)
 
         return entries
