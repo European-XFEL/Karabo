@@ -27,7 +27,6 @@ class KaraboEventSender(Enum):
     MiddlePanelClosed = "Middle panel closed"
     NetworkConnectStatus = "Network connection changed"
     OpenSceneLink = "Scene link"
-    ProcessingDelay = "Delay"
     RemoveAlarmServices = "Remove alarm services"
     RemoveProjectModelViews = "Remove scene or macro views"
     ProjectDBConnect = "Reestablish connection to project db"
