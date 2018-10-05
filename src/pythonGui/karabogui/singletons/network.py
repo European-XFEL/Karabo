@@ -21,6 +21,7 @@ class Network(QObject):
     # our qt signals
     signalServerConnectionChanged = pyqtSignal(bool)
     signalReceivedData = pyqtSignal(object)
+    signalNetworkPerformance = pyqtSignal(float, bool)
 
     def __init__(self, parent=None):
         super(Network, self).__init__(parent=parent)
@@ -36,7 +37,7 @@ class Network(QObject):
         self.requestQueue = []
 
         self._waitingMessages = {}
-        self._monitoringPerformance = False
+        self._show_proc_delay = False
 
         self.hostname = "localhost"
         self.port = "44444"
@@ -122,7 +123,7 @@ class Network(QObject):
         print("Disconnect failed:", self.tcpSocket.errorString())
 
     def togglePerformanceMonitor(self):
-        self._monitoringPerformance = not self._monitoringPerformance
+        self._show_proc_delay = not self._show_proc_delay
 
     def _login(self):
         """Authentification login.
@@ -215,9 +216,8 @@ class Network(QObject):
         self.signalReceivedData.emit(decodeBinary(data))
 
     def _performanceMonitor(self, recv_timestamp):
-        if self._monitoringPerformance:
-            diff = Timestamp().toTimestamp() - recv_timestamp
-            broadcast_event(KaraboEventSender.ProcessingDelay, {'value': diff})
+        diff = Timestamp().toTimestamp() - recv_timestamp
+        self.signalNetworkPerformance.emit(diff, self._show_proc_delay)
 
     @pyqtSlot(QObject)
     def onSocketError(self, socketError):
