@@ -16,12 +16,10 @@ from karabo.common.scenemodel.api import (
 )
 from karabo.middlelayer import Hash, read_project_model
 from karabogui import globals as krb_globals, messagebox
-from karabogui.enums import KaraboSettings
 from karabogui.events import broadcast_event, KaraboEventSender
-from karabogui.singletons.api import (get_db_conn, get_project_model,
-                                      get_network)
+from karabogui.singletons.api import (get_config, get_db_conn,
+                                      get_project_model, get_network)
 from karabogui.topology.util import is_server_online
-from karabogui.util import get_setting
 
 
 def add_device_to_server(server, class_id=''):
@@ -325,7 +323,7 @@ def run_macro(macro_model):
              "module", macro_model.simple_name,
              "uuid", macro_model.uuid)
 
-    serverId = get_setting(KaraboSettings.MACRO_SERVER)
+    serverId = get_config()['macro_server']
 
     serverId = serverId or krb_globals.MACRO_SERVER
     success = is_server_online(serverId)

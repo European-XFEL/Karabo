@@ -15,13 +15,12 @@ from karabo.common.project.api import get_user_cache
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo.middlelayer_api.project.api import read_project_model
 from karabogui import icons, messagebox
-from karabogui.enums import KaraboSettings
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.project.dialog.object_handle import (
     ObjectDuplicateDialog, ObjectEditDialog)
 from karabogui.singletons.api import get_db_conn, get_panel_wrangler
-from karabogui.util import (
-    getOpenFileName, getSaveFileName, get_setting, set_setting)
+from karabogui.util import getOpenFileName, getSaveFileName
+from karabogui.singletons.api import get_config
 from .bases import BaseProjectController, ProjectControllerUiData
 
 
@@ -74,8 +73,8 @@ class SceneController(BaseProjectController):
         """
         # Make sure scene is closed before!
         scene = self.model
-
-        path = get_setting(KaraboSettings.SCENE_DIR)
+        config = get_config()
+        path = config['scene_dir']
         directory = path if path and op.isdir(path) else ""
 
         fn = getOpenFileName(caption='Replace scene',
@@ -85,7 +84,7 @@ class SceneController(BaseProjectController):
             return
 
         # Store scene dir path
-        set_setting(KaraboSettings.SCENE_DIR, op.dirname(fn))
+        config['scene_dir'] = op.dirname(fn)
 
         project = project_controller.model
         if scene in project.scenes:
@@ -163,7 +162,8 @@ class SceneController(BaseProjectController):
 
     @pyqtSlot()
     def _save_scene_to_file(self):
-        path = get_setting(KaraboSettings.SCENE_DIR)
+        config = get_config()
+        path = config['scene_dir']
         directory = path if path and op.isdir(path) else ""
         scene = self.model
         filename = scene.simple_name
@@ -177,7 +177,7 @@ class SceneController(BaseProjectController):
             return
 
         # Store old scene dialog path
-        set_setting(KaraboSettings.SCENE_DIR, op.dirname(fn))
+        config['scene_dir'] = op.dirname(fn)
 
         if not fn.endswith('.svg'):
             fn = '{}.svg'.format(fn)
