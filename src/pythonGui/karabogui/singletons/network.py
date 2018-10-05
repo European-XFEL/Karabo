@@ -235,7 +235,7 @@ class Network(QObject):
             if reply == QMessageBox.Cancel:
                 return
         elif socketError == QAbstractSocket.RemoteHostClosedError:
-            msg = ('The remote host <b>{}[:{}]</b> closed the connection'
+            msg = ('The remote host <b>{}[:{}]</b> closed the connection. '
                    'Your GUI client version might not be supported.').format(
                 self.hostname, self.port)
             reply = QMessageBox.question(
