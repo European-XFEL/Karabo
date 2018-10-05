@@ -16,9 +16,8 @@ from karabogui import messagebox
 from karabogui.events import (
     broadcast_event, KaraboEventSender, register_for_broadcasts
 )
-from karabogui.enums import KaraboSettings
 from karabogui.singletons.api import get_config, get_network
-from karabogui.util import handle_scene_from_server, get_setting, set_setting
+from karabogui.util import handle_scene_from_server
 from karabogui.request import call_device_slot
 
 # This matches the batch size used in the project database
@@ -74,9 +73,6 @@ class ProjectDatabaseConnection(QObject):
 
         # XXX: This is really asinine right now!
         self._have_logged_in = False
-
-        # cached domain for saving project
-        self._default_domain = None
 
     def karaboBroadcastEvent(self, event):
         """ Router for incoming broadcasts
@@ -181,16 +177,11 @@ class ProjectDatabaseConnection(QObject):
 
     @property
     def default_domain(self):
-        if self._default_domain is None:
-            self._default_domain = (
-                    get_setting(KaraboSettings.PROJECT_DOMAIN)
-                    or 'CAS_INTERNAL')
-        return self._default_domain
+        return get_config()['domain']
 
     @default_domain.setter
     def default_domain(self, value):
-        self._default_domain = value
-        set_setting(KaraboSettings.PROJECT_DOMAIN, value)
+        get_config()['domain'] = value
 
     @property
     def ignore_local_cache(self):
@@ -359,9 +350,10 @@ class ProjectDatabaseConnection(QObject):
     def _get_database_scene(self, name, uuid, target_window):
         """Directly ask for a scene from the project database
         """
+        config = get_config()
         device_id = self.project_manager
-        domain = self._default_domain
-        db_token = get_config()['db_token']
+        domain = config['domain']
+        db_token = config['db_token']
         handler = partial(handle_scene_from_server, device_id, name, None,
                           target_window)
         call_device_slot(handler, device_id, 'slotGetScene',
