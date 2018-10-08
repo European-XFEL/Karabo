@@ -1,5 +1,6 @@
 from karabogui.testing import GuiTestCase
-from ..configuration import Configuration, NETWORK, PROJECT, ECOSYSTEM, DIR
+from ..configuration import (
+    Configuration, ECOSYSTEM, DIRECTORIES, NETWORK, PROJECT)
 
 
 class TestConfiguration(GuiTestCase):
@@ -40,7 +41,7 @@ class TestConfiguration(GuiTestCase):
         self.assertEqual(len(project_group), 2)
         self.assertIn('db_token', project_group)
         self.assertIn('domain', project_group)
-        dir_group = groups[DIR]
+        dir_group = groups[DIRECTORIES]
         self.assertEqual(len(dir_group), 3)
         self.assertIn('macro_dir', dir_group)
         self.assertIn('scene_dir', dir_group)
