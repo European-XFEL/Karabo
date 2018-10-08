@@ -186,6 +186,7 @@ class DeviceServer(object):
         self.deviceInstanceMap = dict()
         self.hostname, dotsep, self.domainname = socket.gethostname().partition('.')
         self.needScanPlugins = True
+        self.pluginThread = None
         self.autoStart = config.get("autoStart")
         self.deviceClasses = config.get("deviceClasses")
         self.timeServerId = config.get("timeServerId")
@@ -313,7 +314,7 @@ class DeviceServer(object):
 
     def stopDeviceServer(self):
         self.scanning = False
-        if hasattr(self, "pluginThread") and self.pluginThread.isAlive():
+        if self.pluginThread and self.pluginThread.isAlive():
             self.pluginThread.join()
         self.pluginThread = None
         self.ss = None
