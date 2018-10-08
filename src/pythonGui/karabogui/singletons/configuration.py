@@ -41,11 +41,36 @@ class Item:
 NETWORK = "network"
 PROJECT = "project"
 ECOSYSTEM = "ecosystem"
-DIR = "dir"
+DIRECTORIES = "dir"
 
 
 class Configuration(QObject):
     """The main dispatch point for Karabo Configurations and QSettings.
+
+    An Item is constructed via the descriptor protocol.
+
+    pool = Item('pool', defaultValue='fish', q_set=False, group=POOL)
+
+    - The first parameter is the name, which must correspond to the
+      property name.
+    - The second parameter defaultValue provides - as the name says - the
+      default value. This value might be overwritten on initialization if
+      there is a presetting in QSettings.
+    - The qset parameter activates the QSetting functionality. Items with this
+      parameter set to True, store their value in a QSetting file and load
+      this on the next GUI startup and overwrite an eventual default value.
+    - The group parameter defines an additional string for sorting and grabbing
+      the Items for a later model view.
+
+    NOTE: Every parameter has a cache principle, meaning that if an additional
+          client is opened on the same machine, both clients do not interact
+          via QSettings on runtime.
+
+    NOTE: Not every parameter is supposed to have a QSetting
+          - db tokens or other sensible data which should not leave the GUI.
+          - parameters, such as broker topic, which might not be send always
+            as they will take a default value from QSettings next time, which
+            might be wrong.
     """
 
     broker_topic = Item('broker_topic', q_set=False, group=ECOSYSTEM)
@@ -57,9 +82,9 @@ class Configuration(QObject):
     # ----------------------------------------------
     # Last directories stored and used
 
-    config_dir = Item('config_dir', q_set=True, group=DIR)
-    macro_dir = Item('macro_dir', q_set=True, group=DIR)
-    scene_dir = Item('scene_dir', q_set=True, group=DIR)
+    config_dir = Item('config_dir', q_set=True, group=DIRECTORIES)
+    macro_dir = Item('macro_dir', q_set=True, group=DIRECTORIES)
+    scene_dir = Item('scene_dir', q_set=True, group=DIRECTORIES)
 
     # ----------------------------------------------
     # Project db interface
