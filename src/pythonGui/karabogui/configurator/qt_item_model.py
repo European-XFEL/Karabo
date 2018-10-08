@@ -20,7 +20,7 @@ from karabogui.binding.api import (
     has_changes)
 from karabogui.const import (
     OK_COLOR, ERROR_COLOR_ALPHA, LOCKED_COLOR, PROPERTY_ALARM_COLOR,
-    PROPERTY_ALARM_COLOR_MAP, PROPERTY_WARN_COLOR)
+    PROPERTY_ALARM_COLOR_MAP, PROPERTY_READONLY_COLOR, PROPERTY_WARN_COLOR)
 from karabogui.indicators import get_state_color, STATE_COLORS
 from karabogui.request import send_property_changes
 from .utils import (
@@ -578,6 +578,10 @@ class ConfigurationTreeModel(QAbstractItemModel):
                     font = QFont()
                     font.setBold(True)
                     return font
+            elif role == Qt.ForegroundRole:
+                is_class = isinstance(self.root, DeviceClassProxy)
+                if is_class and binding.access_mode is AccessMode.READONLY:
+                    return QColor(*PROPERTY_READONLY_COLOR)
             elif role == Qt.DecorationRole:
                 return get_icon(binding)
         elif column == 1 and role == Qt.DisplayRole:
