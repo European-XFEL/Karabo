@@ -1,4 +1,29 @@
 **************************
+What's New in Karabo 2.2.6
+**************************
+
+Hotfix release for MDL and cpp DeviceClient. Previously, the middlelayer devices
+described their schema with vectors using minSize and maxSize wrong. This is
+corrected here.
+The DeviceNode bug occurs when multiple device nodes are used in a device,
+giving an exception.
+The input channels created by DeviceClient, e.g. as happening in DOOCS, will
+get an instance id to not confuse connected outputchannels.
+
+Detailed Merge-Log
+==================
+
+Middlelayer Core
+++++++++++++++++
+- MDL: Fix current hash setting in DeviceNode !2989
+- MDL: Fix attribute type description in schema !2963
+
+cpp/bound Core
+++++++++++++++
+- C++: Give and id to input channels created by DeviceClient !2981
+
+
+**************************
 What's New in Karabo 2.2.5
 **************************
 
