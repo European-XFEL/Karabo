@@ -186,6 +186,7 @@ class DeviceServer(object):
         self.deviceInstanceMap = dict()
         self.hostname, dotsep, self.domainname = socket.gethostname().partition('.')
         self.needScanPlugins = True
+        self.pluginThread = None
         self.autoStart = config.get("autoStart")
         self.deviceClasses = config.get("deviceClasses")
         self.timeServerId = config.get("timeServerId")
@@ -313,7 +314,8 @@ class DeviceServer(object):
 
     def stopDeviceServer(self):
         self.scanning = False
-        self.pluginThread.join()
+        if self.pluginThread and self.pluginThread.isAlive():
+            self.pluginThread.join()
         self.pluginThread = None
         self.ss = None
         EventLoop.stop()
@@ -411,7 +413,10 @@ class DeviceServer(object):
         self.log.WARN("DeviceServer \"{}\" does not allow the transition for this event.".format(self.serverid))
 
     def slotKillServer(self):
-        self.log.INFO("Received kill signal")
+        if self.log:
+            self.log.INFO("Received kill signal")
+        else: # might get killed by signal handler before setting up logging
+            print("Received kill signal")
         launchers = []
         for deviceid in list(self.deviceInstanceMap.keys()):
             self.ss.call(deviceid, "slotKillDevice")
@@ -423,9 +428,10 @@ class DeviceServer(object):
         try:
             self.ss.reply(self.serverid)
         except Exception as e:
-            msg = ("Did not notify distributed system of server shutdown:"
-                   "\n {}").format(e)
-            self.log.ERROR(msg)
+            if self.log: # see above
+                msg = ("Did not notify distributed system of server shutdown:"
+                       "\n {}").format(e)
+                self.log.ERROR(msg)
         finally:
             # NOTE: `stopDeviceServer` will not return because the process will
             # be killed - everything which is called after this call will
