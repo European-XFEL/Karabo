@@ -1,5 +1,5 @@
 from PyQt4.QtCore import Qt, pyqtSlot
-from PyQt4.QtGui import QAction, QInputDialog, QFrame, QLabel
+from PyQt4.QtGui import QAction, QFrame, QLabel
 from traits.api import Instance, Str, on_trait_change
 
 from karabo.common.api import State
@@ -32,15 +32,17 @@ class DisplayStateColor(BaseBindingController):
         widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
         widget.setWordWrap(True)
         widget.setFrameStyle(QFrame.Box | QFrame.Plain)
-        widget.setText(self.model.text)
 
         objectName = generateObjectName(self)
         self._style_sheet = ("QLabel#{}".format(objectName) +
                              " {{ background-color : rgba{}; }}")
         widget.setObjectName(objectName)
 
-        textAction = QAction("Edit Static Text...", widget)
-        textAction.triggered.connect(self._change_static_text)
+        textAction = QAction("Show State String", widget)
+        textAction.triggered.connect(self._show_state_string)
+        # update the context menu and keep track
+        textAction.setCheckable(True)
+        textAction.setChecked(self.model.show_string)
         widget.addAction(textAction)
         return widget
 
@@ -70,13 +72,17 @@ class DisplayStateColor(BaseBindingController):
         sheet = self._style_sheet.format(color)
         self.widget.setStyleSheet(sheet)
 
-    @pyqtSlot()
-    def _change_static_text(self):
-        text, ok = QInputDialog.getText(self.widget, "Change static text",
-                                        "Static text:")
-        if ok:
-            self.model.text = text
+        if self.model.show_string:
+            self.widget.setText(proxy.value)
 
-    @on_trait_change('model.text', post_init=True)
+    @on_trait_change('model.show_string', post_init=True)
     def _update_text(self):
-        self.widget.setText(self.model.text)
+        if self.proxy is not None:
+            self.value_update(self.proxy)
+            if not self.model.show_string:
+                # Only clear the widget once if no action is set!
+                self.widget.clear()
+
+    @pyqtSlot()
+    def _show_state_string(self):
+        self.model.show_string = not self.model.show_string

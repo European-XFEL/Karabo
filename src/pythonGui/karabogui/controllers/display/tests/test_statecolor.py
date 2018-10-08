@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 from karabo.common.api import State
 from karabo.common.scenemodel.api import DisplayStateColorModel
 from karabo.middlelayer import Configurable, String
@@ -39,16 +37,19 @@ class TestStateColorModel(GuiTestCase):
             sheet = self.controller.widget.styleSheet()
             assert str(color) in sheet
 
-    def test_static_text(self):
+    def test_string(self):
         action = self.controller.widget.actions()[0]
-        assert action.text() == 'Edit Static Text...'
-
-        sym = 'karabogui.controllers.display.statecolor.QInputDialog'
-        with patch(sym) as QInputDialog:
-            QInputDialog.getText.return_value = 'fake news', True
-            action.trigger()
-
-        assert self.controller.widget.text() == 'fake news'
+        assert action.text() == 'Show State String'
+        state = 'CHANGING'
+        set_proxy_value(self.proxy, 'state', state)
+        assert self.controller.widget.text() == ''
+        action.trigger()
+        assert self.controller.widget.text() == 'CHANGING'
+        state = 'ON'
+        set_proxy_value(self.proxy, 'state', state)
+        assert self.controller.widget.text() == 'ON'
+        action.trigger()
+        assert self.controller.widget.text() == ''
 
     def test_priority(self):
         assert get_class_const_trait(self.controller, '_priority') == 20
