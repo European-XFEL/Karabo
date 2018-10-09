@@ -148,11 +148,13 @@ namespace karabo {
             const std::string& getInstanceId() const;
 
             /**
-             * Get ids of all input channels currently connected
+             * Check whether an InputChannel with given id is registered.
              *
-             * @return vector of strings with the ids
+             * @param instanceId of InputChannel
+             * @param copy - if true, check among channels that receive copies, else check among those that share data
+             * @return bool whether InputChannel of specified type is connected
              */
-            std::vector<std::string> getRegisteredInputChannels() const;
+            bool hasRegisteredInputChannel(const std::string& instanceId, bool copy) const;
 
             void registerIOEventHandler(const boost::function<void (const OutputChannel::Pointer&)>& ioEventHandler);
 
