@@ -579,14 +579,35 @@ def getClients():
     return list(instance.systemTopology["client"])
 
 
-def getServers(visibility=3):
+def findServers(matchPattern, visibility=3):
+    """Return a list of found serverId's
+
+    This function is a shortcut to find serverId's with `getServers`
+
+    :param matchPattern: String pattern, to find the serverId's containing
+                         the matchPattern.
+    :param visibility: Integer specifying the visibility of desired servers.
+                       Default visibility level is 3.
+    """
+    ret = getServers(matchPattern=matchPattern, visibility=visibility)
+
+    return ret
+
+
+def getServers(visibility=3, matchPattern=None):
     """Return a list of currently running servers
 
     :param visibility: Integer specifying the visiblity of desired servers.
                        Default visibility level is 3.
+    :param matchPattern: Optional string pattern, to find serverId's containing
+                         the matchPattern.
     """
-    return [k for k, v, a in get_instance().systemTopology["server"].iterall()
-            if a["visibility"] <= visibility]
+    ret = [k for k, v, a in get_instance().systemTopology["server"].iterall()
+           if a["visibility"] <= visibility]
+    if matchPattern is not None:
+        ret = [serv for serv in ret if matchPattern in serv]
+
+    return ret
 
 
 def getClasses(serverId):
