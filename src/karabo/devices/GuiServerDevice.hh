@@ -10,6 +10,9 @@
 #ifndef KARABO_CORE_GUISERVERDEVICE_HH
 #define	KARABO_CORE_GUISERVERDEVICE_HH
 
+#include <unordered_map>
+#include <set>
+
 #include <krb_log4cpp/Priority.hh>
 #include "karabo/net/JmsProducer.hh"
 #include "karabo/net/Connection.hh"
@@ -30,17 +33,11 @@ namespace karabo {
          * @brief The GuiServerDevice mediates between GUI clients and the distributed system.
          *
          * The GuiServerDevice acts as a mediator between the distributed system and GUI clients,
-         * which connect to it through p2p channels. The device centrally manages updates from
+         * which connect to it through (tcp) channels. The device centrally manages updates from
          * the distributed system and pushes them to the clients. Conversly, it handles requests
          * by clients and passes them on to devices in the distributed system.
          */
         class GuiServerDevice : public karabo::core::Device<> {
-
-            struct NetworkConnection {
-
-                std::string name;
-                karabo::net::Channel::Pointer channel;
-            };
 
             struct DeviceInstantiation {
                 boost::weak_ptr<karabo::net::Channel> channel;
@@ -61,7 +58,8 @@ namespace karabo {
             };
 
             typedef boost::weak_ptr<karabo::net::Channel> WeakChannelPointer;
-            typedef std::multimap<karabo::xms::InputChannel::Pointer, NetworkConnection> NetworkMap;
+            // There is no way to have a reliable unordered_set of weak pointers...
+            typedef std::unordered_map<std::string, std::set<WeakChannelPointer> > NetworkMap;
 
             enum QueueBehaviorsTypes {
 
@@ -418,16 +416,19 @@ namespace karabo {
             void onSubscribeNetwork(WeakChannelPointer channel, const karabo::util::Hash& info);
 
             /**
-             * handles ``input`` data from the pipe-lined processing channels the gui-server is
+             * handles data from the pipe-lined processing channels the gui-server is
              * subscribed to and forwards it to the relevant client channels, which have
              * connected via ``onSubscribeNetwork``. The incoming data is forwarded
-             * to all channels connected to this pipe-lined processing channels using
+             * to all channels connected to this pipe-lined processing channel using
              * the following hash message format: ``type=networkData``, ``name`` is the
-             * channel name and ``data`` holding ``input``.
+             * channel name and ``data`` holding the data.
              *
-             * @param input
+             * @param channelName: name of the InputChannel that provides these data
+             * @param data: the data coming from channelName
+             * @param meta: corresponding meta data
              */
-            void onNetworkData(const karabo::xms::InputChannel::Pointer& input);
+            void onNetworkData(const std::string& channelName,
+                               const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta);
 
             /**
              * sends the current system topology to the client connected on ``channel``.
@@ -770,6 +771,13 @@ namespace karabo {
              */
             std::string getChannelAddress(const karabo::net::Channel::Pointer& channel) const;
 
+            /**
+             * Utility to split pipeline channel name into device id and channel
+             * @param channelName: the complete channel name
+             * @param delim: the delimiter whose first appearance splits the two parts, default is ':'
+             * @return pair of two strings
+             */
+            std::pair<std::string, std::string> decodePipelineChannelName(const std::string& channelName, char delim = ':') const;
 
             /**
              * Possibly update schema attributes on device
