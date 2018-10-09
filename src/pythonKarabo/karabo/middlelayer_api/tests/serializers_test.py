@@ -7,6 +7,7 @@ from karabo.middlelayer import (
     Configurable, encodeXML, decodeXML, Hash, loadFromFile, VectorDouble,
     saveToFile
 )
+from karabo.testing.utils import xml_is_equal
 
 TST_WORKING_DIR = "/tmp/serializers_tests"
 
@@ -22,6 +23,7 @@ BOUND_HASH_XML = """<?xml version="1.0"?>
 
 # The following XML is what the middlelayer API generates
 MDL_HASH_XML = '<root KRB_Artificial=""><akey KRB_Type="STRING" >aval</akey><another KRB_Type="HASH" ><nested KRB_Type="DOUBLE" >1.618</nested></another></root>'  # noqa
+TRAIN_XML = '<root KRB_Artificial=""><bumpy KRB_Type="INT32" tid="KRB_UINT64:11" frac="KRB_UINT64:1212223123" sec="KRB_UINT64:3433113233111" >12</bumpy></root>'  # noqa
 
 # The following is used accross all tests as template Hash
 HASH = Hash('akey', 'aval', 'another', Hash('nested', 1.618))
@@ -112,6 +114,22 @@ class TestSerializers(TestCase):
         decoded = decodeXML(encoded)
         self.assertEqual(decoded['vector', 'minSize'], 1)
         self.assertEqual(decoded['vector', 'maxSize'], 2)
+
+    def test_time_info_hash(self):
+        """Test the unsigned integer 64 for timing information
+        """
+        h = Hash('bumpy', 12)
+        h.setAttribute('bumpy', 'tid', 11)
+        h.setAttribute('bumpy', 'frac', 1212223123)
+        h.setAttribute('bumpy', 'sec', 3433113233111)
+        encoded = encodeXML(h)
+        self.assertTrue(xml_is_equal(encoded, TRAIN_XML))
+
+        with self.assertRaises(ValueError):
+            h.setAttribute('bumpy', 'tid', 1.122)  # float is not UInt64
+            encoded = encodeXML(h)
+            # Serialization blows up as expected!
+            decodeXML(encoded)
 
 
 if __name__ == "__main__":
