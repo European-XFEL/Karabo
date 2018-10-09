@@ -165,19 +165,18 @@ namespace karabo {
         }
 
 
-        std::vector<std::string> OutputChannel::getRegisteredInputChannels() const {
-            std::vector<std::string> result;
-            {
-                boost::mutex::scoped_lock lock(m_registeredInputsMutex);
-                for (const InputChannelInfo& channelInfo : m_registeredCopyInputs) {
-                    result.push_back(channelInfo.get<std::string>("instanceId"));
-                }
-                for (const InputChannelInfo& channelInfo : m_registeredSharedInputs) {
-                    result.push_back(channelInfo.get<std::string>("instanceId"));
+        bool OutputChannel::hasRegisteredInputChannel(const std::string& instanceId, bool copy) const {
+            boost::mutex::scoped_lock lock(m_registeredInputsMutex);
+            const InputChannels& inputs = (copy ? m_registeredCopyInputs : m_registeredSharedInputs);
+            for (const InputChannelInfo& channelInfo : inputs) {
+                if (channelInfo.get<std::string>("instanceId") == instanceId) {
+                  return true;
                 }
             }
-            return result;
+
+            return false;
         }
+
 
         void OutputChannel::registerIOEventHandler(const boost::function<void (const OutputChannel::Pointer&)>& ioEventHandler) {
             m_ioEventHandler = ioEventHandler;
@@ -655,6 +654,7 @@ namespace karabo {
 
                     } else if (m_onNoSharedInputChannelAvailable == "wait") {
                         KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Waiting for available (shared) input channel...";
+                        // FIXME: Move blocking out of mutex that is also locked in onInputAvailable to make hasSharedInput return true
                         while (!hasSharedInput(instanceId)) {
                             boost::this_thread::sleep(boost::posix_time::millisec(1));
                         }
@@ -697,6 +697,7 @@ namespace karabo {
                         m_registeredSharedInputs[sharedInputIdx].get<std::deque<int> >("queuedChunks").push_back(chunkId);
                     } else if (m_onNoSharedInputChannelAvailable == "wait") {
                         KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Waiting for available (shared) input channel...";
+                        // FIXME: Move blocking out of mutex that is also locked in onInputAvailable to make isSharedNextEmpty return false
                         while (isShareNextEmpty()) {
                             boost::this_thread::sleep(boost::posix_time::millisec(1));
                         }
@@ -787,47 +788,68 @@ namespace karabo {
 
         void OutputChannel::copy(unsigned int chunkId) {
 
-            boost::mutex::scoped_lock lock(m_registeredInputsMutex);
-            // If no copied input channels are registered at all, we do not go on
-            if (m_registeredCopyInputs.empty()) return;
+            InputChannels waitingInstances;
+            {
+                boost::mutex::scoped_lock lock(m_registeredInputsMutex);
+                // If no copied input channels are registered at all, we do not go on
+                if (m_registeredCopyInputs.empty()) return;
 
-            for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
+                for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
 
-                const karabo::util::Hash& channelInfo = m_registeredCopyInputs[i];
+                    const karabo::util::Hash& channelInfo = m_registeredCopyInputs[i];
+                    const std::string& instanceId = channelInfo.get<std::string>("instanceId");
+                    const std::string& onSlowness = channelInfo.get<std::string>("onSlowness");
+
+                    if (hasCopyInput(instanceId)) {
+                        eraseCopyInput(instanceId);
+                        if (channelInfo.get<std::string > ("memoryLocation") == "local") {
+                            KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Now copying data (local)";
+                            copyLocal(chunkId, channelInfo);
+                        } else {
+                            KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Now copying data (remote)";
+                            copyRemote(chunkId, channelInfo);
+                        }
+                    } else if (onSlowness == "drop") {
+                        unregisterWriterFromChunk(chunkId);
+                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Dropping (copied) data package for " << instanceId;
+                    } else if (onSlowness == "throw") {
+                        unregisterWriterFromChunk(chunkId);
+                        throw KARABO_IO_EXCEPTION("Can not write (copied) data because input channel of " + instanceId + " was too late");
+                    } else if (onSlowness == "queue") {
+                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Queuing (copied) data package for " << instanceId;
+                        m_registeredCopyInputs[i].get<std::deque<int> >("queuedChunks").push_back(chunkId);
+                    } else if (onSlowness == "wait") {
+                        // Blocking actions must not happen under the mutex that is also needed to unblock (in onInputAvailable)
+                        waitingInstances.push_back(channelInfo);
+                    }
+                }
+            } // end of mutex lock
+
+            for (const InputChannelInfo& channelInfo : waitingInstances) {
                 const std::string& instanceId = channelInfo.get<std::string>("instanceId");
-                const std::string& onSlowness = channelInfo.get<std::string>("onSlowness");
-
-                if (hasCopyInput(instanceId)) {
-                    eraseCopyInput(instanceId);
-                    if (channelInfo.get<std::string > ("memoryLocation") == "local") {
-                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Now copying data (local)";
-                        copyLocal(chunkId, channelInfo);
-                    } else {
-                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Now copying data (remote)";
-                        copyRemote(chunkId, channelInfo);
+                KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Data (copied) is waiting for input channel of "
+                                           << instanceId << " to be available";
+                bool instanceDisconnected = false;
+                while (!hasCopyInput(instanceId)) {
+                    boost::this_thread::sleep(boost::posix_time::millisec(1));
+                    if (!hasRegisteredInputChannel(instanceId, true)) { // might have disconnected meanwhile...
+                        instanceDisconnected = true;
+                        break;
                     }
-                } else if (onSlowness == "drop") {
-                    unregisterWriterFromChunk(chunkId);
-                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Dropping (copied) data package for " << instanceId;
-                } else if (onSlowness == "throw") {
-                    unregisterWriterFromChunk(chunkId);
-                    throw KARABO_IO_EXCEPTION("Can not write (copied) data because input channel of " + instanceId + " was too late");
-                } else if (onSlowness == "queue") {
-                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Queuing (copied) data package for " << instanceId;
-                    m_registeredCopyInputs[i].get<std::deque<int> >("queuedChunks").push_back(chunkId);
-                } else if (onSlowness == "wait") {
-                    KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Data (copied) is waiting for input channel of "
-                            << instanceId << " to be available";
-                    while (!hasCopyInput(instanceId)) boost::this_thread::sleep(boost::posix_time::millisec(1));
-                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " found (copied) input channel after waiting, copying now";
-                    eraseCopyInput(instanceId);
-                    if (channelInfo.get<std::string > ("memoryLocation") == "local") {
-                        KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Now copying data (local)";
-                        copyLocal(chunkId, channelInfo);
-                    } else {
-                        KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Now copying data (remote)";
-                        copyRemote(chunkId, channelInfo);
-                    }
+                }
+                if (instanceDisconnected) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " input channel (copy) of " << instanceId
+                                               << " disconnected while waiting for it";
+                    continue;
+                }
+                KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " found (copied) input channel after waiting, copying now";
+                eraseCopyInput(instanceId);
+                if (channelInfo.get<std::string > ("memoryLocation") == "local") {
+                    KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Now copying data (local)";
+                    copyLocal(chunkId, channelInfo);
+                } else {
+                    KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Now copying data (remote)";
+                    copyRemote(chunkId, channelInfo);
                 }
             }
         }
