@@ -336,16 +336,13 @@ namespace karabo {
             size_t pipeBytesRead = 0, pipeBytesWritten = 0;
             {
                 boost::mutex::scoped_lock lock(m_networkMutex);
-                for (auto it = m_networkConnections.begin(); it != m_networkConnections.end(); ) {
-                    karabo::xms::InputChannel::Pointer channel = it->first;
-
-                    pipeBytesRead += channel->dataQuantityRead();
-                    pipeBytesWritten += channel->dataQuantityWritten();
-
-                    // m_networkConnections is a multimap. Go to the next non-duplicate key.
-                    do {
-                        ++it;
-                    } while (it != m_networkConnections.end() && channel != it->first);
+                for (const auto& nameAndChannelSet : m_networkConnections) {
+                    const std::string& channelName = nameAndChannelSet.first;
+                    const InputChannel::Pointer inputChannel = getInputChannelNoThrow(channelName);
+                    if (inputChannel) {
+                        pipeBytesRead += inputChannel->dataQuantityRead();
+                        pipeBytesWritten += inputChannel->dataQuantityWritten();
+                    }
                 }
             }
 
@@ -372,6 +369,9 @@ namespace karabo {
                 // priority 4 should be LOSSLESS
                 channel->setAsyncChannelPolicy(LOSSLESS, "LOSSLESS");
 
+                // Register channel before channel->readAsyncHash to be prepared immediately.
+                registerConnect(channel);
+
                 channel->readAsyncHash(bind_weak(&karabo::devices::GuiServerDevice::onRead, this, _1, WeakChannelPointer(channel), _2));
 
                 Hash brokerInfo("type", "brokerInformation");
@@ -381,9 +381,6 @@ namespace karabo {
                 brokerInfo.set("port", 7777); // TODO Kill once it's clear the GUI does not need that
                 brokerInfo.set("topic", m_topic);
                 channel->writeAsync(brokerInfo);
-
-                // Register channel
-                registerConnect(channel);
 
                 // Re-register acceptor socket (allows handling multiple clients)
                 m_dataConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
@@ -848,79 +845,86 @@ namespace karabo {
 
         void GuiServerDevice::onSubscribeNetwork(WeakChannelPointer channel, const karabo::util::Hash& info) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onSubscribeNetwork : channelName = \"" << info.get<string>("channelName") << "\" "
-                        << (info.get<bool>("subscribe") ? "+" : "-");
+                const string& channelName = info.get<string>("channelName");
+                const bool subscribe = info.get<bool>("subscribe");
+                KARABO_LOG_FRAMEWORK_DEBUG << "onSubscribeNetwork : channelName = '" << channelName << "' "
+                        << (subscribe ? "+" : "-");
 
-                karabo::net::Channel::Pointer chan = channel.lock();
-                string channelName = info.get<string>("channelName");
-                bool subscribe = info.get<bool>("subscribe");
-                NetworkMap::iterator iter;
                 boost::mutex::scoped_lock lock(m_networkMutex);
+                std::set<WeakChannelPointer>& channelSet = m_networkConnections[channelName]; // might create empty set
+                if (subscribe) {
+                    const bool notYetRegistered = channelSet.empty();
+                    if (!channelSet.insert(channel).second) {
+                        KARABO_LOG_FRAMEWORK_WARN << "A GUI client wants to subscribe a second time to output channel: "
+                                << channelName;
+                    }
+                    if (notYetRegistered) {
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Register to monitor '" << channelName << "'";
+                        const std::pair<std::string, std::string> devIdAndName(decodePipelineChannelName(channelName));
 
-                for (iter = m_networkConnections.begin(); iter != m_networkConnections.end(); ++iter) {
-                    if (channelName == iter->second.name) {
-                        if (subscribe) {
-                            if (chan == iter->second.channel) {
-                                KARABO_LOG_FRAMEWORK_WARN << "Skip subscription to output channel '" << channelName
-                                        << "' for GUI on channel " " : It is already subscribed for GUI on channel "
-                                        << chan.get();
-                                return;
-                            }
-                            NetworkConnection nc;
-                            nc.name = channelName;
-                            nc.channel = chan;
-                            m_networkConnections.insert(NetworkMap::value_type(iter->first, nc));
-                            return;
-                        } else {
-                            if (iter->second.channel == chan) {
-                                m_networkConnections.erase(iter);
-                                return;
-                            }
+                        auto dataHandler = bind_weak(&GuiServerDevice::onNetworkData, this, channelName, _1, _2);
+                        // Channel configuration - we rely on defaults as: "dataDistribution" == copy, "onSlowness" == drop
+                        const Hash cfg("delayOnInput", get<int>("delayOnInput"));
+                        if (!remote().registerChannelMonitor(devIdAndName.first, devIdAndName.second, dataHandler, cfg)) {
+                            KARABO_LOG_FRAMEWORK_WARN << "Already monitoring '" << channelName << "'!";
+                            // Should we remote().unregisterChannelMonitor' and try again? But problem never seen...
                         }
+                    } else {
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Do not register to monitor '" << channelName << "' "
+                                << "since " << channelSet.size() - 1u << " client(s) already registered."; // -1: the new one
+                    }
+                } else { // i.e. un-subscribe
+                    if (0 == channelSet.erase(channel)) {
+                        KARABO_LOG_FRAMEWORK_WARN << "A GUI client wants to un-subscribe from an output channel that it"
+                                << " is not subscribed: " << channelName;
+                    }
+                    if (channelSet.empty()) {
+                        const std::pair<std::string, std::string> devIdAndName(decodePipelineChannelName(channelName));
+                        if (!remote().unregisterChannelMonitor(devIdAndName.first, devIdAndName.second)) {
+                            KARABO_LOG_FRAMEWORK_WARN << "Failed to unregister '" << channelName << "'"; // Did it ever work?
+                        }
+                        m_networkConnections.erase(channelName); // Caveat: Makes 'channelSet' a dangling reference...
+                    } else {
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Do not unregister to monitor '" << channelName << "' "
+                                << "since " << channelSet.size() << " client(s) still interested";
+
                     }
                 }
-
-                if (!subscribe) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "trying to unsubscribe from non-subscribed channel " << channelName;
-                    return;
-                }
-
-                Hash h("connectedOutputChannels", channelName, "dataDistribution", "copy",
-                       "onSlowness", "drop", "delayOnInput", get<int>("delayOnInput"));
-                InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", h);
-                input->setInstanceId(m_instanceId);
-                input->registerInputHandler(bind_weak(&GuiServerDevice::onNetworkData, this, _1));
-
-                connectInputChannel(input); // asynchronous
-                NetworkConnection nc;
-                nc.name = channelName;
-                nc.channel = chan;
-                m_networkConnections.insert(NetworkMap::value_type(input, nc));
-
             } catch (const std::exception &e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onSubscribeNetwork(): " << e.what();
             }
         }
 
 
-        void GuiServerDevice::onNetworkData(const InputChannel::Pointer& input) {
+        std::pair<std::string, std::string> GuiServerDevice::decodePipelineChannelName(const std::string& channelName, char delim) const {
+            // Cut channelName into deviceId (all before 'delim') and channel (all behind 'delim')
+
+            const std::string::size_type splitPos = channelName.find_first_of(delim);
+            std::string rest;
+            if (splitPos != std::string::npos) {
+                rest = std::string(channelName, splitPos + 1); // all behind the delimiter
+            }
+            return std::make_pair(std::string(channelName, 0, splitPos), // from start until one before splitPos
+                                  std::move(rest)); //
+        }
+
+
+        void GuiServerDevice::onNetworkData(const std::string& channelName,
+                                            const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onNetworkData ....";
 
-                Hash h("type", "networkData");
-                for (size_t i = 0; i < input->size(); ++i) {
-                    Hash& data = h.bindReference<Hash>("data"); // overwrites if "data" already there
-                    input->read(data, i);
+                const Hash h("type", "networkData", "name", channelName, "data", data);
 
-                    boost::mutex::scoped_lock lock(m_networkMutex);
-                    pair<NetworkMap::iterator, NetworkMap::iterator> range = m_networkConnections.equal_range(input);
-                    for (; range.first != range.second; ++range.first) {
-                        h.set("name", range.first->second.name);
-                        safeClientWrite(WeakChannelPointer(range.first->second.channel), h, FAST_DATA);
+                boost::mutex::scoped_lock lock(m_networkMutex);
+                NetworkMap::const_iterator iter = m_networkConnections.find(channelName);
+                if (iter != m_networkConnections.cend()) {
+                    for (const WeakChannelPointer& channel : iter->second) { // iter->second is set<WeakChannelPointer>
+                        safeClientWrite(channel, h, FAST_DATA);
                     }
-                }
-            } catch (const Exception &e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onNetworkData: " << e.userFriendlyMsg();
+                } // else: all clients lost interest, but still some data arrives
+            } catch (const std::exception &e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onNetworkData: " << e.what();
             }
         }
 
@@ -1046,15 +1050,21 @@ namespace karabo {
 
                 {
                     // Erase all bookmarks (InputChannel pointers) associated with instance that gone
-                    NetworkMap::iterator iter;
+                    // GF: There is no real need for this: If a client is interested in an output channel of this
+                    //     device, better just rely on the automatic reconnect once the device is back.
+                    //     (Currently [before 2.3.0] the GUI assumes that it has to give an extra command for this
+                    //      channel if the device is back.)
                     boost::mutex::scoped_lock lock(m_networkMutex);
-
-                    for (iter = m_networkConnections.begin(); iter != m_networkConnections.end(); ++iter) {
-                        std::vector<std::string> tmp;
-                        boost::split(tmp, iter->second.name, boost::is_any_of("@:"));
-                        if (tmp[0] == instanceId) {
-                            KARABO_LOG_FRAMEWORK_DEBUG << "instanceId : " << instanceId << ", channelName : " << iter->second.name;
-                            m_networkConnections.erase(iter);
+                    NetworkMap::const_iterator mapIter = m_networkConnections.cbegin();
+                    while (mapIter != m_networkConnections.cend()) {
+                        const std::string& channelName = mapIter->first;
+                        const std::pair<std::string, std::string> idAndChannel(decodePipelineChannelName(channelName));
+                        if (idAndChannel.first == instanceId) {
+                            KARABO_LOG_FRAMEWORK_DEBUG << "Remove connection to input channel: " << channelName;
+                            m_networkConnections.erase(mapIter++); // postfix: erase current iterator, but prepare next
+                            remote().unregisterChannelMonitor(idAndChannel.first, idAndChannel.second);
+                        } else {
+                           ++mapIter;
                         }
                     }
                 }
@@ -1167,13 +1177,13 @@ namespace karabo {
 
         void GuiServerDevice::onError(const karabo::net::ErrorCode& errorCode, WeakChannelPointer channel) {
             KARABO_LOG_INFO << "onError : TCP socket got error : " << errorCode.value() << " -- \"" << errorCode.message() << "\",  Close connection to a client";
+            // TODO (?) Fork on error message
             disconnectChannel(channel);
         }
 
 
         void GuiServerDevice::disconnectChannel(WeakChannelPointer channel) {
             try {
-                // TODO Fork on error message
                 karabo::net::Channel::Pointer chan = channel.lock();
                 std::set<std::string> deviceIds; // empty set
                 {
@@ -1210,19 +1220,22 @@ namespace karabo {
                     }
                 }
                 // All devices left in deviceIds have to be unregistered from monitoring.
-
+                // TODO: Better move (back) under mutex - it is a fast action...
                 for (const std::string& deviceId : deviceIds) {
                     remote().unregisterDeviceMonitor(deviceId);
                 }
 
                 {
                     boost::mutex::scoped_lock lock(m_networkMutex);
-
                     NetworkMap::iterator iter = m_networkConnections.begin();
                     while (iter != m_networkConnections.end()) {
-                        if (iter->second.channel == chan) {
+                        std::set<WeakChannelPointer>& channelSet = iter->second;
+                        channelSet.erase(channel); // no matter whether in or not...
+                        if (channelSet.empty()) {
                             m_networkConnections.erase(iter++);
-                        } else ++iter;
+                        } else {
+                            ++iter;
+                        }
                     }
                     KARABO_LOG_FRAMEWORK_INFO << m_networkConnections.size() << " pipeline channel(s) left.";
                 }
@@ -1265,12 +1278,17 @@ namespace karabo {
                     // Then add pipeline information to the client connection infos
                     {
                         boost::mutex::scoped_lock lock(m_networkMutex);
-
-                        // m_networkConnections is a multimap; the same client channel (key) might be encountered more than once
-                        for (auto it = m_networkConnections.begin(); it != m_networkConnections.end(); ++it) {
-                            const std::string clientAddr = getChannelAddress(it->second.channel);
-                            std::vector<std::string>& pipelineConnections = data.get<std::vector<std::string> >(clientAddr + ".pipelineConnections");
-                            pipelineConnections.push_back(it->second.name); // the connected device property name
+                        for (auto mapIter = m_networkConnections.begin(); mapIter != m_networkConnections.end(); ++mapIter) {
+                            const std::string& channelName = mapIter->first;
+                            const std::set<WeakChannelPointer>& channelSet = mapIter->second;
+                            for (const WeakChannelPointer& channel : channelSet) {
+                                Channel::Pointer channelPtr = channel.lock(); // promote to shared pointer
+                                if (channelPtr) {
+                                    const std::string clientAddr = getChannelAddress(channelPtr);
+                                    std::vector<std::string>& pipelineConnections = data.get<std::vector<std::string> >(clientAddr + ".pipelineConnections");
+                                    pipelineConnections.push_back(channelName);
+                                } // else - client might have gone meanwhile...
+                            }
                         }
                     }
                 }
