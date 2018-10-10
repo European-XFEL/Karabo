@@ -50,8 +50,9 @@ class KaraboKernel(IPythonKernel):
 
         @coroutine
         def execute():
-            reply_content = yield from background(self.do_execute,
-                code, silent, store_history, user_expressions, allow_stdin)
+            reply_content = yield from background(
+                self.do_execute, code, silent, store_history, user_expressions,
+                allow_stdin)
 
             # Flush output before sending the reply.
             sys.stdout.flush()
@@ -73,7 +74,14 @@ class KaraboKernel(IPythonKernel):
 
 
 class JupyterDevice(DeviceClientBase, Device):
-    pass
+    def __init__(self, configuration):
+        super(JupyterDevice, self).__init__(configuration)
+
+    def _initInfo(self):
+        info = super(JupyterDevice, self)._initInfo()
+        info["lang"] = "python"
+        info["type"] = "client"
+        return info
 
 
 class KaraboKernelApp(IPKernelApp):
@@ -86,12 +94,13 @@ class KaraboKernelApp(IPKernelApp):
     def start(self):
         hostname = socket.gethostname().split(".", 1)[0]
         pid = os.getpid()
+        loop = get_event_loop()
         self.kernel.device = JupyterDevice(
             {"_deviceId_": "jupyter-{}-{}".format(hostname, pid)})
-        get_event_loop().run_until_complete(
+        loop.run_until_complete(
             self.kernel.device.startInstance())
         self.kernel.start()
-        get_event_loop().run_forever()
+        loop.run_forever()
 
 
 if __name__ == "__main__":
