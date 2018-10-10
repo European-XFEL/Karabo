@@ -5,6 +5,7 @@ from itertools import chain
 from .basetypes import isSet
 from .device_client import getDevice, lock
 from .enums import AccessMode, Assignment, NodeType
+from .exceptions import KaraboError
 from .signalslot import coslot
 from .hash import Hash, String
 
@@ -115,8 +116,19 @@ class DeviceNode(String):
             instance.logger.exception(
                 'device node "{}" failed'.format(self.key))
 
+    def checkedInit(self, instance, value=None):
+        """Device Nodes cannot have an empty string
+        """
+        if not value:
+            if self.defaultValue:
+                return self._initialize(instance, self.defaultValue)
+            raise KaraboError('Assignment is mandatory for "{}"'.format(
+                self.key))
+        return self._initialize(instance, value)
+
     @coroutine
     def initialize(self, instance, value):
+        # This should not happen as we are mandatory, but we never know
         if not isSet(value):
             instance.__dict__[self.key] = None
             return
