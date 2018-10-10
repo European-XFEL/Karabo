@@ -11,7 +11,6 @@ import uuid
 import weakref
 
 from karabo.middlelayer_api.device import Device
-from karabo.middlelayer_api.devicenode import DeviceNode
 from karabo.middlelayer_api.device_client import (
     getDevice, findDevices, shutdown, getClients, getDevices)
 from karabo.middlelayer_api.device_server import DeviceServer
@@ -27,7 +26,6 @@ from .eventloop import setEventLoop
 
 class Remote(Macro):
     counter = Int(defaultValue=-1)
-    device = DeviceNode()
 
     # avoid that test_main gets stuck. Raise a timeout error instead.
     @coroutine
@@ -249,6 +247,7 @@ class Tests(TestCase):
                 thread.stop()
                 thread.join(0.1)
                 self.assertFalse(thread.is_alive())
+
 
 if __name__ == "__main__":
     main()
