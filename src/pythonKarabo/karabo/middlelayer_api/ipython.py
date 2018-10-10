@@ -30,7 +30,8 @@ class ChannelMixin(ZMQSocketChannel, ChannelABC):
                 msg = yield from loop.run_in_executor(None, self.get_msg,
                                                       True, 1)
                 self.call_handlers(pickle.dumps(msg))
-                self.device.doNotCompressEvents += 1
+                value = self.device.doNotCompressEvents.value + 1
+                self.device.doNotCompressEvents = value
                 self.device.update()
             except Empty:
                 pass
@@ -121,6 +122,12 @@ class IPythonKernel(Device):
         self.client.stdin_channel.device = self
         self.client.start_channels()
         self.state = State.STARTED
+
+    def _initInfo(self):
+        info = super(IPythonKernel, self)._initInfo()
+        info["lang"] = "python"
+        info["type"] = "client"
+        return info
 
     @coslot
     def slotKillDevice(self):
