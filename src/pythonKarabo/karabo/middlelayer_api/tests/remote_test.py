@@ -884,9 +884,8 @@ class Tests(DeviceTest):
         class A(Device):
             dn = DeviceNode()
 
-        a = A({"_deviceId_": "devicenode"})
-        yield from a.startInstance()
-        self.assertEqual(a.dn, None)
+        with self.assertRaises(KaraboError):
+            a = A({"_deviceId_": "devicenode"})
 
     @async_tst
     def test_prenatal_proxy(self):

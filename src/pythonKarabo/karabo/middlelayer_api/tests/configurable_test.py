@@ -557,7 +557,6 @@ class Tests(TestCase):
         self.assertEqual(a.children_set, [("nested.nested.value", 7, C.value)])
 
     def test_vector_size(self):
-
         class A(Configurable):
             stringVector = VectorString(
                 defaultValue=['bla', 'blub'],
@@ -589,7 +588,7 @@ class Tests(TestCase):
                 maxSize=4)
 
             complexVector = VectorComplexFloat(
-                defaultValue=[2+3j, 3+4j, 4],
+                defaultValue=[2 + 3j, 3 + 4j, 4],
                 maxSize=4)
 
         a = A()
@@ -653,13 +652,13 @@ class Tests(TestCase):
         self.assertEqual(a.intVector.value[0], 17)
         self.assertEqual(a.intVector.value[1], 5)
 
-        a.complexVector = [2+3j]
-        self.assertEqual(a.complexVector.value[0], 2+3j)
+        a.complexVector = [2 + 3j]
+        self.assertEqual(a.complexVector.value[0], 2 + 3j)
         with self.assertRaises(ValueError):
-            a.complexVector = [2+3j, 3+4j, 4, 17+4j, 1]
-        a.complexVector = [5+3j, 3+4j]
-        self.assertEqual(a.complexVector.value[0], 5+3j)
-        self.assertEqual(a.complexVector.value[1], 3+4j)
+            a.complexVector = [2 + 3j, 3 + 4j, 4, 17 + 4j, 1]
+        a.complexVector = [5 + 3j, 3 + 4j]
+        self.assertEqual(a.complexVector.value[0], 5 + 3j)
+        self.assertEqual(a.complexVector.value[1], 3 + 4j)
 
     def test_table(self):
         class Row(Configurable):
@@ -869,7 +868,6 @@ class Tests(TestCase):
         self.assertEqual(a.node.daqDataType, DaqDataType.TRAIN)
 
     def test_daqPolicy(self):
-
         class MyNode(Configurable):
             string = String()
 
@@ -1012,12 +1010,27 @@ class Tests(TestCase):
         class A(Configurable):
             node = DeviceNode()
 
+        a = A({"node": "remote"})
+        schema = a.getClassSchema()
+        self.assertEqual(schema.hash['node', 'accessMode'],
+                         AccessMode.INITONLY.value)
+        self.assertEqual(schema.hash['node', 'assignment'],
+                         Assignment.MANDATORY.value)
+
+    def test_deviceNode_default(self):
+        class A(Configurable):
+            node = DeviceNode(defaultValue="remote")
+
         a = A()
         schema = a.getClassSchema()
         self.assertEqual(schema.hash['node', 'accessMode'],
                          AccessMode.INITONLY.value)
         self.assertEqual(schema.hash['node', 'assignment'],
                          Assignment.MANDATORY.value)
+        self.assertEqual(schema.hash['node', 'defaultValue'],
+                         "remote")
+        # Becomes a node!
+        self.assertEqual(a.node, None)
 
 
 if __name__ == "__main__":
