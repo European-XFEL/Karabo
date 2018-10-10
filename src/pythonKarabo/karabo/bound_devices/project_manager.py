@@ -7,7 +7,7 @@ from karabo.bound import (AccessLevel, BOOL_ELEMENT, Hash, KARABO_CLASSINFO,
                           VECTOR_STRING_ELEMENT)
 from karabo.common.scenemodel.api import write_scene
 from karabo.common.states import State
-from karabo.middlelayer import read_project_model
+from karabo.middlelayer_api.project.api import read_project_model
 from karabo.project_db.project_database import ProjectDatabase
 from karabo.project_db.util import assure_running, ProjectDBError
 
