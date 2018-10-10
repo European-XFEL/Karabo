@@ -253,7 +253,7 @@ def get_processing_color(proc_delay):
     """
     if proc_delay < PROC_FINE:
         return PROC_FINE_COLOR
-    elif PROC_FINE < proc_delay < PROC_ALARM:
+    elif PROC_FINE <= proc_delay <= PROC_ALARM:
         return PROC_BETWEEN_COLOR
     elif proc_delay > PROC_ALARM:
         return PROC_ALARM_COLOR
