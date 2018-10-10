@@ -462,6 +462,9 @@ class MainWindow(QMainWindow):
         # Un-minimize all panels when disconnecting!
         if not isConnected:
             self._unminimize_remaining_panels()
+            # Erase lamp information
+            self.ui_lamp.setStyleSheet("")
+            self.ui_lamp.clear()
 
         if isConnected:
             text = "Disconnect from server"
