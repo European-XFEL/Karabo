@@ -80,7 +80,7 @@ class PanelWrangler(QObject):
             name = data.get('name', '')
             target_window = data.get('target_window')
             uuid = data.get('target')
-            model = _find_scene_model(uuid)
+            model = _find_scene_model(name, uuid)
             if model is not None:
                 # We found the scene in our project!
                 self._open_scene(model, target_window)
@@ -241,7 +241,7 @@ class PanelWrangler(QObject):
                 scene_view.update()
 
 
-def _find_scene_model(uuid):
+def _find_scene_model(name, uuid):
     """Find a SceneModel which is already open in the project.
     """
     class _Visitor(object):
@@ -261,7 +261,9 @@ def _find_scene_model(uuid):
     walk_traits_object(project, visitor, fast_exit=True)
 
     if visitor.found is None:
-        msg = 'Linked scene with UUID "{}" not found!'.format(uuid)
+        msg = ("The UUID of the linked scene <b>{}</b> was not found in the "
+               "project! Trying to retrieve the scene in <b>control mode</b> "
+               "from the project <b>database<b/> instead.".format(name))
         messagebox.show_error(msg)
         return None
 
