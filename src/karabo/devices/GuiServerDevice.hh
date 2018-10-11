@@ -396,6 +396,33 @@ namespace karabo {
             void propertyHistory(WeakChannelPointer channel, const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data);
 
             /**
+             * Request configuration for a ``device`` at point in time ``time`` as specified in ``info``.
+             * The request is asynchronously sent to the device logger logging information for ``deviceId``.
+             * The reply from the logger is then forwarded to the client on ``channel``
+             * using the ``configurationFromPast`` history callback in case of success or ``configurationFromPastError``
+             * for failures.
+             */
+            void onGetConfigurationFromPast(WeakChannelPointer channel, const karabo::util::Hash& info);
+
+            /**
+             * Success callback for ``onGetDeviceConfiguration``
+             */
+            void configurationFromPast(WeakChannelPointer channel, const std::string& deviceId, const std::string& time,
+                                       const karabo::util::Hash& config, const karabo::util::Schema& /*schema*/);
+
+            /**
+             * Failure callback for ``onGetDeviceConfiguration``
+             */
+            void configurationFromPastError(WeakChannelPointer channel, const std::string& deviceId, const std::string& time);
+
+            /**
+             * Helper for history retrieval functions
+             * @param deviceId of the device whose history is searched for
+             * @return id of DataLogReader device to ask for history
+             */
+            std::string getDataReaderId(const std::string& deviceId) const;
+
+            /**
              * registers the client connected on ``channel`` to a pipe-lined processing
              * channel identified by ``channelName`` in ``info`` in case ``subscribe``
              * is true. In case the pipe-lined processing channel is already connected
