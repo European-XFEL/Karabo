@@ -92,6 +92,7 @@ class OneShotQueue(asyncio.Future):
 
     It may be registered in the list of queues for a property, and is removed
     from that property once fired """
+
     def put_nowait(self, value):
         if not self.done():
             self.set_result(value)
@@ -275,26 +276,47 @@ def getHistory(prop, begin, end, *, maxNumData=10000, timeout=-1, wait=True):
 
 
 @synchronize
-def getConfigurationFromPast(deviceId, timepoint):
-    """ get the configuration of a device at a given time::
+def getConfigurationFromPast(device, timepoint):
+    """ Get the configuration of a device at a given time::
 
         getConfigurationFromPast(device, "12:30")
 
-    returns a karabo hash and the schema of the device as it was at that
-    time.
+    Returns a karabo configuration hash of the device at the specified time.
 
     The date of the time point is parsed using :func:`dateutil.parser.parse`,
     allowing many ways to write the date.
-
-    This effectively calls :func:`dataLogReader.slotGetConfigurationFromPast`.
     """
-
+    if isinstance(device, ProxyBase):
+        device = device._deviceId
     timepoint = _parse_date(timepoint)
     instance = get_instance()
-    reader = yield from _getLogReaderId(deviceId)
-    h, s = yield from instance.call(reader, "slotGetConfigurationFromPast",
-                                    deviceId, timepoint)
-    return h, s
+    reader = yield from _getLogReaderId(device)
+    slot = "slotGetConfigurationFromPast"
+    conf, schema = yield from instance.call(reader, slot, device, timepoint)
+
+    return conf
+
+
+@synchronize
+def getSchemaFromPast(device, timepoint):
+    """ Get the schema of a device or proxy at a given time::
+
+        getSchemaFromPast(deviceId, "12:30")
+
+    Returns a karabo schema object of the device at the specified time.
+
+    The date of the time point is parsed using :func:`dateutil.parser.parse`,
+    allowing many ways to write the date.
+    """
+    if isinstance(device, ProxyBase):
+        device = device._deviceId
+    timepoint = _parse_date(timepoint)
+    instance = get_instance()
+    reader = yield from _getLogReaderId(device)
+    slot = "slotGetConfigurationFromPast"
+    conf, schema = yield from instance.call(reader, slot, device, timepoint)
+
+    return schema
 
 
 class Queue(object):
@@ -306,6 +328,7 @@ class Queue(object):
         q = Queue(motor.position)
         new_position = yield from q.get()
     """
+
     def __init__(self, prop):
         self.queue = asyncio.Queue(loop=EventLoop.global_loop)
         prop._parent._queues[prop.descriptor.longkey].add(self.queue)
@@ -399,6 +422,7 @@ def _getDevice(deviceId, sync, factory=DeviceClientProxyFactory):
                     proxy = weakproxy()
                     if proxy is not None:
                         proxy.__del__()
+
             instance._ss.enter_context(killer())
         finally:
             del futures[deviceId]
@@ -533,6 +557,7 @@ def lock(proxy, wait_for_release=None):
                     setNoWait(proxy, lockedBy="")
                 else:
                     proxy.lockedBy = ""
+
     return context()
 
 
