@@ -440,6 +440,8 @@ namespace karabo {
                         onStopMonitoringDevice(channel, info);
                     } else if (type == "getPropertyHistory") {
                         onGetPropertyHistory(channel, info);
+                    } else if (type == "getConfigurationFromPast") {
+                        onGetConfigurationFromPast(channel, info);
                     } else if (type == "subscribeNetwork") {
                         onSubscribeNetwork(channel, info);
                     } else if (type == "error") {
