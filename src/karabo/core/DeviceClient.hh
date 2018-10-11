@@ -824,6 +824,25 @@ namespace karabo {
                                         const karabo::xms::SignalSlotable::InputHandler& eosHandler = karabo::xms::SignalSlotable::InputHandler());
 
             /**
+             * Register handlers to be called whenever the defined output channel receives data or end-of-stream (EOS).
+             * Internally, an InputChannel is created and configured using the cfg Hash.
+             *
+             * @param channelName identifies the channel as a concatenation of the id of its devices, a colon (:) and
+             *                     the name of the output channel (e.g. A/COOL/DEVICE:output)
+             * @param dataHandler boost::function<void (const karabo::util::Hash&, const MetaData&) to be called whenever data arrives
+             * @param inputChannelCfg configures via InputChanel::create(..) - use default except you know what your are doing
+             *        for the expert:  "connectedOutputChannels" will be overwritten,
+             *                         "onSlowness" default is overwritten to "drop"
+             * @param eosHandler boost::function<void (const InputChannel::Pointer&)> called for EOS if given
+             *
+             * @return false if channel is already registered
+             */
+            bool registerChannelMonitor(const std::string& channelName,
+                                        const karabo::xms::SignalSlotable::DataHandler& dataHandler,
+                                        const karabo::util::Hash& inputChannelCfg = karabo::util::Hash(),
+                                        const karabo::xms::SignalSlotable::InputHandler& eosHandler = karabo::xms::SignalSlotable::InputHandler());
+
+            /**
              * Unregister monitoring of output channel
              *
              * @param instanceId of the device having the output channel
@@ -831,6 +850,15 @@ namespace karabo {
              * @return false if channel was not registered
              */
             bool unregisterChannelMonitor(const std::string& instanceId, const std::string& channel);
+
+            /**
+             * Unregister monitoring of output channel
+             *
+             * @param channelName identifies the channel as a concatenation of the id of its devices, a colon (:) and
+             *                     the name of the output channel (e.g. A/COOL/DEVICE:output)
+             * @return false if channel was not registered
+             */
+            bool unregisterChannelMonitor(const std::string& channelName);
 
             /**
              * Sets an attribute of a device.
