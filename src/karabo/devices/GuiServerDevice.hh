@@ -772,14 +772,6 @@ namespace karabo {
             std::string getChannelAddress(const karabo::net::Channel::Pointer& channel) const;
 
             /**
-             * Utility to split pipeline channel name into device id and channel
-             * @param channelName: the complete channel name
-             * @param delim: the delimiter whose first appearance splits the two parts, default is ':'
-             * @return pair of two strings
-             */
-            std::pair<std::string, std::string> decodePipelineChannelName(const std::string& channelName, char delim = ':') const;
-
-            /**
              * Possibly update schema attributes on device
              */
             void tryToUpdateNewInstanceAttributes(const std::string& deviceId, const int callerMask);

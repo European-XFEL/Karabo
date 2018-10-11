@@ -860,12 +860,11 @@ namespace karabo {
                     }
                     if (notYetRegistered) {
                         KARABO_LOG_FRAMEWORK_DEBUG << "Register to monitor '" << channelName << "'";
-                        const std::pair<std::string, std::string> devIdAndName(decodePipelineChannelName(channelName));
 
                         auto dataHandler = bind_weak(&GuiServerDevice::onNetworkData, this, channelName, _1, _2);
                         // Channel configuration - we rely on defaults as: "dataDistribution" == copy, "onSlowness" == drop
                         const Hash cfg("delayOnInput", get<int>("delayOnInput"));
-                        if (!remote().registerChannelMonitor(devIdAndName.first, devIdAndName.second, dataHandler, cfg)) {
+                        if (!remote().registerChannelMonitor(channelName, dataHandler, cfg)) {
                             KARABO_LOG_FRAMEWORK_WARN << "Already monitoring '" << channelName << "'!";
                             // Should we remote().unregisterChannelMonitor' and try again? But problem never seen...
                         }
@@ -879,8 +878,7 @@ namespace karabo {
                                 << " is not subscribed: " << channelName;
                     }
                     if (channelSet.empty()) {
-                        const std::pair<std::string, std::string> devIdAndName(decodePipelineChannelName(channelName));
-                        if (!remote().unregisterChannelMonitor(devIdAndName.first, devIdAndName.second)) {
+                        if (!remote().unregisterChannelMonitor(channelName)) {
                             KARABO_LOG_FRAMEWORK_WARN << "Failed to unregister '" << channelName << "'"; // Did it ever work?
                         }
                         m_networkConnections.erase(channelName); // Caveat: Makes 'channelSet' a dangling reference...
@@ -893,19 +891,6 @@ namespace karabo {
             } catch (const std::exception &e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onSubscribeNetwork(): " << e.what();
             }
-        }
-
-
-        std::pair<std::string, std::string> GuiServerDevice::decodePipelineChannelName(const std::string& channelName, char delim) const {
-            // Cut channelName into deviceId (all before 'delim') and channel (all behind 'delim')
-
-            const std::string::size_type splitPos = channelName.find_first_of(delim);
-            std::string rest;
-            if (splitPos != std::string::npos) {
-                rest = std::string(channelName, splitPos + 1); // all behind the delimiter
-            }
-            return std::make_pair(std::string(channelName, 0, splitPos), // from start until one before splitPos
-                                  std::move(rest)); //
         }
 
 
@@ -1058,11 +1043,12 @@ namespace karabo {
                     NetworkMap::const_iterator mapIter = m_networkConnections.cbegin();
                     while (mapIter != m_networkConnections.cend()) {
                         const std::string& channelName = mapIter->first;
-                        const std::pair<std::string, std::string> idAndChannel(decodePipelineChannelName(channelName));
-                        if (idAndChannel.first == instanceId) {
+                        // If channelName lacks the ':', channelInstanceId will be the full channelName.
+                        const std::string channelInstanceId(channelName, 0, channelName.find_first_of(':'));
+                        if (channelInstanceId == instanceId) {
                             KARABO_LOG_FRAMEWORK_DEBUG << "Remove connection to input channel: " << channelName;
                             m_networkConnections.erase(mapIter++); // postfix: erase current iterator, but prepare next
-                            remote().unregisterChannelMonitor(idAndChannel.first, idAndChannel.second);
+                            remote().unregisterChannelMonitor(channelName);
                         } else {
                            ++mapIter;
                         }
