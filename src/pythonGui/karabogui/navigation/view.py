@@ -8,17 +8,21 @@ from functools import partial
 from PyQt4.QtCore import Qt, pyqtSlot
 from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog, QMenu,
                          QTreeView)
+from traits.api import Undefined
 
 from karabo.common.api import Capabilities
 from karabogui import icons
+from karabogui import messagebox
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.enums import NavigationItemTypes
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.request import call_device_slot
-from karabogui.singletons.api import get_manager, get_selection_tracker
+from karabogui.singletons.api import (
+    get_manager, get_selection_tracker, get_topology)
 from karabogui.util import (
+    get_scene_from_server, handle_scene_from_server,
     load_configuration_from_file, save_configuration_to_file,
-    handle_scene_from_server, set_treeview_header)
+    set_treeview_header)
 from karabogui.widgets.popup import PopupWidget
 from .model import NavigationTreeModel
 
@@ -129,6 +133,61 @@ class NavigationTreeView(QTreeView):
         """
         self.setExpanded(index, True)
         super(NavigationTreeView, self).scrollTo(index)
+
+    # ----------------------------
+    # Events
+
+    def mouseDoubleClickEvent(self, event):
+        index = self.currentIndex()
+        node = self.model().index_ref(index)
+        if node is None:
+            return
+
+        device_id = node.node_id
+        capabilities = node.capabilities
+
+        def _test_mask(mask, bit):
+            return (mask & bit) == bit
+
+        has_scene = _test_mask(capabilities, Capabilities.PROVIDES_SCENES)
+        if not has_scene:
+            messagebox.show_warning("The device <b>{}</b> does not provide a "
+                                    "scene!".format(device_id), "Warning",
+                                    modal=False)
+            return
+
+        def _config_handler():
+            """Act on the arrival of the configuration"""
+            device_proxy.on_trait_change(_config_handler, 'config_update',
+                                         remove=True)
+            scenes = device_proxy.binding.value.availableScenes.value
+            if not len(scenes):
+                # The device might not have a scene names in property
+                messagebox.show_warning(
+                    "The device <b>{}</b> does not specify a scene "
+                    "name!".format(device_id), "Warning", modal=False)
+                return
+            scene_name = scenes[0]
+            get_scene_from_server(device_id, scene_name)
+
+        device_proxy = get_topology().get_device(device_id)
+        scenes = device_proxy.binding.value.availableScenes.value
+        if scenes is Undefined:
+            # NOTE: The configuration did not yet arrive and we cannot get
+            # a scene name from the availableScenes. We wait for the
+            # configuration to arrive and install a handler.
+            device_proxy.on_trait_change(_config_handler, 'config_update')
+            return
+
+        if not len(scenes):
+            # The device might not have a scene name in property
+            messagebox.show_warning(
+                "The device <b>{}</b> does not specify a scene "
+                "name!".format(device_id), "Warning", modal=False)
+            return
+
+        scene_name = scenes[0]
+        get_scene_from_server(device_id, scene_name)
 
     # ----------------------------
     # Slots
