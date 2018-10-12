@@ -80,7 +80,7 @@ class ProjectView(QTreeView):
             project_controller = self._project_controller(selected_controller)
             selected_controller.double_click(project_controller, parent=self)
 
-            if isinstance(selected_controller, BaseProjectGroupController):
+            if not isinstance(selected_controller, DeviceInstanceController):
                 # Double clicks expand groups
                 indices = self.selectionModel().selectedIndexes()
                 self.expand(indices[0])
