@@ -8,7 +8,6 @@
 #include <karabo/util/Hash.hh>
 #include <karabo/util/NDArray.hh>
 #include <karabo/util/Schema.hh>
-#include <karabo/util/VectorElement.hh>
 #include <stack>
 #include "Hash_Test.hh"
 #include "karabo/util/ToLiteral.hh"
@@ -817,10 +816,11 @@ void Hash_Test::testGetPaths() {
         vh.push_back(Hash());
         h.set("vector.hash.one", vh);
         h.set("empty.vector.hash", std::vector<Hash > ());
+        h.set("empty.hash", Hash());
 
         std::vector<std::string> paths;
         h.getPaths(paths);
-        CPPUNIT_ASSERT(paths.size() == 6);
+        CPPUNIT_ASSERT(paths.size() == 7);
 
         std::vector<std::string>::const_iterator it = paths.begin();
         CPPUNIT_ASSERT(*it++ == "a");
@@ -829,6 +829,7 @@ void Hash_Test::testGetPaths() {
         CPPUNIT_ASSERT(*it++ == "vector.hash.one[0].a.b");
         CPPUNIT_ASSERT(*it++ == "vector.hash.one[1]");
         CPPUNIT_ASSERT(*it++ == "empty.vector.hash");
+        CPPUNIT_ASSERT(*it++ == "empty.hash");
     }
     
     {
