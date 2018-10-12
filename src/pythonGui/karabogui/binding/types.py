@@ -1,5 +1,5 @@
 from traits.api import (
-    HasStrictTraits, Array, Bool, CArray, Complex, Dict, Enum, Event,
+    HasStrictTraits, Array, CBool, CArray, Complex, Dict, Enum, Event,
     Float, Instance, List, Property, Range, String, Trait, TraitHandler,
     Undefined
 )
@@ -178,7 +178,7 @@ class BindingRoot(BaseBinding):
 #
 
 class BoolBinding(BaseBinding):
-    value = Bool
+    value = CBool
     # number type binding (Bool, Float and Int) could have options in type of
     # numpy array, CArray will cast list to a numpy array. Be aware that when
     # comparing numpy arrays, result is an array as well.

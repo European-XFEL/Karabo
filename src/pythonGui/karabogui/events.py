@@ -39,6 +39,7 @@ class KaraboEventSender(Enum):
     ProjectManagersList = "Project managers list"
     ShowAlarmServices = "Show alarm services"
     ShowConfiguration = "Show configuration"
+    ShowConfigurationFromPast = "Show Configuration From Past"
     ShowDevice = "Show device"
     ShowMacroView = "Show macro"
     ShowSceneView = "Show scene"

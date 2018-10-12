@@ -187,6 +187,11 @@ class ConfigurationPanel(BasePanelWidget):
             configuration = data.get('configuration')
             self._apply_loaded_configuration(proxy, configuration)
             return True  # Nobody else gets this event!
+        elif sender is KaraboEventSender.ShowConfigurationFromPast:
+            deviceId = data.get('deviceId')
+            configuration = data.get('configuration')
+            self._apply_configuration_from_past(deviceId, configuration)
+            return True
         elif sender is KaraboEventSender.NetworkConnectStatus:
             connected = data['status']
             if not connected:
@@ -197,15 +202,45 @@ class ConfigurationPanel(BasePanelWidget):
     # -----------------------------------------------------------------------
     # private methods
 
-    def _apply_loaded_configuration(self, proxy, configuration):
-        """Apply a configuration loaded from a file to a proxy"""
-        binding = proxy.binding
-        if len(binding.value) == 0 or binding.class_id not in configuration:
-            messagebox.show_error('Configuration load failed')
+    def _apply_configuration_from_past(self, deviceId, configuration):
+        """Apply the retrieved configuration from getConfigurationFromPast
+        """
+        proxy = self._showing_proxy
+        if proxy is None:
             return
 
-        access_level = krb_globals.GLOBAL_ACCESS_LEVEL
+        binding = proxy.binding
+        # The check we can provide is to check the deviceId and classId
+        # NOTE: Schema evolution should not be a problem!
+        classId = configuration['classId']
+        if proxy.device_id != deviceId or binding.class_id != classId:
+            messagebox.show_error('The classId or the deviceId are different '
+                                  'for the shown device.', modal=False)
+            return
+
+        self._set_proxy_configuration(proxy, configuration)
+        messagebox.show_information('A configuration has arrived!',
+                                    modal=False)
+
+    def _apply_loaded_configuration(self, proxy, configuration):
+        """Apply a configuration loaded from a file to a proxy
+        """
+        binding = proxy.binding
+        # Loading a configuration from file has to check for a present Schema
+        # and if the classId is the first key of the configuration
+        if len(binding.value) == 0 or binding.class_id not in configuration:
+            messagebox.show_error('Configuration load failed in configurator.',
+                                  modal=False)
+            return
+
         configuration = configuration[binding.class_id]
+        self._set_proxy_configuration(proxy, configuration)
+
+    def _set_proxy_configuration(self, proxy, configuration):
+        """Internal method to apply the configuration in the Configurator
+        """
+        binding = proxy.binding
+        access_level = krb_globals.GLOBAL_ACCESS_LEVEL
         if isinstance(proxy, DeviceProxy):
             # Load the configuration into PropertyProxy instances
             state = proxy.state_binding.value
@@ -393,6 +428,7 @@ class ConfigurationPanel(BasePanelWidget):
         self.acKillInstance.setVisible(not visible)
         self.acApplyAll.setVisible(not visible)
         self.acResetAll.setVisible(not visible)
+
     update_buttons_visibility = property(fset=_update_buttons_visibility)
 
     # -----------------------------------------------------------------------
