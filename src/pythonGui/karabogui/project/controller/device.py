@@ -6,6 +6,7 @@
 from functools import partial
 from io import StringIO
 
+from traits.api import Undefined
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance, Property, on_trait_change
@@ -13,8 +14,7 @@ from traits.api import Instance, Property, on_trait_change
 from karabo.common.api import Capabilities, NO_CONFIG_STATUSES
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
-    find_parent_object
-)
+    find_parent_object)
 from karabo.middlelayer import Hash
 from karabo.middlelayer_api.project.api import (read_project_model,
                                                 write_project_model)
@@ -30,7 +30,8 @@ from karabogui.project.utils import (
 from karabogui.request import call_device_slot
 from karabogui.singletons.api import get_manager, get_topology
 from karabogui.topology.api import ProjectDeviceInstance
-from karabogui.util import handle_scene_from_server, handle_macro_from_server
+from karabogui.util import (
+    get_scene_from_server, handle_scene_from_server, handle_macro_from_server)
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 from .server import DeviceServerController
 
@@ -119,6 +120,59 @@ class DeviceInstanceController(BaseProjectGroupController):
             return
 
         self._broadcast_item_click()
+
+    def double_click(self, project_controller, parent=None):
+        project_device = self.project_device
+        device_id = project_device.device_id
+        # Check first if we are online!
+        if project_device is None or not project_device.online:
+            return
+
+        topology_node = self.project_device.device_node
+        capabilities = topology_node.capabilities if topology_node else 0
+
+        def _test_mask(mask, bit):
+            return (mask & bit) == bit
+
+        has_scene = _test_mask(capabilities, Capabilities.PROVIDES_SCENES)
+        if not has_scene:
+            messagebox.show_warning("The device <b>{}</b> does not provide a "
+                                    "scene!".format(device_id), "Warning",
+                                    modal=False)
+            return
+
+        def _config_handler():
+            """Act on the arrival of the configuration"""
+            device_proxy.on_trait_change(_config_handler, 'config_update',
+                                         remove=True)
+            scenes = device_proxy.binding.value.availableScenes.value
+            if not len(scenes):
+                # The device might not have a scene names in property
+                messagebox.show_warning(
+                    "The device <b>{}</b> does not specify a scene "
+                    "name!".format(device_id), "Warning", modal=False)
+                return
+            scene_name = scenes[0]
+            get_scene_from_server(device_id, scene_name)
+
+        device_proxy = project_device.proxy
+        scenes = device_proxy.binding.value.availableScenes.value
+        if scenes is Undefined:
+            # NOTE: The configuration did not yet arrive and we cannot get
+            # a scene name from the availableScenes. We wait for the
+            # configuration to arrive and install a handler.
+            device_proxy.on_trait_change(_config_handler, 'config_update')
+            return
+
+        if not len(scenes):
+            # The device might not have a scene name in property
+            messagebox.show_warning(
+                "The device <b>{}</b> does not specify a scene "
+                "name!".format(device_id), "Warning", modal=False)
+            return
+
+        scene_name = scenes[0]
+        get_scene_from_server(device_id, scene_name)
 
     def _get_display_name(self):
         """Traits property getter for ``display_name``
