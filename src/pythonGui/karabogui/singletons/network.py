@@ -402,6 +402,12 @@ class Network(QObject):
         h["maxNumData"] = maxNumData
         self._tcpWriteHash(h)
 
+    def onGetConfigurationFromPast(self, device_id, time):
+        h = Hash("type", "getConfigurationFromPast")
+        h["deviceId"] = device_id
+        h["time"] = time
+        self._tcpWriteHash(h)
+
     # ---------------------------------------------------------------------
     # Current Project Interface
 
