@@ -14,10 +14,10 @@ from .middlelayer_api.device_client import (
     call, connectDevice, DeviceClientBase, disconnectDevice, execute,
     executeNoWait, findDevices, filterByTags, findServers, getClasses,
     getClients, getConfiguration, getConfigurationFromPast, getDevice,
-    getDevices, getDescriptors, getTopology, getSchema, getServers, getHistory,
-    isAlive, instantiate, instantiateNoWait, lock, waitUntilNew, waitUntil,
-    waitWhile, setWait, shutdown, shutdownNoWait, setNoWait, updateDevice,
-    Queue
+    getDevices, getDescriptors, getTopology, getSchema, getSchemaFromPast,
+    getServers, getHistory, isAlive, instantiate, instantiateNoWait, lock,
+    waitUntilNew, waitUntil, waitWhile, setWait, shutdown, shutdownNoWait,
+    setNoWait, updateDevice, Queue
 )
 from .middlelayer_api.proxy import (
     ProxyBase as Proxy, ProxySlotBase as ProxySlot,
@@ -87,8 +87,9 @@ def _create_cli_submodule():
     symbols = (
         call, connectDevice, disconnectDevice, execute, executeNoWait,
         findDevices, findServers, getClasses, getClients, getConfiguration,
-        getDevice, getDevices, getHistory, getSchema, getServers, getTopology,
-        instantiate, instantiateNoWait, karabo, setWait, setNoWait, shutdown,
+        getConfigurationFromPast, getSchemaFromPast, getDevice, getDevices,
+        getHistory, getSchema, getServers, getTopology, instantiate,
+        instantiateNoWait, karabo, setWait, setNoWait, shutdown,
         shutdownNoWait, sleep, State, waitUntil, waitUntilNew
     )
     module = create_module('karabo.middlelayer.cli', *symbols)
