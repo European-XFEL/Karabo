@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 from datetime import datetime
+from functools import partial
 from io import StringIO
 import os
 import os.path as op
@@ -22,6 +23,7 @@ from karabogui import globals as krb_globals, icons, messagebox
 from karabogui.binding.api import (
     DeviceClassProxy, DeviceProxy, extract_configuration)
 from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.request import call_device_slot
 from karabogui.singletons.api import get_config, get_db_conn
 
 
@@ -197,6 +199,22 @@ def temp_file(suffix='', prefix='tmp', dir=None):
     finally:
         os.close(fd)
         os.unlink(filename)
+
+
+def get_scene_from_server(device_id, scene_name, project=None,
+                          target_window=SceneTargetWindow.Dialog):
+    """Get a scene from the a device
+
+    :param device_id: The deviceId of the device
+    :param scene_name: The scene name
+    :param project: The project owner of the scene. Default is None.
+    :param target_window: The target window option. Default is Dialog.
+    """
+
+    handler = partial(handle_scene_from_server, device_id, scene_name,
+                      project, target_window)
+    call_device_slot(handler, device_id, 'requestScene',
+                     name=scene_name)
 
 
 def handle_scene_from_server(dev_id, name, project, target_window, success,

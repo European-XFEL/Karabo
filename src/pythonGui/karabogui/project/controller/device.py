@@ -6,6 +6,7 @@
 from functools import partial
 from io import StringIO
 
+from traits.api import Undefined
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance, Property, on_trait_change
@@ -14,7 +15,6 @@ from karabo.common.api import Capabilities, NO_CONFIG_STATUSES
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     find_parent_object)
-from karabo.common.scenemodel.api import SceneTargetWindow
 from karabo.middlelayer import Hash
 from karabo.middlelayer_api.project.api import (read_project_model,
                                                 write_project_model)
@@ -30,7 +30,8 @@ from karabogui.project.utils import (
 from karabogui.request import call_device_slot
 from karabogui.singletons.api import get_manager, get_topology
 from karabogui.topology.api import ProjectDeviceInstance
-from karabogui.util import handle_scene_from_server, handle_macro_from_server
+from karabogui.util import (
+    get_scene_from_server, handle_scene_from_server, handle_macro_from_server)
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 from .server import DeviceServerController
 
@@ -135,14 +136,43 @@ class DeviceInstanceController(BaseProjectGroupController):
 
         has_scene = _test_mask(capabilities, Capabilities.PROVIDES_SCENES)
         if not has_scene:
+            messagebox.show_warning("The device <b>{}</b> does not provide a "
+                                    "scene!".format(device_id), "Warning",
+                                    modal=False)
             return
 
-        scene_name = 'scene'
-        target_window = SceneTargetWindow.Dialog
-        handler = partial(handle_scene_from_server, device_id, scene_name,
-                          None, target_window)
-        call_device_slot(handler, device_id, 'requestScene',
-                         name=scene_name)
+        def _config_handler():
+            """Act on the arrival of the configuration"""
+            device_proxy.on_trait_change(_config_handler, 'config_update',
+                                         remove=True)
+            scenes = device_proxy.binding.value.availableScenes.value
+            if not len(scenes):
+                # The device might not have a scene names in property
+                messagebox.show_warning(
+                    "The device <b>{}</b> does not specify a scene "
+                    "name!".format(device_id), "Warning", modal=False)
+                return
+            scene_name = scenes[0]
+            get_scene_from_server(device_id, scene_name)
+
+        device_proxy = project_device.proxy
+        scenes = device_proxy.binding.value.availableScenes.value
+        if scenes is Undefined:
+            # NOTE: The configuration did not yet arrive and we cannot get
+            # a scene name from the availableScenes. We wait for the
+            # configuration to arrive and install a handler.
+            device_proxy.on_trait_change(_config_handler, 'config_update')
+            return
+
+        if not len(scenes):
+            # The device might not have a scene name in property
+            messagebox.show_warning(
+                "The device <b>{}</b> does not specify a scene "
+                "name!".format(device_id), "Warning", modal=False)
+            return
+
+        scene_name = scenes[0]
+        get_scene_from_server(device_id, scene_name)
 
     def _get_display_name(self):
         """Traits property getter for ``display_name``
