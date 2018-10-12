@@ -277,7 +277,7 @@ def getHistory(prop, begin, end, *, maxNumData=10000, timeout=-1, wait=True):
 
 @synchronize
 def getConfigurationFromPast(device, timepoint):
-    """ Get the configuration of a device at a given time::
+    """Get the configuration of a deviceId or proxy at a given time::
 
         getConfigurationFromPast(device, "12:30")
 
@@ -299,7 +299,7 @@ def getConfigurationFromPast(device, timepoint):
 
 @synchronize
 def getSchemaFromPast(device, timepoint):
-    """ Get the schema of a device or proxy at a given time::
+    """Get the schema of a deviceId or proxy at a given time::
 
         getSchemaFromPast(deviceId, "12:30")
 
