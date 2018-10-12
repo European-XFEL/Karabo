@@ -234,3 +234,26 @@ def get_project_server_status_icon(status):
         status = DeviceStatus(status)
 
     return status_icons.get(status)
+
+
+# ---------------------------------
+# Lamp coloring in the main window
+
+PROC_FINE = 2
+PROC_ALARM = 5
+PROC_FINE_COLOR = (120, 255, 0, 200)
+PROC_BETWEEN_COLOR = (255, 255, 102, 200)
+PROC_ALARM_COLOR = (255, 0, 0, 200)
+
+
+def get_processing_color(proc_delay):
+    """Define the processing lamp coloring in the main window
+
+    A three stage lamp is provided with basic colors: green, yellow, red
+    """
+    if proc_delay < PROC_FINE:
+        return PROC_FINE_COLOR
+    elif PROC_FINE <= proc_delay <= PROC_ALARM:
+        return PROC_BETWEEN_COLOR
+    elif proc_delay > PROC_ALARM:
+        return PROC_ALARM_COLOR
