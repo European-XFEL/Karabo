@@ -10,7 +10,7 @@ import os.path
 
 from PyQt4.QtCore import Qt, pyqtSlot
 from PyQt4.QtGui import (
-    QAction, QActionGroup, QLabel, QMainWindow, QMenu, QMessageBox,
+    QAction, QActionGroup, QFrame, QLabel, QMainWindow, QMenu, QMessageBox,
     QSizePolicy, QSplitter, QToolButton, QWidget, qApp
 )
 
@@ -18,6 +18,7 @@ from karabo.middlelayer import AccessLevel
 from karabogui import globals as krb_globals
 from karabogui import icons
 from karabogui.dialogs.dialogs import AboutDialog
+from karabogui.indicators import get_processing_color
 from karabogui.events import (
     KaraboEventSender, broadcast_event, register_for_broadcasts)
 from karabogui.panels.api import (
@@ -86,6 +87,8 @@ class MainWindow(QMainWindow):
         network = get_network()
         network.signalServerConnectionChanged.connect(
             self.onServerConnectionChanged)
+        network.signalNetworkPerformance.connect(
+            self.onNetworkPerformance)
 
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
         # not necessary for self due to the fact that the singleton mediator
@@ -107,9 +110,6 @@ class MainWindow(QMainWindow):
     def karaboBroadcastEvent(self, event):
         sender = event.sender
         data = event.data
-        if sender is KaraboEventSender.ProcessingDelay:
-            self.networkPerfDisplay.setText('{:.3f}'.format(data['value']))
-            return True  # Nobody else should handle this event!
         if sender is KaraboEventSender.brokerInformationUpdate:
             self._update_broker_connection(data)
             return True  # Nobody else should handle this event!
@@ -230,9 +230,12 @@ class MainWindow(QMainWindow):
         # Add a widget (on the right side) for displaying network performance
         expander = QWidget()
         expander.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.networkPerfDisplay = QLabel()
+        self.ui_lamp = QLabel()
+        self.ui_lamp.setFixedWidth(60)
+        self.ui_lamp.setAlignment(Qt.AlignCenter)
+        self.ui_lamp.setFrameStyle(QFrame.Box)
         toolbar.addWidget(expander)
-        toolbar.addWidget(self.networkPerfDisplay)
+        toolbar.addWidget(self.ui_lamp)
 
     def _setupStatusBar(self):
         self.statusBar().showMessage('Ready...')
@@ -437,6 +440,17 @@ class MainWindow(QMainWindow):
         if action is not None:
             action.setEnabled(True)
 
+    @pyqtSlot(float, bool)
+    def onNetworkPerformance(self, proc_delay, active):
+        """Color our network lamp with respect to the processing delay
+        """
+        color = get_processing_color(proc_delay=proc_delay)
+        self.ui_lamp.setStyleSheet("background-color: rgba{}".format(color))
+
+        # The CHOOCH from the QDialog will still set the diff!
+        if active:
+            self.ui_lamp.setText('{:.3f}'.format(proc_delay))
+
     @pyqtSlot(bool)
     def onServerConnectionChanged(self, isConnected):
         """Slot triggered when the network connection goes up/down. At this
@@ -448,6 +462,9 @@ class MainWindow(QMainWindow):
         # Un-minimize all panels when disconnecting!
         if not isConnected:
             self._unminimize_remaining_panels()
+            # Erase lamp information
+            self.ui_lamp.setStyleSheet("")
+            self.ui_lamp.clear()
 
         if isConnected:
             text = "Disconnect from server"
