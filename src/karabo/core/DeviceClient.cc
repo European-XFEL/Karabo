@@ -1192,8 +1192,15 @@ namespace karabo {
                                                   const karabo::xms::SignalSlotable::DataHandler& dataHandler,
                                                   const karabo::util::Hash& inputChannelCfg,
                                                   const karabo::xms::SignalSlotable::InputHandler& eosHandler) {
+            return registerChannelMonitor(instanceId + ":" + channel, dataHandler, inputChannelCfg, eosHandler);
+        }
+
+
+        bool DeviceClient::registerChannelMonitor(const std::string& channelName,
+                                                  const karabo::xms::SignalSlotable::DataHandler& dataHandler,
+                                                  const karabo::util::Hash& inputChannelCfg,
+                                                  const karabo::xms::SignalSlotable::InputHandler& eosHandler) {
             auto sigSlotPtr = m_signalSlotable.lock();
-            const std::string channelName(instanceId + ":" + channel);
             // No SignalSlotable or channel already there? ==> Fail!
             if (!sigSlotPtr || sigSlotPtr->getInputChannelNoThrow(channelName)) {
                 if (sigSlotPtr) {
@@ -1225,7 +1232,11 @@ namespace karabo {
 
 
         bool DeviceClient::unregisterChannelMonitor(const std::string& instanceId, const std::string& channel) {
-            const std::string channelName(instanceId + ":" + channel);
+            return unregisterChannelMonitor(instanceId + ":" + channel);
+        }
+
+
+        bool DeviceClient::unregisterChannelMonitor(const std::string& channelName) {
             auto sigSlotPtr = m_signalSlotable.lock();
 
             return (sigSlotPtr && sigSlotPtr->removeInputChannel(channelName));
