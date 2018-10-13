@@ -216,6 +216,7 @@ namespace karabo {
              *      startMonitoringDevice       onStartMonitoringDevice
              *      stopMonitoringDevice        onStopMonitoringDevice
              *      getPropertyHistory          onGetPropertyHistory
+             *      getConfigurationFromPast    onGetConfigurationFromPast
              *      subscribeNetwork            onSubscribeNetwork
              *      error                       onGuiError
              *      getAvailableProjects        onGetAvailableProjects
