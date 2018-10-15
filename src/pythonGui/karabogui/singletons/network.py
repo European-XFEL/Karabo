@@ -82,7 +82,7 @@ class Network(QObject):
         # Load from configuration singleton
         config = get_config()
         self.username = config['username']
-        self.guiservers = config['guiServers']
+        self.guiservers = config['gui_servers']
 
         if self.guiservers:
             self.hostname, self.port = self.guiservers[0].split(':')
@@ -308,7 +308,7 @@ class Network(QObject):
 
         config = get_config()
         config['username'] = self.username
-        config['guiServers'] = self.guiservers
+        config['gui_servers'] = self.guiservers
 
         # If some requests got piled up, because of no server connection,
         # now these get handled

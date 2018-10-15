@@ -9,15 +9,11 @@ from sys import platform
 from karabo.middlelayer import AccessLevel
 from ._version import version as GUI_VERSION, full_version as GUI_VERSION_LONG  # noqa
 
-# TODO Karabo will support an global access level and an exception list which
+# XXX: Karabo will support an global access level and an exception list which
 # is deviceId specific.
 # This requires a function like in SignalSlotable: getAccessLevel(deviceId) in
-# the end
+# the end!
 
-KARABO_GUI_HOST = 'KARABO_GUI_HOST'
-KARABO_GUI_PORT = 'KARABO_GUI_PORT'
-
-DEFAULT_USER = 'operator'
 GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
 # KARABO_DEFAULT_ACCESS_LEVEL = AccessLevel.OBSERVER  # Inside XFEL
 KARABO_DEFAULT_ACCESS_LEVEL = AccessLevel.ADMIN  # Outside XFEL
@@ -29,8 +25,6 @@ else:
     HIDDEN_KARABO_FOLDER = path.join(environ['HOME'], '.karabo')
 # Project folder
 KARABO_PROJECT_FOLDER = path.join(HIDDEN_KARABO_FOLDER, 'projects')
-
-MACRO_SERVER = 'karabo/macroServer'
 
 MAX_INT8 = (2**7)-1
 MIN_INT8 = -(2**7)
