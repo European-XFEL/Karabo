@@ -179,16 +179,14 @@ class NetworkInput(Configurable):
 
            :param tracking: Defines whether this channel is tracked via the
                             the signal slotable. Only proxies don't use
-                            tracking and hence don't reconnect the channel if
-                            the device reappears.
+                            tracking via a signal slotable lookup.
         """
         try:
             instance, name = output.split(":")
             # success, configuration
             ok, info = yield from self.parent._call_once_alive(
                 instance, "slotGetOutputChannelInformation", name, os.getpid())
-            # NOTE: Tracking via the signalslotable should be done for devices
-            # but not for proxies for the time being!
+            # NOTE: Tracking is different for devices and proxies
             if tracking:
                 self.parent._remote_output_channel[instance].add(
                     (self, output))
@@ -413,7 +411,10 @@ class OutputProxy(SubProxyBase):
         """
         if self.task is not None:
             return
+
         output = ":".join((self._parent.deviceId, self.longkey))
+        # Add our channel to the proxy
+        self._parent._remote_output_channel.add(self)
         self.networkInput.parent = self._parent._device
         self.task = background(self._connect(output))
 
@@ -432,6 +433,7 @@ class OutputProxy(SubProxyBase):
         """Disconnect from the output channel"""
         if self.task is not None:
             self.task.cancel()
+            self._parent._remote_output_channel.remove(self)
 
 
 class NetworkOutput(Configurable):
