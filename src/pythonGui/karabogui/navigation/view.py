@@ -157,37 +157,54 @@ class NavigationTreeView(QTreeView):
             return
 
         def _config_handler():
-            """Act on the arrival of the configuration"""
-            device_proxy.on_trait_change(_config_handler, 'config_update',
-                                         remove=True)
-            scenes = device_proxy.binding.value.availableScenes.value
-            if not len(scenes):
-                # The device might not have a scene names in property
+            """Act on the arrival of the configuration
+            """
+            proxy.on_trait_change(_config_handler, 'config_update',
+                                  remove=True)
+            scenes = proxy.binding.value.availableScenes.value
+            if scenes is Undefined or not len(scenes):
                 messagebox.show_warning(
                     "The device <b>{}</b> does not specify a scene "
-                    "name!".format(device_id), "Warning", modal=False)
-                return
-            scene_name = scenes[0]
-            get_scene_from_server(device_id, scene_name)
+                    "name!".format(device_id), modal=False)
+            else:
+                scene_name = scenes[0]
+                get_scene_from_server(device_id, scene_name)
 
-        device_proxy = get_topology().get_device(device_id)
-        scenes = device_proxy.binding.value.availableScenes.value
-        if scenes is Undefined:
-            # NOTE: The configuration did not yet arrive and we cannot get
+        def _schema_handler():
+            """Act on the arrival of the schema
+            """
+            proxy.on_trait_change(_schema_handler, 'schema_update',
+                                  remove=True)
+            scenes = proxy.binding.value.availableScenes.value
+            if scenes is Undefined:
+                proxy.on_trait_change(_config_handler, 'config_update')
+            elif not len(scenes):
+                messagebox.show_warning(
+                    "The device <b>{}</b> does not specify a scene "
+                    "name!".format(device_id), modal=False)
+            else:
+                scene_name = scenes[0]
+                get_scene_from_server(device_id, scene_name)
+
+        proxy = get_topology().get_device(device_id)
+        if not len(proxy.binding.value):
+            # We completely miss our schema and wait for it.
+            proxy.on_trait_change(_schema_handler, 'schema_update')
+        elif proxy.binding.value.availableScenes.value is Undefined:
+            # The configuration did not yet arrive and we cannot get
             # a scene name from the availableScenes. We wait for the
             # configuration to arrive and install a handler.
-            device_proxy.on_trait_change(_config_handler, 'config_update')
-            return
-
-        if not len(scenes):
-            # The device might not have a scene name in property
-            messagebox.show_warning(
-                "The device <b>{}</b> does not specify a scene "
-                "name!".format(device_id), "Warning", modal=False)
-            return
-
-        scene_name = scenes[0]
-        get_scene_from_server(device_id, scene_name)
+            proxy.on_trait_change(_config_handler, 'config_update')
+        else:
+            scenes = proxy.binding.value.availableScenes.value
+            if not len(scenes):
+                # The device might not have a scene name in property
+                messagebox.show_warning(
+                    "The device <b>{}</b> does not specify a scene "
+                    "name!".format(device_id), modal=False)
+            else:
+                scene_name = scenes[0]
+                get_scene_from_server(device_id, scene_name)
 
     # ----------------------------
     # Slots
