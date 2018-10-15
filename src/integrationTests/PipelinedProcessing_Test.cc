@@ -279,8 +279,9 @@ void PipelinedProcessing_Test::testPipeMinData() {
     // poll until nTotalDataOnEos changes
     CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", 0, false));
 
-    // Test if data source was correctly passed
+    // test if data source was correctly passed
     auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSourcesFromIndex");
+    // test that "input.onData = false" and "input.miniData" are respected
     CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(minData), sources.size());
     for (auto& src : sources) {
         CPPUNIT_ASSERT_EQUAL(m_senderOutput1, src);
