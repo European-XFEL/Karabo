@@ -117,9 +117,7 @@ class Tests(TestCase):
             NoRemote(_deviceId_="NoRemote")
 
     def test_main(self):
-        Remote.main(["", "count", "counter=7",
-                     "device=Remote_{}_{}".format(
-                        socket.gethostname().split(".")[0], os.getpid())])
+        Remote.main(["", "count", "counter=7"])
 
     code = """if True:
         from karabo.middlelayer import *
