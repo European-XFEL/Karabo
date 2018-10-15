@@ -1,6 +1,6 @@
 from karabogui.testing import GuiTestCase
 from ..configuration import (
-    Configuration, ECOSYSTEM, DIRECTORIES, NETWORK, PROJECT)
+    BACKBONE, Configuration, DIRECTORIES, NETWORK, PROJECT)
 
 
 class TestConfiguration(GuiTestCase):
@@ -46,8 +46,8 @@ class TestConfiguration(GuiTestCase):
         self.assertIn('macro_dir', dir_group)
         self.assertIn('scene_dir', dir_group)
         self.assertIn('config_dir', dir_group)
-        eco_group = groups[ECOSYSTEM]
-        self.assertEqual(len(eco_group), 3)
-        self.assertIn('macro_server', eco_group)
-        self.assertIn('project_manager', eco_group)
-        self.assertIn('broker_topic', eco_group)
+        bone_group = groups[BACKBONE]
+        self.assertEqual(len(bone_group), 3)
+        self.assertIn('macro_server', bone_group)
+        self.assertIn('project_manager', bone_group)
+        self.assertIn('broker_topic', bone_group)
