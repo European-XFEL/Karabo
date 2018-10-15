@@ -117,9 +117,11 @@ namespace karabo {
     }
 
 
-    P2PSenderDevice::P2PSenderDevice(const Hash& config) : Device<>(config), m_stopSending(true) {
+    P2PSenderDevice::P2PSenderDevice(const Hash& config)
+            : Device<>(config), m_stopWriting(true), m_stopWritingProfile(true) {
         KARABO_SLOT0(write);
-        KARABO_SLOT0(stop);
+        KARABO_SLOT0(stopWrite);
+        KARABO_SLOT0(stopWriteProfile)
     }
 
 
@@ -148,10 +150,13 @@ namespace karabo {
         updateState(State::ACTIVE);
     }
 
-    void P2PSenderDevice::stop() {
-        m_stopSending = true;
+    void P2PSenderDevice::stopWrite() {
+        m_stopWriting = true;
     }
 
+    void P2PSenderDevice::stopWriteProfile() {
+        m_stopWritingProfile = true;
+    }
 
 #define TEST_VECTOR_SIZE 1000000
 
@@ -172,7 +177,7 @@ namespace karabo {
     //------------------+---------------------
 
     void P2PSenderDevice::writing() {
-        m_stopSending = false;
+        m_stopWriting = false;
 
         try {
             const int nData = get<unsigned int>("nData");
@@ -187,7 +192,7 @@ namespace karabo {
             for (size_t i = 1; i <= vec.size(); ++i) vec[i - 1] = i;
 
             // Loop all the data to be send
-            for (int iData = 0; iData < nData && !m_stopSending; ++iData) {
+            for (int iData = 0; iData < nData && !m_stopWriting; ++iData) {
 
                 // Fill the data object
                 data.set("dataId", iData);
@@ -213,6 +218,8 @@ namespace karabo {
     }
     
     void P2PSenderDevice::writingProfile() {
+        m_stopWritingProfile = false;
+
         try {
             const int nData = get<unsigned int>("nData");
             const unsigned int delayInMs = get<unsigned int>("delay");
@@ -232,7 +239,7 @@ namespace karabo {
             auto channel = this->getOutputChannel("output2");
 
             // Loop all the data to be send
-            for (int iData = 0; iData < nData; ++iData) {
+            for (int iData = 0; iData < nData && !m_stopWritingProfile; ++iData) {
 
                 // Fill the data object - for now only dataId.
                 data1.set("array", ndarr1);
