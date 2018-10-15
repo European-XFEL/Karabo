@@ -312,9 +312,9 @@ void PipelinedProcessing_Test::testPipeTwoPots() {
 
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", nDataWhenStop));
         // stop sending data after receiving nDataWhenStop data!
-        m_deviceClient->execute(m_sender, "stop");
+        m_deviceClient->execute(m_sender, "stopWrite");
         // The receiver is expected to get one more data when EOS arrives: the one which is being written
-        // into the inactive pot when the "stop" slot is called.
+        // into the inactive pot when the "stopWrite" slot is called.
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", 0, false));
         CPPUNIT_ASSERT_EQUAL(nDataWhenStop + 1, m_deviceClient->get<unsigned int>(m_receiver, "nTotalDataOnEos"));
         
