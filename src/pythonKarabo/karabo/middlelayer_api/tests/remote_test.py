@@ -661,7 +661,8 @@ class Tests(DeviceTest):
         self.assertLessEqual(_absolute_delta_to_now(hash["timestamp"]), 10)
         self.assertEqual(hash["funcname"], "test_log")
         self.assertEqual(hash["module"], "remote_test")
-        self.assertEqual(len(hash["traceback"]), 3)
+        # Traceback is a joined string of traceback info parts
+        self.assertEqual(len(hash["traceback"]), 186)
 
     @async_tst
     def test_earlylog(self):
