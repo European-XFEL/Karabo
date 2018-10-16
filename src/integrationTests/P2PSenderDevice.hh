@@ -33,9 +33,7 @@ namespace karabo {
         // slot for write command
         void write();
         // slot for stopping the writing activity
-        void stopWrite();
-        // slot for stopping the writingProfile activity
-        void stopWriteProfile();
+        void stop();
 
         /// method for writing thread
         void writing();
@@ -44,8 +42,6 @@ namespace karabo {
         boost::thread m_writingThread;
 
         bool m_stopWriting;
-        bool m_stopWritingProfile;
-
     };
 }
 
