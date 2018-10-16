@@ -225,6 +225,7 @@ class LogWidget(QWidget):
                for i, log in enumerate(logData, start=self.tailindex + 1)]
         self.tailindex += len(logData)
         self.logs.extend(new)
+
         for log in self.filter(new):
             self.queryModel.add(log)
         self.prune()
@@ -291,7 +292,9 @@ class LogWidget(QWidget):
                      if (ins and text in log.instanceId) or
                         (des and text in log.description) or
                         (add and text in log.additionalDescription))
+
             return list(g)
+
         return []
 
     @pyqtSlot(QModelIndex)
@@ -379,7 +382,6 @@ class LogQueryModel(QAbstractTableModel):
         hi = len(self.filtered)
         lo = 0
         key = self.key(data)
-        print(key)
 
         while hi > lo:
             mid = (hi + lo) // 2
