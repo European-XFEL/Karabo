@@ -261,6 +261,28 @@ namespace karabo {
             void distribute(unsigned int chunkId);
 
             /**
+             * Distribute in round round-robin mode, i.e. one shared input after another
+             *
+             * requires that m_registeredSharedInputs not empty
+             *
+             * @param chunkId which chunk to distribute
+             * @param lock of mutex m_registeredInputsMutex which must be active/locked,
+             *             and might get unlocked within function call
+             *
+             */
+            void distributeRoundRobin(unsigned int chunkId, boost::mutex::scoped_lock& lock);
+
+            /**
+             * Distribute in load balanced mode, i.e. pick one of the shared inputs that is ready
+             *
+             * @param chunkId which chunk to distribute
+             * @param lock of mutex m_registeredInputsMutex which must be active/locked,
+             *             and might get unlocked within function call
+
+             *
+             */
+            void distributeLoadBalanced(unsigned int chunkId, boost::mutex::scoped_lock& lock);
+            /**
              * Get index of next one of the shared inputs.
              *
              * Requires protection of m_registeredInputsMutex
