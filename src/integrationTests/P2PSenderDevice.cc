@@ -117,11 +117,9 @@ namespace karabo {
     }
 
 
-    P2PSenderDevice::P2PSenderDevice(const Hash& config)
-            : Device<>(config), m_stopWriting(true), m_stopWritingProfile(true) {
+    P2PSenderDevice::P2PSenderDevice(const Hash& config) : Device<>(config), m_stopWriting(true) {
         KARABO_SLOT0(write);
-        KARABO_SLOT0(stopWrite);
-        KARABO_SLOT0(stopWriteProfile)
+        KARABO_SLOT0(stop);
     }
 
 
@@ -150,12 +148,8 @@ namespace karabo {
         updateState(State::ACTIVE);
     }
 
-    void P2PSenderDevice::stopWrite() {
+    void P2PSenderDevice::stop() {
         m_stopWriting = true;
-    }
-
-    void P2PSenderDevice::stopWriteProfile() {
-        m_stopWritingProfile = true;
     }
 
 #define TEST_VECTOR_SIZE 1000000
@@ -218,7 +212,7 @@ namespace karabo {
     }
     
     void P2PSenderDevice::writingProfile() {
-        m_stopWritingProfile = false;
+        m_stopWriting = false;
 
         try {
             const int nData = get<unsigned int>("nData");
@@ -239,7 +233,7 @@ namespace karabo {
             auto channel = this->getOutputChannel("output2");
 
             // Loop all the data to be send
-            for (int iData = 0; iData < nData && !m_stopWritingProfile; ++iData) {
+            for (int iData = 0; iData < nData && !m_stopWriting; ++iData) {
 
                 // Fill the data object - for now only dataId.
                 data1.set("array", ndarr1);
