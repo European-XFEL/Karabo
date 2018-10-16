@@ -219,12 +219,12 @@ class LogWidget(QWidget):
 
     def onLogDataAvailable(self, logData):
         new = [Log(i, messageType=log["type"], instanceId=log["category"],
-                   description=log["message"], additionalDescription="",
+                   description=log["message"],
+                   additionalDescription=log.get("traceback", ""),
                    dateTime=QDateTime.fromString(log["timestamp"], Qt.ISODate))
                for i, log in enumerate(logData, start=self.tailindex + 1)]
         self.tailindex += len(logData)
         self.logs.extend(new)
-
         for log in self.filter(new):
             self.queryModel.add(log)
         self.prune()
@@ -379,6 +379,8 @@ class LogQueryModel(QAbstractTableModel):
         hi = len(self.filtered)
         lo = 0
         key = self.key(data)
+        print(key)
+
         while hi > lo:
             mid = (hi + lo) // 2
             if self.reverse == (self.key(self.filtered[mid]) < key):
