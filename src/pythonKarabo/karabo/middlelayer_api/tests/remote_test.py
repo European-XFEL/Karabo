@@ -662,7 +662,7 @@ class Tests(DeviceTest):
         self.assertEqual(hash["funcname"], "test_log")
         self.assertEqual(hash["module"], "remote_test")
         # Traceback is a joined string of traceback info parts
-        self.assertEqual(len(hash["traceback"]), 186)
+        self.assertEqual(type(hash["traceback"]), str)
 
     @async_tst
     def test_earlylog(self):
