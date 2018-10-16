@@ -219,7 +219,8 @@ class LogWidget(QWidget):
 
     def onLogDataAvailable(self, logData):
         new = [Log(i, messageType=log["type"], instanceId=log["category"],
-                   description=log["message"], additionalDescription="",
+                   description=log["message"],
+                   additionalDescription=log.get("traceback", ""),
                    dateTime=QDateTime.fromString(log["timestamp"], Qt.ISODate))
                for i, log in enumerate(logData, start=self.tailindex + 1)]
         self.tailindex += len(logData)
@@ -291,7 +292,9 @@ class LogWidget(QWidget):
                      if (ins and text in log.instanceId) or
                         (des and text in log.description) or
                         (add and text in log.additionalDescription))
+
             return list(g)
+
         return []
 
     @pyqtSlot(QModelIndex)
@@ -379,6 +382,7 @@ class LogQueryModel(QAbstractTableModel):
         hi = len(self.filtered)
         lo = 0
         key = self.key(data)
+
         while hi > lo:
             mid = (hi + lo) // 2
             if self.reverse == (self.key(self.filtered[mid]) < key):
