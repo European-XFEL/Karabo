@@ -30,6 +30,12 @@ namespace karabo {
                 .allowedStates(State::NORMAL)
                 .commit();
 
+        SLOT_ELEMENT(expected).key("stop")
+                .displayedName("Stop")
+                .description("Stop writing data")
+                .allowedStates(State::ACTIVE)
+                .commit();
+ 
         Schema data;
         INT32_ELEMENT(data).key("dataId")
                 .readOnly()
@@ -111,8 +117,9 @@ namespace karabo {
     }
 
 
-    P2PSenderDevice::P2PSenderDevice(const Hash& config) : Device<>(config) {
+    P2PSenderDevice::P2PSenderDevice(const Hash& config) : Device<>(config), m_stopWriting(true) {
         KARABO_SLOT0(write);
+        KARABO_SLOT0(stop);
     }
 
 
@@ -136,11 +143,14 @@ namespace karabo {
             m_writingThread = boost::thread(boost::bind(&Self::writing, this));
         } else {
             m_writingThread = boost::thread(boost::bind(&Self::writingProfile, this));
-        } 
+        }
 
         updateState(State::ACTIVE);
     }
 
+    void P2PSenderDevice::stop() {
+        m_stopWriting = true;
+    }
 
 #define TEST_VECTOR_SIZE 1000000
 
@@ -161,6 +171,8 @@ namespace karabo {
     //------------------+---------------------
 
     void P2PSenderDevice::writing() {
+        m_stopWriting = false;
+
         try {
             const int nData = get<unsigned int>("nData");
             const unsigned int delayInMs = get<unsigned int>("delay");
@@ -174,7 +186,7 @@ namespace karabo {
             for (size_t i = 1; i <= vec.size(); ++i) vec[i - 1] = i;
 
             // Loop all the data to be send
-            for (int iData = 0; iData < nData; ++iData) {
+            for (int iData = 0; iData < nData && !m_stopWriting; ++iData) {
 
                 // Fill the data object
                 data.set("dataId", iData);
@@ -200,6 +212,8 @@ namespace karabo {
     }
     
     void P2PSenderDevice::writingProfile() {
+        m_stopWriting = false;
+
         try {
             const int nData = get<unsigned int>("nData");
             const unsigned int delayInMs = get<unsigned int>("delay");
@@ -219,7 +233,7 @@ namespace karabo {
             auto channel = this->getOutputChannel("output2");
 
             // Loop all the data to be send
-            for (int iData = 0; iData < nData; ++iData) {
+            for (int iData = 0; iData < nData && !m_stopWriting; ++iData) {
 
                 // Fill the data object - for now only dataId.
                 data1.set("array", ndarr1);
