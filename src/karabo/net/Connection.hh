@@ -15,8 +15,10 @@
 
 #include <string>
 #include <boost/shared_ptr.hpp>
-#include <karabo/util/Factory.hh>
-#include <karabo/util/Configurator.hh>
+#include <boost/system/error_code.hpp>
+
+#include "karabo/util/Factory.hh"
+#include "karabo/util/Configurator.hh"
 #include "karabo/util/karaboDll.hh"
 
 
@@ -70,7 +72,7 @@ namespace karabo {
 
             /**
              * Starts the connection asynchronously
-             * @param handler A callback with the following signature: void myHandler(ChannelPointer)
+             * @param handler A callback with the following signature: void myHandler(ErrorCode, ChannelPointer)
              */
             virtual int startAsync(const ConnectionHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Asynchronous connect is not available for " + this->classInfo().getClassId() + "connections");
