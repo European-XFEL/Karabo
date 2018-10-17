@@ -138,13 +138,13 @@ class NavigationTreeView(QTreeView):
     # Events
 
     def mouseDoubleClickEvent(self, event):
-        index = self.currentIndex()
-        node = self.model().index_ref(index)
-        if node is None:
+        info = self.indexInfo()
+        navigation_type = info.get('type')
+        if navigation_type is not NavigationItemTypes.DEVICE:
             return
 
-        device_id = node.node_id
-        capabilities = node.capabilities
+        device_id = info.get('deviceId')
+        capabilities = info.get('capabilities')
 
         def _test_mask(mask, bit):
             return (mask & bit) == bit
