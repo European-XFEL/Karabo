@@ -14,6 +14,8 @@
 #include "karabo/net/EventLoop.hh"
 #include "karabo/util/MetaTools.hh"
 
+#include <boost/system/error_code.hpp>
+
 using namespace karabo::util;
 using namespace karabo::io;
 using namespace karabo::net;
@@ -214,11 +216,12 @@ namespace karabo {
         }
 
 
-        void InputChannel::connect(const karabo::util::Hash& outputChannelInfo) {
-
+        void InputChannel::connect(const karabo::util::Hash& outputChannelInfo,
+                                   const boost::function<void (const karabo::net::ErrorCode&)>& handler) {
+            namespace bse = boost::system::errc;
             KARABO_LOG_FRAMEWORK_DEBUG << "connect  on \"" << m_instanceId << "\"  :   outputChannelInfo is ...\n" << outputChannelInfo;
 
-            std::string connectionType = outputChannelInfo.get<std::string > ("connectionType");
+            const std::string& connectionType = outputChannelInfo.get<std::string > ("connectionType");
 
             if (connectionType == "tcp") {
 
@@ -226,7 +229,14 @@ namespace karabo {
                     const string& outputChannelString = outputChannelInfo.get<string>("outputChannelString");
                     boost::mutex::scoped_lock lock(m_outputChannelsMutex);
                     OpenConnections::iterator it = m_openConnections.find(outputChannelString);
-                    if (it != m_openConnections.end()) return; // Already connected!
+                    if (it != m_openConnections.end()) {
+                        KARABO_LOG_FRAMEWORK_WARN << "InputChannel with id " << getInstanceId()
+                                << " already connected to " << outputChannelString;
+                        if (handler) {
+                            EventLoop::getIOService().post(boost::bind(handler, bse::make_error_code(bse::already_connected)));
+                        }
+                        return;
+                    }
                 }
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "connect  on \"" << m_instanceId << "\"   :   No old connection found.  Create one!";
@@ -237,7 +247,13 @@ namespace karabo {
                 karabo::net::Connection::Pointer connection = karabo::net::Connection::create(config);
 
                 // Establish connection (and define sub-type of server)
-                connection->startAsync(karabo::util::bind_weak(&InputChannel::onConnect, this, _1, connection, outputChannelInfo, _2));
+                connection->startAsync(karabo::util::bind_weak(&InputChannel::onConnect, this, _1, connection,
+                                                               outputChannelInfo, _2, handler));
+            } else {
+                KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << " does not support connection type '" << connectionType << "'";
+                if (handler) {
+                    EventLoop::getIOService().post(boost::bind(handler, bse::make_error_code(bse::protocol_not_supported)));
+                }
             }
         }
 
@@ -277,6 +293,7 @@ namespace karabo {
             ConnectedOutputChannels::iterator ii = m_connectedOutputChannels.find(outputChannelString);
             if (ii == m_connectedOutputChannels.end()) return;
             // Should we clean Hash or keep it?  More safe is to clean.
+            // GF sept. 2018: Why not erase? Could be completely different when it comes back...
             ii->second.clear();
         }
 
@@ -302,12 +319,13 @@ namespace karabo {
         void InputChannel::onConnect(const karabo::net::ErrorCode& ec,
                                      karabo::net::Connection::Pointer connection,
                                      const karabo::util::Hash& outputChannelInfo,
-                                     karabo::net::Channel::Pointer channel) {
+                                     karabo::net::Channel::Pointer channel,
+                                     boost::function<void (const karabo::net::ErrorCode&)>& handler) {
 
             KARABO_LOG_FRAMEWORK_DEBUG << "onConnect  :  outputChannelInfo is ...\n" << outputChannelInfo;
 
             if (ec) {
-                onTcpChannelError(ec, channel);
+                handler(ec);
                 return;
             }
 
@@ -323,6 +341,8 @@ namespace karabo {
             if (outputChannelInfo.has("outputChannelString")) {
                 outputChannelString = outputChannelInfo.get<string>("outputChannelString");
             } else {
+                // GF Sept. 2018: Does it make sense to look into old stored data? Things might have changed in such
+                //                a dynamic system as Karabo... But I do not dare to change now (due to lack of time).
                 for (ConnectedOutputChannels::const_iterator it = m_connectedOutputChannels.begin(); it != m_connectedOutputChannels.end(); ++it) {
                     if (!it->second.empty() && it->second.get<string>("hostname") == hostname && it->second.get<unsigned>("port") == port) {
                         outputChannelString = it->first;
@@ -330,34 +350,15 @@ namespace karabo {
                     }
                 }
             }
-            if (outputChannelString.empty())
-                throw KARABO_PARAMETER_EXCEPTION("Output Channel String is not registered  in \"ConnectedOutputChannels\"!");
-            m_openConnections.insert(std::make_pair(outputChannelString, std::make_pair(connection, channel)));
-        }
-
-
-        void InputChannel::onTcpConnectionError(const karabo::net::ErrorCode& error, const karabo::net::Connection::Pointer& connection) {
-
-            string outputChannelString;
-
-            boost::mutex::scoped_lock lock(m_outputChannelsMutex);
-            for (OpenConnections::iterator ii = m_openConnections.begin(); ii != m_openConnections.end(); ++ii) {
-                if (ii->second.first == connection) {
-                    ii->second.second->close();
-                    connection->stop();
-                    outputChannelString = ii->first;
-                    m_openConnections.erase(ii);
-                    break;
-                }
+            if (outputChannelString.empty()) {
+                KARABO_LOG_FRAMEWORK_ERROR << getInstanceId()
+                        << ": Output channel info input lacks 'outputChannelString' - " << outputChannelInfo;
+                handler(boost::system::errc::make_error_code(boost::system::errc::invalid_argument));
+                return;
             }
+            m_openConnections.insert(std::make_pair(outputChannelString, std::make_pair(connection, channel)));
 
-            KARABO_LOG_FRAMEWORK_INFO << "onTcpConnectionError on \"" << m_instanceId << "\"  connected to \""
-                    << outputChannelString << "\"  :  code #" << error.value() << " -- \"" << error.message() << "\".  Close channel.";
-
-            if (outputChannelString.empty()) return;
-            ConnectedOutputChannels::iterator it = m_connectedOutputChannels.find(outputChannelString);
-            if (it == m_connectedOutputChannels.end()) return;
-            it->second.clear();
+            handler(ec);
         }
 
 
@@ -449,9 +450,7 @@ namespace karabo {
                     this->swapBuffers();
                     // Ask to fill second pot...
                     notifyOutputChannelForPossibleRead(channel);
-
                     // ...and in parallel process first one.
-                    // No mutex under callback
                     KARABO_LOG_FRAMEWORK_TRACE << debugId << "Triggering IOEvent";
                     m_strand->post(util::bind_weak(&InputChannel::triggerIOEvent, this));
                 }
