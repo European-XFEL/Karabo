@@ -108,8 +108,9 @@ namespace karabo {
             std::string m_onNoSharedInputChannelAvailable;
             std::string m_distributionMode;
 
-            mutable boost::mutex m_registeredInputsMutex;
+            mutable boost::mutex m_registeredSharedInputsMutex;
             InputChannels m_registeredSharedInputs;
+            mutable boost::mutex m_registeredCopyInputsMutex;
             InputChannels m_registeredCopyInputs;
 
             unsigned int m_sharedInputIndex;
@@ -227,10 +228,8 @@ namespace karabo {
 
             void onInputGone(const karabo::net::Channel::Pointer& channel);
 
-            /// Requires protection of m_registeredInputsMutex
             void distributeQueue(karabo::util::Hash& channelInfo);
 
-            /// Requires protection of m_registeredInputsMutex
             void copyQueue(karabo::util::Hash& channelInfo);
 
             void pushShareNext(const std::string& instanceId);
@@ -266,8 +265,8 @@ namespace karabo {
              * requires that m_registeredSharedInputs not empty
              *
              * @param chunkId which chunk to distribute
-             * @param lock of mutex m_registeredInputsMutex which must be active/locked,
-             *             and might get unlocked within function call
+             * @param lock of mutex m_registeredSharedInputsMutex which must be active/locked,
+             *             and might get unlocked within function call (or not)
              *
              */
             void distributeRoundRobin(unsigned int chunkId, boost::mutex::scoped_lock& lock);
@@ -276,31 +275,36 @@ namespace karabo {
              * Distribute in load balanced mode, i.e. pick one of the shared inputs that is ready
              *
              * @param chunkId which chunk to distribute
-             * @param lock of mutex m_registeredInputsMutex which must be active/locked,
-             *             and might get unlocked within function call
+             * @param lock of mutex m_registeredSharedInputsMutex which must be active/locked,
+             *             and might get unlocked within function call (or not)
 
              *
              */
             void distributeLoadBalanced(unsigned int chunkId, boost::mutex::scoped_lock& lock);
+
             /**
              * Get index of next one of the shared inputs.
              *
-             * Requires protection of m_registeredInputsMutex
+             * Requires protection of m_registeredSharedInputsMutex and m_registeredSharedInputs.size() > 0
              */
             unsigned int getNextSharedInputIdx();
 
-            /// Requires protection of m_registeredInputsMutex
+            /**
+             * Undo a previous getNextSharedInputIdx()
+             *
+             * Requires protection of m_registeredSharedInputsMutex.
+             * Even more, that mutex must not have been unlocked after the getNextSharedInputIdx() it should undo.
+             */
+            void undoGetNextSharedInputIdx();
+
             void distributeLocal(unsigned int chunkId, const InputChannelInfo & channelInfo);
 
-            /// Requires protection of m_registeredInputsMutex
             void distributeRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo);
 
             void copy(unsigned int chunkId);
 
-            /// Requires protection of m_registeredInputsMutex
             void copyLocal(const unsigned int& chunkId, const InputChannelInfo & channelInfo);
 
-            /// Requires protection of m_registeredInputsMutex
             void copyRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo);
 
             /// Provide a string identifying this output channel (useful in DEBUG logging)
