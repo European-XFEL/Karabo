@@ -149,13 +149,24 @@ namespace karabo {
             const std::string& getInstanceId() const;
 
             /**
-             * Check whether an InputChannel with given id is registered.
+             * Check whether an InputChannel with given id is registered to receive all data
+             *
+             * i.e. an InputChannel with "dataDistribution == copy"
              *
              * @param instanceId of InputChannel
-             * @param copy - if true, check among channels that receive copies, else check among those that share data
              * @return bool whether InputChannel of specified type is connected
              */
-            bool hasRegisteredInputChannel(const std::string& instanceId, bool copy) const;
+            bool hasRegisteredCopyInputChannel(const std::string& instanceId) const;
+
+            /**
+             * Check whether an InputChannel with given id is registered to receive a share of the data
+             *
+             * i.e. an InputChannel with "dataDistribution == shared"
+             *
+             * @param instanceId of InputChannel
+             * @return bool whether InputChannel of specified type is connected
+             */
+            bool hasRegisteredSharedInputChannel(const std::string& instanceId) const;
 
             void registerIOEventHandler(const boost::function<void (const OutputChannel::Pointer&)>& ioEventHandler);
 
