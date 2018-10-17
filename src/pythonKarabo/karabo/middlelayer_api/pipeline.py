@@ -379,6 +379,26 @@ class OutputProxy(SubProxyBase):
         self.task = None
         self.initialized = False
 
+    def setDataHandler(self, handler):
+        """Redirect the output of the pipelining proxy before connecting
+
+        NOTE: The handler must take two arguments ``data`` and ``meta``.
+        """
+        if self.initialized:
+            raise RuntimeError("Setting a data handler must happen before "
+                               "connecting to the output channel!")
+        self.networkInput.handler = handler
+
+    def setEndOfStreamHandler(self, handler):
+        """Redirect the endOfStream of the pipelining proxy before connecting
+
+        NOTE: The handler must take one argument ``channelname``.
+        """
+        if self.initialized:
+            raise RuntimeError("Setting an endOfStream handler must happen "
+                               "before connecting to the output channel!")
+        self.networkInput.end_of_stream_handler = handler
+
     @coroutine
     def handler(self, data, meta):
         self._parent._onChanged_r(data, self.schema)
