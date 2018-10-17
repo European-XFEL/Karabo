@@ -165,15 +165,24 @@ namespace karabo {
         }
 
 
-        bool OutputChannel::hasRegisteredInputChannel(const std::string& instanceId, bool copy) const {
-            boost::mutex::scoped_lock lock(m_registeredSharedInputsMutex);
-            const InputChannels& inputs = (copy ? m_registeredCopyInputs : m_registeredSharedInputs);
-            for (const InputChannelInfo& channelInfo : inputs) {
+        bool OutputChannel::hasRegisteredCopyInputChannel(const std::string& instanceId) const {
+            boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
+            for (const InputChannelInfo& channelInfo : m_registeredCopyInputs) {
                 if (channelInfo.get<std::string>("instanceId") == instanceId) {
-                  return true;
+                    return true;
                 }
             }
+            return false;
+        }
 
+
+        bool OutputChannel::hasRegisteredSharedInputChannel(const std::string& instanceId) const {
+            boost::mutex::scoped_lock lock(m_registeredSharedInputsMutex);
+            for (const InputChannelInfo& channelInfo : m_registeredSharedInputs) {
+                if (channelInfo.get<std::string>("instanceId") == instanceId) {
+                    return true;
+                }
+            }
             return false;
         }
 
@@ -682,12 +691,12 @@ namespace karabo {
                     // Make copy of references which might become dangling when unlocking mutex lock
                     const karabo::util::Hash channelInfoCopy = channelInfo;
                     const std::string& instanceIdCopy = channelInfoCopy.get<std::string>("instanceId");
-                    lock.unlock(); // Otherwise hasSharedInput will never become true (and deadlock with hasRegisteredInputChannel)!
+                    lock.unlock(); // Otherwise hasSharedInput will never become true (and deadlock with hasRegisteredSharedInputChannel)!
                     KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Waiting for available (shared) input channel...";
 
                     while (!hasSharedInput(instanceIdCopy)) {
                         boost::this_thread::sleep(boost::posix_time::millisec(1));
-                        if (!hasRegisteredInputChannel(instanceIdCopy, false)) { // might have disconnected meanwhile...
+                        if (!hasRegisteredSharedInputChannel(instanceIdCopy)) { // might have disconnected meanwhile...
                             KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " input channel (shared) of " << instanceIdCopy
                                                        << " disconnected while waiting for it";
                             // recurse to find next available shared input
@@ -891,7 +900,7 @@ namespace karabo {
                 bool instanceDisconnected = false;
                 while (!hasCopyInput(instanceId)) {
                     boost::this_thread::sleep(boost::posix_time::millisec(1));
-                    if (!hasRegisteredInputChannel(instanceId, true)) { // might have disconnected meanwhile...
+                    if (!hasRegisteredCopyInputChannel(instanceId)) { // might have disconnected meanwhile...
                         instanceDisconnected = true;
                         break;
                     }
