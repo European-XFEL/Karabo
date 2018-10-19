@@ -408,35 +408,30 @@ class Network(QObject):
     def onProjectBeginSession(self, project_manager):
         h = Hash("type", "projectBeginUserSession")
         h["projectManager"] = project_manager
-        # XXX: Don't leave token hardcoded!
-        h["token"] = "admin"
+        h["token"] = get_config()["db_token"]
         self._tcpWriteHash(h)
 
     def onProjectEndSession(self, project_manager):
         h = Hash("type", "projectEndUserSession")
         h["projectManager"] = project_manager
-        # XXX: Don't leave token hardcoded!
-        h["token"] = "admin"
+        h["token"] = get_config()["db_token"]
         self._tcpWriteHash(h)
 
     def onListProjectDomains(self, project_manager):
         h = Hash("type", "projectListDomains")
         h["projectManager"] = project_manager
-        # XXX: Don't leave token hardcoded!
-        h["token"] = "admin"
+        h["token"] = get_config()["db_token"]
         self._tcpWriteHash(h)
 
     def onListProjectManagers(self):
         h = Hash("type", "projectListProjectManagers")
-        # XXX: Don't leave token hardcoded!
-        h["token"] = "admin"
+        h["token"] = get_config()["db_token"]
         self._tcpWriteHash(h)
 
     def onProjectListItems(self, project_manager, domain, item_type):
         h = Hash("type", "projectListItems")
         h["projectManager"] = project_manager
-        # XXX: Don't leave token hardcoded!
-        h["token"] = "admin"
+        h["token"] = get_config()["db_token"]
         h["domain"] = domain
         h["item_types"] = [item_type]
         self._tcpWriteHash(h)
@@ -444,24 +439,21 @@ class Network(QObject):
     def onProjectLoadItems(self, project_manager, items):
         h = Hash("type", "projectLoadItems")
         h["projectManager"] = project_manager
-        # XXX: Don't leave token hardcoded!
-        h["token"] = "admin"
+        h["token"] = get_config()["db_token"]
         h["items"] = items
         self._tcpWriteHash(h)
 
     def onProjectSaveItems(self, project_manager, items):
         h = Hash("type", "projectSaveItems")
         h["projectManager"] = project_manager
-        # XXX: Don't leave token hardcoded!
-        h["token"] = "admin"
+        h["token"] = get_config()["db_token"]
         h["items"] = items
         self._tcpWriteHash(h)
 
     def onProjectUpdateAttribute(self, project_manager, items):
         h = Hash("type", "projectUpdateAttribute")
         h["projectManager"] = project_manager
-        # XXX: Don't leave token hardcoded!
-        h["token"] = "admin"
+        h["token"] = get_config()["db_token"]
         h["items"] = items
         self._tcpWriteHash(h)
 
