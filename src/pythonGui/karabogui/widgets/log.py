@@ -16,6 +16,8 @@ from karabogui import icons
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.util import getSaveFileName
 
+DEVICE_COLUMN = 3
+
 
 class LogWidget(QWidget):
     def __init__(self, parent=None):
@@ -302,9 +304,9 @@ class LogWidget(QWidget):
         value = index.data()
         if value is None:
             return
-        # TODO: make sure that only data from the device ID column is sent
-        broadcast_event(KaraboEventSender.ShowNavigationItem,
-                        {'device_path': value})
+        index = self.queryModel.index(index.row(), DEVICE_COLUMN)
+        deviceId = self.queryModel.data(index, Qt.DisplayRole)
+        broadcast_event(KaraboEventSender.ShowDevice, {'deviceId': deviceId})
 
     @pyqtSlot()
     def onSaveToFile(self):
