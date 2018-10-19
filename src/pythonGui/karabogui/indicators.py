@@ -257,3 +257,20 @@ def get_processing_color(proc_delay):
         return PROC_BETWEEN_COLOR
     elif proc_delay > PROC_ALARM:
         return PROC_ALARM_COLOR
+
+
+# --------------------------------------------------------------------------
+# Mapping topics to colors
+
+def get_topic_color(topic=None):
+    """Get the corresponding standard color belonging to karabo topic
+
+    :param topic: The karabo topic string, e.g. SA1, FXE, SPB, SA2, etc.
+    """
+    color_map = {
+        "SA1": (140, 170, 215, 128),
+        "SA2": (215, 170, 150, 128),
+        "SA3": (150, 185, 150, 128),
+    }
+
+    return color_map.get(topic, None)
