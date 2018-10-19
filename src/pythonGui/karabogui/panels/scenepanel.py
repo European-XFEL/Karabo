@@ -11,6 +11,7 @@ from PyQt4.QtGui import (QAction, QActionGroup, QApplication, QKeySequence,
 
 from karabogui import icons
 from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.indicators import get_topic_color
 from karabogui.sceneview.api import SceneView
 from karabogui.sceneview.const import QT_CURSORS, SCENE_BORDER_WIDTH
 from karabogui.sceneview.tools.api import (
@@ -121,7 +122,6 @@ class ScenePanel(BasePanelWidget):
             tool_bar.addAction(action)
 
         self.drawing_tool_bar = tool_bar
-
         # Add placeholder widget to toolbar
         self.drawing_tool_bar.add_expander()
 
@@ -159,8 +159,40 @@ class ScenePanel(BasePanelWidget):
             self.resize(width, height)
             self.scroll_widget.setWidgetResizable(True)
 
+    def set_toolbar_style(self, karabo_topic):
+        color = get_topic_color(karabo_topic)
+        if color is not None:
+            self.toolbar.setStyleSheet(
+                """QToolBar {{ background-color: rgba{} }};""".format(color))
+
     # ----------------------------
-    # other methods
+    # Qt slots
+
+    @pyqtSlot()
+    def apply_editor_changes(self):
+        self.scene_view.apply_editor_changes()
+
+    @pyqtSlot()
+    def decline_editor_changes(self):
+        self.scene_view.decline_editor_changes()
+
+    @pyqtSlot(bool)
+    def design_mode_changed(self, is_checked):
+        self.drawing_tool_bar.setVisible(is_checked)
+        text = self.design_mode_text(is_checked)
+        self.ac_design_mode.setToolTip(text)
+        self.ac_design_mode.setStatusTip(text)
+        self.ac_selection_tool.setChecked(is_checked)
+        self.scene_view.design_mode = is_checked
+
+    def design_mode_text(self, is_design_mode):
+        if is_design_mode:
+            return "Change to control mode"
+
+        return "Change to design mode"
+
+    # ----------------------------
+    # ToolBar and Action creators
 
     def create_toolbar_actions(self, connected_to_server):
         text = self.design_mode_text(self.scene_view.design_mode)
@@ -208,29 +240,6 @@ class ScenePanel(BasePanelWidget):
 
         self.qactions.extend(self._build_qaction(a)
                              for a in self.create_order_actions())
-
-    @pyqtSlot()
-    def apply_editor_changes(self):
-        self.scene_view.apply_editor_changes()
-
-    @pyqtSlot()
-    def decline_editor_changes(self):
-        self.scene_view.decline_editor_changes()
-
-    def design_mode_text(self, is_design_mode):
-        if is_design_mode:
-            return "Change to control mode"
-
-        return "Change to design mode"
-
-    @pyqtSlot(bool)
-    def design_mode_changed(self, is_checked):
-        self.drawing_tool_bar.setVisible(is_checked)
-        text = self.design_mode_text(is_checked)
-        self.ac_design_mode.setToolTip(text)
-        self.ac_design_mode.setStatusTip(text)
-        self.ac_selection_tool.setChecked(is_checked)
-        self.scene_view.design_mode = is_checked
 
     def create_mode_qactions(self):
         """ Create mode QActions and return list of them"""
