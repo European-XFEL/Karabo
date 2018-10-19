@@ -11,7 +11,7 @@ from karabogui import messagebox
 from karabogui.events import KaraboEventSender, register_for_broadcasts
 from karabogui.mainwindow import MainWindow, PanelAreaEnum
 from karabogui.panels.api import AlarmPanel, MacroPanel, ScenePanel
-from karabogui.singletons.api import get_project_model, get_db_conn
+from karabogui.singletons.api import get_config, get_project_model, get_db_conn
 
 
 class PanelWrangler(QObject):
@@ -201,6 +201,10 @@ class PanelWrangler(QObject):
         panel = self._project_item_panels.get(model)
         if panel is None:
             panel = ScenePanel(model, self.connected_to_server)
+            # Set the tool color according to the defined indicators!
+            karabo_topic = get_config()['broker_topic']
+            panel.set_toolbar_style(karabo_topic)
+
         # NOTE: Only attached Scene panels are allowed to have design mode!
         panel.ac_design_mode.setVisible(attached)
         self._show_project_item_panel(model, panel)
