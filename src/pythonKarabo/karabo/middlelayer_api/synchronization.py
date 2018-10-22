@@ -90,6 +90,10 @@ def _wait(return_when, *args, timeout=None, cancel_pending=True, **kwargs):
     names = {
         f.future if isinstance(f, KaraboFuture) else f: k
         for k, f in futures.items()}
+
+    # Make firstCompleted and allCompleted compliant with KaraboValues
+    if timeout is not None and isinstance(timeout, KaraboValue):
+        timeout /= unit.second
     try:
         done, pending = yield from asyncio.wait(names, return_when=return_when,
                                                 timeout=timeout)
