@@ -144,7 +144,7 @@ class _BaseTableElement(BaseBindingController):
             # remove any combo delegate
             for col, key in enumerate(c_hash.getKeys()):
                 if c_hash.hasAttribute(key, 'options'):
-                    delegate = QStyledItemDelegate()
+                    delegate = QStyledItemDelegate(parent=self.widget)
                     self.widget.setItemDelegateForColumn(col, delegate)
         else:
             # add context menu to vertical header to add and remove rows
@@ -159,8 +159,7 @@ class _BaseTableElement(BaseBindingController):
                     delegate = ComboBoxDelegate(
                         c_hash.getAttribute(key, 'options'),
                         row=self._item_model.rowCount(None),
-                        column=col, parent=self.widget
-                    )
+                        column=col, parent=self.widget)
                     self.widget.setItemDelegateForColumn(col, delegate)
 
     @pyqtSlot(QPoint)
