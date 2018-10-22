@@ -5,8 +5,8 @@ import time
 
 from .eventloop import async_tst, DeviceTest, sync_tst
 from karabo.middlelayer import (
-    allCompleted, background, firstCompleted, firstException, gather, sleep,
-    synchronous, unit)
+    allCompleted, background, firstCompleted, firstException, gather,
+    QuantityValue, sleep, synchronous, Unit, unit)
 from karabo.middlelayer_api.synchronization import FutureDict
 
 
@@ -254,9 +254,11 @@ class Tests(DeviceTest):
         @coroutine
         def raisor():
             raise exception
+
+        timeout = QuantityValue(0.01, unit=Unit.SECOND)
         done, pending, error = yield from allCompleted(
             sleep(100), slow=sleep(1000), fast=sleep(0.001, "result"),
-            err=raisor(), timeout=0.01)
+            err=raisor(), timeout=timeout)
 
         self.assertEqual(done, {"fast": "result"})
         self.assertEqual(error, {"err": exception})
