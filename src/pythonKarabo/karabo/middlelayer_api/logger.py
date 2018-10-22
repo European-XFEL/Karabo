@@ -62,7 +62,9 @@ class NetworkHandler(Handler):
             args["{}{}".format(type(arg).__name__, i)] = arg
         hash["args"] = args
         if record.exc_info is not None:
-            hash["traceback"] = traceback.format_exception(*record.exc_info)
+            trace = "".join(traceback.format_exception(*record.exc_info))
+            hash["traceback"] = trace
+
         self.parent.broker.log(hash)
 
 
