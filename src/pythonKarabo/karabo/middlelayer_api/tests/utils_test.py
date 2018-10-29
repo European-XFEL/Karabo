@@ -98,12 +98,12 @@ class Tests(TestCase):
         v1 = a1.toKaraboValue(6.0)
         v1.timestamp = self.timestamp_1
         self.assertEqual(v1, 6.0)
-        v2 = a2.toKaraboValue(1.3)
+        v2 = a2.toKaraboValue(1.25)
         v2.timestamp = self.timestamp_2
-        self.assertEqual(v2, 1.3)
-        v3 = a3.toKaraboValue(1.7)
+        self.assertEqual(v2, 1.25)
+        v3 = a3.toKaraboValue(1.75)
         v3.timestamp = self.timestamp_3
-        self.assertEqual(v3, 1.7)
+        self.assertEqual(v3, 1.75)
         v4 = a4.toKaraboValue(4.0)
         v4.timestamp = self.timestamp_4
         self.assertEqual(v4, 4.0)
@@ -128,18 +128,18 @@ class Tests(TestCase):
         v1 = a1.toKaraboValue(6.0)
         v1.timestamp = self.timestamp_1
         self.assertEqual(v1, 6.0)
-        v2 = a2.toKaraboValue(1.3)
+        v2 = a2.toKaraboValue(1.25)
         v2.timestamp = self.timestamp_2
-        self.assertEqual(v2, 1.3)
-        v3 = a3.toKaraboValue(1.7)
+        self.assertEqual(v2, 1.25)
+        v3 = a3.toKaraboValue(1.75)
         v3.timestamp = self.timestamp_3
-        self.assertEqual(v3, 1.7)
+        self.assertEqual(v3, 1.75)
         v4 = a4.toKaraboValue(4.0)
         v4.timestamp = self.timestamp_4
         self.assertEqual(v4, 4.0)
 
         value = minimum([v1, v2, v3, v4])
-        self.assertEqual(value, 1.3)
+        self.assertEqual(value, 1.25)
         self.assertEqual(value.timestamp, v4.timestamp)
         self.assertEqual(value.timestamp, 4)
         self.assertEqual(v1.timestamp, self.timestamp_1)
