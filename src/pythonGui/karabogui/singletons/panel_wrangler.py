@@ -31,7 +31,8 @@ class PanelWrangler(QObject):
         # Panel containers
         # Project items (scenes, macros) {model: panel}
         self._project_item_panels = {}
-        self._unattached_project_models = []
+        # Unattached scene panels {model: panel}
+        self._unattached_scene_panels = {}
 
         # Panels linked to instances {instance id: (panel, pos)}
         self._instance_panels = {}
@@ -75,6 +76,7 @@ class PanelWrangler(QObject):
             model = data.get('model')
             attached = sender is KaraboEventSender.ShowSceneView
             self._open_scene(model, target_window, attached=attached)
+            return True
 
         elif sender is KaraboEventSender.OpenSceneLink:
             name = data.get('name', '')
@@ -96,8 +98,9 @@ class PanelWrangler(QObject):
             model = data.get('model')
             if model in self._project_item_panels:
                 self._project_item_panels.pop(model)
-            elif model in self._unattached_project_models:
-                self._unattached_project_models.remove(model)
+            elif model in self._unattached_scene_panels:
+                self._unattached_scene_panels.pop(model)
+            return True
 
         elif sender is KaraboEventSender.ShowMacroView:
             self._open_macro(data.get('model'))
@@ -121,8 +124,7 @@ class PanelWrangler(QObject):
                 for inst_id in panel_ids:
                     self._close_instance_panel(inst_id)
                 # Close panels not associated with projects
-                self._close_project_item_panels(
-                    self._unattached_project_models)
+                self._close_unattached_panels()
 
         elif sender is KaraboEventSender.CreateMainWindow:
             self._create_main_window()
@@ -165,15 +167,21 @@ class PanelWrangler(QObject):
         if instance_id in self._instance_panels:
             del self._instance_panels[instance_id]
 
+    def _close_panel(self, panel):
+        if panel is None:
+            return
+        if self.main_window is None:
+            panel.close()
+        else:
+            self.main_window.removePanel(panel, PanelAreaEnum.MiddleTop)
+
     def _close_project_item_panels(self, models):
         for model in models:
-            panel = self._project_item_panels.get(model)
-            if panel is None:
-                continue
-            if self.main_window is None:
-                panel.close()
-            else:
-                self.main_window.removePanel(panel, PanelAreaEnum.MiddleTop)
+            self._close_panel(self._project_item_panels.get(model))
+
+    def _close_unattached_panels(self):
+        for panel in self._unattached_scene_panels.values():
+            self._close_panel(panel)
 
     def _create_main_window(self):
         if self.main_window is not None:
@@ -207,10 +215,7 @@ class PanelWrangler(QObject):
 
         # NOTE: Only attached Scene panels are allowed to have design mode!
         panel.ac_design_mode.setVisible(attached)
-        self._show_project_item_panel(model, panel)
-
-        if not attached:
-            self._unattached_project_models.append(model)
+        self._show_project_item_panel(model, panel, attached)
 
         if self.main_window is None:
             return
@@ -220,9 +225,13 @@ class PanelWrangler(QObject):
         elif target_window is SceneTargetWindow.Dialog:
             panel.onUndock()
 
-    def _show_project_item_panel(self, model, panel):
+    def _show_project_item_panel(self, model, panel, attached=True):
         has_panel = model in self._project_item_panels
-        self._project_item_panels[model] = panel
+
+        if attached:
+            self._project_item_panels[model] = panel
+        else:
+            self._unattached_scene_panels[model] = panel
 
         if self.splash is not None:
             self.splash.close()
