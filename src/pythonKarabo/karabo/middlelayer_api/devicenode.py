@@ -40,12 +40,12 @@ class DeviceNode(String):
     If the other device should be locked by this device, set the attribute
     ``lock=True``.
 
-    A timeout in seconds can be specified via
+    A timeout in seconds can be specified via::
 
         class Stage(Device):
             motor = DeviceNode(timeout=1.5)
 
-    The device with try to connect to the device within this time frame. If
+    The DeviceNode will try to connect to the device within this time frame. If
     the connection could not be established, an error is raised.
     """
 
