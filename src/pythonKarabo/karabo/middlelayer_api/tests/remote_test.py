@@ -796,7 +796,8 @@ class Tests(DeviceTest):
         class A(Device):
             dn = DeviceNode(properties=["value", {"counter": "cntr",
                                                   "other": "othr"}],
-                            commands=[{"doit": "do_it"}, "changeit"])
+                            commands=[{"doit": "do_it"}, "changeit"],
+                            timeout=15.0)
 
             dnEmpty = DeviceNode()
 
@@ -845,6 +846,15 @@ class Tests(DeviceTest):
                 self.assertFalse(isSet(d.dn.othr))
         finally:
             yield from a.slotKillDevice()
+
+    @async_tst
+    def test_devicenode_timeout(self):
+        class A(Device):
+            dn = DeviceNode(timeout=0.0)
+
+        a = A({"_deviceId_": "devicenode", "dn": "nodevice"})
+        with self.assertRaises(KaraboError):
+            yield from a.startInstance()
 
     @async_tst
     def test_device_node_alive(self):
