@@ -4,12 +4,11 @@ from karabo.middlelayer_api.device_client import get_instance
 DEVICE = "device"
 
 
-def _test_word(word, bits):
+def _test_word(word, bit):
     """Test the bit word with our capabilities and interfaces enums
     """
-    for bit in bits:
-        if (word & bit.value) == bit.value:
-            return True
+    if (word & bit.value) == bit.value:
+        return True
 
     return False
 
@@ -28,7 +27,7 @@ def _get_interface_device(interfaces, matchPattern=None):
     topology = get_instance().systemTopology[DEVICE]
     for k, v, a in topology.iterall():
         has_interfaces = _test_word(a["capabilities"],
-                                    [Capabilities.PROVIDES_INTERFACES])
+                                    Capabilities.PROVIDES_INTERFACES)
         if has_interfaces and _test_word(a["interfaces"], interfaces):
             ret.append(k)
 
@@ -39,7 +38,7 @@ def _get_interface_device(interfaces, matchPattern=None):
 
 
 def listMotors(matchPattern=None):
-    """List all the Motors and MultiAxisMotors from the systemTopology
+    """List all the Motors from the systemTopology
 
     Parameters
     ----------
@@ -60,8 +59,37 @@ def listMotors(matchPattern=None):
     -------
     List of found deviceId's of motor devices in the system topology
     """
-    ret = _get_interface_device([Interfaces.Motor, Interfaces.MultiAxisMotor],
-                                matchPattern)
+    ret = _get_interface_device(Interfaces.Motor, matchPattern)
+
+    return ret
+
+
+def listMultiAxisMotors(matchPattern=None):
+    """List all the MultiAxisMotors from the systemTopology
+
+    Parameters
+    ----------
+    matchPattern: Optionally provide a string pattern to find the
+                  deviceId's containing the matchPattern.
+    Interface
+    ---------
+    A MultiAxisMotor contains full abstract motor interface in nodes.
+    All nodes are specified in the ``axes`` property.
+
+    Each node contains the following properties:
+
+    - Properties: actualPosition, targetPosition, isCWLimit, isCCWLimit
+
+      Optionally, if provided, there will be: isSWLimitHigh, isSWLimitLow,
+      velocity, backlash
+
+    - Commands: move, stop
+
+    Returns
+    -------
+    List of found deviceId's of multiaxis motor devices in the system topology
+    """
+    ret = _get_interface_device(Interfaces.MultiAxisMotor, matchPattern)
 
     return ret
 
@@ -86,7 +114,7 @@ def listCameras(matchPattern=None):
     -------
     List of found deviceId's of camera devices in the system topology
     """
-    ret = _get_interface_device([Interfaces.Camera], matchPattern)
+    ret = _get_interface_device(Interfaces.Camera, matchPattern)
 
     return ret
 
@@ -111,6 +139,6 @@ def listTriggers(matchPattern=None):
     -------
     List of found deviceId's of trigger devices in the system topology
     """
-    ret = _get_interface_device([Interfaces.Trigger], matchPattern)
+    ret = _get_interface_device(Interfaces.Trigger, matchPattern)
 
     return ret
