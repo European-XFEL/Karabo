@@ -111,7 +111,7 @@ class Tests(TestCase):
             oct_int: 0o0
             hex_int: 0x0
             enum_int: <Words.a>
-            ohm_float: 0 Ω
+            ohm_float: 0.0 Ω
             err_float: 0.0 
             strings: []
             node: 
@@ -136,7 +136,7 @@ class Tests(TestCase):
                     <td><i>Words.a</i></td>
                 </tr><tr>
                     <td style="padding-left:1em">ohm_float</td>
-                    <td>0 Ω</td>
+                    <td>0.0 Ω</td>
                 </tr><tr>
                     <td style="padding-left:1em">err_float</td>
                     <td>0.0 </td>
