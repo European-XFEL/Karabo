@@ -137,7 +137,7 @@ class Tests(TestCase):
         v = d.toKaraboValue(1.9, strict=False)
         self.assertEqual(v, 1)
 
-        d = Int8(unitSymbol=Unit.METER, metricPrefixSymbol=MetricPrefix.MILLI,
+        d = Int16(unitSymbol=Unit.METER, metricPrefixSymbol=MetricPrefix.MILLI,
                  minExc=3, maxInc=6000)
         v = d.toKaraboValue(5)
         with self.assertRaises(DimensionalityError):
@@ -206,8 +206,8 @@ class Tests(TestCase):
             v = d.toKaraboValue(5 * unit.m / unit.m)
         v = d.toKaraboValue(5, strict=False)
         self.assertEqual(v, QuantityValue("5 mm"))
-        v = d.toKaraboValue("3.71111 m")
-        self.assertEqual(v.magnitude, 3711.11)
+        v = d.toKaraboValue("3.71125 m")
+        self.assertEqual(v.magnitude, 3711.25)
         v = d.toKaraboValue("5 m")
         self.assertEqual(v.magnitude, 5000)
         self.check_general(d, v)
@@ -259,8 +259,8 @@ class Tests(TestCase):
         v = d.toKaraboValue("5 m")
         self.assertEqual(v.magnitude, 5000)
         self.check_general(d, v)
-        v = d.toKaraboValue("3.71111 m")
-        self.assertEqual(v.magnitude, 3711.11)
+        v = d.toKaraboValue("3.71125 m")
+        self.assertEqual(v.magnitude, 3711.25)
 
     def test_vector_complex(self):
         d = VectorComplexFloat()

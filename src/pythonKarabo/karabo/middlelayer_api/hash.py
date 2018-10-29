@@ -183,11 +183,17 @@ class Simple(object):
     def toKaraboValue(self, data, strict=True):
         if self.enum is not None:
             return Enumable.toKaraboValue(self, data, strict)
-        data = basetypes.QuantityValue(data, descriptor=self)
-        if data.units != self.units:
-            data = data.to(self.units)
-            data.descriptor = self
-        self.check(data.magnitude)
+        if isinstance(data, basetypes.KaraboValue):
+            timestamp = data.timestamp
+        else:
+            timestamp = None
+        if isinstance(data, str):
+            data = basetypes.QuantityValue(data)
+        if isinstance(data, basetypes.QuantityValue):
+            data = data.to(self.units).value
+        self.check(data)
+        data = basetypes.QuantityValue(self.numpy(data), descriptor=self,
+                                       timestamp=timestamp)
         return data
 
     def getMinMax(self):
@@ -216,6 +222,15 @@ class Simple(object):
 class Integer(Simple, Enumable):
     """The base class for all integers"""
 
+    def check(self, value):
+        super().check(value)
+        if self.enum is not None:
+            return
+
+        info = np.iinfo(self.numpy)
+        if value < info.min or value > info.max:
+            raise ValueError("value {} not in range of datatype".format(value))
+
     def getMinMax(self):
         info = np.iinfo(self.numpy)
         min = self.minExc
@@ -235,14 +250,6 @@ class Integer(Simple, Enumable):
             max = info.max
 
         return min, max
-
-    def toKaraboValue(self, data, strict=True):
-        if self.enum is not None:
-            return Enumable.toKaraboValue(self, data, strict)
-        ret = Simple.toKaraboValue(self, data, strict)
-        return basetypes.QuantityValue(int(ret.magnitude), unit=ret.units,
-                                       descriptor=self,
-                                       timestamp=ret.timestamp)
 
 
 class Number(Simple):
