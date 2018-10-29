@@ -1,6 +1,8 @@
 Welcome to Karabo's documentation!
 ==================================
 
+.. _welcome:
+
 Contents:
 
 .. toctree::
