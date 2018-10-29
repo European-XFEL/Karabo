@@ -39,11 +39,13 @@ class Tests(TestCase):
         val, attrs = desc.toDataAndAttrs(c)
         h["a"] = val
         h["a", ...].update(attrs)
+        h = decodeBinary(encodeBinary(h))
         if isinstance(desc, NumpyVector):
             self.assertTrue((c == value).all())
             self.assertTrue((h["a"] == value.value).all())
         else:
             self.assertTrue(c == value)
+            self.assertEqual(h["a"], value.value)
         with self.assertRaises(TypeError):
             type(desc)(some_unknown_attr=3)
         type(desc)(strict=False, some_unknown_attr=3)
@@ -137,7 +139,7 @@ class Tests(TestCase):
         v = d.toKaraboValue(1.9, strict=False)
         self.assertEqual(v, 1)
 
-        d = Int8(unitSymbol=Unit.METER, metricPrefixSymbol=MetricPrefix.MILLI,
+        d = Int16(unitSymbol=Unit.METER, metricPrefixSymbol=MetricPrefix.MILLI,
                  minExc=3, maxInc=6000)
         v = d.toKaraboValue(5)
         with self.assertRaises(DimensionalityError):
@@ -161,6 +163,10 @@ class Tests(TestCase):
         with self.assertRaises(TypeError):
             Int16(unitSymbol="m")
         Int16(strict=False, unitSymbol="m", metricPrefixSymbol="m")
+
+        d = UInt64()
+        v = d.toKaraboValue(10 ** 19)
+        self.check_general(d, v)
 
     def test_options(self):
         d = Int16(options=[3, 2, 4],
@@ -206,8 +212,8 @@ class Tests(TestCase):
             v = d.toKaraboValue(5 * unit.m / unit.m)
         v = d.toKaraboValue(5, strict=False)
         self.assertEqual(v, QuantityValue("5 mm"))
-        v = d.toKaraboValue("3.71111 m")
-        self.assertEqual(v.magnitude, 3711.11)
+        v = d.toKaraboValue("3.71125 m")
+        self.assertEqual(v.magnitude, 3711.25)
         v = d.toKaraboValue("5 m")
         self.assertEqual(v.magnitude, 5000)
         self.check_general(d, v)
@@ -259,8 +265,8 @@ class Tests(TestCase):
         v = d.toKaraboValue("5 m")
         self.assertEqual(v.magnitude, 5000)
         self.check_general(d, v)
-        v = d.toKaraboValue("3.71111 m")
-        self.assertEqual(v.magnitude, 3711.11)
+        v = d.toKaraboValue("3.71125 m")
+        self.assertEqual(v.magnitude, 3711.25)
 
     def test_vector_complex(self):
         d = VectorComplexFloat()
