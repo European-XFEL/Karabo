@@ -39,6 +39,14 @@ class DeviceNode(String):
 
     If the other device should be locked by this device, set the attribute
     ``lock=True``.
+
+    A timeout in seconds can be specified via
+
+        class Stage(Device):
+            motor = DeviceNode(timeout=1.5)
+
+    The device with try to connect to the device within this time frame. If
+    the connection could not be established, an error is raised.
     """
 
     def __init__(self, properties=(), commands=(), timeout=None,
@@ -143,9 +151,9 @@ class DeviceNode(String):
         except TimeoutError:
             # We can accept a connection attempt only for a limited time, after
             # that, the device will go offline
-            raise KaraboError('The DeviceNode with key "{}" could not '
-                              'establish a proxy to "{}"'.format(self.key,
-                                                                 value))
+            raise KaraboError(
+                'The DeviceNode with key "{}" timed out and could not '
+                'establish a proxy to "{}"'.format(self.key, value))
 
         proxy._current = Hash()
         instance.__dict__[self.key] = proxy
