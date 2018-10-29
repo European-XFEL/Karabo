@@ -39,11 +39,13 @@ class Tests(TestCase):
         val, attrs = desc.toDataAndAttrs(c)
         h["a"] = val
         h["a", ...].update(attrs)
+        h = decodeBinary(encodeBinary(h))
         if isinstance(desc, NumpyVector):
             self.assertTrue((c == value).all())
             self.assertTrue((h["a"] == value.value).all())
         else:
             self.assertTrue(c == value)
+            self.assertEqual(h["a"], value.value)
         with self.assertRaises(TypeError):
             type(desc)(some_unknown_attr=3)
         type(desc)(strict=False, some_unknown_attr=3)
@@ -161,6 +163,10 @@ class Tests(TestCase):
         with self.assertRaises(TypeError):
             Int16(unitSymbol="m")
         Int16(strict=False, unitSymbol="m", metricPrefixSymbol="m")
+
+        d = UInt64()
+        v = d.toKaraboValue(10 ** 19)
+        self.check_general(d, v)
 
     def test_options(self):
         d = Int16(options=[3, 2, 4],
