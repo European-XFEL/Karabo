@@ -547,6 +547,12 @@ class QuantityValue(KaraboValue, Quantity):
         absolute = getattr(self.descriptor, "absoluteError", None)
         relative = getattr(self.descriptor, "relativeError", None)
 
+        if relative is None:
+            try:
+                relative = numpy.finfo(value.dtype).resolution
+            except (AttributeError, ValueError):
+                pass
+
         if absolute is not None and self.value != 0:
             err = abs(absolute / self.value)
             if relative is not None:
