@@ -206,7 +206,7 @@ namespace karabo {
                            karabo::net::Connection::Pointer connection,
                            const karabo::util::Hash& outputChannelInfo,
                            karabo::net::Channel::Pointer channel,
-                           boost::function<void (const karabo::net::ErrorCode&)>& handler);
+                           const boost::function<void (const karabo::net::ErrorCode&)>& handler);
 
             void onTcpChannelError(const karabo::net::ErrorCode&, const karabo::net::Channel::Pointer&);
 

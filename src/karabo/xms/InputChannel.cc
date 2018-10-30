@@ -320,12 +320,11 @@ namespace karabo {
                                      karabo::net::Connection::Pointer connection,
                                      const karabo::util::Hash& outputChannelInfo,
                                      karabo::net::Channel::Pointer channel,
-                                     boost::function<void (const karabo::net::ErrorCode&)>& handler) {
+                                     const boost::function<void (const karabo::net::ErrorCode&)>& handler) {
 
             KARABO_LOG_FRAMEWORK_DEBUG << "onConnect  :  outputChannelInfo is ...\n" << outputChannelInfo;
-
             if (ec) {
-                handler(ec);
+                if (handler) handler(ec);
                 return;
             }
 
@@ -353,12 +352,12 @@ namespace karabo {
             if (outputChannelString.empty()) {
                 KARABO_LOG_FRAMEWORK_ERROR << getInstanceId()
                         << ": Output channel info input lacks 'outputChannelString' - " << outputChannelInfo;
-                handler(boost::system::errc::make_error_code(boost::system::errc::invalid_argument));
+                if (handler) handler(boost::system::errc::make_error_code(boost::system::errc::invalid_argument));
                 return;
             }
             m_openConnections.insert(std::make_pair(outputChannelString, std::make_pair(connection, channel)));
 
-            handler(ec);
+            if (handler) handler(ec);
         }
 
 

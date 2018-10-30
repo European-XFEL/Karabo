@@ -103,6 +103,17 @@ void InputOutputChannel_Test::testConnectDisconnect() {
 
         // Disconnect
         input->disconnect(outputChannelId);
+        // Some time to travel for message
+        trials = 20;
+        connected = true;
+        do {
+            if (!output->hasRegisteredCopyInputChannel(input->getInstanceId())) {
+                connected = false;
+                break;
+            }
+            boost::this_thread::sleep(boost::posix_time::milliseconds(2));
+        } while (--trials >= 0);
+        CPPUNIT_ASSERT(!connected);
     }
 
     // Write data again - input does not anymore receive data.
@@ -126,7 +137,6 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     badOutputInfos.back().set("hostname", "exflblablupp-not-there.desy.de");
 
     for (const Hash& badOutputInfo : badOutputInfos) {
-        std::clog << badOutputInfo << "\n\n" << std::endl;
         // Setup connection handler
         std::promise<karabo::net::ErrorCode> connectErrorCode;
         auto connectFuture = connectErrorCode.get_future();
