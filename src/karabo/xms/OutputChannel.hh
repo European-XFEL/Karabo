@@ -92,8 +92,6 @@ namespace karabo {
 
             typedef std::deque< std::string > InputChannelQueue;
 
-            typedef std::map<unsigned int, int> CurrentWritersCount;
-
             // Callback on available input
             boost::function<void (const boost::shared_ptr<OutputChannel>&) > m_ioEventHandler;
 
@@ -110,7 +108,9 @@ namespace karabo {
             std::string m_onNoSharedInputChannelAvailable;
             std::string m_distributionMode;
 
+            mutable boost::mutex m_registeredSharedInputsMutex;
             InputChannels m_registeredSharedInputs;
+            mutable boost::mutex m_registeredCopyInputsMutex;
             InputChannels m_registeredCopyInputs;
 
             unsigned int m_sharedInputIndex;
@@ -118,21 +118,10 @@ namespace karabo {
             InputChannelQueue m_shareNext;
             InputChannelQueue m_copyNext;
 
-            boost::mutex m_nextInputMutex;
-            boost::mutex m_chunkIdsMutex;
-            boost::mutex m_currentWritersCountMutex;
-            boost::mutex m_onTcpReadMutex;
-            //boost::mutex m_updateMutex;
-
-
-            // Async out
-            CurrentWritersCount m_currentWritersCount;
-            CurrentWritersCount m_maxWritersCount;
+            mutable boost::mutex m_nextInputMutex;
 
             unsigned int m_channelId;
             unsigned int m_chunkId;
-
-            std::map<int, int> m_writersOnChunk;
 
         public:
             typedef Memory::MetaData MetaData;
@@ -158,6 +147,26 @@ namespace karabo {
             void setInstanceIdAndName(const std::string& instanceId, const std::string& name);
 
             const std::string& getInstanceId() const;
+
+            /**
+             * Check whether an InputChannel with given id is registered to receive all data
+             *
+             * i.e. an InputChannel with "dataDistribution == copy"
+             *
+             * @param instanceId of InputChannel
+             * @return bool whether InputChannel of specified type is connected
+             */
+            bool hasRegisteredCopyInputChannel(const std::string& instanceId) const;
+
+            /**
+             * Check whether an InputChannel with given id is registered to receive a share of the data
+             *
+             * i.e. an InputChannel with "dataDistribution == shared"
+             *
+             * @param instanceId of InputChannel
+             * @return bool whether InputChannel of specified type is connected
+             */
+            bool hasRegisteredSharedInputChannel(const std::string& instanceId) const;
 
             void registerIOEventHandler(const boost::function<void (const OutputChannel::Pointer&)>& ioEventHandler);
 
@@ -202,6 +211,10 @@ namespace karabo {
              */
             KARABO_DEPRECATED void write(const karabo::util::Hash::Pointer& data);
 
+            /**
+             * Update the output channel, i.e. send all data over the wire that was previously written
+             * by calling write(...).
+             */
             void update();
 
             void signalEndOfStream();
@@ -234,6 +247,8 @@ namespace karabo {
 
             std::string popShareNext();
 
+            bool isShareNextEmpty() const;
+
             bool hasSharedInput(const std::string& instanceId);
 
             void eraseSharedInput(const std::string& instanceId);
@@ -255,7 +270,43 @@ namespace karabo {
 
             void distribute(unsigned int chunkId);
 
+            /**
+             * Distribute in round round-robin mode, i.e. one shared input after another
+             *
+             * requires that m_registeredSharedInputs not empty
+             *
+             * @param chunkId which chunk to distribute
+             * @param lock of mutex m_registeredSharedInputsMutex which must be active/locked,
+             *             and might get unlocked within function call (or not)
+             *
+             */
+            void distributeRoundRobin(unsigned int chunkId, boost::mutex::scoped_lock& lock);
+
+            /**
+             * Distribute in load balanced mode, i.e. pick one of the shared inputs that is ready
+             *
+             * @param chunkId which chunk to distribute
+             * @param lock of mutex m_registeredSharedInputsMutex which must be active/locked,
+             *             and might get unlocked within function call (or not)
+
+             *
+             */
+            void distributeLoadBalanced(unsigned int chunkId, boost::mutex::scoped_lock& lock);
+
+            /**
+             * Get index of next one of the shared inputs.
+             *
+             * Requires protection of m_registeredSharedInputsMutex and m_registeredSharedInputs.size() > 0
+             */
             unsigned int getNextSharedInputIdx();
+
+            /**
+             * Undo a previous getNextSharedInputIdx()
+             *
+             * Requires protection of m_registeredSharedInputsMutex.
+             * Even more, that mutex must not have been unlocked after the getNextSharedInputIdx() it should undo.
+             */
+            void undoGetNextSharedInputIdx();
 
             void distributeLocal(unsigned int chunkId, const InputChannelInfo & channelInfo);
 
