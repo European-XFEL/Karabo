@@ -56,7 +56,7 @@ private:
                                     unsigned int processingTime2,
                                     unsigned int delayTime,
                                     bool dataLoss,
-                                    bool roundRobin = false); // else load-balanced, i.e. the default
+                                    bool roundRobin); // else load-balanced, i.e. the default
     void testProfileTransferTimes(bool noShortCut, bool copy);
 
     template <typename T>

@@ -655,6 +655,9 @@ namespace karabo {
 
 
             if (hasSharedInput(instanceId)) { // Found
+                // Note: If now, before we can actually distribute, instanceId disconnects, the data that should go
+                //       there is lost, also no other shared input will receive it. But that should be acceptable
+                //       in a dynamic and distributed system like Karabo.
                 eraseSharedInput(instanceId);
                 if (channelInfo.get<std::string > ("memoryLocation") == "local") {
                     KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Now distributing data (local)";
