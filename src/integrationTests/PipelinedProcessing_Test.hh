@@ -51,10 +51,12 @@ private:
 
     void testPipeWait(unsigned int processingTime, unsigned int delayTime);
     void testPipeDrop(unsigned int processingTime, unsigned int delayTime, bool dataLoss);
+    // roundRobin = true means that sender is supposed to be configured round-robin - extra tests of fair share are done
     void testPipeTwoSharedReceivers(unsigned int processingTime1,
                                     unsigned int processingTime2,
                                     unsigned int delayTime,
-                                    bool dataLoss);
+                                    bool dataLoss,
+                                    bool roundRobin); // else load-balanced, i.e. the default
     void testProfileTransferTimes(bool noShortCut, bool copy);
 
     template <typename T>
