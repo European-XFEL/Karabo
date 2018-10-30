@@ -1,4 +1,5 @@
-from asyncio import async, CancelledError, coroutine, Queue
+from asyncio import (
+    async, CancelledError, coroutine, TimeoutError, wait_for, Queue)
 from collections import OrderedDict
 from itertools import chain
 
@@ -38,8 +39,18 @@ class DeviceNode(String):
 
     If the other device should be locked by this device, set the attribute
     ``lock=True``.
+
+    A timeout in seconds can be specified via::
+
+        class Stage(Device):
+            motor = DeviceNode(timeout=1.5)
+
+    The DeviceNode will try to connect to the device within this time frame. If
+    the connection could not be established, an error is raised.
     """
-    def __init__(self, properties=(), commands=(), lock=False, **kwargs):
+
+    def __init__(self, properties=(), commands=(), timeout=None,
+                 lock=False, **kwargs):
         super().__init__(**kwargs)
 
         def recode(names):
@@ -56,6 +67,7 @@ class DeviceNode(String):
 
         self.properties = recode(properties)
         self.commands = recode(commands)
+        self.timeout = timeout
         self.lock = lock
         if self.properties or self.commands:
             for default in ("deviceId", "state", "alarmCondition"):
@@ -93,6 +105,7 @@ class DeviceNode(String):
             config = self._copy_properties(value, False)
             yield from instance.call(proxy._deviceId,
                                      "slotReconfigure", config)
+
         return [setter]
 
     @coroutine
@@ -132,7 +145,16 @@ class DeviceNode(String):
         if not isSet(value):
             instance.__dict__[self.key] = None
             return
-        proxy = yield from getDevice(value)
+        try:
+            proxy = yield from wait_for(getDevice(value),
+                                        timeout=self.timeout)
+        except TimeoutError:
+            # We can accept a connection attempt only for a limited time, after
+            # that, the device will go offline
+            raise KaraboError(
+                'The DeviceNode with key "{}" timed out and could not '
+                'establish a proxy to "{}"'.format(self.key, value))
+
         proxy._current = Hash()
         instance.__dict__[self.key] = proxy
         instance._notifyNewSchema()
@@ -141,6 +163,7 @@ class DeviceNode(String):
             @coslot
             def slot():
                 yield from instance._ss.request(proxy._deviceId, theirname)
+
             instance._ss.register_slot("{}.{}".format(self.key, myname), slot)
 
         for theirname, myname in self.commands.items():
