@@ -11,6 +11,8 @@
 #include <karabo/net/EventLoop.hh>
 #include <karabo/log/Logger.hh>
 
+#include <boost/format.hpp>
+
 USING_KARABO_NAMESPACES;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(PipelinedProcessing_Test);
@@ -65,9 +67,12 @@ void PipelinedProcessing_Test::appTestRunner() {
 
     testPipeTwoPots();
 
+    // Now order of sub-tests starts to matter:
+    // After this test, the sender will have "output1.distributionMode == round-robin".
     testPipeTwoSharedReceiversWait();
 
-    // from here on, the sender has "output1.noInputShared == drop". Do not move this test up!
+    // Test does not care about "output1.distributionMode == round-robin",
+    // but after test it will be back to load-balanced and have "output1.noInputShared == drop".
     testPipeTwoSharedReceiversDrop();
 
     // this test uses output2 channel of the sender
@@ -346,9 +351,17 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversWait() {
     // check that the default value of noInputShared is "wait"
     CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_sender, "output1.noInputShared"));
 
-    testPipeTwoSharedReceivers(0, 0, 0, false);
-    testPipeTwoSharedReceivers(200, 0, 0, false);
-    testPipeTwoSharedReceivers(100, 100, 0, false);
+    testPipeTwoSharedReceivers(0, 0, 0, false, false);
+    testPipeTwoSharedReceivers(200, 0, 0, false, false);
+    testPipeTwoSharedReceivers(100, 100, 0, false, false);
+
+    // restart the sender with "output1.distributionMode == round-robin" (and default "output1.noInputShared == wait")
+    killDeviceWithAssert(m_sender);
+    instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", m_sender, "output1", Hash("distributionMode", "round-robin")));
+
+    testPipeTwoSharedReceivers(0, 0, 20, false, true);
+    testPipeTwoSharedReceivers(200, 0, 0, false, true);
+    testPipeTwoSharedReceivers(100, 100, 0, false, true);
     
     killDeviceWithAssert(m_receiver1);
     killDeviceWithAssert(m_receiver2);
@@ -370,21 +383,34 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversDrop() {
 
     // check that even if the receiver has "onSlowness == drop", all data will still be received by shared
     // receivers if "onInputShared" from the output channel of the sender is "wait"!
+    // Do not care about "output1.distributionMode == round-robin" or " == load-balanced"
     CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_sender, "output1.noInputShared"));
-    testPipeTwoSharedReceivers(100, 100, 0, false);
+    testPipeTwoSharedReceivers(100, 100, 0, false, false);
 
     // restart the sender with "output1.noInputShared == drop"
     killDeviceWithAssert(m_sender);
     instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", m_sender, "output1.noInputShared", "drop"));
 
-    testPipeTwoSharedReceivers(0, 0, 100, false);
+    // check that the default value of distributionMode is "load-balanced"
+    CPPUNIT_ASSERT_EQUAL(std::string("load-balanced"), m_deviceClient->get<std::string>(m_sender, "output1.distributionMode"));
+
+    testPipeTwoSharedReceivers(0, 0, 100, false, false);
     // The following line is commented out because:
     // 1. the result is not deterministic;
     // 2. segmentation fault has been observed, but rather rarely.
     // testPipeTwoSharedReceivers(200, 0, 0, false);
     // We expect to see data loss in the following cases:
-    testPipeTwoSharedReceivers(100, 40, 0, true); // receivers which have different "speed"
-    testPipeTwoSharedReceivers(100, 100, 0, true); // receivers which have the same "speed"
+    testPipeTwoSharedReceivers(100, 40, 0, true, false); // receivers which have different "speed"
+    testPipeTwoSharedReceivers(100, 100, 0, true, false); // receivers which have the same "speed"
+
+    // restart the sender with "output1.noInputShared == drop" and "output1.distributionMode = round-robin"
+    killDeviceWithAssert(m_sender);
+    instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", m_sender, "output1", Hash("noInputShared", "drop",
+                                                                                              "distributionMode", "round-robin")));
+
+    testPipeTwoSharedReceivers(0, 0, 20, false, true);
+    testPipeTwoSharedReceivers(100, 40, 0, true, true); // receivers which have different "speed"
+    testPipeTwoSharedReceivers(100, 100, 0, true, true); // receivers which have the same "speed"
 
     killDeviceWithAssert(m_receiver1);
     killDeviceWithAssert(m_receiver2);
@@ -396,11 +422,11 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversDrop() {
 void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processingTime1, 
                                                           unsigned int processingTime2,
                                                           unsigned int delayTime,
-                                                          bool dataLoss) {
+                                                          bool dataLoss, bool roundRobin) {
 
     std::clog << "- processingTime1 = " << processingTime1
               << " ms, processingTime2 = " << processingTime2
-              << " ms, delayTime = " << delayTime << " ms\n";
+            << " ms, delayTime = " << delayTime << " ms -- expect " << (roundRobin ? "round-robin" : "load-balanced") << "\n";
 
     m_deviceClient->set(m_receiver1, "processingTime", processingTime1);
     m_deviceClient->set(m_receiver2, "processingTime", processingTime2);
@@ -427,8 +453,8 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processin
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver1, "nTotalDataOnEos", nTotalData1, false));
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver2, "nTotalDataOnEos", nTotalData2, false));
 
-        unsigned int nTotalData1New = m_deviceClient->get<unsigned int>(m_receiver1, "nTotalData");
-        unsigned int nTotalData2New = m_deviceClient->get<unsigned int>(m_receiver2, "nTotalData");
+        const unsigned int nTotalData1New = m_deviceClient->get<unsigned int>(m_receiver1, "nTotalData");
+        const unsigned int nTotalData2New = m_deviceClient->get<unsigned int>(m_receiver2, "nTotalData");
 
         // test nTotalDataOnEos == nTotalData
         CPPUNIT_ASSERT_EQUAL(nTotalData1New, m_deviceClient->get<unsigned int>(m_receiver1, "nTotalDataOnEos"));
@@ -459,6 +485,19 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processin
         // check that receiver did not post any problem on status:
         CPPUNIT_ASSERT_EQUAL(std::string(), m_deviceClient->get<std::string>(m_receiver1, "status"));
         CPPUNIT_ASSERT_EQUAL(std::string(), m_deviceClient->get<std::string>(m_receiver2, "status"));
+
+        if (roundRobin) {
+            // Additional test that data share was fair, i.e. difference is zero for even total number or one for odd
+            if ((nTotalData1New + nTotalData2New) % 2 == 0) { // even
+                CPPUNIT_ASSERT_EQUAL(nTotalData1New, nTotalData2New);
+            } else {
+                const unsigned int diff = (nTotalData1New >= nTotalData2New // unsigned, so cannot...
+                                           ? nTotalData1New - nTotalData2New // ...just calc the diff and take abs
+                                           : nTotalData2New - nTotalData1New);
+                CPPUNIT_ASSERT_EQUAL_MESSAGE((boost::format("total1: %d, total2: %d") % nTotalData1New % nTotalData2New).str(),
+                                             1u, diff);
+            }
+        }
     }
 
     std::clog << "  summary: nTotalData = " << nTotalData1 << ", " << nTotalData2 << std::endl;
