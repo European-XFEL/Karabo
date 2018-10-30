@@ -458,6 +458,10 @@ class DeviceClientProxyFactory(ProxyFactory):
             self._schemaUpdateConnected = False
 
         def __del__(self):
+            outputs = list(self._remote_output_channel)
+            for channel in outputs:
+                channel.disconnect()
+
             self._disconnectSchemaUpdated()
             if self._used > 0:
                 # set the used variable to 1 for a clean disconnect in exit

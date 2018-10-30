@@ -13,10 +13,10 @@ from pint import DimensionalityError
 from karabo.middlelayer import (
     AlarmCondition, background, Bool, Configurable, connectDevice,
     decodeBinary, Device, DeviceNode, execute, filterByTags, Float, getDevice,
-    isAlive, isSet, Int32, KaraboError, lock, MetricPrefix, Node, Overwrite,
-    Queue, setNoWait, setWait, Slot, slot, State, String, unit, Unit,
-    VectorChar, VectorInt16, VectorString, VectorFloat, waitUntil,
-    waitUntilNew)
+    Hash, isAlive, isSet, Int32, KaraboError, lock, MetricPrefix, Node,
+    Overwrite, OutputChannel, Queue, setNoWait, setWait, Slot, slot, State,
+    String, unit, Unit, VectorChar, VectorInt16, VectorString, VectorFloat,
+    waitUntil, waitUntilNew)
 from karabo.middlelayer_api import openmq
 from karabo.middlelayer_api.injectable import Injectable
 
@@ -49,6 +49,10 @@ class Nested(Configurable):
         self.val *= 2
 
 
+class ChannelNode(Configurable):
+    data = 0
+
+
 class Remote(Injectable, Device):
 
     # The state is explicitly overwritten, State.UNKNOWN is always possible by
@@ -75,6 +79,15 @@ class Remote(Injectable, Device):
 
     alarm = Float(warnLow=10, alarmInfo_warnLow="When they go low, we go high",
                   alarmNeedsAck_warnLow=True, alarmHigh=20)
+
+    # Output channel to send hashes
+    output = OutputChannel(ChannelNode)
+
+    @Slot()
+    @coroutine
+    def sendData(self):
+        self.output.schema.data += 1
+        yield from self.output.writeData()
 
     @Int32()
     def other(self, value):
@@ -510,6 +523,66 @@ class Tests(DeviceTest):
         yield from waitUntil(lambda: isAlive(proxy))
         yield from moriturus.slotKillDevice()
         self.assertFalse(isAlive(proxy))
+
+    @async_tst
+    def test_output_reconnect(self):
+        outputdevice = Remote({"_deviceId_": "outputdevice"})
+        yield from outputdevice.startInstance()
+
+        with (yield from getDevice("outputdevice")) as proxy:
+            self.assertTrue(isAlive(proxy))
+
+            received = False
+            def handler(data, meta):
+                nonlocal received
+                received = True
+
+            self.assertEqual(received, False)
+            proxy.output.setDataHandler(handler)
+            proxy.output.connect()
+            yield from proxy.sendData()
+            yield from proxy.sendData()
+            yield from proxy.sendData()
+            yield from proxy.sendData()
+            self.assertEqual(received, True)
+            yield from outputdevice.slotKillDevice()
+            yield from waitUntil(lambda: not isAlive(proxy))
+            self.assertFalse(isAlive(proxy))
+            outputdevice = Remote({"_deviceId_": "outputdevice"})
+            yield from outputdevice.startInstance()
+            yield from waitUntil(lambda: isAlive(proxy))
+            self.assertEqual(received, True)
+            received = False
+            self.assertEqual(received, False)
+            yield from proxy.sendData()
+            yield from proxy.sendData()
+            yield from proxy.sendData()
+            yield from proxy.sendData()
+            self.assertEqual(received, True)
+            received = False
+
+        self.assertEqual(received, False)
+        # Delete our proxy!
+        del proxy
+        yield from outputdevice.slotKillDevice()
+        yield from sleep(1)
+
+        # Bring up our device with same deviceId, we should not have a
+        # channel active with the handler
+        outputdevice = Remote({"_deviceId_": "outputdevice"})
+        yield from outputdevice.startInstance()
+        with (yield from getDevice("outputdevice")) as proxy:
+            self.assertTrue(isAlive(proxy))
+            yield from waitUntil(lambda: isAlive(proxy))
+            self.assertEqual(received, False)
+            yield from proxy.sendData()
+            yield from proxy.sendData()
+            yield from proxy.sendData()
+            yield from proxy.sendData()
+            self.assertEqual(received, False)
+
+        yield from outputdevice.slotKillDevice()
+
 
     @async_tst
     def test_isAlive_state(self):
