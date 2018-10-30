@@ -33,6 +33,8 @@ class MyNode(Configurable):
 class MyDevice(Device):
     __version__ = "1.2"
 
+    integer = Int32(defaultValue=0, minInc=0, maxInc=10)
+
     counter = Int32(
         defaultValue=0)
 
@@ -41,6 +43,10 @@ class MyDevice(Device):
     dataOutput = OutputChannel(Data)
 
     deep = Node(MyNode)
+
+    @Slot
+    def testSlot(self):
+        pass
 
     @InputChannel()
     async def input(self, data, meta):
@@ -89,6 +95,21 @@ class Tests(DeviceTest):
         names = self.myDevice.slotGetOutputChannelNames()
         expected = ['dataOutput', 'deep.output', 'output']
         self.assertEqual(names, expected)
+
+    @sync_tst
+    def test_output_information(self):
+        # second argument is set to None as it is not used in the function
+        value = self.myDevice.slotGetOutputChannelInformation("output", None)
+        self.assertEqual(value[0], True)
+        data = value[1]
+        self.assertEqual(data["hostname"], self.myDevice.hostName)
+        self.assertEqual(data["connectionType"], "tcp")
+        self.assertEqual(data["memoryLocation"], "remote")
+        self.assertIsInstance(data["port"], np.uint32)
+
+        value = self.myDevice.slotGetOutputChannelInformation("doesNotExist",
+                                                              None)
+        self.assertEqual(value[0], False)
 
     @sync_tst
     def test_displayType_state(self):
@@ -165,6 +186,28 @@ class Tests(DeviceTest):
         self.assertIsNotNone(self.myDevice.output.server.sockets)
         await self.myDevice.output.close()
         self.assertIsNone(self.myDevice.output.server.sockets)
+
+    @sync_tst
+    def test_slot_verification(self):
+        self.assertEqual(self.myDevice.slotHasSlot("testSlot"), True)
+        self.assertEqual(self.myDevice.slotHasSlot("output"), False)
+        self.assertEqual(self.myDevice.slotHasSlot("doesNotExist"), False)
+
+    @sync_tst
+    def test_schema_update(self):
+        updates = [Hash('path', "integer",
+                        'attribute', "maxInc",
+                        'value', 1000),
+                   Hash('path', "integer",
+                        'attribute', "minInc",
+                        'value', 10)]
+        self.assertEqual(self.myDevice.integer.descriptor.maxInc, 10)
+        self.assertEqual(self.myDevice.integer.descriptor.minInc, 0)
+
+        result = self.myDevice.slotUpdateSchemaAttributes(updates)
+        self.assertEqual(result["success"], True)
+        self.assertEqual(self.myDevice.integer.descriptor.maxInc, 1000)
+        self.assertEqual(self.myDevice.integer.descriptor.minInc, 10)
 
 
 if __name__ == '__main__':
