@@ -78,7 +78,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
 
         // Now ensure that output channel took note of input registration:
         bool connected = false;
-        int trials = 20;
+        int trials = 200;
         do {
             // By default, InputChannel is configured to receive a "copy" of all data and not to share with others
             if (output->hasRegisteredCopyInputChannel(input->getInstanceId())) {
@@ -94,7 +94,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         output->write(Hash("key", -43));
         output->update();
 
-        trials = 20;
+        trials = 200;
         while (--trials >= 0) {
             if (2u == calls) break;
             boost::this_thread::sleep(boost::posix_time::milliseconds(2)); // time for callback
@@ -104,7 +104,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         // Disconnect
         input->disconnect(outputChannelId);
         // Some time to travel for message
-        trials = 20;
+        trials = 200;
         connected = true;
         do {
             if (!output->hasRegisteredCopyInputChannel(input->getInstanceId())) {
