@@ -351,9 +351,9 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversWait() {
     // check that the default value of noInputShared is "wait"
     CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_sender, "output1.noInputShared"));
 
-    testPipeTwoSharedReceivers(0, 0, 0, false);
-    testPipeTwoSharedReceivers(200, 0, 0, false);
-    testPipeTwoSharedReceivers(100, 100, 0, false);
+    testPipeTwoSharedReceivers(0, 0, 0, false, false);
+    testPipeTwoSharedReceivers(200, 0, 0, false, false);
+    testPipeTwoSharedReceivers(100, 100, 0, false, false);
 
     // restart the sender with "output1.distributionMode == round-robin" (and default "output1.noInputShared == wait")
     killDeviceWithAssert(m_sender);
@@ -385,7 +385,7 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversDrop() {
     // receivers if "onInputShared" from the output channel of the sender is "wait"!
     // Do not care about "output1.distributionMode == round-robin" or " == load-balanced"
     CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_sender, "output1.noInputShared"));
-    testPipeTwoSharedReceivers(100, 100, 0, false);
+    testPipeTwoSharedReceivers(100, 100, 0, false, false);
 
     // restart the sender with "output1.noInputShared == drop"
     killDeviceWithAssert(m_sender);
@@ -394,14 +394,14 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversDrop() {
     // check that the default value of distributionMode is "load-balanced"
     CPPUNIT_ASSERT_EQUAL(std::string("load-balanced"), m_deviceClient->get<std::string>(m_sender, "output1.distributionMode"));
 
-    testPipeTwoSharedReceivers(0, 0, 100, false);
+    testPipeTwoSharedReceivers(0, 0, 100, false, false);
     // The following line is commented out because:
     // 1. the result is not deterministic;
     // 2. segmentation fault has been observed, but rather rarely.
     // testPipeTwoSharedReceivers(200, 0, 0, false);
     // We expect to see data loss in the following cases:
-    testPipeTwoSharedReceivers(100, 40, 0, true); // receivers which have different "speed"
-    testPipeTwoSharedReceivers(100, 100, 0, true); // receivers which have the same "speed"
+    testPipeTwoSharedReceivers(100, 40, 0, true, false); // receivers which have different "speed"
+    testPipeTwoSharedReceivers(100, 100, 0, true, false); // receivers which have the same "speed"
 
     // restart the sender with "output1.noInputShared == drop" and "output1.distributionMode = round-robin"
     killDeviceWithAssert(m_sender);
