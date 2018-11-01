@@ -155,7 +155,7 @@ class SignalSlotable(Configurable):
         self.__initialized = False
         self._new_device_futures = FutureDict()
 
-    def startInstance(self, server=None, *, loop=None, broadcast=False):
+    def startInstance(self, server=None, *, loop=None, broadcast=True):
         """Start this (device) instance
 
         This sets up everything for the instance to run, and then runs

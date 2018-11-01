@@ -366,7 +366,7 @@ class MiddleLayerDeviceServer(DeviceServerBase):
             return (yield from super(MiddleLayerDeviceServer, self)
                     .startDevice(classId, deviceId, config))
         obj = cls(config)
-        task = obj.startInstance(self)
+        task = obj.startInstance(self, broadcast=False)
         yield from task
         return True, '"{}" started'.format(deviceId)
 
