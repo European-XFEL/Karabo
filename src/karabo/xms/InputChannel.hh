@@ -15,10 +15,12 @@
 
 #include <map>
 #include <boost/asio.hpp>
-#include <karabo/net.hpp>
-#include <karabo/io.hpp>
-#include <karabo/log.hpp>
-#include <karabo/util.hpp>
+#include <boost/function.hpp>
+
+#include "karabo/net.hpp"
+#include "karabo/io.hpp"
+#include "karabo/log.hpp"
+#include "karabo/util.hpp"
 #include "Memory.hh"
 
 /**
@@ -182,7 +184,17 @@ namespace karabo {
 
             unsigned int getMinimumNumberOfData() const;
 
-            void connect(const karabo::util::Hash& outputChannelInfo);
+            /**
+             * Asynchronously connect this input channel to the output channel described by the first argument
+             * @param outputChannelInfo  Hash with three keys
+             *                   - "connectionType": a string - currently only "tcp" supported
+             *                   - "hostname": a string
+             *                   - "port": an unsigned int
+             * @param handler  indicates asynchronously (like via EventLoop::post) the success of the connection request
+             */
+            void connect(const karabo::util::Hash& outputChannelInfo,
+                         const boost::function<void (const karabo::net::ErrorCode&)>& handler
+                         = boost::function<void (const karabo::net::ErrorCode&)>());
 
             void disconnect(const karabo::util::Hash& outputChannelInfo);
 
@@ -193,9 +205,8 @@ namespace karabo {
             void onConnect(const karabo::net::ErrorCode& error,
                            karabo::net::Connection::Pointer connection,
                            const karabo::util::Hash& outputChannelInfo,
-                           karabo::net::Channel::Pointer channel);
-
-            void onTcpConnectionError(const karabo::net::ErrorCode&, const karabo::net::Connection::Pointer&);
+                           karabo::net::Channel::Pointer channel,
+                           const boost::function<void (const karabo::net::ErrorCode&)>& handler);
 
             void onTcpChannelError(const karabo::net::ErrorCode&, const karabo::net::Channel::Pointer&);
 
