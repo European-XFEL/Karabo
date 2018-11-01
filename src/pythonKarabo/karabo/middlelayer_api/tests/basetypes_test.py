@@ -445,5 +445,13 @@ class Tests(TestCase):
         self.assertEqual(m, 1 * unit.m)
         self.assertEqual(m.timestamp, self.t1)
 
+    def test_timeout(self):
+        time = QuantityValue(200, Unit.SECOND,
+                                  metricPrefix=MetricPrefix.MILLI)
+        self.assertEqual(time, 200 * unit.millisecond)
+        time /= unit.second
+        self.assertEqual(time, 0.2)
+
+
 if __name__ == "__main__":
     main()
