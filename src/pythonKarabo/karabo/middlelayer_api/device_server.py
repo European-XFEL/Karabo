@@ -97,6 +97,7 @@ class DeviceServerBase(SignalSlotable):
             Hash("pluginDirectory", self.pluginDirectory))
 
         self.deviceId = self._deviceId_ = self.serverId
+        self.deviceInstanceMap = {}
 
         self.plugins = {}
         self.processes = {}
@@ -269,15 +270,30 @@ class DeviceServerBase(SignalSlotable):
         server = cls(params)
         if server:
             loop.add_signal_handler(SIGTERM, async, server.slotKillServer())
-            server.startInstance()
+            server.is_server = True
+            server.startInstance(broadcast=True)
             try:
                 loop.run_forever()
             finally:
                 loop.close()
 
+    @slot
+    def slotInstanceGone(self, instanceId, info):
+        """Distribute the slotInstanceGone signal along the instanceMap
+        """
+        self.deviceInstanceMap.pop(instanceId, None)
+        for device in self.deviceInstanceMap.values():
+            device.slotInstanceGone(instanceId, info)
+
+    @coslot
+    def slotInstanceNew(self, instanceId, info):
+        """Distribute the slotInstanceNew signal along the instanceMap
+        """
+        yield from gather(*[dev.slotInstanceNew(instanceId, info)
+                            for dev in self.deviceInstanceMap.values()])
+
 
 class MiddleLayerDeviceServer(DeviceServerBase):
-
     pluginNamespace = String(
         displayedName="Plugin Namespace",
         description="Namespace to search for middle layer plugins",
@@ -291,7 +307,6 @@ class MiddleLayerDeviceServer(DeviceServerBase):
 
     def __init__(self, configuration):
         super(MiddleLayerDeviceServer, self).__init__(configuration)
-        self.deviceInstanceMap = {}
 
     @coroutine
     def _run(self, **kwargs):
