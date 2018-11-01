@@ -980,7 +980,7 @@ class Tests(DeviceTest):
         scratchy = Local({"_deviceId_": "scratchy"})
         try:
             yield from scratchy.startInstance()
-            yield from node_device.startInstance(broadcast=True)
+            yield from node_device.startInstance()
             yield from waitUntil(lambda: isAlive(node_device.dn))
             self.assertTrue(isAlive(node_device.dn))
             background(scratchy.slotKillDevice())

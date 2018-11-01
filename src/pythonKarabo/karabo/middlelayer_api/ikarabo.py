@@ -35,14 +35,6 @@ class DeviceClient(Macro, DeviceClientBase):
         info["type"] = "client"
         return info
 
-    def startInstance(self, server=None, *, loop=None, broadcast=True):
-        """Start this DeviceClient instance
-
-        The DeviceClient in the command line interface listen to broadcasts!
-        """
-        return super().startInstance(server=server, loop=loop,
-                                     broadcast=broadcast)
-
 
 @functools.wraps(device_client.connectDevice)
 def connectDevice(device, *, autodisconnect=15, **kwargs):
