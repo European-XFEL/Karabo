@@ -62,7 +62,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     Hash outputInfo(output->getInformation());
     outputInfo.set("outputChannelString", outputChannelId);
     outputInfo.set("memoryLocation", "local");
-    size_t n = 200;
+    const size_t n = 50;
     for (size_t i = 0; i < n; ++i) {
         calls = 0;
         // Setup connection handler
