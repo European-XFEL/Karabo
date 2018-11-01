@@ -139,6 +139,7 @@ class SignalSlotable(Configurable):
 
     def __init__(self, configuration):
         self._sethash = {"ignore": "this"}
+        self.is_server = False
         for k in dir(type(self)):
             if isinstance(getattr(self, k, None), Signal):
                 setattr(self, k, BoundSignal(self, k, getattr(self, k)))
@@ -154,7 +155,7 @@ class SignalSlotable(Configurable):
         self.__initialized = False
         self._new_device_futures = FutureDict()
 
-    def startInstance(self, server=None, *, loop=None):
+    def startInstance(self, server=None, *, loop=None, broadcast=False):
         """Start this (device) instance
 
         This sets up everything for the instance to run, and then runs
@@ -162,7 +163,8 @@ class SignalSlotable(Configurable):
         code is running."""
         if loop is None:
             loop = get_event_loop()
-        self._ss = loop.getBroker(self.deviceId, type(self).__name__)
+        self._ss = loop.getBroker(self.deviceId, type(self).__name__,
+                                  broadcast)
         self._sethash = {}
         return loop.create_task(self._run(server=server), self)
 
@@ -204,6 +206,15 @@ class SignalSlotable(Configurable):
         # In contrast to normal slots, let slotPing not send an empty reply.
         if ret is not None:
             device._ss.reply(message, ret)
+
+        # Server implementation. If the device is a server it will ask
+        # the children if they want to respond
+        if device.is_server:
+            for dev in device.deviceInstanceMap.values():
+                ret = dev.slotPing(*args)
+                if ret is not None:
+                    dev._ss.reply(message, ret)
+
     slotPing.slot = inner
     del inner
 
@@ -283,7 +294,6 @@ class SignalSlotable(Configurable):
             self.__initialized = False
             yield from get_event_loop().run_coroutine_or_thread(
                 self.onDestruction)
-
         yield from self._ss.stop_tasks()
 
     def __del__(self):
