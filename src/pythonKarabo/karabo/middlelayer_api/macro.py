@@ -61,7 +61,7 @@ class EventThread(threading.Thread):
 
         @coroutine
         def run_device():
-            yield from device.startInstance()
+            yield from device.startInstance(broadcast=False)
             lock.release()
         self.loop.call_soon_threadsafe(async, run_device())
         lock.acquire()
@@ -261,7 +261,7 @@ class Macro(Device):
         @coroutine
         def run():
             # Starting a macro from command line should receive broadcasts!
-            yield from macro.startInstance(broadcast=True)
+            yield from macro.startInstance()
             future = loop.run_coroutine_or_thread(slot.method, macro)
             yield from loop.create_task(future, macro)
             yield from macro.slotKillDevice()
