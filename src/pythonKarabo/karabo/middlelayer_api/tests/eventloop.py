@@ -66,7 +66,7 @@ class DeviceTest(TestCase):
         if lead not in devices:
             devices += (lead,)
         cls.loop.run_until_complete(
-            gather(*(d.startInstance() for d in devices)))
+            gather(*(d.startInstance(broadcast=True) for d in devices)))
         cls.lead = lead
         yield
         cls.loop.run_until_complete(
