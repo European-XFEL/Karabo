@@ -505,11 +505,6 @@ class Tests(DeviceTest):
         background(moriturus.slotKillDevice())
         yield from waitUntil(lambda: not isAlive(proxy))
         self.assertFalse(isAlive(proxy))
-        moriturus = Local({"_deviceId_": "moriturus"})
-        yield from moriturus.startInstance()
-        yield from waitUntil(lambda: isAlive(proxy))
-        yield from moriturus.slotKillDevice()
-        self.assertFalse(isAlive(proxy))
 
     @async_tst
     def test_isAlive_state(self):
@@ -857,23 +852,6 @@ class Tests(DeviceTest):
             yield from a.startInstance()
 
     @async_tst
-    def test_device_node_alive(self):
-        class A(Device):
-            dn = DeviceNode()
-
-        node_device = A({"_deviceId_": "devicenode", "dn": "gonzales"})
-        gonzales = Local({"_deviceId_": "gonzales"})
-        try:
-            yield from gonzales.startInstance()
-            yield from node_device.startInstance()
-            self.assertTrue(isAlive(node_device.dn))
-            background(gonzales.slotKillDevice())
-            yield from waitUntil(lambda: not isAlive(node_device.dn))
-            self.assertFalse(isAlive(node_device.dn))
-        finally:
-            yield from node_device.slotKillDevice()
-
-    @async_tst
     def test_devicenode_nocopy_lock(self):
         class A(Device):
             dn = DeviceNode(lock=True)
@@ -992,6 +970,24 @@ class Tests(DeviceTest):
             yield from setWait(d, value=50)
             self.assertEqual(d.value, 50)
             self.assertEqual(d.lockedBy, "")
+
+    @async_tst
+    def test_device_node_alive(self):
+        class A(Device):
+            dn = DeviceNode()
+
+        node_device = A({"_deviceId_": "devicenode", "dn": "scratchy"})
+        scratchy = Local({"_deviceId_": "scratchy"})
+        try:
+            yield from scratchy.startInstance()
+            yield from node_device.startInstance(broadcast=True)
+            yield from waitUntil(lambda: isAlive(node_device.dn))
+            self.assertTrue(isAlive(node_device.dn))
+            background(scratchy.slotKillDevice())
+            yield from waitUntil(lambda: not isAlive(node_device.dn))
+            self.assertFalse(isAlive(node_device.dn))
+        finally:
+            yield from node_device.slotKillDevice()
 
     @async_tst
     def test_alarm(self):

@@ -260,7 +260,8 @@ class Macro(Device):
 
         @coroutine
         def run():
-            yield from macro.startInstance()
+            # Starting a macro from command line should receive broadcasts!
+            yield from macro.startInstance(broadcast=True)
             future = loop.run_coroutine_or_thread(slot.method, macro)
             yield from loop.create_task(future, macro)
             yield from macro.slotKillDevice()
