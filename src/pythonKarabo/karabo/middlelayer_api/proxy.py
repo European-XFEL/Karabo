@@ -295,6 +295,7 @@ class DeviceClientProxyFactory(ProxyFactory):
             self._last_update_task = None
             self._schemaUpdateConnected = False
             self._lock_count = 0
+            self._remote_output_channel = WeakSet()
 
         def _notifyChanged(self, descriptor, value):
             for q in self._queues[descriptor.longkey]:
@@ -401,6 +402,11 @@ class DeviceClientProxyFactory(ProxyFactory):
             if not self._alive:
                 self._alive = True
 
+            # reconnect our channels
+            if self._remote_output_channel:
+                for channel in self._remote_output_channel:
+                    channel.connect()
+
         @asyncio.coroutine
         def _raise_on_death(self, coro):
             """execute *coro* but raise KaraboError if proxy is orphaned
@@ -452,6 +458,10 @@ class DeviceClientProxyFactory(ProxyFactory):
             self._schemaUpdateConnected = False
 
         def __del__(self):
+            outputs = list(self._remote_output_channel)
+            for channel in outputs:
+                channel.disconnect()
+
             self._disconnectSchemaUpdated()
             if self._used > 0:
                 # set the used variable to 1 for a clean disconnect in exit
