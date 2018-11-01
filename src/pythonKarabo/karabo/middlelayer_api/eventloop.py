@@ -36,7 +36,7 @@ _MSG_PRIORITY_LOW = 3  # can be dropped in case of congestion
 
 
 class Broker:
-    def __init__(self, loop, deviceId, classId, broadcast=False):
+    def __init__(self, loop, deviceId, classId, broadcast=True):
         self.loop = loop
         self.connection = loop.connection
         self.session = openmq.Session(self.connection, False, 1, 0)
