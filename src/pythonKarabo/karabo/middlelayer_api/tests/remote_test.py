@@ -13,10 +13,10 @@ from pint import DimensionalityError
 from karabo.middlelayer import (
     AlarmCondition, background, Bool, Configurable, connectDevice,
     decodeBinary, Device, DeviceNode, execute, filterByTags, Float, getDevice,
-    isAlive, isSet, Int32, KaraboError, lock, MetricPrefix, Node, Overwrite,
-    Queue, setNoWait, setWait, Slot, slot, State, String, unit, Unit,
-    VectorChar, VectorInt16, VectorString, VectorFloat, waitUntil,
-    waitUntilNew)
+    Hash, isAlive, isSet, Int32, KaraboError, lock, MetricPrefix, Node,
+    Overwrite, OutputChannel, Queue, setNoWait, setWait, Slot, slot, State,
+    String, unit, Unit, VectorChar, VectorInt16, VectorString, VectorFloat,
+    waitUntil, waitUntilNew)
 from karabo.middlelayer_api import openmq
 from karabo.middlelayer_api.injectable import Injectable
 
@@ -49,8 +49,11 @@ class Nested(Configurable):
         self.val *= 2
 
 
-class Remote(Injectable, Device):
+class ChannelNode(Configurable):
+    data = 0
 
+
+class Remote(Injectable, Device):
     # The state is explicitly overwritten, State.UNKNOWN is always possible by
     # default!
     # We test that a proxy can reach State.UNKNOWN even if it is removed
@@ -75,6 +78,15 @@ class Remote(Injectable, Device):
 
     alarm = Float(warnLow=10, alarmInfo_warnLow="When they go low, we go high",
                   alarmNeedsAck_warnLow=True, alarmHigh=20)
+
+    # Output channel to send hashes
+    output = OutputChannel(ChannelNode)
+
+    @Slot()
+    @coroutine
+    def sendData(self):
+        self.output.schema.data += 1
+        yield from self.output.writeData()
 
     @Int32()
     def other(self, value):
@@ -185,6 +197,7 @@ class Tests(DeviceTest):
     The tests then typically call the remote device via a proxy, which is
     generated, if needed, in every test.
     """
+
     @classmethod
     @contextmanager
     def lifetimeManager(cls):
@@ -512,6 +525,69 @@ class Tests(DeviceTest):
         self.assertFalse(isAlive(proxy))
 
     @async_tst
+    def test_output_reconnect(self):
+        NUM_DATA = 5
+        outputdevice = Remote({"_deviceId_": "outputdevice"})
+        yield from outputdevice.startInstance()
+
+        with (yield from getDevice("outputdevice")) as proxy:
+            self.assertTrue(isAlive(proxy))
+            received = False
+
+            def handler(data, meta):
+                """Output handler to see if we received data
+                """
+                nonlocal received
+                received = True
+
+            self.assertEqual(received, False)
+            # Patch the handler to see if our boolean triggers
+            proxy.output.setDataHandler(handler)
+            proxy.output.connect()
+            # Send more often as our proxy has a drop setting and we are busy
+            # in tests.
+            for data in range(NUM_DATA):
+                yield from proxy.sendData()
+            self.assertEqual(received, True)
+            # We received data and now kill the device
+            yield from outputdevice.slotKillDevice()
+            yield from waitUntil(lambda: not isAlive(proxy))
+            self.assertFalse(isAlive(proxy))
+            # The device is gone, now we instantiate the device with same
+            # deviceId to see if the output automatically reconnects
+            outputdevice = Remote({"_deviceId_": "outputdevice"})
+            yield from outputdevice.startInstance()
+            yield from waitUntil(lambda: isAlive(proxy))
+            self.assertEqual(received, True)
+            received = False
+            self.assertEqual(received, False)
+            for data in range(NUM_DATA):
+                yield from proxy.sendData()
+            # Our reconnect was successful, we are receiving data via the
+            # output channel
+            self.assertEqual(received, True)
+            received = False
+
+        self.assertEqual(received, False)
+        # Delete our proxy and see if we still receive data!
+        del proxy
+        yield from outputdevice.slotKillDevice()
+        yield from sleep(1)
+
+        # Bring up our device with same deviceId, we should not have a
+        # channel active with the handler
+        outputdevice = Remote({"_deviceId_": "outputdevice"})
+        yield from outputdevice.startInstance()
+        with (yield from getDevice("outputdevice")) as proxy:
+            self.assertTrue(isAlive(proxy))
+            self.assertEqual(received, False)
+            for data in range(NUM_DATA):
+                yield from proxy.sendData()
+            self.assertEqual(received, False)
+
+        yield from outputdevice.slotKillDevice()
+
+    @async_tst
     def test_isAlive_state(self):
         moriturus = Local({"_deviceId_": "moriturus"})
         yield from moriturus.startInstance()
@@ -593,7 +669,7 @@ class Tests(DeviceTest):
             with self.assertRaises(KaraboError):
                 # this raises the error from above
                 d.value = 8
-            with self.assertLogs(logger="remote", level="WARNING") as log,\
+            with self.assertLogs(logger="remote", level="WARNING") as log, \
                     self.assertRaises(KaraboError):
                 d.disallowed_int = 333
                 yield from d.allow()
@@ -624,6 +700,7 @@ class Tests(DeviceTest):
     @async_tst
     def test_log(self):
         """test the logging of warnings and exceptions"""
+
         def _absolute_delta_to_now(isotimestr):
             """Return the delta in seconds between some ISO 8601 timestamp
             and now.
@@ -632,7 +709,7 @@ class Tests(DeviceTest):
             delta = abs(ts - datetime.now())
             # NOTE: `delta` is a timedelta object, which contains only
             # days, seconds, and microseconds.
-            return delta.days*3600*24 + delta.seconds + delta.microseconds*1e-6
+            return delta.days * 3600 * 24 + delta.seconds + delta.microseconds * 1e-6
 
         with (yield from getDevice("remote")) as d:
             t = async(d.read_log())
@@ -674,6 +751,7 @@ class Tests(DeviceTest):
             @coroutine
             def onInitialization(self):
                 self.logger.info("some test log message")
+
         with self.assertLogs("testearlylog", level="INFO") as cm:
             a = A({"_deviceId_": "testearlylog"})
         self.assertEqual(cm.records[0].msg, "log the int")
@@ -761,7 +839,7 @@ class Tests(DeviceTest):
         self.remote.done = False
         with self.assertLogs(logger="local", level="ERROR"):
             with (yield from getDevice("local")) as local, \
-                 (yield from getDevice("remote")) as remote:
+                    (yield from getDevice("remote")) as remote:
                 yield from local.task_error()
                 self.assertFalse(remote.done)
                 yield from waitUntil(lambda: remote.done)
@@ -942,7 +1020,7 @@ class Tests(DeviceTest):
             'alarmNeedsAck_alarmLow': False,
             'alarmNeedsAck_warnHigh': False,
             'alarmNeedsAck_warnLow': False,
-            })
+        })
         self.assertEqual(h["nested", ...], {
             'requiredAccessLevel': 0,
             'assignment': 0,
@@ -1058,12 +1136,14 @@ class Tests(DeviceTest):
             def tobeinit(myself, value):
                 self.assertEqual(value, 100)
                 myself.tobeinit = 123
+
             self.remote.__class__.tobeinit = tobeinit
 
             @Slot(displayedName="Injected")
             def slot(self):
                 nonlocal slotdata
                 slotdata = 44
+
             slotdata = None
             self.remote.__class__.injected_slot = slot
 
@@ -1100,6 +1180,7 @@ class Tests(DeviceTest):
                 self.__class__.number = Int32()
                 yield from self.publishInjectedParameters()
                 self.number = 3
+
         a = A({"_deviceId_": "testinject"})
         yield from a.startInstance()
         with (yield from getDevice("testinject")) as proxy:
