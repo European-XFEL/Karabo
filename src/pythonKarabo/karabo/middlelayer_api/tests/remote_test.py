@@ -532,7 +532,6 @@ class Tests(DeviceTest):
 
         with (yield from getDevice("outputdevice")) as proxy:
             self.assertTrue(isAlive(proxy))
-
             received = False
 
             def handler(data, meta):
@@ -545,9 +544,9 @@ class Tests(DeviceTest):
             # Patch the handler to see if our boolean triggers
             proxy.output.setDataHandler(handler)
             proxy.output.connect()
-            # Send more often as our proxy has a drop setting and we be busy
+            # Send more often as our proxy has a drop setting and we are busy
             # in tests.
-            for x in range(NUM_DATA):
+            for data in range(NUM_DATA):
                 yield from proxy.sendData()
             self.assertEqual(received, True)
             # We received data and now kill the device
@@ -562,7 +561,7 @@ class Tests(DeviceTest):
             self.assertEqual(received, True)
             received = False
             self.assertEqual(received, False)
-            for x in range(NUM_DATA):
+            for data in range(NUM_DATA):
                 yield from proxy.sendData()
             # Our reconnect was successful, we are receiving data via the
             # output channel
@@ -581,9 +580,8 @@ class Tests(DeviceTest):
         yield from outputdevice.startInstance()
         with (yield from getDevice("outputdevice")) as proxy:
             self.assertTrue(isAlive(proxy))
-            yield from waitUntil(lambda: isAlive(proxy))
             self.assertEqual(received, False)
-            for x in range(NUM_DATA):
+            for data in range(NUM_DATA):
                 yield from proxy.sendData()
             self.assertEqual(received, False)
 
