@@ -34,4 +34,6 @@ def get_trendline_scene(device_id, path):
     scene = SceneModel(height=440.0, width=630.0,
                        children=[line, plot, label, display_label])
 
+    scene.simple_name = 'Trendline_{}_{}'.format(device_id, path)
+
     return scene
