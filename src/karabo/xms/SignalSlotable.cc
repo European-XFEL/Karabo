@@ -12,6 +12,7 @@
 #include "karabo/util/Version.hh"
 #include "karabo/util/Exception.hh"
 #include "karabo/net/EventLoop.hh"
+#include "karabo/net/utils.hh"
 
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
@@ -1374,8 +1375,10 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
             InputChannels::const_iterator it = m_inputChannels.find(inputName);
             if (it != m_inputChannels.end()) {
-                if (connect) it->second->connect(outputChannelInfo); // Synchronous
-                else it->second->disconnect(outputChannelInfo);
+                if (connect) {
+                    // Asynchronous without respecting feedback handler... TODO (but hardly used, so low priority)
+                    it->second->connect(outputChannelInfo);
+                } else it->second->disconnect(outputChannelInfo);
                 reply(true);
                 return; // otherwise following 'reply(false)' will overwrite the 'true' above
             }
@@ -2309,7 +2312,25 @@ namespace karabo {
             // Loop channels
             boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
             for (InputChannels::const_iterator it = m_inputChannels.begin(); it != m_inputChannels.end(); ++it) {
-                connectInputChannel(it->second);
+                const std::string channelName(it->first);
+                // In theory, the number of channels can change between its capture here and when the handler is
+                // processed. But in praxis that does not happen - if it does, just a log messages is not 100% precise.
+                const size_t numOutputs = it->second->getConnectedOutputChannels().size();
+                auto handler = [channelName, numOutputs] (bool success) {
+                    if (success) {
+                        KARABO_LOG_FRAMEWORK_WARN << "Connected InputChannel '" << channelName << "' to "
+                                << numOutputs << " output channels";
+                    } else {
+                        try {
+                            throw;
+                        } catch (const std::exception& e) {
+                            // Should we give it another try? But what if other end is not online.. Need to distinguish...
+                            KARABO_LOG_FRAMEWORK_WARN << "Failed to connected InputChannel '" << channelName << "' to all "
+                                    << "its outputs: " << e.what();
+                        }
+                    }
+                };
+                asyncConnectInputChannel(it->second, handler);
             }
         }
 
@@ -2327,28 +2348,120 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_DEBUG << "reconnectInputChannels for '" << m_instanceId
                             << "' to output channel '" << outputChannelString << "'";
                     channel->disconnect(outputChannelString);
-                    connectInputToOutputChannel(channel, outputChannelString);
+
+                    auto handler = [outputChannelString] (bool success) {
+                        if (success) {
+                            KARABO_LOG_FRAMEWORK_INFO << "Successfully reconnected InputChannel to '"
+                                    << outputChannelString << "'";
+                        } else {
+                            try {
+                                throw;
+                            } catch (const std::exception& e) {
+                                KARABO_LOG_FRAMEWORK_WARN << "Failed to reconnected InputChannel to '"
+                                        << outputChannelString << "': " << e.what();
+                            }
+                        }
+                    };
+
+                    connectInputToOutputChannel(channel, outputChannelString, handler);
                 }
             }
         }
 
 
-        void SignalSlotable::disconnectInputChannels(const std::string& instanceId) {
-
-        }
-
-
         void SignalSlotable::connectInputChannel(const InputChannel::Pointer& channel, int trails) {
+            // Called from - DeviceClient::registerChannelMonitor (to be replaced...)
+            //             - pcLayer package for DAQ: DataAggregator::connectToDataSources(..)
             // Loop connected outputs
             const std::map<std::string, karabo::util::Hash>& outputChannels = channel->getConnectedOutputChannels();
             for (std::map<std::string, karabo::util::Hash>::const_iterator it = outputChannels.begin(); it != outputChannels.end(); ++it) {
                 const string& outputChannelString = it->first;
-                connectInputToOutputChannel(channel, outputChannelString, trails);
+                connectInputToOutputChannel_old(channel, outputChannelString, trails);
             }
         }
 
 
-        void SignalSlotable::connectInputToOutputChannel(const InputChannel::Pointer& channel, const std::string& outputChannelString, int trials) {
+        void SignalSlotable::asyncConnectInputChannel(const InputChannel::Pointer& channel, const boost::function<void(bool)>& handler) {
+
+            const std::map<std::string, karabo::util::Hash> outputChannels(channel->getConnectedOutputChannels());
+
+            // Nothing to do except informing that this 'nothing' succeeded ;-)
+            if (outputChannels.empty()) {
+                // To avoid surprises with mutex locks, do not call directly, but leave context by posting to event loop
+                if (handler) EventLoop::getIOService().post(boost::bind(handler, true));
+                return;
+            }
+
+            // Book-keeping structure for all individual requests, kept alive until last "inner" handler finishes:
+            // a mutex to protect against parallel execution of inner handlers, vector of individual statuses,
+            // and the outer handler.
+            // Note: With map of outputChannelStrings and AsyncStatus (instead of vector<AsyncStatus>) we would be in trouble if
+            // someone configured the InputChannel to connect twice to the same OutputChannel - strange, but possible...
+            using karabo::net::AsyncStatus;
+            auto status = boost::make_shared < std::tuple < boost::mutex, std::vector<AsyncStatus>, boost::function<void(bool)> > >();
+            std::get<1>(*status).resize(outputChannels.size(), AsyncStatus::PENDING);
+            std::get<2>(*status) = handler; // As direct argument of 'innerHandler' below it would be copied more often.
+
+            // Loop connected outputs
+            unsigned int counter = 0;
+            for (std::map<std::string, karabo::util::Hash>::const_iterator it = outputChannels.begin();
+                 it != outputChannels.end(); ++it, ++counter) {
+                const string& outputChannelString = it->first;
+                auto innerHandler = bind_weak(&SignalSlotable::connectSingleInputHandler, this,
+                                              status, counter, outputChannelString, _1);
+                connectInputToOutputChannel(channel, outputChannelString, innerHandler);
+            }
+        }
+
+
+        void SignalSlotable::connectSingleInputHandler
+        (boost::shared_ptr<std::tuple<boost::mutex, std::vector<karabo::net::AsyncStatus>, boost::function<void(bool)> > > status,
+         unsigned int counter, const std::string& outputChannelString, bool singleSuccess) {
+
+            if (!singleSuccess) {
+                KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << " failed to connect InputChannel to '" << outputChannelString << "'";
+            }
+
+            const boost::function<void(bool)>& allReadyHandler = std::get<2>(*status);
+            if (!allReadyHandler) {
+                // Nobody cares about overall success or failure - so logging above warning is enough.
+                return;
+            }
+
+            std::vector<karabo::net::AsyncStatus>& singleStatuses = std::get<1>(*status);
+            // Lock the mutex:
+            boost::mutex::scoped_lock lock(std::get<0>(*status));
+            using karabo::net::AsyncStatus;
+            singleStatuses.at(counter) = (singleSuccess ? AsyncStatus::DONE : AsyncStatus::FAILED);
+
+            unsigned int numFailed = 0;
+            for (const AsyncStatus aStatus : singleStatuses) {
+                switch (aStatus) {
+                    case AsyncStatus::PENDING:
+                        return; // just wait for the others
+                    case AsyncStatus::FAILED:
+                        ++numFailed;
+                    case AsyncStatus::DONE:
+                        ;
+                }
+            }
+
+            // None pending anymore - so report!
+            if (0 == numFailed) {
+                allReadyHandler(true);
+            } else {
+                try {
+                    throw KARABO_SIGNALSLOT_EXCEPTION((boost::format("Failed to create %d out of %d connections of an InputChannel")
+                                                       % numFailed % singleStatuses.size()).str());
+                } catch (const std::exception&) {
+                    Exception::clearTrace();
+                    allReadyHandler(false);
+                }
+            }
+        }
+
+
+        void SignalSlotable::connectInputToOutputChannel_old(const InputChannel::Pointer& channel, const std::string& outputChannelString, int trials) {
 
             KARABO_LOG_FRAMEWORK_DEBUG << "connectInputToOutputChannel  on \"" << m_instanceId << "\"  : outputChannelString is \"" << outputChannelString << "\"";
 
@@ -2369,7 +2482,7 @@ namespace karabo {
                 const std::string& channelId = v[1];
 
                 const unsigned int timeout = 1000; // in ms
-                auto successHandler = util::bind_weak(&SignalSlotable::connectInputChannelHandler, this, channel, outputChannelString, _1, _2);
+                auto successHandler = util::bind_weak(&SignalSlotable::connectInputChannelHandler_old, this, channel, outputChannelString, _1, _2);
                 auto timeoutHandler = util::bind_weak(&SignalSlotable::connectInputChannelErrorHandler, this, channel, outputChannelString,
                                                       trials, timeout + 2000);
                 this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int> (getpid()))
@@ -2382,8 +2495,8 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::connectInputChannelHandler(const InputChannel::Pointer& inChannel, const std::string& outputChannelString,
-                                                        bool outChannelExists, const karabo::util::Hash& outChannelInfo) {
+        void SignalSlotable::connectInputChannelHandler_old(const InputChannel::Pointer& inChannel, const std::string& outputChannelString,
+                                                            bool outChannelExists, const karabo::util::Hash& outChannelInfo) {
             if (outChannelExists) {
                 Hash allInfo(outChannelInfo);
                 const std::string connectionString(outChannelInfo.get<string>("connectionType") + "://"
@@ -2416,7 +2529,7 @@ namespace karabo {
                 const std::string& instanceId = v[0];
                 const std::string& channelId = v[1];
 
-                auto successHandler = util::bind_weak(&SignalSlotable::connectInputChannelHandler, this, inChannel, outputChannelString, _1, _2);
+                auto successHandler = util::bind_weak(&SignalSlotable::connectInputChannelHandler_old, this, inChannel, outputChannelString, _1, _2);
                 auto timeoutHandler = util::bind_weak(&SignalSlotable::connectInputChannelErrorHandler, this, inChannel, outputChannelString,
                                                       trials, nextTimeout + 2000);
                 this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int> (getpid()))
@@ -2425,6 +2538,103 @@ namespace karabo {
             } else {
                 KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << " finally gives up to find instance of channel '"
                         << outputChannelString << "', maybe it is not yet online (will try again if it gets online).";
+            }
+        }
+
+
+        void SignalSlotable::connectInputToOutputChannel(const InputChannel::Pointer& channel, const std::string& outputChannelString,
+                                                         const boost::function<void (bool)>& handler) {
+
+            KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ": connectInputToOutputChannel  on with "
+                    << "outputChannelString '" << outputChannelString << "'";
+
+            const std::map<std::string, karabo::util::Hash> outputChannels = channel->getConnectedOutputChannels();
+            const std::map<std::string, karabo::util::Hash>::const_iterator it = outputChannels.find(outputChannelString);
+            if (it == outputChannels.end()) {
+                if (handler) {
+                    try {
+                        throw KARABO_SIGNALSLOT_EXCEPTION("Cannot connect InputChannel to '" + outputChannelString + "' since not configured for it.");
+                    } catch (const std::exception&) {
+                        Exception::clearTrace();
+                        handler(false);
+                    }
+                } else {
+                    KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << " failed to connect InputChannel to  '" << outputChannelString << "'";
+                }
+                return;
+            }
+            // it->first => outputChannelString (STRING)
+            // it->second => outputChannelInfo  (HASH)  with connection parameters
+
+            std::vector<std::string> v;
+            boost::split(v, outputChannelString, boost::is_any_of("@:"));
+
+            const std::string& instanceId = v[0];
+            const std::string& channelId = (v.size() >= 2 ? v[1] : "");
+            auto successHandler = util::bind_weak(&SignalSlotable::connectInputChannelHandler, this,
+                                                  channel, outputChannelString, handler, _1, _2);
+            auto failureHandler = [outputChannelString, handler]() {
+                if (!handler) return;
+                try {
+                    throw;
+                } catch (const std::exception& e) {
+                    // Could directly call handler, but want to add info about path of problem
+                    try {
+                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot connect InputChannel to '"
+                                                                      + (outputChannelString + "' since: ") + e.what()));
+                    } catch (const std::exception&) {
+                        Exception::clearTrace();
+                        handler(false);
+                    }
+                }
+            };
+            this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int> (getpid()))
+                    .timeout(1000) // ms
+                    .receiveAsync<bool, karabo::util::Hash > (successHandler, failureHandler);
+        }
+
+
+        void SignalSlotable::connectInputChannelHandler(const InputChannel::Pointer& inChannel, const std::string& outputChannelString,
+                                                        const boost::function<void(bool)>& handler,
+                                                        bool outChannelExists, const karabo::util::Hash& outChannelInfo) {
+            if (outChannelExists) {
+                Hash allInfo(outChannelInfo);
+                const std::string connectionString(outChannelInfo.get<string>("connectionType") + "://"
+                                                   + outChannelInfo.get<string>("hostname") + ":"
+                                                   + toString(outChannelInfo.get<unsigned int>("port")));
+                allInfo.set("connectionString", connectionString);
+                allInfo.set("outputChannelString", outputChannelString);
+                inChannel->updateOutputChannelConfiguration(outputChannelString, allInfo);
+                auto connectHandler = [handler, outputChannelString](const karabo::net::ErrorCode & ec) {
+                    if (!ec) {
+                        if (handler) handler(true);
+                    } else {
+                        const std::string msg("Cannot connect InputChannel to '" + outputChannelString + "' since: " + ec.message());
+                        if (handler) {
+                            try {
+                                throw KARABO_SIGNALSLOT_EXCEPTION(msg);
+                            } catch (const std::exception&) {
+                                Exception::clearTrace();
+                                handler(false);
+                            }
+                        } else {
+                            KARABO_LOG_FRAMEWORK_WARN << msg;
+                        }
+                    }
+                };
+                inChannel->connect(allInfo, connectHandler); // Asynchronous
+            } else {
+                const std::string msg("Cannot connect InputChannel to '" + outputChannelString + "' since instance has no such channel.");
+                if (handler) {
+                    try {
+                        throw KARABO_SIGNALSLOT_EXCEPTION(msg);
+                    } catch (const std::exception&) {
+                        Exception::clearTrace();
+                        handler(false);
+                    }
+                } else {
+                    KARABO_LOG_FRAMEWORK_WARN << msg;
+                }
             }
         }
 
