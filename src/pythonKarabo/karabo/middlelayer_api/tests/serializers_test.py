@@ -41,6 +41,10 @@ class TestSerializers(TestCase):
         shutil.rmtree(TST_WORKING_DIR)
 
     def test_saveToFile(self):
+        # Test saving in the current directory
+        saveToFile(HASH, 'hash.xml')
+        self.assertTrue(os.path.exists('./hash.xml'))
+
         # Test without any sub-directories existing
         saveToFile(HASH, FILENAME)
         self.assertTrue(os.path.exists(FILENAME))
