@@ -2316,17 +2316,18 @@ namespace karabo {
                 // In theory, the number of channels can change between its capture here and when the handler is
                 // processed. But in praxis that does not happen - if it does, just a log messages is not 100% precise.
                 const size_t numOutputs = it->second->getConnectedOutputChannels().size();
-                auto handler = [channelName, numOutputs] (bool success) {
+                const std::string instanceId(getInstanceId());
+                auto handler = [channelName, numOutputs, instanceId] (bool success) {
                     if (success) {
-                        KARABO_LOG_FRAMEWORK_WARN << "Connected InputChannel '" << channelName << "' to "
-                                << numOutputs << " output channels";
+                        KARABO_LOG_FRAMEWORK_INFO << instanceId << " Connected InputChannel '" << channelName << "' to "
+                                << numOutputs << " output channel(s)";
                     } else {
                         try {
                             throw;
                         } catch (const std::exception& e) {
                             // Should we give it another try? But what if other end is not online.. Need to distinguish...
-                            KARABO_LOG_FRAMEWORK_WARN << "Failed to connected InputChannel '" << channelName << "' to all "
-                                    << "its outputs: " << e.what();
+                            KARABO_LOG_FRAMEWORK_WARN << instanceId << " Failed to connect InputChannel '"
+                                    << channelName << "' to all " << "its outputs: " << e.what();
                         }
                     }
                 };
@@ -2340,6 +2341,7 @@ namespace karabo {
             // Loop channels
             InputChannels inputChannels(getInputChannels()); // copy to avoid need for locking mutex while iterating
             for (InputChannels::const_iterator it = inputChannels.begin(); it != inputChannels.end(); ++it) {
+                const std::string& channelName = it->first;
                 const InputChannel::Pointer& channel = it->second;
                 const std::map<std::string, karabo::util::Hash>& outputChannels = channel->getConnectedOutputChannels();
                 for (std::map<std::string, karabo::util::Hash>::const_iterator ii = outputChannels.begin(); ii != outputChannels.end(); ++ii) {
@@ -2348,17 +2350,17 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_DEBUG << "reconnectInputChannels for '" << m_instanceId
                             << "' to output channel '" << outputChannelString << "'";
                     channel->disconnect(outputChannelString);
-
-                    auto handler = [outputChannelString] (bool success) {
+                    const std::string instanceId(getInstanceId());
+                    auto handler = [outputChannelString, instanceId, channelName] (bool success) {
                         if (success) {
-                            KARABO_LOG_FRAMEWORK_INFO << "Successfully reconnected InputChannel to '"
-                                    << outputChannelString << "'";
+                            KARABO_LOG_FRAMEWORK_INFO << instanceId << " Successfully reconnected InputChannel '"
+                                    << channelName << "' to '" << outputChannelString << "'";
                         } else {
                             try {
                                 throw;
                             } catch (const std::exception& e) {
-                                KARABO_LOG_FRAMEWORK_WARN << "Failed to reconnected InputChannel to '"
-                                        << outputChannelString << "': " << e.what();
+                                KARABO_LOG_FRAMEWORK_WARN << instanceId << " Failed to reconnect InputChannel '" <<
+                                        channelName << "' to '" << outputChannelString << "': " << e.what();
                             }
                         }
                     };
@@ -2545,21 +2547,23 @@ namespace karabo {
         void SignalSlotable::connectInputToOutputChannel(const InputChannel::Pointer& channel, const std::string& outputChannelString,
                                                          const boost::function<void (bool)>& handler) {
 
-            KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ": connectInputToOutputChannel  on with "
+            KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ": connectInputToOutputChannel with "
                     << "outputChannelString '" << outputChannelString << "'";
 
             const std::map<std::string, karabo::util::Hash> outputChannels = channel->getConnectedOutputChannels();
             const std::map<std::string, karabo::util::Hash>::const_iterator it = outputChannels.find(outputChannelString);
             if (it == outputChannels.end()) {
+                const std::string msg("Cannot connect InputChannel to '" + outputChannelString
+                                      + "' since not configured for it.");
+                // Log even if handler exists:
+                KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << msg;
                 if (handler) {
                     try {
-                        throw KARABO_SIGNALSLOT_EXCEPTION("Cannot connect InputChannel to '" + outputChannelString + "' since not configured for it.");
+                        throw KARABO_SIGNALSLOT_EXCEPTION(msg);
                     } catch (const std::exception&) {
                         Exception::clearTrace();
                         handler(false);
                     }
-                } else {
-                    KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << " failed to connect InputChannel to  '" << outputChannelString << "'";
                 }
                 return;
             }
@@ -2573,18 +2577,20 @@ namespace karabo {
             const std::string& channelId = (v.size() >= 2 ? v[1] : "");
             auto successHandler = util::bind_weak(&SignalSlotable::connectInputChannelHandler, this,
                                                   channel, outputChannelString, handler, _1, _2);
-            auto failureHandler = [outputChannelString, handler]() {
-                if (!handler) return;
+            const std::string myInstanceId(getInstanceId()); // prepare to capture in lambda without capture of this
+            auto failureHandler = [outputChannelString, handler, myInstanceId]() {
                 try {
                     throw;
                 } catch (const std::exception& e) {
                     // Could directly call handler, but want to add info about path of problem
+                    const std::string msg("Cannot connect InputChannel to '" + (outputChannelString + "' since: ") + e.what());
+                    // Log even if handler exists:
+                    KARABO_LOG_FRAMEWORK_WARN << myInstanceId << " " << msg;
                     try {
-                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Cannot connect InputChannel to '"
-                                                                      + (outputChannelString + "' since: ") + e.what()));
+                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION(msg));
                     } catch (const std::exception&) {
                         Exception::clearTrace();
-                        handler(false);
+                        if (handler) handler(false);
                     }
                 }
             };
