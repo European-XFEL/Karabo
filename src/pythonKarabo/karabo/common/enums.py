@@ -16,9 +16,10 @@ class Interfaces(IntEnum):
     MultiAxisMotor = 2
     Trigger = 4
     Camera = 8
+    Processor = 16
     # add future interfaces as bit maskable properties:
-    # FUTURE_INTERFACE = 16
-    # SOME_OTHER_INTERFACE = 32
+    # FUTURE_INTERFACE = 32
+    # SOME_OTHER_INTERFACE = 64
     # ...
 
 
