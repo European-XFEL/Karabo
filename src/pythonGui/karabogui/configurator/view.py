@@ -17,15 +17,17 @@ from karabo.common.api import (
     KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MAX_EXC,
     KARABO_SCHEMA_MIN_SIZE, KARABO_SCHEMA_MAX_SIZE,
     KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_UNIT_SYMBOL,
-    KARABO_SCHEMA_TAGS, KARABO_SCHEMA_DAQ_POLICY
-)
+    KARABO_SCHEMA_TAGS, KARABO_SCHEMA_DAQ_POLICY)
+from karabo.common.scenemodel.api import get_trendline_scene, SceneTargetWindow
 from karabogui import icons
 from karabogui.alarms.api import ALARM_LOW, ALARM_HIGH, WARN_LOW, WARN_HIGH
 from karabogui.binding.api import (
-    BaseBinding, DeviceProxy, PropertyProxy, VectorHashBinding,
-)
+    BaseBinding, BoolBinding, DeviceProxy, IntBinding, FloatBinding,
+    PropertyProxy, VectorHashBinding)
 from karabogui.events import (
-    KaraboEventSender, register_for_broadcasts, unregister_from_broadcasts)
+    broadcast_event, KaraboEventSender, register_for_broadcasts,
+    unregister_from_broadcasts)
+
 from karabogui.widgets.popup import PopupWidget
 from .edit_delegate import EditDelegate
 from .qt_item_model import ConfigurationTreeModel
@@ -304,6 +306,23 @@ class ConfigurationTreeView(QTreeView):
             if index.isValid() and index.column() == 0:
                 self._show_popup_widget(index, event.pos())
         super(ConfigurationTreeView, self).mousePressEvent(event)
+
+    def mouseDoubleClickEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            index = self.indexAt(event.pos())
+            if index.isValid() and index.column() == 1:
+                proxy = self.model().index_ref(index)
+                if isinstance(getattr(proxy, 'binding', None),
+                              (BoolBinding, IntBinding, FloatBinding)):
+                    instance_id = proxy.root_proxy.device_id
+                    path = proxy.path
+                    model = get_trendline_scene(instance_id, path)
+                    window = SceneTargetWindow.Dialog
+                    broadcast_event(KaraboEventSender.ShowUnattachedSceneView,
+                                    {'model': model, 'target_window': window})
+                event.accept()
+
+        super(ConfigurationTreeView, self).mouseDoubleClickEvent(event)
 
     def keyPressEvent(self, event):
         """Reimplemented function of QTreeView.
