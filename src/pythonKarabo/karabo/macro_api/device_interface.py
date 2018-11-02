@@ -142,3 +142,27 @@ def listTriggers(matchPattern=None):
     ret = _get_interface_device(Interfaces.Trigger, matchPattern)
 
     return ret
+
+
+def listProcessors(matchPattern=None):
+    """List all the Processors from the systemTopology
+
+    Parameters
+    ----------
+    matchPattern: Optionally provide a string pattern to find the
+                  deviceId's containing the matchPattern.
+    Interface
+    ---------
+    A Processor is a pipelining device that depends on receiving data via
+    an input channel to update its properties
+
+    - States.ON: if signalEndOfStream is received or no data is processed
+    - State.PROCESSING: Once data is received, the devices goes to this state
+
+    Returns
+    -------
+    List of found deviceId's of processor devices in the system topology
+    """
+    ret = _get_interface_device(Interfaces.Processor, matchPattern)
+
+    return ret
