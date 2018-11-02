@@ -194,7 +194,8 @@ def saveToFile(hash_, filename):
 
     assert isinstance(hash_, Hash), "Expected Hash, not {}".format(type(hash_))
     directory = os.path.dirname(filename)
-    os.makedirs(directory, exist_ok=True)
+    if directory:
+        os.makedirs(directory, exist_ok=True)
 
     with open(filename, "w") as fout:
         fout.write(encodeXML(hash_))
