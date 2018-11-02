@@ -18,7 +18,7 @@ class ControllerContainer(QWidget):
         super(ControllerContainer, self).__init__(parent)
         self.model = model
         # Variables used by editable widgets
-        self._is_editable = False
+        self.is_editable = False
         self._style_sheet = ''
 
         self.status_symbol = QLabel('', self)
@@ -61,7 +61,7 @@ class ControllerContainer(QWidget):
         """Update the color layout for display widgets given the ``alarm_type``
          """
         proxy = self.widget_controller.proxy
-        if self._is_editable or proxy.binding is None:
+        if self.is_editable or proxy.binding is None:
             return
 
         widget_alarms = []
@@ -94,7 +94,7 @@ class ControllerContainer(QWidget):
     def apply_changes(self):
         """Apply user-entered values to the remote device properties
         """
-        if not (self._is_editable and self.widget_controller.proxy.visible):
+        if not (self.is_editable and self.widget_controller.proxy.visible):
             return
 
         send_property_changes(self.widget_controller.proxies)
@@ -102,7 +102,7 @@ class ControllerContainer(QWidget):
     def decline_changes(self):
         """Undo any user-entered changes
         """
-        if not (self._is_editable and self.widget_controller.proxy.visible):
+        if not (self.is_editable and self.widget_controller.proxy.visible):
             return
 
         for proxy in self.widget_controller.proxies:
@@ -116,7 +116,7 @@ class ControllerContainer(QWidget):
         proxy = self.widget_controller.proxy
         proxy.root_proxy.on_trait_change(self._device_status_changed, 'status',
                                          remove=True)
-        if self._is_editable:
+        if self.is_editable:
             proxy.on_trait_change(
                 self._on_user_edit, 'edit_value,binding.config_update',
                 remove=True)
@@ -209,7 +209,7 @@ class ControllerContainer(QWidget):
                              ' {{ background-color : rgba{}; }}')
 
         if self.model.parent_component == 'EditableApplyLaterComponent':
-            self._is_editable = True
+            self.is_editable = True
             controller.proxy.on_trait_change(
                 self._on_user_edit, 'edit_value,binding.config_update')
             layout.setContentsMargins(2, 2, 2, 2)
@@ -217,7 +217,7 @@ class ControllerContainer(QWidget):
             layout.setContentsMargins(0, 0, 1, 1)
 
         # Tell the widget if it's editing
-        controller.set_read_only(not self._is_editable)
+        controller.set_read_only(not self.is_editable)
 
         # Make the widget show something
         controller.finish_initialization()
@@ -237,7 +237,7 @@ class ControllerContainer(QWidget):
 
     def _update_background_color(self):
         proxy = self.widget_controller.proxy
-        if not self._is_editable or proxy.binding is None:
+        if not self.is_editable or proxy.binding is None:
             return
 
         if proxy.edit_value is not None:
