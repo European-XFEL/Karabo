@@ -62,9 +62,10 @@ namespace karabo {
             MultiAxisMotor = (1u << 1),
             Trigger = (1u << 2),
             Camera = (1u << 3),
+            Processor = (1u << 4),
 
             // add future interfaces as bitmask:
-            // SOME_OTHER_INTERFACE = (1u << 4),
+            // SOME_OTHER_INTERFACE = (1u << 5),
         };
 
 
@@ -1477,6 +1478,7 @@ namespace karabo {
                         else if (desc == "MultiAxisMotor") interfaces |= Interfaces::MultiAxisMotor;
                         else if (desc == "Trigger") interfaces |= Interfaces::Trigger;
                         else if (desc == "Camera") interfaces |= Interfaces::Camera;
+                        else if (desc == "Processor") interfaces |= Interfaces::Processor;
                         else {
                             throw KARABO_LOGIC_EXCEPTION("Provided interface is not supported: " + desc);
                         }
