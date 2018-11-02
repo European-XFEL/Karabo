@@ -44,8 +44,13 @@ namespace karabo {
          * @return tuple containing scheme, domain, port, path and query
          */
         boost::tuple<std::string, std::string, std::string, std::string, std::string> parseUrl(const std::string& url);
+
+        enum class AsyncStatus {
+	    PENDING = 0,
+	    FAILED = -1,
+	    DONE = 1
+	};
     }
 }
-
 #endif	/* KARABO_NET_UTILS_HH */
 

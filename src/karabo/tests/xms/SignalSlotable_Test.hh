@@ -58,6 +58,7 @@ private:
     void testAutoConnectSignal();
     void testAutoConnectSlot();
     void testRegisterSlotTwice();
+    void testAsyncConnectInputChannel();
 };
 
 #endif	/* SIGNALSLOTABLE_TEST_HH */
