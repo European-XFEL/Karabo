@@ -1,4 +1,4 @@
-from asyncio import coroutine, gather, set_event_loop, wait_for
+from asyncio import coroutine, gather, iscoroutinefunction, set_event_loop, wait_for
 from contextlib import contextmanager, ExitStack
 from functools import partial, wraps
 from unittest import TestCase
@@ -11,7 +11,9 @@ def async_tst(f=None, *, timeout=None):
     if f is None:
         assert timeout is not None, 'timeout must be given!'
         return partial(async_tst, timeout=timeout)
-    return sync_tst(coroutine(f), timeout=timeout)
+    if not iscoroutinefunction(f):
+        f = coroutine(f)
+    return sync_tst(f, timeout=timeout)
 
 
 def sync_tst(f=None, *, timeout=None):

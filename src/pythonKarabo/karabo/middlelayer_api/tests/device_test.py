@@ -1,4 +1,4 @@
-from asyncio import coroutine, sleep
+from asyncio import sleep
 from contextlib import contextmanager
 from unittest import main
 
@@ -6,7 +6,8 @@ import numpy as np
 
 from karabo.common.states import State
 from karabo.middlelayer import (
-    AccessMode, getDevice, Int32, waitUntil, waitWhile)
+    AccessMode, background, getDevice, executeNoWait, Int32, waitUntil,
+    waitWhile)
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import getSchema
 from karabo.middlelayer_api.hash import Float, Hash, Slot, VectorHash
@@ -33,8 +34,7 @@ class MyDevice(Device):
     __version__ = "1.2"
 
     counter = Int32(
-        defaultValue=0,
-    )
+        defaultValue=0)
 
     # an output channel without schema
     output = OutputChannel()
@@ -43,7 +43,7 @@ class MyDevice(Device):
     deep = Node(MyNode)
 
     @InputChannel()
-    def input(self, data, meta):
+    async def input(self, data, meta):
         pass
 
     table = VectorHash(
@@ -53,20 +53,20 @@ class MyDevice(Device):
         accessMode=AccessMode.RECONFIGURABLE)
 
     @Slot(displayedName="Increase", allowedStates=[State.ON])
-    @coroutine
-    def increaseCounter(self):
+    async def increaseCounter(self):
         self.state = State.ACQUIRING
-        self.counter += 1
-        yield from sleep(0.2)
+        self.counter = self.counter.value + 1
+        background(self._state_sleep)
+
+    async def _state_sleep(self):
+        await sleep(0.2)
         self.state = State.ON
 
     @Slot(displayedName="start")
-    @coroutine
-    def start(self):
+    async def start(self):
         return 5
 
-    @coroutine
-    def onInitialization(self):
+    async def onInitialization(self):
         self.state = State.ON
 
 
@@ -81,6 +81,7 @@ class Tests(DeviceTest):
     @sync_tst
     def test_device_version(self):
         expected = "1.2"
+        self.assertEqual(self.myDevice.state, State.ON)
         self.assertEqual(self.myDevice.classVersion, expected)
 
     @sync_tst
@@ -103,14 +104,14 @@ class Tests(DeviceTest):
         self.assertEqual(self.myDevice.input.displayType, 'InputChannel')
 
     @async_tst
-    def test_send_raw(self):
+    async def test_send_raw(self):
         hsh = Hash("Itchy", 10)
         self.assertIsNone(self.myDevice.output.schema)
-        yield from self.myDevice.output.writeRawData(hsh)
+        await self.myDevice.output.writeRawData(hsh)
 
         # provoke attribute error because we don't have a schema
         with self.assertRaises(AttributeError):
-            yield from self.myDevice.output.writeData(hsh)
+            await self.myDevice.output.writeData(hsh)
 
     @sync_tst
     def test_send_raw_no_wait(self):
@@ -123,30 +124,32 @@ class Tests(DeviceTest):
             self.myDevice.output.writeDataNoWait(hsh)
 
     @async_tst
-    def test_lastCommand(self):
+    async def test_lastCommand(self):
         self.assertEqual(self.myDevice.lastCommand, "")
-        with (yield from getDevice("MyDevice")) as d:
-            yield from d.start()
+        with (await getDevice("MyDevice")) as d:
+            await d.start()
         self.assertEqual(self.myDevice.lastCommand, "start")
-        yield from getSchema("MyDevice")
+        await getSchema("MyDevice")
         self.assertEqual(self.myDevice.lastCommand, "start")
 
     @async_tst
-    def test_two_calls_concurrent(self):
+    async def test_two_calls_concurrent(self):
         self.assertEqual(self.myDevice.counter, 0)
-        with (yield from getDevice("MyDevice")) as d:
-            yield from d.increaseCounter()
+        with (await getDevice("MyDevice")) as d:
+            await d.increaseCounter()
+            await waitUntil(lambda: d.state != State.ON)
+            await waitWhile(lambda: d.state == State.ACQUIRING)
             self.assertEqual(self.myDevice.counter, 1)
             # Concurrent slot calls, one will return due to state block
             self.myDevice._ss.emit("call", {"MyDevice": ["increaseCounter",
                                                          "increaseCounter"]})
-            yield from waitUntil(lambda: d.state != State.ON)
-            yield from waitWhile(lambda: d.state == State.ACQUIRING)
+            await waitUntil(lambda: d.state != State.ON)
+            await waitWhile(lambda: d.state == State.ACQUIRING)
             self.assertEqual(self.myDevice.counter, 2)
 
     @async_tst
-    def test_clear_table_external(self):
-        with (yield from getDevice("MyDevice")) as d:
+    async def test_clear_table_external(self):
+        with (await getDevice("MyDevice")) as d:
             dtype = d.table.descriptor.dtype
             current_value = np.array((2.0, 5.6),
                                      dtype=dtype)
@@ -158,9 +161,9 @@ class Tests(DeviceTest):
             self.assertTrue(success)
 
     @async_tst
-    def test_output_close(self):
+    async def test_output_close(self):
         self.assertIsNotNone(self.myDevice.output.server.sockets)
-        yield from self.myDevice.output.close()
+        await self.myDevice.output.close()
         self.assertIsNone(self.myDevice.output.server.sockets)
 
 
