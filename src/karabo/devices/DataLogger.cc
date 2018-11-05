@@ -348,8 +348,7 @@ namespace karabo {
                     TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create(Hash("Xml.indentation", -1));
                     serializer->save(table, value);
                 } else if (type == "VECTOR_STRING") {
-                    value = leafNode.getValueAsShortString(leafNode.getValue<vector<string>>().size());
-                    //value = leafNode.getValueAs<string,vector>();
+                    value = toString(leafNode.getValueAs<string,vector>());
                 } else {
                     value = leafNode.getValueAs<string>();
                 }
