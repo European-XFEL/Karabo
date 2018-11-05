@@ -18,16 +18,15 @@ from karabo.common.api import (
     KARABO_SCHEMA_MIN_SIZE, KARABO_SCHEMA_MAX_SIZE,
     KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_UNIT_SYMBOL,
     KARABO_SCHEMA_TAGS, KARABO_SCHEMA_DAQ_POLICY)
-from karabo.common.scenemodel.api import get_trendline_scene, SceneTargetWindow
+from karabo.common.scenemodel.api import SceneTargetWindow
 from karabogui import icons
 from karabogui.alarms.api import ALARM_LOW, ALARM_HIGH, WARN_LOW, WARN_HIGH
 from karabogui.binding.api import (
-    BaseBinding, BoolBinding, DeviceProxy, IntBinding, FloatBinding,
-    PropertyProxy, VectorHashBinding)
+    BaseBinding, DeviceProxy, PropertyProxy, VectorHashBinding)
 from karabogui.events import (
     broadcast_event, KaraboEventSender, register_for_broadcasts,
     unregister_from_broadcasts)
-
+from karabogui.generic_scenes import get_generic_scene
 from karabogui.widgets.popup import PopupWidget
 from .edit_delegate import EditDelegate
 from .qt_item_model import ConfigurationTreeModel
@@ -312,11 +311,8 @@ class ConfigurationTreeView(QTreeView):
             index = self.indexAt(event.pos())
             if index.isValid() and index.column() == 1:
                 proxy = self.model().index_ref(index)
-                if isinstance(getattr(proxy, 'binding', None),
-                              (BoolBinding, IntBinding, FloatBinding)):
-                    instance_id = proxy.root_proxy.device_id
-                    path = proxy.path
-                    model = get_trendline_scene(instance_id, path)
+                model = get_generic_scene(proxy)
+                if model is not None:
                     window = SceneTargetWindow.Dialog
                     broadcast_event(KaraboEventSender.ShowUnattachedSceneView,
                                     {'model': model, 'target_window': window})
