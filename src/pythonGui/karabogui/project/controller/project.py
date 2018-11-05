@@ -36,9 +36,8 @@ class ProjectController(BaseProjectController):
             if self.parent is not None:
                 messagebox.show_warning(
                     "You are working with an actively trashed project "
-                    "<b>{}</b> with uuid <b>{}</b>! Please untrash or close "
-                    "the project.".format(self.model.simple_name,
-                                          self.model.uuid),
+                    "<b>{}</b>! Please untrash or close "
+                    "the project.".format(self.model.simple_name),
                     modal=False)
         else:
             self.ui_data.icon = icons.folder
