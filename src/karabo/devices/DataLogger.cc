@@ -316,21 +316,43 @@ namespace karabo {
 
             for (size_t i = 0; i < paths.size(); ++i) {
                 const string& path = paths[i];
-                const Hash::Node& leafNode = configuration.getNode(path);
-                if (leafNode.getType() == Types::HASH) continue;
+
                 // Skip those elements which should not be archived
                 if (!m_schemaForSlotChanged.has(path)
                     || (m_schemaForSlotChanged.hasArchivePolicy(path) && (m_schemaForSlotChanged.getArchivePolicy(path) == Schema::NO_ARCHIVING))) {
                     continue;
                 }
+
+                const Hash::Node& leafNode = configuration.getNode(path);
+                // Filter out not a leaf ...
+                if (m_schemaForSlotChanged.getNodeType(path) != Schema::LEAF) continue;
+
+                const std::string displayType = m_schemaForSlotChanged.hasArchivePolicy(path) ? m_schemaForSlotChanged.getDisplayType(path) : "None";
+
+                // Filter out Hashes and VectorHashes except Table ...
+                if ((leafNode.getType() == Types::HASH || leafNode.getType() == Types::VECTOR_HASH) && displayType != "Table") continue;
+
+                // Check for timestamp ...
                 if (!Timestamp::hashAttributesContainTimeInformation(leafNode.getAttributes())) {
                     KARABO_LOG_WARN << "Skip '" << path << "' - it lacks time information attributes.";
                     continue;
                 }
+
                 Timestamp t = Timestamp::fromHashAttributes(leafNode.getAttributes());
                 m_lastDataTimestamp = t;
-                const string value = leafNode.getValueAs<string>();
-                const string type = Types::to<ToLiteral>(leafNode.getType());
+                string type = displayType == "Table" ? "Table" : Types::to<ToLiteral>(leafNode.getType());
+                string value = "";
+                if (type == "Table") {
+                    // Represent table as XML string: table -> value
+                    const vector<Hash>& table = leafNode.getValue<vector<Hash>>();
+                    TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create(Hash("Xml.indentation", -1));
+                    serializer->save(table, value);
+                } else if (type == "VECTOR_STRING") {
+                    value = leafNode.getValueAsShortString(leafNode.getValue<vector<string>>().size());
+                    //value = leafNode.getValueAs<string,vector>();
+                } else {
+                    value = leafNode.getValueAs<string>();
+                }
 
                 bool newFile = false;
                 if (!m_configStream.is_open()) {
