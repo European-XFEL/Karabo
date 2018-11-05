@@ -11,13 +11,13 @@ from PyQt4.QtGui import (
     QPalette, QPainter, QPen, QSizePolicy, QStackedLayout, QWidget)
 
 from karabo.common.scenemodel.api import (
-    FixedLayoutModel, get_trendline_scene, WorkflowItemModel, SCENE_MIN_WIDTH,
+    FixedLayoutModel, WorkflowItemModel, SCENE_MIN_WIDTH,
     SCENE_MIN_HEIGHT, SceneTargetWindow)
 from karabogui import globals as krb_globals
-from karabogui.binding.types import BoolBinding, IntBinding, FloatBinding
 from karabogui.events import (
     broadcast_event, KaraboEventSender, register_for_broadcasts,
     unregister_from_broadcasts)
+from karabogui.generic_scenes import get_generic_scene
 from karabogui.request import send_property_changes
 from .bases import BaseSceneTool
 from .builder import (
@@ -36,7 +36,6 @@ from .widget.api import ControllerContainer
 from .workflow.api import SceneWorkflowModel, WorkflowOverlay
 
 _WIDGET_REMOVAL_DELAY = 5000
-TREND_BINDING = (BoolBinding, IntBinding, FloatBinding)
 
 
 def _get_time_milli():
@@ -186,10 +185,8 @@ class SceneView(QWidget):
             item = self.controller_at_position(event.pos())
             if item is not None and not item.is_editable:
                 proxy = item.widget_controller.proxy
-                if isinstance(proxy.binding, TREND_BINDING):
-                    instance_id = proxy.root_proxy.device_id
-                    path = proxy.path
-                    model = get_trendline_scene(instance_id, path)
+                model = get_generic_scene(proxy)
+                if model is not None:
                     window = SceneTargetWindow.Dialog
                     broadcast_event(KaraboEventSender.ShowUnattachedSceneView,
                                     {'model': model, 'target_window': window})
