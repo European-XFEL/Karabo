@@ -6,7 +6,8 @@ from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.api import KARABO_RUNTIME_ATTRIBUTES_MDL
 from .basetypes import isSet, KaraboValue, NoneValue
 from .enums import NodeType
-from .hash import Attribute, Descriptor, Hash, Schema, HashList, Slot
+from .hash import (
+    Attribute, Descriptor, Hash, Schema, HashList, Slot)
 from .registry import Registry
 from .time_mixin import get_timestamp
 
