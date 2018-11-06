@@ -487,7 +487,7 @@ namespace karabo {
                             Timestamp timestamp(current, Trainstamp(train));
                             const string& type = tokens[4 + offset];
                             const string& val = tokens[5 + offset];
-                            if (type == "Table") {
+                            if (type == "VECTOR_HASH") {
                                 TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create("Xml");
                                 Hash::Node& node = hash.set<vector<Hash>>(path, vector<Hash>());
                                 serializer->load(node.getValue<vector<Hash>>(), val);
