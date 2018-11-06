@@ -326,11 +326,7 @@ namespace karabo {
                 const Hash::Node& leafNode = configuration.getNode(path);
                 // Filter out not a leaf ...
                 if (m_schemaForSlotChanged.getNodeType(path) != Schema::LEAF) continue;
-
-                const std::string displayType = m_schemaForSlotChanged.hasArchivePolicy(path) ? m_schemaForSlotChanged.getDisplayType(path) : "None";
-
-                // Filter out Hashes and VectorHashes except Table ...
-                if ((leafNode.getType() == Types::HASH || leafNode.getType() == Types::VECTOR_HASH) && displayType != "Table") continue;
+                if (leafNode.getType() == Types::HASH) continue;
 
                 // Check for timestamp ...
                 if (!Timestamp::hashAttributesContainTimeInformation(leafNode.getAttributes())) {
@@ -340,14 +336,14 @@ namespace karabo {
 
                 Timestamp t = Timestamp::fromHashAttributes(leafNode.getAttributes());
                 m_lastDataTimestamp = t;
-                string type = displayType == "Table" ? "Table" : Types::to<ToLiteral>(leafNode.getType());
-                string value = "";
-                if (type == "Table") {
-                    // Represent table as XML string: table -> value
-                    const vector<Hash>& table = leafNode.getValue<vector<Hash>>();
+                string type = Types::to<ToLiteral>(leafNode.getType());
+                string value = "";   // "value" should be a string, so convert depending on type ...
+                if (leafNode.getType() == Types::VECTOR_HASH) {
+                    // Represent any vector<Hash> as XML string ...
                     TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create(Hash("Xml.indentation", -1));
-                    serializer->save(table, value);
+                    serializer->save(leafNode.getValue<vector<Hash>>(), value);
                 } else if (Types::isVector(leafNode.getType())) {
+                    // ... and any other vector as a comma separated text string of vector elements
                     value = toString(leafNode.getValueAs<string,vector>());
                 } else {
                     value = leafNode.getValueAs<string>();
