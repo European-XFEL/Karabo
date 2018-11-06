@@ -154,7 +154,9 @@ class Tests(DeviceTest):
             capas = mdl_proxy.foundCapabilities.value
             interfaces = mdl_proxy.foundInterfaces.value
             self.assertEqual(capas, Capabilities.PROVIDES_INTERFACES)
-            self.assertEqual(interfaces, Interfaces.Motor + Interfaces.Camera)
+            interface_detail = (Interfaces.Motor + Interfaces.Camera
+                                + Interfaces.Processor)
+            self.assertEqual(interfaces, interface_detail)
 
             def _test_mask(mask, bit):
                 return (mask & bit) == bit
@@ -167,6 +169,8 @@ class Tests(DeviceTest):
             self.assertTrue(has_motor)
             has_camera = _test_mask(interfaces, Interfaces.Camera)
             self.assertTrue(has_camera)
+            has_processor = _test_mask(interfaces, Interfaces.Processor)
+            self.assertTrue(has_processor)
 
         a_desc = type(proxy).a
         self.assertIs(a_desc.unitSymbol, Unit.AMPERE)

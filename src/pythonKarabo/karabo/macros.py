@@ -1,6 +1,6 @@
 from .macro_api.alarms import showAlarms, showInterlocks
 from .macro_api.device_interface import (
-    listCameras, listMotors, listMultiAxisMotors, listTriggers)
+    listCameras, listMotors, listMultiAxisMotors, listProcessors, listTriggers)
 
 
 def _create_cli_submodule():
@@ -10,7 +10,7 @@ def _create_cli_submodule():
     # NOTE: This is the macro api part of the ikarabo namespace
     symbols = (
         showAlarms, showInterlocks, listCameras, listMotors,
-        listMultiAxisMotors, listTriggers
+        listMultiAxisMotors, listProcessors, listTriggers
     )
     module = create_module('karabo.macros.cli', *symbols)
     module.__file__ = __file__  # looks nicer when repr(cli) is used
