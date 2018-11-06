@@ -109,6 +109,7 @@ namespace karabo {
 
         DataLogReader::DataLogReader(const Hash& input) : karabo::core::Device<karabo::core::OkErrorFsm>(input) {
             m_ibs = IndexBuilderService::getInstance();
+            m_serializer = TextSerializer<Hash>::create("Xml");
 
             KARABO_SLOT(slotGetPropertyHistory, string /*deviceId*/, string /*key*/, Hash /*params*/);
             KARABO_SLOT(slotGetConfigurationFromPast, string /*deviceId*/, string /*timepoint*/)
@@ -489,8 +490,7 @@ namespace karabo {
                             const string& val = tokens[5 + offset];
                             if (type == "VECTOR_HASH") {
                                 TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create("Xml");
-                                Hash::Node& node = hash.set<vector<Hash>>(path, vector<Hash>());
-                                serializer->load(node.getValue<vector<Hash>>(), val);
+                                m_serializer->load(node.getValue<vector<Hash>>(), val);
                                 Hash::Attributes& attrs = node.getAttributes();
                                 timestamp.toHashAttributes(attrs);
                             } else {
