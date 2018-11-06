@@ -489,10 +489,8 @@ namespace karabo {
                             const string& val = tokens[5 + offset];
                             if (type == "Table") {
                                 TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create("Xml");
-                                vector<Hash> vec;
-                                serializer->load(vec, val);
-                                Hash::Node& node = hash.set<vector<Hash>>(path, vec);
-                                node.setType(Types::VECTOR_HASH);
+                                Hash::Node& node = hash.set<vector<Hash>>(path, vector<Hash>());
+                                serializer->load(node.getValue<vector<Hash>>(), val);
                                 Hash::Attributes& attrs = node.getAttributes();
                                 timestamp.toHashAttributes(attrs);
                             } else {
