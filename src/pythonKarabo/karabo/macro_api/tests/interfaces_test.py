@@ -4,7 +4,7 @@ from unittest import main
 
 from karabo.common.states import State
 from karabo.macro_api.device_interface import (
-    listMotors, listCameras, listTriggers)
+    listMotors, listProcessors, listCameras, listTriggers)
 from karabo.middlelayer_api.device_client import getDevice, DeviceClientBase
 from karabo.middlelayer_api.hash import Int32, VectorString
 from karabo.middlelayer_api.tests.eventloop import (
@@ -18,7 +18,7 @@ class MyDevice(DeviceClientBase):
         defaultValue=0)
 
     interfaces = VectorString(
-        defaultValue=["Motor", "Camera"])
+        defaultValue=["Motor", "Camera", "Processor"])
 
     @coroutine
     def onInitialization(self):
@@ -36,7 +36,8 @@ class Tests(DeviceTest):
     @async_tst
     def test_find_interfaces(self):
         with (yield from getDevice("MyDevice")) as proxy:
-            self.assertEqual(proxy.interfaces, ["Motor", "Camera"])
+            self.assertEqual(proxy.interfaces,
+                             ["Motor", "Camera", "Processor"])
 
         motors = listMotors()
         self.assertIn("MyDevice", motors)
@@ -44,7 +45,8 @@ class Tests(DeviceTest):
         self.assertIn("MyDevice", cameras)
         triggers = listTriggers()
         self.assertNotIn("MyDevice", triggers)
-
+        processors = listProcessors()
+        self.assertIn("MyDevice", processors)
         # Find rubbish
         motors = listMotors("deep")
         self.assertNotIn("MyDevice", motors)

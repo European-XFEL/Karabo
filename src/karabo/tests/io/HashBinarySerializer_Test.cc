@@ -500,3 +500,22 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
         CPPUNIT_ASSERT(all_same);
     }
 }
+
+
+void HashBinarySerializer_Test::testMaxHashKeyLength() {
+    BinarySerializer<Hash>::Pointer p = BinarySerializer<Hash>::create("Bin");
+    Hash h;
+    vector<char> archive;
+
+    std::string key(254, 'a');
+    h.set<char>(key, 'c');
+    CPPUNIT_ASSERT_NO_THROW(p->save(h, archive));
+
+    key += 'a';
+    h.set<char>(key, 'c');
+    CPPUNIT_ASSERT_NO_THROW(p->save(h, archive));
+
+    key += 'a';
+    h.set<char>(key, 'c');
+    CPPUNIT_ASSERT_THROW(p->save(h, archive), karabo::util::IOException);
+}

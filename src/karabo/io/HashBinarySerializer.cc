@@ -136,6 +136,9 @@ namespace karabo {
         void HashBinarySerializer::writeKey(std::vector<char>& buffer, const std::string& str) const {
             // ATTENTION: Some optimization takes place here, the size indicator for a key is limited to 1 byte
             // instead of the generic 4 byte for everything else!!
+            if (str.size() > 255) {
+                throw KARABO_IO_EXCEPTION("Could not serialize key \"" + str + "\" of length " + std::to_string(str.size()) + ": over 255 characters");
+            }
             const unsigned char size = str.size();
             writeSingleValue(buffer, size);
             const size_t pos = buffer.size();
