@@ -36,8 +36,11 @@ def yieldKey(key):
 
 
 class Attribute(object):
-    def __init__(self, default=None):
-        self.default = default
+    __slots__ = ["default", "dtype"]
+
+    def __init__(self, default=None, dtype=None):
+        self.dtype = dtype
+        self.default = self.check(default)
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -46,7 +49,17 @@ class Attribute(object):
             return instance.__dict__.get(self, self.default)
 
     def __set__(self, instance, value):
-        instance.__dict__[self] = value
+        instance.__dict__[self] = self.check(value)
+
+    def check(self, value):
+        if self.dtype is None or not basetypes.isSet(value):
+            return value
+
+        info = np.iinfo(self.dtype)
+        if value < info.min or value > info.max:
+            raise ValueError("Attribute {} not "
+                             "in range of datatype".format(value))
+        return self.dtype(value)
 
 
 class Enumable(object):
@@ -683,8 +696,8 @@ class Type(Descriptor, Registry):
 
 class Vector(Type):
     """This is the base class for all vectors of data"""
-    minSize = Attribute()
-    maxSize = Attribute()
+    minSize = Attribute(dtype=np.uint32)
+    maxSize = Attribute(dtype=np.uint32)
 
     @classmethod
     def register(cls, name, dict):
