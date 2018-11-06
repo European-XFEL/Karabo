@@ -126,7 +126,8 @@ class IPythonKernel(Device):
     def _initInfo(self):
         info = super(IPythonKernel, self)._initInfo()
         info["lang"] = "python"
-        info["type"] = "client"
+        # XXX: The GUI cannot handle this device as client for the time being
+        info["type"] = "device"
         return info
 
     @coslot
