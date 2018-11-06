@@ -489,7 +489,7 @@ namespace karabo {
                             const string& type = tokens[4 + offset];
                             const string& val = tokens[5 + offset];
                             if (type == "VECTOR_HASH") {
-                                TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create("Xml");
+                                Hash::Node& node = hash.set<vector<Hash>>(path, vector<Hash>());
                                 m_serializer->load(node.getValue<vector<Hash>>(), val);
                                 Hash::Attributes& attrs = node.getAttributes();
                                 timestamp.toHashAttributes(attrs);
