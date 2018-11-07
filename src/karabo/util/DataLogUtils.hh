@@ -8,7 +8,10 @@
 #ifndef DATALOGGERSTRUCTS_HH
 #define	DATALOGGERSTRUCTS_HH
 
+#include <vector>
 #include "karabo/util/Epochstamp.hh"
+#include "karabo/util/Hash.hh"
+#include "karabo/util/Schema.hh"
 
 namespace karabo {
     namespace util {
@@ -66,7 +69,12 @@ namespace karabo {
          * to an Epochstamp
          */
         util::Epochstamp stringDoubleToEpochstamp(const std::string& timestampAsDouble);
+        
+        void getLeaves(const karabo::util::Hash& configuration, const karabo::util::Schema& schema,
+                       std::vector<std::string>& result, const char separator='.');
 
+        void getLeaves_r(const karabo::util::Hash& hash, const karabo::util::Schema& schema, std::vector<std::string>& result,
+                         std::string prefix, const char separator, const bool fullPaths);
     }
 }
 
