@@ -134,6 +134,15 @@ namespace karabo {
             bool allowLock() const {
                 return false;
             }
+            
+            void getLeaves(const karabo::util::Hash& configuration, const karabo::util::Schema& schema, std::vector<std::string>& result, const char separator='.');
+            
+            static void getLeaves(const karabo::util::Hash& configuration,
+                                  const karabo::util::Schema& schema,
+                                  std::vector<std::string>& result,
+                                  std::string prefix,
+                                  const char separator,
+                                  const bool fullPaths);
         };
     }
 }
