@@ -12,11 +12,11 @@ from unittest import main
 
 from karabo.common.enums import Capabilities, Interfaces
 from karabo.middlelayer import (
-    AccessLevel, AlarmCondition, Assignment, background, Configurable,
+    AccessLevel, AccessMode, AlarmCondition, Assignment, background, Configurable,
     DeviceClientBase, getDevice, getHistory, isSet, InputChannel,
     Int32, KaraboError, MetricPrefix, Node,
     OutputChannel, setWait, shutdown, sleep, Slot, State, String, unit, Unit,
-    VectorDouble, waitUntil, waitUntilNew)
+    VectorDouble, Float, VectorString, VectorHash, Hash, waitUntil, waitUntilNew)
 
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 
@@ -24,6 +24,9 @@ from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 class Child(Configurable):
     number = Int32()
 
+class Row(Configurable):
+    x = Float(defaultValue=1.0)
+    y = Float(defaultValue=1.0)
 
 class MiddlelayerDevice(DeviceClientBase):
     channelcount = 0
@@ -41,6 +44,11 @@ class MiddlelayerDevice(DeviceClientBase):
 
     foundInterfaces = Int32(
         defaultValue=0)
+
+    vectorString = VectorString(defaultValue=['abc','fgi','abrakadabra','23456PQ','xyz'])
+
+    table = VectorHash(rows=Row, defaultValue=[Hash("x", 2.0, "y", 5.6)], accessMode=AccessMode.RECONFIGURABLE)
+
 
     @Slot()
     @coroutine
@@ -339,6 +347,8 @@ class Tests(DeviceTest):
         for i in range(4):
             self.device.value = i
             self.device.child.number = -i
+            self.device.table[0].x = 7.77 * i
+            self.device.table[0].y = -15.55 * i
             self.device.update()
 
         after = datetime.now()
@@ -354,6 +364,7 @@ class Tests(DeviceTest):
         # We have to write another value to close the first archive file :-(...
         self.device.value = 4
         self.device.child.number = -4
+        self.device.table[0] = (7.77 * 4, -15.55 * 4)
         self.device.update()
 
         # ... and finally need to wait until the new archive and index files
