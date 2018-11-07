@@ -47,6 +47,46 @@ namespace karabo {
             return util::Epochstamp(seconds, fractions);
         }
 
+
+        void getLeaves(const util::Hash& configuration, const util::Schema& schema, std::vector<std::string>& result, const char separator) {
+            if (configuration.empty() || schema.empty()) return;
+            getLeaves_r(configuration, schema, result, "", separator, false);            
+        }
+
+
+        void getLeaves_r(const util::Hash& hash, const util::Schema& schema, std::vector<std::string>& result,
+                         std::string prefix, const char separator, const bool fullPaths) {
+            if (hash.empty()) {
+                result.push_back(prefix);
+                return;
+            }
+
+            for (util::Hash::const_iterator it = hash.begin(); it != hash.end(); ++it) {
+                std::string currentKey = it->getKey();
+
+                if (!prefix.empty()) {
+                    char separators[] = {separator, 0};
+                    currentKey = prefix + separators + currentKey;
+                }
+                if (it->is<util::Hash > () && (fullPaths || !it->hasAttribute(KARABO_HASH_CLASS_ID))) { // Recursion, but no hash sub classes
+                    getLeaves_r(it->getValue<util::Hash > (), schema, result, currentKey, separator, fullPaths);
+                } else if (it->is<std::vector<util::Hash> > () && it->getValue<std::vector<util::Hash> > ().size() > 0) { // Recursion for vector
+                    if (schema.has(currentKey) && schema.getNodeType(currentKey) == util::Schema::LEAF) {
+                        //if this is a LEAF then don't go to recurse further ... leaf!
+                        result.push_back(currentKey);
+                    } else {
+                        for (size_t i = 0; i < it->getValue<std::vector<util::Hash> > ().size(); ++i) {
+                            std::ostringstream os;
+                            os << currentKey << "[" << i << "]";
+                            getLeaves_r(it->getValue<std::vector<util::Hash> > ().at(i), schema, result, os.str(), separator, fullPaths);
+                        }
+                    }
+                } else {
+                    result.push_back(currentKey);
+                }
+            }
+        }
+
     } // end of karabo::util
 }
 
