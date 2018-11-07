@@ -2309,29 +2309,38 @@ namespace karabo {
 
 
         void SignalSlotable::connectInputChannels() {
-            // Loop channels
-            boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
-            for (InputChannels::const_iterator it = m_inputChannels.begin(); it != m_inputChannels.end(); ++it) {
-                const std::string channelName(it->first);
-                // In theory, the number of channels can change between its capture here and when the handler is
-                // processed. But in praxis that does not happen - if it does, just a log messages is not 100% precise.
-                const size_t numOutputs = it->second->getConnectedOutputChannels().size();
-                const std::string instanceId(getInstanceId());
-                auto handler = [channelName, numOutputs, instanceId] (bool success) {
+
+            struct Handler {
+                std::string m_channelName;
+                size_t m_numOutputs;
+                std::string m_instanceId;
+
+                Handler(const std::string& channelName, size_t numOutputs, const std::string& instanceId)
+                    : m_channelName(channelName), m_numOutputs(numOutputs), m_instanceId(instanceId) {
+                }
+
+                void operator()(bool success) {
                     if (success) {
-                        KARABO_LOG_FRAMEWORK_INFO << instanceId << " Connected InputChannel '" << channelName << "' to "
-                                << numOutputs << " output channel(s)";
+                        KARABO_LOG_FRAMEWORK_INFO << m_instanceId << " Connected InputChannel '" << m_channelName << "' to "
+                                << m_numOutputs << " output channel(s)";
                     } else {
                         try {
                             throw;
                         } catch (const std::exception& e) {
                             // Should we give it another try? But what if other end is not online.. Need to distinguish...
-                            KARABO_LOG_FRAMEWORK_WARN << instanceId << " Failed to connect InputChannel '"
-                                    << channelName << "' to all " << "its outputs: " << e.what();
+                            KARABO_LOG_FRAMEWORK_WARN << m_instanceId << " Failed to connect InputChannel '"
+                                    << m_channelName << "' to all " << "its outputs: " << e.what();
                         }
                     }
-                };
-                asyncConnectInputChannel(it->second, handler);
+                }
+            };
+            // Loop channels
+            boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
+            for (InputChannels::const_iterator it = m_inputChannels.begin(); it != m_inputChannels.end(); ++it) {
+                // In theory, the number of channels can change between its 'capture' here and when the handler is
+                // processed. But in praxis that does not happen - if it does, just a log messages is not 100% precise.
+                asyncConnectInputChannel(it->second, Handler(it->first, it->second->getConnectedOutputChannels().size(),
+                                                             getInstanceId()));
             }
         }
 
@@ -2350,16 +2359,16 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_DEBUG << "reconnectInputChannels for '" << m_instanceId
                             << "' to output channel '" << outputChannelString << "'";
                     channel->disconnect(outputChannelString);
-                    const std::string instanceId(getInstanceId());
-                    auto handler = [outputChannelString, instanceId, channelName] (bool success) {
+                    const std::string myInstanceId(getInstanceId());
+                    auto handler = [outputChannelString, myInstanceId, channelName] (bool success) {
                         if (success) {
-                            KARABO_LOG_FRAMEWORK_INFO << instanceId << " Successfully reconnected InputChannel '"
+                            KARABO_LOG_FRAMEWORK_INFO << myInstanceId << " Successfully reconnected InputChannel '"
                                     << channelName << "' to '" << outputChannelString << "'";
                         } else {
                             try {
                                 throw;
                             } catch (const std::exception& e) {
-                                KARABO_LOG_FRAMEWORK_WARN << instanceId << " Failed to reconnect InputChannel '" <<
+                                KARABO_LOG_FRAMEWORK_WARN << myInstanceId << " Failed to reconnect InputChannel '" <<
                                         channelName << "' to '" << outputChannelString << "': " << e.what();
                             }
                         }
