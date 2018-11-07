@@ -266,51 +266,6 @@ namespace karabo {
         }
 
 
-        void DataLogger::getLeaves(const karabo::util::Hash& configuration, const karabo::util::Schema& schema,
-                                   std::vector<std::string>& result, const char separator) {
-            if (configuration.empty() || schema.empty()) return;
-            getLeaves(configuration, schema, result, "", separator, false);
-        }
-
-
-        void DataLogger::getLeaves(const karabo::util::Hash& hash,
-                                  const karabo::util::Schema& schema,
-                                  std::vector<std::string>& result,
-                                  std::string prefix,
-                                  const char separator,
-                                  const bool fullPaths) {
-            if (hash.empty()) {
-                result.push_back(prefix);
-                return;
-            }
-
-            for (Hash::const_iterator it = hash.begin(); it != hash.end(); ++it) {
-                std::string currentKey = it->getKey();
-
-                if (!prefix.empty()) {
-                    char separators[] = {separator, 0};
-                    currentKey = prefix + separators + currentKey;
-                }
-                if (it->is<Hash > () && (fullPaths || !it->hasAttribute(KARABO_HASH_CLASS_ID))) { // Recursion, but no hash sub classes
-                    getLeaves(it->getValue<Hash > (), schema, result, currentKey, separator, fullPaths);
-                } else if (it->is<std::vector<Hash> > () && it->getValue<std::vector<Hash> > ().size() > 0) { // Recursion for vector
-                    if (schema.has(currentKey) && schema.getNodeType(currentKey) == Schema::LEAF) {
-                        //if this is a LEAF then don't go to recurse further ... TableElement
-                        result.push_back(currentKey);
-                    } else {
-                        for (size_t i = 0; i < it->getValue<std::vector<Hash> > ().size(); ++i) {
-                            std::ostringstream os;
-                            os << currentKey << "[" << i << "]";
-                            getLeaves(it->getValue<std::vector<Hash> > ().at(i), schema, result, os.str(), separator, fullPaths);
-                        }
-                    }
-                } else {
-                    result.push_back(currentKey);
-                }
-            }
-        }
-
-
         void DataLogger::slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId) {
 
             // To write log I need schema ...
