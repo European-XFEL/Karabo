@@ -71,8 +71,8 @@ namespace karabo {
                 if (it->is<util::Hash > () && (fullPaths || !it->hasAttribute(KARABO_HASH_CLASS_ID))) { // Recursion, but no hash sub classes
                     getLeaves_r(it->getValue<util::Hash > (), schema, result, currentKey, separator, fullPaths);
                 } else if (it->is<std::vector<util::Hash> > () && it->getValue<std::vector<util::Hash> > ().size() > 0) { // Recursion for vector
-                    if (schema.has(currentKey) && schema.getNodeType(currentKey) == util::Schema::LEAF) {
-                        //if this is a LEAF then don't go to recurse further ... leaf!
+                    //if this is a LEAF then don't go to recurse further ... leaf!
+                    if (schema.has(currentKey) && schema.isLeaf(currentKey)) {
                         result.push_back(currentKey);
                     } else {
                         for (size_t i = 0; i < it->getValue<std::vector<util::Hash> > ().size(); ++i) {
