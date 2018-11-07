@@ -24,8 +24,8 @@ from .middlelayer_api.proxy import (
     ProxyNodeBase as ProxyNode, SubProxyBase as SubProxy
 )
 from .middlelayer_api.enums import (
-    AccessLevel, AccessMode, Assignment, DaqDataType, DaqPolicy, EncodingType,
-    LeafType, MetricPrefix, NodeType, Unit
+    AccessLevel, AccessMode, ArchivePolicy, Assignment, DaqDataType,
+    DaqPolicy, EncodingType, LeafType, MetricPrefix, NodeType, Unit
 )
 from .middlelayer_api.eventloop import KaraboFuture
 from .middlelayer_api.basetypes import (
