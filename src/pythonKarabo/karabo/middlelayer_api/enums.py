@@ -27,6 +27,18 @@ class AccessMode(Enum):
 
 
 @unique
+class ArchivePolicy(Enum):
+    EVERY_EVENT = 0
+    EVERY_100MS = 1
+    EVERY_1S = 2
+    EVERY_5S = 3
+    EVERY_10S = 4
+    EVERY_1MIN = 5
+    EVERY_10MIN = 6
+    NO_ARCHIVING = 7
+
+
+@unique
 class Assignment(Enum):
     OPTIONAL = 0
     MANDATORY = 1

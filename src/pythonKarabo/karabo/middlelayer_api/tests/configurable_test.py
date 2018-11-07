@@ -1,16 +1,18 @@
 import asyncio
 from unittest import TestCase, main
+import string
 from zlib import adler32
 
 from karabo.middlelayer import (
-    AccessLevel, AccessMode, Assignment, Bool, Configurable, ComplexDouble,
-    ComplexFloat, DaqDataType, DaqPolicy, decodeBinary, DeviceNode, Double,
-    encodeBinary, Float, Hash, Int8, Int16, Int32, Int64, isSet, KaraboError,
-    MetricPrefix, Node, Overwrite, Slot, State, String, UInt8, UInt16, UInt32,
-    UInt64, Unit, unit, VectorBool, VectorChar, VectorComplexDouble,
-    VectorComplexFloat, VectorDouble, VectorHash, VectorFloat, VectorInt8,
-    VectorInt16, VectorInt32, VectorInt64, VectorString, VectorUInt8,
-    VectorUInt16, VectorUInt32, VectorUInt64)
+    AccessLevel, AccessMode, ArchivePolicy, Assignment, Bool, Configurable,
+    ComplexDouble, ComplexFloat, DaqDataType, DaqPolicy, decodeBinary,
+    DeviceNode, Double, encodeBinary, Float, Hash, Int8, Int16, Int32,
+    Int64, isSet, KaraboError, MetricPrefix, Node, Overwrite, Slot, State,
+    String, UInt8, UInt16, UInt32, UInt64, Unit, unit, VectorBool,
+    VectorChar, VectorComplexDouble, VectorComplexFloat, VectorDouble,
+    VectorHash, VectorFloat, VectorInt8, VectorInt16, VectorInt32,
+    VectorInt64, VectorString, VectorUInt8, VectorUInt16, VectorUInt32,
+    VectorUInt64)
 from karabo.middlelayer_api.injectable import Injectable
 
 
@@ -1032,6 +1034,95 @@ class Tests(TestCase):
         # Becomes a node!
         self.assertEqual(a.node, None)
 
+    def test_archivePolicy(self):
+
+        keys = ['aa', 'az']
+        for c in string.ascii_lowercase:
+            keys.append(c)
+
+        class Default(Configurable):
+            a = Bool()
+            b = Float()
+            c = VectorFloat()
+            d = Int8()
+            e = VectorInt8()
+            f = UInt8()
+            g = VectorUInt8()
+            h = Int16()
+            i = VectorInt16()
+            j = UInt16()
+            k = VectorUInt16()
+            l = Int32()
+            m = VectorInt32()
+            n = UInt32()
+            o = VectorUInt32()
+            p = Int64()
+            q = VectorInt64()
+            r = UInt64()
+            s = VectorUInt64()
+            t = Double()
+            u = VectorDouble()
+            v = ComplexFloat()
+            w = VectorComplexFloat()
+            x = ComplexDouble()
+            y = VectorComplexDouble()
+            z = String()
+            az = VectorString()
+            aa = VectorBool()
+
+        class NoArchive(Default):
+            a = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            b = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            c = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            d = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            e = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            f = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            g = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            h = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            i = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            j = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            k = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            l = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            m = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            n = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            o = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            p = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            q = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            r = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            s = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            t = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            u = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            v = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            w = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            x = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            y = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            z = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            az = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            aa = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+
+        a = Default()
+        b = NoArchive()
+        default_policy = ArchivePolicy.EVERY_EVENT.value
+        schema_a = a.getClassSchema()
+        schema_b = b.getClassSchema()
+        for key in keys:
+            # a archives but is lazily built
+            self.assertFalse(
+                'archivePolicy' in schema_a.hash[key, ...])
+            prop_a = getattr(a, key)
+            self.assertIsNone(prop_a.descriptor.archivePolicy)
+            # b does not archive
+            self.assertEqual(schema_b.hash[key, 'archivePolicy'],
+                             ArchivePolicy.NO_ARCHIVING.value)
+            prop_b = getattr(b, key)
+            self.assertEqual(prop_b.descriptor.archivePolicy,
+                             ArchivePolicy.NO_ARCHIVING, key)
+
+        i = Int32(archivePolicy=2)
+        self.assertEqual(i.archivePolicy,
+                         ArchivePolicy.EVERY_1S)
+        with self.assertRaises(ValueError):
+            Int32(archivePolicy=42)
 
 if __name__ == "__main__":
     main()
