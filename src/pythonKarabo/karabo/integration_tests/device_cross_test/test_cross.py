@@ -347,8 +347,7 @@ class Tests(DeviceTest):
         for i in range(4):
             self.device.value = i
             self.device.child.number = -i
-            self.device.table[0].x = 7.77 * i
-            self.device.table[0].y = -15.55 * i
+            self.device.table[0] = (7.77 * i,-15.55 * i)
             self.device.update()
 
         after = datetime.now()
