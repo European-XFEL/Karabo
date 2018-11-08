@@ -76,11 +76,11 @@ def test_display_progress_bar_widget():
 
 def test_display_state_color_widget():
     traits = base_widget_traits()
-    traits['text'] = 'foo'
+    traits['show_string'] = True
     model = api.DisplayStateColorModel(**traits)
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
-    assert read_model.text == 'foo'
+    assert read_model.show_string
 
 
 def test_evaluator_widget():
