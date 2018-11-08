@@ -158,9 +158,12 @@ class SignalSlotable(Configurable):
     def startInstance(self, server=None, *, loop=None, broadcast=True):
         """Start this (device) instance
 
+        :param broadcast: Defines whether this device receives broadcasts
+
         This sets up everything for the instance to run, and then runs
         all initializing code. It returns the task in which this initializing
-        code is running."""
+        code is running.
+        """
         if loop is None:
             loop = get_event_loop()
         self._ss = loop.getBroker(self.deviceId, type(self).__name__,
