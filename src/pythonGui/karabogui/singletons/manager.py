@@ -197,6 +197,17 @@ class Manager(QObject):
     def handle_log(self, messages):
         broadcast_event(KaraboEventSender.LogMessages, {'messages': messages})
 
+    def handle_configurationFromPast(self, **info):
+        success = info.get('success', False)
+        if not success:
+            reason = info.get('reason')
+            messagebox.show_error(reason, modal=False)
+            return
+        deviceId = info.get('deviceId')
+        config = info.get('config')
+        broadcast_event(KaraboEventSender.ShowConfigurationFromPast,
+                        {'deviceId': deviceId, 'configuration': config})
+
     def handle_brokerInformation(self, **kwargs):
         get_network()._handleBrokerInformation(**kwargs)
         broadcast_event(KaraboEventSender.brokerInformationUpdate,
