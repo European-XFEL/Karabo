@@ -2381,8 +2381,7 @@ namespace karabo {
 
 
         void SignalSlotable::connectInputChannel(const InputChannel::Pointer& channel, int trails) {
-            // Called from - DeviceClient::registerChannelMonitor (to be replaced...)
-            //             - pcLayer package for DAQ: DataAggregator::connectToDataSources(..)
+            // Called from - pcLayer package for DAQ: DataAggregator::connectToDataSources(..) (Nov. 2018)
             // Loop connected outputs
             const std::map<std::string, karabo::util::Hash>& outputChannels = channel->getConnectedOutputChannels();
             for (std::map<std::string, karabo::util::Hash>::const_iterator it = outputChannels.begin(); it != outputChannels.end(); ++it) {
