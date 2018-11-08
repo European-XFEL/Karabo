@@ -36,7 +36,7 @@ _MSG_PRIORITY_LOW = 3  # can be dropped in case of congestion
 
 
 class Broker:
-    def __init__(self, loop, deviceId, classId):
+    def __init__(self, loop, deviceId, classId, broadcast=True):
         self.loop = loop
         self.connection = loop.connection
         self.session = openmq.Session(self.connection, False, 1, 0)
@@ -47,6 +47,7 @@ class Broker:
         self.hbproducer = openmq.Producer(self.session, self.hbdestination)
         self.deviceId = deviceId
         self.classId = classId
+        self.broadcast = broadcast
         self.repliers = {}
         self.tasks = set()
         self.logger = logging.getLogger(deviceId)
@@ -113,6 +114,7 @@ class Broker:
             finally:
                 self.emit('call', {'*': ['slotInstanceGone']},
                           self.deviceId, self.info)
+
         async(heartbeat())
 
     def call(self, signal, targets, reply, args):
@@ -196,11 +198,14 @@ class Broker:
         device = weakref.ref(device)
         running = True
 
+        broadcast_mq = ("slotInstanceIds LIKE '%|{0.deviceId}|%' "
+                        "OR slotInstanceIds LIKE '%|*|%'".format(self))
+        device_mq = "slotInstanceIds LIKE '%|{0.deviceId}|%'".format(self)
+
         def receiver():
+            m_mq = broadcast_mq if self.broadcast else device_mq
             consumer = openmq.Consumer(
-                self.session, self.destination,
-                "slotInstanceIds LIKE '%|{0.deviceId}|%' "
-                "OR slotInstanceIds LIKE '%|*|%'".format(self), False)
+                self.session, self.destination, m_mq, False)
             with closing(consumer):
                 while running:
                     try:
@@ -233,6 +238,7 @@ class Broker:
                     loop.call_soon_threadsafe(
                         loop.create_task, self.handleMessage(message, d), d)
                     d = None
+
         task = loop.run_in_executor(None, receiver)
         try:
             yield from shield(task)
@@ -249,15 +255,17 @@ class Broker:
             self.logger.exception("Malformed message")
             return
         try:
-            slots = [(self.slots[s], s)
-                     for s in slots.get(self.deviceId, [])] + \
-                    [(self.slots[s], s) for s in slots.get("*", [])
-                     if s in self.slots]
+            callSlots = [(self.slots[s], s)
+                         for s in slots.get(self.deviceId, [])]
+            if self.broadcast:
+                callSlots.extend(
+                    [(self.slots[s], s)
+                     for s in slots.get("*", []) if s in self.slots])
         except KeyError:
             self.logger.exception("Slot does not exist")
             return
         try:
-            for slot, name in slots:
+            for slot, name in callSlots:
                 slot.slot(slot, device, name, message, params)
         except Exception:
             # the slot.slot wrapper should already catch all exceptions
@@ -282,6 +290,7 @@ class Broker:
             @wraps(func)
             def wrapper(*args):
                 return func(weakself(), *args)
+
             self.slots[name] = wrapper
         else:
             self.slots[name] = slot
@@ -405,6 +414,7 @@ class KaraboFuture(object):
     set to a function or None. It is possible to add more callbacks, to
     wait for completion, or cancel the operation in question.
     """
+
     def __init__(self, future):
         self.future = async(future)
 
@@ -416,6 +426,7 @@ class KaraboFuture(object):
 
         def func(future):
             loop.create_task(loop.run_coroutine_or_thread(fn, self), instance)
+
         self.future.add_done_callback(func)
 
     @synchronize
@@ -428,6 +439,7 @@ for f in ["cancel", "cancelled", "done", "result", "exception"]:
     @wraps(getattr(Future, f))
     def method(self, *args, name=f):
         return getattr(self.future, name)(*args)
+
     setattr(KaraboFuture, f, synchronize(method))
 
 
@@ -546,7 +558,7 @@ class EventLoop(SelectorEventLoop):
         except Exception:
             self.default_exception_handler(context)
 
-    def getBroker(self, deviceId, classId):
+    def getBroker(self, deviceId, classId, broadcast):
         if self.connection is None:
             hosts = os.environ.get("KARABO_BROKER",
                                    "tcp://exfl-broker.desy.de:7777").split(',')
@@ -568,7 +580,7 @@ class EventLoop(SelectorEventLoop):
                     self.connection = None
             self.connection.start()
 
-        return Broker(self, deviceId, classId)
+        return Broker(self, deviceId, classId, broadcast)
 
     def create_task(self, coro, instance=None):
         """Create a new task, running coroutine *coro*
