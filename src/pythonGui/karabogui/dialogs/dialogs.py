@@ -6,7 +6,7 @@
 import os.path as op
 
 from PyQt4 import uic
-from PyQt4.QtCore import pyqtSlot, QPoint, QSize, Qt
+from PyQt4.QtCore import QDateTime, pyqtSlot, QPoint, QSize, Qt
 from PyQt4.QtGui import (QColorDialog, QComboBox, QDialog, QDialogButtonBox,
                          QDoubleValidator, QFormLayout, QIcon, QPainter, QPen,
                          QPixmap, QTableWidgetItem)
@@ -22,6 +22,7 @@ class _PatternMatcher(object):
 
     Useful for watching for specific key sequences...
     """
+
     def __init__(self, pattern):
         self.pattern = pattern
         self.index = 0
@@ -44,6 +45,7 @@ class AboutDialog(QDialog):
     NOTE: We watch for "cheat codes" here to enable/disable certain application
     features.
     """
+
     def __init__(self, parent=None):
         super(AboutDialog, self).__init__(parent)
         uic.loadUi(op.join(op.dirname(__file__), 'about.ui'), self)
@@ -388,6 +390,7 @@ class SceneLinkDialog(QDialog):
 class SceneItemDialog(QDialog):
     """A dialog to modify the layout bounding rect coordinates
     """
+
     def __init__(self, x=0, y=0, title='SceneItem', max_x=1024, max_y=768,
                  parent=None):
         super(SceneItemDialog, self).__init__(parent)
@@ -414,3 +417,61 @@ class SceneItemDialog(QDialog):
     @property
     def y(self):
         return self.ui_y.value()
+
+
+ONE_WEEK = "One Week"
+ONE_DAY = "One Day"
+ONE_HOUR = "One Hour"
+TEN_MINUTES = "Ten Minutes"
+
+
+class ConfigurationFromPastDialog(QDialog):
+    def __init__(self, parent=None):
+        super(ConfigurationFromPastDialog, self).__init__(parent)
+        filepath = op.join(op.abspath(op.dirname(__file__)),
+                           'conftime.ui')
+        uic.loadUi(filepath, self)
+        self.setModal(False)
+        self.ui_timepoint.setDateTime(QDateTime.currentDateTime())
+        if parent is not None:
+            # place dialog accordingly!
+            point = parent.rect().bottomRight()
+            global_point = parent.mapToGlobal(point)
+            self.move(global_point - QPoint(self.width(), 0))
+
+    def _get_time_information(self, selected_time_point):
+        current_date_time = QDateTime.currentDateTime()
+        if selected_time_point == ONE_WEEK:
+            # One week
+            time_point = current_date_time.addDays(-7)
+        elif selected_time_point == ONE_DAY:
+            # One day
+            time_point = current_date_time.addDays(-1)
+        elif selected_time_point == ONE_HOUR:
+            # One hour
+            time_point = current_date_time.addSecs(-3600)
+        elif selected_time_point == TEN_MINUTES:
+            # Ten minutes
+            time_point = current_date_time.addSecs(-600)
+
+        return time_point
+
+    def _set_timepoint(self, selected_time_point):
+        time = self._get_time_information(selected_time_point)
+        self.ui_timepoint.setDateTime(time)
+
+    @pyqtSlot()
+    def on_ui_one_week_clicked(self):
+        self._set_timepoint(ONE_WEEK)
+
+    @pyqtSlot()
+    def on_ui_one_day_clicked(self):
+        self._set_timepoint(ONE_DAY)
+
+    @pyqtSlot()
+    def on_ui_one_hour_clicked(self):
+        self._set_timepoint(ONE_HOUR)
+
+    @pyqtSlot()
+    def on_ui_ten_minutes_clicked(self):
+        self._set_timepoint(TEN_MINUTES)
