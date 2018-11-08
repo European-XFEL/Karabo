@@ -23,8 +23,8 @@ from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
 from . import basetypes
 from .enums import (
-    AccessLevel, AccessMode, Assignment, DaqPolicy, LeafType, MetricPrefix,
-    NodeType, Unit)
+    AccessLevel, AccessMode, ArchivePolicy, Assignment, DaqPolicy,
+    LeafType, MetricPrefix, NodeType, Unit)
 from .exceptions import KaraboError
 from .registry import Registry
 
@@ -321,9 +321,11 @@ class Descriptor(object):
     displayType = Attribute()
     allowedStates = None
     tags = None
+    archivePolicy = None
 
     def __init__(self, strict=True, key="(unknown key)",
-                 allowedStates=None, tags=None, **kwargs):
+                 allowedStates=None, archivePolicy=None, tags=None,
+                 **kwargs):
         """Create a new descriptor with appropriate attributes
 
         The attributes are given as keyword arguments. If we define
@@ -364,6 +366,8 @@ class Descriptor(object):
             if not all((isinstance(s, str) for s in self.tags)):
                 raise TypeError('tags must contain strings, not "{}"'.
                                 format(tags))
+        if archivePolicy is not None:
+            self.archivePolicy = ArchivePolicy(archivePolicy)
 
         self.__doc__ = self.description
 
@@ -386,6 +390,8 @@ class Descriptor(object):
             attrs["allowedStates"] = [s.value for s in self.allowedStates]
         if self.tags is not None:
             attrs["tags"] = list(self.tags)
+        if self.archivePolicy is not None:
+            attrs["archivePolicy"] = self.archivePolicy.value
         return Hash(), attrs
 
     def __get__(self, instance, owner):
