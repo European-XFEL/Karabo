@@ -60,9 +60,8 @@ class DisplayProgressBarModel(BaseWidgetObjectData):
 class DisplayStateColorModel(BaseWidgetObjectData):
     """ A model for DisplayStateColor
     """
-    # The text shown on the widget
-    text = String
-
+    # The state shown on the widget
+    show_string = Bool(False)
 
 class EvaluatorModel(BaseWidgetObjectData):
     """ A model for Evaluator
@@ -213,7 +212,8 @@ def _display_progress_bar_writer(write_func, model, parent):
 @register_scene_reader('DisplayStateColor', version=1)
 def _display_state_color_reader(read_func, element):
     traits = read_base_widget_data(element)
-    traits['text'] = element.get(NS_KARABO + 'staticText', '')
+    value = element.get(NS_KARABO + 'show_string', '')
+    traits['show_string'] = (value.lower() == 'true')
     return DisplayStateColorModel(**traits)
 
 
@@ -221,7 +221,7 @@ def _display_state_color_reader(read_func, element):
 def _display_state_color_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DisplayStateColor')
-    element.set(NS_KARABO + 'staticText', model.text)
+    element.set(NS_KARABO + 'show_string', str(model.show_string).lower())
     return element
 
 
