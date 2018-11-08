@@ -10,7 +10,7 @@ import socket
 import numpy
 
 from .enums import Assignment, AccessMode
-from .hash import Bool, Hash, VectorString, Schema, String
+from .hash import Bool, Hash, VectorString, Schema, String, UInt32
 from .proxy import ProxyBase, ProxyFactory, ProxyNodeBase, SubProxyBase
 from .schema import Configurable, Node
 from .serializers import decodeBinary, encodeBinary
@@ -441,6 +441,13 @@ class NetworkOutput(Configurable):
 
     server = None
 
+    port = UInt32(
+        displayedName="Port",
+        description="Port number for TCP connection",
+        assignment=Assignment.OPTIONAL,
+        defaultValue=0,
+        accessMode=AccessMode.INITONLY)
+
     noInputShared = String(
         displayedName="No Input (Shared)",
         description="What to do if currently no share-input channel is "
@@ -471,7 +478,8 @@ class NetworkOutput(Configurable):
             """
             get_event_loop().create_task(self.serve(reader, writer), instance)
 
-        self.server = yield from start_server(serve, host=hostname, port=0)
+        self.server = yield from start_server(serve, host=hostname,
+                                              port=self.port)
         self.hostname = hostname
 
     def __init__(self, config):
