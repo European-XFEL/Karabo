@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 from asyncio import (async, CancelledError, coroutine, get_event_loop,
-                     TimeoutError, wait_for)
+                     iscoroutinefunction, TimeoutError, wait_for)
 from collections import defaultdict
 import logging
 import random
@@ -46,7 +46,9 @@ def slot(f):
 
 
 def coslot(f, passMessage=False):
-    f = coroutine(f)
+    # We keep backward compatibilty
+    if not iscoroutinefunction(f):
+        f = coroutine(f)
 
     def outer(func, device, name, message, args):
         broker = device._ss
