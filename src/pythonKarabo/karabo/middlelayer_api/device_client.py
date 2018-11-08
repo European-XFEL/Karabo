@@ -73,13 +73,13 @@ class DeviceClientBase(Device):
         """Cleanup the device children from the server
         """
         if info["type"] == "server":
-            devices = getDevices(serverId=instanceId, visibility=4)
+            devices = [k for k, v, a in self.systemTopology["device"].iterall()
+                       if a["serverId"] == instanceId]
             for deviceId in devices:
                 self.systemTopology["device"].pop(deviceId, None)
 
     def updateSystemTopology(self, instanceId, info, task):
         type = info["type"]
-
         ret = Hash(type, Hash())
         ret[type][instanceId] = Hash()
         ret[type][instanceId, ...] = dict(info.items())
