@@ -270,6 +270,8 @@ class DeviceServerBase(SignalSlotable):
         server = cls(params)
         if server:
             loop.add_signal_handler(SIGTERM, async, server.slotKillServer())
+            # NOTE: The server listens to broadcasts and we set a flag in the
+            # signal slotable
             server.is_server = True
             server.startInstance(broadcast=True)
             try:
