@@ -1223,9 +1223,22 @@ namespace karabo {
                                                                          SignalSlotable::InputHandler(), eosHandler);
             // Set an id for the input channel - since we do not allow to connect more than once to the same
             // output channel, our instance id is sufficient.
-            input->setInstanceId(sigSlotPtr->getInstanceId());
+            const std::string myInstanceId(sigSlotPtr->getInstanceId());
+            input->setInstanceId(myInstanceId);
             // Asynchronously connect to OutputChannel:
-            sigSlotPtr->connectInputChannel(input);
+            auto handler = [myInstanceId, channelName](bool success) {
+                if (success) {
+                    KARABO_LOG_FRAMEWORK_INFO << myInstanceId << " Connected to output channel '" << channelName << "'.";
+                } else {
+                    try {
+                        throw;
+                    } catch (const std::exception& e) {
+                        KARABO_LOG_FRAMEWORK_WARN << myInstanceId << " Failed to connect to output channel '"
+                                << channelName << "'. Automatic reconnect will be tried if destination comes up.";
+                    }
+                }
+            };
+            sigSlotPtr->asyncConnectInputChannel(input, handler);
 
             return true;
         }
