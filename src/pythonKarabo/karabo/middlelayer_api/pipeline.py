@@ -9,6 +9,7 @@ import socket
 
 import numpy
 
+from .basetypes import isSet
 from .enums import Assignment, AccessMode
 from .hash import Bool, Hash, VectorString, Schema, String, UInt32
 from .proxy import ProxyBase, ProxyFactory, ProxyNodeBase, SubProxyBase
@@ -478,8 +479,9 @@ class NetworkOutput(Configurable):
             """
             get_event_loop().create_task(self.serve(reader, writer), instance)
 
+        port = int(self.port) if basetypes.isSet(self.port) else 0
         self.server = yield from start_server(serve, host=hostname,
-                                              port=self.port)
+                                              port=port)
         self.hostname = hostname
 
     def __init__(self, config):
