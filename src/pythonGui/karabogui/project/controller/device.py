@@ -21,6 +21,7 @@ from karabo.middlelayer_api.project.api import (read_project_model,
 from karabogui import messagebox
 from karabogui.binding.api import extract_configuration
 from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.indicators import get_project_device_status_icon
 from karabogui.project.dialog.device_handle import DeviceHandleDialog
@@ -28,7 +29,7 @@ from karabogui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabogui.project.utils import (
     check_device_config_exists, check_device_instance_exists)
 from karabogui.request import call_device_slot
-from karabogui.singletons.api import get_manager, get_topology
+from karabogui.singletons.api import get_manager, get_network, get_topology
 from karabogui.topology.api import ProjectDeviceInstance
 from karabogui.util import (
     get_scene_from_server, handle_scene_from_server, handle_macro_from_server)
@@ -82,6 +83,11 @@ class DeviceInstanceController(BaseProjectGroupController):
         scene_action.setEnabled(has_scene)
         scene_action.triggered.connect(partial(self._load_scene_from_device,
                                                project_controller))
+        conf_action = QAction('Get Configuration', menu)
+        can_get_conf = (server_online and proj_device_online and
+                        proj_device_status not in NO_CONFIG_STATUSES)
+        conf_action.setEnabled(can_get_conf)
+        conf_action.triggered.connect(self._get_configuration_from_past)
 
         instantiate_action = QAction('Instantiate', menu)
         can_instantiate = (server_online and not proj_device_online and
@@ -101,6 +107,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         menu.addSeparator()
         menu.addAction(macro_action)
         menu.addAction(scene_action)
+        menu.addAction(conf_action)
         menu.addSeparator()
         menu.addAction(instantiate_action)
         menu.addAction(shutdown_action)
@@ -496,6 +503,20 @@ class DeviceInstanceController(BaseProjectGroupController):
                               project, None)
             call_device_slot(handler, device_id, 'requestScene',
                              name=scene_name)
+
+    def _get_configuration_from_past(self):
+        """Request a configuration from the datalog reader
+        """
+        if not self.project_device.online:
+            return
+
+        dialog = ConfigurationFromPastDialog()
+        if dialog.exec() == QDialog.Accepted:
+            device_id = self.model.instance_id
+            time_point = dialog.ui_timepoint.dateTime()
+            # Explicitly specifiy ISODate!
+            time = str(time_point.toString(Qt.ISODate))
+            get_network().onGetConfigurationFromPast(device_id, time=time)
 
     def instantiate(self, server):
         """ Instantiate this device instance on the given `server`
