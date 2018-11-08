@@ -324,8 +324,6 @@ namespace karabo {
                 }
 
                 const Hash::Node& leafNode = configuration.getNode(path);
-                // Filter out not a leaf ...
-                if (m_schemaForSlotChanged.getNodeType(path) != Schema::LEAF) continue;
                 if (leafNode.getType() == Types::HASH) continue;
 
                 // Check for timestamp ...
