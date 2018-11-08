@@ -479,7 +479,7 @@ class NetworkOutput(Configurable):
             """
             get_event_loop().create_task(self.serve(reader, writer), instance)
 
-        port = int(self.port) if basetypes.isSet(self.port) else 0
+        port = int(self.port) if isSet(self.port) else 0
         self.server = yield from start_server(serve, host=hostname,
                                               port=port)
         self.hostname = hostname
