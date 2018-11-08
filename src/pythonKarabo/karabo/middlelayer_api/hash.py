@@ -11,6 +11,7 @@ from collections import OrderedDict
 from collections.abc import Iterable
 from enum import Enum
 from functools import partial, wraps
+from inspect import iscoroutinefunction
 import logging
 import numbers
 from struct import pack
@@ -534,6 +535,9 @@ class Slot(Descriptor):
             return self.method(device)
         wrapper.slot = self.slot
         wrapper.descriptor = self
+        if iscoroutinefunction(self.method):
+            wrapper = coroutine(wrapper)
+        # NOTE: wraps loses the coroutine declaration in case async def is used
         return wrapper.__get__(instance, owner)
 
     def slot(self, func, device, name, message, args):
