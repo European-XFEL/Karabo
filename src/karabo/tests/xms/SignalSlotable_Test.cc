@@ -16,6 +16,7 @@
 #include "boost/shared_ptr.hpp"
 
 #include <string>
+#include <future>
 
 using namespace karabo::util;
 using namespace karabo::xms;
@@ -1164,6 +1165,91 @@ void SignalSlotable_Test::testRegisterSlotTwice() {
     CPPUNIT_ASSERT_THROW(instance->registerSlot<int>(third, "slot"), karabo::util::SignalSlotException);
     karabo::util::Exception::clearTrace();
 }
+
+
+void SignalSlotable_Test::testAsyncConnectInputChannel() {
+    using karabo::util::Hash;
+
+    // Setup sender
+    auto sender = boost::make_shared<SignalSlotable>("sender");
+    OutputChannel::Pointer outputChannel = sender->createOutputChannel("output", // default config
+                                                                       Hash("output", karabo::util::Hash()));
+    sender->start();
+
+    // Setup receiver
+    auto receiver = boost::make_shared<SignalSlotable>("receiver");
+    karabo::util::Hash inputCfg("connectedOutputChannels", std::vector<std::string>(1, "sender:output"));
+    InputChannel::Pointer inputChannel = receiver->createInputChannel("input", Hash("input", inputCfg));
+    receiver->start();
+
+    // Setup handler for asyncConnectInputChannel
+    std::promise <std::pair<bool, std::string> > handlerPromise;
+    auto handlerFuture = handlerPromise.get_future();
+    auto handler = [&handlerPromise](bool success) {
+        auto result = std::make_pair(success, std::string());
+        if (!success) {
+            try {
+                throw;
+            } catch (const std::exception& e) {
+                result.second = e.what();
+            }
+        }
+        handlerPromise.set_value(result);
+    };
+    // First test: successful connection
+    receiver->asyncConnectInputChannel(inputChannel, handler);
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(std::chrono::milliseconds(500)));
+    std::pair<bool, std::string > result(handlerFuture.get());
+    CPPUNIT_ASSERT(result.first);
+    CPPUNIT_ASSERT_EQUAL(std::string(), result.second);
+
+    // Reset handler
+    handlerPromise = std::promise <std::pair<bool, std::string> >();
+    handlerFuture = handlerPromise.get_future();
+
+    // Second test: one output is missing (but output instance exists), so we get failure
+    CPPUNIT_ASSERT(receiver->removeInputChannel("input")); // first clear
+    inputCfg.get<std::vector < std::string >> ("connectedOutputChannels").push_back("sender:not_an_output");
+    inputChannel = receiver->createInputChannel("input", Hash("input", inputCfg));
+    receiver->asyncConnectInputChannel(inputChannel, handler);
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(std::chrono::milliseconds(500)));
+    result = handlerFuture.get();
+    CPPUNIT_ASSERT(!result.first);
+    CPPUNIT_ASSERT(result.second.find("SignalSlot Exception") != std::string::npos);
+    CPPUNIT_ASSERT(result.second.find("Failed to create 1 out of 2 connections of an InputChannel") != std::string::npos);
+
+    // Reset handler again
+    handlerPromise = std::promise <std::pair<bool, std::string> >();
+    handlerFuture = handlerPromise.get_future();
+
+    // Third test: one output is missing (because instance does not exist), so we get failure
+    CPPUNIT_ASSERT(receiver->removeInputChannel("input")); // clear again
+    inputCfg.get<std::vector < std::string >> ("connectedOutputChannels").back() = "not_a_sender:output";
+    inputChannel = receiver->createInputChannel("input", Hash("input", inputCfg));
+    receiver->asyncConnectInputChannel(inputChannel, handler);
+    // Larger timeout here: In SignalSlotable::connectInputToOutputChannel it is 1000 ms to receive the reply from
+    // slotGetOutputChannelInformation of the (in this case not existing) instance of the output
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(std::chrono::milliseconds(1500)));
+    result = handlerFuture.get();
+    CPPUNIT_ASSERT(!result.first);
+    CPPUNIT_ASSERT(result.second.find("SignalSlot Exception") != std::string::npos);
+    CPPUNIT_ASSERT(result.second.find("Failed to create 1 out of 2 connections of an InputChannel") != std::string::npos);
+
+    // Reset handler once more
+    handlerPromise = std::promise <std::pair<bool, std::string> >();
+    handlerFuture = handlerPromise.get_future();
+
+    // Forth test: no output configured at all which means success
+    CPPUNIT_ASSERT(receiver->removeInputChannel("input")); // clear once more
+    inputCfg.get<std::vector < std::string >> ("connectedOutputChannels").clear();
+    inputChannel = receiver->createInputChannel("input", Hash("input", inputCfg));
+    receiver->asyncConnectInputChannel(inputChannel, handler);
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(std::chrono::milliseconds(500)));
+    result = handlerFuture.get();
+    CPPUNIT_ASSERT(result.first);
+    CPPUNIT_ASSERT_EQUAL(std::string(), result.second);
+}
+
 
 void SignalSlotable_Test::waitDemoOk(const boost::shared_ptr<SignalSlotDemo>& demo, int messageCalls,
                                      int trials) {

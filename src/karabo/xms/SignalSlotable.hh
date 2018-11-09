@@ -25,6 +25,7 @@
 #include "karabo/net/JmsProducer.hh"
 #include "karabo/net/PointToPoint.hh"
 #include "karabo/net/Strand.hh"
+#include "karabo/net/utils.hh"
 
 #include <queue>
 #include <map>
@@ -438,10 +439,37 @@ namespace karabo {
                               const std::string & funcName);
 
             // TODO This function is not used anywhere -> decide what to do
+            /**
+             * DEPRECATED: Connect an InputChannel to an OutputChannel
+             *
+             * Deprecated since
+             * - mainly synchronous,
+             * - allows third party connections,
+             * - if the underlying Tcp connection cannot be setup, that is not considered for return value
+             *
+             * @param outputInstanceId
+             * @param outputName
+             * @param inputInstanceId
+             * @param inputName
+             * @return
+             */
             bool connectChannels(const std::string& outputInstanceId, const std::string& outputName,
                                  const std::string& inputInstanceId, const std::string& inputName);
 
             // TODO This function is not used anywhere -> decide what to do
+            /**
+             * DEPRECATED: Disconnect an InputChannel from an OutputChannel
+             *
+             * Deprecated since
+             * - mainly synchronous,
+             * - allows third party disconnections
+             *
+             * @param outputInstanceId
+             * @param outputName
+             * @param inputInstanceId
+             * @param inputName
+             * @return
+             */
             bool disconnectChannels(const std::string& outputInstanceId, const std::string& outputName,
                                     const std::string& inputInstanceId, const std::string& inputName);
 
@@ -514,20 +542,29 @@ namespace karabo {
             void registerEndOfStreamHandler(const std::string& channelName, const InputHandler& handler);
 
             /**
+             * Deprecated, use asyncConnectInputChannel!
+             *
              * Connects an input channel to those as defined on the input channel's configuration.
-             * The function is asynchronous
+             * The function is asynchronous, but gives no feedback about success or failure.
              */
             void connectInputChannel(const InputChannel::Pointer& channel, int trails = 8);
 
-            // TODO This function seems to be called only internally, private candidate?
-            void connectInputToOutputChannel(const InputChannel::Pointer& channel,
-                                             const std::string& outputChannelString, int trails = 8);
+            /**
+             * Connect input channel to output channels defined in its configuration.
+             *
+             * Proper asynchronous implementation with feedback handler
+             *
+             * @param channel pointer to InputChannel
+             * @param handler to report success or failure. In the latter case the argument is false and more information
+             *                about the failure can be retrieved via
+             *                     try { throw; } catch (const std::exception&e) { const std::string reason(e.what());}
+             *                in the same as in SignalSlotable::AsyncErrorHandler
+             */
+            void asyncConnectInputChannel(const InputChannel::Pointer& channel, const boost::function<void(bool)>& handler);
 
             void connectInputChannels();
 
             void reconnectInputChannels(const std::string& instanceId);
-
-            void disconnectInputChannels(const std::string& instanceId);
 
             std::pair<bool, std::string> exists(const std::string& instanceId);
 
@@ -1014,6 +1051,7 @@ namespace karabo {
                 return f.substr(0, f.find_first_of('-')) + "|";
             }
 
+            // TODO: Consider removing - there seems to be no Python counterpart (neither bound nor middlelayer)
             void slotConnectToOutputChannel(const std::string& inputName, const karabo::util::Hash& outputChannelInfo,
                                             bool connect);
 
@@ -1046,9 +1084,26 @@ namespace karabo {
             // IO channel related
             void slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId);
 
+            void connectInputToOutputChannel(const InputChannel::Pointer& channel, const std::string& outputChannelString,
+                                             const boost::function<void (bool)>& handler);
+
+            void connectSingleInputHandler
+            (boost::shared_ptr<std::tuple<boost::mutex, std::vector<karabo::net::AsyncStatus>, boost::function<void(bool)> > > status,
+             unsigned int counter, const std::string& outputChannelString, bool singleSuccess);
+
             void connectInputChannelHandler(const InputChannel::Pointer& inChannel, const std::string& outputChannelString,
+                                            const boost::function<void(bool)>& handler,
                                             bool outChannelExists, const karabo::util::Hash& outChannelInfo);
 
+            // Deprecated since only used in the deprecated connectInputChannel(..)
+            void connectInputToOutputChannel_old(const InputChannel::Pointer& channel,
+                                                 const std::string& outputChannelString, int trails = 8);
+
+            // Deprecated since only used in the logic of the deprecated connectInputChannel(..)
+            void connectInputChannelHandler_old(const InputChannel::Pointer& inChannel, const std::string& outputChannelString,
+                                                bool outChannelExists, const karabo::util::Hash& outChannelInfo);
+
+            // Deprecated since only used in the logic of the deprecated connectInputChannel(..)
             void connectInputChannelErrorHandler(const InputChannel::Pointer& inChannel, const std::string& outputChannelString,
                                                  int trials, unsigned int nextTimeout);
 
