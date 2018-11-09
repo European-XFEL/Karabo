@@ -92,6 +92,7 @@ namespace karabo {
             typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator ConstChannelIterator;
             typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::iterator ChannelIterator;
 
+            mutable boost::mutex m_loggerMapMutex;
             karabo::util::Hash m_loggerMap;
             karabo::util::Hash m_loggerInput;
             krb_log4cpp::Priority::Value m_loggerMinForwardingPriority;

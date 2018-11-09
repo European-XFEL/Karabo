@@ -923,6 +923,7 @@ namespace karabo {
 
         std::string GuiServerDevice::getDataReaderId(const std::string& deviceId) const {
             const string loggerId = DATALOGGER_PREFIX + deviceId;
+            boost::mutex::scoped_lock lock(m_loggerMapMutex);
             if (m_loggerMap.has(loggerId)) {
                 static int i = 0;
                 return DATALOGREADER_PREFIX + toString(i++ % DATALOGREADERS_PER_SERVER) += "-" + m_loggerMap.get<string>(loggerId);
@@ -1322,6 +1323,7 @@ namespace karabo {
 
 
         void GuiServerDevice::slotLoggerMap(const karabo::util::Hash& loggerMap) {
+            boost::mutex::scoped_lock lock(m_loggerMapMutex);
             m_loggerMap = loggerMap;
         }
 
