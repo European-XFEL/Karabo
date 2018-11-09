@@ -198,7 +198,7 @@ class NetworkInput(Configurable):
                 cls = None
             else:
                 # schema from output channel we are talking with
-                schema = info.get("schema")
+                schema = info.get("schema", None)
                 if schema is None:
                     schema, _ = yield from self.parent.call(
                         instance, "slotGetSchema", False)
@@ -370,6 +370,8 @@ class OutputProxy(SubProxyBase):
     This represents an output channel on a device. Output channels are
     not connected automatically, but may be connected using :meth:`connect`.
     """
+    schema = None
+
     def __init__(self):
         self.networkInput = NetworkInput(dict(
             dataDistribution="copy", onSlowness="drop"))
@@ -400,7 +402,8 @@ class OutputProxy(SubProxyBase):
 
     @coroutine
     def handler(self, data, meta):
-        self._parent._onChanged_r(data, self.schema)
+        if self.schema is not None:
+            self._parent._onChanged_r(data, self.schema)
 
     def connect(self):
         """Connect to the output channel
