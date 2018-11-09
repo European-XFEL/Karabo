@@ -59,7 +59,8 @@ class DisplayColorBool(BaseBindingController):
             color_state = State.ACTIVE if value else State.PASSIVE
         else:
             color_state = State.PASSIVE if value else State.ACTIVE
-
+        # Set the tooltip according to the value
+        self.widget.setToolTip("{}".format(value))
         svg = self.icon.with_color(STATE_COLORS[color_state])
         self.widget.load(QByteArray(svg))
 
