@@ -61,21 +61,6 @@ Dependencies and deployment
 - Fix RTD's requirements in templates !2651
 - Upgrade Python to 3.6.6 !2804
 
-Documentation
-+++++++++++++
-- Document previous karabo 2.2.3 !2892
-- Document RUNNING state !2886
-- Add changelog for 2.2.4 !2869
-- Document karabo 2.2.4.1 !2895
-- Document Karabo 2.2.4.2 !2905
-- Document Karabo 2.2.4.3 !2913
-- Document hotfix release 2.2.4.4 !2930
-- Update doc with 2.2.5 changelog !2998
-- Document Karabo 2.2.6 !3004
-- Reorder versioning in documentation !2896
-- Remove scanning documentation !3034
-- DOC: added welcome label for intersphinx !3035
-
 Middlelayer core
 ++++++++++++++++
 - MDL: Little refactor in pipeline !2868
