@@ -742,9 +742,6 @@ namespace karabo {
 
             typedef std::map<std::string, SlotInstancePointer> SlotInstances;
             SlotInstances m_slotInstances;
-            // Each slot instance has its strand where actual calls should be posted
-            // (probably later merge m_slotInstances and m_slotInstanceStrands to a single map).
-            std::unordered_map<std::string, boost::shared_ptr<karabo::net::Strand> > m_slotInstanceStrands;
 
             typedef std::map<std::string, std::pair<boost::shared_ptr<boost::asio::deadline_timer>, AsyncErrorHandler> > ReceiveAsyncErrorHandles;
             ReceiveAsyncErrorHandles m_receiveAsyncErrorHandles;
@@ -765,8 +762,12 @@ namespace karabo {
 
             int m_randPing;
 
-            // Reply/Request related
         private:
+            karabo::net::Strand::Pointer m_unicastEventStrand;
+            karabo::net::Strand::Pointer m_broadcastEventStrand;
+
+            // Reply/Request related
+
             // Map slot name and whether it was called globally
             std::map<boost::thread::id, std::pair<std::string, bool> > m_currentSlots; // unordered? needs std::hash<boost::thread::id>...
             mutable boost::mutex m_currentSlotsMutex;
@@ -845,24 +846,20 @@ namespace karabo {
 
             void stopEmittingHearbeats();
 
-            void onBrokerMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
-
             void consumerErrorNotifier(const std::string& consumer,
                                        karabo::net::JmsConsumer::Error ec, const std::string& message);
 
             void onHeartbeatMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
-
-            void onP2pMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
             void connectP2pInfoHandler(const karabo::util::Hash& instanceInfo, const std::string& signalInstanceId,
                                        const boost::function<void()>& successHandler,
                                        const AsyncErrorHandler& errHandler,
                                        bool storeConnection);
 
-            void handleReply(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer & body);
+            void handleReply(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer & body,
+                             long long whenPostedEpochMs);
 
-            void processEvent(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body,
-                              long long whenPostedEpochMs);
+            void processEvent(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
             /**
              * Parses out the instanceId part of signalId or slotId
@@ -963,7 +960,8 @@ namespace karabo {
             void slotPingAnswer(const std::string& instanceId, const karabo::util::Hash& hash);
 
             void processSingleSlot(const std::string& slotFunction, bool globalCall, const std::string& signalInstanceId,
-                                   const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
+                                   const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body,
+                                   long long whenPostedEpochMs);
 
             void replyException(const karabo::util::Hash& header, const std::string& message);
 
