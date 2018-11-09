@@ -55,6 +55,8 @@ namespace karabo {
 
             std::string m_slotFunction;
 
+            boost::mutex m_callRegisteredSlotFunctionsMutex;
+
             void extractSenderInformation(const karabo::util::Hash& header);
 
             void invalidateSenderInformation();
