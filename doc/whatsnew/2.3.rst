@@ -1,0 +1,194 @@
+
+
+
+**************************
+What's New in Karabo 2.3.0
+**************************
+
+Detailed Merge-Log
+==================
+
+bound/cpp core
+++++++++++++++
+- bound/cpp: Fix setNewOptions with hierarchical key !2871
+- Fix pipeline with empty NDArray !2937
+- FIX ImageData and GUI for detector images (stack of GRAY images) !2906
+- Feature: add flip and rotation to ImageData !2900
+- Add units to NDARRAY_ELEMENT !2888
+- Add code coverage measurement for Python !2837
+- Modification of the bind_weak function to allow to use it with methods returning a value !2933
+- Fix C++ pipeline integration !2958
+- Add getDeviceSchemaNoWait to bound !2936
+- Cpp pipeline test !2951 !2966
+- Consistently send vector<BufferSet> through pipe, even for EOS !2954
+- C++: Give and id to input channels created by DeviceClient !2981
+- Remove un-implemented operator + for Hash !2975
+- Add interfaces in instanceInfo Hash !2962
+- C++/bound: Hash::paths() add path to empty VectorHash !3009
+- C++: Add missing mutex to and clean-up of OutputChannel !2984
+- C++: Check max key length on binary serialization !3047
+- C++: Report success of InputChannel::connect by adding a handler !2985
+- Add processor interface to framework !3044
+- More safety in python server when killed before really being alive. !2986
+
+core Devices
+++++++++++++
+- Make _RunConfigurator sources reconfigurable !2893
+- Move "image" in node "data" for CameraInterface. !2914
+- GUIServer: More information on failures in projectDB !2922
+- C++: Give GuiServerDevice a state: INIT, ON and ERROR !2953
+- Clean CentralLogging device- Give the device meaningful states INIT => ON (=> ERROR) !2955
+- Give the project manager State.ON, State.INIT, State.ERROR !2959
+- cpp/bound: More detailed exception message in NDArray::getData !2957
+- FEAT: Project Database manager restricts domains !2952
+- FIX: DataLoggerManager clear queue on server death !2967
+- Add missing import to project manager !3003
+- Gui server handles pipeline data via DeviceClient !3007
+- ProjectDB: use direct import !3008
+- Read project db directly for items  (Cinema capability) !2929
+
+Dependencies and deployment
++++++++++++++++++++++++++++
+- DEPS: Fix small karabo develop bug !2872
+- 'karabo-gterm' and 'karabo-xterm' return abort message if required terminal is not installed. !2938
+- Upgrade for cppunit !2879
+- Update pyzmq to version 17.0.0 !2863
+- Upgrade for log4cpp !2880
+- Add CodeCoverage configuration to Karabo build system. !2836
+- FIX bound mdl pipeline integration test !2883
+- Add coverage 4.5.1 to karabo dependencies !2884
+- Python library for the Docker Engine API !2864
+- Fix RTD's requirements in templates !2651
+- Upgrade Python to 3.6.6 !2804
+
+Documentation
++++++++++++++
+- Document previous karabo 2.2.3 !2892
+- Document RUNNING state !2886
+- Add changelog for 2.2.4 !2869
+- Document karabo 2.2.4.1 !2895
+- Document Karabo 2.2.4.2 !2905
+- Document Karabo 2.2.4.3 !2913
+- Document hotfix release 2.2.4.4 !2930
+- Update doc with 2.2.5 changelog !2998
+- Document Karabo 2.2.6 !3004
+- Reorder versioning in documentation !2896
+- Remove scanning documentation !3034
+- DOC: added welcome label for intersphinx !3035
+
+Middlelayer core
+++++++++++++++++
+- MDL: Little refactor in pipeline !2868
+- MDL: Provide possiblity to explicitly close outputchannel !2874
+- MDL: Fix device node timestamp handling !2878
+- MDL: Reconnect device server to timeServer !2877
+- MDL: Always allow State UNKNOWN for state property in descriptor !2882
+- Clean middlelayer_api: remove guiserver and do proper import !2887
+- MDL: error check in call-once-alive added !2894
+- MDL: Fix getDescriptors, filterByTags on proxies. Ignore ListOfNodes !2897
+- MDL: Set default outputchannel policy to drop !2908
+- MDL: Fix race condition in outputchannel !2889
+- MDL: Fix pipeline case wait & copy !2909
+- MDL: Add remote device to imports !2912
+- MDL: Add unit to NDArray for proxies !2915
+- FW: Add displayTypes constants !2891
+- MDL: Fix schema cross test !2918
+- MDL: Add save to and load from XML files !2921
+- MDL: print MDL stack trace for real !2793
+- MDL: Add Injectable to MDL imports !2940
+- MDL: Fix Overwrite when using with setters !2961
+- MDL: Temporarily increase alarm timeout !2970
+- MDL: Fix attribute type description in schema !2963
+- MDL: Fix current hash setting in DeviceNode !2989
+- MDL: Make sure a new timestamp is attached to not compress events !2988
+- Fix device client information in MDL !2990
+- MDL: Use UInt64 for trainId, secs and fracs !3005
+- MDL: IPython device align info and doNotCompressEvents timestamp !2994
+- MDL: Fix device node being MANDATORY !3011
+- MDL: Provide possilibity to set data and endofstream handler to pipeline proxies !3018
+- MDL: Provide traceback as a single string and not as list of strings !3021
+- MDL: Use declared data types !3033
+- MDL: Added missing ArchivePolicy attribute !3054
+- MDL: Support new syntax !3050
+- MDL: Middlelayer servers receive broadcast messages only once !2907
+- MDL: Port in output channel in middle layer API
+- MDL: Give DeviceNodes an optional timeout parameter !3031
+- MDL: Make firstCompleted and allCompleted take into account karaboValues !3026
+- MDL: Proxies reconnect their pipelines !3017
+- MDL: fix saveToFile in current directory !3042
+- MDL: Introduce attribute casting for vectors !3052
+
+Graphical user interface
+++++++++++++++++++++++++
+- GUI: Protect trendlines against -np.inf and np.inf !2870
+- GUI: Open device scene links when maximized !2881
+- GUI: Apply default configuration correctly to device, e.g. optional UNDEFINED values.!2711
+- GUI: Add feature to edit the properties of the SceneLink
+- GUI: Fix about dialog documentation link !2904
+- GUI: Rework QActions for non controller widgets. Change Scenelink !2903
+- GUI: Establish session with project database when device comes up after connect !2910
+- GUI: Gracefully close everything on closeEvent !2917
+- GUI: Fix vector dialog with min and max Sizes !2920
+- GUI: Bail out in saving project !2919
+- GUI: Show device locked in configurator with color !2901
+- GUI: Blindly copy old scene link target if unknown scene uuid !2924
+- GUI: Add uuid tooltip to project !2926
+- GUI: Restrict domain selection for subprojects !2927
+- GUI: Show trashed project in project panel !2923
+- GUI: Correct focus on edits in configurator !2928
+- GUI: ProjectView gets uuid selection clipboard !2949
+- GUI: Sanitize macro scene widgets in save as !2942
+- GUI: Fix list edit validator !2943
+- GUI: Make trashed projects loadable !2946
+- GUI: Remove trashing option from Load Project dialog !2945
+- GUI: Remove 'Save as' for projects ... !2944
+- FEAT: GUI server can refuse old GUI clients !2947
+- Slow down DataLoggers instantiation !2935
+- GUI: Protect plots from awkwardly high or low values !2964
+- FIX: typo in Version unit tests !2965
+- GUI: The cinema !2956
+- GUI: load topic's group by default if available using KaraboSettings !2934
+- GUI: Do not allow users to use spaces in project's objects names !2925
+- GUI: Project dialog fix column size !2979
+- GUI: Feature replace scene content !2972
+- GUI: Declare trash !2982
+- GUI: Introduce configuration singleton !2968
+- GUI: Delete KaraboSettings from GUI !2993
+- GUI: Modify GUI message when connection is closed !3001
+- GUI: Make readOnly parameters visible before instantiation !3000
+- GUI sparkline: Protect against division by zero !2987
+- GUI: Show a better message when the scene was not found in the project !3010
+- GUI: Implement processing delay lamp !3002
+- GUI: Retrieve scenes via double click on project and topology view !2992
+- GUI: Be more cautious when getting scene from navigation panel !3016
+- GUI: Groups and names in configuration singleton !2997
+- GUI: Show additional logging info in the log panel !3022
+- GUI: Check for device type in navigation panel on scene request !3023
+- GUI: Enable double-click on LogPanel item for instance lookup !3020
+- GUI: Move db token to configuration singleton !3024
+- GUI: Implement toolbar coloring in scenes according to SASE's !2999
+- GUI: Fix table element bug in INITONLY with options !3025
+- GUI: close all scenes on disconnect !3032
+- GUI: getConfigurationFromPast !3015
+- GUI: Change state color widget feature of showing text !3006
+- GUI: Provide trendline on double click for controllers !3040
+- GUI: Provide trendline on double click in configurator !3041
+- GUI: Simplify trashed message when opening or trashing a project !3045
+- GUI: Add image scene to generic scenes !3048
+- GUI: IPython appears as device !3051
+
+ikarabo & Macro API
++++++++++++++++++++
+- ikarabo: findServers by matchPattern !2978
+- ikarabo: Correct jupyter client information !2996
+- ikarabo: Remove 'devices' and provide getTopology !2991
+- ikarabo: add getConfigurationFromPast and getSchemaFromPast !3013
+- ikarabo: findDevices in ikarabo !2977
+- ikarabo: refactor findDevices !2983
+- ikarabo: getClients feature !2980
+- Macro API: showAlarms from Alarm service !2960
+- Macro API: showInterlocks !2971
+- Macro API: Add device interfaces !2973
+- Macro API: Split MultiAxisMotors and Motors in topology listing !3030
+- Macro API: Add listProcessor !3046
+- More tests in Macro API !2995
