@@ -437,6 +437,8 @@ namespace karabo {
                         onStopMonitoringDevice(channel, info);
                     } else if (type == "getPropertyHistory") {
                         onGetPropertyHistory(channel, info);
+                    } else if (type == "getConfigurationFromPast") {
+                        onGetConfigurationFromPast(channel, info);
                     } else if (type == "subscribeNetwork") {
                         onSubscribeNetwork(channel, info);
                     } else if (type == "error") {
@@ -811,17 +813,11 @@ namespace karabo {
 
                 Hash args("from", t0, "to", t1, "maxNumData", maxNumData);
 
-                const string loggerId = DATALOGGER_PREFIX + deviceId;
-                if (m_loggerMap.has(loggerId)) {
-                    static int i = 0;
-                    const string readerId = DATALOGREADER_PREFIX + toString(i++ % DATALOGREADERS_PER_SERVER) += "-" + m_loggerMap.get<string>(loggerId);
-                    request(readerId, "slotGetPropertyHistory", deviceId, property, args)
-                            .receiveAsync<string, string, vector<Hash> >(bind_weak(&karabo::devices::GuiServerDevice::propertyHistory, this, channel, _1, _2, _3));
-                } else {
-                    KARABO_LOG_FRAMEWORK_WARN << "onGetPropertyHistory: No '" << loggerId << "' in map.";
-                }
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetPropertyHistory(): " << e.userFriendlyMsg();
+                const std::string& readerId(getDataReaderId(deviceId));
+                request(readerId, "slotGetPropertyHistory", deviceId, property, args)
+                        .receiveAsync<string, string, vector<Hash> >(bind_weak(&karabo::devices::GuiServerDevice::propertyHistory, this, channel, _1, _2, _3));
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetPropertyHistory(): " << e.what();
             }
         }
 
@@ -839,6 +835,100 @@ namespace karabo {
 
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in propertyHistory " << e.userFriendlyMsg();
+            }
+        }
+
+
+        void GuiServerDevice::onGetConfigurationFromPast(WeakChannelPointer channel, const karabo::util::Hash& info) {
+            try {
+                const string& deviceId = info.get<string>("deviceId");
+                const string& time = info.get<string>("time");
+                KARABO_LOG_FRAMEWORK_DEBUG << "onGetConfigurationFromPast: " << deviceId << " @ " << time;
+
+                const std::string & readerId(getDataReaderId(deviceId));
+                auto handler = bind_weak(&karabo::devices::GuiServerDevice::configurationFromPast, this,
+                                         channel, deviceId, time, _1, _2);
+                auto failureHandler = bind_weak(&karabo::devices::GuiServerDevice::configurationFromPastError, this,
+                                                channel, deviceId, time);
+                request(readerId, "slotGetConfigurationFromPast", deviceId, time).timeout(10000)
+                        .receiveAsync<Hash, Schema>(handler, failureHandler);
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetConfigurationFromPast(): " << e.what();
+                // Be a bit cautious: exception might come from an ill-formed info
+                const boost::optional<const Hash::Node&> idNode = info.find("deviceId");
+                const boost::optional<const Hash::Node&> tNode = info.find("time");
+                const std::string id(idNode && idNode->is<std::string>() ? idNode->getValue<std::string>() : "unknown");
+                const std::string time(tNode && tNode->is<std::string>() ? tNode->getValue<std::string>() : "unknown");
+
+                configurationFromPastError(channel, id, time);
+            }
+        }
+
+
+        void GuiServerDevice::configurationFromPast(WeakChannelPointer channel,
+                                                    const std::string& deviceId, const std::string& time,
+                                                    const karabo::util::Hash& config, const karabo::util::Schema& /*schema*/) {
+            try {
+
+                KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting configuration from past: " << deviceId << " @ " << time;
+
+                Hash h("type", "configurationFromPast", "deviceId", deviceId, "time", time);
+                if (config.empty()) {
+                    // Currently (Oct 2018) DataLogReader::getConfigurationFromPast does not reply errors, but empty
+                    // configuration if it could not fulfill the request, e.g. because the requested time was before the
+                    // first time the device was instantiated.
+                    h.set("success", false);
+                    h.set("reason", "Received empty configuration: maybe the device did not exist or was not logged yet.");
+                } else {
+                    h.set("success", true);
+                    h.set("config", config);
+                }
+
+                safeClientWrite(channel, h, REMOVE_OLDEST);
+
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in configurationFromPast: " << e.what();
+            }
+        }
+
+
+        void GuiServerDevice::configurationFromPastError(WeakChannelPointer channel,
+                                                         const std::string& deviceId, const std::string& time) {
+            // Log failure reason
+            std::string failureReason;
+            std::string details;
+            try {
+                throw; // Error handlers are called within a try block, so we can rethrow the caught exception
+            } catch (const karabo::util::TimeoutException&) {
+                failureReason = "Request timed out - probably the data logging infrastructure is not available.";
+            } catch (const std::exception& e) {
+                failureReason = "Request to configuration from past failed.";
+                details = e.what(); // Only for log, hide from GUI client
+            }
+            KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting configuration from past failed: "
+                    << deviceId << " @ " << time << " : " << failureReason << " " << details;
+
+            try {
+                const Hash h("type", "configurationFromPast", "deviceId", deviceId, "time", time,
+                             "success", false, "reason", failureReason);
+                safeClientWrite(channel, h, REMOVE_OLDEST);
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in configurationFromPastError: " << e.what();
+            }
+        }
+
+
+        std::string GuiServerDevice::getDataReaderId(const std::string& deviceId) const {
+            const string loggerId = DATALOGGER_PREFIX + deviceId;
+            boost::mutex::scoped_lock lock(m_loggerMapMutex);
+            if (m_loggerMap.has(loggerId)) {
+                static int i = 0;
+                return DATALOGREADER_PREFIX + toString(i++ % DATALOGREADERS_PER_SERVER) += "-" + m_loggerMap.get<string>(loggerId);
+            } else {
+                KARABO_LOG_FRAMEWORK_ERROR << "Cannot determine DataLogReaderId: No '"
+                        << loggerId << "' in map for '" << deviceId << "'"; // Full details in log file, ...
+                throw KARABO_PARAMETER_EXCEPTION("Cannot determine DataLogReader"); // ...less for exception.
+                return std::string(); // please the compiler
             }
         }
 
@@ -1232,6 +1322,7 @@ namespace karabo {
 
 
         void GuiServerDevice::slotLoggerMap(const karabo::util::Hash& loggerMap) {
+            boost::mutex::scoped_lock lock(m_loggerMapMutex);
             m_loggerMap = loggerMap;
         }
 
