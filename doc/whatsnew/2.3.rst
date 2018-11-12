@@ -1,9 +1,43 @@
 
-
-
 **************************
 What's New in Karabo 2.3.0
 **************************
+
+
+The **most relevant improvements** and fixes are:
+
+- ikarabo: Gets a Macro API with functions like *showAlarms* and *showInterlocks* to show the respective alarm service information.
+- ikarabo: Devices can have interfaces and can be they can be found via *listMotors*, *listCameras*, *listMultiAxisMotors*, *listTriggers* and *listProcessors*
+- *findDevices* and *findServers* are added and accept a matchPattern (string) to look for in the systemtopology
+- ikarabo: The overview of clients can be viewed with *getClients*
+- ikarabo: *getConfigurationFromPast* and *getSchemaFromPast* have been added to retrieve old configuration and schemas by providing a *timepoint*.
+
+
+- MDL: The middlelayer API is significantly enhanced and uses now declared data types (casted as **numpy data types**)
+- MDL: The middle layer servers receive broadcasting messages only once, giving them a big performance and stability boost
+- MDL: The error messages (logs) have been adjusted so they can be viewed in the GUI
+- MDL: An important bug when overwriting properties was fixed (if a setter function was used in a decorator)
+- MDL: The new asynchronous python syntax is officially supported
+- MDL: Several improvements to pipelining proxies including reconnect
+- MDL: Standard functions provided to load and save to XML (*saveToFile*, *loadFromFile*)
+- MDL: Speed up of the karabo data container Hash by a factor of 100
+
+
+- C++/bound: In the bound/cpp framework a major refactor regarding pipelines was done.
+- C++/bound: It is recommended to use the DeviceClient for pipeline management
+- C++/bound: Ensure message ordering by chaining message execution. This means that slot calls are not allowed to take long!
+
+- GUI: The Graphical user interface becomes more quicker and user-friendly.
+ Device-provided scenes can be retrieved via double-click from the navigation- and topology panel.
+- GUI: The scene toolbars are colored according to the sase broker topic
+- GUI: Trendlines can be derived by double-click on an item in the scene or configurator
+- GUI: The **Karabo Cinema** allows to quickly load a scene from command line
+- GUI: First steps of configuration retrieval from the dataloggers (Only works with online devices)
+
+.. note::
+
+    The python version has been finally updated to **3.6.6**!
+
 
 Detailed Merge-Log
 ==================
@@ -17,9 +51,8 @@ bound/cpp core
 - Add units to NDARRAY_ELEMENT !2888
 - Add code coverage measurement for Python !2837
 - Modification of the bind_weak function to allow to use it with methods returning a value !2933
-- Fix C++ pipeline integration !2958
 - Add getDeviceSchemaNoWait to bound !2936
-- Cpp pipeline test !2951 !2966
+- Fix cpp/bound pipeline tests !2951 !2966 !2883 !2958
 - Consistently send vector<BufferSet> through pipe, even for EOS !2954
 - C++: Give and id to input channels created by DeviceClient !2981
 - Remove un-implemented operator + for Hash !2975
@@ -30,6 +63,10 @@ bound/cpp core
 - C++: Report success of InputChannel::connect by adding a handler !2985
 - Add processor interface to framework !3044
 - More safety in python server when killed before really being alive. !2986
+- cpp/bound: More detailed exception message in NDArray::getData !2957
+- C++/bound: Ensure message ordering by chaining message execution !2974
+- C++: Refactor connecting InputChannels !3043
+- C++: DeviceClient now uses new SignalSlotable:asyncConnectInputChannel !3056
 
 core Devices
 ++++++++++++
@@ -39,13 +76,14 @@ core Devices
 - C++: Give GuiServerDevice a state: INIT, ON and ERROR !2953
 - Clean CentralLogging device- Give the device meaningful states INIT => ON (=> ERROR) !2955
 - Give the project manager State.ON, State.INIT, State.ERROR !2959
-- cpp/bound: More detailed exception message in NDArray::getData !2957
 - FEAT: Project Database manager restricts domains !2952
 - FIX: DataLoggerManager clear queue on server death !2967
 - Add missing import to project manager !3003
 - Gui server handles pipeline data via DeviceClient !3007
 - ProjectDB: use direct import !3008
-- Read project db directly for items  (Cinema capability) !2929
+- Read project db directly for items (Cinema capability) !2929
+- Slow down DataLoggers instantiation !2935
+- GUI Server: Provide GUI clients access to getConfigurationFromPast !3014
 
 Dependencies and deployment
 +++++++++++++++++++++++++++
@@ -55,7 +93,6 @@ Dependencies and deployment
 - Update pyzmq to version 17.0.0 !2863
 - Upgrade for log4cpp !2880
 - Add CodeCoverage configuration to Karabo build system. !2836
-- FIX bound mdl pipeline integration test !2883
 - Add coverage 4.5.1 to karabo dependencies !2884
 - Python library for the Docker Engine API !2864
 - Fix RTD's requirements in templates !2651
@@ -128,7 +165,6 @@ Graphical user interface
 - GUI: Remove trashing option from Load Project dialog !2945
 - GUI: Remove 'Save as' for projects ... !2944
 - FEAT: GUI server can refuse old GUI clients !2947
-- Slow down DataLoggers instantiation !2935
 - GUI: Protect plots from awkwardly high or low values !2964
 - FIX: typo in Version unit tests !2965
 - GUI: The cinema !2956
@@ -161,6 +197,7 @@ Graphical user interface
 - GUI: Simplify trashed message when opening or trashing a project !3045
 - GUI: Add image scene to generic scenes !3048
 - GUI: IPython appears as device !3051
+- GUI: Set the tooltip according to value in colorbool widget !3058
 
 ikarabo & Macro API
 +++++++++++++++++++
