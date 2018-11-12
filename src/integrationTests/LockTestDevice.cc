@@ -7,6 +7,10 @@
 
 #include "LockTestDevice.hh"
 
+#include "karabo/net/EventLoop.hh"
+#include "karabo/util/MetaTools.hh"
+#include "LockTest_Test.hh"
+
 using namespace std;
 
 USING_KARABO_NAMESPACES
@@ -53,6 +57,14 @@ USING_KARABO_NAMESPACES
 
 
     void LockTestDevice::lockAndWait() {
+        const AsyncReply reply(this);
+
+        // A slot should never do actions that take a significant amount of time, but just trigger them:
+        karabo::net::EventLoop::getIOService().post(util::bind_weak(&LockTestDevice::lockAndWait_impl, this, reply));
+    }
+
+
+    void LockTestDevice::lockAndWait_impl(const karabo::xms::SignalSlotable::AsyncReply& aReply) {
         const std::string deviceId = get<std::string>("controlledDevice");
 
         Lock lk = remote().lock(deviceId, false, 0);
@@ -62,10 +74,19 @@ USING_KARABO_NAMESPACES
                 boost::this_thread::sleep(boost::posix_time::milliseconds(200));
             }
         }
+        aReply();
     }
 
 
     void LockTestDevice::lockAndWaitLong() {
+        const AsyncReply reply(this);
+
+        // A slot should never do actions that take a significant amount of time, but just trigger them:
+        karabo::net::EventLoop::getIOService().post(util::bind_weak(&LockTestDevice::lockAndWaitLong_impl, this, reply));
+    }
+
+
+    void LockTestDevice::lockAndWaitLong_impl(const karabo::xms::SignalSlotable::AsyncReply& aReply) {
         const std::string deviceId = get<std::string>("controlledDevice");
 
         Lock lk = remote().lock(deviceId, false, 0);
@@ -75,15 +96,35 @@ USING_KARABO_NAMESPACES
                 boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
             }
         }
+        aReply();
     }
 
 
     void LockTestDevice::lockAndWaitTimeout() {
+        const AsyncReply reply(this);
+
+        // A slot should never do actions that take a significant amount of time, but just trigger them:
+        karabo::net::EventLoop::getIOService().post
+                (util::bind_weak(&LockTestDevice::lockAndWaitTimeout_impl, this, reply));
+    }
+
+
+    void LockTestDevice::lockAndWaitTimeout_impl(const karabo::xms::SignalSlotable::AsyncReply& aReply) {
         Lock lk = remote().lock(get<std::string>("controlledDevice"), false, 1);
+        aReply();
     }
 
 
     void LockTestDevice::lockAndWaitRecursive() {
+        const AsyncReply reply(this);
+
+        // A slot should never do actions that take a significant amount of time, but just trigger them:
+        karabo::net::EventLoop::getIOService().post
+                (util::bind_weak(&LockTestDevice::lockAndWaitRecursive_impl, this, reply));
+    }
+
+
+    void LockTestDevice::lockAndWaitRecursive_impl(const karabo::xms::SignalSlotable::AsyncReply& aReply) {
         const std::string deviceId = get<std::string>("controlledDevice");
 
         Lock lk = remote().lock(deviceId, true, 5);
@@ -92,11 +133,21 @@ USING_KARABO_NAMESPACES
             remote().set(deviceId, "intProperty", i);
             boost::this_thread::sleep(boost::posix_time::milliseconds(500));
         }
+        aReply();
     }
 
 
     void LockTestDevice::lockAndWaitRecursiveFail() {
-        const std::string deviceId = get<std::string>("controlledDevice");
+        const AsyncReply reply(this);
+
+        // A slot should never do actions that take a significant amount of time, but just trigger them:
+        karabo::net::EventLoop::getIOService().post
+                (util::bind_weak(&LockTestDevice::lockAndWaitRecursiveFail_impl, this, reply));
+    }
+
+
+    void LockTestDevice::lockAndWaitRecursiveFail_impl(const karabo::xms::SignalSlotable::AsyncReply& aReply) {
+    const std::string deviceId = get<std::string>("controlledDevice");
 
         Lock lk = remote().lock(deviceId, false, 1);
         for (int i = 0; i < 5; ++i) {
@@ -104,5 +155,6 @@ USING_KARABO_NAMESPACES
             remote().set(deviceId, "intProperty", i);
             boost::this_thread::sleep(boost::posix_time::milliseconds(500));
         }
+        aReply();
     }
 }
