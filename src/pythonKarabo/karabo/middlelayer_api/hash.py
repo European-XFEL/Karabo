@@ -1458,9 +1458,7 @@ class None_(Type):
 def _get_attr_type(attr, data):
     """This function is used for attribute description
     """
-    if attr in ("minSize", "maxSize"):
-        return UInt32
-    elif attr in ("tid", "sec", "frac"):
+    if attr in ("tid", "sec", "frac"):
         return UInt64
     else:
         return _gettype(data)
