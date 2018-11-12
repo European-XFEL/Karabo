@@ -138,7 +138,12 @@ class NavigationTreeView(QTreeView):
     # Events
 
     def mouseDoubleClickEvent(self, event):
-        info = self.indexInfo()
+        index = self.currentIndex()
+        node = self.model().index_ref(index)
+        # QModelIndexes tend to outlive the node objects which they reference!
+        if node is None:
+            return
+        info = node.info()
         navigation_type = info.get('type')
         if navigation_type is not NavigationItemTypes.DEVICE:
             return
