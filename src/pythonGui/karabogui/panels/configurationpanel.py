@@ -250,6 +250,10 @@ class ConfigurationPanel(BasePanelWidget):
             for path, value, _ in flat_iter_hash(configuration):
                 prop_proxy = model.property_proxy(path)
                 prop_binding = prop_proxy.binding
+                if prop_binding is None:
+                    # NOTE: This property most likely was removed from the
+                    # device, we have schema evolution and will continue here!
+                    continue
                 if (prop_binding.access_mode is AccessMode.RECONFIGURABLE and
                         prop_binding.required_access_level <= access_level and
                         prop_binding.is_allowed(state) and
