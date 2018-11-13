@@ -627,7 +627,7 @@ class Tests(DeviceTest):
             task = async(d.count())
             try:
                 for i in range(30):
-                    yield from async(waitUntilNew(d))
+                    yield from waitUntilNew(d)
                     self.assertEqual(i, d.counter)
             finally:
                 yield from task
