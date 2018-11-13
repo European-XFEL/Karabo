@@ -1,4 +1,3 @@
-
 **************************
 What's New in Karabo 2.3.0
 **************************
@@ -6,37 +5,45 @@ What's New in Karabo 2.3.0
 
 The **most relevant improvements** and fixes are:
 
+- GUI: The Graphical user interface becomes quicker and more user-friendly, e.g. device-provided scenes can be retrieved via double-click from the navigation- and project panel.
+- GUI: The scene toolbars of the SA1, SA2 and SA3 topics are coloured
+- GUI: Trendlines can be derived by double-click on a supported property widget in the scene or a property in the configurator
+- GUI: The **Karabo Cinema** allows to quickly load a scene from command line
+- GUI: First steps of configuration retrieval from the dataloggers (Only works with online devices)
+
+
 - ikarabo: Gets a Macro API with functions like *showAlarms* and *showInterlocks* to show the respective alarm service information.
-- ikarabo: Devices can have interfaces and can be they can be found via *listMotors*, *listCameras*, *listMultiAxisMotors*, *listTriggers* and *listProcessors*
+- ikarabo: Devices can have interfaces and can be found via *listMotors*, *listCameras*, *listMultiAxisMotors*, *listTriggers* and *listProcessors*
 - *findDevices* and *findServers* are added and accept a matchPattern (string) to look for in the systemtopology
 - ikarabo: The overview of clients can be viewed with *getClients*
-- ikarabo: *getConfigurationFromPast* and *getSchemaFromPast* have been added to retrieve old configuration and schemas by providing a *timepoint*.
+- ikarabo: *getConfigurationFromPast* and *getSchemaFromPast* have been added to retrieve old configuration and schemas by providing a *timepoint*
+- ikarabo: The systemTopology can be provided with *getTopology* and the global *devices* was removed
 
 
 - MDL: The middlelayer API is significantly enhanced and uses now declared data types (casted as **numpy data types**)
 - MDL: The middle layer servers receive broadcasting messages only once, giving them a big performance and stability boost
-- MDL: The error messages (logs) have been adjusted so they can be viewed in the GUI
+- MDL: The error messages (logs) have been adjusted so that e.g. the Python error stacktrace will be visible in the GUI
 - MDL: An important bug when overwriting properties was fixed (if a setter function was used in a decorator)
-- MDL: The new asynchronous python syntax is officially supported
+- MDL: The new asynchronous **Python 3.6.6** syntax is officially supported
 - MDL: Several improvements to pipelining proxies including reconnect
 - MDL: Standard functions provided to load and save to XML (*saveToFile*, *loadFromFile*)
-- MDL: Speed up of the karabo data container Hash by a factor of 100
+- MDL: Much faster access to entries of the karabo data container Hash: up to a factor of 100
+- MDL: The *DeviceNode* can accept a timeout parameter *timeout* to throw an error message if the proxy cannot be established within this time frame
 
 
-- C++/bound: In the bound/cpp framework a major refactor regarding pipelines was done.
-- C++/bound: It is recommended to use the DeviceClient for pipeline management
-- C++/bound: Ensure message ordering by chaining message execution. This means that slot calls are not allowed to take long!
+- C++/bound: In the bound/C++ framework the way to establish pipeline connections has been refactored to avoid situations where a connection could not be established
+- C++/bound: Ensure message ordering by chaining message execution. This means even more than in the past that slot calls must not take long!
+- C++: It is recommended to use the DeviceClient for pipeline management
 
-- GUI: The Graphical user interface becomes more quicker and user-friendly.
- Device-provided scenes can be retrieved via double-click from the navigation- and topology panel.
-- GUI: The scene toolbars are colored according to the sase broker topic
-- GUI: Trendlines can be derived by double-click on an item in the scene or configurator
-- GUI: The **Karabo Cinema** allows to quickly load a scene from command line
-- GUI: First steps of configuration retrieval from the dataloggers (Only works with online devices)
 
 .. note::
 
-    The python version has been finally updated to **3.6.6**!
+    The Python version has been finally updated to **3.6.6**!
+
+
+.. note::
+
+    The getConfigurationFromPast in ikarabo only returns a configuration!
 
 
 Detailed Merge-Log
