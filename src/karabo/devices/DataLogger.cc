@@ -97,7 +97,7 @@ namespace karabo {
             , m_numChangedConnected(0) {
 
             m_idxprops.clear();
-
+            m_serializer = TextSerializer<Hash>::create(Hash("Xml.indentation", -1));
             input.get("deviceToBeLogged", m_deviceToBeLogged);
             // start "flush" actor ...
             input.get("flushInterval", m_flushInterval); // in seconds
@@ -338,8 +338,7 @@ namespace karabo {
                 string value = "";   // "value" should be a string, so convert depending on type ...
                 if (leafNode.getType() == Types::VECTOR_HASH) {
                     // Represent any vector<Hash> as XML string ...
-                    TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create(Hash("Xml.indentation", -1));
-                    serializer->save(leafNode.getValue<vector<Hash>>(), value);
+                    m_serializer->save(leafNode.getValue<vector<Hash>>(), value);
                 } else if (Types::isVector(leafNode.getType())) {
                     // ... and any other vector as a comma separated text string of vector elements
                     value = toString(leafNode.getValueAs<string,vector>());
