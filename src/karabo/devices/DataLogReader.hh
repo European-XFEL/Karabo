@@ -200,6 +200,7 @@ namespace karabo {
             static std::map<std::string, PropFileInfo::Pointer > m_mapPropFileInfo;
             IndexBuilderService::Pointer m_ibs;
             karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_serializer;
+            static const boost::regex m_lineRegex;
         };
     }
 }
