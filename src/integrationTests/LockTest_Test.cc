@@ -80,7 +80,7 @@ void LockTest_Test::testLocking() {
 
     std::clog << "Tested locking.. Ok" << std::endl;
 
-    waitUntilLockClears("lockTest3");
+    CPPUNIT_ASSERT_NO_THROW(waitUntilLockClears("lockTest3"));
 
     m_deviceClient->executeNoWait("lockTest1", "lockAndWaitLong");
     // We are waiting here to give the machinery time to really lock "lockTest3"
@@ -90,42 +90,43 @@ void LockTest_Test::testLocking() {
     Exception::clearTrace();
     std::clog << "Tested locking with timeout (fail).. Ok" << std::endl;
 
-    m_deviceClient->execute("lockTest3", "slotClearLock");
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("lockTest3", "slotClearLock"));
 
-    waitUntilLockClears("lockTest3");
+    CPPUNIT_ASSERT_NO_THROW(waitUntilLockClears("lockTest3"));
 
     m_deviceClient->executeNoWait("lockTest1", "lockAndWait");
 
-    m_deviceClient->execute("lockTest2", "lockAndWaitTimeout", 10);
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("lockTest2", "lockAndWaitTimeout", 10));
     std::clog << "Tested locking with timeout (success).. Ok" << std::endl;
 
 }
 
 
 void LockTest_Test::testUnlocking() {
-    m_deviceClient->execute("lockTest3", "slotClearLock");
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("lockTest3", "slotClearLock"));
 
-    waitUntilLockClears("lockTest3");
+    // FIXME: should not be needed anymore with ordering guarantee: CPPUNIT_ASSERT_NO_THROW(waitUntilLockClears("lockTest3"));
 
-    m_deviceClient->execute("lockTest2", "lockAndWait", KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("lockTest2", "lockAndWait", KRB_TEST_MAX_TIMEOUT));
     std::clog << "Tested unlocking.. Ok" << std::endl;
 
 }
 
 
 void LockTest_Test::testRecursiveLocking() {
-    m_deviceClient->execute("lockTest3", "slotClearLock");
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("lockTest3", "slotClearLock"));
     CPPUNIT_ASSERT_THROW(m_deviceClient->execute("lockTest1", "lockAndWaitRecursiveFail", KRB_TEST_MAX_TIMEOUT), Exception);
     Exception::clearTrace();
-    m_deviceClient->execute("lockTest3", "slotClearLock");
+
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("lockTest3", "slotClearLock"));
     //recursive succeeds
-    m_deviceClient->execute("lockTest1", "lockAndWaitRecursive", KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("lockTest1", "lockAndWaitRecursive", KRB_TEST_MAX_TIMEOUT));
     std::clog << "Tested recursive locking.. Ok" << std::endl;
 }
 
 
 void LockTest_Test::testSettingOnLocked() {
-    m_deviceClient->execute("lockTest3", "slotClearLock");
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("lockTest3", "slotClearLock"));
     m_deviceClient->executeNoWait("lockTest1", "lockAndWait");
     // We are waiting here to give the machinery time to really lock "lockTest3"
     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
@@ -139,23 +140,28 @@ void LockTest_Test::testSettingOnLocked() {
 
 
 void LockTest_Test::testLockStealing() {
-    m_deviceClient->execute("lockTest3", "slotClearLock");
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("lockTest3", "slotClearLock"));
+
     m_deviceClient->executeNoWait("lockTest1", "lockAndWait");
+    // We are waiting here to give the machinery time to really lock "lockTest3"
     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-    m_deviceClient->executeNoWait("lockTest3", "slotClearLock");
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-    waitUntilLockClears("lockTest3");
-    m_deviceClient->set("lockTest3", "intProperty", 100);
-    CPPUNIT_ASSERT(m_deviceClient->get<int>("lockTest3", "intProperty") == 100);
+
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("lockTest3", "slotClearLock"));
+
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set("lockTest3", "intProperty", 100));
+
+    CPPUNIT_ASSERT_EQUAL(100, m_deviceClient->get<int>("lockTest3", "intProperty"));
     std::clog << "Tested stolen lock exception.. Ok" << std::endl;
 }
 
 
 void LockTest_Test::waitUntilLockClears(const std::string& deviceId) {
-    unsigned int counter = 0; // Do not wait forever...
-    while (m_deviceClient->get<std::string>(deviceId, "lockedBy") != "" && ++counter < 1000) {
+    unsigned int counter = 1000; // Do not wait forever...
+    while (m_deviceClient->get<std::string>(deviceId, "lockedBy") != "" && counter-- > 0) {
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
     };
+    if (0 == counter) {
+        throw KARABO_TIMEOUT_EXCEPTION("Lock on '" + deviceId + "' did not clear.");
+    }
 }
 
