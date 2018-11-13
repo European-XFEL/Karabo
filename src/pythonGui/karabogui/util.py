@@ -346,7 +346,7 @@ class InputValidator(QValidator):
     def __init__(self, parent=None):
         QValidator.__init__(self, parent)
 
-    pattern = re.compile('^[\w-]+(/[\w-]+)*$')
+    pattern = re.compile(r'^[\w-]+(/[\w-]+)*$')
 
     def validate(self, input, pos):
         if not input or input.endswith('/'):
