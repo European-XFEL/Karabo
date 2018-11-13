@@ -9,7 +9,6 @@
 
 #include "karabo/net/EventLoop.hh"
 #include "karabo/util/MetaTools.hh"
-#include "LockTest_Test.hh"
 
 using namespace std;
 
