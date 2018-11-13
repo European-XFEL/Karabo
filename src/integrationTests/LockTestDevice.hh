@@ -48,10 +48,20 @@ namespace karabo {
     private:
 
         void lockAndWait();
+        void lockAndWait_impl(const karabo::xms::SignalSlotable::AsyncReply& aReply);
+
         void lockAndWaitLong();
+        void lockAndWaitLong_impl(const karabo::xms::SignalSlotable::AsyncReply& aReply);
+
         void lockAndWaitTimeout();
+        void lockAndWaitTimeout_impl(const karabo::xms::SignalSlotable::AsyncReply& aReply);
+
         void lockAndWaitRecursive();
+        void lockAndWaitRecursive_impl(const karabo::xms::SignalSlotable::AsyncReply& aReply);
+
         void lockAndWaitRecursiveFail();
+        void lockAndWaitRecursiveFail_impl(const karabo::xms::SignalSlotable::AsyncReply& aReply);
+
         void initialize();
 
     };
