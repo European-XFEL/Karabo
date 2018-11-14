@@ -274,6 +274,8 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
     TextSerializer<Schema>::Pointer serializer = TextSerializer<Schema>::create(Hash("Xml"));
     Schema::Pointer schema(new Schema);
     serializer->load(*schema, schemaRange.fromSchemaArchive);
+    boost::regex lineRegex("^([A-Z0-9\\.]+)\\|([0-9\\.]+)\\|([0-9]+)\\|(.+)\\|([0-9A-Z_]*)\\|(.*)\\|([a-z]*)\\|([A-Z]+)$$",
+                           boost::regex::extended);
 
     string infile = historyDir + "/" + deviceId + "/raw/archive_" + toString(number) + ".txt";
     ifstream irs(infile.c_str());
@@ -288,29 +290,23 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
         size_t position = irs.tellg();
         if (getline(irs, line)) {
             if (line.empty()) continue;
-
-            vector<string> tokens;
-            boost::split(tokens, line, boost::is_any_of("|"));
-            unsigned int offset = 0;
-            if (tokens.size() != 8) {
-                if (tokens.size() == 10) { // old format from 1.4.X
-                    offset = 2;
-                } else {
-                    cout << "*** idxBuild: skip corrupted record : token.size() = " << tokens.size() << endl;
-                    continue; // This record is corrupted -- skip it
-                }
+            boost::smatch tokens;
+            bool search_res = boost::regex_search(line, tokens, lineRegex);
+            if (!search_res){
+                cout << "*** idxBuild: skip corrupted record : token.size() = " << tokens.size() << endl;
+                continue; // This record is corrupted -- skip it
             }
             recnum++;
 
             // With offset = 2 for raw files from 1.4.X and offset = 0 for later releases, we have:
-            const string& epochISO8601 = tokens[0];
-            const string& epochDoubleStr = tokens[1];
-            const string& trainIdStr = tokens[2 + offset];
-            const string& property = tokens[3 + offset];
-            // tokens[4 + offset] => property type
-            // tokens[5 + offset] => property value
-            const string& user = tokens[6 + offset];
-            const string& flag = tokens[7 + offset];
+            const string& epochISO8601 = tokens[1];
+            const string& epochDoubleStr = tokens[2];
+            const string& trainIdStr = tokens[3];
+            const string& property = tokens[4];
+            // tokens[5] => property type
+            // tokens[6] => property value
+            const string& user = tokens[7];
+            const string& flag = tokens[8];
 
             const Epochstamp epstamp(karabo::util::stringDoubleToEpochstamp(epochDoubleStr));
 

@@ -112,6 +112,7 @@ namespace karabo {
 
         DataLogReader::DataLogReader(const Hash& input) : karabo::core::Device<karabo::core::OkErrorFsm>(input) {
             m_serializer = TextSerializer<Hash>::create("Xml");
+            m_schemaSerializer = TextSerializer<Schema>::create("Xml");
             m_ibs = IndexBuilderService::getInstance();
             KARABO_SLOT(slotGetPropertyHistory, string /*deviceId*/, string /*key*/, Hash /*params*/);
             KARABO_SLOT(slotGetConfigurationFromPast, string /*deviceId*/, string /*timepoint*/)
@@ -425,8 +426,8 @@ namespace karabo {
                         KARABO_LOG_WARN << "Requested time point for device configuration is earlier than anything logged";
                         return;
                     }
-                    TextSerializer<Schema>::Pointer serializer = TextSerializer<Schema>::create("Xml");
-                    serializer->load(schema, archived);
+                    try{ m_schemaSerializer->load(schema, archived); } catch (...) { KARABO_RETHROW }
+
                 }
                 vector<string> paths = schema.getPaths();
 
