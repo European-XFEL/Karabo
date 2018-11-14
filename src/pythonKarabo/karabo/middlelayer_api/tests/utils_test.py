@@ -1,7 +1,9 @@
 from unittest import TestCase, main
 
-from karabo.middlelayer import (
-    Float, maximum, minimum, String, State, StateSignifier)
+from karabo.common.states import State
+from ..basetypes import QuantityValue
+from ..hash import Float, String
+from ..unitutil import minimum, maximum, removeQuantity, StateSignifier
 
 
 class Tests(TestCase):
@@ -149,6 +151,26 @@ class Tests(TestCase):
 
         with self.assertRaises(TypeError):
             value = minimum(v1)
+
+    def test_no_quantity(self):
+        @removeQuantity
+        def calculate(a, b, c=5, d=10):
+            return a + b + c - d
+
+        a = Float().toKaraboValue(6.0)
+        b = Float().toKaraboValue(2.0)
+        c = Float().toKaraboValue(1.0)
+        d = Float().toKaraboValue(1.0)
+
+        summation = a + b + c - d
+        self.assertIsInstance(summation, QuantityValue)
+        self.assertEqual(summation, 8.0)
+        new_summation = calculate(a, b=b, c=c)
+        self.assertNotIsInstance(new_summation, QuantityValue)
+        self.assertEqual(new_summation, -1)
+        new_summation = calculate(a, b=b, d=c)
+        self.assertNotIsInstance(new_summation, QuantityValue)
+        self.assertEqual(new_summation, 12)
 
 
 if __name__ == "__main__":
