@@ -541,6 +541,9 @@ class NetworkOutput(Configurable):
                         yield from channel.nextChunk(queue.get())
                 finally:
                     queues.remove(queue)
+        except CancelledError:
+            # If we are destroyed, we should close ourselves
+            yield from self.close()
         except IncompleteReadError as e:
             if e.partial:  # if the input got properly closed, partial is empty
                 raise
