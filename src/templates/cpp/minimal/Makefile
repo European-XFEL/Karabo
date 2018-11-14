@@ -55,7 +55,7 @@ ifndef KARABO
 	KARABO := $(shell cat ${HOME}/.karabo/karaboFramework)
 endif
 
-export PKG_CONFIG_PATH=$(KARABO)/lib
+export PKG_CONFIG_PATH=$(KARABO)/lib:$(KARABO)/extern/lib/pkgconfig
 
 # build
 build: .build-post
