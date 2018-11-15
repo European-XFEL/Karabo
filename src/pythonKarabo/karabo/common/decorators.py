@@ -4,6 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from functools import wraps
+import inspect
 from time import perf_counter
 import warnings
 
@@ -24,6 +25,7 @@ def karabo_deprecated(func):
     def my_func():
         pass
     """
+
     @wraps(func)
     def new_func(*args, **kwargs):
         warnings.warn_explicit(
@@ -33,11 +35,13 @@ def karabo_deprecated(func):
             lineno=func.__code__.co_firstlineno + 1
         )
         return func(*args, **kwargs)
+
     return new_func
 
 
 def timeit(func):
     """A timing decorator"""
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         t_start = perf_counter()
@@ -45,4 +49,28 @@ def timeit(func):
         elapsed = perf_counter() - t_start
         print("{} took {}".format(func.__name__, elapsed))
         return ret
+
+    return wrapper
+
+
+def validate_args(func):
+    """A decorator to be used to validate arguments with their annotations
+
+    ## Usage examples ##
+    @validate
+    def my_func(param1: str, param2: (float, int)):
+        pass
+
+    NOTE: Booleans are also valid for integers!
+    """
+
+    @wraps(func)
+    def wrapper(*args):
+        argspec = inspect.getfullargspec(func).args
+        for index, name in enumerate(argspec):
+            if not isinstance(args[index], func.__annotations__[name]):
+                raise ValueError("Argument {} got wrong input "
+                                 "type {}".format(name, args[index]))
+        return func(*args)
+
     return wrapper
