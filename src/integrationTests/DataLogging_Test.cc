@@ -28,14 +28,15 @@ namespace CppUnit{
             }
             std::vector<std::string> paths;
             a.getPaths(paths);
-            bool _equal = true;
             for (const std::string & path : paths) {
                 // most of the saving is serialized into text, this is why this helper
                 // checks the equality between values only passed as strings.
-                
-                _equal = _equal && ( a.getAs<string>(path) == b.getAs<string>(path));
+
+                if (a.getAs<string>(path) != b.getAs<string>(path)) {
+                    return false;
+                }
             }
-            return _equal;
+            return true;
         }
         static std::string toString(const karabo::util::Hash &p){
             std::ostringstream o;
@@ -63,7 +64,7 @@ namespace CppUnit{
                 for (const std::string & path : paths) {
                     // most of the saving is serialized into text, this is why this helper
                     // checks the equality between values only passed as strings.
-                    if( a_i.getAs<string>(path) == b_i.getAs<string>(path)){
+                    if (a_i.getAs<string>(path) != b_i.getAs<string>(path)) {
                         return false;
                     }
                 }
@@ -163,7 +164,7 @@ void DataLogging_Test::testAllInstantiated() {
     devices.push_back("DataLogger-" + m_deviceId);
     devices.push_back("DataLogReader1-" + m_server);
     devices.push_back("DataLogReader0-" + m_server);
-    while (timeout > 0){
+    while (timeout > 0) {
         const Hash& topo = m_deviceClient->getSystemTopology();
         CPPUNIT_ASSERT(topo.has("device"));
         const Hash& device = topo.get<Hash>("device");
@@ -172,6 +173,8 @@ void DataLogging_Test::testAllInstantiated() {
             allUp = allUp && device.has(deviceId);
         }
         if (allUp) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+        timeout -= 50;
     }
     CPPUNIT_ASSERT_MESSAGE("Timeout while waiting for datalogging to be instantiated", timeout>0);
     std::clog << "Ok" << std::endl;
@@ -184,12 +187,11 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
     Hash beforeConf;
     m_deviceClient->get(m_deviceId, beforeConf);
     // save this instant as a iso string
-    Epochstamp es;
-    es.now();
-    string before = es.toIso8601();
+    Epochstamp es_before;
+    string before = es_before.toIso8601();
 
     // write a bunch of times
-    for (int i = 0; i< 100 ;  i++ ){
+    for (int i = 0; i < 100; i++) {
         m_deviceClient->set<T>(m_deviceId, key, f(i));
         boost::this_thread::sleep(boost::posix_time::milliseconds(10));
     }
@@ -202,15 +204,16 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
     string device;
     string property;
     vector<Hash> history;
-    es.now();
-    string after = es.toIso8601();
+    Epochstamp es_after
+    string after = es_after.toIso8601();
     Hash params;
     params.set<string>("from", before);
     params.set<string>("to", after);
     params.set<int>("maxNumData", 1000);
     // the history retrieval might take more than one try, it could have to index the files.
     int timeout = 20000;
-    while (timeout >0 && history.size()==0) {
+    while (timeout > 0 && history.size() == 0) {
+        // TODO: use the deviceClient to retrieve the property history
         //history = m_deviceClient->getPropertyHistory(m_deviceId, key, before, after, 1000);
         m_sigSlot->request("DataLogReader1-" + m_server, "slotGetPropertyHistory", m_deviceId, key ,params)
                 .timeout(200).receive<string, string, vector<Hash>>(device, property, history);
@@ -218,10 +221,17 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
         timeout -= 200;
     }
     CPPUNIT_ASSERT_MESSAGE("Timeout while getting property history", timeout > 0);
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Not able to retrieve history", history.size(), 100ul);
-    for (int i = 0; i< 100 ;  i++ ){
-        // checking only values not timestamps
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong value in history", f(i), history.at(i).get<T>("v"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Not able to retrieve history", 100ul, history.size());
+    for (int i = 0; i < 100; i++) {
+        // checking values and timestamps
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong value in history", f(i), history[i].get<T>("v"));
+        Epochstamp current = Epochstamp.fromHashAttributes(history[i].getAttributes("v");
+        CPPUNIT_ASSERT_MESSAGE("Timestamp later than the requested window", current <= es_before);
+        CPPUNIT_ASSERT_MESSAGE("Timestamp earlier than the requested window", current >= es_after);
+        if (i>0){
+            Epochstamp previous = Epochstamp.fromHashAttributes(history[i-1].getAttributes("v");
+            CPPUNIT_ASSERT_MESSAGE("Timestamp earlier than the requested window", current > previous);
+        }
     }
     std::clog << "Ok" << std::endl;
 
@@ -231,7 +241,8 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
     // place holder schema, could be checked in future tests
     Schema schema;
     Hash conf;
-    while (timeout > 0 && conf.size() == 0) {
+    while (timeout >= 0 && conf.size() == 0) {
+        // TODO: use the deviceClient to retrieve the configuration from past
         // auto pair = m_deviceClient->getConfigurationFromPast(m_deviceId, before);
         // conf = pair.first;
         conf.clear();
@@ -240,7 +251,8 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
         boost::this_thread::sleep(boost::posix_time::milliseconds(200));
         timeout -= 200;
     }
-    CPPUNIT_ASSERT_MESSAGE("Timeout while getting configuration from past", timeout > 0);
+    CPPUNIT_ASSERT_MESSAGE("Timeout while getting configuration from past", timeout >= 0);
+    // One needs to check only the content here, therefore only the leaves are examined
     std::vector<std::string> leaves;
     getLeaves(conf, schema, leaves, '.');
     for (const std::string & leaf : leaves) {
@@ -251,20 +263,22 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
 
     timeout = 2000;
     while (timeout > 0 && conf.size() == 0) {
-        //conf.clear();
-        // m_sigSlot->request("DataLogReader1-" + m_server, "slotGetConfigurationFromPast", m_deviceId, after)
-        //        .timeout(200).receive<Hash, Schema>(conf, schema);
-        auto pair = m_deviceClient->getConfigurationFromPast(m_deviceId, before);
-        conf = pair.first;
+        // TODO: use the deviceClient to retrieve the configuration from past
+        // auto pair = m_deviceClient->getConfigurationFromPast(m_deviceId, before);
+        // conf = pair.first;
+        conf.clear();
+        m_sigSlot->request("DataLogReader1-" + m_server, "slotGetConfigurationFromPast", m_deviceId, after)
+                    .timeout(200).receive<Hash, Schema>(conf, schema);
         boost::this_thread::sleep(boost::posix_time::milliseconds(200));
         timeout -= 200;
     }
     CPPUNIT_ASSERT_MESSAGE("Timeout while getting configuration from past after settings", timeout > 0);
+    // One needs to check only the content here, therefore only the leaves are examined
     leaves.clear();
     getLeaves(conf, schema, leaves, '.');
     for (const std::string & leaf : leaves) {
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong configuration from past (after) for key :" + leaf,
-                                     beforeConf.getAs<string>(leaf),
+                                     afterConf.getAs<string>(leaf),
                                      conf.getAs<string>(leaf));
     }
 
@@ -278,15 +292,17 @@ void DataLogging_Test::testInt(){
 }
 
 
-void DataLogging_Test::testFloat(){
-    std::function<float(int)>  lambda = [] (int i) {return 2.5*i;};
+void DataLogging_Test::testFloat() {
+    std::function<float(int) > lambda = [] (int i) {
+        return 2.5f * i;
+    };
     testHistory<float>("floatProperty", lambda);
 }
 
 
 void DataLogging_Test::testString(){
     std::function<string(int)>  lambda = [] (int i) {
-        return "ab|c"+karabo::util::toString(i);
+        return "ab|c" + karabo::util::toString(i);
     };
     testHistory<string>("stringProperty", lambda);
 }
@@ -294,7 +310,7 @@ void DataLogging_Test::testString(){
 
 void DataLogging_Test::testVectorString(){
     std::function<vector<string>(int)>  lambda = [] (int i) {
-        vector<string> v = {"abc"+karabo::util::toString(i), "xy|z"+karabo::util::toString(i)};
+        vector<string> v = {"abc" + karabo::util::toString(i), "xy|z" + karabo::util::toString(i)};
         return v;
     };
     testHistory<vector<string>>("vectors.stringProperty", lambda);
@@ -304,10 +320,11 @@ void DataLogging_Test::testVectorString(){
 void DataLogging_Test::testTable(){
     std::function<vector<Hash>(int)>  lambda = [] (int i) {
         vector<Hash> t = {
-            Hash("e1", "abc"+karabo::util::toString(i),  "e2", ((i % 2) == 0),
-                 "e3", 12*i, "e4", 0.9837F * i, "e5", 1.2345 * i),
-            Hash("e1", "xy|z"+karabo::util::toString(i), "e2", ((i % 2) == 1),
-                 "e3", 42*i, "e4", 2.33333F * i, "e5", 7.77777 * i)};
+                          Hash("e1", "abc" + karabo::util::toString(i), "e2", ((i % 2) == 0),
+                               "e3", 12 * i, "e4", 0.9837F * i, "e5", 1.2345 * i),
+                          Hash("e1", "xy|z" + karabo::util::toString(i), "e2", ((i % 2) == 1),
+                               "e3", 42 * i, "e4", 2.33333F * i, "e5", 7.77777 * i)
+        };
         return t;
     };
     testHistory<vector<Hash> >("table", lambda);
