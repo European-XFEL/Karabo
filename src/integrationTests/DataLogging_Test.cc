@@ -77,6 +77,7 @@ namespace CppUnit{
             for (const karabo::util::Hash& e : p){
                 o << e << "," << std::endl;
             }
+            o << ")";
             return o.str();
         }
     };
@@ -126,7 +127,7 @@ void DataLogging_Test::setUp() {
 void DataLogging_Test::tearDown() {
     m_deviceClient.reset();
     m_deviceServer.reset();
-
+    m_sigSlot.reset();
     EventLoop::stop();
     m_eventLoopThread.join();
 }
