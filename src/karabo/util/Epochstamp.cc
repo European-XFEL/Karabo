@@ -13,6 +13,8 @@ typedef int clockid_t;
 #define CLOCK_REALTIME 0
 #endif
 
+#include <boost/format.hpp>
+
 #include "Epochstamp.hh"
 #include "DateTimeString.hh"
 
@@ -253,5 +255,11 @@ namespace karabo {
             attributes.set("frac", m_fractionalSeconds);
         }
 
+
+        std::ostream& operator<<(std::ostream& output, const Epochstamp& stamp) {
+            // Full technical precision of 18 digits for seconds since of unix epoch
+            output << (boost::format("%d.%018d s") % stamp.getSeconds() % stamp.getFractionalSeconds());
+            return output;
+        }
     }
 }

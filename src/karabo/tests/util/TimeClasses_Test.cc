@@ -93,6 +93,10 @@ void TimeClasses_Test::testEpochstampConversion() {
     auto nanoSec = totalNanoSec - asPtime.time_of_day().total_seconds() * 1000000000ull;
     CPPUNIT_ASSERT_EQUAL(123000ull, nanoSec); // nanoseconds are truncated to microseconds
 
+    // output to ostream
+    std::ostringstream oss;
+    oss << Epochstamp(12345ull, 12345678901234567ull);
+    CPPUNIT_ASSERT_EQUAL(std::string("12345.012345678901234567 s"), oss.str());
 }
 
 void TimeClasses_Test::testTimePeriod() {
