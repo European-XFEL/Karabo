@@ -875,10 +875,11 @@ namespace karabo {
                 Hash h("type", "configurationFromPast", "deviceId", deviceId, "time", time);
                 if (config.empty()) {
                     // Currently (Oct 2018) DataLogReader::getConfigurationFromPast does not reply errors, but empty
-                    // configuration if it could not fulfill the request, e.g. because the requested time was before the
-                    // first time the device was instantiated.
+                    // configuration if it could not fulfill the request, e.g. because the device was not online at the
+                    // requested time.
                     h.set("success", false);
-                    h.set("reason", "Received empty configuration: maybe the device did not exist or was not logged yet.");
+                    h.set("reason", "Received empty configuration:\nLikely '" + deviceId
+                          + "' was not online at the requested time '" + time + "' (or not logged).");
                 } else {
                     h.set("success", true);
                     h.set("config", config);
@@ -900,7 +901,7 @@ namespace karabo {
             try {
                 throw; // Error handlers are called within a try block, so we can rethrow the caught exception
             } catch (const karabo::util::TimeoutException&) {
-                failureReason = "Request timed out - probably the data logging infrastructure is not available.";
+                failureReason = "Request timed out:\nProbably the data logging infrastructure is not available.";
             } catch (const std::exception& e) {
                 failureReason = "Request to configuration from past failed.";
                 details = e.what(); // Only for log, hide from GUI client
