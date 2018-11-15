@@ -23,6 +23,9 @@ namespace CppUnit{
     template <>
     struct assertion_traits<karabo::util::Hash>{
         static bool equal(const karabo::util::Hash &a, const karabo::util::Hash &b){
+            if (b.size() != a.size()){
+                return false;
+            }
             std::vector<std::string> paths;
             a.getPaths(paths);
             bool _equal = true;
@@ -49,21 +52,25 @@ namespace CppUnit{
             if (a.size() != b.size()){
                 return false;
             }
-            bool _equal = true;
             for (size_t i = 0; i < a.size(); i++){
-                const karabo::util::Hash a_i = a.at(i);
-                const karabo::util::Hash b_i = b.at(i);
+                const karabo::util::Hash& a_i = a[i];
+                const karabo::util::Hash& b_i = b[i];
+                if (b_i.size() != a_i.size()){
+                    return false;
+                }
                 std::vector<std::string> paths;
                 a_i.getPaths(paths);
                 for (const std::string & path : paths) {
                     // most of the saving is serialized into text, this is why this helper
                     // checks the equality between values only passed as strings.
-                    _equal = _equal && ( a_i.getAs<string>(path) == b_i.getAs<string>(path));
+                    if( a_i.getAs<string>(path) == b_i.getAs<string>(path)){
+                        return false;
+                    }
                 }
-                if (!_equal) break;
             }
-            return _equal;
+            return true;
         }
+
         static std::string toString(const std::vector< karabo::util::Hash> &p){
             std::ostringstream o;
             o << "(" << std::endl;

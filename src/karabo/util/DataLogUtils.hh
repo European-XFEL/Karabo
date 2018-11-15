@@ -19,6 +19,18 @@ namespace karabo {
         char const * const DATALOGMANAGER_ID = "Karabo_DataLoggerManager_0";
         char const * const DATALOGGER_PREFIX = "DataLogger-";
         char const * const DATALOGREADER_PREFIX = "DataLogReader";
+        //    ts=timestamp 
+        //    tsAsIso8601 : numbers, dot and uppercase letters (timezone)
+        //    tsAsDouble  : numbers and a dot (positive double)
+        //    trainId     : unsigned long long
+        //    path        : one or more characters 
+        //    type        : 0 or more characters
+        //    user        : 0 or more lower case letters
+        //    flag        : one or more uppercase letters
+        //
+        //                                     tsAsIso8601   | tsAsDouble  | trainId  | path |    type      | value| user     |flag
+        char const * const DATALOG_REGEX = "^([A-Z0-9\\.]+)\\|([0-9\\.]+)\\|([0-9]+)\\|(.+)\\|([0-9A-Z_]*)\\|(.*)\\|([a-z]*)\\|([A-Z]+)$";
+
         unsigned int const DATALOGREADERS_PER_SERVER = 2;
 
         /**

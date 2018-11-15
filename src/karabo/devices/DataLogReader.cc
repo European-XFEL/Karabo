@@ -14,9 +14,6 @@
 
 #include "DataLogReader.hh"
 
-//       ts=timestamp - tsAsIso8601 | tsAsDouble  | trainId  | path | type         | value| user     |flag
-#define LOG_REGEX "^([A-Z0-9\\.]+)\\|([0-9\\.]+)\\|([0-9]+)\\|(.+)\\|([0-9A-Z_]*)\\|(.*)\\|([a-z]*)\\|([A-Z]+)$$"
-
 namespace bf = boost::filesystem;
 namespace bs = boost::system;
 
@@ -86,7 +83,7 @@ namespace karabo {
             m_cache.erase(commandLineArguments);
         }
 
-        const boost::regex  DataLogReader::m_lineRegex(LOG_REGEX, boost::regex::extended);
+        const boost::regex  DataLogReader::m_lineRegex(karabo::util::DATALOG_REGEX, boost::regex::extended);
 
         void DataLogReader::expectedParameters(Schema& expected) {
 
