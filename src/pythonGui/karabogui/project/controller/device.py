@@ -84,7 +84,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         scene_action.triggered.connect(partial(self._load_scene_from_device,
                                                project_controller))
         conf_action = QAction('Get Configuration', menu)
-        can_get_conf = (server_online and proj_device_online and
+        can_get_conf = (server_online and
                         proj_device_status not in NO_CONFIG_STATUSES)
         conf_action.setEnabled(can_get_conf)
         conf_action.triggered.connect(self._get_configuration_from_past)
@@ -507,13 +507,11 @@ class DeviceInstanceController(BaseProjectGroupController):
     def _get_configuration_from_past(self):
         """Request a configuration from the datalog reader
         """
-        if not self.project_device.online:
-            return
-
         dialog = ConfigurationFromPastDialog()
         if dialog.exec() == QDialog.Accepted:
             device_id = self.model.instance_id
-            time_point = dialog.ui_timepoint.dateTime()
+            # Karabo time points are in UTC
+            time_point = dialog.ui_timepoint.dateTime().toUTC()
             # Explicitly specifiy ISODate!
             time = str(time_point.toString(Qt.ISODate))
             get_network().onGetConfigurationFromPast(device_id, time=time)
