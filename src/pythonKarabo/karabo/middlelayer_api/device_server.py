@@ -279,21 +279,6 @@ class DeviceServerBase(SignalSlotable):
             finally:
                 loop.close()
 
-    @slot
-    def slotInstanceGone(self, instanceId, info):
-        """Distribute the slotInstanceGone signal along the instanceMap
-        """
-        self.deviceInstanceMap.pop(instanceId, None)
-        for device in self.deviceInstanceMap.values():
-            device.slotInstanceGone(instanceId, info)
-
-    @coslot
-    def slotInstanceNew(self, instanceId, info):
-        """Distribute the slotInstanceNew signal along the instanceMap
-        """
-        yield from gather(*[dev.slotInstanceNew(instanceId, info)
-                            for dev in self.deviceInstanceMap.values()])
-
 
 class MiddleLayerDeviceServer(DeviceServerBase):
     pluginNamespace = String(
@@ -391,17 +376,24 @@ class MiddleLayerDeviceServer(DeviceServerBase):
         self.deviceInstanceMap[deviceId] = child
 
     @coslot
-    def slotInstanceNew(self, id, info):
+    def slotInstanceNew(self, instanceId, info):
         yield from super(MiddleLayerDeviceServer, self).slotInstanceNew(
-            id, info)
-        if info.get("classId") == "TimeServer" and id == self.timeServerId:
+            instanceId, info)
+        if (info.get("classId") == "TimeServer"
+                and instanceId == self.timeServerId):
             self._ss.connect(self.timeServerId, "signalTimeTick",
                              self.slotTimeTick)
+        # Forward the broadcast to the device instances!
+        yield from gather(*[dev.slotInstanceNew(instanceId, info)
+                            for dev in self.deviceInstanceMap.values()])
 
     @slot
-    def slotInstanceGone(self, id, info):
-        self.deviceInstanceMap.pop(id, None)
-        super(MiddleLayerDeviceServer, self).slotInstanceGone(id, info)
+    def slotInstanceGone(self, instanceId, info):
+        super(MiddleLayerDeviceServer, self).slotInstanceGone(instanceId, info)
+        self.deviceInstanceMap.pop(instanceId, None)
+        # Forward the broadcast to the device instances!
+        for device in self.deviceInstanceMap.values():
+            device.slotInstanceGone(instanceId, info)
 
 
 class BoundDeviceServer(DeviceServerBase):
