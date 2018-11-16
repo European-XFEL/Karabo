@@ -133,8 +133,10 @@ class NetworkInput(Configurable):
         """
         if channel in self.connected and not self.connected[channel].done():
             return
-
-        task = background(self.start_channel(channel))
+        # Make sure to always set the instance correctly!
+        loop = get_event_loop()
+        task = loop.create_task(self.start_channel(channel),
+                                instance=self.parent)
         self.connected[channel] = task
         self.connectedOutputChannels = list(self.connected)
 
