@@ -289,6 +289,16 @@ class SignalSlotable(Configurable):
             yield from get_event_loop().run_coroutine_or_thread(
                 self.onInitialization)
             self.__initialized = True
+        except CancelledError:
+            pass
+            # NOTE: onInitialization might still be active and creating proxies
+            # and we simply catch the CancelledError. There is no need
+            # to additionally kill the device, as this will be called
+            # by the device server. Calling twice slotKillDevice will
+            # deal with cyclic references and crash the server
+            #
+            # NOTE: Initializers for device nodes might still be active and the
+            # Cancellation is also catched here.
         except Exception:
             yield from self.slotKillDevice()
             raise
