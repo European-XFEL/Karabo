@@ -25,11 +25,11 @@ namespace karabo {
         //    trainId     : unsigned long long
         //    path        : one or more characters 
         //    type        : 0 or more characters
-        //    user        : 0 or more lower case letters
+        //    user        : 0 or more lower case letters, numbers and underscores
         //    flag        : one or more uppercase letters
         //
-        //                                     tsAsIso8601   | tsAsDouble  | trainId  | path |    type      | value| user     |flag
-        char const * const DATALOG_REGEX = "^([A-Z0-9\\.]+)\\|([0-9\\.]+)\\|([0-9]+)\\|(.+)\\|([0-9A-Z_]*)\\|(.*)\\|([a-z]*)\\|([A-Z]+)$";
+        //                                          tsAsIso8601   | tsAsDouble  | trainId  | path |    type      | value|   user       |flag
+        char const * const DATALOG_LINE_REGEX = "^([A-Z0-9\\.]+)\\|([0-9\\.]+)\\|([0-9]+)\\|(.+)\\|([0-9A-Z_]*)\\|(.*)\\|([a-z0-9_]*)\\|([A-Z]+)$";
 
         unsigned int const DATALOGREADERS_PER_SERVER = 2;
 

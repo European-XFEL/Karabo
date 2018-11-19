@@ -57,7 +57,6 @@ namespace karabo {
         void getLeaves_r(const util::Hash& hash, const util::Schema& schema, std::vector<std::string>& result,
                          std::string prefix, const char separator, const bool fullPaths) {
             if (hash.empty()) {
-                result.push_back(prefix);
                 return;
             }
 
@@ -70,7 +69,7 @@ namespace karabo {
                 }
                 if (it->is<util::Hash > () && (fullPaths || !it->hasAttribute(KARABO_HASH_CLASS_ID))) { // Recursion, but no hash sub classes
                     getLeaves_r(it->getValue<util::Hash > (), schema, result, currentKey, separator, fullPaths);
-                } else if (it->is<std::vector<util::Hash> > () && it->getValue<std::vector<util::Hash> > ().size() > 0) { // Recursion for vector
+                } else if (it->is<std::vector<util::Hash> > ()) { // Recursion for vector
                     //if this is a LEAF then don't go to recurse further ... leaf!
                     if (schema.has(currentKey) && schema.isLeaf(currentKey)) {
                         result.push_back(currentKey);
