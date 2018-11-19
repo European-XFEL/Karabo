@@ -150,9 +150,7 @@ void DataLogging_Test::allTestRunner() {
     manager_conf.set<string>("directory", "karaboHistory");
     manager_conf.set<vector<string>>("serverList", {m_server});
     success = m_deviceClient->instantiate(m_server,
-                                          "DataLoggerManager",
-                                                                       manager_conf,
-                                                                       KRB_TEST_MAX_TIMEOUT);
+                                          "DataLoggerManager", manager_conf, KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
     testAllInstantiated();
     testInt();
@@ -207,14 +205,14 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
 
     Hash afterConf;
     m_deviceClient->get(m_deviceId, afterConf);
+    Epochstamp es_after;
+    string after = es_after.toIso8601();
 
     // save this instant as a iso string
 
     boost::this_thread::sleep(boost::posix_time::milliseconds(1500)); // wait more than the flush time
-    // place holders, could be skipped but they are here for future expansions of the tests
-    Epochstamp es_after;
-    string after = es_after.toIso8601();
 
+    // place holders, could be skipped but they are here for future expansions of the tests
     string device;
     string property;
     vector<Hash> history;
@@ -226,15 +224,15 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
     int timeout = 20000;
     while (timeout >= 0 && history.size() == 0) {
         // TODO: use the deviceClient to retrieve the property history
-        //history = m_deviceClient->getPropertyHistory(m_deviceId, key, before, after, 1000);
+        //history = m_deviceClient->getPropertyHistory(m_deviceId, key, before, after, max_set * 2);
         m_sigSlot->request(dlreader0, "slotGetPropertyHistory", m_deviceId, key, params)
                 .timeout(200).receive<string, string, vector<Hash>>(device, property, history);
         boost::this_thread::sleep(boost::posix_time::milliseconds(200));
         timeout -= 200;
     }
     CPPUNIT_ASSERT_MESSAGE("Timeout while getting property history", timeout >= 0);
-    CPPUNIT_ASSERT_MESSAGE("History larger than expected", max_set == history.size());
-    for (int i = 0; i < 100; i++) {
+    CPPUNIT_ASSERT_MESSAGE("History size different than expected", max_set == history.size());
+    for (int i = 0; i < max_set; i++) {
         // checking values and timestamps
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong value in history", f(i), history[i].get<T>("v"));
         Epochstamp current = Epochstamp::fromHashAttributes(history[i].getAttributes("v"));
@@ -275,19 +273,14 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
                                      conf.getAs<string>(leaf));
     }
 
-    std::clog << "Ok" << std::endl;
-
-    return; // TODO: figure out why this last part fails.
-
-    std::clog << "Testing configuration retrieval after settings for '" << key << "' ...";
     timeout = 20000;
+    conf.clear();
     while (timeout >= 0 && conf.size() == 0) {
         // TODO: use the deviceClient to retrieve the configuration from past
         // auto pair = m_deviceClient->getConfigurationFromPast(m_deviceId, before);
         // conf = pair.first;
-        conf.clear();
         m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", m_deviceId, after)
-                    .timeout(200).receive<Hash, Schema>(conf, schema);
+            .timeout(200).receive<Hash, Schema>(conf, schema);
         boost::this_thread::sleep(boost::posix_time::milliseconds(200));
         timeout -= 200;
     }
@@ -305,30 +298,32 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
 }
 
 
-void DataLogging_Test::testInt(){
-    std::function<int(int)> lambda = [] (int i) {return i;};
+void DataLogging_Test::testInt() {
+    auto lambda = [] (int i) -> int {
+        return i;
+    };
     testHistory<int>("int32Property", lambda, true);
 }
 
 
 void DataLogging_Test::testFloat() {
-    std::function<float(int) > lambda = [] (int i) {
+    auto lambda = [] (int i) -> float {
         return 2.5e-8f * i;
     };
     testHistory<float>("floatProperty", lambda, false);
 }
 
 
-void DataLogging_Test::testString(){
-    std::function<string(int)>  lambda = [] (int i) {
+void DataLogging_Test::testString() {
+    auto lambda = [] (int i) -> string {
         return "ab|c" + karabo::util::toString(i);
     };
     testHistory<string>("stringProperty", lambda, false);
 }
 
 
-void DataLogging_Test::testVectorString(){
-    std::function<vector<string>(int)>  lambda = [] (int i) {
+void DataLogging_Test::testVectorString() {
+    auto lambda = [] (int i) -> vector<string> {
         vector<string> v = {"abc" + karabo::util::toString(i), "xy|z" + karabo::util::toString(i)};
         return v;
     };
@@ -336,8 +331,8 @@ void DataLogging_Test::testVectorString(){
 }
 
 
-void DataLogging_Test::testTable(){
-    std::function<vector<Hash>(int)>  lambda = [] (int i) {
+void DataLogging_Test::testTable() {
+    auto lambda = [] (int i) -> vector<Hash> {
         vector<Hash> t = {
                           Hash("e1", "abc" + karabo::util::toString(i), "e2", ((i % 2) == 0),
                                "e3", 12 * i, "e4", 0.9837F * i, "e5", 1.2345 * i),
