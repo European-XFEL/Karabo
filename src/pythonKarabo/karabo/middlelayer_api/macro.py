@@ -160,12 +160,6 @@ class Macro(Device):
         if not isinstance(get_event_loop(), EventLoop):
             EventLoop.global_loop.start_device(self)
 
-        # Prevent the import of blocking synchronous sleep
-        # and use karabo's instead
-        if 'time' in sys.modules:
-            from karabo.middlelayer import sleep
-            sys.modules['time'].sleep = sleep
-
     def _initInfo(self):
         info = super(Macro, self)._initInfo()
         info["type"] = "macro"
