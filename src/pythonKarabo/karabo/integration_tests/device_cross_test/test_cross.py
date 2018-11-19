@@ -16,8 +16,7 @@ from karabo.middlelayer import (
     DeviceClientBase, getDevice, getHistory, isSet, InputChannel,
     Int32, KaraboError, MetricPrefix, Node,
     OutputChannel, setWait, shutdown, sleep, Slot, State, String,
-    unit, Unit, VectorDouble, Float, VectorString, VectorHash, Hash,
-    waitUntil, waitUntilNew)
+    unit, Unit, VectorDouble, waitUntil, waitUntilNew)
 
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 
