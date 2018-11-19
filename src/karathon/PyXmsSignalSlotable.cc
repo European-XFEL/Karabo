@@ -31,6 +31,9 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
     bp::class_<SignalSlotableWrap::RequestorWrap > ("Requestor", bp::no_init)
             .def("waitForReply", (&SignalSlotableWrap::RequestorWrap::waitForReply), (bp::arg("milliseconds")))
 
+            .def("timeout", (&SignalSlotableWrap::RequestorWrap::timeoutPy), (bp::arg("milliseconds")),
+                 "Specify timeout in milliseconds for receiveAsync[0-4] and return self.")
+
             .def("receiveAsync0"
                  , (void(SignalSlotableWrap::RequestorWrap::*)(const bp::object&))(&SignalSlotableWrap::RequestorWrap::receiveAsyncPy0)
                  , (bp::arg("replyCallback")))
@@ -48,6 +51,21 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  , (bp::arg("replyCallback")))
             ;
 
+    bp::class_<SignalSlotableWrap::AsyncReplyWrap> ("AsyncReply", bp::no_init)
+            .def("__call__", &SignalSlotableWrap::AsyncReplyWrap::replyPy0,
+                 "Reply slot call without argument")
+            .def("__call__", &SignalSlotableWrap::AsyncReplyWrap::replyPy1, (bp::arg("a1")),
+                 "Reply slot call with one argument")
+            .def("__call__", &SignalSlotableWrap::AsyncReplyWrap::replyPy2, (bp::arg("a1"), bp::arg("a2")),
+                 "Reply slot call with two arguments")
+            .def("__call__", &SignalSlotableWrap::AsyncReplyWrap::replyPy3, (bp::arg("a1"), bp::arg("a2"), bp::arg("a3")),
+                 "Reply slot call with three arguments")
+            .def("__call__", &SignalSlotableWrap::AsyncReplyWrap::replyPy4, (bp::arg("a1"), bp::arg("a2"), bp::arg("a4"), bp::arg("a4")),
+                 "Reply slot call with four arguments")
+
+            .def("error", &SignalSlotableWrap::AsyncReply::error, (bp::arg("message")),
+                 "Reply failure of slot call stating an error message")
+            ;
 
     bp::class_<SignalSlotable, boost::noncopyable > ("SignalSlotableIntern")
             .def(bp::init<const std::string&, const karabo::net::Broker::Pointer&>())
@@ -207,6 +225,11 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  (bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
             .def("reply", &SignalSlotableWrap::replyPy<bp::object, bp::object, bp::object, bp::object>,
                  (bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
+
+            .def("createAsyncReply", &SignalSlotableWrap::createAsyncReply,
+                 "Create an AsyncReply to postpone the reply of a slot.\n\n"
+                 "Only call within a slot call - and then take care to use the AsyncReply to\n"
+                 "either reply or report an error since no automatic reply will happen.")
 
             .def("createOutputChannel", &SignalSlotableWrap::createOutputChannelPy,
                  (bp::arg("channelName"), bp::arg("configuration"), bp::arg("handler") = bp::object()))
