@@ -79,10 +79,13 @@ namespace karabo {
 
         class PointToPoint::Consumer : public boost::enable_shared_from_this<PointToPoint::Consumer> {
 
+            // SlotInstanceIds :  slotInstanceId  --> ConsumeHandler ( function<Hash::Pointer,Hash::Pointer> )
             typedef std::map<std::string, ConsumeHandler> SlotInstanceIds;
-            // Mapping signalInstanceId into signalConnectionString like "tcp://host:port" and set of pairs of slotInstanceId and ConsumeHandler
+
+            // ConnectedInstances : signalInstanceId --> pair of (signalConnectionString, slotInstanceIds)
             typedef std::map<std::string, std::pair<std::string, SlotInstanceIds> > ConnectedInstances;
-            // Mapping connectionString into (Connection, Channel) pointers
+
+            // OpenConnections : connectionString (like "tcp://host:port") -->  pair of (Connection::Pointer, Channel::Pointer)
             typedef std::map<std::string, std::pair<karabo::net::Connection::Pointer, karabo::net::Channel::Pointer> > OpenConnections;
 
         public:
@@ -93,6 +96,14 @@ namespace karabo {
 
             virtual ~Consumer();
 
+            /**
+             * Connect slotInstanceId to signalInstanceId using signalConnectionString (tcp://host:port) and process
+             * incoming messages in ConsumeHandler (read handler)
+             * @param signalInstanceId
+             * @param slotInstanceId
+             * @param signalConnectionString
+             * @param handler
+             */
             void connect(const std::string& signalInstanceId,
                          const std::string& slotInstanceId,
                          const std::string& signalConnectionString,
@@ -333,9 +344,11 @@ namespace karabo {
             {
                 boost::mutex::scoped_lock lock(m_connectedInstancesMutex);
 
-                for (ConnectedInstances::iterator i = m_connectedInstances.begin(); i != m_connectedInstances.end(); ++i) {
+                for (ConnectedInstances::iterator i = m_connectedInstances.begin(); i != m_connectedInstances.end(); ) {
                     if (i->second.first == signalConnectionString) {
-                        m_connectedInstances.erase(i);
+                        i = m_connectedInstances.erase(i);
+                    } else {
+                        ++i;
                     }
                 }
 
@@ -361,9 +374,11 @@ namespace karabo {
             {
                 boost::mutex::scoped_lock lock(m_connectedInstancesMutex);
 
-                for (ConnectedInstances::iterator i = m_connectedInstances.begin(); i != m_connectedInstances.end(); ++i) {
+                for (ConnectedInstances::iterator i = m_connectedInstances.begin(); i != m_connectedInstances.end(); ) {
                     if (i->second.first == signalConnectionString) {
-                        m_connectedInstances.erase(i);
+                        i = m_connectedInstances.erase(i);
+                    } else {
+                        ++i;
                     }
                 }
 
@@ -495,13 +510,13 @@ namespace karabo {
                     for (auto itTuple = allTuples.begin(), itEnd = allTuples.end(); itTuple != itEnd;) {
                         if (std::get<1>(*itTuple) == signalInstanceId) {
                             KARABO_LOG_FRAMEWORK_DEBUG << "Disconnect pending " << signalInstanceId;
-                            allTuples.erase(itTuple++); // post-increment: erase old iterator
+                            itTuple = allTuples.erase(itTuple); // post-increment: erase old iterator
                         } else {
                             ++itTuple;
                         }
                     }
                     if (allTuples.empty()) {
-                        m_pendingSubscriptions.erase(itPending++); // post-increment: erase old iterator
+                        itPending = m_pendingSubscriptions.erase(itPending); // post-increment: erase old iterator
                     } else {
                         ++itPending;
                     }
