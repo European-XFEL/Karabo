@@ -33,7 +33,7 @@ private:
     void testString();
     void testVectorString();
     void testTable();
-    template <class T> void testHistory(const std::string& key, const std::function<T(int)>& f);
+    template <class T> void testHistory(const std::string& key, const std::function<T(int)>& f, const bool testConf);
     std::string m_server;
     std::string m_deviceId;
     karabo::core::DeviceServer::Pointer m_deviceServer;

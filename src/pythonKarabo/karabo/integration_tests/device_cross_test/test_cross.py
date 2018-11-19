@@ -26,11 +26,6 @@ class Child(Configurable):
     number = Int32()
 
 
-class Row(Configurable):
-    x = Float(defaultValue=1.0)
-    y = Float(defaultValue=1.0)
-
-
 class MiddlelayerDevice(DeviceClientBase):
     channelcount = 0
     rawchannelcount = 0
