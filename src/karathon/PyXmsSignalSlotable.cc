@@ -31,9 +31,6 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
     bp::class_<SignalSlotableWrap::RequestorWrap > ("Requestor", bp::no_init)
             .def("waitForReply", (&SignalSlotableWrap::RequestorWrap::waitForReply), (bp::arg("milliseconds")))
 
-            .def("timeout", (&SignalSlotableWrap::RequestorWrap::timeoutPy), (bp::arg("milliseconds")),
-                 "Specify timeout in milliseconds for receiveAsync[0-4] and return self.")
-
             .def("receiveAsync0"
                  , (void(SignalSlotableWrap::RequestorWrap::*)(const bp::object&))(&SignalSlotableWrap::RequestorWrap::receiveAsyncPy0)
                  , (bp::arg("replyCallback")))
