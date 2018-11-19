@@ -274,7 +274,7 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
     TextSerializer<Schema>::Pointer serializer = TextSerializer<Schema>::create(Hash("Xml"));
     Schema::Pointer schema(new Schema);
     serializer->load(*schema, schemaRange.fromSchemaArchive);
-    boost::regex lineRegex(karabo::util::DATALOG_REGEX,
+    boost::regex lineRegex(karabo::util::DATALOG_LINE_REGEX,
                            boost::regex::extended);
 
     string infile = historyDir + "/" + deviceId + "/raw/archive_" + toString(number) + ".txt";

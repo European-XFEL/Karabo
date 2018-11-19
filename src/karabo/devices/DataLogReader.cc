@@ -83,7 +83,7 @@ namespace karabo {
             m_cache.erase(commandLineArguments);
         }
 
-        const boost::regex  DataLogReader::m_lineRegex(karabo::util::DATALOG_REGEX, boost::regex::extended);
+        const boost::regex DataLogReader::m_lineRegex(karabo::util::DATALOG_LINE_REGEX, boost::regex::extended);
 
         void DataLogReader::expectedParameters(Schema& expected) {
 
@@ -463,7 +463,7 @@ namespace karabo {
                                 const string& path = tokens[4];
                                 if (!schema.has(path)) continue;
                                 current = stringDoubleToEpochstamp(tokens[2]);
-                                unsigned long long train = fromString<unsigned long long>(tokens[2]);
+                                unsigned long long train = fromString<unsigned long long>(tokens[3]);
                                 if (current > target)
                                     break;
                                 const Timestamp timestamp(current, Trainstamp(train));

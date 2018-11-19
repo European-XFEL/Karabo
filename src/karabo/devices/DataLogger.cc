@@ -324,7 +324,6 @@ namespace karabo {
                 }
 
                 const Hash::Node& leafNode = configuration.getNode(path);
-                if (leafNode.getType() == Types::HASH) continue;
 
                 // Check for timestamp ...
                 if (!Timestamp::hashAttributesContainTimeInformation(leafNode.getAttributes())) {
@@ -334,7 +333,6 @@ namespace karabo {
 
                 Timestamp t = Timestamp::fromHashAttributes(leafNode.getAttributes());
                 m_lastDataTimestamp = t;
-                string type = Types::to<ToLiteral>(leafNode.getType());
                 string value = "";   // "value" should be a string, so convert depending on type ...
                 if (leafNode.getType() == Types::VECTOR_HASH) {
                     // Represent any vector<Hash> as XML string ...
@@ -362,7 +360,7 @@ namespace karabo {
                 }
 
                 size_t position = m_configStream.tellp(); // get current file size
-
+                const string type = Types::to<ToLiteral>(leafNode.getType());
                 m_configStream << t.toIso8601Ext() << "|" << fixed << t.toTimestamp() << "|"
                         << t.getTrainId() << "|" << path << "|" << type << "|" << scientific
                         << value << "|" << m_user;
