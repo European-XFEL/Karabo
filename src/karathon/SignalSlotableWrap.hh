@@ -88,18 +88,9 @@ namespace karathon {
 
             void receiveAsyncPy4(const bp::object& replyCallback);
 
-            bp::tuple receivePy0();
-
-            bp::tuple receivePy1();
-
-            bp::tuple receivePy2();
-
-            bp::tuple receivePy3();
-
-            bp::tuple receivePy4();
-
             bp::tuple waitForReply(const int& milliseconds);
 
+        private:
             bp::tuple prepareTuple0(const karabo::util::Hash & body);
 
             bp::tuple prepareTuple1(const karabo::util::Hash & body);
