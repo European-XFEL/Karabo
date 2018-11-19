@@ -4,6 +4,7 @@ from .device import Device
 from .enums import AccessLevel, AccessMode
 from .hash import String, Int32
 from .macro import Macro
+from ..common.macro_sanity_check import macro_sleep_check
 
 
 class MetaMacro(Device):
@@ -28,6 +29,14 @@ class MetaMacro(Device):
     def __init__(self, config):
         super().__init__(config)
         Macro.subclasses = []
+
+        sleeps = macro_sleep_check(self.code)
+        if sleeps:
+            lines = ",".join(str(idx) for idx in sleeps)
+            msg = ("The usage of time.sleep on line(s) {} is forbidden."
+                   " Use karabo.middlelayer.sleep instead".format(lines))
+            raise ImportError(msg)
+
         try:
             code = compile(self.code, self.module, "exec")
             exec(code, {})
