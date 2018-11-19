@@ -208,8 +208,7 @@ class DeviceInstanceController(BaseProjectGroupController):
 
         return get_topology().get_project_device(
             device.instance_id, device.server_id, device.class_id,
-            None if config is None else config.configuration
-        )
+            None if config is None else config.configuration)
 
     @on_trait_change("model:instance_id,model:server_id,model:class_id")
     def _forced_project_device_change(self):
@@ -224,8 +223,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         self.project_device.rename(
             device_id=self.model.instance_id,
             server_id=self.model.server_id,
-            class_id=self.model.class_id
-        )
+            class_id=self.model.class_id)
 
     @on_trait_change("model:initialized,model:instance_id")
     def _update_ui_label(self):
@@ -269,6 +267,19 @@ class DeviceInstanceController(BaseProjectGroupController):
     def _alarm_info_change(self):
         self._update_alarm_type()
 
+    @on_trait_change("children[]")
+    def _update_check_state(self):
+        """Update the Qt.CheckState of the ``DeviceConfigurationController``
+        children
+        """
+        if not self.model.initialized:
+            return
+        active_config = self.active_config
+        for child in self.children:
+            check_state = (Qt.Checked if active_config is child.model
+                           else Qt.Unchecked)
+            child.ui_data.check_state = check_state
+
     # ----------------------------------------------------------------------
     # Util methods
 
@@ -298,19 +309,6 @@ class DeviceInstanceController(BaseProjectGroupController):
         status_enum = self.project_device.status
         ui_data.icon = get_project_device_status_icon(status_enum)
         ui_data.status = status_enum
-
-    def _update_check_state(self):
-        """Update the Qt.CheckState of the ``DeviceConfigurationController``
-        children
-        """
-        if not self.model.initialized:
-            return
-
-        active_config = self.active_config
-        for child in self.children:
-            check_state = (Qt.Checked if active_config is child.model
-                           else Qt.Unchecked)
-            child.ui_data.check_state = check_state
 
     def _update_alarm_type(self):
         # Get current status of device
