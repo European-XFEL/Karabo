@@ -399,7 +399,6 @@ namespace karabo {
                 Epochstamp target(timepoint);
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "Requested time point: " << target.getSeconds();
-
                 // Retrieve proper Schema
                 bf::path schemaPath(get<string>("directory") + "/" + deviceId + "/raw/archive_schema.txt");
                 if (bf::exists(schemaPath)) {
@@ -423,7 +422,7 @@ namespace karabo {
                         KARABO_LOG_WARN << "Requested time point for device configuration is earlier than anything logged";
                         return;
                     }
-                    try{ m_schemaSerializer->load(schema, archived); } catch (...) { KARABO_RETHROW }
+                    m_schemaSerializer->load(schema, archived);
 
                 }
                 vector<string> paths = schema.getPaths();
@@ -522,6 +521,7 @@ namespace karabo {
                 }
                 const Epochstamp epochstamp(stringDoubleToEpochstamp(timestampAsDouble));
                 if (epochstamp > target) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "findLoggerIndexTimepoint: done looping" << tail;
                     break;
                 } else {
                     // store selected event
@@ -537,7 +537,7 @@ namespace karabo {
                 this->extractTailOfArchiveIndex(tail, entry);
             }
 
-            KARABO_LOG_FRAMEWORK_DEBUG << "findLoggerIndexTimepoint - entry: " << entry.m_event << " "
+            KARABO_LOG_FRAMEWORK_ERROR << "findLoggerIndexTimepoint - entry: " << entry.m_event << " "
                     << entry.m_position << " " << entry.m_user << " " << entry.m_fileindex;
             return entry;
         }
