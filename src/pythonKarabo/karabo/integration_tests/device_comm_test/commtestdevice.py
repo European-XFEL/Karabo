@@ -13,6 +13,8 @@ class CommTestDevice(PythonDevice):
             .commit(),
             SLOT_ELEMENT(expected).key("slotRequestArgs")
             .commit(),
+            SLOT_ELEMENT(expected).key("slotRequestArgsAsync")
+            .commit(),
             STRING_ELEMENT(expected).key("remote")
             .assignmentMandatory()
             .commit(),
@@ -36,6 +38,7 @@ class CommTestDevice(PythonDevice):
     def __init__(self, config):
         super(CommTestDevice, self).__init__(config)
         self.KARABO_SLOT(self.slotRequestArgs)
+        self.KARABO_SLOT(self.slotRequestArgsAsync)
         self.KARABO_SLOT(self.slotRequestStateUpdate)
 
         self.registerSlot(self.slotWithoutArguments)
@@ -71,6 +74,18 @@ class CommTestDevice(PythonDevice):
         ret = self.request(self.get("remote"), "slotWithArguments", "one",
                            Hash("a", 1)).waitForReply(2000)
         self.set("someString", ret[1])
+
+    def slotRequestArgsAsync(self):
+        # Same as slotRequestArgs, but using AsyncReply instead of
+        # blocking by use of synchronous request
+        aReply = self._ss.createAsyncReply()
+        def replyer(a1, a2):
+            self.set("someString", a2)
+            aReply()
+
+        requestor = self.request(self.get("remote"), "slotWithArguments",
+                                 "two", Hash("a", 2))
+        requestor.receiveAsync2(replyer)
 
     def slotEmitToSlotWithoutArgs(self):
         self.emit("callSlotWithoutArgs")
