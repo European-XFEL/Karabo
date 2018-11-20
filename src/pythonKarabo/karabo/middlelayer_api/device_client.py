@@ -592,7 +592,7 @@ def getDevices(serverId=None, visibility=3, matchPattern=None):
         ret = [k for k, v, a in instance.systemTopology["device"].iterall()
                if a["serverId"] == serverId and a["visibility"] <= visibility]
     if matchPattern is not None:
-        ret = [dev for dev in ret if matchPattern in dev]
+        ret = [dev for dev in ret if matchPattern.lower() in dev.lower()]
 
     return ret
 
@@ -636,7 +636,7 @@ def getServers(visibility=3, matchPattern=None):
     ret = [k for k, v, a in get_instance().systemTopology["server"].iterall()
            if a["visibility"] <= visibility]
     if matchPattern is not None:
-        ret = [serv for serv in ret if matchPattern in serv]
+        ret = [serv for serv in ret if matchPattern.lower() in serv.lower()]
 
     return ret
 
