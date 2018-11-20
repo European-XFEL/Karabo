@@ -510,13 +510,13 @@ namespace karabo {
                     for (auto itTuple = allTuples.begin(), itEnd = allTuples.end(); itTuple != itEnd;) {
                         if (std::get<1>(*itTuple) == signalInstanceId) {
                             KARABO_LOG_FRAMEWORK_DEBUG << "Disconnect pending " << signalInstanceId;
-                            itTuple = allTuples.erase(itTuple); // post-increment: erase old iterator
+                            itTuple = allTuples.erase(itTuple);
                         } else {
                             ++itTuple;
                         }
                     }
                     if (allTuples.empty()) {
-                        itPending = m_pendingSubscriptions.erase(itPending); // post-increment: erase old iterator
+                        itPending = m_pendingSubscriptions.erase(itPending);
                     } else {
                         ++itPending;
                     }
