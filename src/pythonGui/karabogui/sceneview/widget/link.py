@@ -16,6 +16,7 @@ from karabogui.events import broadcast_event, KaraboEventSender
 class SceneLinkWidget(QPushButton):
     """A clickable link which opens another scene
     """
+
     def __init__(self, model, parent=None):
         super(SceneLinkWidget, self).__init__(parent)
         self.model = model
@@ -33,7 +34,7 @@ class SceneLinkWidget(QPushButton):
         self._layout.setContentsMargins(QMargins(4, 12, 4, 4))
 
         # Apply initial model values!
-        self.set_model(model)
+        self.apply_model()
 
     def paintEvent(self, event):
         with QPainter(self) as painter:
@@ -102,22 +103,28 @@ class SceneLinkWidget(QPushButton):
     def get_actions(self):
         """Return an action for the scene widget handler
         """
-        edit_action = QAction("Edit Label", self)
+        edit_action = QAction('Edit Label', self)
         edit_action.triggered.connect(self.edit_colors_text)
 
         return [edit_action]
 
     @pyqtSlot()
     def edit_colors_text(self):
-        dialog = TextDialog(self.model)
+        model = self.model.clone_traits()
+        # NOTE: We do a dance here because the dialog directly modifies the
+        # model, even when the dialog is cancelled!
+        dialog = TextDialog(model)
         if dialog.exec() == QDialog.Rejected:
             return
 
-        self.set_model(dialog.label_model)
+        # Set all at once!
+        label = dialog.label_model
+        self.model.trait_set(text=label.text, frame_width=label.frame_width,
+                             font=label.font, background=label.background,
+                             foreground=label.foreground)
+        self.apply_model()
 
-    def set_model(self, model):
-
-        self.model = model
+    def apply_model(self):
         self._label.setText(self.model.text)
         self._label.setLineWidth(self.model.frame_width)
 
