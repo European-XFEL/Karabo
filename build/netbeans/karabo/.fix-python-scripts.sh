@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script for fixing up the shebang lines of Python entry-point scripts of 
+# Script for fixing up the shebang lines of Python entry-point scripts of
 # Karabo entry points.
 #
 # Author: <john.wiggins@xfel.eu>
@@ -22,7 +22,7 @@ PYTHON_ENTRY_POINTS=(convert-karabo-device convert-karabo-project
     karabo-pythonserver karabo-start karabo-stop karabo-check
     karabo-xterm karabo-gterm karabo-add-deviceserver
     karabo-remove-deviceserver karabo-webserver karabo-kill
-    pannel-runner karabo-scene2py
+    pannel-runner karabo-scene2py karabo-cinema
 )
 
 count=0
