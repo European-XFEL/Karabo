@@ -32,7 +32,7 @@ def _get_interface_device(interfaces, matchPattern=None):
             ret.append(k)
 
     if matchPattern is not None:
-        ret = [dev for dev in ret if matchPattern in dev]
+        ret = [dev for dev in ret if matchPattern.lower() in dev.lower()]
 
     return ret
 
