@@ -199,6 +199,9 @@ namespace karabo {
             static boost::mutex m_propFileInfoMutex;
             static std::map<std::string, PropFileInfo::Pointer > m_mapPropFileInfo;
             IndexBuilderService::Pointer m_ibs;
+            karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_serializer;
+            karabo::io::TextSerializer<karabo::util::Schema>::Pointer m_schemaSerializer;
+            static const boost::regex m_lineRegex;
         };
     }
 }
