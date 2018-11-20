@@ -41,14 +41,10 @@ namespace karabo {
         IndexBuilderService::IndexBuilderService() : 
             m_cache(),
             m_idxBuildStrand(boost::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService())) {
-                karabo::net::EventLoop::addThread();
             }
 
 
         IndexBuilderService::~IndexBuilderService() {
-            // Clean up in the destructor which is called when m_instance goes
-            // out of scope, i.e. if the program finishes (tested!).
-            karabo::net::EventLoop::removeThread();
         }
 
 
