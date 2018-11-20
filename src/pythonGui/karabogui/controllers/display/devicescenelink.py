@@ -3,10 +3,10 @@ from functools import partial
 import os.path as op
 
 from PyQt4 import uic
-from PyQt4.QtCore import QPoint, QRect, QSize, Qt, pyqtSlot
+from PyQt4.QtCore import QMargins, QPoint, QRect, QSize, Qt, pyqtSlot
 from PyQt4.QtGui import (
-    QAction, QColor, QDialog, QPainter, QPen, QPushButton, QStackedLayout,
-    QWidget)
+    QAction, QColor, QDialog, QFont, QHBoxLayout, QLabel, QPainter, QPen,
+    QPushButton, QSizePolicy)
 from traits.api import Instance
 
 from karabogui import messagebox
@@ -19,7 +19,6 @@ from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.request import call_device_slot
-from karabogui.sceneview.widget.label import LabelWidget
 from karabogui.singletons.api import get_topology
 from karabogui.util import handle_scene_from_server
 
@@ -36,16 +35,45 @@ def _get_device_id(keys):
 LinkModel = namedtuple('LinkModel', ['target', 'target_window'])
 
 
-class LinkSymbol(QWidget):
+class LinkWidget(QPushButton):
     """ A clickable widget which opens a detached scene
     """
+
+    def __init__(self, model, parent=None):
+        super(LinkWidget, self).__init__(parent)
+        self.model = model
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+        self.layout = QHBoxLayout(self)
+        self.clicked.connect(self._handle_click)
+        self.setGeometry(QRect(model.x, model.y, model.width, model.height))
+        self.setCursor(Qt.PointingHandCursor)
+        self.setFocusPolicy(Qt.NoFocus)
+        self._set_tooltip()
+        self.setFlat(True)
+
+        self.label = QLabel(parent=self)
+        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setContentsMargins(QMargins(0, 0, 0, 0))
+        self.label.setAutoFillBackground(True)
+        self.layout.addWidget(self.label)
+        self.layout.setContentsMargins(QMargins(4, 12, 4, 4))
+
+        self.set_link_model(model)
+        self.set_label_model(model)
+
     def paintEvent(self, event):
         with QPainter(self) as painter:
             boundary = self.rect().adjusted(2, 2, -2, -2)
             pt = boundary.topLeft()
             rects = [QRect(pt, QSize(7, 7)),
                      QRect(pt + QPoint(11, 0), QSize(7, 7))]
-            # draw the blue chain links
+            # Draw the boundary
+            pen = QPen()
+            pen.setColor(Qt.black)
+            pen.setWidth(3)
+            painter.drawRect(boundary)
+            # Draw the chain on top left
             pen = QPen()
             pen.setColor(QColor(*NORM_COLOR))
             pen.setWidth(3)
@@ -54,38 +82,8 @@ class LinkSymbol(QWidget):
             pen.setColor(Qt.lightGray)
             painter.setPen(pen)
             painter.drawLine(pt + QPoint(4, 4), pt + QPoint(15, 4))
-            # label and frame need not be drawn
-
-
-class LinkWidget(QWidget):
-    """ A clickable widget which opens a detached scene
-    """
-    def __init__(self, model, parent=None):
-        super(LinkWidget, self).__init__(parent)
-        self.model = model
-
-        self.layout = QStackedLayout(self)
-        self.layout.setStackingMode(QStackedLayout.StackAll)
-
-        self.button = QPushButton(self)
-        self.button.clicked.connect(self._handle_click)
-        self.button.setCursor(Qt.PointingHandCursor)
-        self.button.setFocusPolicy(Qt.NoFocus)
-        self._set_tooltip()
-        self.button.setFlat(True)
-        self.layout.addWidget(self.button)
-
-        symbol = LinkSymbol(self)
-        self.layout.addWidget(symbol)
-
-        self.label = LabelWidget(model, self)
-        self.label.setAttribute(Qt.WA_TransparentForMouseEvents)
-        self.layout.addWidget(self.label)
-        self.layout.setAlignment(self.label, Qt.AlignCenter)
-
-        self.set_label_model(model)
-        self.set_link_model(model)
-        self.setGeometry(QRect(model.x, model.y, model.width, model.height))
+            # And of course our label when we repaint (dock/undock)!
+            self.apply_model()
 
     def set_link_model(self, model):
         self.model.target = model.target
@@ -93,19 +91,31 @@ class LinkWidget(QWidget):
         self._set_tooltip()
 
     def set_label_model(self, model):
-        self.model.text = model.text
-        self.model.frame_width = model.frame_width
-        self.model.font = model.font
-        self.model.foreground = model.foreground
-        if model.background:
-            self.model.background = model.background
-        self.label.set_model(model)
-        self.label.setAlignment(Qt.AlignCenter)
+        # Set all at once!
+        self.model.trait_set(text=model.text, frame_width=model.frame_width,
+                             font=model.font, background=model.background,
+                             foreground=model.foreground)
+        self.apply_model()
+
+    def apply_model(self):
+        self.label.setText(self.model.text)
+        self.label.setLineWidth(self.model.frame_width)
+
+        font_properties = QFont()
+        font_properties.fromString(self.model.font)
+        self.label.setFont(font_properties)
+
+        palette = self.label.palette()
+        palette.setColor(self.label.foregroundRole(),
+                         QColor(self.model.foreground))
+        palette.setColor(self.label.backgroundRole(),
+                         QColor(self.model.background))
+        self.label.setPalette(palette)
 
     def _set_tooltip(self):
         tooltip = "{}|{}".format(
             _get_device_id(self.model.keys), self.model.target)
-        self.button.setToolTip(tooltip)
+        self.setToolTip(tooltip)
 
     @pyqtSlot()
     def _handle_click(self):
