@@ -97,7 +97,7 @@ namespace karabo {
             , m_numChangedConnected(0) {
 
             m_idxprops.clear();
-
+            m_serializer = TextSerializer<Hash>::create(Hash("Xml.indentation", -1));
             input.get("deviceToBeLogged", m_deviceToBeLogged);
             // start "flush" actor ...
             input.get("flushInterval", m_flushInterval); // in seconds
@@ -302,8 +302,8 @@ namespace karabo {
             if (m_user.size() == 0) m_user = "";
 
             vector<string> paths;
-            configuration.getPaths(paths);
-
+            getLeaves(configuration, m_schemaForSlotChanged, paths);
+            
             boost::mutex::scoped_lock lock(m_configMutex);
             if (newPropToIndex) {
                 // DataLogReader got request for history of a property not indexed
@@ -316,21 +316,33 @@ namespace karabo {
 
             for (size_t i = 0; i < paths.size(); ++i) {
                 const string& path = paths[i];
-                const Hash::Node& leafNode = configuration.getNode(path);
-                if (leafNode.getType() == Types::HASH) continue;
+                
                 // Skip those elements which should not be archived
                 if (!m_schemaForSlotChanged.has(path)
                     || (m_schemaForSlotChanged.hasArchivePolicy(path) && (m_schemaForSlotChanged.getArchivePolicy(path) == Schema::NO_ARCHIVING))) {
                     continue;
                 }
+
+                const Hash::Node& leafNode = configuration.getNode(path);
+
+                // Check for timestamp ...
                 if (!Timestamp::hashAttributesContainTimeInformation(leafNode.getAttributes())) {
                     KARABO_LOG_WARN << "Skip '" << path << "' - it lacks time information attributes.";
                     continue;
                 }
+
                 Timestamp t = Timestamp::fromHashAttributes(leafNode.getAttributes());
                 m_lastDataTimestamp = t;
-                const string value = leafNode.getValueAs<string>();
-                const string type = Types::to<ToLiteral>(leafNode.getType());
+                string value = "";   // "value" should be a string, so convert depending on type ...
+                if (leafNode.getType() == Types::VECTOR_HASH) {
+                    // Represent any vector<Hash> as XML string ...
+                    m_serializer->save(leafNode.getValue<vector<Hash>>(), value);
+                } else if (Types::isVector(leafNode.getType())) {
+                    // ... and any other vector as a comma separated text string of vector elements
+                    value = toString(leafNode.getValueAs<string,vector>());
+                } else {
+                    value = leafNode.getValueAs<string>();
+                }
 
                 bool newFile = false;
                 if (!m_configStream.is_open()) {
@@ -348,7 +360,7 @@ namespace karabo {
                 }
 
                 size_t position = m_configStream.tellp(); // get current file size
-
+                const string type = Types::to<ToLiteral>(leafNode.getType());
                 m_configStream << t.toIso8601Ext() << "|" << fixed << t.toTimestamp() << "|"
                         << t.getTrainId() << "|" << path << "|" << type << "|" << scientific
                         << value << "|" << m_user;

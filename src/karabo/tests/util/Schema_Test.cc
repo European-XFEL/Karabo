@@ -1072,3 +1072,20 @@ void Schema_Test::testDaqPolicy() {
 
 }
 
+
+void Schema_Test::testGetLeaves() {
+    Schema schema("test");
+    TestStruct1::expectedParameters(schema);
+    OtherSchemaElements::expectedParameters(schema);
+    Hash h;
+    h.set("shapeList.BizarreForm.length", 20.f);
+    h.set("slotTest", Hash());
+    h.set("filename", string("here"));
+    h.set("testTable", vector<Hash>(3, Hash("a", -1, "b", "this_is a va|id string")));
+    vector<string> leaves;
+    getLeaves(h, schema, leaves, '.');
+    CPPUNIT_ASSERT_EQUAL(std::string("shapeList.BizarreForm.length"), leaves[0]);
+    CPPUNIT_ASSERT_EQUAL(std::string("filename"), leaves[1]);
+    CPPUNIT_ASSERT_EQUAL(std::string("testTable"), leaves[2]);
+    CPPUNIT_ASSERT_EQUAL(3ul, leaves.size());
+}

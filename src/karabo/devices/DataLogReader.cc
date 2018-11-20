@@ -41,14 +41,10 @@ namespace karabo {
         IndexBuilderService::IndexBuilderService() : 
             m_cache(),
             m_idxBuildStrand(boost::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService())) {
-                karabo::net::EventLoop::addThread();
             }
 
 
         IndexBuilderService::~IndexBuilderService() {
-            // Clean up in the destructor which is called when m_instance goes
-            // out of scope, i.e. if the program finishes (tested!).
-            karabo::net::EventLoop::removeThread();
         }
 
 
@@ -83,6 +79,7 @@ namespace karabo {
             m_cache.erase(commandLineArguments);
         }
 
+        const boost::regex DataLogReader::m_lineRegex(karabo::util::DATALOG_LINE_REGEX, boost::regex::extended);
 
         void DataLogReader::expectedParameters(Schema& expected) {
 
@@ -106,10 +103,10 @@ namespace karabo {
 
         }
 
-
         DataLogReader::DataLogReader(const Hash& input) : karabo::core::Device<karabo::core::OkErrorFsm>(input) {
+            m_serializer = TextSerializer<Hash>::create("Xml");
+            m_schemaSerializer = TextSerializer<Schema>::create("Xml");
             m_ibs = IndexBuilderService::getInstance();
-
             KARABO_SLOT(slotGetPropertyHistory, string /*deviceId*/, string /*key*/, Hash /*params*/);
             KARABO_SLOT(slotGetConfigurationFromPast, string /*deviceId*/, string /*timepoint*/)
         }
@@ -333,49 +330,42 @@ namespace karabo {
                             string line;
                             if (getline(df, line)) {
                                 if (line.empty()) continue;
-                                vector<string> tokens;
-                                boost::split(tokens, line, boost::is_any_of("|"));
-                                unsigned int offset = 0;
-                                if (tokens.size() != 8) {
-                                    if (tokens.size() == 10) {
-                                        // old format from 1.4.X: repeats seconds and fractions at indices 2 and 3
-                                        offset = 2;
-                                    } else {
-                                        KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: skip corrupted record: tokens.size() = " << tokens.size();
-                                        continue; // This record is corrupted -- skip it
+                                boost::smatch tokens;
+                                bool search_res = boost::regex_search(line, tokens, m_lineRegex);
+                                if (search_res){
+                                    const string& flag = tokens[8];
+                                    if ((flag == "LOGIN" || flag == "LOGOUT") && result.size() > 0) {
+                                        result[result.size() - 1].setAttribute("v", "isLast", 'L');
                                     }
+                                    const string& path = tokens[4];
+                                    const string& type = tokens[5];
+                                    const string& value = tokens[6];
+                                    if (path != property) {
+                                        // if you don't like the index record (for example, it pointed to the wrong property) just skip it
+                                        KARABO_LOG_FRAMEWORK_WARN << "The index for \"" << deviceId << "\", property : \"" << property
+                                                << "\" and file number : " << fnum << " points out to the wrong property in the raw file. Skip it ...";
+                                        // TODO: Here we can start index rebuilding for fnum != lastFileIndex
+                                        continue;
+                                    }
+                                    Hash hash;
+                                    if (type == "VECTOR_HASH") {
+                                        Hash::Node& node = hash.set<vector<Hash>>("v", vector<Hash>());
+                                        m_serializer->load(node.getValue<vector<Hash>>(), value);
+                                    } else {
+                                        Hash::Node& node = hash.set<string>("v", value);
+                                        node.setType(Types::from<FromLiteral>(type));
+                                    }
+
+                                    const unsigned long long trainId = fromString<unsigned long long>(tokens[3]);
+                                    const Epochstamp epochstamp(stringDoubleToEpochstamp(tokens[2]));
+                                    const Timestamp tst(epochstamp, Trainstamp(trainId));
+                                    Hash::Attributes& attrs = hash.getAttributes("v");
+                                    tst.toHashAttributes(attrs);
+                                    result.push_back(hash);
+                                } else {
+                                    KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: skip corrupted record or old format '" << line << "'";
                                 }
-
-                                const string& flag = tokens[7 + offset];
-                                if ((flag == "LOGIN" || flag == "LOGOUT") && result.size() > 0) {
-                                    result[result.size() - 1].setAttribute("v", "isLast", 'L');
-                                }
-
-                                const string& path = tokens[3 + offset];
-                                if (path != property) {
-                                    // if you don't like the index record (for example, it pointed to the wrong property) just skip it
-                                    KARABO_LOG_FRAMEWORK_WARN << "The index for \"" << deviceId << "\", property : \"" << property
-                                            << "\" and file number : " << fnum << " points out to the wrong property in the raw file. Skip it ...";
-                                    // TODO: Here we can start index rebuilding for fnum != lastFileIndex
-                                    continue;
-                                }
-
-                                Hash hash;
-                                const string& type = tokens[4 + offset];
-                                const string& value = tokens[5 + offset];
-                                Hash::Node& node = hash.set<string>("v", value);
-                                node.setType(Types::from<FromLiteral>(type));
-
-                                const unsigned long long trainId = fromString<unsigned long long>(tokens[2 + offset]);
-                                const Epochstamp epochstamp(stringDoubleToEpochstamp(tokens[1]));
-                                const Timestamp tst(epochstamp, Trainstamp(trainId));
-                                Hash::Attributes& attrs = hash.getAttributes("v");
-                                tst.toHashAttributes(attrs);
-                                result.push_back(hash);
                             }
-                            //else {
-                            //    KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: getline returns FALSE";
-                            //}
                         }
                     }
                     if (mf && mf.is_open()) mf.close();
@@ -405,7 +395,6 @@ namespace karabo {
                 Epochstamp target(timepoint);
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "Requested time point: " << target.getSeconds();
-
                 // Retrieve proper Schema
                 bf::path schemaPath(get<string>("directory") + "/" + deviceId + "/raw/archive_schema.txt");
                 if (bf::exists(schemaPath)) {
@@ -429,8 +418,8 @@ namespace karabo {
                         KARABO_LOG_WARN << "Requested time point for device configuration is earlier than anything logged";
                         return;
                     }
-                    TextSerializer<Schema>::Pointer serializer = TextSerializer<Schema>::create("Xml");
-                    serializer->load(schema, archived);
+                    m_schemaSerializer->load(schema, archived);
+
                 }
                 vector<string> paths = schema.getPaths();
 
@@ -460,37 +449,36 @@ namespace karabo {
 
                         string line;
                         while (getline(file, line)) {
-                            // file >> timestampAsIso8601 >> timestampAsDouble >> seconds >> fraction >> train >> path >> type >> val >> user >> flag;
-                            vector<string> tokens;
-                            boost::split(tokens, line, boost::is_any_of("|"));
-
-                            unsigned int offset = 0;
-                            if (tokens.size() != 8) {
-                                if (tokens.size() == 10) {
-                                    // old format from 1.4.X: repeats seconds and fractions at indices 2 and 3
-                                    offset = 2;
+                            boost::smatch tokens;
+                            bool search_res = boost::regex_search(line, tokens, m_lineRegex);
+                            if (search_res){
+                                const string& flag = tokens[8];
+                                if (flag == "LOGOUT")
+                                    break;
+                                const string& path = tokens[4];
+                                if (!schema.has(path)) continue;
+                                current = stringDoubleToEpochstamp(tokens[2]);
+                                unsigned long long train = fromString<unsigned long long>(tokens[3]);
+                                if (current > target)
+                                    break;
+                                const Timestamp timestamp(current, Trainstamp(train));
+                                const string& type = tokens[5];
+                                const string& value = tokens[6];
+                                if (type == "VECTOR_HASH") {
+                                    Hash::Node& node = hash.set<vector<Hash>>(path, vector<Hash>());
+                                    m_serializer->load(node.getValue<vector<Hash>>(), value);
+                                    Hash::Attributes& attrs = node.getAttributes();
+                                    timestamp.toHashAttributes(attrs);
                                 } else {
-                                    continue; // skip corrupted line
+                                    Hash::Node& node = hash.set<string>(path, value);
+                                    node.setType(Types::from<FromLiteral>(type));
+                                    Hash::Attributes& attrs = node.getAttributes();
+                                    timestamp.toHashAttributes(attrs);
                                 }
+
+                            } else {
+                                KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: skip corrupted record or old format";
                             }
-
-                            const string& flag = tokens[7 + offset];
-                            if (flag == "LOGOUT")
-                                break;
-
-                            const string& path = tokens[3 + offset];
-                            if (!schema.has(path)) continue;
-                            current = stringDoubleToEpochstamp(tokens[1]);
-                            unsigned long long train = fromString<unsigned long long>(tokens[2]);
-                            if (current > target)
-                                break;
-                            Timestamp timestamp(current, Trainstamp(train));
-                            const string& type = tokens[4 + offset];
-                            const string& val = tokens[5 + offset];
-                            Hash::Node& node = hash.set<string>(path, val);
-                            node.setType(Types::from<FromLiteral>(type));
-                            Hash::Attributes& attrs = node.getAttributes();
-                            timestamp.toHashAttributes(attrs);
                         }
                         file.close();
                     }
@@ -529,6 +517,7 @@ namespace karabo {
                 }
                 const Epochstamp epochstamp(stringDoubleToEpochstamp(timestampAsDouble));
                 if (epochstamp > target) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "findLoggerIndexTimepoint: done looping" << tail;
                     break;
                 } else {
                     // store selected event
@@ -544,7 +533,7 @@ namespace karabo {
                 this->extractTailOfArchiveIndex(tail, entry);
             }
 
-            KARABO_LOG_FRAMEWORK_DEBUG << "findLoggerIndexTimepoint - entry: " << entry.m_event << " "
+            KARABO_LOG_FRAMEWORK_ERROR << "findLoggerIndexTimepoint - entry: " << entry.m_event << " "
                     << entry.m_position << " " << entry.m_user << " " << entry.m_fileindex;
             return entry;
         }

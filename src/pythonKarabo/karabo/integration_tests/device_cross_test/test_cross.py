@@ -15,8 +15,8 @@ from karabo.middlelayer import (
     AccessLevel, AlarmCondition, Assignment, background, Configurable,
     DeviceClientBase, getDevice, getHistory, isSet, InputChannel,
     Int32, KaraboError, MetricPrefix, Node,
-    OutputChannel, setWait, shutdown, sleep, Slot, State, String, unit, Unit,
-    VectorDouble, waitUntil, waitUntilNew)
+    OutputChannel, setWait, shutdown, sleep, Slot, State, String,
+    unit, Unit, VectorDouble, waitUntil, waitUntilNew)
 
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 
