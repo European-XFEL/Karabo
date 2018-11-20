@@ -104,12 +104,12 @@ class SceneLinkWidget(QPushButton):
         """Return an action for the scene widget handler
         """
         edit_action = QAction('Edit Label', self)
-        edit_action.triggered.connect(self.edit_colors_text)
+        edit_action.triggered.connect(self.edit_label)
 
         return [edit_action]
 
     @pyqtSlot()
-    def edit_colors_text(self):
+    def edit_label(self):
         model = self.model.clone_traits()
         # NOTE: We do a dance here because the dialog directly modifies the
         # model, even when the dialog is cancelled!
