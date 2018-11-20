@@ -23,6 +23,14 @@
         <itemPath>../../../src/integrationTests/TcpAdapter.hh</itemPath>
         <itemPath>../../../src/integrationTests/integrationRunner.cc</itemPath>
       </logicalFolder>
+      <logicalFolder name="f10"
+                     displayName="DataLogging_Test"
+                     projectFiles="true"
+                     kind="TEST">
+        <itemPath>../../../src/integrationTests/DataLogging_Test.cc</itemPath>
+        <itemPath>../../../src/integrationTests/DataLogging_Test.hh</itemPath>
+        <itemPath>../../../src/integrationTests/integrationRunner_11.cc</itemPath>
+      </logicalFolder>
       <logicalFolder name="f9"
                      displayName="Device_Test"
                      projectFiles="true"
@@ -179,6 +187,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/integrationTests/AlarmTesterDevice_3.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/DataLogging_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/DataLogging_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -383,6 +401,11 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/integrationTests/integrationRunner_11.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/integrationTests/integrationRunner_2.cc"
             ex="false"
             tool="1"
@@ -452,6 +475,20 @@
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/alarmservice_test</output>
+          <linkerLibItems>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f10">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <ccTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f10</output>
           <linkerLibItems>
             <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
           </linkerLibItems>
@@ -651,6 +688,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/integrationTests/DataLogging_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/DataLogging_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/integrationTests/Device_Test.cc"
             ex="false"
             tool="1"
@@ -851,6 +898,11 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/integrationTests/integrationRunner_11.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/integrationTests/integrationRunner_2.cc"
             ex="false"
             tool="1"
@@ -920,6 +972,20 @@
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/alarmservice_test</output>
+          <linkerLibItems>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f10">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <ccTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f10</output>
           <linkerLibItems>
             <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
           </linkerLibItems>
@@ -1112,6 +1178,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/integrationTests/DataLogging_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/DataLogging_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/integrationTests/Device_Test.cc"
             ex="false"
             tool="1"
@@ -1312,6 +1388,11 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/integrationTests/integrationRunner_11.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/integrationTests/integrationRunner_2.cc"
             ex="false"
             tool="1"
@@ -1381,6 +1462,20 @@
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/alarmservice_test</output>
+          <linkerLibItems>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f10">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <ccTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f10</output>
           <linkerLibItems>
             <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
           </linkerLibItems>

@@ -297,7 +297,6 @@ namespace karabo {
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, karabo::util::Schema::PROPERTY);
                 this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Table");
                 this->m_node->setAttribute(KARABO_SCHEMA_VALUE_TYPE, "VECTOR_HASH");
-                this->m_node->setAttribute<int>(KARABO_SCHEMA_ARCHIVE_POLICY, Schema::NO_ARCHIVING); //currently doesn't work
                 this->m_node->setAttribute(KARABO_SCHEMA_ROW_SCHEMA, m_nodeSchema);
 
 

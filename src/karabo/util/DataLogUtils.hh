@@ -8,7 +8,10 @@
 #ifndef DATALOGGERSTRUCTS_HH
 #define	DATALOGGERSTRUCTS_HH
 
+#include <vector>
 #include "karabo/util/Epochstamp.hh"
+#include "karabo/util/Hash.hh"
+#include "karabo/util/Schema.hh"
 
 namespace karabo {
     namespace util {
@@ -16,6 +19,18 @@ namespace karabo {
         char const * const DATALOGMANAGER_ID = "Karabo_DataLoggerManager_0";
         char const * const DATALOGGER_PREFIX = "DataLogger-";
         char const * const DATALOGREADER_PREFIX = "DataLogReader";
+        //    ts=timestamp 
+        //    tsAsIso8601 : numbers, dot and uppercase letters (timezone)
+        //    tsAsDouble  : numbers and a dot (positive double)
+        //    trainId     : unsigned long long
+        //    path        : one or more characters 
+        //    type        : 0 or more characters
+        //    user        : 0 or more lower case letters, numbers and underscores
+        //    flag        : one or more uppercase letters
+        //
+        //                                          tsAsIso8601   | tsAsDouble  | trainId  | path |    type      | value|   user       |flag
+        char const * const DATALOG_LINE_REGEX = "^([A-Z0-9\\.]+)\\|([0-9\\.]+)\\|([0-9]+)\\|(.+)\\|([0-9A-Z_]*)\\|(.*)\\|([a-z0-9_]*)\\|([A-Z]+)$";
+
         unsigned int const DATALOGREADERS_PER_SERVER = 2;
 
         /**
@@ -66,7 +81,12 @@ namespace karabo {
          * to an Epochstamp
          */
         util::Epochstamp stringDoubleToEpochstamp(const std::string& timestampAsDouble);
+        
+        void getLeaves(const karabo::util::Hash& configuration, const karabo::util::Schema& schema,
+                       std::vector<std::string>& result, const char separator='.');
 
+        void getLeaves_r(const karabo::util::Hash& hash, const karabo::util::Schema& schema, std::vector<std::string>& result,
+                         std::string prefix, const char separator, const bool fullPaths);
     }
 }
 
