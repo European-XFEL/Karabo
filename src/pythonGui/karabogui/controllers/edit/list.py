@@ -205,6 +205,8 @@ class ListValidator(QValidator):
         elif (input in ('', []) and self.min_size is not None
                 and self.min_size > 0):
             return self.Intermediate, input, pos
+        elif input.startswith(','):
+            return self.Intermediate, input, pos
 
         # check for size first
         values = [val for val in input.split(',')]
