@@ -210,6 +210,8 @@ class Tests(TestCase):
         self.assertIn("other", getDevices("tserver"))
         self.assertNotIn("other", findDevices("beep"))
         self.assertIn("other", findDevices("other"))
+        self.assertIn("other", findDevices("OTHER"))
+        self.assertIn("other", findDevices("OT"))
         self.assertNotIn("other", getDevices("bserver"))
 
         double = Other(dict(_deviceId_="other", _serverId_="bserver"))
