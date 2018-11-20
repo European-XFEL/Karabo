@@ -68,6 +68,7 @@ namespace karabo {
             // Only for initialisation - counting connections to signalChanged and signalStateChanged
             boost::mutex m_numChangedConnectedMutex;
             int m_numChangedConnected;
+            karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_serializer;
 
         public:
 
