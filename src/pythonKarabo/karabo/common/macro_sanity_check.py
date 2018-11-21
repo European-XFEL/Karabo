@@ -16,6 +16,7 @@ def macro_sleep_check(code):
         import numpy; from time import perf_counter, sleep
         from time import perf_counter; from time import sleep
         exec("FROM TIME IMPORT SLEEP".lower())
+        import time as t; t.sleep
 
     Yet, it's okay to mention time.sleep in comments, which users may well
     do:
@@ -33,12 +34,21 @@ def macro_sleep_check(code):
     # commented out
     exp = re.compile("#(.*?)sleep")
 
+    # Match the next word after `import time as`, from which we can extract the
+    # new name
+    timeas = re.compile(r'(?<=\bimport time as\s)(\w+)')
+    name = 'time'
+
+    # Check if time was imported with another name
+    if "import time as" in code:
+        name = timeas.search(code).group()
+
     lines = code.splitlines()
     line_numbers = []
 
     for lineno, line in enumerate(lines, 1):
         line = line.lower()
-        if "from time" in line or "time.sleep" in line:
+        if "from {}".format(name) in line or "{}.sleep".format(name) in line:
             if not exp.search(line):
                 line_numbers.append(lineno)
 
