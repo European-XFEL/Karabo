@@ -12,7 +12,6 @@ except ImportError:
     from IPython.qt.console.pygments_highlighter import PygmentsHighlighter
 
 from karabo.common.project.api import write_macro
-from karabo.common.macro_sanity_check import macro_sleep_check
 from karabogui.events import (
     KaraboEventSender, broadcast_event, register_for_broadcasts,
     unregister_from_broadcasts)
@@ -167,15 +166,6 @@ class MacroPanel(BasePanelWidget):
             formatted_msg = "{}\n{}{}^\nin {} line {}".format(
                     e.msg, e.text, " " * e.offset, e.filename, e.lineno)
             messagebox.show_warning(formatted_msg, title=type(e).__name__)
-            return
-
-        sleeps = macro_sleep_check(self.model.code)
-        if sleeps:
-            lines = ",".join(str(idx) for idx in sleeps)
-            msg = ("The usage of time.sleep at line(s) {} is forbidden."
-                   " Use karabo.middlelayer.sleep instead".format(lines))
-            messagebox.show_warning(msg, modal=False,
-                                    title="Restricted Import")
             return
 
         run_macro(self.model)
