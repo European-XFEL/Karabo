@@ -157,7 +157,8 @@ class DeviceNode(String):
 
         proxy._current = Hash()
         instance.__dict__[self.key] = proxy
-        instance._notifyNewSchema()
+        if self.commands or self.properties:
+            instance._notifyNewSchema()
 
         def register(theirname, myname):
             @coslot
