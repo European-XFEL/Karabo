@@ -763,8 +763,9 @@ namespace karabo {
             int m_randPing;
 
         private:
-            karabo::net::Strand::Pointer m_unicastEventStrand;
             karabo::net::Strand::Pointer m_broadcastEventStrand;
+            boost::mutex m_unicastEventStrandsMutex;
+            std::unordered_map<std::string, karabo::net::Strand::Pointer> m_unicastEventStrands; // one per sender
 
             // Reply/Request related
 
@@ -958,6 +959,9 @@ namespace karabo {
             void slotPing(const std::string& instanceId, int rand, bool trackPingedInstance);
 
             void slotPingAnswer(const std::string& instanceId, const karabo::util::Hash& hash);
+
+            // Get the strand for the stated sender - may create it if not yet there.
+            karabo::net::Strand::Pointer getUnicastEventStrand(const std::string& signalInstanceId);
 
             void processSingleSlot(const std::string& slotFunction, bool globalCall, const std::string& signalInstanceId,
                                    const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body,
