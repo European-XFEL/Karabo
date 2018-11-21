@@ -6,6 +6,7 @@
 from PyQt4.QtGui import QDialog, QMessageBox
 
 from karabo.common.api import set_modified_flag, walk_traits_object
+from karabo.common.macro_sanity_check import macro_sleep_check
 from karabo.common.project.api import (
     BaseProjectObjectModel, DeviceConfigurationModel, DeviceInstanceModel,
     DeviceServerModel, MacroModel, ProjectModel, device_config_exists,
@@ -331,6 +332,14 @@ def run_macro(macro_model):
         messagebox.show_error("Macro server {} not found in system topology. "
                               "Macro cannot be started.".format(serverId),
                               modal=False)
+        return
+
+    sleeps = macro_sleep_check(macro_model.code)
+    if sleeps:
+        lines = ",".join(str(idx) for idx in sleeps)
+        msg = ("The usage of time.sleep at line(s) {} is forbidden. "
+               "Use karabo.middlelayer.sleep instead".format(lines))
+        messagebox.show_error(msg, title="Restricted Import", modal=False)
         return
 
     get_network().onInitDevice(serverId, "MetaMacro", instance_id, h)
