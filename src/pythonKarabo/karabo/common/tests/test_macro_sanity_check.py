@@ -34,6 +34,22 @@ class Tests(TestCase):
         res = macro_sleep_check(time)
         self.assertSequenceEqual([], res)
 
+    def test_importtimeas(self):
+        timeas = ("import time as t\n"
+                  "t.sleep(5)\n")
+        res = macro_sleep_check(timeas)
+        self.assertSequenceEqual([2], res)
+
+        timeas = ("import whatever; import time as bla; bla.sleep(5)")
+        res = macro_sleep_check(timeas)
+        self.assertSequenceEqual([1], res)
+
+        timeas = ("import whatever\n"
+                  "import time as bla\n"
+                  "bla.sleep(5)")
+        res = macro_sleep_check(timeas)
+        self.assertSequenceEqual([3], res)
+
     def test_comment(self):
         fromtime = "from time import time #, sleep\n"
         res = macro_sleep_check(fromtime)
