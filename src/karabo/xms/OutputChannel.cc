@@ -338,6 +338,7 @@ namespace karabo {
                                     << " Writing queued (shared) data to instance " << instanceId;
                             distributeQueue(channelInfo, channelInfo.get<std::deque<int>>("queuedChunks"));
                             return;
+                        }
                         lock.unlock();
                         pushShareNext(instanceId);
                         KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " New (shared) input on instance " << instanceId << " available for writing ";
@@ -348,9 +349,9 @@ namespace karabo {
             }
             boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
             for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
-                karabo::util::Hash& channelInfo = m_registeredCopyInputs[i];
+                karabo::util::Hash &channelInfo = m_registeredCopyInputs[i];
                 if (channelInfo.get<std::string>("instanceId") == instanceId) {
-                    if (!channelInfo.get<std::deque<int> >("queuedChunks").empty()) {
+                    if (!channelInfo.get<std::deque<int>>("queuedChunks").empty()) {
                         KARABO_LOG_FRAMEWORK_TRACE << debugId() << " Writing queued (copied) data to instance " << instanceId;
                         copyQueue(channelInfo);
                         return;
@@ -366,6 +367,7 @@ namespace karabo {
             }
             KARABO_LOG_FRAMEWORK_WARN << this->debugId() << " An input channel wants to connect (" << instanceId << ") that was not registered before.";
         }
+
 
 
         void OutputChannel::onInputGone(const karabo::net::Channel::Pointer& channel) {
@@ -390,9 +392,6 @@ namespace karabo {
                         std::deque<int> tmp = it->get<std::deque<int> >("queuedChunks");
                         // Delete from registry
                         it = m_registeredSharedInputs.erase(it);
-
-                        // Note: if distribution mode is set to "load-balanced" the chunks will be stored in a single
-                        //       queue and the per input channel should be empty. Nothing has to be done in that mode.
 
                         if (!m_registeredSharedInputs.empty()) { // There are other shared input channels available
                             // Append queued chunks to other shared input
