@@ -247,6 +247,8 @@ namespace karabo {
 
             void distributeQueue(karabo::util::Hash& channelInfo, std::deque<int>& chunkIds);
 
+            void distributeQueueSharedLoadBalanced(karabo::util::Hash& channelInfo);
+
             void copyQueue(karabo::util::Hash& channelInfo);
 
             void pushShareNext(const std::string& instanceId);
