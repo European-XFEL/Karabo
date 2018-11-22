@@ -331,12 +331,12 @@ namespace karabo {
                         if (m_distributionMode == "load-balanced" && !m_sharedLoadBalancedQueuedChunks.empty()) {
                             KARABO_LOG_FRAMEWORK_TRACE << this->debugId()
                                     << " Writing single-queued (shared) data to instance " << instanceId;
-                            distributeQueueSharedLoadBalanced(channelInfo);
+                            distributeQueue(channelInfo, m_sharedLoadBalancedQueuedChunks);
                             return;
                         } else if (!channelInfo.get<std::deque<int> >("queuedChunks").empty()) {
                             KARABO_LOG_FRAMEWORK_TRACE << this->debugId()
                                     << " Writing queued (shared) data to instance " << instanceId;
-                            distributeQueue(channelInfo);
+                            distributeQueue(channelInfo, channelInfo.get<std::deque<int>>("queuedChunks"));
                             return;
                         }
                         // Be safe and unlock before pushShareNext locks another mutex.
@@ -394,14 +394,15 @@ namespace karabo {
                         // Delete from registry
                         it = m_registeredSharedInputs.erase(it);
 
-                        // Note: if distribution mode is set to "load-balanced" the chunks will be stored in a single
-                        //       queue and the per input channel should be empty. Nothing has to be done in that mode.
-
                         if (!m_registeredSharedInputs.empty()) { // There are other shared input channels available
                             // Append queued chunks to other shared input
                             unsigned int idx = getNextSharedInputIdx();
                             std::deque<int>& src = m_registeredSharedInputs[idx].get<std::deque<int> >("queuedChunks");
+                            // Note: if load-balanced, src is empty anyway...
                             src.insert(src.end(), tmp.begin(), tmp.end());
+                        } else {
+                            // As in the non-load-balanced (and copy) case, any queue should be cleared:
+                            m_sharedLoadBalancedQueuedChunks.clear();
                         }
 
                         // Delete from input queue
@@ -449,8 +450,7 @@ namespace karabo {
         }
 
 
-        void OutputChannel::distributeQueue(karabo::util::Hash& channelInfo) {
-            std::deque<int>& chunkIds = channelInfo.get<std::deque<int> >("queuedChunks");
+        void OutputChannel::distributeQueue(karabo::util::Hash& channelInfo, std::deque<int>& chunkIds) {
             int chunkId = chunkIds.front();
             chunkIds.pop_front();
             KARABO_LOG_FRAMEWORK_DEBUG << "Distributing from queue: " << chunkId;
@@ -460,19 +460,6 @@ namespace karabo {
                 distributeRemote(chunkId, channelInfo);
             }
         }
-
-
-        void OutputChannel::distributeQueueSharedLoadBalanced(karabo::util::Hash& channelInfo) {
-            int chunkId = m_sharedLoadBalancedQueuedChunks.front();
-            m_sharedLoadBalancedQueuedChunks.pop_front();
-            KARABO_LOG_FRAMEWORK_DEBUG << "Distributing from single queue (Load balanced mode): " << chunkId;
-            if (channelInfo.get<std::string > ("memoryLocation") == "local") {
-                distributeLocal(chunkId, channelInfo);
-            } else {
-                distributeRemote(chunkId, channelInfo);
-            }
-        }
-
 
         void OutputChannel::copyQueue(karabo::util::Hash& channelInfo) {
             std::deque<int>& chunkIds = channelInfo.get<std::deque<int> >("queuedChunks");
