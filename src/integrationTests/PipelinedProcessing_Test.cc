@@ -529,10 +529,10 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversDrop() {
 
 
 void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueue() {
-    std::clog << "---\ntestPipeTwoSharedReceiversQueue (onSlowness = 'queue', dataDistribution = 'shared')\n";
+    std::clog << "---\ntestPipeTwoSharedReceiversQueue (output.noInputShared = 'queue', input.dataDistribution = 'shared')\n";
 
     karabo::util::Hash config1(m_receiverBaseConfig);
-    config1 += Hash("deviceId", m_receiver1, "input.onSlowness", "queue", "input.dataDistribution", "shared");
+    config1 += Hash("deviceId", m_receiver1, "input.dataDistribution", "shared");
 
     karabo::util::Hash config2(config1);
     config2.set<std::string>("deviceId", m_receiver2);
