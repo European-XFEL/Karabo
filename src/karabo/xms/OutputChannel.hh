@@ -110,6 +110,12 @@ namespace karabo {
 
             mutable boost::mutex m_registeredSharedInputsMutex;
             InputChannels m_registeredSharedInputs;
+            // Used for storing chunks for shared input channels when
+            // distribution mode is "load-balanced" and the strategy for
+            // NoSharedInputChannel available is "queue".
+            // Relies on lock protection using m_registeredSharedInputsMutex.
+            std::deque<int> m_sharedLoadBalancedQueuedChunks;
+
             mutable boost::mutex m_registeredCopyInputsMutex;
             InputChannels m_registeredCopyInputs;
 
@@ -122,11 +128,6 @@ namespace karabo {
 
             unsigned int m_channelId;
             unsigned int m_chunkId;
-
-            // Used for storing chunks for shared input channels when
-            // distribution mode is "load-balanced" and the strategy for
-            // NoSharedInputChannel available is "queue".
-            std::deque<int> m_sharedLoadBalancedQueuedChunks;
 
         public:
             typedef Memory::MetaData MetaData;
@@ -244,9 +245,7 @@ namespace karabo {
 
             void onInputGone(const karabo::net::Channel::Pointer& channel);
 
-            void distributeQueue(karabo::util::Hash& channelInfo);
-
-            void distributeQueueSharedLoadBalanced(karabo::util::Hash& channelInfo);
+            void distributeQueue(karabo::util::Hash& channelInfo, std::deque<int>& chunkIds);
 
             void copyQueue(karabo::util::Hash& channelInfo);
 
