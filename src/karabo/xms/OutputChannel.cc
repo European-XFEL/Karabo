@@ -456,8 +456,9 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "Distributing from queue: " << chunkId;
             if (channelInfo.get<std::string > ("memoryLocation") == "local") {
                 distributeLocal(chunkId, channelInfo);
+            } else {
+                distributeRemote(chunkId, channelInfo);
             }
-            else distributeRemote(chunkId, channelInfo);
         }
 
 
@@ -467,8 +468,9 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "Distributing from single queue (Load balanced mode): " << chunkId;
             if (channelInfo.get<std::string > ("memoryLocation") == "local") {
                 distributeLocal(chunkId, channelInfo);
+            } else {
+                distributeRemote(chunkId, channelInfo);
             }
-            else distributeRemote(chunkId, channelInfo);
         }
 
 
@@ -548,7 +550,7 @@ namespace karabo {
         void OutputChannel::update() {
 
             // m_channelId is unique per _process_...
-            KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT " << m_channelId << " of '" << this->getInstanceId() << "' update()";
+            KARABO_LOG_FRAMEWORK_TRACE << "OUTPUT " << m_channelId << " of '" << this->getInstanceId() << "' update()";
 
             // If no data was written return
             if (Memory::size(m_channelId, m_chunkId) == 0) return;
@@ -667,9 +669,6 @@ namespace karabo {
         void OutputChannel::distribute(unsigned int chunkId) {
 
             boost::mutex::scoped_lock lock(m_registeredSharedInputsMutex);
-
-            KARABO_LOG_FRAMEWORK_DEBUG << "m_distributionMode == " << m_distributionMode;
-            KARABO_LOG_FRAMEWORK_DEBUG << "number of registered shared inputs: " << m_registeredSharedInputs.size();
             
             // If no shared input channels are registered at all, we do not go on
             if (m_registeredSharedInputs.empty()) return;
@@ -716,8 +715,8 @@ namespace karabo {
                     throw KARABO_IO_EXCEPTION("Can not write data because no (shared) input is available");
 
                 } else if (m_onNoSharedInputChannelAvailable == "queue") {
-                    // GF Oct. 2018: When distributing, there should be a common queue, not individual ones!
-                    // Maybe not in round-robin...
+                    // Since distributing round-robin, it is really this instance's turn.
+                    // So we queue for exactly this one.
                     KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Queuing (shared) data package with chunkId: " << chunkId;
                     m_registeredSharedInputs[sharedInputIdx].get<std::deque<int> >("queuedChunks").push_back(chunkId); // channelInfo is const...
                 } else if (m_onNoSharedInputChannelAvailable == "wait") {
@@ -777,26 +776,19 @@ namespace karabo {
                 bool haveToWait = false;
                 if (m_onNoSharedInputChannelAvailable == "drop") {
                     unregisterWriterFromChunk(chunkId);
-                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Dropping (shared) data package with chunkId: " << chunkId;
+                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
+                            << " Dropping (shared) data package with chunkId: " << chunkId;
                 } else if (m_onNoSharedInputChannelAvailable == "throw") {
                     unregisterWriterFromChunk(chunkId);
                     throw KARABO_IO_EXCEPTION("Can not write data because no (shared) input is available");
                 } else if (m_onNoSharedInputChannelAvailable == "queue") {
-                    // GF Oct. 2018: When distributing load-balanced, there should be a common queue, not individual ones!
-                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Queuing (shared) data package with chunkId: " << chunkId;
-                    if (m_distributionMode == "load-balanced") {
-                        // For load-balanced mode the chunks should be put on a single queue.
-                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
-                                << "Placing chunk in single queue (load-balanced distribution mode)";
+                    // When distributing load-balanced, there is a common queue, not individual ones!
+                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
+                            << " Queuing (shared) data package with chunkId: " << chunkId;
+                    // For load-balanced mode the chunks should be put on a single queue.
+                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
+                            << "Placing chunk in single queue (load-balanced distribution mode)";
                         m_sharedLoadBalancedQueuedChunks.push_back(chunkId);
-                    } else {
-                        // For round-robin mode the chunks should be queued per InputChannel.
-                        const unsigned int sharedInputIdx = getNextSharedInputIdx();
-                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
-                                << "Placing chunk in queue for next shared input channel id: " << sharedInputIdx;
-                        m_registeredSharedInputs[sharedInputIdx].get<std::deque<int> >("queuedChunks").push_back(chunkId);
-                    }
-
                 } else if (m_onNoSharedInputChannelAvailable == "wait") {
                     // Blocking actions must not happen under the mutex that is also needed to unblock (in onInputAvailable)
                     haveToWait = true;
