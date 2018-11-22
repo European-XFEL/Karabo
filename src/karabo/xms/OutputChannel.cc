@@ -537,7 +537,7 @@ namespace karabo {
         void OutputChannel::update() {
 
             // m_channelId is unique per _process_...
-            KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT " << m_channelId << " of '" << this->getInstanceId() << "' update()";
+            KARABO_LOG_FRAMEWORK_TRACE << "OUTPUT " << m_channelId << " of '" << this->getInstanceId() << "' update()";
 
             // If no data was written return
             if (Memory::size(m_channelId, m_chunkId) == 0) return;
