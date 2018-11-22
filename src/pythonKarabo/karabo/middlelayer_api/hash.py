@@ -1223,7 +1223,7 @@ class HashType(Type):
             hashtype = _gettype(v)
             yield pack('II', hashtype.number, len(attrs))
             for ak, av in attrs.items():
-                atype = _get_attr_type(ak, av)
+                atype = _gettype(av)
                 yield from yieldKey(ak)
                 yield pack('I', atype.number)
                 yield from atype.yieldBinary(av)
@@ -1247,7 +1247,7 @@ class HashType(Type):
             yield '<{key} KRB_Type="{value_type}" '.format(
                 key=key, value_type=value_type.hashname())
             for k, v in attrs.items():
-                attr_type = _get_attr_type(k, v)
+                attr_type = _gettype(v)
                 attr = "KRB_{attr_type}:{data}".format(
                     attr_type=attr_type.hashname(),
                     data="".join(attr_type.yieldXML(v)))
@@ -1453,15 +1453,6 @@ class None_(Type):
     def cast(self, other):
         if other is not None:
             raise TypeError('cannot cast to None (was {})'.format(other))
-
-
-def _get_attr_type(attr, data):
-    """This function is used for attribute description
-    """
-    if attr in ("tid", "sec", "frac"):
-        return UInt64
-    else:
-        return _gettype(data)
 
 
 def _gettype(data):
