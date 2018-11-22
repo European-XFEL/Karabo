@@ -43,14 +43,31 @@ private:
     void testGetOutputChannelSchema();
     void testPipeWait();
     void testPipeDrop();
+    void testPipeQueue();
     void testPipeMinData();
     void testPipeTwoSharedReceiversWait();
     void testPipeTwoSharedReceiversDrop();
+
+    /**
+     * Tests pipe with two receivers with 'shared' value for their 'input.dataDistribution' setting
+     * and a sender with 'queue' value for its 'output.NoInputShared' setting. Tests are performed
+     * for both the 'round-robin' and 'load-balanced' values for the sender's 'output.distributionMode'.
+     */
+    void testPipeTwoSharedReceiversQueue();
+
     void testPipeTwoPots();
     void testProfileTransferTimes();
 
     void testPipeWait(unsigned int processingTime, unsigned int delayTime);
     void testPipeDrop(unsigned int processingTime, unsigned int delayTime, bool dataLoss);
+
+    /**
+     * Tests pipe for one receiver with 'queue' value for its 'input.onSlowness' setting and 'copy' value
+     * for its 'input.dataDistribution' setting. In this scenario, the sender is expected to queue the
+     * data to be sent when the receiver has high processing times.
+     */
+    void testPipeQueue(unsigned int processingTime, unsigned int delayTime);
+
     // roundRobin = true means that sender is supposed to be configured round-robin - extra tests of fair share are done
     void testPipeTwoSharedReceivers(unsigned int processingTime1,
                                     unsigned int processingTime2,

@@ -123,6 +123,11 @@ namespace karabo {
             unsigned int m_channelId;
             unsigned int m_chunkId;
 
+            // Used for storing chunks for shared input channels when
+            // distribution mode is "load-balanced" and the strategy for
+            // NoSharedInputChannel available is "queue".
+            std::deque<int> m_sharedLoadBalancedQueuedChunks;
+
         public:
             typedef Memory::MetaData MetaData;
 
@@ -240,6 +245,8 @@ namespace karabo {
             void onInputGone(const karabo::net::Channel::Pointer& channel);
 
             void distributeQueue(karabo::util::Hash& channelInfo);
+
+            void distributeQueueSharedLoadBalanced(karabo::util::Hash& channelInfo);
 
             void copyQueue(karabo::util::Hash& channelInfo);
 
