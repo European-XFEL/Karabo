@@ -338,9 +338,6 @@ namespace karabo {
                                     << " Writing queued (shared) data to instance " << instanceId;
                             distributeQueue(channelInfo, channelInfo.get<std::deque<int>>("queuedChunks"));
                             return;
-                        }
-                        // Be safe and unlock before pushShareNext locks another mutex.
-                        // One also never knows what handlers are registered for io event...
                         lock.unlock();
                         pushShareNext(instanceId);
                         KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " New (shared) input on instance " << instanceId << " available for writing ";
@@ -393,6 +390,9 @@ namespace karabo {
                         std::deque<int> tmp = it->get<std::deque<int> >("queuedChunks");
                         // Delete from registry
                         it = m_registeredSharedInputs.erase(it);
+
+                        // Note: if distribution mode is set to "load-balanced" the chunks will be stored in a single
+                        //       queue and the per input channel should be empty. Nothing has to be done in that mode.
 
                         if (!m_registeredSharedInputs.empty()) { // There are other shared input channels available
                             // Append queued chunks to other shared input
@@ -537,7 +537,7 @@ namespace karabo {
         void OutputChannel::update() {
 
             // m_channelId is unique per _process_...
-            KARABO_LOG_FRAMEWORK_TRACE << "OUTPUT " << m_channelId << " of '" << this->getInstanceId() << "' update()";
+            KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT " << m_channelId << " of '" << this->getInstanceId() << "' update()";
 
             // If no data was written return
             if (Memory::size(m_channelId, m_chunkId) == 0) return;
