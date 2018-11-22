@@ -422,7 +422,13 @@ class OutputProxy(SubProxyBase):
         # Add our channel to the proxy
         self._parent._remote_output_channel.add(self)
         self.networkInput.parent = self._parent._device
-        self.task = background(self._connect(output))
+        # Track task correctly according to the Eventloop
+        loop = get_event_loop()
+        if not loop.sync_set:
+            self.task = loop.create_task(self._connect(output),
+                                         instance=self._parent._device)
+        else:
+            self.task = background(self._connect(output))
 
     @coroutine
     def _connect(self, output):
