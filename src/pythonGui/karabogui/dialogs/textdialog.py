@@ -17,7 +17,7 @@ class TextDialog(QDialog):
         if label_model is None:
             self.label_model = LabelModel()
         else:
-            self.label_model = label_model
+            self.label_model = label_model.clone_traits()
 
         self.leText.setText(self.label_model.text)
         # Use a member work with text font
