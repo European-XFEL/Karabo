@@ -21,17 +21,17 @@ class SceneLinkWidget(QPushButton):
         super(SceneLinkWidget, self).__init__(parent)
         self.model = model
 
-        self._layout = QHBoxLayout(self)
+        self.layout = QHBoxLayout(self)
         self.setToolTip(self.model.target)
         self.setCursor(Qt.PointingHandCursor)
         self.clicked.connect(self._handle_click)
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
-        self._label = QLabel(parent=self)
-        self._label.setAlignment(Qt.AlignCenter)
-        self._label.setContentsMargins(QMargins(0, 0, 0, 0))
-        self._label.setAutoFillBackground(True)
-        self._layout.addWidget(self._label)
-        self._layout.setContentsMargins(QMargins(4, 12, 4, 4))
+        self.label = QLabel(parent=self)
+        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setContentsMargins(QMargins(0, 0, 0, 0))
+        self.label.setAutoFillBackground(True)
+        self.layout.addWidget(self.label)
+        self.layout.setContentsMargins(QMargins(4, 12, 4, 4))
 
         # Apply initial model values!
         self.apply_model()
@@ -52,6 +52,8 @@ class SceneLinkWidget(QPushButton):
             pen.setColor(Qt.lightGray)
             painter.setPen(pen)
             painter.drawLine(pt + QPoint(4, 4), pt + QPoint(15, 4))
+            # And of course our label when we repaint (dock/undock)!
+            self.apply_model()
 
     @pyqtSlot()
     def _handle_click(self):
@@ -110,10 +112,7 @@ class SceneLinkWidget(QPushButton):
 
     @pyqtSlot()
     def edit_label(self):
-        model = self.model.clone_traits()
-        # NOTE: We do a dance here because the dialog directly modifies the
-        # model, even when the dialog is cancelled!
-        dialog = TextDialog(model)
+        dialog = TextDialog(self.model)
         if dialog.exec() == QDialog.Rejected:
             return
 
@@ -125,19 +124,19 @@ class SceneLinkWidget(QPushButton):
         self.apply_model()
 
     def apply_model(self):
-        self._label.setText(self.model.text)
-        self._label.setLineWidth(self.model.frame_width)
+        self.label.setText(self.model.text)
+        self.label.setLineWidth(self.model.frame_width)
 
         font_properties = QFont()
         font_properties.fromString(self.model.font)
-        self._label.setFont(font_properties)
+        self.label.setFont(font_properties)
 
-        palette = self._label.palette()
-        palette.setColor(self._label.foregroundRole(),
+        palette = self.label.palette()
+        palette.setColor(self.label.foregroundRole(),
                          QColor(self.model.foreground))
-        palette.setColor(self._label.backgroundRole(),
+        palette.setColor(self.label.backgroundRole(),
                          QColor(self.model.background))
-        self._label.setPalette(palette)
+        self.label.setPalette(palette)
 
     def edit(self, scene_view):
         dialog = SceneLinkDialog(self.model, parent=scene_view)
