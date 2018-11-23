@@ -63,8 +63,13 @@ private:
 
     /**
      * Tests pipe for one receiver with 'queue' value for its 'input.onSlowness' setting and 'copy' value
-     * for its 'input.dataDistribution' setting. In this scenario, the sender is expected to queue the
-     * data to be sent when the receiver has high processing times.
+     * for its 'input.dataDistribution' setting.
+     *
+     * In this scenario, the sender is expected to queue the data to be sent when the receiver has significantly
+     * higher processing times than the sender's delayTime. If the opposite is true - the sender's delay time
+     * is significantly higher than the receiver's processing time - no queuing on the sender is expected.
+     *
+     * This test asserts for those queuing behaviors.
      */
     void testPipeQueue(unsigned int processingTime, unsigned int delayTime);
 
@@ -74,6 +79,18 @@ private:
                                     unsigned int delayTime,
                                     bool dataLoss,
                                     bool roundRobin); // else load-balanced, i.e. the default
+
+    /**
+     * Tests the queuing behavior for pipes with two 'shared' receivers and the sender with 'queue' setting for
+     * 'noInputShared' for its output channel. Queuing should be detected when the receivers processingTime are
+     * significantly higher than the sender delayTime. Queuing should not be detected when the opposite is true -
+     * the sender delayTime is significantly higher than the receivers processingTime.
+     *
+     * Note: the queuing behavior should be detected regardless of the sender's output distribution mode value 
+     * being 'round-robin' or 'load-balanced'.
+     */
+    void testTwoSharedReceiversQueuing(unsigned int processingTime, unsigned int delayTime);
+
     void testProfileTransferTimes(bool noShortCut, bool copy);
 
     template <typename T>
