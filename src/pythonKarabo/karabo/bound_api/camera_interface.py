@@ -3,7 +3,8 @@ from abc import ABCMeta, abstractmethod
 from karathon import (
     OVERWRITE_ELEMENT, SLOT_ELEMENT, IMAGEDATA_ELEMENT, OUTPUT_CHANNEL,
     DOUBLE_ELEMENT, NODE_ELEMENT, BOOL_ELEMENT, PATH_ELEMENT,
-    STRING_ELEMENT, INT32_ELEMENT, DaqDataType, Schema, SignalSlotable, Unit)
+    STRING_ELEMENT, INT32_ELEMENT, DaqDataType, Schema, Unit,
+    VECTOR_STRING_ELEMENT)
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from .no_fsm import NoFsm
 from karabo.common.states import State
@@ -53,10 +54,17 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
                 .description("Resets the camera in case of an error")
                 .allowedStates(State.ERROR)
                 .commit(),
+
+        VECTOR_STRING_ELEMENT(expected).key("interfaces")
+                .displayedName("Interfaces")
+                .description("Describes the interfaces of this device")
+                .readOnly()
+                .initialValue(["Camera"])
+                .commit(),
         )
-        
+
         data = Schema()
-        
+
         (
         NODE_ELEMENT(data).key("data")
                 .displayedName("Data")
@@ -143,7 +151,6 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
         self.registerInitialFunction(self.initialize)
 
     def initFsmSlots(self, sigslot):
-        #sigslot.setNumberOfThreads(1)
         sigslot.registerSlot(self.connectCamera)
         sigslot.registerSlot(self.acquire)
         sigslot.registerSlot(self.trigger)
@@ -167,19 +174,19 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
         """
         The method is called as a result of processing "acquire" Event.
         """
-    
+
     @abstractmethod
     def trigger(self):
         """
         The method is called during processing of a "trigger" event
         """
-        
+
     @abstractmethod
     def stop(self):
         """
         The method is called during processing of a "stop" event.
         """
-        
+
     @abstractmethod
     def resetHardware(self):
         """
