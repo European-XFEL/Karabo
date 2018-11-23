@@ -13,32 +13,36 @@ from karabogui.sceneview.utils import calc_rect_from_text
 class LabelWidget(QLabel):
     """A label which can appear in a scene
     """
+
     def __init__(self, model, parent=None):
         super(LabelWidget, self).__init__(model.text, parent)
         self.setFrameShape(QFrame.Box)
         self.setAutoFillBackground(True)
-        self.set_model(model)
+        self.model = model
+        self.apply_model()
 
     def set_model(self, model):
-        """Set the new ``model`` and update the widget properties.
-        """
-        self.model = model
+        self.model.trait_set(text=model.text, frame_width=model.frame_width,
+                             font=model.font, background=model.background,
+                             foreground=model.foreground)
+        self.apply_model()
 
-        self.setText(self.model.text)
-        self.setToolTip(self.model.text)
-        self.setLineWidth(self.model.frame_width)
+    def apply_model(self):
+        model = self.model
+        self.setText(model.text)
+        self.setToolTip(model.text)
+        self.setLineWidth(model.frame_width)
 
         font_properties = QFont()
-        font_properties.fromString(self.model.font)
+        font_properties.fromString(model.font)
         self.setFont(font_properties)
 
         palette = self.palette()
         palette.setColor(self.foregroundRole(), QColor(model.foreground))
         palette.setColor(self.backgroundRole(), QColor(model.background))
         self.setPalette(palette)
-
-        _, _, model.width, model.height = calc_rect_from_text(model.font,
-                                                              model.text)
+        _, _, model.width, model.height = calc_rect_from_text(
+            model.font, model.text)
         self.setGeometry(model.x, model.y, model.width, model.height)
 
     def add_proxies(self, proxies):
