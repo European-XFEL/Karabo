@@ -553,6 +553,9 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueue() {
     testPipeTwoSharedReceivers(100, 40, 0, false, false); // receivers which have different "speed"
     testPipeTwoSharedReceivers(100, 100, 0, false, false); // receivers which have the same "speed"
 
+    testTwoSharedReceiversQueuing(5, 50);
+    testTwoSharedReceiversQueuing(50, 5);
+
     // restart the sender with "output1.noInputShared == queue" and "output1.distributionMode = "round-robin"
     killDeviceWithAssert(m_sender);
     instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", m_sender, "output1", Hash("noInputShared", "queue",
@@ -563,6 +566,9 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueue() {
     // No data loss is expected for 'queue' distribution mode, despite of differences between receivers
     testPipeTwoSharedReceivers(100, 40, 0, false, true); // receivers which have different "speed"
     testPipeTwoSharedReceivers(100, 100, 0, false, true); // receivers which have the same "speed"
+
+    testTwoSharedReceiversQueuing(5, 50);
+    testTwoSharedReceiversQueuing(50, 5);
 
     killDeviceWithAssert(m_receiver1);
     killDeviceWithAssert(m_receiver2);
@@ -653,6 +659,110 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processin
     }
 
     std::clog << "  summary: nTotalData = " << nTotalData1 << ", " << nTotalData2 << std::endl;
+}
+
+
+void PipelinedProcessing_Test::testTwoSharedReceiversQueuing(unsigned int processingTime,
+                                                             unsigned int delayTime) {
+
+    std::clog << "- processingTime (both receivers) = " << processingTime
+            << " ms, delayTime = " << delayTime << " ms -- expect "
+            << m_deviceClient->get<std::string>(m_sender, "output1.distributionMode") << "\n";
+
+    int64_t elapsedTimeIn_microseconds = 0ll;
+
+    // If processingTime is significantly bigger than delayTime, we are bound by processingTime. In this scenario,
+    // the sender will start "sending" (actually dispatching data to a queue) immediately. As the receivers have a
+    // relatively large processingTime, it will take a while for them to actually receive the data.
+    bool processingTimeHigher = (processingTime > 2 * delayTime);
+
+    // If delayTime is significantly bigger than the processing time, we are bound by the delayTime. This means
+    // that between two successive data writes the sender will wait delayTime milliseconds and the sender is
+    // expected to be slowest part.
+    bool delayTimeHigher = (2 * processingTime < delayTime);
+
+    CPPUNIT_ASSERT_MESSAGE("Difference between processingTime and delayTime not large enough to test queuing behavior!",
+                           processingTimeHigher || delayTimeHigher);
+
+    m_deviceClient->set(m_receiver1, "processingTime", processingTime);
+    m_deviceClient->set(m_receiver2, "processingTime", processingTime);
+    m_deviceClient->set(m_sender, "delay", delayTime);
+
+    // We use the same two receiver devices for several successive tests.
+    // reset nTotalData and nTotalDataOnEos
+    m_deviceClient->execute(m_receiver1, "reset");
+    m_deviceClient->execute(m_receiver2, "reset");
+    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver1, "nTotalData", 0));
+    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver2, "nTotalData", 0));
+
+    unsigned int nDataExpected = 0;
+    for (unsigned int nRun = 0; nRun < m_numRunsPerTest; ++nRun) {
+        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+        
+        // make sure the sender has stopped sending data
+        CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+        // retrieves the amount of data that the sender will send
+        unsigned int senderNData = m_deviceClient->get<unsigned int>(m_sender, "nData");
+        // then call its slot
+        m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
+
+        // Makes sure the sender has finished sending the data in this run. We can't rely on 'currentDataId' for
+        // this because in situations of high delayTime a pollDeviceProperty polling can return immediately due to
+        // an expected value from the previous run.
+        CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+
+        nDataExpected += m_nDataPerRun;
+
+        const unsigned int receivedSoFar1 = m_deviceClient->get<unsigned int>(m_receiver1, "nTotalData");
+        const unsigned int receivedSoFar2 = m_deviceClient->get<unsigned int>(m_receiver2, "nTotalData");
+        const unsigned int receivedSoFar = receivedSoFar1 + receivedSoFar2;
+
+        if (processingTimeHigher) {
+             // We assert a maximum ratio of data arrival in this scenario.
+            CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(receivedSoFar) + " " + karabo::util::toString(nDataExpected),
+                                   2 * (nDataExpected - receivedSoFar) <= m_nDataPerRun * 3); // at max. 2/3 have arrived
+        } else if (delayTimeHigher) {
+            // We assert that the amount of received data must be at the maximum 2*m_nPots lower than the amount of
+            // expected sent data (no bottleneck on the receivers).
+            CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(receivedSoFar) + " " + karabo::util::toString(nDataExpected),
+                                   nDataExpected - receivedSoFar <= 2 * m_nPots);
+        }
+
+        // In the end, all data should have arrived - waits until the total amount of data received equals the total
+        // sent (or fail).
+        const int pollWaitTimeInMs = 5;
+        int pollCounter = 0;
+        bool allReceived = false;
+
+        // Poll the device until it responds with the correct answer or times out.
+        while (pollWaitTimeInMs * pollCounter <= m_maxTestTimeOut * 1000) {
+            boost::this_thread::sleep(boost::posix_time::milliseconds(pollWaitTimeInMs));
+            const unsigned int received1 = m_deviceClient->get<unsigned int>(m_receiver1, "nTotalData");
+            const unsigned int received2 = m_deviceClient->get<unsigned int>(m_receiver2, "nTotalData");
+            const unsigned int received = received1 + received2;
+            if (received == nDataExpected) {
+                allReceived = true;
+                break;
+            }
+            ++pollCounter;
+        }
+        CPPUNIT_ASSERT_MESSAGE("Unexpected data loss detected.", allReceived);
+
+        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        // Note that duration contains overhead from message travel time and polling interval in pollDeviceProperty!
+        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+    }
+
+    const unsigned int dataItemSize = m_deviceClient->get<unsigned int>(m_receiver1, "dataItemSize");
+    double mbps = double(dataItemSize) * double(nDataExpected) / double(elapsedTimeIn_microseconds);
+    // Note that this measurement checks the inner-process shortcut - and includes timing overhead e.g. pollDeviceProperty
+    // In addition, the process and delay times also affect mbps.
+    std::clog << "  summary: Megabytes per sec : " << mbps
+            << ", elapsedTimeIn_microseconds = " << elapsedTimeIn_microseconds
+            << ", dataItemSize = " << dataItemSize
+            << ", nTotalData = " << nDataExpected
+            << ", " << (processingTimeHigher ? "Queuing" : "No queuing") << " on sender detected, as expected."
+            << std::endl;
 }
 
 
