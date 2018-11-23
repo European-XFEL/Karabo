@@ -119,20 +119,31 @@ class SubprojectController(ProjectSubgroupController):
         already loaded.
         """
         project_uuids = defaultdict(int)
+        project_names = []
+        empty_projects = 0
 
         def _visitor(model):
             """Count the number of times each UUID appears in the tree"""
-            nonlocal project_uuids
+            nonlocal project_uuids, project_names, empty_projects
             if isinstance(model, ProjectModel):
                 project_uuids[model.uuid] += 1
+                if not model.simple_name:
+                    empty_projects += 1
+                if project_uuids[model.uuid] > 1:
+                    if model.simple_name:
+                        project_names.append(model.simple_name)
 
         # Walk both projects and count the instances of project models
         walk_traits_object(project, _visitor)
         walk_traits_object(root_project, _visitor)
 
         # If a UUID appeared more than once, we have a problem!
-        if any(v > 1 for v in project_uuids.values()):
-            msg = 'That project OR one of its sub-projects is already loaded!'
+        if project_names:
+            msg = ('That project OR one of its sub-projects is already '
+                   'loaded! Please investigate and have a look at the '
+                   'project(s) <b>{}</b>! You have <b>{}</b> projects '
+                   'that are loaded with an empty name!'.format(
+                    project_names, empty_projects))
             messagebox.show_warning(msg, title='Load Subproject Failed')
             return True
         return False
