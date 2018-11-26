@@ -35,7 +35,7 @@ class TestDisplayDeviceSceneLink(GuiTestCase):
         self.controller.model.keys = ['deviceUno.availableScenes']
         self.controller.model.target = 'Vinny'
         self.controller.model.target_window = SceneTargetWindow.Dialog
-        self.controller._internal_widget.model = self.controller.model
+        self.controller.widget.model = self.controller.model
         self.target = 'karabogui.controllers.display.' + \
                       'devicescenelink.call_device_slot'
         self.mbox = 'karabogui.controllers.display.devicescenelink.messagebox'
@@ -49,7 +49,7 @@ class TestDisplayDeviceSceneLink(GuiTestCase):
         device.status = DeviceStatus.ONLINE
 
         with patch(self.target) as caller:
-            self.controller._internal_widget._handle_click()
+            self.controller.widget._handle_click()
             assert caller.call_count == 1
 
     def test_clicked_device_off(self):
@@ -57,5 +57,5 @@ class TestDisplayDeviceSceneLink(GuiTestCase):
         device.status = DeviceStatus.OFFLINE
 
         with patch(self.target) as caller, patch(self.mbox, new=MockBox):
-            self.controller._internal_widget._handle_click()
+            self.controller.widget._handle_click()
             assert caller.call_count == 0
