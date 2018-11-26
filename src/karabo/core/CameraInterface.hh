@@ -88,6 +88,13 @@ namespace karabo {
                         .reconfigurable()
                         .commit();
 
+                VECTOR_STRING_ELEMENT(expected).key("interfaces")
+                        .displayedName("Interfaces")
+                        .description("Describes the interfaces of this device")
+                        .readOnly()
+                        .initialValue({"Camera"})
+                        .commit();
+
                 NODE_ELEMENT(expected).key("imageStorage")
                         .displayedName("Local Image Storage")
                         .commit();
