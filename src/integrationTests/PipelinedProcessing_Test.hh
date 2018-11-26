@@ -80,6 +80,7 @@ private:
                                     bool dataLoss,
                                     bool roundRobin); // else load-balanced, i.e. the default
 
+    
     /**
      * Tests the queuing behavior for pipes with two 'shared' receivers and the sender with 'queue' setting for
      * 'noInputShared' for its output channel. Queuing should be detected when the receivers processingTime are
@@ -90,6 +91,14 @@ private:
      * being 'round-robin' or 'load-balanced'.
      */
     void testTwoSharedReceiversQueuing(unsigned int processingTime, unsigned int delayTime);
+
+    
+    /**
+     * Tests that the output queues kept by a sender are being properly cleared after the receiver disconnects
+     * while there is still data to be sent.
+     */
+    void testQueueClearAfterReceiverDisconnect();
+    
 
     void testProfileTransferTimes(bool noShortCut, bool copy);
 
