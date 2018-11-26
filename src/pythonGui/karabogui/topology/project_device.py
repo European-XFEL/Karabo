@@ -8,7 +8,8 @@ from traits.api import (
     Bool, DelegatesTo, HasStrictTraits, Instance, Int, Property, String,
     on_trait_change)
 
-from karabo.common.api import DeviceStatus, ONLINE_STATUSES
+from karabo.common.api import (
+    DeviceStatus, KARABO_SCHEMA_DEFAULT_VALUE, ONLINE_STATUSES)
 from karabo.middlelayer import Hash
 from karabogui.binding.api import (
     BaseDeviceProxy, DeviceProxy, ProjectDeviceProxy,
@@ -79,6 +80,23 @@ class ProjectDeviceInstance(HasStrictTraits):
             self._offline_config = new_config
             return new_config
         return Hash()
+
+    def get_schema_default_configuration(self):
+        """Extract the ``default`` configuration derived from a schema
+
+        The returned configuration Hash consists of all keys which have
+        with defaultValue as their value.
+        """
+        topology = get_topology()
+        schema = topology.get_schema(self.server_id, self.class_id)
+        config = Hash()
+        if schema is not None:
+            for key, _, attrs in schema.hash.iterall():
+                default = attrs.get(KARABO_SCHEMA_DEFAULT_VALUE)
+                if default is not None:
+                    config[key] = default
+
+        return config
 
     def rename(self, device_id='', server_id='', class_id=''):
         """Assign a new device_id, server_id, class_id.
