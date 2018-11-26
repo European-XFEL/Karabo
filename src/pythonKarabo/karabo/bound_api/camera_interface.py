@@ -2,8 +2,7 @@ from abc import ABCMeta, abstractmethod
 
 from karathon import (
     OVERWRITE_ELEMENT, SLOT_ELEMENT, IMAGEDATA_ELEMENT, OUTPUT_CHANNEL,
-    DOUBLE_ELEMENT, NODE_ELEMENT, BOOL_ELEMENT, PATH_ELEMENT,
-    STRING_ELEMENT, INT32_ELEMENT, DaqDataType, Schema, Unit,
+    DOUBLE_ELEMENT, NODE_ELEMENT, INT32_ELEMENT, DaqDataType, Schema, Unit,
     VECTOR_STRING_ELEMENT)
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from .no_fsm import NoFsm
@@ -14,7 +13,7 @@ __date__ = "$Apr 22, 2015 4:14:47 PM$"
 
 
 @KARABO_CONFIGURATION_BASE_CLASS
-@KARABO_CLASSINFO("CameraInterface", "1.3")
+@KARABO_CLASSINFO("CameraInterface", "1.4")
 class CameraInterface(NoFsm, metaclass=ABCMeta):
 
     @staticmethod
@@ -89,51 +88,6 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
                 .reconfigurable()
                 .commit(),
 
-        NODE_ELEMENT(expected).key("imageStorage")
-                .displayedName("Local Image Storage")
-                .commit(),
-
-        BOOL_ELEMENT(expected).key("imageStorage.enable")
-                .displayedName("Enable")
-                .description("Save images while acquiring.")
-                .assignmentOptional().defaultValue(False)
-                .reconfigurable()
-                .allowedStates(State.ON)
-                .commit(),
-
-        PATH_ELEMENT(expected).key("imageStorage.filePath")
-                .displayedName("File Path")
-                .description("The path for saving images to file")
-                .isDirectory()
-                .assignmentOptional().defaultValue("/tmp")
-                .reconfigurable()
-                .allowedStates(State.ON)
-                .commit(),
-
-        STRING_ELEMENT(expected).key("imageStorage.fileName")
-                .displayedName("File Name")
-                .description("The name for saving images to file")
-                .assignmentOptional().defaultValue("image")
-                .reconfigurable()
-
-                .allowedStates(State.ON)
-                .commit(),
-
-        STRING_ELEMENT(expected).key("imageStorage.fileType")
-                .displayedName("File Type")
-                .description("The image format to be used for writing to file")
-                .assignmentOptional().defaultValue("tif")
-                .options("tif jpg png")
-                .reconfigurable()
-                .allowedStates(State.ON)
-                .commit(),
-
-        STRING_ELEMENT(expected).key("imageStorage.lastSaved")
-                .displayedName("Last Saved")
-                .description("The name of the last saved image")
-                .readOnly()
-                .commit(),
-
         INT32_ELEMENT(expected).key("pollInterval")
                 .displayedName("Poll Interval")
                 .description("The interval with which the camera should be polled")
@@ -192,4 +146,3 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
         """
         Reset the camera hardware, i.e. bring it to some safe initial state.
         """
-
