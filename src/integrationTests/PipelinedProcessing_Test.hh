@@ -80,7 +80,7 @@ private:
                                     bool dataLoss,
                                     bool roundRobin); // else load-balanced, i.e. the default
 
-   /**
+    /**
      * Tests the queuing behavior for pipes with two 'shared' receivers and the sender with 'queue' setting for
      * 'noInputShared' for its output channel. Queuing should be detected when the receivers processingTime are
      * significantly higher than the sender delayTime. Queuing should not be detected when the opposite is true -
