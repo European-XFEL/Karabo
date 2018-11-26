@@ -70,6 +70,13 @@ namespace karabo {
                         .description("Resets the camera in case of an error")
                         .allowedStates(State::ERROR)
                         .commit();
+
+                VECTOR_STRING_ELEMENT(expected).key("interfaces")
+                        .displayedName("Interfaces")
+                        .description("Describes the interfaces of this device")
+                        .readOnly()
+                        .initialValue({"Camera"})
+                        .commit();
             }
 
             void initFsmSlots() {
