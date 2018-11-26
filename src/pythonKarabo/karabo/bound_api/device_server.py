@@ -5,14 +5,12 @@ __author__ = "Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__  = "$Jul 26, 2012 10:06:25 AM$"
 
 import os
-import os.path
 import sys
 import signal
 import copy
 import socket
 from subprocess import Popen
 import threading
-import time
 
 from karathon import (
     VECTOR_STRING_ELEMENT, INT32_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT,
@@ -155,16 +153,14 @@ class DeviceServer(object):
         return KARABO_FSM_CREATE_MACHINE('DeviceServerMachine')
 
     def signal_handler(self, signum, frame):
-        self.signal_handled = True
         if signum == signal.SIGINT:
             print('INTERRUPT : You pressed Ctrl-C!')
         else:
             print('INTERRUPT : You terminated me!')
         if self.ss is not None:
-            # Give serverid explicitely even though it should not be needed
-            # Note: self.ss.call("", "slotKillServer") currently does not work
-            # TODO: investigate bound method and add tests!
-            self.ss.call(self.serverid, "slotKillServer")
+            # Better do not go via self.ss.call("", "slotKillServer"),
+            # otherwise it will run later in another thread.
+            self.slotKillServer()
         else:
             self.stopDeviceServer()
 
@@ -179,14 +175,9 @@ class DeviceServer(object):
         self.fsm = self.setupFsm()
 
         self.ss = self.log = None
-        self.signal_handled = False
-        signal.signal(signal.SIGINT, self.signal_handler)
-        signal.signal(signal.SIGTERM, self.signal_handler)
         self.availableDevices = dict()
         self.deviceInstanceMap = dict()
         self.hostname, dotsep, self.domainname = socket.gethostname().partition('.')
-        self.needScanPlugins = True
-        self.pluginThread = None
         self.autoStart = config.get("autoStart")
         self.deviceClasses = config.get("deviceClasses")
         self.timeServerId = config.get("timeServerId")
@@ -200,8 +191,6 @@ class DeviceServer(object):
         self.visibility = config.get("visibility")
 
         self.connectionParameters = copy.copy(config['connection'])
-        plc = Hash("pluginNamespace", config["pluginNamespace"])
-        self.pluginLoader = PluginLoader.create("PythonPluginLoader", plc)
         self.pid = os.getpid()
         self.seqnum = 0
 
@@ -210,27 +199,45 @@ class DeviceServer(object):
         info["version"] = self.__class__.__version__
         info["host"] = self.hostname
         info["visibility"] = self.visibility
+        devicesInfo, scanLogs = self.scanPlugins(config["pluginNamespace"])
+        info.merge(devicesInfo)
+
+        signal.signal(signal.SIGINT, self.signal_handler)
+        signal.signal(signal.SIGTERM, self.signal_handler)
+
+        # Be aware: If signal handling is triggered before __init__ has
+        # finished, self.ss might be set to None, causing problems below,
+        # e.g. "'NoneType' object has no attribute 'getConnection'".
+        # In worst case, SignalSlotable is constructed, but not yet assigned
+        # to self.ss when the signal handler wants to reset it to None.
+        # But the process stops nevertheless due to the EventLoop.stop().
 
         self.ss = SignalSlotable(self.serverid, "JmsConnection",
                                  self.connectionParameters,
                                  config["heartbeatInterval"], info)
 
-        # Register before self.ss.start(), i.e before sending instanceNew:
-        self._registerAndConnectSignalsAndSlots()
-
-        # Start SignalSlotable object
-        self.ss.start()
-
+        # Now we can start the logging system (needs self.ss.getTopic())
         self.loadLogger(config)
         self.log = Logger.getCategory(self.serverid)
 
-        msg = "Starting Karabo DeviceServer (pid: {}) on host: {}, "\
-              "serverId: {}, broker: {}"""
-        self.log.INFO(msg.format(self.pid, self.hostname, self.serverid,
+        # Register before self.ss.start(), i.e before sending instanceNew:
+        self._registerAndConnectSignalsAndSlots()
+
+        # Start SignalSlotable object - multithreading begins
+        self.ss.start()
+
+        # Now we can log the postponed logging messages - could have been
+        # done directly after assigning self.log, but prefer to do after
+        # instanceNew triggered by self.ss.start():
+        for level, message in scanLogs:
+            getattr(self.log, level)(message)
+
+        msg = "DeviceServer starts on host '{0.hostname}' "\
+              "with pid {0.pid}, broker: {1}"
+        self.log.INFO(msg.format(self,
                                  self.ss.getConnection().getBrokerUrl()))
 
         self.fsm.start()
-        signal.pause()
 
     def _generateDefaultServerId(self):
         return self.hostname + "_Server_" + str(os.getpid())
@@ -263,66 +270,81 @@ class DeviceServer(object):
         pass
 
     def okStateOnEntry(self):
-        self.log.INFO("DeviceServer with id '{0.serverid}' starts up on host "
-                      "'{0.hostname}'".format(self))
-        if self.needScanPlugins:
-            self.log.INFO("Keep watching namespace: '{0.pluginNamespace}' for "
-                          "Device plugins".format(self.pluginLoader))
-            self.pluginThread = threading.Thread(target=self.scanPlugins)
-            self.scanning = True
-            self.pluginThread.start()
+        self.doAutoStart()
 
-    def scanPlugins(self):
-        self.availableModules = {}
-        while self.scanning:
-            newPlugin = False
-            entrypoints = self.pluginLoader.update()
-            for ep in entrypoints:
-                if ep.name in self.availableModules:
+    def scanPlugins(self, pluginNamespace):
+        """
+        Scan for available device classes
+
+        Returns Hash with keys "deviceClasses" and "visibilities" to be merged
+        into instance info and a list of log messages to be send.
+        Inside the list there are tuples of two string: log level (e.g. "INFO")
+        and message.
+        Also fills self.availableDevices dictionary.
+        """
+        loaderCfg = Hash("pluginNamespace", pluginNamespace)
+        loader = PluginLoader.create("PythonPluginLoader", loaderCfg)
+        entrypoints = loader.update()
+
+        logs = []
+        for ep in entrypoints:
+            if ep.name in self.deviceClasses or not self.deviceClasses:
+                try:
+                    deviceClass = ep.load()
+                except ImportError as e:
+                    logs.append(("WARN",
+                                 "scanPlugins: Cannot import module "
+                                 "{} -- {}".format(ep.name, e)))
                     continue
-                if ep.name in self.deviceClasses or not self.deviceClasses:
-                    try:
-                        deviceClass = ep.load()
-                    except ImportError as e:
-                        self.log.WARN("scanPlugins: Cannot import module "
-                                      "{} -- {}".format(ep.name, e))
-                        continue
 
-                    classid = deviceClass.__classid__
-                    try:
-                        schema = Configurator(PythonDevice).getSchema(classid)
-                        self.availableModules[ep.name] = classid
-                        self.availableDevices[classid] = {"mustNotify": True,
-                                                          "module": ep.name,
-                                                          "xsd": schema}
-                        newPlugin = True
-                        self.log.DEBUG('Successfully loaded plugin: "{}:{}"'
-                                       .format(ep.module_name, ep.name))
-                    except (RuntimeError, AttributeError) as e:
-                        m = "Failure while building schema for class {}, base "
-                        "class {} and bases {} : {}".format(classid,
-                                                            deviceClass.
-                                                            __base_classid__,
-                                                            deviceClass.
-                                                            __bases_classid__,
-                                                            e.message)
-                        self.log.ERROR(m)
-            if newPlugin:
-                self.newPluginAvailable()
+                classid = deviceClass.__classid__
+                try:
+                    schema = Configurator(PythonDevice).getSchema(classid)
+                    self.availableDevices[classid] = {"module": ep.name,
+                                                      "schema": schema}
+                    logs.append(("INFO",
+                                 'Successfully loaded plugin: "{}:{}"'
+                                 .format(ep.module_name, ep.name)))
+                except (RuntimeError, AttributeError) as e:
+                    m = "Failure while building schema for class {}, base "\
+                    "class {} and bases {} : {}".format(classid,
+                                                        deviceClass.
+                                                        __base_classid__,
+                                                        deviceClass.
+                                                        __bases_classid__,
+                                                        e)
+                    logs.append(("ERROR", m))
 
-            time.sleep(3)
+        instInfo = Hash("deviceClasses",
+                        [classid for classid in self.availableDevices.keys()],
+                        "visibilities",
+                        [d['schema'].getDefaultValue("visibility")
+                         for d in self.availableDevices.values()])
+        return instInfo, logs
+
+
+    def doAutoStart(self):
+        if self.autoStart is None:
+            return
+        for entry in self.autoStart:
+            # entry is a Hash with a single key which is the classid
+            classId = entry.getKeys()[0]
+            if classId in self.availableDevices:
+                config = entry.get(classId)
+                hsh = Hash("classId", classId,
+                           "configuration", config)
+                if 'deviceId' in config:
+                    hsh.set('deviceId', config.get('deviceId'))
+                self.instantiateDevice(hsh)
 
     def stopDeviceServer(self):
-        self.scanning = False
-        if self.pluginThread and self.pluginThread.isAlive():
-            self.pluginThread.join()
-        self.pluginThread = None
+        # If stopped early in the initialisation procedure,
+        # sys.getrefcount(self.ss) is very high (>27000), probably with cyclic
+        # references that do not anymore get cleaned up before the Python
+        # interpreter stops. Then we lack the instanceGone from the C++
+        # destructor of SignalSlotable despite of self.ss = None... :-(
         self.ss = None
         EventLoop.stop()
-
-        if not self.signal_handled:
-            pid = os.getpid()
-            os.kill(pid, signal.SIGTERM)
 
     def errorFoundAction(self, m1, m2):
         self.log.ERROR("{} -- {}".format(m1,m2))
@@ -387,28 +409,6 @@ class DeviceServer(object):
             self.log.WARN("Device '{}' could not be started because: {}".format(classid, e))
             self.ss.reply(False, "Device '{}' could not be started because: {}".format(classid, e))
 
-    def newPluginAvailable(self):
-        deviceClasses = []
-        visibilities = []
-        for (classid, d) in list(self.availableDevices.items()):
-            deviceClasses.append(classid)
-            if d['mustNotify']:
-                d['mustNotify'] = False
-                # if in autostart we start this device
-                if self.autoStart is not None:
-                    for entry in self.autoStart:
-                        entry_class_id = entry.getKeys()[0]
-                        if entry_class_id == classid:
-                            config = entry.get(entry_class_id)
-                            hsh = Hash("classId", classid,
-                                       "configuration", config)
-                            if 'deviceId' in config:
-                                hsh.set('deviceId', config.get('deviceId'))
-                            self.instantiateDevice(hsh)
-            visibilities.append(d['xsd'].getDefaultValue("visibility"))
-        self.log.INFO("Sending instance update as new device plugins are available: {}".format(deviceClasses))
-        self.ss.updateInstanceInfo(Hash("deviceClasses", deviceClasses, "visibilities", visibilities))
-
     def noStateTransition(self):
         self.log.WARN("DeviceServer \"{}\" does not allow the transition for this event.".format(self.serverid))
 
@@ -433,9 +433,6 @@ class DeviceServer(object):
                        "\n {}").format(e)
                 self.log.ERROR(msg)
         finally:
-            # NOTE: `stopDeviceServer` will not return because the process will
-            # be killed - everything which is called after this call will
-            # therefore never be executed
             self.stopDeviceServer()
 
     def slotDeviceGone(self, instanceId):
@@ -518,6 +515,7 @@ def main(args=None):
         return
 
     args = args or sys.argv
+    # Load plugins already here to make them available for -h option
     PluginLoader.create("PythonPluginLoader", Hash()).update()
     t = threading.Thread(target=EventLoop.work)
     t.start()
@@ -525,11 +523,15 @@ def main(args=None):
         server = Runner(DeviceServer).instantiate(args)
         if not server:
             EventLoop.stop()
+            # Likely started with -h option: Avoid print after finally.
+            return
     except:
         EventLoop.stop()
         raise
     finally:
+        del server  # increase chance that no log appears after print below
         t.join()
+    print(os.path.basename(args[0]), "has exited!\n")
 
 if __name__ == '__main__':
     main()
