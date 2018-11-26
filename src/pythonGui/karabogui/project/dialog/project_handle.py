@@ -80,8 +80,12 @@ class LoadProjectDialog(QDialog):
         domains = db_conn.get_available_domains()
 
         # Domain combobox
-        topic = network.brokerTopic
-        default_domain = topic if topic in domains else db_conn.default_domain
+        if is_subproject:
+            default_domain = db_conn.default_domain
+        else:
+            topic = network.brokerTopic
+            default_domain = (topic if topic in domains
+                              else db_conn.default_domain)
         self.default_domain = default_domain
 
         if not self.ignore_cache:
