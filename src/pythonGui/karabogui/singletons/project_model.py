@@ -252,7 +252,12 @@ class ProjectViewItemModel(QAbstractItemModel):
         flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable
         controller = self.controller_ref(index)
         if isinstance(controller, DeviceConfigurationController):
-            flags |= Qt.ItemIsUserCheckable
+            # We only allow the configurations to be checkable for offline
+            # devices!
+            parent_controller = self.controller_ref(index.parent())
+            if (parent_controller is not None
+                    and not parent_controller.project_device.online):
+                flags |= Qt.ItemIsUserCheckable
 
         return flags
 
