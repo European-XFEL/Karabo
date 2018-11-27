@@ -138,7 +138,7 @@ class SubprojectController(ProjectSubgroupController):
         walk_traits_object(root_project, _visitor)
 
         # If a UUID appeared more than once, we have a problem!
-        if project_names:
+        if any(v > 1 for v in project_uuids.values()):
             msg = ('That project OR one of its sub-projects is already '
                    'loaded! Please investigate and have a look at the '
                    'project(s) <b>{}</b>! You have <b>{}</b> projects '
