@@ -769,9 +769,6 @@ namespace karabo {
                     unregisterWriterFromChunk(chunkId);
                     throw KARABO_IO_EXCEPTION("Can not write data because no (shared) input is available");
                 } else if (m_onNoSharedInputChannelAvailable == "queue") {
-                    // When distributing load-balanced, there is a common queue, not individual ones!
-                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
-                            << " Queuing (shared) data package with chunkId: " << chunkId;
                     // For load-balanced mode the chunks should be put on a single queue.
                     KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
                             << "Placing chunk in single queue (load-balanced distribution mode)";
