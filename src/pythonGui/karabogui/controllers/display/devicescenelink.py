@@ -63,7 +63,6 @@ class LinkWidget(QPushButton):
             painter.setPen(pen)
             painter.drawRect(boundary)
             # Draw the chain on top left
-            pen = QPen()
             pen.setColor(QColor(*NORM_COLOR))
             pen.setWidth(3)
             painter.setPen(pen)
