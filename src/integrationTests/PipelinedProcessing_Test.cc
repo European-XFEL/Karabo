@@ -78,7 +78,7 @@ void PipelinedProcessing_Test::appTestRunner() {
 
     testPipeTwoSharedReceiversQueue();
 
-    testQueueClearAfterReceiverDisconnect();
+    testQueueClearOnDisconnect();
 
     // this test uses output2 channel of the sender
     testProfileTransferTimes();
@@ -768,70 +768,152 @@ void PipelinedProcessing_Test::testTwoSharedReceiversQueuing(unsigned int proces
 }
 
 
-void PipelinedProcessing_Test::testQueueClearAfterReceiverDisconnect() {
+void PipelinedProcessing_Test::testQueueClearOnDisconnect() {
 
-    std::clog << "---\ntestQueueClearAfterReceiverDisconnect (onSlowness = 'queue', dataDistribution = 'shared')\n";
+    std::clog << "---\ntestQueueClearOnDisconnect\n";
 
-    unsigned int nDataExpected = 0, nDataReceived = 0, nDataFlushed = 0;
-    for (unsigned int nRun = 0; nRun < m_numRunsPerTest; ++nRun) {
+    testQueueClearOnDisconnectCopyQueue();
 
-        // Instantiates the receiver with a really high processing time (in order of seconds) so that the sender won't
-        // be able to send all the data before the receiver disconnects.
-        karabo::util::Hash config(m_receiverBaseConfig);
-        config += Hash("deviceId", m_receiver, "input.onSlowness", "queue");
-        config += Hash("deviceId", m_receiver, "input.dataDistribution", "copy");
-        config += Hash("deviceId", m_receiver, "processingTime", 1000);
-        instantiateDeviceWithAssert("PipeReceiverDevice", config);
-        CPPUNIT_ASSERT_EQUAL(std::string("queue"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
-        CPPUNIT_ASSERT_EQUAL(std::string("copy"), m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
+    testQueueClearOnDisconnectSharedQueue(true);
 
-        // Makes sure the sender is not sending any data before starting the test run.
-        CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
-
-        // Retrieves the amount of data that the sender will send.
-        unsigned int senderNData = m_deviceClient->get<unsigned int>(m_sender, "nData");
-        // then call its slot
-        m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
-
-        //Checks the amount of data actually received after a while (around 0.15 seconds).
-        boost::this_thread::sleep(boost::posix_time::milliseconds(150));
-        const unsigned int receivedBeforeDisc = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
-
-        nDataExpected += m_nDataPerRun;
-        nDataFlushed += (m_nDataPerRun - receivedBeforeDisc);
-        nDataReceived += receivedBeforeDisc;
- 
-        // Disconnects the receiver by killing it.
-        killDeviceWithAssert(m_receiver);
-
-        // Asserts that there's still data to be sent - data already received lower than expected data.
-        CPPUNIT_ASSERT(nDataExpected - receivedBeforeDisc > m_nDataPerRun * 2 / 3);
-
-        // Re-instantiates the receiver - this time there's no need to use a high processingTime.
-        karabo::util::Hash configAfterDisc(m_receiverBaseConfig);
-        configAfterDisc += Hash("deviceId", m_receiver, "input.onSlowness", "queue");
-        configAfterDisc += Hash("deviceId", m_receiver, "input.dataDistribution", "copy");
-        configAfterDisc += Hash("deviceId", m_receiver, "processingTime", 5);
-        instantiateDeviceWithAssert("PipeReceiverDevice", configAfterDisc);
-        CPPUNIT_ASSERT_EQUAL(std::string("queue"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
-        CPPUNIT_ASSERT_EQUAL(std::string("copy"), m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
-
-        // Asserts that after a while (around 1 second), the receiver hasn't received any data - meaning that the queue
-        // has been properly cleared after the receiver disconnected.
-        boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
-        const unsigned int receivedAfterReconnect = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
-        CPPUNIT_ASSERT_EQUAL(0, (int)receivedAfterReconnect);
-
-        // Kills the receiver so that the next run can be started with a new receiver with high processingTime.
-        killDeviceWithAssert(m_receiver);
-    }
-
-    // Prints summary data: total of bytes sent; total of bytes received; total of bytes discarded
-    std::clog << "  summary: bytes to send = " << nDataExpected
-            << ", bytes received = " << nDataReceived
-            << ", bytes discarded = " << nDataFlushed << std::endl;
+    testQueueClearOnDisconnectSharedQueue(false);
 
     std::clog << "Passed!\n\n";
+}
+
+
+void PipelinedProcessing_Test::testQueueClearOnDisconnectSharedQueue(bool useRoundRobin) {
+
+    std::clog << "- input.dataDistribution = 'shared', "
+            << "output1.noInputShared = 'queue', "
+            << "output1.distributionMode = " << (useRoundRobin ? "round-robin" : "load-balanced") << std::endl;
+
+    killDeviceWithAssert(m_sender);
+    instantiateDeviceWithAssert("P2PSenderDevice",
+                                Hash("deviceId", m_sender,
+                                     "output1", Hash("noInputShared", "queue",
+                                                     "distributionMode", (useRoundRobin ? "round-robin" : "load-balanced"))));
+
+    unsigned int nDataExpected = 0, nDataReceived = 0, nDataFlushed = 0;
+
+    // Instantiates the receiver with a really high processing time (in order of seconds) so that the sender won't
+    // be able to send all the data before the receiver disconnects.
+    karabo::util::Hash config(m_receiverBaseConfig);
+    config.set("deviceId", m_receiver);
+    config.set("input.dataDistribution", "shared");
+    config.set("processingTime", 1000);
+    instantiateDeviceWithAssert("PipeReceiverDevice", config);
+    CPPUNIT_ASSERT_EQUAL(std::string("shared"), m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
+
+    // Makes sure the sender is not sending any data before starting the test run.
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+
+    // Retrieves the amount of data that the sender will send.
+    unsigned int senderNData = m_deviceClient->get<unsigned int>(m_sender, "nData");
+    // then call its slot
+    m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
+
+    // Waits long enough for some data to arrive.
+    pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", 0, false);
+    const unsigned int receivedBeforeDisc = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
+    // Checks that at least one data item has been received before the receiver entered in "processing" state.
+    CPPUNIT_ASSERT(receivedBeforeDisc > 0); // Not redundant: the property polling might have timed out.
+
+    nDataExpected += m_nDataPerRun;
+    nDataFlushed += (m_nDataPerRun - receivedBeforeDisc);
+    nDataReceived += receivedBeforeDisc;
+
+    // Disconnects the receiver by killing it.
+    killDeviceWithAssert(m_receiver);
+
+    // Asserts that there's still data to be sent - data already received lower than expected data.
+    CPPUNIT_ASSERT(3 * (nDataExpected - receivedBeforeDisc) > m_nDataPerRun * 2);
+
+    // Re-instantiates the receiver - this time there's no need to use a high processingTime.
+    karabo::util::Hash configAfterDisc(m_receiverBaseConfig);
+    configAfterDisc.set("deviceId", m_receiver);
+    configAfterDisc.set("input.dataDistribution", "shared");
+    configAfterDisc.set("processingTime", 5);
+    instantiateDeviceWithAssert("PipeReceiverDevice", configAfterDisc);
+    CPPUNIT_ASSERT_EQUAL(std::string("shared"), m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
+
+    // Asserts that after a while (around 1 second), the receiver hasn't received any data - meaning that the queue
+    // has been properly cleared after the receiver disconnected.
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+    const unsigned int receivedAfterReconnect = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
+    CPPUNIT_ASSERT_EQUAL(0u, receivedAfterReconnect);
+
+    killDeviceWithAssert(m_receiver);
+
+    // Prints summary data: total of data items sent, received and discarded
+    std::clog << "  summary: data items to send = " << nDataExpected
+            << ", data items received = " << nDataReceived
+            << ", data items discarded = " << nDataFlushed << std::endl;
+ }
+
+
+void PipelinedProcessing_Test::testQueueClearOnDisconnectCopyQueue() {
+
+    std::clog << "- input.onSlowness = 'queue', input.dataDistribution = 'copy'\n";
+
+    unsigned int nDataExpected = 0, nDataReceived = 0, nDataFlushed = 0;
+
+    // Instantiates the receiver with a really high processing time (in order of seconds) so that the sender won't
+    // be able to send all the data before the receiver disconnects.
+    karabo::util::Hash config(Hash("deviceId", m_receiver)); 
+    config.set("input", Hash("onSlowness", "queue", "dataDistribution", "copy"));
+    config.set("processingTime", 1000);
+    config += m_receiverBaseConfig;
+    instantiateDeviceWithAssert("PipeReceiverDevice", config);
+    CPPUNIT_ASSERT_EQUAL(std::string("queue"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
+    CPPUNIT_ASSERT_EQUAL(std::string("copy"), m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
+
+    // Makes sure the sender is not sending any data before starting the test run.
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+
+    // Retrieves the amount of data that the sender will send.
+    unsigned int senderNData = m_deviceClient->get<unsigned int>(m_sender, "nData");
+    // then call its slot
+    m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
+
+    // Waits long enough for some data to arrive.
+    pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", 0, false);
+    const unsigned int receivedBeforeDisc = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
+    // Checks that at least one data item has been received before the receiver entered in "processing" state.
+    CPPUNIT_ASSERT(receivedBeforeDisc > 0); // Not redundant: the property polling might have timed out.
+
+    nDataExpected += m_nDataPerRun;
+    nDataFlushed += (m_nDataPerRun - receivedBeforeDisc);
+    nDataReceived += receivedBeforeDisc;
+
+    // Disconnects the receiver by killing it.
+    killDeviceWithAssert(m_receiver);
+
+    // Asserts that there's still data to be sent - data already received lower than expected data.
+    CPPUNIT_ASSERT(3 * (nDataExpected - receivedBeforeDisc) > m_nDataPerRun * 2);
+
+    // Re-instantiates the receiver - this time there's no need to use a high processingTime.
+    karabo::util::Hash configAfterDisc(Hash("deviceId", m_receiver));
+    configAfterDisc.set("deviceId", m_receiver);
+    configAfterDisc.set("input", Hash("onSlowness", "queue", "dataDistribution", "copy"));
+    configAfterDisc.set("processingTime", 5);
+    configAfterDisc += m_receiverBaseConfig;
+    instantiateDeviceWithAssert("PipeReceiverDevice", configAfterDisc);
+    CPPUNIT_ASSERT_EQUAL(std::string("queue"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
+    CPPUNIT_ASSERT_EQUAL(std::string("copy"), m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
+
+    // Asserts that after a while (around 1 second), the receiver hasn't received any data - meaning that the queue
+    // has been properly cleared after the receiver disconnected.
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+    const unsigned int receivedAfterReconnect = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
+    CPPUNIT_ASSERT_EQUAL(0u, receivedAfterReconnect);
+
+    killDeviceWithAssert(m_receiver);
+    
+    // Prints summary data: total of data items sent, received and discarded
+    std::clog << "  summary: data items to send = " << nDataExpected
+            << ", data items received = " << nDataReceived
+            << ", data items discarded = " << nDataFlushed << std::endl;
 }
 
 
