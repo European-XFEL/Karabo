@@ -22,7 +22,7 @@ namespace karabo {
 
             public:
 
-            KARABO_CLASSINFO(CameraInterface, "CameraInterface", "1.3")
+            KARABO_CLASSINFO(CameraInterface, "CameraInterface", "1.4")
 
             static void expectedParameters(karabo::util::Schema& expected) {
                 using namespace karabo::xms;
@@ -93,50 +93,6 @@ namespace karabo {
                         .description("Describes the interfaces of this device")
                         .readOnly()
                         .initialValue({"Camera"})
-                        .commit();
-
-                NODE_ELEMENT(expected).key("imageStorage")
-                        .displayedName("Local Image Storage")
-                        .commit();
-
-                BOOL_ELEMENT(expected).key("imageStorage.enable")
-                        .displayedName("Enable")
-                        .description("Save images while acquiring.")
-                        .assignmentOptional().defaultValue(false)
-                        .reconfigurable()
-                        .allowedStates(State::ON)
-                        .commit();
-
-                PATH_ELEMENT(expected).key("imageStorage.filePath")
-                        .displayedName("File Path")
-                        .description("The path for saving images to file")
-                        .isDirectory()
-                        .assignmentOptional().defaultValue("/tmp")
-                        .reconfigurable()
-                        .allowedStates(State::ON)
-                        .commit();
-
-                STRING_ELEMENT(expected).key("imageStorage.fileName")
-                        .displayedName("File Name")
-                        .description("The name for saving images to file")
-                        .assignmentOptional().defaultValue("image")
-                        .reconfigurable()
-                        .allowedStates(State::ON)
-                        .commit();
-
-                STRING_ELEMENT(expected).key("imageStorage.fileType")
-                        .displayedName("File Type")
-                        .description("The image format to be used for writing to file")
-                        .assignmentOptional().defaultValue("tif")
-                        .options("tif jpg png")
-                        .reconfigurable()
-                        .allowedStates(State::ON)
-                        .commit();
-
-                STRING_ELEMENT(expected).key("imageStorage.lastSaved")
-                        .displayedName("Last Saved")
-                        .description("The name of the last saved image")
-                        .readOnly()
                         .commit();
 
                 INT32_ELEMENT(expected).key("pollInterval")
