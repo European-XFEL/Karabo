@@ -15,6 +15,7 @@
 #include <karabo/core/Lock.hh>
 
 #include <map>
+#include <unordered_map>
 #include <set>
 #include <string>
 
@@ -50,7 +51,6 @@ namespace karabo {
             template<class T>
             friend class Device;
 
-            typedef std::map<std::string, unsigned int> InstanceUsage;
             /// keys are instance IDs, values are a sets of properties that changed
             typedef std::map<std::string, std::set<std::string> > SignalChangedMap;
             typedef boost::function<void (const karabo::util::Hash& /*topologyEntry*/) > InstanceNewHandler;
@@ -59,7 +59,7 @@ namespace karabo {
             typedef boost::function<void (const std::string& /*deviceId*/, const karabo::util::Schema& /*schema*/) > SchemaUpdatedHandler;
             typedef boost::function<void (const std::string& /*serverId*/, const std::string& /*classId*/, const karabo::util::Schema& /*schema*/) > ClassSchemaHandler;
 
-            static const unsigned int CONNECTION_KEEP_ALIVE = 15;
+            static const int CONNECTION_KEEP_ALIVE = 15;
 
             boost::shared_ptr<karabo::xms::SignalSlotable> m_internalSignalSlotable;
 
@@ -89,8 +89,11 @@ namespace karabo {
 
             boost::weak_ptr<karabo::xms::SignalSlotable> m_signalSlotable;
 
-            bool m_isShared;           
+            bool m_isShared;
 
+            /// Map of devices that we are connected to with timer stating their age
+            /// since last access.
+            typedef std::unordered_map<std::string, int> InstanceUsage;
             InstanceUsage m_instanceUsage;
 
             karabo::util::Hash m_deviceChangedHandlers;
@@ -1054,6 +1057,8 @@ namespace karabo {
 
             void age(const boost::system::error_code& e);
 
+            void disconnect(const std::string& instanceId);
+
             void disconnectHandler(const std::string& signal, const std::string& instanceId,
                                    const std::vector<std::string>& toClear);
 
@@ -1061,6 +1066,11 @@ namespace karabo {
 
             void immortalize(const std::string& deviceId);
 
+            /// Unmark deviceId from staying connected all the time without ageing.
+            ///
+            /// Also clears a zombie (marked by negative age) from m_instanceUsage and thus locks m_instanceUsageMutex.
+            /// That means, unlike immortalize(..) and isImortal(..), mortalize(..) must not be called under protection
+            /// of m_instanceUsageMutex.
             void mortalize(const std::string& deviceId);
 
             bool isImmortal(const std::string& deviceId) const;
@@ -1090,6 +1100,8 @@ namespace karabo {
             /// Marks 'instanceId' as used.
             /// Returns true if explicit "connect" call should still be done for it.
             bool connectNeeded(const std::string & instanceId);
+
+            void connectAndRequest(const std::string& deviceId);
 
             int getAccessLevel(const std::string& deviceId);
 
