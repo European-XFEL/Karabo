@@ -92,12 +92,29 @@ private:
      */
     void testTwoSharedReceiversQueuing(unsigned int processingTime, unsigned int delayTime);
 
-    
+
+    /**
+     * "Driving" method that takes care of calling testQueueClearOnDisconnectCopyQueue and
+     * testQueueClearOnDisconnectSharedQueue.
+     */
+    void testQueueClearOnDisconnect();
+
     /**
      * Tests that the output queues kept by a sender are being properly cleared after the receiver disconnects
-     * while there is still data to be sent.
+     * while there is still data to be sent. The receiver's 'input.onSlowness' is set to 'queue' and its
+     * 'input.dataDistribution' is set to 'copy'.
      */
-    void testQueueClearAfterReceiverDisconnect();
+    void testQueueClearOnDisconnectCopyQueue();
+
+    /**
+     * Tests that the output queues kept by a sender are being properly cleared after the receiver disconnects
+     * while there is still data to be sent. The receiver's 'input.dataDistribution' is set to 'shared' and
+     * the sender's 'output.noInputShared' is set to 'queue'.
+     *
+     * @param useRoundRobin if true, the test is performed with the sender using 'round-robin' distribution mode.
+     * Otherwise 'load-balanced' distribution mode is used.
+     */
+    void testQueueClearOnDisconnectSharedQueue(bool useRoundRobin);
     
 
     void testProfileTransferTimes(bool noShortCut, bool copy);
