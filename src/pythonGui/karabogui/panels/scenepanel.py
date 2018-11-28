@@ -125,6 +125,10 @@ class ScenePanel(BasePanelWidget):
         # Add placeholder widget to toolbar
         self.drawing_tool_bar.add_expander()
 
+        # Reset to selection tool when no current tool is selected
+        self.scene_view.resetToSelectionTool.connect(
+            self.ac_selection_tool.trigger)
+
         return [always_visible_tb, self.drawing_tool_bar]
 
     # ----------------------------
@@ -211,12 +215,13 @@ class ScenePanel(BasePanelWidget):
 
         self.qactions = []
         mode_qactions = self.create_mode_qactions()
-        self._build_qaction_group(mode_qactions)
+        tool_qactions = [self._build_qaction(a)
+                         for a in self.create_tool_actions()]
+        self._build_qaction_group(mode_qactions + tool_qactions)
         self.qactions.extend(mode_qactions)
         self.qactions.append(self._build_separator())
 
-        self.qactions.extend(self._build_qaction(a)
-                             for a in self.create_tool_actions())
+        self.qactions.extend(tool_qactions)
         self.qactions.append(self._build_separator())
 
         menu = QMenu()
@@ -266,23 +271,27 @@ class ScenePanel(BasePanelWidget):
         actions = []
         actions.append(CreateToolAction(tool_factory=TextSceneTool,
                                         icon=icons.text, text="Add text",
-                                        tooltip="Add text to scene"))
+                                        tooltip="Add text to scene",
+                                        checkable=True))
         actions.append(CreateToolAction(tool_factory=LineSceneTool,
                                         icon=icons.line, text="Add line",
-                                        tooltip="Add line to scene"))
+                                        tooltip="Add line to scene",
+                                        checkable=True))
         actions.append(CreateToolAction(tool_factory=RectangleSceneTool,
                                         icon=icons.rect, text="Add rectangle",
-                                        tooltip="Add rectangle to scene"))
+                                        tooltip="Add rectangle to scene",
+                                        checkable=True))
         actions.append(CreateToolAction(tool_factory=SceneLinkTool,
                                         icon=icons.scenelink,
                                         text="Add scene link",
-                                        tooltip="Add scene link to scene"))
+                                        tooltip="Add scene link to scene",
+                                        checkable=True))
         return actions
 
     def create_group_tool_actions(self):
         actions = []
         actions.append(GroupSceneAction(icon=icons.group,
-                                        text="Group in fixed layout",
+                                        text="Group in Fixed Layout",
                                         tooltip="Group selected items"))
         actions.append(BoxVSceneAction(icon=icons.groupVertical,
                                        text="Group Vertically",
