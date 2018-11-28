@@ -3,10 +3,9 @@
 # Created on November 23, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import pyqtSlot, QMargins, QPoint, QRect, QSize, Qt
+from PyQt4.QtCore import pyqtSlot, QPoint, QRect, QSize, Qt
 from PyQt4.QtGui import (
-    QAction, QColor, QDialog, QHBoxLayout, QLabel, QFont, QPainter,
-    QPen, QPushButton)
+    QAction, QColor, QDialog, QFont, QPainter, QPen, QPushButton)
 
 from karabogui.dialogs.dialogs import SceneLinkDialog
 from karabogui.dialogs.textdialog import TextDialog
@@ -20,21 +19,10 @@ class SceneLinkWidget(QPushButton):
     def __init__(self, model, parent=None):
         super(SceneLinkWidget, self).__init__(parent)
         self.model = model
-
-        self.layout = QHBoxLayout(self)
         self.setToolTip(self.model.target)
         self.setCursor(Qt.PointingHandCursor)
         self.clicked.connect(self._handle_click)
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
-        self.label = QLabel(parent=self)
-        self.label.setAlignment(Qt.AlignCenter)
-        self.label.setContentsMargins(QMargins(0, 0, 0, 0))
-        self.label.setAutoFillBackground(True)
-        self.layout.addWidget(self.label)
-        self.layout.setContentsMargins(QMargins(4, 12, 4, 4))
-
-        # Apply initial model values!
-        self.apply_model()
 
     def paintEvent(self, event):
         with QPainter(self) as painter:
@@ -42,8 +30,10 @@ class SceneLinkWidget(QPushButton):
             pt = boundary.topLeft()
             rects = [QRect(pt, QSize(7, 7)),
                      QRect(pt + QPoint(11, 0), QSize(7, 7))]
-
+            painter.fillRect(boundary, QColor(self.model.background))
             pen = QPen(Qt.black)
+            pen.setWidth(self.model.frame_width)
+            painter.setPen(pen)
             painter.drawRect(boundary)
             pen.setColor(Qt.darkGray)
             pen.setWidth(3)
@@ -52,8 +42,13 @@ class SceneLinkWidget(QPushButton):
             pen.setColor(Qt.lightGray)
             painter.setPen(pen)
             painter.drawLine(pt + QPoint(4, 4), pt + QPoint(15, 4))
-            # And of course our label when we repaint (dock/undock)!
-            self.apply_model()
+            # Before painting the text, set the font
+            font_properties = QFont()
+            font_properties.fromString(self.model.font)
+            painter.setFont(font_properties)
+            pen = QPen(QColor(self.model.foreground))
+            painter.setPen(pen)
+            painter.drawText(boundary, Qt.AlignCenter, self.model.text)
 
     @pyqtSlot()
     def _handle_click(self):
@@ -121,22 +116,6 @@ class SceneLinkWidget(QPushButton):
         self.model.trait_set(text=label.text, frame_width=label.frame_width,
                              font=label.font, background=label.background,
                              foreground=label.foreground)
-        self.apply_model()
-
-    def apply_model(self):
-        self.label.setText(self.model.text)
-        self.label.setLineWidth(self.model.frame_width)
-
-        font_properties = QFont()
-        font_properties.fromString(self.model.font)
-        self.label.setFont(font_properties)
-
-        palette = self.label.palette()
-        palette.setColor(self.label.foregroundRole(),
-                         QColor(self.model.foreground))
-        palette.setColor(self.label.backgroundRole(),
-                         QColor(self.model.background))
-        self.label.setPalette(palette)
 
     def edit(self, scene_view):
         dialog = SceneLinkDialog(self.model, parent=scene_view)
