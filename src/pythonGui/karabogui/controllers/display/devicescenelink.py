@@ -3,10 +3,9 @@ from functools import partial
 import os.path as op
 
 from PyQt4 import uic
-from PyQt4.QtCore import QMargins, QPoint, QRect, QSize, Qt, pyqtSlot
+from PyQt4.QtCore import QPoint, QRect, QSize, Qt, pyqtSlot
 from PyQt4.QtGui import (
-    QAction, QColor, QDialog, QFont, QHBoxLayout, QLabel, QPainter, QPen,
-    QPushButton, QSizePolicy)
+    QAction, QColor, QDialog, QFont, QPainter, QPen, QPushButton, QSizePolicy)
 from traits.api import Instance
 
 from karabogui import messagebox
@@ -43,24 +42,12 @@ class LinkWidget(QPushButton):
         super(LinkWidget, self).__init__(parent)
         self.model = model
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        self.layout = QHBoxLayout(self)
         self.clicked.connect(self._handle_click)
-        self.setGeometry(QRect(model.x, model.y, model.width, model.height))
         self.setCursor(Qt.PointingHandCursor)
         self.setFocusPolicy(Qt.NoFocus)
         self._set_tooltip()
-        self.setFlat(True)
-
-        self.label = QLabel(parent=self)
-        self.label.setAlignment(Qt.AlignCenter)
-        self.label.setContentsMargins(QMargins(0, 0, 0, 0))
-        self.label.setAutoFillBackground(True)
-        self.layout.addWidget(self.label)
-        self.layout.setContentsMargins(QMargins(4, 12, 4, 4))
-
+        self.setGeometry(QRect(model.x, model.y, model.width, model.height))
         self.set_link_model(model)
-        self.set_label_model(model)
 
     def paintEvent(self, event):
         with QPainter(self) as painter:
@@ -68,13 +55,14 @@ class LinkWidget(QPushButton):
             pt = boundary.topLeft()
             rects = [QRect(pt, QSize(7, 7)),
                      QRect(pt + QPoint(11, 0), QSize(7, 7))]
+            painter.fillRect(boundary, QColor(self.model.background))
             # Draw the boundary
             pen = QPen()
             pen.setColor(Qt.black)
-            pen.setWidth(3)
+            pen.setWidth(self.model.frame_width)
+            painter.setPen(pen)
             painter.drawRect(boundary)
             # Draw the chain on top left
-            pen = QPen()
             pen.setColor(QColor(*NORM_COLOR))
             pen.setWidth(3)
             painter.setPen(pen)
@@ -82,8 +70,13 @@ class LinkWidget(QPushButton):
             pen.setColor(Qt.lightGray)
             painter.setPen(pen)
             painter.drawLine(pt + QPoint(4, 4), pt + QPoint(15, 4))
-            # And of course our label when we repaint (dock/undock)!
-            self.apply_model()
+            # Before painting the text, set the font
+            font_properties = QFont()
+            font_properties.fromString(self.model.font)
+            painter.setFont(font_properties)
+            pen = QPen(QColor(self.model.foreground))
+            painter.setPen(pen)
+            painter.drawText(boundary, Qt.AlignCenter, self.model.text)
 
     def set_link_model(self, model):
         self.model.target = model.target
@@ -95,22 +88,6 @@ class LinkWidget(QPushButton):
         self.model.trait_set(text=model.text, frame_width=model.frame_width,
                              font=model.font, background=model.background,
                              foreground=model.foreground)
-        self.apply_model()
-
-    def apply_model(self):
-        self.label.setText(self.model.text)
-        self.label.setLineWidth(self.model.frame_width)
-
-        font_properties = QFont()
-        font_properties.fromString(self.model.font)
-        self.label.setFont(font_properties)
-
-        palette = self.label.palette()
-        palette.setColor(self.label.foregroundRole(),
-                         QColor(self.model.foreground))
-        palette.setColor(self.label.backgroundRole(),
-                         QColor(self.model.background))
-        self.label.setPalette(palette)
 
     def _set_tooltip(self):
         tooltip = "{}|{}".format(
@@ -142,18 +119,17 @@ class LinkWidget(QPushButton):
 class DisplayDeviceSceneLink(BaseBindingController):
     # The scene model class for this controller
     model = Instance(DeviceSceneLinkModel, args=())
-    _internal_widget = Instance(LinkWidget, allow_none=True)
 
-    def create_widget(self, parent):
-        self._internal_widget = LinkWidget(self.model, parent)
-        select_action = QAction("Configure Link", self._internal_widget)
+    def create_widget(self, parent=None):
+        widget = LinkWidget(self.model, parent)
+        select_action = QAction("Configure Link", widget)
         select_action.triggered.connect(self._select_scene)
-        self._internal_widget.addAction(select_action)
+        widget.addAction(select_action)
 
-        text_action = QAction("Configure Text", self._internal_widget)
+        text_action = QAction("Configure Text", widget)
         text_action.triggered.connect(self._edit_text)
-        self._internal_widget.addAction(text_action)
-        return self._internal_widget
+        widget.addAction(text_action)
+        return widget
 
     @pyqtSlot()
     def _select_scene(self):
@@ -163,7 +139,7 @@ class DisplayDeviceSceneLink(BaseBindingController):
             scene_list=self.proxy.value, model=self.model)
         if dialog.exec() == QDialog.Rejected:
             return
-        self._internal_widget.set_link_model(dialog.link_model)
+        self.widget.set_link_model(dialog.link_model)
 
     @pyqtSlot()
     def _edit_text(self):
@@ -172,7 +148,7 @@ class DisplayDeviceSceneLink(BaseBindingController):
         dialog = TextDialog(self.model)
         if dialog.exec() == QDialog.Rejected:
             return
-        self._internal_widget.set_label_model(dialog.label_model)
+        self.widget.set_label_model(dialog.label_model)
 
     def binding_update(self, proxy):
         if self.model.target == '':
