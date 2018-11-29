@@ -6,7 +6,7 @@
 from contextlib import contextmanager
 import time
 
-from PyQt4.QtCore import pyqtSlot, QEvent, QSize, Qt, QTimer
+from PyQt4.QtCore import pyqtSignal, pyqtSlot, QEvent, QSize, Qt, QTimer
 from PyQt4.QtGui import (
     QPalette, QPainter, QPen, QSizePolicy, QStackedLayout, QWidget)
 
@@ -45,6 +45,9 @@ def _get_time_milli():
 class SceneView(QWidget):
     """An object representing the view for a Karabo GUI scene.
     """
+
+    resetToSelectionTool = pyqtSignal()
+
     def __init__(self, model=None, design_mode=False, parent=None):
         super(SceneView, self).__init__(parent)
 
@@ -417,8 +420,11 @@ class SceneView(QWidget):
         assert tool is None or isinstance(tool, BaseSceneTool)
         self.current_tool = tool
         if tool is None:
-            self.set_cursor('none')
-            self.current_tool = SceneSelectionTool()
+            if self.design_mode:
+                self.resetToSelectionTool.emit()
+            else:
+                self.set_cursor('none')
+                self.current_tool = SceneSelectionTool()
 
         self.update()
 
