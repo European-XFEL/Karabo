@@ -1,6 +1,5 @@
 from asyncio import (
     async, CancelledError, coroutine, TimeoutError, wait_for, Queue)
-from collections import OrderedDict
 from itertools import chain
 
 from .basetypes import isSet
@@ -32,10 +31,8 @@ class DeviceNode(String):
     properties and commands to be copied can be given::
 
         class Stage(Device):
-            motor = DeviceNode(properties=["position", {"speed": "velocity"}],
+            motor = DeviceNode(properties=["position", "speed"],
                                commands=["start"])
-
-    Note how the property ``speed`` is renamed to ``velocity`` on the way.
 
     If the other device should be locked by this device, set the attribute
     ``lock=True``.
@@ -53,26 +50,14 @@ class DeviceNode(String):
                  lock=False, **kwargs):
         super().__init__(**kwargs)
 
-        def recode(names):
-            ret = OrderedDict()
-            for name in names:
-                if isinstance(name, dict):
-                    assert all(isinstance(k, str) and isinstance(v, str)
-                               for k, v in name.items())
-                    ret.update(name)
-                else:
-                    assert isinstance(name, str)
-                    ret[name] = name
-            return ret
-
-        self.properties = recode(properties)
-        self.commands = recode(commands)
+        self.properties = properties
+        self.commands = commands
         self.timeout = timeout
         self.lock = lock
         if self.properties or self.commands:
             for default in ("deviceId", "state", "alarmCondition"):
                 if default not in self.properties:
-                    self.properties[default] = default
+                    self.properties.append(default)
 
     def toDataAndAttrs(self, proxy):
         if self.properties or self.commands:
@@ -83,28 +68,25 @@ class DeviceNode(String):
 
             return data, attrs
 
-    def _copy_properties(self, data, swapped):
+    def _copy_properties(self, data):
         """return a Hash that contains our properties in Hash data"""
         ret = Hash()
-        for name, rename in self.properties.items():
-            if swapped:
-                name, rename = rename, name
-            val = data.get(rename)
+        for key in self.properties:
+            val = data.get(key)
             if val is not None:
-                attrs = data[rename, ...]
-                ret[name] = val
-                ret[name, ...].update(attrs)
+                attrs = data[key, ...]
+                ret[key] = val
+                ret[key, ...].update(attrs)
 
         return ret
 
-    def _setter(self, instance, value):
+    def _setter(self, instance, data):
         proxy = instance.__dict__[self.key]
 
         @coroutine
         def setter():
-            config = self._copy_properties(value, False)
             yield from instance.call(proxy._deviceId,
-                                     "slotReconfigure", config)
+                                     "slotReconfigure", data)
 
         return [setter]
 
@@ -119,7 +101,9 @@ class DeviceNode(String):
                 yield from proxy
                 while True:
                     data = yield from queue.get()
-                    out = self._copy_properties(data, True)
+                    out = self._copy_properties(data)
+                    if out.empty():
+                        continue
                     proxy._current.merge(out)
                     instance.signalChanged(Hash(self.key, out),
                                            instance.deviceId)
@@ -160,15 +144,15 @@ class DeviceNode(String):
         if self.commands or self.properties:
             instance._notifyNewSchema()
 
-        def register(theirname, myname):
+        def register(command):
             @coslot
             def slot():
-                yield from instance._ss.request(proxy._deviceId, theirname)
+                yield from instance._ss.request(proxy._deviceId, command)
 
-            instance._ss.register_slot("{}.{}".format(self.key, myname), slot)
+            instance._ss.register_slot("{}.{}".format(self.key, command), slot)
 
-        for theirname, myname in self.commands.items():
-            register(theirname, myname)
+        for command in self.commands:
+            register(command)
 
         instance._ss.exitStack.enter_context((yield from proxy))
         if self.lock:
@@ -189,8 +173,8 @@ class DeviceNode(String):
         h = Hash()
         # test whether or not proxy is a NoneValue or None
         if isSet(proxy):
-            for name, rename in chain(self.properties.items(),
-                                      self.commands.items()):
-                h[rename] = proxy._schema_hash[name]
-                h[rename, ...] = proxy._schema_hash[name, ...]
+            for name in chain(self.properties, self.commands):
+                h[name] = proxy._schema_hash[name]
+                h[name, ...] = proxy._schema_hash[name, ...]
+
         return h, attrs
