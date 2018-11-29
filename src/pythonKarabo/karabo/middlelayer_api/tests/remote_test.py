@@ -867,9 +867,8 @@ class Tests(DeviceTest):
     @async_tst
     def test_devicenode(self):
         class A(Device):
-            dn = DeviceNode(properties=["value", {"counter": "cntr",
-                                                  "other": "othr"}],
-                            commands=[{"doit": "do_it"}, "changeit"],
+            dn = DeviceNode(properties=["value", "counter", "other"],
+                            commands=["doit", "changeit"],
                             timeout=15.0)
 
             dnEmpty = DeviceNode()
@@ -886,14 +885,14 @@ class Tests(DeviceTest):
             with (yield from getDevice("devicenode")) as d:
                 self.assertEqual(d.lockedBy, "")
                 self.assertEqual(d.dn.value, 5)
-                self.assertEqual(d.dn.cntr, -1)
+                self.assertEqual(d.dn.counter, -1)
                 self.assertEqual(type(d).dn.displayType, "deviceNode")
                 d.dn.value = 8
-                d.dn.cntr = 12
+                d.dn.counter = 12
                 self.remote.done = False
-                yield from d.dn.do_it()
+                yield from d.dn.doit()
                 self.assertEqual(d.dn.value, 8)
-                self.assertEqual(d.dn.cntr, 12)
+                self.assertEqual(d.dn.counter, 12)
                 self.assertEqual(a.dn.value, 8)
                 self.assertEqual(a.dn.counter, 12)
                 self.assertEqual(a.dn.state, State.UNKNOWN)
@@ -902,7 +901,6 @@ class Tests(DeviceTest):
                 self.assertIsNotNone(a.dn.state.timestamp)
                 self.assertIsNotNone(a.dn.counter.timestamp)
                 self.assertIsNotNone(a.dn.value.timestamp)
-                self.assertIsNotNone(d.dn.cntr.timestamp)
 
                 self.assertEqual(d.dnEmpty, "remote")
                 self.assertIsNotNone(d.dnEmpty.timestamp)
@@ -916,7 +914,7 @@ class Tests(DeviceTest):
 
                 d.dn.othr = 111
                 yield from d
-                self.assertFalse(isSet(d.dn.othr))
+                self.assertFalse(isSet(d.dn.other))
         finally:
             yield from a.slotKillDevice()
 
