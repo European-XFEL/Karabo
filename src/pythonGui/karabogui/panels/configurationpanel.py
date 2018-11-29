@@ -225,6 +225,9 @@ class ConfigurationPanel(BasePanelWidget):
     def _apply_loaded_configuration(self, proxy, configuration):
         """Apply a configuration loaded from a file to a proxy
         """
+        if self._showing_proxy is not proxy:
+            return
+
         binding = proxy.binding
         # Loading a configuration from file has to check for a present Schema
         # and if the classId is the first key of the configuration
@@ -254,12 +257,15 @@ class ConfigurationPanel(BasePanelWidget):
                     # NOTE: This property most likely was removed from the
                     # device, we have schema evolution and will continue here!
                     continue
-                if (prop_binding.access_mode is AccessMode.RECONFIGURABLE and
-                        prop_binding.required_access_level <= access_level and
+                if prop_binding.access_mode is AccessMode.RECONFIGURABLE:
+                    if (prop_binding.required_access_level <= access_level and
                         prop_binding.is_allowed(state) and
-                        has_changes(prop_binding, prop_proxy.value, value)):
-                    prop_proxy.edit_value = value
-                    made_changes = True
+                            has_changes(prop_binding,
+                                        prop_proxy.value, value)):
+                        prop_proxy.edit_value = value
+                        made_changes = True
+                    else:
+                        prop_proxy.trait_setq(edit_value=None)
             model.signalHasModifications.emit(made_changes)
         else:
             # Load the configuration directly into the binding
