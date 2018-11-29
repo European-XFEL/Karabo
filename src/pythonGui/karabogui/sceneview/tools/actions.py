@@ -23,6 +23,7 @@ class CreateToolAction(BaseSceneAction):
         """
         tool = self.tool_factory()
         scene_view.set_tool(tool)
+        scene_view.set_cursor('cross')
 
 
 class BaseLayoutAction(BaseSceneAction):
