@@ -270,6 +270,7 @@ while [ -n "$1" ]; do
         --runTests)
             # Run all the unit tests too
             RUNTESTS="y"
+            RUNINTEGRATIONTESTS="y"
             ;;
         --runIntegrationTests)
             # Run the integration tests
