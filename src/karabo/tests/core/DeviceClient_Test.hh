@@ -38,6 +38,8 @@ private:
 
     void testMonitorChannel();
 
+    void testConnectionHandling();
+
     karabo::core::DeviceServer::Pointer m_deviceServer;
     karabo::core::DeviceClient::Pointer m_deviceClient;
 };
