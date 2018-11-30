@@ -5,13 +5,12 @@ This file closely corresponds to karabo.util.ReferenceType.
 The C++ types are mostly implemented by using the corresponding numpy type.
 """
 
-from asyncio import async, coroutine, get_event_loop
+from asyncio import async, coroutine, get_event_loop, iscoroutinefunction
 import base64
 from collections import OrderedDict
 from collections.abc import Iterable
 from enum import Enum
 from functools import partial, wraps
-from inspect import iscoroutinefunction
 import logging
 import numbers
 from struct import pack
