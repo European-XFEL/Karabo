@@ -553,7 +553,7 @@ namespace karabo {
 
 
         void DeviceClient::_slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "_slotSchemaUpdated";
+            KARABO_LOG_FRAMEWORK_DEBUG << "_slotSchemaUpdated for " << deviceId;
             {
                 boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
                 const string path(findInstance(deviceId));
@@ -1355,6 +1355,10 @@ namespace karabo {
                 // TODO Optimize speed
                 string path(findInstance(instanceId));
                 if (path.empty()) {
+                    // TODO:
+                    // This is at least dangerous: If some call arrives here after disconnection,
+                    // we will have some config in cache - but one that will not be updated anymore!
+                    // This could at least confuse killDevice(..) and killServer(..).
                     path = "device." + instanceId + ".configuration";
                     KARABO_LOG_FRAMEWORK_DEBUG << "_slotChanged created '" << path << "' for" << hash;
                 } else {

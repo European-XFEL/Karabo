@@ -61,6 +61,7 @@ void DeviceClient_Test::testAll() {
     testMonitorChannel();
     testGetSchema();
     testGetSchemaNoWait();
+    testConnectionHandling();
 }
 
 
@@ -301,4 +302,111 @@ void DeviceClient_Test::testGetSchemaNoWait() {
     success = m_deviceClient->killDevice("TestedDevice4", KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
+}
+
+
+void DeviceClient_Test::testConnectionHandling() {
+    const std::string serverId("testServerDeviceClient");
+    const std::string devId("TestedDevice");
+    std::pair<bool, std::string> success = m_deviceClient->instantiate(serverId, "PropertyTest",
+                                                                       Hash("deviceId", devId),
+                                                                       KRB_TEST_MAX_TIMEOUT);
+    ////////////////////////////////////////////////////////////////////
+    // Test 1)
+    // We check that we can get the configuration and a single property
+    ////////////////////////////////////////////////////////////////////
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    CPPUNIT_ASSERT_EQUAL(32000000, m_deviceClient->get<int>(devId, "int32Property"));
+    // Store all paths to cross check later full configurations:
+    std::vector<std::string> paths;
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(devId).getPaths(paths));
+    const std::vector<std::string> allPaths(paths);
+
+    ////////////////////////////////////////////////////////////////////
+    // Test 2)
+    // We kill and restart the device and redo the test to check caching
+    // and cache cleaning
+    ////////////////////////////////////////////////////////////////////
+    success = m_deviceClient->killDevice(devId, KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    // Device not there, so timeout
+    CPPUNIT_ASSERT_THROW(m_deviceClient->get(devId), karabo::util::TimeoutException);
+    success = m_deviceClient->instantiate(serverId, "PropertyTest",
+                                          Hash("deviceId", devId, "int32Property", 64000000),
+                                          KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    CPPUNIT_ASSERT_EQUAL(64000000, m_deviceClient->get<int>(devId, "int32Property"));
+
+    // Now check that still all paths are there
+    paths.clear();
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(devId).getPaths(paths));
+    CPPUNIT_ASSERT_EQUAL(allPaths.size(), paths.size());
+    CPPUNIT_ASSERT_EQUAL(karabo::util::toString(allPaths), karabo::util::toString(paths)); // cannot compare vector<string>...
+
+    ////////////////////////////////////////////////////////////////////
+    // Test 3)
+    // We check whether the same as in test 2 works also in case a
+    // monitor was registered which makes the device an immortal within
+    // the device client and - after the device is shut down, even a
+    // "zombie".
+    ////////////////////////////////////////////////////////////////////
+    bool cfgArrived = false;
+    auto deviceMonitor = [&cfgArrived](const std::string&, const karabo::util::Hash&) {
+        cfgArrived = true;
+    };
+    m_deviceClient->registerDeviceMonitor(devId, deviceMonitor);
+    // TODO: Waiting should not be needed. For the very likely reason I need it here,
+    // see DeviceClient::_slotChanged and DeviceClient::killDevice.
+    int trials = 100;
+    while (--trials >= 0) {
+        if (cfgArrived) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(2));
+    }
+    // Kill the device again - within client it shall be a zombie now
+    success = m_deviceClient->killDevice(devId, KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    // Device not there again, so timeout
+    CPPUNIT_ASSERT_THROW(m_deviceClient->get(devId), karabo::util::TimeoutException);
+
+    // Restart device again with a changed property
+    success = m_deviceClient->instantiate(serverId, "PropertyTest",
+                                          Hash("deviceId", devId, "int32Property", -32000000),
+                                          KRB_TEST_MAX_TIMEOUT);
+    // Check again all paths and the single property
+    Hash config;
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(devId, config));
+    paths.clear();
+    config.getPaths(paths);
+    CPPUNIT_ASSERT_EQUAL(allPaths.size(), paths.size());
+    CPPUNIT_ASSERT_EQUAL(karabo::util::toString(allPaths), karabo::util::toString(paths)); // toString: see above
+    CPPUNIT_ASSERT_EQUAL(-32000000, config.get<int>("int32Property"));
+
+    ////////////////////////////////////////////////////////////////////
+    // Test 4)
+    // Similar test content - but this time unregister the monitor to
+    // get rid of the zombie before re-instantiation and checking again
+    ////////////////////////////////////////////////////////////////////
+    success = m_deviceClient->killDevice(devId, KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    // Now device state in client is "zombie"
+
+    // stop monitoring, i.e. kill zombie
+    m_deviceClient->unregisterDeviceMonitor(devId);
+
+    // Restart device again with a changed property
+    success = m_deviceClient->instantiate(serverId, "PropertyTest",
+                                          Hash("deviceId", devId, "int32Property", -64000000),
+                                          KRB_TEST_MAX_TIMEOUT);
+
+    // Check once more all paths and the single property
+    config.clear();
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(devId, config));
+    paths.clear();
+    config.getPaths(paths);
+    CPPUNIT_ASSERT_EQUAL(allPaths.size(), paths.size());
+    CPPUNIT_ASSERT_EQUAL(karabo::util::toString(allPaths), karabo::util::toString(paths)); // toString: see above
+    CPPUNIT_ASSERT_EQUAL(-64000000, config.get<int>("int32Property"));
 }
