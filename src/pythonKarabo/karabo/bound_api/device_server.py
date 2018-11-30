@@ -338,12 +338,25 @@ class DeviceServer(object):
                 self.instantiateDevice(hsh)
 
     def stopDeviceServer(self):
-        # If stopped early in the initialisation procedure,
-        # sys.getrefcount(self.ss) is very high (>27000), probably with cyclic
-        # references that do not anymore get cleaned up before the Python
-        # interpreter stops. Then we lack the instanceGone from the C++
-        # destructor of SignalSlotable despite of self.ss = None... :-(
+        # HACK: Sometimes the C++ destructor of SignalSlotable is not called
+        #       and then instanceGone is not sent. This can happen when many
+        #       variables are still referring to the SignalSlotable here.
+        #       This has been seen when stopped early in the initialisation
+        #       procedure, leading to a very high (>27000) refcount.
+        #       If we are the last ones, it is guaranteed that the destructor
+        #       is called.
+        #
+        # Take over SignalSlotable to avoid new references in other threads:
+        localSigSlot = self.ss
         self.ss = None
+        refCount = sys.getrefcount(localSigSlot)
+        if refCount > 2:
+            # count of 2: localSigSlot and the one internal to getrefcount
+            print("Forced call to slotInstanceGone due to refcount", refCount)
+            localSigSlot.call("*", "slotInstanceGone",
+                              self.serverid, localSigSlot.getInstanceInfo())
+        # HACK end
+
         EventLoop.stop()
 
     def errorFoundAction(self, m1, m2):
