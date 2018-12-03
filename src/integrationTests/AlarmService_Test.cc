@@ -192,9 +192,10 @@ void AlarmService_Test::testAlarmPassing() {
 void AlarmService_Test::testAcknowledgement() {
     //add another alarm to the table so we have two alarms pending
     //we will work only on the first one afterwards
-    TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
+    TcpAdapter::QueuePtr messageQ;
+    CPPUNIT_ASSERT_NO_THROW(messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
         m_deviceClient->execute("alarmTester", "triggerWarnHighAckNode", KRB_TEST_MAX_TIMEOUT);
-    });
+    }));
     Hash lastMessage;
     messageQ->pop(lastMessage);
 
@@ -210,9 +211,9 @@ void AlarmService_Test::testAcknowledgement() {
     //first test if we cannot acknowledge a not acknowledgeable alarm.
     //the alarm service should be in this state after the previous test.
     Hash message("type", "acknowledgeAlarm", "alarmInstanceId", "testAlarmService", "acknowledgedRows", Hash("0", true));
-    messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
+    CPPUNIT_ASSERT_NO_THROW(messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
         m_tcpAdapter->sendMessage(message);
-    });
+    }));
     messageQ->pop(lastMessage);
     rowId = lastMessage.get<Hash>("rows").begin()->getKey();
 
@@ -232,9 +233,9 @@ void AlarmService_Test::testAcknowledgement() {
 
     //now we go into the normal state. Acknowledging is now possible, and we are
     //made aware of this
-    messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
+    CPPUNIT_ASSERT_NO_THROW(messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
         m_deviceClient->execute("alarmTester", "triggerNormalAck", KRB_TEST_MAX_TIMEOUT);
-    });
+    }));
 
     CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerNormalAck");
 
@@ -250,9 +251,9 @@ void AlarmService_Test::testAcknowledgement() {
     // we can now acknowledge the alarm, by sending the appropriate message
     // this should trigger a message signaling that the acknowledged alarm is
     // to be removed
-    messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
+    CPPUNIT_ASSERT_NO_THROW(messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
         m_tcpAdapter->sendMessage(message);
-    });
+    }));
     messageQ->pop(lastMessage);
     rowId = lastMessage.get<Hash>("rows").begin()->getKey();
 
@@ -271,9 +272,10 @@ void AlarmService_Test::testAcknowledgement() {
         if (rep++ == maxRepeats) CPPUNIT_ASSERT(false);
         boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
         message = Hash("type", "requestAlarms", "alarmInstanceId", "testAlarmService");
-        messageQ = m_tcpAdapter->getNextMessages("alarmInit", 1, [&] {
-            m_tcpAdapter->sendMessage(message);
-        });
+        CPPUNIT_ASSERT_NO_THROW_MESSAGE(toString(rep) + " failures to receive message for " + toString(message),
+                                        messageQ = m_tcpAdapter->getNextMessages("alarmInit", 1, [&] {
+                                            m_tcpAdapter->sendMessage(message);
+                                        }));
         //m_deviceClient->execute("testAlarmService", "slotReconfigure", Hash("currentAlarms", alarmTable), KRB_TEST_MAX_TIMEOUT);
         messageQ->pop(lastMessage);
         rowId = lastMessage.get<Hash>("rows").begin()->getKey();
