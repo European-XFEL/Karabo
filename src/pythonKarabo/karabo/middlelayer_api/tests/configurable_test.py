@@ -13,7 +13,7 @@ from karabo.middlelayer import (
     VectorHash, VectorFloat, VectorInt8, VectorInt16, VectorInt32,
     VectorInt64, VectorString, VectorUInt8, VectorUInt16, VectorUInt32,
     VectorUInt64)
-from karabo.middlelayer_api.injectable import Injectable
+from ..injectable import InjectMixin
 
 
 class StoreChanges(Configurable):
@@ -778,7 +778,7 @@ class Tests(TestCase):
         self.assertEqual(Brian.state.options, [State.ON, State.OFF])
 
     def test_overwrite_inject(self):
-        class Mandy(Injectable):
+        class Mandy(InjectMixin):
             number = Int32(displayedName="whatever", minExc=7,
                            accessMode=AccessMode.READONLY,
                            allowedStates={State.ON}, tags=set(),
