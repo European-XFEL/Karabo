@@ -6,10 +6,11 @@
 from collections import deque
 from enum import Enum
 
-from PyQt4.QtCore import pyqtSignal
+from PyQt4.QtCore import pyqtSignal, pyqtSlot, Qt
 from PyQt4.QtGui import (
-    QAction, QFrame, QHBoxLayout, QLabel, QLineEdit, QPushButton, QSizePolicy,
-    QVBoxLayout, QWidget)
+    QAction, QFrame, QHBoxLayout, QLabel, QLineEdit, QPainter, QPixmap,
+    QPrinter, QPrintPreviewDialog, QPushButton, QSizePolicy, QVBoxLayout,
+    QWidget)
 
 from karabogui import icons
 from karabogui.events import KaraboEventSender, broadcast_event
@@ -228,6 +229,31 @@ class BasePanelWidget(QFrame):
     # --------------------------------------
     # Qt slots and callbacks
 
+    @pyqtSlot()
+    def handlePreview(self):
+        printer = QPrinter()
+        printer.setPageSize(QPrinter.A4)
+        printer.setOutputFormat(QPrinter.PdfFormat)
+        dialog = QPrintPreviewDialog(printer)
+        dialog.setModal(False)
+        dialog.paintRequested.connect(self.handle_paint_request)
+        dialog.exec_()
+
+    @pyqtSlot(QPrinter)
+    def handle_paint_request(self, printer):
+        """Executed for each paint request in the print preview dialog"""
+        pixmap = QPixmap.grabWidget(self)
+        pixmap = pixmap.scaled(printer.pageRect().width(),
+                               printer.pageRect().height(),
+                               Qt.KeepAspectRatio,
+                               Qt.SmoothTransformation)
+
+        center_x = (printer.pageRect().width() - pixmap.width()) / 2
+        center_y = (printer.pageRect().height() - pixmap.height()) / 2
+        painter = QPainter(printer)
+        painter.drawPixmap(center_x, center_y, pixmap)
+        painter.end()
+
     def closeEvent(self, event):
         if not self.allow_closing and self.panel_container is not None:
             self.onDock()
@@ -279,6 +305,12 @@ class BasePanelWidget(QFrame):
         """This toolbar is shown by all panels which are attached to a
         container.
         """
+        text = "Print"
+        self.acPrint = QAction(icons.printer, "&Print", self)
+        self.acPrint.setToolTip(text)
+        self.acPrint.setStatusTip(text)
+        self.acPrint.triggered.connect(self.handlePreview)
+
         text = "Unpin as individual window"
         self.acUndock = QAction(icons.undock, "&Undock", self)
         self.acUndock.setToolTip(text)
@@ -307,6 +339,7 @@ class BasePanelWidget(QFrame):
 
         self.standard_toolbar = ToolBar("Standard", parent=self)
         self.standard_toolbar.add_expander()
+        self.standard_toolbar.addAction(self.acPrint)
         self.standard_toolbar.addAction(self.acUndock)
         self.standard_toolbar.addAction(self.acDock)
         self.standard_toolbar.addAction(self.acMaximize)
@@ -330,7 +363,7 @@ class BasePanelWidget(QFrame):
         toolbar_layout.setContentsMargins(0, 0, 0, 0)
         toolbar_layout.setSpacing(0)
         # Make the first toolbars expand to fill all horizontal space
-        toolbar_layout.setStretch(toolbar_layout.count()-1, 1)
+        toolbar_layout.setStretch(toolbar_layout.count() - 1, 1)
         toolbar.setVisible(False)
 
         # Setup some visual characteristics of the toolbar container
