@@ -162,7 +162,7 @@ void DataLogging_Test::allTestRunner() {
 
 
 void DataLogging_Test::testAllInstantiated() {
-    std::clog << "Testing deviceInstantiation... ";
+    std::clog << "Testing deviceInstantiation... " << std::flush;
     int timeout = 1500; // milliseconds
     vector<string> devices;
     devices.push_back(karabo::util::DATALOGGER_PREFIX + m_deviceId);
@@ -189,7 +189,7 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
     const string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
     const string dlreader1 = karabo::util::DATALOGREADER_PREFIX + ("1-" + m_server);
     const int max_set = 100;
-    std::clog << "Testing Property History retrieval for '" << key << "' ...";
+    std::clog << "Testing Property History retrieval for '" << key << "'... " << std::flush;
     // get configuration for later checks
     Hash beforeConf;
     m_deviceClient->get(m_deviceId, beforeConf);
@@ -247,7 +247,7 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
 
     // skip the configuration retrieval
     if (!testConf) return;
-    std::clog << "Testing past configuration retrieval for '" << key << "' ...";
+    std::clog << "Testing past configuration retrieval for '" << key << "'... " << std::flush;
 
     timeout = 20000;
     // place holder schema, could be checked in future tests
