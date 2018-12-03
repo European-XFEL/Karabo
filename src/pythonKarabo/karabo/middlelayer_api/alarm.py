@@ -1,9 +1,8 @@
 from karabo.common.alarm_conditions import AlarmCondition
-from .enums import AccessLevel, AccessMode
+from .enums import AccessLevel, AccessMode, DaqPolicy
 from .hash import Hash, HashType, String
 from .schema import Configurable
 from .signalslot import Signal, slot
-from .time_mixin import get_timestamp
 
 
 class Alarm(String):
@@ -22,7 +21,8 @@ class AlarmMixin(Configurable):
                     "Evaluates to the highest condition on any property "
                     "if not set manually.",
         accessMode=AccessMode.READONLY,
-        defaultValue=AlarmCondition.NONE)
+        defaultValue=AlarmCondition.NONE,
+        daqPolicy=DaqPolicy.OMIT)
 
     globalAlarmCondition = Alarm(
         displayedName="Global Alarm Condition", displayType='AlarmCondition',
@@ -32,7 +32,8 @@ class AlarmMixin(Configurable):
                     "condition of each property.",
         accessMode=AccessMode.READONLY,
         requiredAccessLevel=AccessLevel.ADMIN,
-        defaultValue=AlarmCondition.NONE)
+        defaultValue=AlarmCondition.NONE,
+        daqPolicy=DaqPolicy.OMIT)
 
     signalAlarmUpdate = Signal(String(), HashType())
 
