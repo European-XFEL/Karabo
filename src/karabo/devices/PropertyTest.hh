@@ -61,6 +61,12 @@ namespace karabo {
 
             void slotUpdateSchema();
 
+            void node_increment();
+
+            void node_reset();
+
+            void replier(const karabo::xms::SignalSlotable::AsyncReply & areply);
+
             long long m_outputCounter;
         };
     } 
