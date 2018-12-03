@@ -38,6 +38,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163556830/DeviceClient.o \
 	${OBJECTDIR}/_ext/163556830/DeviceServer.o \
 	${OBJECTDIR}/_ext/163556830/FsmBaseState.o \
+	${OBJECTDIR}/_ext/163556830/InstanceChangeThrottler.o \
 	${OBJECTDIR}/_ext/163556830/Lock.o \
 	${OBJECTDIR}/_ext/163556830/Runner.o \
 	${OBJECTDIR}/_ext/1423485062/AlarmService.o \
@@ -206,6 +207,11 @@ ${OBJECTDIR}/_ext/163556830/FsmBaseState.o: ../../../src/karabo/core/FsmBaseStat
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/FsmBaseState.o ../../../src/karabo/core/FsmBaseState.cc
+
+${OBJECTDIR}/_ext/163556830/InstanceChangeThrottler.o: ../../../src/karabo/core/InstanceChangeThrottler.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/InstanceChangeThrottler.o ../../../src/karabo/core/InstanceChangeThrottler.cc
 
 ${OBJECTDIR}/_ext/163556830/Lock.o: ../../../src/karabo/core/Lock.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
@@ -792,7 +798,7 @@ ${OBJECTDIR}/_ext/1103122747/Statics.o: ../../../src/karabo/xms/Statics.cc
 
 # Build Test Targets
 .build-tests-conf: .build-conf ${TESTFILES}
-${TESTDIR}/TestFiles/f7: ${TESTDIR}/_ext/1033645296/DeviceClient_Test.o ${TESTDIR}/_ext/1033645296/Runner_Test.o ${TESTDIR}/_ext/1033645296/coreTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f7: ${TESTDIR}/_ext/1033645296/DeviceClient_Test.o ${TESTDIR}/_ext/1033645296/InstanceChangeThrottler_Test.o ${TESTDIR}/_ext/1033645296/Runner_Test.o ${TESTDIR}/_ext/1033645296/coreTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f7 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
 
@@ -825,6 +831,12 @@ ${TESTDIR}/_ext/1033645296/DeviceClient_Test.o: ../../../src/karabo/tests/core/D
 	${MKDIR} -p ${TESTDIR}/_ext/1033645296
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 -I. -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033645296/DeviceClient_Test.o ../../../src/karabo/tests/core/DeviceClient_Test.cc
+
+
+${TESTDIR}/_ext/1033645296/InstanceChangeThrottler_Test.o: ../../../src/karabo/tests/core/InstanceChangeThrottler_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/1033645296
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 -I. -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033645296/InstanceChangeThrottler_Test.o ../../../src/karabo/tests/core/InstanceChangeThrottler_Test.cc
 
 
 ${TESTDIR}/_ext/1033645296/Runner_Test.o: ../../../src/karabo/tests/core/Runner_Test.cc 
@@ -1170,6 +1182,19 @@ ${OBJECTDIR}/_ext/163556830/FsmBaseState_nomain.o: ${OBJECTDIR}/_ext/163556830/F
 	    $(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/FsmBaseState_nomain.o ../../../src/karabo/core/FsmBaseState.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163556830/FsmBaseState.o ${OBJECTDIR}/_ext/163556830/FsmBaseState_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163556830/InstanceChangeThrottler_nomain.o: ${OBJECTDIR}/_ext/163556830/InstanceChangeThrottler.o ../../../src/karabo/core/InstanceChangeThrottler.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/InstanceChangeThrottler.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/InstanceChangeThrottler_nomain.o ../../../src/karabo/core/InstanceChangeThrottler.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163556830/InstanceChangeThrottler.o ${OBJECTDIR}/_ext/163556830/InstanceChangeThrottler_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163556830/Lock_nomain.o: ${OBJECTDIR}/_ext/163556830/Lock.o ../../../src/karabo/core/Lock.cc 
