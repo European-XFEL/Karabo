@@ -58,7 +58,7 @@ class Device(AlarmMixin, SignalSlotable):
         description="The version of the class of this device",
         requiredAccessLevel=AccessLevel.EXPERT,
         accessMode=AccessMode.READONLY,
-        daqPolicy = DaqPolicy.OMIT)
+        daqPolicy=DaqPolicy.OMIT)
 
     serverId = String(
         displayedName="ServerID",
