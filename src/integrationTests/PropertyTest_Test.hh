@@ -33,6 +33,7 @@ private:
     void testVectorProperties();
     void testTableProperties();
     void testAttributeEditing();
+    void testNodedSlots();
     
 private:
         
