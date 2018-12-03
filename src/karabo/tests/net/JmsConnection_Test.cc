@@ -52,7 +52,7 @@ unsigned int JmsConnection_Test::getMessageCount() {
 
 
 void JmsConnection_Test::testConnect() {
-
+    const char* broker_env = getenv("KARABO_BROKER");
     {
         setenv("KARABO_BROKER", BROKER_ADDRESS, true);
         m_connection = JmsConnection::Pointer(new JmsConnection());
@@ -88,6 +88,9 @@ void JmsConnection_Test::testConnect() {
         m_connection->disconnect();
         CPPUNIT_ASSERT(m_connection->isConnected() == false);
         unsetenv("KARABO_BROKER");
+    }
+    if (broker_env) {
+        setenv("KARABO_BROKER", broker_env, true);
     }
 }
 
