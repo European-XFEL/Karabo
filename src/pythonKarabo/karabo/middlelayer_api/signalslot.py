@@ -10,7 +10,7 @@ import inspect
 import re
 
 from .exceptions import KaraboError
-from .enums import AccessLevel, Assignment, AccessMode
+from .enums import AccessLevel, Assignment, AccessMode, DaqPolicy
 from .hash import Descriptor, Hash, HashType, Int32, Slot, String
 from .pipeline import NetworkOutput, OutputChannel
 from .proxy import DeviceClientProxyFactory
@@ -119,7 +119,8 @@ class SignalSlotable(Configurable):
                     "device-server",
         requiredAccessLevel=AccessLevel.EXPERT,
         assignment=Assignment.INTERNAL, accessMode=AccessMode.INITONLY,
-        defaultValue="__none__")
+        defaultValue="__none__",
+        daqPolicy=DaqPolicy.OMIT)
     def _deviceId_(self, value):
         self._deviceId_ = value
         self.logger = logging.getLogger(value)
@@ -128,14 +129,16 @@ class SignalSlotable(Configurable):
         displayedName="DeviceID",
         description="The device instance ID uniquely identifies a device "
                     "instance in the distributed system",
-        accessMode=AccessMode.READONLY)
+        accessMode=AccessMode.READONLY,
+        daqPolicy=DaqPolicy.OMIT)
 
     heartbeatInterval = Int32(
         displayedName="Heartbeat interval",
         description="The heartbeat interval",
         assignment=Assignment.OPTIONAL, defaultValue=20,
         minInc=10,
-        requiredAccessLevel=AccessLevel.ADMIN)
+        requiredAccessLevel=AccessLevel.ADMIN,
+        daqPolicy=DaqPolicy.OMIT)
 
     _ss = None
 

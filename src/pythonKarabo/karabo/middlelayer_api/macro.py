@@ -11,7 +11,7 @@ import threading
 from karabo.common.states import State
 from .device import Device
 from .device_client import waitUntilNew, getDevice
-from .enums import AccessLevel, AccessMode
+from .enums import AccessLevel, AccessMode, DaqPolicy
 from .eventloop import EventLoop
 from .hash import Descriptor, Int32, Slot, String
 
@@ -95,34 +95,39 @@ class Macro(Device):
         description="The name of the project this macro belongs to",
         defaultValue="__none__",
         accessMode=AccessMode.INITONLY,
-        requiredAccessLevel=AccessLevel.EXPERT)
+        requiredAccessLevel=AccessLevel.EXPERT,
+        daqPolicy=DaqPolicy.OMIT)
 
     module = String(
         displayedName="Module",
         description="The name of the module in the project",
         defaultValue="__none__",
         accessMode=AccessMode.INITONLY,
-        requiredAccessLevel=AccessLevel.EXPERT)
+        requiredAccessLevel=AccessLevel.EXPERT,
+        daqPolicy=DaqPolicy.OMIT)
 
     currentSlot = String(
         displayedName="Current Slot",
         description="The name of the slot which is currently running",
         defaultValue="",
-        accessMode=AccessMode.READONLY)
+        accessMode=AccessMode.READONLY,
+        daqPolicy=DaqPolicy.OMIT)
 
     print = String(
         displayedName="Printed output",
         description="The output printed to the console",
         defaultValue="",
         accessMode=AccessMode.READONLY,
-        requiredAccessLevel=AccessLevel.EXPERT)
+        requiredAccessLevel=AccessLevel.EXPERT,
+        daqPolicy=DaqPolicy.OMIT)
 
     doNotCompressEvents = Int32(
         displayedName="Number of prints",
         description="The number of prints issued so far",
         defaultValue=0,
         accessMode=AccessMode.READONLY,
-        requiredAccessLevel=AccessLevel.EXPERT)
+        requiredAccessLevel=AccessLevel.EXPERT,
+        daqPolicy=DaqPolicy.OMIT)
 
     @Slot(displayedName="Cancel")
     def cancel(self):
