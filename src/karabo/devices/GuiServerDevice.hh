@@ -511,11 +511,16 @@ namespace karabo {
              */
             void sendSystemVersion(WeakChannelPointer channel);
 
-            void instanceNewHandler(const karabo::util::Hash& topologyEntry);
+            void instanceNewHandler(const std::string& instanceId, const karabo::util::Hash& topologyEntry);
 
-            void instanceUpdatedHandler(const karabo::util::Hash& topologyEntry);
+            void instanceGoneHandler(const std::string& instanceId);
 
-            void instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            /**
+             * Handles events related to instances: new instance, instance updated, instance gone.
+             * 
+             * @Note: Its signature matches karabo::core::InstanceChangeThrottler::InstanceChangeHandler).
+             */
+            void instanceChangeHandler(const karabo::util::Hash& instChangeData);
 
             /**
              * acts upon incoming configuration updates from ``deviceId``. It is called
