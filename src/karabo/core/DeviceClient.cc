@@ -179,7 +179,9 @@ namespace karabo {
 
             Hash entry = prepareTopologyEntry(instanceId, instanceInfo);
             mergeIntoRuntimeSystemDescription(entry);
-
+            if (isImmortal(instanceId)) { // A "zombie" that now gets alive again - connect and fill cache
+                connectAndRequest(instanceId);
+            }
             if (m_instanceNewHandler) m_instanceNewHandler(entry);
             if (m_loggerMapCached && instanceId == util::DATALOGMANAGER_ID) {
                 karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
@@ -246,9 +248,24 @@ namespace karabo {
 
                 const string path(prepareTopologyPath(instanceId, instanceInfo));
                 if (!existsInRuntimeSystemDescription(path)) return;
-
+                // clear cache
                 eraseFromRuntimeSystemDescription(path);
-                eraseFromInstanceUsage(instanceId);
+                {
+                    boost::mutex::scoped_lock lock(m_instanceUsageMutex);
+                    InstanceUsage::iterator it = m_instanceUsage.find(instanceId);
+                    if (it != m_instanceUsage.end()) {
+                        if (isImmortal(instanceId)) {
+                            // Gone (i.e. dead), but immortal for us - a zombie!
+                            // Mark it for reconnection (resurrection...) , see age(..) and connectNeeded(..)
+                            it->second = -1;
+                        } else {
+                            m_instanceUsage.erase(it);
+                        }
+                        // Take care to avoid the automatic re-connect of SignalSlotable - for zombies we do it
+                        // ourselves in _slotInstanceNew and take care to get the initial configuration as well.
+                        disconnect(instanceId);
+                    }
+                }
                 if (m_instanceGoneHandler) m_instanceGoneHandler(instanceId, instanceInfo);
 
                 if (getInstanceType(instanceInfo) != "server") return;
@@ -533,6 +550,8 @@ namespace karabo {
             // m_runtimeSystemDescription. But if we cache, we also have to connect for updates.
             // Disadvantage is that 'stayConnected' also connects for 'signal[State]Changed' which could be noisy.
             // But usually no-one needs just the schema without the properties as well...
+            // TODO: Adjust and use connectAndRequest and thus also request "slotGetConfiguration": If we are connected
+            //       it is assumed that also the config cache is up to date.
             auto weakSigSlotPtr = m_signalSlotable;
             // Capturing the member variable would capture a bare 'this' - which we want to avoid and thus capture a copy.
             auto successHandler = [weakSigSlotPtr, instanceId] () {
@@ -553,7 +572,7 @@ namespace karabo {
 
 
         void DeviceClient::_slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "_slotSchemaUpdated";
+            KARABO_LOG_FRAMEWORK_DEBUG << "_slotSchemaUpdated for " << deviceId;
             {
                 boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
                 const string path(findInstance(deviceId));
@@ -936,6 +955,8 @@ namespace karabo {
                 }
             }
 
+            // TODO: Adjust and use connectAndRequest and thus also request "slotGetSchema": If we are connected,
+            //       it is assumed that also the schema cache is up to date.
             auto weakSigSlotPtr = m_signalSlotable;
             // Capturing member variable would capture a bare 'this' - which we want to avoid and thus capture a copy.
             auto successHandler = [weakSigSlotPtr, deviceId] () {
@@ -1138,22 +1159,27 @@ namespace karabo {
             }
 
             // Take care that we are connected - and asynchronously request to connect if not yet connected
+            connectAndRequest(deviceId);
+
+            // Take care that we will get updates "forever"
+            immortalize(deviceId);
+        }
+
+
+        void DeviceClient::connectAndRequest(const std::string& deviceId) {
             auto weakSigSlotPtr = m_signalSlotable; // Copy before capture to avoid that a bare 'this' is captured
             auto successHandler = [weakSigSlotPtr, deviceId] () {
                 karabo::xms::SignalSlotable::Pointer p = weakSigSlotPtr.lock();
                 if (p) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "registerDeviceMonitor connected to '" << deviceId << "'";
+                    KARABO_LOG_FRAMEWORK_DEBUG << "connected to '" << deviceId << "'";
                     p->requestNoWait(deviceId, "slotGetSchema", "", "_slotSchemaUpdated", false);
                     p->requestNoWait(deviceId, "slotGetConfiguration", "", "_slotChanged");
                 }
             };
             auto failureHandler = [deviceId] () {
-                KARABO_LOG_FRAMEWORK_WARN << "registerDeviceMonitor failed to connect to " << deviceId;
+                KARABO_LOG_FRAMEWORK_WARN << "failed to connect to " << deviceId;
             };
             stayConnected(deviceId, successHandler, failureHandler);
-
-            // Take care that we will get updates "forever"
-            immortalize(deviceId);
         }
 
 
@@ -1174,6 +1200,7 @@ namespace karabo {
                     }
                 }
             }
+            // TODO: Has to stay a live if a deviceMonitor is still there for this device, see below!
             if (isMortal) mortalize(instanceId);
         }
 
@@ -1184,6 +1211,7 @@ namespace karabo {
                 if (m_deviceChangedHandlers.has(instanceId)) m_deviceChangedHandlers.erase(instanceId);
                 // Cache will be cleaned once age() disconnected the device.
             }
+            // TODO: Has to stay a live if a propertyMonitor is still there for this device, see above!
             mortalize(instanceId);
         }
 
@@ -1304,7 +1332,9 @@ namespace karabo {
                 return true;
             }
 
-            bool result = (it->second >= CONNECTION_KEEP_ALIVE);
+            // < 0: Marked as a zombie in _slotInstanceGone - let's resurrect (aeh, reconnect to) it
+            //      since someone registered for it. See _slotInstanceGone(..) and age(..).
+            const bool result = (it->second < 0 || it->second >= CONNECTION_KEEP_ALIVE);
             it->second = 0; // reset the counter
             return result;
         }
@@ -1355,6 +1385,10 @@ namespace karabo {
                 // TODO Optimize speed
                 string path(findInstance(instanceId));
                 if (path.empty()) {
+                    // TODO:
+                    // This is at least dangerous: If some call arrives here after disconnection,
+                    // we will have some config in cache - but one that will not be updated anymore!
+                    // This could at least confuse killDevice(..) and killServer(..).
                     path = "device." + instanceId + ".configuration";
                     KARABO_LOG_FRAMEWORK_DEBUG << "_slotChanged created '" << path << "' for" << hash;
                 } else {
@@ -1556,39 +1590,17 @@ if (nodeData) {\
                 for (InstanceUsage::iterator it = m_instanceUsage.begin(); it != m_instanceUsage.end(); /*NOT ++it*/) {
 
                     const bool immortal = this->isImmortal(it->first);
+                    // Caveat:
+                    // Check for !immortal first to avoid that operator++ ages an immortal. That means that a zombie
+                    // (with it->second == -1) stays a zombie. Once an immortal gets mortal, the counter starts again,
+                    // i.e. it stays connected CONNECTION_KEEP_ALIVE seconds to be quickly back without disconnect/connect
+                    // overhead in case immortality is re-established quickly, e.g. by a GUI client closing and opening
+                    // a scene etc.
                     if (!immortal && ++(it->second) >= CONNECTION_KEEP_ALIVE) {
                         // It is mortal and too old, nobody has interest anymore:
-                        // Disconnect - and clean system description from respective 'areas'.
-                        // It does not harm to clean twice 'configuration' - if disconnected from either of
-                        // signal(State)Changed, the device configuration is not reliable anymore.
-                        const string& instanceId = it->first;
-                        karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
-                        if (p) {
-                            KARABO_LOG_FRAMEWORK_DEBUG << "Prepare disconnection from '" << instanceId << "'.";
-                            std::vector<std::string> cleanAreas(1, "configuration");
-                            p->asyncDisconnect(instanceId, "signalChanged", "", "_slotChanged",
-                                               bind_weak(&DeviceClient::disconnectHandler, this,
-                                                         "signalChanged", instanceId, cleanAreas));
-                            p->asyncDisconnect(instanceId, "signalStateChanged", "", "_slotChanged",
-                                               bind_weak(&DeviceClient::disconnectHandler, this,
-                                                         "signalStateChanged", instanceId, cleanAreas));
-                            cleanAreas = {"fullSchema", "activeSchema"};
-                            p->asyncDisconnect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated",
-                                               bind_weak(&DeviceClient::disconnectHandler, this,
-                                                         "signalSchemaUpdated", instanceId, cleanAreas));
-                        } else { // How happen?
-                            KARABO_LOG_FRAMEWORK_ERROR << "SignalSlotable invalid in age(..), cannot disconnect "
-                                    << instanceId;
-                        }
+                        this->disconnect(it->first);
                         m_instanceUsage.erase(it++); // postfix increment for erasing while iterating through map
                     } else { // immortal or 'young'
-                        if (immortal) {
-                            // Do not let it age. Once it gets mortal, it will stay connected for
-                            // CONNECTION_KEEP_ALIVE seconds. In this way we are quickly back without the
-                            // disconnect/connect overhead in case immortality is re-established quickly, e.g.
-                            // by a GUI client quickly closing and opening a scene etc.
-                            it->second = 0;
-                        }
                         ++it;
                     }
                 }
@@ -1602,6 +1614,31 @@ if (nodeData) {\
             }
         }
 
+
+        void DeviceClient::disconnect(const std::string& instanceId) {
+            // Disconnect - and clean system description from respective 'areas'.
+            // It does not harm to clean twice 'configuration' - if disconnected from either of
+            // signal(State)Changed, the device configuration is not reliable anymore.
+            karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
+            if (p) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Prepare disconnection from '" << instanceId << "'.";
+                std::vector<std::string> cleanAreas(1, "configuration");
+                p->asyncDisconnect(instanceId, "signalChanged", "", "_slotChanged",
+                                   bind_weak(&DeviceClient::disconnectHandler, this,
+                                             "signalChanged", instanceId, cleanAreas));
+                p->asyncDisconnect(instanceId, "signalStateChanged", "", "_slotChanged",
+                                   bind_weak(&DeviceClient::disconnectHandler, this,
+                                             "signalStateChanged", instanceId, cleanAreas));
+                cleanAreas = {"fullSchema", "activeSchema"};
+                p->asyncDisconnect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated",
+                                   bind_weak(&DeviceClient::disconnectHandler, this,
+                                             "signalSchemaUpdated", instanceId, cleanAreas));
+            } else { // How happen?
+                KARABO_LOG_FRAMEWORK_ERROR << "SignalSlotable invalid, cannot disconnect "
+                        << instanceId;
+            }
+
+        }
 
         void DeviceClient::disconnectHandler(const std::string& signal, const std::string& instanceId,
                                              const std::vector<std::string>& toClear) {
@@ -1678,8 +1715,21 @@ if (nodeData) {\
 
 
         void DeviceClient::mortalize(const std::string& deviceId) {
+            {
+                // If we want to mortalize a zombie, it has to be dead immediately, so remove it from usage.
+                // Otherwise age(..) could be fooled and resurrect the zombie to have a normal age counter. Thus a
+                // request to the device within the CONNECTION_KEEP_ALIVE time will assume that it is alive and cached!
+                boost::mutex::scoped_lock lock(m_instanceUsageMutex);
+                InstanceUsage::iterator it = m_instanceUsage.find(deviceId);
+                if (it != m_instanceUsage.end() && it->second < 0) { // a zombie
+                    m_instanceUsage.erase(it);
+                }
+            }
+            // Better erase from m_immortals after the clean-up above. Otherwise any loop on m_instanceUsage that asks
+            // isImmortal(..) could be fooled.
             boost::mutex::scoped_lock lock(m_immortalsMutex);
             m_immortals.erase(deviceId);
+
         }
 
 
