@@ -44,8 +44,10 @@ public:
         KARABO_SLOT(slotB, int, karabo::util::Hash);
 
         KARABO_SLOT(slotC, int);
-        
+
         KARABO_SLOT(noded_slot, int);
+
+        KARABO_SLOT(noded_asyncSlot);
 
     }
 
@@ -84,13 +86,22 @@ public:
         if (number != 1) m_allOk = false;
         reply(number + number);
     }
-    
+
+
     void noded_slot(int number) {
         boost::mutex::scoped_lock lock(m_mutex);
         // Assertions
         m_messageCount++;
         if (number != 1) m_allOk = false;
         reply(number + number);
+    }
+
+
+    void noded_asyncSlot() {
+        boost::mutex::scoped_lock lock(m_mutex);
+        m_messageCount++;
+        AsyncReply aReply(this);
+        aReply(42);
     }
 
 
@@ -891,11 +902,12 @@ void SignalSlotable_Test::testMethod() {
     }
     CPPUNIT_ASSERT_EQUAL(2, reply);
 
-    waitDemoOk(demo, 11);
-    CPPUNIT_ASSERT(demo->wasOk(11));
-    
-    
+    reply = 0;
+    CPPUNIT_ASSERT_NO_THROW(demo->request("", "noded.asyncSlot").timeout(500).receive(reply));
+    CPPUNIT_ASSERT_EQUAL(42, reply);
 
+    waitDemoOk(demo, 12);
+    CPPUNIT_ASSERT(demo->wasOk(12));
     
 }
 
@@ -1067,6 +1079,7 @@ void SignalSlotable_Test::testAsyncReply() {
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
     }
     CPPUNIT_ASSERT(slotter->m_asynReplyHandlerCalled);
+
 }
 
 void SignalSlotable_Test::testAutoConnectSignal() {
