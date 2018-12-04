@@ -44,8 +44,10 @@ public:
         KARABO_SLOT(slotB, int, karabo::util::Hash);
 
         KARABO_SLOT(slotC, int);
-        
+
         KARABO_SLOT(noded_slot, int);
+
+        KARABO_SLOT(noded_asyncSlot);
 
     }
 
@@ -84,13 +86,22 @@ public:
         if (number != 1) m_allOk = false;
         reply(number + number);
     }
-    
+
+
     void noded_slot(int number) {
         boost::mutex::scoped_lock lock(m_mutex);
         // Assertions
         m_messageCount++;
         if (number != 1) m_allOk = false;
         reply(number + number);
+    }
+
+
+    void noded_asyncSlot() {
+        boost::mutex::scoped_lock lock(m_mutex);
+        m_messageCount++;
+        AsyncReply aReply(this);
+        aReply(42);
     }
 
 
@@ -891,11 +902,12 @@ void SignalSlotable_Test::testMethod() {
     }
     CPPUNIT_ASSERT_EQUAL(2, reply);
 
-    waitDemoOk(demo, 11);
-    CPPUNIT_ASSERT(demo->wasOk(11));
-    
-    
+    reply = 0;
+    CPPUNIT_ASSERT_NO_THROW(demo->request("", "noded.asyncSlot").timeout(500).receive(reply));
+    CPPUNIT_ASSERT_EQUAL(42, reply);
 
+    waitDemoOk(demo, 12);
+    CPPUNIT_ASSERT(demo->wasOk(12));
     
 }
 
@@ -920,7 +932,6 @@ void SignalSlotable_Test::testAsyncReply() {
             , m_timer(karabo::net::EventLoop::getIOService()) {
 
             KARABO_SLOT(slotAsyncReply, int);
-            KARABO_SLOT(slotNode_asyncReply);
             KARABO_SLOT(slotAsyncErrorReply);
         }
 
@@ -933,20 +944,6 @@ void SignalSlotable_Test::testAsyncReply() {
             m_timer.async_wait([reply, i, this](const boost::system::error_code & ec) {
                 if (ec) return;
                 reply(2 * i + 1);
-                this->m_asynReplyHandlerCalled = true;
-            });
-            m_slotCallEnded = true;
-        }
-
-
-        void slotNode_asyncReply() {
-            const AsyncReply reply(this);
-
-            // Let's stop this function call soon, but nevertheless send reply in 100 ms (likely in another thread!)
-            m_timer.expires_from_now(boost::posix_time::milliseconds(100));
-            m_timer.async_wait([reply, this](const boost::system::error_code & ec) {
-                if (ec) return;
-                reply(42);
                 this->m_asynReplyHandlerCalled = true;
             });
             m_slotCallEnded = true;
@@ -1082,45 +1079,6 @@ void SignalSlotable_Test::testAsyncReply() {
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
     }
     CPPUNIT_ASSERT(slotter->m_asynReplyHandlerCalled);
-
-    //
-    // Now check that the node slots are called as well
-    //
-
-    // reset the called flag and other test flags
-    slotter->m_slotCallEnded = false;
-    received = false;
-    bool resultIs42 = false;
-    auto successHandler3 = [&received, &resultIs42] (int j) {
-        received = true;
-        if (j == 42) resultIs42 = true;
-    };
-    errorHappened = false;
-    auto errorHandler3 = [&errorHappened] () {
-        errorHappened = true;
-    };
-    sender->request("slotter", "slotNode.asyncReply").receiveAsync<int>(successHandler3, errorHandler3);
-    // Some time for message travel and execution until slot call is finished...
-    counter = 100;
-    while (--counter >= 0) {
-        if (slotter->m_slotCallEnded) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-    }
-    CPPUNIT_ASSERT(slotter->m_slotCallEnded);
-    // ...but reply is not yet received
-    CPPUNIT_ASSERT(!received);
-
-    // Now wait until reply is received
-    counter = 100;
-    while (--counter >= 0) {
-        if (received) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-    }
-    // Assert and also check result:
-    CPPUNIT_ASSERT(slotter->m_asynReplyHandlerCalled);
-    CPPUNIT_ASSERT(received);
-    CPPUNIT_ASSERT(resultIs42);
-    CPPUNIT_ASSERT(!errorHappened);
 
 }
 
