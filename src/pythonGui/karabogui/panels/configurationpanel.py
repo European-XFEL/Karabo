@@ -267,7 +267,7 @@ class ConfigurationPanel(BasePanelWidget):
                                         prop_proxy.value, value)):
                         prop_proxy.edit_value = value
                     else:
-                        prop_proxy.edit_value =None
+                        prop_proxy.edit_value = None
             # NOTE: We tell the model directly to send dataChanged signal and
             # notify for changes!
             model._config_update()
