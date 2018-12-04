@@ -50,6 +50,12 @@ class Tests(TestCase):
         res = macro_sleep_check(timeas)
         self.assertSequenceEqual([3], res)
 
+        timeas = ("from karabo.middlelayer import Macro, Slot, String\n"
+                  "import time as k\n"
+                  "k.time()\n")
+        res = macro_sleep_check(timeas)
+        self.assertSequenceEqual([], res)
+
     def test_comment(self):
         fromtime = "from time import time #, sleep\n"
         res = macro_sleep_check(fromtime)
