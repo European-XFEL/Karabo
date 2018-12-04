@@ -43,16 +43,15 @@ def macro_sleep_check(code):
     if "import time as" in code:
         name = timeas.search(code).group()
 
-    cond1 = lambda line: "from {}".format(name) in line and "sleep" in line
-    cond2 = lambda line: "{}.sleep".format(name) in line
+    c1 = lambda line: "from {} import".format(name) in line and "sleep" in line
+    c2 = lambda line: "{}.sleep".format(name) in line
 
     lines = code.splitlines()
     line_numbers = []
     for lineno, line in enumerate(lines, 1):
         line = line.lower()
-        if cond1(line) or cond2(line):
+        if c1(line) or c2(line):
             if not exp.search(line):  # not a comment, but a real sleep() call
                 line_numbers.append(lineno)
-                print("faulty:", line)
 
     return line_numbers
