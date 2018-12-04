@@ -3,21 +3,44 @@ import json
 from karabo.common.api import (
     KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_UNIT_SYMBOL,
     KARABO_SCHEMA_DAQ_POLICY)
-from karabo.middlelayer import AccessMode, Configurable, Int8, String, Unit
+from karabo.middlelayer import (
+    AccessMode, Assignment, Configurable, Int8, Node, String, Unit)
 from karabogui import icons
 from karabogui.testing import GuiTestCase, get_class_property_proxy
 from ..utils import (
-    dragged_configurator_items, get_child_names, get_icon, threshold_triggered)
+    dragged_configurator_items, get_child_names, get_icon,
+    is_mandatory, threshold_triggered)
+
+
+class MandatoryNode(Configurable):
+    integer = Int8(
+        unitSymbol=Unit.METER,
+        assignment=Assignment.MANDATORY)
+
+
+class NormalNode(Configurable):
+    integer = Int8(
+        unitSymbol=Unit.METER)
+
+
+class NodeOfNode(Configurable):
+    data = Node(MandatoryNode)
 
 
 class Object(Configurable):
-    string = String(displayedName='String',
-                    accessMode=AccessMode.RECONFIGURABLE)
-    integer = Int8(unitSymbol=Unit.METER)
+    string = String(
+        displayedName='String',
+        accessMode=AccessMode.RECONFIGURABLE)
+
+    integer = Int8(
+        unitSymbol=Unit.METER)
+
+    nodeMandatory = Node(MandatoryNode)
+    nodeNormal = Node(NormalNode)
+    nodeOfNode = Node(NodeOfNode)
 
 
 class TestConfiguratorUtils(GuiTestCase):
-
     def test_dragged_configurator_items(self):
         schema = Object.getClassSchema()
         proxy = get_class_property_proxy(schema, 'string')
@@ -43,7 +66,26 @@ class TestConfiguratorUtils(GuiTestCase):
                                   KARABO_SCHEMA_DAQ_POLICY)
 
         device_names = get_child_names(proxy.root_proxy)
-        assert device_names == ['string', 'integer']
+        self.assertEqual(device_names,
+                         ['string', 'integer', 'nodeMandatory',
+                          'nodeNormal', 'nodeOfNode'])
+
+    def test_get_mandatory(self):
+        schema = Object.getClassSchema()
+        proxy = get_class_property_proxy(schema, 'integer')
+        assert is_mandatory(proxy.binding) is False
+
+        proxy = get_class_property_proxy(schema, 'nodeNormal.integer')
+        assert is_mandatory(proxy.binding) is False
+
+        proxy = get_class_property_proxy(schema, 'nodeMandatory.integer')
+        assert is_mandatory(proxy.binding) is True
+
+        proxy = get_class_property_proxy(schema, 'nodeOfNode')
+        assert is_mandatory(proxy.binding) is True
+
+        proxy = get_class_property_proxy(schema, 'nodeMandatory')
+        assert is_mandatory(proxy.binding) is True
 
     def test_get_icon(self):
         schema = Object.getClassSchema()

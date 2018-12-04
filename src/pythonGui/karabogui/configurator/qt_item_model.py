@@ -8,7 +8,7 @@ from weakref import WeakValueDictionary
 from PyQt4.QtCore import pyqtSignal, QAbstractItemModel, QModelIndex, Qt
 from PyQt4.QtGui import QBrush, QColor, QFont
 
-from karabo.middlelayer import AccessMode, Assignment
+from karabo.middlelayer import AccessMode
 from karabo.common.api import (
     State, KARABO_SCHEMA_ALLOWED_STATES, KARABO_SCHEMA_DISPLAYED_NAME,
     KARABO_SCHEMA_DISPLAY_TYPE, KARABO_WARN_LOW, KARABO_WARN_HIGH,
@@ -25,8 +25,8 @@ from karabogui.indicators import get_state_color, STATE_COLORS
 from karabogui.request import send_property_changes
 from .utils import (
     dragged_configurator_items, get_child_names, get_device_locked_string,
-    get_device_state_string, get_icon, get_proxy_value, threshold_triggered
-)
+    get_device_state_string, get_icon, get_proxy_value, is_mandatory,
+    threshold_triggered)
 
 
 def _friendly_repr(proxy, value):
@@ -574,7 +574,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
                 return name or proxy.path.split('.')[-1]
             elif role == Qt.FontRole:
                 is_class = isinstance(self.root, DeviceClassProxy)
-                if is_class and binding.assignment is Assignment.MANDATORY:
+                if is_class and is_mandatory(binding):
                     font = QFont()
                     font.setBold(True)
                     return font
