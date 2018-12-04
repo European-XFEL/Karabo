@@ -1,7 +1,3 @@
 [karabo.bound_device]
 SceneProvidingDevice = scene_providing_device:SceneProvidingDevice
 NonSceneProvidingDevice = non_scene_providing_device:NonSceneProvidingDevice
-
-[karabo.middlelayer_device]
-SceneProvidingMLDevice = scene_providing_ml_device:SceneProvidingMLDevice
-NonSceneProvidingMLDevice = scene_providing_ml_device:NonSceneProvidingMLDevice
