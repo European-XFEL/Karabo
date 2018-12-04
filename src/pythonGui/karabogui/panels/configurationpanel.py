@@ -11,9 +11,9 @@ from PyQt4.QtGui import (
 from karabo.middlelayer import AccessMode
 from karabogui import globals as krb_globals, icons, messagebox
 from karabogui.binding.api import (
-    DeviceProxy, ProjectDeviceProxy, attr_fast_deepcopy, apply_configuration,
-    extract_configuration, flat_iter_hash, has_changes,
-)
+    ChoiceOfNodesBinding, DeviceProxy, ListOfNodesBinding, ProjectDeviceProxy,
+    attr_fast_deepcopy, apply_configuration, extract_configuration,
+    flat_iter_hash, has_changes)
 from karabogui.configurator.api import ConfigurationTreeView
 from karabogui.events import KaraboEventSender, register_for_broadcasts
 from karabogui.singletons.api import get_manager
@@ -26,6 +26,8 @@ from .base import BasePanelWidget
 BLANK_PAGE = 0
 WAITING_PAGE = 1
 CONFIGURATION_PAGE = 2
+
+RECURSIVE_BINDINGS = (ChoiceOfNodesBinding, ListOfNodesBinding)
 
 
 class ConfigurationPanel(BasePanelWidget):
@@ -249,13 +251,14 @@ class ConfigurationPanel(BasePanelWidget):
             state = proxy.state_binding.value
             editor = self._stacked_tree_widgets.widget(CONFIGURATION_PAGE)
             model = editor.model()
-            made_changes = False
             for path, value, _ in flat_iter_hash(configuration):
                 prop_proxy = model.property_proxy(path)
                 prop_binding = prop_proxy.binding
-                if prop_binding is None:
+                if prop_binding is None or isinstance(
+                        prop_binding, RECURSIVE_BINDINGS):
                     # NOTE: This property most likely was removed from the
                     # device, we have schema evolution and will continue here!
+                    # NOTE: Recursive bindings are not supported here!
                     continue
                 if prop_binding.access_mode is AccessMode.RECONFIGURABLE:
                     if (prop_binding.required_access_level <= access_level and
@@ -263,10 +266,11 @@ class ConfigurationPanel(BasePanelWidget):
                             has_changes(prop_binding,
                                         prop_proxy.value, value)):
                         prop_proxy.edit_value = value
-                        made_changes = True
                     else:
-                        prop_proxy.trait_setq(edit_value=None)
-            model.signalHasModifications.emit(made_changes)
+                        prop_proxy.edit_value =None
+            # NOTE: We tell the model directly to send dataChanged signal and
+            # notify for changes!
+            model._config_update()
         else:
             # Load the configuration directly into the binding
             apply_configuration(configuration, binding)
@@ -282,7 +286,6 @@ class ConfigurationPanel(BasePanelWidget):
     def _hide_all_buttons(self):
         """Hide buttons and actions"""
         self.pbInitDevice.setVisible(False)
-
         self.pbKillInstance.setVisible(False)
         self.acKillInstance.setVisible(False)
         self.pbApplyAll.setVisible(False)
