@@ -48,6 +48,9 @@ class BoundDeviceTestCase(TestCase):
         while not classes_loaded():
             sleep(self._waitTime)
             if nTries > self._retries:
+                if self.serverProcess is not None:
+                    self.serverProcess.terminate()
+                    self.serverProcess = None
                 raise RuntimeError("Waiting for plugin to appear timed out")
             nTries += 1
 
