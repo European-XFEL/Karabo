@@ -74,6 +74,12 @@ bound/cpp core
 - C++/bound: Ensure message ordering by chaining message execution !2974
 - C++: Refactor connecting InputChannels !3043
 - C++: DeviceClient now uses new SignalSlotable:asyncConnectInputChannel !3056
+- Common: Add timeit decorator !3069
+- C++/bound: message order per sender - One Strand is used per sender !3091
+- FIX: Add logging support for table and vector of string1.4x format is not supported anymore !3049
+- Fix C++ integration test on device locking !3059
+- Refactor bound python server to ensure it shuts down !3102
+- Possible fix for DataLogger disconnecting procedure
 
 core Devices
 ++++++++++++
@@ -91,6 +97,9 @@ core Devices
 - Read project db directly for items (Cinema capability) !2929
 - Slow down DataLoggers instantiation !2935
 - GUI Server: Provide GUI clients access to getConfigurationFromPast !3014
+- Add camera interface to abstract camera !3099
+- add interfaces to camerafsm !3104
+- Remove variables for local storage from CameraInterface !3107
 
 Dependencies and deployment
 +++++++++++++++++++++++++++
@@ -107,6 +116,19 @@ Dependencies and deployment
 
 Middlelayer core
 ++++++++++++++++
+- Common: Validate args decorator according to annotations !3073
+- MDL: Update device template to Python 3.6 syntax !3068
+- MDL: Remove not required vector attr check !3063
+- MDL: finding devices and servers is case insensitive !3093
+- MDL: Change iscoroutinefunction import !3116
+- MDL: Pipelining proxies reconnect properly !3092
+- MDL: Remove not required code !3098
+- MDL: Only announce new schema if required in DeviceNode !3095
+- MDL: Don't crack an output proxy without schema !3057
+- MDL: Fix output channel with different port settings !3072
+- MDL: prevent time.sleep usage in macros !3074
+- MDL: Make sure the pipeline reconnect is done correctly !3079
+- Middlelayer server can shutdown gracefully !3080
 - MDL: Little refactor in pipeline !2868
 - MDL: Provide possiblity to explicitly close outputchannel !2874
 - MDL: Fix device node timestamp handling !2878
@@ -149,6 +171,22 @@ Middlelayer core
 
 Graphical user interface
 ++++++++++++++++++++++++
+- GUI: Add additional case to listedit validator !3088
+- GUI: Check for binding in configuration retrieval !3065
+- GUI: Remove a few flake8 complains !3067
+- GUI: Add an extra QModelIndex protection to scene retrieval !3061
+- GUI: Change documentation link to global docu !3062
+- GUI: Provide option to cancel editing scenelink label !3090
+- GUI: Do the macro sleep check in run_macro !3096
+- GUI: Restrict subprojects to domain and not topic !3108
+- GUI: Rework label model editing with TextEdit !3094
+- GUI: Provide project names when having duplicated uuids !3101
+- GUI: Compare online and offline configurations in the configurator !3103
+- GUI: Make tool actions exclusive (checkable) !3112
+- GUI: Check for uuid in project walking !3110
+- GUI: Only allow offline configurations to be checked in the project !3105
+- GUI: Refactor the LinkWidgets !3109
+- GUI: fix configurationFromPast !3076
 - GUI: Protect trendlines against -np.inf and np.inf !2870
 - GUI: Open device scene links when maximized !2881
 - GUI: Apply default configuration correctly to device, e.g. optional UNDEFINED values.!2711
