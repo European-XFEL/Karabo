@@ -8,7 +8,7 @@ from karabo.common.api import (
     KARABO_SCHEMA_DISPLAYED_NAME, KARABO_SCHEMA_DISPLAY_TYPE,
     KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_UNIT_SYMBOL,
     KARABO_EDITABLE_ATTRIBUTES)
-from karabo.middlelayer import AccessMode
+from karabo.middlelayer import AccessMode, Assignment
 from karabogui import globals as krb_globals, icons
 from karabogui.binding.api import (
     BindingRoot, BoolBinding, CharBinding, ChoiceOfNodesBinding,
@@ -18,6 +18,7 @@ from karabogui.controllers.api import get_compatible_controllers
 
 # The fixed height of rows in the configurator
 FIXED_ROW_HEIGHT = 30
+RECURSIVE_BINDING = (BindingRoot, ChoiceOfNodesBinding, NodeBinding)
 
 
 class ButtonState(Enum):
@@ -72,7 +73,7 @@ def get_child_names(proxy):
     level = krb_globals.GLOBAL_ACCESS_LEVEL
 
     binding = proxy.binding
-    if isinstance(binding, (BindingRoot, ChoiceOfNodesBinding, NodeBinding)):
+    if isinstance(binding, RECURSIVE_BINDING):
         ret = binding.children_names.get(level, [])
         # lazily cache visible children names
         if len(ret) == 0:
@@ -89,6 +90,33 @@ def get_child_names(proxy):
             proxy.editable_attributes = ret
 
     return ret
+
+
+def is_mandatory(binding):
+    """Retrieves if a binding or a binding within a node is mandatory
+
+    This function is solely used for DeviceClass proxies
+    """
+    if binding.assignment is Assignment.MANDATORY:
+        return True
+    elif isinstance(binding, RECURSIVE_BINDING):
+        ret = False
+
+        def recurse(binding):
+            """Walk through a node binding for mandatory parameters
+            """
+            nonlocal ret
+            for name in binding.value:
+                node = getattr(binding.value, name)
+                if isinstance(node, RECURSIVE_BINDING):
+                    recurse(node)
+                elif node.assignment is Assignment.MANDATORY:
+                    ret = True
+
+        recurse(binding)
+        return ret
+
+    return False
 
 
 def get_device_state_string(device_proxy):
