@@ -1233,10 +1233,12 @@ namespace karabo {
         }
 
 
-        const SignalSlotable::SlotInstancePointer& SignalSlotable::getSenderInfo(const std::string& slotFunction) {
+        const SignalSlotable::SlotInstancePointer& SignalSlotable::getSenderInfo(const std::string& unmangledSlotFunction) {
+            const std::string& mangledSlotFunction = (unmangledSlotFunction.find('.') == std::string::npos ? unmangledSlotFunction
+                                                      : boost::algorithm::replace_all_copy(unmangledSlotFunction, ".", "_"));
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
-            auto it = m_slotInstances.find(slotFunction);
-            if (it == m_slotInstances.end()) throw KARABO_SIGNALSLOT_EXCEPTION("No slot-object could be found for slotFunction \"" + slotFunction + "\"");
+            auto it = m_slotInstances.find(mangledSlotFunction);
+            if (it == m_slotInstances.end()) throw KARABO_SIGNALSLOT_EXCEPTION("No slot-object could be found for slotFunction \"" + mangledSlotFunction + "\"");
             return it->second;
         }
 
