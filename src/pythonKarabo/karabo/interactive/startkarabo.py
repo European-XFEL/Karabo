@@ -47,6 +47,13 @@ from tempfile import mkdtemp
 from textwrap import dedent
 from time import sleep
 
+COLORS = {
+    "NORMAL": "\033[m",
+    "RED": "\033[1;31m",
+    "YELLOW": "\033[33m",
+    "GREEN": "\033[0;32m",
+}
+
 
 def absolute(*path):
     return osp.join(os.environ["KARABO"], *path)
@@ -215,6 +222,37 @@ def killkarabo():
     os.execv(path, ["svc"] + args + dirs)
 
 
+def colorize(status_line):
+    """
+    Colorize the line of the following structure:
+    `karabo_server: up (pid 26862) 448450 seconds, normally down, running`
+    according to the up/down status
+    """
+    def color_string(color_name, line):
+        return COLORS[color_name] + line + COLORS["NORMAL"]
+
+    match = re.search(r"^(.+:)(\s+(\w+)\s+((?:\(.+\)\s)*)(\d+).+\s(.+))$",
+                      status_line)
+    if not match:
+        return status_line
+    server = match.group(1)
+    rest = match.group(2)
+    status = match.group(3)
+    uptime = int(match.group(5))
+    service_status = match.group(6)
+    if status == "up" and service_status == "stopping":
+        server = color_string("YELLOW", server)
+    elif status == "up" and uptime > 1:
+        server = color_string("GREEN", server)
+    elif status == "up":
+        server = color_string("YELLOW", server)
+    elif status == "down":
+        server = color_string("RED", server)
+    else:
+        server = COLORS["RED"] + server + COLORS["NORMAL"]
+    return f"{server}{rest}"
+
+
 @entrypoint
 def checkkarabo():
     """karabo-check - check Karabo device servers
@@ -225,41 +263,15 @@ def checkkarabo():
 
     If no device server is given, show the status of all device servers.
     """
-
     STDIN = 0
     STDOUT = 1
-
-    def _colorize(status_line):
-        """
-        Colorize the line of the following structure:
-        `karabo_server: up (pid 26862) 448450 seconds, normally down, running`
-        according to the up/down status
-        """
-        # colors
-        NORMAL = "\033[m"
-        RED = "\033[1;31m"
-        YELLOW = "\033[33m"
-        GREEN = "\033[0;32m"
-
-        if ":" not in status_line:
-            return status_line
-
-        server, status = status_line.strip().split(':')
-        if status.startswith(" up ") and " 0 seconds " not in status:
-            server = GREEN + server + NORMAL
-        elif " 0 seconds" in status:
-            server = YELLOW + server + NORMAL
-            status = status.replace("0 seconds", YELLOW + "0 seconds" + NORMAL)
-        else:
-            server = RED + server + NORMAL
-        return f"{server}: {status}"
 
     pipein, pipeout = os.pipe()
     if os.fork():
         os.close(pipeout)
         os.dup2(pipein, STDIN)
         for line in sys.stdin:
-            print(_colorize(line))
+            print(colorize(line))
 
     else:
         os.close(pipein)
