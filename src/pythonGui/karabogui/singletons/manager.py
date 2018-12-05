@@ -208,10 +208,10 @@ class Manager(QObject):
         broadcast_event(KaraboEventSender.ShowConfigurationFromPast,
                         {'deviceId': deviceId, 'configuration': config})
 
-    def handle_brokerInformation(self, **kwargs):
-        get_network()._handleBrokerInformation(**kwargs)
-        broadcast_event(KaraboEventSender.brokerInformationUpdate,
-                        kwargs)
+    def handle_brokerInformation(self, **info):
+        get_network()._handleBrokerInformation(
+            info.get('host'), info.get('port'), info.get('topic'))
+        broadcast_event(KaraboEventSender.brokerInformationUpdate, info)
 
     def handle_systemTopology(self, systemTopology):
         self._topology.update(systemTopology)
@@ -225,9 +225,8 @@ class Manager(QObject):
         broadcast_event(KaraboEventSender.SystemTopologyUpdate,
                         {'devices': devices, 'servers': servers})
 
-    def handle_systemVersion(self, version):
-        """ Handle the version number reply from the GUI server.
-        """
+    def handle_systemVersion(self, **info):
+        """Handle the version number reply from the GUI server"""
         pass
 
     def handle_instanceNew(self, topologyEntry):
