@@ -225,7 +225,46 @@ def checkkarabo():
 
     If no device server is given, show the status of all device servers.
     """
-    exec_defaultall("svstat")
+
+    STDIN = 0
+    STDOUT = 1
+
+    def _colorize(status_line):
+        """
+        Colorize the line of the following structure:
+        `karabo_server: up (pid 26862) 448450 seconds, normally down, running`
+        according to the up/down status
+        """
+        # colors
+        NORMAL = "\033[m"
+        RED = "\033[1;31m"
+        YELLOW = "\033[33m"
+        GREEN = "\033[0;32m"
+
+        if ":" not in status_line:
+            return status_line
+
+        server, status = status_line.strip().split(':')
+        if status.startswith(" up ") and " 0 seconds " not in status:
+            server = GREEN + server + NORMAL
+        elif " 0 seconds" in status:
+            server = YELLOW + server + NORMAL
+            status = status.replace("0 seconds", YELLOW + "0 seconds" + NORMAL)
+        else:
+            server = RED + server + NORMAL
+        return f"{server}: {status}"
+
+    pipein, pipeout = os.pipe()
+    if os.fork():
+        os.close(pipeout)
+        os.dup2(pipein, STDIN)
+        for line in sys.stdin:
+            print(_colorize(line))
+
+    else:
+        os.close(pipein)
+        os.dup2(pipeout, STDOUT)
+        exec_defaultall("svstat")
 
 
 @entrypoint
