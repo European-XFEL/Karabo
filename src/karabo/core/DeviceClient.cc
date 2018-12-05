@@ -1376,18 +1376,6 @@ namespace karabo {
         void DeviceClient::eraseFromInstanceUsage(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_instanceUsageMutex);
             m_instanceUsage.erase(instanceId);
-            karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
-            std::vector<std::string> cleanAreas(1, "configuration");
-            p->asyncDisconnect(instanceId, "signalChanged", "", "_slotChanged",
-                               bind_weak(&DeviceClient::disconnectHandler, this,
-                                         "signalChanged", instanceId, cleanAreas));
-            p->asyncDisconnect(instanceId, "signalStateChanged", "", "_slotChanged",
-                               bind_weak(&DeviceClient::disconnectHandler, this,
-                                         "signalStateChanged", instanceId, cleanAreas));
-            cleanAreas = {"fullSchema", "activeSchema"};
-            p->asyncDisconnect(instanceId, "signalSchemaUpdated", "", "_slotSchemaUpdated",
-                               bind_weak(&DeviceClient::disconnectHandler, this,
-                                         "signalSchemaUpdated", instanceId, cleanAreas));
         }
 
 
