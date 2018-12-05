@@ -100,8 +100,18 @@ public:
     void noded_asyncSlot() {
         boost::mutex::scoped_lock lock(m_mutex);
         m_messageCount++;
+
         AsyncReply aReply(this);
-        aReply(42);
+        // We go via the event loop: An AsyncReply answering in the same thread where it was created might add an extra
+        // default reply at the very end because the protection not to place a default reply is released.
+        // That is likely the reason for failure in https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/43518
+        karabo::net::EventLoop::getIOService().post([aReply]() {
+            // A little imperfect, but OK for this test: We capture indirectly a bare `this`, so in principle this
+            // can end up as a dangling pointer on the event loop...
+            // But the test below ensures (synchronous waiting for reply) that this method has been processed before
+            // the demo object goes out of scope.
+            aReply(42);
+        });
     }
 
 
@@ -903,7 +913,8 @@ void SignalSlotable_Test::testMethod() {
     CPPUNIT_ASSERT_EQUAL(2, reply);
 
     reply = 0;
-    CPPUNIT_ASSERT_NO_THROW(demo->request("", "noded.asyncSlot").timeout(500).receive(reply));
+    // Give e bit more time for the extra thread hops of the async reply.
+    CPPUNIT_ASSERT_NO_THROW(demo->request("", "noded.asyncSlot").timeout(1000).receive(reply));
     CPPUNIT_ASSERT_EQUAL(42, reply);
 
     waitDemoOk(demo, 12);
