@@ -82,6 +82,16 @@ UNKNOWN_WIDGET_SVG = """
 </svg>
 """
 
+UNKNOWN_WIDGET_TOOL = """
+<svg
+    xmlns:krb="http://karabo.eu/scene"
+    xmlns:svg="http://www.w3.org/2000/svg" >
+    <svg:rect
+        height="0" width="0" x="0" y="0"
+        krb:class="NoWeb" />
+</svg>
+"""
+
 
 def _get_file_data(filename):
     with open(filename, 'r') as fp:
@@ -241,6 +251,15 @@ def test_unknown_widget_reader():
         scene = api.read_scene(fn)
     xml = api.write_scene(scene)
     assert xml_is_equal(UNKNOWN_WIDGET_SVG, xml)
+
+
+def test_unknown_widget_reader_tool():
+    """Tool widgets don't have widget trait set
+    """
+    with temp_xml_file(UNKNOWN_WIDGET_TOOL) as fn:
+        scene = api.read_scene(fn)
+    xml = api.write_scene(scene)
+    assert xml_is_equal(UNKNOWN_WIDGET_TOOL, xml)
 
 
 def test_unknown_widget_writer():
