@@ -90,7 +90,7 @@ class BaseShape(ABCHasStrictTraits):
             stroke_opacity=pen.color().alphaF(),
             stroke_linecap=QT_PEN_CAP_STYLE_TO_STR[pen.capStyle()],
             stroke_dashoffset=pen.dashOffset(),
-            stroke_width=pen.widthF(),
+            stroke_width=0 if pen.style() == Qt.NoPen else pen.widthF(),
             stroke_dasharray=pen.dashPattern(),
             stroke_style=pen.style(),
             stroke_linejoin=QT_PEN_JOIN_STYLE_TO_STR[pen.joinStyle()],
