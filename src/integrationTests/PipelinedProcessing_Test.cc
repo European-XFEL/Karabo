@@ -375,7 +375,7 @@ void PipelinedProcessing_Test::testPipeQueue(unsigned int processingTime, unsign
 
 
 void PipelinedProcessing_Test::testPipeMinData() {
-    std::clog << "---\ntestPipeWaitOnData\n";
+    std::clog << "---\ntestPipeMinData\n";
 
     // input.minData = 1 by default
     unsigned int minData = 5;
