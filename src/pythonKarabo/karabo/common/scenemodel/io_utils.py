@@ -50,6 +50,19 @@ def read_empty_display_editable_widget(element):
     return traits
 
 
+def read_unknown_display_editable_widget(element):
+    """ Read the attributes from an unknown data model
+
+    This can be either a controller ``widget`` or a scene ``class`` widget
+    """
+    traits = read_base_widget_data(element)
+    klass = element.get(NS_KARABO + 'widget')
+    if klass is None:
+        klass = element.get(NS_KARABO + 'class')
+    traits['klass'] = klass
+    return traits
+
+
 def write_base_widget_data(model, element, widget_class_name):
     """ Write out the attributes common to all "widget" elements
     """
