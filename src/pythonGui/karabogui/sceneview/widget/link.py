@@ -233,3 +233,4 @@ class WebLinkWidget(QPushButton):
             return
 
         self.model.target = dialog.target
+        self.setToolTip(self.model.target)
