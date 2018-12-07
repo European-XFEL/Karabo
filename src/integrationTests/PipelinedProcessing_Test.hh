@@ -121,7 +121,8 @@ private:
                             const std::string& propertyName,
                             const T& expected,
                             bool checkForEqual = true, // if false, wait until not equal anymore
-                            const int maxTimeout = m_maxTestTimeOut) const;
+                            const int maxTimeout = m_maxTestTimeOut,
+                            bool logFailures = false) const;
 
     void instantiateDeviceWithAssert(const std::string& classId, const karabo::util::Hash& configuration);
     void killDeviceWithAssert(const std::string& deviceId);
