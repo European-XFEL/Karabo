@@ -10,6 +10,7 @@ The **most relevant improvements** and fixes are:
 - GUI: Trendlines can be derived by double-click on a supported property widget in the scene or a property in the configurator
 - GUI: The **Karabo Cinema** allows to quickly load a scene from command line
 - GUI: First steps of configuration retrieval from the dataloggers (Only works with online devices)
+- GUI: Mandatory check on Nodes for configurator visualization !3121
 
 
 - ikarabo: Gets a Macro API with functions like *showAlarms* and *showInterlocks* to show the respective alarm service information.
@@ -74,6 +75,12 @@ bound/cpp core
 - C++/bound: Ensure message ordering by chaining message execution !2974
 - C++: Refactor connecting InputChannels !3043
 - C++: DeviceClient now uses new SignalSlotable:asyncConnectInputChannel !3056
+- Common: Add timeit decorator !3069
+- C++/bound: message order per sender - One Strand is used per sender !3091
+- FIX: Add logging support for table and vector of string1.4x format is not supported anymore !3049
+- Fix C++ integration test on device locking !3059
+- Refactor bound python server to ensure it shuts down !3102
+- Possible fix for DataLogger disconnecting procedure
 
 core Devices
 ++++++++++++
@@ -91,6 +98,9 @@ core Devices
 - Read project db directly for items (Cinema capability) !2929
 - Slow down DataLoggers instantiation !2935
 - GUI Server: Provide GUI clients access to getConfigurationFromPast !3014
+- Add camera interface to abstract camera !3099
+- add interfaces to camerafsm !3104
+- Remove variables for local storage from CameraInterface !3107
 
 Dependencies and deployment
 +++++++++++++++++++++++++++
@@ -107,12 +117,25 @@ Dependencies and deployment
 
 Middlelayer core
 ++++++++++++++++
+- Common: Validate args decorator according to annotations !3073
+- MDL: Update device template to Python 3.6 syntax !3068
+- MDL: Remove not required vector attr check !3063
+- MDL: finding devices and servers is case insensitive !3093
+- MDL: Change iscoroutinefunction import !3116
+- MDL: Pipelining proxies reconnect properly !3092
+- MDL: Remove not required code !3098
+- MDL: Only announce new schema if required in DeviceNode !3095
+- MDL: Don't crack an output proxy without schema !3057
+- MDL: Fix output channel with different port settings !3072
+- MDL: prevent time.sleep usage in macros !3074 !3124
+- MDL: Make sure the pipeline reconnect is done correctly !3079
+- MDL: Middlelayer server can shutdown gracefully !3080
 - MDL: Little refactor in pipeline !2868
 - MDL: Provide possiblity to explicitly close outputchannel !2874
 - MDL: Fix device node timestamp handling !2878
 - MDL: Reconnect device server to timeServer !2877
 - MDL: Always allow State UNKNOWN for state property in descriptor !2882
-- Clean middlelayer_api: remove guiserver and do proper import !2887
+- MDL: Clean middlelayer_api: remove guiserver and do proper import !2887
 - MDL: error check in call-once-alive added !2894
 - MDL: Fix getDescriptors, filterByTags on proxies. Ignore ListOfNodes !2897
 - MDL: Set default outputchannel policy to drop !2908
@@ -130,7 +153,7 @@ Middlelayer core
 - MDL: Fix attribute type description in schema !2963
 - MDL: Fix current hash setting in DeviceNode !2989
 - MDL: Make sure a new timestamp is attached to not compress events !2988
-- Fix device client information in MDL !2990
+- MDL: Fix device client information in MDL !2990
 - MDL: Use UInt64 for trainId, secs and fracs !3005
 - MDL: IPython device align info and doNotCompressEvents timestamp !2994
 - MDL: Fix device node being MANDATORY !3011
@@ -149,6 +172,25 @@ Middlelayer core
 
 Graphical user interface
 ++++++++++++++++++++++++
+- GUI: Enable backward compatibility for tool widgets !3135
+- GUI: Fast forward in configuration view !3120
+- GUI: Add additional case to listedit validator !3088
+- GUI: Mandatory check on Nodes for configurator visualization !3121
+- GUI: Check for binding in configuration retrieval !3065
+- GUI: Remove a few flake8 complains !3067
+- GUI: Add an extra QModelIndex protection to scene retrieval !3061
+- GUI: Change documentation link to global docu !3062
+- GUI: Provide option to cancel editing scenelink label !3090
+- GUI: Do the macro sleep check in run_macro !3096
+- GUI: Restrict subprojects to domain and not topic !3108
+- GUI: Rework label model editing with TextEdit !3094
+- GUI: Provide project names when having duplicated uuids !3101
+- GUI: Compare online and offline configurations in the configurator !3103
+- GUI: Make tool actions exclusive (checkable) !3112
+- GUI: Check for uuid in project walking !3110
+- GUI: Only allow offline configurations to be checked in the project !3105
+- GUI: Refactor the LinkWidgets !3109
+- GUI: fix configurationFromPast !3076
 - GUI: Protect trendlines against -np.inf and np.inf !2870
 - GUI: Open device scene links when maximized !2881
 - GUI: Apply default configuration correctly to device, e.g. optional UNDEFINED values.!2711
