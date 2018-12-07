@@ -167,7 +167,7 @@ class SceneLinkModel(BaseWidgetObjectData):
 
 
 class WebLinkModel(BaseWidgetObjectData):
-    """ A model for a scene link
+    """ A model for the weblink widget
     """
     # What hyperlink do we store
     target = String
