@@ -393,7 +393,7 @@ void PipelinedProcessing_Test::testPipeMinData() {
     m_deviceClient->execute(m_sender, "write");
 
     // poll until nTotalDataOnEos changes
-    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", 0, false));
+    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", 0, false, m_maxTestTimeOut, true));
 
     // test if data source was correctly passed
     auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSourcesFromIndex");
@@ -970,11 +970,14 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool co
 
 template <typename T>
 bool PipelinedProcessing_Test::pollDeviceProperty(const std::string& deviceId,
-                                                  const std::string& propertyName, const T& expected, bool checkForEqual, 
-                                                  const int maxTimeoutInSec) const {
+                                                  const std::string& propertyName, const T& expected, bool checkForEqual,
+                                                  const int maxTimeoutInSec,
+                                                  bool logFailures) const {
 
     const int pollWaitTimeInMs = 5;
     int pollCounter = 0;
+
+    const unsigned int maxPolls = maxTimeoutInSec * 1000 / pollWaitTimeInMs;
 
     // Poll the device until it responds with the correct answer or times out.
     while (pollWaitTimeInMs * pollCounter <= maxTimeoutInSec * 1000) {
@@ -982,6 +985,13 @@ bool PipelinedProcessing_Test::pollDeviceProperty(const std::string& deviceId,
         const T nReceived = m_deviceClient->get<T>(deviceId, propertyName);
         if ((checkForEqual && nReceived == expected) || (!checkForEqual && nReceived != expected)) {
             return true;
+        } else if (logFailures) {
+            std::clog << "------ pollDeviceProperty ------" << std::endl;
+            std::clog << "for Device.Property = '" << deviceId << "." << propertyName << "'" << std::endl;
+            std::clog << "Expecting value " << (checkForEqual ? " == " : " !=  ") << expected << "." << std::endl;
+            std::clog << "Got: " << nReceived << std::endl;
+            std::clog << "pollCounter: " << pollCounter << " of " << maxPolls << std::endl;
+            std::clog << "--------------------------------" << std::endl;
         }
         ++pollCounter;
     }
