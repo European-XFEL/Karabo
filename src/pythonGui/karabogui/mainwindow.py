@@ -414,6 +414,9 @@ class MainWindow(QMainWindow):
             if hostname is not None:
                 info = 'GUI SERVER: <b>{}</b>'.format(hostname)
                 self.guiServerHost.setText(info)
+        else:
+            self.brokerInformation.setText("")
+            self.guiServerHost.setText("")
 
     # --------------------------------------
     # Qt slots
