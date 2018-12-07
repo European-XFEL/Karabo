@@ -518,7 +518,7 @@ class Network(QObject):
 
     def _handleBrokerInformation(self, host=None, port=None, topic=None,
                                  **kwargs):
-        # XXX: Kwargs is for backward compatibility
+        # XXX: Kwargs is for forward compatibility
         self.brokerHost = host
         self.brokerPort = port
         self.brokerTopic = topic
