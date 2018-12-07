@@ -10,6 +10,7 @@ The **most relevant improvements** and fixes are:
 - GUI: Trendlines can be derived by double-click on a supported property widget in the scene or a property in the configurator
 - GUI: The **Karabo Cinema** allows to quickly load a scene from command line
 - GUI: First steps of configuration retrieval from the dataloggers (Only works with online devices)
+- GUI: Mandatory check on Nodes for configurator visualization !3121
 
 
 - ikarabo: Gets a Macro API with functions like *showAlarms* and *showInterlocks* to show the respective alarm service information.
@@ -126,7 +127,7 @@ Middlelayer core
 - MDL: Only announce new schema if required in DeviceNode !3095
 - MDL: Don't crack an output proxy without schema !3057
 - MDL: Fix output channel with different port settings !3072
-- MDL: prevent time.sleep usage in macros !3074
+- MDL: prevent time.sleep usage in macros !3074 !3124
 - MDL: Make sure the pipeline reconnect is done correctly !3079
 - Middlelayer server can shutdown gracefully !3080
 - MDL: Little refactor in pipeline !2868
@@ -171,7 +172,10 @@ Middlelayer core
 
 Graphical user interface
 ++++++++++++++++++++++++
+- GUI: Enable backward compatibility for tool widgets !3135
+- GUI: Fast forward in configuration view !3120
 - GUI: Add additional case to listedit validator !3088
+- GUI: Mandatory check on Nodes for configurator visualization !3121
 - GUI: Check for binding in configuration retrieval !3065
 - GUI: Remove a few flake8 complains !3067
 - GUI: Add an extra QModelIndex protection to scene retrieval !3061
