@@ -21,7 +21,8 @@ from karabogui.sceneview.tools.api import (
     TextSceneTool, RectangleSceneTool, SceneBringToFrontAction,
     SceneCopyAction, SceneCutAction, SceneDeleteAction, SceneMoveAction,
     SceneLinkTool, ScenePasteAction, ScenePasteReplaceAction,
-    SceneSelectAllAction, SceneSendToBackAction, SceneSelectionTool)
+    SceneSelectAllAction, SceneSendToBackAction, SceneSelectionTool,
+    WebLinkTool)
 from karabogui.widgets.toolbar import ToolBar
 from .base import BasePanelWidget
 
@@ -285,6 +286,11 @@ class ScenePanel(BasePanelWidget):
                                         icon=icons.scenelink,
                                         text="Add scene link",
                                         tooltip="Add scene link to scene",
+                                        checkable=True))
+        actions.append(CreateToolAction(tool_factory=WebLinkTool,
+                                        icon=icons.weblink,
+                                        text="Add web link",
+                                        tooltip="Add web link to scene",
                                         checkable=True))
         return actions
 
