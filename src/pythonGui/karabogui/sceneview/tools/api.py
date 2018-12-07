@@ -7,7 +7,7 @@ from .clipboard import (SceneCopyAction, SceneCutAction, SceneDeleteAction,
                         ScenePasteAction, ScenePasteReplaceAction, SceneMoveAction,
                         SceneSelectAllAction)
 from .drawing import (LineSceneTool, RectangleSceneTool, SceneLinkTool,
-                      TextSceneTool)
+                      TextSceneTool, WebLinkTool)
 from .scenedndhandler import ConfigurationDropHandler, NavigationDropHandler
 from .selection import ProxySelectionTool, SceneSelectionTool
 from .widgethandler import WidgetSceneHandler

@@ -3,9 +3,10 @@ from PyQt4.QtGui import QDialog, QPen
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import (
-    LineModel, RectangleModel, SceneLinkModel)
+    LineModel, RectangleModel, SceneLinkModel, WebLinkModel)
 from karabogui.dialogs.dialogs import SceneLinkDialog
 from karabogui.dialogs.textdialog import TextDialog
+from karabogui.dialogs.webdialog import WebDialog
 from karabogui.sceneview.bases import BaseSceneTool
 
 
@@ -128,5 +129,26 @@ class SceneLinkTool(BaseSceneTool):
         if result == QDialog.Accepted:
             model.target = dialog.selectedScene
             model.target_window = dialog.selectedTargetWindow
+            scene_view.add_models(model)
+            scene_view.set_tool(None)
+
+
+class WebLinkTool(BaseSceneTool):
+    def mouse_down(self, scene_view, event):
+        pass
+
+    def mouse_move(self, scene_view, event):
+        pass
+
+    def mouse_up(self, scene_view, event):
+        """A callback which is fired whenever the user ends a mouse click
+        in the SceneView.
+        """
+        mouse_pos = event.pos()
+        model = WebLinkModel(x=mouse_pos.x(), y=mouse_pos.y(),
+                             width=100, height=30)
+        dialog = WebDialog()
+        if dialog.exec() == QDialog.Accepted:
+            model.target = dialog.target
             scene_view.add_models(model)
             scene_view.set_tool(None)
