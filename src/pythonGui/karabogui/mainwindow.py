@@ -17,6 +17,7 @@ from PyQt4.QtGui import (
 from karabo.middlelayer import AccessLevel
 from karabogui import globals as krb_globals
 from karabogui import icons
+from karabogui.dialogs.configuration import ConfigurationDialog
 from karabogui.dialogs.dialogs import AboutDialog
 from karabogui.indicators import get_processing_color
 from karabogui.events import (
@@ -199,6 +200,9 @@ class MainWindow(QMainWindow):
         self.acHelpAbout = QAction("About", self)
         self.acHelpAbout.triggered.connect(self.onHelpAbout)
 
+        self.acConfig = QAction("Configuration", self)
+        self.acConfig.triggered.connect(self.onConfiguration)
+
         self.acHelpAboutQt = QAction("About Qt", self)
         self.acHelpAboutQt.triggered.connect(qApp.aboutQt)
 
@@ -216,6 +220,7 @@ class MainWindow(QMainWindow):
         mHelpMenu = menuBar.addMenu("&Help")
         mHelpMenu.addAction(self.acHelpAbout)
         mHelpMenu.addAction(self.acHelpAboutQt)
+        mHelpMenu.addAction(self.acConfig)
 
     def _setupToolBar(self):
 
@@ -407,6 +412,10 @@ class MainWindow(QMainWindow):
         if not self._quit():
             return
         qApp.quit()
+
+    @pyqtSlot()
+    def onConfiguration(self):
+        ConfigurationDialog(parent=self).open()
 
     @pyqtSlot()
     def onHelpAbout(self):
