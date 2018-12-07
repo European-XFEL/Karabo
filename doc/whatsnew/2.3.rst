@@ -129,13 +129,13 @@ Middlelayer core
 - MDL: Fix output channel with different port settings !3072
 - MDL: prevent time.sleep usage in macros !3074 !3124
 - MDL: Make sure the pipeline reconnect is done correctly !3079
-- Middlelayer server can shutdown gracefully !3080
+- MDL: Middlelayer server can shutdown gracefully !3080
 - MDL: Little refactor in pipeline !2868
 - MDL: Provide possiblity to explicitly close outputchannel !2874
 - MDL: Fix device node timestamp handling !2878
 - MDL: Reconnect device server to timeServer !2877
 - MDL: Always allow State UNKNOWN for state property in descriptor !2882
-- Clean middlelayer_api: remove guiserver and do proper import !2887
+- MDL: Clean middlelayer_api: remove guiserver and do proper import !2887
 - MDL: error check in call-once-alive added !2894
 - MDL: Fix getDescriptors, filterByTags on proxies. Ignore ListOfNodes !2897
 - MDL: Set default outputchannel policy to drop !2908
@@ -153,7 +153,7 @@ Middlelayer core
 - MDL: Fix attribute type description in schema !2963
 - MDL: Fix current hash setting in DeviceNode !2989
 - MDL: Make sure a new timestamp is attached to not compress events !2988
-- Fix device client information in MDL !2990
+- MDL: Fix device client information in MDL !2990
 - MDL: Use UInt64 for trainId, secs and fracs !3005
 - MDL: IPython device align info and doNotCompressEvents timestamp !2994
 - MDL: Fix device node being MANDATORY !3011
