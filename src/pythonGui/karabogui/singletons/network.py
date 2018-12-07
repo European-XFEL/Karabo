@@ -516,7 +516,9 @@ class Network(QObject):
         loginInfo["version"] = krb_globals.GUI_VERSION
         self._tcpWriteHash(loginInfo)
 
-    def _handleBrokerInformation(self, host, port, topic):
+    def _handleBrokerInformation(self, host=None, port=None, topic=None,
+                                 **kwargs):
+        # XXX: Kwargs is for backward compatibility
         self.brokerHost = host
         self.brokerPort = port
         self.brokerTopic = topic
