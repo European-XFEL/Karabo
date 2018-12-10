@@ -83,10 +83,6 @@ namespace karabo {
                 return (!this->operator==(state));
             }
 
-            friend std::ostream& operator<<(std::ostream &os, const State& state) {
-                return os << state.name();
-            }
-
             /**
              * Evaluate if this state is derived from another State s
              * @param s

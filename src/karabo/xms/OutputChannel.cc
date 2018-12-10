@@ -581,7 +581,7 @@ namespace karabo {
                             doWait = true;
                         }
                     }
-
+                    
                     if (!m_sharedLoadBalancedQueuedChunks.empty()) {
                         doWait = true;
                     }
@@ -771,7 +771,7 @@ namespace karabo {
                     // For load-balanced mode the chunks should be put on a single queue.
                     KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
                             << "Placing chunk in single queue (load-balanced distribution mode)";
-                        m_sharedLoadBalancedQueuedChunks.push_back(chunkId);
+                    m_sharedLoadBalancedQueuedChunks.push_back(chunkId);
                 } else if (m_onNoSharedInputChannelAvailable == "wait") {
                     // Blocking actions must not happen under the mutex that is also needed to unblock (in onInputAvailable)
                     haveToWait = true;
