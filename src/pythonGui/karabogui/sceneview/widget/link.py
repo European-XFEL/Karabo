@@ -128,6 +128,7 @@ class SceneLinkWidget(QPushButton):
 
         self.model.target = dialog.selectedScene
         self.model.target_window = dialog.selectedTargetWindow
+        self.setToolTip(self.model.target)
 
 
 class WebLinkWidget(QPushButton):
