@@ -180,7 +180,8 @@ class Broker:
         tb = exception.__traceback__
         code = tb.tb_frame.f_code
         self.reply(message, (
-            traceback.format_exception_only(type(exception), exception),
+            ''.join(traceback.format_exception_only(
+                type(exception), exception)),
             code.co_filename, code.co_name, tb.tb_lineno,
             traceback.format_exc()), error=True)
 
