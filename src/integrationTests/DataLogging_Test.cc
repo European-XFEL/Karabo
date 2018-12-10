@@ -152,12 +152,13 @@ void DataLogging_Test::allTestRunner() {
     success = m_deviceClient->instantiate(m_server,
                                           "DataLoggerManager", manager_conf, KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
-    testAllInstantiated();
-    testInt();
-    testFloat();
-    testString();
-    testVectorString();
-    testTable();
+
+    CPPUNIT_ASSERT_NO_THROW(testAllInstantiated());
+    CPPUNIT_ASSERT_NO_THROW(testInt());
+    CPPUNIT_ASSERT_NO_THROW(testFloat());
+    CPPUNIT_ASSERT_NO_THROW(testString());
+    CPPUNIT_ASSERT_NO_THROW(testVectorString());
+    CPPUNIT_ASSERT_NO_THROW(testTable());
 }
 
 
@@ -192,14 +193,14 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
     std::clog << "Testing Property History retrieval for '" << key << "'... " << std::flush;
     // get configuration for later checks
     Hash beforeConf;
-    m_deviceClient->get(m_deviceId, beforeConf);
+    CPPUNIT_ASSERT_NO_THROW((m_deviceClient->get(m_deviceId, beforeConf)));
     // save this instant as a iso string
     Epochstamp es_before;
     string before = es_before.toIso8601();
 
     // write a bunch of times
     for (int i = 0; i < max_set; i++) {
-        m_deviceClient->set<T>(m_deviceId, key, f(i));
+        CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set<T>(m_deviceId, key, f(i)));
         boost::this_thread::sleep(boost::posix_time::milliseconds(10));
     }
 
@@ -225,8 +226,8 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
     while (timeout >= 0 && history.size() == 0) {
         // TODO: use the deviceClient to retrieve the property history
         //history = m_deviceClient->getPropertyHistory(m_deviceId, key, before, after, max_set * 2);
-        m_sigSlot->request(dlreader0, "slotGetPropertyHistory", m_deviceId, key, params)
-                .timeout(200).receive<string, string, vector<Hash>>(device, property, history);
+        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetPropertyHistory", m_deviceId, key, params)
+                                .timeout(200).receive(device, property, history));
         boost::this_thread::sleep(boost::posix_time::milliseconds(200));
         timeout -= 200;
     }
@@ -258,8 +259,8 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
         // auto pair = m_deviceClient->getConfigurationFromPast(m_deviceId, before);
         // conf = pair.first;
         conf.clear();
-        m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", m_deviceId, before)
-                 .timeout(200).receive<Hash, Schema>(conf, schema);
+        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", m_deviceId, before)
+                                .timeout(200).receive(conf, schema));
         boost::this_thread::sleep(boost::posix_time::milliseconds(200));
         timeout -= 200;
     }
@@ -279,8 +280,8 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
         // TODO: use the deviceClient to retrieve the configuration from past
         // auto pair = m_deviceClient->getConfigurationFromPast(m_deviceId, before);
         // conf = pair.first;
-        m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", m_deviceId, after)
-            .timeout(200).receive<Hash, Schema>(conf, schema);
+        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", m_deviceId, after)
+                                .timeout(200).receive(conf, schema));
         boost::this_thread::sleep(boost::posix_time::milliseconds(200));
         timeout -= 200;
     }
