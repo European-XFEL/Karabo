@@ -411,8 +411,9 @@ class MainWindow(QMainWindow):
 
             # Don't show for older GUI servers
             hostname = data.get('hostname', None)
-            if hostname is not None:
-                info = 'GUI SERVER: <b>{}</b>'.format(hostname)
+            hostport = data.get('hostport', None)
+            if hostname is not None and hostport is not None:
+                info = 'GUI SERVER: <b>{}:{}</b>'.format(hostname, hostport)
                 self.guiServerHost.setText(info)
         else:
             self.brokerInformation.setText("")
