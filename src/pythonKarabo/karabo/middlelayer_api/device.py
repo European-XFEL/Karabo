@@ -6,7 +6,7 @@ from karabo.common.enums import Capabilities, Interfaces
 from karabo.common.states import State
 from .alarm import AlarmMixin
 from .basetypes import isSet
-from .enums import AccessLevel, AccessMode, Assignment
+from .enums import AccessLevel, AccessMode, Assignment, DaqPolicy
 from .exceptions import KaraboError
 from .hash import Bool, Hash, HashType, Int32, SchemaHashType, Slot, String
 from .logger import Logger
@@ -29,14 +29,16 @@ class Device(AlarmMixin, SignalSlotable):
                     "device-server",
         requiredAccessLevel=AccessLevel.EXPERT,
         assignment=Assignment.INTERNAL, accessMode=AccessMode.INITONLY,
-        defaultValue="__none__")
+        defaultValue="__none__",
+        daqPolicy=DaqPolicy.OMIT)
 
     @Int32(
         enum=AccessLevel, displayedName="Visibility",
         description="Configures who is allowed to see this device at all",
         assignment=Assignment.OPTIONAL, defaultValue=AccessLevel.OBSERVER,
         requiredAccessLevel=AccessLevel.EXPERT,
-        accessMode=AccessMode.RECONFIGURABLE)
+        accessMode=AccessMode.RECONFIGURABLE,
+        daqPolicy=DaqPolicy.OMIT)
     def visibility(self, newValue):
         # This setter is already called during initialisation and then there is
         # no need to publish yet:
@@ -48,51 +50,59 @@ class Device(AlarmMixin, SignalSlotable):
         displayedName="ClassID",
         description="The (factory)-name of the class of this device",
         requiredAccessLevel=AccessLevel.EXPERT,
-        accessMode=AccessMode.READONLY)
+        accessMode=AccessMode.READONLY,
+        daqPolicy=DaqPolicy.OMIT)
 
     classVersion = String(
         displayedName="Class version",
         description="The version of the class of this device",
         requiredAccessLevel=AccessLevel.EXPERT,
-        accessMode=AccessMode.READONLY)
+        accessMode=AccessMode.READONLY,
+        daqPolicy=DaqPolicy.OMIT)
 
     serverId = String(
         displayedName="ServerID",
         description="The device-server which this device is running on",
         requiredAccessLevel=AccessLevel.EXPERT,
-        accessMode=AccessMode.READONLY)
+        accessMode=AccessMode.READONLY,
+        daqPolicy=DaqPolicy.OMIT)
 
     hostName = String(
         displayedName="Host",
         description="The name of the host where this device runs",
         requiredAccessLevel=AccessLevel.EXPERT,
-        accessMode=AccessMode.READONLY)
+        accessMode=AccessMode.READONLY,
+        daqPolicy=DaqPolicy.OMIT)
 
     pid = Int32(
         displayedName="Process ID",
         defaultValue=0,
         description="The unix process ID of the device (i.e. of the server)",
         requiredAccessLevel=AccessLevel.EXPERT,
-        accessMode=AccessMode.READONLY)
+        accessMode=AccessMode.READONLY,
+        daqPolicy=DaqPolicy.OMIT)
 
     state = String(
         displayedName="State", enum=State, displayType='State',
         description="The current state the device is in",
         accessMode=AccessMode.READONLY, assignment=Assignment.OPTIONAL,
-        defaultValue=State.UNKNOWN)
+        defaultValue=State.UNKNOWN,
+        daqPolicy=DaqPolicy.OMIT)
 
     status = String(
         displayedName="Status",
         description="A more detailed status description",
         accessMode=AccessMode.READONLY, assignment=Assignment.OPTIONAL,
-        defaultValue="")
+        defaultValue="",
+        daqPolicy=DaqPolicy.OMIT)
 
     lockedBy = String(
         displayedName="Locked By",
         description="The name of the device holding a lock on this one "
                     "(empty if not locked)",
         accessMode=AccessMode.RECONFIGURABLE, assignment=Assignment.OPTIONAL,
-        requiredAccessLevel=AccessLevel.EXPERT, defaultValue="")
+        requiredAccessLevel=AccessLevel.EXPERT, defaultValue="",
+        daqPolicy=DaqPolicy.OMIT)
 
     @Slot(displayedName="Clear Lock", requiredAccessLevel=AccessLevel.EXPERT,
           description="Clear the lock on this device")
@@ -106,7 +116,8 @@ class Device(AlarmMixin, SignalSlotable):
         defaultValue="",
         description="The last slot called.",
         accessMode=AccessMode.READONLY,
-        requiredAccessLevel=AccessLevel.EXPERT)
+        requiredAccessLevel=AccessLevel.EXPERT,
+        daqPolicy=DaqPolicy.OMIT)
 
     @Bool(
         displayedName="Archive",
@@ -114,7 +125,8 @@ class Device(AlarmMixin, SignalSlotable):
                     "will be logged or not",
         requiredAccessLevel=AccessLevel.EXPERT,
         accessMode=AccessMode.RECONFIGURABLE, assignment=Assignment.OPTIONAL,
-        defaultValue=True)
+        defaultValue=True,
+        daqPolicy=DaqPolicy.OMIT)
     def archive(self, newValue):
         # This setter is already called during initialisation and then there is
         # no need to publish yet:
