@@ -22,37 +22,22 @@ Contents:
 
    cpp_api
    python_api
-   middle_layer_devices
-   macros
    states
-   .. openloop_vs_closedloop
 
    alarm_system
-   .. projects_configuration
-
-   .. deployment
 
    data_logging
-   .. access_control
-   .. acknowledgement_service
 
    p2p_interface
 
-   .. beckhoff_devices
-
-   scpi_devices
    snmp
-   .. mpod_devices
 
-   cameras
-   
    gui
    .. gui_server
    gui_scene_development
    gui_scene_files_v1
    gui_widget_development
    .. doocs
-   .. ikarabo
 
    run_configuration
    policies
