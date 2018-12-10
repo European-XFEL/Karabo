@@ -379,6 +379,11 @@ void PipelinedProcessing_Test::testPipeQueue(unsigned int processingTime, unsign
 void PipelinedProcessing_Test::testPipeMinData() {
     std::clog << "---\ntestPipeMinData\n";
 
+    // There's an undesired interdependency between the tests cases; this test only works if the sender delay
+    // is significatively high, more specifically 100 milliseconds.
+    // TODO: IMPORTANT: Stabilize the Output and Input Channels so that this kind of timing dependencies are eliminated.
+    m_deviceClient->set(m_sender, "delay", 100u);
+
     // input.minData = 1 by default
     unsigned int minData = 5;
 
@@ -397,13 +402,7 @@ void PipelinedProcessing_Test::testPipeMinData() {
     CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::ACTIVE));
 
     // poll until nTotalDataOnEos changes
-    // CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", 0, false, m_maxTestTimeOut, false));
-
-    // Sleep a bit to give the last data items enough time to travel
-    // (waiting for EOS is not reliable: in future EOS might hang in the same queue?)
-    // Fundamental question: What do we want with EOS if minData is not satisfied?
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
-
+    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", 0, false, m_maxTestTimeOut));
 
     // test if data source was correctly passed
     auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSourcesFromIndex");
@@ -415,8 +414,8 @@ void PipelinedProcessing_Test::testPipeMinData() {
 
     // in this case, only 10 data out of 12 are expected to be received
     // TODO: Uncomment the nDataExpected assignment and the ASSERT as soon as the bug with SwapBuffers in InputChannel is fixed
-    // unsigned int nDataExpected = m_nDataPerRun - m_nDataPerRun % minData;
-    // CPPUNIT_ASSERT_EQUAL(nDataExpected, m_deviceClient->get<unsigned int>(m_receiver, "nTotalData"));
+    unsigned int nDataExpected = m_nDataPerRun - m_nDataPerRun % minData;
+    CPPUNIT_ASSERT_EQUAL(nDataExpected, m_deviceClient->get<unsigned int>(m_receiver, "nTotalData"));
 
     killDeviceWithAssert(m_receiver);
     std::clog << "Passed!\n\n";
@@ -425,6 +424,11 @@ void PipelinedProcessing_Test::testPipeMinData() {
 
 void PipelinedProcessing_Test::testPipeTwoPots() {
     std::clog << "---\ntestTwoPots\n";
+
+    // There's an undesired interdependency between the tests cases; this test only works if the sender delay
+    // is significatively high, more specifically 100 milliseconds.
+    // TODO: IMPORTANT: Stabilize the Output and Input Channels so that this kind of timing dependencies are eliminated.
+    m_deviceClient->set(m_sender, "delay", 100u);
 
     // start a receiver whose processingTime is significantly longer than the writing time of the output channel
     karabo::util::Hash config(m_receiverBaseConfig);
@@ -446,7 +450,7 @@ void PipelinedProcessing_Test::testPipeTwoPots() {
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", 0, false));
 
         // TODO: Uncomment this as soon as the issue with the nTotalDataOnEos is fixed.
-        //CPPUNIT_ASSERT_EQUAL(nDataWhenStop + 1, m_deviceClient->get<unsigned int>(m_receiver, "nTotalDataOnEos"));
+        CPPUNIT_ASSERT_EQUAL(nDataWhenStop + 1, m_deviceClient->get<unsigned int>(m_receiver, "nTotalDataOnEos"));
         
         // reset nTotalData and nTotalDataOnEos
         m_deviceClient->execute(m_receiver, "reset");
