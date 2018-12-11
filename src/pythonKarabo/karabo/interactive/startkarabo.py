@@ -47,6 +47,13 @@ from tempfile import mkdtemp
 from textwrap import dedent
 from time import sleep
 
+COLORS = {
+    "NORMAL": "\033[m",
+    "RED": "\033[1;31m",
+    "YELLOW": "\033[33m",
+    "GREEN": "\033[0;32m",
+}
+
 
 def absolute(*path):
     return osp.join(os.environ["KARABO"], *path)
@@ -171,7 +178,7 @@ def killkarabo():
     There are other commands that can be given to a device server:
 
     -u
-      Up. This is what karaob-start does.
+      Up. This is what karabo-start does.
 
     -d
       Down. This is what karabo-stop does.
@@ -215,17 +222,67 @@ def killkarabo():
     os.execv(path, ["svc"] + args + dirs)
 
 
+def colorize(status_line):
+    """
+    Colorize the line of the following structure:
+    `karabo_server: up (pid 26862) 448450 seconds, normally down, running`
+    according to the up/down status
+    """
+    def color_string(color_name, line):
+        return COLORS[color_name] + line + COLORS["NORMAL"]
+
+    match = re.search(r"^(.+:)(\s+(\w+)\s+((?:\(.+\)\s)*)(\d+).+\s(.+))$",
+                      status_line)
+    if not match:
+        return status_line
+    server = match.group(1)
+    rest = match.group(2)
+    status = match.group(3)
+    uptime = int(match.group(5))
+    service_status = match.group(6)
+    if status == "up" and service_status == "stopping":
+        server = color_string("YELLOW", server)
+    elif status == "up" and uptime > 1:
+        server = color_string("GREEN", server)
+    elif status == "up":
+        server = color_string("YELLOW", server)
+    elif status == "down":
+        server = color_string("RED", server)
+    else:
+        server = COLORS["RED"] + server + COLORS["NORMAL"]
+    return f"{server}{rest}"
+
+
 @entrypoint
 def checkkarabo():
     """karabo-check - check Karabo device servers
 
       karabo-check [-h|--help] device-servers*
-
     this shows the status of given Karabo device servers.
 
     If no device server is given, show the status of all device servers.
     """
-    exec_defaultall("svstat")
+    STDIN = 0
+    STDOUT = 1
+    STDERR = 2
+
+    pipe_read, pipe_write = os.pipe()
+    if os.fork():  # parent, read from pipe
+        os.close(pipe_write)
+        os.dup2(pipe_read, STDIN)
+        os.close(pipe_read)
+        n, number_of_services = 0, len(defaultall())
+        for line in sys.stdin:
+            print(colorize(line.strip()))
+            n += 1
+            if n > number_of_services:
+                break
+
+    else:   # child, exec svstat and write to pipe
+        os.close(pipe_read)
+        os.dup2(pipe_write, STDOUT)
+        os.dup2(pipe_write, STDERR)
+        exec_defaultall("svstat")
 
 
 @entrypoint
