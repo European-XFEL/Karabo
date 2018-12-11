@@ -24,7 +24,7 @@ from .types import (
     VectorInt8Binding, VectorInt16Binding, VectorInt32Binding,
     VectorInt64Binding, VectorNoneBinding, VectorStringBinding,
     VectorUint8Binding, VectorUint16Binding, VectorUint32Binding,
-    VectorUint64Binding
+    VectorUint64Binding, WidgetNodeBinding
 )
 from .util import (
     attr_fast_deepcopy, flat_iter_hash, get_binding_value, get_editor_value,
