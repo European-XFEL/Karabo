@@ -95,8 +95,14 @@ void TimeClasses_Test::testEpochstampConversion() {
 
     // output to ostream
     std::ostringstream oss;
-    oss << Epochstamp(12345ull, 12345678901234567ull);
+    oss << Epochstamp(12345ull, 12345678901234567ull); // full precision
     CPPUNIT_ASSERT_EQUAL(std::string("12345.012345678901234567 s"), oss.str());
+    std::ostringstream oss2;
+    oss2 << Epochstamp(12345ull, 12345678900000000ull); // trailing zeros, removed in output
+    CPPUNIT_ASSERT_EQUAL(std::string("12345.0123456789 s"), oss2.str());
+    std::ostringstream oss3;
+    oss3 << Epochstamp(0ull, 12345678900000000ull); // less than a second and trailing zeros
+    CPPUNIT_ASSERT_EQUAL(std::string("0.0123456789 s"), oss3.str());
 }
 
 void TimeClasses_Test::testTimePeriod() {

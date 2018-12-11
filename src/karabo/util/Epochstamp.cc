@@ -14,6 +14,7 @@ typedef int clockid_t;
 #endif
 
 #include <boost/format.hpp>
+#include <boost/algorithm/string/trim.hpp>
 
 #include "Epochstamp.hh"
 #include "DateTimeString.hh"
@@ -258,7 +259,12 @@ namespace karabo {
 
         std::ostream& operator<<(std::ostream& output, const Epochstamp& stamp) {
             // Full technical precision of 18 digits for seconds since of unix epoch
-            output << (boost::format("%d.%018d s") % stamp.getSeconds() % stamp.getFractionalSeconds());
+            std::string txt((boost::format("%d.%018d") % stamp.getSeconds() % stamp.getFractionalSeconds()).str());
+            // Now remove trailing zero:
+            boost::algorithm::trim_right_if(txt, [](char c) {
+                return c == '0';
+            });
+            output << txt << " s";
             return output;
         }
     }
