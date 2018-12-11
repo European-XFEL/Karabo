@@ -271,6 +271,10 @@ namespace karabo {
         }
 
 
+        std::ostream& operator<<(std::ostream& out, const State& state) {
+            return out << state.name();
+        }
+
 
     }
 }
