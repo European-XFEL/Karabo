@@ -328,14 +328,17 @@ namespace karabo {
                 for (size_t i = 0; i < m_registeredSharedInputs.size(); ++i) {
                     karabo::util::Hash& channelInfo = m_registeredSharedInputs[i];
                     if (channelInfo.get<std::string>("instanceId") == instanceId) {
-                        if (!channelInfo.get<std::deque<int> >("queuedChunks").empty()) {
-                            // GF Oct. 2018: When distributing, there should be a common queue, not individual ones!
-                            KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Writing queued (shared) data to instance " << instanceId;
-                            distributeQueue(channelInfo);
+                        if (m_distributionMode == "load-balanced" && !m_sharedLoadBalancedQueuedChunks.empty()) {
+                            KARABO_LOG_FRAMEWORK_TRACE << this->debugId()
+                                    << " Writing single-queued (shared) data to instance " << instanceId;
+                            distributeQueue(channelInfo, m_sharedLoadBalancedQueuedChunks);
+                            return;
+                        } else if (!channelInfo.get<std::deque<int> >("queuedChunks").empty()) {
+                            KARABO_LOG_FRAMEWORK_TRACE << this->debugId()
+                                    << " Writing queued (shared) data to instance " << instanceId;
+                            distributeQueue(channelInfo, channelInfo.get<std::deque<int>>("queuedChunks"));
                             return;
                         }
-                        // Be safe and unlock before pushShareNext locks another mutex.
-                        // One also never knows what handlers are registered for io event...
                         lock.unlock();
                         pushShareNext(instanceId);
                         KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " New (shared) input on instance " << instanceId << " available for writing ";
@@ -346,9 +349,9 @@ namespace karabo {
             }
             boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
             for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
-                karabo::util::Hash& channelInfo = m_registeredCopyInputs[i];
+                karabo::util::Hash &channelInfo = m_registeredCopyInputs[i];
                 if (channelInfo.get<std::string>("instanceId") == instanceId) {
-                    if (!channelInfo.get<std::deque<int> >("queuedChunks").empty()) {
+                    if (!channelInfo.get<std::deque<int>>("queuedChunks").empty()) {
                         KARABO_LOG_FRAMEWORK_TRACE << debugId() << " Writing queued (copied) data to instance " << instanceId;
                         copyQueue(channelInfo);
                         return;
@@ -364,6 +367,7 @@ namespace karabo {
             }
             KARABO_LOG_FRAMEWORK_WARN << this->debugId() << " An input channel wants to connect (" << instanceId << ") that was not registered before.";
         }
+
 
 
         void OutputChannel::onInputGone(const karabo::net::Channel::Pointer& channel) {
@@ -393,7 +397,11 @@ namespace karabo {
                             // Append queued chunks to other shared input
                             unsigned int idx = getNextSharedInputIdx();
                             std::deque<int>& src = m_registeredSharedInputs[idx].get<std::deque<int> >("queuedChunks");
+                            // Note: if load-balanced, src is empty anyway...
                             src.insert(src.end(), tmp.begin(), tmp.end());
+                        } else {
+                            // As in the non-load-balanced (and copy) case, any queue should be cleared:
+                            m_sharedLoadBalancedQueuedChunks.clear();
                         }
 
                         // Delete from input queue
@@ -441,15 +449,16 @@ namespace karabo {
         }
 
 
-        void OutputChannel::distributeQueue(karabo::util::Hash& channelInfo) {
-            std::deque<int>& chunkIds = channelInfo.get<std::deque<int> >("queuedChunks");
+        void OutputChannel::distributeQueue(karabo::util::Hash& channelInfo, std::deque<int>& chunkIds) {
             int chunkId = chunkIds.front();
             chunkIds.pop_front();
             KARABO_LOG_FRAMEWORK_DEBUG << "Distributing from queue: " << chunkId;
-            if (channelInfo.get<std::string > ("memoryLocation") == "local") distributeLocal(chunkId, channelInfo);
-            else distributeRemote(chunkId, channelInfo);
+            if (channelInfo.get<std::string > ("memoryLocation") == "local") {
+                distributeLocal(chunkId, channelInfo);
+            } else {
+                distributeRemote(chunkId, channelInfo);
+            }
         }
-
 
         void OutputChannel::copyQueue(karabo::util::Hash& channelInfo) {
             std::deque<int>& chunkIds = channelInfo.get<std::deque<int> >("queuedChunks");
@@ -572,6 +581,18 @@ namespace karabo {
                             doWait = true;
                         }
                     }
+                    
+                    if (!m_sharedLoadBalancedQueuedChunks.empty()) {
+                        doWait = true;
+                    }
+                }
+                {
+                    boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
+                    for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
+                        if (!m_registeredCopyInputs[i].get<std::deque<int> >("queuedChunks").empty()) {
+                            doWait = true;
+                        }
+                    }
                 }
                 if (!doWait) break;
                 boost::this_thread::sleep(boost::posix_time::milliseconds(100));
@@ -634,6 +655,7 @@ namespace karabo {
         void OutputChannel::distribute(unsigned int chunkId) {
 
             boost::mutex::scoped_lock lock(m_registeredSharedInputsMutex);
+            
             // If no shared input channels are registered at all, we do not go on
             if (m_registeredSharedInputs.empty()) return;
 
@@ -679,7 +701,8 @@ namespace karabo {
                     throw KARABO_IO_EXCEPTION("Can not write data because no (shared) input is available");
 
                 } else if (m_onNoSharedInputChannelAvailable == "queue") {
-                    // GF Oct. 2018: When distributing, there should be a common queue, not individual ones!
+                    // Since distributing round-robin, it is really this instance's turn.
+                    // So we queue for exactly this one.
                     KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Queuing (shared) data package with chunkId: " << chunkId;
                     m_registeredSharedInputs[sharedInputIdx].get<std::deque<int> >("queuedChunks").push_back(chunkId); // channelInfo is const...
                 } else if (m_onNoSharedInputChannelAvailable == "wait") {
@@ -739,15 +762,16 @@ namespace karabo {
                 bool haveToWait = false;
                 if (m_onNoSharedInputChannelAvailable == "drop") {
                     unregisterWriterFromChunk(chunkId);
-                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Dropping (shared) data package with chunkId: " << chunkId;
+                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
+                            << " Dropping (shared) data package with chunkId: " << chunkId;
                 } else if (m_onNoSharedInputChannelAvailable == "throw") {
                     unregisterWriterFromChunk(chunkId);
                     throw KARABO_IO_EXCEPTION("Can not write data because no (shared) input is available");
                 } else if (m_onNoSharedInputChannelAvailable == "queue") {
-                    // GF Oct. 2018: When distributing, there should be a common queue, not individual ones!
-                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Queuing (shared) data package with chunkId: " << chunkId;
-                    const unsigned int sharedInputIdx = getNextSharedInputIdx();
-                    m_registeredSharedInputs[sharedInputIdx].get<std::deque<int> >("queuedChunks").push_back(chunkId);
+                    // For load-balanced mode the chunks should be put on a single queue.
+                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
+                            << "Placing chunk in single queue (load-balanced distribution mode)";
+                    m_sharedLoadBalancedQueuedChunks.push_back(chunkId);
                 } else if (m_onNoSharedInputChannelAvailable == "wait") {
                     // Blocking actions must not happen under the mutex that is also needed to unblock (in onInputAvailable)
                     haveToWait = true;
