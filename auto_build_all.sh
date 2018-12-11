@@ -340,8 +340,7 @@ else
 fi
 
 if [ "$RUNTESTS" = "y" ]; then
-    #runUnitTests
-    runIntegrationTests
+    runUnitTests
 fi
 
 if [ "$RUNINTEGRATIONTESTS" = "y" ]; then
