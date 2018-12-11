@@ -21,6 +21,10 @@ class BitfieldModel(BaseEditWidget):
     """ A model for Bitfield"""
 
 
+class WidgetNodeModel(BaseWidgetObjectData):
+    """ A model for the basic widget node box"""
+
+
 class CheckBoxModel(BaseDisplayEditableWidget):
     """ A model for DisplayCheckBox/EditableCheckBox
     """
@@ -367,7 +371,7 @@ def _build_empty_widget_readers_and_writers():
              'EditableSpinBoxModel', 'GlobalAlarmModel', 'HexadecimalModel',
              'IntLineEditModel', 'KnobModel', 'LampModel',
              'MultiCurvePlotModel', 'PopUpModel', 'RunConfiguratorModel',
-             'SliderModel', 'XYPlotModel')
+             'WidgetNodeModel', 'SliderModel', 'XYPlotModel')
     for name in names:
         klass = globals()[name]
         file_name = name[:-len('Model')]

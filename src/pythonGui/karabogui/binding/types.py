@@ -274,6 +274,10 @@ class ImageBinding(NodeBinding):
     pass  # Nothing to add. We just need a different class for Image
 
 
+class WidgetNodeBinding(NodeBinding):
+    pass  # Nothing to add. We just need a different class for CustomBinding
+
+
 class NoneBinding(BaseBinding):
     value = Undefined
 
