@@ -29,6 +29,8 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
+#include "ScopedGILAcquire.hh"
+
 namespace bp = boost::python;
 
 namespace karathon {
@@ -444,6 +446,91 @@ namespace karathon {
          * @return a deep copy of obj
          */
         static bp::object deepCopyHashLike(const bp::object& obj);
+
+        static void proxyHandler(const bp::object& handler, const char* which) {
+            ScopedGILAcquire gil;
+            try {
+                // Is there a way to pack a variable number of arguments into a bp::tuple and unpack that for a function call?
+                // Then we would only need one proxyHandler with variadic templates...
+                if (handler) handler();
+            } catch (const bp::error_already_set& e) {
+                if (PyErr_Occurred()) PyErr_Print();
+                const std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
+                const std::string whichStr(which ? which : "undefined");
+                throw KARABO_PYTHON_EXCEPTION("Python " + whichStr + " handler'" + funcName + "' has thrown an exception.");
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+        template <class A1>
+        static void proxyHandler(const bp::object& handler, const char* which, const A1& arg1) {
+            ScopedGILAcquire gil;
+            try {
+                // Is there a way to pack a variable number of arguments into a bp::tuple and unpack that for a function call?
+                // Then we would only need one proxyHandler with variadic templates...
+                if (handler) handler(bp::object(arg1));
+            } catch (const bp::error_already_set& e) {
+                if (PyErr_Occurred()) PyErr_Print();
+                const std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
+                const std::string whichStr(which ? which : "undefined");
+                throw KARABO_PYTHON_EXCEPTION("Python " + whichStr + " handler'" + funcName + "' has thrown an exception.");
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+        template <class A1, class A2>
+        static void proxyHandler(const bp::object& handler, const char* which, const A1& arg1, const A2& arg2) {
+            ScopedGILAcquire gil;
+            try {
+                // Is there a way to pack a variable number of arguments into a bp::tuple and unpack that for a function call?
+                // Then we would only need one proxyHandler with variadic templates...
+                if (handler) handler(bp::object(arg1), bp::object(arg2));
+            } catch (const bp::error_already_set& e) {
+                if (PyErr_Occurred()) PyErr_Print();
+                const std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
+                const std::string whichStr(which ? which : "undefined");
+                throw KARABO_PYTHON_EXCEPTION("Python " + whichStr + " handler'" + funcName + "' has thrown an exception.");
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+        template <class A1, class A2, class A3>
+        static void proxyHandler(const bp::object& handler, const char* which, const A1& arg1,  const A2& arg2,  const A3& arg3) {
+            ScopedGILAcquire gil;
+            try {
+                // Is there a way to pack a variable number of arguments into a bp::tuple and unpack that for a function call?
+                // Then we would only need one proxyHandler with variadic templates...
+                if (handler) handler(bp::object(arg1), bp::object(arg2), bp::object(arg3));
+            } catch (const bp::error_already_set& e) {
+                if (PyErr_Occurred()) PyErr_Print();
+                const std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
+                const std::string whichStr(which ? which : "undefined");
+                throw KARABO_PYTHON_EXCEPTION("Python " + whichStr + " handler'" + funcName + "' has thrown an exception.");
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+        template <class A1, class A2, class A3, class A4>
+        static void proxyHandler(const bp::object& handler, const char* which, const A1& arg1,  const A2& arg2,  const A3& arg3,  const A4& arg4) {
+            ScopedGILAcquire gil;
+            try {
+                // Is there a way to pack a variable number of arguments into a bp::tuple and unpack that for a function call?
+                // Then we would only need one proxyHandler with variadic templates...
+                if (handler) handler(bp::object(arg1), bp::object(arg2), bp::object(arg3), bp::object(arg4));
+            } catch (const bp::error_already_set& e) {
+                if (PyErr_Occurred()) PyErr_Print();
+                const std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
+                const std::string whichStr(which ? which : "undefined");
+                throw KARABO_PYTHON_EXCEPTION("Python " + whichStr + " handler'" + funcName + "' has thrown an exception.");
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
     };
 
     // Specializations
