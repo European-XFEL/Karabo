@@ -189,8 +189,7 @@ namespace karathon {
 
 
     void OutputChannelWrap::proxyIOEventHandler(const bp::object& handler, const boost::shared_ptr<karabo::xms::OutputChannel>& outputChannel) {
-        ScopedGILAcquire gil;
-        handler(bp::object(outputChannel));
+        Wrapper::proxyHandler(handler, "IOEvent", outputChannel);
     }
 
 
@@ -228,8 +227,7 @@ namespace karathon {
 
 
     void InputChannelWrap::proxyInputHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& input) {
-        ScopedGILAcquire gil;
-        handler(bp::object(input));
+        Wrapper::proxyHandler(handler, "input", input);
     }
 
 
@@ -239,11 +237,8 @@ namespace karathon {
 
 
     void InputChannelWrap::proxyDataHandler(const bp::object& handler, const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta) {
-        //TODO: wrap MetaData to expose full interface
-        //right now this only exposes source
-        const karabo::util::Hash mdHash("source", meta.getSource());
-        ScopedGILAcquire gil;
-        handler(bp::object(data), bp::object(mdHash));
+        //TODO: wrap MetaData to expose full interface, right now this makes it look like a Hash within Python
+        Wrapper::proxyHandler(handler, "data", data, *(reinterpret_cast<const karabo::util::Hash*> (&meta)));
     }
 
 
@@ -253,8 +248,7 @@ namespace karathon {
 
 
     void InputChannelWrap::proxyEndOfStreamEventHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& input) {
-        ScopedGILAcquire gil;
-        handler(bp::object(input));
+        Wrapper::proxyHandler(handler, "EOS", input);
     }
 
 
@@ -298,6 +292,7 @@ namespace karathon {
             ScopedGILRelease nogil;
             std::vector<karabo::xms::InputChannel::MetaData> md = self->getMetaData();
             for (auto it = md.begin(); it != md.end(); ++it) {
+                // TODO: Properly wrap MetaData object - currently this will be visible in Python as hash
                 ret->push_back(*reinterpret_cast<karabo::util::Hash*> (&*it));
             }
         }
