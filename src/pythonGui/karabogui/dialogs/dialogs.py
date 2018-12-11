@@ -129,7 +129,6 @@ class PenDialog(QDialog):
     def __init__(self, pen, brush=None):
         QDialog.__init__(self)
         uic.loadUi(op.join(op.dirname(__file__), 'pendialog.ui'), self)
-
         self.pen = pen
         self.brush = brush
 
@@ -171,13 +170,17 @@ class PenDialog(QDialog):
 
     @pyqtSlot()
     def on_pbStrokeColor_clicked(self):
-        self.pen.setColor(QColorDialog.getColor(self.pen.color()))
-        self.set_color()
+        color = QColorDialog.getColor(self.pen.color())
+        if color.isValid():
+            self.pen.setColor(color)
+            self.set_color()
 
     @pyqtSlot()
     def on_pbFillColor_clicked(self):
-        self.brush.setColor(QColorDialog.getColor(self.brush.color()))
-        self.set_color()
+        color = QColorDialog.getColor(self.brush.color())
+        if color.isValid():
+            self.brush.setColor(color)
+            self.set_color()
 
     def set_color(self):
         p = QPixmap(32, 16)
@@ -211,11 +214,9 @@ class PenDialog(QDialog):
                 self.pen.setStyle(Qt.NoPen)
             else:
                 self.pen.setWidth(self.sbStrokeWidth.value())
-
-            # Set dash offset first, because this sets the pen style to
-            # Qt.CustomDashLine
-            self.pen.setDashOffset(self.dsbDashOffset.value())
-            self.pen.setStyle(self.wDashType.penStyle())
+                # Set style first!
+                self.pen.setStyle(self.wDashType.penStyle())
+                self.pen.setDashOffset(self.dsbDashOffset.value())
 
             for k, v in self.linecaps.items():
                 if getattr(self, v + 'Cap').isChecked():
