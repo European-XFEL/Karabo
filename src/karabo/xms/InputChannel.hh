@@ -212,9 +212,9 @@ namespace karabo {
 
             void onTcpChannelRead(const karabo::net::ErrorCode& ec, karabo::net::Channel::Pointer channel,
                                   const karabo::util::Hash& header, const std::vector<karabo::io::BufferSet::Pointer>& data);
-
+                                  
             void swapBuffers();
-
+            
             bool canCompute() const;
 
             void notifyOutputChannelsForPossibleRead();
