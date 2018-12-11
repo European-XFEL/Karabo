@@ -2,8 +2,8 @@ import os.path as op
 
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot, Qt
-from PyQt4.QtGui import (QColor, QColorDialog, QDialog, QFont, QFontDialog,
-                         QIcon, QPixmap)
+from PyQt4.QtGui import (QApplication, QColor, QColorDialog, QDialog, QFont,
+                         QFontDialog, QIcon, QPixmap)
 
 from karabo.common.scenemodel.api import LabelModel
 
@@ -16,28 +16,38 @@ class TextDialog(QDialog):
 
         if label_model is None:
             self.label_model = LabelModel()
+            self.text_font = QApplication.font()
+            self.text_font.setStyleName("Regular")
+            self.label_model.font = self.text_font.toString()
         else:
             self.label_model = label_model.clone_traits()
+            self.text_font = QFont()
+            self.text_font.fromString(self.label_model.font)
 
         self.leText.setText(self.label_model.text)
-        # Use a member work with text font
-        self.text_font = QFont()
-        self.text_font.fromString(self.label_model.font)
-        self.label_model.font = self.text_font.toString()
 
-        self.set_button_colors()
+        self.set_text_font_button()
+        self.set_text_color_button()
+        self.set_text_background_button()
 
         if self.label_model.frame_width > 0:
             self.cbFrameWidth.setChecked(True)
             self.sbFrameWidth.setValue(self.label_model.frame_width)
 
         self.cbBackground.setChecked(
-                self.label_model.background != 'transparent')
+            self.label_model.background != 'transparent')
 
-    def set_button_colors(self):
+    def set_text_font_button(self):
+        self.pbFont.setFont(self.text_font)
+        self.pbFont.setText(self.text_font.family())
+
+    def set_text_color_button(self):
         pixmap = QPixmap(24, 16)
         pixmap.fill(QColor(self.label_model.foreground))
         self.pbTextColor.setIcon(QIcon(pixmap))
+
+    def set_text_background_button(self):
+        pixmap = QPixmap(24, 16)
         pixmap.fill(QColor(self.label_model.background))
         self.pbBackground.setIcon(QIcon(pixmap))
 
@@ -45,7 +55,7 @@ class TextDialog(QDialog):
     def on_cbBackground_stateChanged(self, state):
         if state != Qt.Checked:
             self.label_model.background = 'transparent'
-            self.set_button_colors()
+            self.set_text_background_button()
 
     @pyqtSlot(str)
     def on_leText_textChanged(self, text):
@@ -56,12 +66,14 @@ class TextDialog(QDialog):
         self.text_font, ok = QFontDialog.getFont(self.text_font, self)
         if ok:
             self.label_model.font = self.text_font.toString()
+            self.set_text_font_button()
 
     @pyqtSlot()
     def on_pbTextColor_clicked(self):
         color = QColorDialog.getColor(QColor(self.label_model.foreground))
-        self.label_model.foreground = color.name()
-        self.set_button_colors()
+        if color.isValid():
+            self.label_model.foreground = color.name()
+            self.set_text_color_button()
 
     @pyqtSlot(bool)
     def on_cbFrameWidth_toggled(self, checked):
@@ -82,5 +94,6 @@ class TextDialog(QDialog):
     @pyqtSlot()
     def on_pbBackground_clicked(self):
         color = QColorDialog.getColor(QColor(self.label_model.background))
-        self.label_model.background = color.name()
-        self.set_button_colors()
+        if color.isValid():
+            self.label_model.background = color.name()
+            self.set_text_background_button()
