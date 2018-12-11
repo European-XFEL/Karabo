@@ -266,6 +266,8 @@ namespace karabo {
             const To concatDateTimeWithFractional(const PT1 dateTime, const TIME_UNITS precision) const;
 
         };
+
+        std::ostream& operator<<(std::ostream& output, const Epochstamp& stamp);
     }
 }
 
