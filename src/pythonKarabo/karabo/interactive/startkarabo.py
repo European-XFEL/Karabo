@@ -178,7 +178,7 @@ def killkarabo():
     There are other commands that can be given to a device server:
 
     -u
-      Up. This is what karaob-start does.
+      Up. This is what karabo-start does.
 
     -d
       Down. This is what karabo-stop does.
@@ -258,24 +258,30 @@ def checkkarabo():
     """karabo-check - check Karabo device servers
 
       karabo-check [-h|--help] device-servers*
-
     this shows the status of given Karabo device servers.
 
     If no device server is given, show the status of all device servers.
     """
     STDIN = 0
     STDOUT = 1
+    STDERR = 2
 
-    pipein, pipeout = os.pipe()
-    if os.fork():
-        os.close(pipeout)
-        os.dup2(pipein, STDIN)
+    pipe_read, pipe_write = os.pipe()
+    if os.fork():  # parent, read from pipe
+        os.close(pipe_write)
+        os.dup2(pipe_read, STDIN)
+        os.close(pipe_read)
+        n, number_of_services = 0, len(defaultall())
         for line in sys.stdin:
-            print(colorize(line))
+            print(colorize(line.strip()))
+            n += 1
+            if n > number_of_services:
+                break
 
-    else:
-        os.close(pipein)
-        os.dup2(pipeout, STDOUT)
+    else:   # child, exec svstat and write to pipe
+        os.close(pipe_read)
+        os.dup2(pipe_write, STDOUT)
+        os.dup2(pipe_write, STDERR)
         exec_defaultall("svstat")
 
 
