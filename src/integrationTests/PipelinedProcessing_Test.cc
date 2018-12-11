@@ -413,7 +413,6 @@ void PipelinedProcessing_Test::testPipeMinData() {
     }
 
     // in this case, only 10 data out of 12 are expected to be received
-    // TODO: Uncomment the nDataExpected assignment and the ASSERT as soon as the bug with SwapBuffers in InputChannel is fixed
     unsigned int nDataExpected = m_nDataPerRun - m_nDataPerRun % minData;
     CPPUNIT_ASSERT_EQUAL(nDataExpected, m_deviceClient->get<unsigned int>(m_receiver, "nTotalData"));
 
