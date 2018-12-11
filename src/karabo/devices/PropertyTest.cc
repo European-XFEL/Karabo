@@ -511,6 +511,11 @@ namespace karabo {
                     .description("Write once to output channel 'Output'")
                     .commit();
 
+            SLOT_ELEMENT(expected).key("eosOutput")
+                    .displayedName("EOS to Output")
+                    .description("Write end-of-stream to output channel 'Output'")
+                    .commit();
+
             SLOT_ELEMENT(expected).key("slotUpdateSchema")
                     .displayedName("Update Schema")
                     .description("Duplicate maxSize of vectors in schema")
@@ -522,6 +527,7 @@ namespace karabo {
             KARABO_INITIAL_FUNCTION(initialize);
 
             KARABO_SLOT(writeOutput);
+            KARABO_SLOT(eosOutput);
             KARABO_SLOT(slotUpdateSchema);
         }
 
@@ -568,6 +574,10 @@ namespace karabo {
             writeChannel("output", data);
         }
 
+
+        void PropertyTest::eosOutput() {
+            signalEndOfStream("output");
+        }
 
         void PropertyTest::slotUpdateSchema() {
             const Schema schema(getFullSchema());
