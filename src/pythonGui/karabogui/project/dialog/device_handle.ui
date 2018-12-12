@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>399</width>
-    <height>537</height>
+    <height>393</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -74,103 +74,36 @@
       </widget>
      </item>
      <item row="3" column="0">
-      <widget class="QLabel" name="laIfExists">
-       <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Startup behaviour&lt;/p&gt;&lt;p&gt;if already online:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QComboBox" name="cbIfExists">
-       <property name="toolTip">
-        <string>Select startup behaviour. Either restart the device, if already online or ignore and do nothing</string>
-       </property>
-       <property name="statusTip">
-        <string>Select startup behaviour. Either restart the device, if already online or ignore and do nothing</string>
-       </property>
-       <item>
-        <property name="text">
-         <string>ignore</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>restart</string>
-        </property>
-       </item>
-      </widget>
-     </item>
-     <item row="4" column="0">
-      <widget class="QLabel" name="laAuthor">
-       <property name="text">
-        <string>Author:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="1">
-      <widget class="QLineEdit" name="leAuthor">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="toolTip">
-        <string>The author of this device</string>
-       </property>
-       <property name="statusTip">
-        <string>The author of this device</string>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="0">
-      <widget class="QLabel" name="laCopyOf">
-       <property name="text">
-        <string>Copy of:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="1">
-      <widget class="QLineEdit" name="leCopyOf">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="toolTip">
-        <string>States where this device was copied from</string>
-       </property>
-       <property name="statusTip">
-        <string>States where this device was copied from</string>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="0">
       <widget class="QLabel" name="laConfig">
        <property name="text">
         <string>Configuration:</string>
        </property>
       </widget>
      </item>
-     <item row="7" column="0">
-      <widget class="QLabel" name="laDescription">
-       <property name="text">
-        <string>Description:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="7" column="1">
-      <widget class="QTextEdit" name="teDescription">
-       <property name="toolTip">
-        <string>The description for this device</string>
-       </property>
-       <property name="statusTip">
-        <string>The description for this device</string>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="1">
+     <item row="3" column="1">
       <widget class="QComboBox" name="cbConfig">
        <property name="toolTip">
         <string>The name which is descriptive enough to find the configuration again</string>
        </property>
        <property name="statusTip">
         <string>The name which is descriptive enough to find the configuration again</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="laDescription">
+       <property name="text">
+        <string>Description:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QTextEdit" name="teDescription">
+       <property name="toolTip">
+        <string>The description for this device</string>
+       </property>
+       <property name="statusTip">
+        <string>The description for this device</string>
        </property>
       </widget>
      </item>
