@@ -183,6 +183,8 @@ class Simple(object):
     def alarmCondition(self, data):
         if not basetypes.isSet(data):
             return AlarmCondition.NONE
+        if isinstance(data, basetypes.KaraboValue):
+            data = data.value
         if self.alarmLow is not None and data < self.alarmLow:
             return AlarmCondition.ALARM_LOW
         if self.alarmHigh is not None and data > self.alarmHigh:
