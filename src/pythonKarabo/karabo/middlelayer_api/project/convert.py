@@ -41,7 +41,7 @@ def _convert_devices(old_devices):
         config_model.initialized = config_model.modified = True
         instance_model = DeviceInstanceModel(
             class_id=dev.classId, instance_id=dev.filename.split('.')[0],
-            if_exists=dev.ifexists, configs=[config_model],
+            configs=[config_model],
             active_config_ref=config_model.uuid)
         # Set initialized and modified last
         instance_model.initialized = instance_model.modified = True
