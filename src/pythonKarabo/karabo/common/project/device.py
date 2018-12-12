@@ -25,8 +25,6 @@ class DeviceInstanceModel(BaseProjectObjectModel):
     # The server ID. Transient, because a parent DeviceServerModel will fill it
     server_id = String(transient=True)
 
-    # If the device is already online, should it be ignored or restarted?
-    if_exists = Enum('ignore', 'restart')
     # A list of references to possible configurations
     configs = List(Instance(DeviceConfigurationModel))
     # UUID of the currently active configuration
@@ -137,7 +135,6 @@ def read_device(io_obj):
     # Read traits in a way which is resilient against missing data
     trait_names = {'class_id': 'class_id',
                    'instance_id': 'instance_id',
-                   'if_exists': 'if_exists',
                    'active_config_ref': 'active_uuid'}
     traits.update({key: root.get(xmlkey) for key, xmlkey in trait_names.items()
                    if root.get(xmlkey) is not None})
@@ -157,7 +154,6 @@ def write_device(model):
     root = Element(PROJECT_DB_TYPE_DEVICE_INSTANCE)
     root.set('class_id', model.class_id)
     root.set('instance_id', model.instance_id)
-    root.set('if_exists', model.if_exists)
     root.set('active_uuid', model.active_config_ref)
     # XXX: Protect old code. Remove this when domains are implemented.
     root.set('active_rev', '0')

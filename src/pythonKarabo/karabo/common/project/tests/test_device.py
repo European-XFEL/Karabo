@@ -14,7 +14,6 @@ UUIDS = [str(uuid4()) for i in range(3)]
 DEVICE_XML = """
 <device_instance class_id='BazClass'
                  instance_id='fooDevice'
-                 if_exists='ignore'
                  active_uuid='{uuids[0]}'>
     <device_config uuid='{uuids[0]}' class_id='BazClass' />
     <device_config uuid='{uuids[1]}' class_id='BazClass' />
@@ -42,7 +41,6 @@ def test_reading():
 
     assert device.class_id == 'BazClass'
     assert device.instance_id == 'fooDevice'
-    assert device.if_exists == 'ignore'
     assert device.active_config_ref == UUIDS[0]
     assert not device.initialized
     conf0 = device.configs[0]
@@ -66,7 +64,6 @@ def test_reading_incomplete():
 
     assert device.class_id == ''
     assert device.instance_id == ''
-    assert device.if_exists == 'ignore'
     assert device.active_config_ref == ''
     assert not device.initialized
 
@@ -76,7 +73,6 @@ def test_writing():
     conf1 = DeviceConfigurationModel(class_id='BazClass', uuid=UUIDS[1])
     conf2 = DeviceConfigurationModel(class_id='BazClass', uuid=UUIDS[2])
     foo = DeviceInstanceModel(class_id='BazClass', instance_id='fooDevice',
-                              if_exists='ignore',
                               configs=[conf0, conf1, conf2],
                               active_config_ref=UUIDS[0])
 
