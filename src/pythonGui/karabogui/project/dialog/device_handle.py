@@ -49,7 +49,7 @@ class DeviceHandleDialog(QDialog):
         self.leTitle.setEnabled(not is_online)
 
         if model is None:
-            title = 'Add device configuration'
+            title = 'Add device'
             self.cbConfig.setEditable(True)
             self.cbConfig.lineEdit().setText('default')
             # We do not allow to modify 'default' configuration!

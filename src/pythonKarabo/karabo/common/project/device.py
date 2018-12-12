@@ -5,7 +5,7 @@
 #############################################################################
 from xml.etree.ElementTree import Element, parse, SubElement, tostring
 
-from traits.api import Enum, Instance, List, on_trait_change, String
+from traits.api import Instance, List, on_trait_change, String
 
 from .bases import BaseProjectObjectModel
 from .const import (
