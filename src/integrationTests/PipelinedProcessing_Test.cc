@@ -382,8 +382,10 @@ void PipelinedProcessing_Test::testPipeMinData() {
     const unsigned int originalSenderDelay = m_deviceClient->get<unsigned int>(m_sender, "delay");
 
     // There's an undesired interdependency between the tests cases; this test only works if the sender delay
-    // is significatively high, more specifically 100 milliseconds.
-    // TODO: IMPORTANT: Stabilize the Output and Input Channels so that this kind of timing dependencies are eliminated.
+    // is significatively high.
+    // TODO: IMPORTANT: Solve the racing condition between onTcpRead and TriggerIOEvent that happens in the
+    //                  InputChannel when the sender has no delay and that causes the Pots swapping to happen
+    //                  in the middle of the processing.
     m_deviceClient->set(m_sender, "delay", 100u);
 
     // input.minData = 1 by default
@@ -465,6 +467,7 @@ void PipelinedProcessing_Test::testPipeTwoPots() {
 
     // Restores the sender 'delay' to the value it had at the beginning of the test.
     m_deviceClient->set(m_sender, "delay", originalSenderDelay);
+    
     killDeviceWithAssert(m_receiver);
     std::clog << "Passed!\n\n";
 }
