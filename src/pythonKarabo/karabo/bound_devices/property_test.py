@@ -5,7 +5,7 @@ __date__ = "September, 2017, 13:45 PM"
 __copyright__ = """Copyright (c) 2010-2017 European XFEL GmbH Hamburg.
 All rights reserved."""
 
-import numpy
+import numpy as np
 
 from karabo.bound import (
     Encoding,
@@ -432,20 +432,14 @@ class PropertyTest(PythonDevice):
         node.setAs("int32", self.outputCounter, Types.INT32)
         node.set("string", str(self.outputCounter))
         # Using plain Hash.set(..), type of vector is determined from 1st elem.:
-        node.setAs("vecInt64",
-                   [self.outputCounter for i in range(self.defVectorMaxSize)],
+        node.setAs("vecInt64", [self.outputCounter] * self.defVectorMaxSize,
                    Types.VECTOR_INT64)
-        arr = numpy.ndarray([100, 200], dtype=numpy.float32)
-        arr[:] = numpy.float32(self.outputCounter)
+        arr = np.full((100, 200), self.outputCounter, dtype=np.float32)
         node.set("ndarray", arr)
-        imArr = numpy.ndarray([400, 500], dtype=numpy.uint16)
-        imArr[:] = numpy.uint16(self.outputCounter)
+        imArr = np.full((400, 500), self.outputCounter, dtype=np.uint16)
         node.set("image", ImageData(imArr, encoding=Encoding.GRAY))
 
-        print (data)
         self.writeChannel("output", data)
-
-        pass
 
     def eosOutput(self):
         self.signalEndOfStream("output")
