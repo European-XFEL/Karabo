@@ -93,3 +93,22 @@ class StateSignifier(SignifierBase):
         ret.timestamp = newest_timestamp(iterable)
 
         return ret
+
+
+def removeQuantity(func):
+    """Decorate a function to remove QuantityValue input
+
+    NOTE: This decorator does not cast to base units!
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        new_args = []
+        new_kwargs = {}
+        for value in tuple(args):
+            value = value.value if isinstance(value, QuantityValue) else value
+            new_args.append(value)
+        for name, value in kwargs.items():
+            value = value.value if isinstance(value, QuantityValue) else value
+            new_kwargs.update({name: value})
+        return func(*new_args, **new_kwargs)
+    return wrapper
