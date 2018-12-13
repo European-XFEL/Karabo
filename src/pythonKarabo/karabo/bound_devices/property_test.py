@@ -5,13 +5,17 @@ __date__ = "September, 2017, 13:45 PM"
 __copyright__ = """Copyright (c) 2010-2017 European XFEL GmbH Hamburg.
 All rights reserved."""
 
+import numpy
+
 from karabo.bound import (
-    KARABO_CLASSINFO, PythonDevice, Hash,
-    Schema, State, OVERWRITE_ELEMENT,
+    Encoding,
+    KARABO_CLASSINFO, PythonDevice, DaqDataType, Hash, ImageData,
+    Schema, State, Types, OVERWRITE_ELEMENT,
     ADMIN, AlarmCondition,
-    BOOL_ELEMENT, FLOAT_ELEMENT, DOUBLE_ELEMENT, INT32_ELEMENT, UINT32_ELEMENT,
-    INT64_ELEMENT, UINT64_ELEMENT, NODE_ELEMENT, SLOT_ELEMENT, STRING_ELEMENT,
-    TABLE_ELEMENT,
+    BOOL_ELEMENT, FLOAT_ELEMENT, DOUBLE_ELEMENT, IMAGEDATA_ELEMENT,
+    INT32_ELEMENT, UINT32_ELEMENT, INT64_ELEMENT, UINT64_ELEMENT,
+    NDARRAY_ELEMENT, NODE_ELEMENT,
+    OUTPUT_CHANNEL, SLOT_ELEMENT, STRING_ELEMENT, TABLE_ELEMENT,
     VECTOR_BOOL_ELEMENT, VECTOR_CHAR_ELEMENT,
     VECTOR_FLOAT_ELEMENT, VECTOR_DOUBLE_ELEMENT,
     VECTOR_INT32_ELEMENT, VECTOR_UINT32_ELEMENT,
@@ -23,9 +27,19 @@ from karabo.bound import (
 @KARABO_CLASSINFO("PropertyTest", "2.1")
 class PropertyTest(PythonDevice):
 
+    defVectorMaxSize = 10  # maximum size of pipeline vector
+
     def __init__(self, configuration):
         # always call PythonDevice constructor first!
         super(PropertyTest, self).__init__(configuration)
+
+        # Define the slots
+        self.KARABO_SLOT(self.setReadonly)
+        self.KARABO_SLOT(self.setAlarm)
+        self.KARABO_SLOT(self.writeOutput)
+        self.KARABO_SLOT(self.eosOutput)
+
+        self.outputCounter = 0
         # Define first function to be called after the constructor has finished
         self.registerInitialFunction(self.initialization)
 
@@ -304,6 +318,9 @@ class PropertyTest(PythonDevice):
             .assignmentOptional().defaultValue(3.14)
             .reconfigurable()
             .commit(),
+        )
+
+        (
 
             TABLE_ELEMENT(expected).key("table")
             .displayedName("Table property")
@@ -319,10 +336,65 @@ class PropertyTest(PythonDevice):
             .commit(),
         )
 
+        pipeData = Schema()
+        (
+            NODE_ELEMENT(pipeData).key("node")
+            .displayedName("Node for DAQ")
+            .description("An intermediate node needed by DAQ")
+            .setDaqDataType(DaqDataType.TRAIN)
+            .commit(),
+
+            INT32_ELEMENT(pipeData).key("node.int32")
+            .description("A signed 32-bit integer sent via the pipeline")
+            .readOnly()
+            .commit(),
+
+            STRING_ELEMENT(pipeData).key("node.string")
+            .description("A string send via the pipeline")
+            .readOnly()
+            .commit(),
+
+            VECTOR_INT64_ELEMENT(pipeData).key("node.vecInt64")
+            .description("A vector of signed 64-bit integers sent via the "
+                         "pipeline")
+            .maxSize(PropertyTest.defVectorMaxSize) # DAQ needs that
+            .readOnly()
+            .commit(),
+
+            NDARRAY_ELEMENT(pipeData).key("node.ndarray")
+            .description("A multi dimensional array of floats sent via the "
+                         "pipeline")
+            .dtype(Types.FLOAT)
+            .shape("100,200")
+            .commit(),
+
+            IMAGEDATA_ELEMENT(pipeData).key("node.image")
+            .description("An image with pixels as 16-bit unsigned integers "
+                         "sent via the pipeline")
+            .setDimensions("400,500")
+            .setEncoding(Encoding.GRAY)
+            # guess that DAQ needs more...
+            .commit(),
+        )
+
+        (
+            OUTPUT_CHANNEL(expected).key("output")
+            .displayedName("Output")
+            .dataSchema(pipeData)
+            .commit(),
+
+            SLOT_ELEMENT(expected).key("writeOutput")
+            .displayedName("Write to Output")
+            .description("Write once to output channel 'Output'")
+            .commit(),
+
+            SLOT_ELEMENT(expected).key("eosOutput")
+            .displayedName("EOS to Output")
+            .description("Write end-of-stream to output channel 'Output'")
+            .commit(),
+        )
+
     def initialization(self):
-        # Define the slots
-        self.KARABO_SLOT(self.setReadonly)
-        self.KARABO_SLOT(self.setAlarm)
 
         self.updateState(State.NORMAL)
 
@@ -348,3 +420,32 @@ class PropertyTest(PythonDevice):
         else:
             self.setAlarmCondition(alarm,
                                    description="Converted from stringProperty")
+
+    def writeOutput(self):
+        self.outputCounter += 1
+
+        # Set all numbers inside to self.outputCounter:
+        data = Hash("node", Hash())
+        node = data["node"]
+
+        # setAs needed if counter exceeds INT32 range...
+        node.setAs("int32", self.outputCounter, Types.INT32)
+        node.set("string", str(self.outputCounter))
+        # Using plain Hash.set(..), type of vector is determined from 1st elem.:
+        node.setAs("vecInt64",
+                   [self.outputCounter for i in range(self.defVectorMaxSize)],
+                   Types.VECTOR_INT64)
+        arr = numpy.ndarray([100, 200], dtype=numpy.float32)
+        arr[:] = numpy.float32(self.outputCounter)
+        node.set("ndarray", arr)
+        imArr = numpy.ndarray([400, 500], dtype=numpy.uint16)
+        imArr[:] = numpy.uint16(self.outputCounter)
+        node.set("image", ImageData(imArr, encoding=Encoding.GRAY))
+
+        print (data)
+        self.writeChannel("output", data)
+
+        pass
+
+    def eosOutput(self):
+        self.signalEndOfStream("output")
