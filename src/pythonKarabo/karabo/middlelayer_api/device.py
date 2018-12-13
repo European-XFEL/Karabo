@@ -9,12 +9,13 @@ from .basetypes import isSet
 from .enums import AccessLevel, AccessMode, Assignment, DaqPolicy
 from .exceptions import KaraboError
 from .hash import Bool, Hash, HashType, Int32, SchemaHashType, Slot, String
+from .injectable import InjectMixin
 from .logger import Logger
 from .schema import Node
 from .signalslot import SignalSlotable, Signal, slot, coslot
 
 
-class Device(AlarmMixin, SignalSlotable):
+class Device(InjectMixin, AlarmMixin, SignalSlotable):
     """This is the base class for all devices.
 
     It inherits from :class:`~karabo.middlelayer.Configurable` and thus

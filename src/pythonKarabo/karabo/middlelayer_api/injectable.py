@@ -22,6 +22,13 @@ class MetaInjectable(MetaConfigurable):
 
 
 class Injectable(Configurable):
+    """This is a dummy class for backward compatiblity
+    """
+    def __init__(self, configuration={}):
+        super(Injectable, self).__init__(configuration)
+
+
+class InjectMixin(Configurable):
     """This is a mixin class for all classes that want to inject parameters
 
     A parameter injection is a modification of the class of an object. Since
@@ -29,9 +36,9 @@ class Injectable(Configurable):
     fresh class for every object, which inherits from our class. This new
     class is completely empty, so we can modify it at will. Once we have done
     that, yield from
-    :meth:`~karabo.middlelayer.Injectable.publishInjectedParameters`::
+    :meth:`~karabo.middlelayer.InjectMiXin.publishInjectedParameters`::
 
-        class MyDevice(Injectable, Device):
+        class MyDevice(Device):
             @coroutine
             def onInitialization(self):
                 # should it be needed to test that the node is there
@@ -75,7 +82,7 @@ class Injectable(Configurable):
       `publishInjectedParameters`
     """
 
-    def __new__(cls, configuration={}):
+    def __new__(cls, configuration={}, **kwargs):
         """each object gets its own personal class, that it may modify"""
         newtype = MetaInjectable(cls.__name__, (cls,), {})
         return super(Configurable, cls).__new__(newtype)
