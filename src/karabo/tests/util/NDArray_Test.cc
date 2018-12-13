@@ -52,6 +52,10 @@ void NDArray_Test::testConstructor() {
         NDArray iCp(someData.begin(), someData.end(), shape); // copy of someData using iterator range
         NDArray ref(&someData[0], someData.size(), NDArray::NullDeleter(), shape); // reference to someData
 
+        // Invalid iterator range throws like it does for std::vector - for both 'real' iterators and bare pointers:
+        CPPUNIT_ASSERT_THROW(NDArray(someData.begin() + 1, someData.begin()), std::bad_alloc);
+        CPPUNIT_ASSERT_THROW(NDArray(&(someData[1]), &(someData[0])), std::bad_alloc);
+
         const Dims& flyShape = fly.getShape();
         const Dims& cpyShape = cpy.getShape();
         const Dims& iCpShape = iCp.getShape();

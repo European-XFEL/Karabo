@@ -84,6 +84,7 @@ namespace karabo {
             /**
              * This constructor copies data from the provided iterator range.
              * Data type is deduced from the value_type of the InputIterator.
+             * The range from 'first' (included) to 'last' (excluded) has to be valid range.
              * @param first Begin of range
              * @param last End of range (i.e. points one behind as vector.end())
              * @param shape Shape information
