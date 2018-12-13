@@ -574,6 +574,47 @@ class DeviceClient(object):
     def unregisterDeviceMonitor(self, instanceId):
         self.__client.unregisterDeviceMonitor(instanceId)
 
+    def registerChannelMonitor(self, channelName, dataHandler,
+                               inputChannelCfg=None, eosHandler=None):
+        """
+        Register an asynchronous call-back to monitor defined output channel.
+
+        Internally, an InputChannel is created and configured.
+        @param channelName identifies the channel as a concatenation of the id of
+                            its device, a colon (:) and the name of the output
+                            channel (e.g. A/COOL/DEVICE:output)
+        @param dataHandler called when data arrives, arguments are data (Hash) and
+                           meta data (Hash/MetaData)
+        @param inputChannelCfg configures the channel via InputChannel.create(..)
+                         use default except you know what your are doing
+                         for experts: "connectedOutputChannels" will be overwritten,
+                                      "onSlowness" default is overwritten to "drop"
+        @param eosHandler called on end of stream, argument is the InputChannel
+
+        @return False if channel is already registered
+
+        Example:
+
+        def handler(data, meta):
+            print(data.getPaths())
+        c = DeviceClient();
+        c.registerChannelMonitor("DEV/ID/1:output", handler)
+        """
+        if inputChannelCfg is None:
+            inputChannelCfg = Hash()
+        return self.__client.registerChannelMonitor(channelName, dataHandler,
+                                                    inputChannelCfg, eosHandler)
+
+    def unregisterChannelMonitor(self, channelName):
+        """
+        Unregister monitoring of output channel
+
+        @param channelName identifies the channel as a concatenation of the id of
+                           its devices, a colon (:) and the name of the output
+                          channel (e.g. A/COOL/DEVICE:output)
+        @return False if channel was not registered
+        """
+        return self.__client.unregisterChannelMonitor(channelName)
 
     def setDeviceMonitorInterval(self, milliseconds):
         """

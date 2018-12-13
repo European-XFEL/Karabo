@@ -91,6 +91,28 @@ void exportPyCoreDeviceClient() {
             .def("setDeviceMonitorInterval", (void (DeviceClient::*)(long int))(&DeviceClient::setDeviceMonitorInterval), bp::arg("milliseconds"))
             .def("unregisterPropertyMonitor", (void (DeviceClient::*)(const string&, const string&))(&DeviceClient::unregisterPropertyMonitor), (bp::arg("instanceId"), bp::arg("key")))
             .def("unregisterDeviceMonitor", (void (DeviceClient::*)(const string&))(&DeviceClient::unregisterDeviceMonitor), bp::arg("instanceId"))
+            .def("registerChannelMonitor", &DeviceClientWrap::registerChannelMonitorPy,
+                 (bp::arg("channelName"), bp::arg("dataHandler"), bp::arg("inputChannelCfg") = karabo::util::Hash(),
+                  bp::arg("eosHandler") = bp::object()),
+                 "Register a handler to monitor defined output channel.\n\n"
+                 "Internally, an InputChannel is created and configured.\n"
+                 "@param channelName identifies the channel as a concatenation of the id of\n"
+                 "                    its device, a colon (:) and the name of the output\n"
+                 "                    channel (e.g. A/COOL/DEVICE:output)\n"
+                 "@param dataHandler called when data arrives, arguments are data (Hash) and\n"
+                 "                   meta data (Hash/MetaData)\n"
+                 "@param inputChannelCfg configures the channel via InputChannel.create(..)\n"
+                 "                 use default except you know what your are doing\n"
+                 "                 for experts: \"connectedOutputChannels\" will be overwritten,\n"
+                 "                              \"onSlowness\" default is overwritten to \"drop\"\n"
+                 "@param eosHandler called on end of stream, argument is the InputChannel\n\n"
+                 "@return False if channel is already registered")
+            .def("unregisterChannelMonitor", &DeviceClientWrap::unregisterChannelMonitorPy, bp::arg("channelName"),
+                 "Unregister monitoring of output channel\n\n"
+                 "@param channelName identifies the channel as a concatenation of the id of\n"
+                 "                   its devices, a colon (:) and the name of the output\n"
+                 "                  channel (e.g. A/COOL/DEVICE:output)\n\n"
+                 "@return False if channel was not registered")
             .def("set", (void(DeviceClientWrap::*)(const string&, const string&, const bp::object&, const std::string&, int))(&DeviceClientWrap::setPy), (bp::arg("deviceId"), bp::arg("key"), bp::arg("value"), bp::arg("keySep") = ".", bp::arg("timeoutInSeconds") = -1))
             .def("set", (void(DeviceClientWrap::*)(const string&, const karabo::util::Hash&, int))(&DeviceClientWrap::setPy), (bp::arg("deviceId"), bp::arg("hash"), bp::arg("timeoutInSeconds") = -1))
             .def("setAttribute", (void(DeviceClientWrap::*)(const std::string&, const std::string&, const std::string&, const bp::object&, int))(&DeviceClientWrap::setAttributePy),

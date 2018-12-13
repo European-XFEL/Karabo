@@ -226,6 +226,21 @@ namespace karathon {
             }
         }
 
+
+        bool registerChannelMonitorPy(const std::string& channelName, const bp::object& dataHandler,
+                                      const karabo::util::Hash& inputChannelCfg, const bp::object& eosHandler) {
+            return this->DeviceClient::registerChannelMonitor
+                    (channelName, boost::bind(&InputChannelWrap::proxyDataHandler, dataHandler, _1, _2),
+                     inputChannelCfg, boost::bind(&InputChannelWrap::proxyEndOfStreamEventHandler, eosHandler, _1));
+        }
+
+        bool unregisterChannelMonitorPy(const std::string& channelName) {
+            // Need this wrapper since DeviceClient::unregisterChannelMonitor is overloaded.
+            // Otherwise we could us that one directly.
+            return this->DeviceClient::unregisterChannelMonitor(channelName);
+        }
+
+
         void setPy(const std::string& instanceId, const std::string& key, const bp::object& value, const std::string& keySep = ".", int timeout = -1) {
             karabo::util::Hash tmp;
             HashWrap::set(tmp, key, value, keySep);
