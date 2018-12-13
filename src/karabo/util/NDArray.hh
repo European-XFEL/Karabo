@@ -82,6 +82,19 @@ namespace karabo {
                     const bool isBigEndian = karabo::util::isBigEndian());
 
             /**
+             * This constructor copies data from the provided iterator range.
+             * Data type is deduced from the value_type of the InputIterator.
+             * @param first Begin of range
+             * @param last End of range (i.e. points one behind as vector.end())
+             * @param shape Shape information
+             * @param isBigEndian Endianess flag
+             */
+            template <typename InputIterator>
+            NDArray(InputIterator first, InputIterator last,
+                    const Dims& shape = Dims(),
+                    const bool isBigEndian = karabo::util::isBigEndian());
+
+            /**
              * This constructor does NOT copy data.
              * Only a view on the external memory is established. A functor for dealing
              * with the viewed on memory must be provided in case this object gets destructed.
@@ -279,6 +292,28 @@ namespace karabo {
             setType<T>();
             setShape(shape);
             setBigEndian(isBigEndian);
+        }
+
+        template <typename InputIterator>
+        NDArray::NDArray(InputIterator first, InputIterator last,
+                         const Dims& shape,
+                         const bool isBigEndian) {
+            using DataType = typename std::iterator_traits<InputIterator>::value_type;
+
+            // Create data structure and specify type
+            const size_t byteSize = (last - first) * sizeof (DataType);
+            set("data", std::make_pair(DataPointer(new char[byteSize], &NDArray::deallocator), byteSize));
+            setType<DataType>();
+
+            // Set further input
+            setShape(shape); // after set up of data structure!
+            setBigEndian(isBigEndian);
+
+            // In the end, copy from the iterator:
+            DataType* data = getData<DataType>();
+            for (; first != last; ++first) {
+                *(data++) = *first; // postfix increment!
+            }
         }
 
         template<typename T, typename D>
