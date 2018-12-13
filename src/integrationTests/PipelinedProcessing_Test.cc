@@ -379,6 +379,8 @@ void PipelinedProcessing_Test::testPipeQueue(unsigned int processingTime, unsign
 void PipelinedProcessing_Test::testPipeMinData() {
     std::clog << "---\ntestPipeMinData\n";
 
+    const unsigned int originalSenderDelay = m_deviceClient->get<unsigned int>(m_sender, "delay");
+
     // There's an undesired interdependency between the tests cases; this test only works if the sender delay
     // is significatively high, more specifically 100 milliseconds.
     // TODO: IMPORTANT: Stabilize the Output and Input Channels so that this kind of timing dependencies are eliminated.
@@ -416,18 +418,24 @@ void PipelinedProcessing_Test::testPipeMinData() {
     unsigned int nDataExpected = m_nDataPerRun - m_nDataPerRun % minData;
     CPPUNIT_ASSERT_EQUAL(nDataExpected, m_deviceClient->get<unsigned int>(m_receiver, "nTotalData"));
 
+    // Restore the sender delay to the value it had before running this test case.
+    m_deviceClient->set(m_sender, "delay", originalSenderDelay);
+
     killDeviceWithAssert(m_receiver);
     std::clog << "Passed!\n\n";
 }
 
 
 void PipelinedProcessing_Test::testPipeTwoPots() {
-    std::clog << "---\ntestTwoPots\n";
+    std::clog << "---\ntestPipeTwoPots\n";
 
-    // There's an undesired interdependency between the tests cases; this test only works if the sender delay
-    // is significatively high, more specifically 100 milliseconds.
-    // TODO: IMPORTANT: Stabilize the Output and Input Channels so that this kind of timing dependencies are eliminated.
-    m_deviceClient->set(m_sender, "delay", 100u);
+    const unsigned int originalSenderDelay = m_deviceClient->get<unsigned int>(m_sender, "delay");
+
+    // As this test interrupts the sender in the middle of a send of 'nData' data items, it depends on some sender delay
+    // to be able to assert precisely how many data items have been sent after the sender 'Stop' slot has been invoked.
+    // The delay set in the next line is high enough to make sure that there will be one extra data item left in the
+    // unprocessed Pot of the receiver input channel.
+    m_deviceClient->set(m_sender, "delay", 75u);
 
     // start a receiver whose processingTime is significantly longer than the writing time of the output channel
     karabo::util::Hash config(m_receiverBaseConfig);
@@ -448,14 +456,15 @@ void PipelinedProcessing_Test::testPipeTwoPots() {
         // into the inactive pot when the "stop" slot is called.
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", 0, false));
 
-        // TODO: Uncomment this as soon as the issue with the nTotalDataOnEos is fixed.
         CPPUNIT_ASSERT_EQUAL(nDataWhenStop + 1, m_deviceClient->get<unsigned int>(m_receiver, "nTotalDataOnEos"));
-        
+
         // reset nTotalData and nTotalDataOnEos
         m_deviceClient->execute(m_receiver, "reset");
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", 0));
     }
 
+    // Restores the sender 'delay' to the value it had at the beginning of the test.
+    m_deviceClient->set(m_sender, "delay", originalSenderDelay);
     killDeviceWithAssert(m_receiver);
     std::clog << "Passed!\n\n";
 }
