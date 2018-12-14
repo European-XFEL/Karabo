@@ -382,7 +382,7 @@ void PipelinedProcessing_Test::testPipeMinData() {
     // There's an undesired interdependency between the tests cases; this test only works if the sender delay
     // is significatively high, more specifically 100 milliseconds.
     // TODO: IMPORTANT: Stabilize the Output and Input Channels so that this kind of timing dependencies are eliminated.
-    m_deviceClient->set(m_sender, "delay", 100u);
+    //m_deviceClient->set(m_sender, "delay", 100u);
 
     // input.minData = 1 by default
     unsigned int minData = 5;
