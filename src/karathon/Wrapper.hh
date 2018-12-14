@@ -448,15 +448,22 @@ namespace karathon {
          */
         static bp::object deepCopyHashLike(const bp::object& obj);
 
+        /**
+         * A proxy around a Python handler to be called with an arbitrary number of arguments
+         *
+         * @param handler A callable Python object
+         * @param which A C-string used to better identify the point of failure in case the Python
+         *              code throws an exception
+         * @param args An arbitrary number of arguments passed to the handler - each has to be a valid
+         *             argument to the constructor of the boost Python object.
+         */
         template <typename... Args>
         static void proxyHandler(const bp::object& handler, const char* which, const Args&... args) {
             ScopedGILAcquire gil;
-            // Convert arguments to an std::tuple of Python objects
-            auto&& tupleArgs = std::make_tuple(bp::object(args)...);
             try {
                 if (handler) {
-                    // Call with unpacked arguments
-                    karabo::util::call(handler, tupleArgs);
+                    // Convert arguments to an std::tuple of Python objects and call handler with unpacked arguments
+                    karabo::util::call(handler, std::make_tuple(bp::object(args)...));
                 }
             } catch (const bp::error_already_set& e) {
                 if (PyErr_Occurred()) PyErr_Print();
