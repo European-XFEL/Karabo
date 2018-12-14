@@ -73,8 +73,7 @@ class SceneController(BaseProjectController):
         """
         # Make sure scene is closed before!
         scene = self.model
-        config = get_config()
-        path = config['scene_dir']
+        path = get_config()['scene_dir']
         directory = path if path and op.isdir(path) else ""
 
         fn = getOpenFileName(caption='Replace scene',
@@ -84,7 +83,7 @@ class SceneController(BaseProjectController):
             return
 
         # Store scene dir path
-        config['scene_dir'] = op.dirname(fn)
+        get_config()['scene_dir'] = op.dirname(fn)
 
         project = project_controller.model
         if scene in project.scenes:
