@@ -184,8 +184,6 @@ namespace karabo {
             KARABO_SLOT(slotAlarmSignalsUpdate, std::string, std::string, karabo::util::Hash );
             KARABO_SLOT(slotRunConfigSourcesUpdate, karabo::util::Hash, std::string);
             KARABO_SLOT(slotDumpDebugInfo, karabo::util::Hash);
-            KARABO_SIGNAL("signalClientSignalsAlarmUpdate", Hash);
-            KARABO_SIGNAL("signalClientRequestsAlarms");
 
             Hash h;
             h.set("port", config.get<unsigned int>("port"));
@@ -592,10 +590,12 @@ namespace karabo {
 
                     KARABO_LOG_FRAMEWORK_DEBUG << "initSingleDevice: Requesting to start device instance \""
                                                << deviceId << "\" on server \"" << serverId << "\"";
-
+                    // initReply both as success and failure handler, identified by boolean flag as last argument
                     request(serverId, "slotStartDevice", inst.hash)
                         .receiveAsync<bool, string>(bind_weak(&karabo::devices::GuiServerDevice::initReply,
-                                                              this, inst.channel, deviceId, inst.hash, _1, _2));
+                                                              this, inst.channel, deviceId, inst.hash, _1, _2, false),
+                                                    bind_weak(&karabo::devices::GuiServerDevice::initReply,
+                                                              this, inst.channel, deviceId, inst.hash, false, "", true));
 
                     m_pendingDeviceInstantiations.pop();
                 }
@@ -609,18 +609,34 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::initReply(WeakChannelPointer channel, const string& givenDeviceId, const karabo::util::Hash& givenConfig, bool success, const string& message) {
+        void GuiServerDevice::initReply(WeakChannelPointer channel, const string& givenDeviceId, const karabo::util::Hash& givenConfig,
+                                        bool success, const string& message,
+                                        bool isFailureHandler) {
             try {
 
-                KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting init reply";
+                KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting init reply - "
+                        << (isFailureHandler ? "" : "not ") << "as failureHandler";
 
                 Hash h("type", "initReply", "deviceId", givenDeviceId, "success", success, "message", message);
+                if (isFailureHandler) {
+                    // Called as a failure handler, so can re-throw
+                    try {
+                        throw;
+                    } catch (const std::exception& e) {
+                        // Set or extend failure message
+                        std::string& msg = h.get<std::string>("message");
+                        if (!msg.empty()) msg += ": "; // as failure handler, msg should be empty, but adding does not harm
+                        msg += e.what();
+                    }
+                }
                 safeClientWrite(channel, h);
 
-                tryToUpdateNewInstanceAttributes(givenDeviceId, DEVICE_SERVER_REPLY_EVENT);
-
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in initReply " << e.userFriendlyMsg();
+                const NewInstanceAttributeUpdateEvents event = (isFailureHandler || !success ?
+                                                                INSTANCE_GONE_EVENT :
+                                                                DEVICE_SERVER_REPLY_EVENT);
+                tryToUpdateNewInstanceAttributes(givenDeviceId, event);
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in initReply " << e.what();
             }
         }
 
@@ -1154,10 +1170,10 @@ namespace karabo {
                     }
                 }
 
+                tryToUpdateNewInstanceAttributes(instanceId, INSTANCE_GONE_EVENT);
 
-
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in instanceGoneHandler(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in instanceGoneHandler(): " << e.what();
             }
         }
 
@@ -1409,6 +1425,10 @@ namespace karabo {
                 const auto it = m_pendingAttributeUpdates.find(deviceId);
 
                 if (it != m_pendingAttributeUpdates.end()) {
+                    if (callerMask == INSTANCE_GONE_EVENT) {
+                        m_pendingAttributeUpdates.erase(it);
+                        return;
+                    }
                     // Set the caller's bit in the event mask
                     it->second.eventMask |= callerMask;
                     if ((it->second.eventMask & FULL_MASK_EVENT) != FULL_MASK_EVENT) {
