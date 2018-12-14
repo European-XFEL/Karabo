@@ -90,8 +90,8 @@ namespace karabo {
 
             unsigned int m_channelId;
 
-            boost::mutex m_mutex;
-            boost::mutex m_swapBuffersMutex;
+            //boost::mutex m_dataProcessMutex;
+            boost::mutex m_dataReadMutex;
 
             int m_activeChunk;
             int m_inactiveChunk;
