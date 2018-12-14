@@ -346,6 +346,7 @@ class Tests(TestCase):
         self.assertEqual(10 * percent, 0.1 * pixel)
         self.assertEqual(1 * degC + QuantityValue("1 K"), 2 * degC)
         self.assertEqual(2 * number, 2)
+        self.assertEqual(pixel, 1 * unit.pixel)
 
         # check correct dimensionality:
         eV + QuantityValue("1 J")
