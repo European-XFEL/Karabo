@@ -121,6 +121,9 @@ void PipelinedProcessing_Test::testGetOutputChannelSchema() {
 
 void PipelinedProcessing_Test::testPipeWait() {
     std::clog << "---\ntestPipeWait (onSlowness = 'wait')\n";
+
+    const auto testStartTime = std::chrono::high_resolution_clock::now();
+
     // use only one receiver for a group of tests
     karabo::util::Hash config(m_receiverBaseConfig);
     config += Hash("deviceId", m_receiver);
@@ -132,6 +135,12 @@ void PipelinedProcessing_Test::testPipeWait() {
     testPipeWait(0, 100);
 
     killDeviceWithAssert(m_receiver);
+
+    const auto testFinishTime = std::chrono::high_resolution_clock::now();
+    const auto testDuration = testFinishTime - testStartTime;
+    std::clog << "Test duration (ms): " << std::chrono::duration_cast<std::chrono::milliseconds>(testDuration).count()
+            << std::endl;
+
     std::clog << "Passed!\n\n";
 }
 
@@ -198,6 +207,8 @@ void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigne
 void PipelinedProcessing_Test::testPipeDrop() {
     std::clog << "---\ntestPipeDrop (onSlowness = 'drop')\n";
 
+    const auto testStartTime = std::chrono::high_resolution_clock::now();
+
     karabo::util::Hash config(m_receiverBaseConfig);
     config += Hash("deviceId", m_receiver, "input.onSlowness", "drop");
     instantiateDeviceWithAssert("PipeReceiverDevice", config);
@@ -208,6 +219,12 @@ void PipelinedProcessing_Test::testPipeDrop() {
     testPipeDrop(0, 100, false);
 
     killDeviceWithAssert(m_receiver);
+
+    const auto testFinishTime = std::chrono::high_resolution_clock::now();
+    const auto testDuration = testFinishTime - testStartTime;
+    std::clog << "Test duration (ms): " << std::chrono::duration_cast<std::chrono::milliseconds>(testDuration).count()
+            << std::endl;
+
     std::clog << "Passed!\n\n";
 }
 
@@ -270,6 +287,8 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
 void PipelinedProcessing_Test::testPipeQueue() {
     std::clog << "---\ntestPipeQueue (onSlowness = 'queue', dataDistribution = 'copy')\n";
 
+    const auto testStartTime = std::chrono::high_resolution_clock::now();
+
     karabo::util::Hash config(m_receiverBaseConfig);
     config += Hash("deviceId", m_receiver, "input.onSlowness", "queue");
     config += Hash("deviceId", m_receiver, "input.dataDistribution", "copy");
@@ -285,6 +304,12 @@ void PipelinedProcessing_Test::testPipeQueue() {
     testPipeQueue(5, 50);
 
     killDeviceWithAssert(m_receiver);
+
+    const auto testFinishTime = std::chrono::high_resolution_clock::now();
+    const auto testDuration = testFinishTime - testStartTime;
+    std::clog << "Test duration (ms): " << std::chrono::duration_cast<std::chrono::milliseconds>(testDuration).count()
+            << std::endl;
+
     std::clog << "Passed!\n\n";
 }
 
@@ -379,6 +404,8 @@ void PipelinedProcessing_Test::testPipeQueue(unsigned int processingTime, unsign
 void PipelinedProcessing_Test::testPipeMinData() {
     std::clog << "---\ntestPipeMinData\n";
 
+    const auto testStartTime = std::chrono::high_resolution_clock::now();
+    
     // There's an undesired interdependency between the tests cases; this test only works if the sender delay
     // is significatively high, more specifically 100 milliseconds.
     // TODO: IMPORTANT: Stabilize the Output and Input Channels so that this kind of timing dependencies are eliminated.
@@ -417,12 +444,20 @@ void PipelinedProcessing_Test::testPipeMinData() {
     CPPUNIT_ASSERT_EQUAL(nDataExpected, m_deviceClient->get<unsigned int>(m_receiver, "nTotalData"));
 
     killDeviceWithAssert(m_receiver);
+
+    const auto testFinishTime = std::chrono::high_resolution_clock::now();
+    const auto testDuration = testFinishTime - testStartTime;
+    std::clog << "Test duration (ms): " << std::chrono::duration_cast<std::chrono::milliseconds>(testDuration).count()
+            << std::endl;
+
     std::clog << "Passed!\n\n";
 }
 
 
 void PipelinedProcessing_Test::testPipeTwoPots() {
     std::clog << "---\ntestTwoPots\n";
+
+    const auto testStartTime = std::chrono::high_resolution_clock::now();
 
     // There's an undesired interdependency between the tests cases; this test only works if the sender delay
     // is significatively high, more specifically 100 milliseconds.
@@ -457,12 +492,20 @@ void PipelinedProcessing_Test::testPipeTwoPots() {
     }
 
     killDeviceWithAssert(m_receiver);
+
+    const auto testFinishTime = std::chrono::high_resolution_clock::now();
+    const auto testDuration = testFinishTime - testStartTime;
+    std::clog << "Test duration (ms): " << std::chrono::duration_cast<std::chrono::milliseconds>(testDuration).count()
+            << std::endl;
+
     std::clog << "Passed!\n\n";
 }
 
 
 void PipelinedProcessing_Test::testPipeTwoSharedReceiversWait() {
     std::clog << "---\ntestPipeTwoSharedReceiversWait (onSlowness = 'wait', dataDistribution = 'shared')\n";
+
+    const auto testStartTime = std::chrono::high_resolution_clock::now();
 
     karabo::util::Hash config1(m_receiverBaseConfig);
     config1 += Hash("deviceId", m_receiver1, "input.onSlowness", "wait", "input.dataDistribution", "shared");
@@ -492,6 +535,12 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversWait() {
     
     killDeviceWithAssert(m_receiver1);
     killDeviceWithAssert(m_receiver2);
+
+    const auto testFinishTime = std::chrono::high_resolution_clock::now();
+    const auto testDuration = testFinishTime - testStartTime;
+    std::clog << "Test duration (ms): " << std::chrono::duration_cast<std::chrono::milliseconds>(testDuration).count()
+            << std::endl;
+
     std::clog << "Passed!\n\n";
 }
 
@@ -549,6 +598,8 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversDrop() {
 void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueue() {
     std::clog << "---\ntestPipeTwoSharedReceiversQueue (output.noInputShared = 'queue', input.dataDistribution = 'shared')\n";
 
+    const auto testStartTime = std::chrono::high_resolution_clock::now();
+
     karabo::util::Hash config1(m_receiverBaseConfig);
     config1 += Hash("deviceId", m_receiver1, "input.dataDistribution", "shared");
 
@@ -590,6 +641,11 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueue() {
 
     killDeviceWithAssert(m_receiver1);
     killDeviceWithAssert(m_receiver2);
+
+    const auto testFinishTime = std::chrono::high_resolution_clock::now();
+    const auto testDuration = testFinishTime - testStartTime;
+    std::clog << "Test duration (ms): " << std::chrono::duration_cast<std::chrono::milliseconds>(testDuration).count()
+            << std::endl;
 
     std::clog << "Passed!\n\n";
 }
@@ -788,11 +844,19 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnect() {
 
     std::clog << "---\ntestQueueClearOnDisconnect\n";
 
+    const auto testStartTime = std::chrono::high_resolution_clock::now();
+
+
     testQueueClearOnDisconnectCopyQueue();
 
     testQueueClearOnDisconnectSharedQueue(true);
 
     testQueueClearOnDisconnectSharedQueue(false);
+
+    const auto testFinishTime = std::chrono::high_resolution_clock::now();
+    const auto testDuration = testFinishTime - testStartTime;
+    std::clog << "Test duration (ms): " << std::chrono::duration_cast<std::chrono::milliseconds>(testDuration).count()
+            << std::endl;
 
     std::clog << "Passed!\n\n";
 }
@@ -937,10 +1001,17 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectCopyQueue() {
 void PipelinedProcessing_Test::testProfileTransferTimes() {
     std::clog << "---\ntestProfileTransferTimes\n";
 
+    const auto testStartTime = std::chrono::high_resolution_clock::now();
+
     testProfileTransferTimes(false, true);
     testProfileTransferTimes(false, false);
     testProfileTransferTimes(true, true);
     testProfileTransferTimes(true, false);
+
+    const auto testFinishTime = std::chrono::high_resolution_clock::now();
+    const auto testDuration = testFinishTime - testStartTime;
+    std::clog << "Test duration (ms): " << std::chrono::duration_cast<std::chrono::milliseconds>(testDuration).count()
+            << std::endl;
 
     std::clog << "Passed!\n\n";
 }
