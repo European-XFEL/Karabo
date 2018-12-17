@@ -6,8 +6,7 @@ import numpy as np
 
 from karabo.common.states import State
 from karabo.middlelayer import (
-    AccessMode, background, getDevice, executeNoWait, Int32, waitUntil,
-    waitWhile)
+    AccessMode, background, getDevice, Int32, waitUntil, waitWhile)
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import getSchema
 from karabo.middlelayer_api.hash import Float, Hash, Slot, VectorHash
@@ -31,9 +30,12 @@ class MyNode(Configurable):
 
 
 class MyDevice(Device):
-    __version__ = "1.2"
+    __version__ = "2.2"
 
-    integer = Int32(defaultValue=0, minInc=0, maxInc=10)
+    integer = Int32(
+        defaultValue=0,
+        minInc=0,
+        maxInc=10)
 
     counter = Int32(
         defaultValue=0)
@@ -44,13 +46,10 @@ class MyDevice(Device):
 
     deep = Node(MyNode)
 
-    @Slot
-    def testSlot(self):
-        pass
-
     @InputChannel()
     async def input(self, data, meta):
-        pass
+        """The input channel with data and meta
+        """
 
     table = VectorHash(
         rows=RowSchema,
@@ -86,8 +85,7 @@ class Tests(DeviceTest):
 
     @sync_tst
     def test_device_version(self):
-        expected = "1.2"
-        self.assertEqual(self.myDevice.state, State.ON)
+        expected = "2.2"
         self.assertEqual(self.myDevice.classVersion, expected)
 
     @sync_tst
@@ -95,21 +93,6 @@ class Tests(DeviceTest):
         names = self.myDevice.slotGetOutputChannelNames()
         expected = ['dataOutput', 'deep.output', 'output']
         self.assertEqual(names, expected)
-
-    @sync_tst
-    def test_output_information(self):
-        # second argument is set to None as it is not used in the function
-        value = self.myDevice.slotGetOutputChannelInformation("output", None)
-        self.assertEqual(value[0], True)
-        data = value[1]
-        self.assertEqual(data["hostname"], self.myDevice.hostName)
-        self.assertEqual(data["connectionType"], "tcp")
-        self.assertEqual(data["memoryLocation"], "remote")
-        self.assertIsInstance(data["port"], np.uint32)
-
-        value = self.myDevice.slotGetOutputChannelInformation("doesNotExist",
-                                                              None)
-        self.assertEqual(value[0], False)
 
     @sync_tst
     def test_displayType_state(self):
@@ -189,7 +172,7 @@ class Tests(DeviceTest):
 
     @sync_tst
     def test_slot_verification(self):
-        self.assertEqual(self.myDevice.slotHasSlot("testSlot"), True)
+        self.assertEqual(self.myDevice.slotHasSlot("increaseCounter"), True)
         self.assertEqual(self.myDevice.slotHasSlot("output"), False)
         self.assertEqual(self.myDevice.slotHasSlot("doesNotExist"), False)
 
@@ -200,14 +183,30 @@ class Tests(DeviceTest):
                         'value', 1000),
                    Hash('path', "integer",
                         'attribute', "minInc",
-                        'value', 10)]
+                        'value', -10)]
         self.assertEqual(self.myDevice.integer.descriptor.maxInc, 10)
         self.assertEqual(self.myDevice.integer.descriptor.minInc, 0)
-
         result = self.myDevice.slotUpdateSchemaAttributes(updates)
         self.assertEqual(result["success"], True)
         self.assertEqual(self.myDevice.integer.descriptor.maxInc, 1000)
-        self.assertEqual(self.myDevice.integer.descriptor.minInc, 10)
+        self.assertEqual(self.myDevice.integer.descriptor.minInc, -10)
+
+    @sync_tst
+    def test_output_information(self):
+        device = self.myDevice
+        # Second argument processId is not used in MDL
+        success, data = yield from device.slotGetOutputChannelInformation(
+            "output", None)
+        self.assertEqual(success, True)
+        self.assertEqual(data["hostname"], self.myDevice.hostName)
+        self.assertEqual(data["connectionType"], "tcp")
+        self.assertEqual(data["memoryLocation"], "remote")
+        self.assertIsInstance(data["port"], np.uint32)
+
+        success, data = yield from device.slotGetOutputChannelInformation(
+            "doesNotExist", None)
+        self.assertEqual(success, False)
+        self.assertEqual(data, Hash())
 
 
 if __name__ == '__main__':
