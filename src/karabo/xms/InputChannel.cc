@@ -193,9 +193,9 @@ namespace karabo {
 
 
         karabo::util::Hash::Pointer InputChannel::read(size_t idx) {
-            KARABO_LOG_FRAMEWORK_WARN << "read(size_t): will acquire lock on m_dataReadMutex";
-            boost::mutex::scoped_lock readLock(m_dataReadMutex);
-            KARABO_LOG_FRAMEWORK_WARN << "read(size_t): acquired lock on m_dataReadMutex";
+            //            KARABO_LOG_FRAMEWORK_WARN << "read(size_t): will acquire lock on m_dataReadMutex";
+            //            boost::mutex::scoped_lock readLock(m_dataReadMutex);
+            //            KARABO_LOG_FRAMEWORK_WARN << "read(size_t): acquired lock on m_dataReadMutex";
             karabo::util::Hash::Pointer hash(new karabo::util::Hash());
             Memory::read(*hash, idx, m_channelId, m_activeChunk);
             return hash;
@@ -203,9 +203,9 @@ namespace karabo {
 
 
         karabo::util::Hash::Pointer InputChannel::read(size_t idx, InputChannel::MetaData& metaData) {
-            KARABO_LOG_FRAMEWORK_WARN << "read(size_t, InputChannel, Metadata): will acquire lock on m_dataReadMutex";
-            boost::mutex::scoped_lock readLock(m_dataReadMutex);
-            KARABO_LOG_FRAMEWORK_WARN << "read(size_t, InputChannel, Metadata): acquired lock on m_dataReadMutex";
+            //            KARABO_LOG_FRAMEWORK_WARN << "read(size_t, InputChannel, Metadata): will acquire lock on m_dataReadMutex";
+            //            boost::mutex::scoped_lock readLock(m_dataReadMutex);
+            //            KARABO_LOG_FRAMEWORK_WARN << "read(size_t, InputChannel, Metadata): acquired lock on m_dataReadMutex";
             auto hash = boost::make_shared<karabo::util::Hash>();
             Memory::read(*hash, idx, m_channelId, m_activeChunk);
             metaData = m_metaDataList[idx];
@@ -407,9 +407,7 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << debugId << "ENTRY onTcpChannelRead  header is ...\n" << header << "\nand data.size=" << data.size();
 
             try {
-                KARABO_LOG_FRAMEWORK_WARN << "OnTcpRead: will acquire lock on m_dataReadMutex";
-                boost::mutex::scoped_lock readLock(m_dataReadMutex);
-                KARABO_LOG_FRAMEWORK_WARN << "OnTcpRead: acquired lock on m_dataReadMutex";
+                boost::mutex::scoped_lock potFillLock(m_potFillingMutex);
                 m_isEndOfStream = false;
 
                 if (header.has("endOfStream")) {
@@ -420,17 +418,12 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_DEBUG << debugId << "Received EOS #" << m_eosChannels.size();
                     if (m_respondToEndOfStream) m_isEndOfStream = true;
                     if (this->getMinimumNumberOfData() <= 0) {
-                        KARABO_LOG_FRAMEWORK_WARN << "OnTcpRead: will release lock on m_dataReadMutex";
-                        //if (readLock.owns_lock()) readLock.unlock();
-                        KARABO_LOG_FRAMEWORK_WARN << "OnTcpRead: released lock on m_dataReadMutex";
                         KARABO_LOG_FRAMEWORK_TRACE << debugId << "Triggering another compute";
+                        boost::mutex::scoped_lock processingLock(m_processingMutex);
                         this->swapBuffers();
                         m_strand->post(util::bind_weak(&InputChannel::triggerIOEvent, this));
                     }
                     if (m_eosChannels.size() == m_openConnections.size()) {
-                        KARABO_LOG_FRAMEWORK_WARN << "OnTcpRead: will release lock on m_dataReadMutex";
-                        //if (readLock.owns_lock()) readLock.unlock();
-                        KARABO_LOG_FRAMEWORK_WARN << "OnTcpRead: released lock on m_dataReadMutex";
                         if (m_respondToEndOfStream) {
                             KARABO_LOG_FRAMEWORK_TRACE << debugId << "Triggering EOS function after reception of " << m_eosChannels.size() << " EOS tokens";
                             m_strand->post(util::bind_weak(&InputChannel::triggerEndOfStreamEvent, this));
@@ -438,9 +431,6 @@ namespace karabo {
                         // Reset eos tracker
                         m_eosChannels.clear();
                     }
-                    KARABO_LOG_FRAMEWORK_WARN << "OnTcpRead: will release lock on m_dataReadMutex";
-                    //if (readLock.owns_lock()) readLock.unlock();
-                    KARABO_LOG_FRAMEWORK_WARN << "OnTcpRead: released on m_dataReadMutex";
                     channel->readAsyncHashVectorBufferSetPointer(util::bind_weak(&karabo::xms::InputChannel::onTcpChannelRead, this, _1, channel, _2, _3));
                     return;
                 }
@@ -456,18 +446,14 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_TRACE << debugId << "Reading from remote memory (over tcp)";
                     Memory::writeAsContiguousBlock(data, header, m_channelId, m_inactiveChunk);
                 }
-                //  TODO:: reconsider mutex locks - maybe need m_swapBuffersMutex? What about m_mutex?
                 size_t nInactiveData = Memory::size(m_channelId, m_inactiveChunk);
                 size_t nActiveData = Memory::size(m_channelId, m_activeChunk);
-
-                KARABO_LOG_FRAMEWORK_WARN << "OnTcpRead: will release lock on m_dataReadMutex";
-                if (readLock.owns_lock()) readLock.unlock();
-                KARABO_LOG_FRAMEWORK_WARN << "OnTcpRead: released lock on m_dataReadMutex";
 
                 if ((this->getMinimumNumberOfData()) <= 0 || (nInactiveData < this->getMinimumNumberOfData())) { // Not enough data, yet
                     KARABO_LOG_FRAMEWORK_TRACE << debugId << "Can read more data";
                     notifyOutputChannelForPossibleRead(channel);
                 } else if (nActiveData == 0) { // Data complete, second pot still empty
+                    boost::mutex::scoped_lock processingLock(m_processingMutex);
                     this->swapBuffers();
                     // Ask to fill second pot...
                     notifyOutputChannelForPossibleRead(channel);
@@ -552,9 +538,7 @@ namespace karabo {
         void InputChannel::triggerIOEvent() {
             std::string exceptMsg;
             {
-                KARABO_LOG_FRAMEWORK_WARN << "triggerIOEvent: will acquire lock on m_dataReadMutex";
-                boost::mutex::scoped_lock readLock(m_dataReadMutex);
-                KARABO_LOG_FRAMEWORK_WARN << "triggerIOEvent: acquired lock on m_dataReadMutex";
+                boost::mutex::scoped_lock processingLock(m_processingMutex);
 
                 try {
                     // There is either m_inputHandler or m_dataHandler
@@ -569,14 +553,13 @@ namespace karabo {
                     }
                     prepareMetaData();
                     if (m_dataHandler) {
-                        //if (readLock.owns_lock()) readLock.unlock();
                         Hash data;
                         for (size_t i = 0; i < this->size(); ++i) {
                             read(data, i); // clears data internally before filling
                             m_dataHandler(data, m_metaDataList[i]);
                         }
                     } else if (m_inputHandler) {
-                        //if (readLock.owns_lock()) readLock.unlock();
+                        boost::mutex::scoped_lock potFillLock(m_potFillingMutex);
                         m_inputHandler(shared_from_this());
                     }
                 } catch (const Exception& e) {
@@ -592,18 +575,16 @@ namespace karabo {
                             << m_instanceId << "' caught " << exceptMsg;
                 }
 
-                //readLock.lock();
                 
                 // Whatever handler (even none or one that throws): we are done with the data.
                 try {
+
+                    boost::mutex::scoped_lock potFillLock(m_potFillingMutex);
+
                     size_t nActiveData = 0;
 
                     // Clear active chunk
                     Memory::clearChunkData(m_channelId, m_activeChunk);
-
-                    //KARABO_LOG_FRAMEWORK_WARN << "triggerIOEvent: will release lock on m_dataProcessMutex";
-                    //readLock.unlock();
-                    //KARABO_LOG_FRAMEWORK_WARN << "triggerIOEvent: released lock on m_dataProcessMutex";
 
                     // Swap buffers
                     swapBuffers();
@@ -637,7 +618,7 @@ namespace karabo {
                 // Safety check if we still have some data in current pot that are not processed yet (we were called too early!)
                 size_t nActiveData = 0;
                 {
-                    boost::mutex::scoped_lock lock(m_dataReadMutex);
+                    boost::mutex::scoped_lock lock(m_potFillingMutex);
                     // Fetch number of data pieces ... should be 0!
                     nActiveData = Memory::size(m_channelId, m_activeChunk);
                 }
