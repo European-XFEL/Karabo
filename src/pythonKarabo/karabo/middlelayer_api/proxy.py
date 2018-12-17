@@ -179,6 +179,7 @@ class ProxyFactory(object):
         It should inherit from :class:`SubProxyBase`.
     """
     Proxy = ProxyBase
+    ProxyNode = ProxyNodeBase
     SubProxy = SubProxyBase
 
     node_factories = dict(
@@ -189,7 +190,7 @@ class ProxyFactory(object):
     def createNode(cls, key, node, prefix, **kwargs):
         sub = cls.createNamespace(node, "{}{}.".format(prefix, key))
         Cls = type(key, (cls.SubProxy,), sub)
-        return ProxyNodeBase(key=key, cls=Cls, **kwargs)
+        return cls.ProxyNode(key=key, cls=Cls, **kwargs)
 
     @classmethod
     def register_special(cls, name, special):
