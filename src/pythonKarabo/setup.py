@@ -105,6 +105,7 @@ if __name__ == '__main__':
             'karabo.testing': ['resources/*.*'],
             'karabo.project_db': ['config_stubs/*.*'],
             'karabo.integration_tests': ['device_comm_test/CommTestDevice.egg-info/*.*',
+                             'device_provided_scenes_test/SceneProvidingDevice.egg-info/*.*',
                              'pipeline_processing_test/PPReceiverDevice.egg-info/*.*',
                              'pipeline_processing_test/PPSenderDevice.egg-info/*.*'],
             'karabo.interactive': ['jupyter_spec/kernel.json'],
