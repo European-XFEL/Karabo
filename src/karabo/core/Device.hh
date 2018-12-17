@@ -1435,6 +1435,8 @@ namespace karabo {
                     m_parameters.set("deviceId", m_deviceId);
                     // ServerId
                     m_parameters.set("serverId", m_serverId);
+                    // ProcessId
+                    m_parameters.set("pid", ::getpid());
 
                     // The following lines of code are needed to initially inject timestamps to the parameters
                     karabo::util::Hash validated;
@@ -1528,8 +1530,6 @@ namespace karabo {
 
                 // Start the state machine (call initialization methods in case of noFsm)
                 this->startFsm(); // This function must be inherited from the templated base class (it's a concept!)
-
-                this->set("pid", ::getpid());
 
             }
 
