@@ -1,43 +1,32 @@
+import os.path as op
 import os
-from unittest import TestCase, main
-import sys
-
-from pycodestyle import Checker
-from pyflakes.api import checkPath
+import subprocess
 
 import __PACKAGE_NAME__
 
-pep8_exceptions = {
-}
 
-flakes_exceptions = {
-}
+BLACKLIST = ['setup.py', '__init__.py']
 
 
-class Tests(TestCase):
-    @classmethod
-    def setUpClass(cls):
-        mods = (obj.__module__ for obj in __PACKAGE_NAME__.__dict__.values()
-                if hasattr(obj, "__module__")
-                and obj.__module__.startswith("__PACKAGE_NAME__"))
-        cls.modules = {sys.modules[m].__file__ for m in mods}
-        print("Testing code quality for modules {}".format(cls.modules))
+def get_python_files():
+    """Get all python files from this package
+    """
+    common_dir = op.abspath(op.dirname(karabacon.__file__))
+    flake_check = []
+    for dirpath, _, filenames in os.walk(common_dir):
+        if dirpath.endswith('tests'):
+            continue
+        for fn in filenames:
+            if op.splitext(fn)[-1].lower() == '.py' and fn not in BLACKLIST:
+                path = op.join(dirpath, fn)
+                flake_check.append(path)
 
-    def test_pep8(self):
-        for mod in self.modules:
-            base = os.path.basename(mod)
-            with self.subTest(module=base):
-                checker = Checker(mod)
-                errs = checker.check_all()
-                self.assertEqual(errs, pep8_exceptions.get(base, 0))
-
-    def test_flakes(self):
-        for mod in self.modules:
-            base = os.path.basename(mod)
-            with self.subTest(module=base):
-                errs = checkPath(mod)
-                self.assertEqual(errs, flakes_exceptions.get(base, 0))
+    return flake_check
 
 
-if __name__ == "__main__":
-    main()
+def test_code_quality_flake8():
+    files = get_python_files()
+    for py_file in files:
+        command = ['flake8', op.abspath(py_file)]
+        subprocess.check_call(command)
+
