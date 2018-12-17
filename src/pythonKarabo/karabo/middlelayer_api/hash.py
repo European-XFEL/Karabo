@@ -201,7 +201,7 @@ class Simple(object):
         else:
             timestamp = None
         if isinstance(data, str):
-            data = basetypes.QuantityValue(data)
+            data = basetypes.QuantityValue(data, descriptor=self)
         if isinstance(data, basetypes.QuantityValue):
             data = data.to(self.units).value
         self.check(data)

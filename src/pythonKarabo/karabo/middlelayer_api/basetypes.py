@@ -362,8 +362,11 @@ class TableValue(MutableSequence, KaraboValue):
         ret = wrap(val)
         ret.timestamp = self.timestamp
         if isinstance(ret, QuantityValue):
-            return QuantityValue(ret.value, unit=units[0],
-                                 metricPrefix=units[1],
+            unit = Unit(units[0]) if units[0] is not None else None
+            # NOTE: metricPrefix has a default NONE
+            metricPrefix = MetricPrefix(units[1])
+            return QuantityValue(ret.value, unit=unit,
+                                 metricPrefix=metricPrefix,
                                  timestamp=self.timestamp)
         return ret
 
