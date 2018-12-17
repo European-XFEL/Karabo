@@ -20,5 +20,8 @@ SED_PROGRAM='1 s%^'$CAPTURE'$%'$NEW_SHEBANG_LINE'%'
 
 for script_name in $PACKAGEDIR/extern/bin/*
 do
-  sed -i "$SED_PROGRAM" $script_name
+  if grep -s -e '^'$CAPTURE'$' $script_name > /dev/null
+  then
+    sed -i "$SED_PROGRAM" $script_name
+  fi
 done
