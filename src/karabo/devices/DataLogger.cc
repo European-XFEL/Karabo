@@ -8,6 +8,8 @@
 
 #include <streambuf>
 
+#include <boost/filesystem.hpp>
+
 #include "karabo/io/Input.hh"
 #include "karabo/io/TextSerializer.hh"
 #include "karabo/util/Schema.hh"
@@ -128,8 +130,6 @@ namespace karabo {
 
             m_user = "."; //TODO:  Define proper user running a device. The dot is unknown user?
 
-            if (!boost::filesystem::exists(get<string>("directory")))
-                boost::filesystem::create_directory(get<string>("directory"));
             if (!boost::filesystem::exists(get<string>("directory") + "/" + m_deviceToBeLogged)) {
                 boost::filesystem::create_directories(get<string>("directory") + "/" + m_deviceToBeLogged, ec);
                 if (ec) {
