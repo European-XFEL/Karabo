@@ -8,6 +8,7 @@ import time
 import weakref
 
 from dateutil.parser import parse as from_isoformat
+from flaky import flaky
 from pint import DimensionalityError
 
 from karabo.middlelayer import (
@@ -597,10 +598,19 @@ class Tests(DeviceTest):
         self.assertEqual(proxy.state, State.UNKNOWN)
 
     @async_tst
+    @flaky(max_runs=5, min_passes=3)
     def test_waituntilnew(self):
-        """test the waitUntilNew coroutine for properties"""
+        """test the waitUntilNew coroutine for properties
+
+        NOTE: This test is declared as flaky as the cycling is sometimes not
+        working in the eventloop as it has to be. See that we have a sleep 0
+        fix here.
+        """
         self.remote.counter = None
         self.remote.nested.val = None
+        # NOTE: Protect against a race condition in getDevice and cycle once!
+        # Can be cured with async with which is not possible at the moment.
+        yield from sleep(0)
         with (yield from getDevice("remote")) as d:
             d.counter = 0
             # we test that d.counter and d.nested.val are still None (it
@@ -619,8 +629,13 @@ class Tests(DeviceTest):
                 yield from task
 
     @async_tst
+    @flaky(max_runs=5, min_passes=3)
     def test_waituntildevice(self):
-        """test the waitUntilNew coroutine for devices"""
+        """test the waitUntilNew coroutine for devices
+
+        NOTE: This test is declared as flaky as the cycling is sometimes not
+        working in the eventloop as it has to be.
+        """
         with (yield from getDevice("remote")) as d:
             d.counter = 0
             yield from sleep(0.1)
