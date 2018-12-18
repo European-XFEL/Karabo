@@ -37,21 +37,35 @@ void NDArray_Test::tearDown() {
 void NDArray_Test::testConstructor() {
 
     const Dims shape(100, 200);
-    vector<int> someData(100*200, 2);
+    // Underlying data: all 2 but the first 100 entries which are 0 to 99
+    vector<int> someData(100 * 200, 2);
+    const int maxSeries = 100; // must be smaller than 124, see below!
+    for (int i = 0; i < maxSeries; ++i) {
+        someData[i] = i;
+    }
 
     Hash h;
 
     {
-        NDArray fly(shape, 2);
-        NDArray cpy(&someData[0], someData.size(), shape);
-        NDArray ref(&someData[0], someData.size(), NDArray::NullDeleter(), shape);
+        NDArray fly(shape, 2); // This NDArray has everything as 2
+        NDArray cpy(&someData[0], someData.size(), shape); // copy of someData using raw pointer
+        NDArray iCp(someData.begin(), someData.end(), shape); // copy of someData using iterator range
+        NDArray ref(&someData[0], someData.size(), NDArray::NullDeleter(), shape); // reference to someData
+
+        // Invalid iterator range throws like it does for std::vector - for both 'real' iterators and bare pointers:
+        CPPUNIT_ASSERT_THROW(NDArray(someData.begin() + 1, someData.begin()), std::bad_alloc);
+        CPPUNIT_ASSERT_THROW(NDArray(&(someData[1]), &(someData[0])), std::bad_alloc);
 
         const Dims& flyShape = fly.getShape();
         const Dims& cpyShape = cpy.getShape();
+        const Dims& iCpShape = iCp.getShape();
         const Dims& refShape = ref.getShape();
 
         CPPUNIT_ASSERT(flyShape.x1() == 100);
         CPPUNIT_ASSERT(flyShape.x2() == 200);
+        for (int i = 0; i < maxSeries; ++i) {
+            CPPUNIT_ASSERT_EQUAL(2, fly.getData<int>()[i]);
+        }
         CPPUNIT_ASSERT(fly.getData<int>()[124] == 2);
         CPPUNIT_ASSERT(fly.size() == 100 * 200);
         CPPUNIT_ASSERT_EQUAL(sizeof (int), fly.itemSize());
@@ -59,30 +73,58 @@ void NDArray_Test::testConstructor() {
 
         CPPUNIT_ASSERT(cpyShape.x1() == 100);
         CPPUNIT_ASSERT(cpyShape.x2() == 200);
+        for (int i = 0; i < maxSeries; ++i) {
+            CPPUNIT_ASSERT_EQUAL(i, cpy.getData<int>()[i]);
+        }
         CPPUNIT_ASSERT(cpy.getData<int>()[124] == 2);
         CPPUNIT_ASSERT(cpy.size() == 100 * 200);
         CPPUNIT_ASSERT_EQUAL(sizeof(int), cpy.itemSize());
         CPPUNIT_ASSERT_EQUAL(sizeof (int) * static_cast<size_t>(100 * 200), cpy.byteSize());
 
+        CPPUNIT_ASSERT(iCpShape.x1() == 100);
+        CPPUNIT_ASSERT(iCpShape.x2() == 200);
+        for (int i = 0; i < maxSeries; ++i) {
+            CPPUNIT_ASSERT_EQUAL(i, iCp.getData<int>()[i]);
+        }
+        CPPUNIT_ASSERT(iCp.getData<int>()[124] == 2);
+        CPPUNIT_ASSERT(iCp.size() == 100 * 200);
+        CPPUNIT_ASSERT_EQUAL(sizeof (int), iCp.itemSize());
+        CPPUNIT_ASSERT_EQUAL(sizeof (int) * static_cast<size_t> (100 * 200), iCp.byteSize());
+
         CPPUNIT_ASSERT(refShape.x1() == 100);
         CPPUNIT_ASSERT(refShape.x2() == 200);
+        for (int i = 0; i < maxSeries; ++i) {
+            CPPUNIT_ASSERT_EQUAL(i, ref.getData<int>()[i]);
+        }
         CPPUNIT_ASSERT(ref.getData<int>()[124] == 2);
         CPPUNIT_ASSERT(ref.size() == 100 * 200);
         CPPUNIT_ASSERT_EQUAL(sizeof(int), ref.itemSize());
         CPPUNIT_ASSERT_EQUAL(sizeof (int) * static_cast<size_t>(100 * 200), ref.byteSize());
 
-        cpy.getData<int>()[0] = 0;
-        CPPUNIT_ASSERT(someData[0] == 2);
+        // Setting content affects underlying data for ref, but not for cpy and iCp which have copied data:
+        cpy.getData<int>()[124] = 0;
+        CPPUNIT_ASSERT_EQUAL(0, cpy.getData<int>()[124]);
+        CPPUNIT_ASSERT(someData[124] == 2);
 
-        ref.getData<int>()[0] = 0;
-        CPPUNIT_ASSERT(someData[0] == 0);
+        iCp.getData<int>()[124] = 0;
+        CPPUNIT_ASSERT_EQUAL(0, iCp.getData<int>()[124]);
+        CPPUNIT_ASSERT(someData[124] == 2);
+
+        ref.getData<int>()[124] = 0;
+        CPPUNIT_ASSERT_EQUAL(0, ref.getData<int>()[124]);
+        CPPUNIT_ASSERT(someData[124] == 0);
 
         h.set("cpy", cpy);
+        h.set("iCp", iCp);
         h.set("ref", ref);
-    }   
+    }
 
+    // What we get from Hash is still a reference to someData:
     NDArray& ref = h.get<NDArray >("ref");
-    CPPUNIT_ASSERT(ref.getData<int>()[124] == 2);
+    CPPUNIT_ASSERT(ref.getData<int>()[124] == 0);
+    CPPUNIT_ASSERT_EQUAL(0, someData[124]);
+    ref.getData<int>()[124] = 124;
+    CPPUNIT_ASSERT_EQUAL(124, someData[124]);
     CPPUNIT_ASSERT(ref.getShape().x1() == 100);
     CPPUNIT_ASSERT(ref.size() == 100 * 200);
 }
