@@ -10,6 +10,7 @@
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Schema.hh>
 #include "karabo/util/DataLogUtils.hh"
+#include <boost/filesystem.hpp>
 #include <sstream>
 
 USING_KARABO_NAMESPACES;
@@ -141,6 +142,11 @@ void DataLogging_Test::tearDown() {
     m_sigSlot.reset();
     EventLoop::stop();
     m_eventLoopThread.join();
+
+    // Clean up directory - you may want to comment out these lines for debugging
+    boost::filesystem::remove("loggermap.xml");
+    boost::filesystem::remove_all("dataLoggingTest");
+
 }
 
 
@@ -152,7 +158,7 @@ void DataLogging_Test::allTestRunner() {
     Hash manager_conf;
     manager_conf.set("deviceId", "loggerManager");
     manager_conf.set("flushInterval", m_flushIntervalSec);
-    manager_conf.set("directory", "karaboHistory");
+    manager_conf.set("directory", "dataLoggingTest/karaboHistory");
     manager_conf.set<vector<string>>("serverList", {m_server});
     success = m_deviceClient->instantiate(m_server,
                                           "DataLoggerManager", manager_conf, KRB_TEST_MAX_TIMEOUT);
