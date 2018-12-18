@@ -1,0 +1,15 @@
+--- guiqwt-2.3.1/guiqwt/tools.py	2018-12-18 13:33:21.412095612 +0200
++++ guiqwt-2.3.1/guiqwt/tools.py	2018-12-18 14:33:21.412095612 +0200
+@@ -1316,7 +1316,11 @@ class BasePlotMenuTool(CommandTool):
+
+     def update_status(self, plot):
+         status = plot.get_plot_parameters_status(self.key)
+-        self.action.setEnabled(status)
++        if self.action:
++            try:
++                self.action.setEnabled(status)
++            except RuntimeError:
++                pass
+
+
+ class AntiAliasingTool(ToggleTool):
