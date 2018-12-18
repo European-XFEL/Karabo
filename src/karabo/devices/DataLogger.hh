@@ -11,7 +11,6 @@
 #define	KARABO_CORE_DATALOGGER_HH
 
 #include <fstream>
-#include <boost/filesystem.hpp>
 
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/core/Device.hh"
