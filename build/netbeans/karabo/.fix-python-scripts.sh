@@ -15,20 +15,13 @@ fi
 PACKAGEDIR=$1
 
 NEW_SHEBANG_LINE="#!/usr/bin/env python3"
-SED_PROGRAM='1 s%^.*$%'$NEW_SHEBANG_LINE'%g'
+CAPTURE="#![^#]*python.*"
+SED_PROGRAM='1 s%^'$CAPTURE'$%'$NEW_SHEBANG_LINE'%'
 
-PYTHON_ENTRY_POINTS=(convert-karabo-device convert-karabo-project
-    ikarabo karabo karabo-cli karabo-gui karabo-middlelayerserver
-    karabo-pythonserver karabo-start karabo-stop karabo-check
-    karabo-xterm karabo-gterm karabo-add-deviceserver
-    karabo-remove-deviceserver karabo-webserver karabo-kill
-    pannel-runner karabo-scene2py karabo-cinema
-)
-
-count=0
-while [ "x${PYTHON_ENTRY_POINTS[count]}" != "x" ]
+for script_name in $PACKAGEDIR/extern/bin/*
 do
-  script_name=${PYTHON_ENTRY_POINTS[count]}
-  [ -f $PACKAGEDIR/extern/bin/$script_name ] && sed -i "$SED_PROGRAM" $PACKAGEDIR/extern/bin/$script_name
-  count=$(($count + 1))
+  if grep -s -e '^'$CAPTURE'$' $script_name > /dev/null
+  then
+    sed -i "$SED_PROGRAM" $script_name
+  fi
 done
