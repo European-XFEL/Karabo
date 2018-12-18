@@ -90,8 +90,8 @@ namespace karabo {
 
             unsigned int m_channelId;
 
-            boost::mutex m_potFillingMutex;
-            boost::mutex m_processingMutex;
+            boost::mutex m_inactiveDataMutex;
+            boost::mutex m_activeDataMutex;
 
             int m_activeChunk;
             int m_inactiveChunk;
@@ -270,7 +270,7 @@ namespace karabo {
 
         private: // functions
 
-            void update();
+            // void update();
 
             void deferredNotificationsOfOutputChannelsForPossibleRead();
 
