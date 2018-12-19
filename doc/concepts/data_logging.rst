@@ -56,7 +56,6 @@ Data logging devices are hidden at user access levels lower than admin. Their
 instance id is given by the device instance id they log, prefixed with "Datalogger-".
 
 
-
 Retrieving Logged Information
 =============================
 
