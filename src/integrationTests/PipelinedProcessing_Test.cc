@@ -63,7 +63,7 @@ void PipelinedProcessing_Test::appTestRunner() {
     testPipeDrop();
 
     testPipeQueue();
-
+ 
     testPipeMinData();
 
     testPipeTwoPots();

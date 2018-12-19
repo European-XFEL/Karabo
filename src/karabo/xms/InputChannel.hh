@@ -100,6 +100,7 @@ namespace karabo {
             ConnectedOutputChannels m_connectedOutputChannels;
             OpenConnections m_openConnections;
 
+            boost::mutex m_isEndOfStreamMutex;
             bool m_isEndOfStream;
             bool m_respondToEndOfStream;
 
@@ -213,8 +214,6 @@ namespace karabo {
             void onTcpChannelRead(const karabo::net::ErrorCode& ec, karabo::net::Channel::Pointer channel,
                                   const karabo::util::Hash& header, const std::vector<karabo::io::BufferSet::Pointer>& data);
                                   
-            void swapBuffers();
-            
             bool canCompute() const;
 
             void notifyOutputChannelsForPossibleRead();
