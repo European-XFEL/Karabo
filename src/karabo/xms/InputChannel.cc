@@ -626,7 +626,7 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_TRACE << traceId << "Will call swapBuffers after processing input";
                         boost::mutex::scoped_lock inactiveDataLock(m_inactiveDataMutex);
                         size_t nInactiveData = Memory::size(m_channelId, m_inactiveChunk);
-                        if (nInactiveData < m_minData) {
+                        if (nInactiveData < this->getMinimumNumberOfData()) {
                             // Too early to process inactive Pot: has to reach minData
                             KARABO_LOG_FRAMEWORK_TRACE << traceId << "Too early to process inactive Pot: has to reach minData.";
                             return;
