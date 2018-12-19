@@ -404,12 +404,11 @@ void PipelinedProcessing_Test::testPipeQueue(unsigned int processingTime, unsign
 void PipelinedProcessing_Test::testPipeMinData() {
     std::clog << "---\ntestPipeMinData\n";
 
+    const unsigned int originalSenderDelay = m_deviceClient->get<unsigned int>(m_sender, "delay");
+
     const auto testStartTime = std::chrono::high_resolution_clock::now();
-    
-    // There's an undesired interdependency between the tests cases; this test only works if the sender delay
-    // is significatively high, more specifically 100 milliseconds.
-    // TODO: IMPORTANT: Stabilize the Output and Input Channels so that this kind of timing dependencies are eliminated.
-    //m_deviceClient->set(m_sender, "delay", 100u);
+
+    m_deviceClient->set(m_sender, "delay", 0u);
 
     // input.minData = 1 by default
     unsigned int minData = 5;
@@ -451,6 +450,9 @@ void PipelinedProcessing_Test::testPipeMinData() {
             << std::endl;
 
     std::clog << "Passed!\n\n";
+
+    // Restores the sender's delay to the value it had at the beginning of the test.
+    m_deviceClient->set(m_sender, "delay", originalSenderDelay);
 }
 
 
