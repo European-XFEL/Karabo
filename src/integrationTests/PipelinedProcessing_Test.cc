@@ -381,7 +381,7 @@ void PipelinedProcessing_Test::testPipeMinData() {
 
     const unsigned int originalSenderDelay = m_deviceClient->get<unsigned int>(m_sender, "delay");
 
-    m_deviceClient->set(m_sender, "delay", 100u);
+    m_deviceClient->set(m_sender, "delay", 0u);
 
     // input.minData = 1 by default
     unsigned int minData = 5;
