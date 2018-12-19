@@ -214,7 +214,6 @@ It is the counterpart to ``INCREASING``.
     This also means that if a change of target value is to be allowed while
     the device is still changing to a previously set target value, the slot
     initiating the move needs to have ``CHANGING`` as an allowed state.
-    See Section :ref:`open_closed_loop` for details.
 
 
 .. warning::
