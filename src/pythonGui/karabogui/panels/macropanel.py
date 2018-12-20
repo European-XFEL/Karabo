@@ -86,10 +86,12 @@ class MacroPanel(BasePanelWidget):
             model = data.get('model')
             if model is self.model:
                 self.connect(data.get('instance'))
+            return True
         elif sender is KaraboEventSender.DeviceInitReply:
             macro_instance = data.get('device')
             if macro_instance.device_id in self.model.instance_id:
                 self.init_reply(data.get('success'), data.get('message'))
+            return True
         return False
 
     def closeEvent(self, event):
@@ -147,9 +149,9 @@ class MacroPanel(BasePanelWidget):
         self.ui_console.insertPlainText(binding.value)
 
     def init_reply(self, ok, message):
-        self.ui_console.moveCursor(QTextCursor.End)
         self.ui_console.insertPlainText(message)
         self.ui_console.insertPlainText("\n")
+        self.ui_console.moveCursor(QTextCursor.End)
 
     @pyqtSlot()
     def on_run(self):
