@@ -177,12 +177,9 @@ class Broker:
             self.send(p, reply)
 
     def replyException(self, message, exception):
-        tb = exception.__traceback__
-        code = tb.tb_frame.f_code
-        self.reply(message, (
-            traceback.format_exception_only(type(exception), exception),
-            code.co_filename, code.co_name, tb.tb_lineno,
-            traceback.format_exc()), error=True)
+        trace = ''.join(traceback.format_exception(
+            type(exception), exception, exception.__traceback__))
+        self.reply(message, trace, error=True)
 
     def connect(self, deviceId, signal, slot):
         self.emit("call", {deviceId: ["slotConnectToSignal"]}, signal,
