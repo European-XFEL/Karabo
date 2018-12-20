@@ -114,7 +114,7 @@ class MainWindow(QMainWindow):
         if sender is KaraboEventSender.brokerInformationUpdate:
             self._update_broker_connection(data)
             return True  # Nobody else should handle this event!
-        if sender is KaraboEventSender.DatabaseIsBusy:
+        elif sender is KaraboEventSender.DatabaseIsBusy:
             self._database_is_processing(data.get('is_processing'))
         elif sender is KaraboEventSender.MaximizePanel:
             self._panelContainerMaximized(data.get('container'))
@@ -244,6 +244,11 @@ class MainWindow(QMainWindow):
 
     def _setupStatusBar(self):
         self.statusBar().showMessage('Ready...')
+        self.guiServerHost = QLabel()
+        self.statusBar().addPermanentWidget(self.guiServerHost)
+        expander = QWidget()
+        expander.setFixedWidth(25)
+        self.statusBar().addPermanentWidget(expander)
         self.brokerInformation = QLabel()
         self.statusBar().addPermanentWidget(self.brokerInformation)
 
@@ -399,11 +404,21 @@ class MainWindow(QMainWindow):
         """Update the status bar with our broker connection information
         """
         if data is not None:
-            info = ('KARABO TOPIC: <b>{}</b>'.format(data['topic']))
+            info = 'KARABO TOPIC: <b>{}</b>'.format(data['topic'])
             self.brokerInformation.setText(info)
+            # Store this information in the config singleton!
             get_config()["broker_topic"] = data['topic']
+
+            # Don't show for older GUI servers
+            hostname = data.get('hostname', None)
+            hostport = data.get('hostport', None)
+            if hostname is not None and hostport is not None:
+                info = 'GUI SERVER: <b>{}:{}</b>'.format(hostname, hostport)
+                self.guiServerHost.setText(info)
         else:
             self.brokerInformation.setText("")
+            self.guiServerHost.setText("")
+
     # --------------------------------------
     # Qt slots
 
