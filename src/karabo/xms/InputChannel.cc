@@ -183,19 +183,12 @@ namespace karabo {
 
 
         const InputChannel::MetaData& InputChannel::read(karabo::util::Hash& data, size_t idx) {
-            //KARABO_LOG_FRAMEWORK_WARN << "read(hash, size_t): will acquire lock on m_dataReadMutex";
-            //boost::mutex::scoped_lock readLock(m_dataReadMutex);
-            //KARABO_LOG_FRAMEWORK_WARN << "read(hash, size_t): acquired lock on m_dataReadMutex";
             Memory::read(data, idx, m_channelId, m_activeChunk);
-            //KARABO_LOG_FRAMEWORK_WARN << "read(hash, size_t): released lock on m_dataReadMutex";
             return m_metaDataList[idx];
         }
 
 
         karabo::util::Hash::Pointer InputChannel::read(size_t idx) {
-            //            KARABO_LOG_FRAMEWORK_WARN << "read(size_t): will acquire lock on m_dataReadMutex";
-            //            boost::mutex::scoped_lock readLock(m_dataReadMutex);
-            //            KARABO_LOG_FRAMEWORK_WARN << "read(size_t): acquired lock on m_dataReadMutex";
             karabo::util::Hash::Pointer hash(new karabo::util::Hash());
             Memory::read(*hash, idx, m_channelId, m_activeChunk);
             return hash;
@@ -203,9 +196,6 @@ namespace karabo {
 
 
         karabo::util::Hash::Pointer InputChannel::read(size_t idx, InputChannel::MetaData& metaData) {
-            //            KARABO_LOG_FRAMEWORK_WARN << "read(size_t, InputChannel, Metadata): will acquire lock on m_dataReadMutex";
-            //            boost::mutex::scoped_lock readLock(m_dataReadMutex);
-            //            KARABO_LOG_FRAMEWORK_WARN << "read(size_t, InputChannel, Metadata): acquired lock on m_dataReadMutex";
             auto hash = boost::make_shared<karabo::util::Hash>();
             Memory::read(*hash, idx, m_channelId, m_activeChunk);
             metaData = m_metaDataList[idx];
