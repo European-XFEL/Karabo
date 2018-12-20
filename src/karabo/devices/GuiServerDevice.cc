@@ -377,7 +377,13 @@ namespace karabo {
                 //brokerInfo.set("url", getConnection()->getBrokerUrl());
                 brokerInfo.set("host", "exfl-broker.desy.de"); // TODO Kill once it's clear the GUI does not need that
                 brokerInfo.set("port", 7777); // TODO Kill once it's clear the GUI does not need that
+
+                // Required information on InitInfo
                 brokerInfo.set("topic", m_topic);
+                brokerInfo.set("hostname", get<std::string>("hostName"));
+                brokerInfo.set("hostport", get<unsigned int>("port"));
+                brokerInfo.set("deviceId", getInstanceId());
+
                 channel->writeAsync(brokerInfo);
 
                 // Re-register acceptor socket (allows handling multiple clients)
@@ -503,7 +509,7 @@ namespace karabo {
                 if (clientVersion >= systemProtocolVersion) {
                     sendSystemVersion(channel);
                 }
-                
+
                 if (clientVersion >= minVersion) {
                     sendSystemTopology(channel);
                     return;
