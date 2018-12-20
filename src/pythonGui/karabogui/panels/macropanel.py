@@ -149,9 +149,9 @@ class MacroPanel(BasePanelWidget):
         self.ui_console.insertPlainText(binding.value)
 
     def init_reply(self, ok, message):
-        self.ui_console.moveCursor(QTextCursor.End)
         self.ui_console.insertPlainText(message)
         self.ui_console.insertPlainText("\n")
+        self.ui_console.moveCursor(QTextCursor.End)
 
     @pyqtSlot()
     def on_run(self):
