@@ -11,7 +11,7 @@ bindings, the native Python package and the pyQt-based GUI.
    pythonApiBound
    pythonApiMiddlelayer
    serviceDevices
-   interfaces
+   states
    testing
    reference
    dataLogger
