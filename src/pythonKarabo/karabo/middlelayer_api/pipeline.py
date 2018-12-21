@@ -370,7 +370,24 @@ class OutputProxy(SubProxyBase):
     """A Proxy for an output channel
 
     This represents an output channel on a device. Output channels are
-    not connected automatically, but may be connected using :meth:`connect`.
+    not connected automatically, but may be connected using :meth:`connect`::
+
+        device = connectDevice("someDevice")
+        # Assuming the output channel has the key `output`
+        device.output.connect()
+
+    The default pipeline settings:
+
+        dataDistribution = "copy"
+        onSlowness = "drop"
+
+    By default the proxy applies the meta data timestamp to the received data.
+    This can be switched to the Hash timestamp by setting the ``meta``
+    attribute to ``False``.
+
+        device = connectDevice("someDevice")
+        device.output.meta = False
+        device.output.connect()
     """
     schema = None
 
@@ -381,6 +398,8 @@ class OutputProxy(SubProxyBase):
         self.networkInput.handler = self.handler
         self.task = None
         self.initialized = False
+        # Define if we apply meta data to the pipeline data on the proxy
+        self.meta = True
 
     def setDataHandler(self, handler):
         """Redirect the output of the pipelining proxy before connecting
@@ -404,8 +423,13 @@ class OutputProxy(SubProxyBase):
 
     @coroutine
     def handler(self, data, meta):
+        # Only apply if we have a schema!
         if self.schema is not None:
-            self._parent._onChanged_r(data, self.schema)
+            if self.meta and meta.timestamp:
+                self._parent._onChanged_timestamp_r(
+                    data, meta.timestamp.timestamp, self.schema)
+            else:
+                self._parent._onChanged_r(data, self.schema)
 
     def connect(self):
         """Connect to the output channel
