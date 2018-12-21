@@ -27,9 +27,9 @@ class Test__CLASS_NAME__(DeviceTest):
             yield
 
     @async_tst
-    def test_greet(self):
+    async def test_greet(self):
         for greet in ("Buongiorno", "Guten Tag", "Moin Moin"):
             self.dev.greeting = greet
             self.assertEqual(self.dev.greeting.value, greet)
-            yield from self.dev.hello()
+            await self.dev.hello()
             self.assertEqual(self.dev.greeting.value, "Hello world!")
