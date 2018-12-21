@@ -11,7 +11,7 @@ BLACKLIST = ['setup.py', '__init__.py']
 def get_python_files():
     """Get all python files from this package
     """
-    common_dir = op.abspath(op.dirname(karabacon.__file__))
+    common_dir = op.abspath(op.dirname(__PACKAGE_NAME__.__file__))
     flake_check = []
     for dirpath, _, filenames in os.walk(common_dir):
         if dirpath.endswith('tests'):
