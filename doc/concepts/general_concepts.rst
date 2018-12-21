@@ -36,76 +36,6 @@ usage *domain*, device *type* and *member* instance into a "/" separated path:
 
    <domain>/<type>/<member>
 
-Details on how instance names are to be assigned can be found in Section
-:ref:`naming_convention`.
-
-Device Flavors
-++++++++++++++
-
-In Karabo devices come in two general flavors: *bound* devices and *middle-layer* devices.
-*bound* devices are usually devices which
-
-	- interact with **hardware**, either directly, via (Beckhoff) PLCs, SCPI interfaces or
-	  mPod and :math:`\mu` TCA functionality;
-	- or implement **algorithms** working as part of a `point-to-point interface`
-	  workflow (see Section :ref:`p2p`).
-
-Bound devices
-~~~~~~~~~~~~~~
-
-*Bound* devices may be implemented either in C++ using the application
-programming interface (API), introduced in Section :ref:`cpp_api`, or using
-the Python API described in Section :ref:`python_api`. Bound devices must
-**not** be implemented using the middle-layer device Python API, as this is
-not feature complete in this respect, e.g. it does not allow for
-strict typing.
-
-.. note::
-
-	The *driver* device Python API may not seem *pythonic* for seasoned Python programmers.
-	This was chosen purposely so that the Python API and the C++ API
-	are as similar as possible, allowing developers to more easily implement in both
-	APIs. In this way the choice of language can focus on the problem at hand, and not be
-	impacted by having to learn a new API.
-
-Middle-layer Devices
-~~~~~~~~~~~~~~~~~~~~
-
-*Middle-layer* devices on the other hand are generally used to define aggregate
-functionality over multiple bound devices. This might be the case when driving multiple
-axes of a motor (semi-)simultaneously, driving a slit, ramping a group of channels
-on a power supply or managing a multi-component processing pipeline.
-*Middle-layer* devices generally exhibit one or more of the following functional
-requirements, resulting from *composition* over device boundaries:
-
-	- interact with multiple devices to drive/monitor them in a coordinated fashion
-	- provide an aggregate state over multiple devices
-	- drive/manage common states across multiple devices
-	- distribute common data to multiple devices
-	- group hardware logically split into multiple devices into a single physical component
-
-Because we compose behavior over multiple device instances such middle-layer devices are
-called *composite* devices.
-
-A second flavor of middle-layer devices are so-called *channel* devices. These are useful
-if a group of hardware components is accessed via a hardware controller, e.g. a MPOD crate
-driving many supply channels. In such a case it may be beneficial to expose individual
-channels as individual devices to the user, as a single crate may drive multiple different
-applications. Middle-layer devices should then be used as proxies to a driver device
-communicating with the controller - this is the inverse to the concept of composite
-devices.
-
-Middle layer devices may be implemented in either API, although it is recommended to use
-the specialized middle-layer API whenever possible, which provides convenient and concise
-access to events triggered by other devices.
-
-.. note::
-
-	The middle-layer API intentionally follows Python codings standards, as set by PEPs
-	more closely, emphasizing a concise and efficient coding style. This is intended to
-	allow for rapid coding of middle-layer devices. Deviations from Python standards exist,
-	and are used whenever a more expressive syntax aids in code understanding.
-
 Device Implementation
 =====================
 
@@ -117,11 +47,6 @@ provided.
 
 Device Slots
 ++++++++++++
-
-.. note::
-
-	The Examples shown in this section apply to C++ and Python API devices. Examples for
-	*middle-layer* devices are given in Section :ref:`middle_layer_api`.
 
 *Device slots* can conceptually be seen as member functions of a C++ or Python
 class which are additionally exposed to all other devices in the control
@@ -286,16 +211,14 @@ Every device is subscribed as a client to a central message broker. All devices 
 with their device names. The broker uses these names for message routing during the
 request / reply communication. The requesting instance generates a unique ID for each
 request, which is shipped with the message and is used for blocking and unblocking or
-registering and finding a provided callback, respectively. Details on Broker communication
-can be found in Section :ref:`broker`.
+registering and finding a provided callback, respectively.
 
 Device Properties
 +++++++++++++++++
 
 .. note::
 
-	Property access is simplified in *middle-layer* devices. Please refer the Section
-	:ref:`middle_layer_api` for examples.
+	Property access is simplified in *middle-layer* devices.
 
 Device properties are the equivalent to public members in C++ or properties in Python,
 i.e. they are class member variables which you would like to expose to the outside world,
@@ -304,7 +227,7 @@ they directly correspond to attributes; in the DOOCS world they correspond to pr
 
 In Karabo they are defined statically in the so-called ``expectedParameters`` section.
 Properties may be of any of the types specified in Section :ref:`data_types` and may have
-received further specification using attributes (Section :ref:`attributes`). Alongside
+received further specification using attributes. Alongside
 methods, properties constitute an integral part of a device's self description, as defined
 by its ``Schema``. By defining a property the following is implied
 
@@ -388,42 +311,6 @@ programmer defines node types which can be used in this list::
             .commit()
         )
 
-
-Which Type of Device to Write
-+++++++++++++++++++++++++++++
-
-The type of device, *bound* or *middle-layer*, depends on how your intended application fits
-into the classification scheme described in the previous section. If you are in doubt
-contact the CAS group for assistance. If direct hardware-access or p2p-interfaces are
-involved the usage of *bound* devices is usually the right way to go.
-
-C++ or Python
-~~~~~~~~~~~~~
-
-If you are writing a middle-layer device the choice is simple, as you will be using a
-Python API. While the middle-layer API at first glance is slender and pythonic, it hides
-most of the explicit calls (in terms of asynchronicity) exposed by the other APIs in the
-back-end. Programmers are thus advised to make themselves familiar with what may
-*actually* happen upon a seemingly innocent property assignment as
-described in Section :ref:`middle_layer_api`.
-
-If the application at hand requires use of a bound device you can choose between the C++
-API or the Python API binding to it. Both are intentionally kept similar in syntax,
-even if this may seem *un-pythonic* at times. Every so often the choice will simply depend
-on your personal programming preferences, i.e. if you are more comfortable in the one or
-the other languages. Both APIs are feature-complete with respect to each other (but not to
-the middle-layer API, although is much more true vice versa).
-
-Traditionally, one might want to select C++ for performance critical applications. If you
-plan on doing heavy computations, first ask yourself if you can efficiently vectorize the problem
-using e.g. Numpy or Scipy in Python. Experience shows that it is often difficult even for seasoned
-programmers to reach the performance of Numpy *ufuncs*, i.e. those numpy/scipy calls which
-bind to C++ or FORTRAN code underneath.
-
-If you require explicit static typing and compile-time type checking C++ is the way to go.
-For the sake of brevity most code examples given in the following will by in the Python API
-unless otherwise indicated.
-
 Device Version vs. Karabo Version
 +++++++++++++++++++++++++++++++++
 
@@ -475,27 +362,6 @@ provide the `registerInitialFunction(func)*` method, which can be used to regist
 function to be called at the end of device initialization, i.e. after the device
 properties' initial values have been set and are available through the *get* and *set*
 methods. Usually, this function should bring the device into an initial known state.
-
-
-Device Servers
-==============
-
-Device servers are the hosts for Karabo devices. They are responsible for loading the
-device code and running the device in an event loop, i.e. keeping it live and available
-to the distributed system. Device servers come in three flavors: C++, Python and
-middle-layer device servers. In addition to the user instantiated devices Karabo auxiliary
-devices are run on device servers. These are:
-
-- the data logging service (see Section :ref:`data_logging`)
-- the gui server device (see Section :ref:`gui_server`)
-- the project manager device
-- the alarm service device
-- the run configuration device
-
-
-Device servers are configured to integrate the devices they host and then deployed to the
-hosts they run on. Section :ref:`deployment` contains details on configuring and initiating
-deployment from within Karabo.
 
 Events vs. Polling on bound devices
 ====================================
