@@ -15,7 +15,6 @@ Contents:
    introduction
    general_concepts
    broker
-   states
    alarm_system
    run_configuration
 
