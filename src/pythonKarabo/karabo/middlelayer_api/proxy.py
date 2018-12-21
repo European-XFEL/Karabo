@@ -101,6 +101,24 @@ class ProxyBase(_ProxyBase):
                     instance.__dict__[descr.key] = converted
                     self._notifyChanged(descr, converted)
 
+    def _onChanged_timestamp_r(self, change, timestamp, instance):
+        """Recursively set data on a proxy with a fixed timestamp
+
+        This function can be optionally used for pipeline data
+        """
+        for k, v, a in change.iterall():
+            descr = getattr(type(instance), k, None)
+            if descr is not None:
+                if isinstance(descr, ProxyNodeBase):
+                    self._onChanged_timestamp_r(
+                        v, timestamp, getattr(instance, descr.key))
+                elif not isinstance(descr, ProxySlotBase):
+                    converted = descr.toKaraboValue(v, strict=False)
+                    converted.timestamp = timestamp
+                    converted._parent = self
+                    instance.__dict__[descr.key] = converted
+                    self._notifyChanged(descr, converted)
+
     def _onChanged(self, change):
         """call this when the remote device changed
 
