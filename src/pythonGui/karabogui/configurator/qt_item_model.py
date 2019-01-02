@@ -24,9 +24,9 @@ from karabogui.const import (
 from karabogui.indicators import get_state_color, STATE_COLORS
 from karabogui.request import send_property_changes
 from .utils import (
-    dragged_configurator_items, get_child_names, get_device_locked_string,
-    get_device_state_string, get_icon, get_proxy_value, is_mandatory,
-    threshold_triggered)
+    dragged_configurator_items, get_attr_icon, get_child_names,
+    get_device_locked_string, get_device_state_string, get_icon,
+    get_proxy_value, is_mandatory, threshold_triggered)
 
 
 def _friendly_repr(proxy, value):
@@ -530,7 +530,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
             if role == Qt.DisplayRole:
                 return name
             elif role == Qt.DecorationRole:
-                return get_icon(binding)
+                return get_attr_icon(binding, name)
         elif column in (1, 2):
             if role == Qt.DisplayRole:
                 return str(value)
