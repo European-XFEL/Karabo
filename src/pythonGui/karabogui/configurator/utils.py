@@ -168,6 +168,24 @@ def get_icon(binding):
     return icon
 
 
+def get_attr_icon(binding, name):
+    """Get the proper attribute icon to show next to an attribute
+    """
+    if name in ('daqPolicy', 'metricPrefixSymbol', 'unitSymbol'):
+        return icons.enumAttribute
+    icon = icons.undefinedAttribute
+    if isinstance(binding, IntBinding):
+        icon = icons.intAttribute
+    elif isinstance(binding, FloatBinding):
+        icon = icons.floatAttribute
+    elif isinstance(binding, BoolBinding):
+        icon = icons.booleanAttribute
+    elif isinstance(binding, (StringBinding, CharBinding)):
+        icon = icons.stringAttribute
+
+    return icon
+
+
 def get_proxy_value(index, proxy, is_edit_col=False):
     """Return the actual value of the given `proxy`, depending on whether this
     is requested for an editable column
