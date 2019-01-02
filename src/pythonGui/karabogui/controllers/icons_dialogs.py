@@ -157,18 +157,20 @@ class _BaseDialog(QDialog):
     @pyqtSlot()
     def on_up_clicked(self):
         cr = self.valueList.currentRow()
-        if not 0 < cr < len(self.items) - 1:
+        if not 0 < cr <= len(self.items) - 1:
             return
         self.valueList.insertItem(cr - 1, self.valueList.takeItem(cr))
         self.items[cr - 1], self.items[cr] = self.items[cr], self.items[cr - 1]
+        self.valueList.setCurrentRow(cr - 1)
 
     @pyqtSlot()
     def on_down_clicked(self):
         cr = self.valueList.currentRow()
-        if cr >= len(self.items) - 2:
+        if cr >= len(self.items) - 1:
             return
         self.valueList.insertItem(cr + 1, self.valueList.takeItem(cr))
         self.items[cr + 1], self.items[cr] = self.items[cr], self.items[cr + 1]
+        self.valueList.setCurrentRow(cr + 1)
 
     def exec_(self):
         super(_BaseDialog, self).exec_()
