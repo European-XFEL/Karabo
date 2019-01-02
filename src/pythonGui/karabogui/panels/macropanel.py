@@ -3,8 +3,8 @@
 # Created in June 2014
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import pyqtSlot, Qt, QEvent
-from PyQt4.QtGui import QPlainTextEdit, QSplitter, QTextCursor
+from PyQt4.QtCore import pyqtSlot, Qt, QEvent, QPoint
+from PyQt4.QtGui import QMenu, QPlainTextEdit, QSplitter, QTextCursor
 
 try:
     from qtconsole.pygments_highlighter import PygmentsHighlighter
@@ -59,6 +59,10 @@ class MacroPanel(BasePanelWidget):
         self.ui_console = QPlainTextEdit(widget)
         self.ui_console.setReadOnly(True)
         self.ui_console.setStyleSheet("font-family: monospace")
+        self.ui_console.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ui_console.customContextMenuRequested.connect(
+            self._show_context_menu)
+
         widget.addWidget(self.ui_console)
 
         return widget
@@ -113,7 +117,7 @@ class MacroPanel(BasePanelWidget):
         if macro_instance not in self.already_connected:
             macro_proxy = get_topology().get_device(macro_instance)
             self.ui_console.moveCursor(QTextCursor.End)
-            self.ui_console.insertPlainText('connecting to {} '
+            self.ui_console.insertPlainText('Connecting to {} '
                                             '...'.format(macro_instance))
             macro_proxy.on_trait_change(self.finish_connection,
                                         'schema_update')
@@ -137,7 +141,7 @@ class MacroPanel(BasePanelWidget):
             # start monitoring property
             text_proxy.start_monitoring()
             self.ui_console.moveCursor(QTextCursor.End)
-            self.ui_console.insertPlainText(' connection done\n')
+            self.ui_console.insertPlainText('Connection done!\n')
             self.already_connected[macro_proxy.device_id] = text_proxy
         macro_proxy.on_trait_change(self.finish_connection,
                                     'schema_update', remove=True)
@@ -149,9 +153,20 @@ class MacroPanel(BasePanelWidget):
         self.ui_console.insertPlainText(binding.value)
 
     def init_reply(self, ok, message):
+        self.ui_console.moveCursor(QTextCursor.End)
         self.ui_console.insertPlainText(message)
         self.ui_console.insertPlainText("\n")
         self.ui_console.moveCursor(QTextCursor.End)
+
+    @pyqtSlot(QPoint)
+    def _show_context_menu(self, pos):
+        """Show a context menu"""
+        menu = QMenu()
+        clear_action = menu.addAction('Clear Console')
+        clear_action.triggered.connect(self.ui_console.clear)
+        select_action = menu.addAction('Select All')
+        select_action.triggered.connect(self.ui_console.selectAll)
+        menu.exec_(self.ui_console.viewport().mapToGlobal(pos))
 
     @pyqtSlot()
     def on_run(self):
