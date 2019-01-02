@@ -65,6 +65,8 @@ class IconItem(IconData):
     def _get_pixmap(self):
         if not self.data:
             pixmap = icons.no.pixmap(100)
+            # NOTE: This is nice, the ``_create_temp_url will`` create
+            # an image which itself triggers a trait handler to set the data.
             _create_temp_url(self, pixmap)
             return pixmap
 
@@ -205,6 +207,8 @@ class DigitDialog(_BaseDialog):
                         equal=self.lessEqual.isChecked())
         self.items.insert(idx, item)
         self.valueList.insertItem(idx, self.text_for_item(item))
+        # Trigger the imageView to generate default data!
+        self._update_image(item)
 
     def text_for_item(self, item):
         if item.value is None:
@@ -231,6 +235,8 @@ class TextDialog(_BaseDialog):
         item = IconItem(value=self.textValue.text())
         self.items.insert(0, item)
         self.valueList.insertItem(0, self.textValue.text())
+        # Trigger the imageView to generate default data!
+        self._update_image(item)
 
     def text_for_item(self, item):
         if not item.value:
