@@ -93,8 +93,8 @@ class _BaseDialog(QDialog):
     def __init__(self, items):
         super(_BaseDialog, self).__init__()
         uic.loadUi(op.join(op.dirname(__file__), 'icons.ui'), self)
-
-        self.items = list(items)  # Force a copy!
+        # Get a copy!
+        self.items = list(items)
         self.valueList.addItems([self.text_for_item(item) for item in items])
         self.valueList.setCurrentRow(0)
 
@@ -173,10 +173,6 @@ class _BaseDialog(QDialog):
         self.valueList.insertItem(cr + 1, self.valueList.takeItem(cr))
         self.items[cr + 1], self.items[cr] = self.items[cr], self.items[cr + 1]
         self.valueList.setCurrentRow(cr + 1)
-
-    def exec_(self):
-        super(_BaseDialog, self).exec_()
-        return self.items
 
 
 class DigitDialog(_BaseDialog):
