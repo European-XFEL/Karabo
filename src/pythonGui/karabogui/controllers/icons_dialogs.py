@@ -208,7 +208,7 @@ class DigitDialog(_BaseDialog):
         self.items.insert(idx, item)
         self.valueList.insertItem(idx, self.text_for_item(item))
         # Trigger the imageView to generate default data!
-        self._update_image(item)
+        self.valueList.setCurrentRow(idx)
 
     def text_for_item(self, item):
         if item.value is None:
@@ -236,7 +236,7 @@ class TextDialog(_BaseDialog):
         self.items.insert(0, item)
         self.valueList.insertItem(0, self.textValue.text())
         # Trigger the imageView to generate default data!
-        self._update_image(item)
+        self.valueList.setCurrentRow(0)
 
     def text_for_item(self, item):
         if not item.value:
