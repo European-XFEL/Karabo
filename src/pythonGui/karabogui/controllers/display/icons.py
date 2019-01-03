@@ -1,6 +1,6 @@
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QAction, QLabel
-from traits.api import Instance, Type, on_trait_change
+from traits.api import Instance, on_trait_change, Type, Undefined
 
 from karabo.common.scenemodel.api import (
     DigitIconsModel, SelectionIconsModel, TextIconsModel)
@@ -58,13 +58,15 @@ class _BaseIcons(BaseBindingController):
 
 
 @register_binding_controller(ui_name='Icons', binding_type=NUMERICAL_BINDINGS,
-                             klassname='DigitIcons', is_compatible=has_options)
+                             klassname='DigitIcons')
 class DigitIcons(_BaseIcons):
     model = Instance(DigitIconsModel, args=())
     dialog_klass = Type(DigitDialog)
 
     def value_update(self, proxy):
         value = proxy.value
+        if value is Undefined:
+            return
         for item in self.model.values:
             if (value < float(item.value) or
                     value == float(item.value) and item.equal):
@@ -90,6 +92,8 @@ class SelectionIcons(_BaseIcons):
 
     def value_update(self, proxy):
         value = proxy.value
+        if value is Undefined:
+            return
         for item in self.model.values:
             if item.value == value:
                 self.set_pixmap(item.pixmap)
