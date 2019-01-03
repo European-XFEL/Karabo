@@ -1,5 +1,5 @@
 from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QAction, QLabel
+from PyQt4.QtGui import QAction, QDialog, QLabel
 from traits.api import Instance, on_trait_change, Type, Undefined
 
 from karabo.common.scenemodel.api import (
@@ -38,7 +38,6 @@ class _BaseIcons(BaseBindingController):
                      if not isinstance(it, IconItem) else it
                      for it in self.model.values]
         self.model.trait_setq(values=converted)
-
         # Maybe update the widget
         if (self.widget is not None and
                 get_binding_value(self.proxy) is not None):
@@ -48,7 +47,11 @@ class _BaseIcons(BaseBindingController):
     def _on_change_icons(self):
         binding = self.proxy.binding
         dialog = self.dialog_klass(self.model.values, binding)
-        self.model.values = dialog.exec_()
+        if dialog.exec_() == QDialog.Accepted:
+            self.model.values = dialog.items
+            # The trait handler won't fire as are using a list, hence, we force
+            # an update!
+            self._force_update()
 
     def set_pixmap(self, p):
         if p is None:
@@ -113,6 +116,8 @@ class TextIcons(_BaseIcons):
 
     def value_update(self, proxy):
         value = proxy.value
+        if value is Undefined:
+            return
         for it in self.model.values:
             if it.re.match(value):
                 self.set_pixmap(it.pixmap)
