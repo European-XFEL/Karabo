@@ -4,10 +4,13 @@ from karabo.middlelayer_api.weak import Weak
 
 class Tests(TestCase):
     def test_attribute(self):
+
         class A:
             w = Weak()
+
         class B:
             pass
+
         sentinel = B()
 
         self.assertIsInstance(A.w, Weak)
@@ -29,3 +32,7 @@ class Tests(TestCase):
         self.assertIs(a.w, sentinel)
         del sentinel
         self.assertIs(a.w, None)
+
+
+if __name__ == "__main__":
+    main()
