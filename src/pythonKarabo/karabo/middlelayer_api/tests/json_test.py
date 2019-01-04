@@ -6,7 +6,7 @@ import numpy
 
 from karabo.middlelayer import (
     AccessMode, BoolValue, EnumValue, Hash, KaraboJSONEncoder, NoneValue,
-    QuantityValue, VectorCharValue, StringValue, VectorStringValue)
+    QuantityValue, StringValue, VectorStringValue)
 
 
 class Tests(TestCase):
@@ -37,9 +37,10 @@ class Tests(TestCase):
                  "g", VectorStringValue([]), "h", QuantityValue(34),
                  "i", QuantityValue(numpy.arange(2)))
 
-        self.assert_json_equal(h,
-            '''{"a": false, "b": null, "c": 2, "e": "def", "f": ["a", "b"],
+        self.assert_json_equal(
+            h, '''{"a": false, "b": null, "c": 2, "e": "def", "f": ["a", "b"],
                 "g": [], "h": 34, "i": [0, 1]}''')
+
 
 if __name__ == "__main__":
     main()

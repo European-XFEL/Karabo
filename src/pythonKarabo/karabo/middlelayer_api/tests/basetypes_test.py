@@ -5,7 +5,7 @@ from unittest import TestCase, main
 import pint
 import numpy
 
-from karabo.middlelayer import decodeBinary, encodeBinary, unit
+from karabo.middlelayer import encodeBinary, unit
 from karabo.middlelayer_api.enums import Unit, MetricPrefix
 from karabo.middlelayer_api.basetypes import (
     NoneValue, QuantityValue, isSet, StringValue, VectorCharValue, BoolValue,

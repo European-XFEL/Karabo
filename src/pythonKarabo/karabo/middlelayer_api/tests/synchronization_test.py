@@ -239,11 +239,13 @@ class Tests(DeviceTest):
             pass
 
         exception = RuntimeError()
+
         @coroutine
         def raisor():
             raise exception
         done, pending, error = yield from firstCompleted(
             sleep(100), slow=sleep(1000), err=raisor())
+
         self.assertFalse(done)
         self.assertEqual(set(pending.keys()), {0, "slow"})
         self.assertEqual(error, {"err": exception})
@@ -251,6 +253,7 @@ class Tests(DeviceTest):
     @async_tst
     def test_allCompleted(self):
         exception = RuntimeError()
+
         @coroutine
         def raisor():
             raise exception
@@ -290,9 +293,11 @@ class Tests(DeviceTest):
     @async_tst
     def test_firstException(self):
         exception = RuntimeError()
+
         @coroutine
         def raisor():
             raise exception
+
         done, pending, error = yield from firstException(
             sleep(100), slow=sleep(1000), fast=sleep(0.001, "result"),
             err=raisor(), timeout=0.01)
@@ -300,7 +305,6 @@ class Tests(DeviceTest):
         self.assertFalse(done)
         self.assertEqual(error, {"err": exception})
         self.assertEqual(set(pending.keys()), {0, "slow", "fast"})
-
 
     @async_tst
     def test_futuredict(self):
@@ -320,6 +324,7 @@ class Tests(DeviceTest):
         futuredict["power"] = "lightning"
 
         futuredict["whatever"] = 3  # should be a no-op
+
 
 if __name__ == "__main__":
     main()
