@@ -4,7 +4,6 @@ from contextlib import closing
 import gc
 from itertools import count
 import os
-import socket
 import time
 from unittest import TestCase, main, skip
 import uuid
