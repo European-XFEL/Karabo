@@ -50,6 +50,7 @@ class SparkRenderer(QWidget):
         self.no_pen = QPen(Qt.blue, 1, Qt.SolidLine)
 
         self.yrange = None
+        self.reset_range = False
         self.ystep = None
         self.tvals = np.arange(self._p_max)
 
@@ -311,10 +312,11 @@ class SparkRenderer(QWidget):
         they are indicated.
         """
         # the y range which simply needs to scale to new maxima and minima
-        if self.yrange is None:
+        if self.yrange is None or self.reset_range:
             # initially only single value
             self.yrange = (min(0.9*value, 1.1*value),
                            max(0.9*value, 1.1*value))
+            self.reset_range = False
         else:
             self.yrange = min(value, *self.yrange), max(value, *self.yrange)
 
@@ -363,15 +365,15 @@ class DisplaySparkline(BaseBindingController):
         self.line_edit.setVisible(self.model.show_value)
         layout.addWidget(self.render_area)
 
-        # display options
-        @pyqtSlot(bool)
-        def toggle_show_value(stat):
-            self.model.show_value = stat
-
         action_show_value = QAction("Show value", widget, checkable=True)
-        action_show_value.toggled.connect(toggle_show_value)
+        action_show_value.toggled.connect(self.toggle_show_value)
         action_show_value.setChecked(self.model.show_value)
         widget.addAction(action_show_value)
+
+        action_alarms = QAction("Show alarms", widget, checkable=True)
+        action_alarms.toggled.connect(self.toggle_show_alarms)
+        action_alarms.setChecked(self.model.show_alarms)
+        widget.addAction(action_alarms)
 
         self.action_show_format = QAction("Set value format", widget)
         self.action_show_format.triggered.connect(self._change_show_format)
@@ -405,6 +407,14 @@ class DisplaySparkline(BaseBindingController):
     def value_update(self, proxy):
         self._draw(proxy.value, proxy.binding.timestamp)
 
+    @pyqtSlot(bool)
+    def toggle_show_value(self, value):
+        self.model.show_value = value
+
+    @pyqtSlot(bool)
+    def toggle_show_alarms(self, value):
+        self.model.show_alarms = value
+
     @on_trait_change('proxy:binding:historic_data')
     def _historic_data_arrived(self, data):
         if not data:
@@ -434,6 +444,10 @@ class DisplaySparkline(BaseBindingController):
         now = time.time()
         self._fetch_property_history(now - timebase, now)
 
+    @on_trait_change('model:show_alarms')
+    def _reset_yrange(self):
+        self.render_area.reset_range = True
+
     @on_trait_change('model:show_value')
     def _show_value_update(self, value):
         self.line_edit.setVisible(value)
@@ -452,10 +466,15 @@ class DisplaySparkline(BaseBindingController):
 
     def _draw(self, value, timestamp):
         """ Draw data vs. time and alarm limits """
-        attrs = self.proxy.binding.attributes
-        # extract alarms if present, if not the sparkrenderer expects "None"
-        alarms = {k: attrs.get(k, None)
-                  for k in (ALARM_LOW, WARN_LOW, WARN_HIGH, ALARM_HIGH)}
+        if self.model.show_alarms:
+            # extract alarms if present, if not the sparkrenderer expects
+            # `None` to process data
+            attrs = self.proxy.binding.attributes
+            alarms = {k: attrs.get(k, None)
+                      for k in (ALARM_LOW, WARN_LOW, WARN_HIGH, ALARM_HIGH)}
+        else:
+            alarms = {k: None
+                      for k in (ALARM_LOW, WARN_LOW, WARN_HIGH, ALARM_HIGH)}
 
         self.render_area.setData(value, timestamp, alarms)
         self._set_text()
