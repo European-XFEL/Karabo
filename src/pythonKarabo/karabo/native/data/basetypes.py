@@ -422,7 +422,8 @@ class TableValue(MutableSequence, KaraboValue):
             yield "\n"
             for row in self.value:
                 for val in row:
-                    yield "{:10} ".format(val)
+                    # NOTE: str casting is for numpy vectors and lists
+                    yield "{:10} ".format(str(val))
                 yield "\n"
         return "".join(inner())
 
