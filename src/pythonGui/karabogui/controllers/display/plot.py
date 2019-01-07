@@ -10,7 +10,6 @@ from guiqwt.builder import make
 import numpy as np
 from traits.api import Dict, Instance
 
-from karabo.common.api import KARABO_SCHEMA_DISPLAYED_NAME
 from karabo.common.scenemodel.api import DisplayPlotModel
 from karabogui.const import MAX_NUMBER_LIMIT
 from karabogui.binding.api import VectorNumberBinding
@@ -48,8 +47,7 @@ class DisplayPlot(BaseBindingController):
         curve = self._curves.pop(proxy, None)
         if curve is not None:
             self._plot.del_item(curve)
-        attrs = proxy.binding.attributes
-        title = attrs.get(KARABO_SCHEMA_DISPLAYED_NAME, proxy.path)
+        title = proxy.binding.displayed_name or proxy.path
         curve = make.curve([0, 1], [0, 1], title, next(self._line_colors))
         self._curves[proxy] = curve
         self._plot.add_item(curve)
