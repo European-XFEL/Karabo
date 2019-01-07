@@ -387,7 +387,6 @@ class DeviceInstanceController(BaseProjectGroupController):
                 return
 
             device.instance_id = dialog.instance_id
-            device.if_exists = dialog.if_exists
 
             # Look for existing DeviceConfigurationModel
             dev_conf = device.select_config(dialog.active_uuid)
@@ -443,7 +442,6 @@ class DeviceInstanceController(BaseProjectGroupController):
                 dev_inst = DeviceInstanceModel(
                     class_id=device.class_id,
                     instance_id=simple_name,
-                    if_exists=device.if_exists,
                     active_config_ref=dupe_dev_conf.uuid,
                     configs=[dupe_dev_conf]
                 )

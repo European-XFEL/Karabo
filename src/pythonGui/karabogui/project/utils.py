@@ -66,7 +66,6 @@ def add_device_to_server(server, class_id=''):
         device = DeviceInstanceModel(
             class_id=dialog.class_id,
             instance_id=dialog.instance_id,
-            if_exists=dialog.if_exists,
             configs=[config_model],
             active_config_ref=config_model.uuid,
         )
