@@ -11,8 +11,7 @@ from PyQt4.QtGui import QFrame, QLabel
 from traits.api import Instance, Str, Tuple
 
 from karabo.common.api import (
-    KARABO_SCHEMA_ABSOLUTE_ERROR, KARABO_SCHEMA_DISPLAY_TYPE,
-    KARABO_SCHEMA_RELATIVE_ERROR
+    KARABO_SCHEMA_ABSOLUTE_ERROR, KARABO_SCHEMA_RELATIVE_ERROR
 )
 from karabo.common.scenemodel.api import DisplayLabelModel
 from karabogui.binding.api import (
@@ -68,7 +67,7 @@ class DisplayLabel(BaseBindingController):
             self._internal_widget.setText(value[:255])
             return
 
-        disp_type = binding.attributes.get(KARABO_SCHEMA_DISPLAY_TYPE)
+        disp_type = binding.display_type
         try:
             fmt = {
                 'bin': 'b{:b}',
