@@ -10,8 +10,7 @@ from PyQt4.QtGui import QBrush, QColor, QFont
 
 from karabo.middlelayer import AccessMode
 from karabo.common.api import (
-    State, KARABO_SCHEMA_ALLOWED_STATES, KARABO_SCHEMA_DISPLAYED_NAME,
-    KARABO_SCHEMA_DISPLAY_TYPE, KARABO_WARN_LOW, KARABO_WARN_HIGH,
+    State, KARABO_SCHEMA_ALLOWED_STATES, KARABO_WARN_LOW, KARABO_WARN_HIGH,
     KARABO_ALARM_LOW, KARABO_ALARM_HIGH)
 from karabogui.binding.api import (
     BaseBinding, BindingRoot, ChoiceOfNodesBinding, DeviceClassProxy,
@@ -33,7 +32,7 @@ def _friendly_repr(proxy, value):
     """Return a user-friendly value, convert base or with units displayed.
     """
     converters = {'hex': hex, 'oct': oct, 'bin': bin}
-    base = proxy.binding.attributes.get(KARABO_SCHEMA_DISPLAY_TYPE)
+    base = proxy.binding.display_type
     if base in converters:
         try:
             return converters[base](value)
@@ -546,21 +545,18 @@ class ConfigurationTreeModel(QAbstractItemModel):
             return None  # indicate no color
         alarm_low = attributes.get(KARABO_ALARM_LOW)
         alarm_high = attributes.get(KARABO_ALARM_HIGH)
-        warn_low = attributes.get(KARABO_WARN_LOW)
-        warn_high = attributes.get(KARABO_WARN_HIGH)
-        state = attributes.get(KARABO_SCHEMA_DISPLAY_TYPE) == 'State'
-        alarm = attributes.get(KARABO_SCHEMA_DISPLAY_TYPE) == 'AlarmCondition'
-
         if threshold_triggered(value, alarm_low, alarm_high):
             return PROPERTY_ALARM_COLOR
 
+        warn_low = attributes.get(KARABO_WARN_LOW)
+        warn_high = attributes.get(KARABO_WARN_HIGH)
         if threshold_triggered(value, warn_low, warn_high):
             return PROPERTY_WARN_COLOR
 
-        if state:
+        if binding.display_type == 'State':
             return get_state_color(value) + (128,)
 
-        if alarm:
+        if binding.display_type == 'AlarmCondition':
             return PROPERTY_ALARM_COLOR_MAP.get(value)
 
         return None  # indicate no color
@@ -570,7 +566,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         binding = proxy.binding
         if column == 0:
             if role == Qt.DisplayRole:
-                name = binding.attributes.get(KARABO_SCHEMA_DISPLAYED_NAME)
+                name = binding.displayed_name
                 return name or proxy.path.split('.')[-1]
             elif role == Qt.FontRole:
                 is_class = isinstance(self.root, DeviceClassProxy)

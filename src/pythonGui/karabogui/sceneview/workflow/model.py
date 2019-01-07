@@ -4,7 +4,6 @@ from traits.api import (
     String, cached_property, on_trait_change
 )
 
-from karabo.common.api import KARABO_SCHEMA_DISPLAY_TYPE
 from karabo.common.scenemodel.api import WorkflowItemModel
 from karabogui.binding.api import NodeBinding, PropertyProxy
 from karabogui.singletons.api import get_topology
@@ -183,8 +182,7 @@ class WorkflowDeviceModel(HasStrictTraits):
             # Now we check whether it has a display type. If yes, check for
             # input/output channel and append in case.
             # If not, we might have a node (i.e. NodeBinding).
-            attrs = sub_binding.attributes
-            display_type = attrs.get(KARABO_SCHEMA_DISPLAY_TYPE)
+            display_type = sub_binding.display_type
             sub_path = (path + '.' if path else '') + name
             if display_type == const.CHANNEL_INPUT:
                 channel = WorkflowChannelModel(
