@@ -446,45 +446,43 @@ namespace karabo {
                     Memory::writeAsContiguousBlock(data, header, m_channelId, m_inactiveChunk);
                 }
 
-                bool treated = false;
                 if (this->getMinimumNumberOfData() == 0) { // should keep reading until EOS (minData == 0 means that)
                     KARABO_LOG_FRAMEWORK_TRACE << traceId << "Can read more data since 'all' requested";
                     notifyOutputChannelForPossibleRead(channel);
-                    treated = true;
                 } else {
-                    boost::mutex::scoped_lock inactiveDataLock(m_inactiveDataMutex);
-                    size_t nInactiveData = Memory::size(m_channelId, m_inactiveChunk);
+                    size_t nInactiveData = 0;
+                    {
+                        boost::mutex::scoped_lock inactiveDataLock(m_inactiveDataMutex);
+                        nInactiveData = Memory::size(m_channelId, m_inactiveChunk);
+                    }
                     KARABO_LOG_FRAMEWORK_WARN << traceId
                             << "There's more data to read before processing: nInactiveData = " << nInactiveData;
                     if (nInactiveData < this->getMinimumNumberOfData()) {
-                        inactiveDataLock.unlock(); // before synchronous write to Tcp
-                        // requested more data
+                          // requested more data
                         notifyOutputChannelForPossibleRead(channel);
-                        treated = true;
-                    }
-                }
-                if (!treated) {
-                    boost::mutex::scoped_lock activeDataLock(m_activeDataMutex);
-                    size_t nActiveData = Memory::size(m_channelId, m_activeChunk);
-                    if (nActiveData == 0) { // Data complete, second pot still empty
-                        KARABO_LOG_FRAMEWORK_TRACE << traceId << "Can read more data since 'all' requested";
-                        // Caveat! Both mutexes are locked, always do same order!
-                        {
-                            boost::mutex::scoped_lock inactiveDataLock(m_inactiveDataMutex);
-                            KARABO_LOG_FRAMEWORK_TRACE << traceId << "Will swap buffers for active and inactive data.";
-                            std::swap(m_activeChunk, m_inactiveChunk);
+                    } else {
+                        boost::mutex::scoped_lock activeDataLock(m_activeDataMutex);
+                        size_t nActiveData = Memory::size(m_channelId, m_activeChunk);
+                        if (nActiveData == 0) { // Data complete, second pot still empty
+                            KARABO_LOG_FRAMEWORK_TRACE << traceId << "Can read more data since 'all' requested";
+                            // Caveat! Both mutexes are locked, always do same order!
+                            {
+                                boost::mutex::scoped_lock inactiveDataLock(m_inactiveDataMutex);
+                                KARABO_LOG_FRAMEWORK_TRACE << traceId << "Will swap buffers for active and inactive data.";
+                                std::swap(m_activeChunk, m_inactiveChunk);
+                            }
+                            activeDataLock.unlock(); // before synchronous write to Tcp
+                            // Ask to fill second pot...
+                            notifyOutputChannelForPossibleRead(channel);
+                            // ...and in parallel process first one.
+                            KARABO_LOG_FRAMEWORK_TRACE << traceId << "Triggering IOEvent";
+                            m_strand->post(util::bind_weak(&InputChannel::triggerIOEvent, this));
                         }
-                        activeDataLock.unlock(); // before synchronous write to Tcp
-                        // Ask to fill second pot...
-                        notifyOutputChannelForPossibleRead(channel);
-                        // ...and in parallel process first one.
-                        KARABO_LOG_FRAMEWORK_TRACE << traceId << "Triggering IOEvent";
-                        m_strand->post(util::bind_weak(&InputChannel::triggerIOEvent, this));
+                        //else { // Data complete on both pots now
+                        // triggerIOEvent will be called by the update of the triggerIOEvent
+                        // that is processing the active pot now
+                        //}
                     }
-                    //else { // Data complete on both pots now
-                    // triggerIOEvent will be called by the update of the triggerIOEvent
-                    // that is processing the active pot now
-                    //}
                 }
                 channel->readAsyncHashVectorBufferSetPointer(util::bind_weak(&karabo::xms::InputChannel::onTcpChannelRead, this, _1, channel, _2, _3));
             } catch (const karabo::util::Exception& e) {
@@ -630,13 +628,11 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_TRACE << traceId << "InputChannel::update() nActiveData = " << nActiveData
                             << " and MinData = " << this->getMinimumNumberOfData();
 
-                    if (nActiveData >= this->getMinimumNumberOfData()) {
-                        // After swapping the pots, the new active one is ready...
-                        m_strand->post(util::bind_weak(&InputChannel::triggerIOEvent, this));
-                        // ...and the other one can be filled
-                        activeDataLock.unlock(); // before synchronous write to Tcp
-                        notifyOutputChannelsForPossibleRead();
-                    }
+                    // After swapping the pots, the new active one is ready...
+                    m_strand->post(util::bind_weak(&InputChannel::triggerIOEvent, this));
+                    // ...and the other one can be filled
+                    activeDataLock.unlock(); // before synchronous write to Tcp
+                    notifyOutputChannelsForPossibleRead();
                 } catch (const std::exception& ex) {
                     KARABO_LOG_FRAMEWORK_ERROR << "InputChannel::update exception -- " << ex.what();
                 }
