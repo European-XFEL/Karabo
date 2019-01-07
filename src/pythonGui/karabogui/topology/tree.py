@@ -246,6 +246,11 @@ class SystemTree(HasStrictTraits):
             host_node.children.remove(server_node)
 
         self._server_nodes.pop(instance_id)
+
+        if not len(host_node.children):
+            with self.update_context.removal_context(host_node):
+                self.root.children.remove(host_node)
+
         return server_class_keys
 
     def update(self, system_hash):
