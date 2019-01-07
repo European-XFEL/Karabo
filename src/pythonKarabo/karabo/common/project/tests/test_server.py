@@ -65,10 +65,10 @@ def test_writing():
     dev1 = DeviceConfigurationModel(class_id='QuxClass', uuid=UUIDS[2])
     dev2 = DeviceConfigurationModel(class_id='QuxClass', uuid=UUIDS[2])
     foo = DeviceInstanceModel(class_id='BazClass', instance_id='fooDevice',
-                              if_exists='ignore', configs=[dev0],
+                              configs=[dev0],
                               active_config_ref=UUIDS[2], uuid=UUIDS[0])
     bar = DeviceInstanceModel(class_id='QuxClass', instance_id='barDevice',
-                              if_exists='restart', configs=[dev1, dev2],
+                              configs=[dev1, dev2],
                               active_config_ref=UUIDS[2], uuid=UUIDS[1])
     server = DeviceServerModel(server_id='testServer', host='serverserverFoo',
                                devices=[foo, bar])
@@ -93,20 +93,16 @@ def test_child_modification_tracking():
     dev2 = DeviceConfigurationModel(class_id='QuxClass', uuid=UUIDS[4],
                                     initialized=True)
     foo = DeviceInstanceModel(class_id='BazClass', instance_id='fooDevice',
-                              if_exists='ignore', configs=[dev0],
+                              configs=[dev0],
                               active_config_ref=UUIDS[2], uuid=UUIDS[0],
                               initialized=True)
     bar = DeviceInstanceModel(class_id='QuxClass', instance_id='barDevice',
-                              if_exists='restart', configs=[dev1, dev2],
+                              configs=[dev1, dev2],
                               active_config_ref=UUIDS[3], uuid=UUIDS[1],
                               initialized=True)
     server = DeviceServerModel(server_id='testServer', host='serverserverFoo',
                                devices=[foo], initialized=True)
     server.devices.append(bar)
-
-    server.modified = False
-    foo.if_exists = 'restart'
-    assert server.modified
 
     server.modified = foo.modified = False
 
@@ -114,16 +110,17 @@ def test_child_modification_tracking():
     assert server.modified
 
     server.devices.pop()
-    server.modified = False
-    foo.if_exists = 'ignore'
     assert server.modified
+
+    server.modified = False
+    assert not server.modified
 
 
 def test_child_configuration_rejection():
     dev0 = DeviceConfigurationModel(class_id='BazClass', uuid=UUIDS[1])
     dev1 = DeviceConfigurationModel(class_id='QuxClass', uuid=UUIDS[2])
     inst = DeviceInstanceModel(class_id='BazClass', instance_id='fooDevice',
-                               if_exists='ignore', configs=[dev0],
+                               configs=[dev0],
                                active_config_ref=UUIDS[1], uuid=UUIDS[0])
 
     with assert_raises(ValueError):
