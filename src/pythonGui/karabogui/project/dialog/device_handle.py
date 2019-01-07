@@ -49,9 +49,11 @@ class DeviceHandleDialog(QDialog):
         self.leTitle.setEnabled(not is_online)
 
         if model is None:
-            title = 'Add device configuration'
+            title = 'Add device'
             self.cbConfig.setEditable(True)
             self.cbConfig.lineEdit().setText('default')
+            # We do not allow to modify 'default' configuration!
+            self.cbConfig.setEnabled(False)
 
             # If we already know the class, select it and disable editing.
             if class_id != '':
@@ -67,7 +69,6 @@ class DeviceHandleDialog(QDialog):
                 # These widgets belong to a ``DeviceInstanceModel`` and
                 # should not be changed in case a configuration is added
                 self.leTitle.setEnabled(False)
-                self.cbIfExists.setEnabled(False)
                 if active_dev_conf is not None:
                     self._update_plugin_widget(active_dev_conf.class_id)
             else:
@@ -81,8 +82,6 @@ class DeviceHandleDialog(QDialog):
 
             self.cbClass.setEnabled(False)
             self.leTitle.setText(model.instance_id)
-            index = self.cbIfExists.findText(model.if_exists)
-            self.cbIfExists.setCurrentIndex(index)
 
         self.setWindowTitle(title)
         self.leTitle.textChanged.connect(self._update_button_box)
@@ -161,10 +160,6 @@ class DeviceHandleDialog(QDialog):
     @property
     def class_id(self):
         return self.cbClass.currentText()
-
-    @property
-    def if_exists(self):
-        return self.cbIfExists.currentText()
 
     @property
     def active_uuid(self):
