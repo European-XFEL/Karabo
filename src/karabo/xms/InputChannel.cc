@@ -442,7 +442,7 @@ namespace karabo {
                     Memory::decrementChunkUsage(channelId, chunkId);
                 } else { // TCP data
                     KARABO_LOG_FRAMEWORK_TRACE << traceId << "Reading from remote memory (over tcp)";
-                     boost::mutex::scoped_lock inactiveDataLock(m_inactiveDataMutex);
+                    boost::mutex::scoped_lock inactiveDataLock(m_inactiveDataMutex);
                     Memory::writeAsContiguousBlock(data, header, m_channelId, m_inactiveChunk);
                 }
 
@@ -450,21 +450,19 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_TRACE << traceId << "Can read more data since 'all' requested";
                     notifyOutputChannelForPossibleRead(channel);
                 } else {
-                    size_t nInactiveData = 0;
-                    {
-                        boost::mutex::scoped_lock inactiveDataLock(m_inactiveDataMutex);
-                        nInactiveData = Memory::size(m_channelId, m_inactiveChunk);
-                    }
+                    boost::mutex::scoped_lock inactiveDataLock(m_inactiveDataMutex);
+                    size_t nInactiveData = Memory::size(m_channelId, m_inactiveChunk);
                     KARABO_LOG_FRAMEWORK_WARN << traceId
                             << "There's more data to read before processing: nInactiveData = " << nInactiveData;
                     if (nInactiveData < this->getMinimumNumberOfData()) {
-                          // requested more data
+                        // requested more data
+                        inactiveDataLock.unlock();
                         notifyOutputChannelForPossibleRead(channel);
                     } else {
+                        inactiveDataLock.unlock();
                         boost::mutex::scoped_lock activeDataLock(m_activeDataMutex);
                         size_t nActiveData = Memory::size(m_channelId, m_activeChunk);
                         if (nActiveData == 0) { // Data complete, second pot still empty
-                            KARABO_LOG_FRAMEWORK_TRACE << traceId << "Can read more data since 'all' requested";
                             // Caveat! Both mutexes are locked, always do same order!
                             {
                                 boost::mutex::scoped_lock inactiveDataLock(m_inactiveDataMutex);
