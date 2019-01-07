@@ -1166,6 +1166,7 @@ class String(Enumable, Type):
 class VectorString(Vector):
     basetype = String
     number = 29
+    numpy = np.object_
 
     @staticmethod
     def fromstring(s):
