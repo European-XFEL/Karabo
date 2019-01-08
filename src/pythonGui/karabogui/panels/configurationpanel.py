@@ -173,6 +173,7 @@ class ConfigurationPanel(BasePanelWidget):
         if sender is KaraboEventSender.ShowConfiguration:
             proxy = data.get('proxy')
             self._show_configuration(proxy)
+            return True
         elif sender is KaraboEventSender.UpdateDeviceConfigurator:
             proxy = data.get('proxy')
             self._update_displayed_configuration(proxy)
