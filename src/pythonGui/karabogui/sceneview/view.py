@@ -30,10 +30,14 @@ from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
 from .tools.api import (
     ConfigurationDropHandler, NavigationDropHandler, ProxySelectionTool,
-    SceneSelectionTool, WidgetSceneHandler)
+    SceneSelectionTool, SceneControllerHandler, SceneWidgetHandler)
 from .utils import save_painter_state
 from .widget.api import ControllerContainer
 from .workflow.api import SceneWorkflowModel, WorkflowOverlay
+
+# The scene widgets handler for mutations and action of the controllers and
+# layout items on our scene
+SCENE_WIDGET_HANDLER = (SceneControllerHandler, SceneWidgetHandler)
 
 _WIDGET_REMOVAL_DELAY = 5000
 
@@ -286,12 +290,17 @@ class SceneView(QWidget):
         """Show scene view specific context menu. """
         if self.design_mode:
             widget = self.widget_at_position(event.pos())
-            if widget is not None:
-                widget_handler = WidgetSceneHandler(widget=widget)
-                # This methods blocks here until an action is selected
-                widget_handler.handle(self, event)
-                event.accept()
+            if widget is None:
+                event.ignore()
                 return
+            # NOTE: An eventual handler blocks here until an action is selected
+            for handler in SCENE_WIDGET_HANDLER:
+                widget_handler = handler(widget=widget)
+                if widget_handler.can_handle():
+                    widget_handler.handle(self, event)
+                    event.accept()
+                    return
+
         event.ignore()
 
     # ----------------------------
@@ -370,7 +379,7 @@ class SceneView(QWidget):
         widget = self.inner.childAt(pos)
         if widget is not None:
             while (widget is not None
-                    and not isinstance(widget, ControllerContainer)):
+                   and not isinstance(widget, ControllerContainer)):
                 widget = widget.parent()
         return widget
 
