@@ -12,8 +12,7 @@ from PyQt4.QtGui import (QAbstractItemDelegate, QAbstractItemView, QAction,
 
 from karabo.common.api import (
     KARABO_SCHEMA_ALIAS, KARABO_SCHEMA_DESCRIPTION,
-    KARABO_SCHEMA_DEFAULT_VALUE, KARABO_SCHEMA_DISPLAY_TYPE,
-    KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MAX_INC,
+    KARABO_SCHEMA_DEFAULT_VALUE, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MAX_INC,
     KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MAX_EXC,
     KARABO_SCHEMA_MIN_SIZE, KARABO_SCHEMA_MAX_SIZE,
     KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_UNIT_SYMBOL,
@@ -142,7 +141,7 @@ class ConfigurationTreeView(QTreeView):
         if binding.timestamp is not None:
             info['Timestamp'] = binding.timestamp.toLocal()
             info['Train Id'] = binding.timestamp.tid
-        display_type = attributes.get(KARABO_SCHEMA_DISPLAY_TYPE)
+        display_type = binding.display_type
         if display_type and display_type.startswith('bin|'):
             info['Bits'] = display_type[4:]
         if isinstance(obj.root_proxy, DeviceProxy):
