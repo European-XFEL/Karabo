@@ -148,6 +148,8 @@ class NavigationTreeView(QTreeView):
                 event.accept()
                 return
 
+        super(NavigationTreeView, self).mouseDoubleClickEvent(event)
+
     # ----------------------------
     # Slots
 
