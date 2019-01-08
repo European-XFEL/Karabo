@@ -1,9 +1,9 @@
 from unittest import main, TestCase
 
-from karabo.middlelayer_api.alarm import AlarmMixin
 from karabo.middlelayer import (
-    AccessLevel, AlarmCondition, Configurable, Int32, MetricPrefix, Node,
-    Unit, unit)
+    AccessLevel, AlarmCondition, Configurable, Hash, Int32,
+    MetricPrefix, Node, Unit, unit)
+from karabo.middlelayer_api.alarm import AlarmMixin
 
 
 class Tests(TestCase):
@@ -78,12 +78,12 @@ class Tests(TestCase):
     def test_units(self):
         class N(Configurable):
             amin = Int32(
-                    unitSymbol=Unit.METER,
-                    metricPrefixSymbol=MetricPrefix.MILLI,
-                    alarmLow=30)
+                unitSymbol=Unit.METER,
+                metricPrefixSymbol=MetricPrefix.MILLI,
+                alarmLow=30)
             wmax = Int32(
-                    unitSymbol=Unit.METER,
-                    warnHigh=3)
+                unitSymbol=Unit.METER,
+                warnHigh=3)
 
         class A(AlarmMixin):
             left = Node(N)
@@ -137,6 +137,51 @@ class Tests(TestCase):
                          'AlarmCondition')
         self.assertEqual(a.globalAlarmCondition.descriptor.requiredAccessLevel,
                          AccessLevel.ADMIN)
+
+    def test_resubmit(self):
+        """Test the slotReSubmitAlarms function"""
+
+        class A(AlarmMixin):
+            # DeviceId is required as no device is present!
+            deviceId = 'remoteAlarm'
+            amin = Int32(
+                alarmLow=5,
+                defaultValue=7)
+            amax = Int32(
+                alarmHigh=10,
+                defaultValue=5)
+
+        a = A(configuration={})
+
+        # First return value is the deviceId
+        deviceId, als1 = a.slotReSubmitAlarms(Hash())
+        self.assertEqual(deviceId, 'remoteAlarm')
+        self.assertEqual(len(als1['toAdd']), 0)
+        self.assertEqual(len(als1['toClear']), 0)
+
+        a.amin = 3
+        # We have one alarmLow!
+        _, als2 = a.slotReSubmitAlarms(Hash())
+        self.assertEqual(len(als2['toAdd']), 1)
+        self.assertEqual(len(als2['toClear']), 0)
+
+        a.amax = 12
+        # We add an alarmHigh!
+        _, als3 = a.slotReSubmitAlarms(Hash())
+        self.assertEqual(len(als3['toAdd']), 2)
+        self.assertEqual(len(als3['toClear']), 0)
+
+        a.amin = 7
+        # We remove the alarmLow and add use previous as existing!
+        _, als4 = a.slotReSubmitAlarms(als3['toAdd'])
+        self.assertEqual(len(als4['toAdd']), 1)
+        self.assertEqual(len(als4['toClear']), 2)
+
+        a.amax = 5
+        # We remove the alarmHigh!
+        _, als5 = a.slotReSubmitAlarms(als4['toAdd'])
+        self.assertEqual(len(als5['toAdd']), 0)
+        self.assertEqual(len(als5['toClear']), 1)
 
 
 if __name__ == "__main__":
