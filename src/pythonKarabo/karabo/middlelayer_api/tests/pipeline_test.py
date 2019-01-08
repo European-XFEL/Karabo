@@ -128,8 +128,10 @@ class TestChannel(DeviceTest):
         network = NetworkInput({})
         network.handler = self.handler
         network.raw = False
+
         class Test(Proxy):
             a = Int32()
+
         task = background(network.readChunk(self.channel, Test))
         self.feedTestData()
         self.data = []

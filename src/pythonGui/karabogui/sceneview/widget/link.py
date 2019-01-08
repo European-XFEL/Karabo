@@ -107,7 +107,9 @@ class SceneLinkWidget(QPushButton):
         edit_action = QAction('Edit Label', self)
         edit_action.triggered.connect(self.edit_label)
 
-        return [edit_action]
+        target_action = QAction('Edit Target', self)
+        target_action.triggered.connect(self.edit_target)
+        return [edit_action, target_action]
 
     @pyqtSlot()
     def edit_label(self):
@@ -121,7 +123,11 @@ class SceneLinkWidget(QPushButton):
                              font=label.font, background=label.background,
                              foreground=label.foreground)
 
-    def edit(self, scene_view):
+    @pyqtSlot()
+    def edit_target(self):
+        self.edit()
+
+    def edit(self, scene_view=None):
         dialog = SceneLinkDialog(self.model, parent=scene_view)
         if dialog.exec() == QDialog.Rejected:
             return
@@ -214,7 +220,9 @@ class WebLinkWidget(QPushButton):
         edit_action = QAction('Edit Label', self)
         edit_action.triggered.connect(self.edit_label)
 
-        return [edit_action]
+        target_action = QAction('Edit Target', self)
+        target_action.triggered.connect(self.edit_target)
+        return [edit_action, target_action]
 
     @pyqtSlot()
     def edit_label(self):
@@ -228,7 +236,11 @@ class WebLinkWidget(QPushButton):
                              font=label.font, background=label.background,
                              foreground=label.foreground)
 
-    def edit(self, scene_view):
+    @pyqtSlot()
+    def edit_target(self):
+        self.edit()
+
+    def edit(self, scene_view=None):
         dialog = WebDialog(self.model.target)
         if dialog.exec() == QDialog.Rejected:
             return

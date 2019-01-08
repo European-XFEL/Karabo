@@ -68,11 +68,11 @@ class AlarmModel(QAbstractTableModel):
                     if needsAck:
                         filtered.append(entry)
                 elif filterType == DEVICE_ID and text in entry.deviceId:
-                        filtered.append(entry)
+                    filtered.append(entry)
                 elif filterType == PROPERTY and text in entry.property:
-                        filtered.append(entry)
+                    filtered.append(entry)
                 elif filterType == ALARM_TYPE and text in entry.type:
-                        filtered.append(entry)
+                    filtered.append(entry)
         self._setFilterList(filtered)
 
     def _getEntryIndex(self, entry_id):

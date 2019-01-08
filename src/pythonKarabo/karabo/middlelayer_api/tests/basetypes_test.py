@@ -5,7 +5,7 @@ from unittest import TestCase, main
 import pint
 import numpy
 
-from karabo.middlelayer import decodeBinary, encodeBinary, unit
+from karabo.middlelayer import encodeBinary, unit
 from karabo.middlelayer_api.enums import Unit, MetricPrefix
 from karabo.middlelayer_api.basetypes import (
     NoneValue, QuantityValue, isSet, StringValue, VectorCharValue, BoolValue,
@@ -346,6 +346,7 @@ class Tests(TestCase):
         self.assertEqual(10 * percent, 0.1 * pixel)
         self.assertEqual(1 * degC + QuantityValue("1 K"), 2 * degC)
         self.assertEqual(2 * number, 2)
+        self.assertEqual(pixel, 1 * unit.pixel)
 
         # check correct dimensionality:
         eV + QuantityValue("1 J")
