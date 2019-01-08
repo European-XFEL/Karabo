@@ -441,6 +441,9 @@ void PipelinedProcessing_Test::testPipeMinData() {
     unsigned int nDataExpected = m_nDataPerRun - m_nDataPerRun % minData;
     CPPUNIT_ASSERT_EQUAL(nDataExpected, m_deviceClient->get<unsigned int>(m_receiver, "nTotalData"));
 
+    // Restore the sender delay to the value it had before running this test case.
+    m_deviceClient->set(m_sender, "delay", originalSenderDelay);
+
     killDeviceWithAssert(m_receiver);
 
     std::clog << "Test duration (ms): "
@@ -455,9 +458,11 @@ void PipelinedProcessing_Test::testPipeMinData() {
 
 
 void PipelinedProcessing_Test::testPipeTwoPots() {
-    std::clog << "---\ntestTwoPots\n";
+    std::clog << "---\ntestPipeTwoPots\n";
 
     const auto testStartTime = chrono::high_resolution_clock::now();
+
+    const unsigned int originalSenderDelay = m_deviceClient->get<unsigned int>(m_sender, "delay");
 
     // There's an undesired interdependency between the tests cases; this test only works if the sender delay
     // is significatively high, more specifically 100 milliseconds.
@@ -483,14 +488,16 @@ void PipelinedProcessing_Test::testPipeTwoPots() {
         // into the inactive pot when the "stop" slot is called.
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", 0, false));
 
-        // TODO: Uncomment this as soon as the issue with the nTotalDataOnEos is fixed.
         CPPUNIT_ASSERT_EQUAL(nDataWhenStop + 1, m_deviceClient->get<unsigned int>(m_receiver, "nTotalDataOnEos"));
-        
+
         // reset nTotalData and nTotalDataOnEos
         m_deviceClient->execute(m_receiver, "reset");
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", 0));
     }
 
+    // Restores the sender 'delay' to the value it had at the beginning of the test.
+    m_deviceClient->set(m_sender, "delay", originalSenderDelay);
+    
     killDeviceWithAssert(m_receiver);
 
     std::clog << "Test duration (ms): "

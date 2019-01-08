@@ -50,6 +50,7 @@ namespace karabo {
                 DEVICE_SERVER_REPLY_EVENT = 0x02,
 
                 FULL_MASK_EVENT = INSTANCE_NEW_EVENT | DEVICE_SERVER_REPLY_EVENT,
+                INSTANCE_GONE_EVENT
             };
 
             struct AttributeUpdates {
@@ -299,7 +300,8 @@ namespace karabo {
              * @param success
              * @param message
              */
-            void initReply(WeakChannelPointer channel, const std::string& givenDeviceId, const karabo::util::Hash& givenConfig, bool success, const std::string& message);
+            void initReply(WeakChannelPointer channel, const std::string& givenDeviceId, const karabo::util::Hash& givenConfig,
+                           bool success, const std::string& message, bool isFailureHandler);
 
             /**
              * requests the current device configuration for ``deviceId`` specified in
