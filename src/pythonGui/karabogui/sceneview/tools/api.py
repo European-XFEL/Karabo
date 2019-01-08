@@ -10,6 +10,6 @@ from .drawing import (LineSceneTool, RectangleSceneTool, SceneLinkTool,
                       TextSceneTool, WebLinkTool)
 from .scenedndhandler import ConfigurationDropHandler, NavigationDropHandler
 from .selection import ProxySelectionTool, SceneSelectionTool
-from .widgethandler import SceneControllerHandler, SceneWidgetHandler
+from .widgethandler import SceneControllerHandler, SceneToolHandler
 from .workflow import (
     CreateWorkflowConnectionToolAction, WorkflowConnectionTool)
