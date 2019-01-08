@@ -6,6 +6,7 @@
 #include <streambuf>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 
 #include "karabo/io/Input.hh"
 #include "karabo/util/DataLogUtils.hh"
@@ -419,7 +420,10 @@ namespace karabo {
                         return;
                     }
                     m_schemaSerializer->load(schema, archived);
-
+                } else {
+                    KARABO_LOG_WARN << "Schema archive file does not exist: " << schemaPath;
+                    reply(Hash(), Schema());
+                    return;
                 }
                 vector<string> paths = schema.getPaths();
 

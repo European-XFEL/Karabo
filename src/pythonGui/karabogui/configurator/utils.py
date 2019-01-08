@@ -5,7 +5,9 @@ from PyQt4.QtCore import QMimeData, Qt
 from PyQt4.QtGui import QStyle
 
 from karabo.common.api import (
-    KARABO_SCHEMA_DISPLAYED_NAME, KARABO_SCHEMA_DISPLAY_TYPE,
+    KARABO_SCHEMA_DAQ_POLICY, KARABO_SCHEMA_DISPLAYED_NAME,
+    KARABO_SCHEMA_DISPLAY_TYPE, KARABO_SCHEMA_DISPLAY_TYPE_DIRECTORY,
+    KARABO_SCHEMA_DISPLAY_TYPE_FILEIN, KARABO_SCHEMA_DISPLAY_TYPE_FILEOUT,
     KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_UNIT_SYMBOL,
     KARABO_EDITABLE_ATTRIBUTES)
 from karabo.middlelayer import AccessMode, Assignment
@@ -153,7 +155,9 @@ def get_icon(binding):
     if isinstance(binding, CharBinding):
         icon = icons.string
     elif isinstance(binding, StringBinding):
-        path_types = ('directory', 'fileIn', 'fileOut')
+        path_types = (KARABO_SCHEMA_DISPLAY_TYPE_DIRECTORY,
+                      KARABO_SCHEMA_DISPLAY_TYPE_FILEIN,
+                      KARABO_SCHEMA_DISPLAY_TYPE_FILEOUT)
         if attributes.get(KARABO_SCHEMA_DISPLAY_TYPE) in path_types:
             icon = icons.path
         else:
@@ -164,6 +168,25 @@ def get_icon(binding):
         icon = icons.float
     elif isinstance(binding, BoolBinding):
         icon = icons.boolean
+
+    return icon
+
+
+def get_attr_icon(binding, name):
+    """Get the proper attribute icon to show next to an attribute
+    """
+    if name in (KARABO_SCHEMA_DAQ_POLICY, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
+                KARABO_SCHEMA_UNIT_SYMBOL):
+        return icons.enumAttribute
+    icon = icons.undefinedAttribute
+    if isinstance(binding, IntBinding):
+        icon = icons.intAttribute
+    elif isinstance(binding, FloatBinding):
+        icon = icons.floatAttribute
+    elif isinstance(binding, BoolBinding):
+        icon = icons.booleanAttribute
+    elif isinstance(binding, (StringBinding, CharBinding)):
+        icon = icons.stringAttribute
 
     return icon
 

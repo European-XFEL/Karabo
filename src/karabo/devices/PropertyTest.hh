@@ -57,6 +57,8 @@ namespace karabo {
 
             void writeOutput();
 
+            void eosOutput();
+
             void slotUpdateSchema();
 
             long long m_outputCounter;

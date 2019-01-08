@@ -6,12 +6,12 @@ Welcome to Karabo's documentation!
 Contents:
 
 .. toctree::
-   concepts/index
    installation/index
    run/index
    library/index
    tools/index
    documentation
+   concepts/index
    versionchanges
    :maxdepth: 1
 

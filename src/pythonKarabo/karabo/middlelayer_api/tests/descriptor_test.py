@@ -433,6 +433,8 @@ class Tests(TestCase):
         rowSchema = Hash("int", None, "string", None, "vector", None,
                          "bytes", None, "array", None)
         rowSchema["int", "valueType"] = "INT32"
+        rowSchema["int", "unitSymbol"] = "m"
+        rowSchema["int", "metricPrefixSymbol"] = "m"
         rowSchema["string", "valueType"] = "STRING"
         rowSchema["vector", "valueType"] = "VECTOR_DOUBLE"
         rowSchema["bytes", "valueType"] = "VECTOR_CHAR"
@@ -444,7 +446,7 @@ class Tests(TestCase):
                              (2.5, "bla", numpy.array([], dtype=float),
                               b"", b"")])
         self.assertEqual(len(v), 2)
-        self.assertEqual(v[1]["int"], 2)
+        self.assertEqual(v[1]["int"], 2 * unit.millimeter)
         self.assertEqual(v[1]["string"], "bla")
         self.assertEqual(len(v[0]["vector"]), 5)
         self.assertEqual(v[0]["vector"].dtype, float)
@@ -468,7 +470,7 @@ class Tests(TestCase):
 
         v = d.toKaraboValue(h["a"], strict=False)
         self.assertEqual(len(v), 2)
-        self.assertEqual(v[1]["int"], 2)
+        self.assertEqual(v[1]["int"], 2 * unit.millimeter)
         self.assertEqual(v[1]["string"], "bla")
         self.assertEqual(len(v[0]["vector"]), 5)
         self.assertEqual(v[0]["vector"].dtype, float)

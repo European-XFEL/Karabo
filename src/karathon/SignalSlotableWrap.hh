@@ -261,11 +261,9 @@ namespace karathon {
         createOutputChannelPy(const std::string& channelName,
                               const karabo::util::Hash& config,
                               const bp::object& onOutputPossibleHandler = bp::object()) {
-            // Should we do same trick concerning bp::object as in createInputChannelPy?
             return createOutputChannel(channelName,
                                        config,
-                                       boost::bind(&SignalSlotableWrap::proxyOnOutputPossibleHandler,
-                                                   this, onOutputPossibleHandler, _1));
+                                       boost::bind(&OutputChannelWrap::proxyIOEventHandler, onOutputPossibleHandler, _1));
         }
 
         karabo::xms::InputChannel::Pointer
@@ -289,15 +287,15 @@ namespace karathon {
         }
 
         void registerDataHandlerPy(const std::string& channelName, const bp::object& handler) {
-            registerDataHandler(channelName, boost::bind(&SignalSlotableWrap::proxyOnDataAvailableHandler, this, handler, _1, _2));
+            registerDataHandler(channelName, boost::bind(&InputChannelWrap::proxyDataHandler, handler, _1, _2));
         }
 
         void registerInputHandlerPy(const std::string& channelName, const bp::object& handler) {
-            registerInputHandler(channelName, boost::bind(&SignalSlotableWrap::proxyOnInputAvailableHandler, this, handler, _1));
+            registerInputHandler(channelName, boost::bind(&InputChannelWrap::proxyInputHandler, handler, _1));
         }
 
         void registerEndOfStreamHandlerPy(const std::string& channelName, const bp::object& handler) {
-            registerEndOfStreamHandler(channelName, boost::bind(&SignalSlotableWrap::proxyOnEndOfStreamEventHandler, this, handler, _1));
+            registerEndOfStreamHandler(channelName, boost::bind(&InputChannelWrap::proxyEndOfStreamEventHandler, handler, _1));
         }
 
     private:
@@ -313,15 +311,6 @@ namespace karathon {
         void proxyUpdatePerformanceStatisticsHandler(const bp::object&, const karabo::util::Hash::Pointer&);
 
         void proxyBrokerErrorHandler(const bp::object&, const std::string&);
-
-        void proxyOnOutputPossibleHandler(const bp::object& handler, const karabo::xms::OutputChannel::Pointer& channel);
-
-        void proxyOnInputAvailableHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& channel);
-
-        void proxyOnDataAvailableHandler(const bp::object& handler, const karabo::util::Hash& data,
-                                         const karabo::xms::InputChannel::MetaData& metaData);
-
-        void proxyOnEndOfStreamEventHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& channel);
 
     };
 }

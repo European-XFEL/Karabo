@@ -292,33 +292,3 @@ breathe_default_project = "KARABO"
 #add support for detailed developer configuration:
 def setup(app):
     app.add_config_value('includeDevInfo', False, 'env')
-
-    #generate color boxes
-    import os
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
-    import matplotlib.patches as patches
-
-    cwd = os.getcwd()
-    colors = ['grey', 'beige', 'red', 'magenta', 'yellow', 'lightblue', 'lightgreen',
-               'orange', 'darkgreen', 'white']
-
-    if 'concepts' in cwd:
-        if not os.path.isdir('{}/colors'.format(cwd)):
-            os.mkdir('{}/colors'.format(cwd))
-    else:
-        if not os.path.isdir('{}/concepts/colors'.format(cwd)):
-            os.mkdir('{}/concepts/colors'.format(cwd))
-
-    with open("{}/colors.rst".format(cwd) if 'concepts' in cwd else "{}/concepts/colors.rst".format(cwd), "w") as crst:
-        for c in colors:
-            fig = plt.figure(figsize=(0.1, 0.05))
-            ax = fig.add_subplot(111)
-            ax.add_patch(patches.Rectangle((0,0), 1, 1, color=c))
-            ax.axes.get_xaxis().set_visible(False)
-            ax.axes.get_yaxis().set_visible(False)
-            fig.savefig("{}/colors/{}.png".format(cwd, c) if 'concepts' in cwd else "{}/concepts/colors/{}.png".format(cwd, c), dpi=300)
-            crst.write(".. |{}-box| image::  ./colors/{}.png\n".format(c,c))
-            crst.write("\n\n")
-            

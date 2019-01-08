@@ -21,9 +21,6 @@ For new instances it creates a new logging device if necessary. For device
 instances which are shutdown it makes sure the logging device closes the log
 file and then shuts the log device instance down.
 
-.. note:: Data logging is implemented such, that logging information bypasses the broker,
-	i.e. the logging of many devices should not lead to broker-congestion.
-
 
 Distinction from Data Acquisition
 =================================
@@ -56,7 +53,6 @@ Data logging devices are hidden at user access levels lower than admin. Their
 instance id is given by the device instance id they log, prefixed with "Datalogger-".
 
 
-
 Retrieving Logged Information
 =============================
 
@@ -80,10 +76,6 @@ information
     Each entry in the returned vector of hashes has a property *v* of the
     correct value type of the archived property with the
     appropriate time stamp attributes set.
-
-.. function:: getFromPast(deviceId, key, from, to, maxNumData)
-
-    is an alias for ``getPropertyHistory``
 
 .. function:: getDataLogReader(deviceId)
 

@@ -306,9 +306,9 @@ class Network(QObject):
         self.guiservers = _least_recently_used(server, self.guiservers,
                                                int(self.max_servers))
 
-        config = get_config()
-        config['username'] = self.username
-        config['gui_servers'] = self.guiservers
+        # Save to singleton!
+        get_config()['username'] = self.username
+        get_config()['gui_servers'] = self.guiservers
 
         # If some requests got piled up, because of no server connection,
         # now these get handled
