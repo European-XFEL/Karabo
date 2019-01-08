@@ -68,7 +68,7 @@ class AlarmPanel(BasePanelWidget):
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
         """
-        widget = QWidget(self)
+        widget = QWidget(parent=self)
         self.bgFilter = QButtonGroup(parent=widget)
         self.bgFilter.buttonClicked.connect(self.filterToggled)
         self.pbDefaultView = QPushButton("Default view", parent=widget)
@@ -170,7 +170,7 @@ class ButtonDelegate(QStyledItemDelegate):
     def __init__(self, parent=None):
         super(ButtonDelegate, self).__init__(parent)
         # Fake button used for later rendering
-        self.pbClick = QPushButton("", parent)
+        self.pbClick = QPushButton("")
         self.pbClick.hide()
         parent.clicked.connect(self.cellClicked)
         self.cellEditMode = False

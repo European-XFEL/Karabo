@@ -65,6 +65,8 @@ class IconItem(IconData):
     def _get_pixmap(self):
         if not self.data:
             pixmap = icons.no.pixmap(100)
+            # NOTE: This is nice, the ``_create_temp_url will`` create
+            # an image which itself triggers a trait handler to set the data.
             _create_temp_url(self, pixmap)
             return pixmap
 
@@ -91,8 +93,8 @@ class _BaseDialog(QDialog):
     def __init__(self, items):
         super(_BaseDialog, self).__init__()
         uic.loadUi(op.join(op.dirname(__file__), 'icons.ui'), self)
-
-        self.items = list(items)  # Force a copy!
+        # Get a copy!
+        self.items = list(items)
         self.valueList.addItems([self.text_for_item(item) for item in items])
         self.valueList.setCurrentRow(0)
 
@@ -157,22 +159,20 @@ class _BaseDialog(QDialog):
     @pyqtSlot()
     def on_up_clicked(self):
         cr = self.valueList.currentRow()
-        if not 0 < cr < len(self.items) - 1:
+        if not 0 < cr <= len(self.items) - 1:
             return
         self.valueList.insertItem(cr - 1, self.valueList.takeItem(cr))
         self.items[cr - 1], self.items[cr] = self.items[cr], self.items[cr - 1]
+        self.valueList.setCurrentRow(cr - 1)
 
     @pyqtSlot()
     def on_down_clicked(self):
         cr = self.valueList.currentRow()
-        if cr >= len(self.items) - 2:
+        if cr >= len(self.items) - 1:
             return
         self.valueList.insertItem(cr + 1, self.valueList.takeItem(cr))
         self.items[cr + 1], self.items[cr] = self.items[cr], self.items[cr + 1]
-
-    def exec_(self):
-        super(_BaseDialog, self).exec_()
-        return self.items
+        self.valueList.setCurrentRow(cr + 1)
 
 
 class DigitDialog(_BaseDialog):
@@ -203,6 +203,8 @@ class DigitDialog(_BaseDialog):
                         equal=self.lessEqual.isChecked())
         self.items.insert(idx, item)
         self.valueList.insertItem(idx, self.text_for_item(item))
+        # Trigger the imageView to generate default data!
+        self.valueList.setCurrentRow(idx)
 
     def text_for_item(self, item):
         if item.value is None:
@@ -229,6 +231,8 @@ class TextDialog(_BaseDialog):
         item = IconItem(value=self.textValue.text())
         self.items.insert(0, item)
         self.valueList.insertItem(0, self.textValue.text())
+        # Trigger the imageView to generate default data!
+        self.valueList.setCurrentRow(0)
 
     def text_for_item(self, item):
         if not item.value:

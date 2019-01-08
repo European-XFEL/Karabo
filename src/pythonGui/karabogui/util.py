@@ -139,8 +139,7 @@ def load_configuration_from_file(device_proxy):
         config = decodeXML(fp.read())
 
     # Save the directory information
-    config['config_dir'] = op.dirname(filename)
-
+    get_config()['config_dir'] = op.dirname(filename)
     # Broadcast so the configurator can handle the complexities of applying
     # a configuration.
     broadcast_event(KaraboEventSender.LoadConfiguration,
@@ -181,7 +180,7 @@ def save_configuration_to_file(device_proxy):
         writeXML(config, fp)
 
     # save the last config directory
-    config['config_dir'] = op.dirname(filename)
+    get_config()['config_dir'] = op.dirname(filename)
 
 
 @contextmanager

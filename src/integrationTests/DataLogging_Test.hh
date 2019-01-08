@@ -40,6 +40,8 @@ private:
     boost::thread m_eventLoopThread;
     karabo::xms::SignalSlotable::Pointer m_sigSlot;
     karabo::core::DeviceClient::Pointer m_deviceClient;
+
+    static const unsigned int m_flushIntervalSec;
 };
 
 #endif	/* DATALOGGING_TEST_HH */

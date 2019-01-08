@@ -665,57 +665,65 @@ class Tests(TestCase):
     def test_table(self):
         class Row(Configurable):
             name = String()
-            number = Int32()
+            number = Int32(unitSymbol=Unit.METER,
+                           metricPrefixSymbol=MetricPrefix.MILLI)
+            counter = Int32()
 
         class A(Configurable):
             table = VectorHash(rows=Row, defaultValue=[])
 
         a = A()
         self.assertEqual(a.table.shape, (0,))
-        a.table = [("asf", 3), ("fw", 2)]
+        a.table = [("asf", 3, 5), ("fw", 2, 5)]
         self.assertEqual(a.table.shape, (2,))
         self.assertEqual(a.table["name"][1], "fw")
 
-        a.table.append(("lll", 55))
+        a.table.append(("lll", 55, 10))
         self.assertEqual(len(a.table), 3)
         self.assertEqual(a.table[2]["name"], "lll")
-        self.assertEqual(a.table["number"][2], 55)
+        self.assertEqual(a.table["number"][2], 55 * unit.millimeter)
 
-        a.table.extend([(str(i), i) for i in range(10)])
-        self.assertEqual(a.table[10]["number"], 7)
+        a.table.extend([(str(i), i, i + 1) for i in range(10)])
+        self.assertEqual(a.table[10]["number"], 7 * unit.millimeter)
 
         del a.table[10]
-        self.assertEqual(a.table[10]["number"], 8)
+        self.assertEqual(a.table[10]["number"], 8 * unit.millimeter)
+        self.assertEqual(a.table[10]["counter"], 9)
         del a.table[10:12]
         self.assertEqual(len(a.table), 10)
 
-        a.table[1] = ("k", 111)
+        a.table[1] = ("k", 111, 72)
         self.assertEqual(a.table[1]["name"], "k")
+        self.assertEqual(a.table[1]["counter"], 72)
         self.assertEqual(len(a.table), 10)
 
-        a.table[5:7] = [("A", 2), ("B", 3)]
+        a.table[5:7] = [("A", 2, 1), ("B", 3, 2)]
         self.assertEqual(a.table[5]["name"], "A")
-        self.assertEqual(a.table["number"][6], 3)
-        self.assertEqual(a.table["number"][7], 4)
+        self.assertEqual(a.table["number"][6], 3 * unit.millimeter)
+        self.assertEqual(a.table["number"][7], 4 * unit.millimeter)
+        self.assertEqual(a.table["counter"][6], 2)
+        self.assertEqual(a.table["counter"][7], 5)
 
-        a.table.insert(2, ("C", 11))
+        a.table.insert(2, ("C", 11, 5))
         self.assertEqual(a.table[2]["name"], "C")
         self.assertEqual(a.table[3]["name"], "lll")
+        self.assertEqual(a.table[2]["number"], 11 * unit.millimeter)
+        self.assertEqual(a.table[2]["counter"], 5)
         self.assertEqual(len(a.table), 11)
 
-        self.assertEqual(adler32(str(a.table).encode("ascii")), 1313745943)
+        self.assertEqual(adler32(str(a.table).encode("ascii")), 1396785557)
 
-        a = A(Hash("table", [Hash("name", "bla", "number", 5)]))
+        a = A(Hash("table", [Hash("name", "bla", "number", 5, "counter", 2)]))
         self.assertEqual(a.table.shape, (1,))
         self.assertEqual(a.table["name"][0], "bla")
         b = a.table.pop()
         self.assertEqual(a.table.shape, (0,))
         self.assertEqual(b["name"], "bla")
-        self.assertEqual(b["number"], 5)
+        self.assertEqual(b["number"], 5 * unit.millimeter)
 
-        c = A(Hash("table", [Hash("name", "bla", "number", 5)]))
+        c = A(Hash("table", [Hash("name", "bla", "number", 5, "counter", 2)]))
         self.assertEqual(len(c.table.value), 1)
-        c.table.extend([(str(i), i) for i in range(10)])
+        c.table.extend([(str(i), i, i + 1) for i in range(10)])
         self.assertEqual(len(c.table.value), 11)
         c.table.clear()
         self.assertEqual(len(c.table.value), 0)
@@ -1123,6 +1131,7 @@ class Tests(TestCase):
                          ArchivePolicy.EVERY_1S)
         with self.assertRaises(ValueError):
             Int32(archivePolicy=42)
+
 
 if __name__ == "__main__":
     main()

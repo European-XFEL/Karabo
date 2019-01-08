@@ -101,6 +101,24 @@ class ProxyBase(_ProxyBase):
                     instance.__dict__[descr.key] = converted
                     self._notifyChanged(descr, converted)
 
+    def _onChanged_timestamp_r(self, change, timestamp, instance):
+        """Recursively set data on a proxy with a fixed timestamp
+
+        This function can be optionally used for pipeline data
+        """
+        for k, v, a in change.iterall():
+            descr = getattr(type(instance), k, None)
+            if descr is not None:
+                if isinstance(descr, ProxyNodeBase):
+                    self._onChanged_timestamp_r(
+                        v, timestamp, getattr(instance, descr.key))
+                elif not isinstance(descr, ProxySlotBase):
+                    converted = descr.toKaraboValue(v, strict=False)
+                    converted.timestamp = timestamp
+                    converted._parent = self
+                    instance.__dict__[descr.key] = converted
+                    self._notifyChanged(descr, converted)
+
     def _onChanged(self, change):
         """call this when the remote device changed
 
@@ -179,6 +197,7 @@ class ProxyFactory(object):
         It should inherit from :class:`SubProxyBase`.
     """
     Proxy = ProxyBase
+    ProxyNode = ProxyNodeBase
     SubProxy = SubProxyBase
 
     node_factories = dict(
@@ -189,7 +208,7 @@ class ProxyFactory(object):
     def createNode(cls, key, node, prefix, **kwargs):
         sub = cls.createNamespace(node, "{}{}.".format(prefix, key))
         Cls = type(key, (cls.SubProxy,), sub)
-        return ProxyNodeBase(key=key, cls=Cls, **kwargs)
+        return cls.ProxyNode(key=key, cls=Cls, **kwargs)
 
     @classmethod
     def register_special(cls, name, special):

@@ -20,6 +20,7 @@
 #include <karabo/util/Exception.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/NDArray.hh>
+#include <karabo/util/MetaTools.hh>
 
 #define PY_ARRAY_UNIQUE_SYMBOL karabo_ARRAY_API
 #define KRB_NDARRAY_MIN_DIM 1
@@ -28,6 +29,8 @@
 #define NO_IMPORT_ARRAY
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
+
+#include "ScopedGILAcquire.hh"
 
 namespace bp = boost::python;
 
@@ -444,6 +447,34 @@ namespace karathon {
          * @return a deep copy of obj
          */
         static bp::object deepCopyHashLike(const bp::object& obj);
+
+        /**
+         * A proxy around a Python handler to be called with an arbitrary number of arguments
+         *
+         * @param handler A callable Python object
+         * @param which A C-string used to better identify the point of failure in case the Python
+         *              code throws an exception
+         * @param args An arbitrary number of arguments passed to the handler - each has to be a valid
+         *             argument to the constructor of the boost Python object.
+         */
+        template <typename... Args>
+        static void proxyHandler(const bp::object& handler, const char* which, const Args&... args) {
+            ScopedGILAcquire gil;
+            try {
+                if (handler) {
+                    // Convert arguments to an std::tuple of Python objects and call handler with unpacked arguments
+                    karabo::util::call(handler, std::make_tuple(bp::object(args)...));
+                }
+            } catch (const bp::error_already_set& e) {
+                if (PyErr_Occurred()) PyErr_Print();
+                const std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
+                const std::string whichStr(which ? which : "undefined");
+                throw KARABO_PYTHON_EXCEPTION("Python " + whichStr + " handler'" + funcName + "' has thrown an exception.");
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
     };
 
     // Specializations
