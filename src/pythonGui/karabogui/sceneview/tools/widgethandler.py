@@ -10,6 +10,7 @@ from PyQt4.QtCore import QPoint, QRect
 from PyQt4.QtGui import QAction, QDialog, QMenu
 from traits.api import Any, ABCHasStrictTraits
 
+from karabo.common.enums import ONLINE_STATUSES
 from karabo.common.scenemodel.api import BaseWidgetObjectData
 from karabogui.controllers.api import (
     get_class_const_trait, get_compatible_controllers, get_scene_model_class)
@@ -153,7 +154,8 @@ class SceneControllerHandler(SceneWidgetHandler):
 
         # We don't allow changing widgets without binding!
         binding = controller.proxy.binding
-        if binding is None:
+        status = controller.proxy.root_proxy.status
+        if binding is None or status not in ONLINE_STATUSES:
             info = menu.addAction('No mutation for offline properties')
             info.setEnabled(False)
             menu.exec_(event.globalPos())
@@ -165,6 +167,7 @@ class SceneControllerHandler(SceneWidgetHandler):
             can_edit = True
         else:
             can_edit = False
+
         klasses = get_compatible_controllers(binding, can_edit=can_edit)
 
         change_menu = menu.addMenu('Change Widget')
