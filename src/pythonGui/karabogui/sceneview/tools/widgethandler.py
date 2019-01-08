@@ -157,11 +157,12 @@ class SceneControllerHandler(SceneWidgetHandler):
         for klass in klasses:
             ui_name = get_class_const_trait(klass, '_ui_name')
             action = change_menu.addAction(ui_name)
+            action.triggered.connect(partial(self._change_widget,
+                                             scene_view, klass))
             if isinstance(controller, klass):
                 action.setCheckable(True)
                 action.setChecked(True)
-                action.triggered.connect(partial(self._change_widget,
-                                         scene_view, klass))
+
         menu.exec_(event.globalPos())
 
     # -------------------------------------------------
