@@ -1,7 +1,7 @@
 from PyQt4.QtCore import QPoint
 from traits.api import (
-    HasStrictTraits, Bool, Dict, Enum, Event, Instance, Int, List, Property,
-    String, cached_property, on_trait_change
+    Bool, cached_property, Dict, Enum, Event, Instance, HasStrictTraits, Int,
+    List, on_trait_change, Property, String, Undefined
 )
 
 from karabo.common.scenemodel.api import WorkflowItemModel
@@ -351,12 +351,12 @@ class SceneWorkflowModel(HasStrictTraits):
         connections = []
         for input in self.input_channels:
             binding = input.proxy.binding
-            if (binding is None or
+            if (binding is Undefined or
                     'connectedOutputChannels' not in binding.value):
                 continue
 
             connected_outputs = binding.value.connectedOutputChannels.value
-            if not connected_outputs:
+            if connected_outputs is Undefined or not connected_outputs:
                 continue
 
             data_dist = ''
