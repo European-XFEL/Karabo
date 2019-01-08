@@ -32,7 +32,7 @@ from .tools.api import (
     ConfigurationDropHandler, NavigationDropHandler, ProxySelectionTool,
     SceneSelectionTool, SceneControllerHandler, SceneToolHandler)
 from .utils import save_painter_state
-from .widget.api import ControllerContainer
+from .widget.api import ControllerContainer, WorkflowItemWidget
 from .workflow.api import SceneWorkflowModel, WorkflowOverlay
 
 # The scene widgets handler for mutations and action of the controllers and
@@ -377,10 +377,10 @@ class SceneView(QWidget):
     def controller_at_position(self, pos):
         """Returns the topmost controller whose bounds contain `pos`."""
         widget = self.inner.childAt(pos)
-        if widget is not None:
-            while (widget is not None
-                   and not isinstance(widget, ControllerContainer)):
-                widget = widget.parent()
+        while (widget is not None
+               and not isinstance(widget, ControllerContainer)):
+            widget = widget.parent()
+
         return widget
 
     def widget_at_position(self, pos):
@@ -389,6 +389,14 @@ class SceneView(QWidget):
         if widget is not None:
             while not is_widget(widget):
                 widget = widget.parent()
+        return widget
+
+    def workflow_at_position(self, pos):
+        """Returns the topmost workflow widget whose bounds contain `pos`."""
+        widget = self.inner.childAt(pos)
+        while (widget is not None
+                and not isinstance(widget, WorkflowItemWidget)):
+            widget = widget.parent()
         return widget
 
     def items_in_rect(self, rect):
