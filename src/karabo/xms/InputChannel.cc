@@ -459,13 +459,15 @@ namespace karabo {
                         inactiveDataLock.unlock();
                         notifyOutputChannelForPossibleRead(channel);
                     } else {
+                        // Releases the inactiveDataMutex before reacquiring it after acquiring the activeDataMutex.
+                        // The acquisition of both mutexes before a swap must always be done in the same order.
                         inactiveDataLock.unlock();
                         boost::mutex::scoped_lock activeDataLock(m_activeDataMutex);
                         size_t nActiveData = Memory::size(m_channelId, m_activeChunk);
                         if (nActiveData == 0) { // Data complete, second pot still empty
                             // Caveat! Both mutexes are locked, always do same order!
                             {
-                                boost::mutex::scoped_lock inactiveDataLock(m_inactiveDataMutex);
+                                boost::mutex::scoped_lock inactiveDataLockSwap(m_inactiveDataMutex);
                                 KARABO_LOG_FRAMEWORK_TRACE << traceId << "Will swap buffers for active and inactive data.";
                                 std::swap(m_activeChunk, m_inactiveChunk);
                             }
