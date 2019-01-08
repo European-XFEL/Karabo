@@ -5,8 +5,7 @@ from PyQt4.QtCore import QMimeData, Qt
 from PyQt4.QtGui import QStyle
 
 from karabo.common.api import (
-    KARABO_SCHEMA_DAQ_POLICY, KARABO_SCHEMA_DISPLAYED_NAME,
-    KARABO_SCHEMA_DISPLAY_TYPE, KARABO_SCHEMA_DISPLAY_TYPE_DIRECTORY,
+    KARABO_SCHEMA_DAQ_POLICY, KARABO_SCHEMA_DISPLAY_TYPE_DIRECTORY,
     KARABO_SCHEMA_DISPLAY_TYPE_FILEIN, KARABO_SCHEMA_DISPLAY_TYPE_FILEOUT,
     KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_UNIT_SYMBOL,
     KARABO_EDITABLE_ATTRIBUTES)
@@ -39,11 +38,10 @@ def dragged_configurator_items(proxies):
 
         # Collect the relevant information
         binding = proxy.binding
-        attrs = binding.attributes
         default_name = proxy.path.split('.')[-1]
         data = {
             'key': proxy.key,
-            'label': attrs.get(KARABO_SCHEMA_DISPLAYED_NAME, default_name)
+            'label': binding.displayed_name or default_name
         }
 
         factories = get_compatible_controllers(binding, can_edit=False)
@@ -150,7 +148,6 @@ def get_icon(binding):
     if len(binding.options) > 0:
         return icons.enum
 
-    attributes = binding.attributes
     icon = icons.undefined
     if isinstance(binding, CharBinding):
         icon = icons.string
@@ -158,7 +155,7 @@ def get_icon(binding):
         path_types = (KARABO_SCHEMA_DISPLAY_TYPE_DIRECTORY,
                       KARABO_SCHEMA_DISPLAY_TYPE_FILEIN,
                       KARABO_SCHEMA_DISPLAY_TYPE_FILEOUT)
-        if attributes.get(KARABO_SCHEMA_DISPLAY_TYPE) in path_types:
+        if binding.display_type in path_types:
             icon = icons.path
         else:
             icon = icons.string

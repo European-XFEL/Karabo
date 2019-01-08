@@ -35,7 +35,7 @@ def test_binding_traits():
     expected_traits = ('_attributes', 'access_mode', 'assignment',
                        'attributes', 'children_names', 'options',
                        'required_access_level', 'timestamp', 'unit_label',
-                       'value')
+                       'value', 'displayed_name', 'display_type')
     for binding_factory in ALL_BINDINGS:
         obj = binding_factory()
         for trait in obj.copyable_trait_names():
