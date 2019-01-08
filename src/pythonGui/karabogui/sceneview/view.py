@@ -30,14 +30,14 @@ from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
 from .tools.api import (
     ConfigurationDropHandler, NavigationDropHandler, ProxySelectionTool,
-    SceneSelectionTool, SceneControllerHandler, SceneWidgetHandler)
+    SceneSelectionTool, SceneControllerHandler, SceneToolHandler)
 from .utils import save_painter_state
 from .widget.api import ControllerContainer
 from .workflow.api import SceneWorkflowModel, WorkflowOverlay
 
 # The scene widgets handler for mutations and action of the controllers and
 # layout items on our scene
-SCENE_WIDGET_HANDLER = (SceneControllerHandler, SceneWidgetHandler)
+SCENE_WIDGET_HANDLER = (SceneControllerHandler, SceneToolHandler)
 
 _WIDGET_REMOVAL_DELAY = 5000
 
