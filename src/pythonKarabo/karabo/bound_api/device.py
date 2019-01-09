@@ -375,6 +375,7 @@ class PythonDevice(NoFsm):
             self.parameters.set("classId", self.classid)
             self.parameters.set("deviceId", self.deviceid)
             self.parameters.set("serverId", self.serverid)
+            self.parameters.set("pid", os.getpid())
 
             # Validate first time to assign timestamps
             # Note that invalid property keys are already caught via
@@ -462,8 +463,6 @@ class PythonDevice(NoFsm):
         self._ss.connectInputChannels()
 
         self.startFsm()
-
-        self.set("pid", pid)
 
         if self.timeServerId:
             self.log.DEBUG("Connecting to time server : \"{}\"".format(self.timeServerId))
