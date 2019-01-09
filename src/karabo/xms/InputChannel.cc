@@ -603,6 +603,13 @@ namespace karabo {
                     // Clear active chunk
                     Memory::clearChunkData(m_channelId, m_activeChunk);
 
+                    size_t nInactiveData = Memory::size(m_channelId, m_inactiveChunk);
+                    if (nInactiveData < this->getMinimumNumberOfData()) {
+                        // Too early to process inactive Pot: has to reach minData
+                        KARABO_LOG_FRAMEWORK_TRACE << "Too early to process inactive Pot: has to reach minData.";
+                        return;
+                    }
+
                     // Swap buffers
                     swapBuffers();
 

@@ -381,12 +381,7 @@ void PipelinedProcessing_Test::testPipeMinData() {
 
     const unsigned int originalSenderDelay = m_deviceClient->get<unsigned int>(m_sender, "delay");
 
-    // There's an undesired interdependency between the tests cases; this test only works if the sender delay
-    // is significatively high.
-    // TODO: IMPORTANT: Solve the racing condition between onTcpRead and TriggerIOEvent that happens in the
-    //                  InputChannel when the sender has no delay and that causes the Pots swapping to happen
-    //                  in the middle of the processing.
-    m_deviceClient->set(m_sender, "delay", 100u);
+    m_deviceClient->set(m_sender, "delay", 0u);
 
     // input.minData = 1 by default
     unsigned int minData = 5;
