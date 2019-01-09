@@ -437,11 +437,13 @@ namespace karabo {
                     unsigned int channelId = header.get<unsigned int>("channelId");
                     unsigned int chunkId = header.get<unsigned int>("chunkId");
                     KARABO_LOG_FRAMEWORK_TRACE << traceId << "Reading from local memory [" << channelId << "][" << chunkId << "]";
+                    boost::mutex::scoped_lock activeDataLock(m_activeDataMutex);
                     boost::mutex::scoped_lock inactiveDataLock(m_inactiveDataMutex);
                     Memory::writeChunk(Memory::readChunk(channelId, chunkId), m_channelId, m_inactiveChunk, Memory::getMetaData(channelId, chunkId));
                     Memory::decrementChunkUsage(channelId, chunkId);
                 } else { // TCP data
                     KARABO_LOG_FRAMEWORK_TRACE << traceId << "Reading from remote memory (over tcp)";
+                    boost::mutex::scoped_lock activeDataLock(m_activeDataMutex);
                     boost::mutex::scoped_lock inactiveDataLock(m_inactiveDataMutex);
                     Memory::writeAsContiguousBlock(data, header, m_channelId, m_inactiveChunk);
                 }
@@ -450,6 +452,7 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_TRACE << traceId << "Can read more data since 'all' requested";
                     notifyOutputChannelForPossibleRead(channel);
                 } else {
+                    boost::mutex::scoped_lock activeDataLock(m_activeDataMutex);
                     boost::mutex::scoped_lock inactiveDataLock(m_inactiveDataMutex);
                     size_t nInactiveData = Memory::size(m_channelId, m_inactiveChunk);
                     KARABO_LOG_FRAMEWORK_WARN << traceId
@@ -457,20 +460,15 @@ namespace karabo {
                     if (nInactiveData < this->getMinimumNumberOfData()) {
                         // requested more data
                         inactiveDataLock.unlock();
+                        activeDataLock.unlock();
                         notifyOutputChannelForPossibleRead(channel);
                     } else {
-                        // Releases the inactiveDataMutex before reacquiring it after acquiring the activeDataMutex.
-                        // The acquisition of both mutexes before a swap must always be done in the same order.
-                        inactiveDataLock.unlock();
-                        boost::mutex::scoped_lock activeDataLock(m_activeDataMutex);
                         size_t nActiveData = Memory::size(m_channelId, m_activeChunk);
                         if (nActiveData == 0) { // Data complete, second pot still empty
-                            // Caveat! Both mutexes are locked, always do same order!
-                            {
-                                boost::mutex::scoped_lock inactiveDataLockSwap(m_inactiveDataMutex);
-                                KARABO_LOG_FRAMEWORK_TRACE << traceId << "Will swap buffers for active and inactive data.";
-                                std::swap(m_activeChunk, m_inactiveChunk);
-                            }
+                            KARABO_LOG_FRAMEWORK_TRACE << traceId << "Will swap buffers for active and inactive data.";
+                            std::swap(m_activeChunk, m_inactiveChunk);
+                            // when the order of unlock is reversed, we observed deadlock.
+                            inactiveDataLock.unlock(); // before synchronous write to Tcp
                             activeDataLock.unlock(); // before synchronous write to Tcp
                             // Ask to fill second pot...
                             notifyOutputChannelForPossibleRead(channel);
