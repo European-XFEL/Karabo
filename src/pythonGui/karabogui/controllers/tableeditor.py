@@ -94,25 +94,23 @@ class TableModel(QAbstractTableModel):
 
     def flags(self, idx):
         if not idx.isValid():
-            return Qt.ItemIsEnabled
+            return Qt.NoItemFlags
 
-        base_flags = super(TableModel, self).flags(idx)
+        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
         key = self._column_hash.getKeys()[idx.column()]
         access = AccessMode(self._column_schema.hash[key, 'accessMode'])
         vtype = _value_type(self._column_schema, key)
 
         if vtype == 'BOOL' and self._role == Qt.EditRole:
             if access == AccessMode.READONLY:
-                return (Qt.ItemIsUserCheckable | Qt.ItemIsSelectable
-                        & ~Qt.ItemIsEnabled)
+                flags &= ~Qt.ItemIsEditable
+                flags &= ~Qt.ItemIsEnabled
+            else:
+                flags |= Qt.ItemIsUserCheckable
+        elif access == AccessMode.READONLY:
+            flags &= ~Qt.ItemIsEditable
 
-            return (Qt.ItemIsUserCheckable | Qt.ItemIsSelectable
-                    | Qt.ItemIsEnabled)
-
-        if access == AccessMode.READONLY:
-            return base_flags & ~Qt.ItemIsEditable
-
-        return base_flags | Qt.ItemIsEditable
+        return flags
 
     def setData(self, idx, value, role, from_device_update=False):
         if not idx.isValid():
