@@ -155,10 +155,18 @@ onExit() {
 safeRunCommand() {
     typeset cmnd="$*"
     typeset ret_code
+    typeset max_tries=4
 
     echo cmnd=$cmnd
     eval $cmnd
     ret_code=$?
+    if $ACCEPT_SIGSEGV; then
+        while [ $max_tries \> 1 ] && [ $ret_code == 139 ]; do
+            eval $cmnd
+            ret_code=$?
+            ((max_tries--))
+        done
+    fi
     if [ $ret_code != 0 ]; then
         printf "Error : [%d] when executing command: '$cmnd'" $ret_code
         echo
@@ -185,14 +193,16 @@ runPythonUnitTests() {
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.common"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.project_db"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.tests"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabogui"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.interactive"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.macro_api"
+    ACCEPT_SIGSEGV=true
+    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabogui"
 
     echo
     echo Karabo Python unit tests complete
     echo
 }
+
 
 runPythonIntegrationTests() {
     echo
