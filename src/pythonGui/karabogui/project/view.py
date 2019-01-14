@@ -39,6 +39,7 @@ class ProjectView(QTreeView):
         project_model.rowsInserted.connect(self._items_added)
         self.setSelectionModel(project_model.q_selection_model)
         self.selectionModel().selectionChanged.connect(self._selection_change)
+        self.setDragEnabled(True)
 
         set_treeview_header(self)
 
