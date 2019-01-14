@@ -15,7 +15,7 @@ from karabo.common.scenemodel.api import (
 from karabo.middlelayer import AccessMode
 from karabogui.controllers.api import (
     get_class_const_trait, get_compatible_controllers, get_scene_model_class)
-from karabogui.enums import NavigationItemTypes
+from karabogui.enums import NavigationItemTypes, ProjectItemTypes
 from karabogui.project.utils import (
     add_device_to_server, validate_device_instance_exists)
 from karabogui.sceneview.widget.utils import get_proxy
@@ -138,6 +138,37 @@ class NavigationDropHandler(SceneDnDHandler):
 
     def _extract_items(self, mime_data):
         known_types = (NavigationItemTypes.CLASS, NavigationItemTypes.DEVICE)
+        items_data = mime_data.data('treeItems').data()
+        if items_data:
+            items = json.loads(items_data.decode())
+            return [it for it in items if it['type'] in known_types]
+        return []
+
+
+class ProjectDropHandler(SceneDnDHandler):
+    """Scene D&D handler for drops originating from the project view"""
+    def can_handle(self, event):
+        # We can handle a drop if it contains at least one device
+        return len(self._extract_items(event.mimeData())) > 0
+
+    def handle(self, scene_view, event):
+        dropped_items = self._extract_items(event.mimeData())
+        if len(dropped_items) == 0:
+            return
+
+        # We ONLY handle one dropped device at a time!
+        item = dropped_items[0]
+        device_id = item.get('deviceId')
+        position = event.pos()
+        model = WorkflowItemModel(device_id=device_id,
+                                  klass='WorkflowItem',
+                                  x=position.x(), y=position.y())
+        scene_view.add_models(model)
+        event.accept()
+
+    def _extract_items(self, mime_data):
+        # XXX: Once we drag more items, like scenes, this has to be revisited!
+        known_types = (ProjectItemTypes.DEVICE,)
         items_data = mime_data.data('treeItems').data()
         if items_data:
             items = json.loads(items_data.decode())
