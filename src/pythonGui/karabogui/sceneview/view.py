@@ -30,7 +30,8 @@ from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
 from .tools.api import (
     ConfigurationDropHandler, NavigationDropHandler, ProxySelectionTool,
-    SceneSelectionTool, SceneControllerHandler, SceneToolHandler)
+    ProjectDropHandler, SceneSelectionTool, SceneControllerHandler,
+    SceneToolHandler)
 from .utils import save_painter_state
 from .widget.api import ControllerContainer, WorkflowItemWidget
 from .workflow.api import SceneWorkflowModel, WorkflowOverlay
@@ -85,7 +86,8 @@ class SceneView(QWidget):
 
         # List of scene drag n drop handlers
         self.scene_handler_list = [ConfigurationDropHandler(),
-                                   NavigationDropHandler()]
+                                   NavigationDropHandler(),
+                                   ProjectDropHandler()]
         self.current_scene_handler = None
 
         self.current_tool = None
