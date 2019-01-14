@@ -11,3 +11,12 @@ class NavigationItemTypes(object):
     SERVER = 1
     CLASS = 2
     DEVICE = 3
+
+
+class ProjectItemTypes(object):
+    UNDEFINED = "Undefined"
+    PROJECT = "Project"
+    PROJECT_GROUP = "ProjectGroup"
+    SERVER = "Server"
+    SCENE = "Scene"
+    DEVICE = "Device"
