@@ -30,7 +30,7 @@ from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
 from .tools.api import (
     ConfigurationDropHandler, NavigationDropHandler, ProxySelectionTool,
-    ProjectDropHandler, SceneSelectionTool, SceneControllerHandler,
+    ProjectDropHandler, SceneControllerHandler, SceneSelectionTool,
     SceneToolHandler)
 from .utils import save_painter_state
 from .widget.api import ControllerContainer, WorkflowItemWidget
