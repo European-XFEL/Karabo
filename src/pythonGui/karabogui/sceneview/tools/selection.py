@@ -12,17 +12,26 @@ class ProxySelectionTool(BaseSceneTool):
     from ``ControllerContainer`` and bound to proxies.
     """
     def mouse_down(self, scene_view, event):
-        # Only widgets might have proxies
-        widget = scene_view.widget_at_position(event.pos())
-        if widget is not None and hasattr(widget, 'widget_controller'):
+        # Only controller might have proxies
+        controller = scene_view.controller_at_position(event.pos())
+        if controller is not None:
             # Use the main proxy of the controller
-            proxy = widget.widget_controller.proxy
+            proxy = controller.widget_controller.proxy
             device = proxy.root_proxy
             if isinstance(device, DeviceProxy):  # ignore DeviceClassProxy
                 if not device.online:
                     return  # ignore offline devices
                 broadcast_event(KaraboEventSender.ShowConfiguration,
                                 {'proxy': device})
+            return
+
+        workflow = scene_view.workflow_at_position(event.pos())
+        if workflow is not None:
+            # Simply launch the event to show the device with the deviceId
+            # from the workflow widget!
+            deviceId = workflow.model.device_id
+            broadcast_event(KaraboEventSender.ShowDevice,
+                            {'deviceId': deviceId})
 
     def mouse_move(self, scene_view, event):
         pass
