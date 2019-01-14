@@ -14,6 +14,7 @@ from karabo.common.project.api import (
     DeviceServerModel, MacroModel, ProjectModel, read_macro)
 from karabo.common.scenemodel.api import SceneModel, read_scene
 from karabogui import icons, messagebox
+from karabogui.enums import ProjectItemTypes
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.project.dialog.object_handle import ObjectEditDialog
 from karabogui.project.dialog.server_handle import ServerHandleDialog
@@ -73,6 +74,9 @@ class ProjectSubgroupController(BaseProjectGroupController):
         """Explicitly ignore assignment to the ``ui_data`` trait.
         """
         pass
+
+    def info(self):
+        return {'type': ProjectItemTypes.PROJECT_GROUP}
 
 
 def _fill_macros_menu(menu, project_controller):
