@@ -63,9 +63,13 @@ def _draw_connection(painter, connection):
 
 
 def _draw_device_state(painter, device_model):
-    """ Draw a pixmap which reflects the state the connected device is in.
+    """ Draw a pixmap which reflects the state of the connected device model
+
+    The Device might be missing in the project due to concurrence. Then the
+    device status is missing.
     """
-    status = device_model.device.proxy.status
+    dev = device_model.device
+    status = dev.proxy.status if dev is not None else DeviceStatus.MISSING
     error = (status is DeviceStatus.ERROR)
     pixmap = get_device_status_pixmap(status, error)
     if pixmap is not None:
