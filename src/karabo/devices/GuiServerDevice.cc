@@ -265,7 +265,7 @@ namespace karabo {
                 startDeviceInstantiation();
                 startNetworkMonitor();
                 startForwardingLogs();
-                
+
                 updateState(State::ON);
 
                 // Produce some information
@@ -377,14 +377,16 @@ namespace karabo {
             }
             boost::mutex::scoped_lock lock(m_forwardLogsMutex);
             if (m_logCache.size() > 0) {
-                Hash h("type", "log", "messages", m_logCache);
-                // Broadcast to all GUIs
+
+                Hash h("type", "log");
+                std::vector<Hash>& messages = h.bindReference<std::vector < Hash >> ("messages");
+                messages = std::move(m_logCache); // use r-value assignment operator to avoid a copy
+                m_logCache.clear(); // because std::move left it in a valid, but undefined state
                 safeAllClientsWrite(h, REMOVE_OLDEST);
-                m_logCache.clear();
             }
             startForwardingLogs();
         }
-        
+
         void GuiServerDevice::onConnect(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel) {
             if (e) return;
 
