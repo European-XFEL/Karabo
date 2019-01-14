@@ -61,8 +61,7 @@ class RunControlDataSource(object):
             STRING_ELEMENT(expected).key('type')
             .displayedName('Type')
             .description("Data source's type")
-            # XXX: Uncommenting the following line causes the GUI to crash...
-            # .options('control,instrument')
+            .options('control,instrument')
             .assignmentOptional().defaultValue('control')
             .reconfigurable()
             .commit(),
