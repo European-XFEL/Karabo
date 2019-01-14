@@ -462,8 +462,8 @@ namespace karathon {
             ScopedGILAcquire gil;
             try {
                 if (handler) {
-                    // Convert arguments to an std::tuple of Python objects and call handler with unpacked arguments
-                    karabo::util::call(handler, std::make_tuple(bp::object(args)...));
+                    // Just call handler with individually unpacked arguments:
+                    handler(bp::object(args)...);
                 }
             } catch (const bp::error_already_set& e) {
                 if (PyErr_Occurred()) PyErr_Print();
