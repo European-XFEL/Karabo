@@ -864,7 +864,7 @@ namespace karabo {
 
                 set(validated);
 
-                KARABO_LOG_INFO << "Schema updated";
+                KARABO_LOG_DEBUG << "Schema updated";
             }
 
             /**
@@ -919,7 +919,7 @@ namespace karabo {
 
                 set(validated);
 
-                KARABO_LOG_INFO << "Schema updated";
+                KARABO_LOG_DEBUG << "Schema updated";
             }
 
             /**
@@ -1518,7 +1518,7 @@ namespace karabo {
                 //
                 SignalSlotable::start();
 
-                KARABO_LOG_INFO << "'" << m_classId << "' with deviceId: '" << this->getInstanceId() << "' got started"
+                KARABO_LOG_DEBUG << "'" << m_classId << "' with deviceId: '" << this->getInstanceId() << "' got started"
                         << " on server '" << this->getServerId() << "'.";
 
                 //
@@ -1781,9 +1781,9 @@ namespace karabo {
                 this->preDestruction(); // Give devices a chance to react
                 this->stopFsm();
                 if (senderId == m_serverId) { // Our server killed us
-                    KARABO_LOG_INFO << "Device is going down as instructed by server";
+                    KARABO_LOG_DEBUG << "Device is going down as instructed by server";
                 } else { // Someone else wants to see us dead, we should inform our server
-                    KARABO_LOG_INFO << "Device is going down as instructed by \"" << senderId << "\"";
+                    KARABO_LOG_DEBUG << "Device is going down as instructed by \"" << senderId << "\"";
                     call(m_serverId, "slotDeviceGone", m_deviceId);
                 }
             }
