@@ -262,28 +262,10 @@ def checkkarabo():
 
     If no device server is given, show the status of all device servers.
     """
-    STDIN = 0
-    STDOUT = 1
-    STDERR = 2
-
-    pipe_read, pipe_write = os.pipe()
-    if os.fork():  # parent, read from pipe
-        os.close(pipe_write)
-        os.dup2(pipe_read, STDIN)
-        os.close(pipe_read)
-        n, number_of_services = 0, len(defaultall())
-        for line in sys.stdin:
-            print(colorize(line.strip()))
-            n += 1
-            if n > number_of_services:
-                break
-
-    else:   # child, exec svstat and write to pipe
-        os.close(pipe_read)
-        os.dup2(pipe_write, STDOUT)
-        os.dup2(pipe_write, STDERR)
-        exec_defaultall("svstat")
-
+    svstat = subprocess.run(
+        [absolute("extern", "bin", "svstat")] + defaultall(),
+        stdout=subprocess.PIPE, encoding="utf8")
+    print('\n'.join(map(colorize, svstat.stdout.strip().split('\n'))))
 
 @entrypoint
 def gnometermlog():
