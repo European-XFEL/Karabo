@@ -12,6 +12,7 @@ from traits.api import Instance, Int
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, find_parent_object)
 from karabogui import messagebox
+from karabogui.enums import ProjectItemTypes
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.project.dialog.object_handle import ObjectEditDialog
 from karabogui.project.utils import check_device_config_exists
@@ -62,6 +63,11 @@ class DeviceConfigurationController(BaseProjectController):
     def create_ui_data(self):
         return ProjectControllerUiData(checkable=True,
                                        check_state=self.initial_check_state)
+
+    def info(self):
+        return {'type': ProjectItemTypes.CONFIGURATION,
+                'classId': self.model.class_id,
+                'configuration': self.model.configuration}
 
     # ----------------------------------------------------------------------
     # QAction handlers
