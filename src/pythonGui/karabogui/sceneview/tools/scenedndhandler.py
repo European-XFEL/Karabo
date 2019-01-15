@@ -11,7 +11,7 @@ from PyQt4.QtGui import QBoxLayout, QFont
 from traits.api import ABCHasStrictTraits
 
 from karabo.common.scenemodel.api import (
-    BoxLayoutModel, LabelModel, WorkflowItemModel, SceneLinkModel)
+    BoxLayoutModel, LabelModel, SceneLinkModel, WorkflowItemModel)
 from karabo.common.scenemodel.const import SceneTargetWindow
 from karabo.middlelayer import AccessMode
 from karabogui.controllers.api import (
