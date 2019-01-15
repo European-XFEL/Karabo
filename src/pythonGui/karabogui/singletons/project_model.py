@@ -270,12 +270,9 @@ class ProjectViewItemModel(QAbstractItemModel):
             return Qt.NoItemFlags
 
         # All items have these properties
-        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable
+        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled
         controller = self.controller_ref(index)
-        if isinstance(controller, DeviceInstanceController):
-            # We allow devices to be dragged!
-            flags |= Qt.ItemIsDragEnabled
-        elif isinstance(controller, DeviceConfigurationController):
+        if isinstance(controller, DeviceConfigurationController):
             # We only allow the configurations to be checkable for offline
             # devices!
             parent_controller = self.controller_ref(index.parent())

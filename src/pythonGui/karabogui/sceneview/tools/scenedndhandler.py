@@ -11,7 +11,8 @@ from PyQt4.QtGui import QBoxLayout, QFont
 from traits.api import ABCHasStrictTraits
 
 from karabo.common.scenemodel.api import (
-    BoxLayoutModel, LabelModel, WorkflowItemModel)
+    BoxLayoutModel, LabelModel, SceneLinkModel, WorkflowItemModel)
+from karabo.common.scenemodel.const import SceneTargetWindow
 from karabo.middlelayer import AccessMode
 from karabogui.controllers.api import (
     get_class_const_trait, get_compatible_controllers, get_scene_model_class)
@@ -24,7 +25,6 @@ _STACKED_WIDGET_OFFSET = 30
 
 
 class SceneDnDHandler(ABCHasStrictTraits):
-
     @abstractmethod
     def can_handle(self, event):
         """Check whether the drag event can be handled."""
@@ -37,6 +37,7 @@ class SceneDnDHandler(ABCHasStrictTraits):
 class ConfigurationDropHandler(SceneDnDHandler):
     """Scene D&D handler for drops originating from the configuration view.
     """
+
     def can_handle(self, event):
         source_type = event.mimeData().data('source_type')
         if source_type == 'ParameterTreeWidget':
@@ -104,6 +105,7 @@ class ConfigurationDropHandler(SceneDnDHandler):
 
 class NavigationDropHandler(SceneDnDHandler):
     """Scene D&D handler for drops originating from the navigation view"""
+
     def can_handle(self, event):
         # We can handle a drop if it contains at least one device or class
         return len(self._extract_items(event.mimeData())) > 0
@@ -147,8 +149,9 @@ class NavigationDropHandler(SceneDnDHandler):
 
 class ProjectDropHandler(SceneDnDHandler):
     """Scene D&D handler for drops originating from the project view"""
+
     def can_handle(self, event):
-        # We can handle a drop if it contains at least one device
+        # We can handle a drop if it contains at least one item
         return len(self._extract_items(event.mimeData())) > 0
 
     def handle(self, scene_view, event):
@@ -156,19 +159,27 @@ class ProjectDropHandler(SceneDnDHandler):
         if len(dropped_items) == 0:
             return
 
-        # We ONLY handle one dropped device at a time!
         item = dropped_items[0]
-        device_id = item.get('deviceId')
-        position = event.pos()
-        model = WorkflowItemModel(device_id=device_id,
-                                  klass='WorkflowItem',
-                                  x=position.x(), y=position.y())
-        scene_view.add_models(model)
-        event.accept()
+        if item.get('type') == ProjectItemTypes.DEVICE:
+            device_id = item.get('deviceId')
+            position = event.pos()
+            model = WorkflowItemModel(device_id=device_id,
+                                      klass='WorkflowItem',
+                                      x=position.x(), y=position.y())
+            scene_view.add_models(model)
+
+        elif item.get('type') == ProjectItemTypes.SCENE:
+            uuid = item.get('uuid')
+            simple_name = item.get('simple_name')
+            target = '{}:{}'.format(simple_name, uuid)
+            position = event.pos()
+            model = SceneLinkModel(target=target,
+                                   target_window=SceneTargetWindow.Dialog,
+                                   x=position.x(), y=position.y())
+            scene_view.add_models(model)
 
     def _extract_items(self, mime_data):
-        # XXX: Once we drag more items, like scenes, this has to be revisited!
-        known_types = (ProjectItemTypes.DEVICE,)
+        known_types = (ProjectItemTypes.DEVICE, ProjectItemTypes.SCENE)
         items_data = mime_data.data('treeItems').data()
         if items_data:
             items = json.loads(items_data.decode())
