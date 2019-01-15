@@ -123,7 +123,7 @@ namespace karabo {
                     .displayedName("Log Forwarding Level")
                     .description("The lowest log message level which will be forwarded to GUI clients.")
                     .options("ERROR,WARN,INFO,DEBUG")
-                    .assignmentOptional().defaultValue("ERROR")
+                    .assignmentOptional().defaultValue("INFO")
                     .reconfigurable()
                     .commit();
 
