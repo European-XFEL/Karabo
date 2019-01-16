@@ -1,0 +1,10 @@
+digraph deps {
+    "karabogui" -> "karabocommon"
+    "karabogui" -> "karabonative"
+    "karabonative" -> "karabo.middlelayer"
+    "karabocommon" -> "karabo.common"
+    "karabo.bound" -> "karabo.common"
+    "karabo.bound" -> "karathon"
+    "karathon" -> "openmq"
+    "karabo.middlelayer" -> "openmq"
+}
