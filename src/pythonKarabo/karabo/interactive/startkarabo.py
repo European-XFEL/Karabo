@@ -262,6 +262,7 @@ def checkkarabo():
 
     If no device server is given, show the status of all device servers.
     """
+    supervise()
     svstat = subprocess.run(
         [absolute("extern", "bin", "svstat")] + defaultall(),
         stdout=subprocess.PIPE, encoding="utf8")
