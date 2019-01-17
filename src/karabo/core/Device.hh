@@ -864,7 +864,7 @@ namespace karabo {
 
                 set(validated);
 
-                KARABO_LOG_DEBUG << "Schema updated";
+                KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << "Schema updated;
             }
 
             /**
@@ -919,7 +919,7 @@ namespace karabo {
 
                 set(validated);
 
-                KARABO_LOG_DEBUG << "Schema updated";
+                KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << "Schema updated;
             }
 
             /**
