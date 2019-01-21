@@ -110,12 +110,6 @@ class ProjectView(QTreeView):
         """ Notify controller objects when their Qt list item object is
         selected.
         """
-        # NOTE: There are two project views at all items, because the
-        # configurator has a $%@#ing hidden navigation/project pair.
-        # Avoid doing double the work...
-        if not self.hasFocus():
-            return
-
         selected_controller = self._get_selected_controller()
         if selected_controller is not None:
             project_controller = self._project_controller(selected_controller)
