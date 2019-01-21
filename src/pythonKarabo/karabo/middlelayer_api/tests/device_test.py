@@ -38,7 +38,9 @@ class MyDevice(Device):
         maxInc=10)
 
     counter = Int32(
-        defaultValue=0)
+        defaultValue=0,
+        minInc=0,
+        maxInc=2000)
 
     # an output channel without schema
     output = OutputChannel()
@@ -177,21 +179,6 @@ class Tests(DeviceTest):
         self.assertEqual(self.myDevice.slotHasSlot("doesNotExist"), False)
 
     @sync_tst
-    def test_schema_update(self):
-        updates = [Hash('path', "integer",
-                        'attribute', "maxInc",
-                        'value', 1000),
-                   Hash('path', "integer",
-                        'attribute', "minInc",
-                        'value', -10)]
-        self.assertEqual(self.myDevice.integer.descriptor.maxInc, 10)
-        self.assertEqual(self.myDevice.integer.descriptor.minInc, 0)
-        result = self.myDevice.slotUpdateSchemaAttributes(updates)
-        self.assertEqual(result["success"], True)
-        self.assertEqual(self.myDevice.integer.descriptor.maxInc, 1000)
-        self.assertEqual(self.myDevice.integer.descriptor.minInc, -10)
-
-    @sync_tst
     def test_output_information(self):
         device = self.myDevice
         # Second argument processId is not used in MDL
@@ -207,6 +194,28 @@ class Tests(DeviceTest):
             "doesNotExist", None)
         self.assertEqual(success, False)
         self.assertEqual(data, Hash())
+
+    @async_tst
+    async def test_applyRunTimeUpdates(self):
+        with (await getDevice("MyDevice")) as d:
+            self.assertEqual(d.counter.descriptor.minInc, 0)
+            self.assertEqual(d.counter.descriptor.maxInc, 2000)
+
+        updates = [Hash('path', "counter",
+                        'attribute', "maxInc",
+                        'value', 100.0)]
+        reply = await self.myDevice.slotUpdateSchemaAttributes(updates)
+        self.assertTrue(reply['success'])
+
+        with (await getDevice("MyDevice")) as d:
+            self.assertEqual(d.counter.descriptor.minInc, 0)
+            self.assertEqual(d.counter.descriptor.maxInc, 100)
+
+        updates = [Hash('path', "nocounter",
+                        'attribute', "maxExc",
+                        'value', 100.0)]
+        reply = await self.myDevice.slotUpdateSchemaAttributes(updates)
+        self.assertFalse(reply['success'])
 
 
 if __name__ == '__main__':
