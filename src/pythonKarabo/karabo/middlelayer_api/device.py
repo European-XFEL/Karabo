@@ -237,7 +237,7 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
         """Notfiy the network that our schema has changed"""
         self.signalSchemaUpdated(self.getDeviceSchema(), self.deviceId)
 
-    @slot
+    @coslot
     def slotUpdateSchemaAttributes(self, updates):
         """Apply runtime attribute updates to the device
 
@@ -250,8 +250,7 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
                         as keys
         """
         success = self.applyRuntimeUpdates(updates)
-        if success:
-            self._notifyNewSchema()
+        yield from self.publishInjectedParameters()
 
         ret = Hash()
         ret["success"] = success
