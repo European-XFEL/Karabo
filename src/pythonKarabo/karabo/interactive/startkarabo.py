@@ -268,6 +268,7 @@ def checkkarabo():
         stdout=subprocess.PIPE, encoding="utf8")
     print('\n'.join(map(colorize, svstat.stdout.strip().split('\n'))))
 
+
 @entrypoint
 def gnometermlog():
     """karabo-gterm - show logs in tabs of a gnome terminal
