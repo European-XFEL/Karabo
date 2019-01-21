@@ -1,8 +1,5 @@
-from collections import namedtuple
 from functools import partial
-import os.path as op
 
-from PyQt4 import uic
 from PyQt4.QtCore import QPoint, QRect, QSize, Qt, pyqtSlot
 from PyQt4.QtGui import (
     QAction, QColor, QDialog, QFont, QPainter, QPen, QPushButton, QSizePolicy)
@@ -16,6 +13,7 @@ from karabogui.alarms.api import NORM_COLOR
 from karabogui.binding.api import get_binding_value, VectorStringBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
+from karabogui.dialogs.device_scenelink_dialog import DeviceSceneLinkDialog
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.request import call_device_slot
 from karabogui.singletons.api import get_topology
@@ -29,9 +27,6 @@ def _get_device_id(keys):
         return keys[0].split('.', 1)[0]
     except IndexError:
         return ''
-
-
-LinkModel = namedtuple('LinkModel', ['target', 'target_window'])
 
 
 class LinkWidget(QPushButton):
@@ -154,47 +149,3 @@ class DisplayDeviceSceneLink(BaseBindingController):
         if self.model.target == '':
             self.model.target = proxy.value[0]
             self.model.target_window = SceneTargetWindow.Dialog
-
-
-class DeviceSceneLinkDialog(QDialog):
-    def __init__(self, scene_list, model, parent=None):
-        """A dialog to select the device scene link
-
-        :param scene_list: the list of the scenes
-        :param model: the DeviceSceneLink model
-        :param parent: The parent of the dialog
-        """
-        super(DeviceSceneLinkDialog, self).__init__(parent)
-        filepath = op.join(op.abspath(op.dirname(__file__)),
-                           'device_scenelink.ui')
-        uic.loadUi(filepath, self)
-        for scene in scene_list:
-            self.cbScenes.addItem(scene)
-
-        if model.target != '':
-            index = self.cbScenes.findText(model.target)
-            self.cbScenes.setCurrentIndex(index)
-
-        radioButtons = {
-            SceneTargetWindow.MainWindow: self.mainRadio,
-            SceneTargetWindow.Dialog: self.dialogRadio
-        }
-        self._selectedTargetWin = model.target_window
-        button = radioButtons.get(self._selectedTargetWin)
-        if button:
-            button.setChecked(True)
-
-    @property
-    def link_model(self):
-        return LinkModel(target=self.cbScenes.currentText(),
-                         target_window=self._selectedTargetWin)
-
-    @pyqtSlot(bool)
-    def on_dialogRadio_clicked(self, checked=False):
-        if checked:
-            self._selectedTargetWin = SceneTargetWindow.Dialog
-
-    @pyqtSlot(bool)
-    def on_mainRadio_clicked(self, checked=False):
-        if checked:
-            self._selectedTargetWin = SceneTargetWindow.MainWindow
