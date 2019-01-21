@@ -20,12 +20,12 @@ def _value_type(schema, key):
 
 
 class TableModel(QAbstractTableModel):
-    def __init__(self, column_schema, editing_finished, parent=None):
+    def __init__(self, row_schema, editing_finished, parent=None):
         super(QAbstractTableModel, self).__init__(parent)
 
         self._editing_finished = editing_finished
-        self._column_schema = column_schema
-        self._column_hash = (column_schema.hash if column_schema is not None
+        self._row_schema = row_schema
+        self._row_hash = (row_schema.hash if row_schema is not None
                              else Hash())
         self._role = Qt.EditRole
         self._data = []
@@ -42,29 +42,29 @@ class TableModel(QAbstractTableModel):
     # ------------------------------------------------------------------------
     # QAbstractItemModel methods
 
-    def rowCount(self, parent):
+    def rowCount(self, parent=None):
         return len(self._data)
 
-    def columnCount(self, parent):
-        return len(self._column_hash)
+    def columnCount(self, parent=None):
+        return len(self._row_hash)
 
-    def data(self, idx, role):
-        if not idx.isValid():
+    def data(self, index, role):
+        if not index.isValid():
             return None
 
-        row, col = idx.row(), idx.column()
+        row, col = index.row(), index.column()
 
         if role == Qt.CheckStateRole and self._role == Qt.EditRole:
-            key = self._column_hash.getKeys()[col]
+            key = self._row_hash.getKeys()[col]
             value = self._data[row][key]
-            vtype = _value_type(self._column_schema, key)
+            vtype = _value_type(self._row_schema, key)
             if vtype == 'BOOL':
                 return Qt.Checked if value else Qt.Unchecked
 
         if role == Qt.DisplayRole or role == Qt.EditRole:
-            key = self._column_hash.getKeys()[col]
+            key = self._row_hash.getKeys()[col]
             value = self._data[row][key]
-            vtype = _value_type(self._column_schema, key)
+            vtype = _value_type(self._row_schema, key)
             if vtype.startswith('VECTOR'):
                 # Guard against None values
                 value = [] if value is None else value
@@ -81,25 +81,25 @@ class TableModel(QAbstractTableModel):
             return str(section)
 
         if orientation == Qt.Horizontal:
-            if section >= len(self._column_hash):
+            if section >= len(self._row_hash):
                 return None
 
-            key = self._column_hash.getKeys()[section]
-            attrs = self._column_hash[key, ...]
+            key = self._row_hash.getKeys()[section]
+            attrs = self._row_hash[key, ...]
             if 'displayedName' in attrs:
                 return attrs['displayedName']
             return key
 
         return None
 
-    def flags(self, idx):
-        if not idx.isValid():
+    def flags(self, index):
+        if not index.isValid():
             return Qt.NoItemFlags
 
         flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
-        key = self._column_hash.getKeys()[idx.column()]
-        access = AccessMode(self._column_schema.hash[key, 'accessMode'])
-        vtype = _value_type(self._column_schema, key)
+        key = self._row_hash.getKeys()[index.column()]
+        access = AccessMode(self._row_schema.hash[key, 'accessMode'])
+        vtype = _value_type(self._row_schema, key)
 
         if vtype == 'BOOL' and self._role == Qt.EditRole:
             if access == AccessMode.READONLY:
@@ -112,25 +112,25 @@ class TableModel(QAbstractTableModel):
 
         return flags
 
-    def setData(self, idx, value, role, from_device_update=False):
-        if not idx.isValid():
+    def setData(self, index, value, role, from_device_update=False):
+        if not index.isValid():
             return False
 
-        row, col = idx.row(), idx.column()
+        row, col = index.row(), index.column()
         if role == Qt.CheckStateRole:
-            key = self._column_hash.getKeys()[col]
-            vtype = _value_type(self._column_schema, key)
+            key = self._row_hash.getKeys()[col]
+            vtype = _value_type(self._row_schema, key)
             if vtype == 'BOOL':
                 value = True if value == Qt.Checked else False
                 self._data[row][key] = value
-                self.dataChanged.emit(idx, idx)
+                self.dataChanged.emit(index, index)
                 if not from_device_update:
                     self._editing_finished(self._data)
                 return True
 
         if role == Qt.EditRole or role == Qt.DisplayRole:
-            key = self._column_hash.getKeys()[col]
-            vtype = _value_type(self._column_schema, key)
+            key = self._row_hash.getKeys()[col]
+            vtype = _value_type(self._row_schema, key)
             # now display value
             if vtype.startswith('VECTOR') and not from_device_update:
                 # this will be a list of individual chars we need to join
@@ -141,14 +141,14 @@ class TableModel(QAbstractTableModel):
 
             self._data[row][key] = value
 
-            self.dataChanged.emit(idx, idx)
+            self.dataChanged.emit(index, index)
             if role == Qt.EditRole and not from_device_update:
                 self._editing_finished(self._data)
             return True
 
         return False
 
-    def insertRows(self, pos, rows, idx, *,
+    def insertRows(self, pos, rows, index, *,
                    copy_row=None, from_device_update=False):
         self.layoutAboutToBeChanged.emit()
         self.beginInsertRows(QModelIndex(), pos, pos + rows)
@@ -157,8 +157,8 @@ class TableModel(QAbstractTableModel):
                 row_hash = copy.copy(copy_row)
                 if row_hash is None:
                     row_hash = Hash()
-                    for key in self._column_hash.getKeys():
-                        attrs = self._column_hash[key, ...]
+                    for key in self._row_hash.getKeys():
+                        attrs = self._row_hash[key, ...]
                         val = attrs.get('defaultValue', None)
 
                         # XXX: Formerly, the value was 'cast' here...
@@ -176,7 +176,7 @@ class TableModel(QAbstractTableModel):
             self._editing_finished(self._data)
         return True
 
-    def removeRows(self, pos, rows, idx, *, from_device_update=False):
+    def removeRows(self, pos, rows, index, *, from_device_update=False):
         # protect ourselves against invalid indices by declaring layout change
         self.layoutAboutToBeChanged.emit()
         end_pos = pos + rows
@@ -203,7 +203,7 @@ class ComboBoxDelegate(QItemDelegate):
         self._options = options
         self._row_column = (row, column)
         parent.clicked.connect(self._cell_clicked)
-        self._cur_cell_idx = None  # QPersistentModelIndex
+        self._cur_cell_index = None  # QPersistentModelIndex
 
     def createEditor(self, parent, option, index):
         combo = QComboBox(parent)
@@ -230,34 +230,34 @@ class ComboBoxDelegate(QItemDelegate):
         """
         # Only consider click events for this delegate in its column
         if (index.row(), index.column()) == self._row_column:
-            if self._cur_cell_idx is not None:
+            if self._cur_cell_index is not None:
                 # Persistent model index and data namely QComboBox cleaned up
-                self.parent().closePersistentEditor(self._cur_cell_idx)
-            self._cur_cell_idx = index
-            self.parent().openPersistentEditor(self._cur_cell_idx)
+                self.parent().closePersistentEditor(self._cur_cell_index)
+            self._cur_cell_index = index
+            self.parent().openPersistentEditor(self._cur_cell_index)
         else:
-            if self._cur_cell_idx is not None:
+            if self._cur_cell_index is not None:
                 # Persistent model index and data namely QComboBox cleaned up
-                self.parent().closePersistentEditor(self._cur_cell_idx)
-            self._cur_cell_idx = None
+                self.parent().closePersistentEditor(self._cur_cell_index)
+            self._cur_cell_index = None
 
 
 class KaraboTableView(QTableView):
-    def __init__(self, column_schema=None, parent=None):
+    def __init__(self, row_schema=None, parent=None):
         super(KaraboTableView, self).__init__(parent)
-        self.set_column_schema(column_schema)
+        self.set_row_schema(row_schema)
 
-    def set_column_schema(self, column_schema):
-        if column_schema is None:
+    def set_row_schema(self, row_schema):
+        if row_schema is None:
             return
 
-        self._column_schema = column_schema
-        self._col_hash = column_schema.hash
-        self._col_keys = self._col_hash.getKeys()
+        self._row_schema = row_schema
+        self._row_hash = row_schema.hash
+        self._row_keys = self._row_hash.getKeys()
         self._first_string_column = None
 
-        for c, key in enumerate(self._col_keys):
-            vtype = _value_type(self._column_schema, key)
+        for c, key in enumerate(self._row_keys):
+            vtype = _value_type(self._row_schema, key)
             if vtype == 'STRING':
                 self._first_string_column = c
                 break
@@ -275,8 +275,8 @@ class KaraboTableView(QTableView):
             model = self.model()
             if new_row:
                 if self._first_string_column is not None:
-                    model.insertRows(model.rowCount(None), 1, QModelIndex())
-                    index = model.index(model.rowCount(None) - 1,
+                    model.insertRows(model.rowCount(), 1, QModelIndex())
+                    index = model.index(model.rowCount() - 1,
                                         self._first_string_column,
                                         QModelIndex())
 
@@ -296,23 +296,23 @@ class KaraboTableView(QTableView):
 
         items = json.loads(items_data.decode())
         item = items[0]
-        idx = self.indexAt(event.pos())
+        index = self.indexAt(event.pos())
         nav_type = item.get('type')
         device_id = item.get('deviceId', '')
         from_project = device_id != ''
         usable = (nav_type == NavigationItemTypes.DEVICE or from_project)
 
         # drop in empty area is also okay but must trigger new_row
-        if not idx.isValid() and usable:
+        if not index.isValid() and usable:
             event.accept()
-            return True, idx, True, device_id
+            return True, index, True, device_id
 
-        key = self._col_keys[idx.column()]
-        vtype = _value_type(self._column_schema, key)
+        key = self._row_keys[index.column()]
+        vtype = _value_type(self._row_schema, key)
         if usable:
             event.accept()
             not_string = (vtype != 'STRING')
-            return True, idx, not_string, device_id
+            return True, index, not_string, device_id
 
         event.ignore()
         return False, None, False, device_id
