@@ -370,9 +370,9 @@ class DisplaySparkline(BaseBindingController):
         action_show_value.setChecked(self.model.show_value)
         widget.addAction(action_show_value)
 
-        action_alarms = QAction("Show alarms", widget, checkable=True)
-        action_alarms.toggled.connect(self.toggle_show_alarms)
-        action_alarms.setChecked(self.model.show_alarms)
+        action_alarms = QAction("Use alarm range", widget, checkable=True)
+        action_alarms.toggled.connect(self.toggle_alarm_range)
+        action_alarms.setChecked(self.model.alarm_range)
         widget.addAction(action_alarms)
 
         self.action_show_format = QAction("Set value format", widget)
@@ -412,8 +412,8 @@ class DisplaySparkline(BaseBindingController):
         self.model.show_value = value
 
     @pyqtSlot(bool)
-    def toggle_show_alarms(self, value):
-        self.model.show_alarms = value
+    def toggle_alarm_range(self, value):
+        self.model.alarm_range = value
 
     @on_trait_change('proxy:binding:historic_data')
     def _historic_data_arrived(self, data):
@@ -444,9 +444,10 @@ class DisplaySparkline(BaseBindingController):
         now = time.time()
         self._fetch_property_history(now - timebase, now)
 
-    @on_trait_change('model:show_alarms')
+    @on_trait_change('model:alarm_range')
     def _reset_yrange(self):
         self.render_area.reset_range = True
+        self.value_update(self.proxy)
 
     @on_trait_change('model:show_value')
     def _show_value_update(self, value):
@@ -466,7 +467,7 @@ class DisplaySparkline(BaseBindingController):
 
     def _draw(self, value, timestamp):
         """ Draw data vs. time and alarm limits """
-        if self.model.show_alarms:
+        if self.model.alarm_range:
             # extract alarms if present, if not the sparkrenderer expects
             # `None` to process data
             attrs = self.proxy.binding.attributes
