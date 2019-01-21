@@ -20,6 +20,9 @@ class LabelWidget(QLabel):
         self.setAutoFillBackground(True)
         self.model = model
         self.apply_model()
+        edit_action = QAction("Edit Label", self)
+        edit_action.triggered.connect(self.edit_colors_text)
+        self.addAction(edit_action)
 
     def set_model(self, model):
         self.model.trait_set(text=model.text, frame_width=model.frame_width,
@@ -75,14 +78,6 @@ class LabelWidget(QLabel):
         new_pos = self.pos() + offset
         self.model.set(x=new_pos.x(), y=new_pos.y())
         self.move(new_pos)
-
-    def get_actions(self):
-        """Provide custom actions for the scene widget handler
-        """
-        edit_action = QAction("Edit Label", self)
-        edit_action.triggered.connect(self.edit_colors_text)
-
-        return [edit_action]
 
     @pyqtSlot()
     def edit_colors_text(self):

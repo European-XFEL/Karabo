@@ -95,10 +95,6 @@ class UnknownSvgWidget(QWidget):
     def set_geometry(self, rect):
         """Satisfy the informal widget interface."""
 
-    def get_actions(self):
-        """Satisfy the informal widget interface."""
-        return []
-
     def translate(self, offset):
         """Satisfy the informal widget interface."""
 
@@ -141,10 +137,6 @@ class UnknownWidget(PlaceholderWidget):
         self.model.set(x=rect.x(), y=rect.y(),
                        width=rect.width(), height=rect.height())
         self.setGeometry(rect)
-
-    def get_actions(self):
-        """Satisfy the informal widget interface."""
-        return []
 
     def translate(self, offset):
         new_pos = self.pos() + offset

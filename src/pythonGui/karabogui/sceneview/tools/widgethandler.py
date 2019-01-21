@@ -101,11 +101,9 @@ class SceneToolHandler(SceneWidgetHandler):
 
     def handle_widget(self, scene_view, event, menu):
         # The non-controller widget might have some actions for us!
-        widget_actions = self.widget.get_actions()
-        if widget_actions:
+        if self.widget.actions():
             menu.addSeparator()
-            for action in widget_actions:
-                menu.addAction(action)
+            menu.addActions(self.widget.actions())
         menu.exec_(event.globalPos())
 
 
