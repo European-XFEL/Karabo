@@ -25,6 +25,7 @@ WIDGET_HEIGHT = 50
 WIDGET_WIDTH = 200
 # timebases available for the widget, values in seconds
 TIMEBASES = (('60s', 60), ('10m', 600), ('10h', 36000))
+NO_ALARMS = {k: None for k in (ALARM_LOW, WARN_LOW, WARN_HIGH, ALARM_HIGH)}
 
 
 class SparkRenderer(QWidget):
@@ -474,8 +475,7 @@ class DisplaySparkline(BaseBindingController):
             alarms = {k: attrs.get(k, None)
                       for k in (ALARM_LOW, WARN_LOW, WARN_HIGH, ALARM_HIGH)}
         else:
-            alarms = {k: None
-                      for k in (ALARM_LOW, WARN_LOW, WARN_HIGH, ALARM_HIGH)}
+            alarms = NO_ALARMS
 
         self.render_area.setData(value, timestamp, alarms)
         self._set_text()
