@@ -191,46 +191,27 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         :param updates: List of Hashes with "path", "attribute" and "value"
         :return success: True if all updates could be applied, False otherwise
         """
-        def _applyAttribute(obj, path, attr_name, attr_value):
+        def _overwrite_attribute(path, attr_name, attr_value):
             # Basic check if the attribute is allowed to be set
             if attr_name not in KARABO_RUNTIME_ATTRIBUTES_MDL:
                 return False
 
-            key = path.split(".", 1)
+            if len(path.split('.')) > 1:
+                return False
 
-            if len(key) > 1:
-                obj = getattr(obj, key[0])
-                path = key[1]
-                return _applyAttribute(obj, path, attr_name,
-                                       attr_value)
-
-            value = getattr(obj, path, None)
+            value = getattr(self, path, None)
             if not isSet(value):
                 return False
 
-            # Get the descriptor as it has the attributes
-            desc = getattr(obj.__class__, path)
-            attr = getattr(desc.__class__, attr_name, None)
-            if not isinstance(attr, Attribute):
-                # not Attribute type
-                return False
-
-            if attr.default:
-                # convert the enum attribute value
-                try:
-                    attr_value = type(attr.default)(attr_value)
-                except ValueError:
-                    return False
-
-            # Apply attribute change
-            setattr(desc, attr_name, attr_value)
+            # Overwrite the attribute
+            setattr(self.__class__, path, Overwrite(attr_name, attr_value))
             return True
 
         success = True
         for update in updates:
             path, attr_name, attr_value = (update["path"], update["attribute"],
                                            update["value"])
-            success &= _applyAttribute(self, path, attr_name, attr_value)
+            success &= _overwrite_attribute(path, attr_name, attr_value)
 
         return success
 
@@ -251,7 +232,8 @@ class Overwrite(object):
         class Child(Base):
             number = Overwrite(minExc=7)
     """
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
+        kwargs.update(zip(args[::2], args[1::2]))
         self.kwargs = kwargs
 
     def overwrite(self, original):
