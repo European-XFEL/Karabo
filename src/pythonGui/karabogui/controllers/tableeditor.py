@@ -26,7 +26,7 @@ class TableModel(QAbstractTableModel):
         self._editing_finished = editing_finished
         self._row_schema = row_schema
         self._row_hash = (row_schema.hash if row_schema is not None
-                             else Hash())
+                          else Hash())
         self._role = Qt.EditRole
         self._data = []
 
@@ -39,16 +39,19 @@ class TableModel(QAbstractTableModel):
     def set_role(self, role):
         self._role = role
 
-    # ------------------------------------------------------------------------
-    # QAbstractItemModel methods
-
     def rowCount(self, parent=None):
+        """Reimplemented function of QAbstractTableModel.
+        """
         return len(self._data)
 
     def columnCount(self, parent=None):
+        """Reimplemented function of QAbstractTableModel.
+        """
         return len(self._row_hash)
 
     def data(self, index, role):
+        """Reimplemented function of QAbstractTableModel.
+        """
         if not index.isValid():
             return None
 
@@ -74,6 +77,8 @@ class TableModel(QAbstractTableModel):
         return None
 
     def headerData(self, section, orientation, role):
+        """Reimplemented function of QAbstractTableModel.
+        """
         if role != Qt.DisplayRole:
             return None
 
@@ -93,6 +98,8 @@ class TableModel(QAbstractTableModel):
         return None
 
     def flags(self, index):
+        """Reimplemented function of QAbstractTableModel.
+        """
         if not index.isValid():
             return Qt.NoItemFlags
 
@@ -113,6 +120,8 @@ class TableModel(QAbstractTableModel):
         return flags
 
     def setData(self, index, value, role, from_device_update=False):
+        """Reimplemented function of QAbstractTableModel.
+        """
         if not index.isValid():
             return False
 
@@ -195,8 +204,6 @@ class TableModel(QAbstractTableModel):
         return True
 
 
-# from http://stackoverflow.com/questions/17615997/pyqt-how-to-set-qcombobox
-# -in-a-table-view-using-qitemdelegate
 class ComboBoxDelegate(QItemDelegate):
     def __init__(self, options, row=-1, column=-1, parent=None):
         super(ComboBoxDelegate, self).__init__(parent)
