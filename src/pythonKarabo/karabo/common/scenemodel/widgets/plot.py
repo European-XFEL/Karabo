@@ -66,7 +66,7 @@ class SparklineModel(BaseWidgetObjectData):
     # If True, show the current value next to the line
     show_value = Bool(False)
     # If True, show the current alarms if present
-    show_alarms = Bool(True)
+    alarm_range = Bool(True)
     # String format for the value when it is shown
     show_format = String("0.2f")
 
@@ -109,8 +109,8 @@ def _display_sparkline_reader(read_func, element):
     traits['show_format'] = element.get(NS_KARABO + 'show_format', '0.2f')
     show_value = element.get(NS_KARABO + 'show_value', 'false')
     traits['show_value'] = (show_value.lower() == 'true')
-    show_alarms = element.get(NS_KARABO + 'show_alarms', 'true')
-    traits['show_alarms'] = (show_alarms.lower() == 'true')
+    alarm_range = element.get(NS_KARABO + 'alarm_range', 'true')
+    traits['alarm_range'] = (alarm_range.lower() == 'true')
     return SparklineModel(**traits)
 
 
@@ -120,6 +120,6 @@ def _display_sparkline_writer(write_func, model, parent):
     write_base_widget_data(model, element, 'DisplaySparkline')
     element.set(NS_KARABO + 'time_base', str(model.time_base))
     element.set(NS_KARABO + 'show_value', str(model.show_value).lower())
-    element.set(NS_KARABO + 'show_alarms', str(model.show_alarms).lower())
+    element.set(NS_KARABO + 'alarm_range', str(model.alarm_range).lower())
     element.set(NS_KARABO + 'show_format', str(model.show_format))
     return element
