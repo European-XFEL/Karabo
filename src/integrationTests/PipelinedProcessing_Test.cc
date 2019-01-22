@@ -94,8 +94,6 @@ void PipelinedProcessing_Test::testGetOutputChannelSchema() {
 
     karabo::util::Hash dataSchema = m_deviceClient->getOutputChannelSchema(m_sender, "output1");
 
-//    clog << "\nPipelinedProcessing_Test::testGetOutputChannelSchema() : dataSchema => \n" << dataSchema << endl;
-
     CPPUNIT_ASSERT(dataSchema.has("dataId"));
     CPPUNIT_ASSERT(dataSchema.getType("dataId") == karabo::util::Types::INT32);
     CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("dataId", "valueType") == "INT32");
@@ -469,11 +467,7 @@ void PipelinedProcessing_Test::testPipeTwoPots() {
     config += Hash("deviceId", m_receiver, "processingTime", 200);
     instantiateDeviceWithAssert("PipeReceiverDevice", config);
 
-    //const std::string traceId{"(" + boost::lexical_cast<std::string>(boost::this_thread::get_id()) + "):testPipeTwoPots: "};
-
     for (unsigned int nDataWhenStop = 3; nDataWhenStop < 8; ++nDataWhenStop) {
-
-        //std::clog << "Test run for nDataWhenStop = " << nDataWhenStop << std::endl;
 
         // make sure the sender has stopped sending data
         CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
@@ -493,7 +487,6 @@ void PipelinedProcessing_Test::testPipeTwoPots() {
         m_deviceClient->execute(m_receiver, "reset");
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", 0));
 
-        //std::clog << traceId << "end of test run" << std::endl;
     }
 
     // Restores the sender 'delay' to the value it had at the beginning of the test.
@@ -710,7 +703,6 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processin
             CPPUNIT_ASSERT_EQUAL_MESSAGE((boost::format("NoDataLoss assertion: expected: %d; actual: %d")
                                           % (nTotalData1 + nTotalData2 + m_nDataPerRun) % (nTotalData1New + nTotalData2New)).str(),
                                          nTotalData1 + nTotalData2 + m_nDataPerRun, nTotalData1New + nTotalData2New);
-            //CPPUNIT_ASSERT_EQUAL(nTotalData1 + nTotalData2 + m_nDataPerRun, nTotalData1New + nTotalData2New);
         } else {
             CPPUNIT_ASSERT(nTotalData1New + nTotalData2New < nTotalData1 + nTotalData2 + m_nDataPerRun);
         }

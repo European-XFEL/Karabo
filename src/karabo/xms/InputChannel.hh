@@ -90,10 +90,8 @@ namespace karabo {
 
             unsigned int m_channelId;
 
-            // Prevents simultaneous access to the inactive data and active data pots, respectively. In some occasions,
-            // e.g. for swapping the pots, the mutexes must be acquired always in the same order.
-            boost::mutex m_inactiveDataMutex;
-            boost::mutex m_activeDataMutex;
+            // Prevents simultaneous access to the inactive data and active data pots.
+            boost::mutex m_twoPotsMutex;
 
             int m_activeChunk;
             int m_inactiveChunk;
