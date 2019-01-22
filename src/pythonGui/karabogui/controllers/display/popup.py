@@ -5,7 +5,6 @@ from PyQt4.QtGui import QMessageBox
 from PyQt4.QtSvg import QSvgWidget
 from traits.api import Instance
 
-from karabo.common.api import KARABO_SCHEMA_DISPLAYED_NAME
 from karabo.common.scenemodel.api import PopUpModel
 from karabo.middlelayer import Timestamp
 from karabogui.binding.api import (
@@ -48,8 +47,7 @@ class PopUp(BaseBindingController):
         return False
 
     def binding_update(self, proxy):
-        attrs = proxy.binding.attributes
-        name = attrs.get(KARABO_SCHEMA_DISPLAYED_NAME)
+        name = proxy.binding.displayed_name
         self._dialog.setWindowTitle(name)
 
     def create_widget(self, parent):

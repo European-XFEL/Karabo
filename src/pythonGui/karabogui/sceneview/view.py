@@ -30,10 +30,15 @@ from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
 from .tools.api import (
     ConfigurationDropHandler, NavigationDropHandler, ProxySelectionTool,
-    SceneSelectionTool, WidgetSceneHandler)
+    ProjectDropHandler, SceneControllerHandler, SceneSelectionTool,
+    SceneToolHandler)
 from .utils import save_painter_state
-from .widget.api import ControllerContainer
+from .widget.api import ControllerContainer, WorkflowItemWidget
 from .workflow.api import SceneWorkflowModel, WorkflowOverlay
+
+# The scene widgets handler for mutations and action of the controllers and
+# layout items on our scene
+SCENE_WIDGET_HANDLER = (SceneControllerHandler, SceneToolHandler)
 
 _WIDGET_REMOVAL_DELAY = 5000
 
@@ -81,7 +86,8 @@ class SceneView(QWidget):
 
         # List of scene drag n drop handlers
         self.scene_handler_list = [ConfigurationDropHandler(),
-                                   NavigationDropHandler()]
+                                   NavigationDropHandler(),
+                                   ProjectDropHandler()]
         self.current_scene_handler = None
 
         self.current_tool = None
@@ -286,12 +292,17 @@ class SceneView(QWidget):
         """Show scene view specific context menu. """
         if self.design_mode:
             widget = self.widget_at_position(event.pos())
-            if widget is not None:
-                widget_handler = WidgetSceneHandler(widget=widget)
-                # This methods blocks here until an action is selected
-                widget_handler.handle(self, event)
-                event.accept()
+            if widget is None:
+                event.ignore()
                 return
+            # NOTE: An eventual handler blocks here until an action is selected
+            for handler in SCENE_WIDGET_HANDLER:
+                widget_handler = handler(widget=widget)
+                if widget_handler.can_handle():
+                    widget_handler.handle(self, event)
+                    event.accept()
+                    return
+
         event.ignore()
 
     # ----------------------------
@@ -368,10 +379,10 @@ class SceneView(QWidget):
     def controller_at_position(self, pos):
         """Returns the topmost controller whose bounds contain `pos`."""
         widget = self.inner.childAt(pos)
-        if widget is not None:
-            while (widget is not None
-                    and not isinstance(widget, ControllerContainer)):
-                widget = widget.parent()
+        while (widget is not None
+               and not isinstance(widget, ControllerContainer)):
+            widget = widget.parent()
+
         return widget
 
     def widget_at_position(self, pos):
@@ -380,6 +391,14 @@ class SceneView(QWidget):
         if widget is not None:
             while not is_widget(widget):
                 widget = widget.parent()
+        return widget
+
+    def workflow_at_position(self, pos):
+        """Returns the topmost workflow widget whose bounds contain `pos`."""
+        widget = self.inner.childAt(pos)
+        while (widget is not None
+                and not isinstance(widget, WorkflowItemWidget)):
+            widget = widget.parent()
         return widget
 
     def items_in_rect(self, rect):

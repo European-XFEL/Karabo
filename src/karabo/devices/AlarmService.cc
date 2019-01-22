@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   AlarmService.cc
  * Author: haufs
- * 
+ *
  * Created on August 5, 2016, 11:30 AM
  */
 
@@ -175,7 +175,7 @@ namespace karabo {
                     } else {
                         //we've known this instance before and might have alarms pending from it. We should ask
                         //for an update on these alarms.
-                        KARABO_LOG_INFO << "Device '" << deviceId << "' reappeared. Asking it to re-submit its alarms!";
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Device '" << deviceId << "' reappeared. Asking it to re-submit its alarms!";
                         boost::shared_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
                         const boost::optional<Hash::Node&> alarmNode = m_alarms.find(deviceId);
                         request(deviceId, "slotReSubmitAlarms", alarmNode ? alarmNode->getValue<Hash>() : Hash())
@@ -208,7 +208,7 @@ namespace karabo {
                 boost::optional<Hash::Node&> alarmN = m_alarms.find(instanceId);
                 if (alarmN) {
                     {
-                        KARABO_LOG_INFO << "Device instance '" << instanceId << "' disappeared. Setting all pending alarms to acknowledgeable";
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Device instance '" << instanceId << "' disappeared. Setting all pending alarms to acknowledgeable";
                         boost::upgrade_to_unique_lock<boost::shared_mutex> writeLock(readLock);
                         Hash& alarm = alarmN->getValue<Hash>();
                         for (Hash::iterator propIt = alarm.begin(); propIt != alarm.end(); ++propIt) {
@@ -566,7 +566,7 @@ namespace karabo {
 
             /*
              * Checking against the following matrix:
-             * 
+             *
              * X marks acknowledgeable
              *                   warn  alarm  interlock
              * normal state        X     X      X

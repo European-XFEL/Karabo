@@ -11,6 +11,7 @@ from traits.api import Bool, Instance, Property, on_trait_change
 
 from karabo.common.api import DeviceStatus
 from karabo.common.project.api import DeviceServerModel
+from karabogui.enums import ProjectItemTypes
 from karabogui.events import (register_for_broadcasts,
                               unregister_from_broadcasts)
 from karabogui.indicators import get_project_server_status_icon
@@ -83,6 +84,11 @@ class DeviceServerController(BaseProjectGroupController):
         """Traits property getter for ``display_name``
         """
         return self.model.server_id
+
+    def info(self):
+        return {'type': ProjectItemTypes.SERVER,
+                'serverId': self.model.server_id,
+                'host': self.model.host}
 
     # ----------------------------------------------------------------------
     # traits handlers

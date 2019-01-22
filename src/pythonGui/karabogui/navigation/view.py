@@ -8,23 +8,20 @@ from functools import partial
 from PyQt4.QtCore import Qt, pyqtSlot
 from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog, QMenu,
                          QTreeView)
-from traits.api import Undefined
 
 from karabo.common.api import Capabilities
 from karabogui import icons
-from karabogui import messagebox
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.enums import NavigationItemTypes
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.request import call_device_slot
-from karabogui.singletons.api import (
-    get_manager, get_selection_tracker, get_topology)
+from karabogui.singletons.api import get_manager, get_selection_tracker
 from karabogui.util import (
-    get_scene_from_server, handle_scene_from_server,
-    load_configuration_from_file, save_configuration_to_file,
-    set_treeview_header)
+    handle_scene_from_server, load_configuration_from_file,
+    save_configuration_to_file, set_treeview_header)
 from karabogui.widgets.popup import PopupWidget
 from .model import NavigationTreeModel
+from .tools import DeviceSceneHandler
 
 
 class NavigationTreeView(QTreeView):
@@ -48,6 +45,7 @@ class NavigationTreeView(QTreeView):
             self.onCustomContextMenuRequested)
         self.setDragEnabled(True)
 
+        self.navigation_handler_list = [DeviceSceneHandler()]
         # by default all path are expanded
         self.expanded = True
         self.header().sectionDoubleClicked.connect(self.onDoubleClickHeader)
@@ -144,72 +142,13 @@ class NavigationTreeView(QTreeView):
         if node is None:
             return
         info = node.info()
-        navigation_type = info.get('type')
-        if navigation_type is not NavigationItemTypes.DEVICE:
-            return
+        for handler in self.navigation_handler_list:
+            if handler.can_handle(info):
+                handler.handle(info)
+                event.accept()
+                return
 
-        device_id = info.get('deviceId')
-        capabilities = info.get('capabilities')
-
-        def _test_mask(mask, bit):
-            return (mask & bit) == bit
-
-        has_scene = _test_mask(capabilities, Capabilities.PROVIDES_SCENES)
-        if not has_scene:
-            messagebox.show_warning("The device <b>{}</b> does not provide a "
-                                    "scene!".format(device_id), "Warning",
-                                    modal=False)
-            return
-
-        def _config_handler():
-            """Act on the arrival of the configuration
-            """
-            proxy.on_trait_change(_config_handler, 'config_update',
-                                  remove=True)
-            scenes = proxy.binding.value.availableScenes.value
-            if scenes is Undefined or not len(scenes):
-                messagebox.show_warning(
-                    "The device <b>{}</b> does not specify a scene "
-                    "name!".format(device_id), modal=False)
-            else:
-                scene_name = scenes[0]
-                get_scene_from_server(device_id, scene_name)
-
-        def _schema_handler():
-            """Act on the arrival of the schema
-            """
-            proxy.on_trait_change(_schema_handler, 'schema_update',
-                                  remove=True)
-            scenes = proxy.binding.value.availableScenes.value
-            if scenes is Undefined:
-                proxy.on_trait_change(_config_handler, 'config_update')
-            elif not len(scenes):
-                messagebox.show_warning(
-                    "The device <b>{}</b> does not specify a scene "
-                    "name!".format(device_id), modal=False)
-            else:
-                scene_name = scenes[0]
-                get_scene_from_server(device_id, scene_name)
-
-        proxy = get_topology().get_device(device_id)
-        if not len(proxy.binding.value):
-            # We completely miss our schema and wait for it.
-            proxy.on_trait_change(_schema_handler, 'schema_update')
-        elif proxy.binding.value.availableScenes.value is Undefined:
-            # The configuration did not yet arrive and we cannot get
-            # a scene name from the availableScenes. We wait for the
-            # configuration to arrive and install a handler.
-            proxy.on_trait_change(_config_handler, 'config_update')
-        else:
-            scenes = proxy.binding.value.availableScenes.value
-            if not len(scenes):
-                # The device might not have a scene name in property
-                messagebox.show_warning(
-                    "The device <b>{}</b> does not specify a scene "
-                    "name!".format(device_id), modal=False)
-            else:
-                scene_name = scenes[0]
-                get_scene_from_server(device_id, scene_name)
+        super(NavigationTreeView, self).mouseDoubleClickEvent(event)
 
     # ----------------------------
     # Slots

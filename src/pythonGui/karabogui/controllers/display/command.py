@@ -6,7 +6,7 @@ from PyQt4.QtGui import (
 )
 from traits.api import Instance, List
 
-from karabo.common.api import State, KARABO_SCHEMA_DISPLAYED_NAME
+from karabo.common.api import State
 from karabo.common.scenemodel.api import DisplayCommandModel
 from karabogui.const import LOCKED_COLOR
 from karabogui import globals as krb_globals
@@ -109,9 +109,8 @@ class DisplayCommand(BaseBindingController):
         :type initial: bool
         """
         proxy = item.proxy
-        attributes = proxy.binding.attributes
+        display_name = proxy.binding.displayed_name or proxy.path
         # if displayed name is not set, use path
-        display_name = attributes.get(KARABO_SCHEMA_DISPLAYED_NAME, proxy.path)
         item.action.setText(display_name)
         # only initially we connect signals and slots
         if initial:

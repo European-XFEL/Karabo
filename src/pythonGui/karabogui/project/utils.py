@@ -66,7 +66,6 @@ def add_device_to_server(server, class_id=''):
         device = DeviceInstanceModel(
             class_id=dialog.class_id,
             instance_id=dialog.instance_id,
-            if_exists=dialog.if_exists,
             configs=[config_model],
             active_config_ref=config_model.uuid,
         )
@@ -81,8 +80,11 @@ def add_device_to_server(server, class_id=''):
 
 
 def check_device_instance_exists(instance_id):
-    """Check whether the incoming ``instance_id`` already exists in the current
-    projects and return ``True`` if that is the case else ``False``.
+    """Check whether ``instance_id`` already exists in the current projects
+
+    Shows a messagebox if the device already exists in the project!
+
+    :returns: ``True`` if ``instance_id`` was NOT found else ``False``.
     """
     root_project = get_project_model().root_model
     if device_instance_exists(root_project, instance_id):
@@ -92,6 +94,22 @@ def check_device_instance_exists(instance_id):
         messagebox.show_warning(msg, title='Device already exists')
         return True
     return False
+
+
+def validate_device_instance_exists(instance_id):
+    """Validate whether ``instance_id`` was found in the root project
+
+        Shows a messagebox if the device was not found in the project!
+
+        :returns: ``True`` if ``instance_id`` was found else ``False``.
+    """
+    root_project = get_project_model().root_model
+    if not device_instance_exists(root_project, instance_id):
+        msg = ('The device with the device ID \"<b>{}</b>\" '
+               '<br> was not found in the project!').format(instance_id)
+        messagebox.show_warning(msg, title='Device does not exist')
+        return False
+    return True
 
 
 def check_device_config_exists(instance_id, config_name):

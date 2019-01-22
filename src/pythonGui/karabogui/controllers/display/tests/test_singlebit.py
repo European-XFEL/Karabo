@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from numpy import uint64
 
-from karabo.common.api import State, KARABO_SCHEMA_DISPLAY_TYPE
+from karabo.common.api import State
 from karabo.common.scenemodel.api import SingleBitModel
 from karabo.middlelayer import Configurable, Int32
 from karabogui.indicators import STATE_COLORS
@@ -76,8 +76,7 @@ class TestSingleBit(GuiTestCase):
             change_action.trigger()
             assert self.model.bit == 3
 
-            attrs = self.proxy.binding.attributes
-            attrs[KARABO_SCHEMA_DISPLAY_TYPE] = 'bin|1,2,3'
+            self.proxy.binding.display_type = 'bin|1,2,3'
             QInputDialog.getItem.return_value = '2:', True
             change_action.trigger()
 

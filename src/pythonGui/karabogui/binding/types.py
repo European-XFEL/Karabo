@@ -8,6 +8,8 @@ from karabo.common import const
 from karabo.middlelayer import (AccessLevel, AccessMode, Assignment, Hash,
                                 State, Timestamp)
 
+KEY_DISPLAYED_NAME = const.KARABO_SCHEMA_DISPLAYED_NAME
+KEY_DISPLAY_TYPE = const.KARABO_SCHEMA_DISPLAY_TYPE
 KEY_ACCMODE = const.KARABO_SCHEMA_ACCESS_MODE
 KEY_ASSIGNMENT = const.KARABO_SCHEMA_ASSIGNMENT
 KEY_ACCLVL = const.KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL
@@ -39,6 +41,8 @@ class BaseBinding(HasStrictTraits):
     historic_data = Event
 
     # Attribute shortcuts
+    displayed_name = String
+    display_type = String
     access_mode = Enum(*AccessMode)
     assignment = Enum(*Assignment)
     options = List
@@ -70,6 +74,12 @@ class BaseBinding(HasStrictTraits):
             self.trait_setq(**traits)
             self._update_shortcuts(attrs)
 
+    def _displayed_name_default(self):
+        return self.attributes.get(const.KARABO_SCHEMA_DISPLAYED_NAME, '')
+
+    def _display_type_default(self):
+        return self.attributes.get(const.KARABO_SCHEMA_DISPLAY_TYPE, '')
+
     def _access_mode_default(self):
         mode = self.attributes.get(const.KARABO_SCHEMA_ACCESS_MODE)
         return AccessMode.UNDEFINED if mode is None else AccessMode(mode)
@@ -91,6 +101,10 @@ class BaseBinding(HasStrictTraits):
         return unit
 
     def _update_shortcuts(self, attrs):
+        if KEY_DISPLAYED_NAME in attrs:
+            self.displayed_name = attrs[KEY_DISPLAYED_NAME]
+        if KEY_DISPLAY_TYPE in attrs:
+            self.display_type = attrs[KEY_DISPLAY_TYPE]
         if KEY_ACCMODE in attrs:
             self.access_mode = AccessMode(attrs[KEY_ACCMODE])
         if KEY_ACCLVL in attrs:

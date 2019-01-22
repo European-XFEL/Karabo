@@ -76,11 +76,13 @@ namespace karabo {
             mutable boost::mutex m_channelMutex;
             mutable boost::mutex m_monitoredDevicesMutex;
             mutable boost::mutex m_networkMutex;
+            mutable boost::mutex m_forwardLogsMutex;
             mutable boost::mutex m_pendingAttributesMutex;
             mutable boost::mutex m_pendingInstantiationsMutex;
 
             boost::asio::deadline_timer m_deviceInitTimer;
             boost::asio::deadline_timer m_networkStatsTimer;
+            boost::asio::deadline_timer m_forwardLogsTimer;
 
             karabo::net::JmsConsumer::Pointer m_loggerConsumer;
             std::map<std::string, int> m_monitoredDevices;
@@ -94,6 +96,8 @@ namespace karabo {
             mutable boost::mutex m_loggerMapMutex;
             karabo::util::Hash m_loggerMap;
             karabo::util::Hash m_loggerInput;
+            std::vector<karabo::util::Hash> m_logCache;
+
             krb_log4cpp::Priority::Value m_loggerMinForwardingPriority;
 
             std::set<std::string> m_projectManagers;
@@ -133,7 +137,12 @@ namespace karabo {
             void startNetworkMonitor();
 
             /**
-             * Preform network stats collection
+             * Starts the deadline timer which forwards the cached log messages
+             */
+            void startForwardingLogs();
+
+            /**
+             * Perform network stats collection
              */
             void collectNetworkStats(const boost::system::error_code& error);
 
@@ -143,6 +152,12 @@ namespace karabo {
              * @param message
              * @param prio
              */
+
+            /**
+             * Perform forwarding logs
+             */
+            void forwardLogs(const boost::system::error_code& error);
+
             void safeClientWrite(const WeakChannelPointer channel, const karabo::util::Hash& message, int prio = LOSSLESS);
 
             /**
