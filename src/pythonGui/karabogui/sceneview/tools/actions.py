@@ -166,44 +166,63 @@ class UngroupSceneAction(BaseSceneAction):
     """Ungroup action
     """
     def perform(self, scene_view):
-        selection_model = scene_view.selection_model
-
-        unparented_models = []
-        for obj in selection_model:
-            model = obj.model
-            if not isinstance(model, BaseLayoutModel):
-                continue
-
-            scene_view.remove_model(model)
-            unparented_models.extend(model.children)
-
-        # Clear the layout_data for all the now unparented models
-        for child in unparented_models:
-            child.layout_data = None
-
-        scene_view.add_models(*unparented_models)
-        selection_model.clear_selection()
+        ungroup(scene_view)
 
 
 class SceneBringToFrontAction(BaseSceneAction):
     """Bring to front action"""
     def perform(self, scene_view):
-        selection_model = scene_view.selection_model
-        if len(selection_model) == 0:
-            return
-
-        for o in selection_model:
-            scene_view.bring_to_front(o.model)
-        scene_view.update()
+        send_to_front(scene_view)
 
 
 class SceneSendToBackAction(BaseSceneAction):
     """Send to back action"""
     def perform(self, scene_view):
-        selection_model = scene_view.selection_model
-        if len(selection_model) == 0:
-            return
+        send_to_back(scene_view)
 
-        for o in selection_model:
-            scene_view.send_to_back(o.model)
-        scene_view.update()
+
+# ----------------------------------------------------------------------------------
+# scene_view actions.
+
+def send_to_front(scene_view):
+    """ Sends the selection_model models to the front and updates
+        the scene_view """
+    selection_model = scene_view.selection_model
+    if len(selection_model) == 0:
+        return
+
+    for o in selection_model:
+        scene_view.bring_to_front(o.model)
+    scene_view.update()
+
+
+def send_to_back(scene_view):
+    """ Sends the selection_model models to the back and updates
+        the scene_view """
+    selection_model = scene_view.selection_model
+    if len(selection_model) == 0:
+        return
+    for o in selection_model:
+        scene_view.send_to_back(o.model)
+    scene_view.update()
+
+
+def ungroup(scene_view):
+    """ Ungroups the selection_model models and add the ungrouped
+        models to the view """
+    selection_model = scene_view.selection_model
+    unparented_models = []
+    for obj in selection_model:
+        model = obj.model
+        if not isinstance(model, BaseLayoutModel):
+            continue
+
+        scene_view.remove_model(model)
+        unparented_models.extend(model.children)
+
+    # Clear the layout_data for all the now unparented models
+    for child in unparented_models:
+        child.layout_data = None
+
+    scene_view.add_models(*unparented_models)
+    selection_model.clear_selection()
