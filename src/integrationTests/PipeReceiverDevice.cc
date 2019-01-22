@@ -158,12 +158,22 @@ namespace karabo {
         // Sum total number of data
         set("nTotalData", get<unsigned int>("nTotalData") + 1);
         unsigned int processingTime = get<unsigned int>("processingTime");
+        /*
+        const std::string traceId{"\t(" + boost::lexical_cast<std::string>(boost::this_thread::get_id())
+                                  + "): ReceiverDevice::onData: "};
+        std::clog << traceId << "Will process " << v.size() << " items for data # " << data.get<int>("dataId") << std::endl;
+         */
         if (processingTime > 0) boost::this_thread::sleep(boost::posix_time::milliseconds(processingTime));
+        //std::clog << traceId << "... processed" << std::endl;
     }
 
 
     void PipeReceiverDevice::onEndOfStream(const xms::InputChannel::Pointer& input) {
-
+        /*
+        const std::string traceId{"\t(" + boost::lexical_cast<std::string>(boost::this_thread::get_id())
+                                  + "): ReceiverDevice::onEndOfStream: "};
+        std::clog << traceId << " Setting nTotalDataOnEos to " << get<unsigned int>("nTotalData") << std::endl;
+         */
         set<unsigned int>("nTotalDataOnEos", get<unsigned int>("nTotalData"));
     }
 

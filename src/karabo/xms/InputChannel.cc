@@ -22,6 +22,13 @@ using namespace karabo::net;
 
 using std::string;
 
+//#include <chrono>
+
+//static long get_CurrentTime() {
+//    std::chrono::time_point<std::chrono::high_resolution_clock> currTime = std::chrono::high_resolution_clock::now();
+//    return std::chrono::duration_cast<std::chrono::microseconds>(currTime.time_since_epoch()).count();
+//}
+
 namespace karabo {
     namespace xms {
 
@@ -432,45 +439,60 @@ namespace karabo {
                     return;
                 }
 
+                boost::mutex::scoped_lock activeDataLock(m_activeDataMutex);
+                boost::mutex::scoped_lock inactiveDataLock(m_inactiveDataMutex);
+
                 if (header.has("channelId") && header.has("chunkId")) {
                     // Local memory
                     unsigned int channelId = header.get<unsigned int>("channelId");
                     unsigned int chunkId = header.get<unsigned int>("chunkId");
                     KARABO_LOG_FRAMEWORK_TRACE << traceId << "Reading from local memory [" << channelId << "][" << chunkId << "]";
-                    boost::mutex::scoped_lock activeDataLock(m_activeDataMutex);
-                    boost::mutex::scoped_lock inactiveDataLock(m_inactiveDataMutex);
                     Memory::writeChunk(Memory::readChunk(channelId, chunkId), m_channelId, m_inactiveChunk, Memory::getMetaData(channelId, chunkId));
                     Memory::decrementChunkUsage(channelId, chunkId);
                 } else { // TCP data
                     KARABO_LOG_FRAMEWORK_TRACE << traceId << "Reading from remote memory (over tcp)";
-                    boost::mutex::scoped_lock activeDataLock(m_activeDataMutex);
-                    boost::mutex::scoped_lock inactiveDataLock(m_inactiveDataMutex);
                     Memory::writeAsContiguousBlock(data, header, m_channelId, m_inactiveChunk);
                 }
 
                 if (this->getMinimumNumberOfData() == 0) { // should keep reading until EOS (minData == 0 means that)
                     KARABO_LOG_FRAMEWORK_TRACE << traceId << "Can read more data since 'all' requested";
+                    //                    std::clog << get_CurrentTime() << " :: " << traceId
+                    //                            << " at getMinimumNumberOfData() == 0: will notifyOutputChannelForPossibleRead"
+                    //                            << std::endl;
                     notifyOutputChannelForPossibleRead(channel);
                 } else {
-                    boost::mutex::scoped_lock activeDataLock(m_activeDataMutex);
-                    boost::mutex::scoped_lock inactiveDataLock(m_inactiveDataMutex);
                     size_t nInactiveData = Memory::size(m_channelId, m_inactiveChunk);
-                    KARABO_LOG_FRAMEWORK_WARN << traceId
-                            << "There's more data to read before processing: nInactiveData = " << nInactiveData;
                     if (nInactiveData < this->getMinimumNumberOfData()) {
+                        /*
+                        KARABO_LOG_FRAMEWORK_WARN << traceId
+                                << "There's more data to read before processing: nInactiveData = " << nInactiveData;
+                        std::clog << "OnTcpRead: not yet at minData - notify " << nInactiveData << " " << Memory::size(m_channelId, m_activeChunk) << std::endl;
+                         */
                         // requested more data
                         inactiveDataLock.unlock();
                         activeDataLock.unlock();
+                        //                        std::clog << get_CurrentTime() << " :: " << traceId
+                        //                                << "nInactiveData == " << nInactiveData << std::endl;
+                        //                        std::clog << get_CurrentTime() << " :: " << traceId
+                        //                                << " at nInactiveData < getMinimumNumberOfData(): will notifyOutputChannelForPossibleRead"
+                        //                                << std::endl;
                         notifyOutputChannelForPossibleRead(channel);
                     } else {
                         size_t nActiveData = Memory::size(m_channelId, m_activeChunk);
                         if (nActiveData == 0) { // Data complete, second pot still empty
-                            KARABO_LOG_FRAMEWORK_TRACE << traceId << "Will swap buffers for active and inactive data.";
+                            KARABO_LOG_FRAMEWORK_TRACE << traceId << "At nActiveData == 0; will swap buffers for active and inactive data.";
                             std::swap(m_activeChunk, m_inactiveChunk);
+                            //                            std::clog << get_CurrentTime() << " :: " << traceId
+                            //                                    << " At nActiveData == 0; swapped active and inactive chunks"
+                            //                                    << std::endl;
                             // when the order of unlock is reversed, we observed deadlock.
                             inactiveDataLock.unlock(); // before synchronous write to Tcp
                             activeDataLock.unlock(); // before synchronous write to Tcp
                             // Ask to fill second pot...
+                            //                            std::clog << get_CurrentTime() << " :: " << traceId
+                            //                                    << " at nActiveData == 0: will notifyOutputChannelForPossibleRead"
+                            //                                    << std::endl;
+                            //                            std::clog << "OnTcpRead: active pot empty - notify" << std::endl;
                             notifyOutputChannelForPossibleRead(channel);
                             // ...and in parallel process first one.
                             KARABO_LOG_FRAMEWORK_TRACE << traceId << "Triggering IOEvent";
@@ -555,6 +577,7 @@ namespace karabo {
 
         void InputChannel::triggerIOEvent() {
             std::string exceptMsg;
+            boost::mutex::scoped_lock activeDataLock(m_activeDataMutex);
             {
                 const std::string traceId("(" + boost::lexical_cast<std::string>(boost::this_thread::get_id()) + ": triggerIOEvent) ");
                 
@@ -569,7 +592,7 @@ namespace karabo {
                         // interface (though inputHandler is more general...).
                         m_inputHandler.clear();
                     }
-                    boost::mutex::scoped_lock activeDataLock(m_activeDataMutex);
+                    //boost::mutex::scoped_lock activeDataLock(m_activeDataMutex);
 
                     KARABO_LOG_FRAMEWORK_TRACE << traceId << "Will prepare Metadata";
                     
@@ -599,9 +622,9 @@ namespace karabo {
                 
                 // Whatever handler (even none or one that throws): we are done with the data.
                 try {
-                    boost::mutex::scoped_lock activeDataLock(m_activeDataMutex);
+                    //boost::mutex::scoped_lock activeDataLock(m_activeDataMutex);
 
-                    size_t nActiveData = 0;
+                    //size_t nActiveData = 0;
 
                     // Clear active chunk
                     Memory::clearChunkData(m_channelId, m_activeChunk);
@@ -611,7 +634,11 @@ namespace karabo {
                         // Caveat! Lock both mutexes, this is the right order:
                         KARABO_LOG_FRAMEWORK_TRACE << traceId << "Will call swapBuffers after processing input";
                         boost::mutex::scoped_lock inactiveDataLock(m_inactiveDataMutex);
+                        //                        std::clog << get_CurrentTime() << " :: " << traceId
+                        //                                << "Will assign inactiveData" << std::endl;
                         size_t nInactiveData = Memory::size(m_channelId, m_inactiveChunk);
+                        //                        std::clog << get_CurrentTime() << " :: " << traceId
+                        //                                << "inactiveData == " << nInactiveData << std::endl;
                         if (nInactiveData < this->getMinimumNumberOfData()) {
                             // Too early to process inactive Pot: has to reach minData
                             KARABO_LOG_FRAMEWORK_TRACE << traceId << "Too early to process inactive Pot: has to reach minData.";
@@ -619,18 +646,17 @@ namespace karabo {
                         }
                         KARABO_LOG_FRAMEWORK_TRACE << traceId << "Will swap buffers of active and inactive data";
                         std::swap(m_activeChunk, m_inactiveChunk);
+                        //                        std::clog << get_CurrentTime() << " :: " << traceId
+                        //                                << "chunks swapped" << std::endl;
                     }
-                    // Fetch number of data pieces
-                    nActiveData = Memory::size(m_channelId, m_activeChunk);
-
-                    KARABO_LOG_FRAMEWORK_TRACE << traceId << "InputChannel::update() nActiveData = " << nActiveData
-                            << " and MinData = " << this->getMinimumNumberOfData();
 
                     // After swapping the pots, the new active one is ready...
                     m_strand->post(util::bind_weak(&InputChannel::triggerIOEvent, this));
                     // ...and the other one can be filled
                     activeDataLock.unlock(); // before synchronous write to Tcp
+                    //std::clog << "triggerIOEvent: swapped, so notify" << std::endl;
                     notifyOutputChannelsForPossibleRead();
+
                 } catch (const std::exception& ex) {
                     KARABO_LOG_FRAMEWORK_ERROR << "InputChannel::update exception -- " << ex.what();
                 }
@@ -685,7 +711,8 @@ namespace karabo {
 
         void InputChannel::deferredNotificationOfOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel) {
             if (channel->isOpen()) {
-                const std::string traceId("(" + boost::lexical_cast<std::string>(boost::this_thread::get_id()) + ": onTcpChannelRead) ");
+                const std::string traceId("(" + boost::lexical_cast<std::string>(boost::this_thread::get_id()) + ": deferredNotificationOfOutputChannel...) ");
+                //                std::clog << get_CurrentTime() << " :: " << traceId << "INPUT Notifying output channel that " << this->getInstanceId() << " is ready for next read." << std::endl;
                 KARABO_LOG_FRAMEWORK_TRACE << traceId << "INPUT Notifying output channel that " << this->getInstanceId() << " is ready for next read.";
                 channel->write(karabo::util::Hash("reason", "update", "instanceId", this->getInstanceId()));
             }
@@ -693,6 +720,7 @@ namespace karabo {
 
 
         void InputChannel::notifyOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel) {
+            const std::string traceId("(" + boost::lexical_cast<std::string>(boost::this_thread::get_id()) + ": notifyOutputChannelForPossibleRead) ");
             if (channel->isOpen()) {
                 if (m_delayOnInput <= 0) // no delay
                     deferredNotificationOfOutputChannelForPossibleRead(channel);

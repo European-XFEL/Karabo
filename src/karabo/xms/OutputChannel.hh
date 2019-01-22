@@ -90,7 +90,7 @@ namespace karabo {
 
             typedef std::vector<InputChannelInfo> InputChannels;
 
-            typedef std::deque< std::string > InputChannelQueue;
+            //typedef std::deque< std::string > InputChannelQueue;
 
             // Callback on available input
             boost::function<void (const boost::shared_ptr<OutputChannel>&) > m_ioEventHandler;
@@ -121,8 +121,15 @@ namespace karabo {
 
             unsigned int m_sharedInputIndex;
 
-            InputChannelQueue m_shareNext;
-            InputChannelQueue m_copyNext;
+            // Final target:
+            //std::list<string> m_shareNext;
+            //std::unordered_set<string> m_copyNext;
+
+            std::deque<std::string> m_shareNext;
+            std::deque<std::string> m_copyNext;
+
+            //InputChannelQueue m_shareNext;
+            //InputChannelQueue m_copyNext;
 
             mutable boost::mutex m_nextInputMutex;
 
