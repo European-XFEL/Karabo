@@ -13,6 +13,7 @@ from traits.api import Instance, String, on_trait_change
 from karabo.common.api import DeviceStatus
 from karabo.common.project.api import MacroModel, read_macro, write_macro
 from karabogui import icons
+from karabogui.enums import ProjectItemTypes
 from karabogui.events import (
     broadcast_event, register_for_broadcasts, unregister_from_broadcasts,
     KaraboEventSender)
@@ -52,6 +53,10 @@ class MacroInstanceController(BaseProjectController):
         """Traits property getter for ``display_name``
         """
         return self.instance_id
+
+    def info(self):
+        return {'type': ProjectItemTypes.MACRO_INSTANCE,
+                'deviceId': self.instance_id}
 
     # ----------------------------------------------------------------------
     # action handlers
@@ -94,6 +99,11 @@ class MacroController(BaseProjectGroupController):
 
     def create_ui_data(self):
         return ProjectControllerUiData(icon=icons.file)
+
+    def info(self):
+        return {'type': ProjectItemTypes.MACRO,
+                'deviceId': self.model.instance_id,
+                'code': self.model.code}
 
     def double_click(self, project_controller, parent=None):
         broadcast_event(KaraboEventSender.ShowMacroView,

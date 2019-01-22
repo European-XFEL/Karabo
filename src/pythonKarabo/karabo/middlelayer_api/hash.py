@@ -1309,7 +1309,11 @@ class VectorHash(Vector):
                 tablerow = ()
                 for name in self.dtype.names:
                     desc = self.coltypes[name]
-                    kvalue = desc.toKaraboValue(datarow[name], strict=False)
+                    # NOTE: This is in principle not an MDL problem, but a GUI
+                    # one who lost all its casting since a year for the table
+                    # element. We protect here for the time being.
+                    value = desc.cast(datarow[name])
+                    kvalue = desc.toKaraboValue(value, strict=False)
                     tablerow += (kvalue.value,)
                 table.append(tablerow)
             table = np.array(table, dtype=self.dtype)

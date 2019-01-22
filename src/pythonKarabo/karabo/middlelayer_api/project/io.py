@@ -158,7 +158,6 @@ def _device_reader(io_obj, existing, metadata):
     # Now copy into the existing object
     existing.class_id = device.class_id
     existing.instance_id = device.instance_id
-    existing.if_exists = device.if_exists
     existing.configs[:] = device.configs[:]
     existing.active_config_ref = device.active_config_ref
 

@@ -15,6 +15,7 @@ from karabo.common.project.api import get_user_cache
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo.middlelayer_api.project.api import read_project_model
 from karabogui import icons, messagebox
+from karabogui.enums import ProjectItemTypes
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.project.dialog.object_handle import (
     ObjectDuplicateDialog, ObjectEditDialog)
@@ -58,6 +59,11 @@ class SceneController(BaseProjectController):
         menu.addAction(revert_action)
 
         return menu
+
+    def info(self):
+        return {'type': ProjectItemTypes.SCENE,
+                'uuid': self.model.uuid,
+                'simple_name': self.model.simple_name}
 
     def create_ui_data(self):
         return ProjectControllerUiData(icon=icons.image)

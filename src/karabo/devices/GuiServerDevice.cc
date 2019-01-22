@@ -104,6 +104,15 @@ namespace karabo {
                     .minExc(200).maxInc(5000) // NOTE: Not _too_ fast. The device instantiation timer is always running!
                     .commit();
 
+            INT32_ELEMENT(expected).key("forwardLogInterval")
+                    .displayedName("Log Interval")
+                    .description("Time interval between the forwarding of logs.")
+                    .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
+                    .assignmentOptional().defaultValue(1000)
+                    .reconfigurable()
+                    .minExc(500).maxInc(5000)
+                    .commit();
+
             UINT32_ELEMENT(expected).key("connectedClientCount")
                     .displayedName("Connected clients count")
                     .description("The number of clients currently connected to the server.")
@@ -114,7 +123,7 @@ namespace karabo {
                     .displayedName("Log Forwarding Level")
                     .description("The lowest log message level which will be forwarded to GUI clients.")
                     .options("ERROR,WARN,INFO,DEBUG")
-                    .assignmentOptional().defaultValue("ERROR")
+                    .assignmentOptional().defaultValue("INFO")
                     .reconfigurable()
                     .commit();
 
@@ -176,7 +185,8 @@ namespace karabo {
         GuiServerDevice::GuiServerDevice(const Hash& config)
         : Device<>(config)
         , m_deviceInitTimer(EventLoop::getIOService())
-        , m_networkStatsTimer(EventLoop::getIOService()) {
+        , m_networkStatsTimer(EventLoop::getIOService())
+        , m_forwardLogsTimer(EventLoop::getIOService()) {
 
             KARABO_INITIAL_FUNCTION(initialize)
 
@@ -254,6 +264,7 @@ namespace karabo {
 
                 startDeviceInstantiation();
                 startNetworkMonitor();
+                startForwardingLogs();
 
                 updateState(State::ON);
 
@@ -316,6 +327,12 @@ namespace karabo {
             m_networkStatsTimer.async_wait(bind_weak(&karabo::devices::GuiServerDevice::collectNetworkStats, this, boost::asio::placeholders::error));
         }
 
+
+        void GuiServerDevice::startForwardingLogs() {
+            m_forwardLogsTimer.expires_from_now(boost::posix_time::milliseconds(get<int>("forwardLogInterval")));
+            m_forwardLogsTimer.async_wait(bind_weak(&karabo::devices::GuiServerDevice::forwardLogs, this, boost::asio::placeholders::error));
+        }
+
         void GuiServerDevice::collectNetworkStats(const boost::system::error_code& error) {
             if (error) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Network monitor timer was cancelled!";
@@ -352,6 +369,23 @@ namespace karabo {
             startNetworkMonitor();
         }
 
+
+        void GuiServerDevice::forwardLogs(const boost::system::error_code& error) {
+            if (error) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Log forwarding was cancelled!";
+                return;
+            }
+            boost::mutex::scoped_lock lock(m_forwardLogsMutex);
+            if (m_logCache.size() > 0) {
+
+                Hash h("type", "log");
+                std::vector<Hash>& messages = h.bindReference<std::vector < Hash >> ("messages");
+                messages = std::move(m_logCache); // use r-value assignment operator to avoid a copy
+                m_logCache.clear(); // because std::move left it in a valid, but undefined state
+                safeAllClientsWrite(h, REMOVE_OLDEST);
+            }
+            startForwardingLogs();
+        }
 
         void GuiServerDevice::onConnect(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel) {
             if (e) return;
@@ -1250,22 +1284,15 @@ namespace karabo {
 
         void GuiServerDevice::logHandler(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
             try {
-                // Filter the messages before forwarding!
+                // Filter the messages before caching!
+                boost::mutex::scoped_lock lock(m_forwardLogsMutex);
                 const std::vector<util::Hash>& inMessages = body->get<std::vector<util::Hash> >("messages");
-                std::vector<util::Hash> outMessages;
-
-                BOOST_FOREACH(const util::Hash& msg, inMessages) {
+                for (const util::Hash& msg : inMessages) {
                     const krb_log4cpp::Priority::Value priority(krb_log4cpp::Priority::getPriorityValue(msg.get<std::string>("type")));
                     // The lower the number, the higher the priority
                     if (priority <= m_loggerMinForwardingPriority) {
-                        outMessages.push_back(msg);
+                        m_logCache.push_back(msg);
                     }
-                }
-
-                if (outMessages.size() > 0){
-                    Hash h("type", "log", "messages", outMessages);
-                    // Broadcast to all GUIs
-                    safeAllClientsWrite(h, REMOVE_OLDEST);
                 }
 
             } catch (const Exception& e) {

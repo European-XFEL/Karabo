@@ -155,10 +155,21 @@ onExit() {
 safeRunCommand() {
     typeset cmnd="$*"
     typeset ret_code
+    typeset -i max_tries=4
 
     echo cmnd=$cmnd
     eval $cmnd
     ret_code=$?
+    if $ACCEPT_SIGSEGV; then
+        # the default return code of a process segfaulting is 139
+        # which is the "abnormal termination" code 128 plus the signal number (SIGSEGV=11)
+        while [ $max_tries -gt 1 ] && [ $ret_code == 139 ]; do
+            ((max_tries--))
+            printf "Segmentation Fault: [%d] when executing command: '$cmnd' - %d tries left" $ret_code $max_tries
+            eval $cmnd
+            ret_code=$?
+        done
+    fi
     if [ $ret_code != 0 ]; then
         printf "Error : [%d] when executing command: '$cmnd'" $ret_code
         echo
@@ -185,14 +196,16 @@ runPythonUnitTests() {
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.common"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.project_db"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.tests"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabogui"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.interactive"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.macro_api"
-
+    ACCEPT_SIGSEGV=true
+    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabogui"
+    unset ACCEPT_SIGSEGV
     echo
     echo Karabo Python unit tests complete
     echo
 }
+
 
 runPythonIntegrationTests() {
     echo

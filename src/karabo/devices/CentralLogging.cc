@@ -99,7 +99,7 @@ namespace karabo {
                 m_timer.expires_from_now(boost::posix_time::seconds(get<int>("flushInterval")));
                 m_timer.async_wait(bind_weak(&CentralLogging::flushHandler, this, boost::asio::placeholders::error));
                 // Produce some information
-                KARABO_LOG_INFO << "Central Logging service started listening all log messages ...";
+                KARABO_LOG_FRAMEWORK_INFO << "Central Logging service started listening all log messages ...";
 
                 updateState(State::ON);
             } catch (const Exception& e) {
@@ -144,7 +144,7 @@ namespace karabo {
                         m_loggerConsumer.reset();
                         return;        
                     } else {
-                        KARABO_LOG_INFO << "Opened \"" << logname << "\" for writing";
+                        KARABO_LOG_FRAMEWORK_INFO << "Opened \"" << logname << "\" for writing";
                         if (m_logstream.tellp() > 0) m_logstream << "\n";
                     }
                 }

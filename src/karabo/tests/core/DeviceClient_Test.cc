@@ -25,6 +25,17 @@ using namespace karabo::util;
 using karabo::xms::InputChannel;
 using karabo::xms::ImageData;
 
+
+template<class Container>
+void assertIgnoringOrder(const Container& expected, const Container& actual, const std::string& which) {
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(which, expected.size(), actual.size());
+
+    for (auto itExpected = expected.cbegin(); itExpected != expected.cend(); ++itExpected) {
+        CPPUNIT_ASSERT_MESSAGE(which + "." + *itExpected,
+                               std::find(actual.cbegin(), actual.cend(), *itExpected) != actual.cend());
+    }
+}
+
 DeviceClient_Test::DeviceClient_Test() {
 }
 
@@ -342,8 +353,7 @@ void DeviceClient_Test::testConnectionHandling() {
     // Now check that still all paths are there
     paths.clear();
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(devId).getPaths(paths));
-    CPPUNIT_ASSERT_EQUAL(allPaths.size(), paths.size());
-    CPPUNIT_ASSERT_EQUAL(karabo::util::toString(allPaths), karabo::util::toString(paths)); // cannot compare vector<string>...
+    assertIgnoringOrder(allPaths, paths, "killRestart");
 
     ////////////////////////////////////////////////////////////////////
     // Test 3)
@@ -380,8 +390,7 @@ void DeviceClient_Test::testConnectionHandling() {
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(devId, config));
     paths.clear();
     config.getPaths(paths);
-    CPPUNIT_ASSERT_EQUAL(allPaths.size(), paths.size());
-    CPPUNIT_ASSERT_EQUAL(karabo::util::toString(allPaths), karabo::util::toString(paths)); // toString: see above
+    assertIgnoringOrder(allPaths, paths, "zombie");
     CPPUNIT_ASSERT_EQUAL(-32000000, config.get<int>("int32Property"));
 
     ////////////////////////////////////////////////////////////////////
@@ -406,7 +415,6 @@ void DeviceClient_Test::testConnectionHandling() {
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(devId, config));
     paths.clear();
     config.getPaths(paths);
-    CPPUNIT_ASSERT_EQUAL(allPaths.size(), paths.size());
-    CPPUNIT_ASSERT_EQUAL(karabo::util::toString(allPaths), karabo::util::toString(paths)); // toString: see above
+    assertIgnoringOrder(allPaths, paths, "killedZombie");
     CPPUNIT_ASSERT_EQUAL(-64000000, config.get<int>("int32Property"));
 }

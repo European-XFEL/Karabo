@@ -1,10 +1,9 @@
 from PyQt4.QtCore import QPoint
 from traits.api import (
-    HasStrictTraits, Bool, Dict, Enum, Event, Instance, Int, List, Property,
-    String, cached_property, on_trait_change
+    Bool, cached_property, Dict, Enum, Event, Instance, HasStrictTraits, Int,
+    List, on_trait_change, Property, String, Undefined
 )
 
-from karabo.common.api import KARABO_SCHEMA_DISPLAY_TYPE
 from karabo.common.scenemodel.api import WorkflowItemModel
 from karabogui.binding.api import NodeBinding, PropertyProxy
 from karabogui.singletons.api import get_topology
@@ -183,8 +182,7 @@ class WorkflowDeviceModel(HasStrictTraits):
             # Now we check whether it has a display type. If yes, check for
             # input/output channel and append in case.
             # If not, we might have a node (i.e. NodeBinding).
-            attrs = sub_binding.attributes
-            display_type = attrs.get(KARABO_SCHEMA_DISPLAY_TYPE)
+            display_type = sub_binding.display_type
             sub_path = (path + '.' if path else '') + name
             if display_type == const.CHANNEL_INPUT:
                 channel = WorkflowChannelModel(
@@ -353,12 +351,12 @@ class SceneWorkflowModel(HasStrictTraits):
         connections = []
         for input in self.input_channels:
             binding = input.proxy.binding
-            if (binding is None or
+            if (binding is Undefined or
                     'connectedOutputChannels' not in binding.value):
                 continue
 
             connected_outputs = binding.value.connectedOutputChannels.value
-            if not connected_outputs:
+            if connected_outputs is Undefined or not connected_outputs:
                 continue
 
             data_dist = ''
