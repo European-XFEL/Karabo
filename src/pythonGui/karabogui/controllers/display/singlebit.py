@@ -8,7 +8,7 @@ from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import QAction, QInputDialog, QLabel, QSizePolicy
 from traits.api import Instance, Str, on_trait_change
 
-from karabo.common.api import State, KARABO_SCHEMA_DISPLAY_TYPE
+from karabo.common.api import State
 from karabo.common.scenemodel.api import SingleBitModel
 from karabogui.binding.api import get_binding_value, get_min_max, IntBinding
 from karabogui.controllers.api import (
@@ -79,7 +79,7 @@ class SingleBit(BaseBindingController):
         if binding is None:
             return
 
-        dt = binding.attributes.get(KARABO_SCHEMA_DISPLAY_TYPE, '')
+        dt = binding.display_type
         if dt.startswith('bin|'):
             s, ok = QInputDialog.getItem(self.widget, 'Select Bit',
                                          'Select Bit:', dt[4:].split(','))

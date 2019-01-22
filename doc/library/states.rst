@@ -1,8 +1,8 @@
 .. _states:
 
-****************************
-States and Statuses
-****************************
+******
+States
+******
 
 
 Karabo has a fixed set of provided states, all of which are listed in the
@@ -12,8 +12,6 @@ to the type of hardware being controlled or to certain types
 of software devices, but also always map to a base state. Each base state has a
 assigned color coding, making it easy to view are devices state at first
 glance.
-Device, type, base and meta states connections can be seen as a form
-or inheritance as given in the below diagram:
 
 .. digraph:: state_transitions
 
@@ -46,30 +44,16 @@ or inheritance as given in the below diagram:
     "CHANGING" -> "INCREASING"
 
 
-As is apparent from the diagram an additional hierarchy level exists for the
-``STATIC`` and ``CHANGING`` states. Furthermore, the ``ACTIVE`` and ``PASSIVE``
-base states may seem a bit weird. This is due to the fact, that frequently
-hardware functionality has a somewhat binary scope, e.g. a channel can be
-powered (on) or not (off), a valve can be open or closed, but even for two
-similar devices this may map differently to e.g. voltage applied on an output
-or not. By using the simple approach of a binary system for base states there
-is clear indication that a more meaningful *device state* derived from these
-should be used in the concrete device implementation. Both will however compare
-equal to the ``STATIC`` state, i.e. the hardware is in fact maintaining a
-defined state.
-
-Base and meta states are defined as follows:
+Base and derived states are defined as follows:
 
 .. graphviz::
 
     digraph unknown {UNKNOWN [shape=box, style=filled, fillcolor="#FFAA00"]}
 
-
 ``UNKNOWN`` should be used if the Karabo device has no connection to hardware,
 or it cannot be assured that the correct state of the hardware is reported by
-the device. The latter can be e.g. the case if an unknown software error
-occurs in the device code, which is only caught by the Karabo Framework
-code and not by the device code.
+the device. The state can also be set if an unknown software error
+occurs in the device code.
 
 .. graphviz::
 
@@ -77,42 +61,32 @@ code and not by the device code.
 
 The ``INIT`` state in which a Karabo device should transition into upon
 initialization. During initialization connection to the hardware should
-be established. After initialization the hardware state should thus
-be ``KNOWN``, and the device should transition either to ``DISABLED``,
-``ERROR`` or one of the states derived from ``NORMAL``, all of which derive
-from ``KNOWN``. If no connection can be established the device should be placed
-into the ``UNKNOWN state``.
-
+be established.
+After initialization the device state should thus be ``KNOWN``, and the device
+should transition either to ``DISABLED``, ``ERROR`` or one of the states which
+are derived from ``NORMAL``. If no connection can be established the device
+should be placed into the ``UNKNOWN`` state.
 
 The ``KNOWN`` base state is the counterpart to the ``UNKNOWN`` state and should
-not usually be entered programmatically. Rather
-while in ``INIT`` the device logic should decide which of the states deriving
-from ``KNOWN`` should be entered. All states listed in the following derive
-from it and will compare equal to it:
+not usually be set to device. Instead, the device logic should decide which
+of the states deriving from ``KNOWN`` should be entered after initialization.
+All states listed in the following derive from ``KNOWN``.
 
 .. graphviz::
 
     digraph disabled {DISABLED [shape=box, style=filled, fillcolor="#FF00FF"]}
 
-``DISABLED`` is used if the device is will not act on commands and assignment
-for some reason, e.g. due to manual override or an interlock condition preventing
-the device from being used. A disabled device is however connected to the
-Karabo system, i.e. (some) value may be read back, at the very least it
-is able to notify Karabo of its disabled status. Note that no ``ENABLED``
-state exists, a device which is enabled is either in one of the ``NORMAL``
-states or in the ``ERROR`` state.
+``DISABLED`` is used if the device will not normally act on commands and reconfigurations.
+However, a disabled device is connected to the Karabo system,
+i.e. (some) value may be read back, at the very least it is able to notify
+Karabo of its disabled status.
 
 .. graphviz::
 
     digraph error {ERROR [shape=box, style=filled, fillcolor=red]}
 
-The ``ERROR`` state is reserved for hardware errors and uncaught processing
-errors on pipelined-processing devices. It should only be used for an
-error pertinent to the hardware component, not for indicating an alarm
-condition due to e.g. a property measured by the hardware. The latter case
-is handled via alarm conditions in Karabo. Note that no ``OK``
-state exists, a device which is working normally is in one of the
-``NORMAL`` states.
+The ``ERROR`` state is reserved for hardware errors. It must only be used for an
+error pertinent to the hardware component.
 
 .. graphviz::
 
@@ -121,18 +95,14 @@ state exists, a device which is working normally is in one of the
 The ``NORMAL`` base state should not usually be entered programmatically.
 Similar to ``KNOWN``, device logic should rather transition the device
 into one of the derived states. The following states derive from and compare
-equal to ``NORMAL``:
+equal to ``NORMAL``.
 
 .. graphviz::
 
     digraph static {STATIC [shape=box, style=filled, fillcolor="#00AA00"]}
 
 ``STATIC`` is itself a base state to the ``ACTIVE`` and ``PASSIVE`` states.
-It may however also directly be used, e.g. if a device is connected but
-waiting on commands.
-It is the counterpart to the changing states. Devices in a static operating
-mode, e.g. a running turbo-pump which is at target speed are also in the
-``STATIC`` state.
+It is the counterpart to the changing states and rarely used.
 
 .. graphviz::
 
@@ -190,8 +160,6 @@ The state ``DECREASING`` is derived from ``CHANGING`` and should be used
 if it makes sense to indicate a directional transition of the hardware.
 It is the counterpart to ``INCREASING``.
 
-
-
 .. warning::
 
     The ``ERROR`` state is reserved for hardware errors. Errors due to
@@ -202,35 +170,22 @@ It is the counterpart to ``INCREASING``.
     able to contact a device they are to control, as they might not have
     all the information available to work properly.
 
-
-.. note::
-
-    As is evident from the list there is no ``FOLLOWING`` state in Karabo.
-    A device which operates in a closed-regulatory loop should be in
-    the ``CHANGING`` state or one of the derived states as long as it is
-    not on-target, and then transition ``STATIC`` or a state derived there-of.
-    This also means that if a change of target value is to be allowed while
-    the device is still changing to a previously set target value, the slot
-    initiating the move needs to have ``CHANGING`` as an allowed state.
-
-
 .. warning::
 
-    As is evident from the list there is no ``CONNECTED`` state. Devices
-    requiring to establish connections to hardware first, e.g. through the
+    Devices requiring to establish connections to hardware first, e.g. through the
     network, or some other interface, do this either in the ``INIT`` state.
-    Connection functionality should be implemented in the initialization hooks,
-    **not** in the constructor or ``__init__`` methods, as it may take time,
+    Connection functionality **must** be implemented in the ``initialization hooks``,
+    **not** in the constructor or ``__init__`` methods. It might take time,
     and would otherwise yield the device unresponsive.
 
 
-The following diagram shows how base-states and base states are connected,
-and which transitions are allowed. Upon initialization devices generally
+The following diagram shows how base states and derived states are connected,
+and which transitions are allowed. Upon initialization, devices generally
 transition from ``UNKNOWN`` into one of the states derived from the ``KNOWN``
 base state. This is done by passing through the ``INIT`` state, where the
 connection to hardware should be established. Note that a connection error
 should not put the device into an ``ERROR`` state but rather back into
-``UNKNOWN``.
+``UNKNOWN``!
 
 As shown in the diagram a transition to any of the states deriving from
 the ``KNOWN`` base state back to ``UNKNOWN`` is possible, this should e.g.
@@ -331,8 +286,8 @@ Most Significant State
 ======================
 
 Especially for middle-layer devices a recurring scenario is the evaluation of
-the most significant state, or composite state, of a group of states. This is
-where state trumping comes into play. In Karabo, state trumping is centralized
+the most significant state, or composite state of a group of states. This is
+where state trumping must be used. In Karabo, state trumping is centralized
 in the sense that a set of standard trumping rules are provided, giving the
 base states are particular order.
 In the flat base-state hierarchy the following graph is being followed
@@ -463,12 +418,8 @@ in *trump* evaluation, where ``DISABLED`` is trumped by all other states and
     in a condition in which it does not have all the information necessary
     to determine the proper state. Thus the conservative assumption is
     that the device is in an error state.
-    If a device is controlling hardware known to be disconnected, used as
-    a spare, or not working, it should be brought to into the ``DISABLED``
-    state. In this case it is ignored for composite state determination, as
-    this state is trumped by all other states.
 
-Users should however not implement trumping functionality themselves,
+Device developers should however not implement trumping functionality themselves,
 but instead use the ``StateSignifier().returnMostSignificant`` function
 provided by Karabo.
 
@@ -496,14 +447,6 @@ staticSignificant = ``ACTIVE|PASSIVE``
 
 changingSignificant = ``INCREASING|DECREASING``
     defines whether ``INCREASING`` or  ``DECREASING`` should evaluate as more significant.
-
-.. note::
-
-    ``returnMostSignificant`` from the ``StateSignifier`` works also with
-    derived states like ``MOVING``, as shown in the example, and will also
-    return the derived state, if it is most significant. It is good practice
-    to always compare the defining state against one of the base states,
-    i.e. here ``if definingState == CHANGING``.
 
 In rare scenarios states might to be trumped differently. Developers can
 provide for a different trumping method in initialization of the ``StateSignifier``.
@@ -548,7 +491,6 @@ in a state derived from ``DISABLED``:
     "INTERLOCKED"[shape = box style=filled, fillcolor="#FF00FF"]
 
     "DISABLED" -> "INTERLOCKED"
-
 
 .. note::
 
@@ -737,37 +679,12 @@ or decrease of the value is being performed.
     "DECREASING" -> "SWITCHING_OFF"
 
 
-Devices Interacting with Personal Interlock
--------------------------------------------
-
-Karabo devices may monitor and request actions upon the personal interlock
-system of the hutches. For these devices the following mapping to base states
-should be used.
-
-.. digraph:: state_transitions
-
-    rankdir = LR;
-
-    "CHANGING"[shape = box style=filled, fillcolor="#00AAFF"]
-    "SEARCHING"[shape = box style=filled, fillcolor="#00AAFF"]
-
-    "STATIC"[shape = box style=filled, fillcolor="#00AA00"]
-    "INTERLOCK_OK"[shape = box style=filled, fillcolor="#00AA00"]
-
-    "DISABLED"[shape = box style=filled, fillcolor="#FF00FF"]
-    "INTERLOCK_BROKEN"[shape = box style=filled, fillcolor="#FF00FF"]
-
-    "CHANGING" -> "SEARCHING"
-    "STATIC" -> "INTERLOCK_OK"
-    "DISABLED" -> "INTERLOCK_BROKEN"
-
-
 .. note::
 
     While comparisons between different derived states are guaranteed to work
-    it is good practice to always compare to the base state. You should thus
-    write ``if myState == State.CHANGING`` and **not**
-    ``if myState == State.MOVING``!
+    it is good practice to compare to the base state. You can also write
+    ``if myState.isDerivedFrom(State.CHANGING)`` and **not**
+    ``if myState == State.MOVING``.
 
 Changing States
 ===============
@@ -777,7 +694,7 @@ and *updateState()* methods in the *bound* APIs
 
 .. code-block:: Python
 
-    currentState = self.getState()
+    current_state = self.getState()
     ...
     self.updateState(State.MOVING)
 
@@ -786,52 +703,11 @@ automatically map to these calls
 
 .. code-block:: Python
 
-    currentState = self.state
+    current_state = self.state
     self.state = State.MOVING
 
 .. warning::
 
-    While the device state is just another property on the device it is not
-    available via usual *get* and *set* commands. This has two reasons:
+    While internally states are serialized as strings, states can only be
+    updated by assigning a state enumerator object.
 
-    - state updates are propagated via a dedicated signal to the distributed
-      system, allowing to listen on state updates of other devices without
-      consuming network-bandwith on updates from other devies property
-
-    - while internally states are serialized as strings, states can only be
-      updated by assigning a state enumerator object.
-
-
-Status
-======
-
-The states introduced above are meant to be unified; accordingly, only a relatively
-small number of states has been defined. While it should always be possible to match
-a device state to one of the predefined-states, it can be useful to convey more specific
-information. For this the device status property is to be used, which is can be set
-to any string value using the normal assignment and retrieval syntax in the *bound* APIs:
-
-.. code-block:: Python
-
-   print(self.get("status"))
-   self.set("status", "The device is running")
-
-or in the middle-layer API:
-
-.. code-block:: Python
-
-   print(self.status)
-   self.status = "The device is running"
-
-On a state update a text indicating the device state is automatically set. After update
-state the user may overwrite the status again.
-
-
-.. code-block:: Python
-
-   self.updateState(State.RUNNING)
-   print(self.get("status"))
-   >> The device is in the RUNNING state.
-   self.set("status", "My new status")
-   print(self.get("status"))
-   >> My new status
