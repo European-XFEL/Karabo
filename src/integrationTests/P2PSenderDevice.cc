@@ -185,6 +185,8 @@ namespace karabo {
                     << ", delay in ms = " << delayInMs << ", vector<long long>.size = " << vec.size();
             for (size_t i = 1; i <= vec.size(); ++i) vec[i - 1] = i;
 
+            const std::string traceId{"\t(" + boost::lexical_cast<std::string>(boost::this_thread::get_id())
+                                      + "): SenderDevice::writing: "};
             // Loop all the data to be send
             for (int iData = 0; iData < nData && !m_stopWriting; ++iData) {
 
@@ -195,9 +197,17 @@ namespace karabo {
                 // Write
                 writeChannel("output1", data);
 
+                /*
+                std::clog << traceId << "Written data # " << iData << " ("
+                        << data.get<std::vector<long long>>("data").size() << " items)" << std::endl;
+                 */
                 KARABO_LOG_FRAMEWORK_DEBUG << "Written data # " << iData;
                 set("currentDataId", iData);
-                if (delayInMs > 0) boost::this_thread::sleep(boost::posix_time::milliseconds(delayInMs));
+                if (delayInMs > 0) {
+                    // std::clog << traceId << "will sleep for '" << delayInMs << "' ms..." << std::endl;
+                    boost::this_thread::sleep(boost::posix_time::milliseconds(delayInMs));
+                    // std::clog << traceId << "... sender woke up! " << iData << std::endl;
+                }
             }
         } catch (const std::exception &eStd) {
             KARABO_LOG_ERROR << "Stop writing since:\n" << eStd.what();
