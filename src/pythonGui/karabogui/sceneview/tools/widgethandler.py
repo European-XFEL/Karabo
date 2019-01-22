@@ -15,6 +15,7 @@ from karabogui.controllers.api import (
     get_class_const_trait, get_compatible_controllers, get_scene_model_class)
 from karabogui.dialogs.dialogs import SceneItemDialog
 from karabogui.sceneview.widget.api import ControllerContainer
+from karabogui.sceneview.tools.api import send_to_back, send_to_front, ungroup
 
 # Padding constrains for resize action
 QPAD_CART = 2
@@ -39,6 +40,19 @@ class SceneWidgetHandler(ABCHasStrictTraits):
             resize_action.triggered.connect(partial(self._resize_dialog,
                                                     scene_view))
             menu.addAction(resize_action)
+        ungroup_action = QAction("Ungroup Layout", self.widget)
+        ungroup_action.triggered.connect(partial(self._ungroup,
+                                                 scene_view))
+        menu.addAction(ungroup_action)
+
+        to_front_action = QAction("Send To Front", self.widget)
+        to_front_action.triggered.connect(partial(self._to_front,
+                                                  scene_view))
+        menu.addAction(to_front_action)
+        to_back_action = QAction("Send To Back", self.widget)
+        to_back_action.triggered.connect(partial(self._to_back,
+                                                 scene_view))
+        menu.addAction(to_back_action)
 
         self.handle_widget(scene_view, event, menu)
 
@@ -78,6 +92,15 @@ class SceneWidgetHandler(ABCHasStrictTraits):
                              dialog.x - QPAD_GEO, dialog.y - QPAD_GEO)
             for c in selection_model:
                 c.set_geometry(new_rect)
+
+    def _to_back(self, scene_view):
+        send_to_back(scene_view)
+
+    def _to_front(self, scene_view):
+        send_to_front(scene_view)
+
+    def _ungroup(self, scene_view):
+        ungroup(scene_view)
 
     # ------------------------------
     # Abstract public interface
