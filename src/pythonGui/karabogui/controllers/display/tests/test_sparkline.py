@@ -43,6 +43,10 @@ class TestDisplaySparkline(GuiTestCase):
                         assert controller.model.show_value == ac.isChecked()
                         ac.setChecked(not ac.isChecked())
                         assert controller.model.show_value == ac.isChecked()
+                    elif ac_name == 'Use alarm range':
+                        assert controller.model.alarm_range == ac.isChecked()
+                        ac.setChecked(not ac.isChecked())
+                        assert controller.model.alarm_range == ac.isChecked()
                     else:
                         tb_val = TIMEBASES.get(ac_name[:3], None)
                         if tb_val is None:
