@@ -2,7 +2,8 @@
 from .actions import (BoxVSceneAction, BoxHSceneAction, CreateToolAction,
                       GroupEntireSceneAction, GridSceneAction,
                       GroupSceneAction, SceneBringToFrontAction,
-                      SceneSendToBackAction, UngroupSceneAction)
+                      SceneSendToBackAction, send_to_back, send_to_front,
+                      ungroup, UngroupSceneAction)
 from .clipboard import (SceneCopyAction, SceneCutAction, SceneDeleteAction,
                         ScenePasteAction, ScenePasteReplaceAction, SceneMoveAction,
                         SceneSelectAllAction)
