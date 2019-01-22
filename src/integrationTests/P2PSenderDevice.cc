@@ -197,16 +197,10 @@ namespace karabo {
                 // Write
                 writeChannel("output1", data);
 
-                /*
-                std::clog << traceId << "Written data # " << iData << " ("
-                        << data.get<std::vector<long long>>("data").size() << " items)" << std::endl;
-                 */
                 KARABO_LOG_FRAMEWORK_DEBUG << "Written data # " << iData;
                 set("currentDataId", iData);
                 if (delayInMs > 0) {
-                    // std::clog << traceId << "will sleep for '" << delayInMs << "' ms..." << std::endl;
                     boost::this_thread::sleep(boost::posix_time::milliseconds(delayInMs));
-                    // std::clog << traceId << "... sender woke up! " << iData << std::endl;
                 }
             }
         } catch (const std::exception &eStd) {
