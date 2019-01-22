@@ -28,6 +28,14 @@ class SceneLinkWidget(QPushButton):
         self.clicked.connect(self._handle_click)
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
 
+        edit_action = QAction('Edit Label', self)
+        edit_action.triggered.connect(self.edit_label)
+        self.addAction(edit_action)
+
+        target_action = QAction('Edit Target', self)
+        target_action.triggered.connect(self.edit_target)
+        self.addAction(target_action)
+
     def paintEvent(self, event):
         with QPainter(self) as painter:
             boundary = self.rect().adjusted(2, 2, -2, -2)
@@ -101,16 +109,6 @@ class SceneLinkWidget(QPushButton):
         self.model.set(x=new_pos.x(), y=new_pos.y())
         self.move(new_pos)
 
-    def get_actions(self):
-        """Return an action for the scene widget handler
-        """
-        edit_action = QAction('Edit Label', self)
-        edit_action.triggered.connect(self.edit_label)
-
-        target_action = QAction('Edit Target', self)
-        target_action.triggered.connect(self.edit_target)
-        return [edit_action, target_action]
-
     @pyqtSlot()
     def edit_label(self):
         dialog = TextDialog(self.model)
@@ -148,6 +146,14 @@ class WebLinkWidget(QPushButton):
         self.setCursor(Qt.PointingHandCursor)
         self.clicked.connect(self._handle_click)
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
+
+        edit_action = QAction('Edit Label', self)
+        edit_action.triggered.connect(self.edit_label)
+        self.addAction(edit_action)
+
+        target_action = QAction('Edit Target', self)
+        target_action.triggered.connect(self.edit_target)
+        self.addAction(target_action)
 
     def paintEvent(self, event):
         with QPainter(self) as painter:
@@ -213,16 +219,6 @@ class WebLinkWidget(QPushButton):
         new_pos = self.pos() + offset
         self.model.set(x=new_pos.x(), y=new_pos.y())
         self.move(new_pos)
-
-    def get_actions(self):
-        """Return an action for the scene widget handler
-        """
-        edit_action = QAction('Edit Label', self)
-        edit_action.triggered.connect(self.edit_label)
-
-        target_action = QAction('Edit Target', self)
-        target_action.triggered.connect(self.edit_target)
-        return [edit_action, target_action]
 
     @pyqtSlot()
     def edit_label(self):
