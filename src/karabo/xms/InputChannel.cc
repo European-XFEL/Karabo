@@ -421,8 +421,7 @@ namespace karabo {
                     if (this->getMinimumNumberOfData() == 0) {
                         KARABO_LOG_FRAMEWORK_TRACE << traceId << "Triggering another compute";
                         // Caveat! Order of mutex locks!
-                        boost::mutex::scoped_lock activeDataLock(m_activeDataMutex);
-                        boost::mutex::scoped_lock inactiveDataLock(m_inactiveDataMutex);
+                        boost::mutex::scoped_lock twoPotsLock(m_twoPotsMutex);
                         KARABO_LOG_FRAMEWORK_WARN << traceId << "Triggering another compute; will swap buffers of active and inactive data";
                         std::swap(m_activeChunk, m_inactiveChunk);
                         m_strand->post(util::bind_weak(&InputChannel::triggerIOEvent, this));
@@ -439,8 +438,7 @@ namespace karabo {
                     return;
                 }
 
-                boost::mutex::scoped_lock activeDataLock(m_activeDataMutex);
-                boost::mutex::scoped_lock inactiveDataLock(m_inactiveDataMutex);
+                boost::mutex::scoped_lock twoPotsLock(m_twoPotsMutex);
 
                 if (header.has("channelId") && header.has("chunkId")) {
                     // Local memory
@@ -456,43 +454,19 @@ namespace karabo {
 
                 if (this->getMinimumNumberOfData() == 0) { // should keep reading until EOS (minData == 0 means that)
                     KARABO_LOG_FRAMEWORK_TRACE << traceId << "Can read more data since 'all' requested";
-                    //                    std::clog << get_CurrentTime() << " :: " << traceId
-                    //                            << " at getMinimumNumberOfData() == 0: will notifyOutputChannelForPossibleRead"
-                    //                            << std::endl;
                     notifyOutputChannelForPossibleRead(channel);
                 } else {
                     size_t nInactiveData = Memory::size(m_channelId, m_inactiveChunk);
                     if (nInactiveData < this->getMinimumNumberOfData()) {
-                        /*
-                        KARABO_LOG_FRAMEWORK_WARN << traceId
-                                << "There's more data to read before processing: nInactiveData = " << nInactiveData;
-                        std::clog << "OnTcpRead: not yet at minData - notify " << nInactiveData << " " << Memory::size(m_channelId, m_activeChunk) << std::endl;
-                         */
-                        // requested more data
-                        inactiveDataLock.unlock();
-                        activeDataLock.unlock();
-                        //                        std::clog << get_CurrentTime() << " :: " << traceId
-                        //                                << "nInactiveData == " << nInactiveData << std::endl;
-                        //                        std::clog << get_CurrentTime() << " :: " << traceId
-                        //                                << " at nInactiveData < getMinimumNumberOfData(): will notifyOutputChannelForPossibleRead"
-                        //                                << std::endl;
+                        // requests more data
+                        twoPotsLock.unlock();
                         notifyOutputChannelForPossibleRead(channel);
                     } else {
                         size_t nActiveData = Memory::size(m_channelId, m_activeChunk);
                         if (nActiveData == 0) { // Data complete, second pot still empty
                             KARABO_LOG_FRAMEWORK_TRACE << traceId << "At nActiveData == 0; will swap buffers for active and inactive data.";
                             std::swap(m_activeChunk, m_inactiveChunk);
-                            //                            std::clog << get_CurrentTime() << " :: " << traceId
-                            //                                    << " At nActiveData == 0; swapped active and inactive chunks"
-                            //                                    << std::endl;
-                            // when the order of unlock is reversed, we observed deadlock.
-                            inactiveDataLock.unlock(); // before synchronous write to Tcp
-                            activeDataLock.unlock(); // before synchronous write to Tcp
-                            // Ask to fill second pot...
-                            //                            std::clog << get_CurrentTime() << " :: " << traceId
-                            //                                    << " at nActiveData == 0: will notifyOutputChannelForPossibleRead"
-                            //                                    << std::endl;
-                            //                            std::clog << "OnTcpRead: active pot empty - notify" << std::endl;
+                            twoPotsLock.unlock(); // before synchronous write to Tcp
                             notifyOutputChannelForPossibleRead(channel);
                             // ...and in parallel process first one.
                             KARABO_LOG_FRAMEWORK_TRACE << traceId << "Triggering IOEvent";
@@ -577,7 +551,7 @@ namespace karabo {
 
         void InputChannel::triggerIOEvent() {
             std::string exceptMsg;
-            boost::mutex::scoped_lock activeDataLock(m_activeDataMutex);
+            boost::mutex::scoped_lock twoPotsLock(m_twoPotsMutex);
             {
                 const std::string traceId("(" + boost::lexical_cast<std::string>(boost::this_thread::get_id()) + ": triggerIOEvent) ");
                 
@@ -592,8 +566,6 @@ namespace karabo {
                         // interface (though inputHandler is more general...).
                         m_inputHandler.clear();
                     }
-                    //boost::mutex::scoped_lock activeDataLock(m_activeDataMutex);
-
                     KARABO_LOG_FRAMEWORK_TRACE << traceId << "Will prepare Metadata";
                     
                     prepareMetaData(); 
@@ -622,39 +594,24 @@ namespace karabo {
                 
                 // Whatever handler (even none or one that throws): we are done with the data.
                 try {
-                    //boost::mutex::scoped_lock activeDataLock(m_activeDataMutex);
-
-                    //size_t nActiveData = 0;
-
                     // Clear active chunk
                     Memory::clearChunkData(m_channelId, m_activeChunk);
 
-                    {
-                        // Swap buffers
-                        // Caveat! Lock both mutexes, this is the right order:
-                        KARABO_LOG_FRAMEWORK_TRACE << traceId << "Will call swapBuffers after processing input";
-                        boost::mutex::scoped_lock inactiveDataLock(m_inactiveDataMutex);
-                        //                        std::clog << get_CurrentTime() << " :: " << traceId
-                        //                                << "Will assign inactiveData" << std::endl;
-                        size_t nInactiveData = Memory::size(m_channelId, m_inactiveChunk);
-                        //                        std::clog << get_CurrentTime() << " :: " << traceId
-                        //                                << "inactiveData == " << nInactiveData << std::endl;
-                        if (nInactiveData < this->getMinimumNumberOfData()) {
-                            // Too early to process inactive Pot: has to reach minData
-                            KARABO_LOG_FRAMEWORK_TRACE << traceId << "Too early to process inactive Pot: has to reach minData.";
-                            return;
-                        }
-                        KARABO_LOG_FRAMEWORK_TRACE << traceId << "Will swap buffers of active and inactive data";
-                        std::swap(m_activeChunk, m_inactiveChunk);
-                        //                        std::clog << get_CurrentTime() << " :: " << traceId
-                        //                                << "chunks swapped" << std::endl;
+                    // Swap buffers
+                    KARABO_LOG_FRAMEWORK_TRACE << traceId << "Will call swapBuffers after processing input";
+                    size_t nInactiveData = Memory::size(m_channelId, m_inactiveChunk);
+                    if (nInactiveData < this->getMinimumNumberOfData()) {
+                        // Too early to process inactive Pot: has to reach minData
+                        KARABO_LOG_FRAMEWORK_TRACE << traceId << "Too early to process inactive Pot: has to reach minData.";
+                        return;
                     }
+                    KARABO_LOG_FRAMEWORK_TRACE << traceId << "Will swap buffers of active and inactive data";
+                    std::swap(m_activeChunk, m_inactiveChunk);
 
                     // After swapping the pots, the new active one is ready...
                     m_strand->post(util::bind_weak(&InputChannel::triggerIOEvent, this));
                     // ...and the other one can be filled
-                    activeDataLock.unlock(); // before synchronous write to Tcp
-                    //std::clog << "triggerIOEvent: swapped, so notify" << std::endl;
+                    twoPotsLock.unlock(); // before synchronous write to Tcp
                     notifyOutputChannelsForPossibleRead();
 
                 } catch (const std::exception& ex) {
@@ -671,7 +628,7 @@ namespace karabo {
             if (m_endOfStreamHandler) {
                 {
                     // Safety check if we still have some data in current pot that are not processed yet (we were called too early!)
-                    boost::mutex::scoped_lock lock(m_activeDataMutex);
+                    boost::mutex::scoped_lock lock(m_twoPotsMutex);
                     // Fetch number of data pieces ... should be 0!
                     // TODO: this is likely not required behavior, and should be refactored such that EOS events a placed into the
                     // same queues/buckets as data is
