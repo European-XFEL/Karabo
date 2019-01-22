@@ -20,6 +20,7 @@ from karabo.middlelayer_api.project.api import (read_project_model,
                                                 write_project_model)
 from karabogui import messagebox
 from karabogui.binding.api import extract_configuration
+from karabogui.enums import ProjectItemTypes
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
@@ -112,6 +113,11 @@ class DeviceInstanceController(BaseProjectGroupController):
         menu.addAction(instantiate_action)
         menu.addAction(shutdown_action)
         return menu
+
+    def info(self):
+        return {'type': ProjectItemTypes.DEVICE,
+                'classId': self.model.class_id,
+                'deviceId': self.model.instance_id}
 
     def create_ui_data(self):
         ui_data = ProjectControllerUiData()
@@ -387,7 +393,6 @@ class DeviceInstanceController(BaseProjectGroupController):
                 return
 
             device.instance_id = dialog.instance_id
-            device.if_exists = dialog.if_exists
 
             # Look for existing DeviceConfigurationModel
             dev_conf = device.select_config(dialog.active_uuid)
@@ -443,7 +448,6 @@ class DeviceInstanceController(BaseProjectGroupController):
                 dev_inst = DeviceInstanceModel(
                     class_id=device.class_id,
                     instance_id=simple_name,
-                    if_exists=device.if_exists,
                     active_config_ref=dupe_dev_conf.uuid,
                     configs=[dupe_dev_conf]
                 )

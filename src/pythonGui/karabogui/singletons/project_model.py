@@ -4,10 +4,11 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from contextlib import contextmanager
+import json
 import re
 from weakref import WeakValueDictionary
 
-from PyQt4.QtCore import QAbstractItemModel, QModelIndex, Qt
+from PyQt4.QtCore import QAbstractItemModel, QMimeData, QModelIndex, Qt
 from PyQt4.QtGui import QItemSelection, QItemSelectionModel
 
 from karabo.common.api import walk_traits_object
@@ -42,6 +43,7 @@ class ProjectViewItemModel(QAbstractItemModel):
         self._traits_model = None
         self._controller = None
         self._model_index_refs = WeakValueDictionary()
+        self.setSupportedDragActions(Qt.CopyAction)
 
     def controller_ref(self, model_index):
         """Get the controller object for a ``QModelIndex``. This is essentially
@@ -128,6 +130,25 @@ class ProjectViewItemModel(QAbstractItemModel):
                 self._controller = None
         finally:
             self.endResetModel()
+
+    def mimeData(self, indices):
+        """Reimplemented function of QAbstractItemModel.
+
+        Provide data for Drag & Drop operations.
+        """
+        # Get one selection per row
+        rows = {idx.row(): idx for idx in indices if idx.isValid()}
+        # Extract info() dictionaries from controllers
+        data = []
+        for index in rows.values():
+            controller = self.controller_ref(index)
+            if controller is None:
+                continue
+            data.append(controller.info())
+
+        mimeData = QMimeData()
+        mimeData.setData('treeItems', json.dumps(data))
+        return mimeData
 
     def findNodes(self, text, case_sensitive=True,
                   use_reg_ex=True, full_match=False):
@@ -249,7 +270,7 @@ class ProjectViewItemModel(QAbstractItemModel):
             return Qt.NoItemFlags
 
         # All items have these properties
-        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable
+        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled
         controller = self.controller_ref(index)
         if isinstance(controller, DeviceConfigurationController):
             # We only allow the configurations to be checkable for offline
