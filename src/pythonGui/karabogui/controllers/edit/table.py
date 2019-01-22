@@ -33,7 +33,7 @@ first string-type column encountered is pre-filled with the deviceID.
 """
 from PyQt4.QtCore import pyqtSlot, Qt, QModelIndex, QPoint, QTimer
 from PyQt4.QtGui import QAbstractItemView, QMenu, QStyledItemDelegate
-from traits.api import Bool, Instance, Int, on_trait_change
+from traits.api import Bool, Instance, Int
 
 from karabo.common.api import KARABO_SCHEMA_ROW_SCHEMA
 from karabo.common.scenemodel.api import TableElementModel
@@ -50,7 +50,7 @@ class _BaseTableElement(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(TableElementModel, args=())
     # Internal traits
-    _column_hash = Instance(Hash)
+    _row_hash = Instance(Hash)
     _role = Int(Qt.DisplayRole)
     _item_model = Instance(TableModel)
     _recent_context_trigger = Bool(False)
@@ -88,58 +88,51 @@ class _BaseTableElement(BaseBindingController):
         if binding is None and self.model.column_schema != '':
             # No binding yet, but the scene model has us covered
             schema = SchemaHashType.fromstring(self.model.column_schema)
-            self._set_column_schema(schema)
+            self._set_row_schema(schema)
         elif binding is not None:
             schema = binding.attributes.get(KARABO_SCHEMA_ROW_SCHEMA)
             if schema is not None:
-                self._set_column_schema(schema)
+                self._set_row_schema(schema)
                 self.model.column_schema = SchemaHashType.toString(schema)
 
     def value_update(self, proxy):
         value = get_editor_value(proxy, [])
-        if self._item_model.rowCount(None) > len(value):
+        if self._item_model.rowCount() > len(value):
             start = len(value) - 1
-            count = self._item_model.rowCount(None) - len(value)
+            count = self._item_model.rowCount() - len(value)
             self._item_model.removeRows(start, count, QModelIndex(),
                                         from_device_update=True)
 
         # add rows if necessary
-        if self._item_model.rowCount(None) < len(value):
-            start = self._item_model.rowCount(None)
-            count = len(value) - self._item_model.rowCount(None)
+        if self._item_model.rowCount() < len(value):
+            start = self._item_model.rowCount()
+            count = len(value) - self._item_model.rowCount()
             self._item_model.insertRows(start, count, QModelIndex(),
                                         from_device_update=True)
 
         for r, row in enumerate(value):
             for c, key in enumerate(row.getKeys()):
-                idx = self._item_model.index(r, c, QModelIndex())
-                self._item_model.setData(idx, row[key], self._role,
+                index = self._item_model.index(r, c, QModelIndex())
+                self._item_model.setData(index, row[key], self._role,
                                          from_device_update=True)
-
-    @on_trait_change('model.column_schema')
-    def _model_schema_update(self):
-        if self.widget is None:
-            return
-        schema = SchemaHashType.fromstring(self.model.column_schema)
-        self._set_column_schema(schema)
 
     def _on_user_edit(self, data):
         """Callback method used by `self._item_model` when data changes"""
         self.proxy.edit_value = data
 
-    def _set_column_schema(self, schema):
-        self._column_hash = schema.hash if schema is not None else Hash()
+    def _set_row_schema(self, schema):
+        self._row_hash = schema.hash if schema is not None else Hash()
         self._item_model = TableModel(schema, self._on_user_edit)
         self._item_model.set_role(self._role)
         self.widget.setModel(self._item_model)
-        self.widget.set_column_schema(schema)
+        self.widget.set_row_schema(schema)
         self._set_combo_boxes(self._role == Qt.DisplayRole)
 
     def _set_combo_boxes(self, ro):
-        if self._column_hash is None:
+        if self._row_hash is None:
             return
 
-        c_hash = self._column_hash
+        c_hash = self._row_hash
         if ro:
             # remove any combo delegate
             for col, key in enumerate(c_hash.getKeys()):
@@ -158,7 +151,7 @@ class _BaseTableElement(BaseBindingController):
                 if c_hash.hasAttribute(key, 'options'):
                     delegate = ComboBoxDelegate(
                         c_hash.getAttribute(key, 'options'),
-                        row=self._item_model.rowCount(None),
+                        row=self._item_model.rowCount(),
                         column=col, parent=self.widget)
                     self.widget.setItemDelegateForColumn(col, delegate)
 
@@ -171,79 +164,79 @@ class _BaseTableElement(BaseBindingController):
         if self.widget.selectionModel().selectedRows():
             return
 
-        idx = None
+        index = None
         for i in self.widget.selectionModel().selection().indexes():
-            idx = i
+            index = i
         menu = QMenu()
-        if idx is None or not idx.isValid():
+        if index is None or not index.isValid():
             add_action = menu.addAction('Add Row to end')
             action = menu.exec_(self.widget.viewport().mapToGlobal(pos))
             if action == add_action:
-                start, count = self._item_model.rowCount(None), 1
+                start, count = self._item_model.rowCount(), 1
                 self._item_model.insertRows(start, count, QModelIndex())
             return
 
         # check if this cell can be set to a default value
-        col = idx.column()
+        col = index.column()
         set_default_action = None
         key = None
 
-        if col >= 0 and col < len(self._column_hash):
-            key = self._column_hash.getKeys()[col]
+        if col >= 0 and col < len(self._row_hash):
+            key = self._row_hash.getKeys()[col]
 
-            if (self._column_hash.hasAttribute(key, 'defaultValue') and
+            if (self._row_hash.hasAttribute(key, 'defaultValue') and
                     self._role == Qt.EditRole):
                 set_default_action = menu.addAction('Set to Default')
 
             # add a hint to the object type
-            vtype = self._column_hash.getAttribute(key, 'valueType')
+            vtype = self._row_hash.getAttribute(key, 'valueType')
             type_dummy_action = menu.addAction(vtype)
             type_dummy_action.setEnabled(False)
 
         action = menu.exec_(self.widget.viewport().mapToGlobal(pos))
         if (action == set_default_action and key is not None and
                 set_default_action is not None):
-            defaultValue = self._column_hash.getAttribute(key, 'defaultValue')
-            self._item_model.setData(idx, defaultValue, Qt.EditRole)
+            defaultValue = self._row_hash.getAttribute(key, 'defaultValue')
+            self._item_model.setData(index, defaultValue, Qt.EditRole)
 
     @pyqtSlot(QPoint)
     def _header_context_menu(self, pos):
         if self._recent_context_trigger:
             return
 
-        idx = None
+        index = None
         for i in self.widget.selectionModel().selection().indexes():
-            idx = i
+            index = i
 
         menu = QMenu()
-        if idx is not None:
+        if index is not None:
             add_action = menu.addAction('Add Row below')
             dupe_action = menu.addAction('Duplicate Row below')
             remove_action = menu.addAction('Delete Row')
             action = menu.exec(self.widget.viewport().mapToGlobal(pos))
             if action == add_action:
-                self._item_model.insertRows(idx.row() + 1, 1, QModelIndex())
+                self._item_model.insertRows(index.row() + 1, 1, QModelIndex())
             elif action == remove_action:
-                self._item_model.removeRows(idx.row(), 1, QModelIndex())
+                self._item_model.removeRows(index.row(), 1, QModelIndex())
             elif action == dupe_action:
-                self._item_model.duplicate_row(idx.row())
+                self._item_model.duplicate_row(index.row())
         else:
             # try if we get are at a row nevertheless
-            idx = self.widget.indexAt(pos)
-            if idx.isValid():
+            index = self.widget.indexAt(pos)
+            if index.isValid():
                 add_action = menu.addAction('Add Row below')
                 dupe_action = menu.addAction('Duplicate Row below')
                 action = menu.exec(self.widget.viewport().mapToGlobal(pos))
                 if action == add_action:
-                    start, count = idx.row() + 1, 1
+                    start, count = index.row() + 1, 1
                     self._item_model.insertRows(start, count, QModelIndex())
                 elif action == dupe_action:
-                    self._item_model.duplicate_row(idx.row())
+                    self._item_model.duplicate_row(index.row())
             else:
                 add_action = menu.addAction('Add Row to end')
                 action = menu.exec(self.widget.viewport().mapToGlobal(pos))
                 if action == add_action:
-                    start, count = self._item_model.rowCount(None), 1
+                    start, count = self._item_model.rowCount(), 1
                     self._item_model.insertRows(start, count, QModelIndex())
 
         @pyqtSlot()
