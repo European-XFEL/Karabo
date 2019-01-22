@@ -41,6 +41,8 @@ namespace karabo {
             PluginLoader(const std::string& pluginDirectory) : m_pluginDirectory(pluginDirectory) {
             }
 
+            static std::string defaultPluginPath();
+
             static void expectedParameters(karabo::util::Schema& expected);
 
             PluginLoader(const karabo::util::Hash& input);
