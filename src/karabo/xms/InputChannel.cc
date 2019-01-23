@@ -22,13 +22,6 @@ using namespace karabo::net;
 
 using std::string;
 
-//#include <chrono>
-
-//static long get_CurrentTime() {
-//    std::chrono::time_point<std::chrono::high_resolution_clock> currTime = std::chrono::high_resolution_clock::now();
-//    return std::chrono::duration_cast<std::chrono::microseconds>(currTime.time_since_epoch()).count();
-//}
-
 namespace karabo {
     namespace xms {
 
