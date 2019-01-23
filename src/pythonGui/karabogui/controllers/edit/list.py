@@ -225,10 +225,11 @@ class ListValidator(QValidator):
             if not self.pattern.match(value):
                 return self.Invalid, input, pos
             # We have to check other behavior, e.g. leading zeros, and see
-            # if we can cast it properly
+            # if we can cast it properly (SyntaxError)
+            # Check for changes in between Vectors (ValueError)
             try:
                 self.cast(value)
-            except SyntaxError:
+            except (ValueError, SyntaxError):
                 return self.Intermediate, input, pos
 
         return self.Acceptable, input, pos
