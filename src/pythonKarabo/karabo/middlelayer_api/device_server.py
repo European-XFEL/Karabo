@@ -3,6 +3,7 @@ from asyncio import (async, coroutine, create_subprocess_exec, gather,
                      wait_for)
 import copy
 import os
+from json import loads
 import sys
 from signal import SIGTERM
 import socket
@@ -63,6 +64,7 @@ class DeviceServerBase(SignalSlotable):
         requiredAccessLevel=AccessLevel.EXPERT)
 
     scanPluginsTask = None
+    _device_initializer = {}
 
     @Bool(
         displayedName="Scan plug-ins?",
@@ -264,11 +266,17 @@ class DeviceServerBase(SignalSlotable):
                 d = getattr(d, p)
             return d
 
+        # Split the params for basic properties
+        params = {k: v for k, v in (a.split("=", 1) for a in argv[1:])}
+
+        # Retrieve the init information if available and convert to json
+        _device_initializer = loads(params.pop("init", "{}"))
+
         # The fromstring function takes over proper type conversion
-        params = Hash({k: get(k).fromstring(v)
-                       for k, v in (a.split("=", 1) for a in argv[1:])})
+        params = Hash({k: get(k).fromstring(v) for k, v in params.items()})
         server = cls(params)
         if server:
+            server._device_initializer = _device_initializer
             loop.add_signal_handler(SIGTERM, async, server.slotKillServer())
             # NOTE: The server listens to broadcasts and we set a flag in the
             # signal slotable
@@ -278,6 +286,25 @@ class DeviceServerBase(SignalSlotable):
                 loop.run_forever()
             finally:
                 loop.close()
+
+    @coroutine
+    def onInitialization(self):
+        """Initialization coroutine of the server to start up devices
+        """
+        if not self._device_initializer:
+            return
+
+        # We have to wait until our plugins are available, which is around
+        # 3 seconds after startup.
+        yield from sleep(4)
+
+        for deviceId, configuration in self._device_initializer.items():
+            configuration["_deviceId_"] = deviceId
+            configuration["_serverId_"] = self.serverId
+            classId = configuration.pop("classId")
+            background(self.startDevice(classId, deviceId, configuration))
+        # Not required information anymore!
+        del self._device_initializer
 
 
 class MiddleLayerDeviceServer(DeviceServerBase):
