@@ -175,8 +175,7 @@ class _BaseTableElement(BaseBindingController):
         self._item_model.removeRows(index.row(), 1, QModelIndex())
 
     @pyqtSlot(QPoint)
-    def _context_menu(self, event_pos):
-        pos = event_pos
+    def _context_menu(self, pos):
         selection_model = self.widget.selectionModel()
         selection = selection_model.selection()
         indexes = selection.indexes()
