@@ -14,7 +14,7 @@ from karabo.middlelayer import AccessMode, Hash
 from karabogui.enums import NavigationItemTypes, ProjectItemTypes
 
 
-def _value_type(schema, key):
+def _get_value_type(schema, key):
     """Extract a single key's value type from a schema"""
     return schema.hash[key, KARABO_SCHEMA_VALUE_TYPE]
 
@@ -60,14 +60,14 @@ class TableModel(QAbstractTableModel):
         if role == Qt.CheckStateRole and self._role == Qt.EditRole:
             key = self._row_hash.getKeys()[col]
             value = self._data[row][key]
-            vtype = _value_type(self._row_schema, key)
+            vtype = _get_value_type(self._row_schema, key)
             if vtype == 'BOOL':
                 return Qt.Checked if value else Qt.Unchecked
 
         if role == Qt.DisplayRole or role == Qt.EditRole:
             key = self._row_hash.getKeys()[col]
             value = self._data[row][key]
-            vtype = _value_type(self._row_schema, key)
+            vtype = _get_value_type(self._row_schema, key)
             if vtype.startswith('VECTOR'):
                 # Guard against None values
                 value = [] if value is None else value
@@ -106,11 +106,11 @@ class TableModel(QAbstractTableModel):
         flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
         key = self._row_hash.getKeys()[index.column()]
         access = AccessMode(self._row_schema.hash[key, 'accessMode'])
-        vtype = _value_type(self._row_schema, key)
+        vtype = _get_value_type(self._row_schema, key)
 
         if vtype == 'BOOL' and self._role == Qt.EditRole:
+            flags &= ~Qt.ItemIsEditable
             if access is AccessMode.READONLY:
-                flags &= ~Qt.ItemIsEditable
                 flags &= ~Qt.ItemIsEnabled
             else:
                 flags |= Qt.ItemIsUserCheckable
@@ -128,7 +128,7 @@ class TableModel(QAbstractTableModel):
         row, col = index.row(), index.column()
         if role == Qt.CheckStateRole:
             key = self._row_hash.getKeys()[col]
-            vtype = _value_type(self._row_schema, key)
+            vtype = _get_value_type(self._row_schema, key)
             if vtype == 'BOOL':
                 value = True if value == Qt.Checked else False
                 self._data[row][key] = value
@@ -141,7 +141,7 @@ class TableModel(QAbstractTableModel):
 
         if role in (Qt.DisplayRole, Qt.EditRole):
             key = self._row_hash.getKeys()[col]
-            vtype = _value_type(self._row_schema, key)
+            vtype = _get_value_type(self._row_schema, key)
             # now display value
             if vtype.startswith('VECTOR') and not from_device_update:
                 # this will be a list of individual chars we need to join
@@ -266,7 +266,7 @@ class KaraboTableView(QTableView):
         self._first_string_column = None
 
         for count, key in enumerate(self._row_keys):
-            vtype = _value_type(self._row_schema, key)
+            vtype = _get_value_type(self._row_schema, key)
             if vtype == 'STRING':
                 self._first_string_column = count
                 break
@@ -291,7 +291,6 @@ class KaraboTableView(QTableView):
                     # scroll to the end and pad with new whitespace to drop
                     # next item
                     self.scrollToBottom()
-
                 else:
                     return
             model.setData(index, device_id, Qt.EditRole)
@@ -317,7 +316,7 @@ class KaraboTableView(QTableView):
             return True, index, True, device_id
 
         key = self._row_keys[index.column()]
-        vtype = _value_type(self._row_schema, key)
+        vtype = _get_value_type(self._row_schema, key)
         if usable:
             event.accept()
             not_string = (vtype != 'STRING')
