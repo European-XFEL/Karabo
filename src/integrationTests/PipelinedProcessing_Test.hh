@@ -79,8 +79,8 @@ private:
      */
     void testPipeWaitPerf(unsigned int numOfDataItems);
 
-    void testPipeDrop(unsigned int processingTime, unsigned int delayTime, bool dataLoss);
 
+    void testPipeDrop(unsigned int processingTime, unsigned int delayTime, bool dataLoss);
     /**
      * Tests pipe for one receiver with 'queue' value for its 'input.onSlowness' setting and 'copy' value
      * for its 'input.dataDistribution' setting.
