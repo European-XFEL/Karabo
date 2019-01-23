@@ -57,6 +57,8 @@ build/python/*.exe
 /build/netbeans/deviceServer/build/
 /build/netbeans/brokerMessageLogger/build/
 /build/netbeans/integrationTests/build/
+/build/netbeans/integrationTests/dataLoggingTest/
+/build/netbeans/integrationTests/loggermap.xml
 /build/netbeans/tools/brokerRates/build/
 /build/netbeans/tools/dataLoggerIndex/idxview/build/
 /build/netbeans/tools/dataLoggerIndex/idxbuild/build/
