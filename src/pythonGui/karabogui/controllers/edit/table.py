@@ -58,6 +58,9 @@ class _BaseTableElement(BaseBindingController):
 
     def create_widget(self, parent):
         widget = KaraboTableView(parent=parent)
+        widget.setSelectionBehavior(QAbstractItemView.SelectItems |
+                                    QAbstractItemView.SelectRows |
+                                    QAbstractItemView.SelectColumns)
         widget.horizontalHeader().setStretchLastSection(True)
         return widget
 
