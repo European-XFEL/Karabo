@@ -31,9 +31,11 @@ deviceId.
 Dropping on a non-string cell or on an empty region will add a row in which the
 first string-type column encountered is pre-filled with the deviceID.
 """
-from PyQt4.QtCore import pyqtSlot, Qt, QModelIndex, QPoint, QTimer
+from functools import partial
+
+from PyQt4.QtCore import pyqtSlot, Qt, QModelIndex, QPoint
 from PyQt4.QtGui import QAbstractItemView, QMenu, QStyledItemDelegate
-from traits.api import Bool, Instance, Int
+from traits.api import Instance, Int
 
 from karabo.common.api import KARABO_SCHEMA_ROW_SCHEMA
 from karabo.common.scenemodel.api import TableElementModel
@@ -53,13 +55,9 @@ class _BaseTableElement(BaseBindingController):
     _row_hash = Instance(Hash)
     _role = Int(Qt.DisplayRole)
     _item_model = Instance(TableModel)
-    _recent_context_trigger = Bool(False)
 
     def create_widget(self, parent):
         widget = KaraboTableView(parent=parent)
-        widget.setSelectionBehavior(QAbstractItemView.SelectItems |
-                                    QAbstractItemView.SelectRows |
-                                    QAbstractItemView.SelectColumns)
         widget.horizontalHeader().setStretchLastSection(True)
         return widget
 
@@ -71,9 +69,9 @@ class _BaseTableElement(BaseBindingController):
             self.widget.setSelectionMode(QAbstractItemView.NoSelection)
         else:
             self._role = Qt.EditRole
-            self.widget.setSelectionMode(QAbstractItemView.SingleSelection)
-            self.widget.setEditTriggers(QAbstractItemView.SelectedClicked)
-            # add context menu to cells
+            flags = (QAbstractItemView.DoubleClicked
+                     | QAbstractItemView.AnyKeyPressed)
+            self.widget.setEditTriggers(flags)
             self.widget.setContextMenuPolicy(Qt.CustomContextMenu)
             self.widget.customContextMenuRequested.connect(self._context_menu)
             self.widget.setAcceptDrops(True)
@@ -109,7 +107,6 @@ class _BaseTableElement(BaseBindingController):
             count = len(value) - self._item_model.rowCount()
             self._item_model.insertRows(start, count, QModelIndex(),
                                         from_device_update=True)
-
         for r, row in enumerate(value):
             for c, key in enumerate(row.getKeys()):
                 index = self._item_model.index(r, c, QModelIndex())
@@ -135,117 +132,78 @@ class _BaseTableElement(BaseBindingController):
         c_hash = self._row_hash
         if ro:
             # remove any combo delegate
-            for col, key in enumerate(c_hash.getKeys()):
+            for column, key in enumerate(c_hash.getKeys()):
                 if c_hash.hasAttribute(key, 'options'):
                     delegate = QStyledItemDelegate(parent=self.widget)
-                    self.widget.setItemDelegateForColumn(col, delegate)
+                    self.widget.setItemDelegateForColumn(column, delegate)
         else:
-            # add context menu to vertical header to add and remove rows
-            v_header = self.widget.verticalHeader()
-            v_header.setContextMenuPolicy(Qt.CustomContextMenu)
-            v_header.customContextMenuRequested.connect(
-                self._header_context_menu)
-
             # Create an item delegate for columns which have options
-            for col, key in enumerate(c_hash.getKeys()):
+            for column, key in enumerate(c_hash.getKeys()):
                 if c_hash.hasAttribute(key, 'options'):
                     delegate = ComboBoxDelegate(
                         c_hash.getAttribute(key, 'options'),
                         row=self._item_model.rowCount(),
-                        column=col, parent=self.widget)
-                    self.widget.setItemDelegateForColumn(col, delegate)
+                        column=column, parent=self.widget)
+                    self.widget.setItemDelegateForColumn(column, delegate)
+
+# ---------------------------------------------------------------------
+# Actions
+
+    @pyqtSlot()
+    def _row_to_end_action(self):
+        start, count = self._item_model.rowCount(), 1
+        self._item_model.insertRows(start, count, QModelIndex())
+
+    @pyqtSlot(QModelIndex, str)
+    def _set_row_default(self, index, key):
+        default_value = self._row_hash.getAttribute(key, 'defaultValue')
+        self._item_model.setData(index, default_value, role=Qt.EditRole)
+
+    @pyqtSlot(QModelIndex)
+    def _add_row(self, index):
+        self._item_model.insertRows(index.row() + 1, 1, QModelIndex())
+
+    @pyqtSlot(QModelIndex)
+    def _dupe_row(self, index):
+        self._item_model.duplicate_row(index.row())
+
+    @pyqtSlot(QModelIndex)
+    def _remove_row(self, index):
+        self._item_model.removeRows(index.row(), 1, QModelIndex())
 
     @pyqtSlot(QPoint)
-    def _context_menu(self, pos):
-        """Context menu for single cells
-        """
-        # NOTE: This is a context menu for single cells, hence we bail out
-        # if the entire row has been selected via the header
-        if self.widget.selectionModel().selectedRows():
-            return
-
-        index = None
-        for i in self.widget.selectionModel().selection().indexes():
-            index = i
-        menu = QMenu()
-        if index is None or not index.isValid():
-            add_action = menu.addAction('Add Row to end')
-            action = menu.exec_(self.widget.viewport().mapToGlobal(pos))
-            if action == add_action:
-                start, count = self._item_model.rowCount(), 1
-                self._item_model.insertRows(start, count, QModelIndex())
-            return
-
-        # check if this cell can be set to a default value
-        col = index.column()
-        set_default_action = None
-        key = None
-
-        if col >= 0 and col < len(self._row_hash):
-            key = self._row_hash.getKeys()[col]
-
-            if (self._row_hash.hasAttribute(key, 'defaultValue') and
-                    self._role == Qt.EditRole):
-                set_default_action = menu.addAction('Set to Default')
-
-            # add a hint to the object type
-            vtype = self._row_hash.getAttribute(key, 'valueType')
-            type_dummy_action = menu.addAction(vtype)
-            type_dummy_action.setEnabled(False)
-
-        action = menu.exec_(self.widget.viewport().mapToGlobal(pos))
-        if (action == set_default_action and key is not None and
-                set_default_action is not None):
-            defaultValue = self._row_hash.getAttribute(key, 'defaultValue')
-            self._item_model.setData(index, defaultValue, Qt.EditRole)
-
-    @pyqtSlot(QPoint)
-    def _header_context_menu(self, pos):
-        if self._recent_context_trigger:
-            return
-
-        index = None
-        for i in self.widget.selectionModel().selection().indexes():
-            index = i
+    def _context_menu(self, event_pos):
+        pos = event_pos
+        selection_model = self.widget.selectionModel()
+        selection = selection_model.selection()
+        indexes = selection.indexes()
+        index = indexes[-1] if len(indexes) else None
 
         menu = QMenu()
         if index is not None:
+            # NOTE: We have a selection and check first if we can set this
+            # cell to a default value
+            column = index.column()
+            if column >= 0 and column < len(self._row_hash):
+                key = self._row_hash.getKeys()[column]
+                if (self._role == Qt.EditRole
+                        and self._row_hash.hasAttribute(key, 'defaultValue')):
+                    set_default_action = menu.addAction('Set Cell Default')
+                    set_default_action.triggered.connect(
+                        partial(self._set_row_default, index=index, key=key))
+                    menu.addSeparator()
+
             add_action = menu.addAction('Add Row below')
+            add_action.triggered.connect(partial(self._add_row, index))
             dupe_action = menu.addAction('Duplicate Row below')
+            dupe_action.triggered.connect(partial(self._dupe_row, index))
             remove_action = menu.addAction('Delete Row')
-            action = menu.exec(self.widget.viewport().mapToGlobal(pos))
-            if action == add_action:
-                self._item_model.insertRows(index.row() + 1, 1, QModelIndex())
-            elif action == remove_action:
-                self._item_model.removeRows(index.row(), 1, QModelIndex())
-            elif action == dupe_action:
-                self._item_model.duplicate_row(index.row())
+            remove_action.triggered.connect(partial(self._remove_row, index))
         else:
-            # try if we get are at a row nevertheless
-            index = self.widget.indexAt(pos)
-            if index.isValid():
-                add_action = menu.addAction('Add Row below')
-                dupe_action = menu.addAction('Duplicate Row below')
-                action = menu.exec(self.widget.viewport().mapToGlobal(pos))
-                if action == add_action:
-                    start, count = index.row() + 1, 1
-                    self._item_model.insertRows(start, count, QModelIndex())
-                elif action == dupe_action:
-                    self._item_model.duplicate_row(index.row())
-            else:
-                add_action = menu.addAction('Add Row to end')
-                action = menu.exec(self.widget.viewport().mapToGlobal(pos))
-                if action == add_action:
-                    start, count = self._item_model.rowCount(), 1
-                    self._item_model.insertRows(start, count, QModelIndex())
-
-        @pyqtSlot()
-        def _clear_context_trigger():
-            self._recent_context_trigger = False
-
-        # avoid self triggering of the menu
-        self._recent_context_trigger = True
-        QTimer.singleShot(200, _clear_context_trigger)
+            # We have no selection and are most probably out of bounds!
+            end_action = menu.addAction('Add Row to End')
+            end_action.triggered.connect(self._row_to_end_action)
+        menu.exec_(self.widget.viewport().mapToGlobal(pos))
 
 
 def _is_compatible(binding):
