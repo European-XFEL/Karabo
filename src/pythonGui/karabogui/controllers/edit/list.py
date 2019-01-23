@@ -192,7 +192,8 @@ class ListValidator(QValidator):
         super(ListValidator, self).__init__()
         self.pattern = re.compile(REGEX_MAP.get(type(binding), ''))
         self.intermediate = MEDIATE_MAP.get(type(binding), ())
-        self.try_literal = not isinstance(binding, VectorStringBinding)
+        self.cast = (str if isinstance(binding, VectorStringBinding)
+                     else literal_eval)
         self.min_size = min_size
         self.max_size = max_size
 
@@ -223,12 +224,12 @@ class ListValidator(QValidator):
         for value in values:
             if not self.pattern.match(value):
                 return self.Invalid, input, pos
-            # If we do not have a string binding, we have to check other
-            # behavior, e.g. leading zeros, and see if we can cast it
-            if self.try_literal:
-                try:
-                    literal_eval(value)
-                except SyntaxError:
-                    return self.Intermediate, input, pos
+            # We have to check other behavior, e.g. leading zeros, and see
+            # if we can cast it properly (SyntaxError)
+            # Check for changes in between Vectors (ValueError)
+            try:
+                self.cast(value)
+            except (ValueError, SyntaxError):
+                return self.Intermediate, input, pos
 
         return self.Acceptable, input, pos
