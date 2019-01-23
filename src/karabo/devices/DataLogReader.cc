@@ -495,6 +495,7 @@ namespace karabo {
 
 
         DataLoggerIndex DataLogReader::findLoggerIndexTimepoint(const std::string& deviceId, const std::string& timepoint) {
+
             string timestampAsIso8061;
             string timestampAsDouble;
             string event;
@@ -512,13 +513,29 @@ namespace karabo {
             }
 
             ifstream ifs(contentpath.c_str());
-            while (ifs >> event >> timestampAsIso8061 >> timestampAsDouble) {
-                // read the rest of the line (upto '\n')
-                string line;
-                if (!getline(ifs, line)) {
-                    ifs.close();
-                    throw KARABO_IO_EXCEPTION("Premature EOF while reading index file \"" + contentpath + "\"");
+
+            unsigned long lineNum = 0;
+            string line;
+            while (getline(ifs, line)) {
+
+                lineNum++;
+
+                vector<string> lineFields;
+                boost::split(lineFields, line, boost::is_any_of(" "));
+
+                if (lineFields.size() < 3) {
+                    // The line doesn't have the minimum number of values; ignore it and go to the next line.
+                    KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader (" << contentpath << ", ln. " << lineNum << "): "
+                            << "line should have at least 3 values separated by white space.";
+                    continue;
                 }
+
+                event = lineFields[0];
+                timestampAsIso8061 = lineFields[1];
+                timestampAsDouble = lineFields[2];
+
+                // If any parsing or processing problem happens for the current line, proceed to the next line.
+                try {
                 const Epochstamp epochstamp(stringDoubleToEpochstamp(timestampAsDouble));
                 if (epochstamp > target) {
                     KARABO_LOG_FRAMEWORK_ERROR << "findLoggerIndexTimepoint: done looping" << tail;
@@ -529,16 +546,22 @@ namespace karabo {
                         entry.m_event = event;
                         entry.m_epoch = epochstamp;
                         tail.swap(line); // store for later usage, but avoid a copy
+                        }
                     }
+                }                catch (const exception &e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader (" << contentpath << ", ln. " << lineNum << "): " << e.what();
+                    continue;
                 }
             }
             ifs.close();
+
             if (!tail.empty()) {
                 this->extractTailOfArchiveIndex(tail, entry);
             }
 
             KARABO_LOG_FRAMEWORK_ERROR << "findLoggerIndexTimepoint - entry: " << entry.m_event << " "
                     << entry.m_position << " " << entry.m_user << " " << entry.m_fileindex;
+            
             return entry;
         }
 
@@ -556,31 +579,53 @@ namespace karabo {
             ifstream contentstream(contentpath.c_str());
 
             bool gotAfter = false;
-            while (contentstream >> event >> timestampAsIso8061 >> timestampAsDouble) {
-                // read the rest of the line (upto '\n')
-                string line;
-                if (!getline(contentstream, line)) {
-                    contentstream.close();
-                    KARABO_LOG_WARN << "Premature EOF while reading index file \"" << contentpath + "\" in findNearestLoggerIndex";
-                    return nearest;
-                }
-                const Epochstamp epochstamp(stringDoubleToEpochstamp(timestampAsDouble));
+            unsigned long lineNum = 0;
+            string line;
 
-                if (epochstamp <= target || nearest.m_fileindex == -1 || (!before && !gotAfter)) {
-                    // We are here since
-                    // 1) target time is larger than current timestamp
-                    // 2) or we did not yet have any result
-                    // 3) or we search the first line with a timestamp larger than target, but did not yet find it
-                    if (!(epochstamp <= target || nearest.m_fileindex == -1)) {
-                        // We have case 3 - and will get what we want now.
-                        gotAfter = true;
-                    }
-                    nearest.m_event = event;
-                    nearest.m_epoch = epochstamp;
-                    this->extractTailOfArchiveIndex(line, nearest);
+            while (getline(contentstream, line)) {
+
+                lineNum++;
+
+                vector<string> lineFields;
+                boost::split(lineFields, line, boost::is_any_of(" "));
+
+                if (lineFields.size() < 3) {
+                    // The line doesn't have the minimum number of values; ignore it and go to the next line.
+                    KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader (" << contentpath << ", ln. " << lineNum << "): "
+                            << "line should have at least 3 values separated by white space.";
+                    continue;
                 }
-                // Stop loop if greater than target time point or we search the first after the target and got it.
-                if (epochstamp > target && (before || gotAfter)) break;
+
+                event = lineFields[0];
+                timestampAsIso8061 = lineFields[1];
+                timestampAsDouble = lineFields[2];
+
+                // If any parsing or processing problem happens for the current line, proceed to the next line.
+                try {
+                    const Epochstamp epochstamp(stringDoubleToEpochstamp(timestampAsDouble));
+
+                    if (epochstamp <= target || nearest.m_fileindex == -1 || (!before && !gotAfter)) {
+                        // We are here since
+                        // 1) target time is larger than current timestamp
+                        // 2) or we did not yet have any result
+                        // 3) or we search the first line with a timestamp larger than target, but did not yet find it
+                        if (!(epochstamp <= target || nearest.m_fileindex == -1)) {
+                            // We have case 3 - and will get what we want now.
+                            gotAfter = true;
+                        }
+                        nearest.m_event = event;
+                        nearest.m_epoch = epochstamp;
+                        this->extractTailOfArchiveIndex(line, nearest);
+                    }
+
+                    // Stop loop if greater than target time point or we search the first after the target and got it.
+                    if (epochstamp > target && (before || gotAfter)) break;
+
+                } catch (const exception &e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader (" << contentpath << ", ln. " << lineNum << "): " << e.what();
+                    continue;
+                }
+
             }
             contentstream.close();
             return nearest;
