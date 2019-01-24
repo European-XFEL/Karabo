@@ -11,7 +11,7 @@ from karabo.common.scenemodel.api import EditableListElementModel
 from karabogui.binding.api import VectorStringBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
-from karabogui.controllers.listedit import ListEdit
+from karabogui.dialogs.listedit import ListEditDialog
 
 
 @register_binding_controller(ui_name='List Element Field', can_edit=True,
@@ -32,7 +32,7 @@ class EditableListElement(BaseBindingController):
         if self.proxy.binding is None:
             return
 
-        list_edit = ListEdit(self.proxy, True)
+        list_edit = ListEditDialog(self.proxy, True)
         list_edit.set_texts('Add', '&Name', 'Edit')
         if list_edit.exec_() == QDialog.Accepted:
             self.proxy.edit_value = list_edit.values
