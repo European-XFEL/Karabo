@@ -1,5 +1,5 @@
 #############################################################################
-# Author: <steffen.hauf@xfel.eu>
+# Author: <steffen.hauf@xfel.eu> & <dennis.goeries@xfel.eu>
 # Created on August 10, 2015
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
@@ -72,6 +72,7 @@ class _BaseTableElement(BaseBindingController):
             self.widget.setSelectionMode(QAbstractItemView.NoSelection)
         else:
             self._role = Qt.EditRole
+            self.widget.setSelectionMode(QAbstractItemView.SingleSelection)
             flags = (QAbstractItemView.DoubleClicked
                      | QAbstractItemView.AnyKeyPressed)
             self.widget.setEditTriggers(flags)
@@ -167,7 +168,7 @@ class _BaseTableElement(BaseBindingController):
         self._item_model.insertRows(index.row() + 1, 1, QModelIndex())
 
     @pyqtSlot(QModelIndex)
-    def _dupe_row(self, index):
+    def _duplicate_row(self, index):
         self._item_model.duplicate_row(index.row())
 
     @pyqtSlot(QModelIndex)
@@ -186,7 +187,7 @@ class _BaseTableElement(BaseBindingController):
             # NOTE: We have a selection and check first if we can set this
             # cell to a default value
             column = index.column()
-            if column >= 0 and column < len(self._row_hash):
+            if 0 <= column < len(self._row_hash):
                 key = self._row_hash.getKeys()[column]
                 if (self._role == Qt.EditRole
                         and self._row_hash.hasAttribute(key, 'defaultValue')):
@@ -198,7 +199,7 @@ class _BaseTableElement(BaseBindingController):
             add_action = menu.addAction('Add Row below')
             add_action.triggered.connect(partial(self._add_row, index))
             dupe_action = menu.addAction('Duplicate Row below')
-            dupe_action.triggered.connect(partial(self._dupe_row, index))
+            dupe_action.triggered.connect(partial(self._duplicate_row, index))
             remove_action = menu.addAction('Delete Row')
             remove_action.triggered.connect(partial(self._remove_row, index))
         else:
