@@ -185,8 +185,6 @@ namespace karabo {
                     << ", delay in ms = " << delayInMs << ", vector<long long>.size = " << vec.size();
             for (size_t i = 1; i <= vec.size(); ++i) vec[i - 1] = i;
 
-            const std::string traceId{"\t(" + boost::lexical_cast<std::string>(boost::this_thread::get_id())
-                                      + "): SenderDevice::writing: "};
             // Loop all the data to be send
             for (int iData = 0; iData < nData && !m_stopWriting; ++iData) {
 
