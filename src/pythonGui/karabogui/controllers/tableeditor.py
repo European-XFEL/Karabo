@@ -11,10 +11,10 @@ from PyQt4.QtGui import QTableView, QComboBox, QItemDelegate
 
 from karabo.common.api import KARABO_SCHEMA_VALUE_TYPE
 from karabo.middlelayer import AccessMode, Hash
-from karabogui.enums import NavigationItemTypes
+from karabogui.enums import NavigationItemTypes, ProjectItemTypes
 
 
-def _value_type(schema, key):
+def _get_value_type(schema, key):
     """Extract a single key's value type from a schema"""
     return schema.hash[key, KARABO_SCHEMA_VALUE_TYPE]
 
@@ -60,14 +60,14 @@ class TableModel(QAbstractTableModel):
         if role == Qt.CheckStateRole and self._role == Qt.EditRole:
             key = self._row_hash.getKeys()[col]
             value = self._data[row][key]
-            vtype = _value_type(self._row_schema, key)
+            vtype = _get_value_type(self._row_schema, key)
             if vtype == 'BOOL':
                 return Qt.Checked if value else Qt.Unchecked
 
         if role == Qt.DisplayRole or role == Qt.EditRole:
             key = self._row_hash.getKeys()[col]
             value = self._data[row][key]
-            vtype = _value_type(self._row_schema, key)
+            vtype = _get_value_type(self._row_schema, key)
             if vtype.startswith('VECTOR'):
                 # Guard against None values
                 value = [] if value is None else value
@@ -106,15 +106,15 @@ class TableModel(QAbstractTableModel):
         flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
         key = self._row_hash.getKeys()[index.column()]
         access = AccessMode(self._row_schema.hash[key, 'accessMode'])
-        vtype = _value_type(self._row_schema, key)
+        vtype = _get_value_type(self._row_schema, key)
 
         if vtype == 'BOOL' and self._role == Qt.EditRole:
-            if access == AccessMode.READONLY:
-                flags &= ~Qt.ItemIsEditable
+            flags &= ~Qt.ItemIsEditable
+            if access is AccessMode.READONLY:
                 flags &= ~Qt.ItemIsEnabled
             else:
                 flags |= Qt.ItemIsUserCheckable
-        elif access == AccessMode.READONLY:
+        elif access is AccessMode.READONLY:
             flags &= ~Qt.ItemIsEditable
 
         return flags
@@ -128,7 +128,7 @@ class TableModel(QAbstractTableModel):
         row, col = index.row(), index.column()
         if role == Qt.CheckStateRole:
             key = self._row_hash.getKeys()[col]
-            vtype = _value_type(self._row_schema, key)
+            vtype = _get_value_type(self._row_schema, key)
             if vtype == 'BOOL':
                 value = True if value == Qt.Checked else False
                 self._data[row][key] = value
@@ -137,9 +137,11 @@ class TableModel(QAbstractTableModel):
                     self._editing_finished(self._data)
                 return True
 
-        if role == Qt.EditRole or role == Qt.DisplayRole:
+            return False
+
+        if role in (Qt.DisplayRole, Qt.EditRole):
             key = self._row_hash.getKeys()[col]
-            vtype = _value_type(self._row_schema, key)
+            vtype = _get_value_type(self._row_schema, key)
             # now display value
             if vtype.startswith('VECTOR') and not from_device_update:
                 # this will be a list of individual chars we need to join
@@ -263,10 +265,10 @@ class KaraboTableView(QTableView):
         self._row_keys = self._row_hash.getKeys()
         self._first_string_column = None
 
-        for c, key in enumerate(self._row_keys):
-            vtype = _value_type(self._row_schema, key)
+        for count, key in enumerate(self._row_keys):
+            vtype = _get_value_type(self._row_schema, key)
             if vtype == 'STRING':
-                self._first_string_column = c
+                self._first_string_column = count
                 break
 
     def dragEnterEvent(self, event):
@@ -286,11 +288,9 @@ class KaraboTableView(QTableView):
                     index = model.index(model.rowCount() - 1,
                                         self._first_string_column,
                                         QModelIndex())
-
                     # scroll to the end and pad with new whitespace to drop
                     # next item
                     self.scrollToBottom()
-
                 else:
                     return
             model.setData(index, device_id, Qt.EditRole)
@@ -304,18 +304,19 @@ class KaraboTableView(QTableView):
         items = json.loads(items_data.decode())
         item = items[0]
         index = self.indexAt(event.pos())
-        nav_type = item.get('type')
+        drag_type = item.get('type')
+        from_navigation = drag_type == NavigationItemTypes.DEVICE
+        from_project = drag_type == ProjectItemTypes.DEVICE
+        usable = from_navigation or from_project
         device_id = item.get('deviceId', '')
-        from_project = device_id != ''
-        usable = (nav_type == NavigationItemTypes.DEVICE or from_project)
 
-        # drop in empty area is also okay but must trigger new_row
+        # Drop in empty area is also okay but must trigger new_row
         if not index.isValid() and usable:
             event.accept()
             return True, index, True, device_id
 
         key = self._row_keys[index.column()]
-        vtype = _value_type(self._row_schema, key)
+        vtype = _get_value_type(self._row_schema, key)
         if usable:
             event.accept()
             not_string = (vtype != 'STRING')
