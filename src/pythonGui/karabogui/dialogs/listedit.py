@@ -26,9 +26,9 @@ INT_BINDINGS = (VectorInt8Binding, VectorInt16Binding, VectorInt32Binding,
                 VectorUint32Binding, VectorUint64Binding)
 
 
-class ListEdit(QDialog):
+class ListEditDialog(QDialog):
     def __init__(self, proxy, duplicates_ok=True, parent=None):
-        super(ListEdit, self).__init__(parent)
+        super(ListEditDialog, self).__init__(parent)
 
         self._proxy = proxy
         self._duplicates_ok = duplicates_ok

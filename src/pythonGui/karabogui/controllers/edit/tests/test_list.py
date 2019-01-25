@@ -5,7 +5,7 @@ from PyQt4.QtGui import QDialog
 from karabo.common.scenemodel.api import EditableListModel
 from karabo.middlelayer import Configurable, VectorInt32
 from karabogui.binding.api import apply_default_configuration, get_min_max_size
-from karabogui.controllers.listedit import ListEdit
+from karabogui.dialogs.listedit import ListEditDialog
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..list import EditableList
@@ -19,7 +19,7 @@ class SizeObject(Configurable):
     prop = VectorInt32(defaultValue=[1], minSize=1, maxSize=3)
 
 
-class ListEditMock(ListEdit):
+class ListEditMock(ListEditDialog):
     @property
     def values(self):
         return ['-1', '42', '-1']
@@ -72,7 +72,7 @@ class TestEditableList(GuiTestCase):
         assert self.proxy.edit_value is None
 
     def test_edit_dialog(self):
-        target = 'karabogui.controllers.edit.list.ListEdit'
+        target = 'karabogui.controllers.edit.list.ListEditDialog'
         with patch(target, new=ListEditMock):
             self.controller.set_read_only(False)
             self.controller._on_edit_clicked()

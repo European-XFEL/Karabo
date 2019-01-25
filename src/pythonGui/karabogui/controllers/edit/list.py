@@ -20,7 +20,7 @@ from karabogui.binding.api import (
 
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
-from karabogui.controllers.listedit import ListEdit
+from karabogui.dialogs.listedit import ListEditDialog
 from karabogui.util import SignalBlocker
 
 
@@ -113,7 +113,7 @@ class _BaseListController(BaseBindingController):
         if self.proxy.binding is None:
             return
 
-        list_edit = ListEdit(self.proxy, True)
+        list_edit = ListEditDialog(self.proxy, True)
         list_edit.set_texts("Add", "&Value", "Edit")
         if list_edit.exec_() == QDialog.Accepted:
             self.proxy.edit_value = list_edit.values
