@@ -74,12 +74,11 @@ private:
      *
      * @param numOfDataItems Number of data items to be transmitted across the pipeline for each
      * test run.
-     * @param numOfRuns The number of runs to be performed per invocation of the method.
      *
      * @note To minimize the effects of the property pollings used internally, it is recommended
      * to use a high number of data items to be transmitted along the pipe.
      */
-    void testPipeWaitPerf(unsigned int numOfDataItems, unsigned int numOfRuns);
+    void testPipeWaitPerf(unsigned int numOfDataItems);
 
     void testPipeDrop(unsigned int processingTime, unsigned int delayTime, bool dataLoss);
 
