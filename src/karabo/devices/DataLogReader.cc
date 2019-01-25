@@ -536,19 +536,19 @@ namespace karabo {
 
                 // If any parsing or processing problem happens for the current line, proceed to the next line.
                 try {
-                const Epochstamp epochstamp(stringDoubleToEpochstamp(timestampAsDouble));
-                if (epochstamp > target) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "findLoggerIndexTimepoint: done looping" << tail;
-                    break;
-                } else {
-                    // store selected event
-                    if (event == "+LOG" || event == "-LOG") {
-                        entry.m_event = event;
-                        entry.m_epoch = epochstamp;
-                        tail.swap(line); // store for later usage, but avoid a copy
+                    const Epochstamp epochstamp(stringDoubleToEpochstamp(timestampAsDouble));
+                    if (epochstamp > target) {
+                        KARABO_LOG_FRAMEWORK_ERROR << "findLoggerIndexTimepoint: done looping" << tail;
+                        break;
+                    } else {
+                        // store selected event
+                        if (event == "+LOG" || event == "-LOG") {
+                            entry.m_event = event;
+                            entry.m_epoch = epochstamp;
+                            tail.swap(line); // store for later usage, but avoid a copy
                         }
                     }
-                }                catch (const exception &e) {
+                } catch (const exception &e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader (" << contentpath << ", ln. " << lineNum << "): " << e.what();
                     continue;
                 }
