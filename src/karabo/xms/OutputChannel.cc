@@ -500,28 +500,14 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_nextInputMutex);
             auto it = std::find(m_shareNext.begin(), m_shareNext.end(), instanceId);
             if (it != m_shareNext.end()) m_shareNext.erase(it);
-            /*
-            if (std::find(m_shareNext.begin(), m_shareNext.end(), instanceId) != m_shareNext.end()) {
-                const std::string traceId("(" + boost::lexical_cast<std::string>(boost::this_thread::get_id()) + ": OutputChannel::eraseSharedInput) ");
-                std::clog << traceId
-                        << " more left of " << instanceId << std::endl;
-                for (auto& id : m_shareNext) {
-                    std::clog << id << " ";
-                }
-                std::clog << std::endl;
-            }
-             */
         }
 
 
         void OutputChannel::pushCopyNext(const std::string& info) {
             boost::mutex::scoped_lock lock(m_nextInputMutex);
             if (std::find(m_copyNext.begin(), m_copyNext.end(), info) == m_copyNext.end()) {
-                //std::clog << "OutputChannel::pushCopyNext " << m_channelName << " " << info << " added" << std::endl;
                 m_copyNext.push_back(info);
-            } /* else {
-                std::clog << "OutputChannel::pushCopyNext " << m_channelName << " " << info << " SKIPPED" << std::endl;
-            } */
+            }
         }
 
 
@@ -543,17 +529,6 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_nextInputMutex);
             auto it = std::find(m_copyNext.begin(), m_copyNext.end(), instanceId);
             if (it != m_copyNext.end()) m_copyNext.erase(it);
-            /*
-            if (std::find(m_copyNext.begin(), m_copyNext.end(), instanceId) != m_copyNext.end()) {
-                const std::string traceId("(" + boost::lexical_cast<std::string>(boost::this_thread::get_id()) + ": OutputChannel::eraseCopyInput) ");
-                std::clog << traceId
-                        << " more left of " << instanceId << std::endl;
-                for (auto& id : m_copyNext) {
-                    std::clog << id << " | ";
-                }
-                std::clog << std::endl;
-            }
-            */
         }
 
 
@@ -863,23 +838,19 @@ namespace karabo {
 
             Channel::Pointer tcpChannel = channelInfo.get<ChannelWeakPointer > ("tcpChannel").lock();
             if (!tcpChannel) return;
-          
+
             // Synchronous write as it takes no time here
             KARABO_LOG_FRAMEWORK_TRACE << "OUTPUT Now distributing (local memory)";
             try {
-                //                std::clog << "OutputChannel::distributeLocal: before isOpen test." << std::endl;
                 if (tcpChannel->isOpen()) {
                     using namespace karabo::io;
                     // in case of short-cutting the receiver may async. work on data the sender is already altering again.
                     // we assure that the contents in the chunk the receiver gets sent have been copied once
                     Memory::assureAllDataIsCopied(m_channelId, chunkId);
-                    //                    std::clog << "OutputChannel::distributeLocal: isChannelOpen == " << tcpChannel->isOpen() << std::endl;
                     tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId),
                                       // To allow old versions <= 2.2.4.4 to read our data, send vector with one
                                       // empty BufferSet instead of an empty vector:
                                       std::vector<BufferSet::Pointer>(1, BufferSet::Pointer(new BufferSet)));
-                    //                    std::clog << "OutputChannel::distributeLocal: after tcpChannel->write for channel '" << m_channelId
-                    //                            << "' and chunkId '" << chunkId << "'" << std::endl;
                 }
             } catch (const std::exception& e) {
                 //                std::clog << "OutputChannel::distributeLocal  :  " << e.what() << std::endl;
@@ -989,25 +960,21 @@ namespace karabo {
 
             Channel::Pointer tcpChannel = channelInfo.get<ChannelWeakPointer > ("tcpChannel").lock();
             if (!tcpChannel) return;
-            
+
             // Synchronous write as it takes no time here
             try {
-                //                std::clog << "OutputChannel::copyLocal: before isOpen test." << std::endl;
                 if (tcpChannel->isOpen()) {
                     using namespace karabo::io;
                     // in case of short-cutting the receiver may async. work on data the sender is already altering again.
                     // we assure that the contents in the chunk the receiver gets sent have been copied once
                     Memory::assureAllDataIsCopied(m_channelId, chunkId);
-                    //                    std::clog << "OutputChannel::copyLocal: isChannelOpen == " << tcpChannel->isOpen() << std::endl;
                     tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId),
                                       // To allow old versions <= 2.2.4.4 to read our data, send vector with one
                                       // empty BufferSet instead of an empty vector:
                                       std::vector<BufferSet::Pointer>(1, BufferSet::Pointer(new BufferSet)));
-                    //                    std::clog << "OutputChannel::copyLocal: after tcpChannel->write for channel '" << m_channelId
-                    //                            << "' and chunkId '" << chunkId << "'" << std::endl;
                 }
             } catch (const std::exception& e) {
-                    //                std::clog << "OutputChannel::copyLocal  :  " << e.what() << std::endl;
+                //                std::clog << "OutputChannel::copyLocal  :  " << e.what() << std::endl;
                 KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::copyLocal  :  " << e.what();
             }
 
