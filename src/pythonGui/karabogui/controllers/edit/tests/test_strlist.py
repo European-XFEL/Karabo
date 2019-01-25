@@ -4,7 +4,7 @@ from PyQt4.QtGui import QDialog
 
 from karabo.middlelayer import Configurable, VectorString
 from karabogui.binding.api import apply_default_configuration
-from karabogui.controllers.listedit import ListEdit
+from karabogui.dialogs.listedit import ListEditDialog
 from karabogui.testing import GuiTestCase, get_class_property_proxy
 from ..strlist import EditableListElement
 
@@ -13,7 +13,7 @@ class Object(Configurable):
     prop = VectorString(defaultValue=['hi there'])
 
 
-class ListEditMock(ListEdit):
+class ListEditMock(ListEditDialog):
     @property
     def values(self):
         return ['foo', 'bar']
@@ -35,7 +35,7 @@ class TestEditableListElement(GuiTestCase):
         assert self.controller.widget is None
 
     def test_edit_dialog(self):
-        target = 'karabogui.controllers.edit.strlist.ListEdit'
+        target = 'karabogui.controllers.edit.strlist.ListEditDialog'
         with patch(target, new=ListEditMock):
             self.controller._on_edit_clicked()
             assert self.proxy.edit_value == ['foo', 'bar']
