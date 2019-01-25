@@ -74,7 +74,8 @@ class _BaseTableElement(BaseBindingController):
             self._role = Qt.EditRole
             self.widget.setSelectionMode(QAbstractItemView.SingleSelection)
             flags = (QAbstractItemView.DoubleClicked
-                     | QAbstractItemView.AnyKeyPressed)
+                     | QAbstractItemView.AnyKeyPressed
+                     | QAbstractItemView.SelectedClicked)
             self.widget.setEditTriggers(flags)
             self.widget.setContextMenuPolicy(Qt.CustomContextMenu)
             self.widget.customContextMenuRequested.connect(self._context_menu)
