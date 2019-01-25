@@ -78,7 +78,7 @@ class NDArray(Type):
             ar.shape = data["shape"]
             return QuantityValue(ar, descriptor=self)
 
-        if not isinstance(data, numpy.ndarray):
+        if not isinstance(data, numpy.ndarray) or data.dtype != self.dtype:
             data = numpy.array(data, dtype=self.dtype)
         data = QuantityValue(data, descriptor=self)
         if data.units != self.units:
