@@ -1003,7 +1003,7 @@ namespace karabo {
 
             virtual void _slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-            virtual void slotInstanceUpdated(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            virtual void _slotInstanceUpdated(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
             virtual void _slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
