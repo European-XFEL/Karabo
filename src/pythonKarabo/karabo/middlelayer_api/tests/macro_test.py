@@ -1,5 +1,6 @@
 from asyncio import async, coroutine, TimeoutError
 from contextlib import contextmanager
+from flaky import flaky
 import sys
 import time
 from unittest import main
@@ -295,8 +296,13 @@ class Tests(DeviceTest):
             self.assertGreaterEqual(d.counter, 10)
 
     @sync_tst
+    @flaky(max_runs=5, min_passes=3)
     def test_waituntilnew(self):
-        """test the waitUntilNew function"""
+        """test the waitUntilNew function
+
+        NOTE: This test is declared as flaky as the cycling is sometimes not
+        working in the eventloop as it has to be.
+        """
         with getDevice("remote") as d:
             d.counter = 0
             sleep(0.01)
