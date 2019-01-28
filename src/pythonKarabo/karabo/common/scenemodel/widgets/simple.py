@@ -371,7 +371,7 @@ def _build_empty_widget_readers_and_writers():
              'EditableSpinBoxModel', 'GlobalAlarmModel', 'HexadecimalModel',
              'IntLineEditModel', 'KnobModel', 'LampModel',
              'MultiCurvePlotModel', 'PopUpModel', 'RunConfiguratorModel',
-             'WidgetNodeModel', 'SliderModel', 'XYPlotModel')
+             'SliderModel', 'WidgetNodeModel', 'XYPlotModel')
     for name in names:
         klass = globals()[name]
         file_name = name[:-len('Model')]
