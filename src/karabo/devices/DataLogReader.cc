@@ -526,7 +526,7 @@ namespace karabo {
                 if (lineFields.size() < 3) {
                     // The line doesn't have the minimum number of values; ignore it and go to the next line.
                     KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader (" << contentpath << ", ln. " << lineNum << "): "
-                            << "line should have at least 3 values separated by white space.";
+                            << "line should start with an event followed by two timestamps separated by white space.";
                     continue;
                 }
 
@@ -545,7 +545,11 @@ namespace karabo {
                         if (event == "+LOG" || event == "-LOG") {
                             entry.m_event = event;
                             entry.m_epoch = epochstamp;
-                            tail.swap(line); // store for later usage, but avoid a copy
+                            // store tail for later usage.
+                            for (size_t i = 3; i < lineFields.size(); i++) {
+                                tail.append(" ");
+                                tail.append(lineFields[i]);
+                            }
                         }
                     }
                 } catch (const exception &e) {
@@ -592,13 +596,21 @@ namespace karabo {
                 if (lineFields.size() < 3) {
                     // The line doesn't have the minimum number of values; ignore it and go to the next line.
                     KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader (" << contentpath << ", ln. " << lineNum << "): "
-                            << "line should have at least 3 values separated by white space.";
+                            << "line should start with an event followed by two timestamps separated by white space.";
                     continue;
                 }
 
                 event = lineFields[0];
                 timestampAsIso8061 = lineFields[1];
                 timestampAsDouble = lineFields[2];
+
+                // Stores the rest of the line in trail with all fields prefixed with one space - format assumed
+                // by method extractTailOfArchiveIndex.
+                string tail;
+                for (size_t i = 3; i < lineFields.size(); i++) {
+                    tail.append(" ");
+                    tail.append(lineFields[i]);
+                }
 
                 // If any parsing or processing problem happens for the current line, proceed to the next line.
                 try {
@@ -615,7 +627,7 @@ namespace karabo {
                         }
                         nearest.m_event = event;
                         nearest.m_epoch = epochstamp;
-                        this->extractTailOfArchiveIndex(line, nearest);
+                        this->extractTailOfArchiveIndex(tail, nearest);
                     }
 
                     // Stop loop if greater than target time point or we search the first after the target and got it.
