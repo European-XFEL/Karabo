@@ -53,7 +53,10 @@ def populate_controller_registry():
     EXT_PACKAGE = 'karabogui.gui_extensions'
     entry_points = pkg_resources.iter_entry_points(EXT_PACKAGE)
     for entry in entry_points:
-        entry.load()
+        try:
+            entry.load()
+        except Exception as e:
+            print('Cannot load plugin {}: {}'.format(entry.name, e))
 
 
 def with_display_type(display_type):

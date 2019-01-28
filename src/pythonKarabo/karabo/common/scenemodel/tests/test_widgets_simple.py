@@ -50,7 +50,8 @@ def _geometry_traits():
 def test_all_empty_widgets():
     model_classes = (
         api.DisplayLabelModel, api.DisplayPlotModel,
-        api.PopUpModel, api.MultiCurvePlotModel, api.XYPlotModel
+        api.PopUpModel, api.MultiCurvePlotModel, api.WidgetNodeModel,
+        api.XYPlotModel
     )
     for klass in model_classes:
         yield _check_empty_widget, klass

@@ -46,6 +46,6 @@ class DisplayWidgetNode(BaseBindingController):
     def binding_update(self, proxy):
         info = proxy.binding.display_type.split('|')
         # The real widget type is mangled in the display_type
-        version = info[1] if len(info) > 1 else "NaN"
-        template = "WidgetNode\nVersion: {}".format(version)
+        widget_type = info[1] if len(info) > 1 else "NaN"
+        template = "WidgetNode\nWidget: {}".format(widget_type)
         self.widget.setText(template)
