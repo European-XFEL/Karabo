@@ -520,22 +520,23 @@ namespace karabo {
 
                 lineNum++;
 
-                vector<string> lineFields;
-                boost::split(lineFields, line, boost::is_any_of(" "));
-
-                if (lineFields.size() < 3) {
-                    // The line doesn't have the minimum number of values; ignore it and go to the next line.
-                    KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader (" << contentpath << ", ln. " << lineNum << "): "
-                            << "line should start with an event followed by two timestamps separated by white space.";
-                    continue;
-                }
-
-                event = lineFields[0];
-                timestampAsIso8061 = lineFields[1];
-                timestampAsDouble = lineFields[2];
-
                 // If any parsing or processing problem happens for the current line, proceed to the next line.
                 try {
+
+                    vector<string> lineFields;
+                    boost::split(lineFields, line, boost::is_any_of(" "));
+
+                    if (lineFields.size() < 3) {
+                        // The line doesn't have the minimum number of values; ignore it and go to the next line.
+                        KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader (" << contentpath << ", ln. " << lineNum << "): "
+                                << "line should start with an event followed by two timestamps separated by white space.";
+                        continue;
+                    }
+
+                    event = lineFields[0];
+                    timestampAsIso8061 = lineFields[1];
+                    timestampAsDouble = lineFields[2];
+
                     const Epochstamp epochstamp(stringDoubleToEpochstamp(timestampAsDouble));
                     if (epochstamp > target) {
                         KARABO_LOG_FRAMEWORK_ERROR << "findLoggerIndexTimepoint: done looping" << tail;
@@ -590,30 +591,31 @@ namespace karabo {
 
                 lineNum++;
 
-                vector<string> lineFields;
-                boost::split(lineFields, line, boost::is_any_of(" "));
-
-                if (lineFields.size() < 3) {
-                    // The line doesn't have the minimum number of values; ignore it and go to the next line.
-                    KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader (" << contentpath << ", ln. " << lineNum << "): "
-                            << "line should start with an event followed by two timestamps separated by white space.";
-                    continue;
-                }
-
-                event = lineFields[0];
-                timestampAsIso8061 = lineFields[1];
-                timestampAsDouble = lineFields[2];
-
-                // Stores the rest of the line in trail with all fields prefixed with one space - format assumed
-                // by method extractTailOfArchiveIndex.
-                string tail;
-                for (size_t i = 3; i < lineFields.size(); i++) {
-                    tail.append(" ");
-                    tail.append(lineFields[i]);
-                }
-
                 // If any parsing or processing problem happens for the current line, proceed to the next line.
                 try {
+
+                    vector<string> lineFields;
+                    boost::split(lineFields, line, boost::is_any_of(" "));
+
+                    if (lineFields.size() < 3) {
+                        // The line doesn't have the minimum number of values; ignore it and go to the next line.
+                        KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader (" << contentpath << ", ln. " << lineNum << "): "
+                                << "line should start with an event followed by two timestamps separated by white space.";
+                        continue;
+                    }
+
+                    event = lineFields[0];
+                    timestampAsIso8061 = lineFields[1];
+                    timestampAsDouble = lineFields[2];
+
+                    // Stores the rest of the line in trail with all fields prefixed with one space - format assumed
+                    // by method extractTailOfArchiveIndex.
+                    string tail;
+                    for (size_t i = 3; i < lineFields.size(); i++) {
+                        tail.append(" ");
+                        tail.append(lineFields[i]);
+                    }
+                    
                     const Epochstamp epochstamp(stringDoubleToEpochstamp(timestampAsDouble));
 
                     if (epochstamp <= target || nearest.m_fileindex == -1 || (!before && !gotAfter)) {
