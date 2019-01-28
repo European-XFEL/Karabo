@@ -71,9 +71,7 @@ class _BaseListController(BaseBindingController):
 
     def value_update(self, proxy):
         value = get_editor_value(proxy, [])
-        with SignalBlocker(self._internal_widget):
-            self._internal_widget.setText(','.join(str(v) for v in value))
-        self._internal_widget.setCursorPosition(self.last_cursor_position)
+        self._set_edit_field_text(value)
 
     @pyqtSlot(str)
     def _on_user_edit(self, text):
@@ -108,6 +106,11 @@ class _BaseListController(BaseBindingController):
             value = None
         return value
 
+    def _set_edit_field_text(self, value):
+        with SignalBlocker(self._internal_widget):
+            self._internal_widget.setText(','.join(str(v) for v in value))
+        self._internal_widget.setCursorPosition(self.last_cursor_position)
+
     @pyqtSlot()
     def _on_edit_clicked(self):
         if self.proxy.binding is None:
@@ -117,6 +120,7 @@ class _BaseListController(BaseBindingController):
         list_edit.set_texts("Add", "&Value", "Edit")
         if list_edit.exec_() == QDialog.Accepted:
             self.proxy.edit_value = list_edit.values
+            self._set_edit_field_text(list_edit.values)
 
         # Give back the focus!
         self._internal_widget.setFocus(Qt.PopupFocusReason)
