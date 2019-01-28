@@ -8,6 +8,8 @@
 # are executed from the karabo environment.
 COVERAGE="python $(which coverage)"
 NOSETESTS="python $(which nosetests)"
+# For some tests we allow flakiness:
+FLAKY_FLAGS="--with-flaky --no-success-flaky-report"
 
 # coverage configuration file
 COVERAGE_CONF_FILE=".coveragerc"
@@ -192,12 +194,14 @@ runPythonUnitTests() {
     # Pass the bound_api/launcher.py file. If the file is imported, a
     # part of its code is executed. That results in an error.
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS -I launcher.py karabo.bound_api"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.middlelayer_api"
+    # Some middlelayer tests are flaky for the time being, so add proper flags:
+    safeRunCommand "$NOSETESTS -v $FLAKY_FLAGS $COVER_FLAGS karabo.middlelayer_api"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.common"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.project_db"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.tests"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.interactive"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.macro_api"
+    # Allow gui tests to crash sometimes - for the time being:
     ACCEPT_SIGSEGV=true
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabogui"
     unset ACCEPT_SIGSEGV
