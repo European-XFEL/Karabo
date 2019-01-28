@@ -270,8 +270,6 @@ namespace karabo {
 
         private: // functions
 
-            // void update();
-
             void deferredNotificationsOfOutputChannelsForPossibleRead();
 
             void deferredNotificationOfOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel);

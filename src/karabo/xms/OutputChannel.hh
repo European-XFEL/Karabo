@@ -18,6 +18,8 @@
 #include <karabo/io.hpp>
 #include <karabo/net.hpp>
 
+#include <unordered_set>
+
 #include "Statics.hh"
 #include "Memory.hh"
 #include "InputChannel.hh"
@@ -120,7 +122,7 @@ namespace karabo {
             unsigned int m_sharedInputIndex;
 
             std::deque<std::string> m_shareNext;
-            std::deque<std::string> m_copyNext;
+            std::unordered_set<std::string> m_copyNext;
 
             mutable boost::mutex m_nextInputMutex;
 
@@ -258,8 +260,6 @@ namespace karabo {
             void eraseSharedInput(const std::string& instanceId);
 
             void pushCopyNext(const std::string& info);
-
-            std::string popCopyNext();
 
             bool hasCopyInput(const std::string& instanceId);
 
