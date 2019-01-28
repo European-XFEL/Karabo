@@ -21,13 +21,14 @@ class Tests(TestCase):
         cls.event_loop.start()
 
         # Set up slots.
-        cls.sigSender = SignalSlotable(Tests.senderId)
+        cls.sigSender = SignalSlotable(cls.senderId)
         cls.sigSender.start()
-        cls.sigReceiver = SignalSlotable(Tests.receiverId)
+        cls.sigReceiver = SignalSlotable(cls.receiverId)
         cls.sigReceiver.start()
 
     @classmethod
     def tearDownClass(cls):
+        del cls.sigSender, cls.sigReceiver
         EventLoop.stop()
         cls.event_loop.join()
 
