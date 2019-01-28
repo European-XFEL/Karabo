@@ -980,6 +980,8 @@ namespace karabo {
 
             KARABO_SYSTEM_SIGNAL("signalInstanceGone", string, Hash);
 
+            KARABO_SYSTEM_SIGNAL("signalInstanceUpdated", string, Hash);
+
             // Global ping listener
             KARABO_SLOT3(slotPing, string /*callersInstanceId*/, int /*replyIfSame*/, bool /*trackPingedInstance*/)
 
@@ -1110,6 +1112,7 @@ namespace karabo {
 
             if (instanceId == m_instanceId) return;
 
+            emit("signalInstanceUpdated", instanceId, instanceInfo);
             if (m_discoverConnectionResourcesMode) {
                 // We are in charge to take care of global p2p_connection info (added, changed or even removed)
                 boost::shared_lock<boost::shared_mutex> lock(m_instanceInfoMutex);
