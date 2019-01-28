@@ -413,9 +413,7 @@ namespace karabo {
                     if (m_respondToEndOfStream) m_isEndOfStream = true;
                     if (this->getMinimumNumberOfData() == 0) {
                         KARABO_LOG_FRAMEWORK_TRACE << traceId << "Triggering another compute";
-                        // Caveat! Order of mutex locks!
                         boost::mutex::scoped_lock twoPotsLock(m_twoPotsMutex);
-                        KARABO_LOG_FRAMEWORK_WARN << traceId << "Triggering another compute; will swap buffers of active and inactive data";
                         std::swap(m_activeChunk, m_inactiveChunk);
                         m_strand->post(util::bind_weak(&InputChannel::triggerIOEvent, this));
                     }
@@ -598,7 +596,6 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_TRACE << traceId << "Too early to process inactive Pot: has to reach minData.";
                         return;
                     }
-                    KARABO_LOG_FRAMEWORK_TRACE << traceId << "Will swap buffers of active and inactive data";
                     std::swap(m_activeChunk, m_inactiveChunk);
 
                     // After swapping the pots, the new active one is ready...
@@ -662,7 +659,6 @@ namespace karabo {
         void InputChannel::deferredNotificationOfOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel) {
             if (channel->isOpen()) {
                 const std::string traceId("(" + boost::lexical_cast<std::string>(boost::this_thread::get_id()) + ": deferredNotificationOfOutputChannel...) ");
-                //                std::clog << get_CurrentTime() << " :: " << traceId << "INPUT Notifying output channel that " << this->getInstanceId() << " is ready for next read." << std::endl;
                 KARABO_LOG_FRAMEWORK_TRACE << traceId << "INPUT Notifying output channel that " << this->getInstanceId() << " is ready for next read.";
                 channel->write(karabo::util::Hash("reason", "update", "instanceId", this->getInstanceId()));
             }
