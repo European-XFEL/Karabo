@@ -233,6 +233,7 @@ namespace karabo {
              *      getPropertyHistory          onGetPropertyHistory
              *      getConfigurationFromPast    onGetConfigurationFromPast
              *      subscribeNetwork            onSubscribeNetwork
+             *      requestNetwork              onRequestNetwork
              *      error                       onGuiError
              *      getAvailableProjects        onGetAvailableProjects
              *      newProject                  onNewProject
@@ -460,6 +461,15 @@ namespace karabo {
              * @param info
              */
             void onSubscribeNetwork(WeakChannelPointer channel, const karabo::util::Hash& info);
+
+            /**
+             * Receives a message from the GUI client that it processed network data from
+             * an output channel with name ``channelName`` in the info Hash.
+             *
+             * @param channel
+             * @param info
+             */
+            void onRequestNetwork(WeakChannelPointer channel, const karabo::util::Hash& info);
 
             /**
              * handles data from the pipe-lined processing channels the gui-server is
