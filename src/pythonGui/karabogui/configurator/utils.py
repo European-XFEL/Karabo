@@ -5,16 +5,15 @@ from PyQt4.QtCore import QMimeData, Qt
 from PyQt4.QtGui import QStyle
 
 from karabo.common.api import (
-    KARABO_SCHEMA_DAQ_POLICY, KARABO_SCHEMA_DISPLAY_TYPE_DIRECTORY,
-    KARABO_SCHEMA_DISPLAY_TYPE_FILEIN, KARABO_SCHEMA_DISPLAY_TYPE_FILEOUT,
-    KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_UNIT_SYMBOL,
-    KARABO_EDITABLE_ATTRIBUTES)
+    KARABO_SCHEMA_DAQ_POLICY, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
+    KARABO_SCHEMA_UNIT_SYMBOL, KARABO_EDITABLE_ATTRIBUTES)
 from karabo.middlelayer import AccessMode, Assignment
 from karabogui import globals as krb_globals, icons
 from karabogui.binding.api import (
     BindingRoot, BoolBinding, CharBinding, ChoiceOfNodesBinding,
-    IntBinding, FloatBinding, ListOfNodesBinding, NodeBinding, StringBinding,
-    VectorHashBinding, get_binding_value, get_editor_value)
+    ImageBinding, IntBinding, FloatBinding, ListOfNodesBinding, NodeBinding,
+    StringBinding, VectorHashBinding, WidgetNodeBinding, get_binding_value,
+    get_editor_value)
 from karabogui.controllers.api import get_compatible_controllers
 
 # The fixed height of rows in the configurator
@@ -149,22 +148,16 @@ def get_icon(binding):
         return icons.enum
 
     icon = icons.undefined
-    if isinstance(binding, CharBinding):
+    if isinstance(binding, (CharBinding, StringBinding)):
         icon = icons.string
-    elif isinstance(binding, StringBinding):
-        path_types = (KARABO_SCHEMA_DISPLAY_TYPE_DIRECTORY,
-                      KARABO_SCHEMA_DISPLAY_TYPE_FILEIN,
-                      KARABO_SCHEMA_DISPLAY_TYPE_FILEOUT)
-        if binding.display_type in path_types:
-            icon = icons.path
-        else:
-            icon = icons.string
     elif isinstance(binding, IntBinding):
         icon = icons.int
     elif isinstance(binding, FloatBinding):
         icon = icons.float
     elif isinstance(binding, BoolBinding):
         icon = icons.boolean
+    elif isinstance(binding, (ImageBinding, WidgetNodeBinding)):
+        icon = icons.image
 
     return icon
 

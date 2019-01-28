@@ -53,8 +53,9 @@ def _build_node(value, attrs):
         return namespace
 
     node_type = attrs[const.KARABO_SCHEMA_NODE_TYPE]
-    display_type = attrs.get(const.KARABO_SCHEMA_DISPLAY_TYPE, '')
     if node_type == NodeType.Node:
+        display_type = attrs.get(
+            const.KARABO_SCHEMA_DISPLAY_TYPE, '').split('|')[0]
         namespace = _build_subnamespace(value, types.BaseBinding)
         if display_type in _NODE_BINDING_MAP:
             # Certain display types get a different binding class
@@ -117,6 +118,7 @@ _BINDING_MAP = {
 }
 _NODE_BINDING_MAP = {
     'ImageData': types.ImageBinding,
+    'WidgetNode': types.WidgetNodeBinding,
     'Image': types.ImageBinding,
     'Slot': types.SlotBinding,
     'OutputChannel': types.PipelineOutputBinding,
