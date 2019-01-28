@@ -505,30 +505,19 @@ namespace karabo {
 
         void OutputChannel::pushCopyNext(const std::string& info) {
             boost::mutex::scoped_lock lock(m_nextInputMutex);
-            if (std::find(m_copyNext.begin(), m_copyNext.end(), info) == m_copyNext.end()) {
-                m_copyNext.push_back(info);
-            }
-        }
-
-
-        std::string OutputChannel::popCopyNext() {
-            boost::mutex::scoped_lock lock(m_nextInputMutex);
-            std::string info = m_copyNext.front();
-            m_copyNext.pop_front();
-            return info;
+            m_copyNext.insert(info);
         }
 
 
         bool OutputChannel::hasCopyInput(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_nextInputMutex);
-            return std::find(m_copyNext.begin(), m_copyNext.end(), instanceId) != m_copyNext.end();
+            return (m_copyNext.count(instanceId) > 0);
         }
 
 
         void OutputChannel::eraseCopyInput(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_nextInputMutex);
-            auto it = std::find(m_copyNext.begin(), m_copyNext.end(), instanceId);
-            if (it != m_copyNext.end()) m_copyNext.erase(it);
+            m_copyNext.erase(instanceId);
         }
 
 
@@ -853,7 +842,6 @@ namespace karabo {
                                       std::vector<BufferSet::Pointer>(1, BufferSet::Pointer(new BufferSet)));
                 }
             } catch (const std::exception& e) {
-                //                std::clog << "OutputChannel::distributeLocal  :  " << e.what() << std::endl;
                 KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::distributeLocal  :  " << e.what();
             }
             // The input channel will decrement the chunkId usage, as he uses the same memory location

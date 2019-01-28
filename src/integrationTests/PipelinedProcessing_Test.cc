@@ -536,10 +536,11 @@ void PipelinedProcessing_Test::testPipeTwoPots() {
 
     const unsigned int originalSenderDelay = m_deviceClient->get<unsigned int>(m_sender, "delay");
 
-    // There's an undesired interdependency between the tests cases; this test only works if the sender delay
-    // is significatively high, more specifically 100 milliseconds.
-    // TODO: IMPORTANT: Stabilize the Output and Input Channels so that this kind of timing dependencies are eliminated.
-    m_deviceClient->set(m_sender, "delay", 100u);
+    // As this test interrupts the sender in the middle of a send of 'nData' data items, it depends on some sender delay
+    // to be able to assert precisely how many data items have been sent after the sender 'Stop' slot has been invoked.
+    // The delay set in the next line is high enough to make sure that there will be one extra data item left in the
+    // unprocessed Pot of the receiver input channel.
+    m_deviceClient->set(m_sender, "delay", 75u);
 
     // start a receiver whose processingTime is significantly longer than the writing time of the output channel
     karabo::util::Hash config(m_receiverBaseConfig);
@@ -758,7 +759,11 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processin
         // then call its slot
         m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
 
-        // poll until nTotalDataOnEos(s) of both receivers change (increase)
+        // poll until nTotalDataOnEos(s) of both receivers change (increase).
+        // In case a load-balanced shared InputChannels, it is an implementation detail that both
+        // receivers always get data - it is not logically required. If that detail changes,
+        // one of the "nTotalDataOnEos" values could stay at its old value even if updated in an
+        // EOS call and break this test here.
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver1, "nTotalDataOnEos", nTotalData1, false));
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver2, "nTotalDataOnEos", nTotalData2, false));
 
