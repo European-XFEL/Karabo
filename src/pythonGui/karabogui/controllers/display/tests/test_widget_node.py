@@ -32,4 +32,4 @@ class TestWidgetNode(GuiTestCase):
 
     def test_widget_version(self):
         self.assertEqual(self.controller.widget.text(),
-                         "WidgetNode\nWidget: DataNode")
+                         "WidgetNode\nNodeType: DataNode")
