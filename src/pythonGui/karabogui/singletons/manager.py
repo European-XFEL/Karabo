@@ -386,6 +386,8 @@ class Manager(QObject):
             binding = device_proxy.get_property_binding(prop_path)
             apply_configuration(data_hash, binding.value.schema)
             device_proxy.config_update = True
+            # Let the GUI server know we have processed this chunk
+            get_network().onRequestNetwork(name)
 
         self._big_data[name] = data
         executeLater(show_data, Priority.BIG_DATA)
