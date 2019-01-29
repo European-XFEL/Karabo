@@ -159,11 +159,11 @@ namespace karabo {
         set("nTotalData", get<unsigned int>("nTotalData") + 1);
         unsigned int processingTime = get<unsigned int>("processingTime");
         if (processingTime > 0) boost::this_thread::sleep(boost::posix_time::milliseconds(processingTime));
+
     }
 
 
     void PipeReceiverDevice::onEndOfStream(const xms::InputChannel::Pointer& input) {
-
         set<unsigned int>("nTotalDataOnEos", get<unsigned int>("nTotalData"));
     }
 
