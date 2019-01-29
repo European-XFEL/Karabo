@@ -547,6 +547,7 @@ namespace karabo {
                             entry.m_event = event;
                             entry.m_epoch = epochstamp;
                             // store tail for later usage.
+                            tail.clear();
                             for (size_t i = 3; i < lineFields.size(); i++) {
                                 tail.append(" ");
                                 tail.append(lineFields[i]);
