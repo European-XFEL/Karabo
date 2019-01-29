@@ -100,13 +100,13 @@ namespace karabo {
             p->registerSlot<Schema, string > (boost::bind(&karabo::core::DeviceClient::_slotSchemaUpdated, this, _1, _2), "_slotSchemaUpdated");
             p->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::_slotInstanceNew, this, _1, _2), "_slotInstanceNew");
             p->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::_slotInstanceGone, this, _1, _2), "_slotInstanceGone");
-            // Note that SignalSlotable registered already a function for "slotInstanceUpdated" - both will be called
-            p->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceUpdated, this, _1, _2), "slotInstanceUpdated");
+            p->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::_slotInstanceUpdated, this, _1, _2), "_slotInstanceUpdated");
             p->registerSlot<Hash > (boost::bind(&karabo::core::DeviceClient::_slotLoggerMap, this, _1), "_slotLoggerMap");
 
             // No advantage from asyncConnect since connecting to one's own signal is just a call chain:
             p->connect("", "signalInstanceNew", "", "_slotInstanceNew");
             p->connect("", "signalInstanceGone", "", "_slotInstanceGone");
+            p->connect("", "signalInstanceUpdated", "", "_slotInstanceUpdated");
         }
 
 
@@ -231,8 +231,8 @@ namespace karabo {
         }
 
 
-        void DeviceClient::slotInstanceUpdated(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "slotInstanceUpdated was called for: " << instanceId;
+        void DeviceClient::_slotInstanceUpdated(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "_slotInstanceUpdated was called for: " << instanceId;
 
             const Hash entry(prepareTopologyEntry(instanceId, instanceInfo));
             mergeIntoRuntimeSystemDescription(entry);
