@@ -794,6 +794,10 @@ class Tests(TestCase):
                            metricPrefixSymbol=MetricPrefix.MILLI,
                            options=[8, 9, 10])
 
+            numberEnum = Int32(displayedName="EnumAccess",
+                               defaultValue=AccessLevel.OPERATOR,
+                               enum=AccessLevel)
+
             @Slot(displayedName="MandyRandy", allowedStates=[State.INIT])
             def randyMandy(self):
                 pass
@@ -816,6 +820,10 @@ class Tests(TestCase):
             accessMode=AccessMode.INITONLY,
             unitSymbol=Unit.SECOND, metricPrefixSymbol=MetricPrefix.MEGA,
             tags={"naughty"}, options=[6, 4])
+
+        mandy.__class__.numberEnum = Overwrite(defaultValue=AccessLevel.ADMIN,
+                                               options=[AccessLevel.ADMIN])
+
         mandy.__class__.randyMandy = Overwrite(
             displayedName="NoMandy", allowedStates=[State.ON]
         )
@@ -838,6 +846,10 @@ class Tests(TestCase):
         self.assertEqual(mandy.number.descriptor.units, unit.megasecond)
         self.assertEqual(Mandy.number.options, [8, 9, 10])
         self.assertEqual(mandy.number.descriptor.options, [6, 4])
+        self.assertEqual(mandy.numberEnum.descriptor.options,
+                         [AccessLevel.ADMIN])
+        self.assertEqual(mandy.numberEnum.descriptor.defaultValue,
+                         AccessLevel.ADMIN)
         self.assertIs(mandy.randyMandy.descriptor.displayedName, "NoMandy")
         self.assertEqual(mandy.randyMandy.descriptor.allowedStates,
                          {State.ON})
