@@ -197,7 +197,9 @@ namespace karabo {
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "Written data # " << iData;
                 set("currentDataId", iData);
-                if (delayInMs > 0) boost::this_thread::sleep(boost::posix_time::milliseconds(delayInMs));
+                if (delayInMs > 0) {
+                    boost::this_thread::sleep(boost::posix_time::milliseconds(delayInMs));
+                }
             }
         } catch (const std::exception &eStd) {
             KARABO_LOG_ERROR << "Stop writing since:\n" << eStd.what();

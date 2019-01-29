@@ -15,6 +15,8 @@
 
 USING_KARABO_NAMESPACES;
 
+namespace chrono = std::chrono; // alias for shortening timing expressions
+
 CPPUNIT_TEST_SUITE_REGISTRATION(PipelinedProcessing_Test);
 
 
@@ -60,6 +62,8 @@ void PipelinedProcessing_Test::appTestRunner() {
 
     testPipeWait();
 
+    testPipeWaitPerf();
+
     testPipeDrop();
 
     testPipeQueue();
@@ -92,8 +96,6 @@ void PipelinedProcessing_Test::testGetOutputChannelSchema() {
 
     karabo::util::Hash dataSchema = m_deviceClient->getOutputChannelSchema(m_sender, "output1");
 
-//    clog << "\nPipelinedProcessing_Test::testGetOutputChannelSchema() : dataSchema => \n" << dataSchema << endl;
-
     CPPUNIT_ASSERT(dataSchema.has("dataId"));
     CPPUNIT_ASSERT(dataSchema.getType("dataId") == karabo::util::Types::INT32);
     CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("dataId", "valueType") == "INT32");
@@ -121,6 +123,9 @@ void PipelinedProcessing_Test::testGetOutputChannelSchema() {
 
 void PipelinedProcessing_Test::testPipeWait() {
     std::clog << "---\ntestPipeWait (onSlowness = 'wait')\n";
+
+    const auto testStartTime = chrono::high_resolution_clock::now();
+
     // use only one receiver for a group of tests
     karabo::util::Hash config(m_receiverBaseConfig);
     config += Hash("deviceId", m_receiver);
@@ -132,6 +137,11 @@ void PipelinedProcessing_Test::testPipeWait() {
     testPipeWait(0, 100);
 
     killDeviceWithAssert(m_receiver);
+
+    std::clog << "Test duration (ms): "
+            << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - testStartTime).count()
+            << std::endl;
+
     std::clog << "Passed!\n\n";
 }
 
@@ -149,8 +159,8 @@ void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigne
     unsigned int nTotalDataOnEos0 = m_deviceClient->get<unsigned int>(m_receiver, "nTotalDataOnEos");
     unsigned int nDataExpected = nTotalData0;
     for (unsigned int nRun = 0; nRun < m_numRunsPerTest; ++nRun) {
-        const auto startTimepoint = std::chrono::high_resolution_clock::now();
-        
+        const auto startTimepoint = chrono::high_resolution_clock::now();
+
         // make sure the sender has stopped sending data
         CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
         // Then call its slot
@@ -160,12 +170,12 @@ void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigne
         // And poll for the correct answer
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", nDataExpected));
 
-        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        const auto dur = chrono::high_resolution_clock::now() - startTimepoint;
         // Note that duration contains overhead from message travel time and polling interval in pollDeviceProperty!
-        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+        elapsedTimeIn_microseconds += chrono::duration_cast<chrono::microseconds>(dur).count();
 
         // Check that EOS handling is not called too early
-        
+
         // EOS comes a bit later, so we have to poll client again to be sure...
         // Note: only one EOS arrives after receiving a train of data!
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nDataExpected));
@@ -188,15 +198,93 @@ void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigne
     // Note that this measurement checks the inner-process shortcut - and includes timing overhead e.g. pollDeviceProperty
     // In addition, the process and delay times also affect mbps.
     std::clog << "  summary: Megabytes per sec : " << mbps
-              << ", elapsedTimeIn_microseconds = " << elapsedTimeIn_microseconds
-              << ", dataItemSize = " << dataItemSize 
-              << ", nTotalData = " << nDataExpected - nTotalData0
-              << ", nTotalDataOnEos = " << nDataExpected - nTotalDataOnEos0 << std::endl;
+            << ", elapsedTimeIn_microseconds = " << elapsedTimeIn_microseconds
+            << ", dataItemSize = " << dataItemSize
+            << ", nTotalData = " << nDataExpected - nTotalData0
+            << ", nTotalDataOnEos = " << nDataExpected - nTotalDataOnEos0 << std::endl;
+}
+
+
+void PipelinedProcessing_Test::testPipeWaitPerf() {
+    std::clog << "---\ntestPipeWaitPerf (onSlowness = 'wait', senderDelay = 0, receiverProcessing = 0)\n";
+    karabo::util::Hash config(m_receiverBaseConfig);
+    config += Hash("deviceId", m_receiver);
+    instantiateDeviceWithAssert("PipeReceiverDevice", config);
+    CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
+
+    // We are looking for measures of pipeline data "transmission" performance - zero all
+    // sender's delays and receivers processing times so we can focus on transmission times.
+    unsigned int currSendDelay = m_deviceClient->get<unsigned int>(m_sender, "delay");
+    m_deviceClient->set(m_receiver, "processingTime", 0u);
+    m_deviceClient->set(m_sender, "delay", 0u);
+
+    testPipeWaitPerf(1500);
+    testPipeWaitPerf(2500);
+    testPipeWaitPerf(5000);
+
+    // Restores the sender's delay before leaving.
+    m_deviceClient->set(m_sender, "delay", currSendDelay);
+
+    killDeviceWithAssert(m_receiver);
+    std::clog << "Passed!\n\n";
+}
+
+
+void PipelinedProcessing_Test::testPipeWaitPerf(unsigned int numOfDataItems) {
+
+    std::clog << "- numOfDataItems per run = " << numOfDataItems << std::endl;
+
+    // Stores the current num of data items per run; all the other tests in the suite
+    // use the same value, which is the value of the sender's nData property.
+    unsigned int currItems = m_deviceClient->get<unsigned int>(m_sender, "nData");
+    m_deviceClient->set<unsigned int>(m_sender, "nData", numOfDataItems);
+
+    int64_t elapsedTimeIn_microseconds = 0ll;
+    // we use a single receiver device for several successive tests.
+    unsigned int nTotalData0 = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
+    unsigned int nTotalDataOnEos0 = m_deviceClient->get<unsigned int>(m_receiver, "nTotalDataOnEos");
+    unsigned int nDataExpected = nTotalData0;
+
+    // make sure the sender has stopped sending data
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+    // Then call its slot
+    const auto startTimepoint = std::chrono::high_resolution_clock::now();
+    m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
+
+    nDataExpected += numOfDataItems;
+    // And poll for the correct answer
+    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", nDataExpected, true, 40000));
+
+    const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+    // Note that duration contains overhead from message travel time and polling interval in pollDeviceProperty!
+    elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+
+    // EOS comes a bit later, so we have to poll client again to be sure...
+    // Note: only one EOS arrives after receiving a train of data!
+    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nDataExpected));
+
+    // Check that receiver did not post any problem on status:
+    CPPUNIT_ASSERT_EQUAL(std::string(), m_deviceClient->get<std::string>(m_receiver, "status"));
+
+    const unsigned int dataItemSize = m_deviceClient->get<unsigned int>(m_receiver, "dataItemSize");
+    double mbps = double(dataItemSize) * double(nDataExpected - nTotalData0) / double(elapsedTimeIn_microseconds);
+    // The process and delay times also affect mbps.
+    std::clog << "  summary: Megabytes per sec = " << mbps << std::endl
+            << "           total time (microsends) = " << elapsedTimeIn_microseconds << std::endl
+            << "           data item size (bytes) = " << dataItemSize << std::endl
+            << "           # of data items = " << nDataExpected - nTotalData0 << std::endl
+            << "           nTotalDataOnEos = " << nDataExpected - nTotalDataOnEos0 << std::endl
+            << std::endl;
+
+    // Restores the number of data items per run before leaving.
+    m_deviceClient->set<unsigned int>(m_sender, "nData", currItems);
 }
 
 
 void PipelinedProcessing_Test::testPipeDrop() {
     std::clog << "---\ntestPipeDrop (onSlowness = 'drop')\n";
+
+    const auto testStartTime = chrono::high_resolution_clock::now();
 
     karabo::util::Hash config(m_receiverBaseConfig);
     config += Hash("deviceId", m_receiver, "input.onSlowness", "drop");
@@ -208,6 +296,11 @@ void PipelinedProcessing_Test::testPipeDrop() {
     testPipeDrop(0, 100, false);
 
     killDeviceWithAssert(m_receiver);
+
+    std::clog << "Test duration (ms): "
+            << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - testStartTime).count()
+            << std::endl;
+
     std::clog << "Passed!\n\n";
 }
 
@@ -224,7 +317,7 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
     unsigned int nTotalDataOnEos0 = m_deviceClient->get<unsigned int>(m_receiver, "nTotalDataOnEos");
     unsigned int nDataExpected = nTotalData0;
     for (unsigned int nRun = 0; nRun < m_numRunsPerTest; ++nRun) {
-        auto startTimepoint = std::chrono::high_resolution_clock::now();
+        auto startTimepoint = chrono::high_resolution_clock::now();
         // make sure the sender has stopped sending data
         CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
         m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
@@ -236,7 +329,7 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
         } else {
             // poll until nTotalDataOnEos changes (increases)
             CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nDataExpected, false));
-            
+
             // if the processing time is comparable to or larger than the delay time, 
             // the number of received data is random, but should be larger than the 
             // number of local buffers (currently one 'active' and one 'inactive')
@@ -246,8 +339,8 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
             nDataExpected = nTotalData;
         }
 
-        auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
-        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+        auto dur = chrono::high_resolution_clock::now() - startTimepoint;
+        elapsedTimeIn_microseconds += chrono::duration_cast<chrono::microseconds>(dur).count();
 
         // test EOS
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nDataExpected));
@@ -261,14 +354,17 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
     unsigned int dataItemSize = m_deviceClient->get<unsigned int>(m_receiver, "dataItemSize");
     double mbps = double(dataItemSize) * double(nDataExpected - nTotalData0) / double(elapsedTimeIn_microseconds);
     std::clog << "  summary: Megabytes per sec : " << mbps
-              << ", elapsedTimeIn_microseconds = " << elapsedTimeIn_microseconds
-              << ", dataItemSize = " << dataItemSize 
-              << ", nTotalData = " << nDataExpected - nTotalData0
-              << ", nTotalDataOnEos = " << nDataExpected - nTotalDataOnEos0 << std::endl;
+            << ", elapsedTimeIn_microseconds = " << elapsedTimeIn_microseconds
+            << ", dataItemSize = " << dataItemSize
+            << ", nTotalData = " << nDataExpected - nTotalData0
+            << ", nTotalDataOnEos = " << nDataExpected - nTotalDataOnEos0 << std::endl;
 }
+
 
 void PipelinedProcessing_Test::testPipeQueue() {
     std::clog << "---\ntestPipeQueue (onSlowness = 'queue', dataDistribution = 'copy')\n";
+
+    const auto testStartTime = chrono::high_resolution_clock::now();
 
     karabo::util::Hash config(m_receiverBaseConfig);
     config += Hash("deviceId", m_receiver, "input.onSlowness", "queue");
@@ -285,6 +381,11 @@ void PipelinedProcessing_Test::testPipeQueue() {
     testPipeQueue(5, 50);
 
     killDeviceWithAssert(m_receiver);
+
+    std::clog << "Test duration (ms): "
+            << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - testStartTime).count()
+            << std::endl;
+
     std::clog << "Passed!\n\n";
 }
 
@@ -301,7 +402,7 @@ void PipelinedProcessing_Test::testPipeQueue(unsigned int processingTime, unsign
     unsigned int nTotalDataOnEos0 = m_deviceClient->get<unsigned int>(m_receiver, "nTotalDataOnEos");
     unsigned int nDataExpected = nTotalData0;
     for (unsigned int nRun = 0; nRun < m_numRunsPerTest; ++nRun) {
-        const auto startTimepoint = std::chrono::high_resolution_clock::now();
+        const auto startTimepoint = chrono::high_resolution_clock::now();
 
         // make sure the sender has stopped sending data
         CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
@@ -324,7 +425,7 @@ void PipelinedProcessing_Test::testPipeQueue(unsigned int processingTime, unsign
             // We assert a maximum ratio of data arrival in this scenario.
             const unsigned int receivedSoFar = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
             CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(receivedSoFar) + " " + karabo::util::toString(nDataExpected),
-                                   2 * (nDataExpected - receivedSoFar) <= m_nDataPerRun * 3);// at max. 2/3 have arrived
+                                   2 * (nDataExpected - receivedSoFar) <= m_nDataPerRun * 3); // at max. 2/3 have arrived
         } else if (2 * processingTime < delayTime) {
             // If delayTime is significantly bigger than the processing time, we are bound by the delayTime. This means
             // that between two successive data writes the sender will wait delayTime milliseconds and the sender is
@@ -338,16 +439,11 @@ void PipelinedProcessing_Test::testPipeQueue(unsigned int processingTime, unsign
         // In the end, all should arrive
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", nDataExpected));
 
-        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        const auto dur = chrono::high_resolution_clock::now() - startTimepoint;
         // Note that duration contains overhead from message travel time and polling interval in pollDeviceProperty!
-        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+        elapsedTimeIn_microseconds += chrono::duration_cast<chrono::microseconds>(dur).count();
 
-        // The following line is commented out because when 'onSlowness' is set to 'queue' the EOS may
-        // be received and handled before data that comes before EOS. This is a pending issue and this
-        // assert should be uncommented as part of the validation of a fix for that issue. For 'wait'
-        // value for the 'onSlowness' setting the issue doesn't happen.
-        // TODO!
-        //CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nDataExpected));
+        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nDataExpected));
 
         // Test if data source was correctly passed
         auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSources");
@@ -380,6 +476,8 @@ void PipelinedProcessing_Test::testPipeMinData() {
     std::clog << "---\ntestPipeMinData\n";
 
     const unsigned int originalSenderDelay = m_deviceClient->get<unsigned int>(m_sender, "delay");
+
+    const auto testStartTime = chrono::high_resolution_clock::now();
 
     m_deviceClient->set(m_sender, "delay", 0u);
 
@@ -419,12 +517,22 @@ void PipelinedProcessing_Test::testPipeMinData() {
     m_deviceClient->set(m_sender, "delay", originalSenderDelay);
 
     killDeviceWithAssert(m_receiver);
+
+    std::clog << "Test duration (ms): "
+            << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - testStartTime).count()
+            << std::endl;
+
     std::clog << "Passed!\n\n";
+
+    // Restores the sender's delay to the value it had at the beginning of the test.
+    m_deviceClient->set(m_sender, "delay", originalSenderDelay);
 }
 
 
 void PipelinedProcessing_Test::testPipeTwoPots() {
     std::clog << "---\ntestPipeTwoPots\n";
+
+    const auto testStartTime = chrono::high_resolution_clock::now();
 
     const unsigned int originalSenderDelay = m_deviceClient->get<unsigned int>(m_sender, "delay");
 
@@ -440,6 +548,7 @@ void PipelinedProcessing_Test::testPipeTwoPots() {
     instantiateDeviceWithAssert("PipeReceiverDevice", config);
 
     for (unsigned int nDataWhenStop = 3; nDataWhenStop < 8; ++nDataWhenStop) {
+
         // make sure the sender has stopped sending data
         CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
 
@@ -452,24 +561,31 @@ void PipelinedProcessing_Test::testPipeTwoPots() {
         // The receiver is expected to get one more data when EOS arrives: the one which is being written
         // into the inactive pot when the "stop" slot is called.
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", 0, false));
-
         CPPUNIT_ASSERT_EQUAL(nDataWhenStop + 1, m_deviceClient->get<unsigned int>(m_receiver, "nTotalDataOnEos"));
 
         // reset nTotalData and nTotalDataOnEos
         m_deviceClient->execute(m_receiver, "reset");
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", 0));
+
     }
 
     // Restores the sender 'delay' to the value it had at the beginning of the test.
     m_deviceClient->set(m_sender, "delay", originalSenderDelay);
-    
+
     killDeviceWithAssert(m_receiver);
+
+    std::clog << "Test duration (ms): "
+            << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - testStartTime).count()
+            << std::endl;
+
     std::clog << "Passed!\n\n";
 }
 
 
 void PipelinedProcessing_Test::testPipeTwoSharedReceiversWait() {
     std::clog << "---\ntestPipeTwoSharedReceiversWait (onSlowness = 'wait', dataDistribution = 'shared')\n";
+
+    const auto testStartTime = chrono::high_resolution_clock::now();
 
     karabo::util::Hash config1(m_receiverBaseConfig);
     config1 += Hash("deviceId", m_receiver1, "input.onSlowness", "wait", "input.dataDistribution", "shared");
@@ -496,9 +612,14 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversWait() {
     testPipeTwoSharedReceivers(0, 0, 20, false, true);
     testPipeTwoSharedReceivers(200, 0, 0, false, true);
     testPipeTwoSharedReceivers(100, 100, 0, false, true);
-    
+
     killDeviceWithAssert(m_receiver1);
     killDeviceWithAssert(m_receiver2);
+
+    std::clog << "Test duration (ms): "
+            << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - testStartTime).count()
+            << std::endl;
+
     std::clog << "Passed!\n\n";
 }
 
@@ -556,6 +677,8 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversDrop() {
 void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueue() {
     std::clog << "---\ntestPipeTwoSharedReceiversQueue (output.noInputShared = 'queue', input.dataDistribution = 'shared')\n";
 
+    const auto testStartTime = chrono::high_resolution_clock::now();
+
     karabo::util::Hash config1(m_receiverBaseConfig);
     config1 += Hash("deviceId", m_receiver1, "input.dataDistribution", "shared");
 
@@ -598,17 +721,21 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueue() {
     killDeviceWithAssert(m_receiver1);
     killDeviceWithAssert(m_receiver2);
 
+    std::clog << "Test duration (ms): "
+            << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - testStartTime).count()
+            << std::endl;
+
     std::clog << "Passed!\n\n";
 }
 
 
-void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processingTime1, 
+void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processingTime1,
                                                           unsigned int processingTime2,
                                                           unsigned int delayTime,
                                                           bool dataLoss, bool roundRobin) {
 
     std::clog << "- processingTime1 = " << processingTime1
-              << " ms, processingTime2 = " << processingTime2
+            << " ms, processingTime2 = " << processingTime2
             << " ms, delayTime = " << delayTime << " ms -- expect " << (roundRobin ? "round-robin" : "load-balanced") << "\n";
 
     m_deviceClient->set(m_receiver1, "processingTime", processingTime1);
@@ -632,7 +759,11 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processin
         // then call its slot
         m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
 
-        // poll until nTotalDataOnEos(s) of both receivers change (increase)
+        // poll until nTotalDataOnEos(s) of both receivers change (increase).
+        // In case a load-balanced shared InputChannels, it is an implementation detail that both
+        // receivers always get data - it is not logically required. If that detail changes,
+        // one of the "nTotalDataOnEos" values could stay at its old value even if updated in an
+        // EOS call and break this test here.
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver1, "nTotalDataOnEos", nTotalData1, false));
         CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver2, "nTotalDataOnEos", nTotalData2, false));
 
@@ -648,7 +779,9 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processin
         CPPUNIT_ASSERT(nTotalData1New >= nTotalData1 + m_nPots);
         CPPUNIT_ASSERT(nTotalData2New >= nTotalData2 + m_nPots);
         if (!dataLoss) {
-            CPPUNIT_ASSERT_EQUAL(nTotalData1 + nTotalData2 + m_nDataPerRun, nTotalData1New + nTotalData2New);
+            CPPUNIT_ASSERT_EQUAL_MESSAGE((boost::format("NoDataLoss assertion: expected: %d; actual: %d")
+                                          % (nTotalData1 + nTotalData2 + m_nDataPerRun) % (nTotalData1New + nTotalData2New)).str(),
+                                         nTotalData1 + nTotalData2 + m_nDataPerRun, nTotalData1New + nTotalData2New);
         } else {
             CPPUNIT_ASSERT(nTotalData1New + nTotalData2New < nTotalData1 + nTotalData2 + m_nDataPerRun);
         }
@@ -722,8 +855,8 @@ void PipelinedProcessing_Test::testTwoSharedReceiversQueuing(unsigned int proces
 
     unsigned int nDataExpected = 0;
     for (unsigned int nRun = 0; nRun < m_numRunsPerTest; ++nRun) {
-        const auto startTimepoint = std::chrono::high_resolution_clock::now();
-        
+        const auto startTimepoint = chrono::high_resolution_clock::now();
+
         // make sure the sender has stopped sending data
         CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
         // retrieves the amount of data that the sender will send
@@ -743,7 +876,7 @@ void PipelinedProcessing_Test::testTwoSharedReceiversQueuing(unsigned int proces
         const unsigned int receivedSoFar = receivedSoFar1 + receivedSoFar2;
 
         if (processingTimeHigher) {
-             // We assert a maximum ratio of data arrival in this scenario.
+            // We assert a maximum ratio of data arrival in this scenario.
             CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(receivedSoFar) + " " + karabo::util::toString(nDataExpected),
                                    2 * (nDataExpected - receivedSoFar) <= m_nDataPerRun * 3); // at max. 2/3 have arrived
         } else if (delayTimeHigher) {
@@ -773,9 +906,9 @@ void PipelinedProcessing_Test::testTwoSharedReceiversQueuing(unsigned int proces
         }
         CPPUNIT_ASSERT_MESSAGE("Unexpected data loss detected.", allReceived);
 
-        const auto dur = std::chrono::high_resolution_clock::now() - startTimepoint;
+        const auto dur = chrono::high_resolution_clock::now() - startTimepoint;
         // Note that duration contains overhead from message travel time and polling interval in pollDeviceProperty!
-        elapsedTimeIn_microseconds += std::chrono::duration_cast<std::chrono::microseconds>(dur).count();
+        elapsedTimeIn_microseconds += chrono::duration_cast<chrono::microseconds>(dur).count();
     }
 
     const unsigned int dataItemSize = m_deviceClient->get<unsigned int>(m_receiver1, "dataItemSize");
@@ -795,11 +928,17 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnect() {
 
     std::clog << "---\ntestQueueClearOnDisconnect\n";
 
+    const auto testStartTime = chrono::high_resolution_clock::now();
+
     testQueueClearOnDisconnectCopyQueue();
 
     testQueueClearOnDisconnectSharedQueue(true);
 
     testQueueClearOnDisconnectSharedQueue(false);
+
+    std::clog << "Test duration (ms): "
+            << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - testStartTime).count()
+            << std::endl;
 
     std::clog << "Passed!\n\n";
 }
@@ -872,7 +1011,7 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectSharedQueue(bool useRou
     std::clog << "  summary: data items to send = " << nDataExpected
             << ", data items received = " << nDataReceived
             << ", data items discarded = " << nDataFlushed << std::endl;
- }
+}
 
 
 void PipelinedProcessing_Test::testQueueClearOnDisconnectCopyQueue() {
@@ -913,6 +1052,7 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectCopyQueue() {
     // Disconnects the receiver by killing it.
     killDeviceWithAssert(m_receiver);
 
+
     // Asserts that there's still data to be sent - data already received lower than expected data.
     CPPUNIT_ASSERT(3 * (nDataExpected - receivedBeforeDisc) > m_nDataPerRun * 2);
 
@@ -933,7 +1073,7 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectCopyQueue() {
     CPPUNIT_ASSERT_EQUAL(0u, receivedAfterReconnect);
 
     killDeviceWithAssert(m_receiver);
-    
+
     // Prints summary data: total of data items sent, received and discarded
     std::clog << "  summary: data items to send = " << nDataExpected
             << ", data items received = " << nDataReceived
@@ -944,10 +1084,16 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectCopyQueue() {
 void PipelinedProcessing_Test::testProfileTransferTimes() {
     std::clog << "---\ntestProfileTransferTimes\n";
 
+    const auto testStartTime = chrono::high_resolution_clock::now();
+
     testProfileTransferTimes(false, true);
     testProfileTransferTimes(false, false);
     testProfileTransferTimes(true, true);
     testProfileTransferTimes(true, false);
+
+    std::clog << "Test duration (ms): "
+            << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - testStartTime).count()
+            << std::endl;
 
     std::clog << "Passed!\n\n";
 }
@@ -973,7 +1119,7 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool co
     CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
     // Then call its slot
     m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
-    
+
     // And poll for the correct answer
     CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalData", nDataPerRun));
 
@@ -981,8 +1127,8 @@ void PipelinedProcessing_Test::testProfileTransferTimes(bool noShortCut, bool co
     float transferTime = m_deviceClient->get<float>(m_receiver, "averageTransferTime") / 1000;
 
     std::clog << "- ("
-              << (copy ? "copy" : "no copy") << ", " << (noShortCut ? "no short cut" : "short cut")
-              << "): " << transferTime << " milliseconds average transfer time" << std::endl;
+            << (copy ? "copy" : "no copy") << ", " << (noShortCut ? "no short cut" : "short cut")
+            << "): " << transferTime << " milliseconds average transfer time" << std::endl;
 
     if (noShortCut) {
         unsetenv("KARABO_NO_PIPELINE_SHORTCUT");
@@ -1005,7 +1151,7 @@ bool PipelinedProcessing_Test::pollDeviceProperty(const std::string& deviceId,
         const T nReceived = m_deviceClient->get<T>(deviceId, propertyName);
         if ((checkForEqual && nReceived == expected) || (!checkForEqual && nReceived != expected)) {
             return true;
-        } 
+        }
         ++pollCounter;
     }
 
