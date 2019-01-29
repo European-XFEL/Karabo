@@ -479,6 +479,8 @@ namespace karabo {
                         onGetConfigurationFromPast(channel, info);
                     } else if (type == "subscribeNetwork") {
                         onSubscribeNetwork(channel, info);
+                    } else if (type == "requestNetwork") {
+                        onRequestNetwork(channel, info);
                     } else if (type == "error") {
                         onGuiError(info);
                     } else if (type == "acknowledgeAlarm") {
@@ -1041,6 +1043,16 @@ namespace karabo {
         }
 
 
+        void GuiServerDevice::onRequestNetwork(WeakChannelPointer channel, const karabo::util::Hash& info) {
+            try {
+                const string& channelName = info.get<string>("channelName");
+                KARABO_LOG_FRAMEWORK_DEBUG << "onRequestNetwork for " << channelName;
+            } catch (const std::exception &e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestNetwork: " << e.what();
+            }
+        }
+
+        
         void GuiServerDevice::onNetworkData(const std::string& channelName,
                                             const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta) {
             try {
