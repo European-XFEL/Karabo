@@ -666,7 +666,6 @@ namespace karabo {
 
 
         void InputChannel::notifyOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel) {
-            const std::string traceId("(" + boost::lexical_cast<std::string>(boost::this_thread::get_id()) + ": notifyOutputChannelForPossibleRead) ");
             if (channel->isOpen()) {
                 if (m_delayOnInput <= 0) // no delay
                     deferredNotificationOfOutputChannelForPossibleRead(channel);
