@@ -36,19 +36,14 @@ The dependencies look like this:
 
 [X] Roadmap in git
 
-[] create ``karabocommon``,
-listing all the imports needed for ``karabo`` and ``karabogui``
-
-[] create ``karabonative`` listing all the imports needed by ``karabogui``
+[] create ``karabo.native`` listing all the imports needed by ``karabogui``
 from ``karabo``.
 
-[] API redirection for the GUI. from ``karabo.common`` to `karaboprime.common`
-
 [] API redirection for the GUI. from ``karabo.middelayer`` to
-``karaboprime.native``
+``karabo.native``
 
 [] Create an import tests that make sure that ``karabogui`` does not import
-from ``karabo``
+from ``karabo.middlelayer`` directly
 
 After these steps, the dependencies look like this
 
@@ -59,17 +54,12 @@ After these steps, the dependencies look like this
 
 **Achievement**: The GUI work is unimpeded by the restructuring.
 
-[] Refactor the project manager as a middlelayer device.
+[X] Refactor the project manager as a middlelayer device.
 
-[] Move code from `common` to `karabocommon` and change the imports
-
-[] Move code from `middelayer_api` to `karaboprime.native`
+[] Move code from `karabo.middelayer_api` to `karabo.native`
 and change the imports
 
-[] Move code from `middelayer_api` to `karaboprime.native` and change
-the imports
-
-[] Move code from `middelayer_api` to `karaboprime.project` and change
+[] Move code from `middelayer_api` to `karabo.project` and change
 the imports
 
 .. graphviz:: dot/api_goal.dot
@@ -79,7 +69,7 @@ the imports
 
 **Milestone reached**: API separation
 
-[] conda recipe and build system for ``karaboprime``
+[] conda recipe and build system for ``karabo-native``. 
 
 [] conda recipe and build system for ``karabogui``
 
