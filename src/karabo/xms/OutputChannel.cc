@@ -472,7 +472,9 @@ namespace karabo {
 
         void OutputChannel::pushShareNext(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_nextInputMutex);
-            m_shareNext.push_back(instanceId);
+            if (std::find(m_shareNext.begin(), m_shareNext.end(), instanceId) == m_shareNext.end()) {
+                m_shareNext.push_back(instanceId);
+            }
         }
 
 
@@ -496,35 +498,26 @@ namespace karabo {
 
         void OutputChannel::eraseSharedInput(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_nextInputMutex);
-            InputChannelQueue::iterator it = std::find(m_shareNext.begin(), m_shareNext.end(), instanceId);
+            auto it = std::find(m_shareNext.begin(), m_shareNext.end(), instanceId);
             if (it != m_shareNext.end()) m_shareNext.erase(it);
         }
 
 
         void OutputChannel::pushCopyNext(const std::string& info) {
             boost::mutex::scoped_lock lock(m_nextInputMutex);
-            m_copyNext.push_back(info);
-        }
-
-
-        std::string OutputChannel::popCopyNext() {
-            boost::mutex::scoped_lock lock(m_nextInputMutex);
-            std::string info = m_copyNext.front();
-            m_copyNext.pop_front();
-            return info;
+            m_copyNext.insert(info);
         }
 
 
         bool OutputChannel::hasCopyInput(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_nextInputMutex);
-            return std::find(m_copyNext.begin(), m_copyNext.end(), instanceId) != m_copyNext.end();
+            return (m_copyNext.count(instanceId) > 0);
         }
 
 
         void OutputChannel::eraseCopyInput(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_nextInputMutex);
-            InputChannelQueue::iterator it = std::find(m_copyNext.begin(), m_copyNext.end(), instanceId);
-            if (it != m_copyNext.end()) m_copyNext.erase(it);
+            m_copyNext.erase(instanceId);
         }
 
 
@@ -834,7 +827,7 @@ namespace karabo {
 
             Channel::Pointer tcpChannel = channelInfo.get<ChannelWeakPointer > ("tcpChannel").lock();
             if (!tcpChannel) return;
-          
+
             // Synchronous write as it takes no time here
             KARABO_LOG_FRAMEWORK_TRACE << "OUTPUT Now distributing (local memory)";
             try {
@@ -955,7 +948,7 @@ namespace karabo {
 
             Channel::Pointer tcpChannel = channelInfo.get<ChannelWeakPointer > ("tcpChannel").lock();
             if (!tcpChannel) return;
-            
+
             // Synchronous write as it takes no time here
             try {
                 if (tcpChannel->isOpen()) {

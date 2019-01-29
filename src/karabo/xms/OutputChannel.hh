@@ -18,6 +18,8 @@
 #include <karabo/io.hpp>
 #include <karabo/net.hpp>
 
+#include <unordered_set>
+
 #include "Statics.hh"
 #include "Memory.hh"
 #include "InputChannel.hh"
@@ -90,8 +92,6 @@ namespace karabo {
 
             typedef std::vector<InputChannelInfo> InputChannels;
 
-            typedef std::deque< std::string > InputChannelQueue;
-
             // Callback on available input
             boost::function<void (const boost::shared_ptr<OutputChannel>&) > m_ioEventHandler;
 
@@ -121,8 +121,12 @@ namespace karabo {
 
             unsigned int m_sharedInputIndex;
 
-            InputChannelQueue m_shareNext;
-            InputChannelQueue m_copyNext;
+            // m_shareNext could also be an unordered_set, but the deque allows a more uniform
+            // distribution of work in the load-balanced case, even in the presence of a fast
+            // enough input channel that could, potentially, handle all the load by itself.
+            std::deque<std::string> m_shareNext;
+
+            std::unordered_set<std::string> m_copyNext;
 
             mutable boost::mutex m_nextInputMutex;
 
@@ -260,8 +264,6 @@ namespace karabo {
             void eraseSharedInput(const std::string& instanceId);
 
             void pushCopyNext(const std::string& info);
-
-            std::string popCopyNext();
 
             bool hasCopyInput(const std::string& instanceId);
 
