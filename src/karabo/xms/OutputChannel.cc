@@ -962,7 +962,6 @@ namespace karabo {
                                       std::vector<BufferSet::Pointer>(1, BufferSet::Pointer(new BufferSet)));
                 }
             } catch (const std::exception& e) {
-                //                std::clog << "OutputChannel::copyLocal  :  " << e.what() << std::endl;
                 KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::copyLocal  :  " << e.what();
             }
 
