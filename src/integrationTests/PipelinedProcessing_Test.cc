@@ -771,13 +771,8 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processin
         const unsigned int nTotalData2New = m_deviceClient->get<unsigned int>(m_receiver2, "nTotalData");
 
         // test nTotalDataOnEos == nTotalData
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("nTotalData1New equal assertion failed!",
-                                     nTotalData1New, m_deviceClient->get<unsigned int>(m_receiver1, "nTotalDataOnEos"));
-        //CPPUNIT_ASSERT_EQUAL(nTotalData1New, m_deviceClient->get<unsigned int>(m_receiver1, "nTotalDataOnEos"));
-
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("nTotalData2New equal assertion failed!",
-                                     nTotalData2New, m_deviceClient->get<unsigned int>(m_receiver2, "nTotalDataOnEos"));
-        //CPPUNIT_ASSERT_EQUAL(nTotalData2New, m_deviceClient->get<unsigned int>(m_receiver2, "nTotalDataOnEos"));
+        CPPUNIT_ASSERT_EQUAL(nTotalData1New, m_deviceClient->get<unsigned int>(m_receiver1, "nTotalDataOnEos"));
+        CPPUNIT_ASSERT_EQUAL(nTotalData2New, m_deviceClient->get<unsigned int>(m_receiver2, "nTotalDataOnEos"));
 
         // test the total data received
         // A receiver should receive at least m_nPots data no mater how long the processingTime is.
