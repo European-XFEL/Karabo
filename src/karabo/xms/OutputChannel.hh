@@ -121,7 +121,11 @@ namespace karabo {
 
             unsigned int m_sharedInputIndex;
 
+            // m_shareNext could also be an unordered_set, but the deque allows a more uniform
+            // distribution of work in the load-balanced case, even in the presence of a fast
+            // enough input channel that could, potentially, handle all the load by itself.
             std::deque<std::string> m_shareNext;
+
             std::unordered_set<std::string> m_copyNext;
 
             mutable boost::mutex m_nextInputMutex;
