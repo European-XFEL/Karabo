@@ -369,7 +369,6 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
         const float ave = diff.total_milliseconds() / static_cast<float> (numTries);
         std::clog << " --- Average de-serialization time: " << ave << " ms" << std::endl;
     };
-    vector<char> archive1;
     
     BinarySerializer<Hash>::Pointer p = BinarySerializer<Hash>::create("Bin");
 
@@ -379,31 +378,24 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
     std::clog << "\nvector<char> copy -- allocate always...\n";
     boost::posix_time::ptime tick = boost::posix_time::microsec_clock::local_time();
 
+    size_t totalSize = 0;
     for (int i = 0; i < numTries; ++i) {
         // To count also the time needed for space allocation for the target vector during serialisation, we always
         // start with a fresh vector. To get the last result out of the loop, we just swap, i.e. copy pointers.
-        vector<char> vecInt;
-        p->save(h, vecInt);
+        vector<char> vecInLoop;
+        p->save(h, vecInLoop);
         if (i == numTries - 1) {
-            archive1.swap(vecInt);
+            totalSize = vecInLoop.size();
+            printSerializationTime(boost::posix_time::microsec_clock::local_time() - tick, totalSize);
         }
     }
 
-    printSerializationTime(boost::posix_time::microsec_clock::local_time() - tick, archive1.size());
-
-    Hash dh;
-    tick = boost::posix_time::microsec_clock::local_time();
-    for (int i = 0; i < numTries; ++i) {
-        p->load(dh, archive1);
-    }
-    printDeserializationTime(boost::posix_time::microsec_clock::local_time() - tick);
-
-    CPPUNIT_ASSERT(karabo::util::similar(h, dh));
     //////////////////////////////////////////////////
     //////////////////////////////////////////////////
     //////////////////////////////////////////////////
     std::clog << "\nvector<char> copy -- re-use memory...\n";
-    archive1.clear(); // but keep capacity
+    vector<char> archive1;
+    archive1.reserve(totalSize); // pre-allocate capacity
     tick = boost::posix_time::microsec_clock::local_time();
 
     for (int i = 0; i < numTries; ++i) {
@@ -412,6 +404,18 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
 
     printSerializationTime(boost::posix_time::microsec_clock::local_time() - tick, archive1.size());
 
+    Hash dh;
+    tick = boost::posix_time::microsec_clock::local_time();
+    for (int i = 0; i < numTries; ++i) {
+        Hash hInternal;
+        p->load(hInternal, archive1);
+        if (i == numTries - 1) {
+            dh = std::move(hInternal);
+        }
+    }
+    printDeserializationTime(boost::posix_time::microsec_clock::local_time() - tick);
+
+    CPPUNIT_ASSERT(karabo::util::similar(h, dh));
     //////////////////////////////////////////////////
     //////////////////////////////////////////////////
     //////////////////////////////////////////////////
@@ -430,7 +434,11 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
         Hash dh2;
         tick = boost::posix_time::microsec_clock::local_time();
         for (int i = 0; i < numTries; ++i) {
-            p->load(dh2, archive3);
+            Hash hInternal;
+            p->load(hInternal, archive3);
+            if (i == numTries - 1) {
+                dh2 = std::move(hInternal);
+            }
         }
         printDeserializationTime(boost::posix_time::microsec_clock::local_time() - tick);
         std::clog << "------ " << archive3 << std::endl;
@@ -486,7 +494,11 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
         Hash dh3;
         tick = boost::posix_time::microsec_clock::local_time();
         for (int i = 0; i < numTries; ++i) {
-            p->load(dh3, archive3);
+            Hash hInternal;
+            p->load(hInternal, archive3);
+            if (i == numTries - 1) {
+                dh3 = std::move(hInternal);
+            }
         }
         printDeserializationTime(boost::posix_time::microsec_clock::local_time() - tick);
         std::clog << "------ " << archive3 << std::endl;
