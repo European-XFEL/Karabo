@@ -90,8 +90,8 @@ namespace karabo {
 
             unsigned int m_channelId;
 
-            boost::mutex m_mutex;
-            boost::mutex m_swapBuffersMutex;
+            // Prevents simultaneous access to the inactive data and active data pots.
+            boost::mutex m_twoPotsMutex;
 
             int m_activeChunk;
             int m_inactiveChunk;
@@ -100,6 +100,8 @@ namespace karabo {
             ConnectedOutputChannels m_connectedOutputChannels;
             OpenConnections m_openConnections;
 
+            // Prevents simultaneous access to the m_isEndOfStream flag upon data package arrival on the TcpChannel.
+            boost::mutex m_isEndOfStreamMutex;
             bool m_isEndOfStream;
             bool m_respondToEndOfStream;
 
@@ -213,8 +215,6 @@ namespace karabo {
             void onTcpChannelRead(const karabo::net::ErrorCode& ec, karabo::net::Channel::Pointer channel,
                                   const karabo::util::Hash& header, const std::vector<karabo::io::BufferSet::Pointer>& data);
                                   
-            void swapBuffers();
-            
             bool canCompute() const;
 
             void notifyOutputChannelsForPossibleRead();
@@ -269,8 +269,6 @@ namespace karabo {
 
 
         private: // functions
-
-            void update();
 
             void deferredNotificationsOfOutputChannelsForPossibleRead();
 
