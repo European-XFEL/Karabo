@@ -499,8 +499,8 @@ namespace karabo {
             string timestampAsIso8061;
             string timestampAsDouble;
             string event;
-            string tail;
             DataLoggerIndex entry;
+            vector<std::string> tailFields;
 
             const Epochstamp target(timepoint);
 
@@ -539,7 +539,8 @@ namespace karabo {
 
                     const Epochstamp epochstamp(stringDoubleToEpochstamp(timestampAsDouble));
                     if (epochstamp > target) {
-                        KARABO_LOG_FRAMEWORK_ERROR << "findLoggerIndexTimepoint: done looping" << tail;
+                        KARABO_LOG_FRAMEWORK_ERROR << "findLoggerIndexTimepoint: done looping. Line tail:"
+                                << karabo::util::toString(tailFields);
                         break;
                     } else {
                         // store selected event
@@ -547,11 +548,8 @@ namespace karabo {
                             entry.m_event = event;
                             entry.m_epoch = epochstamp;
                             // store tail for later usage.
-                            tail.clear();
-                            for (size_t i = 3; i < lineFields.size(); i++) {
-                                tail.append(" ");
-                                tail.append(lineFields[i]);
-                            }
+                            tailFields.resize(lineFields.size() - 3);
+                            std::copy(lineFields.begin() + 3, lineFields.end(), tailFields.begin());
                         }
                     }
                 } catch (const exception &e) {
@@ -561,11 +559,11 @@ namespace karabo {
             }
             ifs.close();
 
-            if (!tail.empty()) {
-                this->extractTailOfArchiveIndex(tail, entry);
+            if (tailFields.size() > 0) {
+                this->extractTailOfArchiveIndex(tailFields, entry);
             }
 
-            KARABO_LOG_FRAMEWORK_ERROR << "findLoggerIndexTimepoint - entry: " << entry.m_event << " "
+            KARABO_LOG_FRAMEWORK_DEBUG << "findLoggerIndexTimepoint - entry: " << entry.m_event << " "
                     << entry.m_position << " " << entry.m_user << " " << entry.m_fileindex;
             
             return entry;
@@ -611,11 +609,8 @@ namespace karabo {
 
                     // Stores the rest of the line in trail with all fields prefixed with one space - format assumed
                     // by method extractTailOfArchiveIndex.
-                    string tail;
-                    for (size_t i = 3; i < lineFields.size(); i++) {
-                        tail.append(" ");
-                        tail.append(lineFields[i]);
-                    }
+                    vector<std::string> tailFields(lineFields.size() - 3);
+                    std::copy(lineFields.begin() + 3, lineFields.end(), tailFields.begin());
                     
                     const Epochstamp epochstamp(stringDoubleToEpochstamp(timestampAsDouble));
 
@@ -630,7 +625,7 @@ namespace karabo {
                         }
                         nearest.m_event = event;
                         nearest.m_epoch = epochstamp;
-                        this->extractTailOfArchiveIndex(tail, nearest);
+                        this->extractTailOfArchiveIndex(tailFields, nearest);
                     }
 
                     // Stop loop if greater than target time point or we search the first after the target and got it.
@@ -840,23 +835,16 @@ namespace karabo {
         }
 
 
-        void DataLogReader::extractTailOfArchiveIndex(const std::string& tail, DataLoggerIndex& entry) const {
-            stringstream ss(tail);
-            ss >> entry.m_train;
-            if (entry.m_epoch.getSeconds() == entry.m_train) {
-                // If seconds == train, we very likely have old format from 1.4.X where seconds and fractions
-                // follow as ULL after timestampAsDouble - then we have (as usual) train, position, user and index.
-                // In case by chance we have trainId == seconds, we double check that there is a space in front
-                // of each of the six words in the tail (sec, fraction, train, position, user, index):
-                if (std::count(tail.begin(), tail.end(), ' ') == 6) {
-                    ss >> entry.m_train >> entry.m_train; // get rid of fractions and fill train with real value
-                } else {
-                    KARABO_LOG_FRAMEWORK_WARN << "extractTailOfArchiveIndex: Value after timestamp as double equals "
-                            << "full seconds (" << entry.m_epoch.getSeconds() << "), i.e. looks like 1.4.X format, "
-                            << "but tail of line '" << tail << "' does not have six words with a space in front of each.";
-                }
+        void DataLogReader::extractTailOfArchiveIndex(const std::vector<std::string>& tailFields,
+                                                      DataLoggerIndex& entry) const {
+            if (tailFields.size() > 3) {
+                entry.m_train = karabo::util::fromString<unsigned long long>(tailFields[0]);
+                entry.m_position = karabo::util::fromString<long>(tailFields[1]);
+                entry.m_user = tailFields[2];
+                entry.m_fileindex = karabo::util::fromString<int>(tailFields[3]);
+            } else {
+                throw KARABO_PARAMETER_EXCEPTION("Not enough values in line.");
             }
-            ss >> entry.m_position >> entry.m_user >> entry.m_fileindex;
         }
     }
 
