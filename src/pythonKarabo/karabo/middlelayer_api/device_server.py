@@ -297,8 +297,8 @@ class DeviceServerBase(SignalSlotable):
         # We have to wait until our plugins are available, which is around
         # 3 seconds after startup.
         yield from sleep(4)
-
-        for deviceId, configuration in self._device_initializer.items():
+        for deviceId, initializer in self._device_initializer.items():
+            configuration = Hash(initializer)
             configuration["_deviceId_"] = deviceId
             configuration["_serverId_"] = self.serverId
             classId = configuration.pop("classId")
