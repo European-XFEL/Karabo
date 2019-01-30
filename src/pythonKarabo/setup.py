@@ -130,13 +130,13 @@ if __name__ == '__main__':
                 'karabo-webserver=karabo.interactive.webserver:run_webserver',
              ],
             'karabo.bound_device': [
-                'ProjectManager=karabo.bound_devices.project_manager:ProjectManager',
                 'PropertyTest=karabo.bound_devices.property_test:PropertyTest',
                 'RunConfigurationGroup=karabo.bound_devices.run_configuration_group:RunConfigurationGroup',
                 'RunConfigurator=karabo.bound_devices.run_configurator:RunConfigurator',
             ],
             'karabo.middlelayer_device': [
                 'IPythonKernel=karabo.middlelayer_api.ipython:IPythonKernel',
+                'ProjectManager=karabo.middlelayer_devices.project_manager:ProjectManager',
                 'MetaMacro=karabo.middlelayer_api.metamacro:MetaMacro'
             ],
             'karabo.bound_device_test': [
