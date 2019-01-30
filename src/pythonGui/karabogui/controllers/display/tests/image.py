@@ -1,7 +1,6 @@
-from karabo.middlelayer_api.hash import ByteArray
-from karabo.middlelayer import (
+from karabo.native import (
     Bool, Configurable, EncodingType, Hash, Int8, Node,
-    VectorInt8, VectorInt16)
+    VectorInt8, VectorInt16, ByteArray)
 
 
 # Reverse map of controllers.images.

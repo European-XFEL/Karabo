@@ -1,8 +1,7 @@
 from traits.api import TraitError, Undefined
 
 from karabo.common import const
-from karabo.middlelayer import (
-    AccessMode, Hash, MetricPrefix, Timestamp, Unit)
+from karabo.native import AccessMode, Hash, MetricPrefix, Unit, Timestamp
 from .proxy import PropertyProxy
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .types import (

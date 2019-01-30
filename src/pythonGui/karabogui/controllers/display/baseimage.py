@@ -17,7 +17,7 @@ from traits.api import (
     Bool, Callable, HasStrictTraits, Instance, on_trait_change, String)
 
 from karabo.common.scenemodel.api import ScientificImageModel, WebcamImageModel
-from karabo.middlelayer import EncodingType
+from karabo.native import EncodingType
 from karabogui import icons
 from karabogui.binding.api import ImageBinding
 from karabogui.controllers.api import (

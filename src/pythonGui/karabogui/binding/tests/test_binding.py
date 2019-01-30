@@ -7,11 +7,11 @@ from traits.api import Undefined
 
 from karabo.common.api import (
     KARABO_SCHEMA_METRIC_PREFIX_ENUM, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
-    KARABO_SCHEMA_UNIT_ENUM, KARABO_SCHEMA_UNIT_SYMBOL, KARABO_ALARM_LOW
+    KARABO_SCHEMA_UNIT_ENUM, KARABO_SCHEMA_UNIT_SYMBOL, KARABO_ALARM_LOW, State
 )
-from karabo.middlelayer import (
-    AccessLevel, AccessMode, Assignment, Hash, MetricPrefix, Schema, State,
-    Unit, decodeBinary
+from karabo.native import (
+    AccessLevel, AccessMode, Assignment, Hash, MetricPrefix, Schema, Unit,
+    decodeBinary
 )
 from ..api import (
     BoolBinding, ByteArrayBinding, CharBinding, ChoiceOfNodesBinding,

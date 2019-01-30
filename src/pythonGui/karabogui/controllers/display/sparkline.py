@@ -10,7 +10,7 @@ from PyQt4.QtGui import (QAction, QActionGroup, QColor, QHBoxLayout,
 from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import SparklineModel
-from karabo.middlelayer import Timestamp
+from karabo.native import Timestamp
 from karabogui.alarms.api import (
     ALARM_COLOR, ALARM_HIGH, ALARM_LOW, WARN_COLOR, WARN_GLOBAL, WARN_HIGH,
     WARN_LOW)

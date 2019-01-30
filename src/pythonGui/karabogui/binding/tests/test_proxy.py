@@ -3,7 +3,7 @@ from unittest.mock import Mock
 from traits.api import Undefined
 
 from karabo.common.api import DeviceStatus
-from karabo.middlelayer import Hash
+from karabo.native import Hash
 from karabogui.testing import (
     assert_trait_change, get_class_property_proxy, singletons)
 from ..api import (

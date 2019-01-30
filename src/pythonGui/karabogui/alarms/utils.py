@@ -5,7 +5,7 @@
 #############################################################################
 from PyQt4.QtCore import QDateTime
 
-from karabo.middlelayer import Timestamp
+from karabo.native import Timestamp
 from .const import (ACKNOWLEDGEABLE, ALARM_DATA, ALARM_NONE, ALARM_TYPE,
                     DEVICE_ID, NEEDS_ACKNOWLEDGING, TIME_OF_FIRST_OCCURENCE,
                     TIME_OF_OCCURENCE, AlarmEntry)

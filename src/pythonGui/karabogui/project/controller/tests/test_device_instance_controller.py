@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 from karabo.common.project.device import DeviceInstanceModel
 from karabo.common.project.device_config import DeviceConfigurationModel
 from karabo.common.project.server import DeviceServerModel
-from karabo.middlelayer_api.hash import Hash
+from karabo.native import Hash
 from karabogui.project.controller.device import DeviceInstanceController
 from karabogui.testing import singletons, system_hash
 from karabogui.topology.system import SystemTopology

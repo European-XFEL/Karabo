@@ -1,5 +1,5 @@
 from karabo.common.api import DeviceStatus
-from karabo.middlelayer import Configurable, Float, String
+from karabo.native import Configurable, Float, String
 from karabogui.binding.api import (
     DeviceClassProxy, PropertyProxy, build_binding
 )

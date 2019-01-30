@@ -1,7 +1,7 @@
 from traits.api import Enum, Instance
 
 from karabo.common.scenemodel.api import BaseWidgetObjectData
-from karabo.middlelayer import (
+from karabo.native import (
     Configurable, Int8, Int16, UInt32, UInt64, String)
 from karabogui.binding.api import StringBinding, IntBinding, build_binding
 from karabogui.testing import GuiTestCase, flushed_registry

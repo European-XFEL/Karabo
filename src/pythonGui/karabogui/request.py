@@ -10,7 +10,7 @@ from weakref import WeakKeyDictionary
 
 from PyQt4.QtCore import pyqtSlot, QTimer
 
-from karabo.middlelayer import Hash
+from karabo.native import Hash
 from karabogui import messagebox
 from karabogui.binding.api import extract_sparse_configurations
 from karabogui.events import broadcast_event, KaraboEventSender

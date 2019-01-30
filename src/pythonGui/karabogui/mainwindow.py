@@ -14,7 +14,7 @@ from PyQt4.QtGui import (
     QSizePolicy, QSplitter, QToolButton, QWidget, qApp
 )
 
-from karabo.middlelayer import AccessLevel
+from karabo.native import AccessLevel
 from karabogui import globals as krb_globals
 from karabogui import icons
 from karabogui.dialogs.configuration import ConfigurationDialog

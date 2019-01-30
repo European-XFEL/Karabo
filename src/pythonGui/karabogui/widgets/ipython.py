@@ -17,7 +17,8 @@ except ImportError:
         as RichJupyterWidget
     from IPython.qt import kernel_mixins, inprocess
 
-from karabo.middlelayer import Hash, State
+from karabo.common.states import State
+from karabo.native import Hash
 from karabogui import messagebox
 from karabogui.binding.api import get_binding_value, PropertyProxy
 from karabogui.request import send_property_changes
