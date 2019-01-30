@@ -1,7 +1,7 @@
 from unittest.mock import Mock
 
 from karabo.common.api import DeviceStatus, KARABO_SCHEMA_ABSOLUTE_ERROR
-from karabo.middlelayer import Configurable, Hash, String
+from karabo.native import Configurable, Hash, String
 from karabogui.testing import singletons, system_hash
 from karabogui.topology.system import SystemTopology
 

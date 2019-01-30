@@ -2,7 +2,7 @@ from nose.tools import assert_raises
 from traits.api import TraitError
 
 from karabo.common.api import KARABO_SCHEMA_ABSOLUTE_ERROR
-from karabo.middlelayer import Hash
+from karabo.native import Hash
 from ..api import (
     BindingNamespace, BindingRoot, ChoiceOfNodesBinding, FloatBinding,
     Int32Binding, ListOfNodesBinding, NodeBinding,

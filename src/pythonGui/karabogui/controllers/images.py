@@ -8,7 +8,7 @@ from guiqwt.plot import ImageDialog, ImageWidget
 from PyQt4.QtCore import Qt, pyqtSignal
 from PyQt4.Qwt5.Qwt import QwtPlot
 
-from karabo.middlelayer import EncodingType
+from karabo.native import EncodingType
 from karabogui.dialogs.dialogs import LutRangeDialog
 
 

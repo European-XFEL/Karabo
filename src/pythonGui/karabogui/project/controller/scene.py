@@ -13,7 +13,7 @@ from traits.api import Instance
 
 from karabo.common.project.api import get_user_cache
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
-from karabo.middlelayer_api.project.api import read_project_model
+from karabo.native import read_project_model
 from karabogui import icons, messagebox
 from karabogui.enums import ProjectItemTypes
 from karabogui.events import broadcast_event, KaraboEventSender

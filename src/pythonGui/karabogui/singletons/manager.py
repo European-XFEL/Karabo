@@ -11,7 +11,7 @@ from PyQt4.QtCore import pyqtSlot, QObject
 from PyQt4.QtGui import QMessageBox
 
 from karabo.common.api import State, DeviceStatus
-from karabo.middlelayer import AccessMode, Hash
+from karabo.native import AccessMode, Hash
 from karabogui.alarms.api import extract_alarms_data
 from karabogui.background import executeLater, Priority
 from karabogui.binding.api import (

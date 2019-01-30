@@ -6,7 +6,7 @@ from PyQt4.QtSvg import QSvgWidget
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import PopUpModel
-from karabo.middlelayer import Timestamp
+from karabo.native import Timestamp
 from karabogui.binding.api import (
     get_binding_value, PropertyProxy, SlotBinding, StringBinding)
 from karabogui.controllers.api import (

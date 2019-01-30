@@ -18,7 +18,7 @@ from PyQt4.QtGui import (
 
 from karabo.common.project.api import read_macro
 from karabo.common.scenemodel.api import SceneTargetWindow, read_scene
-from karabo.middlelayer import decodeXML, Hash, writeXML
+from karabo.native import decodeXML, Hash, writeXML
 from karabogui import globals as krb_globals, icons, messagebox
 from karabogui.binding.api import (
     DeviceClassProxy, DeviceProxy, extract_configuration)

@@ -15,9 +15,8 @@ from karabo.common.api import Capabilities, NO_CONFIG_STATUSES
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     find_parent_object)
-from karabo.middlelayer import Hash
-from karabo.middlelayer_api.project.api import (read_project_model,
-                                                write_project_model)
+from karabo.native import (
+    Hash, read_project_model, write_project_model)
 from karabogui import messagebox
 from karabogui.binding.api import extract_configuration
 from karabogui.enums import ProjectItemTypes

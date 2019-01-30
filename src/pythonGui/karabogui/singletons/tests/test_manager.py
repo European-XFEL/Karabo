@@ -1,7 +1,7 @@
 from unittest.mock import ANY, Mock, call, patch
 
 from karabo.common.api import DeviceStatus
-from karabo.middlelayer import AccessMode, Configurable, Hash, Int32, Schema
+from karabo.native import AccessMode, Configurable, Hash, Int32, Schema
 from karabogui.binding.api import build_binding, DeviceClassProxy, DeviceProxy
 from karabogui.events import KaraboEventSender
 from karabogui.testing import alarm_data, GuiTestCase, singletons, system_hash

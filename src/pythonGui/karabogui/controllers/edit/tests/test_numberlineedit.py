@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from karabo.common.scenemodel.api import DoubleLineEditModel
 from karabo.common.scenemodel.widgets.simple import IntLineEditModel
-from karabo.middlelayer import Configurable, Double, Int32
+from karabo.native import Configurable, Double, Int32
 from karabogui.binding.util import get_editor_value
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)

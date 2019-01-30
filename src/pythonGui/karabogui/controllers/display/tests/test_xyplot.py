@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from karabo.middlelayer import Configurable, Int32
+from karabo.native import Configurable, Int32
 from karabogui.binding.api import PropertyProxy
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)

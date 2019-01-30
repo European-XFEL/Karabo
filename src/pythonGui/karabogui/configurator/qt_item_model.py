@@ -8,7 +8,7 @@ from weakref import WeakValueDictionary
 from PyQt4.QtCore import pyqtSignal, QAbstractItemModel, QModelIndex, Qt
 from PyQt4.QtGui import QBrush, QColor, QFont
 
-from karabo.middlelayer import AccessMode
+from karabo.native import AccessMode
 from karabo.common.api import (
     State, KARABO_SCHEMA_ALLOWED_STATES, KARABO_WARN_LOW, KARABO_WARN_HIGH,
     KARABO_ALARM_LOW, KARABO_ALARM_HIGH)

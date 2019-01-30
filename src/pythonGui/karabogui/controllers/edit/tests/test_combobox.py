@@ -1,5 +1,5 @@
 from karabo.common.scenemodel.api import ComboBoxModel
-from karabo.middlelayer import Configurable, String, Int32
+from karabo.native import Configurable, String, Int32
 from karabogui.binding.api import build_binding
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)

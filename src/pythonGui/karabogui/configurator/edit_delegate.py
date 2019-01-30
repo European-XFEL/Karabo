@@ -13,7 +13,7 @@ from PyQt4.QtGui import (
 )
 
 from karabo.common.api import KARABO_EDITABLE_ATTRIBUTES
-from karabo.middlelayer import DaqPolicy, MetricPrefix, Unit
+from karabo.native import DaqPolicy, MetricPrefix, Unit
 from karabogui.binding.api import (
     IntBinding, PropertyProxy, VectorHashBinding)
 from karabogui.controllers.api import get_compatible_controllers
