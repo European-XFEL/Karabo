@@ -191,8 +191,8 @@ namespace karabo {
             /// The tail is everything after event, timestampAsIso8061 and timestampAsDouble.
             /// The entry has to be partly filled (m_event and m_epoch) and partly serves as output
             /// (m_train, m_position, m_user and m_fileindex).
-            /// Works for lines written to archive_index.txt by <= 1.4 (old format) and >= 1.5
-            void extractTailOfArchiveIndex(const std::string& tail, DataLoggerIndex& entry) const;
+            /// Works for lines written to archive_index.txt by >= 1.5
+            void extractTailOfArchiveIndex(const std::vector<std::string>& tailFields, DataLoggerIndex& entry) const;
 
         private:
 
