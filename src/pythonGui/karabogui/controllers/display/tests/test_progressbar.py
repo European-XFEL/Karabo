@@ -3,7 +3,7 @@ from unittest.mock import patch
 from PyQt4.QtCore import Qt
 
 from karabo.common.scenemodel.api import DisplayProgressBarModel
-from karabo.middlelayer import Configurable, Float, Int8
+from karabo.native import Configurable, Float, Int8
 from karabogui.binding.api import build_binding
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)

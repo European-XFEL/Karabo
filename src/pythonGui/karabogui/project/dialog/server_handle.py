@@ -9,7 +9,7 @@ from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QDialog, QDialogButtonBox
 
-from karabo.middlelayer import AccessLevel
+from karabo.native import AccessLevel
 from karabogui import globals as krb_globals
 from karabogui.singletons.api import get_topology
 from karabogui.util import InputValidator
