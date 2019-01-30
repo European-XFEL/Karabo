@@ -5,7 +5,7 @@ from PyQt4.QtGui import QWidget
 
 from karabo.common.api import State
 from karabo.common.scenemodel.api import ColorBoolModel
-from karabo.middlelayer import Configurable, Bool, Hash
+from karabo.native import Configurable, Bool, Hash
 from karabogui.binding.api import apply_configuration
 from karabogui.indicators import STATE_COLORS
 from karabogui.testing import GuiTestCase, get_class_property_proxy

@@ -10,7 +10,7 @@ from traits.api import (
 
 from karabo.common.api import (
     DeviceStatus, KARABO_SCHEMA_DEFAULT_VALUE, ONLINE_STATUSES)
-from karabo.middlelayer import Hash
+from karabo.native import Hash
 from karabogui.binding.api import (
     BaseDeviceProxy, DeviceProxy, ProjectDeviceProxy,
     apply_configuration, apply_default_configuration, extract_edits

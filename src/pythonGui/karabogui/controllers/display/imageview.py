@@ -10,7 +10,7 @@ from PyQt4.QtGui import (QCheckBox, QComboBox, QHBoxLayout, QLabel,
 from traits.api import Array, Instance, Int
 
 from karabo.common.scenemodel.api import DisplayImageModel
-from karabo.middlelayer import EncodingType
+from karabo.native import EncodingType
 from karabogui.binding.api import ImageBinding
 from karabogui.controllers.api import (
     BaseBindingController, KaraboImageDialog, get_dimensions_and_encoding,

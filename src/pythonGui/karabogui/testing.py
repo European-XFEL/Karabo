@@ -7,7 +7,7 @@ from PyQt4.QtCore import QEventLoop
 from PyQt4.QtGui import QApplication
 
 from karabo.common.api import Capabilities, DeviceStatus
-from karabo.middlelayer import AccessLevel, Hash
+from karabo.native import AccessLevel, Hash
 from karabogui.alarms.api import (
     ACKNOWLEDGEABLE, ALARM_HIGH, ALARM_ID, ALARM_NONE, ALARM_TYPE, DESCRIPTION,
     DEVICE_ID, NEEDS_ACKNOWLEDGING, PROPERTY, TIME_OF_FIRST_OCCURENCE,

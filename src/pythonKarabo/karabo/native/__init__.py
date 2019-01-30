@@ -3,3 +3,9 @@ from karabo.authenticator import Authenticator
 from karabo.middlelayer_api.time_mixin import TimeMixin, get_timestamp
 from karabo.middlelayer_api.timestamp import Timestamp
 from karabo.middlelayer_api.weak import Weak
+
+# Import data namespace
+from karabo.native.data import *
+
+# Import project namespace
+from karabo.native.project import *

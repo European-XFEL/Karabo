@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
 from karabo.common.scenemodel.api import FloatSpinBoxModel
-from karabo.middlelayer import Configurable, Double
+from karabo.native import Configurable, Double
 from karabogui.binding.api import build_binding
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
