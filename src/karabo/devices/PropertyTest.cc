@@ -520,6 +520,30 @@ namespace karabo {
                     .displayedName("Update Schema")
                     .description("Duplicate maxSize of vectors in schema")
                     .commit();
+
+            PATH_ELEMENT(expected).key("inputPath")
+                    .displayedName("Input File")
+                    .description("An input file")
+                    .isInputFile()
+                    .assignmentOptional().defaultValue("./input_file")
+                    .reconfigurable()
+                    .commit();
+
+            PATH_ELEMENT(expected).key("outputPath")
+                    .displayedName("Output File")
+                    .description("An output file")
+                    .isOutputFile()
+                    .assignmentOptional().defaultValue("./output_file")
+                    .reconfigurable()
+                    .commit();
+
+            PATH_ELEMENT(expected).key("directoryPath")
+                    .displayedName("Directory")
+                    .description("A directory")
+                    .isDirectory()
+                    .assignmentOptional().defaultValue(".")
+                    .reconfigurable()
+                    .commit();
         }
 
 
