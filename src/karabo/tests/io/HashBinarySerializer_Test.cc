@@ -356,107 +356,91 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
     for(size_t i = 0; i != ndarr.size(); ++i) {
         dptr[i] = i % 100;
     }
-    
+
     h.set("ndarr", ndarr);
 
-    vector<char> archive1;
+    int numTries = 10;
+    auto printSerializationTime = [&numTries] (const boost::posix_time::time_duration& diff, size_t sizeInBytes) {
+        const float ave = diff.total_milliseconds() / static_cast<float> (numTries);
+        std::clog << " --- Average serialization time: " << ave << " ms for Hash of size: "
+                << sizeInBytes * 1.e-6 << " MB" << std::endl;
+    };
+    auto printDeserializationTime = [&numTries] (const boost::posix_time::time_duration & diff) {
+        const float ave = diff.total_milliseconds() / static_cast<float> (numTries);
+        std::clog << " --- Average de-serialization time: " << ave << " ms" << std::endl;
+    };
     
     BinarySerializer<Hash>::Pointer p = BinarySerializer<Hash>::create("Bin");
 
-    std::clog << "\nvector<char> copy ...\n";
+    //////////////////////////////////////////////////
+    //////////////////////////////////////////////////
+    //////////////////////////////////////////////////
+    std::clog << "\nvector<char> copy -- allocate always...\n";
     boost::posix_time::ptime tick = boost::posix_time::microsec_clock::local_time();
 
-    for (int i = 0; i < 10; ++i) {
+    size_t totalSize = 0;
+    for (int i = 0; i < numTries; ++i) {
+        // To count also the time needed for space allocation for the target vector during serialisation, we always
+        // start with a fresh vector. To get the last result out of the loop, we just swap, i.e. copy pointers.
+        vector<char> vecInLoop;
+        p->save(h, vecInLoop);
+        if (i == numTries - 1) {
+            totalSize = vecInLoop.size();
+            printSerializationTime(boost::posix_time::microsec_clock::local_time() - tick, totalSize);
+        }
+    }
+
+    //////////////////////////////////////////////////
+    //////////////////////////////////////////////////
+    //////////////////////////////////////////////////
+    std::clog << "\nvector<char> copy -- re-use memory...\n";
+    vector<char> archive1;
+    archive1.reserve(totalSize); // pre-allocate capacity
+    tick = boost::posix_time::microsec_clock::local_time();
+
+    for (int i = 0; i < numTries; ++i) {
         p->save(h, archive1);
     }
 
-    boost::posix_time::time_duration diff = boost::posix_time::microsec_clock::local_time() - tick;
-    float ave = diff.total_milliseconds() / 10.0;
-    std::clog << "\n Average serialization time: " << ave << " ms for Hash of size: " << archive1.size() / 10.e6 << " MB"<<std::endl;
+    printSerializationTime(boost::posix_time::microsec_clock::local_time() - tick, archive1.size());
 
     Hash dh;
     tick = boost::posix_time::microsec_clock::local_time();
-    for (int i = 0; i < 10; ++i) {
-        p->load(dh, archive1);
+    for (int i = 0; i < numTries; ++i) {
+        Hash hInternal;
+        p->load(hInternal, archive1);
+        if (i == numTries - 1) {
+            dh = std::move(hInternal);
+        }
     }
-    diff = boost::posix_time::microsec_clock::local_time() - tick;
-    ave = diff.total_milliseconds() / 10.0;
-    std::clog << "\n Average de-serialization time: " << ave << " ms" << std::endl;
-    
+    printDeserializationTime(boost::posix_time::microsec_clock::local_time() - tick);
 
     CPPUNIT_ASSERT(karabo::util::similar(h, dh));
-    
+    //////////////////////////////////////////////////
+    //////////////////////////////////////////////////
+    //////////////////////////////////////////////////
     {
         std::clog << "\nBufferSet copy ...\n";
         karabo::io::BufferSet archive3(true);
         tick = boost::posix_time::microsec_clock::local_time();
 
-        for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i < numTries; ++i) {
             p->save(h, archive3);
         }
-        
-        
-        diff = boost::posix_time::microsec_clock::local_time() - tick;
-        ave = diff.total_milliseconds() / 10.0;
-        std::clog << "--- Average serialization time: " << ave << " ms for Hash of size: " << archive1.size() / 10.e6 << " MB"<<std::endl;
-        
-        std::clog << "------ " << archive3 << std::endl;
 
-        // Check the content of boost::asio::buffer ....
-        std::clog << "\tListing of Boost ASIO buffers ...\n";
-        vector<boost::asio::const_buffer> buf;
-        CPPUNIT_ASSERT_NO_THROW(archive3.appendTo(buf));
-        std::size_t idx = 0;
-        for(auto it = buf.begin(); it != buf.end(); ++it, ++idx){
-            size_t size = boost::asio::buffer_size(*it);
-            std::clog << std::dec << "\tidx=" << idx << "\t size=" << std::setw(12) << std::setfill(' ') << size << "  ->  0x" << std::hex;
-            for(size_t i = 0; i != std::min(size, size_t(30)); ++i) {
-                std::clog << std::setw(2) << std::setfill('0') << int(boost::asio::buffer_cast<const char*>(*it)[i]);
-            }
-            std::clog << (size > 30 ? "..." : "") << std::endl;
-        }
-
-        archive3.rewind();    
+        printSerializationTime(boost::posix_time::microsec_clock::local_time() - tick, archive3.totalSize());
+        
+        archive3.rewind();
         Hash dh2;
         tick = boost::posix_time::microsec_clock::local_time();
-        for (int i = 0; i < 10; ++i) {
-            p->load(dh2, archive3);
+        for (int i = 0; i < numTries; ++i) {
+            Hash hInternal;
+            p->load(hInternal, archive3);
+            if (i == numTries - 1) {
+                dh2 = std::move(hInternal);
+            }
         }
-        diff = boost::posix_time::microsec_clock::local_time() - tick;
-        ave = diff.total_milliseconds() / 10.0;
-        std::clog << "\n--- Average de-serialization time: " << ave << " ms" << std::endl;
-
-        CPPUNIT_ASSERT(karabo::util::similar(h, dh2));
-        bool all_same =  true;
-
-        // verify that we do not have any byte shifting in between serialization and deserialization
-        NDArray tarr = dh2.get<NDArray>("ndarr");
-        CPPUNIT_ASSERT(ndarr.itemSize() == tarr.itemSize());
-        CPPUNIT_ASSERT(ndarr.byteSize() == tarr.byteSize());
-        for(int i = 0; i != 100; ++i) {
-            all_same &= (ndarr.getDataPtr().get()[i] == tarr.getDataPtr().get()[i]);
-        }
-        CPPUNIT_ASSERT(all_same);
-
-        for(int i = 0; i != 100; ++i) {
-            all_same &= (ndarr.getDataPtr().get()[ndarr.byteSize()-i-1] == tarr.getDataPtr().get()[ndarr.byteSize()-i-1]);
-        }
-        CPPUNIT_ASSERT(all_same);
-    }
-    
-    {
-        std::clog << "\n--- BufferSet no copy...\n";
-        karabo::io::BufferSet archive3(false);
-        tick = boost::posix_time::microsec_clock::local_time();
-
-        for (int i = 0; i < 1000; ++i) {
-            p->save(h, archive3);
-        }
-
-        diff = boost::posix_time::microsec_clock::local_time() - tick;
-        ave = diff.total_milliseconds() / 1000.0;
-        std::clog << "--- Average serialization time: " << ave << " ms for Hash of size: " << archive1.size() / 10.e6 << " MB"<<std::endl;
-
+        printDeserializationTime(boost::posix_time::microsec_clock::local_time() - tick);
         std::clog << "------ " << archive3 << std::endl;
 
         // Check the content of boost::asio::buffer ....
@@ -473,15 +457,65 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
             std::clog << (size > 30 ? "..." : "") << std::endl;
         }
 
+        CPPUNIT_ASSERT(karabo::util::similar(h, dh2));
+        bool all_same =  true;
+
+        // verify that we do not have any byte shifting in between serialization and deserialization
+        NDArray tarr = dh2.get<NDArray>("ndarr");
+        CPPUNIT_ASSERT(ndarr.itemSize() == tarr.itemSize());
+        CPPUNIT_ASSERT(ndarr.byteSize() == tarr.byteSize());
+        for(int i = 0; i != 100; ++i) {
+            all_same &= (ndarr.getDataPtr().get()[i] == tarr.getDataPtr().get()[i]);
+        }
+        CPPUNIT_ASSERT(all_same);
+
+        for(int i = 0; i != 100; ++i) {
+            all_same &= (ndarr.getDataPtr().get()[ndarr.byteSize() - i - 1] == tarr.getDataPtr().get()[ndarr.byteSize() - i - 1]);
+        }
+        CPPUNIT_ASSERT(all_same);
+    }
+
+    //////////////////////////////////////////////////
+    //////////////////////////////////////////////////
+    //////////////////////////////////////////////////
+    {
+        std::clog << "\n--- BufferSet no copy...\n";
+        numTries = 1000; // This is so fast that we can afford much more tries to get a nice average.
+        karabo::io::BufferSet archive3(false);
+        tick = boost::posix_time::microsec_clock::local_time();
+
+        for (int i = 0; i < numTries; ++i) {
+            p->save(h, archive3);
+        }
+
+        printSerializationTime(boost::posix_time::microsec_clock::local_time() - tick, archive3.totalSize());
+
         archive3.rewind();
         Hash dh3;
         tick = boost::posix_time::microsec_clock::local_time();
-        for (int i = 0; i < 1000; ++i) {
-            p->load(dh3, archive3);
+        for (int i = 0; i < numTries; ++i) {
+            Hash hInternal;
+            p->load(hInternal, archive3);
+            if (i == numTries - 1) {
+                dh3 = std::move(hInternal);
+            }
         }
-        diff = boost::posix_time::microsec_clock::local_time() - tick;
-        ave = diff.total_milliseconds() / 1000.0;
-        std::clog << "--- Average de-serialization time: " << ave << " ms" << std::endl;
+        printDeserializationTime(boost::posix_time::microsec_clock::local_time() - tick);
+        std::clog << "------ " << archive3 << std::endl;
+
+        // Check the content of boost::asio::buffer ....
+        std::clog << "\tListing of Boost ASIO buffers ...\n";
+        vector<boost::asio::const_buffer> buf;
+        CPPUNIT_ASSERT_NO_THROW(archive3.appendTo(buf));
+        std::size_t idx = 0;
+        for (auto it = buf.begin(); it != buf.end(); ++it, ++idx) {
+            size_t size = boost::asio::buffer_size(*it);
+            std::clog << std::dec << "\tidx=" << idx << "\t size=" << std::setw(12) << std::setfill(' ') << size << "  ->  0x" << std::hex;
+            for (size_t i = 0; i != std::min(size, size_t(30)); ++i) {
+                std::clog << std::setw(2) << std::setfill('0') << int(boost::asio::buffer_cast<const char*>(*it)[i]);
+            }
+            std::clog << (size > 30 ? "..." : "") << std::endl;
+        }
         CPPUNIT_ASSERT(karabo::util::similar(h, dh3));
 
         bool all_same = true;
