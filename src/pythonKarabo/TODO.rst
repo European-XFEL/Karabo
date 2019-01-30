@@ -36,10 +36,10 @@ The dependencies look like this:
 
 [X] Roadmap in git
 
-[] create ``karabo.native`` listing all the imports needed by ``karabogui``
+[X] create ``karabo.native`` listing all the imports needed by ``karabogui``
 from ``karabo``.
 
-[] API redirection for the GUI. from ``karabo.middelayer`` to
+[X] API redirection for the GUI. from ``karabo.middelayer`` to
 ``karabo.native``
 
 [] Create an import tests that make sure that ``karabogui`` does not import
