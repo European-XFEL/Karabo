@@ -136,6 +136,7 @@ if __name__ == '__main__':
             ],
             'karabo.middlelayer_device': [
                 'IPythonKernel=karabo.middlelayer_api.ipython:IPythonKernel',
+                'PropertyTestMDL=karabo.middlelayer_devices.property_test:PropertyTestMDL',
                 'ProjectManager=karabo.middlelayer_devices.project_manager:ProjectManager',
                 'MetaMacro=karabo.middlelayer_api.metamacro:MetaMacro'
             ],
