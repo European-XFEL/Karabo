@@ -504,7 +504,7 @@ namespace karabo {
             string timestampAsDouble;
             string event;
             DataLoggerIndex entry;
-            std::string tail;
+            string tail;
 
             const Epochstamp target(timepoint);
 
@@ -521,12 +521,9 @@ namespace karabo {
             unsigned long lineNum = 0;
             string line;
             while (getline(ifs, line)) {
-
                 lineNum++;
-
                 // If any parsing or processing problem happens for the current line, proceed to the next line.
                 try {
-
                     boost::smatch indexFields;
                     bool matches = boost::regex_search(line, indexFields, m_indexLineRegex);
                     if (!matches) {
@@ -588,12 +585,9 @@ namespace karabo {
             string line;
 
             while (getline(contentstream, line)) {
-
                 lineNum++;
-
                 // If any parsing or processing problem happens for the current line, proceed to the next line.
                 try {
-
                     boost::smatch indexFields;
                     bool matches = boost::regex_search(line, indexFields, m_indexLineRegex);
                     if (!matches) {
@@ -602,13 +596,11 @@ namespace karabo {
                                 << "line should start with an event followed by two timestamps separated by white space.";
                         continue;
                     } else {
-
                         event = indexFields[1];
                         timestampAsIso8061 = indexFields[2];
                         timestampAsDouble = indexFields[3];
-
                         // Stores the rest of the line as the tail contents to be further processed.
-                        std::string tail = indexFields[4];
+                        string tail = indexFields[4];
 
                         const Epochstamp epochstamp(stringDoubleToEpochstamp(timestampAsDouble));
 
@@ -629,12 +621,10 @@ namespace karabo {
                         // Stop loop if greater than target time point or we search the first after the target and got it.
                         if (epochstamp > target && (before || gotAfter)) break;
                     }
-
                 } catch (const exception &e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader (" << contentpath << ", ln. " << lineNum << "): " << e.what();
                     continue;
                 }
-
             }
             contentstream.close();
             return nearest;
