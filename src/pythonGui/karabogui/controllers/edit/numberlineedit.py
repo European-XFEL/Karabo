@@ -6,9 +6,10 @@
 from PyQt4.QtCore import Qt, pyqtSlot
 from PyQt4.QtGui import (
     QAction, QInputDialog, QLineEdit, QPalette, QValidator)
-from traits.api import Instance, Int, Str, on_trait_change
+from traits.api import Instance, Int, on_trait_change, Str, Undefined
 
 from karabo.common.scenemodel.api import DoubleLineEditModel, IntLineEditModel
+from karabogui import globals as krb_globals
 from karabogui.binding.api import (
     get_editor_value, get_min_max, FloatBinding, IntBinding)
 from karabogui.controllers.api import (
@@ -46,6 +47,19 @@ class NumberLineEdit(BaseBindingController):
 
         focus_policy = Qt.NoFocus if ro else Qt.StrongFocus
         self._internal_widget.setFocusPolicy(focus_policy)
+
+    def state_update(self, proxy):
+        root_proxy = proxy.root_proxy
+        value = root_proxy.state_binding.value
+        if value is Undefined or not value:
+            return
+
+        binding = proxy.binding
+        is_allowed = binding.is_allowed(value)
+        is_accessible = (krb_globals.GLOBAL_ACCESS_LEVEL >=
+                         binding.required_access_level)
+
+        self._internal_widget.setEnabled(is_allowed and is_accessible)
 
     def binding_update(self, proxy):
         low, high = get_min_max(proxy.binding)
