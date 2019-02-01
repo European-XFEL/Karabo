@@ -14,9 +14,9 @@ from karabo.common.enums import Capabilities, Interfaces
 from karabo.middlelayer import (
     AccessLevel, AlarmCondition, Assignment, background, Configurable,
     DeviceClientBase, getDevice, getHistory, isSet, InputChannel,
-    Int32, KaraboError, MetricPrefix, Node,
+    Int32, KaraboError, MetricPrefix, NDArray, Node,
     OutputChannel, setWait, shutdown, sleep, Slot, State, String,
-    unit, Unit, VectorDouble, waitUntil, waitUntilNew)
+    unit, Unit, UInt32, VectorDouble, waitUntil, waitUntilNew)
 
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 
@@ -28,13 +28,21 @@ class Child(Configurable):
 class MiddlelayerDevice(DeviceClientBase):
     channelcount = 0
     rawchannelcount = 0
+
     value = Int32()
 
-    boundDevice = String(defaultValue="")
+    boundDevice = String(
+        defaultValue="")
+
     child = Node(Child)
 
-    vectorMaxSize = VectorDouble(defaultValue=[2.0, 2.0],
-                                 minSize=2, maxSize=4)
+    vectorMaxSize = VectorDouble(
+        defaultValue=[2.0, 2.0],
+        minSize=2, maxSize=4)
+
+    array = NDArray(
+        dtype=UInt32,
+        shape=(2,))
 
     foundCapabilities = Int32(
         defaultValue=0)
