@@ -5,9 +5,10 @@
 #############################################################################
 from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import QCheckBox
-from traits.api import Instance
+from traits.api import Instance, Undefined
 
 from karabo.common.scenemodel.api import CheckBoxModel
+from karabogui import globals as krb_globals
 from karabogui.binding.api import BoolBinding, get_editor_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
@@ -31,6 +32,19 @@ class EditableCheckBox(BaseBindingController):
         checkState = Qt.Checked if get_editor_value(proxy) else Qt.Unchecked
         with SignalBlocker(self.widget):
             self.widget.setCheckState(checkState)
+
+    def state_update(self, proxy):
+        root_proxy = proxy.root_proxy
+        value = root_proxy.state_binding.value
+        if value is Undefined or not value:
+            return
+
+        binding = proxy.binding
+        is_allowed = binding.is_allowed(value)
+        is_accessible = (krb_globals.GLOBAL_ACCESS_LEVEL >=
+                         binding.required_access_level)
+
+        self.widget.setEnabled(is_allowed and is_accessible)
 
     @pyqtSlot(int)
     def _on_user_edit(self, state):
