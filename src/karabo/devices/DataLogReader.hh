@@ -192,7 +192,7 @@ namespace karabo {
             /// The entry has to be partly filled (m_event and m_epoch) and partly serves as output
             /// (m_train, m_position, m_user and m_fileindex).
             /// Works for lines written to archive_index.txt by >= 1.5
-            void extractTailOfArchiveIndex(const std::vector<std::string>& tailFields, DataLoggerIndex& entry) const;
+            void extractTailOfArchiveIndex(const std::string& tail, DataLoggerIndex& entry) const;
 
         private:
 
@@ -202,6 +202,8 @@ namespace karabo {
             karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_serializer;
             karabo::io::TextSerializer<karabo::util::Schema>::Pointer m_schemaSerializer;
             static const boost::regex m_lineRegex;
+            static const boost::regex m_indexLineRegex;
+            static const boost::regex m_indexTailRegex;
         };
     }
 }
