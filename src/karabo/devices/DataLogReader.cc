@@ -82,6 +82,10 @@ namespace karabo {
 
         const boost::regex DataLogReader::m_lineRegex(karabo::util::DATALOG_LINE_REGEX, boost::regex::extended);
 
+        const boost::regex DataLogReader::m_indexLineRegex(karabo::util::DATALOG_INDEX_LINE_REGEX, boost::regex::extended);
+
+        const boost::regex DataLogReader::m_indexTailRegex(karabo::util::DATALOG_INDEX_TAIL_REGEX, boost::regex::extended);
+
         void DataLogReader::expectedParameters(Schema& expected) {
 
             OVERWRITE_ELEMENT(expected).key("visibility")
@@ -500,7 +504,7 @@ namespace karabo {
             string timestampAsDouble;
             string event;
             DataLoggerIndex entry;
-            vector<std::string> tailFields;
+            std::string tail;
 
             const Epochstamp target(timepoint);
 
@@ -523,33 +527,30 @@ namespace karabo {
                 // If any parsing or processing problem happens for the current line, proceed to the next line.
                 try {
 
-                    vector<string> lineFields;
-                    boost::split(lineFields, line, boost::is_any_of(" "));
-
-                    if (lineFields.size() < 3) {
-                        // The line doesn't have the minimum number of values; ignore it and go to the next line.
+                    boost::smatch indexFields;
+                    bool matches = boost::regex_search(line, indexFields, m_indexLineRegex);
+                    if (!matches) {
+                        // The line doesn't have the required values; ignore it and go to the next line.
                         KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader (" << contentpath << ", ln. " << lineNum << "): "
                                 << "line should start with an event followed by two timestamps separated by white space.";
                         continue;
-                    }
-
-                    event = lineFields[0];
-                    timestampAsIso8061 = lineFields[1];
-                    timestampAsDouble = lineFields[2];
-
-                    const Epochstamp epochstamp(stringDoubleToEpochstamp(timestampAsDouble));
-                    if (epochstamp > target) {
-                        KARABO_LOG_FRAMEWORK_ERROR << "findLoggerIndexTimepoint: done looping. Line tail:"
-                                << karabo::util::toString(tailFields);
-                        break;
                     } else {
-                        // store selected event
-                        if (event == "+LOG" || event == "-LOG") {
-                            entry.m_event = event;
-                            entry.m_epoch = epochstamp;
-                            // store tail for later usage.
-                            tailFields.resize(lineFields.size() - 3);
-                            std::copy(lineFields.begin() + 3, lineFields.end(), tailFields.begin());
+                        event = indexFields[1];
+                        timestampAsIso8061 = indexFields[2];
+                        timestampAsDouble = indexFields[3];
+
+                        const Epochstamp epochstamp(stringDoubleToEpochstamp(timestampAsDouble));
+                        if (epochstamp > target) {
+                            KARABO_LOG_FRAMEWORK_ERROR << "findLoggerIndexTimepoint: done looping. Line tail:" << tail;
+                            break;
+                        } else {
+                            // store selected event
+                            if (event == "+LOG" || event == "-LOG") {
+                                entry.m_event = event;
+                                entry.m_epoch = epochstamp;
+                                // store tail for later usage.
+                                tail = indexFields[4];
+                            }
                         }
                     }
                 } catch (const exception &e) {
@@ -559,8 +560,8 @@ namespace karabo {
             }
             ifs.close();
 
-            if (tailFields.size() > 0) {
-                this->extractTailOfArchiveIndex(tailFields, entry);
+            if (!tail.empty() > 0) {
+                this->extractTailOfArchiveIndex(tail, entry);
             }
 
             KARABO_LOG_FRAMEWORK_DEBUG << "findLoggerIndexTimepoint - entry: " << entry.m_event << " "
@@ -593,43 +594,41 @@ namespace karabo {
                 // If any parsing or processing problem happens for the current line, proceed to the next line.
                 try {
 
-                    vector<string> lineFields;
-                    boost::split(lineFields, line, boost::is_any_of(" "));
-
-                    if (lineFields.size() < 3) {
-                        // The line doesn't have the minimum number of values; ignore it and go to the next line.
+                    boost::smatch indexFields;
+                    bool matches = boost::regex_search(line, indexFields, m_indexLineRegex);
+                    if (!matches) {
+                        // The line doesn't have the expected values; ignore it and go to the next line.
                         KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader (" << contentpath << ", ln. " << lineNum << "): "
                                 << "line should start with an event followed by two timestamps separated by white space.";
                         continue;
-                    }
+                    } else {
 
-                    event = lineFields[0];
-                    timestampAsIso8061 = lineFields[1];
-                    timestampAsDouble = lineFields[2];
+                        event = indexFields[1];
+                        timestampAsIso8061 = indexFields[2];
+                        timestampAsDouble = indexFields[3];
 
-                    // Stores the rest of the line in trail with all fields prefixed with one space - format assumed
-                    // by method extractTailOfArchiveIndex.
-                    vector<std::string> tailFields(lineFields.size() - 3);
-                    std::copy(lineFields.begin() + 3, lineFields.end(), tailFields.begin());
-                    
-                    const Epochstamp epochstamp(stringDoubleToEpochstamp(timestampAsDouble));
+                        // Stores the rest of the line as the tail contents to be further processed.
+                        std::string tail = indexFields[4];
 
-                    if (epochstamp <= target || nearest.m_fileindex == -1 || (!before && !gotAfter)) {
-                        // We are here since
-                        // 1) target time is larger than current timestamp
-                        // 2) or we did not yet have any result
-                        // 3) or we search the first line with a timestamp larger than target, but did not yet find it
-                        if (!(epochstamp <= target || nearest.m_fileindex == -1)) {
-                            // We have case 3 - and will get what we want now.
-                            gotAfter = true;
+                        const Epochstamp epochstamp(stringDoubleToEpochstamp(timestampAsDouble));
+
+                        if (epochstamp <= target || nearest.m_fileindex == -1 || (!before && !gotAfter)) {
+                            // We are here since
+                            // 1) target time is larger than current timestamp
+                            // 2) or we did not yet have any result
+                            // 3) or we search the first line with a timestamp larger than target, but did not yet find it
+                            if (!(epochstamp <= target || nearest.m_fileindex == -1)) {
+                                // We have case 3 - and will get what we want now.
+                                gotAfter = true;
+                            }
+                            nearest.m_event = event;
+                            nearest.m_epoch = epochstamp;
+                            this->extractTailOfArchiveIndex(tail, nearest);
                         }
-                        nearest.m_event = event;
-                        nearest.m_epoch = epochstamp;
-                        this->extractTailOfArchiveIndex(tailFields, nearest);
-                    }
 
-                    // Stop loop if greater than target time point or we search the first after the target and got it.
-                    if (epochstamp > target && (before || gotAfter)) break;
+                        // Stop loop if greater than target time point or we search the first after the target and got it.
+                        if (epochstamp > target && (before || gotAfter)) break;
+                    }
 
                 } catch (const exception &e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader (" << contentpath << ", ln. " << lineNum << "): " << e.what();
@@ -835,15 +834,19 @@ namespace karabo {
         }
 
 
-        void DataLogReader::extractTailOfArchiveIndex(const std::vector<std::string>& tailFields,
-                                                      DataLoggerIndex& entry) const {
-            if (tailFields.size() > 3) {
-                entry.m_train = karabo::util::fromString<unsigned long long>(tailFields[0]);
-                entry.m_position = karabo::util::fromString<long>(tailFields[1]);
-                entry.m_user = tailFields[2];
-                entry.m_fileindex = karabo::util::fromString<int>(tailFields[3]);
+        void DataLogReader::extractTailOfArchiveIndex(const std::string& tail, DataLoggerIndex& entry) const {
+            // Match tail fields;
+            boost::smatch tailFields;
+            bool matches = boost::regex_search(tail, tailFields, m_indexTailRegex);
+
+            if (matches) {
+                // Assign tail fields.
+                entry.m_train = karabo::util::fromString<unsigned long long>(tailFields[1]);
+                entry.m_position = karabo::util::fromString<long>(tailFields[2]);
+                entry.m_user = tailFields[3];
+                entry.m_fileindex = karabo::util::fromString<int>(tailFields[4]);
             } else {
-                throw KARABO_PARAMETER_EXCEPTION("Not enough values in line.");
+                throw KARABO_PARAMETER_EXCEPTION("Invalid format in index line tail: \"" + tail + "\".");
             }
         }
     }
