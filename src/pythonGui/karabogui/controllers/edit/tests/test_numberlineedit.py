@@ -1,8 +1,9 @@
 from unittest.mock import patch
 
+from karabo.common.states import State
 from karabo.common.scenemodel.api import DoubleLineEditModel
 from karabo.common.scenemodel.widgets.simple import IntLineEditModel
-from karabo.middlelayer import Configurable, Double, Int32
+from karabo.middlelayer import Configurable, Double, Int32, String
 from karabogui.binding.util import get_editor_value
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
@@ -10,11 +11,15 @@ from ..numberlineedit import DoubleLineEdit, IntLineEdit
 
 
 class IntObject(Configurable):
-    prop = Int32(minInc=-10, maxInc=10)
+    state = String(defaultValue=State.INIT)
+    prop = Int32(minInc=-10, maxInc=10,
+                 allowedStates=[State.INIT])
 
 
 class FloatObject(Configurable):
-    prop = Double(minInc=-1000, maxInc=1000)
+    state = String(defaultValue=State.INIT)
+    prop = Double(minInc=-1000, maxInc=1000,
+                  allowedStates=[State.INIT])
 
 
 class TestNumberLineEdit(GuiTestCase):
@@ -46,6 +51,17 @@ class TestNumberLineEdit(GuiTestCase):
 
         set_proxy_value(self.i_proxy, 'prop', 5)
         assert self.i_controller._internal_widget.text() == '5'
+
+    def test_state_update(self):
+        set_proxy_value(self.i_proxy, 'state', 'CHANGING')
+        assert self.i_controller._internal_widget.isEnabled() is False
+        set_proxy_value(self.i_proxy, 'state', 'INIT')
+        assert self.i_controller._internal_widget.isEnabled() is True
+
+        set_proxy_value(self.d_proxy, 'state', 'CHANGING')
+        assert self.d_controller._internal_widget.isEnabled() is False
+        set_proxy_value(self.d_proxy, 'state', 'INIT')
+        assert self.d_controller._internal_widget.isEnabled() is True
 
     def test_edit_value(self):
         self.d_controller._internal_widget.setText('3.14')
