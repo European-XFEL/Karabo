@@ -2,7 +2,8 @@ import argparse
 import os.path as op
 import sys
 
-from PyQt4.QtGui import QApplication, QIcon
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import QApplication, QIcon, QPixmap, QSplashScreen
 
 from karabo.common.scenemodel.api import SceneTargetWindow
 from karabogui import icons
@@ -30,6 +31,16 @@ def run_cinema(ns):
     app.setOrganizationDomain('xfel.eu')
     app.setApplicationName('KaraboGUI')
 
+    splash_path = op.join(op.dirname(__file__), '..', "icons", "splash.png")
+    splash_img = QPixmap(splash_path)
+    splash = QSplashScreen(splash_img, Qt.WindowStaysOnTopHint)
+    splash.setMask(splash_img.mask())
+    splash.show()
+    app.processEvents()
+
+    # This is needed to make the splash screen show up...
+    splash.showMessage(" ")
+    app.processEvents()
     # Run the lazy initializers (icons, widget controllers)
     icons.init()
     populate_controller_registry()
@@ -39,16 +50,23 @@ def run_cinema(ns):
     get_manager()
 
     # Init the panel wrangler singleton
-    get_panel_wrangler()
+    get_panel_wrangler().use_splash_screen(splash)
 
-    # Connect to the GUI Server
-    success = get_network().connectToServer()
+    # We might want to connect directly to the gui server
+    if ns.host and ns.port:
+        success = get_network().connectToServerDirectly(
+            username=ns.username, hostname=ns.host, port=ns.port)
+    else:
+        # Connect to the GUI Server via dialog
+        success = get_network().connectToServer()
+
     if success:
         get_db_conn().default_domain = ns.domain
-        db_scene = {'name': "Cinema",
-                    'target_window': SceneTargetWindow.MainWindow,
-                    'target': ns.scene_uuid}
-        broadcast_event(KaraboEventSender.OpenSceneLink, db_scene)
+        for uuid in ns.scene_uuid:
+            db_scene = {'name': "Cinema",
+                        'target_window': SceneTargetWindow.MainWindow,
+                        'target': uuid}
+            broadcast_event(KaraboEventSender.OpenSceneLink, db_scene)
 
         sys.exit(app.exec_())
     else:
@@ -60,8 +78,16 @@ def main():
     ap = argparse.ArgumentParser(description='Karabo Cinema')
     ap.add_argument('domain', type=str,
                     help='The domain where to look for the initial scene')
-    ap.add_argument('scene_uuid', type=str,
-                    help='The uuid of the initial scene')
+    ap.add_argument('scene_uuid', type=str, nargs='+',
+                    help='The uuids of the scenes. This can be either a single'
+                         'uuid or a sequence of uuids separated with a space')
+    ap.add_argument('-host', '--host', type=str,
+                    help='The hostname of the gui server to connect')
+    ap.add_argument('-port', '--port', type=int,
+                    help='The port number of the gui server to connect')
+    ap.add_argument('-username', '--username', type=str, default='admin',
+                    help='The user name. Only used when specifying host and '
+                         'port. The default user name is `admin`')
     run_cinema(ap.parse_args())
 
 
