@@ -126,7 +126,7 @@ void DataLogging_Test::setUp() {
     m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
 
     // Create and start server
-    Hash config("serverId", m_server, "scanPlugins", false, "Logger.priority", "FATAL");
+    Hash config("serverId", m_server, "scanPlugins", false, "Logger.priority", "ERROR");
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
     // Create client
