@@ -24,11 +24,11 @@ def show_warning(text, title="Warning", modal=True, parent=None):
     _show_message_box(QMessageBox.Warning, text, title, modal, parent)
 
 
-def _show_message_box(icon, text, title, modal=None, parent=None):
+def _show_message_box(icon, text, title, modal=True, parent=None):
     """A wrapper to simplify the different message box styles defined below.
 
-    Defining a parent shows the dialog non-modal, otherwise a modal dialog
-    is executed and blocks the eventloop.
+    Defining a parent provides a modal non-blocking dialog, otherwise the
+    messagebox will block the eventloop!
     """
     message_box = QMessageBox(parent=parent)
     message_box.setWindowTitle(title)
