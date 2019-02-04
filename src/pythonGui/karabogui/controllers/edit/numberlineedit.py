@@ -139,6 +139,9 @@ class NumberValidator(QValidator):
         # we might not have standard notation
         if input[-1] in ('+', '-', 'e'):
             return self.Intermediate, input, pos
+        # we might not have standard notation
+        elif input[-1] in (' '):
+            return self.Invalid, input, pos
 
         # check for floating point precision
         if self.decimals != -1:
