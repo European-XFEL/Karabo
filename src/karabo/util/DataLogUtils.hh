@@ -1,4 +1,4 @@
-/*
+/*  *//*
  * File:   DataLoggerStructs.hh
  * Author: Sergey Esenov <serguei.essenov at xfel.eu>
  *
@@ -37,7 +37,7 @@ namespace karabo {
         //    tsAsDouble  : numbers and a dot (positive double)
         //    tail        : whatever comes afterwards
         //                                                 event      tsAsIso8601    tsAsDouble tail
-        char const * const DATALOG_INDEX_LINE_REGEX = "^([A-Z=\\+\\-]+)[\\s]+([A-Z0-9\\.]+)[\\s]+([0-9\\.]+)[\\s]+(.+)$";
+        char const * const DATALOG_INDEX_LINE_REGEX = "^([A-Z=\\+\\-]+)[\\s]+([TZ0-9\\.]+)[\\s]+([0-9\\.]+)[\\s]+(.+)$";
 
         //    trainId     : numbers (integer; can be negative)
         //    position    : numbers (positive integer)
