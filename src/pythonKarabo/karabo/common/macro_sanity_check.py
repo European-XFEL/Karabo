@@ -45,12 +45,12 @@ def macro_sleep_check(code):
 
     lines = code.splitlines()
     line_numbers = []
-    for lineno, line in enumerate(lines, 1):
+    for line_num, line in enumerate(lines, start=1):
         line = line.lower()
         if (check_time_import_sleep(line, name) or
                 check_time_dot_sleep(line, name)):
             if not exp.search(line):  # not a comment, but a real sleep() call
-                line_numbers.append(lineno)
+                line_numbers.append(line_num)
 
     return line_numbers
 

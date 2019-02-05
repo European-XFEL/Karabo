@@ -10,6 +10,7 @@ class _ParentDict:
     into a `parents` dict, and tell the underlying dict that the value of
     the member is its name.
     """
+
     def __init__(self, raw_dict):
         self.raw_dict = raw_dict
         self.parents = {}
@@ -48,6 +49,7 @@ class ParentEnumMeta(EnumMeta):
         >>> Tree.some_member.parent
         <Tree.root: 'root'>
     """
+
     @classmethod
     def __prepare__(cls, name, bases):
         return _ParentDict(super().__prepare__(name, bases))
@@ -121,7 +123,7 @@ class State(StateBase, metaclass=ParentEnumMeta):
     ERROR = KNOWN
 
     # INTERLOCKED is derived from DISABLED, but much more significant
-    INTERLOCKED = DISABLED # noqa
+    INTERLOCKED = DISABLED  # noqa
 
     NORMAL = KNOWN
     STATIC = NORMAL
@@ -223,6 +225,7 @@ class StateSignifier:
     :param changingMoreSignificant: tells whether DECREASING (the
         default) or INCREASING should be more significant.
     """
+
     def __init__(self, trumplist=(),
                  staticMoreSignificant=State.PASSIVE,
                  changingMoreSignificant=State.DECREASING):
