@@ -63,6 +63,7 @@ class DisplayStateColorModel(BaseWidgetObjectData):
     # The state shown on the widget
     show_string = Bool(False)
 
+
 class EvaluatorModel(BaseWidgetObjectData):
     """ A model for Evaluator
     """
@@ -104,7 +105,6 @@ class TableElementModel(BaseDisplayEditableWidget):
     column_schema = String
     # The actual type of the widget
     klass = Enum('DisplayTableElement', 'EditableTableElement')
-
 
 
 @register_scene_reader('DisplayCommand', version=2)

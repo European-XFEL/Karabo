@@ -121,7 +121,7 @@ class State(StateBase, metaclass=ParentEnumMeta):
     ERROR = KNOWN
 
     # INTERLOCKED is derived from DISABLED, but much more significant
-    INTERLOCKED = DISABLED
+    INTERLOCKED = DISABLED # noqa
 
     NORMAL = KNOWN
     STATIC = NORMAL
