@@ -32,26 +32,34 @@ def macro_sleep_check(code):
     """
     # Match occurences of sleep preceeded, at some point, by a pound, ie,
     # commented out
-    exp = re.compile("#(.*?)sleep")
+    exp = re.compile(r"#(.*?)sleep")
 
     # Match the next word after `import time as`, from which we can extract the
     # new name
-    timeas = re.compile(r'(?<=\bimport time as\s)(\w+)')
-    name = 'time'
+    timeas = re.compile(r"(?<=\bimport time as\s)(\w+)")
+    name = "time"
 
     # Check if time was imported with another name
     if "import time as" in code:
         name = timeas.search(code).group()
 
-    c1 = lambda line: "from {} import".format(name) in line and "sleep" in line
-    c2 = lambda line: "{}.sleep".format(name) in line
-
     lines = code.splitlines()
     line_numbers = []
-    for lineno, line in enumerate(lines, 1):
+    for line_num, line in enumerate(lines, start=1):
         line = line.lower()
-        if c1(line) or c2(line):
+        if (check_time_import_sleep(line, name) or
+                check_time_dot_sleep(line, name)):
             if not exp.search(line):  # not a comment, but a real sleep() call
-                line_numbers.append(lineno)
+                line_numbers.append(line_num)
 
     return line_numbers
+
+
+def check_time_dot_sleep(line, package):
+    """Check if package.sleep is appearing in the line of code"""
+    return "{}.sleep".format(package) in line
+
+
+def check_time_import_sleep(line, package):
+    """Check if sleep is imported from a package"""
+    return "from {} import".format(package) in line and "sleep" in line
