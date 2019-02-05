@@ -29,5 +29,6 @@ class AlarmCondition_TestCase(unittest.TestCase):
         self.assertTrue(condition.isSameCriticality(AlarmCondition.ALARM_LOW))
         self.assertFalse(condition.isSameCriticality(AlarmCondition.WARN))
 
+
 if __name__ == '__main__':
     unittest.main()
