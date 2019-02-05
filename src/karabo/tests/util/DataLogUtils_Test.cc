@@ -19,12 +19,10 @@ DataLogUtils_Test::DataLogUtils_Test() :
 
 
 void DataLogUtils_Test::setUp() {
-
 }
 
 
 void DataLogUtils_Test::tearDown() {
-
 }
 
 
@@ -42,7 +40,7 @@ void DataLogUtils_Test::testValidIndexString() {
 }
 
 
-void DataLogUtils_Test::testValidIndexTailString() {
+void DataLogUtils_Test::testValidTailString() {
 
     const std::string indexTail{"0 0 . 0"};
 
@@ -57,8 +55,8 @@ void DataLogUtils_Test::testValidIndexTailString() {
 }
 
 
-void DataLogUtils_Test::testInvalidIndexString() {
-    const std::string indexLine{"+LOG 20190204T092008+LOG 20190204T094210.961209Z 1549273330.961209 0 0 . 0"};
+void DataLogUtils_Test::testInvalidEventField() {
+    const std::string indexLine{"+LOG2019+LOG 20190204T094210.961209Z 1549273330.961209 0 0 . 0"};
 
     boost::smatch indexFields;
     bool matches = boost::regex_search(indexLine, indexFields, m_indexRegex);
@@ -67,8 +65,28 @@ void DataLogUtils_Test::testInvalidIndexString() {
 }
 
 
-void DataLogUtils_Test::testInvalidIndexTailString() {
-    const std::string indexTail{"0A 0 .0"};
+void DataLogUtils_Test::testInvalidTailPositionField() {
+    const std::string indexTail{"0 P0 . 0"};
+
+    boost::smatch tailFields;
+    bool matches = boost::regex_search(indexTail, tailFields, m_indexTailRegex);
+
+    CPPUNIT_ASSERT(matches == false);
+}
+
+
+void DataLogUtils_Test::testInvalidIsoTimestampField() {
+    const std::string indexLine{"+LOG 20190204T094210F.961209Z 1549273330.961209 0 0 . 0"};
+
+    boost::smatch indexFields;
+    bool matches = boost::regex_search(indexLine, indexFields, m_indexRegex);
+
+    CPPUNIT_ASSERT(matches == false);
+}
+
+
+void DataLogUtils_Test::testInvalidTailFileIndexField() {
+    const std::string indexTail{"0 0 . -1"};
 
     boost::smatch tailFields;
     bool matches = boost::regex_search(indexTail, tailFields, m_indexTailRegex);
