@@ -3,7 +3,6 @@ from traits.api import Instance, List
 from karabo.common.api import walk_traits_object
 from .bases import BaseProjectObjectModel
 from .device import DeviceInstanceModel
-from .device_config import DeviceConfigurationModel
 
 
 def find_parent_object(model, ancestor_model, search_klass):
