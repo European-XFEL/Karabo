@@ -17,7 +17,7 @@ from karabogui.events import (
     register_for_broadcasts, unregister_from_broadcasts, KaraboEventSender,
 )
 from karabogui.project.utils import show_trash_project_message
-from karabogui.singletons.api import get_db_conn, get_network
+from karabogui.singletons.api import get_config, get_db_conn
 from karabogui.util import InputValidator, SignalBlocker, utc_to_local
 
 SIMPLE_NAME = 'simple_name'
@@ -53,7 +53,6 @@ class LoadProjectDialog(QDialog):
         self.setWindowFlags(Qt.WindowCloseButtonHint)
 
         db_conn = get_db_conn()
-        network = get_network()
         self.rbFromRemote.setChecked(db_conn.ignore_local_cache)
         self.rbFromCache.setChecked(not db_conn.ignore_local_cache)
         self.load_from_group = QButtonGroup(self)
@@ -83,7 +82,7 @@ class LoadProjectDialog(QDialog):
         if is_subproject:
             default_domain = db_conn.default_domain
         else:
-            topic = network.brokerTopic
+            topic = get_config()['broker_topic']
             default_domain = (topic if topic in domains
                               else db_conn.default_domain)
         self.default_domain = default_domain
