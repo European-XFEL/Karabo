@@ -1,4 +1,4 @@
-/*  *//*
+/*
  * File:   DataLoggerStructs.hh
  * Author: Sergey Esenov <serguei.essenov at xfel.eu>
  *
@@ -29,7 +29,7 @@ namespace karabo {
         //    flag        : one or more uppercase letters
         //
         //                                          tsAsIso8601   | tsAsDouble  | trainId  | path |    type      | value|   user       |flag
-        char const * const DATALOG_LINE_REGEX = "^([A-Z0-9\\.]+)\\|([0-9\\.]+)\\|([0-9]+)\\|(.+)\\|([0-9A-Z_]*)\\|(.*)\\|([a-z0-9_]*)\\|([A-Z]+)$";
+        char const * const DATALOG_LINE_REGEX = "^([TZ0-9\\.]+)\\|([0-9\\.]+)\\|([0-9]+)\\|(.+)\\|([0-9A-Z_]*)\\|(.*)\\|([a-z0-9_]*)\\|([A-Z]+)$";
 
         //    event       : indexing event type (+LOG, -LOG, =NEW)
         //    ts=timestamp
@@ -44,7 +44,7 @@ namespace karabo {
         //    user        : lowercase letters, numbers and underscores (can also be a point)
         //    fileIndex   : numbers (positive integer)
         //                                             trainId       position user            fileIndex
-        char const * const DATALOG_INDEX_TAIL_REGEX = "^([0-9\\-]+)[\\s]+([0-9]+)[\\s]+([a-z0-9_\\.]*)[\\s]+([0-9]+)$";
+        char const * const DATALOG_INDEX_TAIL_REGEX = "^([0-9]+)[\\s]+([0-9]+)[\\s]+([a-z0-9_\\.]*)[\\s]+([0-9]+)$";
 
         unsigned int const DATALOGREADERS_PER_SERVER = 2;
 

@@ -528,8 +528,8 @@ namespace karabo {
                     bool matches = boost::regex_search(line, indexFields, m_indexLineRegex);
                     if (!matches) {
                         // The line doesn't have the required values; ignore it and go to the next line.
-                        KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader (" << contentpath << ", ln. " << lineNum << "): "
-                                << "line should start with an event followed by two timestamps separated by white space.";
+                        KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader (" << contentpath << ", ln. " << lineNum << "):"
+                                << " line should start with an event followed by two timestamps separated by white space.";
                         continue;
                     } else {
                         event = indexFields[1];
@@ -557,7 +557,7 @@ namespace karabo {
             }
             ifs.close();
 
-            if (!tail.empty() > 0) {
+            if (!tail.empty()) {
                 this->extractTailOfArchiveIndex(tail, entry);
             }
 

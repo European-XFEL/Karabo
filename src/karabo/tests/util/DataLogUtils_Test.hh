@@ -16,12 +16,8 @@ class DataLogUtils_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(DataLogUtils_Test);
 
-    CPPUNIT_TEST(testValidIndexString);
-    CPPUNIT_TEST(testInvalidEventField);
-    CPPUNIT_TEST(testInvalidIsoTimestampField);
-    CPPUNIT_TEST(testValidTailString);
-    CPPUNIT_TEST(testInvalidTailPositionField);
-    CPPUNIT_TEST(testInvalidTailFileIndexField);
+    CPPUNIT_TEST(testValidIndexLines);
+    CPPUNIT_TEST(testInvalidIndexLines);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -35,41 +31,20 @@ public:
 private:
 
     /**
-     * Tests a valid data logger index line. For a detailed description
+     * Tests valid data logger index lines. For a detailed description
      * of the index line format see the declaration of
      * karabo::util::DataLogUtils::DATALOG_INDEX_LINE_REGEX.
      */
-    void testValidIndexString();
+    void testValidIndexLines();
 
     /**
-     * Tests a valid data logger index line tail. The index line tail is
-     * composed of all the fields in the index line that come after the
-     * event field and the two timestamp fields that follow it.
-     * Detailed description of the tail can be found at
+     * Tests invalids data logger index lines - some with errors in the
+     * first three fields and some with error on further fields (in the
+     * tail portion). Detailed description of the tail can be found at
      * karabo::util::DataLogUtils::DATALOG_INDEX_TAIL_REGEX.
      */
-    void testValidTailString();
+    void testInvalidIndexLines();
 
-
-    /**
-     * An index line with an invalid event field.
-     */
-    void testInvalidEventField();
-
-    /**
-     * An index line with an invalid Iso8601 invalid timestamp field.
-     */
-    void testInvalidIsoTimestampField();
-
-    /**
-     * An index line tail with an invalid position field.
-     */
-    void testInvalidTailPositionField();
-
-    /**
-     * An index line tail with an invalid file index field.
-     */
-    void testInvalidTailFileIndexField();
 
     boost::regex m_indexRegex;
     boost::regex m_indexTailRegex;
