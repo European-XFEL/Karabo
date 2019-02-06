@@ -39,7 +39,7 @@ namespace karabo {
         //                                                 event      tsAsIso8601    tsAsDouble tail
         char const * const DATALOG_INDEX_LINE_REGEX = "^([A-Z=\\+\\-]+)[\\s]+([TZ0-9\\.]+)[\\s]+([0-9\\.]+)[\\s]+(.+)$";
 
-        //    trainId     : numbers (integer; can be negative)
+        //    trainId     : numbers (non-negative integer)
         //    position    : numbers (positive integer)
         //    user        : lowercase letters, numbers and underscores (can also be a point)
         //    fileIndex   : numbers (positive integer)
