@@ -120,6 +120,13 @@ namespace karabo {
                 return *this;
             }
 
+            /**
+             * Set a special display type string on the node.
+             */
+            NodeElement& setSpecialDisplayType(const std::string& displaytype) {
+                this->m_node->setAttribute<std::string>(KARABO_SCHEMA_DISPLAY_TYPE, displaytype);
+                return *this;
+            }
         protected:
 
             void beforeAddition() {
