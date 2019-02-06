@@ -62,11 +62,12 @@ void DataLogUtils_Test::testValidIndexLines() {
         CPPUNIT_ASSERT_EQUAL(aPair.second[1], std::string(indexFields[2])); // iso timestamp
         CPPUNIT_ASSERT_EQUAL(aPair.second[2], std::string(indexFields[3])); // double timestamp
         // Now the tail:
-        CPPUNIT_ASSERT(boost::regex_search(std::string(indexFields[4]), indexFields, m_indexTailRegex));
-        CPPUNIT_ASSERT_EQUAL(aPair.second[3], std::string(indexFields[1])); // train id
-        CPPUNIT_ASSERT_EQUAL(aPair.second[4], std::string(indexFields[2])); // index file position
-        CPPUNIT_ASSERT_EQUAL(aPair.second[5], std::string(indexFields[3])); // user name
-        CPPUNIT_ASSERT_EQUAL(aPair.second[6], std::string(indexFields[4])); // file number
+        boost::smatch tailFields;
+        CPPUNIT_ASSERT(boost::regex_search(std::string(indexFields[4]), tailFields, m_indexTailRegex));
+        CPPUNIT_ASSERT_EQUAL(aPair.second[3], std::string(tailFields[1])); // train id
+        CPPUNIT_ASSERT_EQUAL(aPair.second[4], std::string(tailFields[2])); // index file position
+        CPPUNIT_ASSERT_EQUAL(aPair.second[5], std::string(tailFields[3])); // user name
+        CPPUNIT_ASSERT_EQUAL(aPair.second[6], std::string(tailFields[4])); // file number
     }
 }
 
