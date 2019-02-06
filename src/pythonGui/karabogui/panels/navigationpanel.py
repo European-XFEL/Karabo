@@ -116,8 +116,8 @@ class NavigationPanel(BasePanelWidget):
         idx = next(iter(self.index_array))
         self.twNavigation.model().selectNode(self.found[idx])
 
-# -----------------------------------------
-# Qt Slots
+    # -----------------------------------------
+    # Qt Slots
 
     @pyqtSlot(str)
     def _search_filter_changed(self, text):

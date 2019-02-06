@@ -28,6 +28,7 @@ from .base import BasePanelWidget
 class ProjectPanel(BasePanelWidget):
     """ A dockable panel which contains a view of the project
     """
+
     def __init__(self):
         super(ProjectPanel, self).__init__("Projects")
         self._init_search_filter()
@@ -146,7 +147,7 @@ class ProjectPanel(BasePanelWidget):
             q_ac.setEnabled(False)
             project_view = self.project_view
             q_ac.triggered.connect(partial(k_action.triggered,
-                                   project_view))
+                                           project_view))
             self._toolbar_actions.append(q_ac)
 
         toolbar = ToolBar(parent=self)
@@ -213,8 +214,8 @@ class ProjectPanel(BasePanelWidget):
         idx = next(iter(self.index_array))
         self.project_view.model().selectNode(self.found[idx])
 
-# -----------------------------------------
-# Qt Slots
+    # -----------------------------------------
+    # Qt Slots
 
     @pyqtSlot(str)
     def _search_filter_changed(self, text):
