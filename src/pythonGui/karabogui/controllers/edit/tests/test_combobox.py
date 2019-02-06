@@ -1,5 +1,6 @@
 from karabo.common.scenemodel.api import ComboBoxModel
 from karabo.native import Configurable, String, Int32
+from karabo.common.states import State
 from karabogui.binding.api import build_binding
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
@@ -7,7 +8,9 @@ from ..combobox import EditableComboBox
 
 
 class Object(Configurable):
-    prop = String(options=['foo', 'bar', 'baz', 'qux'])
+    state = String(defaultValue=State.ON)
+    prop = String(options=['foo', 'bar', 'baz', 'qux'],
+                  allowedStates=[State.ON])
 
 
 class Other(Configurable):
@@ -25,6 +28,12 @@ class TestEditableComboBox(GuiTestCase):
     def tearDown(self):
         self.controller.destroy()
         assert self.controller.widget is None
+
+    def test_allowed(self):
+        set_proxy_value(self.proxy, 'state', 'CHANGING')
+        assert self.controller.widget.isEnabled() is False
+        set_proxy_value(self.proxy, 'state', 'ON')
+        assert self.controller.widget.isEnabled() is True
 
     def test_set_value(self):
         set_proxy_value(self.proxy, 'prop', 'bar')

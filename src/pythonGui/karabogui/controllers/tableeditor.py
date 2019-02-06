@@ -6,6 +6,7 @@
 import copy
 import json
 
+import numpy as np
 from PyQt4.QtCore import pyqtSlot, Qt, QAbstractTableModel, QModelIndex
 from PyQt4.QtGui import QTableView, QComboBox, QItemDelegate
 
@@ -209,6 +210,11 @@ class TableModel(QAbstractTableModel):
 class ComboBoxDelegate(QItemDelegate):
     def __init__(self, options, row=-1, column=-1, parent=None):
         super(ComboBoxDelegate, self).__init__(parent)
+        # XXX: We might have options from number values, they serialize as
+        # ndarray! Once the value casting is back, the string cast has
+        # to be removed!
+        if isinstance(options, np.ndarray):
+            options = options.astype(np.str).tolist()
         self._options = options
         self._row_column = (row, column)
         parent.clicked.connect(self._cell_clicked)

@@ -41,6 +41,7 @@ class _BaseListController(BaseBindingController):
         self._normal_palette = self._internal_widget.palette()
         self._error_palette = QPalette(self._normal_palette)
         self._error_palette.setColor(QPalette.Text, Qt.red)
+        composite_widget.setFocusProxy(self._internal_widget)
 
         return composite_widget
 
