@@ -59,9 +59,6 @@ private:
     void testProfileTransferTimes();
 
     void testPipeWait(unsigned int processingTime, unsigned int delayTime);
-<<<<<<< HEAD
-=======
-
 
     /**
      * The "driver" method for the pipeline transmission performance test. This is the method to be
@@ -83,29 +80,7 @@ private:
     void testPipeWaitPerf(unsigned int numOfDataItems);
 
     void testPipeDrop(unsigned int processingTime, unsigned int delayTime, bool dataLoss);
->>>>>>> 79efd38abd943ae28f04e71053cb130c5f7740b8
 
-    /**
-     * The "driver" method for the pipeline transmission performance test. This is the method to be
-     * added to the test suite.
-     */
-    void testPipeWaitPerf();
-
-    /**
-     * Measures the pipeline "data transmission" performance by connecting a sender with zero
-     * delay time to a receiver with zero processing time. The receiver also uses "wait" policy
-     * for its "onSlowness" property.
-     *
-     * @param numOfDataItems Number of data items to be transmitted across the pipeline for each
-     * test run.
-     *
-     * @note To minimize the effects of the property pollings used internally, it is recommended
-     * to use a high number of data items to be transmitted along the pipe.
-     */
-    void testPipeWaitPerf(unsigned int numOfDataItems);
-
-
-    void testPipeDrop(unsigned int processingTime, unsigned int delayTime, bool dataLoss);
     /**
      * Tests pipe for one receiver with 'queue' value for its 'input.onSlowness' setting and 'copy' value
      * for its 'input.dataDistribution' setting.
