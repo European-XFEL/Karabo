@@ -1,4 +1,44 @@
 **************************
+What's New in Karabo 2.3.4
+**************************
+
+The middlelayer framework table element recasts the values sent by the gui client.
+This is required as the client does send strings for any type of value.
+
+Detailed Merge-Log
+==================
+
+- MDL: Safety cast on table values !3214
+
+
+**************************
+What's New in Karabo 2.3.2
+**************************
+
+An enhancement in the middlelayer proxy generation to enable the DeviceClone
+(multi topic communication).
+
+Detailed Merge-Log
+==================
+
+- MDL: Proxy factory fits documentation !3166
+
+
+**************************
+What's New in Karabo 2.3.1
+**************************
+
+The GUI Client is made forward compatible with a new feature of the GUI server.
+In future versions the GUI server will send the host and port information to the client
+for display.
+
+Detailed Merge-Log
+==================
+
+- GUI: Forward compatibility for init info from gui server !3140
+
+
+**************************
 What's New in Karabo 2.3.0
 **************************
 
