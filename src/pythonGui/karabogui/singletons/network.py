@@ -76,6 +76,21 @@ class Network(QObject):
         # Allow external runner to see the status of the connection!
         return isConnected
 
+    def connectToServerDirectly(self, username, hostname, port):
+        """Connection to server directly via username, host and port
+
+        This function is used for fast startup via the karabo cinema
+        """
+        self.username = username
+        self.hostname = hostname
+        self.port = port
+        self.startServerConnection()
+
+        # Update MainWindow toolbar
+        self.signalServerConnectionChanged.emit(True)
+        # Allow external runner to see the status of the connection!
+        return True
+
     def load_login_settings(self):
         # Maximum number of GUI servers to be stored, 5 by default
 
