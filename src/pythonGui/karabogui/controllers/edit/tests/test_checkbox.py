@@ -2,7 +2,7 @@ from PyQt4.QtCore import Qt
 
 from karabo.common.scenemodel.api import CheckBoxModel
 from karabo.common.states import State
-from karabo.native import Configurable, Bool
+from karabo.native import Configurable, Bool, String
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..checkbox import EditableCheckBox
