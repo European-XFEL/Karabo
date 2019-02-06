@@ -1,6 +1,7 @@
 from PyQt4.QtCore import Qt
 
 from karabo.common.scenemodel.api import CheckBoxModel
+from karabo.common.states import State
 from karabo.native import Configurable, Bool
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
@@ -8,7 +9,8 @@ from ..checkbox import EditableCheckBox
 
 
 class Object(Configurable):
-    prop = Bool()
+    state = String(defaultValue=State.ON)
+    prop = Bool(allowedStates=[State.ON])
 
 
 class TestEditableCheckBox(GuiTestCase):
@@ -22,6 +24,12 @@ class TestEditableCheckBox(GuiTestCase):
     def tearDown(self):
         self.controller.destroy()
         assert self.controller.widget is None
+
+    def test_state_update(self):
+        set_proxy_value(self.proxy, 'state', 'CHANGING')
+        assert self.controller.widget.isEnabled() is False
+        set_proxy_value(self.proxy, 'state', 'ON')
+        assert self.controller.widget.isEnabled() is True
 
     def test_set_value(self):
         set_proxy_value(self.proxy, 'prop', True)
