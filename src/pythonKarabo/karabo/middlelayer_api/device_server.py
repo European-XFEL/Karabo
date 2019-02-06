@@ -382,7 +382,7 @@ class MiddleLayerDeviceServer(DeviceServerBase):
         obj = cls(config)
         task = obj.startInstance(self, broadcast=False)
         yield from task
-        return True, '{}'.format(deviceId)
+        return True, deviceId
 
     @coslot
     def slotKillServer(self):
@@ -549,9 +549,9 @@ class BoundDeviceServer(DeviceServerBase):
         if "ok" in done:
             self.processes[deviceId] = process
             background(self.supervise(deviceId, process, done["ok"]))
-            return True, '{}'.format(deviceId)
+            return True, deviceId
         else:
-            return False, '{}'.format(deviceId)
+            return False, deviceId
 
     @coslot
     def slotKillServer(self):
