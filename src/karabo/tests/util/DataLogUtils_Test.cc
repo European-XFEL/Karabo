@@ -63,7 +63,8 @@ void DataLogUtils_Test::testValidIndexLines() {
         CPPUNIT_ASSERT_EQUAL(aPair.second[2], std::string(indexFields[3])); // double timestamp
         // Now the tail:
         boost::smatch tailFields;
-        CPPUNIT_ASSERT(boost::regex_search(std::string(indexFields[4]), tailFields, m_indexTailRegex));
+        std::string tail = std::string(indexFields[4]);
+        CPPUNIT_ASSERT(boost::regex_search(tail, tailFields, m_indexTailRegex));
         CPPUNIT_ASSERT_EQUAL(aPair.second[3], std::string(tailFields[1])); // train id
         CPPUNIT_ASSERT_EQUAL(aPair.second[4], std::string(tailFields[2])); // index file position
         CPPUNIT_ASSERT_EQUAL(aPair.second[5], std::string(tailFields[3])); // user name
