@@ -1,8 +1,9 @@
 from asyncio import gather
 
+from karabo.native.data.enums import AccessLevel, AccessMode
+from karabo.native.data.hash import String, Int32
+
 from .device import Device
-from .enums import AccessLevel, AccessMode
-from .hash import String, Int32
 from .macro import Macro
 from ..common.macro_sanity_check import macro_sleep_check
 

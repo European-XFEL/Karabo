@@ -11,19 +11,20 @@ from subprocess import PIPE
 
 import numpy
 
-from .basetypes import isSet
-from .enums import AccessLevel, AccessMode, Assignment
+from karabo.native.data.basetypes import isSet
+from karabo.native.data.enums import AccessLevel, AccessMode, Assignment
+from karabo.native.exceptions import KaraboError
+from karabo.native.data.hash import Bool, Hash, Int32, String, VectorString
+from karabo.native.data.schema import Node
+
 from .eventloop import EventLoop
-from .exceptions import KaraboError
-from .hash import Bool, Hash, Int32, String, VectorString
 from .logger import Logger
 from .output import KaraboStream
 from .plugin_loader import PluginLoader
-from .schema import Node
-from .serializers import decodeBinary, encodeXML
+from karabo.native.data.serializers import decodeBinary, encodeXML
 from .signalslot import SignalSlotable, slot, coslot
 from .synchronization import background, firstCompleted
-from .time_mixin import TimeMixin
+from karabo.native.time_mixin import TimeMixin
 from .utils import get_karabo_version
 
 

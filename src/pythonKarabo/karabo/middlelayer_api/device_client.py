@@ -18,11 +18,12 @@ from weakref import ref
 import dateutil.parser
 import dateutil.tz
 
-from .basetypes import KaraboValue
+from karabo.native.data.basetypes import KaraboValue
+from karabo.native.exceptions import KaraboError
+from karabo.native.data.hash import Hash, Schema, Type
+
 from .device import Device
 from .eventloop import EventLoop, synchronize
-from .exceptions import KaraboError
-from .hash import Hash, Schema, Type
 from .proxy import (AutoDisconnectProxyFactory, DeviceClientProxyFactory,
                     ProxyBase, ProxyNodeBase)
 from .signalslot import coslot, slot

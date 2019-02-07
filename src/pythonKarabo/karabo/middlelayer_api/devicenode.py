@@ -2,12 +2,13 @@ from asyncio import (
     async, CancelledError, coroutine, TimeoutError, wait_for, Queue)
 from itertools import chain
 
-from .basetypes import isSet
+from karabo.native.data.basetypes import isSet
+from karabo.native.data.enums import AccessMode, Assignment, NodeType
+from karabo.native.exceptions import KaraboError
+from karabo.native.data.hash import Hash, String
+
 from .device_client import getDevice, lock
-from .enums import AccessMode, Assignment, NodeType
-from .exceptions import KaraboError
 from .signalslot import coslot
-from .hash import Hash, String
 
 
 class DeviceNode(String):

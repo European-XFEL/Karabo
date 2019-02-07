@@ -14,8 +14,8 @@ from karabo.middlelayer_api.device_client import (
     getDevice, findDevices, shutdown, getClients, getDevices)
 from karabo.middlelayer_api.device_server import DeviceServer
 from karabo.middlelayer_api.eventloop import NoEventLoop
-from karabo.middlelayer_api.exceptions import KaraboError
-from karabo.middlelayer_api.hash import Hash, Int32 as Int, Slot
+from karabo.native.exceptions import KaraboError
+from karabo.native.data.hash import Hash, Int32 as Int, Slot
 from karabo.middlelayer_api.ikarabo import (
     connectDevice, DeviceClient, start_device_client)
 from karabo.middlelayer_api.macro import Macro, EventThread, RemoteDevice
