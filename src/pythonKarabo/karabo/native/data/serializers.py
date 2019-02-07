@@ -5,7 +5,7 @@ from xml.sax import make_parser, SAXException
 from xml.sax.saxutils import unescape
 from xml.sax.handler import ContentHandler
 
-from .hash import _gettype, Hash, HashList, HashType, Type
+from karabo.native.data.hash import _gettype, Hash, HashList, HashType, Type
 
 
 class BinaryParser(object):
