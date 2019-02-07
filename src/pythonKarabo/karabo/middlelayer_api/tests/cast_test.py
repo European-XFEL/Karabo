@@ -1,7 +1,7 @@
 from enum import Enum
 from unittest import TestCase, main
 
-from karabo.middlelayer_api import hash as hashmod
+from karabo.native.data import hash as hashmod
 
 
 class Tests(TestCase):

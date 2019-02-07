@@ -12,9 +12,9 @@ import csv
 from datetime import datetime
 from threading import Timer
 
-from .hash import Hash
-from .project.old import Project, BaseDevice, BaseDeviceGroup
-from .serializers import decodeXML, encodeXML
+from karabo.native.data.hash import Hash
+from karabo.middlelayer_api.project.old import Project, BaseDevice, BaseDeviceGroup
+from karabo.native.data.serializers import decodeXML, encodeXML
 
 
 class ProjectDevice(BaseDevice):
