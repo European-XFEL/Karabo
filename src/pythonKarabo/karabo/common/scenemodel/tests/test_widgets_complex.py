@@ -125,6 +125,18 @@ def test_single_bit_widget():
     assert read_model.bit == 42
 
 
+def test_editable_option_combobox_widget():
+    traits = base_widget_traits()
+    sample_options = ["foo", "bar", "baz"]
+    traits['options'] = sample_options
+    model = api.EditableOptionComboBoxModel(**traits)
+    assert model.parent_component == 'EditableApplyLaterComponent'
+    read_model = single_model_round_trip(model)
+    assert_base_traits(read_model)
+    assert read_model.options == sample_options
+    assert read_model.parent_component == model.parent_component
+
+
 def test_table_element_widget():
     for klass_name in ('DisplayTableElement', 'EditableTableElement'):
         traits = base_widget_traits()
