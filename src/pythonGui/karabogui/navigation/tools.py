@@ -44,8 +44,7 @@ class DeviceSceneHandler(NavigationHandler):
         has_scene = _test_mask(capabilities, Capabilities.PROVIDES_SCENES)
         if not has_scene:
             messagebox.show_warning("The device <b>{}</b> does not provide a "
-                                    "scene!".format(device_id), "Warning",
-                                    modal=False)
+                                    "scene!".format(device_id), "Warning")
             return
 
         def _config_handler():
@@ -57,7 +56,7 @@ class DeviceSceneHandler(NavigationHandler):
             if scenes is Undefined or not len(scenes):
                 messagebox.show_warning(
                     "The device <b>{}</b> does not specify a scene "
-                    "name!".format(device_id), modal=False)
+                    "name!".format(device_id))
             else:
                 scene_name = scenes[0]
                 get_scene_from_server(device_id, scene_name)
@@ -73,7 +72,7 @@ class DeviceSceneHandler(NavigationHandler):
             elif not len(scenes):
                 messagebox.show_warning(
                     "The device <b>{}</b> does not specify a scene "
-                    "name!".format(device_id), modal=False)
+                    "name!".format(device_id))
             else:
                 scene_name = scenes[0]
                 get_scene_from_server(device_id, scene_name)
@@ -93,7 +92,7 @@ class DeviceSceneHandler(NavigationHandler):
                 # The device might not have a scene name in property
                 messagebox.show_warning(
                     "The device <b>{}</b> does not specify a scene "
-                    "name!".format(device_id), modal=False)
+                    "name!".format(device_id))
             else:
                 scene_name = scenes[0]
                 get_scene_from_server(device_id, scene_name)

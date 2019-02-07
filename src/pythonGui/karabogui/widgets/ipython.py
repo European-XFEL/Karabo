@@ -74,8 +74,7 @@ class KernelManager(kernel_mixins.QtKernelManagerMixin):
         if not success:
             messagebox.show_error(
                 "Macro server {} not found in system topology. "
-                "Macro cannot be started.".format(serverId),
-                modal=False)
+                "Macro cannot be started.".format(serverId))
             raise IOError
 
         hostname = socket.gethostname().replace(".", "_")
