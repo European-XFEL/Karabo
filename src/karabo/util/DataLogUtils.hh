@@ -19,17 +19,32 @@ namespace karabo {
         char const * const DATALOGMANAGER_ID = "Karabo_DataLoggerManager_0";
         char const * const DATALOGGER_PREFIX = "DataLogger-";
         char const * const DATALOGREADER_PREFIX = "DataLogReader";
-        //    ts=timestamp 
+        //    ts=timestamp
         //    tsAsIso8601 : numbers, dot and uppercase letters (timezone)
         //    tsAsDouble  : numbers and a dot (positive double)
         //    trainId     : unsigned long long
-        //    path        : one or more characters 
+        //    path        : one or more characters
         //    type        : 0 or more characters
         //    user        : 0 or more lower case letters, numbers and underscores
         //    flag        : one or more uppercase letters
         //
         //                                          tsAsIso8601   | tsAsDouble  | trainId  | path |    type      | value|   user       |flag
-        char const * const DATALOG_LINE_REGEX = "^([A-Z0-9\\.]+)\\|([0-9\\.]+)\\|([0-9]+)\\|(.+)\\|([0-9A-Z_]*)\\|(.*)\\|([a-z0-9_]*)\\|([A-Z]+)$";
+        char const * const DATALOG_LINE_REGEX = "^([TZ0-9\\.]+)\\|([0-9\\.]+)\\|([0-9]+)\\|(.+)\\|([0-9A-Z_]*)\\|(.*)\\|([a-z0-9_]*)\\|([A-Z]+)$";
+
+        //    event       : indexing event type (+LOG, -LOG, =NEW)
+        //    ts=timestamp
+        //    tsAsIso8601 : numbers, dot and uppercase letters (timezone)
+        //    tsAsDouble  : numbers and a dot (positive double)
+        //    tail        : whatever comes afterwards
+        //                                                 event      tsAsIso8601    tsAsDouble tail
+        char const * const DATALOG_INDEX_LINE_REGEX = "^([A-Z=\\+\\-]+)[\\s]+([TZ0-9\\.]+)[\\s]+([0-9\\.]+)[\\s]+(.+)$";
+
+        //    trainId     : numbers (non-negative integer)
+        //    position    : numbers (positive integer)
+        //    user        : lowercase letters, numbers and underscores (can also be a point)
+        //    fileIndex   : numbers (positive integer)
+        //                                             trainId       position user            fileIndex
+        char const * const DATALOG_INDEX_TAIL_REGEX = "^([0-9]+)[\\s]+([0-9]+)[\\s]+([a-z0-9_\\.]*)[\\s]+([0-9]+)$";
 
         unsigned int const DATALOGREADERS_PER_SERVER = 2;
 
