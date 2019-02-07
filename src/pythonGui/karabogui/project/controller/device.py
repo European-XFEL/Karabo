@@ -150,7 +150,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         has_scene = _test_mask(capabilities, Capabilities.PROVIDES_SCENES)
         if not has_scene:
             messagebox.show_warning("The device <b>{}</b> does not provide a "
-                                    "scene!".format(device_id))
+                                    "scene!".format(device_id), parent=parent)
             return
 
         def _config_handler():
@@ -162,7 +162,7 @@ class DeviceInstanceController(BaseProjectGroupController):
             if scenes is Undefined or not len(scenes):
                 messagebox.show_warning(
                     "The device <b>{}</b> does not specify a scene "
-                    "name!".format(device_id))
+                    "name!".format(device_id), parent=parent)
             else:
                 scene_name = scenes[0]
                 get_scene_from_server(device_id, scene_name)
@@ -178,7 +178,7 @@ class DeviceInstanceController(BaseProjectGroupController):
             # The device might not have a scene name in property
             messagebox.show_warning(
                 "The device <b>{}</b> does not specify a scene "
-                "name!".format(device_id))
+                "name!".format(device_id), parent=parent)
         else:
             scene_name = scenes[0]
             get_scene_from_server(device_id, scene_name)

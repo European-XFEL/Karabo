@@ -98,7 +98,7 @@ class SceneController(BaseProjectController):
             try:
                 new_scene = read_scene(fn)
             except Exception:
-                messagebox.show_error("Scene file could not be read!", "Error")
+                messagebox.show_error("Scene file could not be read!")
                 return
 
             # NOTE: We can successfully read the scene, now close the old one
