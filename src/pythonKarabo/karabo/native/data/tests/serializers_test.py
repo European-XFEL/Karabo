@@ -3,11 +3,10 @@ import os
 import shutil
 from unittest import TestCase, main
 
-from karabo.middlelayer import (
+from karabo.native import (
     Configurable, encodeXML, decodeXML, Hash, loadFromFile, VectorDouble,
     saveToFile
 )
-from karabo.testing.utils import xml_is_equal
 
 TST_WORKING_DIR = "/tmp/serializers_tests"
 

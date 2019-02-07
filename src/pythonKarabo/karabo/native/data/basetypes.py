@@ -14,8 +14,8 @@ from xml.sax.saxutils import escape
 import numpy
 import pint
 
-from .enums import MetricPrefix, Unit
-from .weak import Weak
+from karabo.native.data.enums import MetricPrefix, Unit
+from karabo.native.weak import Weak
 
 
 def wrap(data):
