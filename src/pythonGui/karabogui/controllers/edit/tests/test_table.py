@@ -1,5 +1,5 @@
 from karabo.common.scenemodel.api import TableElementModel
-from karabo.middlelayer import Configurable, Bool, Hash, String, VectorHash
+from karabo.native import Configurable, Bool, Hash, String, VectorHash
 from karabogui.testing import GuiTestCase, get_class_property_proxy
 from ..table import EditableTableElement
 

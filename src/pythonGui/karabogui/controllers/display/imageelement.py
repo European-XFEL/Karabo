@@ -9,7 +9,7 @@ from PyQt4.QtGui import QColor, QFrame, QImage, QLabel, QPixmap
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import DisplayImageElementModel
-from karabo.middlelayer import EncodingType
+from karabo.native import EncodingType
 from karabogui.binding.api import ImageBinding
 from karabogui.controllers.api import (
     BaseBindingController, get_image_data, get_dimensions_and_encoding,

@@ -1,6 +1,7 @@
 import numpy as np
 
-from karabo.middlelayer import (
+from karabo.common.states import State
+from karabo.native import (
     Bool, ByteArray, Char, ComplexDouble, ComplexFloat, Configurable,
     Double, Float, HashType, Int16, Int32, Int64, Int8,
     SchemaHashType, Slot, String, UInt16, UInt32, UInt64, UInt8,
@@ -8,7 +9,7 @@ from karabo.middlelayer import (
     VectorDouble, VectorFloat, VectorHash, VectorInt16, VectorInt32,
     VectorInt64, VectorInt8, VectorString, VectorUInt16, VectorUInt32,
     VectorUInt64, VectorUInt8, Node, ChoiceOfNodes, ListOfNodes,
-    AccessLevel, AccessMode, Assignment, State, Unit
+    AccessLevel, AccessMode, Assignment, Unit
 )
 
 

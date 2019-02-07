@@ -9,9 +9,8 @@ from PyQt4.QtCore import QObject
 
 from karabo.common.project.api import (
     MemCacheWrapper, get_user_cache, read_lazy_object)
-from karabo.middlelayer import Hash
-from karabo.middlelayer_api.project.api import (read_project_model,
-                                                write_project_model)
+from karabo.native import (
+    Hash, read_project_model, write_project_model)
 from karabogui import messagebox
 from karabogui.events import (
     broadcast_event, KaraboEventSender, register_for_broadcasts

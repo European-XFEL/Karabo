@@ -5,7 +5,7 @@ import numpy as np
 from traits.api import Undefined
 
 from karabo.common import const
-from karabo.middlelayer import Hash, Schema
+from karabo.native import Hash, Schema
 from . import types
 
 

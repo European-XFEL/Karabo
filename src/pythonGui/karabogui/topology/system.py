@@ -7,7 +7,7 @@ from traits.api import (HasStrictTraits, Bool, Dict, Instance, Property,
                         on_trait_change)
 
 from karabo.common.api import DeviceStatus
-from karabo.middlelayer import Hash
+from karabo.native import Hash
 from karabogui.alarms.api import ADD_ALARM_TYPES, REMOVE_ALARM_TYPES
 from karabogui.binding.api import (
     BindingRoot, DeviceClassProxy, DeviceProxy, ProjectDeviceProxy,

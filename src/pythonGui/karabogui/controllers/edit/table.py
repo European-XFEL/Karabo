@@ -39,7 +39,7 @@ from traits.api import Instance, Int
 
 from karabo.common.api import KARABO_SCHEMA_ROW_SCHEMA
 from karabo.common.scenemodel.api import TableElementModel
-from karabo.middlelayer import Hash, SchemaHashType
+from karabo.native import Hash, SchemaHashType
 from karabogui.binding.api import (
     VectorHashBinding, get_editor_value)
 from karabogui.controllers.api import (

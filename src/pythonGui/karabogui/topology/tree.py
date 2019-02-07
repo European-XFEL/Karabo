@@ -10,7 +10,7 @@ from traits.api import (HasStrictTraits, Bool, Dict, Enum, Event, Instance,
                         Int, List, on_trait_change, String, WeakRef)
 
 from karabo.common.api import DeviceStatus
-from karabo.middlelayer import AccessLevel
+from karabo.native import AccessLevel
 from karabogui.alarms.api import AlarmInfo
 from karabogui.enums import NavigationItemTypes
 import karabogui.globals as krb_globals

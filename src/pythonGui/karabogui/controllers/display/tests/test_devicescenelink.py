@@ -3,9 +3,9 @@ from unittest.mock import patch
 from PyQt4.QtGui import QMessageBox
 
 from karabo.common.enums import DeviceStatus
-from karabo.middlelayer import Configurable, VectorString
 from karabo.common.scenemodel.api import (
     DeviceSceneLinkModel, SceneTargetWindow)
+from karabo.native import Configurable, VectorString
 from karabogui.singletons.api import get_topology
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy)

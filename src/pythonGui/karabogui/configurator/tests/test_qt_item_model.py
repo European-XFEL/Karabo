@@ -1,7 +1,7 @@
 from PyQt4.QtCore import Qt
 
 from karabo.common.api import DeviceStatus, State
-from karabo.middlelayer import (
+from karabo.native import (
     Bool, Configurable, Float, Int32, Slot, String, VectorFloat, VectorHash
 )
 from karabogui.binding.api import ProjectDeviceProxy, build_binding

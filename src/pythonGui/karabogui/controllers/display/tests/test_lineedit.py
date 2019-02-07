@@ -1,4 +1,4 @@
-from karabo.middlelayer import Configurable, String
+from karabo.native import Configurable, String
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..lineedit import DisplayLineEdit

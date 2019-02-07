@@ -8,7 +8,7 @@ from PyQt4.QtGui import (
     QAction, QHBoxLayout, QPalette, QPushButton, QScrollArea, QStackedWidget,
     QVBoxLayout, QWidget)
 
-from karabo.middlelayer import AccessMode
+from karabo.native import AccessMode
 from karabogui import globals as krb_globals, icons, messagebox
 from karabogui.binding.api import (
     ChoiceOfNodesBinding, DeviceProxy, ListOfNodesBinding, ProjectDeviceProxy,

@@ -1,6 +1,6 @@
 from traits.api import Dict, Instance, List, Property, Trait, TraitHandler
 
-from karabo.middlelayer import Hash
+from karabo.native import Hash
 from .types import BaseBinding, BindingNamespace, BindingRoot, NodeBinding
 from .util import attr_fast_deepcopy
 

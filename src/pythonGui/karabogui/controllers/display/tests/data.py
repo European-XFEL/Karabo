@@ -2,7 +2,7 @@ import datetime
 
 import numpy as np
 
-from karabo.middlelayer import Hash, Timestamp
+from karabo.native import Hash, Timestamp
 
 
 def build_historic_data_float():
