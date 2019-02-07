@@ -4,7 +4,7 @@ from numpy import uint64
 
 from karabo.common.api import State
 from karabo.common.scenemodel.api import SingleBitModel
-from karabo.middlelayer import Configurable, Int32
+from karabo.native import Configurable, Int32
 from karabogui.indicators import STATE_COLORS
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)

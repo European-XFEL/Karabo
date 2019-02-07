@@ -1,12 +1,10 @@
 from traits.api import (
-    HasStrictTraits, Array, CBool, CArray, Complex, Dict, Enum, Event,
-    Float, Instance, List, Property, Range, String, Trait, TraitHandler,
-    Undefined
-)
+    Array, CArray, CBool, Complex, Dict, Enum, Event, Float, HasStrictTraits,
+    Instance, List, Property, Range, String, Trait, TraitHandler, Undefined)
 
 from karabo.common import const
-from karabo.middlelayer import (AccessLevel, AccessMode, Assignment, Hash,
-                                State, Timestamp)
+from karabo.common.states import State
+from karabo.native import AccessLevel, AccessMode, Assignment, Hash, Timestamp
 
 KEY_DISPLAYED_NAME = const.KARABO_SCHEMA_DISPLAYED_NAME
 KEY_DISPLAY_TYPE = const.KARABO_SCHEMA_DISPLAY_TYPE

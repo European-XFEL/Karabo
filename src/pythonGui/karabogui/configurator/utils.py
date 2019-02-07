@@ -7,7 +7,7 @@ from PyQt4.QtGui import QStyle
 from karabo.common.api import (
     KARABO_SCHEMA_DAQ_POLICY, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
     KARABO_SCHEMA_UNIT_SYMBOL, KARABO_EDITABLE_ATTRIBUTES)
-from karabo.middlelayer import AccessMode, Assignment
+from karabo.native import AccessMode, Assignment
 from karabogui import globals as krb_globals, icons
 from karabogui.binding.api import (
     BindingRoot, BoolBinding, CharBinding, ChoiceOfNodesBinding,

@@ -3,7 +3,7 @@ from traits.api import Dict, Instance, Int, Str
 
 from karabo.common.api import DeviceStatus, State, KARABO_SCHEMA_DISPLAYED_NAME
 from karabo.common.scenemodel.api import BaseWidgetObjectData
-from karabo.middlelayer import (
+from karabo.native import (
     Bool, Configurable, Hash, Node, String, AccessMode)
 from karabogui.binding.api import (
     DeviceClassProxy, NodeBinding, PropertyProxy, StringBinding,

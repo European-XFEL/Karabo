@@ -3,7 +3,7 @@ from unittest.mock import patch
 from PyQt4.QtGui import QWidget
 
 from karabo.common.scenemodel.api import GlobalAlarmModel
-from karabo.middlelayer import Configurable, Hash, String
+from karabo.native import Configurable, Hash, String
 from karabogui.alarms.api import get_alarm_svg
 from karabogui.binding.api import apply_configuration
 from karabogui.testing import GuiTestCase, get_class_property_proxy

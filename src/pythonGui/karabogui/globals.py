@@ -6,7 +6,7 @@
 from os import environ, path
 from sys import platform
 
-from karabo.middlelayer import AccessLevel
+from karabo.native import AccessLevel
 from ._version import version as GUI_VERSION, full_version as GUI_VERSION_LONG  # noqa
 
 # XXX: Karabo will support an global access level and an exception list which

@@ -3,7 +3,7 @@ from unittest.mock import patch
 from urllib.request import pathname2url
 
 from karabo.common.scenemodel.api import DisplayIconsetModel
-from karabo.middlelayer import Configurable, String
+from karabo.native import Configurable, String
 from karabogui.testing import GuiTestCase, get_class_property_proxy
 from ..iconset import DisplayIconset, DEFAULT_ICON_URL
 
