@@ -131,12 +131,15 @@ class TestEditableOptionComboBox(GuiTestCase):
         build_binding(WithOption.getClassSchema(),
                       existing=self.proxy.root_proxy.binding)
 
+        options = self.controller.model.options
+        index = self.controller.model.options.index(value)
+
         # remove options by injecting empty options
         build_binding(WithoutOption.getClassSchema(),
                       existing=self.proxy.root_proxy.binding)
 
         assert self.proxy.edit_value is None
-        assert self.controller._internal_widget.currentIndex() == 0
-        assert self.controller._internal_widget.count() == 1  # ["qux]
-        assert self.controller._current_index == 0
+        assert self.controller._internal_widget.currentIndex() == index
+        assert self.controller._internal_widget.count() == len(options)
+        assert self.controller._current_index == index
         assert self.controller._current_binding_value == value
