@@ -256,8 +256,8 @@ def save_as_object(obj):
         if obj.simple_name == dialog.simple_name:
             # Throw a tantrum
             messagebox.show_error(
-                "Please choose a different name."
-                " Projects with the same name should be avoided.")
+                "Please choose a different name. "
+                "Projects with the same name should be avoided.")
             return
         obj.simple_name = dialog.simple_name
         # Reset UUIDs and map scene and macro models
