@@ -1,8 +1,9 @@
 from unittest import TestCase, main
 
 from karabo.common.states import State
-from ..basetypes import QuantityValue
-from ..hash import Float, String
+from karabo.native.data.basetypes import QuantityValue
+from karabo.native.data.hash import Float, String
+
 from ..unitutil import minimum, maximum, removeQuantity, StateSignifier
 
 
