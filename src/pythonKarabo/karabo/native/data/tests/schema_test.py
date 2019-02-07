@@ -1,7 +1,7 @@
 from unittest import TestCase, main
 
-from karabo.middlelayer import Hash, Schema
-from karabo.middlelayer_api.enums import NodeType
+from karabo.native import Hash, Schema
+from karabo.native.data.enums import NodeType
 
 
 class Tests(TestCase):

@@ -1,7 +1,7 @@
 from unittest import TestCase, main
 from time import sleep
 
-from karabo.middlelayer import Timestamp, TimeMixin, get_timestamp
+from karabo.native import Timestamp, TimeMixin, get_timestamp
 
 PERIOD = 100000  # microseconds [us]
 
