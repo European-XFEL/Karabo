@@ -40,8 +40,7 @@ def project_db_handler(fall_through=False):
         def wrapped(self, reply):
             success = reply.get('success', True)
             if not success:
-                # NOTE: Don't block the event loop with these messages!
-                messagebox.show_error(reply['reason'], modal=False)
+                messagebox.show_error(reply['reason'])
             # If needed, call the handler even when there was a failure
             if fall_through or success:
                 return handler(self, reply)
@@ -201,7 +200,7 @@ class Manager(QObject):
         success = info.get('success', False)
         if not success:
             reason = info.get('reason')
-            messagebox.show_error(reason, modal=False)
+            messagebox.show_error(reason, parent=self)
             return
         deviceId = info.get('deviceId')
         config = info.get('config')

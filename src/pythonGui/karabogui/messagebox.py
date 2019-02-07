@@ -8,23 +8,23 @@ from textwrap import dedent
 from PyQt4.QtGui import QMessageBox
 
 
-def show_alarm(text, title="Alarm", modal=True, parent=None):
-    _show_message_box(QMessageBox.Critical, text, title, modal, parent)
+def show_alarm(text, title="Alarm", parent=None):
+    _show_message_box(QMessageBox.Critical, text, title, parent)
 
 
-def show_error(text, title="Error", modal=True, parent=None):
-    _show_message_box(QMessageBox.Critical, text, title, modal, parent)
+def show_error(text, title="Error", parent=None):
+    _show_message_box(QMessageBox.Critical, text, title, parent)
 
 
-def show_information(text, title="Information", modal=True, parent=None):
-    _show_message_box(QMessageBox.Information, text, title, modal, parent)
+def show_information(text, title="Information", parent=None):
+    _show_message_box(QMessageBox.Information, text, title, parent)
 
 
-def show_warning(text, title="Warning", modal=True, parent=None):
-    _show_message_box(QMessageBox.Warning, text, title, modal, parent)
+def show_warning(text, title="Warning", parent=None):
+    _show_message_box(QMessageBox.Warning, text, title, parent)
 
 
-def _show_message_box(icon, text, title, modal=True, parent=None):
+def _show_message_box(icon, text, title, parent=None):
     """A wrapper to simplify the different message box styles defined below.
 
     Defining a parent provides a modal non-blocking dialog, otherwise the

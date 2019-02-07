@@ -135,7 +135,7 @@ class LoadProjectDialog(QDialog):
             # NOTE: If this dialog is not modal, it can block the list of
             # domains arriving from the GUI server!
             messagebox.show_warning(msg, title='Default domain does not exist',
-                                    modal=False)
+                                    parent=self)
         if index in (self.cbDomain.currentIndex(), -1):
             # Make sure the signal is triggered when setting the index below
             self.cbDomain.setCurrentIndex(-1)
