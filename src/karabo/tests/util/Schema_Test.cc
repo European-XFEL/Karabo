@@ -1073,6 +1073,26 @@ void Schema_Test::testDaqPolicy() {
 }
 
 
+void Schema_Test::testNodeDisplayType() {
+    {
+        Schema schema;
+        NODE_ELEMENT(schema).key("node")
+                .setSpecialDisplayType("WidgetNode")
+                .commit();
+
+        STRING_ELEMENT(schema).key("node.string")
+                .readOnly()
+                .commit();
+
+        BOOL_ELEMENT(schema).key("node.bool")
+                .readOnly()
+                .commit();
+
+        CPPUNIT_ASSERT(schema.getDisplayType("node") == "WidgetNode");
+    }
+}
+
+
 void Schema_Test::testGetLeaves() {
     Schema schema("test");
     TestStruct1::expectedParameters(schema);
