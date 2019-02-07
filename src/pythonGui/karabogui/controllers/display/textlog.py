@@ -11,7 +11,7 @@ from PyQt4.QtGui import (
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import DisplayTextLogModel
-from karabo.middlelayer import Timestamp
+from karabo.native import Timestamp
 from karabogui import icons
 from karabogui.binding.api import get_binding_value, StringBinding
 from karabogui.const import ALL_OK_COLOR

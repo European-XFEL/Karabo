@@ -1,7 +1,7 @@
 import numpy as np
 from PyQt4.QtCore import Qt
 
-from karabo.middlelayer import EncodingType
+from karabo.native import EncodingType
 from karabogui.binding.api import (
     apply_configuration, build_binding, DeviceProxy, PropertyProxy)
 from karabogui.testing import GuiTestCase

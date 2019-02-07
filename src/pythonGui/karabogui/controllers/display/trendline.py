@@ -22,7 +22,7 @@ from traits.api import (
 )
 
 from karabo.common.scenemodel.api import LinePlotModel
-from karabo.middlelayer import Timestamp
+from karabo.native import Timestamp
 from karabogui import globals as krb_globals
 from karabogui.binding.api import (
     BoolBinding, FloatBinding, IntBinding, PropertyProxy
