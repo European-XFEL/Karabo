@@ -34,6 +34,7 @@ def _show_message_box(icon, text, title, parent=None):
     message_box.setWindowTitle(title)
     message_box.setIcon(icon)
     message_box.setText(dedent(text))
+    message_box.setModal(False)
     if parent is not None:
         return message_box.open()
 

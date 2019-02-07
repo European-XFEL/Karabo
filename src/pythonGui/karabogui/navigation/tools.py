@@ -44,7 +44,7 @@ class DeviceSceneHandler(NavigationHandler):
         has_scene = _test_mask(capabilities, Capabilities.PROVIDES_SCENES)
         if not has_scene:
             messagebox.show_warning("The device <b>{}</b> does not provide a "
-                                    "scene!".format(device_id), "Warning")
+                                    "scene!".format(device_id))
             return
 
         def _config_handler():
