@@ -218,8 +218,6 @@ void PipelinedProcessing_Test::testPipeWaitPerf() {
     m_deviceClient->set(m_receiver, "processingTime", 0u);
     m_deviceClient->set(m_sender, "delay", 0u);
 
-    testPipeWaitPerf(1500);
-    testPipeWaitPerf(2500);
     testPipeWaitPerf(5000);
 
     // Restores the sender's delay before leaving.
@@ -232,7 +230,7 @@ void PipelinedProcessing_Test::testPipeWaitPerf() {
 
 void PipelinedProcessing_Test::testPipeWaitPerf(unsigned int numOfDataItems) {
 
-    std::clog << "- numOfDataItems per run = " << numOfDataItems << std::endl;
+    std::clog << "- numOfDataItems = " << numOfDataItems << std::endl;
 
     // Stores the current num of data items per run; all the other tests in the suite
     // use the same value, which is the value of the sender's nData property.
@@ -272,7 +270,6 @@ void PipelinedProcessing_Test::testPipeWaitPerf(unsigned int numOfDataItems) {
     std::clog << "  summary: Megabytes per sec = " << mbps << std::endl
             << "           total time (microsends) = " << elapsedTimeIn_microseconds << std::endl
             << "           data item size (bytes) = " << dataItemSize << std::endl
-            << "           # of data items = " << nDataExpected - nTotalData0 << std::endl
             << "           nTotalDataOnEos = " << nDataExpected - nTotalDataOnEos0 << std::endl
             << std::endl;
 
