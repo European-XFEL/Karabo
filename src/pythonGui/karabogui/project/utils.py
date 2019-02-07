@@ -256,9 +256,8 @@ def save_as_object(obj):
         if obj.simple_name == dialog.simple_name:
             # Throw a tantrum
             messagebox.show_error(
-                "Please choose a different name."
-                " Projects with the same name should be avoided.",
-                modal=False)
+                "Please choose a different name. "
+                "Projects with the same name should be avoided.")
             return
         obj.simple_name = dialog.simple_name
         # Reset UUIDs and map scene and macro models
@@ -348,8 +347,7 @@ def run_macro(macro_model):
     success = is_server_online(serverId)
     if not success:
         messagebox.show_error("Macro server {} not found in system topology. "
-                              "Macro cannot be started.".format(serverId),
-                              modal=False)
+                              "Macro cannot be started.".format(serverId))
         return
 
     sleeps = macro_sleep_check(macro_model.code)
@@ -357,7 +355,7 @@ def run_macro(macro_model):
         lines = ",".join(str(idx) for idx in sleeps)
         msg = ("The usage of time.sleep at line(s) {} is forbidden. "
                "Use karabo.middlelayer.sleep instead".format(lines))
-        messagebox.show_error(msg, title="Restricted Import", modal=False)
+        messagebox.show_error(msg, title="Restricted Import")
         return
 
     get_network().onInitDevice(serverId, "MetaMacro", instance_id, h)

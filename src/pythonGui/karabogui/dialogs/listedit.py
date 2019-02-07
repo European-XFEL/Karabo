@@ -189,7 +189,7 @@ class ListEditDialog(QDialog):
         if (self._maxSize is not None
                 and self._list_widget.count() == self._maxSize):
             messagebox.show_error("The vector size cannot be greater than {}!"
-                                  .format(self._maxSize), modal=False)
+                                  .format(self._maxSize), parent=self)
             return
 
         if len(self._allowed_choices) < 1:
@@ -230,7 +230,7 @@ class ListEditDialog(QDialog):
         if (self._minSize is not None
                 and self._list_widget.count() == self._minSize):
             messagebox.show_error("The vector size cannot be smaller than {}!"
-                                  .format(self._minSize), modal=False)
+                                  .format(self._minSize), parent=self)
             return
         self._list_widget.takeItem(self._list_widget.currentRow())
         self._on_update_buttons()

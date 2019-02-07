@@ -218,12 +218,12 @@ class ConfigurationPanel(BasePanelWidget):
         classId = configuration['classId']
         if proxy.device_id != deviceId or binding.class_id != classId:
             messagebox.show_error('The classId or the deviceId are different '
-                                  'for the shown device.', modal=False)
+                                  'for the shown device.', parent=self)
             return
 
         self._set_proxy_configuration(proxy, configuration)
         messagebox.show_information('A configuration has arrived!',
-                                    modal=False)
+                                    parent=self)
 
     def _apply_loaded_configuration(self, proxy, configuration):
         """Apply a configuration loaded from a file to a proxy
@@ -236,7 +236,7 @@ class ConfigurationPanel(BasePanelWidget):
         # and if the classId is the first key of the configuration
         if len(binding.value) == 0 or binding.class_id not in configuration:
             messagebox.show_error('Configuration load failed in configurator.',
-                                  modal=False)
+                                  parent=self)
             return
 
         configuration = configuration[binding.class_id]
