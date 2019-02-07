@@ -223,16 +223,14 @@ def handle_scene_from_server(dev_id, name, project, target_window, success,
     if not (success and reply.get('payload.success', False)):
         msg = 'Scene "{}" from device "{}" was not retreived!'
         messagebox.show_warning(msg.format(name, dev_id),
-                                title='Load Scene from Device Failed',
-                                modal=False)
+                                title='Load Scene from Device Failed')
         return
 
     data = reply.get('payload.data', '')
     if not data:
         msg = 'Scene "{}" from device "{}" contains no data!'
         messagebox.show_warning(msg.format(name, dev_id),
-                                title='Load Scene from Device Failed',
-                                modal=False)
+                                title='Load Scene from Device Failed')
         return
 
     with StringIO(data) as fp:
@@ -256,16 +254,14 @@ def handle_macro_from_server(dev_id, name, project, success, reply):
     if not (success and reply.get('payload.success', False)):
         msg = 'Macro "{}" from device "{}" was not retreived!'
         messagebox.show_warning(msg.format(name, dev_id),
-                                title='Load Macro from Device Failed',
-                                modal=False)
+                                title='Load Macro from Device Failed')
         return
 
     data = reply.get('payload.data', '')
     if not data:
         msg = 'Macro "{}" from device "{}" contains no data!'
         messagebox.show_warning(msg.format(name, dev_id),
-                                title='Load Macro from Device Failed',
-                                modal=False)
+                                title='Load Macro from Device Failed')
         return
 
     with StringIO(data) as fp:
