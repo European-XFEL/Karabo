@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Bool, Enum, Float, Int, String
+from traits.api import Bool, Enum, Float, Int, List, String
 
 from karabo.common.scenemodel.bases import (
     BaseDisplayEditableWidget, BaseEditWidget, BaseWidgetObjectData)
@@ -105,6 +105,31 @@ class TableElementModel(BaseDisplayEditableWidget):
     column_schema = String
     # The actual type of the widget
     klass = Enum('DisplayTableElement', 'EditableTableElement')
+
+
+OPTIONS_SEPARATOR = "|"
+
+
+class EditableOptionComboBoxModel(BaseEditWidget):
+    """ A model for EditableComboBox"""
+    options = List(String)
+
+
+@register_scene_reader('EditableOptionComboBox', version=2)
+def __editable_option_combobox_reader(read_func, element):
+    options = element.get(NS_KARABO + 'options', "")
+    options = [] if options == "" else options.split(OPTIONS_SEPARATOR)
+    traits = read_base_widget_data(element)
+    traits['options'] = options
+    return EditableOptionComboBoxModel(**traits)
+
+
+@register_scene_writer(EditableOptionComboBoxModel)
+def __editable_option_combobox_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'EditableOptionComboBox')
+    element.set(NS_KARABO + 'options', OPTIONS_SEPARATOR.join(model.options))
+    return element
 
 
 @register_scene_reader('DisplayCommand', version=2)
