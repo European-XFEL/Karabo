@@ -635,7 +635,7 @@ class Tests(DeviceTest):
         self.assertEqual(proxy.state, State.UNKNOWN)
 
     @async_tst
-    @flaky(max_runs=5, min_passes=3)
+    @flaky(max_runs=5, min_passes=2)
     def test_waituntilnew(self):
         """test the waitUntilNew coroutine for properties
 
