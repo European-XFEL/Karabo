@@ -42,7 +42,7 @@ from ``karabo``.
 [X] API redirection for the GUI. from ``karabo.middelayer`` to
 ``karabo.native``
 
-[] Create an import tests that make sure that ``karabogui`` does not import
+[X] Create an import tests that make sure that ``karabogui`` does not import
 from ``karabo.middlelayer`` directly
 
 After these steps, the dependencies look like this
