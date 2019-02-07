@@ -259,7 +259,7 @@ class TestManager(GuiTestCase):
             handler = make_project_db_handler(False)
             handler('placeholder', bad_result)
             # error shown in case of bad result
-            msg_box.show_error.assert_called_with('error_msg', modal=False)
+            msg_box.show_error.assert_called_with('error_msg')
 
             handled_result = handler('placeholder', good_result)
             assert handled_result.get('value') == 1
