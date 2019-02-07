@@ -96,7 +96,7 @@ class EditableOptionComboBox(BaseBindingController):
             elif self._is_injected_with_options:
                 # If previously injected but the options seems to be cleared,
                 # reset the widget.
-                if self._is_current_value_not_in_options(self.model.options):
+                if self._is_not_current_value_in_options(self.model.options):
                     self.model.options.append(self._current_binding_value)
                     self._set_combobox_tooltip(CLEARED_OPTIONS.tooltip.format(
                         value=self._current_binding_value))
@@ -106,7 +106,7 @@ class EditableOptionComboBox(BaseBindingController):
             # as the combobox choices instead.
             new_options = proxy.binding.options
             same_choices = (set(self.model.options) == set(new_options))
-            if self._is_current_value_not_in_options(new_options):
+            if self._is_not_current_value_in_options(new_options):
                 new_options.append(self._current_binding_value)
             self.model.options = new_options
             self._is_injected_with_options = True
@@ -120,7 +120,7 @@ class EditableOptionComboBox(BaseBindingController):
         self._change_edit_button_state()
 
     def value_update(self, proxy):
-        value = self._get_current_edit_value(proxy)
+        value = self._get_current_editor_value(proxy)
         if value is None:
             return
 
@@ -239,7 +239,7 @@ class EditableOptionComboBox(BaseBindingController):
         self._internal_widget.setToolTip(message)
         self._internal_widget.setStatusTip(status)
 
-    def _get_current_edit_value(self, proxy):
+    def _get_current_editor_value(self, proxy):
         binding_value = get_binding_value(proxy, None)
         if (self._current_binding_value != binding_value
                 or self._is_edit_value_changed_internally):
@@ -247,6 +247,6 @@ class EditableOptionComboBox(BaseBindingController):
         else:
             return get_editor_value(proxy)
 
-    def _is_current_value_not_in_options(self, options):
+    def _is_not_current_value_in_options(self, options):
         return (self._current_binding_value and
                 self._current_binding_value not in options)
