@@ -149,7 +149,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         has_scene = _test_mask(capabilities, Capabilities.PROVIDES_SCENES)
         if not has_scene:
             messagebox.show_warning("The device <b>{}</b> does not provide a "
-                                    "scene!".format(device_id), modal=False)
+                                    "scene!".format(device_id), parent=parent)
             return
 
         def _config_handler():
@@ -161,7 +161,7 @@ class DeviceInstanceController(BaseProjectGroupController):
             if scenes is Undefined or not len(scenes):
                 messagebox.show_warning(
                     "The device <b>{}</b> does not specify a scene "
-                    "name!".format(device_id), modal=False)
+                    "name!".format(device_id), parent=parent)
             else:
                 scene_name = scenes[0]
                 get_scene_from_server(device_id, scene_name)
@@ -177,7 +177,7 @@ class DeviceInstanceController(BaseProjectGroupController):
             # The device might not have a scene name in property
             messagebox.show_warning(
                 "The device <b>{}</b> does not specify a scene "
-                "name!".format(device_id), modal=False)
+                "name!".format(device_id), parent=parent)
         else:
             scene_name = scenes[0]
             get_scene_from_server(device_id, scene_name)
@@ -474,8 +474,7 @@ class DeviceInstanceController(BaseProjectGroupController):
             if '{}-{}'.format(device_id, macro_name) in project_macros:
                 msg = ('A macro with that name already exists in the selected '
                        'project.')
-                messagebox.show_warning(msg, modal=False,
-                                        title='Cannot Load Macro')
+                messagebox.show_warning(msg, title='Cannot Load Macro')
                 return
 
             handler = partial(handle_macro_from_server, device_id, macro_name,
@@ -496,8 +495,7 @@ class DeviceInstanceController(BaseProjectGroupController):
             if '{}|{}'.format(device_id, scene_name) in project_scenes:
                 msg = ('A scene with that name already exists in the selected '
                        'project.')
-                messagebox.show_warning(msg, modal=False,
-                                        title='Cannot Load Scene')
+                messagebox.show_warning(msg, title='Cannot Load Scene')
                 return
 
             handler = partial(handle_scene_from_server, device_id, scene_name,
