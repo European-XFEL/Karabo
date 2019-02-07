@@ -1,11 +1,11 @@
 import numpy
 
-from .basetypes import NoneValue, QuantityValue
-from .enums import NodeType
-from .hash import (
+from karabo.native.data.basetypes import NoneValue, QuantityValue
+from karabo.native.data.enums import NodeType
+from karabo.native.data.hash import (
     AccessMode, Bool, ByteArray, Hash, HashElement, Int32, Simple, Type,
     VectorUInt64)
-from .schema import Configurable
+from karabo.native.data.schema import Configurable
 
 
 class ArraySchema(Configurable):

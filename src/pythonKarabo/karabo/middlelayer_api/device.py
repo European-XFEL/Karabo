@@ -4,14 +4,17 @@ import socket
 
 from karabo.common.enums import Capabilities, Interfaces
 from karabo.common.states import State
+from karabo.native.data.basetypes import isSet
+from karabo.native.data.enums import (
+    AccessLevel, AccessMode, Assignment, DaqPolicy)
+from karabo.native.exceptions import KaraboError
+from karabo.native.data.hash import (
+    Bool, Hash, HashType, Int32, SchemaHashType, Slot, String)
+from karabo.native.data.schema import Node
+
 from .alarm import AlarmMixin
-from .basetypes import isSet
-from .enums import AccessLevel, AccessMode, Assignment, DaqPolicy
-from .exceptions import KaraboError
-from .hash import Bool, Hash, HashType, Int32, SchemaHashType, Slot, String
 from .injectable import InjectMixin
 from .logger import Logger
-from .schema import Node
 from .signalslot import SignalSlotable, Signal, slot, coslot
 
 

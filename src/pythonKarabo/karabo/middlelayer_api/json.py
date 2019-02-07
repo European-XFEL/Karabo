@@ -3,8 +3,8 @@ import json
 
 from numpy import ndarray
 
-from .basetypes import KaraboValue
-from .hash import Hash
+from karabo.native.data.basetypes import KaraboValue
+from karabo.native.data.hash import Hash
 
 
 class KaraboJSONEncoder(json.JSONEncoder):

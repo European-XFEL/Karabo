@@ -9,7 +9,7 @@ from karabo.bound import (BinarySerializerHash, TextSerializerHash,
 from karabo.middlelayer import (
     Hash, NodeType, Schema, HashList, Int64, decodeBinary, decodeXML,
     encodeBinary, encodeXML, XMLWriter, XMLParser)
-from karabo.middlelayer_api.hash import _Byte
+from karabo.native.data.hash import _Byte
 
 
 class Hash_TestCase(unittest.TestCase):
