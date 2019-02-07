@@ -3,7 +3,7 @@ from unittest.mock import patch
 from PyQt4.QtGui import QDialog
 
 from karabo.common.scenemodel.api import EditableListModel
-from karabo.middlelayer import Configurable, VectorInt32
+from karabo.native import Configurable, VectorInt32
 from karabogui.binding.api import apply_default_configuration, get_min_max_size
 from karabogui.dialogs.listedit import ListEditDialog
 from karabogui.testing import (

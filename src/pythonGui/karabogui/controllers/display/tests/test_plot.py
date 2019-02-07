@@ -1,4 +1,4 @@
-from karabo.middlelayer import Configurable, VectorFloat
+from karabo.native import Configurable, VectorFloat
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..plot import DisplayPlot

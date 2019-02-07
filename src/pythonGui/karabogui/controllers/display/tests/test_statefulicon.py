@@ -5,7 +5,7 @@ from PyQt4.QtGui import QDialog, QWidget
 
 from karabo.common.api import State
 from karabo.common.scenemodel.api import StatefulIconWidgetModel
-from karabo.middlelayer import Configurable, String
+from karabo.native import Configurable, String
 from karabogui.indicators import STATE_COLORS
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)

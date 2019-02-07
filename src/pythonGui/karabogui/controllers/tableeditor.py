@@ -11,7 +11,7 @@ from PyQt4.QtCore import pyqtSlot, Qt, QAbstractTableModel, QModelIndex
 from PyQt4.QtGui import QTableView, QComboBox, QItemDelegate
 
 from karabo.common.api import KARABO_SCHEMA_VALUE_TYPE
-from karabo.middlelayer import AccessMode, Hash
+from karabo.native import AccessMode, Hash
 from karabogui.enums import NavigationItemTypes, ProjectItemTypes
 
 

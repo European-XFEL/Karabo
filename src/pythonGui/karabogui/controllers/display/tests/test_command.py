@@ -3,7 +3,8 @@ from unittest.mock import Mock
 from PyQt4.QtGui import QToolButton, QMessageBox
 from unittest.mock import MagicMock
 
-from karabo.middlelayer import Configurable, State, Slot, String
+from karabo.common.states import State
+from karabo.native import Configurable, Slot, String
 from karabogui.binding.api import (
     DeviceProxy, PropertyProxy, build_binding, apply_default_configuration)
 from karabogui.testing import GuiTestCase, set_proxy_value, singletons

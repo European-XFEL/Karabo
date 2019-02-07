@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from karabo.middlelayer import Configurable, String
+from karabo.native import Configurable, String
 from karabogui.testing import GuiTestCase, get_class_property_proxy
 from ..filesystem import EditableDirectory, EditableFileIn, EditableFileOut
 

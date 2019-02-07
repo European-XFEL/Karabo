@@ -1,4 +1,4 @@
-from karabo.middlelayer import Configurable, Int8, String
+from karabo.native import Configurable, Int8, String
 from karabogui.binding.api import build_binding, apply_default_configuration
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)

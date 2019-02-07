@@ -1,5 +1,5 @@
 from karabo.common.scenemodel.api import KnobModel, SliderModel
-from karabo.middlelayer import Configurable, Float, Int32
+from karabo.native import Configurable, Float, Int32
 from karabogui.binding.api import build_binding
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)

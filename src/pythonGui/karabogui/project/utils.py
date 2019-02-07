@@ -15,7 +15,7 @@ from karabo.common.project.api import (
 from karabo.common.scenemodel.api import (
     BaseWidgetObjectData, SceneLinkModel, SceneModel
 )
-from karabo.middlelayer import Hash, read_project_model
+from karabo.native import Hash, read_project_model
 from karabogui import globals as krb_globals, messagebox
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.singletons.api import (get_config, get_db_conn,

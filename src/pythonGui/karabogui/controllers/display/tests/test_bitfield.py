@@ -2,7 +2,7 @@ from numpy import uint64
 from PyQt4.QtCore import QEvent, QPoint, QRect, Qt
 from PyQt4.QtGui import QMouseEvent
 
-from karabo.middlelayer import Configurable, UInt16, UInt32
+from karabo.native import Configurable, UInt16, UInt32
 from karabogui.binding.api import build_binding
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)

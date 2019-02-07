@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
 from karabo.common.scenemodel.api import EvaluatorModel
-from karabo.middlelayer import Configurable, Float
+from karabo.native import Configurable, Float
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..eval import Evaluator

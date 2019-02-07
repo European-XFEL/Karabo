@@ -9,7 +9,7 @@ from PyQt4.QtGui import (QAbstractItemView, QStandardItemModel, QTreeView,
 from traits.api import Bool, Instance
 
 from karabo.common.scenemodel.api import RunConfiguratorModel
-from karabo.middlelayer import Hash
+from karabo.native import Hash
 from karabogui.binding.api import ListOfNodesBinding, get_editor_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)

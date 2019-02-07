@@ -3,7 +3,7 @@ import json
 from karabo.common.api import (
     KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_UNIT_SYMBOL,
     KARABO_SCHEMA_DAQ_POLICY)
-from karabo.middlelayer import (
+from karabo.native import (
     AccessMode, Assignment, Configurable, Int8, Node, String, Unit)
 from karabogui import icons
 from karabogui.testing import GuiTestCase, get_class_property_proxy
