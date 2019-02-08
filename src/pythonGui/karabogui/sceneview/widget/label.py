@@ -7,7 +7,6 @@ from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QAction, QColor, QDialog, QFont, QFrame, QLabel
 
 from karabogui.dialogs.textdialog import TextDialog
-from karabogui.sceneview.utils import calc_rect_from_text
 
 
 class LabelWidget(QLabel):
@@ -44,8 +43,6 @@ class LabelWidget(QLabel):
         palette.setColor(self.foregroundRole(), QColor(model.foreground))
         palette.setColor(self.backgroundRole(), QColor(model.background))
         self.setPalette(palette)
-        _, _, model.width, model.height = calc_rect_from_text(
-            model.font, model.text)
         self.setGeometry(model.x, model.y, model.width, model.height)
 
     def add_proxies(self, proxies):
