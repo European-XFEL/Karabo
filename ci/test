@@ -23,10 +23,11 @@ __coverage_tests() {
     export REL_OS_VERS_LONG=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
     export REL_ARTIFACT_NAME=coverage_report_$REL_TAG.tar.gz
     bash ./auto_build_all.sh CodeCoverage
-    cd ci/coverage/report
-    tar cfz $REL_ARTIFACT_NAME *report*.zip
+    pushd ci/coverage
+    tar cfz $REL_ARTIFACT_NAME *eport/*.zip
     sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_USER_HOST "mkdir -p $SSH_KARABO_DIR/$FRAMEWORK_DEST_DIR"
     sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $REL_ARTIFACT_NAME $SSH_PREFIX/$FRAMEWORK_DEST_DIR
+    popd
 }
 
 

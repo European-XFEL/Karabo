@@ -249,8 +249,10 @@ generateCodeCoverageReport() {
     safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/common/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_common"
     safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/project_db/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_project_db"
     safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/interactive/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_interactive"
-    safeRunCommand $COVERAGE html -i --include "*/karabogui/*" --omit $OMIT -d htmlcov_karabogui
-    safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/bound_devices/*" --omit $OMIT -d htmlcov_bound_devices
+    safeRunCommand $COVERAGE html -i --include "*/site-packages/karabogui/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_karabogui"
+    safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/bound_devices/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_bound_devices"
+    safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/middlelayer_devices/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_middlelayer_devices"
+    safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/native/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_native"
 
     echo
     echo HTML coverage reports generation complete
