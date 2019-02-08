@@ -184,6 +184,12 @@ struct NodeElementWrap {
         const DaqDataType dataType = getDaqType();
         return self.setDaqDataType(dataType);
     }
+
+    static NodeElement& setSpecialDisplayType(NodeElement& self, const std::string& displayType) {
+        self.getNode().setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, displayType);
+        return self;
+    }
+
 };
 
 
@@ -1478,7 +1484,7 @@ namespace schemawrap {
         const std::string conditionName = bp::extract<std::string>(condition.attr("value"));
         return schema.getInfoForAlarm(path, karabo::util::AlarmCondition::fromString(conditionName));
     }
-    
+
     const bool doesAlarmNeedAcknowledging(Schema& schema, const std::string & path, const bp::object condition) {
         const std::string className = bp::extract<std::string>(condition.attr("__class__").attr("__name__"));
         if(className != "AlarmCondition"){
@@ -1536,7 +1542,7 @@ void exportPyUtilSchema() {
             .value("PULSEMASTER", DaqDataType::PULSEMASTER)
             .value("TRAINMASTER", DaqDataType::TRAINMASTER)
             ;
-    
+
     bp::enum_< DAQPolicy>("DAQPolicy")
             .value("UNSPECIFIED", DAQPolicy::UNSPECIFIED)
             .value("OMIT", DAQPolicy::OMIT)
@@ -2067,7 +2073,7 @@ void exportPyUtilSchema() {
 
     ///////////////////////////////////////////////////////////
     //DefaultValue<VectorElement< EType, 1, std::vector >, std::vector< EType > > where EType:
-    //BOOL, INT32, UINT32, INT64, UINT64, DOUBLE, STRING 
+    //BOOL, INT32, UINT32, INT64, UINT64, DOUBLE, STRING
 
     KARABO_PYTHON_VECTOR_DEFAULT_VALUE(int, INT32)
     KARABO_PYTHON_VECTOR_DEFAULT_VALUE(unsigned int, UINT32)
