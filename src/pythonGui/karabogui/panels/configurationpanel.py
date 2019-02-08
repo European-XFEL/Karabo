@@ -311,6 +311,8 @@ class ConfigurationPanel(BasePanelWidget):
         self._showing_proxy = None
 
         tree_widget = self._stacked_tree_widgets.widget(CONFIGURATION_PAGE)
+        if tree_widget.popup_widget is not None:
+            tree_widget.popup_widget.close()
         tree_widget.clear()
 
         self._set_stack_widget_index(BLANK_PAGE)
