@@ -174,8 +174,8 @@ def save_configuration_to_file(device_proxy):
 
     # If we are shutdown in between, either server or device, notify!
     if device_proxy.binding is None or not len(device_proxy.binding.value):
-        messagebox.show_error("The instance is gone and the configuration "
-                              "cannot be saved", title='No configuration')
+        messagebox.show_error("The configuration is empty and cannot "
+                              "be saved", title='No configuration')
         return
 
     config = Hash(class_id, extract_configuration(device_proxy.binding,
