@@ -186,7 +186,7 @@ struct NodeElementWrap {
     }
 
     static NodeElement& setSpecialDisplayType(NodeElement& self, const std::string& displayType) {
-        self.getNode().setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, displayType);
+        self.setSpecialDisplayType(displayType);
         return self;
     }
 
@@ -2230,6 +2230,9 @@ void exportPyUtilSchema() {
                      , bp::return_internal_reference<> ())
                 .def("setDaqDataType"
                      , &NodeElementWrap::setDaqDataType, (bp::arg("dataType"))
+                     , bp::return_internal_reference<> ())
+                .def("setSpecialDisplayType"
+                     , &NodeElementWrap::setSpecialDisplayType, (bp::arg("displayType"))
                      , bp::return_internal_reference<> ())
                 ;
     }
