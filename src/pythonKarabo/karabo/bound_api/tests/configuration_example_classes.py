@@ -22,11 +22,11 @@ from karabo.common.states import State
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("Shape", "1.0")
 class Shape(object):
-    
+
     def __init__(self, configuration):
         self.configuration = configuration
         #print "Shape.__init__"
-        
+
     @staticmethod
     def expectedParameters(expected):
         (
@@ -37,21 +37,21 @@ class Shape(object):
          .init()
          .commit(),
          )
-        
+
     def getConfiguration(self):
         return self.configuration
-        
+
     def draw(self):
         pass
-    
-    
-@KARABO_CLASSINFO("Circle", "1.0")    
+
+
+@KARABO_CLASSINFO("Circle", "1.0")
 class Circle(Shape):
-    
+
     def __init__(self, configuration):
         super(Circle, self).__init__(configuration)
         #print "Circle.__init__"
-        
+
     @staticmethod
     def expectedParameters(expected):
         (
@@ -72,7 +72,7 @@ class Circle(Shape):
         .readOnly()
         .commit()
         )
-        
+
     def draw(self):
         return self.__class__.__name__
 
@@ -80,13 +80,13 @@ class Circle(Shape):
 '''
 Editable Circle
 '''
-@KARABO_CLASSINFO("EditableCircle", "1.0")    
+@KARABO_CLASSINFO("EditableCircle", "1.0")
 class EditableCircle(Circle):
-    
+
     def __init__(self, configuration):
         super(EditableCircle, self).__init__(configuration)
         #print "EditableCircle.__init__"
-        
+
     @staticmethod
     def expectedParameters(expected):
         (
@@ -105,20 +105,20 @@ class EditableCircle(Circle):
          .setNewDefaultValue("a")
          .commit()
          )
-        
+
     def draw(self):
         return self.__class__.__name__
 
 '''
 Rectangle
 '''
-@KARABO_CLASSINFO("Rectangle", "1.0")    
+@KARABO_CLASSINFO("Rectangle", "1.0")
 class Rectangle(Shape):
-    
+
     def __init__(self, configuration):
         super(Rectangle, self).__init__(configuration)
         #print "Rectangle.__init__"
-    
+
     @staticmethod
     def expectedParameters(expected):
         (
@@ -131,7 +131,7 @@ class Rectangle(Shape):
          .assignmentOptional().defaultValue(10)
          .init()
          .commit(),
-        
+
         DOUBLE_ELEMENT(expected).key("b").alias(1)
          .description("Length of b")
          .displayedName("B")
@@ -145,18 +145,18 @@ class Rectangle(Shape):
 
     def draw(self):
         return self.__class__.__name
-    
+
 
 @KARABO_CONFIGURATION_BASE_CLASS
-@KARABO_CLASSINFO("GraphicsRenderer", "1.0")    
+@KARABO_CLASSINFO("GraphicsRenderer", "1.0")
 class GraphicsRenderer(object):
-    
+
     def __init__(self, input):
         shape = Shape.createChoice("shapes", input)
         #assert input["version"] == "1.4.7"
         if "shapes.Circle" in input:
             assert shape.draw() == "Circle"
-        
+
     @staticmethod
     def expectedParameters(expected):
         (
@@ -193,11 +193,11 @@ class GraphicsRenderer(object):
          .assignmentOptional().defaultValue("Rectangle")
          .commit(),
         )
-        
-        
-@KARABO_CLASSINFO("GraphicsRenderer1", "1.0")    
+
+
+@KARABO_CLASSINFO("GraphicsRenderer1", "1.0")
 class GraphicsRenderer1(object):
-    
+
     @staticmethod
     def expectedParameters(expected):
         (
@@ -265,9 +265,9 @@ class GraphicsRenderer1(object):
 
 
 @KARABO_CONFIGURATION_BASE_CLASS
-@KARABO_CLASSINFO("TestStruct1", "1.0")    
+@KARABO_CLASSINFO("TestStruct1", "1.0")
 class TestStruct1(object):
-    
+
     @staticmethod
     def expectedParameters(expected):
         (
@@ -470,15 +470,22 @@ class TestStruct1(object):
                 .operatorAccess()
                 .commit()
                 ,
+
+        NODE_ELEMENT(expected).key("myNode")
+                .displayedName("myNode")
+                .description("WidgetNode Test")
+                .setSpecialDisplayType("WidgetNode")
+                .commit()
+                ,
         )
-        
+
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("SomeClassId", "1.0")
 class SomeClass(object):
-    
+
     def __init__(self, configuration):
         super(SomeClass,self).__init__()
-        
+
     @staticmethod
     def expectedParameters(expected):
         (
@@ -489,7 +496,7 @@ class SomeClass(object):
          .minInc(5).maxInc(25).unit(AMPERE).metricPrefix(MILLI)
          .assignmentOptional().defaultValue(5)
          .init().expertAccess().commit()
-         , 
+         ,
         INT32_ELEMENT(expected).key("y").alias('bla')
          .tags("CY")
          .displayedName("Ykey").description("Example of Y key description")
@@ -518,22 +525,22 @@ class SomeClass(object):
                 .description("Image Element")
                 .operatorAccess()
                 .commit()
-                ,        
+                ,
         )
 
-    
+
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("Base", "1.0")
 class Base(object):
     def __init__(self, configuration):
         super(Base,self).__init__()
-        
+
 
 @KARABO_CLASSINFO("P1", "1.0")
 class P1(Base):
     def __init__(self, configuration):
         super(P1,self).__init__(configuration)
-        
+
     @staticmethod
     def expectedParameters(expected):
         (
@@ -575,13 +582,13 @@ class P1(Base):
          .displayedName("Example key 5").description("Example key 5 description")
          .assignmentOptional().defaultValue(5).commit(),
         )
-        
-        
+
+
 @KARABO_CLASSINFO("P2", "1.0")
 class P2(Base):
     def __init__(self, configuration):
         super(P2,self).__init__(configuration)
-        
+
     @staticmethod
     def expectedParameters(expected):
         (
@@ -605,12 +612,12 @@ class P2(Base):
          .assignmentOptional().defaultValue(10)
          .init().commit(),
         )
-        
+
 @KARABO_CLASSINFO("P3", "1.0")
 class P3(Base):
     def __init__(self, configuration):
         super(P3,self).__init__(configuration)
-        
+
     @staticmethod
     def expectedParameters(expected):
         (
@@ -671,7 +678,7 @@ class ArrayContainer(Base):
 class GraphicsRenderer2(object):
     def __init__(self, configuration):
         super(GraphicsRenderer2,self).__init__()
-        
+
     @staticmethod
     def expectedParameters(expected):
         (
