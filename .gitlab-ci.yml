@@ -47,7 +47,7 @@ before_script:
     - schedules
     - /^deps-mr-.+$/
 
-.converage_tests: &coverage-tests
+.coverage_tests: &coverage-tests
   <<: *test
   only:
     - schedules
