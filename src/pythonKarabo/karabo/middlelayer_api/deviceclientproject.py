@@ -13,7 +13,7 @@ from datetime import datetime
 from threading import Timer
 
 from karabo.native.data.hash import Hash
-from karabo.middlelayer_api.project.old import Project, BaseDevice, BaseDeviceGroup
+from karabo.native.project.old import Project, BaseDevice, BaseDeviceGroup
 from karabo.native.data.serializers import decodeXML, encodeXML
 
 

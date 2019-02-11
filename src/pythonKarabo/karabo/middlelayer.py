@@ -36,9 +36,6 @@ from .middlelayer_api import numeric
 from .middlelayer_api.pipeline import (
     InputChannel, NetworkInput, OutputChannel, NetworkOutput
 )
-from .middlelayer_api.project.api import (
-    convert_old_project, OldProject, read_project_model, write_project_model
-)
 from .middlelayer_api.signalslot import Signal, SignalSlotable, slot, coslot
 from .middlelayer_api.synchronization import (
     allCompleted, background, firstCompleted, firstException, gather,
@@ -76,6 +73,9 @@ from karabo.native.data.serializers import (
     writeBinary, writeXML, XMLParser, XMLWriter
 )
 from karabo.native.exceptions import KaraboError
+from karabo.native.project import (
+    convert_old_project, OldProject, read_project_model, write_project_model
+)
 from karabo.native.registry import MetaRegistry, Registry
 from karabo.native.time_mixin import TimeMixin, get_timestamp
 from karabo.native.timestamp import Timestamp
