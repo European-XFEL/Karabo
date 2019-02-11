@@ -70,6 +70,7 @@ class SystemTopology(HasStrictTraits):
         self._class_schemas.clear()
         self._device_proxies.clear()
         self._device_schemas.clear()
+        self._requested_class_schemas = set()
 
     def clear_project_devices(self):
         """Called by project model on closing project
@@ -101,12 +102,14 @@ class SystemTopology(HasStrictTraits):
 
             attrs = self._get_device_attributes(server_id)
             if attrs and class_id in attrs.get('deviceClasses', ()):
-                # The server is online and has the device class we want
+                # NOTE: The server is online and has the device class we want
+                # but we only request if it was not previously requested!
                 request = key not in self._requested_class_schemas
                 if request:
-                    # We only request if it was not previously requested!
                     self._requested_class_schemas.add(key)
-                proxy.refresh_schema(request=request)
+                    proxy.refresh_schema()
+                else:
+                    proxy.status = DeviceStatus.REQUESTED
 
         return proxy
 
@@ -192,7 +195,9 @@ class SystemTopology(HasStrictTraits):
                     request = key not in self._requested_class_schemas
                     if request:
                         self._requested_class_schemas.add(key)
-                    proxy.refresh_schema(request=request)
+                        proxy.refresh_schema()
+                    else:
+                        proxy.status = DeviceStatus.REQUESTED
                 else:
                     # The device class is not installed on the server, but
                     # requested from the project, we create an empty
