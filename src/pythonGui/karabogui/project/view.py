@@ -12,6 +12,7 @@ from PyQt4.QtGui import (
 
 from karabo.common.project.api import (
     find_parent_object, get_children_of_klass)
+from karabogui import messagebox
 from karabogui.events import KaraboEventSender, broadcast_event
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.utils import (
@@ -209,8 +210,21 @@ class ProjectView(QTreeView):
         """
         server_controllers = get_children_of_klass(
             selected_controller, DeviceServerController)
+        # Check for offline servers to provide a warning
+        offline_servers = []
         for server in server_controllers:
-            server.instantiate_devices()
+            if server.online:
+                server.instantiate_devices()
+            else:
+                instance_id = server.model.server_id
+                offline_servers.append(instance_id)
+
+        # Nofify that we have seen offline servers!
+        if offline_servers:
+            msg = ('Servers are not online for device instantiation: '
+                   '{}!'.format(', '.join(offline_servers)))
+            messagebox.show_warning(msg, title='Servers offline',
+                                    parent=self)
 
     def _close_project(self, project, project_controller, show_dialog=False):
         """ Close the given `project`
