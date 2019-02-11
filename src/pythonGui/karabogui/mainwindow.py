@@ -48,9 +48,9 @@ class PanelAreaEnum(Enum):
 
 
 _CLOSABLE_PANELS = {
-    # Title: (class, position)
-    'Console': (ScriptingPanel, PanelAreaEnum.MiddleBottom),
-    'Log': (LoggingPanel, PanelAreaEnum.MiddleBottom),
+    # Title: (class, position, icon)
+    'Console': (ScriptingPanel, PanelAreaEnum.MiddleBottom, icons.consoleMenu),
+    'Log': (LoggingPanel, PanelAreaEnum.MiddleBottom, icons.logMenu),
 }
 
 _PANELS = {
@@ -86,9 +86,11 @@ class MainWindow(QMainWindow):
             self._open_panel(name)
 
         # Create the menu bar for panels which are by default closed!
-        for name in _CLOSABLE_PANELS:
+        for name, data in _CLOSABLE_PANELS.items():
             callback = partial(self._open_closable_panel, name)
             action = QAction(name, self)
+            _, _, icon = data
+            action.setIcon(icon)
             action.triggered.connect(callback)
             self._addViewMenuAction(action)
             self.panelActions[name] = action
@@ -368,7 +370,7 @@ class MainWindow(QMainWindow):
         if panel_info is None:
             return
 
-        klass, area_enum = panel_info
+        klass, area_enum, _ = panel_info
         panel = klass()
 
         # We must have a closable panel!
