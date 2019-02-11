@@ -59,7 +59,7 @@ After these steps, the dependencies look like this
 [X] Move code from `karabo.middelayer_api` to `karabo.native`
 and change the imports
 
-[] Move code from `middelayer_api` to `karabo.project` and change
+[X] Move code from `middelayer_api` to `karabo.project` and change
 the imports
 
 .. graphviz:: dot/api_goal.dot
