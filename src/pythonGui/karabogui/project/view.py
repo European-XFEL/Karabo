@@ -10,7 +10,8 @@ from PyQt4.QtGui import (
     QApplication, QAction, QClipboard, QDialog, QCursor, QKeySequence,
     QMessageBox, QTreeView)
 
-from karabo.common.project.api import find_parent_object
+from karabo.common.project.api import (
+    find_parent_object, get_children_of_klass)
 from karabogui.events import KaraboEventSender, broadcast_event
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.utils import (
@@ -22,6 +23,7 @@ from .controller.bases import BaseProjectGroupController
 from .controller.device import DeviceInstanceController
 from .controller.project import ProjectController
 from .controller.project_groups import ProjectSubgroupController
+from .controller.server import DeviceServerController
 from .controller.subproject import SubprojectController
 
 
@@ -145,6 +147,11 @@ class ProjectView(QTreeView):
                                                        selected_project,
                                                        project_controller,
                                                        show_dialog=True))
+                instantiate_all_action = QAction('Instantiate all devices',
+                                                 menu)
+                instantiate_all_action.triggered.connect(
+                    partial(self._instantiate_devices, selected_controller))
+
                 is_trashed = selected_project.is_trashed
                 if is_trashed:
                     text = 'Restore from trash'
@@ -155,6 +162,7 @@ class ProjectView(QTreeView):
                                                        selected_project,
                                                        project_controller))
                 menu.addAction(rename_action)
+                menu.addAction(instantiate_all_action)
                 menu.addSeparator()
                 menu.addAction(save_action)
                 menu.addAction(close_action)
@@ -191,6 +199,18 @@ class ProjectView(QTreeView):
         result = dialog.exec()
         if result == QDialog.Accepted:
             project.simple_name = dialog.simple_name
+
+    @pyqtSlot()
+    def _instantiate_devices(self, selected_controller):
+        """ Instantiate all devices in the given project
+
+        The project controller ``selected_controller`` is used to find the
+        children server controller to instantiate devices
+        """
+        server_controller = get_children_of_klass(
+            selected_controller, DeviceServerController)
+        for server in server_controller:
+            server.instantiate_devices()
 
     def _close_project(self, project, project_controller, show_dialog=False):
         """ Close the given `project`
