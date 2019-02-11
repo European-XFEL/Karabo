@@ -207,9 +207,9 @@ class ProjectView(QTreeView):
         The project controller ``selected_controller`` is used to find the
         children server controller to instantiate devices
         """
-        server_controller = get_children_of_klass(
+        server_controllers = get_children_of_klass(
             selected_controller, DeviceServerController)
-        for server in server_controller:
+        for server in server_controllers:
             server.instantiate_devices()
 
     def _close_project(self, project, project_controller, show_dialog=False):
