@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from traits.api import (HasStrictTraits, Bool, Dict, Instance, Property,
-                        on_trait_change)
+                        on_trait_change, Set)
 
 from karabo.common.api import DeviceStatus
 from karabo.native import Hash
@@ -36,6 +36,9 @@ class SystemTopology(HasStrictTraits):
 
     # Mapping of (server id, class id) -> Schema
     _class_schemas = Dict
+
+    # Tracking of requested Class Schemas for (server id, class id)
+    _requested_class_schemas = Set
 
     # Mapping of device_id -> DeviceProxy
     _device_proxies = Dict
@@ -99,7 +102,11 @@ class SystemTopology(HasStrictTraits):
             attrs = self._get_device_attributes(server_id)
             if attrs and class_id in attrs.get('deviceClasses', ()):
                 # The server is online and has the device class we want
-                proxy.refresh_schema()
+                request = key not in self._requested_class_schemas
+                if request:
+                    # We only request if it was not previously requested!
+                    self._requested_class_schemas.add(key)
+                proxy.refresh_schema(request=request)
 
         return proxy
 
@@ -181,7 +188,11 @@ class SystemTopology(HasStrictTraits):
             if schema is None:
                 if proxy.status not in (DeviceStatus.NOSERVER,
                                         DeviceStatus.NOPLUGIN):
-                    proxy.refresh_schema()
+                    # We only request if it was not previously requested!
+                    request = key not in self._requested_class_schemas
+                    if request:
+                        self._requested_class_schemas.add(key)
+                    proxy.refresh_schema(request=request)
                 else:
                     # The device class is not installed on the server, but
                     # requested from the project, we create an empty
@@ -247,6 +258,9 @@ class SystemTopology(HasStrictTraits):
         """Called when a `classSchema` message is received from the server.
         """
         key = (server_id, class_id)
+        if key in self._requested_class_schemas:
+            self._requested_class_schemas.remove(key)
+
         if len(schema.hash) > 0:
             # if it's a valid schema we cache it even if it is not requested,
             # may be useful in future
