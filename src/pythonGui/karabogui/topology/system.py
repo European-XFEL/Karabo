@@ -263,8 +263,6 @@ class SystemTopology(HasStrictTraits):
         """Called when a `classSchema` message is received from the server.
         """
         key = (server_id, class_id)
-        if key in self._requested_class_schemas:
-            self._requested_class_schemas.remove(key)
 
         if len(schema.hash) > 0:
             # if it's a valid schema we cache it even if it is not requested,
@@ -276,6 +274,9 @@ class SystemTopology(HasStrictTraits):
             # This schema has nothing to do with us whatsoever
             # We used to print 'Unrequested schema for classId {} arrived'.
             return
+
+        if key in self._requested_class_schemas:
+            self._requested_class_schemas.remove(key)
 
         proxies = []
         if key not in self._class_proxies.keys():
