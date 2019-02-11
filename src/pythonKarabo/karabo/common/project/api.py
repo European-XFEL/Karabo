@@ -17,5 +17,5 @@ from .server import (
 )
 from .utils import (
     device_config_exists, device_instance_exists, find_parent_object,
-    recursive_save_object
+    get_children_of_klass, recursive_save_object
 )

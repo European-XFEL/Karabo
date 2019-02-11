@@ -16,6 +16,7 @@ def find_parent_object(model, ancestor_model, search_klass):
                          class, type, or tuple as it is passed to `isinstance`.
     :return: A parent project object model or None
     """
+
     class _Visitor(object):
         found_parent = None
         parent_candidate = None
@@ -32,6 +33,24 @@ def find_parent_object(model, ancestor_model, search_klass):
     visitor = _Visitor()
     walk_traits_object(ancestor_model, visitor, pass_parent=True)
     return visitor.found_parent
+
+
+def get_children_of_klass(model, search_klass):
+    """Provides all the desired children of ``search_klass``
+    """
+    ret = []
+
+    class _Visitor(object):
+        nonlocal ret
+
+        def __call__(self, obj):
+            if isinstance(obj, search_klass):
+                ret.append(obj)
+
+    visitor = _Visitor()
+    walk_traits_object(model, visitor)
+
+    return ret
 
 
 def device_instance_exists(project, instance_ids):
@@ -81,6 +100,7 @@ def recursive_save_object(root, storage, domain):
     saving all the modified ``BaseProjectObjectModel`` objects which are
     found in the object tree.
     """
+
     # XXX: Yes, this is duplicated code. It's basically yield parent first vs.
     # yield parent last. This should be generalized later in walk_traits_object
     def _is_list_of_has_traits(trait):

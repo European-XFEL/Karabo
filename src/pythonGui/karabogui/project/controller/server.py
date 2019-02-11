@@ -50,7 +50,7 @@ class DeviceServerController(BaseProjectGroupController):
         add_action.triggered.connect(self._add_device)
         instantiate_all_action = QAction('Instantiate all devices', menu)
         instantiate_all_action.setEnabled(online)
-        instantiate_all_action.triggered.connect(self._instantiate_devices)
+        instantiate_all_action.triggered.connect(self.instantiate_devices)
         shutdown_all_action = QAction('Shutdown all devices', menu)
         shutdown_all_action.triggered.connect(self._shutdown_devices)
         remove_all_action = QAction('Delete all devices', menu)
@@ -179,7 +179,11 @@ class DeviceServerController(BaseProjectGroupController):
         server.devices[:] = []
 
     @pyqtSlot()
-    def _instantiate_devices(self):
+    def instantiate_devices(self):
+        """Public action handler to instantiate all devices from this server
+
+        This action handler is also publicly used by the project controller
+        """
         server = self.model
         for dev_inst_item in self.children:
             dev_inst_item.instantiate(server)
