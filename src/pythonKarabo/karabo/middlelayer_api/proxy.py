@@ -5,14 +5,14 @@ from weakref import WeakSet
 
 from karabo.native.data.basetypes import KaraboValue, NoneValue
 from karabo.native.data.enums import NodeType
-from karabo.native.exceptions import KaraboError
 from karabo.native.data.hash import Descriptor, Hash, Slot, Type
-from karabo.native.timestamp import Timestamp
+from karabo.native.data.ndarray import NDArray
+from karabo.native.exceptions import KaraboError
 from karabo.native.time_mixin import get_timestamp
+from karabo.native.timestamp import Timestamp
 from karabo.native.weak import Weak
 
 from .eventloop import synchronize
-from .ndarray import NDArray
 
 
 class _ProxyBase(object):

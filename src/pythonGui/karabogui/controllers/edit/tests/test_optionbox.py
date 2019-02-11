@@ -1,8 +1,9 @@
 from karabo.common.scenemodel.api import EditableOptionComboBoxModel
-from karabo.middlelayer import Configurable, String
+from karabo.native import Configurable, String
 from karabogui.binding.api import build_binding, get_binding_value
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
+
 from ..optionbox import EditableOptionComboBox
 
 
