@@ -19,7 +19,7 @@ from karabo.native.data.hash import (
 from karabo.native.data.ndarray import NDArray
 from karabo.native.data.schema import (
     Configurable, Node, ChoiceOfNodes, ListOfNodes, Overwrite,
-	MetaConfigurable)
+    MetaConfigurable)
 from karabo.native.data.serializers import (
     decodeBinary, decodeXML, encodeBinary, encodeXML, loadFromFile, saveToFile,
     writeBinary, writeXML, XMLParser, XMLWriter)
