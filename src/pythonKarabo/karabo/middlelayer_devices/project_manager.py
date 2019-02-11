@@ -6,7 +6,7 @@ from karabo.common.states import State
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Bool, Device, Hash, Overwrite, slot, Slot, String,
     UInt32, VectorString)
-from karabo.middlelayer_api.project.api import read_project_model
+from karabo.native import read_project_model
 from karabo.project_db.project_database import ProjectDatabase
 from karabo.project_db.util import assure_running, ProjectDBError
 
