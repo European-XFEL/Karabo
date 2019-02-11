@@ -5,9 +5,10 @@ from asyncio import (async, CancelledError, coroutine, Future, get_event_loop,
                      iscoroutine, iscoroutinefunction)
 from functools import wraps
 
-from .basetypes import KaraboValue, unit_registry as unit
-from .eventloop import (EventLoop, KaraboFuture, synchronize,
-                        synchronize_notimeout)
+from karabo.native.data.basetypes import KaraboValue, unit_registry as unit
+
+from .eventloop import (
+    EventLoop, KaraboFuture, synchronize, synchronize_notimeout)
 
 
 def background(task, *args, timeout=-1):

@@ -11,9 +11,10 @@ from jupyter_client.manager import KernelManager
 
 from karabo.common.states import State
 from karabo.interactive.ikarabo import SCRIPT
+from karabo.native.data.enums import AccessLevel, AccessMode, Assignment
+from karabo.native.data.hash import Bool, Int32, Slot, VectorChar
+
 from .device import Device
-from .enums import AccessLevel, AccessMode, Assignment
-from .hash import Bool, Int32, Slot, VectorChar
 from .signalslot import coslot
 
 

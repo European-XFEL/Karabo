@@ -1,15 +1,15 @@
-from asyncio import coroutine, gather
 from collections import OrderedDict
+from asyncio import coroutine, gather
 from weakref import WeakKeyDictionary
 
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.api import KARABO_RUNTIME_ATTRIBUTES_MDL
-from .basetypes import isSet, KaraboValue, NoneValue
-from .enums import NodeType
-from .hash import (
-    Attribute, Descriptor, Hash, Integer, Schema, HashList, Slot)
-from .registry import Registry
-from .time_mixin import get_timestamp
+from karabo.native.data.basetypes import KaraboValue, NoneValue, isSet
+from karabo.native.data.enums import NodeType
+from karabo.native.data.hash import (Attribute, Descriptor, Hash, HashList,
+                                     Integer, Schema, Slot)
+from karabo.native.registry import Registry
+from karabo.native.time_mixin import get_timestamp
 
 
 class MetaConfigurable(type(Registry)):
@@ -24,7 +24,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
     A class with Karabo attributes inherits from this class.
     The attributes are then defined as follows::
 
-        from karabo.middlelayer import Configurable, Int32, String
+        from karabo.native import Configurable, Int32, String
 
         class Spam(Configurable):
             ham = Int32()

@@ -9,11 +9,12 @@ import sys
 import threading
 
 from karabo.common.states import State
+from karabo.native.data.enums import AccessLevel, AccessMode, DaqPolicy
+from karabo.native.data.hash import Descriptor, Int32, Slot, String
+
+from .eventloop import EventLoop
 from .device import Device
 from .device_client import waitUntilNew, getDevice
-from .enums import AccessLevel, AccessMode, DaqPolicy
-from .eventloop import EventLoop
-from .hash import Descriptor, Int32, Slot, String
 
 
 def Monitor():

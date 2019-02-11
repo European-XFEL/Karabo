@@ -1,5 +1,6 @@
 from unittest import TestCase, main
-from karabo.middlelayer_api.weak import Weak
+
+from karabo.native.weak import Weak
 
 
 class Tests(TestCase):

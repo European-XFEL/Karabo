@@ -7,9 +7,8 @@ from PyQt4.QtCore import (
     pyqtSignal, pyqtSlot, QByteArray, QCoreApplication, QObject)
 from PyQt4.QtGui import QDialog, QMessageBox, qApp
 
-from karabo.authenticator import Authenticator
 from karabo.native import (
-    Hash, decodeBinary, encodeBinary, AccessLevel, Timestamp)
+    Hash, decodeBinary, encodeBinary, AccessLevel, Timestamp, Authenticator)
 from karabogui import background
 from karabogui.dialogs.logindialog import LoginDialog
 from karabogui.events import broadcast_event, KaraboEventSender
