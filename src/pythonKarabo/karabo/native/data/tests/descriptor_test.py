@@ -1,5 +1,8 @@
-import numpy
 from enum import Enum
+import numpy
+from pint import DimensionalityError
+from unittest import TestCase, main
+
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
 from karabo.native import (AccessLevel, AccessMode, Assignment, Attribute, Bool,
@@ -10,8 +13,6 @@ from karabo.native import (AccessLevel, AccessMode, Assignment, Attribute, Bool,
                            VectorComplexFloat, VectorFloat, VectorHash,
                            VectorInt32, VectorInt8, VectorString, decodeBinary,
                            encodeBinary, unit)
-from pint import DimensionalityError
-from unittest import TestCase, main
 
 
 class Tests(TestCase):
