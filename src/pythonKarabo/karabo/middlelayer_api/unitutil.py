@@ -4,7 +4,7 @@ from functools import wraps
 import numpy as np
 
 from karabo.common.states import StateSignifier as SignifierBase
-from karabo.middlelayer_api.basetypes import (
+from karabo.native.data.basetypes import (
     newest_timestamp, QuantityValue, wrap, wrap_function)
 
 

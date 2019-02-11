@@ -21,12 +21,12 @@ import numpy as np
 
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
-from . import basetypes
-from .enums import (
+from karabo.native.data import basetypes
+from karabo.native.data.enums import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, DaqPolicy,
     LeafType, MetricPrefix, NodeType, Unit)
-from .exceptions import KaraboError
-from .registry import Registry
+from karabo.native.exceptions import KaraboError
+from karabo.native.registry import Registry
 
 
 def yieldKey(key):

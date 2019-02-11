@@ -16,7 +16,8 @@ from karabo.common.project.api import (
     ProjectModel, read_lazy_object, recursive_save_object
 )
 from karabo.common.scenemodel.api import SceneModel
-from karabo.middlelayer import encodeXML, Hash
+from karabo.native.data import encodeXML, Hash
+
 from ..api import (
     convert_old_project, OldProject, read_project_model, write_project_model
 )

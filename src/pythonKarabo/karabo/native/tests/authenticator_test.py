@@ -4,7 +4,7 @@
 from datetime import datetime
 import unittest
 
-from karabo.authenticator import Authenticator
+from karabo.native.authenticator import Authenticator
 
 
 class  Authenticator_TestCase(unittest.TestCase):

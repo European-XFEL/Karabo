@@ -9,13 +9,16 @@ import weakref
 import inspect
 import re
 
-from .exceptions import KaraboError
-from .enums import AccessLevel, Assignment, AccessMode, DaqPolicy
-from .hash import Descriptor, Hash, HashType, Int32, Slot, String
+from karabo.native.exceptions import KaraboError
+from karabo.native.data.enums import (
+    AccessLevel, Assignment, AccessMode, DaqPolicy)
+from karabo.native.data.hash import (
+    Descriptor, Hash, HashType, Int32, Slot, String)
+from karabo.native.data.schema import Configurable
+
+from .synchronization import firstCompleted, FutureDict
 from .pipeline import NetworkOutput, OutputChannel
 from .proxy import DeviceClientProxyFactory
-from .schema import Configurable
-from .synchronization import firstCompleted, FutureDict
 
 
 class Signal(object):
