@@ -9,14 +9,16 @@ import socket
 
 import numpy
 
-from .basetypes import isSet
-from .enums import Assignment, AccessMode
-from .hash import Bool, Hash, VectorString, Schema, String, UInt32
+from karabo.native.data.basetypes import isSet
+from karabo.native.data.enums import Assignment, AccessMode
+from karabo.native.data.hash import (
+    Bool, Hash, VectorString, Schema, String, UInt32)
+from karabo.native.data.schema import Configurable, Node
+from karabo.native.data.serializers import decodeBinary, encodeBinary
+from karabo.native.time_mixin import get_timestamp
+
 from .proxy import ProxyBase, ProxyFactory, ProxyNodeBase, SubProxyBase
-from .schema import Configurable, Node
-from .serializers import decodeBinary, encodeBinary
 from .synchronization import background, firstCompleted
-from .time_mixin import get_timestamp
 
 
 class PipelineMetaData(ProxyBase):

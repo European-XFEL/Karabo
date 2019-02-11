@@ -9,9 +9,9 @@ from karabo.middlelayer import (
     AccessMode, background, getDevice, Int32, waitUntil, waitWhile)
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import getSchema
-from karabo.middlelayer_api.hash import Float, Hash, Slot, VectorHash
+from karabo.native.data.hash import Float, Hash, Slot, VectorHash
 from karabo.middlelayer_api.pipeline import InputChannel, OutputChannel
-from karabo.middlelayer_api.schema import Configurable, Node
+from karabo.native.data.schema import Configurable, Node
 
 from .eventloop import async_tst, DeviceTest, sync_tst
 

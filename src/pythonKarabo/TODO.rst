@@ -56,7 +56,7 @@ After these steps, the dependencies look like this
 
 [X] Refactor the project manager as a middlelayer device.
 
-[] Move code from `karabo.middelayer_api` to `karabo.native`
+[X] Move code from `karabo.middelayer_api` to `karabo.native`
 and change the imports
 
 [] Move code from `middelayer_api` to `karabo.project` and change
