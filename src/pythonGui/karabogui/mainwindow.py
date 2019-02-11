@@ -46,15 +46,18 @@ class PanelAreaEnum(Enum):
     Right = 4
 
 
-_SINGLETON_PANELS = {
+_CLOSABLE_PANELS = {
     # Title: (class, position)
-    'Configuration Editor': (ConfigurationPanel, PanelAreaEnum.Right),
     'Console': (ScriptingPanel, PanelAreaEnum.MiddleBottom),
     'Log': (LoggingPanel, PanelAreaEnum.MiddleBottom),
+}
+
+_PANELS = {
+    # Title: (class, position)
+    'Configuration Editor': (ConfigurationPanel, PanelAreaEnum.Right),
     'Navigation': (NavigationPanel, PanelAreaEnum.LeftTop),
     'Projects': (ProjectPanel, PanelAreaEnum.LeftBottom),
 }
-
 
 VIEW_MENU_TITLE = '&View'
 
@@ -63,6 +66,7 @@ class MainWindow(QMainWindow):
     """The main window of the application which includes all relevant panels
     and the main toolbar.
     """
+
     def __init__(self):
         super(MainWindow, self).__init__()
 
@@ -77,8 +81,17 @@ class MainWindow(QMainWindow):
 
         self._panel_areas = {}
         self._setupPanelAreas()
-        for name in _SINGLETON_PANELS:
-            self._open_singleton_panel(name)
+        for name in _PANELS:
+            self._open_panel(name)
+
+        # Create the menu bar for panels which are by default closed!
+        for name in _CLOSABLE_PANELS:
+            callback = partial(self._open_closable_panel, name)
+            action = QAction(name, self)
+            action.triggered.connect(callback)
+            self._addViewMenuAction(action)
+            self.panelActions[name] = action
+            self.panelActions[name].setEnabled(True)
 
         title = "European XFEL - Karabo GUI " + krb_globals.GUI_VERSION_LONG
         self.setWindowTitle(title)
@@ -336,23 +349,31 @@ class MainWindow(QMainWindow):
         for panel in container.panel_set:
             panel.setEnabled(enable)
 
-    def _open_singleton_panel(self, name):
-        panel_info = _SINGLETON_PANELS.get(name)
+    def _open_panel(self, name):
+        panel_info = _PANELS.get(name)
         if panel_info is None:
             return
 
         klass, area_enum = panel_info
         panel = klass()
         self.addPanel(panel, area_enum)
-        if panel.allow_closing:
-            if name not in self.panelActions:
-                callback = partial(self._open_singleton_panel, name)
-                action = QAction(name, self)
-                action.triggered.connect(callback)
-                self._addViewMenuAction(action)
-                self.panelActions[name] = action
-            panel.signalPanelClosed.connect(self.onPanelClose)
-            self.panelActions[name].setEnabled(False)
+
+    def _open_closable_panel(self, name):
+        panel_info = _CLOSABLE_PANELS.get(name)
+        if panel_info is None:
+            return
+
+        klass, area_enum = panel_info
+        panel = klass()
+
+        # We must have a closable panel!
+        assert panel.allow_closing
+
+        self.addPanel(panel, area_enum)
+        panel.signalPanelClosed.connect(self.onPanelClose)
+        action = self.panelActions.get(name)
+        if action is not None:
+            action.setEnabled(False)
 
     def _panelContainerMaximized(self, panel_container):
         """The given `panel_container` is about to be maximized.
