@@ -1,8 +1,8 @@
 from asyncio import coroutine, gather
 from itertools import chain
 
-from .hash import Descriptor
-from .schema import Configurable, Overwrite, MetaConfigurable
+from karabo.native.data.hash import Descriptor
+from karabo.native.data.schema import Configurable, Overwrite, MetaConfigurable
 
 
 class MetaInjectable(MetaConfigurable):

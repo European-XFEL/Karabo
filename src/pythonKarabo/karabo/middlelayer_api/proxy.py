@@ -3,15 +3,16 @@ from collections import defaultdict
 import time
 from weakref import WeakSet
 
-from .basetypes import KaraboValue, NoneValue
-from .enums import NodeType
+from karabo.native.data.basetypes import KaraboValue, NoneValue
+from karabo.native.data.enums import NodeType
+from karabo.native.exceptions import KaraboError
+from karabo.native.data.hash import Descriptor, Hash, Slot, Type
+from karabo.native.timestamp import Timestamp
+from karabo.native.time_mixin import get_timestamp
+from karabo.native.weak import Weak
+
 from .eventloop import synchronize
-from .exceptions import KaraboError
-from .hash import Descriptor, Hash, Slot, Type
 from .ndarray import NDArray
-from .timestamp import Timestamp
-from .time_mixin import get_timestamp
-from .weak import Weak
 
 
 class _ProxyBase(object):

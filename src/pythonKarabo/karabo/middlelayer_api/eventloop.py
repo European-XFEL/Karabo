@@ -23,11 +23,12 @@ import threading
 import traceback
 import weakref
 
+from karabo.native.data.basetypes import KaraboValue, unit_registry as unit
+from karabo.native.exceptions import KaraboError
+from karabo.native.data.hash import Hash
+from karabo.native.data.serializers import decodeBinary, encodeBinary
+
 from . import openmq
-from .basetypes import KaraboValue, unit_registry as unit
-from .exceptions import KaraboError
-from .hash import Hash
-from .serializers import decodeBinary, encodeBinary
 
 # See C++ karabo/xms/Signal.hh for reasoning about the two minutes...
 _MSG_TIME_TO_LIVE = 120000  # in ms - i.e. 2 minutes
