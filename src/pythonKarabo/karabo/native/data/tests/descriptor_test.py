@@ -1,16 +1,18 @@
 from enum import Enum
-from unittest import TestCase, main
-
 import numpy
 from pint import DimensionalityError
+from unittest import TestCase, main
 
-from karabo.middlelayer import (
-    AccessMode, AlarmCondition, Assignment, AccessLevel, Attribute, Bool, Char,
-    ComplexFloat, decodeBinary, Double, encodeBinary, Float,
-    Hash, Int8, Int16, LeafType, MetricPrefix, NumpyVector, NDArray,
-    QuantityValue, Schema, State, String, Timestamp, Type, Unit, unit,
-    UInt64, VectorBool, VectorChar, VectorComplexFloat, VectorInt32,
-    VectorFloat, VectorHash, VectorInt8, VectorString)
+from karabo.common.alarm_conditions import AlarmCondition
+from karabo.common.states import State
+from karabo.native import (AccessLevel, AccessMode, Assignment, Attribute, Bool,
+                           Char, ComplexFloat, Double, Float, Hash, Int16, Int8,
+                           LeafType, MetricPrefix, NDArray, NumpyVector,
+                           QuantityValue, Schema, String, Timestamp, Type,
+                           UInt64, Unit, VectorBool, VectorChar,
+                           VectorComplexFloat, VectorFloat, VectorHash,
+                           VectorInt32, VectorInt8, VectorString, decodeBinary,
+                           encodeBinary, unit)
 
 
 class Tests(TestCase):
