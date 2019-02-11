@@ -40,14 +40,11 @@ def get_children_of_klass(model, search_klass):
     """
     ret = []
 
-    class _Visitor(object):
+    def visitor(obj):
         nonlocal ret
+        if isinstance(obj, search_klass):
+            ret.append(obj)
 
-        def __call__(self, obj):
-            if isinstance(obj, search_klass):
-                ret.append(obj)
-
-    visitor = _Visitor()
     walk_traits_object(model, visitor)
 
     return ret
