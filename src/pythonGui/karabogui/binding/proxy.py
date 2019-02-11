@@ -217,9 +217,9 @@ class DeviceClassProxy(BaseDeviceProxy):
         """Request a recent schema for this device class
         """
         if self.status is not DeviceStatus.REQUESTED:
-            self.status = DeviceStatus.REQUESTED
             get_network().onGetClassSchema(self.server_id,
                                            self.binding.class_id)
+            self.status = DeviceStatus.REQUESTED
 
 
 class ProjectDeviceProxy(DeviceClassProxy):
