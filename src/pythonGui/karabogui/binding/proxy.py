@@ -216,11 +216,11 @@ class DeviceClassProxy(BaseDeviceProxy):
     def refresh_schema(self, request=True):
         """Request a recent schema for this device class
         """
-        if request:
-            get_network().onGetClassSchema(self.server_id,
-                                           self.binding.class_id)
         if self.status is not DeviceStatus.REQUESTED:
             self.status = DeviceStatus.REQUESTED
+            if request:
+                get_network().onGetClassSchema(self.server_id,
+                                               self.binding.class_id)
 
 
 class ProjectDeviceProxy(DeviceClassProxy):
