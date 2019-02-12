@@ -224,11 +224,13 @@ class SystemTree(HasStrictTraits):
             return server_class_keys
 
         # Take care of removing all children from bottom to top
-        while server_node.children:
-            class_node = server_node.children[-1]
-            while class_node.children:
+        class_nodes = server_node.children
+        while class_nodes:
+            class_node = class_nodes[-1]
+            device_nodes = class_node.children
+            while device_nodes:
                 # Just for security take care of devices
-                device_node = class_node.children[-1]
+                device_node = device_nodes[-1]
                 # Remove device node
                 with self.update_context.removal_context(device_node):
                     class_node.children.pop()
