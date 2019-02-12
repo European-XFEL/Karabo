@@ -25,7 +25,7 @@ from karabo.native.data.hash import (
 from karabo.native.data.ndarray import NDArray
 from karabo.native.data.schema import (
     Configurable, Node, ChoiceOfNodes, ListOfNodes, Overwrite,
-	MetaConfigurable)
+    MetaConfigurable)
 from karabo.native.data.serializers import (
     decodeBinary, decodeXML, encodeBinary, encodeXML, loadFromFile, saveToFile,
     writeBinary, writeXML, XMLParser, XMLWriter)
@@ -33,6 +33,6 @@ from karabo.native.data.serializers import (
 # Import project namespace
 from karabo.native.project.convert import convert_old_project
 from karabo.native.project.io import (
-	read_project_model, write_project_model)
+    read_project_model, write_project_model)
 from karabo.native.project.old import (
     Project as OldProject, BaseDevice, BaseDeviceGroup)
