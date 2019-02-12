@@ -10,8 +10,7 @@ from PyQt4.QtGui import (
     QApplication, QAction, QClipboard, QDialog, QCursor, QKeySequence,
     QMessageBox, QTreeView)
 
-from karabo.common.project.api import (
-    find_parent_object, get_children_of_klass)
+from karabo.common.project.api import find_parent_object
 from karabogui import messagebox
 from karabogui.events import KaraboEventSender, broadcast_event
 from karabogui.project.dialog.project_handle import NewProjectDialog
@@ -24,7 +23,7 @@ from .controller.bases import BaseProjectGroupController
 from .controller.device import DeviceInstanceController
 from .controller.project import ProjectController
 from .controller.project_groups import ProjectSubgroupController
-from .controller.server import DeviceServerController
+from .controller.server import get_project_servers
 from .controller.subproject import SubprojectController
 
 
@@ -208,21 +207,19 @@ class ProjectView(QTreeView):
         The project controller ``selected_controller`` is used to find the
         children server controller to instantiate devices
         """
-        server_controllers = get_children_of_klass(
-            selected_controller, DeviceServerController)
+        online, offline = get_project_servers(
+            selected_controller)
         # Check for offline servers to provide a warning
-        offline_servers = []
-        for server in server_controllers:
-            if server.online:
-                server.instantiate_devices()
-            else:
-                instance_id = server.model.server_id
-                offline_servers.append(instance_id)
+        for server in online:
+            server.instantiate_devices()
 
         # Nofify that we have seen offline servers!
-        if offline_servers:
+        if offline:
+            offline_ids = ', '.join(
+                sorted(set([server.model.server_id
+                            for server in offline])))
             msg = ('Servers are not online for device instantiation: '
-                   '{}!'.format(', '.join(offline_servers)))
+                   '{}!'.format(offline_ids))
             messagebox.show_warning(msg, title='Servers offline',
                                     parent=self)
 
