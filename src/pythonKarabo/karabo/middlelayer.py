@@ -92,13 +92,15 @@ def _create_cli_submodule():
         call, connectDevice, disconnectDevice, execute, executeNoWait,
         findDevices, findServers, getClasses, getClients, getConfiguration,
         getConfigurationFromPast, getSchemaFromPast, getDevice, getDevices,
-        getHistory, getSchema, getServers, getTopology, instantiate,
-        instantiateNoWait, karabo, setWait, setNoWait, shutdown,
-        shutdownNoWait, sleep, State, waitUntil, waitUntilNew
+        getHistory, getSchema, getServers, getTopology, get_timestamp,
+        Hash, instantiate, instantiateNoWait, karabo, setWait, setNoWait,
+        shutdown, shutdownNoWait, sleep, State, Timestamp, waitUntil,
+        waitUntilNew
     )
     module = create_module('karabo.middlelayer.cli', *symbols)
     module.__file__ = __file__  # looks nicer when repr(cli) is used
     return module
+
 
 cli = _create_cli_submodule()
 del _create_cli_submodule
