@@ -191,7 +191,7 @@ runPythonUnitTests() {
     echo Running Karabo Python unit tests ...
     echo
 
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS -e 'integration_tests' karabo"
+    safeRunCommand "$NOSETESTS -v $FLAKY_FLAGS $COVER_FLAGS -e 'integration_tests' karabo"
     # Allow gui tests to crash sometimes - for the time being:
     ACCEPT_SIGSEGV=true
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabogui"
