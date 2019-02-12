@@ -18,15 +18,16 @@ __coverage_tests() {
     export SSH_PREFIX=$SSH_USER_HOST:$SSH_KARABO_DIR
     export CURL_PREFIX=http://exflserv05.desy.de/karabo
     export REL_TAG=$CI_COMMIT_SHA
-    export FRAMEWORK_DEST_DIR=karaboCoverageReport/$REL_TAG
+    export REPORT_DEST_DIR=karaboCoverageReport/$REL_TAG
     export REL_OS_NAME=$(lsb_release -is)
     export REL_OS_VERS_LONG=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
     export REL_ARTIFACT_NAME=coverage_report_$REL_TAG.tar.gz
     bash ./auto_build_all.sh CodeCoverage
     pushd ci/coverage
-    tar cfz $REL_ARTIFACT_NAME *eport/*.zip
-    sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_USER_HOST "mkdir -p $SSH_KARABO_DIR/$FRAMEWORK_DEST_DIR"
-    sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $REL_ARTIFACT_NAME $SSH_PREFIX/$FRAMEWORK_DEST_DIR
+    tar cfz $REL_ARTIFACT_NAME *eport/
+    sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_USER_HOST "mkdir -p $SSH_KARABO_DIR/$REPORT_DEST_DIR"
+    sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $REL_ARTIFACT_NAME $SSH_PREFIX/$REPORT_DEST_DIR
+    sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "cd $SSH_KARABO_DIR/$REPORT_DEST_DIR; tar xfz $REL_ARTIFACT_NAME;"
     popd
 }
 
