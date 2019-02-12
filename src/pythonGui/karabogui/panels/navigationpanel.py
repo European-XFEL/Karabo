@@ -12,14 +12,14 @@ from PyQt4.QtGui import (
     QWidget)
 from karabogui import icons
 from karabogui.events import KaraboEventSender, register_for_broadcasts
-from karabogui.navigation.view import NavigationTreeView
+from karabogui.navigation.system_view import SystemTreeView
 
 from .base import BasePanelWidget
 
 
-class NavigationPanel(BasePanelWidget):
+class TopologyPanel(BasePanelWidget):
     def __init__(self):
-        super(NavigationPanel, self).__init__("Navigation")
+        super(TopologyPanel, self).__init__("System Topology")
         self._init_search_filter()
 
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
@@ -34,11 +34,11 @@ class NavigationPanel(BasePanelWidget):
         main_layout = QVBoxLayout(widget)
         main_layout.setContentsMargins(5, 5, 5, 5)
 
-        self.twNavigation = NavigationTreeView(widget)
+        self.tree_view = SystemTreeView(widget)
         h_layout = self.create_search_bar()
         main_layout.addLayout(h_layout)
 
-        main_layout.addWidget(self.twNavigation)
+        main_layout.addWidget(self.tree_view)
         return widget
 
     def karaboBroadcastEvent(self, event):
@@ -114,7 +114,7 @@ class NavigationPanel(BasePanelWidget):
         """Pick the first number in index array, select the corresponding node
         """
         idx = next(iter(self.index_array))
-        self.twNavigation.model().selectNode(self.found[idx])
+        self.tree_view.model().selectNode(self.found[idx])
 
     # -----------------------------------------
     # Qt Slots
@@ -124,7 +124,7 @@ class NavigationPanel(BasePanelWidget):
         """ Slot is called whenever the search filter text was changed
         """
         if text:
-            model = self.twNavigation.model()
+            model = self.tree_view.model()
             kwargs = {'case_sensitive': self.pb_match.isChecked(),
                       'use_reg_ex': self.pb_reg_ex.isChecked()}
             self.found = model.findNodes(text, **kwargs)

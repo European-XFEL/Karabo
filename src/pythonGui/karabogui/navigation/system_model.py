@@ -3,14 +3,12 @@
 # Created on June 1, 2013
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-import contextlib
 import json
 from weakref import WeakValueDictionary
 
 from PyQt4.QtCore import (QAbstractItemModel, QMimeData, QModelIndex,
                           Qt, pyqtSignal)
 from PyQt4.QtGui import QItemSelection, QItemSelectionModel
-from traits.api import HasStrictTraits, WeakRef
 
 from karabo.common.api import DeviceStatus
 from karabogui import globals as krb_globals, icons
@@ -19,86 +17,14 @@ from karabogui.events import KaraboEventSender, register_for_broadcasts
 from karabogui.indicators import get_state_icon_for_status
 from karabogui.singletons.api import get_topology
 
-
-class _UpdateContext(HasStrictTraits):
-    """A context manager that can be handed off to code which doesn't need to
-    know that it's dealing with a Qt QAbstractItemModel.
-    """
-    item_model = WeakRef(QAbstractItemModel)
-
-    @contextlib.contextmanager
-    def reset_context(self):
-        """Provide a context whenever the system tree was cleared then the
-        Qt model needs to be reseted.
-
-        NOTE: This method is a context manager wraps the insertion with calls
-        to ``QAbstractItemModel.beginResetModel`` and
-        ``QAbstractItemModel.endResetModel`` (See Qt documentation)
-        """
-        try:
-            self.item_model.beginResetModel()
-            yield
-        finally:
-            self.item_model.endResetModel()
-
-    @contextlib.contextmanager
-    def insertion_context(self, parent_node, first, last):
-        """Provide a context for the addition of multiple children under a
-        single parent item.
-
-        NOTE: This method is a context manager wraps the insertion with calls
-        to ``QAbstractItemModel.beginInsertRows`` and
-        ``QAbstractItemModel.endInsertRows`` (See Qt documentation)
-        """
-        parent_index = self.item_model.createIndex(parent_node.row(), 0,
-                                                   parent_node)
-
-        def gen():
-            try:
-                self.item_model.beginInsertRows(parent_index, first, last)
-                yield
-            finally:
-                self.item_model.endInsertRows()
-
-        if parent_index.isValid():
-            yield from gen()
-        else:
-            yield
-
-    @contextlib.contextmanager
-    def removal_context(self, tree_node):
-        """Provide a context for the removal of a single item from the model.
-
-        NOTE: This method is a context manager which wraps the removal of an
-        item with ``QAbstractItemModel.beginRemoveRows`` and
-        ``QAbstractItemModel.endRemoveRows`` (See Qt documentation)
-        """
-        node_row = tree_node.row()
-        index = self.item_model.createIndex(node_row, 0, tree_node)
-        if index.isValid():
-            parent_index = index.parent()
-        else:
-            parent_index = QModelIndex()
-
-        def gen():
-            try:
-                self.item_model.beginRemoveRows(parent_index, node_row,
-                                                node_row)
-                yield
-            finally:
-                self.item_model.endRemoveRows()
-
-        if parent_index.isValid():
-            yield from gen()
-        else:
-            yield
+from .context import _UpdateContext
 
 
-class NavigationTreeModel(QAbstractItemModel):
+class SystemTreeModel(QAbstractItemModel):
     signalItemChanged = pyqtSignal(str, object)  # type, BaseDeviceProxy
 
     def __init__(self, parent=None):
-        super(NavigationTreeModel, self).__init__(parent)
+        super(SystemTreeModel, self).__init__(parent)
 
         self._model_index_refs = WeakValueDictionary()
 
@@ -158,7 +84,7 @@ class NavigationTreeModel(QAbstractItemModel):
         key = id(node)
         if key not in self._model_index_refs:
             self._model_index_refs[key] = node
-        return super(NavigationTreeModel, self).createIndex(row, column, key)
+        return super(SystemTreeModel, self).createIndex(row, column, key)
 
     def clear(self):
         self.tree.clear_all()
@@ -177,7 +103,7 @@ class NavigationTreeModel(QAbstractItemModel):
         self.selectionModel.setCurrentIndex(index,
                                             QItemSelectionModel.ClearAndSelect)
 
-        treeview = super(NavigationTreeModel, self).parent()
+        treeview = super(SystemTreeModel, self).parent()
         treeview.scrollTo(index)
 
     def selectNodeById(self, node_id):
@@ -390,6 +316,7 @@ class NavigationTreeModel(QAbstractItemModel):
         """ Whenever the ``needs_update`` event of a ``SystemTree`` is changed
         the view needs to be updated
         """
+        self.layoutAboutToBeChanged.emit()
         self.layoutChanged.emit()
 
     def _alarm_update(self, node_ids):
