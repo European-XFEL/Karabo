@@ -544,6 +544,25 @@ namespace karabo {
                     .assignmentOptional().defaultValue(".")
                     .reconfigurable()
                     .commit();
+
+            NODE_ELEMENT(expected).key("node")
+                    .displayedName("Node for Slots")
+                    .commit();
+
+            SLOT_ELEMENT(expected).key("node.increment")
+                    .displayedName("Increment Counter")
+                    .commit();
+
+            SLOT_ELEMENT(expected).key("node.reset")
+                    .displayedName("Reset Counter")
+                    .commit();
+
+            UINT32_ELEMENT(expected).key("node.counter")
+                    .displayedName("Counter")
+                    .readOnly()
+                    .initialValue(0)
+                    .commit();
+
         }
 
 
@@ -553,6 +572,9 @@ namespace karabo {
             KARABO_SLOT(writeOutput);
             KARABO_SLOT(eosOutput);
             KARABO_SLOT(slotUpdateSchema);
+            KARABO_SLOT(node_increment);
+            KARABO_SLOT(node_reset);
+           
         }
 
 
@@ -616,5 +638,28 @@ namespace karabo {
                 appendSchemaMaxSize(path, schema.getMaxSize(path) * 2, sendUpdate);
             }
         }
+
+
+        void PropertyTest::node_increment() {
+            AsyncReply areply(this);
+            const unsigned int counter = get<unsigned int>("node.counter");
+            set<unsigned short>("node.counter", counter + 1);
+            karabo::net::EventLoop::getIOService().post(
+                    karabo::util::bind_weak(&PropertyTest::replier, this, areply));
+        }
+
+
+        void PropertyTest::replier(const AsyncReply & areply) {
+            areply(this->getState().name());
+        }
+
+
+        void PropertyTest::node_reset() {
+            AsyncReply areply(this);
+            set<unsigned int>("node.counter", 0);
+            karabo::net::EventLoop::getIOService().post(
+                    karabo::util::bind_weak(&PropertyTest::replier, this, areply));
+        }
+
     }
 }
