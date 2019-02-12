@@ -1,0 +1,1 @@
+recursive-include karabogui *.ui *.svg *.config, *.schema
