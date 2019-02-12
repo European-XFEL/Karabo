@@ -1,7 +1,7 @@
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     MacroModel, ProjectModel, device_config_exists, device_instance_exists,
-    find_parent_object, get_children_of_klass
+    find_parent_object
 )
 from nose.tools import assert_raises
 
@@ -53,15 +53,6 @@ def test_find_parent_project():
 
     parent = find_parent_object(proj, proj, ProjectModel)
     assert parent is None
-
-
-def test_get_children_of_klass():
-    mac = MacroModel()
-    sub_proj0 = ProjectModel(macros=[mac])
-    sub_proj1 = ProjectModel(macros=[mac])
-    proj = ProjectModel(subprojects=[sub_proj0, sub_proj1])
-    macro_models = get_children_of_klass(proj, MacroModel)
-    assert len(macro_models) == 2
 
 
 def test_find_parent_project_degenerate():

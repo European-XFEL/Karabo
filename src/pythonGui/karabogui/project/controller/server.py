@@ -9,7 +9,7 @@ from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Bool, Instance, Property, on_trait_change
 
-from karabo.common.api import DeviceStatus
+from karabo.common.api import DeviceStatus, walk_traits_object
 from karabo.common.project.api import DeviceServerModel
 from karabogui.enums import ProjectItemTypes
 from karabogui.events import (register_for_broadcasts,
@@ -211,3 +211,21 @@ def _get_server_status(server_id):
     if attributes is not None:
         return DeviceStatus(attributes.get('status', 'ok'))
     return DeviceStatus.OFFLINE
+
+
+def get_project_servers(project_controller):
+    """Given a ``project_controller`` return all the online and offline servers
+    """
+    online = []
+    offline = []
+
+    def visitor(obj):
+        if isinstance(obj, DeviceServerController):
+            if obj.online:
+                online.append(obj)
+            else:
+                offline.append(obj)
+
+    walk_traits_object(project_controller, visitor)
+
+    return online, offline
