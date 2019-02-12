@@ -1,0 +1,78 @@
+import contextlib
+
+from PyQt4.QtCore import (QAbstractItemModel, QModelIndex)
+from traits.api import HasStrictTraits, WeakRef
+
+
+class _UpdateContext(HasStrictTraits):
+    """A context manager that can be handed off to code which doesn't need to
+    know that it's dealing with a Qt QAbstractItemModel.
+    """
+    item_model = WeakRef(QAbstractItemModel)
+
+    @contextlib.contextmanager
+    def reset_context(self):
+        """Provide a context whenever the system tree was cleared then the
+        Qt model needs to be reseted.
+
+        NOTE: This method is a context manager wraps the insertion with calls
+        to ``QAbstractItemModel.beginResetModel`` and
+        ``QAbstractItemModel.endResetModel`` (See Qt documentation)
+        """
+        try:
+            self.item_model.beginResetModel()
+            yield
+        finally:
+            self.item_model.endResetModel()
+
+    @contextlib.contextmanager
+    def insertion_context(self, parent_node, first, last):
+        """Provide a context for the addition of multiple children under a
+        single parent item.
+
+        NOTE: This method is a context manager wraps the insertion with calls
+        to ``QAbstractItemModel.beginInsertRows`` and
+        ``QAbstractItemModel.endInsertRows`` (See Qt documentation)
+        """
+        parent_index = self.item_model.createIndex(parent_node.row(), 0,
+                                                   parent_node)
+
+        def gen():
+            try:
+                self.item_model.beginInsertRows(parent_index, first, last)
+                yield
+            finally:
+                self.item_model.endInsertRows()
+
+        if parent_index.isValid():
+            yield from gen()
+        else:
+            yield
+
+    @contextlib.contextmanager
+    def removal_context(self, tree_node):
+        """Provide a context for the removal of a single item from the model.
+
+        NOTE: This method is a context manager which wraps the removal of an
+        item with ``QAbstractItemModel.beginRemoveRows`` and
+        ``QAbstractItemModel.endRemoveRows`` (See Qt documentation)
+        """
+        node_row = tree_node.row()
+        index = self.item_model.createIndex(node_row, 0, tree_node)
+        if index.isValid():
+            parent_index = index.parent()
+        else:
+            parent_index = QModelIndex()
+
+        def gen():
+            try:
+                self.item_model.beginRemoveRows(parent_index, node_row,
+                                                node_row)
+                yield
+            finally:
+                self.item_model.endRemoveRows()
+
+        if parent_index.isValid():
+            yield from gen()
+        else:
+            yield
