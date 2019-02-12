@@ -191,8 +191,6 @@ runPythonUnitTests() {
     echo Running Karabo Python unit tests ...
     echo
 
-    # Pass the bound_api/launcher.py file. If the file is imported, a
-    # part of its code is executed. That results in an error.
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS -e 'integration_tests' karabo"
     # Allow gui tests to crash sometimes - for the time being:
     ACCEPT_SIGSEGV=true
