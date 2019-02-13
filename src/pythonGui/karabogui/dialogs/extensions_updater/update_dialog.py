@@ -18,8 +18,8 @@ class UpdateDialog(QDialog):
 
         self.updater = ExtensionsUpdater(self)
 
-        self.lb_current.setText(self.UNDEFINED_VERSION)
-        self.lb_latest.setText(self.UNDEFINED_VERSION)
+        self.lb_current.setText(self.updater.UNDEFINED_VERSION)
+        self.lb_latest.setText(self.updater.UNDEFINED_VERSION)
 
         self.bt_refresh.setIcon(icons.refresh)
         self.pb_current.setVisible(False)
@@ -40,7 +40,7 @@ class UpdateDialog(QDialog):
         current = self.lb_current.text()
         latest = self.lb_latest.text()
 
-        if current != latest != self.UNDEFINED_VERSION:
+        if current != latest != self.updater.UNDEFINED_VERSION:
             self.bt_update.setEnabled(True)
         else:
             self.bt_update.setEnabled(False)
