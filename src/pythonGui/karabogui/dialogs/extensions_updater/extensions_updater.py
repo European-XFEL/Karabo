@@ -29,6 +29,7 @@ class ExtensionsUpdater:
             return self.UNDEFINED_VERSION
 
     def _retrieve_remote_html(self):
+        """Retrieves the remote tag url html and decodes it"""
         result = requests.get(self._REMOTE_SVR)
         html = result.content.decode()
 
@@ -48,6 +49,7 @@ class ExtensionsUpdater:
         # Match entries of the type N.N.N
         tag_regex = re.compile(self._TAG_REGEX)
 
+        # All the tags are in an href tag
         for href in reversed(table.xpath('//a/@href')):
             tag = href.strip('/')
             if tag_regex.match(tag):
@@ -57,6 +59,8 @@ class ExtensionsUpdater:
 
     @contextmanager
     def _retrieve_wheel_file(self, tag):
+        """Downloads the wheel for the given tag and writes it to a file,
+        removing it when the context is finished."""
         wheel_file = self._WHEEL_TEMPLATE.format(tag)
         wheel_path = '{}{}/{}'.format(self._REMOTE_SVR,
                                       tag,
