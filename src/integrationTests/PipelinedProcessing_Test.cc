@@ -404,9 +404,7 @@ void PipelinedProcessing_Test::testPipeQueue(unsigned int processingTime, unsign
         // make sure the sender has stopped sending data
         CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
 
-        // Retrieves the amount of data that the sender will send
-        unsigned int senderNData = m_deviceClient->get<unsigned int>(m_sender, "nData");
-        // Then call its slot
+        // Then call its slot again
         m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
 
         // Makes sure the sender has finished sending the data in this run. We can't rely on 'currentDataId' for
@@ -856,9 +854,7 @@ void PipelinedProcessing_Test::testTwoSharedReceiversQueuing(unsigned int proces
 
         // make sure the sender has stopped sending data
         CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
-        // retrieves the amount of data that the sender will send
-        unsigned int senderNData = m_deviceClient->get<unsigned int>(m_sender, "nData");
-        // then call its slot
+        // then call its slot again
         m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
 
         // Makes sure the sender has finished sending the data in this run. We can't rely on 'currentDataId' for
@@ -967,9 +963,6 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectSharedQueue(bool useRou
     // Makes sure the sender is not sending any data before starting the test run.
     CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
 
-    // Retrieves the amount of data that the sender will send.
-    unsigned int senderNData = m_deviceClient->get<unsigned int>(m_sender, "nData");
-    // then call its slot
     m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
 
     // Waits long enough for some data to arrive.
