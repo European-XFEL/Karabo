@@ -462,6 +462,14 @@ class Tests(TestCase):
         d.toKaraboValue(v)
         data, _ = d.toDataAndAttrs(v)
         self.assertEqual(len(data), 2)
+        self.assertIsNone(v.timestamp)
+        v.timestamp = self.timestamp
+        d.toKaraboValue(v)
+        data, timestamp = d.toDataAndAttrs(v)
+        self.assertEqual(self.timestamp,
+                         Timestamp.fromHashAttributes(timestamp))
+        self.assertEqual(len(data), 2)
+
 
         h = Hash()
         h["a"] = data

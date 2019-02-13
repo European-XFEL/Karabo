@@ -1321,9 +1321,15 @@ class VectorHash(Vector):
                                     timestamp=timestamp)
 
     def toDataAndAttrs(self, value):
+        if (isinstance(value, basetypes.KaraboValue)
+                and value.timestamp is not None):
+            attrs = value.timestamp.toDict()
+        else:
+            attrs = {}
+
         data = [Hash((col, row[col]) for col in self.dtype.names)
                 for row in value.value]
-        return data, {}
+        return data, attrs
 
     @classmethod
     def yieldXML(cls, data):
