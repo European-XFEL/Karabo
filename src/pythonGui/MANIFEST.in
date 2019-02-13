@@ -1,2 +1,3 @@
 recursive-include karabogui *.ui *.config *.schema
 recursive-include karabogui/icons *.*
+recursive-include karabogui/dialogs *.html
