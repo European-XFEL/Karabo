@@ -35,21 +35,6 @@ def find_parent_object(model, ancestor_model, search_klass):
     return visitor.found_parent
 
 
-def get_children_of_klass(model, search_klass):
-    """Provides all the desired children of ``search_klass``
-    """
-    ret = []
-
-    def visitor(obj):
-        nonlocal ret
-        if isinstance(obj, search_klass):
-            ret.append(obj)
-
-    walk_traits_object(model, visitor)
-
-    return ret
-
-
 def device_instance_exists(project, instance_ids):
     """Check whether the a ``project`` already has a device[s] with the given
     ``instance_ids`` and return ``True`` or ``False``
