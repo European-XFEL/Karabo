@@ -3,8 +3,9 @@ import contextlib
 import sys
 import unittest
 
-from PyQt4.QtCore import QEventLoop
+from PyQt4.QtCore import QEventLoop, Qt
 from PyQt4.QtGui import QApplication
+from PyQt4.QtTest import QTest
 
 from karabo.common.api import Capabilities, DeviceStatus
 from karabo.native import AccessLevel, Hash
@@ -37,6 +38,9 @@ class GuiTestCase(unittest.TestCase):
     def process_qt_events(self):
         # Give the event loop 10ms to process its events
         self.app.processEvents(QEventLoop.AllEvents, 10)
+
+    def click(self, button_widget, button=Qt.LeftButton):
+        QTest.mouseClick(button_widget, button)
 
 
 def alarm_data():
