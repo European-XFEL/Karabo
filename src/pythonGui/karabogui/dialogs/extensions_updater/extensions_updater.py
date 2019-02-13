@@ -3,7 +3,6 @@ from lxml import etree
 import os
 from pathlib import Path
 import pkg_resources
-from PyQt4.QtCore import QProcess
 import re
 import requests
 
@@ -16,9 +15,6 @@ class ExtensionsUpdater:
     _REMOTE_SVR = 'http://exflserv05.desy.de/karabo/karaboExtensions/tags/'
 
     UNDEFINED_VERSION = 'Undefined'
-
-    def __init__(self, parent=None):
-        self._parent = parent
 
     def get_current_version(self):
         """Gets the current version of the package"""
@@ -58,7 +54,7 @@ class ExtensionsUpdater:
         return self.UNDEFINED_VERSION
 
     @contextmanager
-    def _retrieve_wheel_file(self, tag):
+    def download_file_for_tag(self, tag):
         """Downloads the wheel for the given tag and writes it to a file,
         removing it when the context is finished."""
         wheel_file = self._WHEEL_TEMPLATE.format(tag)
@@ -78,14 +74,3 @@ class ExtensionsUpdater:
 
             # Remove downloaded wheel
             os.remove(temp_file)
-
-    def update_to_latest(self, tag):
-        """Updates the package to the latest tag"""
-        with self._retrieve_wheel_file(tag) as temp_file:
-            if not temp_file:
-                return
-
-            # Install it using a system call
-            process = QProcess(self._parent)
-            process.start('pip install --upgrade {}'.format(temp_file))
-            process.waitForFinished()

@@ -1,4 +1,5 @@
 from PyQt4 import uic
+from PyQt4.QtCore import QProcess
 from PyQt4.QtGui import QDialog
 from karabogui.dialogs.extensions_updater import ExtensionsUpdater
 from pathlib import Path
@@ -73,7 +74,12 @@ class UpdateDialog(QDialog):
         self.bt_update.setEnabled(False)
         self.bt_update.setText('Updating...')
 
-        self.updater.update_to_latest(self.lb_latest.text())
+        tag = self.lb_latest.text()
+        with self.updater.download_file_for_tag(tag) as wheel_file:
+            # Install it using a system call
+            process = QProcess(self)
+            process.start('pip install --upgrade {}'.format(wheel_file))
+            process.waitForFinished()
 
         self.bt_update.setText('Update')
         self.bt_refresh.setEnabled(True)
