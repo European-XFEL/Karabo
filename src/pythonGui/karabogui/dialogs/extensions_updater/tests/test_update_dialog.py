@@ -2,7 +2,6 @@ import requests
 from contextlib import contextmanager
 from pathlib import Path
 from unittest import mock, skip
-from PyQt4.QtCore import QProcess
 
 from karabogui.dialogs.extensions_updater import (
     ExtensionsUpdater, UpdateDialog)
@@ -63,37 +62,30 @@ class TestCase(GuiTestCase):
         return _mock_response
 
     @mock.patch.object(requests, 'get')
-    @mock.patch.object(QProcess, 'start')
-    def test_outgoing_messages(self, start_mock, get_mock):
+    def test_outgoing_messages(self, get_mock):
         """Tests if the outgoing messages are called with the right
         parameters"""
         expected_wheel = 'http://exflserv05.desy.de/karabo/karaboExtensions' \
                          '/tags/0.0.0/GUI_Extensions-0.0.0-py3-none-any.whl'
-        expected_cmd = 'pip install --upgrade ' \
-                       'GUI_Extensions-0.0.0-py3-none-any.whl'
 
         updater = ExtensionsUpdater()
 
         get_mock.side_effect = self._create_get_mock(b'', requests.codes.ok)
-        updater.update_to_latest('0.0.0')
+        with updater.download_file_for_tag('0.0.0'):
+            pass
 
         # Assert outgoing messages
         get_mock.assert_called_once_with(
             expected_wheel,
             stream=True)
 
-        assert start_mock.call_count == 1
-        start_mock.assert_called_with(expected_cmd)
-
         # Emulate a <not ok> get request
         get_mock.side_effect = self._create_get_mock(b'',
                                                      requests.codes.not_found)
-        updater.update_to_latest('0.0.0')
+        with updater.download_file_for_tag('0.0.0'):
+            pass
 
         assert get_mock.call_count == 2
         get_mock.assert_called_with(
             expected_wheel,
             stream=True)
-
-        # Not called again as the wheel couldn't be retrieved
-        assert start_mock.call_count == 1
