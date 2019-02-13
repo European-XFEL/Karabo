@@ -190,7 +190,6 @@ runPythonUnitTests() {
     echo
     echo Running Karabo Python unit tests ...
     echo
-
     safeRunCommand "$NOSETESTS -v $FLAKY_FLAGS $COVER_FLAGS -e 'integration_tests' karabo"
     # Allow gui tests to crash sometimes - for the time being:
     ACCEPT_SIGSEGV=true
@@ -206,13 +205,18 @@ runPythonIntegrationTests() {
     echo
     echo Running Karabo Python integration tests ...
     echo
-
+    # coverage flags will add a karabogui dependency that might cause a seg. fault
+    # temporary we add a flag here.
+    if [ $COLLECT_COVERAGE ] then
+        ACCEPT_SIGSEGV=true
+    fi
     # TODO: Needs to be uncommented when the bound_device_test integration test is added.
     #safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.bound_device_test"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_comm_test"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_provided_scenes_test"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.run_configuration_group"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.pipeline_processing_test"
+    unset ACCEPT_SIGSEGV
 
     echo
     echo Karabo Python integration tests complete
