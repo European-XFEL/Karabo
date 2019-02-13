@@ -48,16 +48,12 @@ class ExtensionsUpdater:
         # Match entries of the type N.N.N
         tag_regex = re.compile(self._TAG_REGEX)
 
-        tags = []
-        for href in table.xpath('//a/@href'):
+        for href in reversed(table.xpath('//a/@href')):
             tag = href.strip('/')
             if tag_regex.match(tag):
-                tags.append(tag)
+                return tag
 
-        if not tags:
-            return self.UNDEFINED_VERSION
-
-        return tags[-1]
+        return self.UNDEFINED_VERSION
 
     @contextmanager
     def _retrieve_wheel_file(self, tag):
