@@ -27,7 +27,7 @@ __coverage_tests() {
     tar cfz $REL_ARTIFACT_NAME *eport/ --exclude='*.zip'
     sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_USER_HOST "mkdir -p $SSH_KARABO_DIR/$REPORT_DEST_DIR"
     sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $REL_ARTIFACT_NAME $SSH_PREFIX/$REPORT_DEST_DIR
-    sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "cd $SSH_KARABO_DIR/$REPORT_DEST_DIR; tar xfz $REL_ARTIFACT_NAME;"
+    sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_USER_HOST "cd $SSH_KARABO_DIR/$REPORT_DEST_DIR; tar xfz $REL_ARTIFACT_NAME;"
     popd
 }
 
