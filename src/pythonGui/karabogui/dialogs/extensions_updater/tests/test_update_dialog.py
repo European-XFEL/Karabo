@@ -3,8 +3,8 @@ from contextlib import contextmanager
 from pathlib import Path
 from unittest import mock, skip
 
-from karabogui.dialogs.extensions_updater import (
-    ExtensionsUpdater, UpdateDialog)
+from karabogui.dialogs.extensions_updater import UpdateDialog, \
+    extensions_updater as updater
 from karabogui.testing import GuiTestCase
 
 
@@ -36,8 +36,6 @@ class TestCase(GuiTestCase):
 
     def test_latest_version(self):
         """Tests the model of the extension updater"""
-        updater = ExtensionsUpdater()
-
         html = Path(__file__).parent.joinpath('test_html.html').read_text()
 
         with mock.patch.object(updater,
@@ -67,8 +65,6 @@ class TestCase(GuiTestCase):
         parameters"""
         expected_wheel = 'http://exflserv05.desy.de/karabo/karaboExtensions' \
                          '/tags/0.0.0/GUI_Extensions-0.0.0-py3-none-any.whl'
-
-        updater = ExtensionsUpdater()
 
         get_mock.side_effect = self._create_get_mock(b'', requests.codes.ok)
         with updater.download_file_for_tag('0.0.0'):
