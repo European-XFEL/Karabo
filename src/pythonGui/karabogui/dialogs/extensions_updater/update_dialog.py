@@ -14,7 +14,7 @@ class UpdateDialog(QDialog):
     pip install install call is done.
     """
     def __init__(self, parent=None):
-        super().__init__(parent)
+        super(UpdateDialog, self).__init__(parent)
         uic.loadUi(Path(__file__).parent.joinpath('update_dialog.ui'), self)
 
         self.lb_current.setText(updater.UNDEFINED_VERSION)
