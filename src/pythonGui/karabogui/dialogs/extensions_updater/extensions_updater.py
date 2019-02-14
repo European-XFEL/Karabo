@@ -1,6 +1,5 @@
 from contextlib import contextmanager
 from lxml import etree
-import os
 from pathlib import Path
 import pkg_resources
 import re
@@ -74,4 +73,4 @@ def download_file_for_tag(tag):
         yield temp_file
 
         # Remove downloaded wheel
-        os.remove(temp_file)
+        temp_file.unlink()
