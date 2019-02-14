@@ -122,12 +122,20 @@ class UpdateDialog(QDialog):
         # Connect signals
         self.bt_close.clicked.connect(self.accept)
         self.bt_refresh.clicked.connect(self.refresh_versions)
+        self.bt_clear_log.clicked.connect(self.ed_log.clear)
 
-    def refresh_versions(self):
+    @pyqtSlot()
+    def on_bt_refresh_clicked(self):
+        self.refresh_versions(should_log=True)
+
+    def refresh_versions(self, should_log=False):
         """Method responsible for refreshing the current and latest package
         versions"""
         self._update_current_version()
         self._update_latest_version()
+
+        if should_log:
+            self.ed_log.append('Versions refreshed')
 
         current = self.lb_current.text()
         latest = self.lb_latest.text()
@@ -161,7 +169,8 @@ class UpdateDialog(QDialog):
         self.bt_refresh.setEnabled(False)
         self.bt_update.setEnabled(False)
 
-        update_package(self.lb_latest.text())
+        output = update_package(self.lb_latest.text())
+        self.ed_log.append(output)
 
         self.bt_update.setText('Update')
         self.bt_refresh.setEnabled(True)
