@@ -53,7 +53,12 @@ def _build_node(value, attrs):
         return namespace
 
     node_type = attrs[const.KARABO_SCHEMA_NODE_TYPE]
-    if node_type == NodeType.Node:
+    if node_type == NodeType.Leaf:
+        value_type = attrs[const.KARABO_SCHEMA_VALUE_TYPE]
+        binding_factory = _BINDING_MAP[value_type]
+        return binding_factory(attributes=attrs, value=Undefined)
+
+    elif node_type == NodeType.Node:
         display_type = attrs.get(
             const.KARABO_SCHEMA_DISPLAY_TYPE, '').split('|')[0]
         namespace = _build_subnamespace(value, types.BaseBinding)
@@ -62,11 +67,6 @@ def _build_node(value, attrs):
             binding_factory = _NODE_BINDING_MAP[display_type]
             return binding_factory(value=namespace, attributes=attrs)
         return types.NodeBinding(value=namespace, attributes=attrs)
-
-    elif node_type == NodeType.Leaf:
-        value_type = attrs[const.KARABO_SCHEMA_VALUE_TYPE]
-        binding_factory = _BINDING_MAP[value_type]
-        return binding_factory(attributes=attrs, value=Undefined)
 
     elif node_type in _RECURSIVE_BINDING_MAP:
         namespace = _build_node_choices(value)
