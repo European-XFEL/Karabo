@@ -76,7 +76,15 @@ if __name__ == '__main__':
         'description': 'This is the Karabo GUI',
         'url': 'http://karabo.eu',
         'packages': find_packages(),
-        'include_package_data': True
+        'package_data': {
+            "karabogui.binding.tests": ["data/*.config", "data/*.schema"],
+            "karabogui.configurator.dialog": ["*.ui"],
+            "karabogui.controllers": ["*.ui"],
+            "karabogui.controllers.display": ["*.svg", "*.ui"],
+            "karabogui.dialogs": ["*.ui"],
+            "karabogui.icons": ["*.*", "statefulicons/iconset/*.svg"],
+            "karabogui.project.dialog": ["*.ui"],
+        }
     }
 
     WINDOWS_BUILDER = 'krb_windows_build'
