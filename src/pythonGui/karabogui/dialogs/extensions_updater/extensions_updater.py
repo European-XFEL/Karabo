@@ -38,7 +38,7 @@ def get_latest_version():
         return UNDEFINED_VERSION
 
     table = etree.HTML(html).find('body/table')
-    if not table:
+    if table is not None:
         return UNDEFINED_VERSION
 
     # Match entries of the type N.N.N
