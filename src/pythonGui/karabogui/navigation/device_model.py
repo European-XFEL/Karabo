@@ -174,7 +174,7 @@ class DeviceTreeModel(QAbstractItemModel):
         """
         if role == Qt.DisplayRole:
             if orientation == Qt.Horizontal and section == 0:
-                return "Hierarchical view"
+                return "Domain - Type - Member"
 
     def onSelectionChanged(self, selected, deselected):
         selectedIndexes = selected.indexes()
