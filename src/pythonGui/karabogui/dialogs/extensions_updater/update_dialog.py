@@ -1,7 +1,7 @@
 from PyQt4 import uic
 from PyQt4.QtCore import QProcess
 from PyQt4.QtGui import QDialog
-from karabogui.dialogs.extensions_updater import ExtensionsUpdater
+from karabogui.dialogs.extensions_updater import extensions_updater as updater
 from pathlib import Path
 
 from karabogui import icons
@@ -17,10 +17,8 @@ class UpdateDialog(QDialog):
         super().__init__(parent)
         uic.loadUi(Path(__file__).parent.joinpath('update_dialog.ui'), self)
 
-        self.updater = ExtensionsUpdater(self)
-
-        self.lb_current.setText(self.updater.UNDEFINED_VERSION)
-        self.lb_latest.setText(self.updater.UNDEFINED_VERSION)
+        self.lb_current.setText(updater.UNDEFINED_VERSION)
+        self.lb_latest.setText(updater.UNDEFINED_VERSION)
 
         self.bt_refresh.setIcon(icons.refresh)
         self.pb_current.setVisible(False)
@@ -41,7 +39,7 @@ class UpdateDialog(QDialog):
         current = self.lb_current.text()
         latest = self.lb_latest.text()
 
-        if current != latest != self.updater.UNDEFINED_VERSION:
+        if current != latest != updater.UNDEFINED_VERSION:
             self.bt_update.setEnabled(True)
         else:
             self.bt_update.setEnabled(False)
@@ -51,7 +49,7 @@ class UpdateDialog(QDialog):
         self.pb_current.setVisible(True)
         self.lb_current.setVisible(False)
 
-        current_version = self.updater.get_current_version()
+        current_version = updater.get_current_version()
 
         self.pb_current.setVisible(False)
         self.lb_current.setVisible(True)
@@ -62,7 +60,7 @@ class UpdateDialog(QDialog):
         self.pb_latest.setVisible(True)
         self.lb_latest.setVisible(False)
 
-        latest_version = self.updater.get_latest_version()
+        latest_version = updater.get_latest_version()
 
         self.pb_latest.setVisible(False)
         self.lb_latest.setVisible(True)
@@ -75,7 +73,7 @@ class UpdateDialog(QDialog):
         self.bt_update.setText('Updating...')
 
         tag = self.lb_latest.text()
-        with self.updater.download_file_for_tag(tag) as wheel_file:
+        with updater.download_file_for_tag(tag) as wheel_file:
             # Install it using a system call
             process = QProcess(self)
             process.start('pip install --upgrade {}'.format(wheel_file))
