@@ -101,7 +101,7 @@ namespace karabo {
                     .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
                     .assignmentOptional().defaultValue(500)
                     .reconfigurable()
-                    .minExc(200).maxInc(5000) // NOTE: Not _too_ fast. The device instantiation timer is always running!
+                    .minInc(200).maxInc(5000) // NOTE: Not _too_ fast. The device instantiation timer is always running!
                     .commit();
 
             INT32_ELEMENT(expected).key("forwardLogInterval")
@@ -110,7 +110,7 @@ namespace karabo {
                     .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
                     .assignmentOptional().defaultValue(1000)
                     .reconfigurable()
-                    .minExc(500).maxInc(5000)
+                    .minInc(500).maxInc(5000)
                     .commit();
 
             UINT32_ELEMENT(expected).key("connectedClientCount")
