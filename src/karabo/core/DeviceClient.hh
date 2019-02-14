@@ -92,8 +92,8 @@ namespace karabo {
             bool m_isShared;
 
             /// Map of devices that we are connected to with timer stating their age
-            /// since last access.
-            typedef std::unordered_map<std::string, int> InstanceUsage;
+            /// since last access. Before C++14 not an unordered_map since we want to erase while looping over it
+            typedef std::map<std::string, int> InstanceUsage;
             InstanceUsage m_instanceUsage;
 
             karabo::util::Hash m_deviceChangedHandlers;

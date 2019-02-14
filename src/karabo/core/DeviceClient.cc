@@ -1599,7 +1599,7 @@ if (nodeData) {\
                     if (!immortal && ++(it->second) >= CONNECTION_KEEP_ALIVE) {
                         // It is mortal and too old, nobody has interest anymore:
                         this->disconnect(it->first);
-                        m_instanceUsage.erase(it++); // postfix increment for erasing while iterating through map
+                        it = m_instanceUsage.erase(it);
                     } else { // immortal or 'young'
                         ++it;
                     }
