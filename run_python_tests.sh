@@ -207,7 +207,8 @@ runPythonIntegrationTests() {
     echo
     # coverage flags will add a karabogui dependency that might cause a seg. fault
     # temporary we add a flag here.
-    if [ $COLLECT_COVERAGE ] then
+    if [ $COLLECT_COVERAGE ]
+    then
         ACCEPT_SIGSEGV=true
     fi
     # TODO: Needs to be uncommented when the bound_device_test integration test is added.
