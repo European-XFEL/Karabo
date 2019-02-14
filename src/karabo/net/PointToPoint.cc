@@ -159,7 +159,8 @@ namespace karabo {
             ConnectedInstances m_connectedInstances;
             boost::mutex m_connectedInstancesMutex;
             // key is signalConnectionString, value is list of tuple(slotInstanceId, signalInstanceId, handler)
-            typedef std::unordered_map<std::string, std::list<std::tuple<std::string, std::string, karabo::net::ConsumeHandler> > > PendingSubscriptionsMap;
+            // Before C++14 not an unordered_map since we want to erase an iterator while looping on it.
+            typedef std::map<std::string, std::list<std::tuple<std::string, std::string, karabo::net::ConsumeHandler> > > PendingSubscriptionsMap;
             PendingSubscriptionsMap m_pendingSubscriptions; // to be protected by m_connectedInstancesMutex
 
         };
