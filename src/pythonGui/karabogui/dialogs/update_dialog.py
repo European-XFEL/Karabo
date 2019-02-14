@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 from contextlib import contextmanager
 from lxml import etree
 from pathlib import Path
@@ -67,18 +68,39 @@ def download_file_for_tag(tag):
                                   tag,
                                   wheel_file)
 
-    with requests.get(wheel_path, stream=True) as wheel_request:
-        if not wheel_request.status_code == requests.codes.ok:
-            yield None
-            return
+    wheel_request = requests.get(wheel_path, stream=True)
+    if not wheel_request.status_code == requests.codes.ok:
+        yield None, 'Error downloading wheel {}'.format(tag)
+        return
 
-        temp_file = Path(wheel_file)
-        temp_file.write_bytes(wheel_request.content)
+    temp_file = Path(wheel_file)
+    temp_file.write_bytes(wheel_request.content)
 
-        yield temp_file
+    yield temp_file, None
 
-        # Remove downloaded wheel
-        temp_file.unlink()
+    # Remove downloaded wheel
+    temp_file.unlink()
+
+
+def update_package(tag: str):
+    """Updates the package to the given tag version.
+
+    :returns str:
+        The output given by the process.
+    """
+    with download_file_for_tag(tag) as (wheel_file, err):
+        if err is not None:
+            return err
+
+        # Install it using a system call
+        process = QProcess()
+        process.setProcessChannelMode(QProcess.MergedChannels)
+        process.start('pip install --upgrade {}'.format(wheel_file))
+        process.waitForFinished()
+
+        output = process.readAllStandardOutput().data().decode()
+
+        return output
 
 
 class UpdateDialog(QDialog):
@@ -91,19 +113,17 @@ class UpdateDialog(QDialog):
         super(UpdateDialog, self).__init__(parent)
         uic.loadUi(Path(__file__).parent.joinpath('update_dialog.ui'), self)
 
-        self.lb_current.setText(updater.UNDEFINED_VERSION)
-        self.lb_latest.setText(updater.UNDEFINED_VERSION)
+        self.lb_current.setText(UNDEFINED_VERSION)
+        self.lb_latest.setText(UNDEFINED_VERSION)
 
         self.bt_refresh.setIcon(icons.refresh)
-        self.pb_current.setVisible(False)
-        self.pb_latest.setVisible(False)
         self.bt_update.setEnabled(False)
 
         # Connect signals
         self.bt_close.clicked.connect(self.accept)
+        self.bt_refresh.clicked.connect(self.refresh_versions)
 
-    @pyqtSlot()
-    def on_bt_refresh_clicked(self, value):
+    def refresh_versions(self):
         """Method responsible for refreshing the current and latest package
         versions"""
         self._update_current_version()
@@ -119,23 +139,19 @@ class UpdateDialog(QDialog):
 
     def _update_current_version(self):
         """Updates the current version of the device"""
-        self.pb_current.setVisible(True)
         self.lb_current.setVisible(False)
 
         current_version = get_current_version()
 
-        self.pb_current.setVisible(False)
         self.lb_current.setVisible(True)
         self.lb_current.setText(current_version)
 
     def _update_latest_version(self):
         """Updates the latest version of the device"""
-        self.pb_latest.setVisible(True)
         self.lb_latest.setVisible(False)
 
         latest_version = get_latest_version()
 
-        self.pb_latest.setVisible(False)
         self.lb_latest.setVisible(True)
         self.lb_latest.setText(latest_version)
 
@@ -144,17 +160,33 @@ class UpdateDialog(QDialog):
         """Updates guiextensions to the latest tag"""
         self.bt_refresh.setEnabled(False)
         self.bt_update.setEnabled(False)
-        self.bt_update.setText('Updating...')
 
-        tag = self.lb_latest.text()
-        with download_file_for_tag(tag) as wheel_file:
-            # Install it using a system call
-            process = QProcess(self)
-            process.start('pip install --upgrade {}'.format(wheel_file))
-            process.waitForFinished()
+        update_package(self.lb_latest.text())
 
         self.bt_update.setText('Update')
         self.bt_refresh.setEnabled(True)
         self.bt_update.setEnabled(True)
 
         self.refresh_versions()
+
+
+def main():
+    description = """Command-line tool to update the GUI-Extensions package"""
+    ap = ArgumentParser(description=description)
+    ap.add_argument('-t', '--tag', nargs=1, required=True, help='Desired '
+                                                                'package '
+                                                                'version ('
+                                                                'tag)')
+
+    args = ap.parse_args()
+
+    if args.tag:
+        tag = args.tag[0]
+
+        print('Installing GUI-Extensions version {}'.format(tag))
+        output = update_package(tag)
+        print(output)
+
+
+if __name__ == '__main__':
+    main()
