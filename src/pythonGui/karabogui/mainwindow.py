@@ -19,7 +19,7 @@ from karabogui import globals as krb_globals
 from karabogui import icons
 from karabogui.dialogs.configuration import ConfigurationDialog
 from karabogui.dialogs.dialogs import AboutDialog
-from karabogui.dialogs.extensions_updater.update_dialog import UpdateDialog
+from karabogui.dialogs.update_dialog import UpdateDialog
 from karabogui.indicators import get_processing_color
 from karabogui.events import (
     KaraboEventSender, broadcast_event, register_for_broadcasts)
