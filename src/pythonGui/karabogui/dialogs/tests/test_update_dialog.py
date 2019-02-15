@@ -59,9 +59,8 @@ class TestCase(GuiTestCase):
             pass
 
         # Assert outgoing messages
-        get_mock.assert_called_once_with(
-            expected_wheel,
-            stream=True)
+        get_mock.assert_called_once_with(expected_wheel, stream=True,
+                                         timeout=0.1)
 
         # Emulate a <not ok> get request
         get_mock.return_value = MockResponse(b'', requests.codes.not_found)
@@ -69,4 +68,4 @@ class TestCase(GuiTestCase):
             pass
 
         assert get_mock.call_count == 2
-        get_mock.assert_called_with(expected_wheel, stream=True)
+        get_mock.assert_called_with(expected_wheel, stream=True, timeout=0.1)
