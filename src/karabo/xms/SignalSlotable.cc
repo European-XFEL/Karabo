@@ -796,14 +796,15 @@ namespace karabo {
                 ((id += getInstanceId()) += slotName) += generateUUID(); // instanceId/slot for debugging
                 {
                     boost::mutex::scoped_lock lock(m_asyncReplyInfosMutex);
-                    const auto it = m_asyncReplyInfos.find(id);
-                    while (it != m_asyncReplyInfos.end()) {
+                    auto* replyInfos = &(m_asyncReplyInfos[id]); // Take address here...
+                    while (!std::get<1>(*replyInfos).empty()) { // pos 1 is the slotName which must not be empty (see above))
                         // Should not happen, but...
                         KARABO_LOG_FRAMEWORK_WARN << "Uuid clash in registerAsyncReply: '" << id << "' already used for"
                                 " one of " << m_asyncReplyInfos.size() << " active async replies";
                         id = ((getInstanceId() + slotName) += generateUUID());
+                        replyInfos = &(m_asyncReplyInfos[id]); // ... to re-assign the pointer here (which is impossible for reference)
                     }
-                    m_asyncReplyInfos[id] = std::make_tuple(getSenderInfo(slotName)->getHeaderOfSender(), slotName,
+                    *replyInfos = std::make_tuple(getSenderInfo(slotName)->getHeaderOfSender(), slotName,
                                                             slotName_calledGlobally.second);
                 }
 
@@ -1722,15 +1723,16 @@ namespace karabo {
             std::string uuid(generateUUID());
             {
                 boost::mutex::scoped_lock lock(m_currentMultiAsyncConnectsMutex);
-                const auto it = m_currentMultiAsyncConnects.find(uuid);
-                while (it != m_currentMultiAsyncConnects.end()) {
+                auto* multiAsyncConnectInfo = &(m_currentMultiAsyncConnects[uuid]); // Take address here...
+                while (!std::get<0>(*multiAsyncConnectInfo).empty()) { // pos 0 has non-zero size of signalSlotConnections (see above)
                     // Should not happen, but...
                     KARABO_LOG_FRAMEWORK_WARN << "Uuid clash in asyncConnect: '" << uuid << "' already used for one of "
                             << m_currentMultiAsyncConnects.size() << " active asyncConnects";
                     uuid = generateUUID();
+                    multiAsyncConnectInfo = &(m_currentMultiAsyncConnects[uuid]); // ... to re-assign the pointer here (which is impossible for reference)
                 }
-                m_currentMultiAsyncConnects[uuid] = std::make_tuple(vector<bool>(signalSlotConnections.size(), false),
-                                                                    successHandler, failureHandler);
+                *multiAsyncConnectInfo = std::make_tuple(vector<bool>(signalSlotConnections.size(), false),
+                                                         successHandler, failureHandler);
             }
 
             // Send individual requests
