@@ -136,8 +136,6 @@
           <incDir>
             <pElem>../../../src</pElem>
             <pElem>${KARABO}/extern/include</pElem>
-            <pElem>${KARABO}/extern/include/hdf5</pElem>
-            <pElem>${KARABO}/extern/include/python3.4</pElem>
           </incDir>
           <commandLine>-Wfatal-errors -Wno-unused-local-typedefs</commandLine>
           <preprocessorList>
@@ -627,8 +625,6 @@
           <incDir>
             <pElem>../../../src</pElem>
             <pElem>${KARABO}/extern/include</pElem>
-            <pElem>${KARABO}/extern/include/hdf5</pElem>
-            <pElem>${KARABO}/extern/include/python3.4</pElem>
           </incDir>
           <commandLine>-Wfatal-errors -Wno-unused-local-typedefs</commandLine>
           <preprocessorList>
@@ -1123,8 +1119,6 @@
           <incDir>
             <pElem>../../../src</pElem>
             <pElem>${KARABO}/extern/include</pElem>
-            <pElem>${KARABO}/extern/include/hdf5</pElem>
-            <pElem>${KARABO}/extern/include/python3.4</pElem>
           </incDir>
           <commandLine>-Wfatal-errors -Wno-unused-local-typedefs -fprofile-arcs -ftest-coverage</commandLine>
           <preprocessorList>
