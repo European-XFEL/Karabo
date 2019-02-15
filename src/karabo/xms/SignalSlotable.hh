@@ -783,6 +783,7 @@ namespace karabo {
             std::unordered_map<std::string, MultiAsyncConnectInfo> m_currentMultiAsyncConnects;
             boost::mutex m_currentMultiAsyncConnectsMutex;
 
+            static boost::mutex m_uuidGeneratorMutex;
             static boost::uuids::random_generator m_uuidGenerator;
 
        protected:
