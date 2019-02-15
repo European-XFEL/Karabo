@@ -81,7 +81,7 @@ if __name__ == '__main__':
             "karabogui.configurator.dialog": ["*.ui"],
             "karabogui.controllers": ["*.ui"],
             "karabogui.controllers.display": ["*.svg", "*.ui"],
-            "karabogui.dialogs": ["*.ui"],
+            "karabogui.dialogs": ["*.ui", 'tests/*.html'],
             "karabogui.icons": ["*.*", "statefulicons/iconset/*.svg"],
             "karabogui.project.dialog": ["*.ui"],
         }
