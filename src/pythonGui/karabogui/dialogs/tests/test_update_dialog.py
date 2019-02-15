@@ -1,4 +1,4 @@
-from pathlib import Path
+from os import path as op
 import requests
 from unittest import mock, skip
 
@@ -39,7 +39,9 @@ class TestCase(GuiTestCase):
 
     def test_latest_version(self):
         """Tests the model of the extension updater"""
-        html = Path(__file__).parent.joinpath('test_html.html').read_text()
+        html_file = op.join(op.dirname(__file__), 'test_html.html')
+        with open(html_file) as f:
+            html = f.read()
 
         with mock.patch.object(update_dialog,
                                'retrieve_remote_html',
