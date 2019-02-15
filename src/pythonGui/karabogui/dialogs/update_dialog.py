@@ -175,13 +175,29 @@ class UpdateDialog(QDialog):
         self.lb_latest.setVisible(True)
         self.lb_latest.setText(latest_version)
 
+    def _update_to_latest_tag(self):
+        """Updates the package to the latest tag"""
+        tag = self.lb_latest.text()
+        with download_file_for_tag(tag) as (wheel_file, err):
+            if err is not None:
+                return err
+
+            # Install it using a system call
+            process = QProcess(self)
+            process.setProcessChannelMode(QProcess.MergedChannels)
+            process.start('pip install --upgrade {}'.format(wheel_file))
+            process.waitForFinished()
+
+            output = process.readAllStandardOutput().data().decode()
+            return output
+
     @pyqtSlot()
     def on_bt_update_clicked(self):
         """Updates guiextensions to the latest tag"""
         self.bt_refresh.setEnabled(False)
         self.bt_update.setEnabled(False)
 
-        output = update_package(self.lb_latest.text())
+        output = self._update_to_latest_tag()
         self.ed_log.append(output)
 
         self.bt_update.setText('Update')
