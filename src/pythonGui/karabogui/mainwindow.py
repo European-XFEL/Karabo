@@ -19,6 +19,7 @@ from karabogui import globals as krb_globals
 from karabogui import icons
 from karabogui.dialogs.configuration import ConfigurationDialog
 from karabogui.dialogs.dialogs import AboutDialog
+from karabogui.dialogs.update_dialog import UpdateDialog
 from karabogui.indicators import get_processing_color
 from karabogui.events import (
     KaraboEventSender, broadcast_event, register_for_broadcasts)
@@ -219,6 +220,9 @@ class MainWindow(QMainWindow):
         self.acHelpAboutQt = QAction("About Qt", self)
         self.acHelpAboutQt.triggered.connect(qApp.aboutQt)
 
+        self.acCheckUpdates = QAction("Check for Updates", self)
+        self.acCheckUpdates.triggered.connect(self.onCheckUpdates)
+
     def _setupMenuBar(self):
         menuBar = self.menuBar()
 
@@ -234,6 +238,7 @@ class MainWindow(QMainWindow):
         mHelpMenu.addAction(self.acHelpAbout)
         mHelpMenu.addAction(self.acHelpAboutQt)
         mHelpMenu.addAction(self.acConfig)
+        mHelpMenu.addAction(self.acCheckUpdates)
 
     def _setupToolBar(self):
 
@@ -456,6 +461,11 @@ class MainWindow(QMainWindow):
     @pyqtSlot()
     def onHelpAbout(self):
         AboutDialog(parent=self).open()
+
+    @pyqtSlot()
+    def onCheckUpdates(self):
+        dialog = UpdateDialog(parent=self)
+        dialog.open()
 
     @pyqtSlot(object)
     def onChangeAccessLevel(self, action):
