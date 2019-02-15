@@ -466,7 +466,6 @@ class MainWindow(QMainWindow):
     def onCheckUpdates(self):
         dialog = UpdateDialog(parent=self)
         dialog.open()
-        dialog.refresh_versions()
 
     @pyqtSlot(object)
     def onChangeAccessLevel(self, action):
