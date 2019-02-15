@@ -1138,8 +1138,9 @@ namespace karabo {
                         const std::string channelInstanceId(channelName, 0, channelName.find_first_of(':'));
                         if (channelInstanceId == instanceId) {
                             KARABO_LOG_FRAMEWORK_DEBUG << "Remove connection to input channel: " << channelName;
-                            m_networkConnections.erase(mapIter++); // postfix: erase current iterator, but prepare next
+                            // Use the reference 'channelName' before invalidating it by invalidating mapIter:
                             remote().unregisterChannelMonitor(channelName);
+                            mapIter = m_networkConnections.erase(mapIter);
                         } else {
                            ++mapIter;
                         }
@@ -1309,7 +1310,9 @@ namespace karabo {
                         std::set<WeakChannelPointer>& channelSet = iter->second;
                         channelSet.erase(channel); // no matter whether in or not...
                         if (channelSet.empty()) {
-                            m_networkConnections.erase(iter++);
+                            // First use 'iter', then remove it:
+                            remote().unregisterChannelMonitor(iter->first);
+                            iter = m_networkConnections.erase(iter);
                         } else {
                             ++iter;
                         }

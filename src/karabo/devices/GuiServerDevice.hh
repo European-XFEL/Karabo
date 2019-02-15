@@ -59,7 +59,9 @@ namespace karabo {
 
             typedef boost::weak_ptr<karabo::net::Channel> WeakChannelPointer;
             // There is no way to have a reliable unordered_set of weak pointers...
-            typedef std::unordered_map<std::string, std::set<WeakChannelPointer> > NetworkMap;
+            // Before C++14 we cannot use unordered_map since that does not (yet) guarantee that we can erase
+            // entries while looping over it.
+            typedef std::map<std::string, std::set<WeakChannelPointer> > NetworkMap;
 
             enum QueueBehaviorsTypes {
 
