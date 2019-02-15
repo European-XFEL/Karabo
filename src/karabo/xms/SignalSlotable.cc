@@ -35,6 +35,7 @@ namespace karabo {
         const int msPingTimeoutInIsValidInstanceId = 1000;
 
         // Static initializations
+        boost::mutex SignalSlotable::m_uuidGeneratorMutex;
         boost::uuids::random_generator SignalSlotable::m_uuidGenerator;
         std::unordered_map<std::string, SignalSlotable*> SignalSlotable::m_instanceMap;
         boost::shared_mutex SignalSlotable::m_instanceMapMutex;
@@ -795,6 +796,13 @@ namespace karabo {
                 ((id += getInstanceId()) += slotName) += generateUUID(); // instanceId/slot for debugging
                 {
                     boost::mutex::scoped_lock lock(m_asyncReplyInfosMutex);
+                    const auto it = m_asyncReplyInfos.find(id);
+                    while (it != m_asyncReplyInfos.end()) {
+                        // Should not happen, but...
+                        KARABO_LOG_FRAMEWORK_WARN << "Uuid clash in registerAsyncReply: '" << id << "' already used for"
+                                " one of " << m_asyncReplyInfos.size() << " active async replies";
+                        id = ((getInstanceId() + slotName) += generateUUID());
+                    }
                     m_asyncReplyInfos[id] = std::make_tuple(getSenderInfo(slotName)->getHeaderOfSender(), slotName,
                                                             slotName_calledGlobally.second);
                 }
@@ -853,6 +861,8 @@ namespace karabo {
 
 
         std::string SignalSlotable::generateUUID() {
+            // The generator is not thread safe, but we rely on real uniqueness!
+            boost::mutex::scoped_lock lock(m_uuidGeneratorMutex);
             return boost::uuids::to_string(m_uuidGenerator());
         }
 
@@ -1709,9 +1719,16 @@ namespace karabo {
             }
 
             // Store book keeping structure
-            const std::string uuid(generateUUID());
+            std::string uuid(generateUUID());
             {
                 boost::mutex::scoped_lock lock(m_currentMultiAsyncConnectsMutex);
+                const auto it = m_currentMultiAsyncConnects.find(uuid);
+                while (it != m_currentMultiAsyncConnects.end()) {
+                    // Should not happen, but...
+                    KARABO_LOG_FRAMEWORK_WARN << "Uuid clash in asyncConnect: '" << uuid << "' already used for one of "
+                            << m_currentMultiAsyncConnects.size() << " active asyncConnects";
+                    uuid = generateUUID();
+                }
                 m_currentMultiAsyncConnects[uuid] = std::make_tuple(vector<bool>(signalSlotConnections.size(), false),
                                                                     successHandler, failureHandler);
             }
