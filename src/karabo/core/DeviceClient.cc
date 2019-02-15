@@ -679,7 +679,7 @@ namespace karabo {
 
 
         std::vector<std::string> DeviceClient::getCurrentlyExecutableCommands(const std::string& instanceId) {
-            Schema schema = cacheAndGetActiveSchema(instanceId);
+            Schema schema = cacheAndGetActiveSchema(instanceId);            
             vector<string> commands;
             extractCommands(schema, "", commands);
             return commands;
@@ -688,13 +688,19 @@ namespace karabo {
 
         void DeviceClient::extractCommands(const karabo::util::Schema& schema, const std::string& parentKey, std::vector<std::string>& commands) {
             vector<string> keys = schema.getKeys(parentKey);
-
-
-            BOOST_FOREACH(std::string key, keys) {
-                if (schema.isCommand(key)) {
-                    commands.push_back(key);
-                } else if (!schema.isLeaf(key)) {
-                    extractCommands(schema, key, commands);
+            
+            for(const std::string& key: keys) {
+                std::string addr;
+                if(!parentKey.empty()){
+                    addr = (parentKey+"."+key);
+                }else{
+                    addr = key;
+                }
+                
+                if (schema.isCommand(addr)) {
+                    commands.push_back(addr);
+                } else if (!schema.isLeaf(addr)) {
+                    extractCommands(schema, addr, commands);
                 }
             }
         }
