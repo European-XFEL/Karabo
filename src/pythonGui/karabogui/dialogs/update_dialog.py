@@ -64,8 +64,7 @@ def get_latest_version():
     return UNDEFINED_VERSION
 
 
-@contextmanager
-def download_file_for_tag(tag):
+def _download_file_for_tag(tag):
     """Downloads the wheel for the given tag and writes it to a file,
     removing it when the context is finished."""
     wheel_file = _WHEEL_TEMPLATE.format(tag)
@@ -76,21 +75,27 @@ def download_file_for_tag(tag):
     try:
         wheel_request = requests.get(wheel_path, stream=True, timeout=_TIMEOUT)
     except requests.Timeout:
-        yield None, 'Timeout when updating version {}'.format(tag)
-        return
+        return None, 'Timeout when updating version {}'.format(tag)
 
     if not wheel_request.status_code == requests.codes.ok:
-        yield None, 'Error {} downloading version {}'.format(
+        return None, 'Error {} downloading version {}'.format(
             wheel_request.status_code, tag)
-        return
 
     with open(wheel_file, 'wb') as f:
         f.write(wheel_request.content)
 
-    yield wheel_file, None
+    return wheel_file, None
 
-    # Remove downloaded wheel
-    os.remove(wheel_file)
+
+@contextmanager
+def download_file_for_tag(tag):
+    """Takes care of also cleaning resources after downloading"""
+    wheel_file, err = _download_file_for_tag(tag)
+
+    yield wheel_file, err
+
+    if wheel_file is not None:
+        os.remove(wheel_file)
 
 
 def update_package(tag: str):
@@ -128,12 +133,17 @@ class UpdateDialog(QDialog):
         self.bt_refresh.setIcon(icons.refresh)
         self.bt_clear_log.setIcon(icons.editClear)
 
+        self.bt_stop.setEnabled(False)
         self.bt_update.setEnabled(False)
 
         # Connect signals
         self.bt_close.clicked.connect(self.accept)
         self.bt_refresh.clicked.connect(self.refresh_versions)
         self.bt_clear_log.clicked.connect(self.ed_log.clear)
+
+        # Store the current running process
+        self._process = None
+        self._wheel_file = None
 
         self.refresh_versions()
 
@@ -174,34 +184,63 @@ class UpdateDialog(QDialog):
         self.lb_latest.setVisible(True)
         self.lb_latest.setText(latest_version)
 
-    def _update_to_latest_tag(self):
-        """Updates the package to the latest tag"""
+    def _start_update_process(self):
+        """Create a QProcess to update to the latest tag. This
+        process' signals are connected to the given callbacks."""
         tag = self.lb_latest.text()
-        with download_file_for_tag(tag) as (wheel_file, err):
-            if err is not None:
-                return err
+        self._wheel_file, err = _download_file_for_tag(tag)
+        if err is not None:
+            self.ed_log.append(err)
+            return None
 
-            # Install it using a system call
-            process = QProcess(self)
-            process.setProcessChannelMode(QProcess.MergedChannels)
-            process.start('pip install --upgrade {}'.format(wheel_file))
-            process.waitForFinished()
+        # Create a process and connect its signals
+        self._process = QProcess(self)
+        self._process.setProcessChannelMode(QProcess.MergedChannels)
+        self._process.readyReadStandardOutput.connect(self._on_output)
+        self._process.finished.connect(self._on_finished)
+        self._process.error.connect(self._on_finished)
 
-            output = process.readAllStandardOutput().data().decode()
-            return output
+        self._process.start('pip install --upgrade {}'
+                            .format(self._wheel_file))
+
+    @pyqtSlot()
+    def on_bt_stop_clicked(self):
+        """Kills the running process"""
+        if self._process is not None:
+            if self._process.state() == QProcess.Running:
+                self._process.kill()
+                self._on_finished()
 
     @pyqtSlot()
     def on_bt_update_clicked(self):
         """Updates guiextensions to the latest tag"""
         self.bt_refresh.setEnabled(False)
         self.bt_update.setEnabled(False)
+        self.bt_stop.setEnabled(True)
 
-        output = self._update_to_latest_tag()
-        self.ed_log.append(output)
+        self._start_update_process()
 
-        self.bt_update.setText('Update')
+    def _on_output(self):
+        """Called whenever there is output available to be consumed from the
+        process stdout. This output is then logged in the text edit."""
+        if self._process and self._process.bytesAvailable():
+            output = self._process.readAllStandardOutput()
+            output = output.data().decode()
+
+            if output:
+                self.ed_log.append(output)
+
+    def _on_finished(self, *args, **kwargs):
+        """Method called whenever the process finishes or crashes. It's used
+        to clean any created resources and restore the interface states."""
+        if os.path.isfile(self._wheel_file):
+            os.remove(self._wheel_file)
+
+        self._wheel_file = None
+        self._process = None
+
         self.bt_refresh.setEnabled(True)
-        self.bt_update.setEnabled(True)
+        self.bt_stop.setEnabled(False)
 
         self.refresh_versions()
 
