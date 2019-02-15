@@ -11,6 +11,7 @@ import requests
 from PyQt4 import uic
 from PyQt4.QtCore import QProcess, pyqtSlot
 from PyQt4.QtGui import QDialog
+from subprocess import check_output, STDOUT, CalledProcessError
 
 _TIMEOUT = 0.1
 _TAG_REGEX = '^\d+\.\d+\.\d+$'
@@ -103,14 +104,12 @@ def update_package(tag: str):
             return err
 
         # Install it using a system call
-        process = QProcess()
-        process.setProcessChannelMode(QProcess.MergedChannels)
-        process.start('pip install --upgrade {}'.format(wheel_file))
-        process.waitForFinished()
-
-        output = process.readAllStandardOutput().data().decode()
-
-        return output
+        try:
+            output = check_output(['pip', 'install', '--upgrade', wheel_file],
+                                  stderr=STDOUT)
+            return output.decode()
+        except CalledProcessError as e:
+            return str(e)
 
 
 class UpdateDialog(QDialog):
@@ -218,7 +217,7 @@ def main():
     if args.tag:
         tag = args.tag[0]
 
-        print('Installing GUI-Extensions version {}'.format(tag))
+        print('Installing GUI-Extensions version {}\n'.format(tag))
         output = update_package(tag)
         print(output)
 
