@@ -190,17 +190,7 @@ runPythonUnitTests() {
     echo
     echo Running Karabo Python unit tests ...
     echo
-
-    # Pass the bound_api/launcher.py file. If the file is imported, a
-    # part of its code is executed. That results in an error.
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS -I launcher.py karabo.bound_api"
-    # Some middlelayer tests are flaky for the time being, so add proper flags:
-    safeRunCommand "$NOSETESTS -v $FLAKY_FLAGS $COVER_FLAGS karabo.middlelayer_api"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.common"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.project_db"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.tests"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.interactive"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.macro_api"
+    safeRunCommand "$NOSETESTS -v $FLAKY_FLAGS $COVER_FLAGS -e 'integration_tests' karabo"
     # Allow gui tests to crash sometimes - for the time being:
     ACCEPT_SIGSEGV=true
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabogui"
@@ -215,13 +205,19 @@ runPythonIntegrationTests() {
     echo
     echo Running Karabo Python integration tests ...
     echo
-
+    # coverage flags will add a karabogui dependency that might cause a seg. fault
+    # temporary we add a flag here.
+    if [ $COLLECT_COVERAGE ]
+    then
+        ACCEPT_SIGSEGV=true
+    fi
     # TODO: Needs to be uncommented when the bound_device_test integration test is added.
     #safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.bound_device_test"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_comm_test"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_provided_scenes_test"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.run_configuration_group"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.pipeline_processing_test"
+    unset ACCEPT_SIGSEGV
 
     echo
     echo Karabo Python integration tests complete
@@ -244,13 +240,7 @@ generateCodeCoverageReport() {
 
     # Generate coverage for the following modules.
     safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_karabo"
-    safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/bound_api/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_bound_api"
-    safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/middlelayer_api/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_middlelayer_api"
-    safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/common/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_common"
-    safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/project_db/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_project_db"
-    safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/interactive/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_interactive"
-    safeRunCommand $COVERAGE html -i --include "*/karabogui/*" --omit $OMIT -d htmlcov_karabogui
-    safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/bound_devices/*" --omit $OMIT -d htmlcov_bound_devices
+    safeRunCommand $COVERAGE html -i --include "*/karabogui/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_karabogui"
 
     echo
     echo HTML coverage reports generation complete
