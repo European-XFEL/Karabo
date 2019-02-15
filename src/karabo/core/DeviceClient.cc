@@ -679,7 +679,7 @@ namespace karabo {
 
 
         std::vector<std::string> DeviceClient::getCurrentlyExecutableCommands(const std::string& instanceId) {
-            Schema schema = cacheAndGetActiveSchema(instanceId);            
+            Schema schema = cacheAndGetActiveSchema(instanceId);
             vector<string> commands;
             extractCommands(schema, "", commands);
             return commands;
