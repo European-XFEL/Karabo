@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>335</width>
+    <width>342</width>
     <height>394</height>
    </rect>
   </property>
@@ -46,6 +46,15 @@
        <weight>75</weight>
        <bold>true</bold>
       </font>
+     </property>
+     <property name="autoFillBackground">
+      <bool>false</bool>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QLabel { background-color : #4B8AA4;}</string>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
      </property>
      <property name="text">
       <string>Karabo Extensions</string>
@@ -239,6 +248,13 @@
       <widget class="QPushButton" name="bt_update">
        <property name="text">
         <string>Update</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="bt_stop">
+       <property name="text">
+        <string>Stop</string>
        </property>
       </widget>
      </item>
