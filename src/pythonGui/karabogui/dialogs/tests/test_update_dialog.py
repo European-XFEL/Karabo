@@ -1,10 +1,15 @@
-from contextlib import contextmanager
 from pathlib import Path
 import requests
 from unittest import mock, skip
 
 from karabogui.dialogs import update_dialog
 from karabogui.testing import GuiTestCase
+
+
+class MockResponse:
+    def __init__(self, content, status):
+        self.content = content
+        self.status_code = status
 
 
 class TestCase(GuiTestCase):
@@ -19,19 +24,18 @@ class TestCase(GuiTestCase):
         self.assertEqual(dialog.lb_current.text(), updater.UNDEFINED_VERSION)
         self.assertEqual(dialog.lb_latest.text(), updater.UNDEFINED_VERSION)
 
-        with mock.patch.object(
-                updater, 'get_current_version',
-                return_value='1'):
-            with mock.patch.object(
-                    updater, 'get_latest_version',
-                    return_value='2'):
-                self.click(dialog.bt_refresh)
+        mock_obj = mock.patch.object
+        mock1 = mock_obj(updater, 'get_current_version', return_value='1')
+        mock2 = mock_obj(updater, 'get_latest_version', return_value='2')
 
-                # Should refresh current and latest versions
-                self.assertEqual(dialog.lb_current.text(), '1')
-                self.assertEqual(dialog.lb_latest.text(), '2')
+        with mock1, mock2:
+            self.click(dialog.bt_refresh)
 
-                self.assertTrue(dialog.bt_update.isEnabled())
+            # Should refresh current and latest versions
+            self.assertEqual(dialog.lb_current.text(), '1')
+            self.assertEqual(dialog.lb_latest.text(), '2')
+
+            self.assertTrue(dialog.bt_update.isEnabled())
 
     def test_latest_version(self):
         """Tests the model of the extension updater"""
@@ -43,29 +47,14 @@ class TestCase(GuiTestCase):
             latest_version = update_dialog.get_latest_version()
             assert latest_version == '2.3.4'
 
-    def _create_get_mock(self, content, status_code):
-        """Used to mock a requests.get method call with a fake content
-        and status code"""
-        class MockResponse:
-            def __init__(self, content, status):
-                self.content = content
-                self.status_code = status
-
-        @contextmanager
-        def _mock_response(*args, **kwargs):
-            response = MockResponse(content, status_code)
-            yield response
-
-        return _mock_response
-
     @mock.patch.object(requests, 'get')
     def test_outgoing_messages(self, get_mock):
         """Tests if the outgoing messages are called with the right
         parameters"""
-        expected_wheel = 'http://exflserv05.desy.de/karabo/karaboExtensions' \
-                         '/tags/0.0.0/GUI_Extensions-0.0.0-py3-none-any.whl'
+        expected_wheel = ('http://exflserv05.desy.de/karabo/karaboExtensions'
+                          '/tags/0.0.0/GUI_Extensions-0.0.0-py3-none-any.whl')
 
-        get_mock.side_effect = self._create_get_mock(b'', requests.codes.ok)
+        get_mock.return_value = MockResponse(b'', requests.codes.ok)
         with update_dialog.download_file_for_tag('0.0.0'):
             pass
 
@@ -75,12 +64,9 @@ class TestCase(GuiTestCase):
             stream=True)
 
         # Emulate a <not ok> get request
-        get_mock.side_effect = self._create_get_mock(b'',
-                                                     requests.codes.not_found)
+        get_mock.return_value = MockResponse(b'', requests.codes.not_found)
         with update_dialog.download_file_for_tag('0.0.0'):
             pass
 
         assert get_mock.call_count == 2
-        get_mock.assert_called_with(
-            expected_wheel,
-            stream=True)
+        get_mock.assert_called_with(expected_wheel, stream=True)
