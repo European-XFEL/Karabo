@@ -12,6 +12,7 @@ from PyQt4 import uic
 from PyQt4.QtCore import QProcess, pyqtSlot
 from PyQt4.QtGui import QDialog
 
+_TIMEOUT = 0.1
 _TAG_REGEX = '^\d+\.\d+\.\d+$'
 _PKG_NAME = 'GUI_Extensions'
 _WHEEL_TEMPLATE = 'GUI_Extensions-{}-py3-none-any.whl'
@@ -31,16 +32,18 @@ def get_current_version():
 
 def retrieve_remote_html():
     """Retrieves the remote tag url html and decodes it"""
-    result = requests.get(_REMOTE_SVR)
-    html = result.content.decode()
+    try:
+        result = requests.get(_REMOTE_SVR, timeout=_TIMEOUT)
+    except requests.Timeout:
+        return None
 
+    html = result.content.decode()
     return html
 
 
 def get_latest_version():
     """Gets the latest version of the package"""
     html = retrieve_remote_html()
-
     if not html:
         return UNDEFINED_VERSION
 
@@ -69,9 +72,15 @@ def download_file_for_tag(tag):
                                   tag,
                                   wheel_file)
 
-    wheel_request = requests.get(wheel_path, stream=True)
+    try:
+        wheel_request = requests.get(wheel_path, stream=True, timeout=_TIMEOUT)
+    except requests.Timeout:
+        yield None, 'Timeout when updating version {}'.format(tag)
+        return
+
     if not wheel_request.status_code == requests.codes.ok:
-        yield None, 'Error downloading wheel {}'.format(tag)
+        yield None, 'Error {} downloading version {}'.format(
+            wheel_request.status_code, tag)
         return
 
     with open(wheel_file, 'wb') as f:
