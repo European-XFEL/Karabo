@@ -1,15 +1,16 @@
+import os
+from os import path as op
+
 from argparse import ArgumentParser
 from contextlib import contextmanager
+from karabogui import icons
 from lxml import etree
-from pathlib import Path
 import pkg_resources
+import re
+import requests
 from PyQt4 import uic
 from PyQt4.QtCore import QProcess, pyqtSlot
 from PyQt4.QtGui import QDialog
-import re
-import requests
-
-from karabogui import icons
 
 _TAG_REGEX = '^\d+\.\d+\.\d+$'
 _PKG_NAME = 'GUI_Extensions'
@@ -73,13 +74,13 @@ def download_file_for_tag(tag):
         yield None, 'Error downloading wheel {}'.format(tag)
         return
 
-    temp_file = Path(wheel_file)
-    temp_file.write_bytes(wheel_request.content)
+    with open(wheel_file, 'wb') as f:
+        f.write(wheel_request.content)
 
-    yield temp_file, None
+    yield wheel_file, None
 
     # Remove downloaded wheel
-    temp_file.unlink()
+    os.remove(wheel_file)
 
 
 def update_package(tag: str):
@@ -111,18 +112,22 @@ class UpdateDialog(QDialog):
     """
     def __init__(self, parent=None):
         super(UpdateDialog, self).__init__(parent)
-        uic.loadUi(Path(__file__).parent.joinpath('update_dialog.ui'), self)
+        uic.loadUi(op.join(op.dirname(__file__), 'update_dialog.ui'), self)
 
         self.lb_current.setText(UNDEFINED_VERSION)
         self.lb_latest.setText(UNDEFINED_VERSION)
 
         self.bt_refresh.setIcon(icons.refresh)
+        self.bt_clear_log.setIcon(icons.editClear)
+
         self.bt_update.setEnabled(False)
 
         # Connect signals
         self.bt_close.clicked.connect(self.accept)
         self.bt_refresh.clicked.connect(self.refresh_versions)
         self.bt_clear_log.clicked.connect(self.ed_log.clear)
+
+        self.refresh_versions()
 
     @pyqtSlot()
     def on_bt_refresh_clicked(self):
@@ -140,10 +145,8 @@ class UpdateDialog(QDialog):
         current = self.lb_current.text()
         latest = self.lb_latest.text()
 
-        if current != latest != UNDEFINED_VERSION:
-            self.bt_update.setEnabled(True)
-        else:
-            self.bt_update.setEnabled(False)
+        needs_updating = current != latest != UNDEFINED_VERSION
+        self.bt_update.setEnabled(needs_updating)
 
     def _update_current_version(self):
         """Updates the current version of the device"""
@@ -182,10 +185,8 @@ class UpdateDialog(QDialog):
 def main():
     description = """Command-line tool to update the GUI-Extensions package"""
     ap = ArgumentParser(description=description)
-    ap.add_argument('-t', '--tag', nargs=1, required=True, help='Desired '
-                                                                'package '
-                                                                'version ('
-                                                                'tag)')
+    tag_help = 'Desired package version (tag)'
+    ap.add_argument('-t', '--tag', nargs=1, required=True, help=tag_help)
 
     args = ap.parse_args()
 
