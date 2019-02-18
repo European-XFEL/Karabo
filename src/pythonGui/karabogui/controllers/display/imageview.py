@@ -184,7 +184,8 @@ class DisplayImage(BaseBindingController):
     def _set_image(self, array):
         if self._image is None:
             # Some dtypes (eg uint32) are not displayed -> astype('float')
-            self._image = make.image(array.astype('float'))
+            self._image = make.image(array.astype('float'),
+                                     interpolation='nearest')
             self._plot.add_item(self._image)
         else:
             if array.ndim == 2:  # Grayscale
