@@ -260,8 +260,9 @@ class DeviceClient(object):
         """
         return self.__client.logout()
 
-    def getClient(self):
-        return self.__client
+    # Users should not have direct access to the client
+    # def getClient(self):
+    #    return self.__client
         
     def instantiate(self, serverId, classId, deviceId, config = Hash(), timeout = None):
         """
