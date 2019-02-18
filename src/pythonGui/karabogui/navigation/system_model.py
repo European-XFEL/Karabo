@@ -247,7 +247,7 @@ class SystemTreeModel(QAbstractItemModel):
         """
         if role == Qt.DisplayRole:
             if orientation == Qt.Horizontal and section == 0:
-                return "Hierarchical view"
+                return "Host - Server - Class - Device"
 
     def indexInfo(self, index):
         if not index.isValid():
