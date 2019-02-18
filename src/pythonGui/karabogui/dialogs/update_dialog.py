@@ -213,7 +213,7 @@ class UpdateDialog(QDialog):
     def on_bt_stop_clicked(self):
         """Kills the running process"""
         if (self._process is not None and
-                    self._process.state() == QProcess.Running):
+                self._process.state() == QProcess.Running):
             self._process.kill()
             self._on_finished()
 
