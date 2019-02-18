@@ -796,15 +796,7 @@ namespace karabo {
                 ((id += getInstanceId()) += slotName) += generateUUID(); // instanceId/slot for debugging
                 {
                     boost::mutex::scoped_lock lock(m_asyncReplyInfosMutex);
-                    auto* replyInfos = &(m_asyncReplyInfos[id]); // Take address here...
-                    while (!std::get<1>(*replyInfos).empty()) { // pos 1 is the slotName which must not be empty (see above))
-                        // Should not happen, but...
-                        KARABO_LOG_FRAMEWORK_WARN << "Uuid clash in registerAsyncReply: '" << id << "' already used for"
-                                " one of " << m_asyncReplyInfos.size() << " active async replies";
-                        id = ((getInstanceId() + slotName) += generateUUID());
-                        replyInfos = &(m_asyncReplyInfos[id]); // ... to re-assign the pointer here (which is impossible for reference)
-                    }
-                    *replyInfos = std::make_tuple(getSenderInfo(slotName)->getHeaderOfSender(), slotName,
+                    m_asyncReplyInfos[id] = std::make_tuple(getSenderInfo(slotName)->getHeaderOfSender(), slotName,
                                                             slotName_calledGlobally.second);
                 }
 
@@ -1720,19 +1712,11 @@ namespace karabo {
             }
 
             // Store book keeping structure
-            std::string uuid(generateUUID());
+            const std::string uuid(generateUUID());
             {
                 boost::mutex::scoped_lock lock(m_currentMultiAsyncConnectsMutex);
-                auto* multiAsyncConnectInfo = &(m_currentMultiAsyncConnects[uuid]); // Take address here...
-                while (!std::get<0>(*multiAsyncConnectInfo).empty()) { // pos 0 has non-zero size of signalSlotConnections (see above)
-                    // Should not happen, but...
-                    KARABO_LOG_FRAMEWORK_WARN << "Uuid clash in asyncConnect: '" << uuid << "' already used for one of "
-                            << m_currentMultiAsyncConnects.size() << " active asyncConnects";
-                    uuid = generateUUID();
-                    multiAsyncConnectInfo = &(m_currentMultiAsyncConnects[uuid]); // ... to re-assign the pointer here (which is impossible for reference)
-                }
-                *multiAsyncConnectInfo = std::make_tuple(vector<bool>(signalSlotConnections.size(), false),
-                                                         successHandler, failureHandler);
+                m_currentMultiAsyncConnects[uuid] = std::make_tuple(vector<bool>(signalSlotConnections.size(), false),
+                                                                    successHandler, failureHandler);
             }
 
             // Send individual requests
