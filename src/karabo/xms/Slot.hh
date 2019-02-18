@@ -55,7 +55,7 @@ namespace karabo {
 
             std::string m_slotFunction;
 
-            boost::mutex m_callRegisteredSlotFunctionsMutex;
+            boost::mutex m_registeredSlotFunctionsMutex;
 
             void extractSenderInformation(const karabo::util::Hash& header);
 
@@ -82,6 +82,7 @@ namespace karabo {
             typedef typename boost::function<Ret(Args...) > SlotHandler;
 
             void registerSlotFunction(const SlotHandler& slotHandler) {
+                boost::mutex::scoped_lock lock(m_registeredSlotFunctionsMutex);
                 m_slotHandlers.push_back(slotHandler);
             }
 
@@ -91,6 +92,10 @@ namespace karabo {
             virtual ~SlotN() {
             }
 
+            /**
+             * To be called under protection of m_registeredSlotFunctionsMutex
+             * @param body a Hash with up to four keys "a1" to "a4" with the expected types behind
+             */
             virtual void doCallRegisteredSlotFunctions(const karabo::util::Hash& body) {
                 for (const auto& handler : m_slotHandlers) {
                     karabo::util::call(handler, karabo::util::unpack < Args...>(body));
