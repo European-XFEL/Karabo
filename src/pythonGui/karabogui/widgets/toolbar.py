@@ -14,6 +14,7 @@ class ToolBar(QToolBar):
         iconSize = QSize(32, 32)
         iconSize *= 0.6
         self.setIconSize(iconSize)
+        self.setStyleSheet("QToolBar { border: 0px }")
 
     def add_expander(self):
         """Add an empty widget to the toolbar which absorbs horizontal space.
