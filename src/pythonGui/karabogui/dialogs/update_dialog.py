@@ -233,7 +233,7 @@ class UpdateDialog(QDialog):
     def _on_finished(self, *args, **kwargs):
         """Method called whenever the process finishes or crashes. It's used
         to clean any created resources and restore the interface states."""
-        if os.path.isfile(self._wheel_file):
+        if self._wheel_file and os.path.isfile(self._wheel_file):
             os.remove(self._wheel_file)
 
         self._wheel_file = None
