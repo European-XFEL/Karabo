@@ -3,7 +3,8 @@ import os.path as op
 import sys
 
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QApplication, QIcon, QPixmap, QSplashScreen
+from PyQt4.QtGui import (
+    QApplication, QIcon, QPixmap, QSplashScreen, QStyleFactory)
 
 from karabo.common.scenemodel.api import SceneTargetWindow
 from karabogui import icons
@@ -22,6 +23,10 @@ def run_cinema(ns):
     All scenes have the name ProjectDB|SceneName and are not editable!
     """
     app = QApplication(sys.argv)
+    # Set the style among all operating systems
+    app.setStyle(QStyleFactory.create("Cleanlooks"))
+    app.setPalette(QApplication.style().standardPalette())
+
     # set a nice app logo
     logo_path = op.join(op.dirname(__file__), '..', "icons", "app_logo.png")
     app.setWindowIcon(QIcon(logo_path))
