@@ -5,11 +5,10 @@
 #############################################################################
 
 from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QAbstractItemView, QTreeView
+from PyQt4.QtGui import QAbstractItemView, QHeaderView, QTreeView
 
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.singletons.api import get_selection_tracker
-from karabogui.util import set_treeview_header
 
 from .device_model import DeviceTreeModel
 from .tools import DeviceSceneHandler
@@ -26,7 +25,10 @@ class DeviceTreeView(QTreeView):
         model.rowsInserted.connect(self._items_added)
         model.signalItemChanged.connect(self.onSelectionChanged)
 
-        set_treeview_header(self)
+        header = self.header()
+        header.setResizeMode(QHeaderView.ResizeToContents)
+        # Prevent drag reorder of the header
+        header.setMovable(False)
 
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
