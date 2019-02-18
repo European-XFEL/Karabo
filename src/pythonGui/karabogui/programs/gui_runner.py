@@ -4,7 +4,7 @@ from traceback import print_exception, format_exception
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (
-    QApplication, QIcon, QMessageBox, QPixmap, QSplashScreen)
+    QApplication, QIcon, QMessageBox, QPixmap, QSplashScreen, QStyleFactory)
 
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.controllers.api import populate_controller_registry
@@ -57,6 +57,10 @@ def init_gui(app, splash):
 
 def run_gui(args):
     app = QApplication(args)
+    # Set the style among all operating systems
+    app.setStyle(QStyleFactory.create("Cleanlooks"))
+    app.setPalette(QApplication.style().standardPalette())
+
     # set a nice app logo
     logo_path = op.join(op.dirname(__file__), '..', "icons", "app_logo.png")
     app.setWindowIcon(QIcon(logo_path))
