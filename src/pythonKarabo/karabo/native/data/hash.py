@@ -1166,6 +1166,9 @@ class String(Enumable, Type):
 class VectorString(Vector):
     basetype = String
     number = 29
+    numpy = np.object_
+    # NOTE: Vectorstring should be represented as python lists
+    # the np.object is simply for the table element
 
     @staticmethod
     def fromstring(s):
