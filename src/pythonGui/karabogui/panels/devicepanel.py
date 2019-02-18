@@ -11,7 +11,7 @@ from .base import BasePanelWidget
 
 class DevicePanel(BasePanelWidget):
     def __init__(self):
-        super(DevicePanel, self).__init__("DeviceTopology")
+        super(DevicePanel, self).__init__("Device Topology")
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.

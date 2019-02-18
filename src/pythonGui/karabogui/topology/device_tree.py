@@ -203,7 +203,6 @@ class DeviceSystemTree(HasStrictTraits):
             if domain_node is None:
                 domain_node = DeviceTreeNode(node_id=domain,
                                              parent=self.root,
-                                             visibility=visibility,
                                              level=DOMAIN_LEVEL)
                 self._append_child_node(self.root, domain_node)
 
@@ -211,7 +210,6 @@ class DeviceSystemTree(HasStrictTraits):
             if type_node is None:
                 type_node = DeviceTreeNode(node_id=dev_type,
                                            parent=domain_node,
-                                           visibility=visibility,
                                            level=TYPE_LEVEL)
                 self._append_child_node(domain_node, type_node)
 
