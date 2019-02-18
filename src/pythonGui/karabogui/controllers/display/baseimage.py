@@ -94,7 +94,8 @@ class _BaseImage(BaseBindingController):
         image_items = self._image_widget.get_image_item()
         if not image_items:
             # Some dtypes (eg uint32) are not displayed -> astype('float')
-            image_item = make.image(npy.astype('float'))
+            image_item = make.image(npy.astype('float'),
+                                    interpolation='nearest')
             self._plot.add_item(image_item)
         else:
             # Manipulate top item
