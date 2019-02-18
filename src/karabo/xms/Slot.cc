@@ -68,11 +68,12 @@ namespace karabo {
         void Slot::callRegisteredSlotFunctions(const Hash &header, const Hash &body) {
             try {
                 // Mutex lock prevents that the same slot of a SignalSlotable can be called concurrently.
-                // In principle this should be taken care of by SignalSlotable itself, but for Karabo 2.2.4
-                // it was chosen to independently "sequentialise" calls for directly addressed slots and
-                // for broadcasted slots. So the lock here protects against the unlikely case (known as
-                // possibility only for slotPing) that the same slot is called both directly and as broadcast.
-                boost::mutex::scoped_lock lock(m_callRegisteredSlotFunctionsMutex);
+                // SignalSlotable takes care that messages are sequentially processed per sender
+                // (with one common sequence for broadcast events), but then calls to the same slot from different
+                // senders can run in parallel which was guaranteed not to happen from the Karabo beginning.
+                // If we give up that guarantee, the caching in extractSenderInformation(..) has to be made thread
+                // safe in another way - and the protection not to add function while being called as well.
+                boost::mutex::scoped_lock lock(m_registeredSlotFunctionsMutex);
                 extractSenderInformation(header);
                 doCallRegisteredSlotFunctions(body);
                 invalidateSenderInformation();
