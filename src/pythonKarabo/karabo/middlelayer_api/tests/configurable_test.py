@@ -665,25 +665,31 @@ class Tests(TestCase):
     def test_table(self):
         class Row(Configurable):
             name = String()
-            number = Int32(unitSymbol=Unit.METER,
-                           metricPrefixSymbol=MetricPrefix.MILLI)
+
+            number = Int32(
+                unitSymbol=Unit.METER,
+                metricPrefixSymbol=MetricPrefix.MILLI)
             counter = Int32()
+
+            vectorString = VectorString(
+                unitSymbol=Unit.METER,
+                metricPrefixSymbol=MetricPrefix.MILLI)
 
         class A(Configurable):
             table = VectorHash(rows=Row, defaultValue=[])
 
         a = A()
         self.assertEqual(a.table.shape, (0,))
-        a.table = [("asf", 3, 5), ("fw", 2, 5)]
+        a.table = [("asf", 3, 5, ["Bart", "Marge"]), ("fw", 2, 5, ["Homer"])]
         self.assertEqual(a.table.shape, (2,))
         self.assertEqual(a.table["name"][1], "fw")
 
-        a.table.append(("lll", 55, 10))
+        a.table.append(("lll", 55, 10, ["Lisa"]))
         self.assertEqual(len(a.table), 3)
         self.assertEqual(a.table[2]["name"], "lll")
         self.assertEqual(a.table["number"][2], 55 * unit.millimeter)
 
-        a.table.extend([(str(i), i, i + 1) for i in range(10)])
+        a.table.extend([(str(i), i, i + 1, ["Moe"]) for i in range(10)])
         self.assertEqual(a.table[10]["number"], 7 * unit.millimeter)
 
         del a.table[10]
@@ -692,28 +698,34 @@ class Tests(TestCase):
         del a.table[10:12]
         self.assertEqual(len(a.table), 10)
 
-        a.table[1] = ("k", 111, 72)
+        a.table[1] = ("k", 111, 72, ["Nelson"])
         self.assertEqual(a.table[1]["name"], "k")
         self.assertEqual(a.table[1]["counter"], 72)
+        self.assertEqual(a.table[1]["vectorString"], ["Nelson"])
         self.assertEqual(len(a.table), 10)
 
-        a.table[5:7] = [("A", 2, 1), ("B", 3, 2)]
+        a.table[5:7] = [("A", 2, 1, ["Scratchy"]), ("B", 3, 2, ["Nelson"])]
         self.assertEqual(a.table[5]["name"], "A")
         self.assertEqual(a.table["number"][6], 3 * unit.millimeter)
         self.assertEqual(a.table["number"][7], 4 * unit.millimeter)
         self.assertEqual(a.table["counter"][6], 2)
         self.assertEqual(a.table["counter"][7], 5)
+        self.assertEqual(a.table["vectorString"][6], ["Nelson"])
+        self.assertEqual(a.table["vectorString"][7], ["Moe"])
 
-        a.table.insert(2, ("C", 11, 5))
+        a.table.insert(2, ("C", 11, 5, ["Itchy", "Burns"]))
         self.assertEqual(a.table[2]["name"], "C")
         self.assertEqual(a.table[3]["name"], "lll")
         self.assertEqual(a.table[2]["number"], 11 * unit.millimeter)
         self.assertEqual(a.table[2]["counter"], 5)
+        self.assertEqual(a.table[2]["vectorString"], ["Itchy", "Burns"])
         self.assertEqual(len(a.table), 11)
 
-        self.assertEqual(adler32(str(a.table).encode("ascii")), 1396785557)
+        self.assertEqual(adler32(str(a.table).encode("ascii")), 3585240932)
 
-        a = A(Hash("table", [Hash("name", "bla", "number", 5, "counter", 2)]))
+        a = A(Hash("table", [Hash("name", "bla",
+                                  "number", 5, "counter", 2,
+                                  "vectorString", ["Itchy", "Burns"])]))
         self.assertEqual(a.table.shape, (1,))
         self.assertEqual(a.table["name"][0], "bla")
         b = a.table.pop()
@@ -721,9 +733,11 @@ class Tests(TestCase):
         self.assertEqual(b["name"], "bla")
         self.assertEqual(b["number"], 5 * unit.millimeter)
 
-        c = A(Hash("table", [Hash("name", "bla", "number", 5, "counter", 2)]))
+        c = A(Hash("table", [Hash("name", "bla",
+                                  "number", 5, "counter", 2,
+                                  "vectorString", ["Itchy", "Burns"])]))
         self.assertEqual(len(c.table.value), 1)
-        c.table.extend([(str(i), i, i + 1) for i in range(10)])
+        c.table.extend([(str(i), i, i + 1, ["Abu"]) for i in range(10)])
         self.assertEqual(len(c.table.value), 11)
         c.table.clear()
         self.assertEqual(len(c.table.value), 0)
