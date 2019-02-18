@@ -688,19 +688,19 @@ namespace karabo {
 
         void DeviceClient::extractCommands(const karabo::util::Schema& schema, const std::string& parentKey, std::vector<std::string>& commands) {
             vector<string> keys = schema.getKeys(parentKey);
-            
-            for(const std::string& key: keys) {
-                std::string addr;
-                if(!parentKey.empty()){
-                    addr = (parentKey+"."+key);
-                }else{
-                    addr = key;
+
+            for (const std::string& key : keys) {
+                std::string path;
+                if (!parentKey.empty()) {
+                    path = (parentKey + "." + key);
+                } else {
+                    path = key;
                 }
-                
-                if (schema.isCommand(addr)) {
-                    commands.push_back(addr);
-                } else if (!schema.isLeaf(addr)) {
-                    extractCommands(schema, addr, commands);
+
+                if (schema.isCommand(path)) {
+                    commands.push_back(path);
+                } else if (!schema.isLeaf(path)) {
+                    extractCommands(schema, path, commands);
                 }
             }
         }
