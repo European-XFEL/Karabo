@@ -259,6 +259,24 @@ void DeviceClient_Test::testGetSchema() {
 }
 
 
+void DeviceClient_Test::testCurrentlyExecutableCommands() {
+    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest",
+                                                                       Hash("deviceId", "TestedDevice3_5"),
+                                                                       KRB_TEST_MAX_TIMEOUT);
+
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    //  Check if the parameter hierarchy can be correctly traversed or it throws a KeyError
+    std::vector<std::string> commands;
+    CPPUNIT_ASSERT_NO_THROW(commands = m_deviceClient->getCurrentlyExecutableCommands("TestedDevice3_5"));
+
+    // Final clean-up
+    success = m_deviceClient->killDevice("TestedDevice3_5", KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+}
+
+
+
 void DeviceClient_Test::testGetSchemaNoWait() {
     // NOTE: Better use new id, see comment in testGetSchema.
     std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest",
