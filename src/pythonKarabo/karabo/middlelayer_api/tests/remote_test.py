@@ -24,7 +24,8 @@ from karabo.middlelayer_api.injectable import Injectable
 from .eventloop import DeviceTest, async_tst
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
-
+FLAKY_MAX_RUNS=7
+FLAKY_MIN_PASSES=3
 
 class Superslot(Slot):
     @coroutine
@@ -635,7 +636,7 @@ class Tests(DeviceTest):
         self.assertEqual(proxy.state, State.UNKNOWN)
 
     @async_tst
-    @flaky(max_runs=5, min_passes=2)
+    @flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
     def test_waituntilnew(self):
         """test the waitUntilNew coroutine for properties
 
@@ -666,7 +667,7 @@ class Tests(DeviceTest):
                 yield from task
 
     @async_tst
-    @flaky(max_runs=5, min_passes=3)
+    @flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
     def test_waituntildevice(self):
         """test the waitUntilNew coroutine for devices
 
