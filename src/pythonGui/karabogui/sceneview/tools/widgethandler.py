@@ -144,19 +144,28 @@ class SceneControllerHandler(SceneWidgetHandler):
         """A callback which is fired whenever the user requests a context menu
         in the SceneView.
         """
-        # We don't allow to mutate a controller which contains many proxies
         controller = self.widget.widget_controller
-        if len(controller.proxies) > 1:
-            info = menu.addAction('No mutation for multiple properties')
-            info.setEnabled(False)
-            menu.exec_(event.globalPos())
-            return
 
         # We don't allow changing widgets without binding!
         binding = controller.proxy.binding
         status = controller.proxy.root_proxy.status
         if binding is None or status not in ONLINE_STATUSES:
             info = menu.addAction('No mutation for offline properties')
+            info.setEnabled(False)
+            menu.exec_(event.globalPos())
+            return
+
+        # Add actions which are bound to the actual Qt widget
+        qwidget = controller.widget
+        if qwidget.actions():
+            name = get_class_const_trait(controller, '_ui_name')
+            property_menu = menu.addMenu('{}: Properties'.format(name))
+            property_menu.addActions(qwidget.actions())
+            property_menu.addSeparator()
+
+        # But we don't allow to mutate a controller which contains many proxies
+        if len(controller.proxies) > 1:
+            info = menu.addAction('No mutation for multiple properties')
             info.setEnabled(False)
             menu.exec_(event.globalPos())
             return
@@ -168,19 +177,12 @@ class SceneControllerHandler(SceneWidgetHandler):
         else:
             can_edit = False
 
+        mutate_menu = menu.addMenu('Change Widget')
         klasses = get_compatible_controllers(binding, can_edit=can_edit)
-
-        change_menu = menu.addMenu('Change Widget')
-        # Add actions which are bound to the actual Qt widget
-        qwidget = controller.widget
-        if qwidget.actions():
-            change_menu.addActions(qwidget.actions())
-            change_menu.addSeparator()
-
         klasses.sort(key=lambda w: get_class_const_trait(w, '_ui_name'))
         for klass in klasses:
             ui_name = get_class_const_trait(klass, '_ui_name')
-            action = change_menu.addAction(ui_name)
+            action = mutate_menu.addAction(ui_name)
             action.triggered.connect(partial(self._change_widget,
                                              scene_view, klass))
             if isinstance(controller, klass):
