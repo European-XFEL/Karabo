@@ -12,7 +12,6 @@ import asyncio
 from asyncio import get_event_loop, sleep
 from contextlib import contextmanager
 from decimal import Decimal
-from functools import partial
 from weakref import ref
 
 import dateutil.parser
@@ -374,7 +373,11 @@ def waitWhile(condition):
     that for this to work, it is necessary that all the devices used in the
     condition are connected while we are waiting (so typically they appear
     in a with statement)"""
-    yield from waitUntil(partial(lambda f: not f(), condition))
+    loop = get_event_loop()
+    # suspend once to assure the event loop gets a chance to run
+    yield from sleep(0)
+    while condition():
+        yield from loop.waitForChanges()
 
 
 @synchronize
