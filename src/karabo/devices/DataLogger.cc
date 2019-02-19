@@ -8,6 +8,7 @@
 
 #include <streambuf>
 
+#include <algorithm>
 #include <boost/filesystem.hpp>
 
 #include "karabo/io/Input.hh"
@@ -303,6 +304,29 @@ namespace karabo {
 
             vector<string> paths;
             getLeaves(configuration, m_schemaForSlotChanged, paths);
+
+            // Look for a "deviceId" path and, if one is found, sort the paths by ascending order of the
+            // corresponding nodes. A configuration with a "deviceId" path is one for a full configuration and
+            // for full configurations the default path order, which is the order of the paths in the schema,
+            // might not match the order of the events (actually will often not match).
+            auto deviceIdPos = std::find(paths.begin(), paths.end(), "deviceId");
+            if (deviceIdPos != paths.end()) {
+                // "deviceId" path found
+                std::sort(paths.begin(), paths.end(),
+                          [&configuration](const std::string& firstPath, const std::string & secondPath) {
+                              const Hash::Node& firstNode = configuration.getNode(firstPath);
+                          const Hash::Node& secondNode = configuration.getNode(secondPath);
+                          double firstTime = 0.0;
+                          double secondTime = 0.0;
+                          if (Timestamp::hashAttributesContainTimeInformation(firstNode.getAttributes())) {
+                          firstTime = Timestamp::fromHashAttributes(firstNode.getAttributes()).toTimestamp();
+                          }
+                          if (Timestamp::hashAttributesContainTimeInformation(secondNode.getAttributes())) {
+                          secondTime = Timestamp::fromHashAttributes(secondNode.getAttributes()).toTimestamp();
+                          }
+                          return (firstTime < secondTime);
+                          });
+            }
             
             boost::mutex::scoped_lock lock(m_configMutex);
             if (newPropToIndex) {
