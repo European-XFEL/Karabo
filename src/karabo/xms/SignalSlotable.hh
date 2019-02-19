@@ -634,6 +634,8 @@ namespace karabo {
                 const std::string m_replyId;
             };
 
+            static std::string generateUUID();
+
         protected:
 
             class Requestor {
@@ -783,6 +785,7 @@ namespace karabo {
             std::unordered_map<std::string, MultiAsyncConnectInfo> m_currentMultiAsyncConnects;
             boost::mutex m_currentMultiAsyncConnectsMutex;
 
+            static boost::mutex m_uuidGeneratorMutex;
             static boost::uuids::random_generator m_uuidGenerator;
 
        protected:
@@ -983,8 +986,6 @@ namespace karabo {
             /// Helper for asyncReplyImpl:
             /// If info is found for id, it is returned and removed from map.
             std::tuple<util::Hash::Pointer, std::string, bool> extractAsyncReplyInfo(const std::string& id);
-
-            static std::string generateUUID();
 
             void emitHeartbeat(const boost::system::error_code& e);
 

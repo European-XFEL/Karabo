@@ -35,6 +35,7 @@ namespace karabo {
         const int msPingTimeoutInIsValidInstanceId = 1000;
 
         // Static initializations
+        boost::mutex SignalSlotable::m_uuidGeneratorMutex;
         boost::uuids::random_generator SignalSlotable::m_uuidGenerator;
         std::unordered_map<std::string, SignalSlotable*> SignalSlotable::m_instanceMap;
         boost::shared_mutex SignalSlotable::m_instanceMapMutex;
@@ -853,6 +854,8 @@ namespace karabo {
 
 
         std::string SignalSlotable::generateUUID() {
+            // The generator is not thread safe, but we rely on real uniqueness!
+            boost::mutex::scoped_lock lock(m_uuidGeneratorMutex);
             return boost::uuids::to_string(m_uuidGenerator());
         }
 
