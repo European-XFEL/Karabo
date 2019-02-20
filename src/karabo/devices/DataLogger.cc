@@ -303,31 +303,8 @@ namespace karabo {
             if (m_user.size() == 0) m_user = "";
 
             vector<string> paths;
-            getLeaves(configuration, m_schemaForSlotChanged, paths);
+            getPathsForConfiguration(configuration, paths);
 
-            // Look for a "deviceId" path and, if one is found, sort the paths by ascending order of the
-            // corresponding nodes. A configuration with a "deviceId" path is one for a full configuration and
-            // for full configurations the default path order, which is the order of the paths in the schema,
-            // might not match the order of the events (actually will often not match).
-            auto deviceIdPos = std::find(paths.begin(), paths.end(), "deviceId");
-            if (deviceIdPos != paths.end()) {
-                // "deviceId" path found
-                std::sort(paths.begin(), paths.end(),
-                          [&configuration](const std::string& firstPath, const std::string & secondPath) {
-                              const Hash::Node& firstNode = configuration.getNode(firstPath);
-                          const Hash::Node& secondNode = configuration.getNode(secondPath);
-                          double firstTime = 0.0;
-                          double secondTime = 0.0;
-                          if (Timestamp::hashAttributesContainTimeInformation(firstNode.getAttributes())) {
-                          firstTime = Timestamp::fromHashAttributes(firstNode.getAttributes()).toTimestamp();
-                          }
-                          if (Timestamp::hashAttributesContainTimeInformation(secondNode.getAttributes())) {
-                          secondTime = Timestamp::fromHashAttributes(secondNode.getAttributes()).toTimestamp();
-                          }
-                          return (firstTime < secondTime);
-                          });
-            }
-            
             boost::mutex::scoped_lock lock(m_configMutex);
             if (newPropToIndex) {
                 // DataLogReader got request for history of a property not indexed
@@ -438,6 +415,39 @@ namespace karabo {
             long position = m_configStream.tellp();
             if (maxFilesize <= position) {
                 this->ensureFileClosed();
+            }
+        }
+
+
+        void DataLogger::getPathsForConfiguration(const karabo::util::Hash& configuration,
+                                                  std::vector<std::string>& paths) {
+            {
+                using karabo::util::Epochstamp;
+
+                // Gets the paths for the leaf nodes in the configuration sorted by their order in the schema.
+                getLeaves(configuration, m_schemaForSlotChanged, paths);
+
+                if (paths.size() < 2) {
+                    // There's no more than one path; no further sorting needed.
+                    return;
+                }
+
+                // When there's more than one path, sort them by ascending order of their corresponding
+                // nodes Epochstamps.
+                std::sort(paths.begin(), paths.end(),
+                          [&configuration](const std::string& firstPath, const std::string & secondPath) {
+                              const Hash::Node& firstNode = configuration.getNode(firstPath);
+                          const Hash::Node& secondNode = configuration.getNode(secondPath);
+                          Epochstamp firstTime(0, 0);
+                          Epochstamp secondTime(0, 0);
+                          if (Epochstamp::hashAttributesContainTimeInformation(firstNode.getAttributes())) {
+                          firstTime = Epochstamp::fromHashAttributes(firstNode.getAttributes()).toTimestamp();
+                              }
+                          if (Epochstamp::hashAttributesContainTimeInformation(secondNode.getAttributes())) {
+                          secondTime = Epochstamp::fromHashAttributes(secondNode.getAttributes()).toTimestamp();
+                              }
+                          return (firstTime < secondTime);
+                          });
             }
         }
 
