@@ -7,8 +7,16 @@ from karabo.common.states import State
 from .worker import Worker
 
 # ======================================= Fsm Macros
-NOOP = lambda: None
-GNOOP = lambda: True
+# NOOP = lambda: None
+# GNOOP = lambda: True
+
+
+def NOOP():
+    return None
+
+
+def GNOOP():
+    return True
 
 
 class Event(object):
@@ -422,7 +430,7 @@ class StateMachine(_State):
             raise TypeError(
                 'The parameter is not an instance of the "Event" subclass')
         for s in self.current_state:
-            if not s.interrupt is None and s.interrupt != o.__class__.__name__:
+            if s.interrupt is not None and s.interrupt != o.__class__.__name__:
                 return False
         for i, cs in enumerate(self.current_state):
             if o in cs:
