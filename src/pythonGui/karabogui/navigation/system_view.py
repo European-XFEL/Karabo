@@ -20,16 +20,16 @@ from karabogui.util import (
     handle_scene_from_server, load_configuration_from_file,
     save_configuration_to_file, set_treeview_header)
 from karabogui.widgets.popup import PopupWidget
-from .model import NavigationTreeModel
+from .system_model import SystemTreeModel
 from .tools import DeviceSceneHandler
 
 
-class NavigationTreeView(QTreeView):
+class SystemTreeView(QTreeView):
     def __init__(self, parent):
-        super(NavigationTreeView, self).__init__(parent)
+        super(SystemTreeView, self).__init__(parent)
         self._selected_proxy = None  # A BaseDeviceProxy
 
-        model = NavigationTreeModel(parent=self)
+        model = SystemTreeModel(parent=self)
         self.setModel(model)
         self.setSelectionModel(model.selectionModel)
         model.rowsInserted.connect(self._items_added)
@@ -45,7 +45,7 @@ class NavigationTreeView(QTreeView):
             self.onCustomContextMenuRequested)
         self.setDragEnabled(True)
 
-        self.navigation_handler_list = [DeviceSceneHandler()]
+        self.handler_list = [DeviceSceneHandler()]
         # by default all path are expanded
         self.expanded = True
         self.header().sectionDoubleClicked.connect(self.onDoubleClickHeader)
@@ -130,7 +130,7 @@ class NavigationTreeView(QTreeView):
         """Reimplementation of the Qt function
         """
         self.setExpanded(index, True)
-        super(NavigationTreeView, self).scrollTo(index)
+        super(SystemTreeView, self).scrollTo(index)
 
     # ----------------------------
     # Events
@@ -142,13 +142,13 @@ class NavigationTreeView(QTreeView):
         if node is None:
             return
         info = node.info()
-        for handler in self.navigation_handler_list:
+        for handler in self.handler_list:
             if handler.can_handle(info):
                 handler.handle(info)
                 event.accept()
                 return
 
-        super(NavigationTreeView, self).mouseDoubleClickEvent(event)
+        super(SystemTreeView, self).mouseDoubleClickEvent(event)
 
     # ----------------------------
     # Slots
