@@ -11,13 +11,13 @@ import signal
 import traceback
 
 from karathon import (
-    ALARM_ELEMENT, BOOL_ELEMENT, CHOICE_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
+    ALARM_ELEMENT, BOOL_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
     UINT32_ELEMENT, MICROSEC, NODE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT,
     STATE_ELEMENT, STRING_ELEMENT,
-    OBSERVER, READ, WRITE, INIT,
+    OBSERVER, WRITE,
     AccessLevel, AccessType, AssemblyRules, ChannelMetaData, JmsConnection,
     EventLoop, Epochstamp, Hash, HashFilter, HashMergePolicy,
-    LeafType, loadFromFile, Logger, MetricPrefix, Priority,
+    LeafType, loadFromFile, Logger, MetricPrefix,
     Schema, SignalSlotable, Timestamp, Trainstamp, Unit, Validator,
     ValidatorValidationRules
 )
@@ -33,8 +33,7 @@ from .no_fsm import NoFsm
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("PythonDevice", "1.0")
 class PythonDevice(NoFsm):
-    """
-    The PythonDevice class is the basis for all karabo.bound devices
+    """The PythonDevice class is the basis for all karabo.bound devices
 
     Devices implemented in the karabo.bound API should derive from this
     class. It provides an interface to the distributed system and holds
@@ -59,250 +58,242 @@ class PythonDevice(NoFsm):
     def expectedParameters(expected):
         (
             STRING_ELEMENT(expected).key("_serverId_")
-                    .displayedName("_ServerID_")
-                    .description("Do not set this property, it will be"
-                                 " set by the device-server")
-                    .expertAccess().assignmentInternal().noDefaultValue().init()
-                    .commit(),
+            .displayedName("_ServerID_")
+            .description("Do not set this property, it will be set by the"
+                         " device-server")
+            .expertAccess().assignmentInternal().noDefaultValue().init()
+            .commit(),
 
             STRING_ELEMENT(expected).key("_deviceId_")
-                    .displayedName("_DeviceID_")
-                    .description("Do not set this property, it will be set"
-                                 " by the device-server")
-                    .expertAccess().assignmentInternal().noDefaultValue().init()
-                    .commit(),
+            .displayedName("_DeviceID_")
+            .description("Do not set this property, it will be set by the"
+                         " device-server")
+            .expertAccess().assignmentInternal().noDefaultValue().init()
+            .commit(),
 
             NODE_ELEMENT(expected).key("_connection_")
-                    .displayedName("Connection")
-                    .description("The connection to the communication layer"
-                                 " of the distributed system")
-                    .appendParametersOf(JmsConnection)
-                    .adminAccess()
-                    .commit(),
+            .displayedName("Connection")
+            .description("The connection to the communication layer of the"
+                         " distributed system")
+            .appendParametersOf(JmsConnection)
+            .adminAccess()
+            .commit(),
 
             INT32_ELEMENT(expected).key("visibility")
-                    .displayedName("Visibility")
-                    .description("Configures who is allowed to see this "
-                                 "device at all")
-                    .assignmentOptional().defaultValue(AccessLevel(OBSERVER))
-                    .expertAccess().reconfigurable()
-                    .commit(),
+            .displayedName("Visibility")
+            .description("Configures who is allowed to see this device at all")
+            .assignmentOptional().defaultValue(AccessLevel(OBSERVER))
+            .expertAccess().reconfigurable()
+            .commit(),
 
             STRING_ELEMENT(expected).key("deviceId")
-                    .displayedName("DeviceID")
-                    .description("The device instance ID uniquely identifies"
-                                 " a device instance in the distributed system")
-                    .readOnly()
-                    .commit(),
+            .displayedName("DeviceID")
+            .description("The device instance ID uniquely identifies a device"
+                         " instance in the distributed system")
+            .readOnly()
+            .commit(),
 
             STRING_ELEMENT(expected).key("classId")
-                    .displayedName("ClassID")
-                    .description("The (factory)-name of the class of"
-                                 " this device")
-                    .expertAccess()
-                    .readOnly().initialValue(PythonDevice.__classid__)
-                    .commit(),
+            .displayedName("ClassID")
+            .description("The (factory)-name of the class of this device")
+            .expertAccess()
+            .readOnly().initialValue(PythonDevice.__classid__)
+            .commit(),
 
             STRING_ELEMENT(expected).key("classVersion")
-                    .displayedName("Class version")
-                    .description("The version of the class of this device defined in KARABO_CLASSINFO")
-                    .expertAccess()
-                    .readOnly().initialValue(PythonDevice.__version__)
-                    .commit(),
+            .displayedName("Class version")
+            .description("The version of the class of this device defined in"
+                         " KARABO_CLASSINFO")
+            .expertAccess()
+            .readOnly().initialValue(PythonDevice.__version__)
+            .commit(),
 
             STRING_ELEMENT(expected).key("serverId")
-                    .displayedName("ServerID")
-                    .description("The device-server on which this device"
-                                 " is running on")
-                    .expertAccess().readOnly()
-                    .commit(),
+            .displayedName("ServerID")
+            .description("The device-server on which this device "
+                         "is running on")
+            .expertAccess().readOnly()
+            .commit(),
 
             STRING_ELEMENT(expected).key("hostName")
-                    .displayedName("Host")
-                    .description("The name of the host where this device runs")
-                    .expertAccess()
-                    .readOnly()
-                    .commit(),
+            .displayedName("Host")
+            .description("The name of the host where this device runs")
+            .expertAccess()
+            .readOnly()
+            .commit(),
 
             INT32_ELEMENT(expected).key("pid")
-                    .displayedName("Process ID")
-                    .description("The unix process ID of the device")
-                    .expertAccess().readOnly().initialValue(0)
-                    .commit(),
+            .displayedName("Process ID")
+            .description("The unix process ID of the device")
+            .expertAccess().readOnly().initialValue(0)
+            .commit(),
 
             STATE_ELEMENT(expected).key("state")
-                    .displayedName("State")
-                    .description("The current state the device is in")
-                    .initialValue(State.UNKNOWN)
-                    .commit(),
+            .displayedName("State")
+            .description("The current state the device is in")
+            .initialValue(State.UNKNOWN)
+            .commit(),
 
             STRING_ELEMENT(expected).key("status")
-                    .displayedName("Status")
-                    .description("A more detailed status description")
-                    .readOnly().initialValue("")
-                    .commit(),
+            .displayedName("Status")
+            .description("A more detailed status description")
+            .readOnly().initialValue("")
+            .commit(),
 
             ALARM_ELEMENT(expected).key("alarmCondition")
-                        .displayedName("Alarm condition")
-                        .description("The current alarm condition of the "
-                                     "device. Evaluates to the highest"
-                                     " condition on any property if not set"
-                                     " manually.")
-                        .initialValue(AlarmCondition.NONE)
-                        .commit(),
+            .displayedName("Alarm condition")
+            .description("The current alarm condition of the device. Evaluates"
+                         " to the highest condition on any property if not set"
+                         " manually.")
+            .initialValue(AlarmCondition.NONE)
+            .commit(),
 
             STRING_ELEMENT(expected).key("lockedBy")
-                        .displayedName("Locked by")
-                        .reconfigurable()
-                        .assignmentOptional().defaultValue("")
-                        .expertAccess()
-                        .commit(),
+            .displayedName("Locked by")
+            .reconfigurable()
+            .assignmentOptional().defaultValue("")
+            .expertAccess()
+            .commit(),
 
             SLOT_ELEMENT(expected).key("slotClearLock")
-                        .displayedName("Clear Lock")
-                        .expertAccess()
-                        .commit(),
+            .displayedName("Clear Lock")
+            .expertAccess()
+            .commit(),
 
             STRING_ELEMENT(expected).key("lastCommand")
-                    .displayedName("Last command")
-                    .description("The last slot called.")
-                    .adminAccess()
-                    .readOnly().initialValue("")
-                    .commit(),
+            .displayedName("Last command")
+            .description("The last slot called.")
+            .adminAccess()
+            .readOnly().initialValue("")
+            .commit(),
 
             BOOL_ELEMENT(expected).key("archive")
-                        .displayedName("Archive")
-                        .description("Decides whether the properties of this"
-                                     " device will be logged or not")
-                        .reconfigurable()
-                        .expertAccess()
-                        .assignmentOptional().defaultValue(True)
-                        .commit(),
+            .displayedName("Archive")
+            .description("Decides whether the properties of this"
+                         " device will be logged or not")
+            .reconfigurable()
+            .expertAccess()
+            .assignmentOptional().defaultValue(True)
+            .commit(),
 
             BOOL_ELEMENT(expected).key("useTimeserver")
-                .displayedName("Use Timeserver")
-                .description("Unused - whether device connects to time server "
-                             "is configured via 'timeServerId'")
-                .init()
-                .adminAccess()
-                .assignmentOptional().defaultValue(True)
-                .commit(),
+            .displayedName("Use Timeserver")
+            .description("Unused - whether device connects to time server "
+                         "is configured via 'timeServerId'")
+            .init()
+            .adminAccess()
+            .assignmentOptional().defaultValue(True)
+            .commit(),
 
             STRING_ELEMENT(expected).key("timeServerId")
-                    .displayedName("TimeServer ID")
-                    .description("The instance id uniquely identifies a "
-                                 "TimeServer instance in the distributed"
-                                 " system")
-                    .assignmentOptional().defaultValue("")
-                    .commit(),
+            .displayedName("TimeServer ID")
+            .description("The instance id uniquely identifies a TimeServer"
+                         " instance in the distributed system")
+            .assignmentOptional().defaultValue("")
+            .commit(),
 
             INT32_ELEMENT(expected).key("progress")
-                    .displayedName("Progress")
-                    .description("The progress of the current action")
-                    .readOnly().initialValue(0).commit(),
+            .displayedName("Progress")
+            .description("The progress of the current action")
+            .readOnly().initialValue(0)
+            .commit(),
 
             INT32_ELEMENT(expected).key("heartbeatInterval")
-                    .displayedName("Heartbeat interval")
-                    .description("The heartbeat interval")
-                    .assignmentOptional()
-                    .defaultValue(20)  # smaller than C++ device: own process!
-                    .minInc(10)  # avoid too much traffic
-                    .adminAccess()
-                    .commit(),
+            .displayedName("Heartbeat interval")
+            .description("The heartbeat interval")
+            .assignmentOptional()
+            .defaultValue(20)  # smaller than C++ device: own process!
+            .minInc(10)  # avoid too much traffic
+            .adminAccess()
+            .commit(),
 
             NODE_ELEMENT(expected).key("performanceStatistics")
-                    .displayedName("Performance Statistics")
-                    .description("Accumulates some statistics")
-                    .expertAccess()
-                    .commit(),
+            .displayedName("Performance Statistics")
+            .description("Accumulates some statistics")
+            .expertAccess()
+            .commit(),
 
             BOOL_ELEMENT(expected).key("performanceStatistics."
                                        "messagingProblems")
-                    .displayedName("Messaging problems")
-                    .description("If true, there is a problem consuming "
-                                 "broker messages")
-                    .expertAccess()
-                    .readOnly().initialValue(False)
-                    # Alarm commented as long as it dominates alarm handling:
-                    ## Threshold is exclusive: value True fulfils "> False"
-                    ## and triggers alarm whereas False does not:
-                    #.alarmHigh(False)
-                    #.info("Unreliable broker message consumption - "
-                    #      "consider restarting device!")
-                    #.needsAcknowledging(True)
-                    .commit(),
+            .displayedName("Messaging problems")
+            .description("If true, there is a problem consuming"
+                         " broker messages")
+            .expertAccess()
+            .readOnly().initialValue(False)
+            .commit(),
 
             BOOL_ELEMENT(expected).key("performanceStatistics.enable")
-                    .displayedName("Enable Performance Indicators")
-                    .description("Enables some statistics to follow the"
-                                 " performance of an individual device")
-                    .reconfigurable()
-                    .expertAccess()
-                    .assignmentOptional().defaultValue(False)
-                    .commit(),
+            .displayedName("Enable Performance Indicators")
+            .description("Enables some statistics to follow the"
+                         " performance of an individual device")
+            .reconfigurable()
+            .expertAccess()
+            .assignmentOptional().defaultValue(False)
+            .commit(),
 
-            FLOAT_ELEMENT(expected).key("performanceStatistics.processingLatency")
-                    .displayedName("Processing latency")
-                    .description("Average time interval between remote message"
-                                 " sending and processing it in this device.")
-                    .unit(Unit.SECOND).metricPrefix(MetricPrefix.MILLI)
-                    .expertAccess()
-                    .readOnly().initialValue(0.0)
-                    .warnHigh(3000.)  # 3 s
-                    .info("Long average time between message being sent and"
-                          " start of its processing")
-                    .needsAcknowledging(False)
-                    .alarmHigh(10000.)  # 10 s
-                    .info("Very long average time between message being sent "
-                          "and start of its processing")
-                    .needsAcknowledging(False)
-                    .commit(),
+            FLOAT_ELEMENT(expected).key("performanceStatistics."
+                                        "processingLatency")
+            .displayedName("Processing latency")
+            .description("Average time interval between remote message"
+                         " sending and processing it in this device.")
+            .unit(Unit.SECOND).metricPrefix(MetricPrefix.MILLI)
+            .expertAccess()
+            .readOnly().initialValue(0.0)
+            .warnHigh(3000.)  # 3 s
+            .info("Long average time between message being sent and"
+                  " start of its processing")
+            .needsAcknowledging(False)
+            .alarmHigh(10000.)  # 10 s
+            .info("Very long average time between message being sent "
+                  "and start of its processing")
+            .needsAcknowledging(False)
+            .commit(),
 
             UINT32_ELEMENT(expected).key("performanceStatistics"
                                          ".maxProcessingLatency")
-                     .displayedName("Maximum latency")
-                     .description("Maximum processing latency within averaging"
-                                  " interval.")
-                     .unit(Unit.SECOND).metricPrefix(MetricPrefix.MILLI)
-                     .expertAccess()
-                     .readOnly().initialValue(0)
-                     .commit(),
+            .displayedName("Maximum latency")
+            .description("Maximum processing latency within averaging"
+                         " interval.")
+            .unit(Unit.SECOND).metricPrefix(MetricPrefix.MILLI)
+            .expertAccess()
+            .readOnly().initialValue(0)
+            .commit(),
 
             UINT32_ELEMENT(expected).key("performanceStatistics.numMessages")
-                     .displayedName("Number of messages")
-                     .description("Number of messages received within "
-                                  "averaging interval.")
-                     .unit(Unit.COUNT)
-                     .expertAccess()
-                     .readOnly().initialValue(0)
-                     .commit(),
+            .displayedName("Number of messages")
+            .description("Number of messages received within"
+                         " averaging interval.")
+            .unit(Unit.COUNT)
+            .expertAccess()
+            .readOnly().initialValue(0)
+            .commit(),
 
             UINT32_ELEMENT(expected).key("performanceStatistics"
                                          ".maxEventLoopLatency")
-                     .displayedName("Max. event loop latency")
-                     .description("Maximum time interval between posting a "
-                                  "message on the central event loop and "
-                                  "processing it within averaging interval.")
-                     .unit(Unit.SECOND).metricPrefix(MetricPrefix.MILLI)
-                     .expertAccess()
-                     .readOnly().initialValue(0)
-                     .commit(),
+            .displayedName("Max. event loop latency")
+            .description("Maximum time interval between posting a message on"
+                         " the central event loop and processing it within"
+                         " averaging interval.")
+            .unit(Unit.SECOND).metricPrefix(MetricPrefix.MILLI)
+            .expertAccess()
+            .readOnly().initialValue(0)
+            .commit(),
 
             NODE_ELEMENT(expected).key("Logger")
-                    .description("Logging settings")
-                    .displayedName("Logger")
-                    .appendParametersOf(Logger)
-                    .expertAccess()
-                    .commit(),
+            .description("Logging settings")
+            .displayedName("Logger")
+            .appendParametersOf(Logger)
+            .expertAccess()
+            .commit(),
 
         )
 
     log = None  # make always available, at least as None
 
     def __init__(self, configuration):
-        """
-        The initialization method of a device expects a configuration passed
-        as a Karabo Hash.
+        """The initialization method of a device
+
+        Expects a configuration passed as a Karabo Hash.
 
         :param configuration: the configuration Hash. It may contain the
                following entries:
@@ -325,7 +316,7 @@ class PythonDevice(NoFsm):
         if "_deviceId_" in self.parameters:
             self.deviceid = self.parameters["_deviceId_"]
         else:
-            self.deviceid = "__none__"    #TODO: generate uuid
+            self.deviceid = "__none__"  # TODO: generate uuid
 
         # Initialize threading locks...
         self._lock = threading.Lock()
@@ -337,8 +328,8 @@ class PythonDevice(NoFsm):
         self._client = None
 
         # host & domain names
-        self.hostname, dotsep, self.domainname = socket.gethostname()\
-                                                       .partition('.')
+        self.hostname, dotsep, self.domainname = \
+            socket.gethostname().partition('.')
 
         # timeserver related
         self._timeLock = threading.Lock()
@@ -349,11 +340,11 @@ class PythonDevice(NoFsm):
         self.timeServerId = self.parameters["timeServerId"]
 
         # Setup the validation classes
-        self.validatorIntern   = Validator()
-        self.validatorExtern   = Validator()
+        self.validatorIntern = Validator()
+        self.validatorExtern = Validator()
         rules = ValidatorValidationRules()
         rules.allowAdditionalKeys = False
-        rules.allowMissingKeys    = True
+        rules.allowMissingKeys = True
         rules.allowUnrootedConfiguration = True
         rules.injectDefaults = False
         rules.injectTimestamps = True
@@ -380,10 +371,10 @@ class PythonDevice(NoFsm):
             # Validate first time to assign timestamps
             # Note that invalid property keys are already caught via
             # Configurator(PythonDevice).create in launchPythonDevice below.
-            validated = self.validatorIntern.validate(self.fullSchema,
-                                                      self.parameters,
-                                                      self.getActualTimestamp())
-            self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+            validated = self.validatorIntern.validate(
+                self.fullSchema, self.parameters, self.getActualTimestamp())
+            self.parameters.merge(validated,
+                                  HashMergePolicy.REPLACE_ATTRIBUTES)
 
         # Create 'info' hash
         info = Hash("type", "device")
@@ -443,17 +434,17 @@ class PythonDevice(NoFsm):
 
         self._ss.registerBrokerErrorHandler(self.onBrokerError)
 
-
     def _finalizeInternalInitialization(self):
         # Start - after all settings/registrations done:
-        # Communication (incl. system registration) starts and thus parallelism!
+        # Communication (incl. system registration) starts and thus parallelism
         # This is done here and not yet in __init__ to be sure that inheriting
         # devices can register in their __init__ after super(..).__init__(..)
         try:
             self._ss.start()
         except RuntimeError as e:
             raise RuntimeError("PythonDevice.__init__: "
-                               "SignalSlotable Exception -- {0}".format(str(e)))
+                               "SignalSlotable Exception -- {0}"
+                               .format(str(e)))
 
         pid = os.getpid()
         self.log.INFO("'{0.classid}' with deviceId '{0.deviceid}' got started "
@@ -465,10 +456,10 @@ class PythonDevice(NoFsm):
         self.startFsm()
 
         if self.timeServerId:
-            self.log.DEBUG("Connecting to time server : \"{}\"".format(self.timeServerId))
+            self.log.DEBUG("Connecting to time server : \"{}\""
+                           .format(self.timeServerId))
             self._ss.connect(self.timeServerId, "signalTimeTick",
                              "", "slotTimeTick")
-
 
     @property
     def signalSlotable(self):
@@ -476,8 +467,9 @@ class PythonDevice(NoFsm):
         return self._ss
 
     def loadLogger(self):
-        """
-        Load the distributed logger using config in self.parameters["Logger"]
+        """Load the distributed logger
+
+        Uses config in self.parameters["Logger"]
         """
         config = self.parameters["Logger"]
         stamp = self.getActualTimestamp()
@@ -510,15 +502,15 @@ class PythonDevice(NoFsm):
         Logger.useOstream("karabo", False)
         Logger.useFile("karabo", False)
 
-
     def __del__(self):
         """ PythonDevice destructor """
         sys.exit(0)
 
     def remote(self):
-        """
-        Return a DeviceClient instance. The DeviceClient will use this device's
-        SignalSlotable to interact with the distributed system
+        """Return a DeviceClient instance.
+
+        The DeviceClient will use this device's SignalSlotable to interact with
+        the distributed system
         :return:
         """
         if self._client is None:
@@ -527,9 +519,9 @@ class PythonDevice(NoFsm):
         return self._client
 
     def set(self, *args, **kwargs):
-        """
-        Updates the state of the device. This function automatically
-        notifies any observers.
+        """Updates the state of the device.
+
+        This function automatically notifies any observers.
 
         args: can be of length
 
@@ -540,8 +532,6 @@ class PythonDevice(NoFsm):
 
         kwargs: validate: specifies if validation of args should be performed
                 before notification.
-
-
         """
         pars = tuple(args)
         validate = kwargs.get("validate", True)
@@ -571,13 +561,12 @@ class PythonDevice(NoFsm):
                     h.set(key, value)
                 pars = tuple([h, stamp])
 
-
             # hash args
             if len(pars) == 1:
                 h = pars[0]
                 if not isinstance(h, Hash):
                     raise TypeError("The only argument should be a Hash")
-                pars = tuple([h, self.getActualTimestamp()])   # add timestamp
+                pars = tuple([h, self.getActualTimestamp()])  # add timestamp
 
             # key, value or hash, timestamp args
             if len(pars) == 2:
@@ -605,13 +594,13 @@ class PythonDevice(NoFsm):
                 if validate:
                     try:
                         validated = self.validatorIntern \
-                                        .validate(self.fullSchema, hash, stamp)
+                            .validate(self.fullSchema, hash, stamp)
                     except RuntimeError as e:
                         # As in C++, just warn. But note that here (in contrast
                         # to C++) setting a non-existing parameter skips the
                         # setting of all other parameters in the same hash.
-                        self.log.WARN("Bad parameter setting attempted, ignore "
-                                      "keys " + str(hash.keys())
+                        self.log.WARN("Bad parameter setting attempted, ignore"
+                                      " keys " + str(hash.keys())
                                       + ". Validation reports: " + str(e))
                         validated = Hash()
                     resultingCondition = self._evaluateAndUpdateAlarmCondition(
@@ -619,18 +608,19 @@ class PythonDevice(NoFsm):
                         prevParamsInAlarm=prevAlarmParams, silent=False)
                     # set the overal alarm condition if needed
                     if (resultingCondition is not None
-                        and resultingCondition.asString()
-                        != self.parameters.get("alarmCondition")):
-                            validated.set("alarmCondition",
-                                          resultingCondition.asString())
-                            node = validated.getNode("alarmCondition")
-                            attributes = node.getAttributes()
-                            stamp.toHashAttributes(attributes)
+                            and resultingCondition.asString()
+                            != self.parameters.get("alarmCondition")):
+                        validated.set("alarmCondition",
+                                      resultingCondition.asString())
+                        node = validated.getNode("alarmCondition")
+                        attributes = node.getAttributes()
+                        stamp.toHashAttributes(attributes)
                     changedAlarms = self._evaluateAlarmUpdates(prevAlarmParams)
 
                     if not changedAlarms.get("toClear").empty() or not \
                             changedAlarms.get("toAdd").empty():
-                        self._ss.emit("signalAlarmUpdate", self.getInstanceId(),
+                        self._ss.emit("signalAlarmUpdate",
+                                      self.getInstanceId(),
                                       changedAlarms)
 
                 else:
@@ -642,30 +632,30 @@ class PythonDevice(NoFsm):
                         stamp.toHashAttributes(attributes)
 
                 if not validated.empty():
-                    self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+                    self.parameters.merge(validated,
+                                          HashMergePolicy.REPLACE_ATTRIBUTES)
 
-                    # Hash containing 'state' or at least one reconfigurable key
-                    # should be signalled by 'signalStateChanged'
+                    # Hash containing 'state' or at least one reconfigurable
+                    # key should be signalled by 'signalStateChanged'
                     signal = "signalChanged"
-                    if ('state' in validated or
-                        (validate and
-                         self.validatorIntern.hasReconfigurableParameter())):
+                    shrt = self.validatorIntern.hasReconfigurableParameter()
+                    if 'state' in validated or (validate and shrt):
                         signal = "signalStateChanged"
 
                     self._ss.emit(signal, validated, self.deviceid)
 
-
     def _evaluateAndUpdateAlarmCondition(self, forceUpdate, prevParamsInAlarm,
                                          silent):
-        """
-        Evaluate the device's alarm condition as the most severe alarm condition
-        present on its properties or explicitly set via `setAlarmCondition`.
+        """Evaluate the device's alarm condition
+
+        It sets it to the most severe alarm condition present on its properties
+        or explicitly set via `setAlarmCondition`.
         :param forceUpdate: if set to true  the global alarm condition will
                             always be returned, even if no parameter based
                             alarm conditions are present.
         :param prevParamsInAlarm: parameters in alarm before current update,
                                   needed only if silent=False
-        :silent: If True, suppress any log messages about changed alarms
+        :param silent: If True, suppress any log messages about changed alarms
         :return:
         """
         if self.validatorIntern.hasParametersInWarnOrAlarm():
@@ -677,14 +667,14 @@ class PythonDevice(NoFsm):
                 key = node.getKey()
                 alarmType = desc["type"]
                 if (not silent and
-                    (key not in prevParamsInAlarm
-                     or prevParamsInAlarm.get(key + ".type") != alarmType)):
+                        (key not in prevParamsInAlarm or
+                         prevParamsInAlarm.get(key + ".type") != alarmType)):
                     # A new alarm - so it is worth to notify the sysyem:
                     self.log.WARN("{}: {}".format(alarmType, desc["message"]))
                 conditions.append(AlarmCondition.fromString(alarmType))
 
-            mostSignificantCondition = AlarmCondition\
-                                        .returnMostSignificant(conditions)
+            mostSignificantCondition = AlarmCondition \
+                .returnMostSignificant(conditions)
             return mostSignificantCondition
         elif forceUpdate:
             return self.globalAlarmCondition
@@ -692,7 +682,8 @@ class PythonDevice(NoFsm):
             return None
 
     def _evaluateAlarmUpdates(self, previous, forceUpdate=False):
-        """
+        """Evaluates the difference between current and previous alarms
+
         Evaluates difference between previous and current parameter in alarm
         conditions and emits a signal with the update
         :param previous: alarm conditions previously present on the device.
@@ -777,19 +768,16 @@ class PythonDevice(NoFsm):
 
         self._ss.reply(self.getInstanceId(), alarmsToUpdate)
 
-
-
     def __setitem__(self, key, value):
-        """
-        Alternative to `self.set`: `self[key] = value`
+        """Alternative to `self.set`: `self[key] = value`
+
         The timestamp is set to the current timestamp
         """
-
         self.set(key, value, self.getActualTimestamp())
 
     def writeChannel(self, channelName, data, timestamp=None):
-        """
-        Write data to an output channel.
+        """Write data to an output channel.
+
         :param channelName: name given to an OUTPUT_CHANNEL in
          expectedParameters
         :param data: a Hash with keys as described in the Schema of the
@@ -816,23 +804,26 @@ class PythonDevice(NoFsm):
         channel.update()
 
     def signalEndOfStream(self, channelName):
-        """
-        Signal an end-of-stream event on the channel identified by
-        `channnelName`
-        """
+        """Signal an end-of-stream event
 
+        The channel is identified by `channnelName`
+        """
         self._ss.getOutputChannel(channelName).signalEndOfStream()
 
     def get(self, key):
-        """
-        Return a property of this device
+        """Return a property of this device
+
         :param key: as defined in the expected parameter section
         :return: the value of the property
         """
         with self._stateChangeLock:
             try:
-                leafType = None if not self.fullSchema.getParameterHash().hasAttribute(key, "leafType") \
-                    else self.fullSchema.getParameterHash().getAttribute(key, "leafType")
+                if not self.fullSchema.getParameterHash()\
+                        .hasAttribute(key, "leafType"):
+                    leafType = None
+                else:
+                    leafType = self.fullSchema.getParameterHash()\
+                        .getAttribute(key, "leafType")
 
                 if leafType == LeafType.STATE:
                     return State(self.parameters[key])
@@ -846,42 +837,40 @@ class PythonDevice(NoFsm):
                     "Error while retrieving '{}' from device".format(key))
 
     def __getitem__(self, key):
-        """
-        Alternative for `value = self.get(key)`: `value = self[key]`
-        """
-
+        """Alternative for `value = self.get(key)`: `value = self[key]`"""
         return self.get(key)
 
     def getFullSchema(self):
-        """
-        Return the full schema describing this device
+        """Return the full schema describing this device
+
         :return: a karabo Schema object
         """
 
         return self.fullSchema
 
     def updateSchema(self, schema):
-        """
-        Update the existing device schema by merging the argument to the static
-        schema defined in expectedParameters.
+        """Updates the existing device schema
+        It merges the schema in argument to the static schema defined in
+        expectedParameters.
 
         :param schema: to be merged with the static schema
         """
-
         rules = ValidatorValidationRules()
-        rules.allowAdditionalKeys        = True
-        rules.allowMissingKeys           = True
+        rules.allowAdditionalKeys = True
+        rules.allowMissingKeys = True
         rules.allowUnrootedConfiguration = True
-        rules.injectDefaults             = True
-        rules.injectTimestamps           = True
+        rules.injectDefaults = True
+        rules.injectTimestamps = True
         validator = Validator()
         validator.setValidationRules(rules)
-        validated = validator.validate(schema, Hash(), self.getActualTimestamp())
+        validated = validator.validate(schema, Hash(),
+                                       self.getActualTimestamp())
         with self._stateChangeLock:
             # Instead of looping on paths of injectedSchema, could probably
             # directly loop on paths of self.parameters
             for path in self._injectedSchema.getPaths():
-                if self.parameters.has(path) and not self.staticSchema.has(path):
+                if self.parameters.has(path) and not self.staticSchema.has(
+                        path):
                     self.parameters.erase(path)
             self._stateDependentSchema.clear()
             self._injectedSchema.copy(schema)
@@ -894,21 +883,20 @@ class PythonDevice(NoFsm):
         self.log.INFO("Schema updated")
 
     def appendSchema(self, schema):
-        """
-        Append to the existing device schema
+        """Append to the existing device schema
 
         :param schema: to append
         """
-
         rules = ValidatorValidationRules()
-        rules.allowAdditionalKeys        = True
-        rules.allowMissingKeys           = True
+        rules.allowAdditionalKeys = True
+        rules.allowMissingKeys = True
         rules.allowUnrootedConfiguration = True
-        rules.injectDefaults             = True
-        rules.injectTimestamps           = True
+        rules.injectDefaults = True
+        rules.injectTimestamps = True
         validator = Validator()
         validator.setValidationRules(rules)
-        validated = validator.validate(schema, self.parameters, self.getActualTimestamp())
+        validated = validator.validate(schema, self.parameters,
+                                       self.getActualTimestamp())
         with self._stateChangeLock:
             for key in self._injectedSchema.getKeys():
                 self.parameters.erase(key)
@@ -916,7 +904,8 @@ class PythonDevice(NoFsm):
             self._injectedSchema += schema
             self.fullSchema.copy(self.staticSchema)
             self.fullSchema += self._injectedSchema
-            self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+            self.parameters.merge(
+                validated, HashMergePolicy.REPLACE_ATTRIBUTES)
             self.fullSchema.updateAliasMap()
         # notify the distributed system...
         self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
@@ -958,34 +947,27 @@ class PythonDevice(NoFsm):
                 self._ss.emit("signalSchemaUpdated",
                               self.fullSchema, self.deviceid)
 
-    def setProgress(self, value, associatedText = ""):
-        """
-        Set progress indicator on this device, use this for processing on
-        devices, or a slow hardware related process.
+    def setProgress(self, value, associatedText=""):
+        """Set progress indicator on this device
+        Use this for processing on devices, or a slow hardware related process.
         :param value:
         :param associatedText: optionally set a text describing the progress
         :return:
         """
-
         v = self.progressMin + value / (self.progressMax - self.progressMin)
         self.set("progress", v)
 
     def resetProgress(self):
-        """
-        Reset progress to the minimum progress range.
-        :return:
-        """
-
+        """Reset progress to the minimum progress range."""
         set("progress", self.progressMin)
 
     def setProgressRange(self, minimum, maximum):
-        """
-        Set the range used for progress indication.
+        """Set the range used for progress indication.
+
         :param minimum: lower bound of value used in `setProgress`
         :param maximum: upper bound of value used in `setProgress`
         :return:
         """
-
         self.progressMin, self.progressMax = minimum, maximum
 
     def getAliasFromKey(self, key, aliasReferenceType):
@@ -995,94 +977,75 @@ class PythonDevice(NoFsm):
         :param aliasReferenceType: type the alias is of
         :return: an object of aliasReferenceType
         """
-
         try:
             return self.fullSchema.getAliasFromKey(key, aliasReferenceType)
         except RuntimeError as e:
-            raise AttributeError(
-                "Error while retrieving alias from parameter ({}): {}".
-                format(key, e))
+            raise AttributeError("Error while retrieving alias from parameter"
+                                 " ({}): {}".format(key, e))
 
     def getKeyFromAlias(self, alias):
-        """
-        Return the key mapping to a given alias
-        """
+        """Return the key mapping to a given alias"""
 
         try:
             return self.fullSchema.getKeyFromAlias(alias)
         except RuntimeError as e:
-            raise AttributeError(
-                "Error while retrieving parameter from alias ({}): {}".
-                format(alias, e))
+            raise AttributeError("Error while retrieving parameter from alias"
+                                 " ({}): {}".format(alias, e))
 
     def aliasHasKey(self, alias):
-        """
-        Check if a key for a given alias exists
-        """
-
+        """Check if a key for a given alias exists"""
         return self.fullSchema.aliasHasKey(alias)
 
     def keyHasAlias(self, key):
-        """
-        Check if a given key has an alias defined
-        """
-
+        """Check if a given key has an alias defined"""
         return self.fullSchema.keyHasAlias(key)
 
     def getValueType(self, key):
-        """
-        Get the ValueType in terms of `karabo::util::ReferenceTypes` for a
-        given key
-        """
+        """Get the ValueType of a given key
 
+        :returns: The type in terms of `karabo::util::ReferenceTypes`
+        """
         return self.fullSchema.getValueType(key)
 
-    def getCurrentConfiguration(self, tags = ""):
-        """
-        Return the current configuration, optionally filtered by tags
+    def getCurrentConfiguration(self, tags=""):
+        """Return the current configuration, optionally filtered by tags
 
         :param tags: a string, with several entries separated by commas
                     spaces or semicolons. Set to an empty string if no
                     filtering is to be applied.
         :return: a configuration Hash
         """
-
         if tags == "":
             return self.parameters
         with self._stateChangeLock:
-            return HashFilter.byTag(self.fullSchema, self.parameters, tags, " ,;")
+            return HashFilter.byTag(self.fullSchema, self.parameters, tags,
+                                    " ,;")
 
     def filterByTags(self, configuration, tags):
-        """
-        Filter a given configuration Hash by tags
+        """Filter a given configuration Hash by tags
 
         :param configuration:
         :param tags: a string, with several entries separated by commas
                      spaces or semicolons
         :return: the filtered configuration Hash
         """
-
         return HashFilter.byTag(self.fullSchema, configuration, tags, " ,;")
 
     def getServerId(self):
-        """
-        Return the id of the server hosting this devices
-        """
+        """Return the id of the server hosting this devices"""
 
         return self.serverid
 
     def getAvailableInstances(self):
-        """
-        Return available instances in the distributed system
-        """
+        """Return available instances in the distributed system"""
 
         return self._ss.getAvailableInstances()
 
     @karabo_deprecated
     def errorFoundAction(self, shortMessage, detailedMessage):
-        """
+        """A function to overwrite for error handling.
+
         This method is DEPRECATED!
-        A function to overwrite for error handling.
         :param shortMessage:
         :param detailedMessage:
         :return:
@@ -1096,8 +1059,6 @@ class PythonDevice(NoFsm):
         :param incomingReconfiguration:
         """
 
-        pass
-
     def postReconfigure(self):
         """
         Use this hook to react on configuration changes after they have been
@@ -1105,16 +1066,11 @@ class PythonDevice(NoFsm):
         distributed system.
         """
 
-        pass
-
     def preDestruction(self):
         """
         Use this hook if you need to perform clean-up actions before a device
         gets destroyed.
         """
-
-        pass
-
 
     def initClassId(self):
         self.classid = self.__class__.__classid__
@@ -1125,10 +1081,10 @@ class PythonDevice(NoFsm):
         self.fullSchema.copy(self.staticSchema)
 
     def updateState(self, currentState):
-        """
-        Update the state of the device to a new state. This should be used
-        for NoFSM devices and should *not* be used if you have an underlying
-        FSM.
+        """Update the state of the device to a new state.
+
+        This should be used for NoFSM devices and should *not* be used if you
+        have an underlying FSM.
         :param currentState: the state to set the device to
         :return:
         """
@@ -1142,7 +1098,8 @@ class PythonDevice(NoFsm):
             else:
                 if self._ss.getInstanceInfo()["status"] == "error":
                     self._ss.updateInstanceInfo(Hash("status", "ok"))
-        self._ss.reply(stateName)  # reply new state to interested event initiators
+        # reply new state to interested event initiators
+        self._ss.reply(stateName)
 
     @karabo_deprecated
     def onStateUpdate(self, currentState):
@@ -1152,16 +1109,16 @@ class PythonDevice(NoFsm):
 
     @karabo_deprecated
     def exceptionFound(self, shortMessage, detailedMessage):
-        """
+        """Hook for when an exception is encountered.
+
         This method is DEPRECATED and will be removed.
-        Hook for when an exception is encountered.
+
         Catch exceptions where they can occur instead, e.g.
         when calling a slot or requesting a value!
 
         :param shortMessage: exception message
         :param detailedMessage: detailed exception message
         """
-
         self.log.ERROR(shortMessage + " -- " + detailedMessage)
 
     def noStateTransition(self, currentState, currentEvent):
@@ -1170,13 +1127,13 @@ class PythonDevice(NoFsm):
         in the current context. Usually, this means you have an error in your
         state machine.
         """
-
-        self.log.WARN("Device \"{}\" being in state '{}' does not allow the transition for event '{}'."
+        self.log.WARN("Device \"{}\" being in state '{}' does not allow the"
+                      " transition for event '{}'."
                       .format(self.deviceid, currentState, currentEvent))
 
     def onTimeUpdate(self, id, sec, frac, period):
-        """
-        Called when an update from the time server is received
+        """Called when an update from the time server is received
+
         :param id: train id
         :param sec: seconds
         :param frac: fractional seconds
@@ -1184,13 +1141,11 @@ class PythonDevice(NoFsm):
         :return:
         """
 
-        pass
-
     def KARABO_SLOT(self, slot):
-        """
-        Register a slot in the distributed system. Note that a slot is only
-        connected with a SLOT_ELEMENT if the key of the SLOT_ELEMENT matches
-        the slot name provided to this function.
+        """Register a slot in the distributed system.
+
+        Note that a slot is only connected with a SLOT_ELEMENT if the key of
+        the SLOT_ELEMENT matches the slot name provided to this function.
 
             SLOT_ELEMENT(expected).key("slotDoSomething")
 
@@ -1208,22 +1163,23 @@ class PythonDevice(NoFsm):
         self._ss.registerSlot(slot)
 
     def _initDeviceSlots(self):
-        #-------------------------------------------- register intrinsic signals
-        self._ss.registerSignal("signalChanged", Hash, str)                # changeHash, instanceId
-        self._ss.registerSystemSignal("signalStateChanged", Hash, str)                # changeHash, instanceId
-
-        self._ss.registerSystemSignal("signalSchemaUpdated", Schema, str)           # schema, deviceid
-
+        # Register intrinsic signals
+        # changeHash, instanceId
+        self._ss.registerSignal("signalChanged", Hash, str)
+        # changeHash, instanceId
+        self._ss.registerSystemSignal("signalStateChanged", Hash, str)
+        # schema, deviceid
+        self._ss.registerSystemSignal("signalSchemaUpdated", Schema, str)
         self._ss.registerSystemSignal("signalAlarmUpdate", str, Hash)
 
-        #---------------------------------------------- register intrinsic slots
+        # Register intrinsic slots
         self._ss.registerSlot(self.slotReconfigure)
         self._ss.registerSlot(self.slotGetConfiguration)
         self._ss.registerSlot(self.slotGetSchema)
         self._ss.registerSlot(self.slotKillDevice)
         self._ss.registerSlot(self.slotUpdateSchemaAttributes)
         self._ss.registerSlot(self.slotReSubmitAlarms)
-        # timeserver related slots
+        # Timeserver related slots
         self._ss.registerSlot(self.slotTimeTick)
         self._ss.registerSlot(self.slotLoggerPriority)
         self._ss.registerSlot(self.slotClearLock)
@@ -1238,27 +1194,30 @@ class PythonDevice(NoFsm):
                 displayType = self.fullSchema.getDisplayType(key)
                 if displayType == "OutputChannel":
                     # Would best be INFO level, but without broadcasting:
-                    self.log.DEBUG("Creating output channel \"{}\"".format(key))
+                    self.log.DEBUG("Creating output channel \"{}\""
+                                   .format(key))
                     self._ss.createOutputChannel(key, self.parameters)
                 elif displayType == "InputChannel":
                     # Would best be INFO level, but without broadcasting:
-                    self.log.DEBUG("Creating input channel \"{}\"".format(key))
+                    self.log.DEBUG("Creating input channel \"{}\""
+                                   .format(key))
                     self._ss.createInputChannel(key, self.parameters)
                 else:
-                    self.log.DEBUG("Not creating in-/output channel for '" +
-                                   key + "' since it's a '" + displayType +"'")
+                    self.log.DEBUG("Not creating in-/output channel for '"
+                                   + key + "' since it's a '"
+                                   + displayType + "'")
             elif self.fullSchema.isNode(key):
                 # Recursive call going down the tree for channels within nodes
                 self.log.DEBUG("Looking for input/output channels " +
                                "under node '" + key + "'")
                 self.initChannels(key)
 
-
     def KARABO_ON_DATA(self, channelName, handlerPerData):
-        """
-        Registers a handler function to be called if data is received on an
-        input channel identified by `channelName`. The handler function should
-        have the signature
+        """Registers a data handler function
+
+        This function will be called if data is received on an input channel
+        identified by `channelName`. The handler function should have the
+        signature:
 
             def onData(data, metaData):
                 pass
@@ -1267,13 +1226,12 @@ class PythonDevice(NoFsm):
 
          Note that for each channelName one can only use one of
         `KARABO_ON_DATA` and`KARABO_ON_INPUT`.
-
         """
-
         self._ss.registerDataHandler(channelName, handlerPerData)
 
     def KARABO_ON_INPUT(self, channelName, handlerPerInput):
-        """
+        """Registers an input handler function
+
         Registers a handler to be called if data is available on the input
         channel identified by `channelName`. It is up to the device developer
         to read data (in contrast to the `KARABO_ON_DATA` registration).
@@ -1286,15 +1244,14 @@ class PythonDevice(NoFsm):
 
         Note that for each channelName one can only use one of
         `KARABO_ON_DATA` and`KARABO_ON_INPUT`.
-
         """
-
         self._ss.registerInputHandler(channelName, handlerPerInput)
 
     def KARABO_ON_EOS(self, channelName, handler):
-        """
-        Registers a handler to be called if input channel identified by `channelName`
-        is signaled end-of-stream.
+        """Registers an end-of-stream handler
+
+        Registers a handler to be called if input channel identified by
+        `channelName` is signaled end-of-stream.
 
         The handler function should  have the signature
 
@@ -1302,7 +1259,6 @@ class PythonDevice(NoFsm):
              pass
 
         where `input` is a reference to the input channel.
-
         """
         self._ss.registerEndOfStreamHandler(channelName, handler)
 
@@ -1341,8 +1297,9 @@ class PythonDevice(NoFsm):
             if allowedStates:
                 currentState = self["state"]
                 if currentState not in allowedStates:
-                    msg = "Command \"{}\" is not allowed in current state \"{}\" " \
-                          "of device \"{}\"".format(slotName, currentState, self.deviceid)
+                    msg = "Command \"{}\" is not allowed in current state" \
+                          " \"{}\" of device \"{}\""\
+                        .format(slotName, currentState, self.deviceid)
                     raise RuntimeError(msg)
 
         # Log the call of this slot by setting a parameter of the device
@@ -1388,12 +1345,13 @@ class PythonDevice(NoFsm):
         whiteList = self._getStateDependentSchema(currentState)
 
         try:
-            validated = self.validatorExtern.validate(whiteList, unvalidated, self.getActualTimestamp())
+            validated = self.validatorExtern.validate(
+                whiteList, unvalidated, self.getActualTimestamp())
         except RuntimeError as e:
             errorText = str(e) + " in '" + str(currentState) + "'"
-            return (False, errorText, unvalidated)
+            return False, errorText, unvalidated
         self.log.DEBUG("Validated reconfiguration:\n{}".format(validated))
-        return (True,"",validated)
+        return True, "", validated
 
     def _applyReconfiguration(self, reconfiguration):
 
@@ -1401,7 +1359,7 @@ class PythonDevice(NoFsm):
         with self._stateChangeLock:
             for prop in ["archive", "visibility"]:
                 node = reconfiguration.find(prop)
-                if (node and node.getValue() != self.parameters.get(prop)):
+                if node and node.getValue() != self.parameters.get(prop):
                     instanceInfoUpdate.set(prop, node.getValue())
             self.parameters += reconfiguration
 
@@ -1424,11 +1382,13 @@ class PythonDevice(NoFsm):
             self._ss.reply(self.fullSchema, self.deviceid)
 
     def slotKillDevice(self):
-        senderid = self._ss.getSenderInfo("slotKillDevice").getInstanceIdOfSender()
+        senderid = self._ss.getSenderInfo(
+            "slotKillDevice").getInstanceIdOfSender()
         if senderid == self.serverid and self.serverid != "__none__":
             self.log.INFO("Device is going down as instructed by server")
         else:
-            self.log.INFO("Device is going down as instructed by \"{}\"".format(senderid))
+            self.log.INFO("Device is going down as instructed by \"{}\""
+                          .format(senderid))
             self._ss.call(self.serverid, "slotDeviceGone", self.deviceid)
         self.preDestruction()
         self.stopFsm()
@@ -1450,7 +1410,8 @@ class PythonDevice(NoFsm):
 
         if success:
             # Notify everyone
-            self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
+            self._ss.emit("signalSchemaUpdated", self.fullSchema,
+                          self.deviceid)
 
         self._ss.reply(Hash("success", success,
                             "instanceId", self.deviceid,
@@ -1465,7 +1426,7 @@ class PythonDevice(NoFsm):
             self._timeFrac = frac
             # Fallback to the local timing ...
             if sec == 0:
-                self._timeSec  = epochNow.getSeconds()
+                self._timeSec = epochNow.getSeconds()
                 self._timeFrac = epochNow.getFractionalSeconds()
             self._timePeriod = period
         self.onTimeUpdate(id, sec, frac, period)
@@ -1473,27 +1434,28 @@ class PythonDevice(NoFsm):
     def slotLoggerPriority(self, newprio):
         oldprio = Logger.getPriority()
         Logger.setPriority(newprio)
-        self.log.INFO("Logger Priority changed : {} ==> {}".format(oldprio, newprio))
+        self.log.INFO(
+            "Logger Priority changed : {} ==> {}".format(oldprio, newprio))
 
     def getActualTimestamp(self):
-        """
-        Returns the actual timestamp. The Trainstamp part of Timestamp is
-        extrapolated from the last values received via slotTimeTick (or zero
-        if no time ticks received, i.e. timeServerId is empty).
-        To receive time ticks, the server of the device has to be connected
-        to a time server.
+        """Returns the actual timestamp.
+
+        The Trainstamp part of Timestamp is extrapolated from the last values
+        received via slotTimeTick (or zero if no time ticks received, i.e.
+        timeServerId is empty). To receive time ticks, the server of the device
+        has to be connected to a time server.
 
         :return: the actual timestamp
         """
         return self.getTimestamp(Epochstamp())  # i.e. for now
 
     def getTimestamp(self, epoch):
-        """
-        Returns the Timestamp for given Epochstamp. The Trainstamp part of
-        Timestamp is extrapolated forward or backward from the last values
-        received via slotTimeTick (or zero if no time ticks received yet).
-        To receive time ticks, the server of the device has to be connected
-        to a time server.
+        """Returns the Timestamp for given Epochstamp.
+
+        The Trainstamp part of Timestamp is extrapolated forward or backward
+        from the last values received via slotTimeTick (or zero if no time
+        ticks received yet). To receive time ticks, the server of the device
+        has to be connected to a time server.
 
         :param epoch: Epochstamp for that the time stamp is searched for
         :return: the matching Timestamp, consisting of epoch and the
@@ -1508,15 +1470,15 @@ class PythonDevice(NoFsm):
                 duration = epoch.elapsed(epochLastReceived)
                 nPeriods = (duration.getTotalSeconds() * 1000000
                             + duration.getFractions(MICROSEC)
-                           ) // self._timePeriod
+                            ) // self._timePeriod
                 if epochLastReceived <= epoch:
                     resultId = self._timeId + nPeriods
                 elif self._timeId >= nPeriods + 1:  # sanity check
                     resultId = self._timeId - nPeriods - 1
                 elif self.log:  # if 'log' is not yet initialised
-                    self.log.WARN("Bad input: (train)Id zero since epoch = {}; "
-                                  "from time server: epoch = {}, id = {}, "
-                                  "period = {} mus"
+                    self.log.WARN("Bad input: (train)Id zero since epoch = {};"
+                                  " from time server: epoch = {}, id = {},"
+                                  " period = {} mus"
                                   .format(epoch.toIso8601(),
                                           epochLastReceived.toIso8601(),
                                           self._timeId, self._timePeriod))
@@ -1524,7 +1486,7 @@ class PythonDevice(NoFsm):
 
     @karabo_deprecated
     def _getActualTimestamp(self):
-        '''This method is DEPRECATED, use getActualTimestamp() instead'''
+        """This method is DEPRECATED, use getActualTimestamp() instead"""
         return self.getActualTimestamp()
 
     def _getStateDependentSchema(self, state):
@@ -1559,10 +1521,10 @@ class PythonDevice(NoFsm):
             self["performanceStatistics.messagingProblems"] = True
             self.lastBrokerErrorStamp = time.time()
 
-    def setAlarmCondition(self, condition, needsAcknowledging = True,
-                          description = ""):
-        """
-        Set the global alarm condition
+    def setAlarmCondition(self, condition, needsAcknowledging=True,
+                          description=""):
+        """Set the global alarm condition
+
         :param condition: condition to set
         :param needsAcknowledging: if this condition will require
                acknowledgment on the alarm service
@@ -1581,9 +1543,8 @@ class PythonDevice(NoFsm):
         with self._stateChangeLock:
             self.globalAlarmCondition = condition
             resultingCondition = \
-                self._evaluateAndUpdateAlarmCondition(forceUpdate=True,
-                                                      prevParamsInAlarm=Hash(),
-                                                      silent=True)
+                self._evaluateAndUpdateAlarmCondition(
+                    forceUpdate=True, prevParamsInAlarm=Hash(), silent=True)
             currentCondition = self.parameters.get("alarmCondition")
 
         if (resultingCondition is not None
@@ -1610,11 +1571,9 @@ class PythonDevice(NoFsm):
             Timestamp().toHashAttributes(entryNode.getAttributes())
             emitHash.set("toAdd.global", prop)
 
-        if (not emitHash.get("toClear").empty() or not
-            emitHash.get("toAdd").empty()):
-
+        if (not emitHash.get("toClear").empty() or
+                not emitHash.get("toAdd").empty()):
             self._ss.emit("signalAlarmUpdate", self.getInstanceId(), emitHash)
-
 
     def getAlarmCondition(self, key=None, separator="."):
         if key is None:
@@ -1631,8 +1590,8 @@ class PythonDevice(NoFsm):
         return self.validatorIntern.getRollingStatistics(key)
 
     def getAlarmInfo(self):
-        """
-        Output information on current alarms on this device
+        """Output information on current alarms on this device
+
         :return: a Hash containing the property as key and as string for
          the alarm information as value.
         """
@@ -1642,7 +1601,7 @@ class PythonDevice(NoFsm):
             for key in warnings.getKeys():
                 desc = warnings.get(key)
                 condition = AlarmCondition.fromString(desc.get("type"))
-                thisinfo = self.fullSchema.getInfoForAlarm(key,condition)
+                thisinfo = self.fullSchema.getInfoForAlarm(key, condition)
                 info.set(key, thisinfo)
         return info
 
@@ -1657,16 +1616,16 @@ class PythonDevice(NoFsm):
     # device interface.
 
     def registerSignal(self, signalName, *args):
-        """
-        Register a signal to be handles in the remote system
+        """Register a signal to be handles in the remote system
+
         :param signalName:name of the signal to be registered
         :param args: signature of the signal, e.g. `str, Hash, str`
         """
         self._ss.registerSignal(signalName, *args)
 
     def connect(self, signalInstance, signalName, slotInstance, slotName):
-        """
-        Connect a signal with a slot
+        """Connect a signal with a slot
+
         :param signalInstance: instance the signal is on, use "" for local
         :param signalName: name of the signal to connect
         :param slotInstance: instance the slot is on, use "" for local
@@ -1675,23 +1634,23 @@ class PythonDevice(NoFsm):
         self._ss.connect(signalInstance, signalName, slotInstance, slotName)
 
     def reply(self, *args):
-        """
-        Send a reply upon a slot being called
+        """Send a reply upon a slot being called
+
         :param args: list of arguments to reply, maximum length is 4
         """
         self._ss.reply(*args)
 
     def emit(self, signalName, *args):
-        """
-        Emit a signal to the remote system
+        """Emit a signal to the remote system
+
         :param signalName: name of the signal.
         :param args: list of arguments signal is emitted with. Maximum 4
         """
         self._ss.emit(signalName, *args)
 
     def call(self, instanceId, slotName, *args):
-        """
-        Call a remote slot with arguments
+        """Call a remote slot with arguments
+
         :param instanceId: instance of the remote device to call slot on
         :param slotName: name of the slot to call on instanceId
         :param args: list of arguments to call slot with, maximum length is 4
@@ -1699,8 +1658,8 @@ class PythonDevice(NoFsm):
         self._ss.call(instanceId, slotName, *args)
 
     def request(self, instanceId, slotName, *args):
-        """
-        Request a reply from a remote slot
+        """Request a reply from a remote slot
+
         :param instanceId: instance of the remote device to request from
         :param slotName: name of the slot to request from on instanceId
         :param args: list of arguments to call slot with, maximum length is 4
@@ -1710,8 +1669,8 @@ class PythonDevice(NoFsm):
 
     def requestNoWait(self, instanceId, slotName, replyInstance,
                       replySlotName, *args):
-        """
-        Request a reply from a remote slot
+        """Request a reply from a remote slot
+
         :param instanceId: instance of the remote device to request from
         :param slotName: name of the slot to request from on instanceId
         :param replyInstance: instance on which to handle reply, use "" for
@@ -1721,8 +1680,7 @@ class PythonDevice(NoFsm):
         :return: a `SignalSlotable.Requestor` object handling the reply
         """
         return self._ss.requestNoWait(instanceId, slotName, replyInstance,
-                      replySlotName, *args)
-
+                                      replySlotName, *args)
 
 
 def launchPythonDevice():
@@ -1736,14 +1694,13 @@ def launchPythonDevice():
     # TODO:
     # "karabo.log" is default from RollingFileAppender::expectedParameters.
     # Unfortunately, GUI sends full config, including defaults.
-    if (not "Logger.file.filename" in config
-        or config["Logger.file.filename"] == "karabo.log"):
+    if ("Logger.file.filename" not in config
+            or config["Logger.file.filename"] == "karabo.log"):
         deviceId = config["_deviceId_"]
         defaultLog = "device-" + deviceId.replace(os.path.sep, "_") + ".log"
         config["Logger.file.filename"] = defaultLog
     loader = PluginLoader.create(
-        "PythonPluginLoader", Hash("pluginNamespace", "karabo.bound_device")
-    )
+        "PythonPluginLoader", Hash("pluginNamespace", "karabo.bound_device"))
     loader.update()
 
     try:
