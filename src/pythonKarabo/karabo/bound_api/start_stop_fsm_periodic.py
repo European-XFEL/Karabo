@@ -81,7 +81,8 @@ class StartStopFsmPeriodic(base.BaseFsm):
 
         okStateTransitionTable = [
             # Source-State      Event    Target-State    Action     Guard
-            (State.STOPPED, 'StartEvent', State.STARTED, 'StartAction', 'none'),
+            (State.STOPPED, 'StartEvent', State.STARTED, 'StartAction',
+             'none'),
             (State.STARTED, 'StopEvent', State.STOPPED, 'StopAction', 'none')
         ]
 
