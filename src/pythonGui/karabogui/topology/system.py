@@ -13,6 +13,7 @@ from karabogui.binding.api import (
     BindingRoot, DeviceClassProxy, DeviceProxy, ProjectDeviceProxy,
     apply_configuration, apply_default_configuration, build_binding
 )
+from .device_tree import DeviceSystemTree
 from .project_device import ProjectDeviceInstance
 from .tree import SystemTree
 
@@ -27,6 +28,9 @@ class SystemTopology(HasStrictTraits):
 
     # A high-level version of `_system_hash`. Used by GUI views.
     system_tree = Instance(SystemTree)
+
+    # A high-level version for device folded structure
+    device_tree = Instance(DeviceSystemTree)
 
     # True if the system is online, False otherwise
     online = Property(Bool)
@@ -64,6 +68,7 @@ class SystemTopology(HasStrictTraits):
         """
         self.clear_project_devices()
         self.system_tree.clear_all()
+        self.device_tree.clear_all()
 
         self._system_hash = None
         self._class_proxies.clear()
@@ -230,6 +235,12 @@ class SystemTopology(HasStrictTraits):
         """
         self.system_tree.visit(visitor)
 
+    def visit_device_tree(self, visitor):
+        """Walk every node in the device tree and run a `visitor` function on
+        each item.
+        """
+        self.device_tree.visit(visitor)
+
     # ---------------------------------------------------------------------
     # Traits Handlers
 
@@ -243,6 +254,12 @@ class SystemTopology(HasStrictTraits):
         will instantiate the once instance of this object.
         """
         return SystemTree()
+
+    def _device_tree_default(self):
+        """We must provide a default initializer since the singleton system
+        will instantiate the once instance of this object.
+        """
+        return DeviceSystemTree()
 
     @on_trait_change('_project_devices:device_id')
     def _project_device_instance_id_changed(self, obj, name, old, new):
@@ -365,6 +382,8 @@ class SystemTopology(HasStrictTraits):
             # Update system tree
             self.system_tree.remove_device(instance_id)
 
+            self.device_tree.remove_device(instance_id)
+
             # Use pop() for removal in case there's nothing there
             self._device_schemas.pop(instance_id, None)
 
@@ -439,7 +458,7 @@ class SystemTopology(HasStrictTraits):
         # Error and alarm information are also get updated to nodes appear in
         # the system topology in the navigation panel
         new_topology_nodes = self.system_tree.update(server_hash)
-
+        self.device_tree.update(server_hash)
         for proxy in self._device_proxies.values():
             # extract this device's information from system hash
             attrs = self._get_device_attributes(proxy.device_id)
