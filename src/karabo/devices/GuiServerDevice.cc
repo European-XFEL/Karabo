@@ -1008,7 +1008,7 @@ namespace karabo {
                                 << channelName;
                     }
                     // Mark as ready - no matter whether ready already before...
-                    m_readyNetworkConnections.insert(std::make_pair(channelName, channel));
+                    m_readyNetworkConnections[channelName][channel] = true;
                     if (notYetRegistered) {
                         KARABO_LOG_FRAMEWORK_DEBUG << "Register to monitor '" << channelName << "'";
 
@@ -1028,7 +1028,14 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_WARN << "A GUI client wants to un-subscribe from an output channel that it"
                                 << " is not subscribed: " << channelName;
                     }
-                    m_readyNetworkConnections.erase(std::make_pair(channelName, channel)); // No interest, no readiness!
+                    auto itReadyByChannel = m_readyNetworkConnections.find(channelName);
+                    if (itReadyByChannel != m_readyNetworkConnections.end()) {
+                        // No interest, no readiness:
+                        itReadyByChannel->second.erase(channel);
+                        if (itReadyByChannel->second.empty()) {
+                            m_readyNetworkConnections.erase(itReadyByChannel);
+                        }
+                    }
                     if (channelSet.empty()) {
                         if (!remote().unregisterChannelMonitor(channelName)) {
                             KARABO_LOG_FRAMEWORK_WARN << "Failed to unregister '" << channelName << "'"; // Did it ever work?
@@ -1051,7 +1058,7 @@ namespace karabo {
                 const string& channelName = info.get<string>("channelName");
                 KARABO_LOG_FRAMEWORK_DEBUG << "onRequestNetwork for " << channelName << " " << info;
                 boost::mutex::scoped_lock lock(m_networkMutex);
-                m_readyNetworkConnections.insert(std::make_pair(channelName, channel));
+                m_readyNetworkConnections[channelName][channel] = true;
             } catch (const std::exception &e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestNetwork: " << e.what();
             }
@@ -1069,11 +1076,11 @@ namespace karabo {
                 NetworkMap::const_iterator iter = m_networkConnections.find(channelName);
                 if (iter != m_networkConnections.cend()) {
                     for (const WeakChannelPointer& channel : iter->second) { // iter->second is set<WeakChannelPointer>
-                        auto readyIter = m_readyNetworkConnections.find(std::make_pair(channelName, channel));
-                        if (readyIter != m_readyNetworkConnections.end()) {
-                            // Ready for data, so send and then remove readiness.
+                        bool& ready = m_readyNetworkConnections[channelName][channel];
+                        if (ready) {
+                            // Ready for data, so send and set non-ready.
                             safeClientWrite(channel, h, FAST_DATA);
-                            m_readyNetworkConnections.erase(readyIter);
+                            ready = false; // it's a reference
                         }
                     }
                 } // else: all clients lost interest, but still some data arrives
@@ -1218,8 +1225,8 @@ namespace karabo {
                             KARABO_LOG_FRAMEWORK_DEBUG << "Remove connection to input channel: " << channelName;
                             // Use the reference 'channelName' before invalidating it by invalidating mapIter:
                             remote().unregisterChannelMonitor(channelName);
+                            m_readyNetworkConnections.erase(channelName);
                             mapIter = m_networkConnections.erase(mapIter);
-                            // Do not touch readiness flag in m_readyNetworkConnections.
                         } else {
                            ++mapIter;
                         }
@@ -1381,7 +1388,16 @@ namespace karabo {
                     while (iter != m_networkConnections.end()) {
                         std::set<WeakChannelPointer>& channelSet = iter->second;
                         channelSet.erase(channel); // no matter whether in or not...
-                        // FIXME: Do we have to remove any readiness flags?
+                        // Remove from readiness structures
+                        for (auto itPair = m_readyNetworkConnections.begin(); itPair != m_readyNetworkConnections.end();) {
+                            itPair->second.erase(channel); // itPair->second is map<WeakChannelPointer, bool>
+                            if (itPair->second.empty()) {
+                                // channel was the last with interest in this pipeline
+                                itPair = m_readyNetworkConnections.erase(itPair);
+                            } else {
+                                ++itPair;
+                            }
+                        }
                         if (channelSet.empty()) {
                             // First use 'iter', then remove it:
                             remote().unregisterChannelMonitor(iter->first);
@@ -1443,8 +1459,7 @@ namespace karabo {
                                     std::vector<std::string>& pipelineConnections = data.get<std::vector<std::string> >(clientAddr + ".pipelineConnections");
                                     pipelineConnections.push_back(channelName);
                                     std::vector<bool>& pipelinesReady = data.get < std::vector<bool> >(clientAddr + ".pipelineConnectionsReadiness");
-                                    auto readyIter = m_readyNetworkConnections.find(std::make_pair(channelName, channel));
-                                    pipelinesReady.push_back(readyIter != m_readyNetworkConnections.end());
+                                    pipelinesReady.push_back(m_readyNetworkConnections[channelName][channel]);
                                 } // else - client might have gone meanwhile...
                             }
                         }
