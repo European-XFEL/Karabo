@@ -24,8 +24,8 @@ from karabogui.indicators import get_processing_color
 from karabogui.events import (
     KaraboEventSender, broadcast_event, register_for_broadcasts)
 from karabogui.panels.api import (
-    ConfigurationPanel, PanelContainer, LoggingPanel, NavigationPanel,
-    ProjectPanel, ScriptingPanel)
+    ConfigurationPanel, DevicePanel, PanelContainer, LoggingPanel,
+    ProjectPanel, ScriptingPanel, TopologyPanel)
 from karabogui.singletons.api import (
     get_config, get_db_conn, get_network, get_project_model)
 
@@ -56,7 +56,8 @@ _CLOSABLE_PANELS = {
 _PANELS = {
     # Title: (class, position)
     'Configuration Editor': (ConfigurationPanel, PanelAreaEnum.Right),
-    'Navigation': (NavigationPanel, PanelAreaEnum.LeftTop),
+    'System Topology': (TopologyPanel, PanelAreaEnum.LeftTop),
+    'Device Topology': (DevicePanel, PanelAreaEnum.LeftTop),
     'Projects': (ProjectPanel, PanelAreaEnum.LeftBottom),
 }
 
