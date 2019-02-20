@@ -103,12 +103,11 @@ class Configurator(object):
         for theClass in clist:
             try:
                 if hasattr(theClass, "expectedParameters"):
-                    theClass.expectedParameters(
-                        schema)  # fill schema in order from base to derived
+                    # fill schema in order from base to derived
+                    theClass.expectedParameters(schema)
             except AttributeError as e:
-                print(
-                    "Exception while adding expected parameters for class"
-                    " %r: %r" % (theClass.__name__, e))
+                print("Exception while adding expected parameters for class"
+                      " %r: %r" % (theClass.__name__, e))
         return schema
 
     def create(self, *args):
@@ -168,11 +167,11 @@ class Configurator(object):
         if isinstance(classid, type):
             classid = classid.__classid__
         if not isinstance(classid, str):
-            raise TypeError(
-                "First argument 'classid' must be a python string type")
+            raise TypeError("First argument 'classid' must be a python"
+                            " string type")
         if classid not in self.baseRegistry:
-            raise AttributeError("Unknown classid '{}' in base registry".
-                                 format(classid))
+            raise AttributeError("Unknown classid '{}' in base registry"
+                                 .format(classid))
         Derived = self.baseRegistry[classid]
         schema = Configurator(Derived.__base_classid__).getSchema(classid)
         if not validation:
