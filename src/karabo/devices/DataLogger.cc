@@ -427,13 +427,7 @@ namespace karabo {
                 // Gets the paths for the leaf nodes in the configuration sorted by their order in the schema.
                 getLeaves(configuration, m_schemaForSlotChanged, paths);
 
-                if (paths.size() < 2) {
-                    // There's no more than one path; no further sorting needed.
-                    return;
-                }
-
-                // When there's more than one path, sort them by ascending order of their corresponding
-                // nodes Epochstamps.
+                // Sort the paths by ascending order of their corresponding nodes Epochstamps.
                 std::sort(paths.begin(), paths.end(),
                           [&configuration](const std::string& firstPath, const std::string & secondPath) {
                               const Hash::Node& firstNode = configuration.getNode(firstPath);
