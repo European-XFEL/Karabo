@@ -89,6 +89,7 @@ namespace karabo {
             karabo::net::JmsConsumer::Pointer m_loggerConsumer;
             std::map<std::string, int> m_monitoredDevices;
             NetworkMap m_networkConnections;
+            std::set<std::pair<std::string, WeakChannelPointer> > m_readyNetworkConnections; // ready to receive data
 
             karabo::net::JmsProducer::Pointer m_guiDebugProducer;
 
