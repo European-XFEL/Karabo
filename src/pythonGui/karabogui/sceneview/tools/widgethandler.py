@@ -14,6 +14,7 @@ from karabo.common.enums import ONLINE_STATUSES
 from karabo.common.scenemodel.api import BaseWidgetObjectData
 from karabogui.controllers.api import (
     get_class_const_trait, get_compatible_controllers, get_scene_model_class)
+from karabogui import icons
 from karabogui.dialogs.dialogs import SceneItemDialog
 from karabogui.sceneview.widget.api import ControllerContainer
 from karabogui.sceneview.tools.api import send_to_back, send_to_front, ungroup
@@ -30,27 +31,28 @@ class SceneWidgetHandler(ABCHasStrictTraits):
     def handle(self, scene_view, event):
         """Handle the widget and event."""
         menu = QMenu(self.widget)
-        move_action = QAction("Move Layout", self.widget)
+        move_action = QAction(icons.move, "Move Layout", self.widget)
         move_action.triggered.connect(partial(self._move_dialog, scene_view))
         menu.addAction(move_action)
 
         # NOTE: Only if we don't have more items selected than a single one, we
         # are allowed to resize the layout!
         if not len(scene_view.selection_model) > 1:
-            resize_action = QAction("Resize Layout", self.widget)
+            resize_action = QAction(icons.resize, "Resize Layout", self.widget)
             resize_action.triggered.connect(partial(self._resize_dialog,
                                                     scene_view))
             menu.addAction(resize_action)
-        ungroup_action = QAction("Ungroup Layout", self.widget)
+        ungroup_action = QAction(icons.ungroup, "Ungroup Layout", self.widget)
         ungroup_action.triggered.connect(partial(self._ungroup,
                                                  scene_view))
         menu.addAction(ungroup_action)
 
-        to_front_action = QAction("Send To Front", self.widget)
+        to_front_action = QAction(icons.bringToFront, "Send To Front",
+                                  self.widget)
         to_front_action.triggered.connect(partial(self._to_front,
                                                   scene_view))
         menu.addAction(to_front_action)
-        to_back_action = QAction("Send To Back", self.widget)
+        to_back_action = QAction(icons.sendToBack, "Send To Back", self.widget)
         to_back_action.triggered.connect(partial(self._to_back,
                                                  scene_view))
         menu.addAction(to_back_action)
@@ -159,7 +161,8 @@ class SceneControllerHandler(SceneWidgetHandler):
         qwidget = controller.widget
         if qwidget.actions():
             name = get_class_const_trait(controller, '_ui_name')
-            property_menu = menu.addMenu('{}: Properties'.format(name))
+            property_menu = menu.addMenu(icons.undefinedAttribute,
+                                         '{}: Properties'.format(name))
             property_menu.addActions(qwidget.actions())
             property_menu.addSeparator()
 
@@ -177,7 +180,7 @@ class SceneControllerHandler(SceneWidgetHandler):
         else:
             can_edit = False
 
-        mutate_menu = menu.addMenu('Change Widget')
+        mutate_menu = menu.addMenu(icons.change, 'Change Widget')
         klasses = get_compatible_controllers(binding, can_edit=can_edit)
         klasses.sort(key=lambda w: get_class_const_trait(w, '_ui_name'))
         for klass in klasses:
