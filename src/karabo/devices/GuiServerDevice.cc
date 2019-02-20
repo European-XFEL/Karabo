@@ -70,14 +70,6 @@ namespace karabo {
                     .metricPrefix(MetricPrefix::MILLI)
                     .commit();
 
-            INT32_ELEMENT(expected).key("fastDataQueueCapacity")
-                    .displayedName("Fast Data forwarding queue size")
-                    .description("The number of fast data (cameras, other big data) messages to store in the forwarding ring buffer. NOTE: Will be applied to newly connected clients only")
-                    .assignmentOptional().defaultValue(5) // 5Hz * 1 second
-                    .reconfigurable()
-                    .minExc(0).maxInc(100)
-                    .commit();
-
             INT32_ELEMENT(expected).key("lossyDataQueueCapacity")
                     .displayedName("Lossy Data forwarding queue size")
                     .description("The number of lossy data messages to store in the forwarding ring buffer. NOTE: Will be applied to newly connected clients only")
@@ -394,8 +386,14 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Incoming connection";
 
                 // Set 3 different queues for publishing (writeAsync) to the GUI client...
-                // priority 2 bound to FAST_DATA traffic with REMOVE_OLDEST policy with a small queue
-                channel->setAsyncChannelPolicy(FAST_DATA, "REMOVE_OLDEST", get<int>("fastDataQueueCapacity"));
+                // priority 2 bound to FAST_DATA traffic: This queue is filled only when GUI client reports readiness
+                // for a pipeline channel, so we can afford a LOSSLESS policy. In fact we have to:
+                // If something would be dropped, the client will never report readiness again for that pipeline. And
+                // we do not have to fear that the queue grows very big - it is limited to the number of pipelines that
+                // the client monitors.
+                // We do not use the same queue as for priority 4 (although both are lossless) since sending FAST_DATA
+                // still has lower priority than other data.
+                channel->setAsyncChannelPolicy(FAST_DATA, "LOSSLESS");
                 // priority 3 bound to REMOVE_OLDEST dropping policy
                 channel->setAsyncChannelPolicy(REMOVE_OLDEST, "REMOVE_OLDEST", get<int>("lossyDataQueueCapacity"));
                 // priority 4 should be LOSSLESS
@@ -448,7 +446,7 @@ namespace karabo {
             try {
                 // GUI communication scenarios
                 if (info.has("type")) {
-                    string type = info.get<string > ("type");
+                    const string& type = info.get<string > ("type");
                     if (type == "requestFromSlot") {
                         onRequestFromSlot(channel, info);
                     } else if (type == "login") {
@@ -507,12 +505,14 @@ namespace karabo {
                         onProjectUpdateAttribute(channel, info);
                     } else if (type == "runConfigSourcesInGroup") {
                         onRunConfigSourcesInGroup(channel, info);
+                    } else {
+                        KARABO_LOG_FRAMEWORK_WARN << "Ignoring request of unknown type '" << type << "'";
                     }
                 } else {
-                    KARABO_LOG_FRAMEWORK_WARN << "Ignoring request";
+                    KARABO_LOG_FRAMEWORK_WARN << "Ignoring request that lacks type specification: " << info;
                 }
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRead(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRead(): " << e.what();
             }
 
             // Read the next Hash from the client
@@ -1007,6 +1007,8 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_WARN << "A GUI client wants to subscribe a second time to output channel: "
                                 << channelName;
                     }
+                    // Mark as ready - no matter whether ready already before...
+                    m_readyNetworkConnections.insert(std::make_pair(channelName, channel));
                     if (notYetRegistered) {
                         KARABO_LOG_FRAMEWORK_DEBUG << "Register to monitor '" << channelName << "'";
 
@@ -1026,6 +1028,7 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_WARN << "A GUI client wants to un-subscribe from an output channel that it"
                                 << " is not subscribed: " << channelName;
                     }
+                    m_readyNetworkConnections.erase(std::make_pair(channelName, channel)); // No interest, no readiness!
                     if (channelSet.empty()) {
                         if (!remote().unregisterChannelMonitor(channelName)) {
                             KARABO_LOG_FRAMEWORK_WARN << "Failed to unregister '" << channelName << "'"; // Did it ever work?
@@ -1046,7 +1049,9 @@ namespace karabo {
         void GuiServerDevice::onRequestNetwork(WeakChannelPointer channel, const karabo::util::Hash& info) {
             try {
                 const string& channelName = info.get<string>("channelName");
-                KARABO_LOG_FRAMEWORK_DEBUG << "onRequestNetwork for " << channelName;
+                KARABO_LOG_FRAMEWORK_DEBUG << "onRequestNetwork for " << channelName << " " << info;
+                boost::mutex::scoped_lock lock(m_networkMutex);
+                m_readyNetworkConnections.insert(std::make_pair(channelName, channel));
             } catch (const std::exception &e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestNetwork: " << e.what();
             }
@@ -1064,7 +1069,12 @@ namespace karabo {
                 NetworkMap::const_iterator iter = m_networkConnections.find(channelName);
                 if (iter != m_networkConnections.cend()) {
                     for (const WeakChannelPointer& channel : iter->second) { // iter->second is set<WeakChannelPointer>
-                        safeClientWrite(channel, h, FAST_DATA);
+                        auto readyIter = m_readyNetworkConnections.find(std::make_pair(channelName, channel));
+                        if (readyIter != m_readyNetworkConnections.end()) {
+                            // Ready for data, so send and then remove readiness.
+                            safeClientWrite(channel, h, FAST_DATA);
+                            m_readyNetworkConnections.erase(readyIter);
+                        }
                     }
                 } // else: all clients lost interest, but still some data arrives
             } catch (const std::exception &e) {
@@ -1209,6 +1219,7 @@ namespace karabo {
                             // Use the reference 'channelName' before invalidating it by invalidating mapIter:
                             remote().unregisterChannelMonitor(channelName);
                             mapIter = m_networkConnections.erase(mapIter);
+                            // Do not touch readiness flag in m_readyNetworkConnections.
                         } else {
                            ++mapIter;
                         }
@@ -1370,6 +1381,7 @@ namespace karabo {
                     while (iter != m_networkConnections.end()) {
                         std::set<WeakChannelPointer>& channelSet = iter->second;
                         channelSet.erase(channel); // no matter whether in or not...
+                        // FIXME: Do we have to remove any readiness flags?
                         if (channelSet.empty()) {
                             // First use 'iter', then remove it:
                             remote().unregisterChannelMonitor(iter->first);
@@ -1412,8 +1424,9 @@ namespace karabo {
 
                             data.set(clientAddr, Hash("queueInfo", tcpChannel->queueInfo(),
                                                       "monitoredDevices", monitoredDevices,
-                                                      // Leave a string vector for the pipeline connections to be filled in below
-                                                      "pipelineConnections", std::vector<std::string>()));
+                                                      // Leave string and bool vectors for the pipeline connections to be filled in below
+                                                      "pipelineConnections", std::vector<std::string>(),
+                                                      "pipelineConnectionsReadiness", std::vector<bool>()));
                         }
                     }
 
@@ -1429,6 +1442,9 @@ namespace karabo {
                                     const std::string clientAddr = getChannelAddress(channelPtr);
                                     std::vector<std::string>& pipelineConnections = data.get<std::vector<std::string> >(clientAddr + ".pipelineConnections");
                                     pipelineConnections.push_back(channelName);
+                                    std::vector<bool>& pipelinesReady = data.get < std::vector<bool> >(clientAddr + ".pipelineConnectionsReadiness");
+                                    auto readyIter = m_readyNetworkConnections.find(std::make_pair(channelName, channel));
+                                    pipelinesReady.push_back(readyIter != m_readyNetworkConnections.end());
                                 } // else - client might have gone meanwhile...
                             }
                         }
