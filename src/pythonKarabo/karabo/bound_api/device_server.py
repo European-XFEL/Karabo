@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__ = "Sergey Esenov <serguei.essenov at xfel.eu>"
-__date__  = "$Jul 26, 2012 10:06:25 AM$"
+__date__ = "$Jul 26, 2012 10:06:25 AM$"
 
 import os
 import sys
@@ -36,13 +36,13 @@ from .runner import Runner
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("DeviceServer", "1.0")
 class DeviceServer(object):
-    """
-    Device server serves as a launcher of python devices.  It scans 'plugins' directory
-    for new plugins (python scripts) available and communicates its findings to master device
-    server.  It communicates XSD form of schema of user devices and starts such devices as
-    separate process if user push "Initiate" button in GUI
-    """
+    """Device server serves as a launcher of python devices.
 
+    It scans 'plugins' directory for new plugins (python scripts) available and
+    communicates its findings to master device server.  It communicates XSD
+    form of schema of user devices and starts such devices as separate process
+    if user push "Initiate" button in GUI
+    """
     instanceCountLock = threading.Lock()
     instanceCountPerDeviceServer = dict()
 
@@ -50,76 +50,79 @@ class DeviceServer(object):
     def expectedParameters(expected):
         (
             STRING_ELEMENT(expected).key("serverId")
-                    .displayedName("Server ID")
-                    .description("The device-server instance id uniquely identifies a device-server instance in the distributed system")
-                    .assignmentOptional().noDefaultValue().commit()
-                    ,
+            .displayedName("Server ID")
+            .description("The device-server instance id uniquely identifies a"
+                         " device-server instance in the distributed system")
+            .assignmentOptional().noDefaultValue()
+            .commit(),
+
             INT32_ELEMENT(expected).key("visibility")
-                    .displayedName("Visibility")
-                    .description("Configures who is allowed to see this server at all")
-                    .assignmentOptional().defaultValue(AccessLevel.OBSERVER).options("0 1 2 3 4")
-                    .adminAccess().reconfigurable()
-                    .commit()
-                    ,
+            .displayedName("Visibility")
+            .description("Configures who is allowed to see this server at all")
+            .assignmentOptional().defaultValue(AccessLevel.OBSERVER)
+            .options("0 1 2 3 4")
+            .adminAccess().reconfigurable()
+            .commit(),
+
             NODE_ELEMENT(expected).key("connection")
-                    .displayedName("Connection")
-                    .description("The connection to the communication layer of the distributed system")
-                    .appendParametersOf(JmsConnection)
-                    .expertAccess()
-                    .commit()
-                    ,
+            .displayedName("Connection")
+            .description("The connection to the communication layer of the"
+                         " distributed system")
+            .appendParametersOf(JmsConnection)
+            .expertAccess()
+            .commit(),
+
             INT32_ELEMENT(expected).key("heartbeatInterval")
-                    .displayedName("Heartbeat interval")
-                    .description("The heartbeat interval")
-                    .assignmentOptional().defaultValue(10)
-                    .minInc(10)  # avoid too much traffic
-                    .adminAccess()
-                    .commit()
-                    ,
+            .displayedName("Heartbeat interval")
+            .description("The heartbeat interval")
+            .assignmentOptional().defaultValue(10)
+            .minInc(10)  # avoid too much traffic
+            .adminAccess()
+            .commit(),
+
             VECTOR_STRING_ELEMENT(expected).key("deviceClasses")
-                    .displayedName("Device Classes")
-                    .description("The device classes the server will manage")
-                    .assignmentOptional()
-                    .defaultValue(PythonDevice.getRegisteredClasses())
-                    .expertAccess()
-                    .commit()
-                    ,
+            .displayedName("Device Classes")
+            .description("The device classes the server will manage")
+            .assignmentOptional()
+            .defaultValue(PythonDevice.getRegisteredClasses())
+            .expertAccess()
+            .commit(),
+
             LIST_ELEMENT(expected).key("autoStart")
-                    .displayedName("Auto start")
-                    .description("Auto starts selected devices")
-                    .appendNodesOfConfigurationBase(PythonDevice)
-                    .assignmentOptional().noDefaultValue()
-                    .commit()
-                    ,
+            .displayedName("Auto start")
+            .description("Auto starts selected devices")
+            .appendNodesOfConfigurationBase(PythonDevice)
+            .assignmentOptional().noDefaultValue()
+            .commit(),
+
             STRING_ELEMENT(expected).key("pluginNamespace")
-                    .displayedName("Plugin Namespace")
-                    .description("Namespace to search for plugins")
-                    .assignmentOptional().defaultValue("karabo.bound_device")
-                    .expertAccess()
-                    .commit()
-                    ,
+            .displayedName("Plugin Namespace")
+            .description("Namespace to search for plugins")
+            .assignmentOptional().defaultValue("karabo.bound_device")
+            .expertAccess()
+            .commit(),
+
             NODE_ELEMENT(expected).key("Logger")
-                    .description("Logging settings")
-                    .displayedName("Logger")
-                    .appendParametersOf(Logger)
-                    .commit()
-                    ,
+            .description("Logging settings")
+            .displayedName("Logger")
+            .appendParametersOf(Logger)
+            .commit(),
+
             OVERWRITE_ELEMENT(expected).key("Logger.file.filename")
-                    .setNewDefaultValue("device-server.log")
-                    .commit()
-                    ,
+            .setNewDefaultValue("device-server.log")
+            .commit(),
+
             STRING_ELEMENT(expected).key("timeServerId")
-                    .description("The instance id uniquely identifies a TimeServer instance in the distributed system")
-                    .displayedName("TimeServer ID")
-                    .assignmentOptional().defaultValue("")
-                    .commit()
-                    ,
+            .description("The instance id uniquely identifies a TimeServer"
+                         " instance in the distributed system")
+            .displayedName("TimeServer ID")
+            .assignmentOptional().defaultValue("")
+            .commit(),
+
         )
 
     def setupFsm(self):
-        '''
-        Description of DeviceServer state machine
-        '''
+        """Description of DeviceServer state machine"""
         # **************************************************************
         # *                        Events                              *
         # **************************************************************
@@ -143,9 +146,8 @@ class DeviceServer(object):
 
         deviceServerMachineSTT = [
             (State.NORMAL, 'ErrorFoundEvent', State.ERROR,
-                'ErrorFoundAction', 'none'),
-            (State.ERROR, 'ResetEvent', State.NORMAL,
-                'none', 'none')]
+             'ErrorFoundAction', 'none'),
+            (State.ERROR, 'ResetEvent', State.NORMAL, 'none', 'none')]
 
         KARABO_FSM_STATE_MACHINE('DeviceServerMachine', deviceServerMachineSTT,
                                  State.NORMAL)
@@ -165,7 +167,7 @@ class DeviceServer(object):
             self.stopDeviceServer()
 
     def __init__(self, config):
-        '''Constructor'''
+        """Constructor"""
         if config is None:
             raise ValueError(
                 "Input configuration for constructor should be Hash, not None")
@@ -177,7 +179,8 @@ class DeviceServer(object):
         self.ss = self.log = None
         self.availableDevices = dict()
         self.deviceInstanceMap = dict()
-        self.hostname, dotsep, self.domainname = socket.gethostname().partition('.')
+        self.hostname, dotsep, self.domainname = \
+            socket.gethostname().partition('.')
         self.autoStart = config.get("autoStart")
         self.deviceClasses = config.get("deviceClasses")
         self.timeServerId = config.get("timeServerId")
@@ -232,7 +235,7 @@ class DeviceServer(object):
         for level, message in scanLogs:
             getattr(self.log, level)(message)
 
-        msg = "DeviceServer starts on host '{0.hostname}' "\
+        msg = "DeviceServer starts on host '{0.hostname}' " \
               "with pid {0.pid}, broker: {1}"
         self.log.INFO(msg.format(self,
                                  self.ss.getConnection().getBrokerUrl()))
@@ -266,15 +269,14 @@ class DeviceServer(object):
         self.ss.registerSlot(self.slotLoggerPriority)
 
     def onStateUpdate(self, currentState):
-        #self.ss.reply(currentState)
+        # self.ss.reply(currentState)
         pass
 
     def okStateOnEntry(self):
         self.doAutoStart()
 
     def scanPlugins(self, pluginNamespace):
-        """
-        Scan for available device classes
+        """Scan for available device classes
 
         Returns Hash with keys "deviceClasses" and "visibilities" to be merged
         into instance info and a list of log messages to be send.
@@ -306,13 +308,10 @@ class DeviceServer(object):
                                  'Successfully loaded plugin: "{}:{}"'
                                  .format(ep.module_name, ep.name)))
                 except (RuntimeError, AttributeError) as e:
-                    m = "Failure while building schema for class {}, base "\
-                    "class {} and bases {} : {}".format(classid,
-                                                        deviceClass.
-                                                        __base_classid__,
-                                                        deviceClass.
-                                                        __bases_classid__,
-                                                        e)
+                    m = "Failure while building schema for class {}, base " \
+                        "class {} and bases {} : {}"\
+                        .format(classid, deviceClass.__base_classid__,
+                                deviceClass.__bases_classid__, e)
                     logs.append(("ERROR", m))
 
         instInfo = Hash("deviceClasses",
@@ -321,7 +320,6 @@ class DeviceServer(object):
                         [d['schema'].getDefaultValue("visibility")
                          for d in self.availableDevices.values()])
         return instInfo, logs
-
 
     def doAutoStart(self):
         if self.autoStart is None:
@@ -360,7 +358,7 @@ class DeviceServer(object):
         EventLoop.stop()
 
     def errorFoundAction(self, m1, m2):
-        self.log.ERROR("{} -- {}".format(m1,m2))
+        self.log.ERROR("{} -- {}".format(m1, m2))
 
     def slotStartDevice(self, configuration):
         self.instantiateDevice(configuration)
@@ -375,22 +373,27 @@ class DeviceServer(object):
         config['_serverId_'] = self.serverid
 
         # Inject deviceId
-        if 'deviceId' not in input_config or len(input_config['deviceId']) == 0:
-            config['_deviceId_'] = self._generateDefaultDeviceInstanceId(classid)
+        if ('deviceId' not in input_config
+                or len(input_config['deviceId']) == 0):
+            config['_deviceId_'] = self._generateDefaultDeviceInstanceId(
+                classid)
         else:
             config['_deviceId_'] = input_config['deviceId']
 
         self.log.INFO("Trying to start a '{}' with device id '{}'"
                       "...".format(classid, config['_deviceId_']))
-        self.log.DEBUG("with the following configuration:\n{}".format(input_config))
+        self.log.DEBUG(
+            "with the following configuration:\n{}".format(input_config))
 
-        # Add connection type and parameters used by device server for connecting to broker
+        # Add connection type and parameters used by device server for
+        # connecting to broker
         config['_connection_'] = self.connectionParameters
 
         # Add time server ID configured for device server
         config['timeServerId'] = self.timeServerId
 
-        # create temporary instance to check the configuration parameters are valid
+        # Create temporary instance to check the configuration parameters
+        # are valid
         try:
             if "_deviceId_" in config:
                 deviceid = config["_deviceId_"]
@@ -419,16 +422,19 @@ class DeviceServer(object):
             self.deviceInstanceMap[deviceid] = launcher
             self.ss.reply(True, deviceid)
         except Exception as e:
-            self.log.WARN("Device '{}' could not be started because: {}".format(classid, e))
-            self.ss.reply(False, "Device '{}' could not be started because: {}".format(classid, e))
+            self.log.WARN("Device '{}' could not be started because:"
+                          " {}".format(classid, e))
+            self.ss.reply(False, "Device '{}' could not be started because:"
+                                 " {}".format(classid, e))
 
     def noStateTransition(self):
-        self.log.WARN("DeviceServer \"{}\" does not allow the transition for this event.".format(self.serverid))
+        self.log.WARN("DeviceServer \"{}\" does not allow the transition for"
+                      " this event.".format(self.serverid))
 
     def slotKillServer(self):
         if self.log:
             self.log.INFO("Received kill signal")
-        else: # might get killed by signal handler before setting up logging
+        else:  # might get killed by signal handler before setting up logging
             print("Received kill signal")
         launchers = []
         for deviceid in list(self.deviceInstanceMap.keys()):
@@ -441,7 +447,7 @@ class DeviceServer(object):
         try:
             self.ss.reply(self.serverid)
         except Exception as e:
-            if self.log: # see above
+            if self.log:  # see above
                 msg = ("Did not notify distributed system of server shutdown:"
                        "\n {}").format(e)
                 self.log.ERROR(msg)
@@ -449,7 +455,8 @@ class DeviceServer(object):
             self.stopDeviceServer()
 
     def slotDeviceGone(self, instanceId):
-        # Would prefer a self.log.FRAMEWORK_INFO as in C++ instead of self.log.DEBUG:
+        # Would prefer a self.log.FRAMEWORK_INFO as in C++ instead of
+        # self.log.DEBUG:
         self.log.DEBUG("Device '{0}' notifies '{1.serverid}' about its future "
                        "death.".format(instanceId, self))
         if instanceId in self.deviceInstanceMap:
@@ -457,7 +464,8 @@ class DeviceServer(object):
             if t:
                 t.join()
             del self.deviceInstanceMap[instanceId]
-            self.log.INFO("Device '{}' removed from server.".format(instanceId))
+            self.log.INFO("Device '{}' removed from server."
+                          .format(instanceId))
 
     def slotGetClassSchema(self, classid):
         try:
@@ -469,13 +477,14 @@ class DeviceServer(object):
 
     def slotLoggerPriority(self, newprio):
         # In contrast to C++, the new priority will not be "forwarded" to
-        # existing devices. The Python devices have their own slotLoggerPriority
+        # existing devices. Python devices have their own slotLoggerPriority
         # which allows priority setting device by device.
         # But future device instantiations should inherit their priority from
         # the current value of the server:
         oldprio = Logger.getPriority()
         Logger.setPriority(newprio)
-        self.log.INFO("Logger Priority changed : {} ==> {}".format(oldprio, newprio))
+        self.log.INFO(
+            "Logger Priority changed : {} ==> {}".format(oldprio, newprio))
 
     def processEvent(self, event):
         with self.processEventLock:
@@ -498,8 +507,7 @@ class DeviceServer(object):
 
 
 class Launcher(object):
-    """ Launches a PythonDevice in its own interpreter.
-    """
+    """ Launches a PythonDevice in its own interpreter."""
 
     def __init__(self, params):
         self.args = params
@@ -545,6 +553,7 @@ def main(args=None):
         del server  # increase chance that no log appears after print below
         t.join()
     print(os.path.basename(args[0]), "has exited!\n")
+
 
 if __name__ == '__main__':
     main()
