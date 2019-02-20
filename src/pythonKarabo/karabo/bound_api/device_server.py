@@ -61,7 +61,8 @@ class DeviceServer(object):
             .description("Configures who is allowed to see this server at all")
             .assignmentOptional().defaultValue(AccessLevel.OBSERVER)
             .options("0 1 2 3 4")
-            .adminAccess().reconfigurable()
+            .adminAccess()
+            .reconfigurable()
             .commit(),
 
             NODE_ELEMENT(expected).key("connection")
@@ -269,8 +270,7 @@ class DeviceServer(object):
         self.ss.registerSlot(self.slotLoggerPriority)
 
     def onStateUpdate(self, currentState):
-        # self.ss.reply(currentState)
-        pass
+        """This function is DEPRECATED and will be removed."""
 
     def okStateOnEntry(self):
         self.doAutoStart()
@@ -546,7 +546,7 @@ def main(args=None):
             EventLoop.stop()
             # Likely started with -h option: Avoid print after finally.
             return
-    except:
+    except Exception:
         EventLoop.stop()
         raise
     finally:

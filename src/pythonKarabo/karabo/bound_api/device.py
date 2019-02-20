@@ -83,7 +83,8 @@ class PythonDevice(NoFsm):
             .displayedName("Visibility")
             .description("Configures who is allowed to see this device at all")
             .assignmentOptional().defaultValue(AccessLevel(OBSERVER))
-            .expertAccess().reconfigurable()
+            .expertAccess()
+            .reconfigurable()
             .commit(),
 
             STRING_ELEMENT(expected).key("deviceId")
@@ -112,7 +113,8 @@ class PythonDevice(NoFsm):
             .displayedName("ServerID")
             .description("The device-server on which this device "
                          "is running on")
-            .expertAccess().readOnly()
+            .expertAccess()
+            .readOnly()
             .commit(),
 
             STRING_ELEMENT(expected).key("hostName")
@@ -125,7 +127,8 @@ class PythonDevice(NoFsm):
             INT32_ELEMENT(expected).key("pid")
             .displayedName("Process ID")
             .description("The unix process ID of the device")
-            .expertAccess().readOnly().initialValue(0)
+            .expertAccess()
+            .readOnly().initialValue(0)
             .commit(),
 
             STATE_ELEMENT(expected).key("state")
@@ -673,9 +676,8 @@ class PythonDevice(NoFsm):
                     self.log.WARN("{}: {}".format(alarmType, desc["message"]))
                 conditions.append(AlarmCondition.fromString(alarmType))
 
-            mostSignificantCondition = AlarmCondition \
-                .returnMostSignificant(conditions)
-            return mostSignificantCondition
+            topCondition = AlarmCondition.returnMostSignificant(conditions)
+            return topCondition
         elif forceUpdate:
             return self.globalAlarmCondition
         else:
@@ -869,8 +871,8 @@ class PythonDevice(NoFsm):
             # Instead of looping on paths of injectedSchema, could probably
             # directly loop on paths of self.parameters
             for path in self._injectedSchema.getPaths():
-                if self.parameters.has(path) and not self.staticSchema.has(
-                        path):
+                if (self.parameters.has(path) and
+                        not self.staticSchema.has(path)):
                     self.parameters.erase(path)
             self._stateDependentSchema.clear()
             self._injectedSchema.copy(schema)
