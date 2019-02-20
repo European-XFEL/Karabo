@@ -1,16 +1,16 @@
-import sys
 import traceback
 import threading
 from collections import deque
 
+
 class Worker(threading.Thread):
-    
-    def __init__(self, callback = None, timeout = -1, repetition = -1):
+
+    def __init__(self, callback=None, timeout=-1, repetition=-1):
         threading.Thread.__init__(self)
         self.callback = callback
         self.onError = None
-        self.onExit  = None
-        self.timeout  = timeout
+        self.onExit = None
+        self.timeout = timeout
         self.repetition = repetition
         self.running = False
         self.aborted = False
@@ -18,38 +18,38 @@ class Worker(threading.Thread):
         self.counter = -1
         self.cv = threading.Condition()  # cv = condition variable
         self.dq = deque()
-    
-    def set(self, callback, timeout = -1, repetition = -1):
+
+    def set(self, callback, timeout=-1, repetition=-1):
         self.callback = callback
-        self.timeout  = timeout
+        self.timeout = timeout
         self.repetition = repetition
 
-    def setTimeout(self, timeout = -1):
+    def setTimeout(self, timeout=-1):
         self.timeout = timeout
 
-    def setRepetition(self, repetition = -1):
+    def setRepetition(self, repetition=-1):
         self.repetition = repetition
-        
+
     def setErrorHandler(self, handler):
         self.onError = handler
         return self
-        
+
     def setExitHandler(self, handler):
         self.onExit = handler
         return self
 
     def is_running(self):
         return self.running
-    
-    def push(self,o):
+
+    def push(self, o):
         if self.running:
             with self.cv:
                 self.dq.append(o)
                 self.cv.notify()
-            
+
     def isRepetitionCounterExpired(self):
         return self.counter == 0
-    
+
     def run(self):
         self.running = True
         self.aborted = False
@@ -82,7 +82,8 @@ class Worker(threading.Thread):
                 elif self.timeout > 0:
                     with self.cv:
                         if len(self.dq) == 0:
-                            self.cv.wait(float(self.timeout) / 1000)   # self.timeout in milliseconds
+                            # self.timeout in milliseconds
+                            self.cv.wait(float(self.timeout) / 1000)
                         if len(self.dq) != 0 and not self.suspended:
                             t = self.dq.popleft()
                 else:
@@ -105,13 +106,13 @@ class Worker(threading.Thread):
                 self.onError(traceback.format_exc())
             else:
                 traceback.print_exc()
-            
+
         if self.running:
             self.running = False
-            
+
     def stopCondition(self, obj):
         return False
-    
+
     def start(self):
         if not self.running:
             self.suspended = False
@@ -121,7 +122,7 @@ class Worker(threading.Thread):
                 self.suspended = False
                 self.cv.notify()
         return self
-    
+
     def stop(self):
         if self.running:
             with self.cv:
@@ -129,37 +130,37 @@ class Worker(threading.Thread):
                 self.suspended = False
                 self.cv.notify()
         return self
-    
+
     def abort(self):
         self.aborted = True
         self.running = False
         if self.suspended:
             with self.cv:
                 self.suspended = False
-                self.cv.notify()        
+                self.cv.notify()
         if len(self.dq) != 0:
             with self.cv:
                 self.dq.clear()
         return self
-    
+
     def pause(self):
         if not self.suspended:
             with self.cv:
                 self.suspended = True
                 self.cv.notify()
-            
+
 
 class QueueWorker(Worker):
-    
+
     def __init__(self, callback):
         super(QueueWorker, self).__init__(self.onWork)
         self.handler = callback
         self.msg = None
-        
+
     def onWork(self):
         self.handler(self.msg)
         self.msg = None
-        
+
     def stopCondition(self, msg):
         if "stop" in msg:
             return True
