@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
-from karathon import (OVERWRITE_ELEMENT, SLOT_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
-                      Schema, SignalSlotable, Unit, MetricPrefix)
+from karathon import (OVERWRITE_ELEMENT, SLOT_ELEMENT, FLOAT_ELEMENT,
+                      INT32_ELEMENT, Unit, MetricPrefix)
 from .decorators import (KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS)
 from .no_fsm import NoFsm
 from karabo.common.states import State
@@ -17,111 +17,121 @@ class MotorInterface(NoFsm, metaclass=ABCMeta):
     @staticmethod
     def expectedParameters(expected):
         (
-            
-         OVERWRITE_ELEMENT(expected).key("state")
-                        .setNewOptions(State.INIT, State.ERROR, State.DISABLED, State.OFF, State.STOPPED, State.STATIC, State.HOMING, State.MOVING)
-                        .setNewDefaultValue(State.INIT)
-                        .commit(),
 
-        SLOT_ELEMENT(expected).key("resetHardware")
-                .description("Resets the hardware")
-                .displayedName("Reset hardware")
-                .allowedStates(State.ERROR)
-                .commit(),
+            OVERWRITE_ELEMENT(expected).key("state")
+            .setNewOptions(State.INIT, State.ERROR, State.DISABLED, State.OFF,
+                           State.STOPPED, State.STATIC, State.HOMING,
+                           State.MOVING)
+            .setNewDefaultValue(State.INIT)
+            .commit(),
 
-        SLOT_ELEMENT(expected).key("safe")
-                .description("Brings device into a safe operation mode (as defined on h/w)")
-                .displayedName("Safe")
-                .commit(),
+            SLOT_ELEMENT(expected).key("resetHardware")
+            .description("Resets the hardware")
+            .displayedName("Reset hardware")
+            .allowedStates(State.ERROR)
+            .commit(),
 
-        SLOT_ELEMENT(expected).key("normal")
-                .displayedName("Normal")
-                .description("Brings device into normal operation mode")
-                .expertAccess()
-                .commit(),
+            SLOT_ELEMENT(expected).key("safe")
+            .description("Brings device into a safe operation mode"
+                         " (as defined on h/w)")
+            .displayedName("Safe")
+            .commit(),
 
-        SLOT_ELEMENT(expected).key("override")
-                .displayedName("Override")
-                .description("Brings device into override operation mode (be careful, hardware may be broken)")
-                .adminAccess()
-                .commit(),
+            SLOT_ELEMENT(expected).key("normal")
+            .displayedName("Normal")
+            .description("Brings device into normal operation mode")
+            .expertAccess()
+            .commit(),
 
-        SLOT_ELEMENT(expected).key("off")
-                .displayedName("Off")
-                .description("Instructs device to switch off")
-                .allowedStates(State.DISABLED, State.STOPPED, State.STATIC, State.CHANGING)
-                .commit(),
+            SLOT_ELEMENT(expected).key("override")
+            .displayedName("Override")
+            .description("Brings device into override operation mode"
+                         " (be careful, hardware may be broken)")
+            .adminAccess()
+            .commit(),
 
-        SLOT_ELEMENT(expected).key("on")
-                .displayedName("On")
-                .description("Instructs device to switch on")
-                .allowedStates(State.DISABLED, State.OFF)
-                .commit(),
+            SLOT_ELEMENT(expected).key("off")
+            .displayedName("Off")
+            .description("Instructs device to switch off")
+            .allowedStates(State.DISABLED, State.STOPPED, State.STATIC,
+                           State.CHANGING)
+            .commit(),
 
-        SLOT_ELEMENT(expected).key("stop")
-                .displayedName("Stop")
-                .description("Instructs the device to switch on and stopped")
-                .allowedStates(State.DISABLED, State.STATIC, State.CHANGING)
-                .commit(),
+            SLOT_ELEMENT(expected).key("on")
+            .displayedName("On")
+            .description("Instructs device to switch on")
+            .allowedStates(State.DISABLED, State.OFF)
+            .commit(),
 
-        SLOT_ELEMENT(expected).key("home")
-                .displayedName("Home")
-                .description("Find home position")
-                .allowedStates(State.DISABLED, State.STOPPED)
-                .commit(),
+            SLOT_ELEMENT(expected).key("stop")
+            .displayedName("Stop")
+            .description("Instructs the device to switch on and stopped")
+            .allowedStates(State.DISABLED, State.STATIC, State.CHANGING)
+            .commit(),
 
-        SLOT_ELEMENT(expected).key("move")
-                .displayedName("Move")
-                .description("Move position")
-                .allowedStates(State.DISABLED, State.STOPPED)
-                .commit(),
+            SLOT_ELEMENT(expected).key("home")
+            .displayedName("Home")
+            .description("Find home position")
+            .allowedStates(State.DISABLED, State.STOPPED)
+            .commit(),
 
-        SLOT_ELEMENT(expected).key("stepUp")
-                .displayedName("Step up")
-                .description("Step up")
-                .allowedStates(State.DISABLED, State.STATIC, State.STOPPED)
-                .commit(),
+            SLOT_ELEMENT(expected).key("move")
+            .displayedName("Move")
+            .description("Move position")
+            .allowedStates(State.DISABLED, State.STOPPED)
+            .commit(),
 
-        SLOT_ELEMENT(expected).key("stepDown")
-                .displayedName("Step down")
-                .description("Step down")
-                .allowedStates(State.DISABLED, State.STATIC, State.STOPPED)
-                .commit(),
+            SLOT_ELEMENT(expected).key("stepUp")
+            .displayedName("Step up")
+            .description("Step up")
+            .allowedStates(State.DISABLED, State.STATIC, State.STOPPED)
+            .commit(),
 
-        FLOAT_ELEMENT(expected).key("encoderPosition")
-                .description("Encoder position")
-                .displayedName("Encoder position")
-                .unit(Unit.METER)
-                .metricPrefix(MetricPrefix.MILLI)
-                .readOnly()
-                .commit(),
+            SLOT_ELEMENT(expected).key("stepDown")
+            .displayedName("Step down")
+            .description("Step down")
+            .allowedStates(State.DISABLED, State.STATIC, State.STOPPED)
+            .commit(),
 
-        FLOAT_ELEMENT(expected).key("stepCounterPosition")
-                .displayedName("Stepcounter position")
-                .description("The step counter position describes the motor position calculated from counter steps (instead of encoder values), and is only valid if connected to external encoder")
-                .expertAccess()
-                .readOnly()
-                .commit(),
+            FLOAT_ELEMENT(expected).key("encoderPosition")
+            .description("Encoder position")
+            .displayedName("Encoder position")
+            .unit(Unit.METER)
+            .metricPrefix(MetricPrefix.MILLI)
+            .readOnly()
+            .commit(),
 
-        FLOAT_ELEMENT(expected).key("targetPosition")
-                .description("Target position in position mode")
-                .displayedName("Target position")
-                .unit(Unit.METER)
-                .metricPrefix(MetricPrefix.MILLI)
-                .assignmentOptional().noDefaultValue()
-                .reconfigurable()
-                .allowedStates(State.DISABLED, State.STOPPED, State.OFF, State.STATIC, State.MOVING)
-                .commit(),
+            FLOAT_ELEMENT(expected).key("stepCounterPosition")
+            .displayedName("Stepcounter position")
+            .description("The step counter position describes the motor"
+                         " position calculated from counter steps (instead"
+                         " of encoder values), and is only valid if"
+                         " connected to external encoder")
+            .expertAccess()
+            .readOnly()
+            .commit(),
 
-        INT32_ELEMENT(expected).key("targetVelocity")
-                .description("Target velocity in velocity mode")
-                .displayedName("Target velocity")
-                .assignmentOptional().noDefaultValue()
-                .reconfigurable()
-                .allowedStates(State.DISABLED, State.STOPPED, State.OFF, State.STATIC, State.MOVING)
-                .expertAccess()
-                .commit(),
-         
+            FLOAT_ELEMENT(expected).key("targetPosition")
+            .description("Target position in position mode")
+            .displayedName("Target position")
+            .unit(Unit.METER)
+            .metricPrefix(MetricPrefix.MILLI)
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .allowedStates(State.DISABLED, State.STOPPED, State.OFF,
+                           State.STATIC, State.MOVING)
+            .commit(),
+
+            INT32_ELEMENT(expected).key("targetVelocity")
+            .description("Target velocity in velocity mode")
+            .displayedName("Target velocity")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .allowedStates(State.DISABLED, State.STOPPED, State.OFF,
+                           State.STATIC, State.MOVING)
+            .expertAccess()
+            .commit(),
+
         )
 
     def __init__(self, configuration):
@@ -129,7 +139,7 @@ class MotorInterface(NoFsm, metaclass=ABCMeta):
         self.registerInitialFunction(self.initialize)
 
     def initFsmSlots(self, sigslot):
-        #sigslot.setNumberOfThreads(1)
+        # sigslot.setNumberOfThreads(1)
         sigslot.registerSlot(self.resetHardware)
         sigslot.registerSlot(self.safe)
         sigslot.registerSlot(self.normal)
@@ -144,9 +154,7 @@ class MotorInterface(NoFsm, metaclass=ABCMeta):
 
     @abstractmethod
     def resetHardware(self):
-        """
-        Reset the motor hardware, i.e. bring it to some default initial state.
-        """
+        """Reset the motor hardware, i.e. bring it to default initial state."""
 
     @abstractmethod
     def safe(self):
