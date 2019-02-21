@@ -19,15 +19,15 @@ def test_imagedata_from_ndarray():
     assert imageData.getROIOffsets() == (0, 0)
     assert imageData.getBinning() == (1, 1)
     assert imageData.getRotation() == Rotation.ROT_0
-    assert imageData.getFlipX() == False
-    assert imageData.getFlipY() == False
+    assert imageData.getFlipX() is False
+    assert imageData.getFlipY() is False
 
     # Two additional tests on bitsPerPixel
     # 1. set it in constructor
     imageData = ImageData(arr, bitsPerPixel=12)
     assert imageData.getBitsPerPixel() == 12
     # 2. change it later
-    imageData.setBitsPerPixel(10);
+    imageData.setBitsPerPixel(10)
     assert imageData.getBitsPerPixel() == 10
 
     # Make sure conversion from Fortran order doesn't harm dimensions

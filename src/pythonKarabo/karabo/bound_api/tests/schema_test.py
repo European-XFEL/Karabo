@@ -1,4 +1,3 @@
-
 import unittest
 
 from karabo.bound import (
@@ -14,22 +13,11 @@ from .configuration_example_classes import (
 )
 
 
-class  Schema_TestCase(unittest.TestCase):
-    #def setUp(self):
-    #    try:
-    #        self.schema = cc.TestStruct1.getSchema("TestStruct1")
-    #        #self.schema = Schema("MyTest", AssemblyRules(AccessType(READ | WRITE | INIT)))
-    #        #TestStruct1.expectedParameters(self.schema)
-    #    except Exception as e:
-    #        self.fail("setUp exception group 1: " + str(e))
-
-    #def tearDown(self):
-    #    self.foo.dispose()
-    #    self.foo = None
+class Schema_TestCase(unittest.TestCase):
 
     def test_buildUp(self):
         try:
-            #schema = Shape.getSchema("EditableCircle")
+            # schema = Shape.getSchema("EditableCircle")
             schema = Configurator("Shape").getSchema("Circle")
             self.assertTrue(schema.isAccessInitOnly("shadowEnabled"))
             self.assertTrue(schema.isAccessInitOnly("radius"))
@@ -54,13 +42,17 @@ class  Schema_TestCase(unittest.TestCase):
 
         try:
             instance = GraphicsRenderer.create("GraphicsRenderer",
-                        Hash("shapes.Circle.radius", 0.5, "color", "red", "antiAlias", "true"))
+                                               Hash("shapes.Circle.radius",
+                                                    0.5, "color", "red",
+                                                    "antiAlias", "true"))
+            self.assertIsNotNone(instance)
         except Exception as e:
             self.fail("test_buildUp exception group 3: " + str(e))
 
     def test_getRootName(self):
         try:
-            schema = Schema("MyTest", AssemblyRules(AccessType(READ | WRITE | INIT)))
+            schema = Schema("MyTest",
+                            AssemblyRules(AccessType(READ | WRITE | INIT)))
             TestStruct1.expectedParameters(schema)
             self.assertEqual(schema.getRootName(), "MyTest")
         except Exception as e:
@@ -94,26 +86,41 @@ class  Schema_TestCase(unittest.TestCase):
     def test_getsetExpertLevel(self):
         try:
             schema = Configurator(SomeClass).getSchema("SomeClassId")
-            self.assertEqual(schema.getRequiredAccessLevel('x'), AccessLevel.EXPERT)
-            self.assertEqual(schema.getRequiredAccessLevel('y'), AccessLevel.USER)
-            self.assertEqual(schema.getRequiredAccessLevel('a'), AccessLevel.OBSERVER)
+            self.assertEqual(schema.getRequiredAccessLevel('x'),
+                             AccessLevel.EXPERT)
+            self.assertEqual(schema.getRequiredAccessLevel('y'),
+                             AccessLevel.USER)
+            self.assertEqual(schema.getRequiredAccessLevel('a'),
+                             AccessLevel.OBSERVER)
 
             schema.setRequiredAccessLevel('x', AccessLevel.ADMIN)
             schema.setRequiredAccessLevel('y', AccessLevel.OPERATOR)
-            self.assertEqual(schema.getRequiredAccessLevel('x'), AccessLevel.ADMIN)
-            self.assertEqual(schema.getRequiredAccessLevel('y'), AccessLevel.OPERATOR)
+            self.assertEqual(schema.getRequiredAccessLevel('x'),
+                             AccessLevel.ADMIN)
+            self.assertEqual(schema.getRequiredAccessLevel('y'),
+                             AccessLevel.OPERATOR)
         except Exception as e:
             self.fail("test_setTags exception group 1: " + str(e))
 
         try:
             schema = Configurator(TestStruct1).getSchema("TestStruct1")
-            self.assertEqual(schema.getRequiredAccessLevel('exampleKey1'), AccessLevel.USER)
-            self.assertEqual(schema.getRequiredAccessLevel('exampleKey2'), AccessLevel.OPERATOR)
-            self.assertEqual(schema.getRequiredAccessLevel('exampleKey3'), AccessLevel.EXPERT)
-            self.assertEqual(schema.getRequiredAccessLevel('exampleKey4'), AccessLevel.ADMIN)
-            self.assertEqual(schema.getRequiredAccessLevel('exampleKey5'), AccessLevel.OBSERVER) #default for readOnly
-            self.assertEqual(schema.getRequiredAccessLevel('exampleKey10'), AccessLevel.USER) #default for reconfigurable
-            self.assertEqual(schema.getRequiredAccessLevel('exampleKey11'), AccessLevel.OBSERVER) #observerAccess in reconfigurable
+            self.assertEqual(schema.getRequiredAccessLevel('exampleKey1'),
+                             AccessLevel.USER)
+            self.assertEqual(schema.getRequiredAccessLevel('exampleKey2'),
+                             AccessLevel.OPERATOR)
+            self.assertEqual(schema.getRequiredAccessLevel('exampleKey3'),
+                             AccessLevel.EXPERT)
+            self.assertEqual(schema.getRequiredAccessLevel('exampleKey4'),
+                             AccessLevel.ADMIN)
+            # default for readOnly
+            self.assertEqual(schema.getRequiredAccessLevel('exampleKey5'),
+                             AccessLevel.OBSERVER)
+            # default for reconfigurable
+            self.assertEqual(schema.getRequiredAccessLevel('exampleKey10'),
+                             AccessLevel.USER)
+            # observerAccess in reconfigurable
+            self.assertEqual(schema.getRequiredAccessLevel('exampleKey11'),
+                             AccessLevel.OBSERVER)
         except Exception as e:
             self.fail("test_setTags exception group 2: " + str(e))
 
@@ -134,9 +141,12 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(schema.getValueType("exampleKey3"), Types.UINT32)
             self.assertEqual(schema.getValueType("exampleKey4"), Types.DOUBLE)
             self.assertEqual(schema.getValueType("exampleKey5"), Types.INT64)
-            self.assertEqual(schema.getValueType("exampleKey7"), Types.VECTOR_INT32)
-            self.assertEqual(schema.getValueType("exampleKey8"), Types.VECTOR_DOUBLE)
-            self.assertEqual(schema.getValueType("exampleKey9"), Types.VECTOR_STRING)
+            self.assertEqual(schema.getValueType("exampleKey7"),
+                             Types.VECTOR_INT32)
+            self.assertEqual(schema.getValueType("exampleKey8"),
+                             Types.VECTOR_DOUBLE)
+            self.assertEqual(schema.getValueType("exampleKey9"),
+                             Types.VECTOR_STRING)
         except Exception as e:
             self.fail("test_getValueType exception: " + str(e))
 
@@ -146,9 +156,12 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(schema.getAliasAsString("exampleKey2"), "10")
             self.assertEqual(schema.getAliasAsString("exampleKey3"), "5.5")
 
-            self.assertEqual(schema.getAliasAsString("exampleKey4"), "exampleAlias4")
-            self.assertEqual(schema.getAliasAsString("exampleKey5"), "exampleAlias5")
-            self.assertEqual(schema.getAliasAsString("exampleKey6"), "1193046,43724")
+            self.assertEqual(schema.getAliasAsString("exampleKey4"),
+                             "exampleAlias4")
+            self.assertEqual(schema.getAliasAsString("exampleKey5"),
+                             "exampleAlias5")
+            self.assertEqual(schema.getAliasAsString("exampleKey6"),
+                             "1193046,43724")
             self.assertEqual(schema.getAliasAsString("testPath"), "5")
         except Exception as e:
             self.fail("test_getAliasAsString exception: " + str(e))
@@ -167,26 +180,29 @@ class  Schema_TestCase(unittest.TestCase):
             self.fail("test_keyHasAlias exception: " + str(e))
 
     def test_aliasHasKey(self):
-          try:
-              schema = TestStruct1.getSchema("TestStruct1")
-              self.assertTrue(schema.aliasHasKey(10))
-              self.assertTrue(schema.aliasHasKey(5.5))
-              self.assertTrue(schema.aliasHasKey("exampleAlias4"))
-              self.assertTrue(schema.aliasHasKey("exampleAlias5"))
-              self.assertTrue(schema.aliasHasKey([0x00123456, 0x0000aacc]))
-              self.assertFalse(schema.aliasHasKey(7))
-              self.assertTrue(schema.aliasHasKey(5))
-          except Exception as e:
-              self.fail("test_aliasHasKey exception: " + str(e))
+        try:
+            schema = TestStruct1.getSchema("TestStruct1")
+            self.assertTrue(schema.aliasHasKey(10))
+            self.assertTrue(schema.aliasHasKey(5.5))
+            self.assertTrue(schema.aliasHasKey("exampleAlias4"))
+            self.assertTrue(schema.aliasHasKey("exampleAlias5"))
+            self.assertTrue(schema.aliasHasKey([0x00123456, 0x0000aacc]))
+            self.assertFalse(schema.aliasHasKey(7))
+            self.assertTrue(schema.aliasHasKey(5))
+        except Exception as e:
+            self.fail("test_aliasHasKey exception: " + str(e))
 
     def test_getAliasFromKey(self):
         try:
             schema = TestStruct1.getSchema("TestStruct1")
             self.assertEqual(schema.getAliasFromKey("exampleKey2"), 10)
             self.assertEqual(schema.getAliasFromKey("exampleKey3"), 5.5)
-            self.assertEqual(schema.getAliasFromKey("exampleKey4"), "exampleAlias4")
-            self.assertEqual(schema.getAliasFromKey("exampleKey5"), "exampleAlias5")
-            self.assertEqual(schema.getAliasFromKey("exampleKey6"), [0x00123456, 0x0000aacc])
+            self.assertEqual(schema.getAliasFromKey("exampleKey4"),
+                             "exampleAlias4")
+            self.assertEqual(schema.getAliasFromKey("exampleKey5"),
+                             "exampleAlias5")
+            self.assertEqual(schema.getAliasFromKey("exampleKey6"),
+                             [0x00123456, 0x0000aacc])
             self.assertEqual(schema.getAliasFromKey("testPath"), 5)
         except Exception as e:
             self.fail("test_getAliasFromKey exception: " + str(e))
@@ -207,9 +223,12 @@ class  Schema_TestCase(unittest.TestCase):
             schema = TestStruct1.getSchema("TestStruct1")
             self.assertEqual(schema.getKeyFromAlias(10), "exampleKey2")
             self.assertEqual(schema.getKeyFromAlias(5.5), "exampleKey3")
-            self.assertEqual(schema.getKeyFromAlias("exampleAlias4"), "exampleKey4")
-            self.assertEqual(schema.getKeyFromAlias("exampleAlias5"), "exampleKey5")
-            self.assertEqual(schema.getKeyFromAlias([0x00123456, 0x0000aacc]), "exampleKey6")
+            self.assertEqual(schema.getKeyFromAlias("exampleAlias4"),
+                             "exampleKey4")
+            self.assertEqual(schema.getKeyFromAlias("exampleAlias5"),
+                             "exampleKey5")
+            self.assertEqual(schema.getKeyFromAlias([0x00123456, 0x0000aacc]),
+                             "exampleKey6")
             self.assertEqual(schema.getKeyFromAlias(5), "testPath")
         except Exception as e:
             self.fail("test_KeyFromAlias exception: " + str(e))
@@ -217,32 +236,52 @@ class  Schema_TestCase(unittest.TestCase):
     def test_getAccessMode(self):
         try:
             schema = TestStruct1.getSchema("TestStruct1")
-            self.assertEqual(schema.getAccessMode("exampleKey1"), AccessType.WRITE)
-            self.assertEqual(schema.getAccessMode("exampleKey2"), AccessType.INIT)
-            self.assertEqual(schema.getAccessMode("exampleKey3"), AccessType.WRITE)
-            self.assertEqual(schema.getAccessMode("exampleKey4"), AccessType.INIT)
-            self.assertEqual(schema.getAccessMode("exampleKey5"), AccessType.READ)
-            self.assertEqual(schema.getAccessMode("exampleKey8"), AccessType.READ)
-            self.assertEqual(schema.getAccessMode("exampleKey10"), AccessType.WRITE)
-            self.assertEqual(schema.getAccessMode("testPath"), AccessType.WRITE)
-            self.assertEqual(schema.getAccessMode("testPath2"), AccessType.READ)
-            self.assertEqual(schema.getAccessMode("testPath3"), AccessType.INIT)
+            self.assertEqual(schema.getAccessMode("exampleKey1"),
+                             AccessType.WRITE)
+            self.assertEqual(schema.getAccessMode("exampleKey2"),
+                             AccessType.INIT)
+            self.assertEqual(schema.getAccessMode("exampleKey3"),
+                             AccessType.WRITE)
+            self.assertEqual(schema.getAccessMode("exampleKey4"),
+                             AccessType.INIT)
+            self.assertEqual(schema.getAccessMode("exampleKey5"),
+                             AccessType.READ)
+            self.assertEqual(schema.getAccessMode("exampleKey8"),
+                             AccessType.READ)
+            self.assertEqual(schema.getAccessMode("exampleKey10"),
+                             AccessType.WRITE)
+            self.assertEqual(schema.getAccessMode("testPath"),
+                             AccessType.WRITE)
+            self.assertEqual(schema.getAccessMode("testPath2"),
+                             AccessType.READ)
+            self.assertEqual(schema.getAccessMode("testPath3"),
+                             AccessType.INIT)
         except Exception as e:
             self.fail("test_getAccessMode exception: " + str(e))
 
     def test_getAssignment(self):
         try:
             schema = TestStruct1.getSchema("TestStruct1")
-            self.assertEqual(schema.getAssignment("exampleKey1"), AssignmentType.OPTIONAL)
-            self.assertEqual(schema.getAssignment("exampleKey2"), AssignmentType.OPTIONAL)
-            self.assertEqual(schema.getAssignment("exampleKey3"), AssignmentType.MANDATORY)
-            self.assertEqual(schema.getAssignment("exampleKey4"), AssignmentType.INTERNAL)
-            self.assertEqual(schema.getAssignment("exampleKey5"), AssignmentType.OPTIONAL)
-            self.assertEqual(schema.getAssignment("exampleKey8"), AssignmentType.OPTIONAL)
-            self.assertEqual(schema.getAssignment("exampleKey10"), AssignmentType.OPTIONAL)
-            self.assertEqual(schema.getAssignment("testPath"), AssignmentType.OPTIONAL)
-            self.assertEqual(schema.getAssignment("testPath2"), AssignmentType.OPTIONAL)
-            self.assertEqual(schema.getAssignment("testPath3"), AssignmentType.MANDATORY)
+            self.assertEqual(schema.getAssignment("exampleKey1"),
+                             AssignmentType.OPTIONAL)
+            self.assertEqual(schema.getAssignment("exampleKey2"),
+                             AssignmentType.OPTIONAL)
+            self.assertEqual(schema.getAssignment("exampleKey3"),
+                             AssignmentType.MANDATORY)
+            self.assertEqual(schema.getAssignment("exampleKey4"),
+                             AssignmentType.INTERNAL)
+            self.assertEqual(schema.getAssignment("exampleKey5"),
+                             AssignmentType.OPTIONAL)
+            self.assertEqual(schema.getAssignment("exampleKey8"),
+                             AssignmentType.OPTIONAL)
+            self.assertEqual(schema.getAssignment("exampleKey10"),
+                             AssignmentType.OPTIONAL)
+            self.assertEqual(schema.getAssignment("testPath"),
+                             AssignmentType.OPTIONAL)
+            self.assertEqual(schema.getAssignment("testPath2"),
+                             AssignmentType.OPTIONAL)
+            self.assertEqual(schema.getAssignment("testPath3"),
+                             AssignmentType.MANDATORY)
         except Exception as e:
             self.fail("test_getAssignment exception: " + str(e))
 
@@ -252,7 +291,8 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertTrue(schema.hasAssignment('x'))
             self.assertTrue(schema.isAssignmentOptional('x'))
             self.assertFalse(schema.isAssignmentMandatory('x'))
-            self.assertEqual(schema.getAssignment('x'), AssignmentType.OPTIONAL)
+            self.assertEqual(schema.getAssignment('x'),
+                             AssignmentType.OPTIONAL)
             schema.setAssignment('x', AssignmentType.MANDATORY)
             self.assertFalse(schema.isAssignmentOptional('x'))
             self.assertTrue(schema.isAssignmentMandatory('x'))
@@ -308,20 +348,28 @@ class  Schema_TestCase(unittest.TestCase):
     def test_getDefaultValue(self):
         try:
             schema = Configurator(TestStruct1).getSchema("TestStruct1")
-            self.assertEqual(schema.getDefaultValue("exampleKey1"), "Navigation")
+            self.assertEqual(schema.getDefaultValue("exampleKey1"),
+                             "Navigation")
             self.assertEqual(schema.getDefaultValue("exampleKey2"), 10)
-            self.assertEqual(schema.getDefaultValueAs("exampleKey2", Types.STRING), "10")
+            self.assertEqual(
+                schema.getDefaultValueAs("exampleKey2", Types.STRING), "10")
             self.assertEqual(schema.getDefaultValue("exampleKey5"), 1442244)
-            self.assertEqual(schema.getDefaultValueAs("exampleKey5", Types.STRING), "1442244")
+            self.assertEqual(
+                schema.getDefaultValueAs("exampleKey5", Types.STRING),
+                "1442244")
 
             self.assertEqual(schema.getDefaultValue("exampleKey6"), 1.11)
-            self.assertEqual(schema.getDefaultValueAs("exampleKey6", Types.DOUBLE), 1.11)
+            self.assertEqual(
+                schema.getDefaultValueAs("exampleKey6", Types.DOUBLE), 1.11)
 
-            self.assertEqual(schema.getDefaultValue("exampleKey7"), [1,2,3])
-            self.assertEqual(schema.getDefaultValue("exampleKey8"), [1.1, 2.2, 3.3 ])
-            self.assertEqual(schema.getDefaultValue("exampleKey9"), ["Hallo", "World"])
+            self.assertEqual(schema.getDefaultValue("exampleKey7"), [1, 2, 3])
+            self.assertEqual(schema.getDefaultValue("exampleKey8"),
+                             [1.1, 2.2, 3.3])
+            self.assertEqual(schema.getDefaultValue("exampleKey9"),
+                             ["Hallo", "World"])
 
-            #'readOnly'-element (vector as well) that does not specify 'initialValue' has 'defaultValue' equal to string "" :
+            # 'readOnly'-element (vector as well) that does not specify
+            #  'initialValue' has 'defaultValue' equal to string "" :
             self.assertEqual(schema.getDefaultValue("testPath2"), "")
             self.assertEqual(schema.getDefaultValue("vectInt"), [])
 
@@ -349,11 +397,13 @@ class  Schema_TestCase(unittest.TestCase):
             allowedStates = schema.getAllowedStates("exampleKey3")
             self.assertEqual(allowedStates[0], State.STARTED)
             self.assertEqual(allowedStates[1], State.STOPPED)
-            self.assertEqual(schema.getAllowedStates("exampleKey3")[2], State.NORMAL)
+            self.assertEqual(schema.getAllowedStates("exampleKey3")[2],
+                             State.NORMAL)
 
-
-            self.assertEqual(schema.getAllowedStates("exampleKey7")[0], State.STARTED)
-            self.assertEqual(schema.getAllowedStates("exampleKey7")[1], State.NORMAL)
+            self.assertEqual(schema.getAllowedStates("exampleKey7")[0],
+                             State.STARTED)
+            self.assertEqual(schema.getAllowedStates("exampleKey7")[1],
+                             State.NORMAL)
         except Exception as e:
             self.fail("test_getAllowedStates exception: " + str(e))
 
@@ -361,11 +411,13 @@ class  Schema_TestCase(unittest.TestCase):
         try:
             schema = TestStruct1.getSchema("TestStruct1")
             self.assertEqual(schema.getDisplayType("exampleBitsKey1"), "bin")
-            self.assertEqual(schema.getDisplayType("exampleBitsKey2"), "bin|10:In Error, 21:Busy, 35:HV On, 55:Crate On")
+            self.assertEqual(schema.getDisplayType("exampleBitsKey2"),
+                             "bin|10:In Error, 21:Busy, 35:HV On, 55:Crate On")
             self.assertEqual(schema.getDisplayType("exampleBitsKey3"), "oct")
             self.assertEqual(schema.getDisplayType("exampleBitsKey4"), "hex")
             self.assertEqual(schema.getDisplayType("exampleKey8"), "Curve")
-            self.assertEqual(schema.getDisplayType("exampleKey9"), "TestDisplayType")
+            self.assertEqual(schema.getDisplayType("exampleKey9"),
+                             "TestDisplayType")
         except Exception as e:
             self.fail("test_getDisplatType exception: " + str(e))
 
@@ -393,8 +445,10 @@ class  Schema_TestCase(unittest.TestCase):
     def test_getMetricPrefix(self):
         try:
             schema = TestStruct1.getSchema("TestStruct1")
-            self.assertEqual(schema.getMetricPrefix("exampleKey2"), MetricPrefix.MILLI)
-            self.assertEqual(schema.getMetricPrefixName("exampleKey2"), "milli")
+            self.assertEqual(schema.getMetricPrefix("exampleKey2"),
+                             MetricPrefix.MILLI)
+            self.assertEqual(schema.getMetricPrefixName("exampleKey2"),
+                             "milli")
             self.assertEqual(schema.getMetricPrefixSymbol("exampleKey2"), "m")
         except Exception as e:
             self.fail("test_getMetricPrefix exception: " + str(e))
@@ -414,9 +468,11 @@ class  Schema_TestCase(unittest.TestCase):
         try:
             schema = TestStruct1.getSchema("TestStruct1")
             self.assertEqual(schema.getMinInc("exampleKey2"), 5)
-            self.assertEqual(schema.getMinIncAs("exampleKey2", Types.STRING), "5")
+            self.assertEqual(schema.getMinIncAs("exampleKey2", Types.STRING),
+                             "5")
             self.assertEqual(schema.getMaxInc("exampleKey2"), 25)
-            self.assertEqual(schema.getMaxIncAs("exampleKey2", Types.STRING), "25")
+            self.assertEqual(schema.getMaxIncAs("exampleKey2", Types.STRING),
+                             "25")
         except Exception as e:
             self.fail("test_getMinIncMaxInc exception: " + str(e))
 
@@ -451,16 +507,22 @@ class  Schema_TestCase(unittest.TestCase):
             self.fail("test_getMinExcMaxExc exception in getMaxExc: " + str(e))
 
         try:
-            self.assertEqual(schema.getMinExcAs("exampleKey3", Types.STRING), "10")
-            self.assertEqual(schema.getMinExcAs("exampleKey4", Types.STRING), "-2.22")
+            self.assertEqual(schema.getMinExcAs("exampleKey3", Types.STRING),
+                             "10")
+            self.assertEqual(schema.getMinExcAs("exampleKey4", Types.STRING),
+                             "-2.22")
         except Exception as e:
-            self.fail("test_getMinExcMaxExc exception in getMinExcAs: " + str(e))
+            self.fail(
+                "test_getMinExcMaxExc exception in getMinExcAs: " + str(e))
 
         try:
-            self.assertEqual(schema.getMaxExcAs("exampleKey3", Types.STRING), "20")
-            self.assertEqual(schema.getMaxExcAs("exampleKey4", Types.STRING), "5.55")
+            self.assertEqual(schema.getMaxExcAs("exampleKey3", Types.STRING),
+                             "20")
+            self.assertEqual(schema.getMaxExcAs("exampleKey4", Types.STRING),
+                             "5.55")
         except Exception as e:
-            self.fail("test_getMinExcMaxExc exception in getMaxExcAs: " + str(e))
+            self.fail(
+                "test_getMinExcMaxExc exception in getMaxExcAs: " + str(e))
 
     def test_setMinExcMaxExc(self):
         try:
@@ -480,54 +542,75 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(schema.getWarnLow("exampleKey5"), -10)
             self.assertEqual(schema.getWarnLow("exampleKey6"), -5.5)
         except Exception as e:
-            self.fail("test_getWarnAlarmLowHigh exception in getWarnLow: " + str(e))
+            self.fail(
+                "test_getWarnAlarmLowHigh exception in getWarnLow: " + str(e))
 
         try:
             self.assertEqual(schema.getWarnHigh("exampleKey5"), 10)
             self.assertEqual(schema.getWarnHigh("exampleKey6"), 5.5)
 
         except Exception as e:
-            self.fail("test_getWarnAlarmLowHigh exception in getWarnHigh: " + str(e))
+            self.fail(
+                "test_getWarnAlarmLowHigh exception in getWarnHigh: " + str(e))
 
         try:
             self.assertEqual(schema.getAlarmLow("exampleKey5"), -20)
             self.assertEqual(schema.getAlarmLow("exampleKey6"), -22.1)
 
         except Exception as e:
-            self.fail("test_getWarnAlarmLowHigh exception in getAlarmLow: " + str(e))
+            self.fail(
+                "test_getWarnAlarmLowHigh exception in getAlarmLow: " + str(e))
 
         try:
             self.assertEqual(schema.getAlarmHigh("exampleKey5"), 20)
             self.assertEqual(schema.getAlarmHigh("exampleKey6"), 22.777)
 
         except Exception as e:
-            self.fail("test_getWarnAlarmLowHigh exception in getAlarmHigh: " + str(e))
+            self.fail(
+                "test_getWarnAlarmLowHigh exception in getAlarmHigh: " + str(
+                    e))
 
     def test_getWarnAlarmLowHighAs(self):
         schema = Configurator(TestStruct1).getSchema("TestStruct1")
         try:
-            self.assertEqual(schema.getWarnLowAs("exampleKey5", Types.STRING), "-10")
-            self.assertEqual(schema.getWarnLowAs("exampleKey6", Types.STRING), "-5.5")
+            self.assertEqual(schema.getWarnLowAs("exampleKey5", Types.STRING),
+                             "-10")
+            self.assertEqual(schema.getWarnLowAs("exampleKey6", Types.STRING),
+                             "-5.5")
         except Exception as e:
-            self.fail("test_getWarnAlarmLowHighAs exception in getWarnLowAs: " + str(e))
+            self.fail(
+                "test_getWarnAlarmLowHighAs exception in getWarnLowAs: " + str(
+                    e))
 
         try:
-            self.assertEqual(schema.getWarnHighAs("exampleKey5", Types.STRING), "10")
-            self.assertEqual(schema.getWarnHighAs("exampleKey6", Types.STRING), "5.5")
+            self.assertEqual(schema.getWarnHighAs("exampleKey5", Types.STRING),
+                             "10")
+            self.assertEqual(schema.getWarnHighAs("exampleKey6", Types.STRING),
+                             "5.5")
         except Exception as e:
-            self.fail("test_getWarnAlarmLowHighAs exception in getWarnHighAs: " + str(e))
+            self.fail((
+                "test_getWarnAlarmLowHighAs exception in "
+                "getWarnHighAs: " + str(e)))
 
         try:
-            self.assertEqual(schema.getAlarmLowAs("exampleKey5", Types.STRING), "-20")
-            self.assertEqual(schema.getAlarmLowAs("exampleKey6", Types.STRING), "-22.1")
+            self.assertEqual(schema.getAlarmLowAs("exampleKey5", Types.STRING),
+                             "-20")
+            self.assertEqual(schema.getAlarmLowAs("exampleKey6", Types.STRING),
+                             "-22.1")
         except Exception as e:
-            self.fail("test_getWarnAlarmLowHighAs exception in getAlarmLowAs: " + str(e))
+            self.fail(
+                ("test_getWarnAlarmLowHighAs exception in "
+                 "getAlarmLowAs: " + str(e)))
 
         try:
-            self.assertEqual(schema.getAlarmHighAs("exampleKey5", Types.STRING), "20")
-            self.assertEqual(schema.getAlarmHighAs("exampleKey6", Types.STRING), "22.777")
+            self.assertEqual(
+                schema.getAlarmHighAs("exampleKey5", Types.STRING), "20")
+            self.assertEqual(
+                schema.getAlarmHighAs("exampleKey6", Types.STRING), "22.777")
         except Exception as e:
-            self.fail("test_getWarnAlarmLowHighAs exception in getAlarmHighAs: " + str(e))
+            self.fail(
+                ("test_getWarnAlarmLowHighAs exception in "
+                 "getAlarmHighAs: " + str(e)))
 
     def test_hasWarnAlarm(self):
         try:
@@ -555,20 +638,32 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(schema.hasDefaultValue("exampleKey14"), True)
             self.assertEqual(schema.hasDefaultValue("exampleKey15"), True)
 
+            self.assertEqual(schema.getDefaultValue("exampleKey10"),
+                             [10, 20, 30])
 
-            self.assertEqual(schema.getDefaultValue("exampleKey10"), [10, 20, 30])
+            self.assertEqual(schema.getDefaultValue("exampleKey12"),
+                             [1.1, -2.2, 3.3])
 
-            self.assertEqual(schema.getDefaultValue("exampleKey12"), [1.1, -2.2, 3.3])
+            self.assertEqual(schema.getDefaultValue("exampleKey11"),
+                             [10, 20, 30])
+            self.assertEqual(
+                schema.getDefaultValueAs("exampleKey11", Types.STRING),
+                "10,20,30")
+            self.assertEqual(
+                schema.getDefaultValueAs("exampleKey11", Types.VECTOR_INT32),
+                [10, 20, 30])
 
-            self.assertEqual(schema.getDefaultValue("exampleKey11"), [10, 20, 30])
-            self.assertEqual(schema.getDefaultValueAs("exampleKey11", Types.STRING), "10,20,30")
-            self.assertEqual(schema.getDefaultValueAs("exampleKey11", Types.VECTOR_INT32), [10, 20, 30])
+            self.assertEqual(schema.getDefaultValue("exampleKey14"),
+                             ["Hallo", "World", "Test"])
+            self.assertEqual(
+                schema.getDefaultValueAs("exampleKey14", Types.STRING),
+                "Hallo,World,Test")
 
-            self.assertEqual(schema.getDefaultValue("exampleKey14"), ["Hallo", "World", "Test"])
-            self.assertEqual(schema.getDefaultValueAs("exampleKey14", Types.STRING), "Hallo,World,Test")
-
-            self.assertEqual(schema.getDefaultValue("exampleKey15"), ["word1", "word2", "test"])
-            self.assertEqual(schema.getDefaultValueAs("exampleKey15", Types.STRING), "word1,word2,test")
+            self.assertEqual(schema.getDefaultValue("exampleKey15"),
+                             ["word1", "word2", "test"])
+            self.assertEqual(
+                schema.getDefaultValueAs("exampleKey15", Types.STRING),
+                "word1,word2,test")
 
             self.assertEqual(schema.getMinSize("exampleKey10"), 2)
             self.assertEqual(schema.getMaxSize("exampleKey10"), 7)
@@ -579,17 +674,15 @@ class  Schema_TestCase(unittest.TestCase):
             schema = Configurator(SomeClass).getSchema("SomeClassId")
             validator = Validator()
             configuration = Hash('somelist', [])
-            #print "\nInput configuration is ...\n{}".format(configuration)
             validated = validator.validate(schema, configuration)
-            #print "Validated configuration is ...\n{}".format(validated)
             somelist = validated['somelist']
             somelist.append(99)
             somelist.append(55)
             configuration['somelist'] = somelist
             validated = validator.validate(schema, configuration)
-            #print "After adding to the list the configuration is ...\n{}".format(validated)
+            self.assertIsNotNone(validated)
         except Exception as e:
-            self.fail("test_vectorElement exception 2: " +str(e))
+            self.fail("test_vectorElement exception 2: " + str(e))
 
     def test_ndarrayElement(self):
         schema = Configurator(ArrayContainer).getSchema("ArrayContainer")
@@ -599,7 +692,8 @@ class  Schema_TestCase(unittest.TestCase):
         assert schema.getDefaultValue("exampleKey18.shape") == [3, 2, 1]
 
         assert schema.getUnit("exampleKey16.data") == Unit.DEGREE_CELSIUS
-        assert schema.getMetricPrefix("exampleKey16.data") == MetricPrefix.CENTI
+        assert schema.getMetricPrefix(
+            "exampleKey16.data") == MetricPrefix.CENTI
 
         assert schema.isAccessReadOnly("exampleKey16")
         assert schema.isAccessReadOnly("exampleKey17")
@@ -620,10 +714,10 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(schema.getDisplayType("testPath"), "fileOut")
             self.assertEqual(schema.getDisplayType("testPath2"), "fileIn")
             self.assertEqual(schema.getDisplayType("testPath3"), "directory")
-#            self.assertEqual(schema.getDisplayType("exampleBitsKey1"), "Bitset")
-#            self.assertEqual(schema.getDisplayType("exampleBitsKey2"), "Bitset")
-#            self.assertEqual(schema.getDisplayType("exampleBitsKey3"), "Bitset")
-#            self.assertEqual(schema.getDisplayType("exampleBitsKey4"), "Bitset")
+        #  self.assertEqual(schema.getDisplayType("exampleBitsKey1"), "Bitset")
+        #  self.assertEqual(schema.getDisplayType("exampleBitsKey2"), "Bitset")
+        #  self.assertEqual(schema.getDisplayType("exampleBitsKey3"), "Bitset")
+        #  self.assertEqual(schema.getDisplayType("exampleBitsKey4"), "Bitset")
         except Exception as e:
             self.fail("test_getDisplayType exception: " + str(e))
 
@@ -653,7 +747,6 @@ class  Schema_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail("test_isProperty exception: " + str(e))
 
-
     def test_hasArchivePolicy(self):
         try:
             schema = Configurator(TestStruct1).getSchema("TestStruct1")
@@ -667,22 +760,27 @@ class  Schema_TestCase(unittest.TestCase):
     def test_getArchivePolicy(self):
         try:
             schema = Configurator(TestStruct1).getSchema("TestStruct1")
-            self.assertEqual(schema.getArchivePolicy("exampleKey5"), ArchivePolicy.EVERY_EVENT)
-            self.assertEqual(schema.getArchivePolicy("exampleKey6"), ArchivePolicy.EVERY_100MS)
-            self.assertEqual(schema.getArchivePolicy("exampleKey7"), ArchivePolicy.EVERY_1S)
-            self.assertEqual(schema.getArchivePolicy("exampleKey8"), ArchivePolicy.NO_ARCHIVING)
+            self.assertEqual(schema.getArchivePolicy("exampleKey5"),
+                             ArchivePolicy.EVERY_EVENT)
+            self.assertEqual(schema.getArchivePolicy("exampleKey6"),
+                             ArchivePolicy.EVERY_100MS)
+            self.assertEqual(schema.getArchivePolicy("exampleKey7"),
+                             ArchivePolicy.EVERY_1S)
+            self.assertEqual(schema.getArchivePolicy("exampleKey8"),
+                             ArchivePolicy.NO_ARCHIVING)
         except Exception as e:
             self.fail("test_getArchivePolicy exception: " + str(e))
 
     def test_setArchivePolicy(self):
         try:
             schema = Configurator(SomeClass).getSchema("SomeClassId")
-            self.assertEqual(schema.getArchivePolicy("a"), ArchivePolicy.EVERY_100MS)
+            self.assertEqual(schema.getArchivePolicy("a"),
+                             ArchivePolicy.EVERY_100MS)
             schema.setArchivePolicy('a', ArchivePolicy.EVERY_10MIN)
-            self.assertEqual(schema.getArchivePolicy("a"), ArchivePolicy.EVERY_10MIN)
+            self.assertEqual(schema.getArchivePolicy("a"),
+                             ArchivePolicy.EVERY_10MIN)
         except Exception as e:
             self.fail("test_setArchivePolicy exception: " + str(e))
-
 
     def test_perKeyFunctionality(self):
         try:
@@ -760,7 +858,6 @@ class  Schema_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail("test_merge exception: " + str(e))
 
-
     def test_logger(self):
         config = Hash("priority", "DEBUG")
         Logger.configure(config)
@@ -769,7 +866,7 @@ class  Schema_TestCase(unittest.TestCase):
         a1_a2 = Logger.getCategory("a1.a2")
         root.DEBUG("ERROR")
 
-        Logger.useOstream();
+        Logger.useOstream()
         root.DEBUG("ok")
         a1.DEBUG("ok")
         a1_a2.DEBUG("ok")
@@ -777,55 +874,76 @@ class  Schema_TestCase(unittest.TestCase):
         a1.INFO("ok")
         a1_a2.INFO("ok")
 
-        Logger.reset();
+        Logger.reset()
         root.DEBUG("ERROR")
         a1.DEBUG("ERROR")
         a1_a2.DEBUG("ERROR")
 
     def test_helpFunction(self):
         pass
-        #uncomment to see help:
-        #schema = TestStruct1.getSchema("TestStruct1")
-        #schema.help()
+        # uncomment to see help:
+        # schema = TestStruct1.getSchema("TestStruct1")
+        # schema.help()
 
     def test_schemaImageElement(self):
         try:
             schema = Configurator(TestStruct1).getSchema("TestStruct1")
-            self.assertEqual(schema.getDisplayType("myImageElement"), "ImageData")
+            self.assertEqual(schema.getDisplayType("myImageElement"),
+                             "ImageData")
             self.assertEqual(schema.isCustomNode("myImageElement"), True)
-            self.assertEqual(schema.getCustomNodeClass("myImageElement"), "ImageData")
-            self.assertEqual(schema.getAccessMode("myImageElement"), AccessType.READ)
-            self.assertEqual(schema.getNodeType("myImageElement"), NodeType.NODE)
-            self.assertEqual(schema.getRequiredAccessLevel("myImageElement"), AccessLevel.OPERATOR) # .operatorAccess()
-            self.assertEqual(schema.getDisplayedName("myImageElement"), "myImage")
-            self.assertEqual(schema.getDescription("myImageElement"), "Image Element")
-            # Hijack this test to test correct false result of isCustomNode, but
-            # here just one type, excessive test is done for underlying C++ code
+            self.assertEqual(schema.getCustomNodeClass("myImageElement"),
+                             "ImageData")
+            self.assertEqual(schema.getAccessMode("myImageElement"),
+                             AccessType.READ)
+            self.assertEqual(schema.getNodeType("myImageElement"),
+                             NodeType.NODE)
+            self.assertEqual(schema.getRequiredAccessLevel("myImageElement"),
+                             AccessLevel.OPERATOR)  # .operatorAccess()
+            self.assertEqual(schema.getDisplayedName("myImageElement"),
+                             "myImage")
+            self.assertEqual(schema.getDescription("myImageElement"),
+                             "Image Element")
+            # Hijack this test to test correct false result of isCustomNode,
+            # but here just one type, excessive test is done for
+            # underlying C++ code
             self.assertEqual(schema.isCustomNode("exampleKey1"), False)
         except Exception as e:
             self.fail("test_schemaImageElement group 1: " + str(e))
 
         try:
-            # self.assertEqual(schema.getDescription("myImageElement.pixels"), "Pixel array")
-            # self.assertEqual(schema.getValueType("myImageElement.pixels"), Types.VECTOR_CHAR)
+            # self.assertEqual(schema.getDescription("myImageElement.pixels"),
+            #  "Pixel array")
+            # self.assertEqual(schema.getValueType("myImageElement.pixels"),
+            # Types.VECTOR_CHAR)
 
-            self.assertEqual(schema.getDisplayedName("myImageElement.dims"), "Dimensions")
-            self.assertEqual(schema.getValueType("myImageElement.dims"), Types.VECTOR_UINT64)
-            self.assertEqual(schema.getDisplayType("myImageElement.dims"), "Curve")
+            self.assertEqual(schema.getDisplayedName("myImageElement.dims"),
+                             "Dimensions")
+            self.assertEqual(schema.getValueType("myImageElement.dims"),
+                             Types.VECTOR_UINT64)
+            self.assertEqual(schema.getDisplayType("myImageElement.dims"),
+                             "Curve")
 
-            self.assertEqual(schema.getDisplayedName("myImageElement.encoding"), "Encoding")
-            self.assertEqual(schema.getValueType("myImageElement.encoding"), Types.INT32)
+            self.assertEqual(
+                schema.getDisplayedName("myImageElement.encoding"), "Encoding")
+            self.assertEqual(schema.getValueType("myImageElement.encoding"),
+                             Types.INT32)
 
-            # self.assertEqual(schema.getDisplayedName("myImageElement.pixels.isBigEndian"), "Is big endian")
-            # self.assertEqual(schema.getValueType("myImageElement.pixels.isBigEndian"), Types.BOOL)
-            # self.assertEqual(schema.getDefaultValue("myImageElement.pixels.isBigEndian"), False)
+        # self.assertEqual(
+        # schema.getDisplayedName("myImageElement.pixels.isBigEndian"),
+        # "Is big endian")
+        # self.assertEqual(
+        # schema.getValueType("myImageElement.pixels.isBigEndian"), Types.BOOL)
+        # self.assertEqual(
+        # schema.getDefaultValue("myImageElement.pixels.isBigEndian"), False)
 
         except Exception as e:
             self.fail("test_schemaImageElement group 2: " + str(e))
 
     def test_alarm_info(self):
         schema = Configurator(TestStruct1).getSchema("TestStruct1")
-        self.assertEqual(schema.getInfoForAlarm("exampleKey6", AlarmCondition.WARN_LOW), "Some info")
+        self.assertEqual(
+            schema.getInfoForAlarm("exampleKey6", AlarmCondition.WARN_LOW),
+            "Some info")
 
     def test_allowed_states(self):
         schema = Configurator(TestStruct1).getSchema("TestStruct1")
@@ -833,12 +951,13 @@ class  Schema_TestCase(unittest.TestCase):
         allowedStates = schema.getAllowedStates("exampleKey3")
         self.assertEqual(allowedStates, [State.INIT, State.NORMAL])
 
-
     def test_daq_data_type(self):
         schema = Schema()
 
-        NODE_ELEMENT(schema).key("trainData").commit() # Has no DAQ data type yet
-        NODE_ELEMENT(schema).key("pulseData").setDaqDataType(DaqDataType.PULSE).commit()
+        NODE_ELEMENT(schema).key(
+            "trainData").commit()  # Has no DAQ data type yet
+        NODE_ELEMENT(schema).key("pulseData").setDaqDataType(
+            DaqDataType.PULSE).commit()
 
         self.assertEqual(schema.hasDaqDataType("trainData"), False)
         self.assertEqual(schema.hasDaqDataType("pulseData"), True)
@@ -852,23 +971,23 @@ class  Schema_TestCase(unittest.TestCase):
     def test_overwrite_restrictions_for_options(self):
         schema = Schema()
         (
-        INT32_ELEMENT(schema).key("range")
-                .displayedName("Range")
-                .options("0,1")
-                .assignmentOptional().defaultValue(0)
-                .reconfigurable()
-                .commit()
+            INT32_ELEMENT(schema).key("range")
+            .displayedName("Range")
+            .options("0,1")
+            .assignmentOptional().defaultValue(0)
+            .reconfigurable()
+            .commit()
         )
-        vec = schema.getOptions("range");
+        vec = schema.getOptions("range")
         self.assertEqual(len(vec), 2)
         self.assertEqual(vec[0], 0)
         self.assertEqual(vec[1], 1)
         (
-        OVERWRITE_ELEMENT(schema).key("range")
-                .setNewOptions("0,1,2")
-                .commit()
+            OVERWRITE_ELEMENT(schema).key("range")
+            .setNewOptions("0,1,2")
+            .commit()
         )
-        vec = schema.getOptions("range");
+        vec = schema.getOptions("range")
         self.assertEqual(len(vec), 3)
         self.assertEqual(vec[0], 0)
         self.assertEqual(vec[1], 1)
@@ -877,4 +996,3 @@ class  Schema_TestCase(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
