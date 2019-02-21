@@ -15,13 +15,14 @@ class StartStopUser(StartStopFsm):
     def __init__(self, configuration):
         super(StartStopUser, self).__init__(configuration)
 
-    # The following 2 methods should be always defined 
+    # The following 2 methods should be always defined
     def noStateTransition(self):
         self.log.DEBUG("-- StartStopUser.noStateTransition")
-        
+
     def updateState(self, currentState):
-        self.log.DEBUG("-- StartStopUser.updateState to '{}'".format(currentState))
-    
+        self.log.DEBUG(
+            "-- StartStopUser.updateState to '{}'".format(currentState))
+
     def errorStateOnEntry(self):
         self.log.DEBUG("-- StartStopUser.errorStateOnEntry")
 
@@ -45,17 +46,18 @@ class StartStopUser(StartStopFsm):
 
     def startAction(self):
         self.log.DEBUG("-- StartStopUser.startAction")
-        
+
     def stopAction(self):
         self.log.DEBUG("-- StartStopUser.stopAction")
-        
+
     def resetAction(self):
         self.log.DEBUG("-- StartStopUser.resetAction")
 
-class  Start_stop_fsm_TestCase(unittest.TestCase):
+
+class Start_stop_fsm_TestCase(unittest.TestCase):
     def setUp(self):
         self.startstop = StartStopUser(None)
-    
+
     def tearDown(self):
         self.startstop = None
 
@@ -63,19 +65,20 @@ class  Start_stop_fsm_TestCase(unittest.TestCase):
         fsm = self.startstop.fsm
         fsm.start()
         self.assertIs(fsm.get_state(), State.STOPPED)
-        self.startstop.log.DEBUG ("*** State 'STOPPED' reached")
+        self.startstop.log.DEBUG("*** State 'STOPPED' reached")
         self.startstop.start()
         self.assertIs(fsm.get_state(), State.STARTED)
-        self.startstop.log.DEBUG ("*** State 'STARTED' reached")
+        self.startstop.log.DEBUG("*** State 'STARTED' reached")
         self.startstop.stop()
         self.assertIs(fsm.get_state(), State.STOPPED)
-        self.startstop.log.DEBUG ("*** State 'STOPPED' reached")
-        self.startstop.errorFound("user error message", "detailed error message")
+        self.startstop.log.DEBUG("*** State 'STOPPED' reached")
+        self.startstop.errorFound("user error message",
+                                  "detailed error message")
         self.assertIs(fsm.get_state(), State.ERROR)
-        self.startstop.log.DEBUG ("*** State 'ERROR' reached")
+        self.startstop.log.DEBUG("*** State 'ERROR' reached")
         self.startstop.reset()
         self.assertIs(fsm.get_state(), State.STOPPED)
-        self.startstop.log.DEBUG ("*** State 'STOPPED' reached")
+        self.startstop.log.DEBUG("*** State 'STOPPED' reached")
 
 
 if __name__ == '__main__':

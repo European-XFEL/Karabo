@@ -6,6 +6,7 @@ import unittest
 
 from karabo.bound import CameraFsm, Hash, Logger, State
 
+
 class CameraUser(CameraFsm):
     config = Hash("priority", "DEBUG")
     Logger.configure(config)
@@ -14,10 +15,10 @@ class CameraUser(CameraFsm):
     def __init__(self, configuration):
         super(CameraUser, self).__init__(configuration)
 
-    # The following 2 methods should be always defined 
+    # The following 2 methods should be always defined
     def noStateTransition(self):
         self.log.DEBUG("-- CameraUser.noStateTransition")
-        
+
     def updateState(self, currentState):
         self.log.DEBUG("-- CameraUser.updateState "
                        "to '{}'".format(currentState))
@@ -57,23 +58,24 @@ class CameraUser(CameraFsm):
 
     def acquireAction(self):
         self.log.DEBUG("-- CameraUser.acquireAction")
-        
+
     def stopAction(self):
         self.log.DEBUG("-- CameraUser.stopAction")
 
     def triggerAction(self):
         self.log.DEBUG("-- CameraUser.stopAction")
-        
+
     def resetAction(self):
         self.log.DEBUG("-- CameraUser.resetAction")
 
     def connectGuard(self):
         return True
 
-class  Camera_fsm_TestCase(unittest.TestCase):
+
+class Camera_fsm_TestCase(unittest.TestCase):
     def setUp(self):
         self.camera = CameraUser(None)
-    
+
     def tearDown(self):
         self.camera = None
 
@@ -103,6 +105,7 @@ class  Camera_fsm_TestCase(unittest.TestCase):
         self.camera.disconnectCamera()
         self.assertIs(fsm.get_state(), State.UNKNOWN)
         self.camera.log.DEBUG("*** State 'UNKNOWN' reached")
+
 
 if __name__ == '__main__':
     unittest.main()
