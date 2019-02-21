@@ -3,8 +3,7 @@ import sys
 
 
 def runSingleDeviceServer(*pluginNames, serverId=""):
-    """ Run an API 1 device server with a single device.
-    """
+    """ Run an API 1 device server with a single device."""
     from karabo.bound import DeviceServer, Hash
 
     serverId = serverId or basename(sys.argv[0])
