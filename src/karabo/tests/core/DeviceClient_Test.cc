@@ -260,6 +260,7 @@ void DeviceClient_Test::testGetSchema() {
 
 
 void DeviceClient_Test::testCurrentlyExecutableCommands() {
+    //std::cout << "Im alive!" << std::endl;
     std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest",
                                                                        Hash("deviceId", "TestedDevice3_5"),
                                                                        KRB_TEST_MAX_TIMEOUT);
@@ -269,6 +270,8 @@ void DeviceClient_Test::testCurrentlyExecutableCommands() {
     //  Check if the parameter hierarchy can be correctly traversed or it throws a KeyError
     std::vector<std::string> commands;
     CPPUNIT_ASSERT_NO_THROW(commands = m_deviceClient->getCurrentlyExecutableCommands("TestedDevice3_5"));
+    CPPUNIT_ASSERT_EQUAL((size_t) 6, commands.size());
+    CPPUNIT_ASSERT_EQUAL(std::string("slotClearLock"), commands[0]);
 
     // Final clean-up
     success = m_deviceClient->killDevice("TestedDevice3_5", KRB_TEST_MAX_TIMEOUT);
