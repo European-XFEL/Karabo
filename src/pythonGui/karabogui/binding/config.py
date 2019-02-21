@@ -9,6 +9,34 @@ from .types import (
 from .util import attr_fast_deepcopy, is_equal
 
 
+def apply_fast_data(config, binding, timestamp):
+    """Recursively set values from a fast data Hash object to a binding
+    object.
+    """
+    namespace = binding.value
+    assert isinstance(namespace, BindingNamespace)
+
+    for key, value, attrs in config.iterall():
+        if key not in namespace:
+            continue
+
+        node = getattr(namespace, key)
+        if isinstance(value, Hash) and isinstance(node, NodeBinding):
+            apply_fast_data(value, node, timestamp)
+        else:
+            traits = {'value': value}
+            traits['timestamp'] = timestamp
+            # Set everything at once and notify via the config_update event
+            try:
+                node.trait_set(trait_change_notify=False, **traits)
+            except TraitError:
+                # value in the configuration is not compatible to schema
+                continue
+            node.config_update = True
+
+    binding.config_update = True
+
+
 def apply_configuration(config, binding, notify=True,
                         include_attributes=False):
     """Recursively set values from a configuration Hash object to a binding
