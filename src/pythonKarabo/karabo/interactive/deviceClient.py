@@ -259,8 +259,7 @@ class DeviceClient(object):
         Logs the current user out.
         """
         return self.__client.logout()
-        
-        
+
     def instantiate(self, serverId, classId, deviceId, config = Hash(), timeout = None):
         """
         Instantiate (and configure) a device on a running server.
