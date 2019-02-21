@@ -89,6 +89,8 @@ namespace karabo {
             karabo::net::JmsConsumer::Pointer m_loggerConsumer;
             std::map<std::string, int> m_monitoredDevices;
             NetworkMap m_networkConnections;
+            // Next map<string, ...> not unordered before use of C++14 because we erase from it while looping over it.
+            std::map<std::string, std::map<WeakChannelPointer, bool> > m_readyNetworkConnections;
 
             karabo::net::JmsProducer::Pointer m_guiDebugProducer;
 

@@ -1,0 +1,45 @@
+**************************
+What's New in Karabo 2.4.0
+**************************
+
+
+The **most relevant improvements**, fixes and changes are:
+
+- Older GUI clients are not compatible with GUI servers of Karabo 2.4.0:
+  They will not receive pipeline data.
+- a
+- b
+
+
+Detailed Merge-Log
+==================
+
+Bound/cpp core
+++++++++++++++
+- a
+- b
+
+Core Devices
+++++++++++++
+- a
+- b
+
+Dependencies and deployment
++++++++++++++++++++++++++++
+- a
+- b
+
+Middlelayer core
+++++++++++++++++
+- a
+- b
+
+Graphical user interface
+++++++++++++++++++++++++
+- a
+- b
+
+ikarabo & Macro API
++++++++++++++++++++
+- a
+- b
