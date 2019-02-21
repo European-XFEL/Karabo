@@ -9,8 +9,7 @@ class DeviceClient(BoundDeviceClient):
     Python code in Karabo.
     """
     def get(self, instanceId, *args, **kw):
-        """ Handle conversion of returned State and AlarmCondition objects.
-        """
+        """ Handle conversion of returned State and AlarmCondition objects."""
         value = super(DeviceClient, self).get(instanceId, *args, **kw)
 
         if not isinstance(value, Hash):

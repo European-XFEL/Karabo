@@ -73,7 +73,8 @@ class Runner(object):
                         braces -= 1
                     pos += 1
                     if braces < 0:
-                        raise SyntaxError("CLI Syntax Error: '}' encounters before corresponding '{'")
+                        raise SyntaxError("CLI Syntax Error: '}' encounters"
+                                          " before corresponding '{'")
             if braces == 0:
                 pars.append((arg + ' ' + a).strip())
                 arg = ''
@@ -81,9 +82,11 @@ class Runner(object):
                 arg += ' ' + a
 
         if braces > 0:
-            raise SyntaxError("CLI Syntax Error: missing {} closing brace(s)".format(braces))
+            raise SyntaxError("CLI Syntax Error: missing {} closing brace(s)"
+                              .format(braces))
         elif braces < 0:
-            raise SyntaxError("CLI Syntax Error: missing {} opening brace(s)".format(-braces))
+            raise SyntaxError("CLI Syntax Error: missing {} opening brace(s)"
+                              .format(-braces))
         return pars
 
     def processOption(self, option, args):
@@ -98,11 +101,15 @@ class Runner(object):
             self.showUsage(args[0])
 
     def showUsage(self, name, what=""):
-        print("\n ################################################################")
+        print("\n ############################################################"
+              "####")
         print(" #                   Karabo Device Server")
         print(" #")
-        print(" # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.")
-        print(" ################################################################\n")
+        print(
+            " # Copyright (C) European XFEL GmbH Hamburg. "
+            "All rights reserved.")
+        print(" ############################################################"
+              "####\n")
         if not what:
             print("Usage: {} <configuration>\n".format(name.split('/')[-1]))
             print("Positional arguments:\n")
@@ -120,25 +127,26 @@ class Runner(object):
             loadFromFile(configuration, token)
             return
         if token[0] == '{':
-            raise SyntaxError("Key cannot start with opening brace ==> '{}'".format(token))
+            raise SyntaxError(
+                "Key cannot start with opening brace ==> '{}'".format(token))
         pos = token.find("={")
         if pos > 0:
-            key=prefix + token[:pos] + '.'
+            key = prefix + token[:pos] + '.'
             if token[-1] != '}':
                 raise SyntaxError("Missing closing brace '}'")
-            value = token[pos+2:-1].strip()
+            value = token[pos + 2:-1].strip()
             args = value.split()
             pars = self.join_args_in_braces(args)
             self.readTokens(key, pars, configuration)
         elif pos == 0:
             raise SyntaxError("Missing the key before '={'")
-        else:    # pos == -1 ... not found
+        else:  # pos == -1 ... not found
             pos = token.find("=")
             if pos > 0:
-                key=token[:pos]
-                value=token[pos+1:]
-                configuration.set(prefix+key,value)
-            elif pos==0:
+                key = token[:pos]
+                value = token[pos + 1:]
+                configuration.set(prefix + key, value)
+            elif pos == 0:
                 raise SyntaxError("Missing the key before '='")
             else:
                 configuration.set(prefix + token, Hash())

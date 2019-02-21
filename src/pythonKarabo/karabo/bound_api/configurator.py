@@ -1,14 +1,15 @@
 # To change this template, choose Tools | Templates
 # and open the template in the editor.
 
-__author__="Sergey Esenov <serguei.essenov at xfel.eu>"
-__date__ ="$Apr 11, 2013 4:20:13 PM$"
+__author__ = "Sergey Esenov <serguei.essenov at xfel.eu>"
+__date__ = "$Apr 11, 2013 4:20:13 PM$"
 
-from karathon import Hash, Schema, AssemblyRules, AccessType, READ, WRITE, INIT, Validator
+from karathon import Hash, Schema, AssemblyRules, AccessType, READ, WRITE, \
+    INIT, Validator
+
 
 class Configurator(object):
-    """
-    Provides factorized configuration
+    """Provides factorized configuration
 
     Configurator is the singleton class that keeps methods for registration and
     creation other classes that are configurable classes
@@ -18,8 +19,7 @@ class Configurator(object):
 
     @staticmethod
     def registerAsBaseClass(theClass):
-        """
-        Register a class as a base class in the configurator
+        """Register a class as a base class in the configurator
 
         :param theClass: to be registered
         """
@@ -27,8 +27,9 @@ class Configurator(object):
             theClass.__base_classid__ = theClass.__classid__
             theClass.__bases_classid__ = (theClass.__classid__,)
             Configurator.registry[theClass.__classid__] = {}
-        Configurator.registry[theClass.__classid__][theClass.__classid__] = theClass  # self-registering
-
+        # self-registering
+        shrt = theClass.__classid__
+        Configurator.registry[shrt][shrt] = theClass
 
     def __init__(self, classid):
         """
@@ -50,7 +51,6 @@ class Configurator(object):
         self.baseRegistry = Configurator.registry[classid]
         assert classid in self.baseRegistry
 
-
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
             cls._instance = super(Configurator, cls).__new__(cls)
@@ -66,7 +66,8 @@ class Configurator(object):
         self.baseRegistry[derived.__classid__] = derived
         return self
 
-    def getSchema(self, classid, rules = AssemblyRules(AccessType(READ | WRITE | INIT))):
+    def getSchema(self, classid,
+                  rules=AssemblyRules(AccessType(READ | WRITE | INIT))):
         """
         Get schema for class with "classid" derived from base class given to
         constructor using assembly "rules".
@@ -81,13 +82,14 @@ class Configurator(object):
         if classid not in self.baseRegistry:
             raise AttributeError("Class Id '{}' not found in the base registry"
                                  .format(classid))
-        Derived = self.baseRegistry[classid]   # userclass -> Derived
+        Derived = self.baseRegistry[classid]  # userclass -> Derived
 
-        # building list of classes in inheritance order from bases to the last derived
+        # building list of classes in inheritance order from bases to the
+        # last derived
         def inheritanceChain(c, bases_id, clist):
             if not isinstance(c, type):
                 return
-            classId = getattr(c , '__classid__', None)
+            classId = getattr(c, '__classid__', None)
             if classId is not None and classId not in bases_id:
                 for x in c.__bases__:
                     inheritanceChain(x, bases_id, clist)
@@ -101,11 +103,12 @@ class Configurator(object):
         for theClass in clist:
             try:
                 if hasattr(theClass, "expectedParameters"):
-                    theClass.expectedParameters(schema) # fill schema in order from base to derived
+                    # fill schema in order from base to derived
+                    theClass.expectedParameters(schema)
             except AttributeError as e:
-                print("Exception while adding expected parameters for class %r: %r" % (theClass.__name__, e))
+                print("Exception while adding expected parameters for class"
+                      " %r: %r" % (theClass.__name__, e))
         return schema
-
 
     def create(self, *args):
         """
@@ -164,11 +167,11 @@ class Configurator(object):
         if isinstance(classid, type):
             classid = classid.__classid__
         if not isinstance(classid, str):
-            raise TypeError(
-                "First argument 'classid' must be a python string type")
+            raise TypeError("First argument 'classid' must be a python"
+                            " string type")
         if classid not in self.baseRegistry:
-            raise AttributeError("Unknown classid '{}' in base registry".
-                                 format(classid))
+            raise AttributeError("Unknown classid '{}' in base registry"
+                                 .format(classid))
         Derived = self.baseRegistry[classid]
         schema = Configurator(Derived.__base_classid__).getSchema(classid)
         if not validation:
@@ -181,8 +184,7 @@ class Configurator(object):
             raise RuntimeError("Validation Exception: " + str(e))
         return Derived(validated)
 
-
-    def createNode(self, nodename, classid, configuration, validation = True):
+    def createNode(self, nodename, classid, configuration, validation=True):
         """
         The helper method to create instance of class specified by "classId"
         and derived from class given to constructor using sub-configuration
@@ -196,15 +198,14 @@ class Configurator(object):
         if isinstance(classid, type):
             classid = classid.__classid__
         if not isinstance(classid, str):
-            raise TypeError(
-                "Second argument 'classid' must be a python string type")
+            raise TypeError("Second argument 'classid' must be a python"
+                            " string type")
         if nodename in configuration:
             return self.create(classid, configuration[nodename], validation)
-        raise AttributeError(
-            'Given nodeName "{}" is not part of input configuration'.
-            format(nodename))
+        raise AttributeError('Given nodeName "{}" is not part of input'
+                             ' configuration'.format(nodename))
 
-    def createChoice(self, choicename, configuration, validation = True):
+    def createChoice(self, choicename, configuration, validation=True):
         """
         The helper method to create the instance of class derived from base
         class given to constructor using "choiceName" and
@@ -214,7 +215,7 @@ class Configurator(object):
 
         return self.create(configuration[choicename], validation)
 
-    def createList(self, listname, input, validation = True):
+    def createList(self, listname, input, validation=True):
         """
         The helper method to create the list of instances of classes derived
         from base class given to constructor using "listName"
@@ -224,9 +225,8 @@ class Configurator(object):
         """
 
         if listname not in input:
-            raise AttributeError(
-                'Given list name "{}" is not a part of input configuration'.
-                format(listname))
+            raise AttributeError('Given list name "{}" is not a part of input'
+                                 ' configuration'.format(listname))
         instances = []
         for hash in input[listname]:
             instances.append(self.create(hash, validation))
@@ -237,7 +237,6 @@ class Configurator(object):
         Returns list of "classid"'s for all registered classes derived from
         base class given to constructor.
         """
-
         return list(self.baseRegistry.keys())
 
     @staticmethod
@@ -245,5 +244,4 @@ class Configurator(object):
         """
         Returns all classid's of base classes registered in Configurator.
         """
-
         return list(Configurator.registry.keys())
