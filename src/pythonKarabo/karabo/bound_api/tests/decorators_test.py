@@ -118,6 +118,7 @@ class Decorators_TestCase(unittest.TestCase):
         try:
             # call Configurator by classid
             schema = Configurator("ExampleBase").getSchema('Example')
+            self.assertIsNotNone(schema)
             # call Configurator by class
             schema = Configurator(ExampleBaseClass).getSchema('Example')
             self.assertEqual(
@@ -133,13 +134,12 @@ class Decorators_TestCase(unittest.TestCase):
                 schema.getValueType("composedWord"), Types.STRING,
                 "expectedParameters failed -- no 'composedWord' key found")
 
-            schema_derived = Configurator(ExampleBaseClass).getSchema(
-                'Example')
-
             # Just try the other methods
             example = Configurator('ExampleBase').create('Example', Hash())
+            self.assertIsNotNone(example)
             schema_derived = Configurator(ExampleBaseClass).getSchema(
                 'Example')
+            self.assertIsNotNone(schema_derived)
             schema_inherit = ExampleNoKarabo.create(
                 'ExampleNoKarabo', Hash()).getSchema('ExampleNoKarabo')
             self.assertFalse(schema_inherit.empty())

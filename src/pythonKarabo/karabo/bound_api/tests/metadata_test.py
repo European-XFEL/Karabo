@@ -5,19 +5,20 @@
 import unittest
 from karabo.bound import Epochstamp, Timestamp, Trainstamp, ChannelMetaData
 
-class  Metadata_TestCase(unittest.TestCase):
 
+class Metadata_TestCase(unittest.TestCase):
     def test_metadata_general_functionality(self):
-        
         es = Epochstamp(1356441936, 789333123456789123)
         ts = Timestamp(es, Trainstamp(987654321))
         meta = ChannelMetaData('abc', ts)
-        
+
         self.assertTrue(meta.getSource() == 'abc')
         self.assertTrue(meta.getTimestamp().getTrainId() == 987654321)
         self.assertTrue(meta.getTimestamp().getSeconds() == 1356441936)
-        self.assertTrue(meta.getTimestamp().getFractionalSeconds() == 789333123456789123)
-        self.assertTrue(meta.getTimestamp().toFormattedString() == ts.toFormattedString())
+        self.assertTrue(
+            meta.getTimestamp().getFractionalSeconds() == 789333123456789123)
+        self.assertTrue(
+            meta.getTimestamp().toFormattedString() == ts.toFormattedString())
         self.assertFalse(meta.getTimestamp() == ts)
 
         meta.setSource('xyz')
@@ -27,10 +28,11 @@ class  Metadata_TestCase(unittest.TestCase):
         ts1 = Timestamp()
         meta.setTimestamp(ts1)
         self.assertTrue(meta.getTimestamp().getTrainId() == 0)
-        self.assertFalse(meta.getTimestamp().toFormattedString() == ts.toFormattedString())
-        self.assertTrue(meta.getTimestamp().toFormattedString() == ts1.toFormattedString())
+        self.assertFalse(
+            meta.getTimestamp().toFormattedString() == ts.toFormattedString())
+        self.assertTrue(
+            meta.getTimestamp().toFormattedString() == ts1.toFormattedString())
 
 
 if __name__ == '__main__':
     unittest.main()
-
