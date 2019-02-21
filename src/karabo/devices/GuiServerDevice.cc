@@ -1056,7 +1056,7 @@ namespace karabo {
         void GuiServerDevice::onRequestNetwork(WeakChannelPointer channel, const karabo::util::Hash& info) {
             try {
                 const string& channelName = info.get<string>("channelName");
-                KARABO_LOG_FRAMEWORK_DEBUG << "onRequestNetwork for " << channelName << " " << info;
+                KARABO_LOG_FRAMEWORK_DEBUG << "onRequestNetwork for " << channelName;
                 boost::mutex::scoped_lock lock(m_networkMutex);
                 m_readyNetworkConnections[channelName][channel] = true;
             } catch (const std::exception &e) {
