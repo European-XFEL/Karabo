@@ -692,7 +692,7 @@ namespace karabo {
             for (const std::string& key : keys) {
                 std::string path;
                 if (!parentKey.empty()) {
-                    path = (parentKey + "." + key);
+                    path = parentKey + "." + key;
                 } else {
                     path = key;
                 }
