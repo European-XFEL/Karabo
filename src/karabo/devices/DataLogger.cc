@@ -303,7 +303,7 @@ namespace karabo {
             if (m_user.size() == 0) m_user = "";
 
             vector<string> paths;
-            getPathsForConfiguration(configuration, paths);
+            getPathsForConfiguration(configuration, m_schemaForSlotChanged, paths);
 
             boost::mutex::scoped_lock lock(m_configMutex);
             if (newPropToIndex) {
@@ -420,12 +420,13 @@ namespace karabo {
 
 
         void DataLogger::getPathsForConfiguration(const karabo::util::Hash& configuration,
+                                                  const karabo::util::Schema& schema,
                                                   std::vector<std::string>& paths) {
             {
                 using karabo::util::Epochstamp;
 
                 // Gets the paths for the leaf nodes in the configuration sorted by their order in the schema.
-                getLeaves(configuration, m_schemaForSlotChanged, paths);
+                getLeaves(configuration, schema, paths);
 
                 // Sort the paths by ascending order of their corresponding nodes Epochstamps.
                 std::sort(paths.begin(), paths.end(),
