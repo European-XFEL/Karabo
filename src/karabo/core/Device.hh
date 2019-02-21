@@ -893,9 +893,16 @@ namespace karabo {
                     // Instead of via injected schema, could erase all paths that are in
                     // m_fullSchema/m_parameters, but not in m_staticSchema!
                     std::vector<std::string> keys = m_injectedSchema.getKeys();
+                    auto newSchemaHash = schema.getParameterHash();
 
                     for (const std::string& key : keys) {
-                        if (m_parameters.has(key)) m_parameters.erase(key);
+                        if (m_parameters.has(key)) {
+                            if (newSchemaHash.has(key) && keepParameters) {
+                                auto value = m_parameters.getAs<unsigned int>(key);
+                                validated.set(key, value);
+                            }
+                            m_parameters.erase(key);
+                        }
                     }
 
                     // Clear cache
