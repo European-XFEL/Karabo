@@ -26,6 +26,7 @@ def run_cinema(ns):
     # Set the style among all operating systems
     app.setStyle(QStyleFactory.create("Cleanlooks"))
     app.setPalette(QApplication.style().standardPalette())
+    app.setAttribute(Qt.AA_DontShowIconsInMenus, False)
 
     # set a nice app logo
     logo_path = op.join(op.dirname(__file__), '..', "icons", "app_logo.png")
