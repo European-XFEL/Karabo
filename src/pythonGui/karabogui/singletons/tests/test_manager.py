@@ -1,7 +1,8 @@
 from unittest.mock import ANY, Mock, call, patch
 
 from karabo.common.api import DeviceStatus
-from karabo.native import AccessMode, Configurable, Hash, Int32, Schema
+from karabo.native import (
+    AccessMode, Configurable, Hash, Int32, Schema, Timestamp)
 from karabogui.binding.api import build_binding, DeviceClassProxy, DeviceProxy
 from karabogui.events import KaraboEventSender
 from karabogui.testing import alarm_data, GuiTestCase, singletons, system_hash
@@ -390,21 +391,23 @@ class TestManager(GuiTestCase):
         dev_proxy, prop_binding, topology = Mock(), Mock(), Mock()
 
         executeLater = 'karabogui.singletons.manager.executeLater'
-        apply_tgt = 'karabogui.singletons.manager.apply_configuration'
+        apply_tgt = 'karabogui.singletons.manager.apply_fast_data'
         with patch(executeLater) as later, patch(apply_tgt) as apply_later:
             with singletons(topology=topology):
                 manager = Manager()
                 dev_proxy.get_property_binding.return_value = prop_binding
                 topology.get_device.return_value = dev_proxy
-
-                manager.handle_networkData('frankie:a', Hash('a', 10))
-                assert 'frankie:a' in manager._big_data
+                ts = Timestamp("2009-04-20T10:32:22 UTC")
+                data = Hash('data', 10)
+                ts.toHashAttributes(data)
+                manager.handle_networkData('frankie:data', data)
+                assert 'frankie:data' in manager._big_data
                 assert later.call_count == 1
 
                 callback = later.mock_calls[0][1][0]
                 callback()
-                apply_later.assert_called_with(Hash('a', 10),
-                                               prop_binding.value.schema)
+                apply_later.assert_called_with(
+                    data, prop_binding.value.schema, ts)
 
     def test_handle_init_reply(self):
         target = 'karabogui.singletons.manager.broadcast_event'
