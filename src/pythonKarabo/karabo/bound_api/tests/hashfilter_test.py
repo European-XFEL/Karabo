@@ -4,14 +4,15 @@
 import unittest
 
 from karabo.bound import Configurator, Hash, HashFilter, Validator
-from .configuration_example_classes import Base, P1, P2, P3, GraphicsRenderer2
+
+from .configuration_example_classes import GraphicsRenderer2
 
 
-class  HashfilterTestCase(unittest.TestCase):
-
+class HashfilterTestCase(unittest.TestCase):
     def test_hashfilter(self):
         try:
-            schema = Configurator(GraphicsRenderer2).getSchema("GraphicsRenderer2")
+            schema = Configurator(GraphicsRenderer2).getSchema(
+                "GraphicsRenderer2")
             validator = Validator()
             config = validator.validate(schema, Hash())
             result = HashFilter.byTag(schema, config, "KW;KW,BH", ",;")
@@ -41,13 +42,13 @@ class  HashfilterTestCase(unittest.TestCase):
             self.assertFalse("chars[1].P3.k" in result)
             self.assertFalse("chars[1].P3.l" in result)
             self.assertFalse("chars[1].P3.m" in result)
-            
+
         except Exception as e:
             self.fail("test_hashfilter exception group 1: " + str(e))
 
         try:
             result = HashFilter.byTag(schema, config, "JS", ",;")
-            
+
             self.assertFalse("antiAlias" in result)
             self.assertFalse("color" in result)
             self.assertFalse("bold" in result)
@@ -73,13 +74,13 @@ class  HashfilterTestCase(unittest.TestCase):
             self.assertFalse("chars[1].P3.k" in result)
             self.assertFalse("chars[1].P3.l" in result)
             self.assertFalse("chars[1].P3.m" in result)
-            
+
         except Exception as e:
             self.fail("test_hashfilter exception group 2: " + str(e))
 
         try:
             result = HashFilter.byTag(schema, config, "NC,LM", ",;")
-            
+
             self.assertTrue("antiAlias" in result)
             self.assertFalse("color" in result)
             self.assertTrue("bold" in result)
@@ -105,13 +106,13 @@ class  HashfilterTestCase(unittest.TestCase):
             self.assertTrue("chars[1].P3.k" in result)
             self.assertTrue("chars[1].P3.l" in result)
             self.assertTrue("chars[1].P3.m" in result)
-            
+
         except Exception as e:
             self.fail("test_hashfilter exception group 3: " + str(e))
 
         try:
             result = HashFilter.byTag(schema, config, "CY", ",;")
-            
+
             self.assertFalse("antiAlias" in result)
             self.assertFalse("color" in result)
             self.assertFalse("bold" in result)
@@ -137,13 +138,13 @@ class  HashfilterTestCase(unittest.TestCase):
             self.assertFalse("chars[1].P3.k" in result)
             self.assertTrue("chars[1].P3.l" in result)
             self.assertTrue("chars[1].P3.m" in result)
-            
+
         except Exception as e:
             self.fail("test_hashfilter exception group 4: " + str(e))
-        
+
         try:
             result = HashFilter.byTag(schema, config, "BF", ",;")
-            
+
             self.assertFalse("antiAlias" in result)
             self.assertFalse("color" in result)
             self.assertFalse("bold" in result)
@@ -169,13 +170,13 @@ class  HashfilterTestCase(unittest.TestCase):
             self.assertFalse("chars[1].P3.k" in result)
             self.assertFalse("chars[1].P3.l" in result)
             self.assertTrue("chars[1].P3.m" in result)
-            
+
         except Exception as e:
             self.fail("test_hashfilter exception group 5: " + str(e))
-        
+
         try:
             result = HashFilter.byTag(schema, config, "WP76", ",;")
-            
+
             self.assertFalse("antiAlias" in result)
             self.assertFalse("color" in result)
             self.assertFalse("bold" in result)
@@ -201,11 +202,10 @@ class  HashfilterTestCase(unittest.TestCase):
             self.assertFalse("chars[1].P3.k" in result)
             self.assertFalse("chars[1].P3.l" in result)
             self.assertFalse("chars[1].P3.m" in result)
-            
+
         except Exception as e:
             self.fail("test_hashfilter exception group 6: " + str(e))
-        
-            
+
+
 if __name__ == '__main__':
     unittest.main()
-

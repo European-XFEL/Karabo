@@ -1,15 +1,9 @@
 import unittest
-import threading
-import time
-import socket
+
+from karabo.bound import RollingWindowStatistics
 
 
-from karabo.bound import RollingWindowStatistics, Hash
-
-
-
-class  RollingWindowStatistics_TestCase(unittest.TestCase):
-
+class RollingWindowStatistics_TestCase(unittest.TestCase):
     def test_rolling_window_statistics_mean(self):
         stat = RollingWindowStatistics(10)
         stat.update(-5)
@@ -32,7 +26,6 @@ class  RollingWindowStatistics_TestCase(unittest.TestCase):
         stat.update(2)
         stat.update(1)
         self.assertAlmostEqual(stat.getRollingWindowMean(), 0)
-
 
     def test_rolling_window_statistics_variance(self):
         stat = RollingWindowStatistics(10)
@@ -57,12 +50,8 @@ class  RollingWindowStatistics_TestCase(unittest.TestCase):
         stat.update(1)
         self.assertAlmostEqual(stat.getRollingWindowVariance(), 10.4)
 
-
-
     def test_rolling_window_statistics_non_empty_interval(self):
         self.assertRaises(Exception, RollingWindowStatistics)
-
-
 
     def test_rolling_window_statistics_no_copy(self):
         import copy
@@ -70,11 +59,5 @@ class  RollingWindowStatistics_TestCase(unittest.TestCase):
         self.assertRaises(RuntimeError, copy.copy, stat)
 
 
-
-
-
-
-
 if __name__ == '__main__':
     unittest.main()
-
