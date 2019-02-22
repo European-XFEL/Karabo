@@ -63,5 +63,6 @@ class Camera_interface_TestCase(unittest.TestCase):
         self.assertTrue(expected.has('exposureTime'))
         self.assertTrue(expected.has('interfaces'))
 
+
 if __name__ == '__main__':
     unittest.main()
