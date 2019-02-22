@@ -16,7 +16,7 @@ def apply_fast_data(config, binding, timestamp):
     namespace = binding.value
     assert isinstance(namespace, BindingNamespace)
 
-    for key, value, attrs in config.iterall():
+    for key, value, _ in config.iterall():
         if key not in namespace:
             continue
 
