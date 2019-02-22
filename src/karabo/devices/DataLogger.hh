@@ -134,6 +134,22 @@ namespace karabo {
             bool allowLock() const {
                 return false;
             }
+
+            /**
+             * Retrieves the paths of the leaf nodes in a given configuration. The paths are returned in
+             * ascending order of their corresponding nodes timestamps.
+             *
+             * @param configuration A configuration with the nodes corresponding to the paths.
+             * @param schema The schema for the configuration hash.
+             * @param paths The paths of the leaf nodes in the configuration, sorted by nodes timestamps.
+             *
+             * @note karabo::devices::DataLogReader depends on the configuration items being properly sorted
+             * in time to retrieve configuration changes.
+             */
+            void getPathsForConfiguration(const karabo::util::Hash& configuration,
+                                          const karabo::util::Schema& schema,
+                                          std::vector<std::string>& paths);
+
         };
     }
 }
