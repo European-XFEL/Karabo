@@ -89,7 +89,8 @@ class Tests(TestCase):
         # Test if a subset of Cyrillic characters is handled properly.
         self.call_and_compare(
             "М Н О П Р С Т У Ф Х Ц Ч Ш Щ Ъ Ы Ь Э Ю Я а б в г д")
-        # Test if a subset of Latin-1 Supplement characters is handled properly.
+        # Test if a subset of Latin-1 Supplement characters is
+        # handled properly.
         self.call_and_compare("Ô Õ Ö × Ø Ù Ú Û Ü Ý Þ ß à á â ã ä å æ ç")
 
         # Test how a random user defined types are handled.
@@ -98,7 +99,6 @@ class Tests(TestCase):
 
         with self.assertRaises(RuntimeError):
             self.call_and_compare(SimpleType())
-
             # XXX: Additional tests need to be added (e.g. test Hash, ...).
 
 
