@@ -200,7 +200,7 @@ class Manager(QObject):
         success = info.get('success', False)
         if not success:
             reason = info.get('reason')
-            messagebox.show_error(reason, parent=self)
+            messagebox.show_error(reason)
             return
         deviceId = info.get('deviceId')
         config = info.get('config')
