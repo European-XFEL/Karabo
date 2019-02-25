@@ -564,10 +564,6 @@ namespace karabo {
                         Hash data;
                         for (size_t i = 0; i < this->size(); ++i) {
                             read(data, i); // clears data internally before filling TODO: doc that all read(..) need 'active' mutex)
-                            // Note: Optimisation in GuiServerDevice::onNetworkData will cast const away from its 'data'
-                            // argument, apply std::move and (move-)assign it to another Hash to avoid copies of big
-                            // vectors (the data of an NDArray is anyway not copied, but shared...).
-                            // That is safe as long as this loop does nothing with 'data' after calling the data handler.
                             m_dataHandler(data, m_metaDataList[i]);
                         }
                     } else if (m_inputHandler) {
