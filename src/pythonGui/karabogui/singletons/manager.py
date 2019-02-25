@@ -11,12 +11,11 @@ from PyQt4.QtCore import pyqtSlot, QObject
 from PyQt4.QtGui import QMessageBox
 
 from karabo.common.api import State, DeviceStatus
-from karabo.native import AccessMode, Hash
+from karabo.native import AccessMode, Hash, Timestamp
 from karabogui.alarms.api import extract_alarms_data
 from karabogui.background import executeLater, Priority
 from karabogui.binding.api import (
-    apply_configuration, extract_attribute_modifications, extract_configuration
-)
+    apply_fast_data, extract_attribute_modifications, extract_configuration)
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui import messagebox
 from karabogui.singletons.api import get_network, get_topology
@@ -383,7 +382,9 @@ class Manager(QObject):
             device_id, prop_path = name.split(":")
             device_proxy = self._topology.get_device(device_id)
             binding = device_proxy.get_property_binding(prop_path)
-            apply_configuration(data_hash, binding.value.schema)
+            data_ts = Timestamp.fromHashAttributes(data_hash['data', ...])
+            timestamp = data_ts or Timestamp()
+            apply_fast_data(data_hash, binding.value.schema, timestamp)
             device_proxy.config_update = True
             # Let the GUI server know we have processed this chunk
             get_network().onRequestNetwork(name)

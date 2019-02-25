@@ -10,8 +10,8 @@ from karabo.common.api import (
     KARABO_SCHEMA_UNIT_ENUM, KARABO_SCHEMA_UNIT_SYMBOL, KARABO_ALARM_LOW, State
 )
 from karabo.native import (
-    AccessLevel, AccessMode, Assignment, Hash, MetricPrefix, Schema, Unit,
-    decodeBinary
+    AccessLevel, AccessMode, Assignment, decodeBinary, Hash, MetricPrefix,
+    Schema, Timestamp, Unit
 )
 from ..api import (
     BoolBinding, ByteArrayBinding, CharBinding, ChoiceOfNodesBinding,
@@ -25,10 +25,9 @@ from ..api import (
     VectorInt32Binding, VectorInt64Binding, VectorStringBinding,
     VectorUint8Binding, VectorUint16Binding, VectorUint32Binding,
     VectorUint64Binding,
-    apply_configuration, apply_default_configuration, build_binding,
-    extract_attribute_modifications, extract_configuration, extract_edits,
-    flat_iter_hash
-)
+    apply_configuration, apply_default_configuration, apply_fast_data,
+    build_binding, extract_attribute_modifications, extract_configuration,
+    extract_edits, flat_iter_hash)
 from .schema import get_all_props_schema, get_vectorattr_schema
 
 TEST_DATA_DIR = op.join(op.dirname(__file__), 'data')
@@ -184,6 +183,26 @@ def test_apply_configuration():
     # bytes type value is converted to bytearray by traits handler
     apply_configuration(config, binding)
     assert binding.value.mm.value == bytearray(b'foo')
+
+
+def test_apply_fast_data():
+    schema = get_all_props_schema()
+    binding = build_binding(schema)
+    ts = Timestamp()
+    ts.tid = 1337
+
+    config = Hash('a', False)
+    with watch_config_update_notification(binding, expected=True):
+        apply_fast_data(config, binding, ts)
+    assert not binding.value.a.value
+    assert binding.value.a.timestamp.tid == 1337
+
+    config = Hash('a', True)
+    # configuration is applied but no notification fired
+    with watch_config_update_notification(binding, expected=True):
+        apply_fast_data(config, binding, ts)
+    assert binding.value.a.value
+    assert binding.value.a.timestamp.tid == 1337
 
 
 def test_extract_edit():
