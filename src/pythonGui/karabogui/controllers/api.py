@@ -10,6 +10,6 @@ from .unitlabel import add_unit_label
 from .util import (
     axis_label, get_class_const_trait, has_options,
     populate_controller_registry, with_display_type)
-
+from .validators import IntValidator, NumberValidator
 # NOTE: None of the controller classes are here. They should be acquired from
 # the registry, not directly (tests excluded, of course)
