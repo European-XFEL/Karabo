@@ -1070,12 +1070,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onNetworkData ....";
 
-                Hash h("type", "networkData", "name", channelName);
-                // Aggressively try to avoid any copies by move-assign the 'data' to the payload
-                // that we send to the clients. For that we cast const away from 'data' and in fact modify it!
-                // That is safe, see comment in InputChannel::triggerIOEvent() which calls this method.
-                Hash::Node& dataNode = h.set("data", Hash());
-                dataNode.getValue<Hash>() = std::move(const_cast<Hash&> (data));
+                const Hash h("type", "networkData", "name", channelName, "data", data);
 
                 boost::mutex::scoped_lock lock(m_networkMutex);
                 NetworkMap::const_iterator iter = m_networkConnections.find(channelName);
