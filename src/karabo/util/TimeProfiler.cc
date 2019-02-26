@@ -5,7 +5,7 @@
  * Created on June 18, 2013, 9:21 PM
  */
 
-#include <karabo/util/Hash.hh>
+#include "Hash.hh"
 
 #include "TimeProfiler.hh"
 

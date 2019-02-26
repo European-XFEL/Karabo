@@ -1,10 +1,8 @@
-#include <assert.h>
-#include <karabo/util/StringTools.hh>
-#include <karabo/util/Factory.hh>
+#include "StringTools.hh"
+#include "Factory.hh"
 #include "StateSignifier.hh"
-#include "karabo/log/Logger.hh"
-#include <algorithm>
 
+#include <algorithm>
 
 using namespace std;
 using namespace karabo::util;
