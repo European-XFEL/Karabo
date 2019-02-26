@@ -18,8 +18,6 @@
 #include "Hash.hh"
 #include "FromLiteral.hh"
 #include "StringTools.hh"
-#include "karabo/webAuth/Authenticator.hh"
-#include "karabo/log/Logger.hh"
 #include "HashFilter.hh"
 
 namespace karabo {
@@ -792,9 +790,9 @@ namespace karabo {
             if (!(accessModeOk && accessRoleOk && stateOk)) return;
 
             if (this->isOrphaned(node)) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Cannot add element with key '" << node.getKey()
-                        << "' since parent node does not exist, is a leaf element or is a list/choice "
-                        << "of nodes, but '" << node.getKey() << "' is not a node.";
+                throw KARABO_LOGIC_EXCEPTION("Cannot add element with key '" + node.getKey()
+                                             + "' since parent node does not exist, is a leaf element or is a list/choice of nodes, but '"
+                                             + node.getKey() + "' is not a node.");
             } else {
                 this->getParameterHash().setNode(node);
             }

@@ -10,8 +10,7 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include <karabo/util/karaboDll.hh>
-
+#include "karaboDll.hh"
 #include "Exception.hh"
 
 namespace karabo {
