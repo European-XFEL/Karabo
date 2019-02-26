@@ -8,10 +8,11 @@
 #ifndef TIMEDURATION_HH
 #define	TIMEDURATION_HH
 
+#include "Hash.hh"
+
 #include <stdint.h>
 #include <string>
 #include <sstream>
-#include <karabo/util/Hash.hh>
 
 namespace karabo {
     namespace util {
