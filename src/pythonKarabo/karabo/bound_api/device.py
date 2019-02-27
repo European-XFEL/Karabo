@@ -872,14 +872,14 @@ class PythonDevice(NoFsm):
             # Instead of looping on paths of injectedSchema, could probably
             # directly loop on paths of self.parameters
             for path in self._injectedSchema.getPaths():
-                if (self.parameters.has(path) and
-                        not self.staticSchema.has(path)):
+                if not self.staticSchema.has(path):
                     self.parameters.erase(path)
             self._stateDependentSchema.clear()
             self._injectedSchema.copy(schema)
             self.fullSchema.copy(self.staticSchema)
             self.fullSchema += self._injectedSchema
             self.fullSchema.updateAliasMap()
+            # validated.merge(self.parameters) ??? see C++
         # notify the distributed system...
         self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
         self.set(validated)
