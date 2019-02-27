@@ -4,11 +4,16 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QAbstractItemView, QHeaderView, QTreeView
+from PyQt4.QtCore import pyqtSlot, QModelIndex, Qt
+from PyQt4.QtGui import (
+    QAbstractItemView, QAction, QCursor, QDialog, QHeaderView, QMenu,
+    QTreeView)
 
+from karabogui.enums import NavigationItemTypes
 from karabogui.events import broadcast_event, KaraboEventSender
-from karabogui.singletons.api import get_selection_tracker
+from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
+from karabogui.singletons.api import get_network, get_selection_tracker
+from karabogui.widgets.popup import PopupWidget
 
 from .device_model import DeviceTreeModel
 from .tools import DeviceSceneHandler
@@ -36,6 +41,40 @@ class DeviceTreeView(QTreeView):
         self.handler_list = [DeviceSceneHandler()]
         self.expanded = True
         self.header().sectionDoubleClicked.connect(self.onDoubleClickHeader)
+
+        # Setup the context menu
+        self._setup_context_menu()
+        self.customContextMenuRequested.connect(
+            self.onCustomContextMenuRequested)
+
+    def _setup_context_menu(self):
+        """Setup the context menu for the device topology"""
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+
+        self.menu = QMenu(self)
+        text = "About"
+        self.ac_about = QAction("About", self)
+        self.ac_about.setStatusTip(text)
+        self.ac_about.setToolTip(text)
+        self.ac_about.triggered.connect(self.onAbout)
+
+        text = "Get Configuration"
+        self.ac_config_past = QAction("Get Configuration", self)
+        self.ac_config_past.setStatusTip(text)
+        self.ac_config_past.setToolTip(text)
+        self.ac_config_past.triggered.connect(self.onGetConfigurationFromPast)
+
+        self.menu.addAction(self.ac_about)
+        self.menu.addAction(self.ac_config_past)
+
+    def indexInfo(self, index=None):
+        """Return the info about the index.
+
+        Defaults to the current index if index is None.
+        """
+        if index is None:
+            index = self.currentIndex()
+        return self.model().indexInfo(index)
 
     def currentIndex(self):
         return self.model().currentIndex()
@@ -72,6 +111,7 @@ class DeviceTreeView(QTreeView):
     # ----------------------------
     # Slots
 
+    @pyqtSlot(QModelIndex, int, int)
     def _items_added(self, parent_index, start, end):
         """React to the addition of an item (or items).
         """
@@ -103,3 +143,38 @@ class DeviceTreeView(QTreeView):
         else:
             self.expandAll()
         self.expanded = not self.expanded
+
+    @pyqtSlot()
+    def onAbout(self):
+        index = self.currentIndex()
+        node = self.model().index_ref(index)
+        if node is None:
+            return
+        popupWidget = PopupWidget(parent=self)
+        popupWidget.setInfo(node.attributes)
+
+        pos = QCursor.pos()
+        pos.setX(pos.x() + 10)
+        pos.setY(pos.y() + 10)
+        popupWidget.move(pos)
+        popupWidget.show()
+
+    @pyqtSlot()
+    def onGetConfigurationFromPast(self):
+        info = self.indexInfo()
+        dialog = ConfigurationFromPastDialog(parent=self)
+        dialog.move(QCursor.pos())
+        if dialog.exec_() == QDialog.Accepted:
+            device_id = info.get('deviceId')
+            # Karabo time points are in UTC
+            time_point = dialog.ui_timepoint.dateTime().toUTC()
+            # Explicitly specifiy ISODate!
+            time = str(time_point.toString(Qt.ISODate))
+            get_network().onGetConfigurationFromPast(device_id, time=time)
+
+    @pyqtSlot(object)
+    def onCustomContextMenuRequested(self, pos):
+        info = self.indexInfo()
+        node_type = info.get('type', NavigationItemTypes.UNDEFINED)
+        if node_type is NavigationItemTypes.DEVICE:
+            self.menu.exec_(QCursor.pos())

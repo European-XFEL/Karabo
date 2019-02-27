@@ -176,6 +176,16 @@ class DeviceTreeModel(QAbstractItemModel):
             if orientation == Qt.Horizontal and section == 0:
                 return "Domain - Type - Member"
 
+    def indexInfo(self, index):
+        if not index.isValid():
+            return {}
+
+        node = self.index_ref(index)
+        if node is None:
+            return {}
+
+        return node.info()
+
     def onSelectionChanged(self, selected, deselected):
         selectedIndexes = selected.indexes()
 
