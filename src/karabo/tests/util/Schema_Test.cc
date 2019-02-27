@@ -781,12 +781,36 @@ void Schema_Test::testList() {
 void Schema_Test::testInvalidNodes() {
     Schema schema("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
     OtherSchemaElements::expectedParameters(schema);
-    // node should not be created automatically
-    CPPUNIT_ASSERT(schema.has("nonExistingNode") == false);
 
-    // placing an element under a leaf is ignored
-    CPPUNIT_ASSERT(schema.has("vecDouble") == true);
-    CPPUNIT_ASSERT(schema.has("vecDouble.uint16") == false);
+    // Placing an element under a leaf is not allowed
+    CPPUNIT_ASSERT(schema.has("vecDouble"));
+    CPPUNIT_ASSERT(!schema.has("vecDouble.uint16"));
+    CPPUNIT_ASSERT_THROW(UINT16_ELEMENT(schema)
+                         .key("vecDouble.uint16")
+                         .description("This element's key refers to a parent that is not a node and thus triggers an exception")
+                         .readOnly()
+                         .commit(),
+                         karabo::util::LogicException);
+
+    // A node should not be created automatically
+    CPPUNIT_ASSERT(!schema.has("nonExistingNode"));
+    CPPUNIT_ASSERT_THROW(INT16_ELEMENT(schema)
+                         .key("nonExistingNode.int16")
+                         .description("This element refers to a non-existing node and thus triggers an exception")
+                         .readOnly()
+                         .commit(),
+                         karabo::util::LogicException);
+
+    // No leaves directly under LIST_ELEMENT:
+    CPPUNIT_ASSERT(schema.has("shapeList"));
+    CPPUNIT_ASSERT_THROW(DOUBLE_ELEMENT(schema)
+                         .key("shapeList.orphanedLength")
+                         .description("Only nodes can be placed under a list element, so this triggers an exception.")
+                         .assignmentOptional().defaultValue(5.)
+                         .commit(),
+                         karabo::util::LogicException);
+
+
 }
 
 
