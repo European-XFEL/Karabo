@@ -163,6 +163,7 @@ class DeviceTreeView(QTreeView):
     def onGetConfigurationFromPast(self):
         info = self.indexInfo()
         dialog = ConfigurationFromPastDialog(parent=self)
+        dialog.move(QCursor.pos())
         if dialog.exec_() == QDialog.Accepted:
             device_id = info.get('deviceId')
             # Karabo time points are in UTC
@@ -176,6 +177,4 @@ class DeviceTreeView(QTreeView):
         info = self.indexInfo()
         node_type = info.get('type', NavigationItemTypes.UNDEFINED)
         if node_type is NavigationItemTypes.DEVICE:
-            self.ac_about.setVisible(True)
-            self.ac_config_past.setVisible(True)
             self.menu.exec_(QCursor.pos())
