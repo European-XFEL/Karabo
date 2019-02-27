@@ -58,18 +58,17 @@ namespace karabo {
                     .assignmentMandatory()
                     .commit();
 
+            STRING_ELEMENT(expected).key("lastUpdateUtc")
+                    .displayedName("Last Update (UTC)")
+                    .description("Timestamp of last recorded parameter update in UTC (updated in flush interval)")
+                    .readOnly().initialValue(std::string())
+                    .commit();
+
             UINT32_ELEMENT(expected).key("flushInterval")
                     .displayedName("Flush interval")
                     .description("The interval after which the memory accumulated data is made persistent")
                     .unit(Unit::SECOND)
-                    .assignmentOptional().defaultValue(60)
-                    .reconfigurable()
-                    .commit();
-
-            STRING_ELEMENT(expected).key("lastUpdateUtc")
-                    .displayedName("Last Update (UTC)")
-                    .description("Timestamp of last recorded parameter update - in UTC")
-                    .readOnly().initialValue(std::string())
+                    .assignmentOptional().defaultValue(60).minInc(1)
                     .commit();
 
             // Do not archive the archivers (would lead to infinite recursion)
@@ -99,6 +98,7 @@ namespace karabo {
             : karabo::core::Device<>(input)
             , m_currentSchemaChanged(true)
             , m_lastDataTimestamp(Epochstamp(0ull, 0ull), Trainstamp())
+            , m_updatedLastTimestamp(false)
             , m_pendingLogin(true)
             , m_propsize(0)
             , m_lasttime(0)
@@ -128,7 +128,6 @@ namespace karabo {
                 doFlush();
 
             slotTagDeviceToBeDiscontinued(true, 'L');
-            KARABO_LOG_FRAMEWORK_INFO << this->getInstanceId() << ": dead.";
         }
 
 
@@ -249,6 +248,8 @@ namespace karabo {
             try {
                 boost::mutex::scoped_lock lock(m_configMutex);
                 if (m_configStream.is_open()) {
+                    // Take care: order of locking m_configMutex and m_lastTimestampMutex!
+                    boost::mutex::scoped_lock lock(m_lastTimestampMutex);
                     m_configStream << m_lastDataTimestamp.toIso8601Ext() << "|" << fixed << m_lastDataTimestamp.toTimestamp()
                             << "|" << m_lastDataTimestamp.getTrainId() << "|.|||" << m_user << "|LOGOUT\n";
                     long position = m_configStream.tellp();
@@ -322,7 +323,6 @@ namespace karabo {
                 this->ensureFileClosed(); // must be protected by m_configMutex
             }
 
-            bool updatedLastTimestamp = false;
             for (size_t i = 0; i < paths.size(); ++i) {
                 const string& path = paths[i];
                 
@@ -341,11 +341,15 @@ namespace karabo {
                 }
 
                 Timestamp t = Timestamp::fromHashAttributes(leafNode.getAttributes());
-                if (t.getEpochstamp() > m_lastDataTimestamp.getEpochstamp()) {
-                    // Update time stamp for slotTagDeviceToBeDiscontinued(..).
-                    // If mixed timestamps in single message (or arrival in wrong order), always take most recent one.
-                    updatedLastTimestamp = true;
-                    m_lastDataTimestamp = t;
+                {
+                    // Take care: order of locking m_configMutex and m_lastTimestampMutex!
+                    boost::mutex::scoped_lock lock(m_lastTimestampMutex);
+                    if (t.getEpochstamp() > m_lastDataTimestamp.getEpochstamp()) {
+                        // Update time stamp for slotTagDeviceToBeDiscontinued(..).
+                        // If mixed timestamps in single message (or arrival in wrong order), always take most recent one.
+                        m_updatedLastTimestamp = true;
+                        m_lastDataTimestamp = t;
+                    }
                 }
                 string value = "";   // "value" should be a string, so convert depending on type ...
                 if (leafNode.getType() == Types::VECTOR_HASH) {
@@ -429,9 +433,6 @@ namespace karabo {
             if (maxFilesize <= position) {
                 this->ensureFileClosed();
             }
-            if (updatedLastTimestamp) {
-                set("lastUpdateUtc", m_lastDataTimestamp.toFormattedString(), m_lastDataTimestamp);
-            } // else nothing to log (only 'archive == false' parameters) or only parameters with older timestamps
         }
 
 
@@ -521,6 +522,14 @@ namespace karabo {
             if (e == boost::asio::error::operation_aborted || !m_doFlushFiles)
                 return;
             doFlush();
+            {
+                // Hijack this actor to update lastUpdateUtc
+                boost::mutex::scoped_lock lock(m_lastTimestampMutex);
+                if (m_updatedLastTimestamp) {
+                    set("lastUpdateUtc", m_lastDataTimestamp.toFormattedString(), m_lastDataTimestamp);
+                    m_updatedLastTimestamp = false;
+                } // else nothing to log (only 'archive == false' parameters) or only parameters with older timestamps
+            }
             // arm timer again
             m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
             m_flushDeadline.async_wait(util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
