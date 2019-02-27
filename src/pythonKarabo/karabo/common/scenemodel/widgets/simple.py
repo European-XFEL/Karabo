@@ -187,6 +187,12 @@ class WebLinkModel(BaseWidgetObjectData):
     frame_width = Int(1)
 
 
+class DoubleWheelBoxModel(BaseEditWidget):
+    """ A model for the WheelBox"""
+    integers = Int(6)
+    decimals = Int(3)
+
+
 class SliderModel(BaseEditWidget):
     """ A model for Slider"""
 
@@ -251,6 +257,27 @@ def __label_writer(write_func, model, parent):
     element.set(NS_KARABO + 'frameWidth', str(model.frame_width))
     if model.background != '':
         element.set(NS_KARABO + 'background', model.background)
+
+    return element
+
+
+@register_scene_reader('DoubleWheelBox')
+def _doublewheel_box_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    decimals = element.get(NS_KARABO + 'decimals', 3)
+    integers = element.get(NS_KARABO + 'integers', 6)
+    traits['decimals'] = int(decimals)
+    traits['integers'] = int(integers)
+
+    return DoubleWheelBoxModel(**traits)
+
+
+@register_scene_writer(DoubleWheelBoxModel)
+def _doublewheel_box_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'DoubleWheelBox')
+    element.set(NS_KARABO + 'decimals', str(model.decimals))
+    element.set(NS_KARABO + 'integers', str(model.integers))
 
     return element
 
