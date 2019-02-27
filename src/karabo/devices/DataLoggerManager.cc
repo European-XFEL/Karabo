@@ -44,7 +44,7 @@ namespace karabo {
                     .displayedName("Flush interval")
                     .description("The interval after which the memory accumulated data is made persistent")
                     .unit(Unit::SECOND)
-                    .assignmentOptional().defaultValue(40)
+                    .assignmentOptional().defaultValue(40).minInc(1)
                     .reconfigurable()
                     .commit();
 
