@@ -773,8 +773,6 @@ void Schema_Test::testList() {
     CPPUNIT_ASSERT(sch.has("shapeList.BizarreForm"));
     CPPUNIT_ASSERT(sch.isNode("shapeList.BizarreForm"));
     CPPUNIT_ASSERT(sch.has("shapeList.BizarreForm.length"));
-    // only nodes can be added as children of lists of elements
-    CPPUNIT_ASSERT(sch.has("shapeList.orphanedLength") == false);
 }
 
 
