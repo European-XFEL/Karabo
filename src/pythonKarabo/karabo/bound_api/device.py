@@ -869,17 +869,15 @@ class PythonDevice(NoFsm):
         validated = validator.validate(schema, Hash(),
                                        self.getActualTimestamp())
         with self._stateChangeLock:
-            # Instead of looping on paths of injectedSchema, could probably
-            # directly loop on paths of self.parameters
-            for path in self._injectedSchema.getPaths():
-                if not self.staticSchema.has(path):
+            for path in self.parameters.getPaths():
+                if not (self.staticSchema.has(path) or schema.has(path)):
                     self.parameters.erase(path)
             self._stateDependentSchema.clear()
             self._injectedSchema.copy(schema)
             self.fullSchema.copy(self.staticSchema)
             self.fullSchema += self._injectedSchema
             self.fullSchema.updateAliasMap()
-            # validated.merge(self.parameters) ??? see C++
+            validated.merge(self.parameters)
         # notify the distributed system...
         self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
         self.set(validated)
