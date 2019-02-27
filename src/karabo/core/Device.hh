@@ -842,6 +842,7 @@ namespace karabo {
                 rules.injectDefaults = true;
                 rules.injectTimestamps = true;
                 karabo::util::Validator v(rules);
+                // Set default values for all parameters in appended Schema
                 v.validate(schema, karabo::util::Hash(), validated, getActualTimestamp());
                 {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
@@ -854,12 +855,14 @@ namespace karabo {
 
                     // Merge to full schema
                     m_fullSchema.merge(m_injectedSchema);
+                    // FIXME: updateAliasMap()?
 
                     // Notify the distributed system
                     emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
 
-                    // Merge all parameters
-                    if (keepParameters) validated.merge(m_parameters);
+                    // For those parameters which have been there before, but for which some attributes changed
+                    // (e.g. alarm levels, min/max value, size, etc.) re-assign the old values and timestamps.
+                    validated.merge(m_parameters);
                 }
 
                 set(validated);
@@ -870,12 +873,11 @@ namespace karabo {
             /**
              * Replace existing schema descriptions by static (hard coded in expectedParameters) part and
              * add additional (dynamic) descriptions
-             * @param schema replacing the existing schema.
-             * @param keepParameters: if true, do not reset the configuration of
-             * the device, for those parameters that validate against the new
-             * schema
+             * @param schema additional, dynamic schema - may also contain existing elements to overwrite their
+             *                attributes like min/max values/sizes, alarm ranges, etc.
+             * @param unused parameter
              */
-            void updateSchema(const karabo::util::Schema& schema, const bool keepParameters = false) {
+            void updateSchema(const karabo::util::Schema& schema, const bool unused = false) {
 
                 KARABO_LOG_DEBUG << "Update Schema requested";
                 karabo::util::Hash validated;
@@ -889,19 +891,12 @@ namespace karabo {
                 v.validate(schema, karabo::util::Hash(), validated, getActualTimestamp());
                 {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-                    // Clear previously injected parameters
-                    // Instead of via injected schema, could erase all paths that are in
-                    // m_fullSchema/m_parameters, but not in m_staticSchema!
-                    std::vector<std::string> keys = m_injectedSchema.getKeys();
-                    auto newSchemaHash = schema.getParameterHash();
-
-                    for (const std::string& key : keys) {
-                        if (m_parameters.has(key)) {
-                            if (newSchemaHash.has(key) && keepParameters) {
-                                auto value = m_parameters.getAs<unsigned int>(key);
-                                validated.set(key, value);
-                            }
-                            m_parameters.erase(key);
+                    // Clear previously injected parameters.
+                    // But not blindly all paths (not only keys!) from m_injectedSchema: injection might have been done
+                    // to update attributes like alarm levels, min/max values, size, etc. of existing properties.
+                    for (const std::string& path : m_injectedSchema.getPaths()) {
+                        if (!(m_staticSchema.has(path) || schema.has(path))) {
+                            m_parameters.erase(path);
                         }
                     }
 
@@ -916,12 +911,14 @@ namespace karabo {
 
                     // Merge to full schema
                     m_fullSchema.merge(m_injectedSchema);
+                    // FIXME: updateAliasMap()?
 
                     // Notify the distributed system
                     emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
 
-                    // Merge all parameters
-                    if (keepParameters) validated.merge(m_parameters);
+                    // For those parameters which are in m_staticSchema, but for which some attributes changed
+                    // (e.g. alarm levels, min/max value, size, etc.) re-assign the old values and timestamps.
+                    validated.merge(m_parameters);
                 }
 
                 set(validated);
