@@ -66,6 +66,12 @@ namespace karabo {
                     .reconfigurable()
                     .commit();
 
+            STRING_ELEMENT(expected).key("lastUpdateUtc")
+                    .displayedName("Last Update (UTC)")
+                    .description("Timestamp of last recorded parameter update - in UTC")
+                    .readOnly().initialValue(std::string())
+                    .commit();
+
             // Do not archive the archivers (would lead to infinite recursion)
             OVERWRITE_ELEMENT(expected).key("archive")
                     .setNewDefaultValue(false)
@@ -92,6 +98,7 @@ namespace karabo {
         DataLogger::DataLogger(const Hash& input)
             : karabo::core::Device<>(input)
             , m_currentSchemaChanged(true)
+            , m_lastDataTimestamp(Epochstamp(0ull, 0ull), Trainstamp())
             , m_pendingLogin(true)
             , m_propsize(0)
             , m_lasttime(0)
@@ -315,6 +322,7 @@ namespace karabo {
                 this->ensureFileClosed(); // must be protected by m_configMutex
             }
 
+            bool updatedLastTimestamp = false;
             for (size_t i = 0; i < paths.size(); ++i) {
                 const string& path = paths[i];
                 
@@ -333,7 +341,12 @@ namespace karabo {
                 }
 
                 Timestamp t = Timestamp::fromHashAttributes(leafNode.getAttributes());
-                m_lastDataTimestamp = t;
+                if (t.getEpochstamp() > m_lastDataTimestamp.getEpochstamp()) {
+                    // Update time stamp for slotTagDeviceToBeDiscontinued(..).
+                    // If mixed timestamps in single message (or arrival in wrong order), always take most recent one.
+                    updatedLastTimestamp = true;
+                    m_lastDataTimestamp = t;
+                }
                 string value = "";   // "value" should be a string, so convert depending on type ...
                 if (leafNode.getType() == Types::VECTOR_HASH) {
                     // Represent any vector<Hash> as XML string ...
@@ -416,6 +429,9 @@ namespace karabo {
             if (maxFilesize <= position) {
                 this->ensureFileClosed();
             }
+            if (updatedLastTimestamp) {
+                set("lastUpdateUtc", m_lastDataTimestamp.toFormattedString(), m_lastDataTimestamp);
+            } // else nothing to log (only 'archive == false' parameters) or only parameters with older timestamps
         }
 
 
