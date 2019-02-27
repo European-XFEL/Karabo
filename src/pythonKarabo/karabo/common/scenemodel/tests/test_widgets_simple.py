@@ -110,6 +110,17 @@ def test_display_command():
     assert read_model.requires_confirmation
 
 
+def test_edit_doublewheel():
+    traits = _geometry_traits()
+    traits['integers'] = 2
+    traits['decimals'] = 4
+    model = api.DoubleWheelBoxModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+    assert read_model.integers == 2
+    assert read_model.decimals == 4
+
+
 def test_scene_link_model():
     traits = _geometry_traits()
     traits['target'] = 'other.svg'
