@@ -11,6 +11,14 @@ The **most relevant improvements**, fixes and changes are:
 - b
 
 
+Minor **backward incompatibilities**:
+- Invalid schema elements will not be ignored anymore, but trigger a LogicException:
+  leaves added to a non-existing node, leafs where the parent is not node, and leaves
+  added to a list of nodes
+- a
+- b
+
+
 Detailed Merge-Log
 ==================
 
