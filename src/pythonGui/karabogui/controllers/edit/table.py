@@ -125,7 +125,6 @@ class _BaseTableElement(BaseBindingController):
         schema = SchemaHashType.fromstring(self.model.column_schema)
         self._set_row_schema(schema)
 
-
     def _on_user_edit(self, data):
         """Callback method used by `self._item_model` when data changes"""
         self.proxy.edit_value = data
