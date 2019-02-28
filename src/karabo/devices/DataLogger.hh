@@ -52,7 +52,9 @@ namespace karabo {
 
             unsigned int m_lastIndex;
             std::string m_user;
+            boost::mutex m_lastTimestampMutex;
             karabo::util::Timestamp m_lastDataTimestamp;
+            bool m_updatedLastTimestamp;
             bool m_pendingLogin;
 
             std::map<std::string, karabo::util::MetaData::Pointer> m_idxMap; // protect by m_configMutex!
