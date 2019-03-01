@@ -15,7 +15,6 @@ from karabogui.binding.api import (
 from karabogui.controllers.api import (
     add_unit_label, BaseBindingController, DoubleWheelEdit,
     register_binding_controller)
-
 from karabogui.util import SignalBlocker
 
 MAX_FLOATING_PRECISION = 8
