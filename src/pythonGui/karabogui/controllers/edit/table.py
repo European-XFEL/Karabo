@@ -35,7 +35,7 @@ from functools import partial
 
 from PyQt4.QtCore import pyqtSlot, Qt, QModelIndex, QPoint
 from PyQt4.QtGui import QAbstractItemView, QMenu, QStyledItemDelegate
-from traits.api import Instance, Int
+from traits.api import Instance, Int, on_trait_change
 
 from karabo.common.api import KARABO_SCHEMA_ROW_SCHEMA
 from karabo.common.scenemodel.api import TableElementModel
@@ -117,6 +117,13 @@ class _BaseTableElement(BaseBindingController):
                 index = self._item_model.index(r, c, QModelIndex())
                 self._item_model.setData(index, row[key], self._role,
                                          from_device_update=True)
+
+    @on_trait_change('model.column_schema')
+    def _model_schema_update(self):
+        if self.widget is None:
+            return
+        schema = SchemaHashType.fromstring(self.model.column_schema)
+        self._set_row_schema(schema)
 
     def _on_user_edit(self, data):
         """Callback method used by `self._item_model` when data changes"""
