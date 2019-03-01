@@ -62,10 +62,11 @@ namespace karabo {
 
             INT32_ELEMENT(expected).key("delayOnInput")
                     .displayedName("Delay on Input channel")
-                    .description("Some delay before informing output channel about readiness for next data.")
+                    .description("Extra Delay on the InputChannel in this device to inform the output channel "
+                    "about its readiness to receive new data. Lowering this delay adds load to the output channel the GUI server connects to.")
                     .assignmentOptional().defaultValue(500)
                     .reconfigurable()
-                    .minInc(0) // allow as slow as desired
+                    .minInc(200) // Max 5 Hz
                     .unit(Unit::SECOND)
                     .metricPrefix(MetricPrefix::MILLI)
                     .commit();
@@ -84,7 +85,7 @@ namespace karabo {
                     .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
                     .assignmentOptional().defaultValue(500)
                     .reconfigurable()
-                    .minInc(0).maxInc(10000) // 0.1 Hz
+                    .minInc(0).maxInc(10000) // 0.1 Hz minimum 
                     .commit();
 
             INT32_ELEMENT(expected).key("waitInitDevice")
