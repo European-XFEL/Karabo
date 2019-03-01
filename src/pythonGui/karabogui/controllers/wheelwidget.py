@@ -141,7 +141,7 @@ class DoubleWheelEdit(QLabel):
         self._create_editor()
 
     def _create_editor(self):
-        # Build the edit widget overlaying the wheelbox
+        """Build the edit widget overlaying the wheelbox"""
         if self.editor_widget is not None:
             self.editor_widget.setParent(None)
             self.editor_widget.destroy()
@@ -164,7 +164,6 @@ class DoubleWheelEdit(QLabel):
 
     def _build_button_group(self):
         """Builds this widget sub-items"""
-
         self.digit_frames = []
 
         sign_label = DigitFrame('+', parent=self)
@@ -225,7 +224,7 @@ class DoubleWheelEdit(QLabel):
             self.layout.addWidget(widget, MIDDLE_ROW, column)
 
     def _clear_button_group(self):
-        """This function clears the button group buttons and the """
+        """This function clears the button group buttons"""
         for button in self.button_group_up.buttons():
             self.button_group_up.removeButton(button)
             button.setParent(None)
@@ -243,8 +242,7 @@ class DoubleWheelEdit(QLabel):
         self.digit_frames = []
 
     def _rebuild_wheelwidget(self):
-        """Updates widget contents (sub-widgets) to current configuration
-        """
+        """Updates widget contents (sub-widgets) to current configuration"""
         self._clear_button_group()
         self._build_button_group()
         self._create_editor()
@@ -282,8 +280,7 @@ class DoubleWheelEdit(QLabel):
         self.setMinimumSize(width, MINIMUM_HEIGHT)
 
     def _generate_limits(self):
-        """Generate the possible value limits for this widget
-        """
+        """Generate the possible value limits for this widget"""
         decimal_max = 0
         for i in range(self.decimals):
             decimal_max += 9 * math.pow(10, -(i + 1))
@@ -301,8 +298,7 @@ class DoubleWheelEdit(QLabel):
             self.total_maximum = self._frames_maximum
 
     def _create_string_from_format(self, value):
-        """Create the string representation of the value to the format
-        """
+        """Create the string representation of the value to the format"""
         ret = self.value_format % value
         if ret.endswith('nan'):
             ret = ret.replace('0', ' ')
@@ -311,8 +307,7 @@ class DoubleWheelEdit(QLabel):
         return ret
 
     def _set_frame_value(self):
-        """Update internally the displayed value of the widget
-        """
+        """Update internally the displayed value of the widget"""
         value, string_value = self.value, self.string_value
 
         if len(string_value) > len(self.digit_frames):
@@ -349,8 +344,7 @@ class DoubleWheelEdit(QLabel):
 
     @pyqtSlot(int)
     def buttonPressed(self, button):
-        """Executed when an arrow button is pressed from the button group
-        """
+        """Executed when an arrow button is pressed from the button group"""
         value = self.value + button.increment
         # Recast to the format we have and validate against the minimum and
         # maximum before sending!
