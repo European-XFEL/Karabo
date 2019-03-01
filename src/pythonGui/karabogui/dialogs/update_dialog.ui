@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>342</width>
-    <height>394</height>
+    <width>659</width>
+    <height>395</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -127,7 +127,7 @@
       <widget class="QPushButton" name="bt_refresh">
        <property name="maximumSize">
         <size>
-         <width>32</width>
+         <width>38</width>
          <height>32</height>
         </size>
        </property>
@@ -213,7 +213,7 @@
            <widget class="QPushButton" name="bt_clear_log">
             <property name="maximumSize">
              <size>
-              <width>32</width>
+              <width>38</width>
               <height>32</height>
              </size>
             </property>
