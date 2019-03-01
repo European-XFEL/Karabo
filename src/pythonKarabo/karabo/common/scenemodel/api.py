@@ -30,10 +30,11 @@ from .widgets.simple import (
     AnalogModel, BitfieldModel, CheckBoxModel, ChoiceElementModel,
     ComboBoxModel, DirectoryModel, DisplayLabelModel,
     DisplayListModel, DisplayPlotModel, DisplayTextLogModel,
-    EditableListElementModel, EditableListModel, EditableSpinBoxModel,
-    FileInModel, FileOutModel, GlobalAlarmModel, HexadecimalModel,
-    IntLineEditModel, KnobModel, LabelModel, LampModel, LineEditModel,
-    MultiCurvePlotModel, PopUpModel, RunConfiguratorModel, SceneLinkModel,
-    SliderModel, WebLinkModel, WorkflowItemModel, WidgetNodeModel, XYPlotModel)
+    DoubleWheelBoxModel, EditableListElementModel, EditableListModel,
+    EditableSpinBoxModel, FileInModel, FileOutModel, GlobalAlarmModel,
+    HexadecimalModel, IntLineEditModel, KnobModel, LabelModel, LampModel,
+    LineEditModel, MultiCurvePlotModel, PopUpModel, RunConfiguratorModel,
+    SceneLinkModel, SliderModel, WebLinkModel, WorkflowItemModel,
+    WidgetNodeModel, XYPlotModel)
 from .widgets.vacuum import VacuumWidgetModel
 from .widgets.statefulicon import StatefulIconWidgetModel

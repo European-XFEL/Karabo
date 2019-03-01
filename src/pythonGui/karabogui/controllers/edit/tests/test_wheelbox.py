@@ -1,0 +1,106 @@
+from unittest.mock import patch
+
+from karabo.native import Configurable, Double
+from karabogui.binding.api import apply_default_configuration
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
+from ..doublewheel import EditableWheelBox
+
+
+class Object(Configurable):
+    prop = Double(defaultValue=1.0)
+
+
+class NoneObject(Configurable):
+    prop = Double(defaultValue=None)
+
+
+class TestDoubleWheelBox(GuiTestCase):
+    def setUp(self):
+        super(TestDoubleWheelBox, self).setUp()
+        self.proxy = get_class_property_proxy(Object.getClassSchema(), 'prop')
+        self.controller = EditableWheelBox(proxy=self.proxy)
+        self.controller.create(None)
+        apply_default_configuration(self.proxy.root_proxy.binding)
+
+    def tearDown(self):
+        self.controller.destroy()
+        assert self.controller.widget is None
+
+    def test_default_configuration(self):
+        widget = self.controller._internal_widget
+        self.assertEqual(widget.string_value, '+000000.000')
+        self.assertEqual(widget.integers, 6)
+        self.assertEqual(widget.decimals, 3)
+
+    def test_set_none(self):
+        widget = self.controller._internal_widget
+        widget.set_value(None)
+        # A None value cannot be shown by the wheel widget. This should not
+        # harm, as we have an editable widget
+        self.assertEqual(widget.string_value, '+000000.000')
+        self.assertEqual(widget.integers, 6)
+        self.assertEqual(widget.decimals, 3)
+
+    def test_set_values_normal(self):
+        widget = self.controller._internal_widget
+        widget.set_value(3.121)
+        self.assertEqual(widget.string_value, '+000003.121')
+        self.assertEqual(widget.integers, 6)
+        self.assertEqual(widget.decimals, 3)
+        set_proxy_value(self.proxy, 'prop', 4.0)
+        self.assertEqual(widget.string_value, '+000004.000')
+
+    def test_set_values_exceed(self):
+        widget = self.controller._internal_widget
+        widget.set_value(3000000000.0)
+        # We enforce a value that does not fit the widget, the widget aligns
+        # with space
+        self.assertEqual(widget.string_value, '+03000000000.000')
+        self.assertEqual(widget.integers, 11)
+        self.assertEqual(widget.decimals, 3)
+
+    def test_set_values_exceed_proxy(self):
+        widget = self.controller._internal_widget
+        set_proxy_value(self.proxy, 'prop', 3000000000.0)
+        # We enforce a value that does not fit the widget, the widget aligns
+        # with space
+        self.assertEqual(widget.string_value, '+03000000000.000')
+        self.assertEqual(widget.integers, 11)
+        self.assertEqual(widget.decimals, 3)
+
+    def test_set_values_exceed_internal(self):
+        widget = self.controller._internal_widget
+        widget.set_value_widget(3000000000.0)
+        # We are exceeding and catched by the widget, it is not set. This is
+        # for validated values, e.g. by buttons, as they should not modify
+        # the number of digits
+        self.assertEqual(widget.string_value, '+000000.000')
+        self.assertEqual(widget.integers, 6)
+        self.assertEqual(widget.decimals, 3)
+
+    def test_set_decimals(self):
+        action = self.controller.widget.actions()[0]
+        self.assertIn('decimals', action.text().lower())
+
+        sym = 'karabogui.controllers.edit.doublewheel.QInputDialog'
+        with patch(sym) as QInputDialog:
+            QInputDialog.getInt.return_value = 4, True
+            action.trigger()
+
+        self.assertEqual(self.controller.model.decimals, 4)
+        widget = self.controller._internal_widget
+        self.assertEqual(widget.string_value, '+000000.0000')
+
+    def test_set_integers(self):
+        action = self.controller.widget.actions()[1]
+        self.assertIn('integers', action.text().lower())
+
+        sym = 'karabogui.controllers.edit.doublewheel.QInputDialog'
+        with patch(sym) as QInputDialog:
+            QInputDialog.getInt.return_value = 1, True
+            action.trigger()
+
+        self.assertEqual(self.controller.model.integers, 1)
+        widget = self.controller._internal_widget
+        self.assertEqual(widget.string_value, '+0.000')
