@@ -65,7 +65,7 @@ namespace karabo {
                     .description("Some delay before informing output channel about readiness for next data.")
                     .assignmentOptional().defaultValue(500)
                     .reconfigurable()
-                    .minInc(200) // => not faster than 5 Hz, but allow as slow as desired
+                    .minInc(0) // allow as slow as desired
                     .unit(Unit::SECOND)
                     .metricPrefix(MetricPrefix::MILLI)
                     .commit();
@@ -84,7 +84,7 @@ namespace karabo {
                     .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
                     .assignmentOptional().defaultValue(500)
                     .reconfigurable()
-                    .minInc(100).maxInc(10000) // => roughly between 10 Hz and 0.1 Hz
+                    .minInc(0).maxInc(10000) // 0.1 Hz
                     .commit();
 
             INT32_ELEMENT(expected).key("waitInitDevice")
