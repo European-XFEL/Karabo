@@ -282,8 +282,8 @@ class MainWindow(QMainWindow):
         left_area = QSplitter(Qt.Vertical, mainSplitter)
         middle_area = QSplitter(Qt.Vertical, mainSplitter)
         right_area = QSplitter(Qt.Vertical, mainSplitter)
-        mainSplitter.setStretchFactor(0, 2)
-        mainSplitter.setStretchFactor(1, 2)
+        mainSplitter.setStretchFactor(0, 1)
+        mainSplitter.setStretchFactor(1, 7)
         mainSplitter.setStretchFactor(2, 2)
         self.setCentralWidget(mainSplitter)
 
