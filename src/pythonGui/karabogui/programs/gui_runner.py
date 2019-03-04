@@ -48,6 +48,7 @@ def init_gui(app, splash):
     populate_controller_registry()
 
     app.setStyleSheet("QPushButton { text-align: left; padding: 5px; }")
+    app.setStyleSheet("QToolBar { border: 0px }")
     app.setAttribute(Qt.AA_DontShowIconsInMenus, False)
     # Initialize the Manager singleton
     get_manager()
