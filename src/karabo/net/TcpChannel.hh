@@ -376,6 +376,10 @@ namespace karabo {
 
             void prepareHashFromData(karabo::util::Hash& hash) const;
 
+            karabo::io::BufferSet::Pointer bufferSetFromPointerToChar(const char* data, size_t size);
+
+            karabo::io::BufferSet::Pointer bufferSetFromHash(const karabo::util::Hash& data);
+
             void decompress(karabo::util::Hash& header, const std::vector<char>&source, char* data, const size_t& size);
             void decompress(karabo::util::Hash& header, const std::vector<char>&source, std::vector<char>& target);
             void decompress(karabo::util::Hash& header, const std::vector<char>&source, std::string& target);
@@ -403,9 +407,7 @@ namespace karabo {
 
             void prepareHashFromVector(const std::vector<char>& vec, karabo::util::Hash& hash) const;
 
-            void writeAsync(const Message::Pointer& mp, int prio);
-
-            void writeAsync(const char* header, const size_t& hsize, const char* data, const size_t& dsize, int prio);
+            void dispatchWriteAsync(const Message::Pointer& mp, int prio);
 
             void doWrite();
 
