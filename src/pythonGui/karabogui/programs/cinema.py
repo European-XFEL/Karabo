@@ -26,6 +26,8 @@ def run_cinema(ns):
     # Set the style among all operating systems
     app.setStyle(QStyleFactory.create("Cleanlooks"))
     app.setPalette(QApplication.style().standardPalette())
+    app.setStyleSheet("QPushButton { text-align: left; padding: 5px; }")
+    app.setStyleSheet("QToolBar { border: 0px }")
     app.setAttribute(Qt.AA_DontShowIconsInMenus, False)
 
     # set a nice app logo
