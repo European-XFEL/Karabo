@@ -141,10 +141,12 @@ class ConfigurationPanel(BasePanelWidget):
         by this panel.
         """
         toolbar = ToolBar(parent=self)
+        icon_size = toolbar.iconSize()
 
         text = "Open configuration from file (*.xml)"
         tb_open_config = QPushButton()
         tb_open_config.setIcon(icons.load)
+        tb_open_config.setIconSize(icon_size)
         tb_open_config.setStatusTip(text)
         tb_open_config.setToolTip(text)
         tb_open_config.setVisible(False)
@@ -154,6 +156,7 @@ class ConfigurationPanel(BasePanelWidget):
         text = "Save configuration to file (*.xml)"
         tb_save_config = QPushButton()
         tb_save_config.setIcon(icons.saveAs)
+        tb_save_config.setIconSize(icon_size)
         tb_save_config.setStatusTip(text)
         tb_save_config.setToolTip(text)
         tb_save_config.setVisible(False)
