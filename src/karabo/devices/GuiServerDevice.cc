@@ -697,11 +697,11 @@ namespace karabo {
         }
         
 
-        void GuiServerDevice::safeClientWrite(const WeakChannelPointer channel, const karabo::util::Hash& data, int prio) {
+        void GuiServerDevice::safeClientWrite(const WeakChannelPointer channel, const karabo::util::Hash& message, int prio) {
             boost::mutex::scoped_lock lock(m_channelMutex);
             karabo::net::Channel::Pointer chan = channel.lock();
             if (chan && chan->isOpen()) {
-                chan->writeAsync(data, prio);
+                chan->writeAsync(message, prio);
             }
         }
 
