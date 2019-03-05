@@ -18,6 +18,7 @@ class TcpNetworking_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(TcpNetworking_Test);
     CPPUNIT_TEST(testClientServer);
+    CPPUNIT_TEST(testWriteAsyncForget);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -30,6 +31,16 @@ public:
 
 private:
     void testClientServer();
+
+    /**
+     * Test the set of writeAsync methods of type write and "forget" in the
+     * karabo::net::TcpChannel class (acessed through its abstract base
+     * class, karabo::net::Channel).
+     *
+     * The write and "forget" do ot call write handlers specified by their
+     * callers once they have done their job (or failed at trying to do it).
+     */
+    void testWriteAsyncForget();
 
 };
 

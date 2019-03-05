@@ -113,7 +113,7 @@ struct TcpClient {
         : m_count(0)
         , m_port(port)
         , m_connection(karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", "sample.example.org")))
-        , m_deadline(karabo::net::EventLoop::getIOService()) { //                                                           timeout repetition channel ec 
+        , m_deadline(karabo::net::EventLoop::getIOService()) { // timeout repetition channel ec
         m_connection->startAsync(boost::bind(&TcpClient::connectHandler, this, _1, 1000, 3, _2));
     }
 
@@ -218,6 +218,87 @@ private:
 };
 
 
+//<editor-fold desc="Server, client and parameters for testWriteAsyncForget">
+
+
+struct WriteAndForgetParams {
+    const karabo::util::Hash dataHash = karabo::util::Hash("Name", "DataHash", "PiField", 3.14159);
+    const std::string dataString = std::string("Data as std::string");
+    const int writePriority = 4;
+};
+
+
+struct WriteAndForgetSrv {
+
+    KARABO_CLASSINFO(WriteAndForgetSrv, "WriteAndForgetSrv", "1.0");
+
+    WriteAndForgetSrv() : m_port(0) {
+        m_connection = karabo::net::Connection::create(karabo::util::Hash("Tcp.port", 0, "Tcp.type", "server"));
+        m_port = m_connection->startAsync(boost::bind(&WriteAndForgetSrv::connectHandler, this, _1, _2));
+    }
+
+    int port() const {
+        return m_port;
+    }
+
+private:
+    int m_port;
+    karabo::net::Connection::Pointer m_connection;
+
+    void connectHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel) {
+        if (ec) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAndForgetSrv error: " << ec.value() << " -- " << ec.message();
+            if (channel) channel->close();
+        }
+        WriteAndForgetParams params;
+        // Send the async write sequence.
+        channel->writeAsync(params.dataHash, params.writePriority);
+        channel->writeAsync(params.dataString, params.writePriority);
+
+        // The client is supposed to close the connection after reading the packages - the server doesn't do anything
+        // else.
+    }
+};
+
+
+struct WriteAndForgetCli {
+
+    KARABO_CLASSINFO(WriteAndForgetCli, "WriteAndForgetCli", "1.0");
+
+    WriteAndForgetCli(const std::string& host, int port)
+        : m_port(port)
+        , m_connection(karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", "sample.example.org"))) { // timeout repetition channel ec
+        m_connection->startAsync(boost::bind(&WriteAndForgetCli::connectHandler, this, _1, _2));
+    }
+
+private:
+    int m_port;
+    karabo::net::Connection::Pointer m_connection;
+
+    void connectHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel) {
+        if (ec) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAndForgetCli error: " << ec.value() << " -- " << ec.message();
+            if (channel) channel->close();
+            return;
+        }
+
+        WriteAndForgetParams params;
+
+        karabo::util::Hash dataHash;
+        std::string dataString;
+
+        channel->read(dataHash);
+        channel->read(dataString);
+
+        // TODO: assert on the values read.
+        
+        channel->close();
+    }
+};
+
+//</editor-fold>
+
+
 TcpNetworking_Test::TcpNetworking_Test() {
 }
 
@@ -249,4 +330,23 @@ void TcpNetworking_Test::testClientServer() {
 
     nThreads = karabo::net::EventLoop::getNumberOfThreads();
     CPPUNIT_ASSERT(nThreads == 0);
+}
+
+
+void TcpNetworking_Test::testWriteAsyncForget() {
+    using namespace std;
+    int nThreads = karabo::net::EventLoop::getNumberOfThreads();
+    CPPUNIT_ASSERT(nThreads == 0);
+
+    WriteAndForgetSrv server;
+    WriteAndForgetCli client("localhost", server.port());
+
+    nThreads = karabo::net::EventLoop::getNumberOfThreads();
+    CPPUNIT_ASSERT(nThreads == 0);
+
+    karabo::net::EventLoop::run();
+
+    nThreads = karabo::net::EventLoop::getNumberOfThreads();
+    CPPUNIT_ASSERT(nThreads == 0);
+
 }
