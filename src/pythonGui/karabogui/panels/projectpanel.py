@@ -6,13 +6,14 @@
 from collections import deque
 from functools import partial
 
-from PyQt4.QtCore import pyqtSlot, QSize
+from PyQt4.QtCore import pyqtSlot, QSize, Qt
 from PyQt4.QtGui import (
     QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit, QPushButton, QVBoxLayout,
     QWidget)
 from karabo.common.project.api import ProjectModel
 from karabogui import icons
 from karabogui.actions import build_qaction, KaraboAction
+from karabogui.const import SEARCH_BUTTON_WIDTH, SEARCH_LABEL_WIDTH
 from karabogui.events import KaraboEventSender, register_for_broadcasts
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.utils import (
@@ -60,11 +61,13 @@ class ProjectPanel(BasePanelWidget):
         self.le_search_filter.textChanged.connect(self._search_filter_changed)
         self.le_search_filter.returnPressed.connect(self._arrow_right_clicked)
         self.pb_match = QPushButton("Aa")
+        self.pb_match.setFixedWidth(SEARCH_BUTTON_WIDTH)
         self.pb_match.setToolTip("Match case")
         self.pb_match.setCheckable(True)
         self.pb_match.setChecked(False)
         self.pb_match.clicked.connect(self._update_search_filter)
         self.pb_reg_ex = QPushButton(".*")
+        self.pb_reg_ex.setFixedWidth(SEARCH_BUTTON_WIDTH)
         self.pb_reg_ex.setToolTip("Use regular expression")
         self.pb_reg_ex.setCheckable(True)
         self.pb_reg_ex.setChecked(False)
@@ -80,12 +83,16 @@ class ProjectPanel(BasePanelWidget):
         frame_layout.addWidget(self.pb_reg_ex)
 
         self.la_result = QLabel("No results")
+        self.la_result.setFixedWidth(SEARCH_LABEL_WIDTH)
+        self.la_result.setAlignment(Qt.AlignCenter)
         self.pb_arrow_left = QPushButton()
+        self.pb_arrow_left.setFixedWidth(SEARCH_BUTTON_WIDTH)
         self.pb_arrow_left.setToolTip("Previous match")
         self.pb_arrow_left.setIcon(icons.arrowLeft)
         self.pb_arrow_left.setMaximumHeight(25)
         self.pb_arrow_left.clicked.connect(self._arrow_left_clicked)
         self.pb_arrow_right = QPushButton()
+        self.pb_arrow_right.setFixedWidth(SEARCH_BUTTON_WIDTH)
         self.pb_arrow_right.setToolTip("Next match")
         self.pb_arrow_right.setIcon(icons.arrowRight)
         self.pb_arrow_right.setMaximumHeight(25)
