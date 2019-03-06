@@ -11,13 +11,11 @@ from PyQt4.QtGui import (
     QFrame, QHBoxLayout, QLabel, QLineEdit, QPushButton, QVBoxLayout,
     QWidget)
 from karabogui import icons
+from karabogui.const import SEARCH_BUTTON_WIDTH, SEARCH_LABEL_WIDTH
 from karabogui.events import KaraboEventSender, register_for_broadcasts
 from karabogui.navigation.system_view import SystemTreeView
 
 from .base import BasePanelWidget
-
-SEARCH_BUTTON_WIDTH = 32
-SEARCH_LABEL_WIDTH = 90
 
 
 class TopologyPanel(BasePanelWidget):
