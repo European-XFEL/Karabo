@@ -1,3 +1,5 @@
+import numpy as np
+
 from .timestamp import Timestamp
 
 
@@ -25,10 +27,10 @@ class TimeMixin(object):
         :param frac: remaining time in attoseconds
         :param period: update interval between train Ids in microsec
         """
-        cls._tid = train_id
-        cls._time_sec = sec
-        cls._time_frac = frac
-        cls._period = period
+        cls._tid = np.uint64(train_id)
+        cls._time_sec = np.uint64(sec)
+        cls._time_frac = np.uint64(frac)
+        cls._period = np.uint64(period)
 
     @classmethod
     def get_timestamp(cls, timestamp):
@@ -47,8 +49,9 @@ class TimeMixin(object):
         # calculate how many trains are between reference and new timestamp
         since_id = cls.elapsed_tid(reference, timestamp)
 
-        trainId = cls._tid + since_id
+        trainId = np.uint64(cls._tid + since_id)
         timestamp.tid = trainId
+
         return timestamp
 
     @classmethod
@@ -64,7 +67,7 @@ class TimeMixin(object):
         :returns: elapsed trainId's between reference and new timestamp
         """
         time_difference = new.toTimestamp() - reference.toTimestamp()
-        return int(time_difference * 1.0e6 // cls._period)
+        return np.int64(time_difference * 1.0e6 // cls._period)
 
 
 def get_timestamp(timestamp=None):
