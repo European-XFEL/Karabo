@@ -85,7 +85,7 @@ namespace karabo {
                     .unit(Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
                     .assignmentOptional().defaultValue(500)
                     .reconfigurable()
-                    .minInc(0).maxInc(10000) // 0.1 Hz minimum 
+                    .minInc(0).maxInc(10000) // 0.1 Hz minimum
                     .commit();
 
             INT32_ELEMENT(expected).key("waitInitDevice")
@@ -1065,7 +1065,7 @@ namespace karabo {
             }
         }
 
-        
+
         void GuiServerDevice::onNetworkData(const std::string& channelName,
                                             const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta) {
             try {
@@ -1076,9 +1076,9 @@ namespace karabo {
                 // that we send to the clients. For that we cast const away from 'data' and in fact modify it!
                 // That is safe, see comment in InputChannel::triggerIOEvent() which calls this method.
                 Hash::Node& dataNode = h.set("data", Hash());
-                meta.getTimestamp().toHashAttributes(dataNode.getAttributes());
                 dataNode.getValue<Hash>() = std::move(const_cast<Hash&> (data));
-
+                Hash::Node& metaNode = h.set("data.meta", true);
+                meta.getTimestamp().toHashAttributes(metaNode.getAttributes());
                 boost::mutex::scoped_lock lock(m_networkMutex);
                 NetworkMap::const_iterator iter = m_networkConnections.find(channelName);
                 if (iter != m_networkConnections.cend()) {

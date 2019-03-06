@@ -398,7 +398,7 @@ class TestManager(GuiTestCase):
                 dev_proxy.get_property_binding.return_value = prop_binding
                 topology.get_device.return_value = dev_proxy
                 ts = Timestamp("2009-04-20T10:32:22 UTC")
-                data = Hash('data', 10)
+                data = Hash('data', 10, 'meta', True)
                 ts.toHashAttributes(data)
                 manager.handle_networkData('frankie:data', data)
                 assert 'frankie:data' in manager._big_data
