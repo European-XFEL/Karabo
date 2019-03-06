@@ -111,6 +111,10 @@ class Channel(object):
         else:
             message = done["read"]
             assert message["reason"] == "update"
+            text = ("{} - Received chunk acknowledgement ``read``. A chunk "
+                    "future was retrieved before: {}".format(self.channelName,
+                                                             "chunk" in done))
+            print(text)
             yield from sleep(0)
 
 
