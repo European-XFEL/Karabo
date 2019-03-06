@@ -46,5 +46,9 @@ namespace karabo {
         void Trainstamp::toHashAttributes(Hash::Attributes& attributes) const {
             attributes.set("tid", m_trainId);
         }
+
+        std::ostream& operator<<(std::ostream& out, const Trainstamp & trainstamp) {
+            return out << trainstamp.getTrainId();
+        }
     }
 }

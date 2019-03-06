@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Timestamp.hh
  * Author: WP76
  *
@@ -15,7 +15,7 @@
 namespace karabo {
     namespace util {
 
-        /**
+/**
          * This class expresses a time point and holds it in form of an Epochstamp and Trainstamp
          */
         class Timestamp {
@@ -49,7 +49,7 @@ namespace karabo {
 
             /**
              * Return the seconds entry of the timestamp
-             * @return 
+             * @return
              */
             inline const unsigned long long& getSeconds() const {
                 return m_epochstamp.getSeconds();
@@ -57,7 +57,7 @@ namespace karabo {
 
             /**
              * Return the fractional seconds entry of the timestamp
-             * @return 
+             * @return
              */
             inline const unsigned long long& getFractionalSeconds() const {
                 return m_epochstamp.getFractionalSeconds();
@@ -65,7 +65,7 @@ namespace karabo {
 
             /**
              * Return the train id entry of the timestamp
-             * @return 
+             * @return
              */
             inline const unsigned long long& getTrainId() const {
                 return m_trainstamp.getTrainId();
@@ -83,7 +83,7 @@ namespace karabo {
 
             /**
              * Generates a sting (respecting ISO-8601) for object time for INTERNAL usage ("%Y%m%dT%H%M%S%f" => "20121225T132536.789333[123456789123]")
-             * 
+             *
              * @param precision - Indicates the precision of the fractional seconds (e.g. MILLISEC, MICROSEC, NANOSEC, PICOSEC, FEMTOSEC, ATTOSEC) [Default: MICROSEC]
              * @param extended - "true" returns ISO8601 extended string; "false" returns ISO8601 compact string [Default: false]
              * @return ISO 8601 formatted string (extended or compact)
@@ -92,7 +92,7 @@ namespace karabo {
 
             /**
              * Generates a sting (respecting ISO-8601) for object time for EXTERNAL usage ("%Y%m%dT%H%M%S%f%z" => "20121225T132536.789333[123456789123]Z")
-             * 
+             *
              * @param precision - Indicates the precision of the fractional seconds (e.g. MILLISEC, MICROSEC, NANOSEC, PICOSEC, FEMTOSEC, ATTOSEC) [Default: MICROSEC]
              * @param extended - "true" returns ISO8601 extended string; "false" returns ISO8601 compact string [Default: false]
              * @return ISO 8601 formatted string with "Z" in the string end ("Z" means the date time zone is using Coordinated Universal Time - UTC)
@@ -101,7 +101,7 @@ namespace karabo {
 
             /**
              * Formats to specified format time stored in the object
-             * 
+             *
              * @param format The format of the time point (visit strftime for more info: http://www.cplusplus.com/reference/ctime/strftime/) [Default: "%Y-%b-%d %H:%M:%S"]
              * @param localTimeZone - String that represents an ISO8601 time zone [Default: "Z" == UTC]
              * @return formated string in the specified Time Zone
@@ -110,7 +110,7 @@ namespace karabo {
 
             /**
              * Formats to specified format time stored in the object
-             * 
+             *
              * @param localeName - String that represents the locale to be used [Default: "" == System locale]
              * @param format The format of the time point (visit strftime for more info: http://www.cplusplus.com/reference/ctime/strftime/) [Default: "%Y-%b-%d %H:%M:%S"]
              * @param localTimeZone - String that represents an ISO8601 time zone [Default: "Z" == UTC]
@@ -121,7 +121,7 @@ namespace karabo {
             /**
              * Generates a timestamp as double with seconds.fractional format (fractional precision == MICROSEC)
              * Function necessary to use in graphs plotting in Python code (MICROSEC precision is enough)
-             * 
+             *
              * @return A double value with the decimal point indicating fractions of seconds
              */
             double toTimestamp() const;
@@ -137,14 +137,14 @@ namespace karabo {
             /**
              * Compare if the Epochstamp and Trainstamp of this Timestamp are the same as those of other
              * @param other
-             * @return 
+             * @return
              */
             bool operator==(const Timestamp& other) const;
 
             /**
              * Compare if the Epochstamp and/or Trainstamp of this Timestamp are not the same of other
              * @param other
-             * @return 
+             * @return
              */
             inline bool operator!=(const Timestamp& other) const {
                 return !(*this == other);
@@ -152,6 +152,9 @@ namespace karabo {
         private:
 
         };
+        
+        std::ostream& operator<<(std::ostream&, const Timestamp& timestamp);
+
     }
 }
 
