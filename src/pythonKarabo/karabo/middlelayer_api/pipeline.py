@@ -102,13 +102,16 @@ class Channel(object):
             self.writeHash(h)
             self.writeSize(sizes.sum())
             self.writer.writelines(encoded)
-            yield from self.writer.drain()
 
         if "read" in pending:
             # NOTE: We accept the fact that also ``read`` can be in ``done``!
             # If ``read`` is still ``pending``, we yield from it here!
             message = yield from pending["read"]
             assert message["reason"] == "update"
+        else:
+            message = done["read"]
+            assert message["reason"] == "update"
+            yield from sleep(0)
 
 
 class NetworkInput(Configurable):
