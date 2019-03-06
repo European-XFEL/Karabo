@@ -14,11 +14,14 @@ Detailed Merge-Log
 
 Bound/cpp core
 ++++++++++++++
-- Python Karathon SignalSlotable Type Handle Test !3038
+
+- Bound: Python Karathon SignalSlotable Type Handle Test !3038
 - Bound: Simplify wrapper code !3212
 - Bound: allow setSpecialDisplayType on Nodes !3284
 - Bound: removed gui elements from karabo-cli !3283
 - Bound: API cleanup code quality (PEP8) !3257
+- Bound: give client access to output channels !3156
+- Bound integration tests: fix device providing scene test !3172
 - Bound: Establish code quality in with test and flake all unit tests !3319
 - Karathon: unify proxy methods !3160
 - C++/bound: Avoid uuid clashes in (a)sync communication !3302
@@ -29,13 +32,11 @@ Bound/cpp core
 - C++/bound: More mature DeviceClient test, init only timestamp for "pid" !3173
 - C++: More mature history integration test !3165
 - C++ DeviceClient must keep order about instanceNew and instanceUpdate !3247
-- C++: No unordered_map if we erase iterators while looping on map !3299
+- C++: Don't use unordered_map if we erase iterators while looping on map !3299
 - C++: Set custom display type for nodes !3273
 - C++ OutputChannel: Single queue for load-balanced shared inputs. !3100
-- More logs and few fixes for p2p shortcut !3331
-- Epochstamp: Add operator<< for output to ostream !3077
-- Bound: give client access to output channels !3156
-- Bound integration tests: fix device providing scene test !3172
+- C++: More logs and few fixes for p2p shortcut !3331
+- C++: Epochstamp: Add operator<< for output to ostream !3077
 - C++: 'Fix for failure of testPipeMinData when sender delay is set to zero. !3179
 - Fix serialiser performance comparison !3241
 
@@ -43,32 +44,31 @@ Core Devices
 ++++++++++++
 
 - ProjectManager becomes native !3233
-- GUISERVER: Gui server send pipeline data only on request !3315
-- GUISERVER: Optimize device instantiation !3310
-- DataLogger: Ensure time ordering of full configuration (RedMine 36581) !3313
-- Agressively avoid one copy when forwarding pipeline data to GUI !3322
-- GUISERVER: allow the server to go as fast as possible !3340
-- GUISERVER: Forward time stamp of pipeline data to clients !3323
+- GuiServer: Gui server send pipeline data only on request !3315
+- GuiServer: Optimize device instantiation !3310
+- GuiServer: Agressively avoid one copy when forwarding pipeline data to GUI !3322
+- GuiServer: reduce lower boundary for property throttling !3340
+- GuiServer: Forward time stamp of pipeline data to clients !3323
 - DataLogger: Publishes timestamp of last recorded data !3335
-- GUISERVER: Fix two bugs in gui server pipeline connection handling !3296
-- GUI Server: Use minInc for time intervals !3301
-- Gui servers treats completely failing instantiate request !3145
+- GuiServer: Fix two bugs in gui server pipeline connection handling !3296
+- GuiServer: Use minInc for time intervals !3301
+- GuiServer: Treats completely failing instantiate request !3145
+- GuiServer: Cache and forward logs !3204
+- GuiServer: loglevel default to INFO !3217
 - DataLogger: 'Fix history retrieval (RedMine 13865) !3249
-- FEAT: path elements in the Property Test !3258
-- GUI Server: Cache and forward logs !3204
+- PropertyTest: Add path elements !3258
 - RunConfigurationGroup: Table combobox !3213
-- Core: Move often occuring logs in Device.hh to debug !3220
-- GUI SERVER: loglevel default to INFO !3217
 - Alarm Service: Move logs to debug without sending !3218
 - DataLogger: Proper log message in slotGetConfigurationFromPast if archive_schema.txt is missing. !3174
+- DataLogger: Ensure time ordering of full configuration (RedMine 36581) !3313
 - DataLogging_Test: Add NO_THROW around synchronous calls. Better diagnostics if it fails the next time with an uncaught exception !3142
+- Core: Move often occuring logs in Device.hh to debug !3220
 
 Dependencies and deployment
 +++++++++++++++++++++++++++
 
 - FIX: colorful karabo-check always returns !3149
 - FEAT: Added Noded slot integration test !3122
-- CI: Added test coverage job on gitlab-ci !2885
 - CI: remove previous files from CI directory! !3175
 - TEST: Implement SIGSEGV flakyness for gui tests !3216
 - Fix all shebangs once and for all !3089
@@ -189,9 +189,3 @@ Graphical user interface
 - GUI: Show gui server hostname !3133
 - GUI: Fix various color dialog bugs !3137
 - GUI: Fix text dialog !3147
-
-
-ikarabo & Macro API
-+++++++++++++++++++
-
-- Nothing
