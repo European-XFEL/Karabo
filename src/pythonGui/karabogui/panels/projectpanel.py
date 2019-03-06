@@ -13,6 +13,7 @@ from PyQt4.QtGui import (
 from karabo.common.project.api import ProjectModel
 from karabogui import icons
 from karabogui.actions import build_qaction, KaraboAction
+from karabogui.const import SEARCH_BUTTON_WIDTH, SEARCH_LABEL_WIDTH
 from karabogui.events import KaraboEventSender, register_for_broadcasts
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.utils import (
@@ -23,9 +24,6 @@ from karabogui.util import get_spin_widget
 from karabogui.widgets.toolbar import ToolBar
 
 from .base import BasePanelWidget
-
-SEARCH_BUTTON_WIDTH = 32
-SEARCH_LABEL_WIDTH = 90
 
 
 class ProjectPanel(BasePanelWidget):
