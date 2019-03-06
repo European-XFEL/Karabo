@@ -855,7 +855,7 @@ namespace karabo {
 
                     // Merge to full schema
                     m_fullSchema.merge(m_injectedSchema);
-                    // FIXME: updateAliasMap()?
+                    m_fullSchema.updateAliasMap();
 
                     // Notify the distributed system
                     emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
@@ -867,7 +867,7 @@ namespace karabo {
 
                 set(validated);
 
-                KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Schema updated";
+                KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Schema appended";
             }
 
             /**
@@ -911,7 +911,7 @@ namespace karabo {
 
                     // Merge to full schema
                     m_fullSchema.merge(m_injectedSchema);
-                    // FIXME: updateAliasMap()?
+                    m_fullSchema.updateAliasMap();
 
                     // Notify the distributed system
                     emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
