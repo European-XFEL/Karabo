@@ -70,7 +70,7 @@ class Timestamp(object):
 
     def toTimestamp(self):
         """Return the time as seconds since 1970-01-01 00:00 UTC"""
-        return self.time / RESOLUTION
+        return numpy.float64(self.time / RESOLUTION)
 
     def toLocal(self):
         """Return the time as an ISO 8601 string in the local timezone"""
