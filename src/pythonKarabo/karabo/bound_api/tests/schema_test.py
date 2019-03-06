@@ -13,8 +13,6 @@ from .configuration_example_classes import (
     TestStruct1, ArrayContainer
 )
 
-from .configuration_example_device import ConfigurationExampleDevice  # noqa
-
 
 class Schema_TestCase(unittest.TestCase):
 
@@ -1047,7 +1045,8 @@ class Schema_TestCase(unittest.TestCase):
             s.setAllowedActions("node.int", ["bla", "blue"])
 
     def test_schemaInjection(self):
-        device = Configurator(PythonDevice).create("ConfigurationExampleDevice", Hash())
+        device = Configurator(PythonDevice).create(
+                        "PythonDevice", Hash())
         device.startFsm()
 
         # Test appendSchema appends
