@@ -854,7 +854,13 @@ class PythonDevice(NoFsm):
     def updateSchema(self, schema):
         """Updates the existing device schema
         It merges the schema in argument to the static schema defined in
-        expectedParameters.
+        expectedParameters, removing any previous schema injections.
+
+        If a property is being reinjected, and of the same type, then it will
+        keep its current value. If it does not fit within range, an error will
+        be raised.
+        Likewise, if the type changes, and the value cannot be cast, an error
+        will be raised.
 
         :param schema: to be merged with the static schema
         """
@@ -877,14 +883,23 @@ class PythonDevice(NoFsm):
             self.fullSchema.copy(self.staticSchema)
             self.fullSchema += self._injectedSchema
             self.fullSchema.updateAliasMap()
+            # notify the distributed system...
+            self._ss.emit("signalSchemaUpdated",
+                          self.fullSchema, self.deviceid)
+            # For parameters in the static schema of which attributes changes,
+            # re-assign previous values and timestamps
             validated.merge(self.parameters)
-        # notify the distributed system...
-        self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
         self.set(validated)
         self.log.INFO("Schema updated")
 
     def appendSchema(self, schema):
         """Append to the existing device schema
+
+        If a property is being reinjected, and of the same type, then it will
+        keep its current value. If it does not fit within range, an error will
+        be raised.
+        Likewise, if the type changes, and the value cannot be cast, an error
+        will be raised.
 
         :param schema: to append
         """
@@ -896,20 +911,21 @@ class PythonDevice(NoFsm):
         rules.injectTimestamps = True
         validator = Validator()
         validator.setValidationRules(rules)
-        validated = validator.validate(schema, self.parameters,
+        validated = validator.validate(schema, Hash(),
                                        self.getActualTimestamp())
         with self._stateChangeLock:
-            for key in self._injectedSchema.getKeys():
-                self.parameters.erase(key)
             self._stateDependentSchema = {}
             self._injectedSchema += schema
             self.fullSchema.copy(self.staticSchema)
             self.fullSchema += self._injectedSchema
-            self.parameters.merge(
-                validated, HashMergePolicy.REPLACE_ATTRIBUTES)
             self.fullSchema.updateAliasMap()
-        # notify the distributed system...
-        self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
+
+            # notify the distributed system...
+            self._ss.emit("signalSchemaUpdated", self.fullSchema,
+                          self.deviceid)
+            validated.merge(self.parameters)
+
+        self.set(validated)
         self.log.INFO("Schema appended")
 
     def appendSchemaMaxSize(self, path, value, emitFlag=True):
