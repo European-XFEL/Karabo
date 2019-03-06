@@ -375,6 +375,7 @@ class Manager(QObject):
         connected devices (p2p) to `GuiServerDevice`. To keep the GUI
         responsive the displaying of this data is delayed here.
         """
+
         def show_data():
             if name not in self._big_data:
                 return
@@ -382,8 +383,12 @@ class Manager(QObject):
             device_id, prop_path = name.split(":")
             device_proxy = self._topology.get_device(device_id)
             binding = device_proxy.get_property_binding(prop_path)
-            data_ts = Timestamp.fromHashAttributes(data_hash['data', ...])
-            timestamp = data_ts or Timestamp()
+            if "meta" in data_hash:
+                timestamp = Timestamp.fromHashAttributes(
+                    data_hash['meta', ...])
+            else:
+                timestamp = Timestamp()
+
             apply_fast_data(data_hash, binding.value.schema, timestamp)
             device_proxy.config_update = True
             # Let the GUI server know we have processed this chunk
