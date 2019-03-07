@@ -70,7 +70,8 @@ namespace karabo {
 
 
         std::ostream& operator<<(std::ostream& out, const Timestamp& timestamp) {
-            return out << "Epoch: " << timestamp.getEpochstamp() << " Train ID: " << timestamp.getTrainstamp();
+            out << "Epoch: " << timestamp.getEpochstamp() << " Train ID: " << timestamp.getTrainstamp();
+            return out;
         }
     }
 }
