@@ -1114,6 +1114,23 @@ class Schema_TestCase(unittest.TestCase):
         self.assertEqual(device._injectedSchema.getPaths(), Schema().getPaths())
         self.assertEqual(device.fullSchema.getPaths(), device.staticSchema.getPaths())
 
+        # Test that appending several times in a row, quickly, set all values
+        for idx in range(10):
+            schema = Schema()
+            (
+                INT32_ELEMENT(schema).key(f"property{idx}")
+                .assignmentOptional().defaultValue(idx)
+                .reconfigurable()
+                .commit()
+            )
+            device.appendSchema(schema)
+
+        for idx in range(10):
+            key = f"property{idx}"
+            self.assertIn(key, device.parameters.getPaths())
+            self.assertIn(key, device.fullSchema.getPaths())
+            self.assertEqual(idx, device.parameters.get(key))
+
 
 if __name__ == '__main__':
     unittest.main()
