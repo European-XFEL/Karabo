@@ -1077,7 +1077,7 @@ namespace karabo {
                 // That is safe, see comment in InputChannel::triggerIOEvent() which calls this method.
                 Hash::Node& dataNode = h.set("data", Hash());
                 dataNode.getValue<Hash>() = std::move(const_cast<Hash&> (data));
-                Hash::Node& metaNode = h.set("data.meta", true);
+                Hash::Node& metaNode = h.set("meta.timestamp", true);
                 meta.getTimestamp().toHashAttributes(metaNode.getAttributes());
                 boost::mutex::scoped_lock lock(m_networkMutex);
                 NetworkMap::const_iterator iter = m_networkConnections.find(channelName);
