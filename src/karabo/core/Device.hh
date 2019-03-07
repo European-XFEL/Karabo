@@ -865,6 +865,14 @@ namespace karabo {
                     validated.merge(m_parameters);
                 }
 
+                // Keep new paths only. This hash is then set, to avoid re-sending updates with the same values.
+                std::vector<std::string> paths;
+                validated.getPaths(paths);
+                for (const std::string& path : paths) {
+                    if (m_parameters.has(path)) {
+                        validated.erase(path);
+                    }
+                }
                 set(validated);
 
                 KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Schema appended";
@@ -921,6 +929,14 @@ namespace karabo {
                     validated.merge(m_parameters);
                 }
 
+                // Keep new paths only. This hash is then set, to avoid re-sending updates with the same values.
+                std::vector<std::string> paths;
+                validated.getPaths(paths);
+                for (const std::string& path : paths) {
+                    if (m_parameters.has(path)) {
+                        validated.erase(path);
+                    }
+                }
                 set(validated);
 
                 KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Schema updated";
