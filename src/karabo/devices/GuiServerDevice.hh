@@ -163,11 +163,11 @@ namespace karabo {
             void forwardLogs(const boost::system::error_code& error);
 
             /**
-             *Write to a Hash to a channel in a synchronous fashion (blocking).
-             * @param message
+             * Deferred disconnect handler launched by a deadline timer. 
              */
-            void safeClientWriteSync(const WeakChannelPointer channel, const karabo::util::Hash& message);
-
+            void deferredDisconnect(const boost::system::error_code& err, WeakChannelPointer channel,
+                                    boost::shared_ptr<boost::asio::deadline_timer> timer);
+            
             void safeClientWrite(const WeakChannelPointer channel, const karabo::util::Hash& message, int prio = LOSSLESS);
 
             /**

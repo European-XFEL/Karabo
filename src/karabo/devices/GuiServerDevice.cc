@@ -554,9 +554,13 @@ namespace karabo {
 
                 std::string message = "The minimum required GUI client version is: " + get<std::string>("minClientVersion");
                 Hash h("type", "notification", "message", message);
-                safeClientWriteSync(channel, h);
-                
-                disconnectChannel(channel);
+                safeClientWrite(channel, h);
+
+                auto timer(boost::make_shared<boost::asio::deadline_timer>(karabo::net::EventLoop::getIOService()));
+                timer->expires_from_now(boost::posix_time::milliseconds(500));
+                timer->async_wait(bind_weak(&GuiServerDevice::deferredDisconnect, this,
+                                            boost::asio::placeholders::error, channel, timer));
+
                 // TODO: check valid login.
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onLogin(): " << e.userFriendlyMsg();
@@ -564,6 +568,16 @@ namespace karabo {
         }
 
 
+        void GuiServerDevice::deferredDisconnect(const boost::system::error_code& err, WeakChannelPointer channel,
+                                                 boost::shared_ptr<boost::asio::deadline_timer> timer) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "deferredDisconnect";
+                disconnectChannel(channel);
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in deferredDisconnect(): " << e.what();
+            }
+        }
+        
         void GuiServerDevice::onReconfigure(const karabo::util::Hash& hash) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onReconfigure";
@@ -687,15 +701,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in initReply " << e.what();
             }
         }
-
-
-        void GuiServerDevice::safeClientWriteSync(const WeakChannelPointer channel, const karabo::util::Hash& message) {
-            boost::mutex::scoped_lock lock(m_channelMutex);
-            karabo::net::Channel::Pointer chan = channel.lock();
-            if (chan && chan->isOpen()) {
-                chan->write(message);
-            }
-        }
+        
 
         void GuiServerDevice::safeClientWrite(const WeakChannelPointer channel, const karabo::util::Hash& message, int prio) {
             boost::mutex::scoped_lock lock(m_channelMutex);
