@@ -47,8 +47,9 @@ namespace karabo {
             attributes.set("tid", m_trainId);
         }
 
-        std::ostream& operator<<(std::ostream& out, const Trainstamp & trainstamp) {
-            return out << trainstamp.getTrainId();
+        std::ostream& operator<<(std::ostream& out, const Trainstamp& trainstamp) {
+            out << trainstamp.getTrainId();
+            return out;
         }
     }
 }
