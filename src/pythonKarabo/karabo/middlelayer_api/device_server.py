@@ -325,10 +325,10 @@ class MiddleLayerDeviceServer(DeviceServerBase):
 
     @coroutine
     def _run(self, **kwargs):
+        yield from super(MiddleLayerDeviceServer, self)._run(**kwargs)
         if isSet(self.timeServerId):
             self._ss.connect(self.timeServerId, "signalTimeTick",
                              self.slotTimeTick)
-        yield from super(MiddleLayerDeviceServer, self)._run(**kwargs)
 
     @slot
     def slotTimeTick(self, train_id, sec, frac, period):
