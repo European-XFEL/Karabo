@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   Timestamp.cc
  * Author: WP76
- * 
+ *
  * Created on June 19, 2013, 3:22 PM
  */
 
@@ -66,6 +66,12 @@ namespace karabo {
 
         bool Timestamp::operator==(const Timestamp& other) const {
             return (m_epochstamp == other.m_epochstamp && m_trainstamp == other.m_trainstamp);
+        }
+
+
+        std::ostream& operator<<(std::ostream& out, const Timestamp& timestamp) {
+            out << "Epoch: " << timestamp.getEpochstamp() << " Train ID: " << timestamp.getTrainstamp();
+            return out;
         }
     }
 }
