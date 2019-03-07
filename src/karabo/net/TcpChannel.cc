@@ -213,7 +213,14 @@ namespace karabo {
 
 
         void TcpChannel::readAsyncSizeInBytesImpl(const ReadSizeInBytesHandler& handler, bool allowNonAsync) {
+            std::string logPrefix("@TcpChannel::readAsyncSizeInBytesImpl (");
+            logPrefix += boost::lexical_cast<std::string>(boost::this_thread::get_id());
+            logPrefix += ") -> ";
+
             size_t sizeofLength = m_connectionPointer->getSizeofLength();
+
+            std::clog << logPrefix << "sizeOfLength = " << sizeofLength << std::endl;
+
             if (sizeofLength == 0) throw KARABO_LOGIC_EXCEPTION("Message's sizeTag size was configured to be 0. Thus, registration of this function does not make sense!");
             m_inboundMessagePrefix.resize(sizeofLength);
             boost::mutex::scoped_lock lock(m_socketMutex);
@@ -226,6 +233,9 @@ namespace karabo {
                 onSizeInBytesAvailable(ec, handler);
             } else {
                 m_asyncCounter++;
+
+                std::clog << logPrefix << "m_asyncCounter = " << m_asyncCounter << std::endl;
+
                 boost::asio::async_read(m_socket, buffer(m_inboundMessagePrefix), transfer_all(),
                                         util::bind_weak(&karabo::net::TcpChannel::onSizeInBytesAvailable,
                                                         this, boost::asio::placeholders::error, handler));
@@ -234,6 +244,12 @@ namespace karabo {
 
 
         void TcpChannel::onSizeInBytesAvailable(const ErrorCode& e, const ReadSizeInBytesHandler& handler) {
+            std::string logPrefix("@TcpChannel::onSizeInBytesAvailable (");
+            logPrefix += boost::lexical_cast<std::string>(boost::this_thread::get_id());
+            logPrefix += ") -> ";
+
+            std::clog << logPrefix << "ErrorCode e = " << e << std::endl;
+
             if (e) {
                 bytesAvailableHandler(e);
                 return;
@@ -241,11 +257,20 @@ namespace karabo {
 
             size_t messageSize;
             _KARABO_VECTOR_TO_SIZE(m_inboundMessagePrefix, messageSize);
+
+            std::clog << logPrefix << "inboundMessagePrefix = '"
+                    << std::string(m_inboundMessagePrefix.begin(), m_inboundMessagePrefix.end()) << "'" << std::endl;
+            std::clog << logPrefix << "call handler with messageSize = '" << messageSize << "'." << std::endl;
+
             handler(messageSize);
         }
 
 
         void TcpChannel::byteSizeAvailableHandler(const size_t byteSize) {
+            // byteSizeAvailableHandler is only used as handler argument of readAsyncSizeInBytes
+            // and readAsyncSizeInBytes binds it to another handler which is protected by a bind_weak
+            // so we do not have to bind_weak here again.
+
             m_inboundData->resize(byteSize);
             boost::mutex::scoped_lock lock(m_socketMutex);
             if (m_socket.available() >= byteSize) {
@@ -322,8 +347,14 @@ namespace karabo {
 
 
         void TcpChannel::readAsyncString(const ReadStringHandler& handler) {
+            std::string logPrefix("TcpChannel::readAsyncString (");
+            logPrefix += boost::lexical_cast<std::string>(boost::this_thread::get_id());
+            logPrefix += ") -> ";
+
+            std::clog << logPrefix << "m_activeHandler = " << m_activeHandler << "." << std::endl;
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
             m_activeHandler = TcpChannel::STRING;
+            std::clog << logPrefix << "m_activeHandler set to " << m_activeHandler << "." << std::endl;
             m_readHandler = handler;
             // 'false' ensures that we leave the context and go via the event loop:
             this->readAsyncSizeInBytesImpl(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1), false);
@@ -453,10 +484,18 @@ namespace karabo {
 
 
         void TcpChannel::readAsyncHashHash(const ReadHashHashHandler& handler) {
+
+            std::string logPrefix("@TcpChannel::readAsyncHashHash (");
+            logPrefix += boost::lexical_cast<std::string>(boost::this_thread::get_id());
+            logPrefix += ") -> ";
+
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
             m_activeHandler = TcpChannel::HASH_HASH;
             m_readHeaderFirst = true;
             m_readHandler = handler;
+
+            std::clog << logPrefix << "call to readAsyncSizeInBytesImpl." << std::endl;
+
             // 'false' ensures that we leave the context and go via the event loop:
             this->readAsyncSizeInBytesImpl(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1), false);
         }
@@ -473,6 +512,14 @@ namespace karabo {
 
 
         void TcpChannel::bytesAvailableHandler(const boost::system::error_code& e) {
+            std::string logPrefix("@TcpChannel::bytesAvailableHandler (");
+            logPrefix += boost::lexical_cast<std::string>(boost::this_thread::get_id());
+            logPrefix += ") -> ";
+
+            std::clog << logPrefix << "will parse the bytes received. error_code e = " << e << "." << std::endl;
+            std::clog << logPrefix << "m_readHeaderFirst = " << m_readHeaderFirst << std::endl;
+            std::clog << logPrefix << "m_activeHandler = " << m_activeHandler << std::endl;
+
             if (!e) {
                 // Only parse header information
                 if (m_readHeaderFirst) {
@@ -1447,14 +1494,29 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_queueMutex);
             m_queue[prio]->push_back(mp);
 
+            std::string logPrefix("TcpChannel::dispatchWriteAsync (");
+            logPrefix += boost::lexical_cast<std::string>(boost::this_thread::get_id());
+            logPrefix += ") -> ";
+
+
+            std::clog << logPrefix << "will dispatch write; m_writeInProgress = " << m_writeInProgress << "." << std::endl;
+
             if (!m_writeInProgress) {
                 m_writeInProgress = true;
+                std::clog << logPrefix << "post to event loop." << std::endl;
                 EventLoop::getIOService().post(bind_weak(&TcpChannel::doWrite, this));
+                std::clog << logPrefix << "posted to event loop." << std::endl;
             }
         }
 
 
         void TcpChannel::doWrite() {
+
+            std::string logPrefix("@TcpChannel::doWrite (");
+            logPrefix += boost::lexical_cast<std::string>(boost::this_thread::get_id());
+            logPrefix += ") -> ";
+
+            std::clog << logPrefix << "got in... " << std::endl;
 
             try {
                 Message::Pointer mp;
@@ -1470,6 +1532,7 @@ namespace karabo {
                     }
                     // if all queues are empty
                     if (!mp) {
+                        std::clog << logPrefix << "all queues empty. Clears m_writeInProgress." << std::endl;
                         m_writeInProgress = false;
                         return;
                     }
@@ -1488,6 +1551,26 @@ namespace karabo {
                     const karabo::io::BufferSet::Pointer& data = mp->body();
                     data->appendTo(buf);
 
+                    // TODO: comment (or delete) all the lines after this and before the call to async_write.
+                    std::clog << logPrefix << "will async write " << buf.size() << " buf(s)" << std::endl;
+                    for (unsigned int i = 0; i < buf.size(); i++) {
+                        std::clog << "\tbuf[" << i << "].size() = " << buf[i].size() << std::endl;
+                        std::clog << "\tbuf[" << i << "].data() = '";
+                        auto first = boost::asio::buffer_cast<const char*>(buf[i]);
+                        auto last = first + boost::asio::buffer_size(buf[i]);
+                        std::vector<unsigned int> dataBytes;
+                        std::clog << "\tbuf[" << i << "].data() as hex:" << std::endl;
+                        std::copy(first, last, std::back_inserter(dataBytes));
+                        for (unsigned int i = 0; i < dataBytes.size(); i++) {
+                            std::clog << " 0x" << std::hex << std::setfill('0') << std::setw(sizeof (unsigned int)*2)
+                                    << dataBytes[i];
+                            if ((i + 1) % 8 == 0) {
+                                std::clog << std::endl;
+                            }
+                        }
+                        std::clog << std::endl;
+                    }
+
                     boost::asio::async_write(m_socket, buf,
                                              util::bind_weak(&TcpChannel::doWriteHandler, this,
                                                              mp, boost::asio::placeholders::error,
@@ -1496,6 +1579,7 @@ namespace karabo {
                 }
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::doWrite exception : " << e.what();
+                std::clog << "@TcpChannel::doWrite -> doWrite exception: '" << e.what() << "'." << std::endl;
                 m_writeInProgress = false;
             }
         }
@@ -1506,7 +1590,14 @@ namespace karabo {
             m_queueWrittenBytes[queueIndex] += length;
             m_writtenBytes += length;
 
+            std::string logPrefix("@TcpChannel::doWriteHandler (");
+            logPrefix += boost::lexical_cast<std::string>(boost::this_thread::get_id());
+            logPrefix += ") -> ";
+
+            std::clog << logPrefix << "wrote " << length << " bytes." << std::endl;
+
             if (!ec) {
+                std::clog << logPrefix << "kicks next doWrite to consume queue." << std::endl;
                 doWrite();
             } else {
                 KARABO_LOG_FRAMEWORK_ERROR << "TcpChannel::doWriteHandler error : " << ec.value() << " -- " << ec.message()
@@ -1535,7 +1626,7 @@ namespace karabo {
             // BufferSet will fallback to normal copy when needed.
             karabo::io::BufferSet::Pointer pBuffSet = boost::make_shared<karabo::io::BufferSet>(false);
             karabo::io::BinarySerializer<karabo::util::Hash>::Pointer pSerializer =
-                    karabo::io::BinarySerializer<karabo::util::Hash>::create("BinarySerializer");
+                    karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin");
             pSerializer->save(data, *pBuffSet);
             return pBuffSet;
         }
@@ -1565,9 +1656,21 @@ namespace karabo {
 
 
         void TcpChannel::writeAsync(const karabo::util::Hash& data, int prio) {
-            auto datap = bufferSetFromHash(data);
-            Message::Pointer mp = boost::make_shared<Message>(datap);
-            dispatchWriteAsync(mp, prio);
+            std::string logPrefix("TcpChannel::writeAsync(Hash&, int)(");
+            logPrefix += boost::lexical_cast<std::string>(boost::this_thread::get_id());
+            logPrefix += ") -> ";
+
+            std::clog << logPrefix << "prio = " << prio << "; data = " << std::endl;
+            std::clog << karabo::util::toString(data) << std::endl;
+            // TODO: remove the catch-all exception handler - just for debugging.
+            try {
+                auto datap = bufferSetFromHash(data);
+                std::clog << logPrefix << "BufferSet datap = " << datap << std::endl;
+                Message::Pointer mp = boost::make_shared<Message>(datap);
+                dispatchWriteAsync(mp, prio);
+            } catch (std::exception& e) {
+                std::clog << logPrefix << "exception thrown: " << e.what() << std::endl;
+            }
         }
 
 
