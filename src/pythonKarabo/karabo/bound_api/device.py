@@ -883,13 +883,21 @@ class PythonDevice(NoFsm):
             self.fullSchema.copy(self.staticSchema)
             self.fullSchema += self._injectedSchema
             self.fullSchema.updateAliasMap()
+
             # notify the distributed system...
             self._ss.emit("signalSchemaUpdated",
                           self.fullSchema, self.deviceid)
             # For parameters in the static schema of which attributes changes,
             # re-assign previous values and timestamps
             validated.merge(self.parameters)
+
+        # Keep new paths only. This hash is then set, to avoid re-sending
+        # updates with the same value.
+        for path in validated.getPaths():
+            if path in self.parameters:
+                validated.erase(path)
         self.set(validated)
+
         self.log.INFO("Schema updated")
 
     def appendSchema(self, schema):
@@ -923,9 +931,17 @@ class PythonDevice(NoFsm):
             # notify the distributed system...
             self._ss.emit("signalSchemaUpdated", self.fullSchema,
                           self.deviceid)
+            # For parameters in the static schema of which attributes changes,
+            # re-assign previous values and timestamps
             validated.merge(self.parameters)
 
+        # Keep new paths only. This hash is then set, to avoid re-sending
+        # updates with the same value.
+        for path in validated.getPaths():
+            if path in self.parameters:
+                validated.erase(path)
         self.set(validated)
+
         self.log.INFO("Schema appended")
 
     def appendSchemaMaxSize(self, path, value, emitFlag=True):
