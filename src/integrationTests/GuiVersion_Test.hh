@@ -33,7 +33,7 @@ private:
     void appTestRunner();
     void testVersionControl();
     void resetClientConnection();
-
+    void testNotification();
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_eventLoopThread;
 
