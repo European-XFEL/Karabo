@@ -84,26 +84,38 @@ class Channel(object):
             for future in pending.values():
                 future.cancel()
             raise error.popitem()[1]
-        chunk = done["chunk"]
-        encoded = []
-        info = []
-        for data, timestamp in chunk:
-            encoded.append(encodeBinary(data))
-            # Create the timestamp information for this packet!
-            hsh = Hash("source", self.channelName, "timestamp", True)
-            hsh["timestamp", ...] = timestamp.toDict()
-            info.append(hsh)
 
-        nData = numpy.uint32(len(chunk))
-        sizes = numpy.array([len(d) for d in encoded], dtype=numpy.uint32)
-        h = Hash("nData", nData, "byteSizes", sizes, "sourceInfo", info)
-        self.writeHash(h)
-        self.writeSize(sizes.sum())
-        for e in encoded:
-            self.writer.write(e)
+        if "chunk" in done:
+            chunk = done["chunk"]
+            encoded = []
+            info = []
+            for data, timestamp in chunk:
+                encoded.append(encodeBinary(data))
+                # Create the timestamp information for this packet!
+                hsh = Hash("source", self.channelName, "timestamp", True)
+                hsh["timestamp", ...] = timestamp.toDict()
+                info.append(hsh)
 
-        message = yield from pending["read"]
-        assert message["reason"] == "update"
+            nData = numpy.uint32(len(chunk))
+            sizes = numpy.array([len(d) for d in encoded], dtype=numpy.uint32)
+            h = Hash("nData", nData, "byteSizes", sizes, "sourceInfo", info)
+            self.writeHash(h)
+            self.writeSize(sizes.sum())
+            self.writer.writelines(encoded)
+
+        if "read" in pending:
+            # NOTE: We accept the fact that also ``read`` can be in ``done``!
+            # If ``read`` is still ``pending``, we yield from it here!
+            message = yield from pending["read"]
+            assert message["reason"] == "update"
+        else:
+            message = done["read"]
+            assert message["reason"] == "update"
+            text = ("{} - Received chunk acknowledgement ``read``. A chunk "
+                    "future was retrieved before: {}".format(self.channelName,
+                                                             "chunk" in done))
+            print(text)
+            yield from sleep(0)
 
 
 class NetworkInput(Configurable):
