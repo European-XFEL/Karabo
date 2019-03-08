@@ -254,9 +254,31 @@ private:
         }
 
         std::clog << "\n@WriteAndForgetSrv::connectHandler -> Starting async dataHash read..." << std::endl;
-        channel->readAsyncHashHash(boost::bind(&WriteAndForgetSrv::readAsyncHashHashHandler, this, _1, channel, _2, _3));
+        //channel->readAsyncHashHash(boost::bind(&WriteAndForgetSrv::readAsyncHashHashHandler, this, _1, channel, _2, _3));
+        channel->readAsyncHash(boost::bind(&WriteAndForgetSrv::readAsyncHashHandler, this, _1, channel, _2));
     }
 
+
+    void readAsyncHashHandler(const boost::system::error_code& ec,
+                              const karabo::net::Channel::Pointer& channel,
+                              karabo::util::Hash& hash) {
+        if (ec) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAndForgetSrv error at readAysncHashHandler: " << ec.value() << " -- " << ec.message();
+            std::clog << "\nWriteAndForgetSrv error at readAysncHashHandler: " << ec.value() << " -- " << ec.message() << std::endl;
+            if (channel) channel->close();
+            return;
+        }
+
+        std::clog << "@WriteAndForgetSrv::readAsyncHashHandler -> Body hash read:" << std::endl;
+        std::clog << karabo::util::toString(hash);
+
+
+        // TODO: assert on the Hash read.
+        //      WriteAndForgetParams params;
+        //      CPPUNIT_ASSERT_EQUAL_MESSAGE("Hash received does not match with expected.", params.dataHash, hash);
+
+        if (channel) channel->close();
+    }
 
     void readAsyncHashHashHandler(const boost::system::error_code& ec,
                                   const karabo::net::Channel::Pointer& channel,
@@ -269,9 +291,9 @@ private:
             return;
         }
 
-        std::clog << "@WriteAndForgetSrv::readAsyncHashHandler -> Header hash read:" << std::endl;
+        std::clog << "@WriteAndForgetSrv::readAsyncHashHashHandler -> Header hash read:" << std::endl;
         std::clog << karabo::util::toString(header);
-        std::clog << "@WriteAndForgetSrv::readAsyncHashHandler -> Body hash read:" << std::endl;
+        std::clog << "@WriteAndForgetSrv::readAsyncHashHashHandler -> Body hash read:" << std::endl;
         std::clog << karabo::util::toString(body);
 
 
@@ -313,6 +335,7 @@ private:
         channel->writeAsync(params.dataHash, params.writePriority);
         std::clog << "\nServer sending completed." << std::endl;
 
+        /*
         // The server is expected to close the connection when it's done reading.
         unsigned int waits = 0;
         const unsigned int maxWaits = 200;
@@ -323,6 +346,7 @@ private:
         std::clog << "@WriteAndForgetCli::connectHandler -> waited for " << waits << " times." << std::endl;
 
         CPPUNIT_ASSERT_MESSAGE("Timed-out waiting for server to read data.", waits < maxWaits);
+         */
     }
 };
 
