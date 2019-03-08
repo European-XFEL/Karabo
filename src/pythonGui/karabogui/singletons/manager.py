@@ -371,9 +371,9 @@ class Manager(QObject):
         pass  # DEPRECATED
 
     def handle_networkData(self, name, data, meta=None):
-        """This method handles the big data chucks coming from directly
-        connected devices (p2p) to `GuiServerDevice`. To keep the GUI
-        responsive the displaying of this data is delayed here.
+        """This method handles the big data chunks coming from Karabo
+        pipelines to `GuiServerDevice`. To keep the GUI responsive the
+        displaying of this data is delayed here.
         """
 
         def show_data():
