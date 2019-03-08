@@ -378,7 +378,7 @@ namespace karabo {
 
             karabo::io::BufferSet::Pointer bufferSetFromPointerToChar(const char* data, size_t size);
 
-            karabo::io::BufferSet::Pointer bufferSetFromHash(const karabo::util::Hash& data);
+            void bufferSetFromHash(const karabo::util::Hash& data, karabo::io::BufferSet::Pointer& pBuffSet);
 
             void decompress(karabo::util::Hash& header, const std::vector<char>&source, char* data, const size_t& size);
             void decompress(karabo::util::Hash& header, const std::vector<char>&source, std::vector<char>& target);

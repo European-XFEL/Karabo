@@ -1625,7 +1625,6 @@ namespace karabo {
                         std::clog << std::dec << std::endl;
                     }
 
-
                     boost::asio::async_write(m_socket, buf,
                                              util::bind_weak(&TcpChannel::doWriteHandler, this,
                                                              mp, boost::asio::placeholders::error,
@@ -1676,14 +1675,20 @@ namespace karabo {
         }
 
 
-        karabo::io::BufferSet::Pointer TcpChannel::bufferSetFromHash(const karabo::util::Hash& data) {
+        void TcpChannel::bufferSetFromHash(const karabo::util::Hash& data,
+                                           karabo::io::BufferSet::Pointer& pBuffSet) {
             // Always use CopyAllData construction parameter set to false; it is expected that
             // BufferSet will fallback to normal copy when needed.
-            karabo::io::BufferSet::Pointer pBuffSet = boost::make_shared<karabo::io::BufferSet>(false);
-            karabo::io::BinarySerializer<karabo::util::Hash>::Pointer pSerializer =
-                    karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin");
-            pSerializer->save(data, *pBuffSet);
-            return pBuffSet;
+            karabo::io::BufferSet::Pointer pBS = boost::make_shared<karabo::io::BufferSet>(false);
+
+            if (m_binarySerializer) {
+                m_binarySerializer->save(data, *pBS);
+                pBuffSet = pBS;
+             } else {
+                std::string serializedData = m_textSerializer->save(data);
+                pBS = bufferSetFromPointerToChar(serializedData.c_str(), serializedData.length() + 1);
+            }
+            pBuffSet = pBS;
         }
 
 
@@ -1695,8 +1700,7 @@ namespace karabo {
 
 
         void TcpChannel::writeAsync(const vector<char>& data, int prio) {
-            std::string strData(data.begin(), data.end());
-            writeAsync(strData.c_str(), strData.length() + 1, prio);
+            writeAsync(&(data[0]), data.size(), prio);
         }
 
 
@@ -1706,7 +1710,7 @@ namespace karabo {
 
 
         void TcpChannel::writeAsync(const std::string& data, int prio) {
-            writeAsync(data.c_str(), data.length() + 1, prio);
+            writeAsync(data.c_str(), data.length(), prio);
         }
 
 
@@ -1719,7 +1723,8 @@ namespace karabo {
             std::clog << karabo::util::toString(data) << std::endl;
             // TODO: remove the catch-all exception handler - just for debugging.
             try {
-                auto datap = bufferSetFromHash(data);
+                karabo::io::BufferSet::Pointer datap;
+                bufferSetFromHash(data, datap);
                 std::clog << logPrefix << "BufferSet datap = " << datap << std::endl;
                 Message::Pointer mp = boost::make_shared<Message>(datap);
                 dispatchWriteAsync(mp, prio);
@@ -1749,8 +1754,7 @@ namespace karabo {
 
 
         void TcpChannel::writeAsync(const karabo::util::Hash& header, const VectorCharPointer& datap, int prio) {
-            std::string strData(datap->begin(), datap->end());
-            auto datapBs = bufferSetFromPointerToChar(strData.c_str(), strData.length() + 1);
+            karabo::io::BufferSet::Pointer datapBs = bufferSetFromPointerToChar(&((*datap)[0]), datap->size());
             VectorCharPointer headerp(new std::vector<char>());
             prepareVectorFromHash(header, *headerp);
             Message::Pointer mp = boost::make_shared<Message>(datapBs, headerp);
@@ -1759,7 +1763,7 @@ namespace karabo {
 
 
         void TcpChannel::writeAsync(const karabo::util::Hash& header, const std::string& data, int prio) {
-            auto datap = bufferSetFromPointerToChar(data.c_str(), data.length() + 1);
+            auto datap = bufferSetFromPointerToChar(data.c_str(), data.length());
             VectorCharPointer headerp(new std::vector<char>());
             prepareVectorFromHash(header, *headerp);
             Message::Pointer mp = boost::make_shared<Message>(datap, headerp);
@@ -1770,7 +1774,8 @@ namespace karabo {
         void TcpChannel::writeAsync(const karabo::util::Hash& header, const karabo::util::Hash& data, int prio) {
             VectorCharPointer headerp(new std::vector<char>());
             prepareVectorFromHash(header, *headerp);
-            auto datap = bufferSetFromHash(data);
+            karabo::io::BufferSet::Pointer datap;
+            bufferSetFromHash(data, datap);
             Message::Pointer mp = boost::make_shared<Message>(datap, headerp);
             dispatchWriteAsync(mp, prio);
         }
