@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QAction, QColor, QDialog, QFont, QFrame, QLabel
+from PyQt4.QtGui import QAction, QDialog, QFrame, QLabel
 
 from karabogui.dialogs.textdialog import TextDialog
 
@@ -18,31 +18,28 @@ class LabelWidget(QLabel):
         self.setFrameShape(QFrame.Box)
         self.setAutoFillBackground(True)
         self.model = model
-        self.apply_model()
+        self.set_model(model)
         edit_action = QAction("Edit Label", self)
         edit_action.triggered.connect(self.edit_colors_text)
         self.addAction(edit_action)
 
     def set_model(self, model):
+        """Set the new ``model`` and update the widget properties.
+        """
         self.model.trait_set(text=model.text, frame_width=model.frame_width,
                              font=model.font, background=model.background,
                              foreground=model.foreground)
-        self.apply_model()
 
-    def apply_model(self):
-        model = self.model
         self.setText(model.text)
         self.setToolTip(model.text)
         self.setLineWidth(model.frame_width)
-
-        font_properties = QFont()
-        font_properties.fromString(model.font)
-        self.setFont(font_properties)
-
-        palette = self.palette()
-        palette.setColor(self.foregroundRole(), QColor(model.foreground))
-        palette.setColor(self.backgroundRole(), QColor(model.background))
-        self.setPalette(palette)
+        styleSheet = []
+        styleSheet.append('qproperty-font: "{}";'.format(model.font))
+        styleSheet.append('color: "{}";'.format(model.foreground))
+        if model.background:
+            styleSheet.append('background-color: "{}";'.format(
+                model.background))
+        self.setStyleSheet("QLabel {{ {} }}".format("".join(styleSheet)))
         self.setGeometry(model.x, model.y, model.width, model.height)
 
     def add_proxies(self, proxies):
