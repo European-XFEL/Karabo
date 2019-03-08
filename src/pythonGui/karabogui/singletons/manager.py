@@ -383,7 +383,7 @@ class Manager(QObject):
             device_id, prop_path = name.split(":")
             device_proxy = self._topology.get_device(device_id)
             binding = device_proxy.get_property_binding(prop_path)
-            if meta is not None:
+            if meta_hash is not None:
                 timestamp = Timestamp.fromHashAttributes(
                         meta_hash['timestamp', ...])
             else:
