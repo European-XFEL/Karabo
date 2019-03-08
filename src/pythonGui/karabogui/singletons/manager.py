@@ -370,26 +370,32 @@ class Manager(QObject):
     def handle_notification(self, device, message, short, detailed):
         pass  # DEPRECATED
 
-    def handle_networkData(self, name, data):
-        """This method handles the big data chucks coming from directly
-        connected devices (p2p) to `GuiServerDevice`. To keep the GUI
-        responsive the displaying of this data is delayed here.
+    def handle_networkData(self, name, data, meta=None):
+        """This method handles the big data chunks coming from Karabo
+        pipelines to `GuiServerDevice`. To keep the GUI responsive the
+        displaying of this data is delayed here.
         """
+
         def show_data():
             if name not in self._big_data:
                 return
-            data_hash = self._big_data.pop(name)
+            data_hash, meta_hash = self._big_data.pop(name)
             device_id, prop_path = name.split(":")
             device_proxy = self._topology.get_device(device_id)
             binding = device_proxy.get_property_binding(prop_path)
-            data_ts = Timestamp.fromHashAttributes(data_hash['data', ...])
-            timestamp = data_ts or Timestamp()
+            if meta is not None:
+                timestamp = Timestamp.fromHashAttributes(
+                        meta_hash['timestamp', ...])
+            else:
+                # gui server is older with version < 2.4.0 and does not
+                # the meta hash
+                timestamp = Timestamp()
             apply_fast_data(data_hash, binding.value.schema, timestamp)
             device_proxy.config_update = True
             # Let the GUI server know we have processed this chunk
             get_network().onRequestNetwork(name)
 
-        self._big_data[name] = data
+        self._big_data[name] = (data, meta)
         executeLater(show_data, Priority.BIG_DATA)
 
     def handle_initReply(self, deviceId, success, message):

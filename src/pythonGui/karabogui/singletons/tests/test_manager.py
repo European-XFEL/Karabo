@@ -398,10 +398,11 @@ class TestManager(GuiTestCase):
                 dev_proxy.get_property_binding.return_value = prop_binding
                 topology.get_device.return_value = dev_proxy
                 ts = Timestamp("2009-04-20T10:32:22 UTC")
-                data = Hash('data', 10)
-                ts.toHashAttributes(data)
-                manager.handle_networkData('frankie:data', data)
-                assert 'frankie:data' in manager._big_data
+                meta = Hash('timestamp', True)
+                ts.toHashAttributes(meta)
+                data = Hash('Position', 10)
+                manager.handle_networkData('frankie:output', data, meta)
+                assert 'frankie:output' in manager._big_data
                 assert later.call_count == 1
 
                 callback = later.mock_calls[0][1][0]
