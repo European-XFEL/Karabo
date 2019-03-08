@@ -40,6 +40,7 @@ class DeviceTreeView(QTreeView):
 
         self.handler_list = [DeviceSceneHandler()]
         self.expanded = True
+        self.popupWidget = None
         self.header().sectionDoubleClicked.connect(self.onDoubleClickHeader)
 
         # Setup the context menu
@@ -150,14 +151,15 @@ class DeviceTreeView(QTreeView):
         node = self.model().index_ref(index)
         if node is None:
             return
-        popupWidget = PopupWidget(parent=self)
-        popupWidget.setInfo(node.attributes)
+        if self.popupWidget is None:
+            self.popupWidget = PopupWidget(parent=self)
+        self.popupWidget.setInfo(node.attributes)
 
         pos = QCursor.pos()
         pos.setX(pos.x() + 10)
         pos.setY(pos.y() + 10)
-        popupWidget.move(pos)
-        popupWidget.show()
+        self.popupWidget.move(pos)
+        self.popupWidget.show()
 
     @pyqtSlot()
     def onGetConfigurationFromPast(self):
