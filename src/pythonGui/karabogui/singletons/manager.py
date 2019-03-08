@@ -370,7 +370,7 @@ class Manager(QObject):
     def handle_notification(self, device, message, short, detailed):
         pass  # DEPRECATED
 
-    def handle_networkData(self, name, data, meta):
+    def handle_networkData(self, name, data, meta=None):
         """This method handles the big data chucks coming from directly
         connected devices (p2p) to `GuiServerDevice`. To keep the GUI
         responsive the displaying of this data is delayed here.
@@ -383,8 +383,11 @@ class Manager(QObject):
             device_id, prop_path = name.split(":")
             device_proxy = self._topology.get_device(device_id)
             binding = device_proxy.get_property_binding(prop_path)
-            timestamp = Timestamp.fromHashAttributes(
-                    meta_hash['timestamp', ...])
+            if meta is not None:
+                timestamp = Timestamp.fromHashAttributes(
+                        meta_hash['timestamp', ...])
+            else:
+                timestamp = Timestamp()
             apply_fast_data(data_hash, binding.value.schema, timestamp)
             device_proxy.config_update = True
             # Let the GUI server know we have processed this chunk
