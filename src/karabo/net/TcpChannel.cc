@@ -258,8 +258,44 @@ namespace karabo {
             size_t messageSize;
             _KARABO_VECTOR_TO_SIZE(m_inboundMessagePrefix, messageSize);
 
-            std::clog << logPrefix << "inboundMessagePrefix = '"
-                    << std::string(m_inboundMessagePrefix.begin(), m_inboundMessagePrefix.end()) << "'" << std::endl;
+            /*
+            #define _KARABO_VECTOR_TO_SIZE(x, v) {\
+                size_t sizeofLength = m_connectionPointer->getSizeofLength();\
+                assert((x).size() == sizeofLength);\
+                if (m_connectionPointer->lengthIsText()) {\
+                    try {\
+                        v = boost::lexical_cast<size_t>(std::string((x).begin(), (x).end()));\
+                    } catch(const boost::bad_lexical_cast& e) {\
+                        throw KARABO_CAST_EXCEPTION(std::string(e.what()) + " ( the source is '" \
+                                + std::string((x).begin(), (x).end()) + "', source_type=" + e.source_type().name()\
+                                + " and target_type=" + e.target_type().name() + " )");\
+                    }\
+                } else if (sizeofLength == sizeof (uint8_t)) {\
+                    v = *reinterpret_cast<uint8_t*> (&(x)[0]);\
+                } else if (sizeofLength == sizeof (uint16_t)) {\
+                    v = *reinterpret_cast<uint16_t*> (&(x)[0]);\
+                } else if (sizeofLength == sizeof (uint64_t)) {\
+                    v = *reinterpret_cast<uint64_t*> (&(x)[0]);\
+                } else {\
+                    v = *reinterpret_cast<uint32_t*> (&(x)[0]);\
+                }\
+            }
+             */
+
+            //std::clog << logPrefix << "inboundMessagePrefix = '"
+            //        << std::string(m_inboundMessagePrefix.begin(), m_inboundMessagePrefix.end()) << "'" << std::endl;
+
+            // TODO: comment (or delete) all the lines after this and before the call to handler.
+            std::clog << logPrefix << "m_inboundMessagePrefix:" << std::endl;
+            for (unsigned int i = 0; i < m_inboundMessagePrefix.size(); i++) {
+                std::clog << " 0x" << std::hex << std::setfill('0') << std::setw(sizeof (unsigned int)*2)
+                        << (unsigned int) (m_inboundMessagePrefix[i]);
+                if ((i + 1) % 8 == 0) {
+                    std::clog << std::endl;
+                }
+            }
+            std::clog << std::dec << std::endl;
+
             std::clog << logPrefix << "call handler with messageSize = '" << messageSize << "'." << std::endl;
 
             handler(messageSize);
@@ -1192,9 +1228,26 @@ namespace karabo {
 
 
         void TcpChannel::prepareHashFromData(karabo::util::Hash& hash) const {
+            std::string logPrefix("TcpChannel::prepareHashFromData (");
+            logPrefix += boost::lexical_cast<std::string>(boost::this_thread::get_id());
+            logPrefix += ") -> ";
+
+            std::clog << logPrefix << "m_inboundData->size = " << m_inboundData->size() << std::endl;
+
+            // TODO: comment (or delete) all the lines after this and before the if for m_textSerializer.
+            for (unsigned int i = 0; i < m_inboundData->size(); i++) {
+                std::clog << " 0x" << std::hex << std::setfill('0') << std::setw(sizeof (unsigned int)*2)
+                        << (unsigned int) ((*m_inboundData)[i]);
+                if ((i + 1) % 8 == 0) {
+                    std::clog << std::endl;
+                }
+            }
+            std::clog << std::dec << std::endl;
+
             if (m_textSerializer) {
                 m_textSerializer->load(hash, &(*m_inboundData)[0], m_inboundData->size());
             } else {
+                std::clog << logPrefix << "will call binarySerializer to deserialize Hash." << std::endl;
                 m_binarySerializer->load(hash, *m_inboundData);
             }
         }
@@ -1549,13 +1602,14 @@ namespace karabo {
                     }
 
                     const karabo::io::BufferSet::Pointer& data = mp->body();
+                    m_bodySize = data->totalSize();
+                    buf.push_back(buffer(&m_bodySize, sizeof (unsigned int)));
                     data->appendTo(buf);
 
                     // TODO: comment (or delete) all the lines after this and before the call to async_write.
                     std::clog << logPrefix << "will async write " << buf.size() << " buf(s)" << std::endl;
                     for (unsigned int i = 0; i < buf.size(); i++) {
-                        std::clog << "\tbuf[" << i << "].size() = " << buf[i].size() << std::endl;
-                        std::clog << "\tbuf[" << i << "].data() = '";
+                        std::clog << "\tbuf[" << i << "].size() = " << boost::asio::buffer_size(buf[i]) << std::endl;
                         auto first = boost::asio::buffer_cast<const char*>(buf[i]);
                         auto last = first + boost::asio::buffer_size(buf[i]);
                         std::vector<unsigned int> dataBytes;
@@ -1568,8 +1622,9 @@ namespace karabo {
                                 std::clog << std::endl;
                             }
                         }
-                        std::clog << std::endl;
+                        std::clog << std::dec << std::endl;
                     }
+
 
                     boost::asio::async_write(m_socket, buf,
                                              util::bind_weak(&TcpChannel::doWriteHandler, this,
