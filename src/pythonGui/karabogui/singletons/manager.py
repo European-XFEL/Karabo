@@ -387,6 +387,8 @@ class Manager(QObject):
                 timestamp = Timestamp.fromHashAttributes(
                         meta_hash['timestamp', ...])
             else:
+                # gui server is older with version < 2.4.0 and does not
+                # the meta hash
                 timestamp = Timestamp()
             apply_fast_data(data_hash, binding.value.schema, timestamp)
             device_proxy.config_update = True
