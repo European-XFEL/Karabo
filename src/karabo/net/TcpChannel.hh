@@ -273,7 +273,7 @@ namespace karabo {
 
             void writeAsync(const std::string& data, int prio);
 
-            void writeAsync(const karabo::util::Hash& data, int prio);
+            void writeAsync(const karabo::util::Hash& data, int prio, bool copyAllData);
 
             void writeAsync(const karabo::util::Hash& header, const char* data, const size_t& size, int prio);
 
@@ -283,7 +283,7 @@ namespace karabo {
 
             void writeAsync(const karabo::util::Hash& header, const std::string& data, int prio);
 
-            void writeAsync(const karabo::util::Hash& header, const karabo::util::Hash& data, int prio);
+            void writeAsync(const karabo::util::Hash& header, const karabo::util::Hash& data, int prio, bool copyAllData);
 
             virtual void setAsyncChannelPolicy(int priority, const std::string& policy, const size_t capacity = 0);
             
@@ -378,7 +378,10 @@ namespace karabo {
 
             karabo::io::BufferSet::Pointer bufferSetFromPointerToChar(const char* data, size_t size);
 
-            void bufferSetFromHash(const karabo::util::Hash& data, karabo::io::BufferSet::Pointer& pBuffSet);
+            karabo::io::BufferSet::Pointer bufferSetFromVectorCharPointer(const VectorCharPointer& dataVect);
+
+            void bufferSetFromHash(const karabo::util::Hash& data, karabo::io::BufferSet::Pointer& pBuffSet,
+                                   bool copyAllData);
 
             void decompress(karabo::util::Hash& header, const std::vector<char>&source, char* data, const size_t& size);
             void decompress(karabo::util::Hash& header, const std::vector<char>&source, std::vector<char>& target);
