@@ -603,8 +603,9 @@ namespace karabo {
              * @param data is contained in a Hash with no particular structure, but serializable, i.e. containing no
              *        non-karabo data types or Hash derived types
              * @param prio the priority of this write operation
+             * @param copyAllData when true data will be copied; when false copies will be avoided wherever possible.
              */
-            virtual void writeAsync(const karabo::util::Hash& data, int prio = 4) {
+            virtual void writeAsync(const karabo::util::Hash& data, int prio = 4, bool copyAllData = false) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
