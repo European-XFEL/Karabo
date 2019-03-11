@@ -14,7 +14,8 @@ from PyQt4.QtGui import (QColorDialog, QComboBox, QDialog, QDialogButtonBox,
 from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
 from karabogui import icons
-from karabogui.singletons.api import get_network, get_project_model
+from karabogui.singletons.api import (
+    get_manager, get_network, get_project_model)
 
 
 class _PatternMatcher(object):
@@ -57,7 +58,9 @@ class AboutDialog(QDialog):
         # Pattern matchers for a specific key combos
         self._cheat_codes = {
             _PatternMatcher('chooch'):
-                lambda: get_network().togglePerformanceMonitor()
+                lambda: get_network().togglePerformanceMonitor(),
+            _PatternMatcher('bigdata'):
+                lambda: get_manager().toggleBigDataPerformanceMonitor()
         }
 
     def keyPressEvent(self, event):
