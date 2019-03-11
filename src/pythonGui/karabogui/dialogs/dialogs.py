@@ -215,8 +215,11 @@ class PenDialog(QDialog):
             else:
                 self.pen.setWidth(self.sbStrokeWidth.value())
                 # Set style first!
-                self.pen.setStyle(self.wDashType.penStyle())
-                self.pen.setDashOffset(self.dsbDashOffset.value())
+                pen_style = self.wDashType.penStyle()
+                self.pen.setStyle(pen_style)
+
+                if pen_style is not Qt.SolidLine:
+                    self.pen.setDashOffset(self.dsbDashOffset.value())
 
             for k, v in self.linecaps.items():
                 if getattr(self, v + 'Cap').isChecked():
