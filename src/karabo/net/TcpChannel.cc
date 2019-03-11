@@ -1675,11 +1675,18 @@ namespace karabo {
         }
 
 
+        karabo::io::BufferSet::Pointer TcpChannel::bufferSetFromVectorCharPointer(const VectorCharPointer& dataVect) {
+            karabo::io::BufferSet::Pointer datapBs = boost::make_shared<karabo::io::BufferSet>();
+            datapBs->back().resize(dataVect->size());
+            datapBs->emplaceBack(dataVect);
+            return datapBs;
+        }
+
+
         void TcpChannel::bufferSetFromHash(const karabo::util::Hash& data,
-                                           karabo::io::BufferSet::Pointer& pBuffSet) {
-            // Always use CopyAllData construction parameter set to false; it is expected that
-            // BufferSet will fallback to normal copy when needed.
-            karabo::io::BufferSet::Pointer pBS = boost::make_shared<karabo::io::BufferSet>(false);
+                                           karabo::io::BufferSet::Pointer& pBuffSet,
+                                           bool copyAllData) {
+            karabo::io::BufferSet::Pointer pBS = boost::make_shared<karabo::io::BufferSet>(copyAllData);
 
             if (m_binarySerializer) {
                 m_binarySerializer->save(data, *pBS);
@@ -1705,7 +1712,9 @@ namespace karabo {
 
 
         void TcpChannel::writeAsync(const VectorCharPointer& datap, int prio) {
-            writeAsync(*datap, prio);
+            karabo::io::BufferSet::Pointer datapBs = bufferSetFromVectorCharPointer(datap);
+            Message::Pointer mp = boost::make_shared<Message>(datapBs);
+            dispatchWriteAsync(mp, prio);
         }
 
 
@@ -1714,7 +1723,7 @@ namespace karabo {
         }
 
 
-        void TcpChannel::writeAsync(const karabo::util::Hash& data, int prio) {
+        void TcpChannel::writeAsync(const karabo::util::Hash& data, int prio, bool copyAllData) {
             std::string logPrefix("TcpChannel::writeAsync(Hash&, int)(");
             logPrefix += boost::lexical_cast<std::string>(boost::this_thread::get_id());
             logPrefix += ") -> ";
@@ -1724,7 +1733,7 @@ namespace karabo {
             // TODO: remove the catch-all exception handler - just for debugging.
             try {
                 karabo::io::BufferSet::Pointer datap;
-                bufferSetFromHash(data, datap);
+                bufferSetFromHash(data, datap, copyAllData);
                 std::clog << logPrefix << "BufferSet datap = " << datap << std::endl;
                 Message::Pointer mp = boost::make_shared<Message>(datap);
                 dispatchWriteAsync(mp, prio);
@@ -1754,7 +1763,7 @@ namespace karabo {
 
 
         void TcpChannel::writeAsync(const karabo::util::Hash& header, const VectorCharPointer& datap, int prio) {
-            karabo::io::BufferSet::Pointer datapBs = bufferSetFromPointerToChar(&((*datap)[0]), datap->size());
+            karabo::io::BufferSet::Pointer datapBs = bufferSetFromVectorCharPointer(datap);
             VectorCharPointer headerp(new std::vector<char>());
             prepareVectorFromHash(header, *headerp);
             Message::Pointer mp = boost::make_shared<Message>(datapBs, headerp);
@@ -1771,11 +1780,11 @@ namespace karabo {
         }
 
 
-        void TcpChannel::writeAsync(const karabo::util::Hash& header, const karabo::util::Hash& data, int prio) {
+        void TcpChannel::writeAsync(const karabo::util::Hash& header, const karabo::util::Hash& data, int prio, bool copyAllData) {
             VectorCharPointer headerp(new std::vector<char>());
             prepareVectorFromHash(header, *headerp);
             karabo::io::BufferSet::Pointer datap;
-            bufferSetFromHash(data, datap);
+            bufferSetFromHash(data, datap, copyAllData);
             Message::Pointer mp = boost::make_shared<Message>(datap, headerp);
             dispatchWriteAsync(mp, prio);
         }
