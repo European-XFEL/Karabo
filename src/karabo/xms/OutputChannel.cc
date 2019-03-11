@@ -441,6 +441,9 @@ namespace karabo {
                     ++it;
                 }
             }
+            // TODO:
+            // In case onInputGone(..) is called in parallel to update(), we have to unregisterWriterFromChunk(..)
+            // if (but only if) 'channel' was supposed to be served, but was not yet...
         }
 
 
@@ -549,14 +552,17 @@ namespace karabo {
             // Take current chunkId for sending
             unsigned int chunkId = m_chunkId;
 
+
+            // TODO: From HERE...
+            //
             // This will increase the usage counts for this chunkId
             // by the number of all interested connected inputs
             registerWritersOnChunk(chunkId);
 
             // We are done with this chunkId, it will stay alive only until
             // all inputs are served (see above)
-            Memory::unregisterChunk(m_channelId, chunkId);
-
+            unregisterWriterFromChunk(chunkId);
+            // What if this throws? Catch and go on? Block in a loop until it does not throw?
             // Register new chunkId for writing to
             m_chunkId = Memory::registerChunk(m_channelId);
 
@@ -565,7 +571,9 @@ namespace karabo {
 
             // Copy chunk(s)
             copy(chunkId);
-
+            // TODO: ...to HERE, input channels that disconnect in parallel might make an unregisterChunk(..) missing!
+            // At least if it is the last in m_registeredSharedInputs or m_registeredCopyInputs since then
+            // we just return from distribute and copy!
         }
 
 
