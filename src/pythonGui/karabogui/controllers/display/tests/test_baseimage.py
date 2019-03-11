@@ -83,4 +83,5 @@ class TestWebcamImageDisplay(GuiTestCase):
         apply_configuration(get_image_hash(), self.ouput_proxy.binding)
         assert self.controller.widget.toolTip() == ""
         self.controller.show_timestamp_tooltip()
-        assert "Last image received: " in self.controller.widget.toolTip()
+        text = ".output.data.image --- Last image received"
+        assert text in self.controller.widget.toolTip()
