@@ -100,7 +100,8 @@ class DisplayImage(BaseBindingController):
             return
         timestamp = image_node.pixels.value.data.timestamp
         diff = Timestamp().toTimestamp() - timestamp.toTimestamp()
-        self.widget.setToolTip("Last image received: {:.3f} s".format(diff))
+        self.widget.setToolTip("{} --- Last image received {:.3f} s "
+                               "ago".format(self.proxy.key, diff))
 
     def value_update(self, proxy):
         img_node = proxy.value
