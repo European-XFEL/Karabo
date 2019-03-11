@@ -94,7 +94,7 @@ if __name__ == '__main__':
         metadata['packages'].extend(
             ["karabo", "karabo.common", "karabo.common.scenemodel",
              "karabo.common.scenemodel.widgets", "karabo.common.project",
-             "karabo.interactive", "karabo.native",
+             "karabo.interactive", "karabo.native", "karabo.native.data",
              "karabo.native.project", "karabo.packaging",
              "karabo.testing"]
         )
