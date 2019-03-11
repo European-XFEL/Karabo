@@ -171,5 +171,6 @@ class TestDisplayImage(GuiTestCase):
         assert controller.widget.toolTip() == ""
         assert np.all(img_arr == np.zeros((dimY, dimX, 3)))
         controller.show_timestamp_tooltip()
-        assert "Last image received: " in controller.widget.toolTip()
+        text = ".output.data.image --- Last image received"
+        assert text in controller.widget.toolTip()
         controller.destroy()
