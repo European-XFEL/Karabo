@@ -1,7 +1,7 @@
 import numpy as np
 from PyQt4.QtCore import Qt
 
-from karabo.native import EncodingType
+from karabo.native import EncodingType, Timestamp
 from karabogui.binding.api import (
     apply_configuration, build_binding, DeviceProxy, PropertyProxy)
 from karabogui.testing import GuiTestCase
@@ -56,7 +56,6 @@ class TestDisplayImage(GuiTestCase):
 
         assert controller.widget is not None
         assert controller._plot is not None
-
         apply_configuration(
             get_image_hash(dimZ=3, encoding=EncodingType.RGB),
             output_proxy.binding)
@@ -150,3 +149,27 @@ class TestDisplayImage(GuiTestCase):
         for i in range(3):
             controller._axis_changed(i)
         controller._unset_slider()
+
+    def test_tooltip(self):
+        output_proxy = PropertyProxy(root_proxy=self.root_proxy,
+                                     path='output.data')
+        img_proxy = PropertyProxy(root_proxy=self.root_proxy,
+                                  path='output.data.image')
+        controller = DisplayImage(proxy=img_proxy)
+        controller.create(None)
+
+        # give qwt sometime to construct
+        self.process_qt_events()
+
+        assert controller.widget is not None
+        assert controller._plot is not None
+        timestamp_data = Timestamp("2009-04-20T10:32:22 UTC")
+        image_hash = get_image_hash(dimZ=3, encoding=EncodingType.RGB)
+        timestamp_data.toHashAttributes(image_hash)
+        apply_configuration(image_hash, output_proxy.binding)
+        img_arr = np.array(controller._img_array)
+        assert controller.widget.toolTip() == ""
+        assert np.all(img_arr == np.zeros((dimY, dimX, 3)))
+        controller.show_timestamp_tooltip()
+        assert "Last image received: " in controller.widget.toolTip()
+        controller.destroy()
