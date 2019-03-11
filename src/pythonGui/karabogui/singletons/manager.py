@@ -59,10 +59,14 @@ class Manager(QObject):
         # Handler callbacks for `handle_requestFromSlot`
         self._request_handlers = {}
 
+        self._show_big_data_proc = False
         network = get_network()
         network.signalServerConnectionChanged.connect(
             self.onServerConnectionChanged)
         network.signalReceivedData.connect(self.onReceivedData)
+
+    def toggleBigDataPerformanceMonitor(self):
+        self._show_big_data_proc = True
 
     def initDevice(self, serverId, classId, deviceId, config=None):
         schema = self._topology.get_schema(serverId, classId)
@@ -209,7 +213,7 @@ class Manager(QObject):
     def handle_brokerInformation(self, **info):
         get_network()._handleBrokerInformation(
             info.get('host'), info.get('port'), info.get('topic'))
-        broadcast_event(KaraboEventSender.brokerInformationUpdate, info)
+        broadcast_event(KaraboEventSender.BrokerInformationUpdate, info)
 
     def handle_systemTopology(self, systemTopology):
         self._topology.update(systemTopology)
@@ -392,6 +396,10 @@ class Manager(QObject):
                 timestamp = Timestamp()
             apply_fast_data(data_hash, binding.value.schema, timestamp)
             device_proxy.config_update = True
+            if self._show_big_data_proc:
+                proc = Timestamp().toTimestamp() - timestamp.toTimestamp()
+                info = {'name': name, 'proc': proc}
+                broadcast_event(KaraboEventSender.BigDataProcessing, info)
             # Let the GUI server know we have processed this chunk
             get_network().onRequestNetwork(name)
 
