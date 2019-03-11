@@ -21,7 +21,7 @@ from .base import BasePanelWidget
 class TopologyPanel(BasePanelWidget):
     def __init__(self):
         super(TopologyPanel, self).__init__("System Topology")
-        self._init_search_filter()
+        self._reset_search_filter()
 
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
         # not necessary for self due to the fact that the singleton mediator
@@ -46,9 +46,13 @@ class TopologyPanel(BasePanelWidget):
         sender = event.sender
         data = event.data
         if sender is KaraboEventSender.AccessLevelChanged:
-            self._init_search_filter(connected_to_server=True)
+            self._reset_search_filter(connected_to_server=True)
         elif sender is KaraboEventSender.NetworkConnectStatus:
-            self._init_search_filter(data.get('status', False))
+            status = data.get('status', False)
+            self._reset_search_filter(status)
+            if not status:
+                self.close_popup_widget()
+
         return False
 
     def create_search_bar(self):
@@ -105,7 +109,7 @@ class TopologyPanel(BasePanelWidget):
 
         return h_layout
 
-    def _init_search_filter(self, connected_to_server=False):
+    def _reset_search_filter(self, connected_to_server=False):
         # A list of nodes found via the search filter
         self.found = []
         # A deque array indicates the current selection in `self.found`
@@ -116,6 +120,11 @@ class TopologyPanel(BasePanelWidget):
         self.pb_reg_ex.setEnabled(connected_to_server)
         self.pb_arrow_left.setEnabled(False)
         self.pb_arrow_right.setEnabled(False)
+
+    def close_popup_widget(self):
+        widget = self.tree_view.popupWidget
+        if widget is not None:
+            widget.close()
 
     def _select_node(self):
         """Pick the first number in index array, select the corresponding node
