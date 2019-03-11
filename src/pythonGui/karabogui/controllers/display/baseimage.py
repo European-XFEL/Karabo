@@ -17,7 +17,7 @@ from traits.api import (
     Bool, Callable, HasStrictTraits, Instance, on_trait_change, String)
 
 from karabo.common.scenemodel.api import ScientificImageModel, WebcamImageModel
-from karabo.native import EncodingType
+from karabo.native import EncodingType, Timestamp
 from karabogui import icons
 from karabogui.binding.api import ImageBinding
 from karabogui.controllers.api import (
@@ -37,6 +37,7 @@ class _BaseImage(BaseBindingController):
     def create_widget(self, parent):
         """ Initialize widget """
         self._image_widget = KaraboImageWidget(parent=parent)
+        self._image_widget.signal_tooltip.connect(self.show_timestamp_tooltip)
         # Make connection to keep zoom_rect in sync
         self._image_widget.signal_mouse_event.connect(self.zoom_reset)
         self._plot = self._image_widget.get_plot()
@@ -63,6 +64,15 @@ class _BaseImage(BaseBindingController):
         self._show_color_bar(model.show_color_bar)
         self._show_axes(model.show_axes)
         return widget
+
+    @pyqtSlot()
+    def show_timestamp_tooltip(self):
+        image_node = self.proxy.value
+        if image_node is None:
+            return
+        timestamp = image_node.pixels.value.data.timestamp
+        diff = Timestamp().toTimestamp() - timestamp.toTimestamp()
+        self.widget.setToolTip("Last image received: {:.3f} s".format(diff))
 
     def value_update(self, proxy):
         img_node = proxy.value

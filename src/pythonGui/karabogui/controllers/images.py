@@ -5,7 +5,7 @@
 #############################################################################
 import numpy as np
 from guiqwt.plot import ImageDialog, ImageWidget
-from PyQt4.QtCore import Qt, pyqtSignal
+from PyQt4.QtCore import Qt, pyqtSignal, QEvent
 from PyQt4.Qwt5.Qwt import QwtPlot
 
 from karabo.native import EncodingType
@@ -151,10 +151,17 @@ class KaraboImageDialog(_KaraboImageMixin, ImageDialog):
         * parent: parent widget
         * panels (optional): additionnal panels (list, tuple)
     """
+    signal_tooltip = pyqtSignal()
+
+    def event(self, event):
+        if event.type() == QEvent.ToolTip:
+            self.signal_tooltip.emit()
+        return super(KaraboImageDialog, self).event(event)
 
 
 class KaraboImageWidget(_KaraboImageMixin, ImageWidget):
     signal_mouse_event = pyqtSignal()
+    signal_tooltip = pyqtSignal()
 
     def __init__(self, **kwargs):
         """ Possible key arguments:
@@ -184,3 +191,8 @@ class KaraboImageWidget(_KaraboImageMixin, ImageWidget):
         super(KaraboImageWidget, self).mousePressEvent(event)
         if event.button() is Qt.MidButton:
             self.signal_mouse_event.emit()
+
+    def event(self, event):
+        if event.type() == QEvent.ToolTip:
+            self.signal_tooltip.emit()
+        return super(KaraboImageWidget, self).event(event)
