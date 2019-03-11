@@ -51,11 +51,11 @@ def convert_scene_model_to_code(model, name='scene'):
 
 
 def main():
-    description = ('Convert a Karabo scene file to Python code.')
+    description = 'Convert a Karabo scene file to Python code.'
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('filename',
                         help='An SVG file containing a Karabo scene')
-
+    parser.add_argument('deviceId', help='deviceId of the source device')
     ns = parser.parse_args()
 
     # main scene code generation
@@ -67,11 +67,15 @@ def main():
                 ''.format(', '.join(sorted(symbols))))
     code.insert(0, imp_stmt)
 
-    # I/O
-    code.append('print(write_scene(scene))')
-
     # Dump it out
-    print('\n'.join(code))
+    indent = '\n' + ' '*4
+    output_scene = code[0]  # <-- import statement
+    output_scene += '\n\ndef get_scene(deviceId):\n'
+    output_scene += ' '*4 + indent.join(code[1:])
+    output_scene += indent + 'return write_scene(scene)\n'
+
+    # Substitute deviceId and print
+    print(output_scene.replace(f"keys=['{ns.deviceId}", "keys=[f'{deviceId}"))
 
 
 if __name__ == '__main__':
