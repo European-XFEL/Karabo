@@ -223,7 +223,8 @@ private:
 
 struct WriteAndForgetParams {
     const karabo::util::Hash dataHash = karabo::util::Hash("Name", "DataHash", "PiField", 3.14159);
-    const std::string dataString = std::string("Data as std::string");
+    const std::string dataString = std::string("Sample of std::string");
+    const karabo::util::Hash headerHash = karabo::util::Hash("Header", "hdr", "NumOfFields", 3, "required", true);
     const int writePriority = 4;
 };
 
@@ -253,7 +254,7 @@ private:
             return;
         }
 
-        std::clog << "\n@WriteAndForgetSrv::connectHandler -> Starting async dataHash read..." << std::endl;
+        std::clog << "\n@WriteAndForgetSrv::connectHandler -> Starting async string read..." << std::endl;
         //channel->readAsyncHashHash(boost::bind(&WriteAndForgetSrv::readAsyncHashHashHandler, this, _1, channel, _2, _3));
         channel->readAsyncHash(boost::bind(&WriteAndForgetSrv::readAsyncHashHandler, this, _1, channel, _2));
     }
@@ -277,7 +278,30 @@ private:
         //      WriteAndForgetParams params;
         //      CPPUNIT_ASSERT_EQUAL_MESSAGE("Hash received does not match with expected.", params.dataHash, hash);
 
-        if (channel) channel->close();
+        //if (channel) channel->close();
+        channel->readAsyncString(boost::bind(&WriteAndForgetSrv::readAsyncStringHandler, this, _1, channel, _2));
+    }
+
+
+    void readAsyncStringHandler(const boost::system::error_code& ec,
+                                const karabo::net::Channel::Pointer& channel,
+                                std::string& str) {
+        if (ec) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAndForgetSrv error at readAysncStringHandler: " << ec.value() << " -- " << ec.message();
+            std::clog << "\nWriteAndForgetSrv error at readAysncStringHandler: " << ec.value() << " -- " << ec.message() << std::endl;
+            if (channel) channel->close();
+            return;
+        }
+
+        std::clog << "@WriteAndForgetSrv::readAsyncStringHandler -> String read:" << std::endl;
+        std::clog << str << std::endl;
+
+        //CPPUNIT_ASSERT_EQUAL(str, std::string("Hi there"));
+
+        if (channel) {
+            channel->close();
+            std::clog << "@WriteAndForgetSrv::readAsyncStringHandler -> Called channel->close()." << std::endl;
+        }
     }
 
     void readAsyncHashHashHandler(const boost::system::error_code& ec,
@@ -301,7 +325,7 @@ private:
         //      WriteAndForgetParams params;
         //      CPPUNIT_ASSERT_EQUAL_MESSAGE("Hash received does not match with expected.", params.dataHash, hash);
 
-        if (channel) channel->close();
+        //if (channel) channel->close();
     }
     
 };
@@ -330,13 +354,21 @@ private:
 
         WriteAndForgetParams params;
         // Send the async write sequence.
+
         std::clog << "@WriteAndForgetCli::connectHandler -> Sending dataHash ..." << std::endl;
         std::clog << karabo::util::toString(params.dataHash);
         channel->writeAsync(params.dataHash, params.writePriority);
-        std::clog << "\nServer sending completed." << std::endl;
 
-        /*
-        // The server is expected to close the connection when it's done reading.
+        std::clog << "@WriteAndForgetCli::connectHandler -> Sending string ..." << std::endl;
+        std::clog << params.dataString << std::endl;
+        channel->writeAsync(params.dataString, params.writePriority);
+
+        std::clog << "\n@WriteAndForgetCli::connectHandler -> Data sending completed." << std::endl;
+
+        // TODO: add code to wait for the server's response stating it read everything it was supposed to read.
+        //       the client then closes the connection. For now, the temporary busy waiting below is handling
+        //       the test.
+
         unsigned int waits = 0;
         const unsigned int maxWaits = 200;
         std::clog << "@WriteAndForgetCli::connectHandler -> waiting for server to read data..." << std::endl;
@@ -345,8 +377,8 @@ private:
         }
         std::clog << "@WriteAndForgetCli::connectHandler -> waited for " << waits << " times." << std::endl;
 
-        CPPUNIT_ASSERT_MESSAGE("Timed-out waiting for server to read data.", waits < maxWaits);
-         */
+        if (channel) channel->close();
+
     }
 };
 
