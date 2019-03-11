@@ -45,7 +45,7 @@ namespace karabo {
             virtual ~Message() {
             }
 
-/**
+            /**
              * Return the body of the message
              * @return 
              */
