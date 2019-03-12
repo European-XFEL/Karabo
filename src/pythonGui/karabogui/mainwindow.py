@@ -128,9 +128,12 @@ class MainWindow(QMainWindow):
     def karaboBroadcastEvent(self, event):
         sender = event.sender
         data = event.data
-        if sender is KaraboEventSender.brokerInformationUpdate:
+        if sender is KaraboEventSender.BrokerInformationUpdate:
             self._update_broker_connection(data)
             return True  # Nobody else should handle this event!
+        elif sender is KaraboEventSender.BigDataProcessing:
+            self._show_big_data_processing(data)
+            return True
         elif sender is KaraboEventSender.DatabaseIsBusy:
             self._database_is_processing(data.get('is_processing'))
         elif sender is KaraboEventSender.MaximizePanel:
@@ -256,11 +259,15 @@ class MainWindow(QMainWindow):
         # Add a widget (on the right side) for displaying network performance
         expander = QWidget()
         expander.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.ui_big_data = QLabel()
+        self.ui_big_data.setFixedWidth(600)
+        self.ui_big_data.setAlignment(Qt.AlignCenter)
         self.ui_lamp = QLabel()
         self.ui_lamp.setFixedWidth(60)
         self.ui_lamp.setAlignment(Qt.AlignCenter)
         self.ui_lamp.setFrameStyle(QFrame.Box)
         toolbar.addWidget(expander)
+        toolbar.addWidget(self.ui_big_data)
         toolbar.addWidget(self.ui_lamp)
 
     def _setupStatusBar(self):
@@ -448,6 +455,12 @@ class MainWindow(QMainWindow):
             self.brokerInformation.setText("")
             self.guiServerHost.setText("")
 
+    def _show_big_data_processing(self, data):
+        """Show the big data latency including value set in the gui"""
+        name = data.get('name')
+        proc = data.get('proc')
+        self.ui_big_data.setText("{} - {:.3f} s".format(name, proc))
+
     # --------------------------------------
     # Qt slots
 
@@ -523,6 +536,7 @@ class MainWindow(QMainWindow):
             # Erase lamp information
             self.ui_lamp.setStyleSheet("")
             self.ui_lamp.clear()
+            self.ui_big_data.setText("")
 
         if isConnected:
             text = "Disconnect from server"
