@@ -132,6 +132,15 @@ def test_scene_link_model():
     assert read_model.target_window == api.SceneTargetWindow.Dialog
 
 
+def test_timelabel():
+    traits = _geometry_traits()
+    traits['time_format'] = '%H:%M:%S'
+    model = api.DisplayTimeModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+    assert read_model.time_format == '%H:%M:%S'
+
+
 def test_workflowitem_model():
     for klass_name in ('WorkflowItem', 'WorkflowGroupItem'):
         traits = _geometry_traits()
