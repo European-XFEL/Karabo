@@ -12,7 +12,11 @@ from karabo.native import (AccessLevel, AccessMode, Assignment, Attribute, Bool,
                            UInt64, Unit, VectorBool, VectorChar,
                            VectorComplexFloat, VectorFloat, VectorHash,
                            VectorInt32, VectorInt8, VectorString, decodeBinary,
-                           encodeBinary, unit)
+                           encodeBinary, unit, UInt8, Configurable)
+
+
+class arraytestdevice( Configurable ):
+    array = NDArray(dtype=UInt8, shape=[20,20,3])
 
 
 class Tests(TestCase):
@@ -359,11 +363,19 @@ class Tests(TestCase):
         self.assertEqual(schema["shape", "defaultValue"][0], 0)
         self.assertEqual(schema["type", "defaultValue"], 8)
         self.assertEqual(schema["isBigEndian", "defaultValue"], True)
+
         h, attrs = d.toDataAndAttrs(v)
         h = decodeBinary(encodeBinary(h))
         self.assertTrue(h["isBigEndian"])
         self.assertEqual(h["shape"][1], 2)
         self.assertEqual(len(h["data"]), 8)
+
+        # This checks NDArray's schema's "shape" attribute's datatype
+        # This caused DAQ problems as c++ uses unsigned, while python signed
+        a = arraytestdevice()
+        s = a.getClassSchema()
+        attr = s.hash["array"].getAttributes("shape")
+        self.assertEqual( attr['defaultValue'].dtype, numpy.uint64 )
 
         conv = d.toKaraboValue(h)
         self.assertEqual(conv[1, 1], 4)
