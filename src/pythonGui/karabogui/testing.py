@@ -141,6 +141,17 @@ def set_proxy_value(proxy, name, value):
     apply_configuration(Hash(name, value), proxy.root_proxy.binding)
 
 
+def set_proxy_hash(proxy, hsh, timestamp=None):
+    """Use `apply_configuration` to set a a hash on a proxy
+
+    :param timestamp: Optionally a timestamp can be provided for the hash
+    """
+    if timestamp is not None:
+        timestamp.toHashAttributes(hsh)
+
+    apply_configuration(hsh, proxy.root_proxy.binding)
+
+
 @contextlib.contextmanager
 def singletons(**objects):
     """Provide a collection of singletons to be used for the duration of a
