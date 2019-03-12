@@ -10,7 +10,7 @@ from PyQt4.QtGui import (QCheckBox, QComboBox, QHBoxLayout, QLabel,
 from traits.api import Array, Instance, Int
 
 from karabo.common.scenemodel.api import DisplayImageModel
-from karabo.native import EncodingType
+from karabo.native import EncodingType, Timestamp
 from karabogui.binding.api import ImageBinding
 from karabogui.controllers.api import (
     BaseBindingController, KaraboImageDialog, get_dimensions_and_encoding,
@@ -46,6 +46,7 @@ class DisplayImage(BaseBindingController):
 
         imageWidget = KaraboImageDialog(edit=False, toolbar=True,
                                         parent=parent)
+        imageWidget.signal_tooltip.connect(self.show_timestamp_tooltip)
         self._plot = imageWidget.get_plot()
         layout.addWidget(imageWidget)
         layout.addWidget(toolWidget)
@@ -91,6 +92,16 @@ class DisplayImage(BaseBindingController):
 
         toolLayout.addWidget(self._cellWidget)
         return widget
+
+    @pyqtSlot()
+    def show_timestamp_tooltip(self):
+        image_node = self.proxy.value
+        if image_node is None:
+            return
+        timestamp = image_node.pixels.value.data.timestamp
+        diff = Timestamp().toTimestamp() - timestamp.toTimestamp()
+        self.widget.setToolTip("{} --- Last image received {:.3f} s "
+                               "ago".format(self.proxy.key, diff))
 
     def value_update(self, proxy):
         img_node = proxy.value
