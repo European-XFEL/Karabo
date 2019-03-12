@@ -11,6 +11,7 @@
 #include "karabo/net/Connection.hh"
 #include "karabo/net/Channel.hh"
 #include "karabo/net/EventLoop.hh"
+#include "karabo/net/Queues.hh"
 
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
@@ -222,14 +223,18 @@ private:
 
 
 struct WriteAndForgetParams {
+
     const karabo::util::Hash dataHash = karabo::util::Hash("Name", "DataHash", "PiField", 3.14159);
     const std::string dataString = std::string("Sample of std::string");
     const karabo::util::Hash headerHash = karabo::util::Hash("Header", "hdr", "NumOfFields", 3, "required", true);
+    const karabo::net::VectorCharPointer vectorCharPointer =
+            boost::make_shared<std::vector<char>>(std::vector<char>(10, 'A'));
+    const char* charArray = "An array of char";
     const int writePriority = 4;
 };
 
-
 struct WriteAndForgetSrv {
+
 
     KARABO_CLASSINFO(WriteAndForgetSrv, "WriteAndForgetSrv", "1.0");
 
@@ -323,11 +328,52 @@ private:
         //      WriteAndForgetParams params;
         //      CPPUNIT_ASSERT_EQUAL_MESSAGE("Hash received does not match with expected.", params.dataHash, hash);
 
+        channel->readAsyncVector(boost::bind(&WriteAndForgetSrv::readAsyncVectorHandler, this, _1, channel, _2));
+    }
+
+
+    void readAsyncVectorHandler(const boost::system::error_code& ec,
+                                const karabo::net::Channel::Pointer& channel,
+                                std::vector<char>& vector) {
+
+        if (ec) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAndForgetSrv error at readAysncVectorHandler: " << ec.value() << " -- " << ec.message();
+            std::clog << "\nWriteAndForgetSrv error at readAysncVetorHandler: " << ec.value() << " -- " << ec.message() << std::endl;
+            if (channel) channel->close();
+            return;
+        }
+
+        std::clog << "@WriteAndForgetSrv::readAsyncVectorHandler -> Vector read:" << std::endl;
+        std::clog << "size = " << vector.size() << std::endl;
+        std::clog << "contents = " << std::string(vector.begin(), vector.end()) << std::endl;
+
+        channel->readAsyncVectorPointer(boost::bind(&WriteAndForgetSrv::readAsyncVectorPointerHandler, this, _1, channel, _2));
+    }
+
+
+    void readAsyncVectorPointerHandler(const boost::system::error_code& ec,
+                                       const karabo::net::Channel::Pointer& channel,
+                                       boost::shared_ptr<std::vector<char>>&vectorCharPointer) {
+
+        if (ec) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAndForgetSrv error at readAysncVectorPointerHandler: " << ec.value() << " -- " << ec.message();
+            std::clog << "\nWriteAndForgetSrv error at readAysncVetorPointerHandler: " << ec.value() << " -- " << ec.message() << std::endl;
+            if (channel) channel->close();
+            return;
+        }
+
+        std::clog << "@WriteAndForgetSrv::readAsyncVectorPointerHandler -> Pointer to vector read:" << std::endl;
+        std::clog << "size = " << vectorCharPointer->size() << std::endl;
+        std::clog << "contents = " << std::string(vectorCharPointer->begin(), vectorCharPointer->end()) << std::endl;
+        
         if (channel) {
             channel->close();
-            std::clog << "@WriteAndForgetSrv::readAsyncHashHashHandler -> Called channel->close()." << std::endl;
+            std::clog << "@WriteAndForgetSrv::readAsyncVectorHandler -> Called channel->close()." << std::endl;
         }
     }
+
+
+
     
 };
 
@@ -368,6 +414,14 @@ private:
         std::clog << "Header hash:" << std::endl;
         std::clog << karabo::util::toString(params.headerHash);
         channel->writeAsync(params.headerHash, params.dataHash, params.writePriority, false);
+
+        std::clog << "@WriteAndForgetCli::connectHandler -> Sending array of char ..." << std::endl;
+        std::clog << params.charArray << std::endl;
+        channel->writeAsync(params.charArray, strlen(params.charArray), params.writePriority);
+
+        std::clog << "@WriteAndForgetCli::connectHandler -> Sending VectorCharPointer ..." << std::endl;
+        std::clog << std::string(params.vectorCharPointer.get()->begin(), params.vectorCharPointer.get()->end()) << std::endl;
+        channel->writeAsync(params.vectorCharPointer, params.writePriority);
 
         std::clog << "\n@WriteAndForgetCli::connectHandler -> Data sending completed." << std::endl;
 
