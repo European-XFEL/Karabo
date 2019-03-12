@@ -7,6 +7,7 @@ from karabo.common.scenemodel.api import WebcamImageModel
 from karabogui.binding.api import (
     apply_configuration, build_binding, DeviceProxy, PropertyProxy)
 from karabogui.testing import GuiTestCase
+from karabo.native import Timestamp
 from .image import PipelineData, get_image_hash
 from ..baseimage import WebcamImageDisplay
 
@@ -74,3 +75,13 @@ class TestWebcamImageDisplay(GuiTestCase):
         apply_configuration(get_image_hash(), self.ouput_proxy.binding)
         # display a new image
         apply_configuration(get_image_hash(val=1), self.ouput_proxy.binding)
+
+    def test_tooltip(self):
+        timestamp_data = Timestamp("2009-04-20T10:32:22 UTC")
+        image_hash = get_image_hash()
+        timestamp_data.toHashAttributes(image_hash)
+        apply_configuration(get_image_hash(), self.ouput_proxy.binding)
+        assert self.controller.widget.toolTip() == ""
+        self.controller.show_timestamp_tooltip()
+        text = ".output.data.image --- Last image received"
+        assert text in self.controller.widget.toolTip()
