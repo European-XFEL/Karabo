@@ -1668,10 +1668,8 @@ namespace karabo {
 
 
         karabo::io::BufferSet::Pointer TcpChannel::bufferSetFromPointerToChar(const char* data, size_t size) {
-            // A copy is done here to allow proper management of the char buffer by the corresponding shared_ptr.
-            char* pCharBuff = new char[size];
-            std::memcpy(pCharBuff, data, size);
-            boost::shared_ptr<char> spCharBuff(pCharBuff);
+            boost::shared_ptr<char> spCharBuff(new char[size], boost::checked_array_deleter<char>());
+            std::memcpy(spCharBuff.get(), data, size);
             karabo::util::ByteArray bArray = std::make_pair(spCharBuff, size);
             // BufferSet's copyAllData ctor parameter set to false to prevent yet another copy (besides the one above).
             karabo::io::BufferSet::Pointer pBuffSet = boost::make_shared<karabo::io::BufferSet>(false);
@@ -1681,9 +1679,8 @@ namespace karabo {
 
 
         karabo::io::BufferSet::Pointer TcpChannel::bufferSetFromString(const std::string& str) {
-            char* pCharBuff = new char[str.size()];
-            std::copy(str.begin(), str.end(), pCharBuff);
-            boost::shared_ptr<char> spCharBuff(pCharBuff);
+            boost::shared_ptr<char> spCharBuff(new char[str.size()], boost::checked_array_deleter<char>());
+            std::copy(str.begin(), str.end(), spCharBuff.get());
             karabo::util::ByteArray bArray = std::make_pair(spCharBuff, static_cast<size_t> (str.size()));
             // BufferSet's copyAllData ctor parameter set to false to prevent yet another copy (besides the one above).
             karabo::io::BufferSet::Pointer pBuffSet = boost::make_shared<karabo::io::BufferSet>(false);

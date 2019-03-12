@@ -651,14 +651,14 @@ namespace karabo {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
-            /**
+/**
              * Write data asynchronously, i.e. do not block upon call. Fire and forget, no callback called upon completion
              * @param header containing metadata for the data being written
              * @param data is contained in a Hash with no particular structure, but serializable, i.e. containing no
              *        non-karabo data types or Hash derived types
              * @param prio the priority of this write operation
              */
-            virtual void writeAsync(const karabo::util::Hash& header, const karabo::util::Hash& data, int prio = 4) {
+            virtual void writeAsync(const karabo::util::Hash& header, const karabo::util::Hash& data, int prio = 4, bool copyAllData = true) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
