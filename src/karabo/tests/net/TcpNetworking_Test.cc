@@ -298,11 +298,9 @@ private:
 
         //CPPUNIT_ASSERT_EQUAL(str, std::string("Hi there"));
 
-        if (channel) {
-            channel->close();
-            std::clog << "@WriteAndForgetSrv::readAsyncStringHandler -> Called channel->close()." << std::endl;
-        }
+        channel->readAsyncHashHash(boost::bind(&WriteAndForgetSrv::readAsyncHashHashHandler, this, _1, channel, _2, _3));
     }
+    
 
     void readAsyncHashHashHandler(const boost::system::error_code& ec,
                                   const karabo::net::Channel::Pointer& channel,
@@ -325,7 +323,10 @@ private:
         //      WriteAndForgetParams params;
         //      CPPUNIT_ASSERT_EQUAL_MESSAGE("Hash received does not match with expected.", params.dataHash, hash);
 
-        //if (channel) channel->close();
+        if (channel) {
+            channel->close();
+            std::clog << "@WriteAndForgetSrv::readAsyncHashHashHandler -> Called channel->close()." << std::endl;
+        }
     }
     
 };
@@ -362,6 +363,11 @@ private:
         std::clog << "@WriteAndForgetCli::connectHandler -> Sending string ..." << std::endl;
         std::clog << params.dataString << std::endl;
         channel->writeAsync(params.dataString, params.writePriority);
+
+        std::clog << "@WriteAndForgetCli::connectHandler -> Sending hashes for body and header ..." << std::endl;
+        std::clog << "Header hash:" << std::endl;
+        std::clog << karabo::util::toString(params.headerHash);
+        channel->writeAsync(params.headerHash, params.dataHash, params.writePriority, false);
 
         std::clog << "\n@WriteAndForgetCli::connectHandler -> Data sending completed." << std::endl;
 
