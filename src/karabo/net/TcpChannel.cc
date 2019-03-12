@@ -13,6 +13,7 @@
 #include "TcpChannel.hh"
 #include "EventLoop.hh"
 #include "karabo/io/HashBinarySerializer.hh"
+#include <utility>
 
 namespace karabo {
     namespace net {
@@ -1667,13 +1668,26 @@ namespace karabo {
 
 
         karabo::io::BufferSet::Pointer TcpChannel::bufferSetFromPointerToChar(const char* data, size_t size) {
-            boost::shared_ptr<karabo::io::BufferSet::BufferType> pBuff =
-                    boost::make_shared<karabo::io::BufferSet::BufferType>();
-            for (size_t i = 0; i < size; i++) {
-                pBuff->push_back(data[i]);
-            }
-            karabo::io::BufferSet::Pointer pBuffSet = boost::make_shared<karabo::io::BufferSet>();
-            pBuffSet->emplaceBack(pBuff);
+            // A copy is done here to allow proper management of the char buffer by the corresponding shared_ptr.
+            char* pCharBuff = new char[size];
+            std::memcpy(pCharBuff, data, size);
+            boost::shared_ptr<char> spCharBuff(pCharBuff);
+            karabo::util::ByteArray bArray = std::make_pair(spCharBuff, size);
+            // BufferSet's copyAllData ctor parameter set to false to prevent yet another copy (besides the one above).
+            karabo::io::BufferSet::Pointer pBuffSet = boost::make_shared<karabo::io::BufferSet>(false);
+            pBuffSet->emplaceBack(bArray, false);
+            return pBuffSet;
+        }
+
+
+        karabo::io::BufferSet::Pointer TcpChannel::bufferSetFromString(const std::string& str) {
+            char* pCharBuff = new char[str.size()];
+            std::copy(str.begin(), str.end(), pCharBuff);
+            boost::shared_ptr<char> spCharBuff(pCharBuff);
+            karabo::util::ByteArray bArray = std::make_pair(spCharBuff, static_cast<size_t> (str.size()));
+            // BufferSet's copyAllData ctor parameter set to false to prevent yet another copy (besides the one above).
+            karabo::io::BufferSet::Pointer pBuffSet = boost::make_shared<karabo::io::BufferSet>(false);
+            pBuffSet->emplaceBack(bArray, false);
             return pBuffSet;
         }
 
@@ -1695,7 +1709,7 @@ namespace karabo {
                 pBuffSet = pBS;
              } else {
                 std::string serializedData = m_textSerializer->save(data);
-                pBS = bufferSetFromPointerToChar(serializedData.c_str(), serializedData.length() + 1);
+                pBS = bufferSetFromString(serializedData);
             }
             pBuffSet = pBS;
         }
@@ -1721,7 +1735,9 @@ namespace karabo {
 
 
         void TcpChannel::writeAsync(const std::string& data, int prio) {
-            writeAsync(data.c_str(), data.length(), prio);
+            auto datap = bufferSetFromString(data);
+            Message::Pointer mp = boost::make_shared<Message>(datap);
+            dispatchWriteAsync(mp, prio);
         }
 
 
