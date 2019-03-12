@@ -371,8 +371,11 @@ class Manager(QObject):
 
     # ---------------------------------------------------------------------
 
-    def handle_notification(self, device, message, short, detailed):
-        pass  # DEPRECATED
+    def handle_notification(self, **info):
+        """Handle notification events from the GUI server
+        """
+        message = info.get('message', 'Notification from GUI Server is empty!')
+        messagebox.show_warning(message)
 
     def handle_networkData(self, name, data, meta=None):
         """This method handles the big data chunks coming from Karabo
