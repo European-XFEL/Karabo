@@ -134,13 +134,13 @@ void GuiVersion_Test::testVersionControl() {
 
 
 void GuiVersion_Test::testNotification() {
-    m_deviceClient->set<std::string>("testGuiServerDevice", "minClientVersion", "2.4.0");
+    m_deviceClient->set<std::string>("testGuiServerDevice", "minClientVersion", "2.4.1");
     // connect again
     resetClientConnection();
 
     // check if we are connected
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
-    Hash loginInfo("type", "login", "username", "mrusp", "password", "12345", "version", "2.3.0");
+    Hash loginInfo("type", "login", "username", "mrusp", "password", "12345", "version", "2.4.0");
     karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&] {
         m_tcpAdapter->sendMessage(loginInfo);
     });
@@ -149,7 +149,7 @@ void GuiVersion_Test::testNotification() {
     messageQ->pop(lastMessage);
     std::string message = lastMessage.get<std::string>("message");
     std::clog << message;
-    CPPUNIT_ASSERT("The minimum required GUI client version is: 2.4.0" == message);
+    CPPUNIT_ASSERT("Your GUI client has version '2.4.0', but the minimum required is: 2.4.1" == message);
 
     int timeout = 1500;
     while (m_tcpAdapter->connected() && timeout > 0) {
