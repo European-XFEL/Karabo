@@ -376,6 +376,8 @@ namespace karabo {
 
             void prepareHashFromData(karabo::util::Hash& hash) const;
 
+            karabo::io::BufferSet::Pointer bufferSetFromString(const std::string& str);
+
             karabo::io::BufferSet::Pointer bufferSetFromPointerToChar(const char* data, size_t size);
 
             karabo::io::BufferSet::Pointer bufferSetFromVectorCharPointer(const VectorCharPointer& dataVect);
