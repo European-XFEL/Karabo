@@ -55,7 +55,9 @@ def main():
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('filename',
                         help='An SVG file containing a Karabo scene')
-    parser.add_argument('deviceId', help='deviceId of the source device')
+    parser.add_argument('deviceId', nargs='?', default=None,
+                        help='deviceId of the source device'
+                             ' (optional argument)')
     ns = parser.parse_args()
 
     # main scene code generation
@@ -75,7 +77,15 @@ def main():
     output_scene += indent + 'return write_scene(scene)\n'
 
     # Substitute deviceId and print
-    print(output_scene.replace(f"keys=['{ns.deviceId}", "keys=[f'{deviceId}"))
+    if ns.deviceId:
+        if not output_scene.count(f"keys=['{ns.deviceId}"):
+            print(f"# WARNING from scene2py: "
+                  f"no occurrences of '{ns.deviceId}' found")
+
+        print(output_scene.replace(f"keys=['{ns.deviceId}",
+                                   "keys=[f'{deviceId}"))
+    else:
+        print(output_scene)
 
 
 if __name__ == '__main__':
