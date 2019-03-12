@@ -70,10 +70,10 @@ def main():
     code.insert(0, imp_stmt)
 
     # Dump it out
-    indent = '\n' + ' '*4
+    indent = '\n' + ' ' * 4
     output_scene = code[0]  # <-- import statement
     output_scene += '\n\ndef get_scene(deviceId):\n'
-    output_scene += ' '*4 + indent.join(code[1:])
+    output_scene += ' ' * 4 + indent.join(code[1:])
     output_scene += indent + 'return write_scene(scene)\n'
 
     # Substitute deviceId and print
