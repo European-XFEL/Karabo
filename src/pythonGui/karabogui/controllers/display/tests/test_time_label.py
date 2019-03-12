@@ -18,8 +18,8 @@ class TestTimeLabel(GuiTestCase):
 
         schema = Object.getClassSchema()
         self.proxy = get_class_property_proxy(schema, 'prop')
-        self.t1 = Timestamp("2009-04-20T10:32:22 UTC")
-        self.t2 = Timestamp("2012-04-20T10:35:27 UTC")
+        self.t1 = Timestamp("2009-04-20T10:32:22")
+        self.t2 = Timestamp("2012-04-20T10:35:27")
 
     def test_basics(self):
         controller = DisplayTimeLabel(proxy=self.proxy,
@@ -36,7 +36,7 @@ class TestTimeLabel(GuiTestCase):
         controller.create(None)
         h = Hash('prop', 2.0)
         set_proxy_hash(self.proxy, h, self.t1)
-        self.assertEqual(controller.widget.text(), '12:32:22')
+        self.assertEqual(controller.widget.text(), '10:32:22')
 
     def test_change_time_format(self):
         h = Hash('prop', 4.0)
@@ -51,4 +51,4 @@ class TestTimeLabel(GuiTestCase):
         with patch(dsym) as QInputDialog:
             QInputDialog.getText.return_value = '%H:%M', True
             action.trigger()
-            self.assertEqual(controller.widget.text(), '12:35')
+            self.assertEqual(controller.widget.text(), '10:35')
