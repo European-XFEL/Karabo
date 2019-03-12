@@ -551,6 +551,11 @@ namespace karabo {
                     sendSystemTopology(channel);
                     return;
                 }
+
+                std::string message = "The minimum required GUI client version is: " + get<std::string>("minClientVersion");
+                Hash h("type", "notification", "message", message);
+                safeClientWriteSync(channel, h);
+                
                 disconnectChannel(channel);
                 // TODO: check valid login.
             } catch (const Exception& e) {
@@ -683,6 +688,14 @@ namespace karabo {
             }
         }
 
+
+        void GuiServerDevice::safeClientWriteSync(const WeakChannelPointer channel, const karabo::util::Hash& message) {
+            boost::mutex::scoped_lock lock(m_channelMutex);
+            karabo::net::Channel::Pointer chan = channel.lock();
+            if (chan && chan->isOpen()) {
+                chan->write(message);
+            }
+        }
 
         void GuiServerDevice::safeClientWrite(const WeakChannelPointer channel, const karabo::util::Hash& message, int prio) {
             boost::mutex::scoped_lock lock(m_channelMutex);
@@ -1077,8 +1090,10 @@ namespace karabo {
                 // That is safe, see comment in InputChannel::triggerIOEvent() which calls this method.
                 Hash::Node& dataNode = h.set("data", Hash());
                 dataNode.getValue<Hash>() = std::move(const_cast<Hash&> (data));
+
                 Hash::Node& metaNode = h.set("meta.timestamp", true);
                 meta.getTimestamp().toHashAttributes(metaNode.getAttributes());
+
                 boost::mutex::scoped_lock lock(m_networkMutex);
                 NetworkMap::const_iterator iter = m_networkConnections.find(channelName);
                 if (iter != m_networkConnections.cend()) {
