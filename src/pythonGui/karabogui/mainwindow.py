@@ -459,7 +459,7 @@ class MainWindow(QMainWindow):
         """Show the big data latency including value set in the gui"""
         name = data.get('name')
         proc = data.get('proc')
-        self.ui_big_data.setText("Channel: {} - {:.3f} s".format(name, proc))
+        self.ui_big_data.setText("{} - {:.3f} s".format(name, proc))
 
     # --------------------------------------
     # Qt slots
