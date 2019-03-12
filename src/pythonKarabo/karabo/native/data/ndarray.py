@@ -60,7 +60,7 @@ class NDArray(Type):
 
         # Get the schema from the Configurable and declare default
         schema = ArraySchema.getClassSchema(device, state).hash
-        schema["shape", "defaultValue"] = numpy.array(self.shape)
+        schema["shape", "defaultValue"] = numpy.array(self.shape, dtype=numpy.uint64)
         schema["type", "defaultValue"] = self._gettype(self.dtype)
         schema["isBigEndian", "defaultValue"] = self.dtype.str[0] == ">"
 
