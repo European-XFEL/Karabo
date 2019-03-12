@@ -19,6 +19,23 @@ from .synchronization import background, firstCompleted
 from .time_mixin import get_timestamp
 
 
+class CancelQueue(Queue):
+    """A queue with an added cancel method
+
+    This uses internal variables from the inherited queue, so it may
+    not work when upgrading Python in the future. Maybe we can convince
+    the Python guys to add this method to the standard library. Worst case
+    we have to copy asyncio's Queue.
+    """
+
+    def cancel(self):
+        """Cancel all getters and putters currently waiting"""
+        for fut in self._putters:
+            fut.cancel()
+        for fut in self._getters:
+            fut.cancel()
+
+
 class PipelineMetaData(ProxyBase):
     source = String(key="source")
     timestamp = Bool(key="timestamp")
@@ -549,9 +566,9 @@ class NetworkOutput(Configurable):
                     yield from channel.nextChunk(future)
             else:
                 if message["onSlowness"] == "queue":
-                    queue = Queue()
+                    queue = CancelQueue()
                 else:
-                    queue = Queue(1)
+                    queue = CancelQueue(1)
                 if message["onSlowness"] == "wait":
                     queues = self.wait_queues
                 else:
@@ -564,6 +581,7 @@ class NetworkOutput(Configurable):
                         yield from channel.nextChunk(queue.get())
                 finally:
                     queues.remove(queue)
+                    queue.cancel()
         except CancelledError:
             # If we are destroyed, we should close ourselves
             yield from self.close()
@@ -596,7 +614,7 @@ class NetworkOutput(Configurable):
             for queue in self.wait_queues:
                 tasks.append(queue.put(chunk))
         finally:
-            yield from gather(*tasks)
+            yield from gather(*tasks, return_exceptions=True)
 
     @coroutine
     def writeData(self, timestamp=None):
