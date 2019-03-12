@@ -162,6 +162,12 @@ namespace karabo {
              */
             void forwardLogs(const boost::system::error_code& error);
 
+            /**
+             *Write to a Hash to a channel in a synchronous fashion (blocking).
+             * @param message
+             */
+            void safeClientWriteSync(const WeakChannelPointer channel, const karabo::util::Hash& message);
+
             void safeClientWrite(const WeakChannelPointer channel, const karabo::util::Hash& message, int prio = LOSSLESS);
 
             /**
