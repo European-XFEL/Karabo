@@ -5,17 +5,16 @@ from unittest import TestCase, main
 
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
-from karabo.native import (AccessLevel, AccessMode, Assignment, Attribute, Bool,
-                           Char, ComplexFloat, Double, Float, Hash, Int16, Int8,
-                           LeafType, MetricPrefix, NDArray, NumpyVector,
-                           QuantityValue, Schema, String, Timestamp, Type,
-                           UInt64, Unit, VectorBool, VectorChar,
-                           VectorComplexFloat, VectorFloat, VectorHash,
-                           VectorInt32, VectorInt8, VectorString, decodeBinary,
-                           encodeBinary, unit, UInt8, Configurable)
+from karabo.native import (
+    AccessLevel, AccessMode, Assignment, Attribute, Bool, Char, ComplexFloat,
+    Double, Float, Hash, Int16, Int8, LeafType, MetricPrefix, NDArray,
+    NumpyVector, QuantityValue, Schema, String, Timestamp, Type, UInt64, Unit,
+    VectorBool, VectorChar, VectorComplexFloat, VectorFloat, VectorHash,
+    VectorInt32, VectorInt8, VectorString, decodeBinary, encodeBinary, unit,
+    UInt8, Configurable)
 
 
-class arraytestdevice( Configurable ):
+class arrayTestDevice(Configurable):
     array = NDArray(dtype=UInt8, shape=[20,20,3])
 
 
@@ -145,8 +144,9 @@ class Tests(TestCase):
         v = d.toKaraboValue(1.9, strict=False)
         self.assertEqual(v, 1)
 
-        d = Int16(unitSymbol=Unit.METER, metricPrefixSymbol=MetricPrefix.MILLI,
-                 minExc=3, maxInc=6000)
+        d = Int16(unitSymbol=Unit.METER,
+                  metricPrefixSymbol=MetricPrefix.MILLI,
+                  minExc=3, maxInc=6000)
         v = d.toKaraboValue(5)
         with self.assertRaises(DimensionalityError):
             v = d.toKaraboValue(5 * unit.m / unit.m)
@@ -372,10 +372,10 @@ class Tests(TestCase):
 
         # This checks NDArray's schema's "shape" attribute's datatype
         # This caused DAQ problems as c++ uses unsigned, while python signed
-        a = arraytestdevice()
+        a = arrayTestDevice()
         s = a.getClassSchema()
         attr = s.hash["array"].getAttributes("shape")
-        self.assertEqual( attr['defaultValue'].dtype, numpy.uint64 )
+        self.assertEqual(attr['defaultValue'].dtype, numpy.uint64)
 
         conv = d.toKaraboValue(h)
         self.assertEqual(conv[1, 1], 4)
@@ -481,7 +481,6 @@ class Tests(TestCase):
         self.assertEqual(self.timestamp,
                          Timestamp.fromHashAttributes(timestamp))
         self.assertEqual(len(data), 2)
-
 
         h = Hash()
         h["a"] = data
