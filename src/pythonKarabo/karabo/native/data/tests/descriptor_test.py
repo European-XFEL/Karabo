@@ -7,15 +7,15 @@ from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
 from karabo.native import (
     AccessLevel, AccessMode, Assignment, Attribute, Bool, Char, ComplexFloat,
-    Double, Float, Hash, Int16, Int8, LeafType, MetricPrefix, NDArray,
-    NumpyVector, QuantityValue, Schema, String, Timestamp, Type, UInt64, Unit,
-    VectorBool, VectorChar, VectorComplexFloat, VectorFloat, VectorHash,
-    VectorInt32, VectorInt8, VectorString, decodeBinary, encodeBinary, unit,
-    UInt8, Configurable)
+    Configurable, Double, decodeBinary, encodeBinary, Float, Hash, Int16, Int8,
+    LeafType, MetricPrefix, NDArray, NumpyVector, QuantityValue, Schema,
+    String, Timestamp, Type, UInt8, UInt64, Unit, unit, VectorBool, VectorChar,
+    VectorComplexFloat, VectorFloat, VectorHash, VectorInt32, VectorInt8,
+    VectorString)
 
 
-class arrayTestDevice(Configurable):
-    array = NDArray(dtype=UInt8, shape=[20,20,3])
+class ArrayTestDevice(Configurable):
+    array = NDArray(dtype=UInt8, shape=[20, 20, 3])
 
 
 class Tests(TestCase):
@@ -372,7 +372,7 @@ class Tests(TestCase):
 
         # This checks NDArray's schema's "shape" attribute's datatype
         # This caused DAQ problems as c++ uses unsigned, while python signed
-        a = arrayTestDevice()
+        a = ArrayTestDevice()
         s = a.getClassSchema()
         attr = s.hash["array"].getAttributes("shape")
         self.assertEqual(attr['defaultValue'].dtype, numpy.uint64)
