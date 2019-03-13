@@ -110,6 +110,7 @@ if __name__ == '__main__':
                 'karabo-gui=karabogui.programs.gui_runner:main',
                 'panel-runner=karabogui.programs.panel_runner:main',
                 'karabo-cinema=karabogui.programs.cinema:main',
+                'karabo-theatre=karabogui.programs.theatre:main',
                 'karabo-update-extensions=karabogui.dialogs.update_dialog:main'
             ]
         },
