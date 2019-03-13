@@ -225,6 +225,8 @@ private:
 struct WriteAndForgetParams {
 
     const karabo::util::Hash dataHash = karabo::util::Hash("Name", "DataHash", "PiField", 3.14159);
+    const karabo::util::Hash dataHashNDArray =
+            karabo::util::Hash("Data", karabo::util::NDArray(karabo::util::Dims(100, 200), 1000u));
     const std::string dataString = std::string("Sample of std::string");
     const karabo::util::Hash headerHash = karabo::util::Hash("Header", "hdr", "NumOfFields", 3, "required", true);
     const karabo::net::VectorCharPointer vectorCharPointer =
@@ -389,10 +391,32 @@ private:
         std::clog << "size = " << data->size() << std::endl;
         std::clog << "contents = " << std::string(data->begin(), data->end()) << std::endl;
 
+        channel->readAsyncHash(boost::bind(&WriteAndForgetSrv::readAsyncHashNDArrayHandler, this, _1, channel, _2));
+    }
+
+
+    void readAsyncHashNDArrayHandler(const boost::system::error_code& ec,
+                                     const karabo::net::Channel::Pointer& channel,
+                                     const karabo::util::Hash& dataHash) {
+
+        if (ec) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAndForgetSrv error at readAysncHashNDArrayHandler: " << ec.value() << " -- " << ec.message();
+            std::clog << "\nWriteAndForgetSrv error at readAysncHashNDArrayHandler: " << ec.value() << " -- " << ec.message() << std::endl;
+            if (channel) channel->close();
+            return;
+        }
+
+        std::clog << "@WriteAndForgetSrv::readAsyncHashNDArrayHandler -> Data hash with NDArray read:" << std::endl;
+        std::clog << karabo::util::toString(dataHash);
+        std::clog << "@WriteAndForgetSrv::readAsyncHashNDArrayHandler -> size of Data hash: "
+                << dataHash.get<karabo::util::NDArray>("Data").size() << std::endl;
+
+
         if (channel) {
             channel->close();
-            std::clog << "@WriteAndForgetSrv::readAsyncHashVectorPointerHandler -> Called channel->close()." << std::endl;
+            std::clog << "@WriteAndForgetSrv::readAsyncHashNDArrayHandler -> Called channel->close()." << std::endl;
         }
+
     }
 
 };
@@ -451,6 +475,10 @@ private:
         std::clog << "Body as VectorCharPointer:" << std::endl;
         std::clog << std::string(params.vectorCharPointer->begin(), params.vectorCharPointer->end());
         channel->writeAsync(params.headerHash, params.vectorCharPointer, params.writePriority);
+
+        std::clog << "@WriteAndForgetCli::connectHandler -> Sending dataHash with NDArray ..." << std::endl;
+        std::clog << "NDArray size = " + params.dataHashNDArray.get<karabo::util::NDArray>("Data").size() << std::endl;
+        channel->writeAsync(params.dataHashNDArray, params.writePriority, false);
 
         std::clog << "\n@WriteAndForgetCli::connectHandler -> Data sending completed." << std::endl;
 
