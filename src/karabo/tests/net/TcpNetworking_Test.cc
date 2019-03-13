@@ -219,11 +219,10 @@ private:
 };
 
 
-//<editor-fold desc="Server, client and parameters for testWriteAsyncForget">
+//<editor-fold desc="Server, client and parameters for testWriteAsync">
 
 
-struct WriteAndForgetParams {
-
+struct WriteAsyncTestsParams {
     const karabo::util::Hash dataHash = karabo::util::Hash("Name", "DataHash", "PiField", 3.14159);
     const karabo::util::Hash dataHashNDArray =
             karabo::util::Hash("Data", karabo::util::NDArray(karabo::util::Dims(100, 200), 1000u));
@@ -235,14 +234,27 @@ struct WriteAndForgetParams {
     const int writePriority = 4;
 };
 
-struct WriteAndForgetSrv {
+
+enum class TestOutcome {
+    UNKNOWN, SUCCESS, FAILURE
+};
+
+/**
+ * The server part for the WriteAsync tests. Reads the data sent by the predefined sequence of writeAsyncs
+ * issued by the client part. After the last data in the sequence is read the server flags that it is done reading
+ * to the client, and the client closes the connection.
+ */
+struct WriteAsyncSrv {
 
 
-    KARABO_CLASSINFO(WriteAndForgetSrv, "WriteAndForgetSrv", "1.0");
+    KARABO_CLASSINFO(WriteAsyncSrv, "WriteAndForgetSrv", "1.0");
 
-    WriteAndForgetSrv() : m_port(0) {
+
+    WriteAsyncSrv(boost::function<void (const TestOutcome&, const std::string&, const std::string&) > testReportFn) :
+        m_port(0),
+        m_testReportFn(testReportFn) {
         m_connection = karabo::net::Connection::create(karabo::util::Hash("Tcp.port", 0, "Tcp.type", "server"));
-        m_port = m_connection->startAsync(boost::bind(&WriteAndForgetSrv::connectHandler, this, _1, _2));
+        m_port = m_connection->startAsync(boost::bind(&WriteAsyncSrv::connectHandler, this, _1, _2));
     }
 
     int port() const {
@@ -251,19 +263,19 @@ struct WriteAndForgetSrv {
 
 private:
     int m_port;
+    boost::function<void(const TestOutcome&, const std::string&, const std::string&) > m_testReportFn;
     karabo::net::Connection::Pointer m_connection;
+    WriteAsyncTestsParams m_params;
 
 
     void connectHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel) {
         if (ec) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAndForgetSrv error: " << ec.value() << " -- " << ec.message();
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error: " << ec.value() << " -- " << ec.message();
+            m_testReportFn(TestOutcome::FAILURE, ec.message(), "WriteAsync connection");
             if (channel) channel->close();
             return;
         }
-
-        std::clog << "\n@WriteAndForgetSrv::connectHandler -> Starting async string read..." << std::endl;
-        //channel->readAsyncHashHash(boost::bind(&WriteAndForgetSrv::readAsyncHashHashHandler, this, _1, channel, _2, _3));
-        channel->readAsyncHash(boost::bind(&WriteAndForgetSrv::readAsyncHashHandler, this, _1, channel, _2));
+        channel->readAsyncHash(boost::bind(&WriteAsyncSrv::readAsyncHashHandler, this, _1, channel, _2));
     }
 
 
@@ -271,22 +283,18 @@ private:
                               const karabo::net::Channel::Pointer& channel,
                               karabo::util::Hash& hash) {
         if (ec) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAndForgetSrv error at readAysncHashHandler: " << ec.value() << " -- " << ec.message();
-            std::clog << "\nWriteAndForgetSrv error at readAysncHashHandler: " << ec.value() << " -- " << ec.message() << std::endl;
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashHandler: " << ec.value() << " -- " << ec.message();
+            m_testReportFn(TestOutcome::FAILURE, ec.message(), "readAsyncHashHandler");
             if (channel) channel->close();
             return;
         }
-
-        std::clog << "@WriteAndForgetSrv::readAsyncHashHandler -> Body hash read:" << std::endl;
-        std::clog << karabo::util::toString(hash);
-
-
-        // TODO: assert on the Hash read.
-        //      WriteAndForgetParams params;
-        //      CPPUNIT_ASSERT_EQUAL_MESSAGE("Hash received does not match with expected.", params.dataHash, hash);
-
-        //if (channel) channel->close();
-        channel->readAsyncString(boost::bind(&WriteAndForgetSrv::readAsyncStringHandler, this, _1, channel, _2));
+        if (hash != m_params.dataHash) {
+            m_testReportFn(TestOutcome::FAILURE, "Hash read differs from hash written.", "readAsyncHashHandler");
+            if (channel) channel->close();
+        } else {
+            // Reads the next piece of data sent by WriteAsyncCli as part of the test.
+            channel->readAsyncString(boost::bind(&WriteAsyncSrv::readAsyncStringHandler, this, _1, channel, _2));
+        }
     }
 
 
@@ -294,18 +302,19 @@ private:
                                 const karabo::net::Channel::Pointer& channel,
                                 std::string& str) {
         if (ec) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAndForgetSrv error at readAysncStringHandler: " << ec.value() << " -- " << ec.message();
-            std::clog << "\nWriteAndForgetSrv error at readAysncStringHandler: " << ec.value() << " -- " << ec.message() << std::endl;
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncStringHandler: " << ec.value() << " -- " << ec.message();
+            m_testReportFn(TestOutcome::FAILURE, ec.message(), "readAsyncStringHandler");
             if (channel) channel->close();
             return;
         }
 
-        std::clog << "@WriteAndForgetSrv::readAsyncStringHandler -> String read:" << std::endl;
-        std::clog << str << std::endl;
-
-        //CPPUNIT_ASSERT_EQUAL(str, std::string("Hi there"));
-
-        channel->readAsyncHashHash(boost::bind(&WriteAndForgetSrv::readAsyncHashHashHandler, this, _1, channel, _2, _3));
+        if (str != m_params.dataString) {
+            m_testReportFn(TestOutcome::FAILURE, "String read differs from string written.", "readAsyncStringHandler");
+            if (channel) channel->close();
+        } else {
+            // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
+            channel->readAsyncHashHash(boost::bind(&WriteAsyncSrv::readAsyncHashHashHandler, this, _1, channel, _2, _3));
+        }
     }
     
 
@@ -314,23 +323,18 @@ private:
                                   karabo::util::Hash& header,
                                   karabo::util::Hash& body) {
         if (ec) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAndForgetSrv error at readAysncHashHashHandler: " << ec.value() << " -- " << ec.message();
-            std::clog << "\nWriteAndForgetSrv error at readAysncHashHashHandler: " << ec.value() << " -- " << ec.message() << std::endl;
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashHashHandler: " << ec.value() << " -- " << ec.message();
+            m_testReportFn(TestOutcome::FAILURE, ec.message(), "readAsyncHashHashHandler");
             if (channel) channel->close();
             return;
         }
-
-        std::clog << "@WriteAndForgetSrv::readAsyncHashHashHandler -> Header hash read:" << std::endl;
-        std::clog << karabo::util::toString(header);
-        std::clog << "@WriteAndForgetSrv::readAsyncHashHashHandler -> Body hash read:" << std::endl;
-        std::clog << karabo::util::toString(body);
-
-
-        // TODO: assert on the Hash read.
-        //      WriteAndForgetParams params;
-        //      CPPUNIT_ASSERT_EQUAL_MESSAGE("Hash received does not match with expected.", params.dataHash, hash);
-
-        channel->readAsyncVector(boost::bind(&WriteAndForgetSrv::readAsyncVectorHandler, this, _1, channel, _2));
+        if (header != m_params.headerHash || body != m_params.dataHash) {
+            m_testReportFn(TestOutcome::FAILURE, "Hashes read don't match the ones written.", "readAsyncHashHashHandler");
+            if (channel) channel->close();
+        } else {
+            // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
+            channel->readAsyncVector(boost::bind(&WriteAsyncSrv::readAsyncVectorHandler, this, _1, channel, _2));
+        }
     }
 
 
@@ -339,17 +343,19 @@ private:
                                 std::vector<char>& vector) {
 
         if (ec) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAndForgetSrv error at readAysncVectorHandler: " << ec.value() << " -- " << ec.message();
-            std::clog << "\nWriteAndForgetSrv error at readAysncVetorHandler: " << ec.value() << " -- " << ec.message() << std::endl;
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncVectorHandler: " << ec.value() << " -- " << ec.message();
+            m_testReportFn(TestOutcome::FAILURE, ec.message(), "readAsyncVectorHandler");
             if (channel) channel->close();
             return;
         }
 
-        std::clog << "@WriteAndForgetSrv::readAsyncVectorHandler -> Vector read:" << std::endl;
-        std::clog << "size = " << vector.size() << std::endl;
-        std::clog << "contents = " << std::string(vector.begin(), vector.end()) << std::endl;
-
-        channel->readAsyncVectorPointer(boost::bind(&WriteAndForgetSrv::readAsyncVectorPointerHandler, this, _1, channel, _2));
+        if (vector.size() != strlen(m_params.charArray) || vector[0] != m_params.charArray[0]) {
+            m_testReportFn(TestOutcome::FAILURE, "Vector read doesn't match the one written.", "readAsyncVectorHandler");
+            if (channel) channel->close();
+        } else {
+            // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
+            channel->readAsyncVectorPointer(boost::bind(&WriteAsyncSrv::readAsyncVectorPointerHandler, this, _1, channel, _2));
+        }
     }
 
 
@@ -358,17 +364,19 @@ private:
                                        boost::shared_ptr<std::vector<char>>&vectorCharPointer) {
 
         if (ec) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAndForgetSrv error at readAysncVectorPointerHandler: " << ec.value() << " -- " << ec.message();
-            std::clog << "\nWriteAndForgetSrv error at readAysncVectorPointerHandler: " << ec.value() << " -- " << ec.message() << std::endl;
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncVectorPointerHandler: " << ec.value() << " -- " << ec.message();
+            m_testReportFn(TestOutcome::FAILURE, ec.message(), "readAsyncVectorHandler");
             if (channel) channel->close();
             return;
         }
-
-        std::clog << "@WriteAndForgetSrv::readAsyncVectorPointerHandler -> Pointer to vector read:" << std::endl;
-        std::clog << "size = " << vectorCharPointer->size() << std::endl;
-        std::clog << "contents = " << std::string(vectorCharPointer->begin(), vectorCharPointer->end()) << std::endl;
-
-        channel->readAsyncHashVectorPointer(boost::bind(&WriteAndForgetSrv::readAsyncHashVectorPointerHandler, this, _1, channel, _2, _3));
+        if (vectorCharPointer->size() != m_params.vectorCharPointer->size() ||
+            (*vectorCharPointer)[0] != (*m_params.vectorCharPointer)[0]) {
+            m_testReportFn(TestOutcome::FAILURE, "Vector read doesn't match the one written.", "readAsyncVectorPointerHandler");
+            if (channel) channel->close();
+        } else {
+            // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
+            channel->readAsyncHashVectorPointer(boost::bind(&WriteAsyncSrv::readAsyncHashVectorPointerHandler, this, _1, channel, _2, _3));
+        }
     }
 
 
@@ -378,20 +386,18 @@ private:
                                            const karabo::net::VectorCharPointer& data) {
 
         if (ec) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAndForgetSrv error at readAysncHashVectorPointerHandler: " << ec.value() << " -- " << ec.message();
-            std::clog << "\nWriteAndForgetSrv error at readAysncHashVectorPointerHandler: " << ec.value() << " -- " << ec.message() << std::endl;
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashVectorPointerHandler: " << ec.value() << " -- " << ec.message();
+            m_testReportFn(TestOutcome::FAILURE, ec.message(), "readAsyncHashVectorPointerHandler");
             if (channel) channel->close();
             return;
         }
-
-        std::clog << "@WriteAndForgetSrv::readAsyncHashVectorPointerHandler -> Header hash read:" << std::endl;
-        std::clog << "Hash header:" << std::endl;
-        std::clog << karabo::util::toString(header);
-        std::clog << "Pointer to vector read:" << std::endl;
-        std::clog << "size = " << data->size() << std::endl;
-        std::clog << "contents = " << std::string(data->begin(), data->end()) << std::endl;
-
-        channel->readAsyncHash(boost::bind(&WriteAndForgetSrv::readAsyncHashNDArrayHandler, this, _1, channel, _2));
+        if (header != m_params.headerHash ||
+            data->size() != m_params.vectorCharPointer->size()) {
+            m_testReportFn(TestOutcome::FAILURE, "Data read doesn't match the data written.", "readAsyncHashVectorPointerHandler");
+        } else {
+            // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
+            channel->readAsyncHash(boost::bind(&WriteAsyncSrv::readAsyncHashNDArrayHandler, this, _1, channel, _2));
+        }
     }
 
 
@@ -400,102 +406,78 @@ private:
                                      const karabo::util::Hash& dataHash) {
 
         if (ec) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAndForgetSrv error at readAysncHashNDArrayHandler: " << ec.value() << " -- " << ec.message();
-            std::clog << "\nWriteAndForgetSrv error at readAysncHashNDArrayHandler: " << ec.value() << " -- " << ec.message() << std::endl;
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashNDArrayHandler: " << ec.value() << " -- " << ec.message();
+            m_testReportFn(TestOutcome::FAILURE, ec.message(), "readAsyncHashNDArrayHandler");
             if (channel) channel->close();
             return;
         }
-
-        std::clog << "@WriteAndForgetSrv::readAsyncHashNDArrayHandler -> Data hash with NDArray read:" << std::endl;
-        std::clog << karabo::util::toString(dataHash);
-        std::clog << "@WriteAndForgetSrv::readAsyncHashNDArrayHandler -> size of Data hash: "
-                << dataHash.get<karabo::util::NDArray>("Data").size() << std::endl;
-
-
-        if (channel) {
-            channel->close();
-            std::clog << "@WriteAndForgetSrv::readAsyncHashNDArrayHandler -> Called channel->close()." << std::endl;
+        if (dataHash.size() != m_params.dataHashNDArray.size() ||
+            dataHash.get<karabo::util::NDArray>("Data").size() != m_params.dataHashNDArray.get<karabo::util::NDArray>("Data").size()) {
+            m_testReportFn(TestOutcome::FAILURE, "Hash read doesn't match the hash written.", "readAsyncHashNDArrayHandler");
+        } else {
+            m_testReportFn(TestOutcome::SUCCESS, "Tests succeeded!", "");
+            if (channel) channel->close();
         }
-
     }
 
 };
 
 
-struct WriteAndForgetCli {
+struct WriteAsyncCli {
 
-    KARABO_CLASSINFO(WriteAndForgetCli, "WriteAndForgetCli", "1.0");
+    KARABO_CLASSINFO(WriteAsyncCli, "WriteAndForgetCli", "1.0");
 
-    WriteAndForgetCli(const std::string& host, int port)
+    WriteAsyncCli(const std::string& host,
+                  int port,
+                  boost::function<void(const TestOutcome&, const std::string&, const std::string&) > testReportFn,
+                  boost::function<const TestOutcome&() > testOutcomeFn)
         : m_port(port)
-        , m_connection(karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", host))) { // timeout repetition channel ec
-        m_connection->startAsync(boost::bind(&WriteAndForgetCli::connectHandler, this, _1, _2));
+        , m_testReportFn(testReportFn)
+        , m_testOutcomeFn(testOutcomeFn)
+        , m_connection(karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", host))) { 
+        m_connection->startAsync(boost::bind(&WriteAsyncCli::connectHandler, this, _1, _2));
     }
 
 private:
     int m_port;
+    boost::function<void(const TestOutcome&, const std::string&, const std::string&) > m_testReportFn;
+    boost::function<const TestOutcome&() > m_testOutcomeFn;
     karabo::net::Connection::Pointer m_connection;
+    WriteAsyncTestsParams m_params;
 
     void connectHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel) {
         if (ec) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAndForgetCli error: " << ec.value() << " -- " << ec.message();
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncCli error: " << ec.value() << " -- " << ec.message();
+            m_testReportFn(TestOutcome::FAILURE, ec.message(), "WriteAsync connection");
             if (channel) channel->close();
             return;
         }
-
-        WriteAndForgetParams params;
-        // Send the async write sequence.
-
-        std::clog << "@WriteAndForgetCli::connectHandler -> Sending dataHash ..." << std::endl;
-        std::clog << karabo::util::toString(params.dataHash);
-        channel->writeAsync(params.dataHash, params.writePriority);
-
-        std::clog << "@WriteAndForgetCli::connectHandler -> Sending string ..." << std::endl;
-        std::clog << params.dataString << std::endl;
-        channel->writeAsync(params.dataString, params.writePriority);
-
-        std::clog << "@WriteAndForgetCli::connectHandler -> Sending hashes for body and header ..." << std::endl;
-        std::clog << "Header hash:" << std::endl;
-        std::clog << karabo::util::toString(params.headerHash);
-        std::clog << "Body heash:" << std::endl;
-        std::clog << karabo::util::toString(params.dataHash);
-        channel->writeAsync(params.headerHash, params.dataHash, params.writePriority, false);
-
-        std::clog << "@WriteAndForgetCli::connectHandler -> Sending array of char ..." << std::endl;
-        std::clog << params.charArray << std::endl;
-        channel->writeAsync(params.charArray, strlen(params.charArray), params.writePriority);
-
-        std::clog << "@WriteAndForgetCli::connectHandler -> Sending VectorCharPointer ..." << std::endl;
-        std::clog << std::string(params.vectorCharPointer->begin(), params.vectorCharPointer->end()) << std::endl;
-        channel->writeAsync(params.vectorCharPointer, params.writePriority);
-
-        std::clog << "@WriteAndForgetCli::connectHandler -> Sending header hash and body as a VectorCharPointer ..." << std::endl;
-        std::clog << "Header hash:" << std::endl;
-        std::clog << karabo::util::toString(params.headerHash) << std::endl;
-        std::clog << "Body as VectorCharPointer:" << std::endl;
-        std::clog << std::string(params.vectorCharPointer->begin(), params.vectorCharPointer->end());
-        channel->writeAsync(params.headerHash, params.vectorCharPointer, params.writePriority);
-
-        std::clog << "@WriteAndForgetCli::connectHandler -> Sending dataHash with NDArray ..." << std::endl;
-        std::clog << "NDArray size = " + params.dataHashNDArray.get<karabo::util::NDArray>("Data").size() << std::endl;
-        channel->writeAsync(params.dataHashNDArray, params.writePriority, false);
-
-        std::clog << "\n@WriteAndForgetCli::connectHandler -> Data sending completed." << std::endl;
-
-        // TODO: add code to wait for the server's response stating it read everything it was supposed to read.
-        //       the client then closes the connection. For now, the temporary busy waiting below is handling
-        //       the test.
-
-        unsigned int waits = 0;
-        const unsigned int maxWaits = 200;
-        std::clog << "@WriteAndForgetCli::connectHandler -> waiting for server to read data..." << std::endl;
-        while (channel && channel->isOpen() && waits++ < maxWaits) {
-            boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+        try {
+            channel->writeAsync(m_params.dataHash, m_params.writePriority);
+            channel->writeAsync(m_params.dataString, m_params.writePriority);
+            channel->writeAsync(m_params.headerHash, m_params.dataHash, m_params.writePriority, false);
+            channel->writeAsync(m_params.charArray, strlen(m_params.charArray), m_params.writePriority);
+            channel->writeAsync(m_params.vectorCharPointer, m_params.writePriority);
+            channel->writeAsync(m_params.headerHash, m_params.vectorCharPointer, m_params.writePriority);
+            channel->writeAsync(m_params.dataHashNDArray, m_params.writePriority, false);
+        } catch (karabo::util::Exception& ke) {
+            std::clog << "Error during write sequence by the client: " << ke.what() << std::endl;
+            std::clog << "Details: " << std::endl;
+            ke.showTrace(std::clog);
+            m_testReportFn(TestOutcome::FAILURE, ke.what() + std::string(": ") + ke.detailedMsg(), "WriteAsync sequence");
+            if (channel) channel->close();
+        } catch (std::exception& e) {
+            std::clog << "Error during write sequence by the client: " << e.what() << std::endl;
+            m_testReportFn(TestOutcome::FAILURE, e.what(), "WriteAsync sequence");
+            if (channel) channel->close();
         }
-        std::clog << "@WriteAndForgetCli::connectHandler -> waited for " << waits << " times." << std::endl;
+
+        // The client has done its part; now keeps waiting for the server to do its (or to fail trying).
+        do {
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+        } while (m_testOutcomeFn() == TestOutcome::UNKNOWN);
 
         if (channel) channel->close();
-
     }
 };
 
@@ -536,20 +518,54 @@ void TcpNetworking_Test::testClientServer() {
 }
 
 
-void TcpNetworking_Test::testWriteAsyncForget() {
+void TcpNetworking_Test::testWriteAsync() {
     using namespace std;
-    int nThreads = karabo::net::EventLoop::getNumberOfThreads();
-    CPPUNIT_ASSERT(nThreads == 0);
 
-    WriteAndForgetSrv server;
-    WriteAndForgetCli client("localhost", server.port());
+    // Data items for the test results - to be called by either the server or the client to report test
+    // results.
+    TestOutcome testOutcome = TestOutcome::UNKNOWN;
+    std::string testOutcomeMessage("");
+    std::string failingTestCaseName("");
 
-    std::clog << "@TcpNetworking_Test::testWriteAsyncForget -> before EventLoop::run: server.port = "
-            << server.port() << "." << std::endl;
+    // Mutex for test results access
+    boost::mutex testResultsMutex;
+
+    // Setter for test results data.
+    auto testReportFn = [&](const TestOutcome& outcome, const std::string& outcomeMessage,
+                            const std::string & failTestCaseName) -> void {
+                               boost::mutex::scoped_lock lock(testResultsMutex);
+                               testOutcome = outcome;
+                               testOutcomeMessage = outcomeMessage;
+                               failingTestCaseName = failTestCaseName;
+                           };
+
+    // Getter for the current TestOutcome value.
+    auto testOutcomeFn = [&]() -> const TestOutcome& {
+        boost::mutex::scoped_lock(testResultsMutex);
+        return testOutcome;
+    };
+
+    WriteAsyncSrv server(testReportFn);
+    WriteAsyncCli client("localhost", server.port(), testReportFn, testOutcomeFn);
 
     karabo::net::EventLoop::addThread(1);
     karabo::net::EventLoop::run();
 
-    std::clog << "@TcpNetworking_Test::testWriteAsyncForget -> after EventLoop::run: # of threads = "
-            << karabo::net::EventLoop::getNumberOfThreads() << "." << std::endl;
+    constexpr unsigned int testTimeoutMs = 120000;
+    const unsigned int sleepIntervalMs = 100;
+    constexpr unsigned int maxSleeps = testTimeoutMs / sleepIntervalMs;
+    unsigned int numOfSleeps = 0;
+    do {
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+        numOfSleeps++;
+    } while (testOutcomeFn() == TestOutcome::UNKNOWN && numOfSleeps < maxSleeps);
+
+    if (testOutcomeFn() == TestOutcome::SUCCESS) {
+        CPPUNIT_ASSERT(true);
+    } else if (numOfSleeps >= maxSleeps) {
+        CPPUNIT_ASSERT_MESSAGE("Tests timed-out - more than 2 minutes elapsed.", false);
+    } else {
+        CPPUNIT_ASSERT_MESSAGE("Failed: " + testOutcomeMessage + " at " + failingTestCaseName, false);
+    }
+    
 }
