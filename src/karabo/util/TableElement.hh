@@ -13,7 +13,6 @@
 #include "LeafElement.hh"
 #include "Configurator.hh"
 #include "Validator.hh"
-#include <karabo/log/Logger.hh>
 #include <vector>
 #include <boost/any.hpp>
 #include <boost/cast.hpp>

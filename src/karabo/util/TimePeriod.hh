@@ -8,8 +8,7 @@
 #ifndef TIMEPERIOD_HH
 #define	TIMEPERIOD_HH
 
-#include <karabo/util/Hash.hh>
-
+#include "Hash.hh"
 #include "Epochstamp.hh"
 #include "TimeDuration.hh"
 

@@ -607,18 +607,6 @@ namespace configurationTest {
                     .assignmentOptional().defaultValue(std::vector<Hash>())
                     .commit();
 
-            INT16_ELEMENT(expected)
-                    .key("nonExistingNode.int16")
-                    .description("This element refers to a non-existing node and thus is ignored")
-                    .readOnly()
-                    .commit();
-
-            UINT16_ELEMENT(expected)
-                    .key("vecDouble.uint16")
-                    .description("This element's key refers to a parent that is not a node and thus is ignored")
-                    .readOnly()
-                    .commit();
-
             LIST_ELEMENT(expected)
                     .key("shapeList")
                     .description("A list of shapes")
@@ -636,13 +624,6 @@ namespace configurationTest {
                     .key("shapeList.BizarreForm.length")
                     .description("The single length parameter characterizing the bizarre form")
                     .assignmentOptional().defaultValue(10.f)
-                    .commit();
-
-            // ... but not leaves:
-            DOUBLE_ELEMENT(expected)
-                    .key("shapeList.orphanedLength")
-                    .description("Only nodes can be placed under a list element, so this is ignored.")
-                    .assignmentOptional().defaultValue(5.)
                     .commit();
         }
     };

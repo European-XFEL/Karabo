@@ -11,7 +11,7 @@
 #include <stack>
 #include <string>
 
-#include <karabo/util/Hash.hh>
+#include "Hash.hh"
 #include "TimePeriod.hh"
 
 namespace karabo {
