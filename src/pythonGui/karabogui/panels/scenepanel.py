@@ -28,7 +28,7 @@ from .base import BasePanelWidget
 
 # NOTE: This is the amount of padding added by ScenePanel's QFrame parent
 # We need to take it into account when undocking!!
-QFRAME_PADDING = 4
+QFRAME_PADDING = 6
 
 
 class ScenePanel(BasePanelWidget):
@@ -163,10 +163,6 @@ class ScenePanel(BasePanelWidget):
             width, height = self._compute_panel_size()
             self.resize(width, height)
             self.scroll_widget.setWidgetResizable(True)
-
-            # We want to grow with the panel window
-            self.scene_view.setSizePolicy(QSizePolicy.Expanding,
-                                          QSizePolicy.Expanding)
 
     def set_toolbar_style(self, karabo_topic):
         color = get_topic_color(karabo_topic)
