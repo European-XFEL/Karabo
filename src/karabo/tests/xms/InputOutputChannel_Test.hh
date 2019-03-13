@@ -15,6 +15,15 @@ class InputOutputChannel_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(InputOutputChannel_Test);
     CPPUNIT_TEST(testConnectDisconnect);
+    CPPUNIT_TEST(testDisconnectWhileSending1);
+    CPPUNIT_TEST(testDisconnectWhileSending2);
+    CPPUNIT_TEST(testDisconnectWhileSending3);
+    CPPUNIT_TEST(testDisconnectWhileSending4);
+    CPPUNIT_TEST(testDisconnectWhileSending5);
+    CPPUNIT_TEST(testDisconnectWhileSending6);
+    CPPUNIT_TEST(testDisconnectWhileSending7);
+    CPPUNIT_TEST(testDisconnectWhileSending8);
+    CPPUNIT_TEST(testDisconnectWhileSending9);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -26,6 +35,20 @@ private:
 
     void testConnectDisconnect();
 
+    void testDisconnectWhileSending1();
+    void testDisconnectWhileSending2();
+    void testDisconnectWhileSending3();
+    void testDisconnectWhileSending4();
+    void testDisconnectWhileSending5();
+    void testDisconnectWhileSending6();
+    void testDisconnectWhileSending7();
+    void testDisconnectWhileSending8();
+    void testDisconnectWhileSending9();
+
+    void testDisconnectWhileSending_impl(const std::string& sender_dataDistribution,
+                                         const std::string& sender_onSlowness,
+                                         const std::string& receiver_distributionMode,
+                                         const std::string& receiver_noInputShared);
 };
 
 #endif	/* INPUTOUTPUTCHANNEL_TEST_HH */
