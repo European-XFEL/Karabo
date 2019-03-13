@@ -12,9 +12,9 @@ The **most relevant improvements**, fixes and changes are:
 
 
 Minor **backward incompatibilities**:
-- Invalid schema elements will not be ignored anymore, but trigger a LogicException:
-  leaves added to a non-existing node, leafs where the parent is not node, and leaves
-  added to a list of nodes
+- Invalid schema elements will not be ignored anymore, but trigger a LogicException.
+  The specific cases are a leaf added to a non-existing node, a leaf where the
+  parent is not node, and a leaf added to a list of nodes.
 - a
 - b
 
