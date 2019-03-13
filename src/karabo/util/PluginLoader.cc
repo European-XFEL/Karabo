@@ -16,7 +16,6 @@
 #include "PathElement.hh"
 #include "VectorElement.hh"
 #include "PluginLoader.hh"
-#include "karabo/log/Logger.hh"
 
 
 namespace karabo {
@@ -117,8 +116,9 @@ namespace karabo {
                             if (m_loadedPlugins.find(plugin) == m_loadedPlugins.end()) {
                                 void* libHandle = dlopen(plugin.c_str(), RTLD_NOW);
                                 if (libHandle == 0) {
-                                    // Exceptionally using plain output here as KARABO_LOG_[...] is potentially
-                                    // not active at the time this message is generated
+                                    // Using plain output here as KARABO_LOG_[...] is potentially
+                                    // not active at the time this message is generated and anyway comes from
+                                    // karabo/log/... which should not be included here in karabo/util/...
                                     cerr << "ERROR Trouble loading plugin "
                                             << it->path().filename()
                                             << ":\n\t" << string(dlerror()) << endl; // dlerror() != 0 since dlopen above failed

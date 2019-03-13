@@ -9,9 +9,9 @@
 #define	DATALOGGERSTRUCTS_HH
 
 #include <vector>
-#include "karabo/util/Epochstamp.hh"
-#include "karabo/util/Hash.hh"
-#include "karabo/util/Schema.hh"
+#include "Epochstamp.hh"
+#include "Hash.hh"
+#include "Schema.hh"
 
 namespace karabo {
     namespace util {
