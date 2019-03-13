@@ -389,19 +389,27 @@ namespace karabo {
                         std::string instanceId = it->get<std::string>("instanceId");
 
                         KARABO_LOG_FRAMEWORK_DEBUG << "Connected (shared) input on instanceId " << instanceId << " disconnected";
-                        std::deque<int> tmp = it->get<std::deque<int> >("queuedChunks");
-                        // Delete from registry
+                        const std::deque<int> queuedChunks = it->get<std::deque<int> >("queuedChunks");
+                        // Delete from registry and then either transfer queued chunks or release them
                         it = m_registeredSharedInputs.erase(it);
 
-                        if (!m_registeredSharedInputs.empty()) { // There are other shared input channels available
+                        if (m_registeredSharedInputs.empty()) {
+                            // Nothing left to transfer, so
+                            // * round-robin case: release chunks in 'queuedChunks'
+                            // * load balanced case: release chunks in common queue and clear it
+                            for (const int chunkId : queuedChunks) {
+                                unregisterWriterFromChunk(chunkId);
+                            }
+                            for (const int chunkId : m_sharedLoadBalancedQueuedChunks) {
+                                unregisterWriterFromChunk(chunkId);
+                            }
+                            m_sharedLoadBalancedQueuedChunks.clear();
+                        } else {
                             // Append queued chunks to other shared input
                             unsigned int idx = getNextSharedInputIdx();
                             std::deque<int>& src = m_registeredSharedInputs[idx].get<std::deque<int> >("queuedChunks");
-                            // Note: if load-balanced, src is empty anyway...
-                            src.insert(src.end(), tmp.begin(), tmp.end());
-                        } else {
-                            // As in the non-load-balanced (and copy) case, any queue should be cleared:
-                            m_sharedLoadBalancedQueuedChunks.clear();
+                            // Note: if load-balanced, queuedChunks is empty anyway...
+                            src.insert(src.end(), queuedChunks.begin(), queuedChunks.end());
                         }
 
                         // Delete from input queue
@@ -421,6 +429,10 @@ namespace karabo {
                     std::string instanceId = it->get<std::string>("instanceId");
 
                     KARABO_LOG_FRAMEWORK_DEBUG << "Connected (copy) input on instanceId " << instanceId << " disconnected";
+                    // Release any queued chunks:
+                    for (const int chunkId : it->get<std::deque<int> >("queuedChunks")) {
+                        unregisterWriterFromChunk(chunkId);
+                    }
                     it = m_registeredCopyInputs.erase(it);
 
                     // Delete from input queue
@@ -429,6 +441,9 @@ namespace karabo {
                     ++it;
                 }
             }
+            // TODO:
+            // In case onInputGone(..) is called in parallel to update(), we have to unregisterWriterFromChunk(..)
+            // if (but only if) 'channel' was supposed to be served, but was not yet...
         }
 
 
@@ -537,14 +552,17 @@ namespace karabo {
             // Take current chunkId for sending
             unsigned int chunkId = m_chunkId;
 
+
+            // TODO: From HERE...
+            //
             // This will increase the usage counts for this chunkId
             // by the number of all interested connected inputs
             registerWritersOnChunk(chunkId);
 
             // We are done with this chunkId, it will stay alive only until
             // all inputs are served (see above)
-            Memory::unregisterChunk(m_channelId, chunkId);
-
+            unregisterWriterFromChunk(chunkId);
+            // What if this throws? Catch and go on? Block in a loop until it does not throw?
             // Register new chunkId for writing to
             m_chunkId = Memory::registerChunk(m_channelId);
 
@@ -553,7 +571,9 @@ namespace karabo {
 
             // Copy chunk(s)
             copy(chunkId);
-
+            // TODO: ...to HERE, input channels that disconnect in parallel might make an unregisterChunk(..) missing!
+            // At least if it is the last in m_registeredSharedInputs or m_registeredCopyInputs since then
+            // we just return from distribute and copy!
         }
 
 
@@ -718,11 +738,16 @@ namespace karabo {
                         if (!hasRegisteredSharedInputChannel(instanceIdCopy)) { // might have disconnected meanwhile...
                             KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " input channel (shared) of " << instanceIdCopy
                                                        << " disconnected while waiting for it";
-                            // recurse to find next available shared input
-                            distribute(chunkId); // or lock.lock(), check !m_registeredSharedInputs.empty() and distributeRoundRobin(chunkId, lock)
+                            lock.lock();
+                            if (m_registeredSharedInputs.empty()) {  // nothing left, so release chunk
+                                unregisterWriterFromChunk(chunkId);
+                            } else { // recurse to find next available shared input
+                                distributeRoundRobin(chunkId, lock);
+                            }
                             return;
                         }
                     }
+                    // lock.lock() not really needed...
                     KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " found (shared) input channel after waiting, distributing now";
                     eraseSharedInput(instanceIdCopy);
                     if (channelInfoCopy.get<std::string > ("memoryLocation") == "local") {
@@ -779,6 +804,8 @@ namespace karabo {
                         boost::this_thread::sleep(boost::posix_time::millisec(1));
                         lock.lock();
                         if (m_registeredSharedInputs.empty()) {
+                            KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " found all (shared) input channels gone while waiting";
+                            unregisterWriterFromChunk(chunkId);
                             return; // Nothing to distribute anymore: no shared channels left
                         }
                         lock.unlock();
@@ -927,7 +954,8 @@ namespace karabo {
                 }
                 if (instanceDisconnected) {
                     KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " input channel (copy) of " << instanceId
-                                               << " disconnected while waiting for it";
+                            << " disconnected while waiting for it";
+                    unregisterWriterFromChunk(chunkId);
                     continue;
                 }
                 KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " found (copied) input channel after waiting, copying now";
