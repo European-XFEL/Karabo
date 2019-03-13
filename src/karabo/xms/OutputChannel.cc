@@ -116,7 +116,8 @@ namespace karabo {
             // HACK starts
             // Treat situations when this method already runs although there is no shared_ptr for this object yet!
             // Seen e.g. if many devices with OutputChannels are instantiated simultaneously, i.e. in a busy process.
-            if (!weak_from_this().lock()) { // Try to promote to shared_ptr.
+            const Self::Pointer sharedSelf(weak_from_this().lock()); // Promote to shared_ptr. and keep alive for bind_weak
+            if (!sharedSelf) {
                 if (countdown > 0) {
                     KARABO_LOG_FRAMEWORK_DEBUG << "initializeServerConnection: no shared_ptr yet, try again up to "
                             << countdown << " more times"; // Unfortunately, m_instanceId cannot be filled yet.
@@ -562,18 +563,20 @@ namespace karabo {
             // We are done with this chunkId, it will stay alive only until
             // all inputs are served (see above)
             unregisterWriterFromChunk(chunkId);
-            // What if this throws? Catch and go on? Block in a loop until it does not throw?
-            // Register new chunkId for writing to
-            m_chunkId = Memory::registerChunk(m_channelId);
 
             // Distribute chunk(s)
             distribute(chunkId);
 
             // Copy chunk(s)
             copy(chunkId);
+
             // TODO: ...to HERE, input channels that disconnect in parallel might make an unregisterChunk(..) missing!
             // At least if it is the last in m_registeredSharedInputs or m_registeredCopyInputs since then
             // we just return from distribute and copy!
+
+            // What if this throws? Catch and go on? Block in a loop until it does not throw?
+            // Register new chunkId for writing to
+            m_chunkId = Memory::registerChunk(m_channelId);
         }
 
 
