@@ -28,9 +28,9 @@ and look in *Other* to *Strip trailing on save* (choose "All" or "Modified lines
 
 .. note::
 
-   You might encounter two issues related to 'Always keep trailing space on caret line' checkbox. 
+   You might encounter two issues related to 'Always keep trailing space on caret line' checkbox.
 
-   - If you keep this checkbox ticked, white spaces won't be stripped from the current line. 
+   - If you keep this checkbox ticked, white spaces won't be stripped from the current line.
 
    - If you uncheck it, annoying disappearing of your whitespaces might happen, when you type your text and make a pause.
 
@@ -44,13 +44,13 @@ and look in *Other* to *Strip trailing on save* (choose "All" or "Modified lines
         -Save files on frame deactivation
 
         -Save files automatically if application is idle for x sec
-      
+
      After auto-saving is disabled, also it could be useful to apply the next settings:
 
      Go to Editor > General > Editor Tabs, put a checkmark on "Mark modified files with asterisk"
 
-     (Optional but recommended) 
-     Under "Tab Closing Policy", select "Close unchanged" option of "When tabs exceed the limit" radiobox. 
+     (Optional but recommended)
+     Under "Tab Closing Policy", select "Close unchanged" option of "When tabs exceed the limit" radiobox.
 
      You may also want to increase the number of allowed tabs.
 
@@ -112,32 +112,31 @@ Here the first number is the line number, the second the character number of
 the problem's location. Simply go through these problems and reformat your code
 as suggested and following the style guide provided here:
 `https://www.python.org/dev/peps/pep-0008/`_. Note that expected parameter
-sections in `python.bound` should be formatted like this, regardless of flake8
-complaints::
+sections in `python.bound` should be formatted like this::
 
     def expectedParameters(expected):
         (
             STRING_ELEMENT(expected).key("_serverId_")
-                .displayedName("_ServerID_")
-                .description("Do not set this property, it will be "
-                             "set by the device-server")
-                .expertAccess().assignmentInternal().noDefaultValue().init()
-                .commit(),
+            .displayedName("_ServerID_")
+            .description("Do not set this property, it will be "
+                         "set by the device-server")
+            .expertAccess().assignmentInternal().noDefaultValue().init()
+            .commit(),
 
             STRING_ELEMENT(expected).key("_deviceId_")
-                .displayedName("_DeviceID_")
-                .description("Do not set this property, it will be set "
-                             "by the device-server")
-                .expertAccess().assignmentInternal().noDefaultValue().init()
-                .commit(),
+            .displayedName("_DeviceID_")
+            .description("Do not set this property, it will be set "
+                         "by the device-server")
+            .expertAccess().assignmentInternal().noDefaultValue().init()
+            .commit(),
 
             NODE_ELEMENT(expected).key("_connection_")
-                .displayedName("Connection")
-                .description("The connection to the communication layer "
-                             "of the distributed system")
-                .appendParametersOf(JmsConnection)
-                .adminAccess()
-                .commit(),
+            .displayedName("Connection")
+            .description("The connection to the communication layer "
+                         "of the distributed system")
+            .appendParametersOf(JmsConnection)
+            .adminAccess()
+            .commit(),
         )
 
 Documentation
