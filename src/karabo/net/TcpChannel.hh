@@ -40,6 +40,7 @@ namespace karabo {
             };
 
             TcpConnection::Pointer m_connectionPointer;
+            mutable boost::mutex m_socketMutex;
             boost::asio::ip::tcp::socket m_socket;
             HandlerType m_activeHandler;
             bool m_readHeaderFirst;
@@ -259,9 +260,21 @@ namespace karabo {
              */
             karabo::util::Hash queueInfo();
 
+            /**
+             * TODO: The socket is not thread safe!
+             *       So this method has to be removed and all usages been revisited. Solution might be to
+             *       move the functionality used outside to inside TcpChannel.
+             *
+             * @return Tcp socket
+             */
             boost::asio::ip::tcp::socket& socket() {
                 return m_socket;
             }
+
+            /**
+             * Address of the remote endpoint
+             */
+            std::string remoteAddress() const;
 
             void writeAsync(const char* data, const size_t& size, int prio);
 
