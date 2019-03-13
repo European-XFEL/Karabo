@@ -38,6 +38,7 @@ Bound/cpp core
 - C++: More logs and few fixes for p2p shortcut !3331
 - C++: Epochstamp: Add operator<< for output to ostream !3077
 - C++: 'Fix for failure of testPipeMinData when sender delay is set to zero. !3179
+- C++: Provide ostream operator for timestamp !3352
 - Fix serialiser performance comparison !3241
 
 Core Devices
@@ -55,6 +56,7 @@ Core Devices
 - GuiServer: Treats completely failing instantiate request !3145
 - GuiServer: Cache and forward logs !3204
 - GuiServer: loglevel default to INFO !3217
+- GuiServer: Timestamp from meta data to client !3351
 - DataLogger: 'Fix history retrieval (RedMine 13865) !3249
 - PropertyTest: Add path elements !3258
 - RunConfigurationGroup: Table combobox !3213
@@ -78,6 +80,9 @@ Dependencies and deployment
 Middlelayer core
 ++++++++++++++++
 
+- MDL: Train ID ticking in Python 36 !3348
+- MDL: Accept read and send chunk swaps in the MDL output channel !3347
+- MDL: Fix broken connection for pipelines !3350
 - MDL: Add unit tests for slotGetOutputInformation, slotHasSlot and runtime schema attributes !3036
 - MDL: Account for units in table elements properly !3164
 - MDL: Proxy factory fits documentation !3166
@@ -106,6 +111,15 @@ Middlelayer core
 Graphical user interface
 ++++++++++++++++++++++++
 
+- GUI: Enforce all toolbar borders and set the size of icons on the configurator !3344
+- GUI: Set a fixed width for buttons in the search panel !3345
+- GUI: Change the label widget to account for new style !3357
+- GUI: Data handler meta hash correction !3359
+- GUI: Close pop up widgets in navigation panels !3358
+- GUI: Fix windows build !3360
+- GUI: Add checker to dash offset setting !3363
+- GUI: Monkey patch the tooltip event for image widgets to show the time… !3364
+- GUI: Show big data processing with cheat sheet !3362
 - GUI: Reliably save settings !3162
 - GUI: Fix tooltip on scene link !3138
 - GUI: Links can have context menu edit !3139
