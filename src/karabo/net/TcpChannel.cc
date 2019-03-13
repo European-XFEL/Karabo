@@ -4,6 +4,7 @@
 #include <string>
 #include <boost/algorithm/string.hpp>
 #include <boost/asio.hpp>
+#include <boost/lexical_cast.hpp>
 #include <karabo/util/Hash.hh>
 #include <karabo/util/MetaTools.hh>
 #include <boost/pointer_cast.hpp>
@@ -209,11 +210,13 @@ namespace karabo {
             size_t sizeofLength = m_connectionPointer->getSizeofLength();
             if (sizeofLength == 0) throw KARABO_LOGIC_EXCEPTION("Message's sizeTag size was configured to be 0. Thus, registration of this function does not make sense!");
             m_inboundMessagePrefix.resize(sizeofLength);
+            boost::mutex::scoped_lock lock(m_socketMutex);
             if (allowNonAsync && m_socket.available() >= sizeofLength) {
                 m_syncCounter++;
                 boost::system::error_code ec;
                 size_t rsize = m_socket.read_some(buffer(m_inboundMessagePrefix), ec);
-                assert(rsize == sizeofLength);
+                assert(ec || rsize == sizeofLength);
+                lock.unlock();
                 onSizeInBytesAvailable(ec, handler);
             } else {
                 m_asyncCounter++;
@@ -241,11 +244,13 @@ namespace karabo {
             // and readAsyncSizeInBytes binds it to another handler which is protected by a bind_weak
             // so we do not have to bind_weak here again.
             m_inboundData->resize(byteSize);
+            boost::mutex::scoped_lock lock(m_socketMutex);
             if (m_socket.available() >= byteSize) {
                 m_syncCounter++;
                 boost::system::error_code ec;
                 size_t rsize = m_socket.read_some(buffer(m_inboundData->data(), byteSize), ec);
-                assert(rsize == byteSize);
+                assert(ec || rsize == byteSize);
+                lock.unlock();
                 bytesAvailableHandler(ec);
             } else {
                 m_asyncCounter++;
@@ -262,11 +267,13 @@ namespace karabo {
 
 
         void TcpChannel::readAsyncRawImpl(char* data, const size_t& size, const ReadRawHandler& handler, bool allowNonAsync) {
+            boost::mutex::scoped_lock lock(m_socketMutex);
             if (allowNonAsync && m_socket.available() >= size) {
                 m_syncCounter++;
                 boost::system::error_code ec;
                 size_t rsize = m_socket.read_some(buffer(data, size), ec);
-                assert(rsize == size);
+                assert(ec || rsize == size);
+                lock.unlock();
                 onBytesAvailable(ec, rsize, handler);
             } else {
                 m_asyncCounter++;
@@ -360,11 +367,13 @@ namespace karabo {
 
             size_t totalSize = sizeof(unsigned int);
             for (auto p : buffers) totalSize += p->totalSize();
+            boost::mutex::scoped_lock lock(m_socketMutex);
             if (m_socket.available() >= totalSize) {
                 ++m_syncCounter;
                 boost::system::error_code ec;
                 const size_t rsize = m_socket.read_some(boostBuffers, ec);
-                onVectorBufferSetPointerAvailable(boost::system::error_code(), rsize, buffers, handler);
+                lock.unlock();
+                onVectorBufferSetPointerAvailable(ec, rsize, buffers, handler);
             } else {
                 ++m_asyncCounter;
                 boost::asio::async_read(m_socket, boostBuffers, transfer_all(),
@@ -743,6 +752,7 @@ namespace karabo {
                 }
                 buf.push_back(buffer(data, size)); // body
 
+                boost::mutex::scoped_lock lock(m_socketMutex);
                 m_writtenBytes += boost::asio::write(m_socket, buf, transfer_all(), error);
 
                 if (!error) {
@@ -908,6 +918,7 @@ namespace karabo {
                 buf.push_back(buffer(header, headerSize));
                 buf.push_back(buffer(m_outboundMessagePrefix));
                 buf.push_back(buffer(body, bodySize));
+                boost::mutex::scoped_lock lock(m_socketMutex);
                 m_writtenBytes += boost::asio::write(m_socket, buf, transfer_all(), error);
                 if (error) {
                     try {
@@ -938,6 +949,7 @@ namespace karabo {
                 buf.push_back(buffer(header, headerSize));
                 buf.push_back(buffer(m_outboundMessagePrefix));
                 body.appendTo(buf);
+                boost::mutex::scoped_lock lock(m_socketMutex);
                 m_writtenBytes += boost::asio::write(m_socket, buf, transfer_all(), error);
                 if (error) {
                     const std::string local_ep_ip = m_socket.local_endpoint().address().to_string();
@@ -971,6 +983,7 @@ namespace karabo {
                 buf.push_back(buffer(header, headerSize));
                 buf.push_back(buffer(m_outboundMessagePrefix));
                 karabo::io::BufferSet::appendTo(buf, body);
+                boost::mutex::scoped_lock lock(m_socketMutex);
                 m_writtenBytes += boost::asio::write(m_socket, buf, transfer_all(), error);
                 if (error) {
                     const std::string local_ep_ip = m_socket.local_endpoint().address().to_string();
@@ -1341,6 +1354,7 @@ namespace karabo {
 
 
         void TcpChannel::close() {
+            boost::mutex::scoped_lock lock(m_socketMutex);
             if (m_socket.is_open())
                 m_socket.cancel();
             m_socket.close();
@@ -1348,6 +1362,7 @@ namespace karabo {
 
 
         bool TcpChannel::isOpen() {
+            boost::mutex::scoped_lock lock(m_socketMutex);
             return m_socket.is_open();
         }
 
@@ -1444,7 +1459,7 @@ namespace karabo {
                         return;
                     }
                 }
-
+                boost::mutex::scoped_lock lock(m_socketMutex);
                 if (m_socket.is_open()) {
                     vector<const_buffer> buf;
 
@@ -1485,6 +1500,7 @@ namespace karabo {
                         << "  --  Channel is closed now!";
                 m_writeInProgress = false;
                 try {
+                    boost::mutex::scoped_lock lock(m_socketMutex);
                     m_socket.close();
                 } catch (...) {
                 }
@@ -1577,6 +1593,12 @@ namespace karabo {
             prepareVectorFromHash(data, *datap);
             Message::Pointer mp(new Message(datap, headerp));
             this->writeAsync(mp, prio);
+        }
+
+
+        std::string TcpChannel::remoteAddress() const {
+            boost::mutex::scoped_lock lock(m_socketMutex);
+            return boost::lexical_cast<std::string>(m_socket.remote_endpoint());
         }
     }
 }

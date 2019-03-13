@@ -1914,7 +1914,7 @@ namespace karabo {
 
         std::string GuiServerDevice::getChannelAddress(const karabo::net::Channel::Pointer& channel) const {
             TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
-            std::string addr = boost::lexical_cast<std::string>(tcpChannel->socket().remote_endpoint());
+            std::string addr = tcpChannel->remoteAddress();
 
             // convert periods to underscores, so that this can be used as a Hash key...
             std::transform(addr.begin(), addr.end(), addr.begin(), [](char c){ return c == '.' ? '_' : c; });
