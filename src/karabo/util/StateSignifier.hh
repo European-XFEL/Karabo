@@ -9,7 +9,8 @@
 #define	KARABO_CORE_STATESIGNIFIER_HH
 
 #include <iostream>
-#include <karabo/util/State.hh>
+
+#include "State.hh"
 
 namespace karabo {
     namespace util {

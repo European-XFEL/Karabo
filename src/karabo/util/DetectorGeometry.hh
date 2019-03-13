@@ -9,8 +9,14 @@
 #define	DETECTORGEOMETRY_HH
 
 #include <vector>
+
 #include <boost/smart_ptr.hpp>
-#include <karabo/util.hpp>
+
+#include "Hash.hh"
+#include "Schema.hh"
+#include "NodeElement.hh"
+#include "VectorElement.hh"
+#include "SimpleElement.hh"
 
 
 namespace karabo {

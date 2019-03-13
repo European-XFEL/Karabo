@@ -9,6 +9,14 @@ The **most relevant improvements**, fixes and changes are:
   They will not receive pipeline data.
 - The ProjectManager is now a MDL device!
 
+Minor **backward incompatibilities**:
+- Invalid schema elements will not be ignored anymore, but trigger a LogicException.
+  The specific cases are a leaf added to a non-existing node, a leaf where the
+  parent is not node, and a leaf added to a list of nodes.
+- a
+- b
+
+
 Detailed Merge-Log
 ==================
 
