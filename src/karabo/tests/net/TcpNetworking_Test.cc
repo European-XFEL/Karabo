@@ -588,6 +588,7 @@ void TcpNetworking_Test::testWriteAsync() {
 
     karabo::net::EventLoop::addThread(1);
     karabo::net::EventLoop::run();
+    karabo::net::EventLoop::removeThread(1);
 
     if (testOutcomeFn() == TestOutcome::SUCCESS) {
         auto testDuration = finishTime - startTime;
