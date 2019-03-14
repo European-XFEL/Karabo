@@ -162,6 +162,12 @@ namespace karabo {
              */
             void forwardLogs(const boost::system::error_code& error);
 
+            /**
+             * Deferred disconnect handler launched by a deadline timer. 
+             */
+            void deferredDisconnect(const boost::system::error_code& err, WeakChannelPointer channel,
+                                    boost::shared_ptr<boost::asio::deadline_timer> timer);
+            
             void safeClientWrite(const WeakChannelPointer channel, const karabo::util::Hash& message, int prio = LOSSLESS);
 
             /**
