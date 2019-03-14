@@ -701,7 +701,7 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_channelMutex);
             karabo::net::Channel::Pointer chan = channel.lock();
             if (chan && chan->isOpen()) {
-                chan->writeAsync(message, prio);
+                chan->writeAsync(message, prio, false);
             }
         }
 
@@ -710,7 +710,7 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_channelMutex);
             // Broadcast to all GUIs
             for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                if (it->first && it->first->isOpen()) it->first->writeAsync(message, prio);
+                if (it->first && it->first->isOpen()) it->first->writeAsync(message, prio, false);
             }
         }
 
