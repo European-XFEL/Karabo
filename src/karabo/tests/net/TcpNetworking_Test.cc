@@ -479,7 +479,7 @@ private:
             std::clog << "[Cli]\t5. sent a VectorCharPointer as body." << std::endl;
             channel->writeAsync(m_params.headerHash, m_params.vectorCharPointer, m_params.writePriority);
             std::clog << "[Cli]\t6. sent a hash for header and VectorCharPointer for body." << std::endl;
-            channel->writeAsync(m_params.dataHashNDArray, m_params.writePriority, true);
+            channel->writeAsync(m_params.dataHashNDArray, m_params.writePriority, false);
             std::clog << "[Cli]\t7. sent a hash with an NDArray as field with copyAllData false." << std::endl;
             std::clog << "[Cli] ... all test data sent by the client" << std::endl;
         } catch (karabo::util::Exception& ke) {
