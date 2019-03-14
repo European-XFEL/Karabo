@@ -599,5 +599,5 @@ void TcpNetworking_Test::testWriteAsync() {
     } else {
         CPPUNIT_ASSERT_MESSAGE("Failed: " + testOutcomeMessage + " at " + failingTestCaseName, false);
     }
-   
+
 }
