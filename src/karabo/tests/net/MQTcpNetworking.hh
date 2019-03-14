@@ -38,7 +38,7 @@ class MQTcpNetworking : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(MQTcpNetworking);
 
-    //CPPUNIT_TEST(testClientServerMethod);
+    CPPUNIT_TEST(testClientServerMethod);
 
     CPPUNIT_TEST_SUITE_END();
 
