@@ -47,7 +47,7 @@ class DisplayTimeLabel(BaseBindingController):
         widget.setObjectName(objectName)
         widget.setStyleSheet(sheet)
 
-        action = QAction('Change time format...', widget)
+        action = QAction('Change datetime format...', widget)
         widget.addAction(action)
         action.triggered.connect(self._change_time_format)
 
@@ -66,7 +66,7 @@ class DisplayTimeLabel(BaseBindingController):
         # NOTE: No extra protection required, as we do not allow altering
         # models for offline devices without binding
         text, ok = QInputDialog.getText(
-            self.widget, 'Enter Time Format', 'Time Format = ',
+            self.widget, 'Enter datetime format', 'datetime format = ',
             text=self.model.time_format)
 
         if not ok:
@@ -80,7 +80,7 @@ class DisplayTimeLabel(BaseBindingController):
         except Exception as e:
             err = traceback.format_exception_only(type(e), e)
             msg = '<pre>{1}{2}</pre>{3}'.format(*err)
-            messagebox.show_error(msg, title='Error in time format',
+            messagebox.show_error(msg, title='Error in datetime format',
                                   parent=self.widget)
             return
         self.model.time_format = text
