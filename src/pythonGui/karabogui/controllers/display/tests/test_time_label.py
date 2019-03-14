@@ -45,7 +45,7 @@ class TestTimeLabel(GuiTestCase):
                                       model=DisplayTimeModel())
         controller.create(None)
         action = controller.widget.actions()[0]
-        assert action.text() == 'Change time format...'
+        assert action.text() == 'Change datetime format...'
 
         dsym = 'karabogui.controllers.display.timelabel.QInputDialog'
         with patch(dsym) as QInputDialog:
