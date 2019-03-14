@@ -1,7 +1,7 @@
 /*
  * File:   GuiVersion_Test.cc
  * Author: steffen.hauf@xfel.eu
- 
+
  */
 
 #include "GuiVersion_Test.hh"
@@ -49,27 +49,28 @@ void GuiVersion_Test::tearDown() {
 
 
 void GuiVersion_Test::appTestRunner() {
-    
+
     // bring up a GUI server and a tcp adapter to it
     std::pair<bool, std::string> success = m_deviceClient->instantiate(
-        "testGuiVersionServer", "GuiServerDevice", Hash("deviceId", "testGuiServerDevice", "port", 44450,
-                                                        "minClientVersion", "2.2.3"),
-        KRB_TEST_MAX_TIMEOUT);
+                                                                       "testGuiVersionServer", "GuiServerDevice", Hash("deviceId", "testGuiServerDevice", "port", 44450,
+                                                                                                                       "minClientVersion", "2.2.3"),
+                                                                       KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
     boost::this_thread::sleep(boost::posix_time::milliseconds(3000));
 
     testVersionControl();
-    
+
     if (m_tcpAdapter->connected()) {
         m_tcpAdapter->disconnect();
     }
 
 }
 
+
 void GuiVersion_Test::resetClientConnection() {
     int timeout = 5000;
-    if (m_tcpAdapter){
-        if (m_tcpAdapter->connected()){
+    if (m_tcpAdapter) {
+        if (m_tcpAdapter->connected()) {
             m_tcpAdapter->disconnect();
         }
         while (m_tcpAdapter->connected() && timeout > 0) {
@@ -86,16 +87,17 @@ void GuiVersion_Test::resetClientConnection() {
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
 }
 
+
 void GuiVersion_Test::testVersionControl() {
     Hash loginInfo("type", "login", "username", "mrusp", "password", "12345", "version", "100.1.0");
     std::clog << std::endl;
-    std::vector<std::tuple<std::string, std::string, bool>> tests;
-    tests.push_back(std::tuple<std::string, std::string, bool>(
-        "version control supported", "100.1.0", true ));
-    tests.push_back(std::tuple<std::string, std::string, bool>(
-        "version control unsupported", "0.1.0", false ));
+    std::vector < std::tuple < std::string, std::string, bool>> tests;
+    tests.push_back(std::tuple < std::string, std::string, bool>(
+                                                                 "version control supported", "100.1.0", true));
+    tests.push_back(std::tuple < std::string, std::string, bool>(
+                                                                 "version control unsupported", "0.1.0", false));
     // Tests if the instance info correctly reports scene availability
-    for (const auto &test : tests){
+    for (const auto &test : tests) {
         const std::string& testName = std::get<0>(test);
         const std::string& version = std::get<1>(test);
         const bool connected = std::get<2>(test);
@@ -109,9 +111,9 @@ void GuiVersion_Test::testVersionControl() {
         }
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Failed :" + testName, connected, m_tcpAdapter->connected());
     }
- 
+
     // change the minVersion
-    m_deviceClient->set<std::string>("testGuiServerDevice","minClientVersion", "");
+    m_deviceClient->set<std::string>("testGuiServerDevice", "minClientVersion", "");
     // connect again
     resetClientConnection();
 
@@ -128,4 +130,32 @@ void GuiVersion_Test::testVersionControl() {
     // the GUI server will not log us out
     CPPUNIT_ASSERT_MESSAGE("GUIServer disconnects client if no version control is enabled", m_tcpAdapter->connected());
     std::clog << "Ok" << std::endl;
+}
+
+
+void GuiVersion_Test::testNotification() {
+    m_deviceClient->set<std::string>("testGuiServerDevice", "minClientVersion", "2.4.1");
+    // connect again
+    resetClientConnection();
+
+    // check if we are connected
+    CPPUNIT_ASSERT(m_tcpAdapter->connected());
+    Hash loginInfo("type", "login", "username", "mrusp", "password", "12345", "version", "2.4.0");
+    karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&] {
+        m_tcpAdapter->sendMessage(loginInfo);
+    });
+
+    Hash lastMessage;
+    messageQ->pop(lastMessage);
+    const std::string message = lastMessage.get<std::string>("message");
+    CPPUNIT_ASSERT(std::string("Your GUI client has version '2.4.0', but the minimum required is: 2.4.1") == message);
+
+    int timeout = 1500;
+    while (m_tcpAdapter->connected() && timeout > 0) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        timeout -= 5;
+    }
+    // the GUI server will log us out
+    CPPUNIT_ASSERT(!m_tcpAdapter->connected());
+    std::clog << "Notification passed!" << std::endl;
 }

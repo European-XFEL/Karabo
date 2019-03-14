@@ -542,16 +542,23 @@ namespace karabo {
                 KARABO_LOG_INFO << "Login request of user: " << hash.get<string > ("username");
                 Version clientVersion(hash.get<string>("version"));
                 Version minVersion(get<std::string>("minClientVersion"));
-                Version systemProtocolVersion("1.5.0");
-                if (clientVersion >= systemProtocolVersion) {
-                    sendSystemVersion(channel);
-                }
-
+                Version notificationVersion("2.4.0");
                 if (clientVersion >= minVersion) {
+                    sendSystemVersion(channel);
                     sendSystemTopology(channel);
                     return;
                 }
-                disconnectChannel(channel);
+                if (clientVersion >= notificationVersion) {
+                    const std::string message("Your GUI client has version '" + hash.get<string>("version")
+                                              + "', but the minimum required is: "
+                                              + get<std::string>("minClientVersion"));
+                    const Hash h("type", "notification", "message", message);
+                    safeClientWrite(channel, h);
+                }
+                auto timer(boost::make_shared<boost::asio::deadline_timer>(karabo::net::EventLoop::getIOService()));
+                timer->expires_from_now(boost::posix_time::milliseconds(500));
+                timer->async_wait(bind_weak(&GuiServerDevice::deferredDisconnect, this,
+                                            boost::asio::placeholders::error, channel, timer));
                 // TODO: check valid login.
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onLogin(): " << e.userFriendlyMsg();
@@ -559,6 +566,12 @@ namespace karabo {
         }
 
 
+        void GuiServerDevice::deferredDisconnect(const boost::system::error_code& err, WeakChannelPointer channel,
+                                                 boost::shared_ptr<boost::asio::deadline_timer> timer) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "deferredDisconnect";
+            disconnectChannel(channel);
+        }
+        
         void GuiServerDevice::onReconfigure(const karabo::util::Hash& hash) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onReconfigure";
@@ -682,7 +695,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in initReply " << e.what();
             }
         }
-
+        
 
         void GuiServerDevice::safeClientWrite(const WeakChannelPointer channel, const karabo::util::Hash& message, int prio) {
             boost::mutex::scoped_lock lock(m_channelMutex);
