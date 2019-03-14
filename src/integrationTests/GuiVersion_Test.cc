@@ -147,9 +147,8 @@ void GuiVersion_Test::testNotification() {
 
     Hash lastMessage;
     messageQ->pop(lastMessage);
-    std::string message = lastMessage.get<std::string>("message");
-    std::clog << message;
-    CPPUNIT_ASSERT("Your GUI client has version '2.4.0', but the minimum required is: 2.4.1" == message);
+    const std::string message = lastMessage.get<std::string>("message");
+    CPPUNIT_ASSERT(std::string("Your GUI client has version '2.4.0', but the minimum required is: 2.4.1") == message);
 
     int timeout = 1500;
     while (m_tcpAdapter->connected() && timeout > 0) {

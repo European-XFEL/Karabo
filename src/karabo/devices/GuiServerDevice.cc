@@ -543,27 +543,22 @@ namespace karabo {
                 Version clientVersion(hash.get<string>("version"));
                 Version minVersion(get<std::string>("minClientVersion"));
                 Version notificationVersion("2.4.0");
-
                 if (clientVersion >= minVersion) {
                     sendSystemVersion(channel);
                     sendSystemTopology(channel);
                     return;
                 }
-
                 if (clientVersion >= notificationVersion) {
                     const std::string message("Your GUI client has version '" + hash.get<string>("version")
                                               + "', but the minimum required is: "
                                               + get<std::string>("minClientVersion"));
                     const Hash h("type", "notification", "message", message);
                     safeClientWrite(channel, h);
-
                 }
-
                 auto timer(boost::make_shared<boost::asio::deadline_timer>(karabo::net::EventLoop::getIOService()));
                 timer->expires_from_now(boost::posix_time::milliseconds(500));
                 timer->async_wait(bind_weak(&GuiServerDevice::deferredDisconnect, this,
                                             boost::asio::placeholders::error, channel, timer));
-
                 // TODO: check valid login.
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onLogin(): " << e.userFriendlyMsg();
@@ -1095,10 +1090,8 @@ namespace karabo {
                 // That is safe, see comment in InputChannel::triggerIOEvent() which calls this method.
                 Hash::Node& dataNode = h.set("data", Hash());
                 dataNode.getValue<Hash>() = std::move(const_cast<Hash&> (data));
-
                 Hash::Node& metaNode = h.set("meta.timestamp", true);
                 meta.getTimestamp().toHashAttributes(metaNode.getAttributes());
-
                 boost::mutex::scoped_lock lock(m_networkMutex);
                 NetworkMap::const_iterator iter = m_networkConnections.find(channelName);
                 if (iter != m_networkConnections.cend()) {
