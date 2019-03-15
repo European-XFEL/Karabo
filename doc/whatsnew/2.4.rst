@@ -16,7 +16,6 @@ Minor **backward incompatibilities**:
 - a
 - b
 
-
 Detailed Merge-Log
 ==================
 
@@ -48,6 +47,8 @@ Bound/cpp core
 - C++: 'Fix for failure of testPipeMinData when sender delay is set to zero. !3179
 - C++: Provide ostream operator for timestamp !3352
 - Fix serialiser performance comparison !3241
+- C++: karabo/util must not include other karabo parts !3334
+- C++: Fix output channel chunk leaks when inout channels disconnectLooks like not the full story is covered... !3361
 
 Core Devices
 ++++++++++++
@@ -84,10 +85,13 @@ Dependencies and deployment
 - Fix all shebangs once and for all !3089
 - Code quality in Karabo common !3269
 - Upgrade to daemontools 1.11 !3141
+- DEPS: Daemontools stop state is fixed !3371
+- wrapping output of `scene2py` into `get_scene(deviceId)` function !3365
 
 Middlelayer core
 ++++++++++++++++
 
+- MDL: Forcing unsigned shape in native NDArray Schema and toDataAndAttrs() !3367 !3372
 - MDL: Train ID ticking in Python 36 !3348
 - MDL: Accept read and send chunk swaps in the MDL output channel !3347
 - MDL: Fix broken connection for pipelines !3350
@@ -119,6 +123,10 @@ Middlelayer core
 Graphical user interface
 ++++++++++++++++++++++++
 
+- GUI: Introducing Karabo Theater !3262
+- GUI: Adjust QPADDING to new QToolbar border size in scenepanel !3370
+- GUI: Notify client - notification message box !3355
+- GUI: Implement Timestamp widget !3366
 - GUI: Enforce all toolbar borders and set the size of icons on the configurator !3344
 - GUI: Set a fixed width for buttons in the search panel !3345
 - GUI: Change the label widget to account for new style !3357
