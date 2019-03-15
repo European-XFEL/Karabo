@@ -701,6 +701,9 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_channelMutex);
             karabo::net::Channel::Pointer chan = channel.lock();
             if (chan && chan->isOpen()) {
+                // Using false for copyAllData parameter in the call below is safe: NDArray appear only in pipeline
+                // data forwarded from an InputChannel. That forwarding happens from a single method in InputChannel;
+                // that method makes no use of the data after forwarding it.
                 chan->writeAsync(message, prio, false);
             }
         }
@@ -710,7 +713,7 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_channelMutex);
             // Broadcast to all GUIs
             for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                if (it->first && it->first->isOpen()) it->first->writeAsync(message, prio, false);
+                if (it->first && it->first->isOpen()) it->first->writeAsync(message, prio);
             }
         }
 
