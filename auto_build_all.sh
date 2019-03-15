@@ -342,6 +342,7 @@ fi
 
 if [ "$RUNTESTS" = "y" ]; then
     runUnitTests
+    runIntegrationTests
 fi
 
 if [ "$RUNINTEGRATIONTESTS" = "y" ]; then
