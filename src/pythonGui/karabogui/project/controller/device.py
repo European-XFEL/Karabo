@@ -7,7 +7,7 @@ from functools import partial
 from io import StringIO
 
 from traits.api import Undefined
-from PyQt4.QtCore import Qt
+from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance, Property, on_trait_change
 
@@ -62,6 +62,8 @@ class DeviceInstanceController(BaseProjectGroupController):
 
         capabilities = proj_topo_node.capabilities if proj_topo_node else 0
 
+        about_action = QAction('About', menu)
+        about_action.triggered.connect(self._about_device)
         edit_action = QAction('Edit', menu)
         edit_action.triggered.connect(partial(self._edit_device,
                                               project_controller))
@@ -99,6 +101,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         shutdown_action.setEnabled(proj_device_online)
         shutdown_action.triggered.connect(partial(self.shutdown_device,
                                                   show_confirm=True))
+        menu.addAction(about_action)
         menu.addAction(edit_action)
         menu.addMenu(config_menu)
         menu.addSeparator()
@@ -399,6 +402,19 @@ class DeviceInstanceController(BaseProjectGroupController):
                 device.active_config_ref = dialog.active_uuid
                 dev_conf.class_id = dialog.class_id
                 dev_conf.description = dialog.description
+
+    @pyqtSlot()
+    def _about_device(self):
+        device = self.model
+        info = {}
+        for name in device.editable_traits():
+            value = getattr(device, name)
+            info[name] = value
+
+        htmlString = ("<table>" +
+                      "".join("<tr><td><b>{}</b>:   </td><td>{}</td></tr>".
+                              format(*p) for p in info.items()) + "</table>")
+        messagebox.show_information(htmlString)
 
     def _add_configuration(self, project_controller):
         device = self.model
