@@ -197,6 +197,11 @@ class SliderModel(BaseEditWidget):
     """ A model for Slider"""
 
 
+class DisplayTimeModel(BaseWidgetObjectData):
+    """ A model for the time widget"""
+    time_format = String('%H:%M:%S')
+
+
 class WorkflowItemModel(BaseWidgetObjectData):
     """ A model for a WorkflowItem
     """
@@ -278,6 +283,24 @@ def _doublewheel_box_writer(write_func, model, parent):
     write_base_widget_data(model, element, 'DoubleWheelBox')
     element.set(NS_KARABO + 'decimals', str(model.decimals))
     element.set(NS_KARABO + 'integers', str(model.integers))
+
+    return element
+
+
+@register_scene_reader('TimeLabel')
+def _time_label_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    time_format = element.get(NS_KARABO + 'time_format', '%H:%M:%S')
+    traits['time_format'] = time_format
+
+    return DisplayTimeModel(**traits)
+
+
+@register_scene_writer(DisplayTimeModel)
+def _time_label_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'TimeLabel')
+    element.set(NS_KARABO + 'time_format', str(model.time_format))
 
     return element
 
