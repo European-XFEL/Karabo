@@ -10,29 +10,24 @@ BUTTON_SIZE = 20
 ICON_SIZE = BUTTON_SIZE - 8
 MINIMUM_HEIGHT = 60
 FRAME_WIDTH = 20
+TOP_ROW = 0
+MIDDLE_ROW = 1
+BOTTOM_ROW = 2
+
+_DEFAULT_INTEGERS = 6
+_DEFAULT_DECIMALS = 3
 
 
-class ButtonUp(QPushButton):
-    def __init__(self, identifier, parent=None):
-        super(ButtonUp, self).__init__(parent)
-        self.increment = math.pow(10, identifier)
+class WheelButton(QPushButton):
+    def __init__(self, identifier, orientation="up", parent=None):
+        super(WheelButton, self).__init__(parent)
+        if orientation == "up":
+            self.increment = math.pow(10, identifier)
+            self.setIcon(icons.arrowWheelUp)
+        elif orientation == "down":
+            self.increment = -math.pow(10, identifier)
+            self.setIcon(icons.arrowWheelDown)
         self.setIconSize(QSize(ICON_SIZE, ICON_SIZE))
-        self.setIcon(icons.arrowWheelUp)
-        self.setFocusPolicy(Qt.ClickFocus)
-        self.setStyleSheet(
-            """QPushButton {
-                        border: none;
-                        outline: none;
-                        }""")
-        self.setFixedSize(BUTTON_SIZE, BUTTON_SIZE)
-
-
-class ButtonDown(QPushButton):
-    def __init__(self, identifier, parent=None):
-        super(ButtonDown, self).__init__(parent)
-        self.increment = -math.pow(10, identifier)
-        self.setIconSize(QSize(ICON_SIZE, ICON_SIZE))
-        self.setIcon(icons.arrowWheelDown)
         self.setFocusPolicy(Qt.ClickFocus)
         self.setStyleSheet(
             """QPushButton {
@@ -75,22 +70,19 @@ class DigitFrame(QLabel):
 
 
 class EditWidget(QLineEdit):
+    """The plain editor in the wheel edit widget
+
+    Allows to edit and apply the parameter with a numpad editor
+    """
+
     def __init__(self, parent=None):
         super(EditWidget, self).__init__(parent)
         self.setValidator(NumberValidator(parent=self))
         self.setFrame(False)
 
 
-_DEFAULT_INTEGERS = 6
-_DEFAULT_DECIMALS = 3
-
-TOP_ROW = 0
-MIDDLE_ROW = 1
-BOTTOM_ROW = 2
-
-
 class DoubleWheelEdit(QLabel):
-    """A widget designed to handle numeric scalar values.
+    """A widget designed to handle double values.
 
     It allows interaction based on single digit as well as normal
     value edition.
@@ -183,8 +175,10 @@ class DoubleWheelEdit(QLabel):
         for index in range(self.integers):
             column = index + 1
             digit_widget = DigitFrame('0', parent=self)
-            button_up = ButtonUp(self.integers - index - 1)
-            button_down = ButtonDown(self.integers - index - 1)
+            button_up = WheelButton(self.integers - index - 1,
+                                    orientation="up")
+            button_down = WheelButton(self.integers - index - 1,
+                                      orientation="down")
             digit_widget.setButtons(button_up, button_down)
             button_up.setFocusProxy(digit_widget)
             button_down.setFocusProxy(digit_widget)
@@ -209,8 +203,10 @@ class DoubleWheelEdit(QLabel):
             if self.decimals > 0:
                 column += 1
             widget = DigitFrame('0', parent=self)
-            button_up = ButtonUp(self.integers - index - 1)
-            button_down = ButtonDown(self.integers - index - 1)
+            button_up = WheelButton(self.integers - index - 1,
+                                    orientation="up")
+            button_down = WheelButton(self.integers - index - 1,
+                                      orientation="down")
             widget.setButtons(button_up, button_down)
             button_up.setFocusProxy(widget)
             button_down.setFocusProxy(widget)
@@ -347,11 +343,11 @@ class DoubleWheelEdit(QLabel):
         """Executed when an arrow button is pressed from the button group"""
         value = self.value + button.increment
         # Recast to the format we have and validate against the minimum and
-        # maximum before sending!
+        # maximum of the widget before sending!
         value = float(self.value_format % value)
-        if self._value_minimum is not None and self._value_minimum > value:
+        if self.total_minimum is not None and self.total_minimum > value:
             return
-        elif self._value_maximum is not None and self._value_maximum < value:
+        elif self.total_maximum is not None and self.total_maximum < value:
             return
 
         self.valueChanged.emit(value)
@@ -367,6 +363,7 @@ class DoubleWheelEdit(QLabel):
             validator = self.editor_widget.validator()
             validator.setBottom(low)
             validator.setTop(high)
+        self._generate_limits()
 
     def set_integer_decimal_configuration(self, integers, decimals):
         self._set_digit_format(integers, decimals)
@@ -380,7 +377,6 @@ class DoubleWheelEdit(QLabel):
         """
         if value is None:
             return
-
         # NOTE: We again check here the value maximum and minimum
         elif self._value_minimum is not None and self._value_minimum > value:
             return

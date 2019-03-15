@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
 from karabo.native import Configurable, Double
-from karabogui.binding.api import apply_default_configuration
+from karabogui.binding.api import apply_default_configuration, build_binding
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..doublewheel import EditableWheelBox
@@ -9,6 +9,10 @@ from ..doublewheel import EditableWheelBox
 
 class Object(Configurable):
     prop = Double(defaultValue=1.0)
+
+
+class MinMaxSchema(Configurable):
+    prop = Double(defaultValue=1.0, minInc=0, maxInc=10)
 
 
 class NoneObject(Configurable):
@@ -104,3 +108,20 @@ class TestDoubleWheelBox(GuiTestCase):
         self.assertEqual(self.controller.model.integers, 1)
         widget = self.controller._internal_widget
         self.assertEqual(widget.string_value, '+0.000')
+
+    def test_minimum_maximum(self):
+        schema = MinMaxSchema.getClassSchema()
+        self.assertEqual(self.controller._internal_widget._value_minimum,
+                         -1.7976931348623157e+308)
+        self.assertEqual(self.controller._internal_widget._value_maximum,
+                         1.7976931348623157e+308)
+        # Just frame min and max
+        self.assertEqual(self.controller._internal_widget.total_minimum,
+                         -999999.999)
+        self.assertEqual(self.controller._internal_widget.total_maximum,
+                         999999.999)
+        build_binding(schema, existing=self.proxy.root_proxy.binding)
+        self.assertEqual(self.controller._internal_widget._value_minimum, 0)
+        self.assertEqual(self.controller._internal_widget._value_maximum, 10)
+        self.assertEqual(self.controller._internal_widget.total_minimum, 0)
+        self.assertEqual(self.controller._internal_widget.total_maximum, 10)
