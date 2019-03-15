@@ -57,10 +57,13 @@ class DisplayTimeLabel(BaseBindingController):
         if proxy.value is Undefined:
             return
         timestamp = proxy.binding.timestamp
-        if timestamp is None:
-            return
-        dt = datetime.fromtimestamp(timestamp.toTimestamp())
-        stamp = dt.strftime(self.model.time_format)
+        # Be backward compatible, some elements might not have a timestamp
+        # in the past
+        if timestamp is not None:
+            dt = datetime.fromtimestamp(timestamp.toTimestamp())
+            stamp = dt.strftime(self.model.time_format)
+        else:
+            stamp = "NaN"
         self.widget.setText(stamp)
 
     @pyqtSlot()
