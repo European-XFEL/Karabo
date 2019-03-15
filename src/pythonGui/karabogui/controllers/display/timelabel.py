@@ -57,6 +57,8 @@ class DisplayTimeLabel(BaseBindingController):
         if proxy.value is Undefined:
             return
         timestamp = proxy.binding.timestamp
+        if timestamp is None:
+            return
         dt = datetime.fromtimestamp(timestamp.toTimestamp())
         stamp = dt.strftime(self.model.time_format)
         self.widget.setText(stamp)
