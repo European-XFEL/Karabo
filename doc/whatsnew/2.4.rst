@@ -48,7 +48,7 @@ Bound/cpp core
 - C++: Provide ostream operator for timestamp !3352
 - Fix serialiser performance comparison !3241
 - C++: karabo/util must not include other karabo parts !3334
-- C++: Fix output channel chunk leaks when inout channels disconnectLooks like not the full story is covered... !3361
+- C++: Fix output channel chunk leaks when input/output channels disconnect. Looks like not the full story is covered... !3361
 
 Core Devices
 ++++++++++++
