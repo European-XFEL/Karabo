@@ -108,7 +108,8 @@ class NDArray(Type):
         h._setelement("isBigEndian",
                       HashElement(data.dtype.str[0] == ">", attrs))
         h._setelement("shape",
-                      HashElement(numpy.array(data.shape), attrs))
+                      HashElement(numpy.array(data.shape, dtype=numpy.uint64),
+                                  attrs))
         h._setelement("data",
                       HashElement(data.value.data, attrs))
 
