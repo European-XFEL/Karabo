@@ -891,12 +891,10 @@ class PythonDevice(NoFsm):
             # re-assign previous values and timestamps
             validated.merge(self.parameters)
 
-        # Keep new paths only. This hash is then set, to avoid re-sending
-        # updates with the same value. This is necessary to do after the merge
-        # above, to keep current values.
-        for path in validated.getPaths():
-            if path in self.parameters:
-                validated.erase(path)
+            # Keep new paths only. This hash is then set, to avoid re-sending
+            # updates with the same value. This is necessary to do after the
+            # merge above, to keep current values.
+            validated -= self.parameters
         self.set(validated)
 
         self.log.INFO("Schema updated")
@@ -936,11 +934,9 @@ class PythonDevice(NoFsm):
             # re-assign previous values and timestamps
             validated.merge(self.parameters)
 
-        # Keep new paths only. This hash is then set, to avoid re-sending
-        # updates with the same value.
-        for path in validated.getPaths():
-            if path in self.parameters:
-                validated.erase(path)
+            # Keep new paths only. This hash is then set, to avoid re-sending
+            # updates with the same value.
+            validated -= self.parameters
         self.set(validated)
 
         self.log.INFO("Schema appended")

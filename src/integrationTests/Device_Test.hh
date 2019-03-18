@@ -11,6 +11,7 @@
 #include "karabo/core/DeviceClient.hh"
 
 #include <boost/thread.hpp>
+#include <boost/function.hpp>
 
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -32,6 +33,9 @@ private:
     void appTestRunner();
 
     void testGetTimestamp();
+    void testSchemaInjection();
+
+    bool waitForCondition(boost::function<bool() > checker, unsigned int timeoutMs);
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_eventLoopThread;
