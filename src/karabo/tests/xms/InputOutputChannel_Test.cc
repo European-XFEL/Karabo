@@ -237,10 +237,10 @@ void InputOutputChannel_Test::testDisconnectWhileSending_impl(const std::string&
             << ", receiver (for shared sender) "
             << receiver_distributionMode << "/" << receiver_noInputShared << std::endl; // FIXME: covert to flush;
 
-    const unsigned int numData = 100000; // overall number of data items the output channel sends
-    const int processTime = 5; // ms that receiving input channel will block on data
+    const unsigned int numData = 200000; // overall number of data items the output channel sends
+    const int processTime = 2; // ms that receiving input channel will block on data
     const int writeIntervall = 1; // ms in between output channel writing data
-    const int reconnectCycle = 2; // ms between dis- and reconnect trials
+    const int reconnectCycle = 4; // ms between dis- and reconnect trials
     const int maxDuration = 600; // s of maximum test duration
 
     ThreadAdder extraThreads(3); // 3 for sender, receiver's callback, dis-/reconnection
@@ -288,17 +288,10 @@ void InputOutputChannel_Test::testDisconnectWhileSending_impl(const std::string&
         connectErrorCode.set_value(ec);
     };
     // initiate connect and block until done (fail test if timeout)
-    //    int trials = 10;
     karabo::net::ErrorCode ec;
-    //    while (--trials >= 0) {
-        input->connect(outputInfo, connectHandler);
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture.wait_for(std::chrono::milliseconds(1000)));
-        ec = connectFuture.get(); // Can get() only once...
-    //        if (!ec) break;
-    //        std::clog << "Another try to connect " << trials << " " << outputInfo << std::endl;
-    //        connectErrorCode = std::promise<karabo::net::ErrorCode>();
-    //        connectFuture = connectErrorCode.get_future();
-    //    }
+    input->connect(outputInfo, connectHandler);
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture.wait_for(std::chrono::milliseconds(1000)));
+    ec = connectFuture.get(); // Can get() only once...
     CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), karabo::net::ErrorCode(), ec); // i.e. no error
 
     //
@@ -307,47 +300,67 @@ void InputOutputChannel_Test::testDisconnectWhileSending_impl(const std::string&
     std::promise<unsigned int> numSent;
     auto numSentFuture = numSent.get_future();
     std::string exceptionText;
-    std::atomic<bool> doGoOn(true); // atomic really needed ? Had a crash which might point to that...
-    auto send = [output, numData, &numSent, &exceptionText, &doGoOn, writeIntervall]() {
+    bool doGoOn = true;
+    auto send = [output, numData, &numSent, &exceptionText, &doGoOn, writeIntervall, &calls]() {
         unsigned int num = 0;
-        while (++num <= numData && doGoOn) {
+        while (num < numData && doGoOn) {
             try {
                 output->write(Hash("a", 42));
             } catch (const std::exception& e) {
                 (exceptionText += "output->write(..): ") += e.what();
-                num += 1; // since below we subtract 1 from while expression getting false...
                 break;
             }
             try {
                 output->update();
             } catch (const std::exception& e) {
                 (exceptionText += "output->update(): ") += e.what();
-                num += 1; // since below we subtract 1 from while expression getting false...
                 break;
             }
-            if (num % 2000 == 0) std::clog << "updated successfully " << num << std::endl;
+            if (num % 2000 == 0) std::clog << "updated successfully " << calls << "/" << num << std::endl;
             boost::this_thread::sleep(boost::posix_time::milliseconds(writeIntervall));
+            ++num;
         }
-        numSent.set_value(num - 1); // subtract the final ++ when the while got false
+        numSent.set_value(num);
         doGoOn = false; // inform disReconnect to stop since test is done
+        std::clog << "DONE: send " << num << std::endl;
     };
 
     std::string disreconnectFailure;
-    auto disReconnect = [input, output, outputInfo, &disreconnectFailure, &doGoOn, reconnectCycle]() {
+    std::promise<void> disReconnectDone;
+    auto disReconnectFuture = disReconnectDone.get_future();
+    auto disReconnect = [input, output, outputInfo, &disreconnectFailure, &disReconnectDone,
+            &doGoOn, &calls, reconnectCycle]() {
         unsigned int counter = 0;
         while (doGoOn) {
             input->disconnect(outputInfo.get<std::string>("outputChannelString"));
 
-            boost::this_thread::sleep(boost::posix_time::milliseconds(reconnectCycle));
             std::promise<karabo::net::ErrorCode> connectErrorCode;
             auto connectFuture = connectErrorCode.get_future();
             auto connectHandler = [&connectErrorCode](const karabo::net::ErrorCode & ec) {
                 connectErrorCode.set_value(ec);
             };
-            if ((++counter) % 1000 == 0) std::clog << "Disconnected successfully " << counter << std::endl;
+            if ((++counter) % 1000 == 0 || counter > 14100 || counter < 5) {
+                std::clog << "Disconnected successfully " << counter
+                        << " times, " << calls << " made it through yet" << std::endl;
+            }
             // initiate connect and block until done
             input->connect(outputInfo, connectHandler);
-            if (std::future_status::ready != connectFuture.wait_for(std::chrono::seconds(1000))) {
+            int trials = 200;
+            while (--trials >= 0 && doGoOn) {
+                if (std::future_status::timeout != connectFuture.wait_for(std::chrono::milliseconds(10))) {
+                    break;
+                }
+                // TODO - minor importance (?):
+                // After about 14100 to 14200 reconnection cycles, 'trials' always goes down to exactly 102
+                // (with 10 ms sleep above) on my local tests - and then connect succeeds....
+                // Maybe some tcp internal port cleaning done about every second only?
+                if (trials < 110) std::clog << "trials " << trials << std::endl;
+            }
+            if (!doGoOn) {
+                std::clog << "Break with no doGoOn, trials now " << trials << std::endl;
+                break;
+            }
+            if (trials < 0) {
                 disreconnectFailure = "Failed to reconnect within 1 s -- " + karabo::util::toString(counter);
                 doGoOn = false;
                 break;
@@ -360,6 +373,8 @@ void InputOutputChannel_Test::testDisconnectWhileSending_impl(const std::string&
             }
             boost::this_thread::sleep(boost::posix_time::milliseconds(reconnectCycle));
         }
+        std::clog << "DONE: disReconnect " << counter << " " << calls << std::endl;
+        disReconnectDone.set_value();
     };
 
     //
@@ -368,13 +383,22 @@ void InputOutputChannel_Test::testDisconnectWhileSending_impl(const std::string&
     karabo::net::EventLoop::getIOService().post(send);
     karabo::net::EventLoop::getIOService().post(disReconnect);
 
+    //
+    // Take care that both posted methods are done, so they cannot access local variables anymore
+    // (worst case: doing that when the test method is left due to a failure)
+    //
     CPPUNIT_ASSERT_EQUAL(std::future_status::ready, numSentFuture.wait_for(std::chrono::seconds(maxDuration)));
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, disReconnectFuture.wait_for(std::chrono::seconds(2)));
+
+    //
+    // Finally do all the necessary asserts:
+    //
     std::clog << "Managed " << calls << " calls!" << std::endl;
     if (!exceptionText.empty()) { // FIXME remove
         std::clog << exceptionText << std::endl;
     }
     CPPUNIT_ASSERT_MESSAGE(exceptionText, exceptionText.empty());
-    CPPUNIT_ASSERT_EQUAL(numSentFuture.get(), numData);
+    CPPUNIT_ASSERT_EQUAL(numData, numSentFuture.get());
 
     if (!exceptionText.empty()) { // FIXME remove
         std::clog << disreconnectFailure << std::endl;
@@ -382,6 +406,7 @@ void InputOutputChannel_Test::testDisconnectWhileSending_impl(const std::string&
     CPPUNIT_ASSERT_MESSAGE(disreconnectFailure, disreconnectFailure.empty());
 
     CPPUNIT_ASSERT(calls > 0);
+
 
     std::clog << "testDisconnectWhileSending " << calls << " calls -- OK!" << std::endl; // FIXME: remove testDisconnectWhileSending
     // boost::this_thread::sleep(boost::posix_time::milliseconds(500)); // time for clean-up???????????
