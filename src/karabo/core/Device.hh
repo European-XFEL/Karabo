@@ -828,11 +828,9 @@ namespace karabo {
             /**
              * Append a schema to the existing device schema
              * @param schema to be appended
-             * @param keepParameters: if true, do not reset the configuration of
-             * the device, for those parameters that validate against the new
-             * schema
+             * @param unused parameter, kept for backward compatibility.
              */
-            void appendSchema(const karabo::util::Schema& schema, const bool keepParameters = false) {
+            void appendSchema(const karabo::util::Schema& schema, const bool /*unused*/ = false) {
                 KARABO_LOG_DEBUG << "Append Schema requested";
                 karabo::util::Hash validated;
                 karabo::util::Validator::ValidationRules rules;
@@ -863,16 +861,11 @@ namespace karabo {
                     // For those parameters which have been there before, but for which some attributes changed
                     // (e.g. alarm levels, min/max value, size, etc.) re-assign the old values and timestamps.
                     validated.merge(m_parameters);
+
+                    // Keep new paths only. This hash is then set, to avoid re-sending updates with the same values.
+                    validated -= m_parameters;
                 }
 
-                // Keep new paths only. This hash is then set, to avoid re-sending updates with the same values.
-                std::vector<std::string> paths;
-                validated.getPaths(paths);
-                for (const std::string& path : paths) {
-                    if (m_parameters.has(path)) {
-                        validated.erase(path);
-                    }
-                }
                 set(validated);
 
                 KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Schema appended";
@@ -883,9 +876,9 @@ namespace karabo {
              * add additional (dynamic) descriptions
              * @param schema additional, dynamic schema - may also contain existing elements to overwrite their
              *                attributes like min/max values/sizes, alarm ranges, etc.
-             * @param unused parameter
+             * @param unused parameter, kept for backward compatibility.
              */
-            void updateSchema(const karabo::util::Schema& schema, const bool unused = false) {
+            void updateSchema(const karabo::util::Schema& schema, const bool /*unused*/ = false) {
 
                 KARABO_LOG_DEBUG << "Update Schema requested";
                 karabo::util::Hash validated;
@@ -927,16 +920,11 @@ namespace karabo {
                     // For those parameters which are in m_staticSchema, but for which some attributes changed
                     // (e.g. alarm levels, min/max value, size, etc.) re-assign the old values and timestamps.
                     validated.merge(m_parameters);
+
+                    // Keep new paths only. This hash is then set, to avoid re-sending updates with the same values.
+                    validated -= m_parameters;
                 }
 
-                // Keep new paths only. This hash is then set, to avoid re-sending updates with the same values.
-                std::vector<std::string> paths;
-                validated.getPaths(paths);
-                for (const std::string& path : paths) {
-                    if (m_parameters.has(path)) {
-                        validated.erase(path);
-                    }
-                }
                 set(validated);
 
                 KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Schema updated";
