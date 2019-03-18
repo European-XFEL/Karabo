@@ -240,9 +240,6 @@ namespace karabo {
 
 
         void TcpChannel::byteSizeAvailableHandler(const size_t byteSize) {
-            // byteSizeAvailableHandler is only used as handler argument of readAsyncSizeInBytes
-            // and readAsyncSizeInBytes binds it to another handler which is protected by a bind_weak
-            // so we do not have to bind_weak here again.
             m_inboundData->resize(byteSize);
             boost::mutex::scoped_lock lock(m_socketMutex);
             if (m_socket.available() >= byteSize) {
@@ -255,7 +252,8 @@ namespace karabo {
             } else {
                 m_asyncCounter++;
                 this->readAsyncRawImpl(m_inboundData->data(), byteSize,
-                                       boost::bind(&karabo::net::TcpChannel::bytesAvailableHandler, this, _1), true);
+                                       util::bind_weak(&karabo::net::TcpChannel::bytesAvailableHandler, this, _1),
+                                       true);
             }
         }
 
@@ -952,13 +950,18 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_socketMutex);
                 m_writtenBytes += boost::asio::write(m_socket, buf, transfer_all(), error);
                 if (error) {
-                    const std::string local_ep_ip = m_socket.local_endpoint().address().to_string();
-                    const std::string remote_ep_ip = m_socket.remote_endpoint().address().to_string();
+                    std::string local_ep_ip;
+                    std::string remote_ep_ip;
+                    try { // m_socket might not be able to provide that info anymore...
+                        local_ep_ip = m_socket.local_endpoint().address().to_string();
+                        remote_ep_ip = m_socket.remote_endpoint().address().to_string();
+                    } catch (...) {
+                    }
                     try {
                         m_socket.close();
                     } catch (...) {
                     }
-                    throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message() + ". Channel " + local_ep_ip + "->" + remote_ep_ip + " is closed!");
+                    throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message() + ". Channel '" + local_ep_ip + "'->'" + remote_ep_ip + "' is closed!");
                 }
             } catch (...) {
                 KARABO_RETHROW
@@ -986,13 +989,18 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_socketMutex);
                 m_writtenBytes += boost::asio::write(m_socket, buf, transfer_all(), error);
                 if (error) {
-                    const std::string local_ep_ip = m_socket.local_endpoint().address().to_string();
-                    const std::string remote_ep_ip = m_socket.remote_endpoint().address().to_string();
+                    std::string local_ep_ip;
+                    std::string remote_ep_ip;
+                    try { // m_socket might not be able to provide that info anymore...
+                        local_ep_ip = m_socket.local_endpoint().address().to_string();
+                        remote_ep_ip = m_socket.remote_endpoint().address().to_string();
+                    } catch (...) {
+                    }
                     try {
                         m_socket.close();
                     } catch (...) {
                     }
-                    throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message() + ". Channel " + local_ep_ip + "->" + remote_ep_ip + " is closed!");
+                    throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message() + ". Channel '" + local_ep_ip + "'->'" + remote_ep_ip + "' is closed!");
                 }
             } catch (...) {
                 KARABO_RETHROW
