@@ -1,8 +1,11 @@
+import sys
+
 from os import path as op
 import requests
 from unittest import mock, skip
 
 from karabogui.dialogs import update_dialog
+from karabogui.dialogs.update_dialog import UNDEFINED_VERSION
 from karabogui.testing import GuiTestCase
 
 
@@ -13,6 +16,33 @@ class MockResponse:
 
 
 class TestCase(GuiTestCase):
+
+    def _get_loaded_modules(self):
+        extensions = []
+        for module in sys.modules:
+            if module.startswith('extensions'):
+                extensions.append(module)
+        return extensions
+
+    @skip(reason='Install is not working properly in CI')
+    def test_current_version_bug(self):
+        """Bug found when updating a package version. After the
+        package is removed pkg_resources still thinks it's there."""
+        wheel = op.join(op.dirname(__file__),
+                        'GUI_Extensions-0.1.0-py3-none-any.whl')
+        update_dialog.uninstall_package()
+        assert update_dialog.get_current_version() == UNDEFINED_VERSION
+        assert self._get_loaded_modules() == []
+
+        update_dialog.install_package(wheel)
+        assert update_dialog.get_current_version() == '0.1.0'
+        assert self._get_loaded_modules() == [
+            'extensions', 'extensions.display_ipm_quadrant',
+            'extensions.models', 'extensions.models.simple']
+
+        update_dialog.uninstall_package()
+        assert update_dialog.get_current_version() == UNDEFINED_VERSION
+        assert self._get_loaded_modules() == []
 
     @skip(reason='Cannot test dialogs in the current Qt version. Should be '
                  'tested and reviewed after PyQt5')
