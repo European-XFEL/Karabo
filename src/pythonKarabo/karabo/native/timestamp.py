@@ -30,6 +30,8 @@ class Timestamp(object):
             self.time = int(time.time() * RESOLUTION)
         elif isinstance(date, Timestamp):
             self.time = date.time
+        elif isinstance(date, float):
+            self.time = date
         else:
             d = dateutil.parser.parse(date)
             if d.tzinfo is None:
