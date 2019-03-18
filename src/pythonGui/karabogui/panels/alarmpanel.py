@@ -3,39 +3,28 @@
 # Created on September 16, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from functools import partial
 
-from PyQt4.QtCore import pyqtSlot, Qt, QTimer
+from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import (
-    QButtonGroup, QColor, QComboBox, QHBoxLayout, QLabel, QLineEdit, QPixmap,
-    QPushButton, QStyle, QStyledItemDelegate, QTableView, QVBoxLayout, QWidget)
-
+    QButtonGroup, QHBoxLayout, QPixmap, QPushButton, QRadioButton, QStyle,
+    QStyledItemDelegate, QTableView, QVBoxLayout, QWidget)
+from karabogui import icons
 from karabogui.alarms.api import (
-    ACKNOWLEDGE, ALARM_COLOR, ALARM_DATA, ALARM_ID, ALARM_TYPE, DEVICE_ID,
-    PROPERTY, SHOW_DEVICE, AlarmModel, get_alarm_key_index)
+    ACKNOWLEDGE, ALARM_DATA, ALARM_ID, ALARM_WARNING_TYPES,
+    SHOW_DEVICE, AlarmModel, INTERLOCK_TYPES, get_alarm_key_index)
 from karabogui.events import (
     KaraboEventSender, broadcast_event, register_for_broadcasts,
     unregister_from_broadcasts)
 from karabogui.singletons.api import get_network
+
 from .base import BasePanelWidget
 
 
 class AlarmPanel(BasePanelWidget):
-    TIMER_INTERVAL = 500
-    BLACK_COLOR = QColor(Qt.black)
-    RED_COLOR = QColor(*ALARM_COLOR)
-
     def __init__(self, instanceId):
         self.instanceId = instanceId
-
         # Important: call the BasePanelWidget initializer
         super(AlarmPanel, self).__init__(instanceId)
-
-        self._color_toggle = False
-        self._color_timer = QTimer()
-        self._color_timer.setInterval(self.TIMER_INTERVAL)
-        self._color_timer.timeout.connect(self._color_timeout)
-
         # Register to broadcast events
         register_for_broadcasts(self)
 
@@ -46,12 +35,10 @@ class AlarmPanel(BasePanelWidget):
             self.model.initAlarms(data.get('instance_id'),
                                   data.get('update_types'),
                                   data.get('alarm_entries'))
-            self._alternate_title_color()
         elif sender is KaraboEventSender.AlarmServiceUpdate:
             self.model.updateAlarms(data.get('instance_id'),
                                     data.get('update_types'),
                                     data.get('alarm_entries'))
-            self._alternate_title_color()
         elif sender is KaraboEventSender.NetworkConnectStatus:
             if not data['status']:
                 # If disconnected to server, unregister the alarm panel from
@@ -69,101 +56,55 @@ class AlarmPanel(BasePanelWidget):
         """Returns a QWidget containing the main content of the panel.
         """
         widget = QWidget(parent=self)
-        self.bgFilter = QButtonGroup(parent=widget)
-        self.bgFilter.buttonClicked.connect(self.filterToggled)
-        self.pbDefaultView = QPushButton("Default view", parent=widget)
-        self.pbDefaultView.setCheckable(True)
-        self.pbDefaultView.setChecked(True)
-        self.bgFilter.addButton(self.pbDefaultView)
-        self.pbAcknowledgeOnly = QPushButton("Acknowledge only", parent=widget)
-        self.pbAcknowledgeOnly.setCheckable(True)
-        self.bgFilter.addButton(self.pbAcknowledgeOnly)
+        self.ui_filter_group = QButtonGroup(parent=widget)
+        self.ui_filter_group.buttonClicked.connect(self.filterToggled)
+        self.ui_show_alarm_warn = QRadioButton("Show alarms and warnings",
+                                               parent=widget)
+        self.ui_show_alarm_warn.setIcon(icons.alarmWarning)
+        self.ui_show_alarm_warn.setChecked(True)
+        self.ui_filter_group.addButton(self.ui_show_alarm_warn)
+        self.ui_show_interlock = QRadioButton("Show interlocks", parent=widget)
+        self.ui_show_interlock.setIcon(icons.interlock)
+        self.ui_filter_group.addButton(self.ui_show_interlock)
 
-        self.laFilterOptions = QLabel("Filter options", parent=widget)
-        self.cbFilterType = QComboBox(parent=widget)
-        self.cbFilterType.addItem(ALARM_DATA[DEVICE_ID], DEVICE_ID)
-        self.cbFilterType.addItem(ALARM_DATA[PROPERTY], PROPERTY)
-        self.cbFilterType.addItem(ALARM_DATA[ALARM_TYPE], ALARM_TYPE)
-        self.leFilterText = QLineEdit(parent=widget)
-        self.pbCustomFilter = QPushButton("Filter", parent=widget)
-        self.pbCustomFilter.setCheckable(True)
-        self.bgFilter.addButton(self.pbCustomFilter)
-        self._enableCustomFilter(False)
-        self.cbFilterType.currentIndexChanged.connect(
-            partial(self.filterToggled, self.pbCustomFilter))
-        self.leFilterText.textChanged.connect(
-            partial(self.filterToggled, self.pbCustomFilter))
-
-        filterLayout = QHBoxLayout()
-        filterLayout.setContentsMargins(0, 0, 0, 0)
-        filterLayout.addWidget(self.pbDefaultView)
-        filterLayout.addWidget(self.pbAcknowledgeOnly)
+        filter_layout = QHBoxLayout()
+        filter_layout.setContentsMargins(0, 0, 0, 0)
+        filter_layout.addWidget(self.ui_show_alarm_warn)
+        filter_layout.addWidget(self.ui_show_interlock)
+        filter_layout.addStretch()
         # Add custom filter options
-        filterLayout.addWidget(self.laFilterOptions)
-        filterLayout.addWidget(self.cbFilterType)
-        filterLayout.addWidget(self.leFilterText)
-        filterLayout.addWidget(self.pbCustomFilter)
-        filterLayout.addStretch()
 
-        self.twAlarm = QTableView(parent=widget)
-        self.twAlarm.setWordWrap(True)
-        self.twAlarm.setAlternatingRowColors(True)
-        self.twAlarm.resizeColumnsToContents()
-        self.twAlarm.horizontalHeader().setStretchLastSection(True)
-        self.model = AlarmModel(self.instanceId, self.twAlarm)
-        btn_delegate = ButtonDelegate(parent=self.twAlarm)
-        self.twAlarm.setItemDelegate(btn_delegate)
+        self.table_view = QTableView(parent=widget)
+        self.table_view.setWordWrap(True)
+        self.table_view.setAlternatingRowColors(True)
+        self.table_view.resizeColumnsToContents()
+        self.table_view.horizontalHeader().setStretchLastSection(True)
+        self.model = AlarmModel(self.instanceId, self.table_view)
+        btn_delegate = ButtonDelegate(parent=self.table_view)
+        self.table_view.setItemDelegate(btn_delegate)
 
         main_layout = QVBoxLayout(widget)
         main_layout.setContentsMargins(5, 5, 5, 5)
-        main_layout.addLayout(filterLayout)
-        main_layout.addWidget(self.twAlarm)
+        main_layout.addLayout(filter_layout)
+        main_layout.addWidget(self.table_view)
 
         return widget
 
-    def _alternate_title_color(self):
-        if self.model.allEntries:
-            self._color_timer.start()
-        else:
-            self._color_timer.stop()
-            # Make sure to have default color again
-            self.update_tab_text_color(self.BLACK_COLOR)
-
-    def _enableCustomFilter(self, enable):
-        self.cbFilterType.setEnabled(enable)
-        self.leFilterText.setEnabled(enable)
-
-    @pyqtSlot()
-    def _color_timeout(self):
-        if self._color_toggle:
-            title_color = self.RED_COLOR
-        else:
-            title_color = self.BLACK_COLOR
-        self._color_toggle = not self._color_toggle
-        self.update_tab_text_color(title_color)
-
     @property
     def model(self):
-        return self.twAlarm.model()
+        return self.table_view.model()
 
     @model.setter
     def model(self, model):
-        self.twAlarm.setModel(model)
+        self.table_view.setModel(model)
 
     @pyqtSlot(object)
     def filterToggled(self, button):
         """ The filter ``button`` was activated. Update filtering needed."""
-        if button is self.pbDefaultView:
-            self._enableCustomFilter(False)
-            self.model.updateFilter(filterType=None)
-        elif button is self.pbAcknowledgeOnly:
-            self._enableCustomFilter(False)
-            self.model.updateFilter(filterType=ACKNOWLEDGE)
-        elif button is self.pbCustomFilter:
-            self._enableCustomFilter(True)
-            data = self.cbFilterType.itemData(self.cbFilterType.currentIndex())
-            filterText = self.leFilterText.text()
-            self.model.updateFilter(filterType=data, text=filterText)
+        if button is self.ui_show_alarm_warn:
+            self.model.updateFilter(filter_type=ALARM_WARNING_TYPES)
+        elif button is self.ui_show_interlock:
+            self.model.updateFilter(filter_type=INTERLOCK_TYPES)
 
 
 class ButtonDelegate(QStyledItemDelegate):
