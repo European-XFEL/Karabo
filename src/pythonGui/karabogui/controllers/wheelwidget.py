@@ -3,8 +3,15 @@ import math
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, Qt, QRect, QSize
 from PyQt4.QtGui import (
     QButtonGroup, QGridLayout, QLabel, QLineEdit, QPushButton, QSizePolicy)
+
 from karabogui import icons
 from karabogui.controllers.validators import NumberValidator
+
+
+class Orientation(object):
+    UP = 0
+    DOWN = 1
+
 
 BUTTON_SIZE = 20
 ICON_SIZE = BUTTON_SIZE - 8
@@ -13,18 +20,17 @@ FRAME_WIDTH = 20
 TOP_ROW = 0
 MIDDLE_ROW = 1
 BOTTOM_ROW = 2
-
 _DEFAULT_INTEGERS = 6
 _DEFAULT_DECIMALS = 3
 
 
 class WheelButton(QPushButton):
-    def __init__(self, identifier, orientation="up", parent=None):
+    def __init__(self, identifier, orientation=Orientation.UP, parent=None):
         super(WheelButton, self).__init__(parent)
-        if orientation == "up":
+        if orientation == Orientation.UP:
             self.increment = math.pow(10, identifier)
             self.setIcon(icons.arrowWheelUp)
-        elif orientation == "down":
+        elif orientation == Orientation.DOWN:
             self.increment = -math.pow(10, identifier)
             self.setIcon(icons.arrowWheelDown)
         self.setIconSize(QSize(ICON_SIZE, ICON_SIZE))
@@ -176,9 +182,9 @@ class DoubleWheelEdit(QLabel):
             column = index + 1
             digit_widget = DigitFrame('0', parent=self)
             button_up = WheelButton(self.integers - index - 1,
-                                    orientation="up")
+                                    orientation=Orientation.UP)
             button_down = WheelButton(self.integers - index - 1,
-                                      orientation="down")
+                                      orientation=Orientation.DOWN)
             digit_widget.setButtons(button_up, button_down)
             button_up.setFocusProxy(digit_widget)
             button_down.setFocusProxy(digit_widget)
@@ -204,9 +210,9 @@ class DoubleWheelEdit(QLabel):
                 column += 1
             widget = DigitFrame('0', parent=self)
             button_up = WheelButton(self.integers - index - 1,
-                                    orientation="up")
+                                    orientation=Orientation.UP)
             button_down = WheelButton(self.integers - index - 1,
-                                      orientation="down")
+                                      orientation=Orientation.DOWN)
             widget.setButtons(button_up, button_down)
             button_up.setFocusProxy(widget)
             button_down.setFocusProxy(widget)
@@ -359,11 +365,11 @@ class DoubleWheelEdit(QLabel):
         """This function"""
         self._value_minimum = low
         self._value_maximum = high
+        self._generate_limits()
         if self.editor_widget is not None:
             validator = self.editor_widget.validator()
-            validator.setBottom(low)
-            validator.setTop(high)
-        self._generate_limits()
+            validator.setBottom(self.total_minimum)
+            validator.setTop(self.total_maximum)
 
     def set_integer_decimal_configuration(self, integers, decimals):
         self._set_digit_format(integers, decimals)
