@@ -11,7 +11,8 @@ from PyQt4.QtGui import (
 from karabogui import icons
 from karabogui.alarms.api import (
     ACKNOWLEDGE, ALARM_DATA, ALARM_ID, ALARM_WARNING_TYPES,
-    SHOW_DEVICE, AlarmModel, INTERLOCK_TYPES, get_alarm_key_index)
+    SHOW_DEVICE, AlarmModel, AlarmFilterModel, INTERLOCK_TYPES,
+    get_alarm_key_index)
 from karabogui.events import (
     KaraboEventSender, broadcast_event, register_for_broadcasts,
     unregister_from_broadcasts)
@@ -32,13 +33,13 @@ class AlarmPanel(BasePanelWidget):
         sender = event.sender
         data = event.data
         if sender is KaraboEventSender.AlarmServiceInit:
-            self.model.initAlarms(data.get('instance_id'),
-                                  data.get('update_types'),
-                                  data.get('alarm_entries'))
+            self.alarm_model.initAlarms(data.get('instance_id'),
+                                        data.get('update_types'),
+                                        data.get('alarm_entries'))
         elif sender is KaraboEventSender.AlarmServiceUpdate:
-            self.model.updateAlarms(data.get('instance_id'),
-                                    data.get('update_types'),
-                                    data.get('alarm_entries'))
+            self.alarm_model.updateAlarms(data.get('instance_id'),
+                                          data.get('update_types'),
+                                          data.get('alarm_entries'))
         elif sender is KaraboEventSender.NetworkConnectStatus:
             if not data['status']:
                 # If disconnected to server, unregister the alarm panel from
@@ -79,7 +80,8 @@ class AlarmPanel(BasePanelWidget):
         self.table_view.setAlternatingRowColors(True)
         self.table_view.resizeColumnsToContents()
         self.table_view.horizontalHeader().setStretchLastSection(True)
-        self.model = AlarmModel(self.instanceId, self.table_view)
+        self.alarm_model = AlarmModel(self.instanceId, self.table_view)
+        self.model = AlarmFilterModel(self.alarm_model, self.table_view)
         btn_delegate = ButtonDelegate(parent=self.table_view)
         self.table_view.setItemDelegate(btn_delegate)
 
