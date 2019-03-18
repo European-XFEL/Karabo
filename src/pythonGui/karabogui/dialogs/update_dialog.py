@@ -1,23 +1,25 @@
 from argparse import ArgumentParser
 from contextlib import contextmanager
+from functools import partial
+import importlib
 import os
 import os.path as op
-import pkg_resources
 import re
 import requests
 from subprocess import check_output, STDOUT, CalledProcessError
 
 from lxml import etree
+import pkg_resources
 from PyQt4 import uic
 from PyQt4.QtCore import QProcess, pyqtSlot
 from PyQt4.QtGui import QDialog
 
 from karabogui import icons
-
+from karabogui.controllers.util import load_extensions
 
 _TIMEOUT = 0.1
-_TAG_REGEX = '^\d+\.\d+\.\d+$'
-_PKG_NAME = 'GUI_Extensions'
+_TAG_REGEX = r'^\d+.\d+.\d+$'
+_PKG_NAME = 'GUI-Extensions'
 _WHEEL_TEMPLATE = 'GUI_Extensions-{}-py3-none-any.whl'
 _REMOTE_SVR = 'http://exflserv05.desy.de/karabo/karaboExtensions/tags/'
 
@@ -27,6 +29,7 @@ UNDEFINED_VERSION = 'Undefined'
 def get_current_version():
     """Gets the current version of the package"""
     try:
+        importlib.reload(pkg_resources)
         package = pkg_resources.get_distribution('GUI-Extensions')
         return package.version
     except pkg_resources.DistributionNotFound:
@@ -99,6 +102,27 @@ def download_file_for_tag(tag):
         os.remove(wheel_file)
 
 
+def uninstall_package():
+    try:
+        output = check_output(['pip', 'uninstall', '--yes', _PKG_NAME],
+                              stderr=STDOUT)
+        return output.decode()
+    except CalledProcessError:
+        return 'Error uninstalling package. Is it installed?'
+
+
+def install_package(wheel_file):
+    """Installs a given wheel file"""
+    try:
+        output = check_output(['pip', 'install', '--upgrade', wheel_file],
+                              stderr=STDOUT)
+        # Reload the entry points
+        load_extensions()
+        return output.decode()
+    except CalledProcessError as e:
+        return 'Error installing GUI-Extensions package: {}'.format(str(e))
+
+
 def update_package(tag):
     """Updates the package to the given tag version.
 
@@ -112,12 +136,7 @@ def update_package(tag):
             return err
 
         # Install it using a system call
-        try:
-            output = check_output(['pip', 'install', '--upgrade', wheel_file],
-                                  stderr=STDOUT)
-            return output.decode()
-        except CalledProcessError as e:
-            return str(e)
+        return install_package(wheel_file)
 
 
 class UpdateDialog(QDialog):
@@ -160,6 +179,7 @@ class UpdateDialog(QDialog):
 
         needs_updating = current != latest != UNDEFINED_VERSION
         self.bt_update.setEnabled(needs_updating)
+        self.bt_uninstall.setEnabled(current != UNDEFINED_VERSION)
 
     def _update_current_version(self):
         """Updates the current version of the device"""
@@ -180,42 +200,77 @@ class UpdateDialog(QDialog):
         self.lb_latest.setVisible(True)
         self.lb_latest.setText(latest_version)
 
+    def _start_process(self, cmd, *, is_update):
+        """Starts a process with the given arguments"""
+        if self._process is not None:
+            self._clear_process()
+
+        if self._process is None:
+            # Create a process and connect its
+            self._process = QProcess(self)
+            self._process.setProcessChannelMode(QProcess.MergedChannels)
+            self._process.readyRead.connect(self._on_output)
+            self._process.finished.connect(partial(
+                self._on_finished, is_update))
+
+            self._process.start(cmd)
+
     def _start_update_process(self):
-        """Create a QProcess to update to the latest tag. This
-        process' signals are connected to the given callbacks."""
+        """Create a QProcess to update to the latest tag.
+
+        This process' signals are connected to the given callbacks."""
         tag = self.lb_latest.text()
         self._wheel_file, err = _download_file_for_tag(tag)
         if err is not None:
             self.ed_log.append(err)
             return None
 
-        if self._process is None:
-            # Create a process and connect its signals
-            self._process = QProcess(self)
-            self._process.setProcessChannelMode(QProcess.MergedChannels)
-            self._process.readyRead.connect(self._on_output)
-            self._process.finished.connect(self._on_finished)
+        cmd = 'pip install --upgrade {}'.format(self._wheel_file)
+        self._start_process(cmd, is_update=True)
 
-        self._process.start('pip install --upgrade {}'
-                            .format(self._wheel_file))
+    def _start_uninstall_process(self):
+        """Uninstalls the current GUI-Extensions package"""
+        cmd = 'pip uninstall --yes {}'.format(_PKG_NAME)
+        self._start_process(cmd, is_update=False)
 
     def _update_log(self, text):
         self.ed_log.append(text)
+
+    def _clear_process(self):
+        """Clears all running process resources"""
+        if self._process is not None:
+            self._process.kill()
+
+        if self._wheel_file and os.path.isfile(self._wheel_file):
+            os.remove(self._wheel_file)
+
+        self._wheel_file = None
+        self._process = None
 
     # --------------------------------------------------------------------
     # Qt Slots
 
     @pyqtSlot()
     def on_bt_refresh_clicked(self):
+        self.bt_refresh.setEnabled(False)
         self.refresh_versions()
+        self.bt_refresh.setEnabled(True)
 
     @pyqtSlot()
     def on_bt_stop_clicked(self):
         """Kills the running process"""
+        self.bt_stop.setEnabled(False)
         if (self._process is not None and
                 self._process.state() == QProcess.Running):
-            self._process.kill()
-            self._on_finished()
+            self._clear_process()
+        self.bt_stop.setEnabled(True)
+
+    @pyqtSlot()
+    def on_bt_uninstall_clicked(self):
+        self.bt_uninstall.setEnabled(False)
+        self.bt_update.setEnabled(False)
+        self.bt_stop.setEnabled(True)
+        self._start_uninstall_process()
 
     @pyqtSlot()
     def on_bt_update_clicked(self):
@@ -232,27 +287,54 @@ class UpdateDialog(QDialog):
         self._update_log(data.decode())
 
     @pyqtSlot()
-    def _on_finished(self):
-        """Method called whenever the process finishes or crashes. It's used
-        to clean any created resources and restore the interface states."""
-        if self._wheel_file and os.path.isfile(self._wheel_file):
-            os.remove(self._wheel_file)
-
-        self._wheel_file = None
-        self._process = None
-
+    def _on_finished(self, is_update):
+        """Called when the uninstall finishes or crashes"""
         self.bt_refresh.setEnabled(True)
         self.bt_stop.setEnabled(False)
+        if is_update:
+            self.bt_update.setEnabled(True)
+        else:
+            # Uninstall clicked
+            self.bt_uninstall.setEnabled(True)
+
+        self._clear_process()
         self.refresh_versions()
+
+        # Reload the entry points
+        importlib.reload(pkg_resources)
+        load_extensions()
+
+    @pyqtSlot()
+    def _on_update_finished(self):
+        """Called whenever the process finishes or crashes.
+
+        Cleans any created resources and restore the interface states."""
+        self._clear_process()
+        self.refresh_versions()
+
+        # Reload the entry points
+        importlib.reload(pkg_resources)
+        load_extensions()
 
 
 def main():
     description = """Command-line tool to update the GUI-Extensions package"""
     ap = ArgumentParser(description=description)
-    ap.add_argument('-t', '--tag', nargs=1, required=True, type=str,
+    ap.add_argument('-t', '--tag', nargs=1, type=str,
                     help='Desired package version (tag)')
+    ap.add_argument('-u', '--uninstall', action='store_true', required=False,
+                    help='Uninstalls any previous versions')
 
     args = ap.parse_args()
+
+    if not args.uninstall and not args.tag:
+        print('At least one option must be given! Please use -h for help.')
+        return
+
+    if args.uninstall:
+        print('Uninstalling GUI-Extensions package')
+        output = uninstall_package()
+        print(output)
 
     if args.tag:
         tag = args.tag[0]
