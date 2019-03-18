@@ -14,4 +14,5 @@ from .const import (ACKNOWLEDGE, ACKNOWLEDGEABLE,
                     get_alarm_icon, get_alarm_svg, get_alarm_pixmap)
 from .info import AlarmInfo
 from .model import AlarmModel, get_alarm_key_index
+from .filter_model import AlarmFilterModel
 from .utils import extract_alarms_data

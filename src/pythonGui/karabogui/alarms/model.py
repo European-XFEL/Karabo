@@ -6,8 +6,8 @@
 from PyQt4.QtCore import QAbstractTableModel, QModelIndex, Qt
 
 from .const import (
-    ALARM_DATA, ALARM_TYPE, ALARM_WARNING_TYPES, REMOVE_ALARM_TYPES,
-    UPDATE_ALARM_TYPES, get_alarm_icon, get_alarm_key_index)
+    ALARM_DATA, ALARM_TYPE, REMOVE_ALARM_TYPES, UPDATE_ALARM_TYPES,
+    get_alarm_icon, get_alarm_key_index)
 
 
 class AlarmModel(QAbstractTableModel):
@@ -20,19 +20,20 @@ class AlarmModel(QAbstractTableModel):
         super(AlarmModel, self).__init__(parent)
         self.instanceId = instanceId  # InstanceId of associated AlarmService
         self.all_entries = []  # All alarm entries
-        self.filtered = []  # Filtered alarm entries
-        self.filter_type = ALARM_WARNING_TYPES  # default filter
 
     def initAlarms(self, instanceId, updateTypes, alarmEntries):
         if self.instanceId != instanceId:
             return
+        self.beginResetModel()
         self.all_entries = alarmEntries
-        self.updateFilter()
+        self.endResetModel()
 
     def updateAlarms(self, instanceId, updateTypes, alarmEntries):
         if self.instanceId != instanceId:
             return
         # Insert updated entries in all entries list
+        self.beginResetModel()
+
         for upType, alarmEntry in zip(updateTypes, alarmEntries):
             entryIndex = self._getEntryIndex(alarmEntry.id)
             if upType in UPDATE_ALARM_TYPES:
@@ -44,21 +45,7 @@ class AlarmModel(QAbstractTableModel):
             elif upType in REMOVE_ALARM_TYPES:
                 if self.all_entries:
                     self.all_entries.pop(entryIndex)
-        self.updateFilter()
-
-    def updateFilter(self, filter_type=None):
-        """ Fetch filtered data of all alarm entries.
-
-            :param filter_type: An optionally new filter set by the panel
-        """
-        if filter_type is not None:
-            self.filter_type = filter_type
-        filtered = []
-        for entry in self.all_entries:
-            alarm_type = entry.type
-            if alarm_type in self.filter_type:
-                filtered.append(entry)
-        self._setFilterList(filtered)
+        self.endResetModel()
 
     def _getEntryIndex(self, entry_id):
         """ The index in ``self.all_entries`` for the given ``entry_id`` is
@@ -70,18 +57,12 @@ class AlarmModel(QAbstractTableModel):
                 return index
         return -1
 
-    def _setFilterList(self, filtered):
-        """ Update filter list and reset model."""
-        self.beginResetModel()
-        self.filtered = filtered
-        self.endResetModel()
-
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
             return self.headers[section]
 
     def rowCount(self, parent=QModelIndex()):
-        return len(self.filtered)
+        return len(self.all_entries)
 
     def columnCount(self, parent=QModelIndex()):
         return len(self.headers)
@@ -89,7 +70,7 @@ class AlarmModel(QAbstractTableModel):
     def data(self, index, role=Qt.DisplayRole):
         if not index.isValid():
             return None
-        entry = self.filtered[index.row()]
+        entry = self.all_entries[index.row()]
         type_index = get_alarm_key_index(ALARM_TYPE)
         if role == Qt.DecorationRole and index.column() == type_index:
             return get_alarm_icon(entry.type)
