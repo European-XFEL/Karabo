@@ -93,15 +93,18 @@ class TestModel(GuiTestCase):
         self.assertIsNone(ret)
 
     def test_update_alarms_remove(self):
+        self.assertEqual(self.alarm_model.rowCount(), 11)
         self.alarm_model.updateAlarms('Bob', _type(REMOVE_UPDATE_TYPE),
                                       _data())
         self.assertEqual(self.alarm_model.rowCount(), 1)
 
-    def test_updateAlarms_realarm(self):
+    def test_update_alarms_realarm(self):
+        self.assertEqual(self.alarm_model.rowCount(), 11)
         self.alarm_model.updateAlarms('Bob', _type(REMOVE_UPDATE_TYPE),
                                       _data())
         self.assertEqual(self.alarm_model.rowCount(), 1)
         self.alarm_model.updateAlarms('Bob', _type(ADD_UPDATE_TYPE), _data())
+        self.assertEqual(self.alarm_model.rowCount(), 11)
 
     # ------------------------------------------------------------
     # Filter test
