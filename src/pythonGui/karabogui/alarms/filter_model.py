@@ -17,6 +17,7 @@ class AlarmFilterModel(QSortFilterProxyModel):
         super(AlarmFilterModel, self).__init__(parent)
         self.setSourceModel(source_model)
         self.setFilterRole(Qt.DisplayRole)
+        self.setFilterKeyColumn(ALARM_TYPE_COLUMN)
         self.filter_type = ALARM_WARNING_TYPES  # default filter
 
     @property

@@ -72,8 +72,9 @@ class AlarmModel(QAbstractTableModel):
             return None
         entry = self.all_entries[index.row()]
         type_index = get_alarm_key_index(ALARM_TYPE)
-        if role == Qt.DecorationRole and index.column() == type_index:
-            return get_alarm_icon(entry.type)
-        elif role in (Qt.DisplayRole, Qt.ToolTipRole):
+        if role in (Qt.DisplayRole, Qt.ToolTipRole):
             return entry[index.column()]
+        elif role == Qt.DecorationRole and index.column() == type_index:
+            return get_alarm_icon(entry.type)
+
         return None
