@@ -40,6 +40,7 @@ namespace karabo {
             };
 
             TcpConnection::Pointer m_connectionPointer;
+            mutable boost::mutex m_socketMutex;
             boost::asio::ip::tcp::socket m_socket;
             HandlerType m_activeHandler;
             bool m_readHeaderFirst;
@@ -259,9 +260,10 @@ namespace karabo {
              */
             karabo::util::Hash queueInfo();
 
-            boost::asio::ip::tcp::socket& socket() {
-                return m_socket;
-            }
+            /**
+             * Address of the remote endpoint
+             */
+            std::string remoteAddress() const;
 
             void writeAsync(const char* data, const size_t& size, int prio);
 
@@ -398,6 +400,31 @@ namespace karabo {
 
             void doWriteHandler(Message::Pointer& msg, boost::system::error_code, const size_t length, const int queueIndex);
 
+            //
+            // Finally some methods for exclusive use in TcpConnection,
+            // we grant friendship exclusively to the methods that need it:
+            //
+            friend Channel::Pointer TcpConnection::startServer(); // for acceptSocket(..)
+            friend void TcpConnection::startServer(const TcpConnection::ConnectionHandler& handler); // for asyncAcceptSocket(..)
+            friend Channel::Pointer TcpConnection::startClient(); // for socketConnect(..)
+            friend void TcpConnection::resolveHandler(const ErrorCode& e, boost::asio::ip::tcp::resolver::iterator it,
+                                                      const TcpConnection::ConnectionHandler& handler); // for asyncSocketConnect(..))
+
+            void acceptSocket(boost::asio::ip::tcp::acceptor& acceptor);
+
+            template<typename Handler>
+            void asyncAcceptSocket(boost::asio::ip::tcp::acceptor& acceptor, Handler&& handler) {
+                boost::mutex::scoped_lock lock(m_socketMutex);
+                acceptor.async_accept(m_socket, handler);
+            }
+
+            void socketConnect(const boost::asio::ip::tcp::endpoint& endpoint);
+
+            template<typename Handler>
+            void asyncSocketConnect(const boost::asio::ip::tcp::endpoint& endpoint, Handler&& handler) {
+                boost::mutex::scoped_lock lock(m_socketMutex);
+                m_socket.async_connect(endpoint, handler);
+            }
         };
     }
 }
