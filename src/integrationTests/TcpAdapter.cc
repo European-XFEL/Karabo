@@ -170,8 +170,8 @@ namespace karabo {
         }
     }
     
-    void TcpAdapter::disconnect(){
-        m_channel->socket().cancel(); // cancel pending reads
+    void TcpAdapter::disconnect() {
+        m_channel->close();
         m_dataConnection->stop();
     }
     
