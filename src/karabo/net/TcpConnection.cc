@@ -176,9 +176,7 @@ namespace karabo {
             try {
                 channel = this->createChannel();
                 TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel > (channel);
-                boost::asio::ip::tcp::socket& sock = tcpChannel->socket();
-                m_acceptor.accept(sock);
-                //KARABO_LOG_FRAMEWORK_DEBUG << "Accepted new connection: " << sock.remote_endpoint().address() << ":" << sock.remote_endpoint().port();
+                tcpChannel->acceptSocket(m_acceptor);
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -193,9 +191,7 @@ namespace karabo {
                 ip::tcp::resolver::iterator endpoint_iterator = m_resolver.resolve(query);
                 channel = this->createChannel();
                 TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel > (channel);
-                boost::asio::ip::tcp::socket& sock = tcpChannel->socket();
-                sock.connect(*endpoint_iterator);
-                //KARABO_LOG_FRAMEWORK_DEBUG << "Connected to: " << sock.remote_endpoint().address() << ":" << sock.remote_endpoint().port();
+                tcpChannel->socketConnect(*endpoint_iterator);
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -246,8 +242,7 @@ namespace karabo {
             try {
                 Channel::Pointer channel = this->createChannel();
                 TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel > (channel);
-                boost::asio::ip::tcp::socket& sock = tcpChannel->socket();
-                m_acceptor.async_accept(sock, boost::bind(handler, boost::asio::placeholders::error, channel));
+                tcpChannel->asyncAcceptSocket(m_acceptor, boost::bind(handler, boost::asio::placeholders::error, channel));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -269,17 +264,15 @@ namespace karabo {
         void TcpConnection::resolveHandler(const ErrorCode& e, ip::tcp::resolver::iterator it, const ConnectionHandler& handler) {
             try {
                 if (!e) {
-                    // No errors... create channel first to get access to the socket
+                    // No errors... create channel
                     Channel::Pointer channel = createChannel();
                     // ... cast it to the TcpChannel
                     TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel > (channel);
-                    // ... get tcp channel socket ...
-                    boost::asio::ip::tcp::socket& tcpSocket = tcpChannel->socket();
-                    // ... and peer endpoint ...
+                    // ... get peer endpoint ...
                     const boost::asio::ip::tcp::endpoint& peerEndpoint = *it;
-                    // ... and, finally, try to connect asynchronously ...
-                    tcpSocket.async_connect(peerEndpoint,
-                                            boost::bind(handler, boost::asio::placeholders::error, channel));
+                    // ... and let the tcpChannel connect its socket asynchronously to the endpoint
+                    tcpChannel->asyncSocketConnect(peerEndpoint,
+                                                   boost::bind(handler, boost::asio::placeholders::error, channel));
                 } else {
                     Channel::Pointer c;
                     handler(e, c);
