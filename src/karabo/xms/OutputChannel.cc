@@ -74,7 +74,8 @@ namespace karabo {
         }
 
 
-        OutputChannel::OutputChannel(const karabo::util::Hash& config) : m_port(0), m_sharedInputIndex(0) {
+        OutputChannel::OutputChannel(const karabo::util::Hash& config) : m_port(0), m_sharedInputIndex(0),
+            m_toUnregisterSharedInput(false) {
             //KARABO_LOG_FRAMEWORK_DEBUG << "*** OutputChannel::OutputChannel CTOR ***";
             config.get("distributionMode", m_distributionMode);
             config.get("noInputShared", m_onNoSharedInputChannelAvailable);
@@ -574,6 +575,18 @@ namespace karabo {
             // Copy chunk(s)
             copy(chunkId);
 
+            if (m_toUnregisterSharedInput) {
+                // The last shared input disconnected while updating...
+                unregisterWriterFromChunk(chunkId);
+                std::clog << "update: last shared input disconnected while updating..." << std::endl;
+                m_toUnregisterSharedInput = false;
+            }
+            for (size_t i = 0; i < m_toUnregisterCopyInputs.size(); ++i) {
+                // All these copy inputs disconnected while updating...
+                unregisterWriterFromChunk(chunkId);
+            }
+            std::clog << "update: " << m_toUnregisterCopyInputs.size() << " copy inputs disconnected while updating..." << std::endl;
+            m_toUnregisterCopyInputs.clear();
             // TODO: ...to HERE, input channels that disconnect in parallel might make an unregisterChunk(..) missing!
             // At least if it is the last in m_registeredSharedInputs or m_registeredCopyInputs since then
             // we just return from distribute and copy!
@@ -653,14 +666,21 @@ namespace karabo {
 
 
         void OutputChannel::registerWritersOnChunk(unsigned int chunkId) {
+
             {
                 boost::mutex::scoped_lock lock(m_registeredSharedInputsMutex);
                 // Only one of the shared inputs will be provided with data
-                if (!m_registeredSharedInputs.empty()) Memory::incrementChunkUsage(m_channelId, chunkId);
+                if (!m_registeredSharedInputs.empty()) {
+                    Memory::incrementChunkUsage(m_channelId, chunkId);
+                    m_toUnregisterSharedInput = true;
+                }
             }
             {
                 boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
-                for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) Memory::incrementChunkUsage(m_channelId, chunkId);
+                for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
+                    Memory::incrementChunkUsage(m_channelId, chunkId);
+                    m_toUnregisterCopyInputs.insert(m_registeredCopyInputs[i].get<std::string>("instanceId"));
+                }
             }
             KARABO_LOG_FRAMEWORK_TRACE << "OUTPUT Registered " << Memory::getChunkStatus(m_channelId, chunkId) << " uses for [" << m_channelId << "][" << chunkId << "]";
         }
@@ -678,6 +698,8 @@ namespace karabo {
             
             // If no shared input channels are registered at all, we do not go on
             if (m_registeredSharedInputs.empty()) return;
+
+            m_toUnregisterSharedInput = false; // We care for it!
 
             if (m_distributionMode == "round-robin") {
                 distributeRoundRobin(chunkId, lock);
@@ -936,6 +958,12 @@ namespace karabo {
                     const std::string& instanceId = channelInfo.get<std::string>("instanceId");
                     const std::string& onSlowness = channelInfo.get<std::string>("onSlowness");
 
+                    if (m_toUnregisterCopyInputs.find(instanceId) == m_toUnregisterCopyInputs.end()) {
+                        std::clog << "Increment chunk usage since copy input " << instanceId << " just connected while we update" << std::endl;
+                        Memory::incrementChunkUsage(m_channelId, chunkId);
+                    } else {
+                        m_toUnregisterCopyInputs.erase(instanceId); // We care about it!
+                    }
                     if (hasCopyInput(instanceId)) {
                         eraseCopyInput(instanceId);
                         if (channelInfo.get<std::string > ("memoryLocation") == "local") {
