@@ -31,6 +31,8 @@ class Timestamp(object):
         elif isinstance(date, Timestamp):
             self.time = date.time
         elif isinstance(date, float):
+            self.time = int(date * RESOLUTION)
+        elif isinstance(date, int):
             self.time = date
         else:
             d = dateutil.parser.parse(date)
