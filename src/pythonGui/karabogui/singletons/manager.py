@@ -19,6 +19,7 @@ from karabogui.binding.api import (
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui import messagebox
 from karabogui.singletons.api import get_network, get_topology
+from karabogui.util import show_wait_cursor
 
 
 def handle_device_state_change(proxy, value):
@@ -215,6 +216,7 @@ class Manager(QObject):
             info.get('host'), info.get('port'), info.get('topic'))
         broadcast_event(KaraboEventSender.BrokerInformationUpdate, info)
 
+    @show_wait_cursor
     def handle_systemTopology(self, systemTopology):
         self._topology.update(systemTopology)
 
