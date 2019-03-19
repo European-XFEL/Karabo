@@ -1604,9 +1604,27 @@ namespace karabo {
         }
 
 
+        void TcpChannel::socketConnect(const boost::asio::ip::tcp::endpoint& endpoint) {
+            boost::mutex::scoped_lock lock(m_socketMutex);
+            m_socket.connect(endpoint);
+        }
+
+
+        void TcpChannel::acceptSocket(boost::asio::ip::tcp::acceptor& acceptor) {
+            boost::mutex::scoped_lock lock(m_socketMutex);
+            acceptor.accept(m_socket);
+        }
+
         std::string TcpChannel::remoteAddress() const {
             boost::mutex::scoped_lock lock(m_socketMutex);
-            return boost::lexical_cast<std::string>(m_socket.remote_endpoint());
+            std::string address("unknown");
+            if (m_socket.is_open()) {
+                try {
+                    address = boost::lexical_cast<std::string>(m_socket.remote_endpoint());
+                } catch (...) {
+                }
+            }
+            return address;
         }
     }
 }
