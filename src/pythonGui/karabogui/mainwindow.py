@@ -138,10 +138,13 @@ class MainWindow(QMainWindow):
             self._database_is_processing(data.get('is_processing'))
         elif sender is KaraboEventSender.MaximizePanel:
             self._panelContainerMaximized(data.get('container'))
+            return True
         elif sender is KaraboEventSender.MinimizePanel:
             self._panelContainerMinimized(data.get('container'))
+            return True
         elif sender is KaraboEventSender.LoginUserChanged:
             self.onUpdateAccessLevel()
+            return True
         return False
 
     # --------------------------------------
