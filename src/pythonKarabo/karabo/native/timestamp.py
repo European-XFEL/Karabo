@@ -17,8 +17,8 @@ class Timestamp(object):
     """This is a time stamp
 
     :param date: is either another timestamp (then we copy), None
-    (we return now) or a string that will be parsed with
-    :mod:`dateutil`
+    (we return now), a float (from time..time()), an integer (raw timestamp)
+    or a string that will be parsed with :mod:`dateutil`
     """
 
     # Reduce the memory needed for this _very_ common object
