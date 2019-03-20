@@ -11,10 +11,10 @@ from uuid import uuid4
 import weakref
 
 from dateutil.tz import tzlocal, tzutc
-from PyQt4.QtCore import QEvent, QObject, QSize
+from PyQt4.QtCore import QEvent, QObject, Qt, QSize
 from PyQt4.QtGui import (
-    QDialog, QFileDialog, QHeaderView, QLabel, QMovie, QValidator
-)
+    QApplication, QCursor, QDialog, QFileDialog, QHeaderView, QLabel, QMovie,
+    QValidator)
 
 from karabo.common.project.api import read_macro
 from karabo.common.scenemodel.api import SceneTargetWindow, read_scene
@@ -204,6 +204,27 @@ def temp_file(suffix='', prefix='tmp', dir=None):
     finally:
         os.close(fd)
         os.unlink(filename)
+
+
+@contextmanager
+def wait_cursor():
+    """Simple context manager to make busy operations"""
+    try:
+        QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+        yield
+    finally:
+        QApplication.restoreOverrideCursor()
+
+
+def show_wait_cursor(func):
+    """Show the processing ``busy`` function in the karabo gui"""
+    def wrapper(*args, **kwargs):
+        try:
+            QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+            return func(*args, **kwargs)
+        finally:
+            QApplication.restoreOverrideCursor()
+    return wrapper
 
 
 def get_scene_from_server(device_id, scene_name, project=None,
