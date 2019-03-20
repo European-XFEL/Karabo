@@ -560,11 +560,8 @@ namespace karabo {
 
             // This will increase the usage counts for this chunkId
             // by the number of all interested connected inputs
+            // and set m_toUnregisterSharedInput/m_toUnregisterCopyInputs to check later for whom we registered
             registerWritersOnChunk(chunkId);
-
-            // We are done with this chunkId, it will stay alive only until
-            // all inputs are served (see above)
-            unregisterWriterFromChunk(chunkId);
 
             // Distribute chunk(s)
             distribute(chunkId);
@@ -572,16 +569,16 @@ namespace karabo {
             // Copy chunk(s)
             copy(chunkId);
 
-            if (m_toUnregisterSharedInput) {
-                // The last shared input disconnected while updating...
-                unregisterWriterFromChunk(chunkId);
-                m_toUnregisterSharedInput = false;
+            // Clean-up chunk registration
+            unsigned int numUnregister = 1; // That is the usage of the OutputChannel itself!
+            if (m_toUnregisterSharedInput) { // The last shared input disconnected while updating...
+                ++numUnregister;
             }
-            for (size_t i = 0; i < m_toUnregisterCopyInputs.size(); ++i) {
-                // All these copy inputs disconnected while updating...
+            numUnregister += m_toUnregisterCopyInputs.size(); // All these copy inputs disconnected while updating
+            // We are done with this chunkId, it may stay alive until local receivers are done as well
+            for (size_t i = 0; i < numUnregister; ++i) {
                 unregisterWriterFromChunk(chunkId);
             }
-            m_toUnregisterCopyInputs.clear();
 
             // What if this throws, e.g. if configured to queue, but receiver is permanently too slow?
             // Catch and go on? Block in a loop until it does not throw?
@@ -662,13 +659,16 @@ namespace karabo {
 
             {
                 boost::mutex::scoped_lock lock(m_registeredSharedInputsMutex);
-                // Only one of the shared inputs will be provided with data
-                if (!m_registeredSharedInputs.empty()) {
+                if (m_registeredSharedInputs.empty()) {
+                    m_toUnregisterSharedInput = false;
+                } else {
+                    // Only one of the shared inputs will be provided with data
                     Memory::incrementChunkUsage(m_channelId, chunkId);
                     m_toUnregisterSharedInput = true;
                 }
             }
             {
+                m_toUnregisterCopyInputs.clear();
                 boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
                 for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
                     Memory::incrementChunkUsage(m_channelId, chunkId);
@@ -691,7 +691,10 @@ namespace karabo {
             
             // If no shared input channels are registered at all, we do not go on
             if (m_registeredSharedInputs.empty()) return;
-
+            if (!m_toUnregisterSharedInput) {
+                // Increment chunk usage since a first shared input just connected while we update
+                Memory::incrementChunkUsage(m_channelId, chunkId);
+            }
             m_toUnregisterSharedInput = false; // We care for it!
 
             if (m_distributionMode == "round-robin") {
