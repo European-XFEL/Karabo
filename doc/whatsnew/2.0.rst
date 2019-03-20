@@ -1,4 +1,41 @@
 **************************
+What's New in Karabo 2.0.2
+**************************
+
+Detailed Merge-Log
+==================
+
+bound/cpp core
+++++++++++++++
+- C++: Added unit test for connect/disconnect of 'Input-' and 'OutputChannel'. !883
+- C++: Fixes a serious bug happening during shortcut messaging !892
+- C++: Clean connectChannel and disconnectChannel.With `request(..).receive(..)` now shortcutting the broker if possible, no further shortcuts are needed. !893
+- C++: Added feature of timeout for request/asyncReceive
+- Bound: Inserted character 'i' in initalValue which repairs bound python !911
+- Add a status field to all three APIs !908
+
+core Devices
+++++++++++++
+- GuiServer: 'master'GUI - GuiServer - ProjectDatabase communication !891
+- Core: Fix camera_interface.py- removed State.READY from "state" options, since State.READY does not exist in the Framework !903
+
+Dependencies and deployment
++++++++++++++++++++++++++++
+- DEPS: Set proper RTD path !894
+- DEPS: Create a doxygen output directory so that breathe correctly works !895
+
+Middlelayer core
+++++++++++++++++
+- MDL: make device node more resilient if a device node is not properly filled, we don't crash anymore. !890
+- MDL: Add an isAlive to proxies !897
+- MDL: add yet another test for the hash, testing a problem I once had while refactoring !899
+- MDL: fix waitUntil, sometimes an error was logged, which actually wasn't one. !898
+- MDL: add the alarm slots to middle layer !906
+- MDL: report caller upon error. it has shown very useful while debugging to know who called a failing slot. !905
+- MDL: The examples should use DeviceNodes where applicable !907 !904
+
+
+**************************
 What's New in Karabo 2.0.1
 **************************
 
