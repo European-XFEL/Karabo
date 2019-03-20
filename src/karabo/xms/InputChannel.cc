@@ -329,6 +329,7 @@ namespace karabo {
             const std::string& hostname = outputChannelInfo.get<std::string > ("hostname");
             unsigned int port = outputChannelInfo.get<unsigned int>("port");
 
+            // synchronous write could throw if connection broken again - but that will be caught by outer event loop:
             channel->write(karabo::util::Hash("reason", "hello", "instanceId", this->getInstanceId(), "memoryLocation", memoryLocation, "dataDistribution", m_dataDistribution, "onSlowness", m_onSlowness)); // Say hello!
             channel->readAsyncHashVectorBufferSetPointer(util::bind_weak(&karabo::xms::InputChannel::onTcpChannelRead, this, _1, channel, _2, _3));
 
@@ -453,29 +454,28 @@ namespace karabo {
                         twoPotsLock.unlock();
                         notifyOutputChannelForPossibleRead(channel);
                     } else {
+                        // Data complete,...
                         size_t nActiveData = Memory::size(m_channelId, m_activeChunk);
-                        if (nActiveData == 0) { // Data complete, second pot still empty
+                        if (nActiveData == 0) { // ...second pot still empty,...
                             KARABO_LOG_FRAMEWORK_TRACE << traceId << "At nActiveData == 0; will swap buffers for active and inactive data.";
                             std::swap(m_activeChunk, m_inactiveChunk);
-                            twoPotsLock.unlock(); // before synchronous write to Tcp
-                            notifyOutputChannelForPossibleRead(channel);
-                            // ...and in parallel process first one.
-                            KARABO_LOG_FRAMEWORK_TRACE << traceId << "Triggering IOEvent";
+                            twoPotsLock.unlock(); // before synchronous tcp write in notifyOutputChannelForPossibleRead
+                            // ...so process first one and...
                             m_strand->post(util::bind_weak(&InputChannel::triggerIOEvent, this));
+                            // ...request more data (after posting triggerIOEvent in case tcp write throws)
+                            notifyOutputChannelForPossibleRead(channel);
+                            KARABO_LOG_FRAMEWORK_TRACE << traceId << "Triggering IOEvent";
+                        } else { // Data complete on both pots now
+                            // triggerIOEvent will be called by the update of the triggerIOEvent
+                            // that is processing the active pot now
+                            KARABO_LOG_FRAMEWORK_WARN << "Do not trigger IOEvent with pot sizes " << nActiveData << "/"
+                                    << Memory::size(m_channelId, m_inactiveChunk);
                         }
-                        //else { // Data complete on both pots now
-                        // triggerIOEvent will be called by the update of the triggerIOEvent
-                        // that is processing the active pot now
-                        //}
                     }
                 }
                 channel->readAsyncHashVectorBufferSetPointer(util::bind_weak(&karabo::xms::InputChannel::onTcpChannelRead, this, _1, channel, _2, _3));
-            } catch (const karabo::util::Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onTcpChannelRead " << e;
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onTcpChannelRead (std::exception) : " << e.what();
-            } catch (...) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Unknown problem in onTcpChannelRead";
             }
 
         }
@@ -586,7 +586,7 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_ERROR << "'triggerIOEvent' for instance '"
                             << m_instanceId << "' caught " << exceptMsg;
                 }
-                
+
                 // Whatever handler (even none or one that throws): we are done with the data.
                 try {
                     // Clear active chunk
@@ -664,7 +664,16 @@ namespace karabo {
             if (channel->isOpen()) {
                 const std::string traceId("(" + boost::lexical_cast<std::string>(boost::this_thread::get_id()) + ": deferredNotificationOfOutputChannel...) ");
                 KARABO_LOG_FRAMEWORK_TRACE << traceId << "INPUT Notifying output channel that " << this->getInstanceId() << " is ready for next read.";
-                channel->write(karabo::util::Hash("reason", "update", "instanceId", this->getInstanceId()));
+                // write can fail if disconnected in wrong moment - but then channel should be closed afterwards:
+                try {
+                    channel->write(karabo::util::Hash("reason", "update", "instanceId", this->getInstanceId()));
+                } catch (const std::exception& e) {
+                    if (channel->isOpen()) {
+                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION("Channel still open!"));
+                    } else {
+                        karabo::util::Exception::clearTrace();
+                    }
+                }
             }
         }
 
@@ -682,10 +691,29 @@ namespace karabo {
 
 
         void InputChannel::deferredNotificationsOfOutputChannelsForPossibleRead() {
+            std::string problems;
             for (OpenConnections::const_iterator it = m_openConnections.begin(); it != m_openConnections.end(); ++it) {
                 const karabo::net::Channel::Pointer& channel = it->second.second;
-                if (channel->isOpen())
+                if (!channel->isOpen()) continue;
+
+                // write can fail if disconnected in wrong moment - but then channel should be closed afterwards:
+                try {
                     channel->write(karabo::util::Hash("reason", "update", "instanceId", this->getInstanceId()));
+                } catch (const std::exception& e) {
+                    if (channel->isOpen()) {
+                        // collect information propagate exception only after notifying all others
+                        if (!problems.empty()) {
+                            problems += "\n--- next bad channel: ---\n";
+                        }
+                        problems += e.what();
+                    } else {
+                        karabo::util::Exception::clearTrace();
+                    }
+                }
+            }
+            if (!problems.empty()) {
+                throw KARABO_PROPAGATED_EXCEPTION("Channel(s) still open after write failed: "
+                                                  + problems);
             }
         }
 
