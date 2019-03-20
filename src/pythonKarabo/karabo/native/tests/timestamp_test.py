@@ -2,7 +2,7 @@ from datetime import datetime
 from unittest import TestCase, main
 import time
 
-from karabo.native.timestamp import Timestamp, RESOLUTION
+from karabo.native.timestamp import RESOLUTION, Timestamp
 from karabo.native import Hash
 
 
@@ -27,8 +27,8 @@ class Tests(TestCase):
         t4 = Timestamp(t2)
         self.assertEqual(t4, t2)
 
-        fval = float(1553078935.3968687)
-        ival = int(fval*RESOLUTION)
+        fval = 1553078935.3968687
+        ival = int(fval * RESOLUTION)
         t5 = Timestamp(fval)
         self.assertAlmostEqual(t5.toTimestamp(), fval)
         t6 = Timestamp(ival)
