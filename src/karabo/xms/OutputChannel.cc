@@ -558,9 +558,6 @@ namespace karabo {
             // Take current chunkId for sending
             unsigned int chunkId = m_chunkId;
 
-
-            // TODO: From HERE...
-            //
             // This will increase the usage counts for this chunkId
             // by the number of all interested connected inputs
             registerWritersOnChunk(chunkId);
@@ -578,20 +575,16 @@ namespace karabo {
             if (m_toUnregisterSharedInput) {
                 // The last shared input disconnected while updating...
                 unregisterWriterFromChunk(chunkId);
-                std::clog << "update: last shared input disconnected while updating..." << std::endl;
                 m_toUnregisterSharedInput = false;
             }
             for (size_t i = 0; i < m_toUnregisterCopyInputs.size(); ++i) {
                 // All these copy inputs disconnected while updating...
                 unregisterWriterFromChunk(chunkId);
             }
-            std::clog << "update: " << m_toUnregisterCopyInputs.size() << " copy inputs disconnected while updating..." << std::endl;
             m_toUnregisterCopyInputs.clear();
-            // TODO: ...to HERE, input channels that disconnect in parallel might make an unregisterChunk(..) missing!
-            // At least if it is the last in m_registeredSharedInputs or m_registeredCopyInputs since then
-            // we just return from distribute and copy!
 
-            // What if this throws? Catch and go on? Block in a loop until it does not throw?
+            // What if this throws, e.g. if configured to queue, but receiver is permanently too slow?
+            // Catch and go on? Block in a loop until it does not throw?
             // Register new chunkId for writing to
             m_chunkId = Memory::registerChunk(m_channelId);
         }
@@ -909,8 +902,7 @@ namespace karabo {
                     }
                 }
             }
-            // The input channel will decrement the chunkId usage, as it uses the same memory location
-            // Having the next line only if not sent is thus correct!
+            // NOTE: Here the same note concerning e.g. a chunk leak applies as at the end of copyLocal(..)
             if (notSent) unregisterWriterFromChunk(chunkId);
         }
 
@@ -959,7 +951,7 @@ namespace karabo {
                     const std::string& onSlowness = channelInfo.get<std::string>("onSlowness");
 
                     if (m_toUnregisterCopyInputs.find(instanceId) == m_toUnregisterCopyInputs.end()) {
-                        std::clog << "Increment chunk usage since copy input " << instanceId << " just connected while we update" << std::endl;
+                        // Increment chunk usage since this copy input just connected while we update
                         Memory::incrementChunkUsage(m_channelId, chunkId);
                     } else {
                         m_toUnregisterCopyInputs.erase(instanceId); // We care about it!
@@ -1048,7 +1040,10 @@ namespace karabo {
                 }
             }
             // NOTE: The input channel will decrement the chunkId usage, as it uses the same memory location
-            // Having the next line only if not sent is thus correct!!!
+            //       Having the next line only if not sent is thus correct.
+            // NOTE II: If the other end disconnects before processing our message, the chunk is leaked!
+            //          But it is an unlikely scenario that a local receiver disconnects often - usually the full
+            //          process including the sender (i.e. we here) is shutdown.
             if (notSent) unregisterWriterFromChunk(chunkId);
         }
 
