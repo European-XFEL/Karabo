@@ -9,10 +9,12 @@ from PyQt4.QtGui import (
     QAbstractItemView, QAction, QCursor, QDialog, QHeaderView, QMenu,
     QTreeView)
 
+from karabogui import icons
 from karabogui.enums import NavigationItemTypes
 from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
-from karabogui.singletons.api import get_network, get_selection_tracker
+from karabogui.singletons.api import (
+    get_manager, get_network, get_selection_tracker)
 from karabogui.widgets.popup import PopupWidget
 
 from .device_model import DeviceTreeModel
@@ -65,8 +67,15 @@ class DeviceTreeView(QTreeView):
         self.ac_config_past.setToolTip(text)
         self.ac_config_past.triggered.connect(self.onGetConfigurationFromPast)
 
+        text = "Shutdown device"
+        self.ac_kill_device = QAction(icons.delete, text, self)
+        self.ac_kill_device.setStatusTip(text)
+        self.ac_kill_device.setToolTip(text)
+        self.ac_kill_device.triggered.connect(self.onKillInstance)
+
         self.menu.addAction(self.ac_about)
         self.menu.addAction(self.ac_config_past)
+        self.menu.addAction(self.ac_kill_device)
 
     def indexInfo(self, index=None):
         """Return the info about the index.
@@ -180,3 +189,13 @@ class DeviceTreeView(QTreeView):
         node_type = info.get('type', NavigationItemTypes.UNDEFINED)
         if node_type is NavigationItemTypes.DEVICE:
             self.menu.exec_(QCursor.pos())
+
+    @pyqtSlot()
+    def onKillInstance(self):
+        info = self.indexInfo()
+        node_type = info.get('type')
+        manager = get_manager()
+
+        if node_type is NavigationItemTypes.DEVICE:
+            deviceId = info.get('deviceId')
+            manager.shutdownDevice(deviceId)
