@@ -1616,7 +1616,7 @@ namespace karabo {
 
         void TcpChannel::writeAsync(const karabo::util::Hash& header, const vector<char>& data, int prio) {
             std::string strData(data.begin(), data.end());
-            auto datap = bufferSetFromPointerToChar(strData.c_str(), strData.length() + 1);
+            auto datap = bufferSetFromPointerToChar(strData.c_str(), strData.length());
             VectorCharPointer headerp(new std::vector<char>());
             prepareVectorFromHash(header, *headerp);
             Message::Pointer mp = boost::make_shared<Message>(datap, headerp);

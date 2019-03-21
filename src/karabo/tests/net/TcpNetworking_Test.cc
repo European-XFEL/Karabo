@@ -230,6 +230,7 @@ struct WriteAsyncTestsParams {
     const karabo::util::Hash headerHash = karabo::util::Hash("Header", "hdr", "NumOfFields", 3, "required", true);
     const karabo::net::VectorCharPointer vectorCharPointer =
             boost::make_shared<std::vector<char>>(std::vector<char>(10, 'A'));
+    const std::vector<char> vectorChar = std::vector<char>(20, 'B');
     const char* charArray = "An array of char";
     const int writePriority = 4;
 };
@@ -427,10 +428,77 @@ private:
             m_testReportFn(TestOutcome::FAILURE, "Hash read doesn't match the hash written.", "readAsyncHashNDArrayHandler");
         } else {
             std::clog << "[Srv]\t 7.2. Hash with NDArray checked to be OK." << std::endl;
+            // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
+            channel->readAsyncHashVector(boost::bind(&WriteAsyncSrv::readAsyncHashCharArrayHandler, this, _1, channel, _2, _3));
+        }
+    }
+
+
+    void readAsyncHashCharArrayHandler(const boost::system::error_code& ec,
+                                       const karabo::net::Channel::Pointer& channel,
+                                       const karabo::util::Hash& headerHash,
+                                       const std::vector<char>& dataVect) {
+        if (ec) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashCharArrayHandler: " << ec.value() << " -- " << ec.message();
+            m_testReportFn(TestOutcome::FAILURE, ec.message(), "readAysncHashCharArrayHandler");
+            if (channel) channel->close();
+            return;
+        }
+        std::clog << "[Srv]\t 8.1. Read header hash and body as a vector of chars." << std::endl;
+
+        if (headerHash != m_params.headerHash || dataVect.size() != strlen(m_params.charArray)) {
+            m_testReportFn(TestOutcome::FAILURE, "Data read doesn't match the data written.", "readAysncHashCharArrayHandler");
+        } else {
+            std::clog << "[Srv]\t 8.2. Header hash and array of char for body matched." << std::endl;
+            // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
+            channel->readAsyncHashString(boost::bind(&WriteAsyncSrv::readAsyncHashStringHandler, this, _1, channel, _2, _3));
+        }
+    }
+
+
+    void readAsyncHashStringHandler(const boost::system::error_code& ec,
+                                    const karabo::net::Channel::Pointer& channel,
+                                    const karabo::util::Hash& headerHash,
+                                    const std::string& dataStr) {
+        if (ec) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAsyncHashStringHandler: " << ec.value() << " -- " << ec.message();
+            m_testReportFn(TestOutcome::FAILURE, ec.message(), "readAsyncHashStringHandler");
+            if (channel) channel->close();
+            return;
+        }
+        std::clog << "[Srv]\t 9.1. Read header hash and body as a string." << std::endl;
+
+        if (headerHash != m_params.headerHash || dataStr != m_params.dataString) {
+            m_testReportFn(TestOutcome::FAILURE, "Data read doesn't match the data written.", "readAsyncHashStringHandler");
+        } else {
+            std::clog << "[Srv]\t 9.2. Header hash and string for body matched." << std::endl;
+            // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
+            channel->readAsyncHashVector(boost::bind(&WriteAsyncSrv::readAsyncHashVectorHandler, this, _1, channel, _2, _3));
+        }
+    }
+
+
+    void readAsyncHashVectorHandler(const boost::system::error_code& ec,
+                                    const karabo::net::Channel::Pointer& channel,
+                                    const karabo::util::Hash& headerHash,
+                                    const std::vector<char>& dataVect) {
+        if (ec) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAsyncHashVectorHandler: " << ec.value() << " -- " << ec.message();
+            m_testReportFn(TestOutcome::FAILURE, ec.message(), "readAsyncHashVectorHandler");
+            if (channel) channel->close();
+            return;
+        }
+        std::clog << "[Srv]\t 10.1. Read header hash and body as a vector of char." << std::endl;
+
+        if (headerHash != m_params.headerHash || dataVect.size() != m_params.vectorChar.size()) {
+            m_testReportFn(TestOutcome::FAILURE, "Data read doesn't match the data written.", "readAsyncHashVectorHandler");
+        } else {
+            std::clog << "[Srv]\t 10.2. Header hash and vector of char for body matched." << std::endl;
             m_testReportFn(TestOutcome::SUCCESS, "Tests succeeded!", "");
             if (channel) channel->close();
             std::clog << "[Srv] ... server read all data in the sequence." << std::endl;
         }
+
     }
 
 };
@@ -481,6 +549,14 @@ private:
             std::clog << "[Cli]\t6. sent a hash for header and VectorCharPointer for body." << std::endl;
             channel->writeAsync(m_params.dataHashNDArray, m_params.writePriority, false);
             std::clog << "[Cli]\t7. sent a hash with an NDArray as field with copyAllData false." << std::endl;
+            channel->writeAsync(m_params.headerHash, m_params.charArray, strlen(m_params.charArray), m_params.writePriority);
+            std::clog << "[Cli]\t8. sent a hash for header and an array of char for body." << std::endl;
+            channel->writeAsync(m_params.headerHash, m_params.dataString, m_params.writePriority);
+            std::clog << "[Cli]\t9. sent a hash for header and a string for body" << std::endl;
+            channel->writeAsync(m_params.headerHash, m_params.vectorChar, m_params.writePriority);
+            std::clog << "[Cli]\t10. sent a hash for header and a vector of char for body." << std::endl;
+            channel->writeAsync(m_params.vectorChar, m_params.writePriority);
+            std::clog << "[Cli]\t11. sent a vector of char for body." << std::endl;
             std::clog << "[Cli] ... all test data sent by the client" << std::endl;
         } catch (karabo::util::Exception& ke) {
             std::clog << "Error during write sequence by the client: " << ke.what() << std::endl;
