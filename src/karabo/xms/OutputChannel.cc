@@ -74,7 +74,8 @@ namespace karabo {
         }
 
 
-        OutputChannel::OutputChannel(const karabo::util::Hash& config) : m_port(0), m_sharedInputIndex(0) {
+        OutputChannel::OutputChannel(const karabo::util::Hash& config) : m_port(0), m_sharedInputIndex(0),
+            m_toUnregisterSharedInput(false) {
             //KARABO_LOG_FRAMEWORK_DEBUG << "*** OutputChannel::OutputChannel CTOR ***";
             config.get("distributionMode", m_distributionMode);
             config.get("noInputShared", m_onNoSharedInputChannelAvailable);
@@ -557,16 +558,10 @@ namespace karabo {
             // Take current chunkId for sending
             unsigned int chunkId = m_chunkId;
 
-
-            // TODO: From HERE...
-            //
             // This will increase the usage counts for this chunkId
             // by the number of all interested connected inputs
+            // and set m_toUnregisterSharedInput/m_toUnregisterCopyInputs to check later for whom we registered
             registerWritersOnChunk(chunkId);
-
-            // We are done with this chunkId, it will stay alive only until
-            // all inputs are served (see above)
-            unregisterWriterFromChunk(chunkId);
 
             // Distribute chunk(s)
             distribute(chunkId);
@@ -574,11 +569,19 @@ namespace karabo {
             // Copy chunk(s)
             copy(chunkId);
 
-            // TODO: ...to HERE, input channels that disconnect in parallel might make an unregisterChunk(..) missing!
-            // At least if it is the last in m_registeredSharedInputs or m_registeredCopyInputs since then
-            // we just return from distribute and copy!
+            // Clean-up chunk registration
+            unsigned int numUnregister = 1; // That is the usage of the OutputChannel itself!
+            if (m_toUnregisterSharedInput) { // The last shared input disconnected while updating...
+                ++numUnregister;
+            }
+            numUnregister += m_toUnregisterCopyInputs.size(); // All these copy inputs disconnected while updating
+            // We are done with this chunkId, it may stay alive until local receivers are done as well
+            for (size_t i = 0; i < numUnregister; ++i) {
+                unregisterWriterFromChunk(chunkId);
+            }
 
-            // What if this throws? Catch and go on? Block in a loop until it does not throw?
+            // What if this throws, e.g. if configured to queue, but receiver is permanently too slow?
+            // Catch and go on? Block in a loop until it does not throw?
             // Register new chunkId for writing to
             m_chunkId = Memory::registerChunk(m_channelId);
         }
@@ -653,14 +656,24 @@ namespace karabo {
 
 
         void OutputChannel::registerWritersOnChunk(unsigned int chunkId) {
+
             {
                 boost::mutex::scoped_lock lock(m_registeredSharedInputsMutex);
-                // Only one of the shared inputs will be provided with data
-                if (!m_registeredSharedInputs.empty()) Memory::incrementChunkUsage(m_channelId, chunkId);
+                if (m_registeredSharedInputs.empty()) {
+                    m_toUnregisterSharedInput = false;
+                } else {
+                    // Only one of the shared inputs will be provided with data
+                    Memory::incrementChunkUsage(m_channelId, chunkId);
+                    m_toUnregisterSharedInput = true;
+                }
             }
             {
+                m_toUnregisterCopyInputs.clear();
                 boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
-                for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) Memory::incrementChunkUsage(m_channelId, chunkId);
+                for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
+                    Memory::incrementChunkUsage(m_channelId, chunkId);
+                    m_toUnregisterCopyInputs.insert(m_registeredCopyInputs[i].get<std::string>("instanceId"));
+                }
             }
             KARABO_LOG_FRAMEWORK_TRACE << "OUTPUT Registered " << Memory::getChunkStatus(m_channelId, chunkId) << " uses for [" << m_channelId << "][" << chunkId << "]";
         }
@@ -678,6 +691,11 @@ namespace karabo {
             
             // If no shared input channels are registered at all, we do not go on
             if (m_registeredSharedInputs.empty()) return;
+            if (!m_toUnregisterSharedInput) {
+                // Increment chunk usage since a first shared input just connected while we update
+                Memory::incrementChunkUsage(m_channelId, chunkId);
+            }
+            m_toUnregisterSharedInput = false; // We care for it!
 
             if (m_distributionMode == "round-robin") {
                 distributeRoundRobin(chunkId, lock);
@@ -887,8 +905,7 @@ namespace karabo {
                     }
                 }
             }
-            // The input channel will decrement the chunkId usage, as it uses the same memory location
-            // Having the next line only if not sent is thus correct!
+            // NOTE: Here the same note concerning e.g. a chunk leak applies as at the end of copyLocal(..)
             if (notSent) unregisterWriterFromChunk(chunkId);
         }
 
@@ -936,6 +953,13 @@ namespace karabo {
                     const std::string& instanceId = channelInfo.get<std::string>("instanceId");
                     const std::string& onSlowness = channelInfo.get<std::string>("onSlowness");
 
+                    const auto unregisterIter = m_toUnregisterCopyInputs.find(instanceId);
+                    if (unregisterIter == m_toUnregisterCopyInputs.end()) {
+                        // Increment chunk usage since this copy input just connected while we update
+                        Memory::incrementChunkUsage(m_channelId, chunkId);
+                    } else {
+                        m_toUnregisterCopyInputs.erase(unregisterIter); // We care about it!
+                    }
                     if (hasCopyInput(instanceId)) {
                         eraseCopyInput(instanceId);
                         if (channelInfo.get<std::string > ("memoryLocation") == "local") {
@@ -1020,7 +1044,10 @@ namespace karabo {
                 }
             }
             // NOTE: The input channel will decrement the chunkId usage, as it uses the same memory location
-            // Having the next line only if not sent is thus correct!!!
+            //       Having the next line only if not sent is thus correct.
+            // NOTE II: If the other end disconnects before processing our message, the chunk is leaked!
+            //          But it is an unlikely scenario that a local receiver disconnects often - usually the full
+            //          process including the sender (i.e. we here) is shutdown.
             if (notSent) unregisterWriterFromChunk(chunkId);
         }
 
