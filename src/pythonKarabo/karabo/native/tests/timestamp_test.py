@@ -2,7 +2,7 @@ from datetime import datetime
 from unittest import TestCase, main
 import time
 
-from karabo.native.timestamp import Timestamp
+from karabo.native.timestamp import RESOLUTION, Timestamp
 from karabo.native import Hash
 
 
@@ -26,6 +26,13 @@ class Tests(TestCase):
 
         t4 = Timestamp(t2)
         self.assertEqual(t4, t2)
+
+        fval = 1553078935.3968687
+        ival = int(fval * RESOLUTION)
+        t5 = Timestamp(fval)
+        self.assertAlmostEqual(t5.toTimestamp(), fval)
+        t6 = Timestamp(ival)
+        self.assertAlmostEqual(t6.toTimestamp(), fval)
 
     def test_hash_read(self):
         self.assertIsNone(Timestamp.fromHashAttributes(dict()))

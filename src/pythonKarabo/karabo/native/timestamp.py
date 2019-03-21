@@ -17,8 +17,8 @@ class Timestamp(object):
     """This is a time stamp
 
     :param date: is either another timestamp (then we copy), None
-    (we return now) or a string that will be parsed with
-    :mod:`dateutil`
+    (we return now), a float (from time.time()), an integer (raw timestamp)
+    or a string that will be parsed with :mod:`dateutil`
     """
 
     # Reduce the memory needed for this _very_ common object
@@ -30,6 +30,10 @@ class Timestamp(object):
             self.time = int(time.time() * RESOLUTION)
         elif isinstance(date, Timestamp):
             self.time = date.time
+        elif isinstance(date, float):
+            self.time = int(date * RESOLUTION)
+        elif isinstance(date, int):
+            self.time = date
         else:
             d = dateutil.parser.parse(date)
             if d.tzinfo is None:
