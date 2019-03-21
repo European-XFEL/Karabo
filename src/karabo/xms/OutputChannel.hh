@@ -128,6 +128,11 @@ namespace karabo {
 
             std::unordered_set<std::string> m_copyNext;
 
+            // The following two variables are only used in update() and methods called from that, i.e.
+            // registerWritersOnChunk(..), copy(.. ), and distribute(..), so they do not need any mutex protection.
+            bool m_toUnregisterSharedInput;
+            std::unordered_set<std::string> m_toUnregisterCopyInputs;
+
             mutable boost::mutex m_nextInputMutex;
 
             unsigned int m_channelId;
