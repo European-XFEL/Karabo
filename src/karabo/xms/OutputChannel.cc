@@ -953,11 +953,12 @@ namespace karabo {
                     const std::string& instanceId = channelInfo.get<std::string>("instanceId");
                     const std::string& onSlowness = channelInfo.get<std::string>("onSlowness");
 
-                    if (m_toUnregisterCopyInputs.find(instanceId) == m_toUnregisterCopyInputs.end()) {
+                    const auto unregisterIter = m_toUnregisterCopyInputs.find(instanceId);
+                    if (unregisterIter == m_toUnregisterCopyInputs.end()) {
                         // Increment chunk usage since this copy input just connected while we update
                         Memory::incrementChunkUsage(m_channelId, chunkId);
                     } else {
-                        m_toUnregisterCopyInputs.erase(instanceId); // We care about it!
+                        m_toUnregisterCopyInputs.erase(unregisterIter); // We care about it!
                     }
                     if (hasCopyInput(instanceId)) {
                         eraseCopyInput(instanceId);
