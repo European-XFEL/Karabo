@@ -261,6 +261,7 @@ namespace karabo {
                 lock.unlock();
                 bytesAvailableHandler(ec);
             } else {
+                lock.unlock();
                 m_asyncCounter++;
                 lock.unlock();
                 this->readAsyncRawImpl(m_inboundData->data(), byteSize,
