@@ -291,7 +291,10 @@ private:
         }
         std::clog << "[Srv]\t 1.1. Read hash sent in body with copyAllData false." << std::endl;
         if (hash != m_params.dataHash) {
-            m_testReportFn(TestOutcome::FAILURE, "Hash read differs from hash written.", "readAsyncHashHandlerCopyFalse");
+            m_testReportFn(TestOutcome::FAILURE,
+                           std::string("Hash read differs from hash written:\n") +
+                           "Expected:\n" + karabo::util::toString(m_params.dataHash) + "\nActual:\n" +
+                           karabo::util::toString(hash), "#1. readAsyncHashHandlerCopyFalse");
             if (channel) channel->close();
         } else {
             std::clog << "[Srv]\t 1.2. Hash checked to be OK." << std::endl;
@@ -312,7 +315,10 @@ private:
         }
         std::clog << "[Srv]\t 2.1. Read hash sent in body with copyAllData true." << std::endl;
         if (hash != m_params.dataHash) {
-            m_testReportFn(TestOutcome::FAILURE, "Hash read differs from hash written.", "readAsyncHashHandlerCopyTrue");
+            m_testReportFn(TestOutcome::FAILURE,
+                           std::string("Hash read differs from hash written:\n") +
+                           "Expected:\n" + karabo::util::toString(m_params.dataHash) + "\nActual:\n" +
+                           karabo::util::toString(hash), "#2. readAsyncHashHandlerCopyTrue");
             if (channel) channel->close();
         } else {
             std::clog << "[Srv]\t 2.2. Hash checked to be OK." << std::endl;
@@ -333,7 +339,10 @@ private:
         }
         std::clog << "[Srv]\t 3.1. Read string sent in body." << std::endl;
         if (str != m_params.dataString) {
-            m_testReportFn(TestOutcome::FAILURE, "String read differs from string written.", "readAsyncStringHandler");
+            m_testReportFn(TestOutcome::FAILURE,
+                           std::string("String read differs from string written:\n") +
+                                       "Expected:\n" + m_params.dataString +
+                                       "\nActual:\n" + str, "#3. readAsyncStringHandler");
             if (channel) channel->close();
         } else {
             std::clog << "[Srv]\t 3.2. String checked to be OK." << std::endl;
@@ -355,7 +364,12 @@ private:
         }
         std::clog << "[Srv]\t 4.1. Read hashes sent in header and body with copyAllData false." << std::endl;
         if (header != m_params.headerHash || body != m_params.dataHash) {
-            m_testReportFn(TestOutcome::FAILURE, "Hashes read don't match the ones written.", "readAsyncHashHashHandlerCopyFalse");
+            m_testReportFn(TestOutcome::FAILURE,
+                           std::string("Hashes read don't match the ones written:\n") +
+                           "Expected header:\n" + karabo::util::toString(m_params.headerHash) +
+                           "\nActual header:\n" + karabo::util::toString(header) +
+                           "\nExpected body:\n" + karabo::util::toString(m_params.dataHash) +
+                           "\nActual body:\n" + karabo::util::toString(body), "#4. readAsyncHashHashHandlerCopyFalse");
             if (channel) channel->close();
         } else {
             std::clog << "[Srv]\t 4.2. Hashes checked to be OK." << std::endl;
@@ -377,7 +391,12 @@ private:
         }
         std::clog << "[Srv]\t 5.1. Read hashes sent in header and body with copyAllData true." << std::endl;
         if (header != m_params.headerHash || body != m_params.dataHash) {
-            m_testReportFn(TestOutcome::FAILURE, "Hashes read don't match the ones written.", "readAsyncHashHashHandlerCopyTrue");
+            m_testReportFn(TestOutcome::FAILURE,
+                           std::string("Hashes read don't match the ones written:\n") +
+                           "Expected header:\n" + karabo::util::toString(m_params.headerHash) +
+                           "\nActual header:\n" + karabo::util::toString(header) +
+                           "\nExpected body:\n" + karabo::util::toString(m_params.dataHash) +
+                           "\nActual body:\n" + karabo::util::toString(body), "#5. readAsyncHashHashHandlerCopyTrue");
             if (channel) channel->close();
         } else {
             std::clog << "[Srv]\t 5.2. Hashes checked to be OK." << std::endl;
