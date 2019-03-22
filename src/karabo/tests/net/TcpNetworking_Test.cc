@@ -276,25 +276,46 @@ private:
             if (channel) channel->close();
             return;
         }
-        channel->readAsyncHash(boost::bind(&WriteAsyncSrv::readAsyncHashHandler, this, _1, channel, _2));
+        channel->readAsyncHash(boost::bind(&WriteAsyncSrv::readAsyncHashHandlerCopyFalse, this, _1, channel, _2));
     }
 
 
-    void readAsyncHashHandler(const boost::system::error_code& ec,
-                              const karabo::net::Channel::Pointer& channel,
-                              karabo::util::Hash& hash) {
+    void readAsyncHashHandlerCopyFalse(const boost::system::error_code& ec,
+                                       const karabo::net::Channel::Pointer& channel,
+                                       karabo::util::Hash& hash) {
         if (ec) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashHandler: " << ec.value() << " -- " << ec.message();
-            m_testReportFn(TestOutcome::FAILURE, ec.message(), "readAsyncHashHandler");
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashHandlerCopyFalse: " << ec.value() << " -- " << ec.message();
+            m_testReportFn(TestOutcome::FAILURE, ec.message(), "readAsyncHashHandlerCopyFalse");
             if (channel) channel->close();
             return;
         }
-        std::clog << "[Srv]\t 1.1. Read hash sent in body." << std::endl;
+        std::clog << "[Srv]\t 1.1. Read hash sent in body with copyAllData false." << std::endl;
         if (hash != m_params.dataHash) {
-            m_testReportFn(TestOutcome::FAILURE, "Hash read differs from hash written.", "readAsyncHashHandler");
+            m_testReportFn(TestOutcome::FAILURE, "Hash read differs from hash written.", "readAsyncHashHandlerCopyFalse");
             if (channel) channel->close();
         } else {
             std::clog << "[Srv]\t 1.2. Hash checked to be OK." << std::endl;
+            // Reads the next piece of data sent by WriteAsyncCli as part of the test.
+            channel->readAsyncHash(boost::bind(&WriteAsyncSrv::readAsyncHashHandlerCopyTrue, this, _1, channel, _2));
+        }
+    }
+
+
+    void readAsyncHashHandlerCopyTrue(const boost::system::error_code& ec,
+                                      const karabo::net::Channel::Pointer& channel,
+                                      karabo::util::Hash& hash) {
+        if (ec) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashHandlerCopyTrue: " << ec.value() << " -- " << ec.message();
+            m_testReportFn(TestOutcome::FAILURE, ec.message(), "readAsyncHashHandlerCopyTrue");
+            if (channel) channel->close();
+            return;
+        }
+        std::clog << "[Srv]\t 2.1. Read hash sent in body with copyAllData true." << std::endl;
+        if (hash != m_params.dataHash) {
+            m_testReportFn(TestOutcome::FAILURE, "Hash read differs from hash written.", "readAsyncHashHandlerCopyTrue");
+            if (channel) channel->close();
+        } else {
+            std::clog << "[Srv]\t 2.2. Hash checked to be OK." << std::endl;
             // Reads the next piece of data sent by WriteAsyncCli as part of the test.
             channel->readAsyncString(boost::bind(&WriteAsyncSrv::readAsyncStringHandler, this, _1, channel, _2));
         }
@@ -310,34 +331,56 @@ private:
             if (channel) channel->close();
             return;
         }
-        std::clog << "[Srv]\t 2.1. Read string sent in body." << std::endl;
+        std::clog << "[Srv]\t 3.1. Read string sent in body." << std::endl;
         if (str != m_params.dataString) {
             m_testReportFn(TestOutcome::FAILURE, "String read differs from string written.", "readAsyncStringHandler");
             if (channel) channel->close();
         } else {
-            std::clog << "[Srv]\t 2.2. String checked to be OK." << std::endl;
+            std::clog << "[Srv]\t 3.2. String checked to be OK." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
-            channel->readAsyncHashHash(boost::bind(&WriteAsyncSrv::readAsyncHashHashHandler, this, _1, channel, _2, _3));
+            channel->readAsyncHashHash(boost::bind(&WriteAsyncSrv::readAsyncHashHashHandlerCopyFalse, this, _1, channel, _2, _3));
         }
     }
-    
 
-    void readAsyncHashHashHandler(const boost::system::error_code& ec,
-                                  const karabo::net::Channel::Pointer& channel,
-                                  karabo::util::Hash& header,
-                                  karabo::util::Hash& body) {
+
+    void readAsyncHashHashHandlerCopyFalse(const boost::system::error_code& ec,
+                                           const karabo::net::Channel::Pointer& channel,
+                                           karabo::util::Hash& header,
+                                           karabo::util::Hash& body) {
         if (ec) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashHashHandler: " << ec.value() << " -- " << ec.message();
-            m_testReportFn(TestOutcome::FAILURE, ec.message(), "readAsyncHashHashHandler");
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashHashHandlerCopyFalse: " << ec.value() << " -- " << ec.message();
+            m_testReportFn(TestOutcome::FAILURE, ec.message(), "readAsyncHashHashHandlerCopyFalse");
             if (channel) channel->close();
             return;
         }
-        std::clog << "[Srv]\t 3.1. Read hashes sent in header and body." << std::endl;
+        std::clog << "[Srv]\t 4.1. Read hashes sent in header and body with copyAllData false." << std::endl;
         if (header != m_params.headerHash || body != m_params.dataHash) {
-            m_testReportFn(TestOutcome::FAILURE, "Hashes read don't match the ones written.", "readAsyncHashHashHandler");
+            m_testReportFn(TestOutcome::FAILURE, "Hashes read don't match the ones written.", "readAsyncHashHashHandlerCopyFalse");
             if (channel) channel->close();
         } else {
-            std::clog << "[Srv]\t 3.2. Hashes checked to be OK." << std::endl;
+            std::clog << "[Srv]\t 4.2. Hashes checked to be OK." << std::endl;
+            // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
+            channel->readAsyncHashHash(boost::bind(&WriteAsyncSrv::readAsyncHashHashHandlerCopyTrue, this, _1, channel, _2, _3));
+        }
+    }
+
+
+    void readAsyncHashHashHandlerCopyTrue(const boost::system::error_code& ec,
+                                          const karabo::net::Channel::Pointer& channel,
+                                          karabo::util::Hash& header,
+                                          karabo::util::Hash& body) {
+        if (ec) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashHashHandlerCopyTrue: " << ec.value() << " -- " << ec.message();
+            m_testReportFn(TestOutcome::FAILURE, ec.message(), "readAsyncHashHashHandlerCopyTrue");
+            if (channel) channel->close();
+            return;
+        }
+        std::clog << "[Srv]\t 5.1. Read hashes sent in header and body with copyAllData true." << std::endl;
+        if (header != m_params.headerHash || body != m_params.dataHash) {
+            m_testReportFn(TestOutcome::FAILURE, "Hashes read don't match the ones written.", "readAsyncHashHashHandlerCopyTrue");
+            if (channel) channel->close();
+        } else {
+            std::clog << "[Srv]\t 5.2. Hashes checked to be OK." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
             channel->readAsyncVector(boost::bind(&WriteAsyncSrv::readAsyncCharArrayHandler, this, _1, channel, _2));
         }
@@ -354,12 +397,12 @@ private:
             if (channel) channel->close();
             return;
         }
-        std::clog << "[Srv]\t 4.1. Read vector of char sent in body." << std::endl;
+        std::clog << "[Srv]\t 6.1. Read vector of char sent in body." << std::endl;
         if (vector.size() != strlen(m_params.charArray) || vector[0] != m_params.charArray[0]) {
             m_testReportFn(TestOutcome::FAILURE, "Vector read doesn't match the one written.", "readAsyncVectorHandler");
             if (channel) channel->close();
         } else {
-            std::clog << "[Srv]\t 4.2. Vector checked to be OK." << std::endl;
+            std::clog << "[Srv]\t 6.2. Vector checked to be OK." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
             channel->readAsyncVectorPointer(boost::bind(&WriteAsyncSrv::readAsyncVectorPointerHandler, this, _1, channel, _2));
         }
@@ -376,13 +419,13 @@ private:
             if (channel) channel->close();
             return;
         }
-        std::clog << "[Srv]\t 5.1. Read VetorCharPointer sent in body." << std::endl;
+        std::clog << "[Srv]\t 7.1. Read VetorCharPointer sent in body." << std::endl;
         if (vectorCharPointer->size() != m_params.vectorCharPointer->size() ||
             (*vectorCharPointer)[0] != (*m_params.vectorCharPointer)[0]) {
             m_testReportFn(TestOutcome::FAILURE, "Vector read doesn't match the one written.", "readAsyncVectorPointerHandler");
             if (channel) channel->close();
         } else {
-            std::clog << "[Srv]\t 5.2. VectorCharPointer checked to be OK." << std::endl;
+            std::clog << "[Srv]\t 7.2. VectorCharPointer checked to be OK." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
             channel->readAsyncHashVectorPointer(boost::bind(&WriteAsyncSrv::readAsyncHashVectorPointerHandler, this, _1, channel, _2, _3));
         }
@@ -400,34 +443,56 @@ private:
             if (channel) channel->close();
             return;
         }
-        std::clog << "[Srv]\t 6.1. Read header hash and VectorCharPointer body." << std::endl;
+        std::clog << "[Srv]\t 8.1. Read header hash and VectorCharPointer body." << std::endl;
         if (header != m_params.headerHash ||
             data->size() != m_params.vectorCharPointer->size()) {
             m_testReportFn(TestOutcome::FAILURE, "Data read doesn't match the data written.", "readAsyncHashVectorPointerHandler");
         } else {
-            std::clog << "[Srv]\t 6.2. Hash header and VectorCharPointer body checked to be OK." << std::endl;
+            std::clog << "[Srv]\t 8.2. Hash header and VectorCharPointer body checked to be OK." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
-            channel->readAsyncHash(boost::bind(&WriteAsyncSrv::readAsyncHashNDArrayHandler, this, _1, channel, _2));
+            channel->readAsyncHash(boost::bind(&WriteAsyncSrv::readAsyncHashNDArrayHandlerCopyFalse, this, _1, channel, _2));
         }
     }
 
 
-    void readAsyncHashNDArrayHandler(const boost::system::error_code& ec,
-                                     const karabo::net::Channel::Pointer& channel,
-                                     const karabo::util::Hash& dataHash) {
+    void readAsyncHashNDArrayHandlerCopyFalse(const boost::system::error_code& ec,
+                                              const karabo::net::Channel::Pointer& channel,
+                                              const karabo::util::Hash& dataHash) {
 
         if (ec) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashNDArrayHandler: " << ec.value() << " -- " << ec.message();
-            m_testReportFn(TestOutcome::FAILURE, ec.message(), "readAsyncHashNDArrayHandler");
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashNDArrayHandlerCopyFalse: " << ec.value() << " -- " << ec.message();
+            m_testReportFn(TestOutcome::FAILURE, ec.message(), "readAsyncHashNDArrayHandlerCopyFalse");
             if (channel) channel->close();
             return;
         }
-        std::clog << "[Srv]\t 7.1. Read hash with NDArray sent in body." << std::endl;
+        std::clog << "[Srv]\t 9.1. Read hash with NDArray sent in body with copyAllData false." << std::endl;
         if (dataHash.size() != m_params.dataHashNDArray.size() ||
             dataHash.get<karabo::util::NDArray>("Data").size() != m_params.dataHashNDArray.get<karabo::util::NDArray>("Data").size()) {
-            m_testReportFn(TestOutcome::FAILURE, "Hash read doesn't match the hash written.", "readAsyncHashNDArrayHandler");
+            m_testReportFn(TestOutcome::FAILURE, "Hash read doesn't match the hash written.", "readAsyncHashNDArrayHandlerCopyFalse");
         } else {
-            std::clog << "[Srv]\t 7.2. Hash with NDArray checked to be OK." << std::endl;
+            std::clog << "[Srv]\t 9.2. Hash with NDArray checked to be OK." << std::endl;
+            // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
+            channel->readAsyncHash(boost::bind(&WriteAsyncSrv::readAsyncHashNDArrayHandlerCopyTrue, this, _1, channel, _2));
+        }
+    }
+
+
+    void readAsyncHashNDArrayHandlerCopyTrue(const boost::system::error_code& ec,
+                                             const karabo::net::Channel::Pointer& channel,
+                                             const karabo::util::Hash& dataHash) {
+
+        if (ec) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncHashNDArrayHandlerCopyTrue: " << ec.value() << " -- " << ec.message();
+            m_testReportFn(TestOutcome::FAILURE, ec.message(), "readAsyncHashNDArrayHandlerCopyTrue");
+            if (channel) channel->close();
+            return;
+        }
+        std::clog << "[Srv]\t 10.1. Read hash with NDArray sent in body with copyAllData true." << std::endl;
+        if (dataHash.size() != m_params.dataHashNDArray.size() ||
+            dataHash.get<karabo::util::NDArray>("Data").size() != m_params.dataHashNDArray.get<karabo::util::NDArray>("Data").size()) {
+            m_testReportFn(TestOutcome::FAILURE, "Hash read doesn't match the hash written.", "readAsyncHashNDArrayHandlerCopyTrue");
+        } else {
+            std::clog << "[Srv]\t 10.2. Hash with NDArray checked to be OK." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
             channel->readAsyncHashVector(boost::bind(&WriteAsyncSrv::readAsyncHashCharArrayHandler, this, _1, channel, _2, _3));
         }
@@ -444,12 +509,12 @@ private:
             if (channel) channel->close();
             return;
         }
-        std::clog << "[Srv]\t 8.1. Read header hash and body as a vector of chars." << std::endl;
+        std::clog << "[Srv]\t 11.1. Read header hash and body as a vector of chars." << std::endl;
 
         if (headerHash != m_params.headerHash || dataVect.size() != strlen(m_params.charArray)) {
             m_testReportFn(TestOutcome::FAILURE, "Data read doesn't match the data written.", "readAysncHashCharArrayHandler");
         } else {
-            std::clog << "[Srv]\t 8.2. Header hash and array of char for body matched." << std::endl;
+            std::clog << "[Srv]\t 11.2. Header hash and array of char for body matched." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
             channel->readAsyncHashString(boost::bind(&WriteAsyncSrv::readAsyncHashStringHandler, this, _1, channel, _2, _3));
         }
@@ -466,12 +531,12 @@ private:
             if (channel) channel->close();
             return;
         }
-        std::clog << "[Srv]\t 9.1. Read header hash and body as a string." << std::endl;
+        std::clog << "[Srv]\t 12.1. Read header hash and body as a string." << std::endl;
 
         if (headerHash != m_params.headerHash || dataStr != m_params.dataString) {
             m_testReportFn(TestOutcome::FAILURE, "Data read doesn't match the data written.", "readAsyncHashStringHandler");
         } else {
-            std::clog << "[Srv]\t 9.2. Header hash and string for body matched." << std::endl;
+            std::clog << "[Srv]\t 12.2. Header hash and string for body matched." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
             channel->readAsyncHashVector(boost::bind(&WriteAsyncSrv::readAsyncHashVectorHandler, this, _1, channel, _2, _3));
         }
@@ -488,12 +553,12 @@ private:
             if (channel) channel->close();
             return;
         }
-        std::clog << "[Srv]\t 10.1. Read header hash and body as a vector of char." << std::endl;
+        std::clog << "[Srv]\t 13.1. Read header hash and body as a vector of char." << std::endl;
 
         if (headerHash != m_params.headerHash || dataVect.size() != m_params.vectorChar.size()) {
             m_testReportFn(TestOutcome::FAILURE, "Data read doesn't match the data written.", "readAsyncHashVectorHandler");
         } else {
-            std::clog << "[Srv]\t 10.2. Header hash and vector of char for body matched." << std::endl;
+            std::clog << "[Srv]\t 13.2. Header hash and vector of char for body matched." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
             channel->readAsyncVector(boost::bind(&WriteAsyncSrv::readAsyncVectorHandler, this, _1, channel, _2));
         }
@@ -509,12 +574,12 @@ private:
             if (channel) channel->close();
             return;
         }
-        std::clog << "[Srv]\t 11.1. Read body as a vector of char." << std::endl;
+        std::clog << "[Srv]\t 14.1. Read body as a vector of char." << std::endl;
 
         if (dataVect.size() != m_params.vectorChar.size()) {
             m_testReportFn(TestOutcome::FAILURE, "Data read doesn't match the data written.", "readAsyncVectorHandler");
         } else {
-            std::clog << "[Srv]\t 11.2. Vector of char for body matched." << std::endl;
+            std::clog << "[Srv]\t 14.2. Vector of char for body matched." << std::endl;
             m_testReportFn(TestOutcome::SUCCESS, "Tests succeeded!", "");
             if (channel) channel->close();
             std::clog << "[Srv] ... server read all data in the sequence." << std::endl;
@@ -557,26 +622,43 @@ private:
         try {
             channel->writeAsync(m_params.dataHash, m_params.writePriority, false);
             std::clog << "[Cli]\t1. sent hash as body with copyAllData false." << std::endl;
+            channel->writeAsync(m_params.dataHash, m_params.writePriority, true);
+            std::clog << "[Cli]\t2. sent hash as body with copyAllData true." << std::endl;
+
             channel->writeAsync(m_params.dataString, m_params.writePriority);
-            std::clog << "[Cli]\t2. sent string as body." << std::endl;
+            std::clog << "[Cli]\t3. sent string as body." << std::endl;
+
             channel->writeAsync(m_params.headerHash, m_params.dataHash, m_params.writePriority, false);
-            std::clog << "[Cli]\t3. sent a hash for header and a hash for body with copyAllData false. " << std::endl;
+            std::clog << "[Cli]\t4. sent a hash for header and a hash for body with copyAllData false. " << std::endl;
+            channel->writeAsync(m_params.headerHash, m_params.dataHash, m_params.writePriority, true);
+            std::clog << "[Cli]\t5. sent a hash for header and a hash for body with copyAllData true. " << std::endl;
+
             channel->writeAsync(m_params.charArray, strlen(m_params.charArray), m_params.writePriority);
-            std::clog << "[Cli]\t4. sent an array of char as body." << std::endl;
+            std::clog << "[Cli]\t6. sent an array of char as body." << std::endl;
+
             channel->writeAsync(m_params.vectorCharPointer, m_params.writePriority);
-            std::clog << "[Cli]\t5. sent a VectorCharPointer as body." << std::endl;
+            std::clog << "[Cli]\t7. sent a VectorCharPointer as body." << std::endl;
+
             channel->writeAsync(m_params.headerHash, m_params.vectorCharPointer, m_params.writePriority);
-            std::clog << "[Cli]\t6. sent a hash for header and VectorCharPointer for body." << std::endl;
+            std::clog << "[Cli]\t8. sent a hash for header and VectorCharPointer for body." << std::endl;
+
             channel->writeAsync(m_params.dataHashNDArray, m_params.writePriority, false);
-            std::clog << "[Cli]\t7. sent a hash with an NDArray as field with copyAllData false." << std::endl;
+            std::clog << "[Cli]\t9. sent a hash with an NDArray as field with copyAllData false." << std::endl;
+            channel->writeAsync(m_params.dataHashNDArray, m_params.writePriority, true);
+            std::clog << "[Cli]\t10. sent a hash with an NDArray as field with copyAllData true." << std::endl;
+
             channel->writeAsync(m_params.headerHash, m_params.charArray, strlen(m_params.charArray), m_params.writePriority);
-            std::clog << "[Cli]\t8. sent a hash for header and an array of char for body." << std::endl;
+            std::clog << "[Cli]\t11. sent a hash for header and an array of char for body." << std::endl;
+
             channel->writeAsync(m_params.headerHash, m_params.dataString, m_params.writePriority);
-            std::clog << "[Cli]\t9. sent a hash for header and a string for body" << std::endl;
+            std::clog << "[Cli]\t12. sent a hash for header and a string for body" << std::endl;
+
             channel->writeAsync(m_params.headerHash, m_params.vectorChar, m_params.writePriority);
-            std::clog << "[Cli]\t10. sent a hash for header and a vector of char for body." << std::endl;
+            std::clog << "[Cli]\t13. sent a hash for header and a vector of char for body." << std::endl;
+
             channel->writeAsync(m_params.vectorChar, m_params.writePriority);
-            std::clog << "[Cli]\t11. sent a vector of char for body." << std::endl;
+            std::clog << "[Cli]\t14. sent a vector of char for body." << std::endl;
+            
             std::clog << "[Cli] ... all test data sent by the client" << std::endl;
         } catch (karabo::util::Exception& ke) {
             std::clog << "Error during write sequence by the client: " << ke.what() << std::endl;
