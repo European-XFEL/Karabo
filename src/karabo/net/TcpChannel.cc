@@ -251,6 +251,7 @@ namespace karabo {
                 bytesAvailableHandler(ec);
             } else {
                 m_asyncCounter++;
+                lock.unlock();
                 this->readAsyncRawImpl(m_inboundData->data(), byteSize,
                                        util::bind_weak(&karabo::net::TcpChannel::bytesAvailableHandler, this, _1),
                                        true);
