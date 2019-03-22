@@ -273,6 +273,7 @@ namespace karabo {
 
             void writeAsync(const std::string& data, int prio);
 
+            // When copyAllData is false, elements of type NDArray in the hash won't be copied before being sent.
             void writeAsync(const karabo::util::Hash& data, int prio, bool copyAllData);
 
             void writeAsync(const karabo::util::Hash& header, const char* data, const size_t& size, int prio);
@@ -283,6 +284,8 @@ namespace karabo {
 
             void writeAsync(const karabo::util::Hash& header, const std::string& data, int prio);
 
+            // When copyAllData is false, elements of type NDArray in the body hash won't be copied before being sent.
+            // copyAllData doesn't influence the handling of the header hash.
             void writeAsync(const karabo::util::Hash& header, const karabo::util::Hash& data, int prio, bool copyAllData);
 
             virtual void setAsyncChannelPolicy(int priority, const std::string& policy, const size_t capacity = 0);
@@ -376,12 +379,48 @@ namespace karabo {
 
             void prepareHashFromData(karabo::util::Hash& hash) const;
 
+            /**
+             * Creates a buffer set with the given string stored in its sole buffer.
+             *
+             * @param str the string to be stored in the buffer set.
+             * @return shared_ptr to the buffer set with the string stored.
+             *
+             * @note actually places a copy of the string into the buffer set.
+             */
             karabo::io::BufferSet::Pointer bufferSetFromString(const std::string& str);
 
+            /**
+             * Creates a buffer set with contents of a given buffer of chars stored
+             * in its sole buffer.
+             *
+             * @param data a pointer to the first char in the input sequence.
+             * @return shared_ptr to the buffer set with the input buffer contents stored.
+             *
+             * @note actually places a copy of the contents of the input buffer into the buffer set.
+             */
             karabo::io::BufferSet::Pointer bufferSetFromPointerToChar(const char* data, size_t size);
 
+            /**
+             * Creates a buffer set with characters in a given vector of chars stored
+             * in its sole buffer.
+             *
+             * @param data a pointer to the vector of chars to be stored in the buffer set.
+             * @return shared_ptr to the buffer set with the character in the vector stored.
+             *
+             * @note actually places a copy of the characters in the vector of chars into the buffer set.
+             */
             karabo::io::BufferSet::Pointer bufferSetFromVectorCharPointer(const VectorCharPointer& dataVect);
 
+            /**
+             * Creates a buffer set with a given hash stored in its sole buffer.
+             *
+             * @param data the hash to be stored in the buffer set.
+             * @param pBuffSet a shared pointer that will be pointed to the newly created buffer set with the hash
+             *        (the shared pointer argument can be either pointing to an existing buffer set or nullptr; it
+             *         will always point to the new buffer after a successful execution of the method).
+             * @param copyAllData if false no copy of any NDArray internal to the hash will be made upon storing the
+             *        hash in the bufferset (the buffer set will actually become one of the "owners" of the NDArray).
+             */
             void bufferSetFromHash(const karabo::util::Hash& data, karabo::io::BufferSet::Pointer& pBuffSet,
                                    bool copyAllData);
 

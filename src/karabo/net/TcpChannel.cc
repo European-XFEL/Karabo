@@ -1563,7 +1563,6 @@ namespace karabo {
 
             if (m_binarySerializer) {
                 m_binarySerializer->save(data, *pBS);
-                pBuffSet = pBS;
              } else {
                 std::string serializedData = m_textSerializer->save(data);
                 pBS = bufferSetFromString(serializedData);
