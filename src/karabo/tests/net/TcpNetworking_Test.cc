@@ -339,14 +339,14 @@ private:
         } else {
             std::clog << "[Srv]\t 3.2. Hashes checked to be OK." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
-            channel->readAsyncVector(boost::bind(&WriteAsyncSrv::readAsyncVectorHandler, this, _1, channel, _2));
+            channel->readAsyncVector(boost::bind(&WriteAsyncSrv::readAsyncCharArrayHandler, this, _1, channel, _2));
         }
     }
 
 
-    void readAsyncVectorHandler(const boost::system::error_code& ec,
-                                const karabo::net::Channel::Pointer& channel,
-                                std::vector<char>& vector) {
+    void readAsyncCharArrayHandler(const boost::system::error_code& ec,
+                                   const karabo::net::Channel::Pointer& channel,
+                                   std::vector<char>& vector) {
 
         if (ec) {
             KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAysncVectorHandler: " << ec.value() << " -- " << ec.message();
@@ -494,11 +494,31 @@ private:
             m_testReportFn(TestOutcome::FAILURE, "Data read doesn't match the data written.", "readAsyncHashVectorHandler");
         } else {
             std::clog << "[Srv]\t 10.2. Header hash and vector of char for body matched." << std::endl;
+            // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
+            channel->readAsyncVector(boost::bind(&WriteAsyncSrv::readAsyncVectorHandler, this, _1, channel, _2));
+        }
+    }
+
+
+    void readAsyncVectorHandler(const boost::system::error_code& ec,
+                                const karabo::net::Channel::Pointer& channel,
+                                const std::vector<char>& dataVect) {
+        if (ec) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "\nWriteAsyncSrv error at readAsyncVectorHandler: " << ec.value() << " -- " << ec.message();
+            m_testReportFn(TestOutcome::FAILURE, ec.message(), "readAsyncVectorHandler");
+            if (channel) channel->close();
+            return;
+        }
+        std::clog << "[Srv]\t 11.1. Read body as a vector of char." << std::endl;
+
+        if (dataVect.size() != m_params.vectorChar.size()) {
+            m_testReportFn(TestOutcome::FAILURE, "Data read doesn't match the data written.", "readAsyncVectorHandler");
+        } else {
+            std::clog << "[Srv]\t 11.2. Vector of char for body matched." << std::endl;
             m_testReportFn(TestOutcome::SUCCESS, "Tests succeeded!", "");
             if (channel) channel->close();
             std::clog << "[Srv] ... server read all data in the sequence." << std::endl;
         }
-
     }
 
 };
