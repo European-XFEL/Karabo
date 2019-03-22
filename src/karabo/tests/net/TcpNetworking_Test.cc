@@ -225,7 +225,7 @@ private:
 struct WriteAsyncTestsParams {
     const karabo::util::Hash dataHash = karabo::util::Hash("Name", "DataHash", "PiField", 3.14159);
     const karabo::util::Hash dataHashNDArray =
-            karabo::util::Hash("Data", karabo::util::NDArray(karabo::util::Dims(10000, 40000), 1000u));
+            karabo::util::Hash("Data", karabo::util::NDArray(karabo::util::Dims(10000, 60000), 1000u));
     const std::string dataString = std::string("Sample of std::string");
     const karabo::util::Hash headerHash = karabo::util::Hash("Header", "hdr", "NumOfFields", 3, "required", true);
     const karabo::net::VectorCharPointer vectorCharPointer =
@@ -618,6 +618,11 @@ private:
             if (channel) channel->close();
             return;
         }
+
+        decltype(boost::chrono::high_resolution_clock::now()) startTime;
+        decltype(boost::chrono::high_resolution_clock::now()) stopTime;
+        decltype(startTime - stopTime) startStopInterval;
+        
         std::clog << "[Cli] Write async client connected. Sending data ..." << std::endl;
         try {
             channel->writeAsync(m_params.dataHash, m_params.writePriority, false);
@@ -642,10 +647,26 @@ private:
             channel->writeAsync(m_params.headerHash, m_params.vectorCharPointer, m_params.writePriority);
             std::clog << "[Cli]\t8. sent a hash for header and VectorCharPointer for body." << std::endl;
 
+            startTime = boost::chrono::high_resolution_clock::now();
             channel->writeAsync(m_params.dataHashNDArray, m_params.writePriority, false);
-            std::clog << "[Cli]\t9. sent a hash with an NDArray as field with copyAllData false." << std::endl;
+            stopTime = boost::chrono::high_resolution_clock::now();
+            startStopInterval = stopTime - startTime;
+            std::clog << "[Cli]\t9. sent a hash with an NDArray as field with copyAllData false (in "
+                    << boost::chrono::duration_cast<boost::chrono::milliseconds>(startStopInterval).count()
+                    << "."
+                    << boost::chrono::duration_cast<boost::chrono::microseconds>(startStopInterval).count() % 1000
+                    << " milliseconds)."
+                    << std::endl;
+            startTime = boost::chrono::high_resolution_clock::now();
             channel->writeAsync(m_params.dataHashNDArray, m_params.writePriority, true);
-            std::clog << "[Cli]\t10. sent a hash with an NDArray as field with copyAllData true." << std::endl;
+            stopTime = boost::chrono::high_resolution_clock::now();
+            startStopInterval = stopTime - startTime;
+            std::clog << "[Cli]\t10. sent a hash with an NDArray as field with copyAllData true (in "
+                    << boost::chrono::duration_cast<boost::chrono::milliseconds>(startStopInterval).count()
+                    << "."
+                    << boost::chrono::duration_cast<boost::chrono::microseconds>(startStopInterval).count() % 1000
+                    << " milliseconds)."
+                    << std::endl;
 
             channel->writeAsync(m_params.headerHash, m_params.charArray, strlen(m_params.charArray), m_params.writePriority);
             std::clog << "[Cli]\t11. sent a hash for header and an array of char for body." << std::endl;
