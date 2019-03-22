@@ -4,7 +4,6 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from contextlib import contextmanager
-import unittest
 
 from karabo.middlelayer_api.tests.eventloop import async_tst, DeviceTest
 

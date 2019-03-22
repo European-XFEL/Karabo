@@ -28,4 +28,3 @@ def test_code_quality_flake8():
     files = get_python_files()
     command = ['flake8', *[op.abspath(py_file) for py_file in files]]
     subprocess.check_call(command)
-
