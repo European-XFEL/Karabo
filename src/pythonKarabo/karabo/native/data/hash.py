@@ -1421,7 +1421,8 @@ class Schema(Special):
         return "alias" in self.hash[key, ...]
 
     def getAliasAsString(self, key):
-        return self.hash[key, "alias"]
+        if self.hash.hasAttribute(key, "alias"):
+            return self.hash[key, "alias"]
 
     def getKeyFromAlias(self, alias):
         for k in self.hash.paths():
