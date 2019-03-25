@@ -418,7 +418,13 @@ private:
         }
         std::clog << "[Srv]\t 6.1. Read vector of char sent in body." << std::endl;
         if (vector.size() != strlen(m_params.charArray) || vector[0] != m_params.charArray[0]) {
-            m_testReportFn(TestOutcome::FAILURE, "Vector read doesn't match the one written.", "readAsyncVectorHandler");
+            m_testReportFn(TestOutcome::FAILURE,
+                           std::string("Vector read doesn't match the one written:\n.") +
+                           "Expected vector size:" + karabo::util::toString(strlen(m_params.charArray)) +
+                           std::string("\nActual vector size: ") + karabo::util::toString(vector.size()) +
+                           std::string("\nExpected first position content: ") + m_params.charArray[0] +
+                           std::string("\nActual first position content: ") + vector[0],
+                           "#6. readAsyncVectorHandler");
             if (channel) channel->close();
         } else {
             std::clog << "[Srv]\t 6.2. Vector checked to be OK." << std::endl;
@@ -441,7 +447,13 @@ private:
         std::clog << "[Srv]\t 7.1. Read VetorCharPointer sent in body." << std::endl;
         if (vectorCharPointer->size() != m_params.vectorCharPointer->size() ||
             (*vectorCharPointer)[0] != (*m_params.vectorCharPointer)[0]) {
-            m_testReportFn(TestOutcome::FAILURE, "Vector read doesn't match the one written.", "readAsyncVectorPointerHandler");
+            m_testReportFn(TestOutcome::FAILURE,
+                           std::string("Vector read doesn't match the one written:\n.") +
+                           "Expected vector size:" + karabo::util::toString(m_params.vectorCharPointer->size()) +
+                           std::string("\nActual vector size: ") + karabo::util::toString(vectorCharPointer->size()) +
+                           std::string("\nExpected first position content: ") + (*m_params.vectorCharPointer)[0] +
+                           std::string("\nActual first position content: ") + (*vectorCharPointer)[0],
+                           "#7. readAsyncVectorPointerHandler");
             if (channel) channel->close();
         } else {
             std::clog << "[Srv]\t 7.2. VectorCharPointer checked to be OK." << std::endl;
@@ -465,7 +477,13 @@ private:
         std::clog << "[Srv]\t 8.1. Read header hash and VectorCharPointer body." << std::endl;
         if (header != m_params.headerHash ||
             data->size() != m_params.vectorCharPointer->size()) {
-            m_testReportFn(TestOutcome::FAILURE, "Data read doesn't match the data written.", "readAsyncHashVectorPointerHandler");
+            m_testReportFn(TestOutcome::FAILURE,
+                           std::string("Data read doesn't match the data written:\n") +
+                           "Expected header:\n" + karabo::util::toString(m_params.headerHash) +
+                           "\nActual header:\n" + karabo::util::toString(header) +
+                           "Expected body vector size:" + karabo::util::toString(m_params.vectorCharPointer->size()) +
+                           std::string("\nActual body vector size: ") + karabo::util::toString(data->size()),
+                           "#8. readAsyncHashVectorPointerHandler");
         } else {
             std::clog << "[Srv]\t 8.2. Hash header and VectorCharPointer body checked to be OK." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
@@ -487,7 +505,13 @@ private:
         std::clog << "[Srv]\t 9.1. Read hash with NDArray sent in body with copyAllData false." << std::endl;
         if (dataHash.size() != m_params.dataHashNDArray.size() ||
             dataHash.get<karabo::util::NDArray>("Data").size() != m_params.dataHashNDArray.get<karabo::util::NDArray>("Data").size()) {
-            m_testReportFn(TestOutcome::FAILURE, "Hash read doesn't match the hash written.", "readAsyncHashNDArrayHandlerCopyFalse");
+            m_testReportFn(TestOutcome::FAILURE,
+                           std::string("Hash with NDArray read doesn't match the hash written:\n.") +
+                           "Expected hash size: " + karabo::util::toString(m_params.dataHashNDArray.size()) +
+                           "\nActual hash size: " + karabo::util::toString(dataHash.size()) +
+                           "\nExpected NDArray size: " + karabo::util::toString(m_params.dataHashNDArray.get<karabo::util::NDArray>("Data").size()) +
+                           "\nActual NDArray size: " + karabo::util::toString(dataHash.get<karabo::util::NDArray>("Data").size()),
+                           "#9. readAsyncHashNDArrayHandlerCopyFalse");
         } else {
             std::clog << "[Srv]\t 9.2. Hash with NDArray checked to be OK." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
@@ -509,7 +533,13 @@ private:
         std::clog << "[Srv]\t 10.1. Read hash with NDArray sent in body with copyAllData true." << std::endl;
         if (dataHash.size() != m_params.dataHashNDArray.size() ||
             dataHash.get<karabo::util::NDArray>("Data").size() != m_params.dataHashNDArray.get<karabo::util::NDArray>("Data").size()) {
-            m_testReportFn(TestOutcome::FAILURE, "Hash read doesn't match the hash written.", "readAsyncHashNDArrayHandlerCopyTrue");
+            m_testReportFn(TestOutcome::FAILURE,
+                           std::string("Hash with NDArray read doesn't match the hash written:\n.") +
+                           "Expected hash size: " + karabo::util::toString(m_params.dataHashNDArray.size()) +
+                           "\nActual hash size: " + karabo::util::toString(dataHash.size()) +
+                           "\nExpected NDArray size: " + karabo::util::toString(m_params.dataHashNDArray.get<karabo::util::NDArray>("Data").size()) +
+                           "\nActual NDArray size: " + karabo::util::toString(dataHash.get<karabo::util::NDArray>("Data").size()),
+                           "#10. readAsyncHashNDArrayHandlerCopyTrue");
         } else {
             std::clog << "[Srv]\t 10.2. Hash with NDArray checked to be OK." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
@@ -531,7 +561,13 @@ private:
         std::clog << "[Srv]\t 11.1. Read header hash and body as a vector of chars." << std::endl;
 
         if (headerHash != m_params.headerHash || dataVect.size() != strlen(m_params.charArray)) {
-            m_testReportFn(TestOutcome::FAILURE, "Data read doesn't match the data written.", "readAysncHashCharArrayHandler");
+            m_testReportFn(TestOutcome::FAILURE,
+                           std::string("Data read doesn't match the data written:\n") +
+                           "Expected header:\n" + karabo::util::toString(m_params.headerHash) +
+                           "\nActual header:\n" + karabo::util::toString(headerHash) +
+                           "\nExpected body vector size: " + karabo::util::toString(strlen(m_params.charArray)) +
+                           "\nActual body vector size: " + karabo::util::toString(dataVect.size()),
+                           "#11. readAysncHashCharArrayHandler");
         } else {
             std::clog << "[Srv]\t 11.2. Header hash and array of char for body matched." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
@@ -553,7 +589,13 @@ private:
         std::clog << "[Srv]\t 12.1. Read header hash and body as a string." << std::endl;
 
         if (headerHash != m_params.headerHash || dataStr != m_params.dataString) {
-            m_testReportFn(TestOutcome::FAILURE, "Data read doesn't match the data written.", "readAsyncHashStringHandler");
+            m_testReportFn(TestOutcome::FAILURE,
+                           std::string("Data read doesn't match the data written:\n") +
+                           "Expected header:\n" + karabo::util::toString(m_params.headerHash) +
+                           "\nActual header:\n" + karabo::util::toString(headerHash) +
+                           "\nExpected body string: " + m_params.dataString +
+                           "\nActual body string: " + dataStr,
+                           "#12. readAsyncHashStringHandler");
         } else {
             std::clog << "[Srv]\t 12.2. Header hash and string for body matched." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
@@ -575,7 +617,13 @@ private:
         std::clog << "[Srv]\t 13.1. Read header hash and body as a vector of char." << std::endl;
 
         if (headerHash != m_params.headerHash || dataVect.size() != m_params.vectorChar.size()) {
-            m_testReportFn(TestOutcome::FAILURE, "Data read doesn't match the data written.", "readAsyncHashVectorHandler");
+            m_testReportFn(TestOutcome::FAILURE,
+                           std::string("Data read doesn't match the data written:\n") +
+                           "Expected header:\n" + karabo::util::toString(m_params.headerHash) +
+                           "\nActual header:\n" + karabo::util::toString(headerHash) +
+                           "\nExpected body size: " + karabo::util::toString(m_params.vectorChar.size()) +
+                           "\nActual body size: " + karabo::util::toString(dataVect.size()),
+                           "#13. readAsyncHashVectorHandler");
         } else {
             std::clog << "[Srv]\t 13.2. Header hash and vector of char for body matched." << std::endl;
             // Reads the next piece of data sent by the WriteAsyncCli as part of the test.
@@ -596,7 +644,11 @@ private:
         std::clog << "[Srv]\t 14.1. Read body as a vector of char." << std::endl;
 
         if (dataVect.size() != m_params.vectorChar.size()) {
-            m_testReportFn(TestOutcome::FAILURE, "Data read doesn't match the data written.", "readAsyncVectorHandler");
+            m_testReportFn(TestOutcome::FAILURE,
+                           std::string("Data read doesn't match the data written:\n") +
+                           "\nExpected vector size: " + karabo::util::toString(m_params.vectorChar.size()) +
+                           "\nActual vector size: " + karabo::util::toString(dataVect.size()),
+                           "#14. readAsyncVectorHandler");
         } else {
             std::clog << "[Srv]\t 14.2. Vector of char for body matched." << std::endl;
             m_testReportFn(TestOutcome::SUCCESS, "Tests succeeded!", "");
@@ -815,7 +867,8 @@ void TcpNetworking_Test::testWriteAsync() {
                 << " milliseconds." << std::endl;
         CPPUNIT_ASSERT(true);
     } else {
-        CPPUNIT_ASSERT_MESSAGE("Failed: " + testOutcomeMessage + " at " + failingTestCaseName, false);
+        CPPUNIT_ASSERT_MESSAGE("Failed:\n---------------\n" + testOutcomeMessage +
+                               "\n---------------\nat test: " + failingTestCaseName, false);
     }
 
 }
