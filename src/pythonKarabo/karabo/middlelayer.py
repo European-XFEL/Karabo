@@ -72,6 +72,7 @@ from karabo.native.data.serializers import (
     decodeBinary, decodeXML, encodeBinary, encodeXML, loadFromFile, saveToFile,
     writeBinary, writeXML, XMLParser, XMLWriter
 )
+from karabo.native.data.utils import dtype_from_number
 from karabo.native.exceptions import KaraboError
 from karabo.native.project import (
     convert_old_project, OldProject, read_project_model, write_project_model
