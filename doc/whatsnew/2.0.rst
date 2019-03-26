@@ -1,4 +1,64 @@
 **************************
+What's New in Karabo 2.0.3
+**************************
+
+
+Detailed Merge-Log
+==================
+
+bound/cpp core
+++++++++++++++
+- C++: Fix memory leak that also created severe message digestion problems. !931
+- C++: Fix 'shutdown behavior' issue using direct asyncWrite callUse of the direct call to the _asyncWrite_ in _JmsProducer_ class fixes the losses of messages.
+- C++: Stop using the "karabo_log" topic for logs !953
+- C++: Clean pipeline handler usage- Using `bind_weak` allows to get rid of wrappers for pipeline data handlers in `SignalSlotable`. !913
+- C++: Use bind_weak where possible in PointToPoint. !956
+- C++: Add support for filtered subschema !926
+- C++: Use bind_weak in OutputChannel and TcpConnectionUsing bind_weak in OutputChannel solves crashes at device shutdown. !925
+- C++/Bound: Fix typo in slot name slotReSubmitAlarms !951
+- C++/Bound: Data source info on p2p should follow ITDM specs
+- C++/Bound: Changes separator for deviceId and outputname from `/` to `:` as specified by ITDM !916
+- Bound: Also bound Python command line needs EventLoop to run.Without that, nothing works. !942
+
+core Devices
+++++++++++++
+- GUIServer: Update the GUI server protocol to use tokens
+
+Dependencies and deployment
++++++++++++++++++++++++++++
+- DEPS: Fix the shebangs of Python entry points !924
+- DEPS: Fix the version of our Python wheels !924
+- DEPS: make cross test more resilient to timing failures !955
+
+Middlelayer core
+++++++++++++++++
+- MDL: also support slotReSubmitAlarms !952
+- MDL: publish alarm states in middle layer !947
+- MDL: fix execute function and add a test for it !944
+- MDL: add unit-aware numpy equivalentsmost numpy functions (namely: ufuncs) work out-of-the-box with units. !921
+- Remove a Hash import that got in during !891
+
+Graphical user interface
+++++++++++++++++++++++++
+- GUI: Adapt Device Server dialog to new model parameters. Follow-up of MR !909
+- GUI: Improve display of vector properties in Table Element !917
+- GUI: Allow for read only columns in GUI repr. of TABLE_ELEMENT !919
+- GUI: Add a VacuumWidget for Agilent Ion Pump
+- GUI: Create a singletons package for the GUI !928
+- GUI: Move the project DB connection into singletons
+- GUI: Handle the initialized flag correctly
+- GUI: Features genericlamp !936
+- GUI: Adapt dialog for device configurationThis is almost done. There is still some problem when saving the device configurations..
+- GUI: Add missing commata in vacuum files MR !936
+- GUI: Remove the krbgui package
+- GUI: Add missing context menu actions+ Added missing context menu entries
+- GUI: Add missing alarm/warn conditions and adapt icon/color association
+- GUI: Add individual object saving to context menu
+- GUI: Remove some of the signals from ManagerThis cleanup in Manager should help the transition to the new project panel. !945
+- GUI: Add more parameters to project models. Add `description` to BaseProjectObjectModel
+
+
+**************************
 What's New in Karabo 2.0.2
 **************************
 
