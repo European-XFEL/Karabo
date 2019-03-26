@@ -314,6 +314,7 @@ namespace karabo {
 
             // Unregister channel
             onInputGone(channel);
+            updateConnectionTable();
         }
 
 
