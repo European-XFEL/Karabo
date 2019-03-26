@@ -1186,8 +1186,8 @@ class PythonDevice(NoFsm):
         self._ss.registerSlot(self.slotLoggerPriority)
         self._ss.registerSlot(self.slotClearLock)
 
-    def updateConnectionTable(self, channelName, table):
-        self.set(channelName + '.table', table)
+    def updateConnectionTable(self, channelName, connections):
+        self.set(channelName + '.connections', connections)
 
     def initChannels(self, topLevel=""):
         # Keys under topLevel, without leading "topLevel.":
