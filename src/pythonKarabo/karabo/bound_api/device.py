@@ -1186,9 +1186,6 @@ class PythonDevice(NoFsm):
         self._ss.registerSlot(self.slotLoggerPriority)
         self._ss.registerSlot(self.slotClearLock)
 
-    def updateConnectionTable(self, channelName, table):
-        self.set(channelName + '.table', table)
-
     def initChannels(self, topLevel=""):
         # Keys under topLevel, without leading "topLevel.":
         subKeys = self.fullSchema.getKeys(topLevel)
@@ -1201,14 +1198,7 @@ class PythonDevice(NoFsm):
                     # Would best be INFO level, but without broadcasting:
                     self.log.DEBUG("Creating output channel \"{}\""
                                    .format(key))
-                    outputChannel = self._ss.createOutputChannel(key, self.parameters)
-                    if not outputChannel:
-                        self.log.ERROR("Failed to create output channel \"{}\""
-                                       .format(key))
-                    else:
-                        self.log.DEBUG("Register \"ShowConnections\" handler on output channel \"{}\""
-                                      .format(key))
-                        outputChannel.registerShowConnectionsHandler(self.updateConnectionTable)
+                    self._ss.createOutputChannel(key, self.parameters)
                 elif displayType == "InputChannel":
                     # Would best be INFO level, but without broadcasting:
                     self.log.DEBUG("Creating input channel \"{}\""
