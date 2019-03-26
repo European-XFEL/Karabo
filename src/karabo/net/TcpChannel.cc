@@ -1627,5 +1627,23 @@ namespace karabo {
             }
             return address;
         }
+
+
+        karabo::util::Hash TcpChannel::getChannelInfo() {
+            karabo::util::Hash info("localAddress", "0.0.0.0",
+                                    "localPort", 0,
+                                    "remoteAddress", "0.0.0.0",
+                                    "remotePort", 0);
+            try {
+                info.set<std::string>("localAddress", m_socket.local_endpoint().address().to_string());
+                info.set<unsigned short>("localPort", m_socket.local_endpoint().port());
+                if (m_socket.is_open()) {
+                    info.set<std::string>("remoteAddress", m_socket.remote_endpoint().address().to_string());
+                    info.set<unsigned short>("remotePort", m_socket.remote_endpoint().port());
+                }
+            } catch(...) {
+            }
+            return info;
+        }
     }
 }
