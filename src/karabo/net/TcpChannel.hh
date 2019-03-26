@@ -295,8 +295,6 @@ namespace karabo {
                 return result;
             }
             
-            karabo::util::Hash getChannelInfo();
-
         private:
 
             void onBytesAvailable(const ErrorCode& error, const size_t length, const ReadRawHandler& handler);
