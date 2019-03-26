@@ -1601,8 +1601,8 @@ namespace karabo {
                                     KARABO_LOG_FRAMEWORK_ERROR << "*** \"createOutputChannel\" for channel name \"" << key << "\" failed to create output channel";
                                 } else {
                                     KARABO_LOG_FRAMEWORK_INFO << "Register \"Show connections\" handler for output channel \"" << key << "\"";
-                                    channel->registerShowConnectionsHandler([this, key](const std::vector<karabo::util::Hash>& table) {
-                                        this->set(key + ".table", table);
+                                    channel->registerShowConnectionsHandler([this, key](const std::vector<karabo::util::Hash>& connections) {
+                                        this->set(key + ".connections", connections);
                                     });
                                 }
                             } catch (const karabo::util::NetworkException& e) {

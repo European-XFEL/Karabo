@@ -126,7 +126,7 @@ namespace karabo {
                     .readOnly().initialValue("drop")
                     .commit();
 
-            TABLE_ELEMENT(expected).key("table")
+            TABLE_ELEMENT(expected).key("connections")
                     .displayedName("Connections")
                     .description("Table of active connections")
                     .setColumns(columns)
@@ -394,7 +394,7 @@ namespace karabo {
 
 
         void OutputChannel::updateConnectionTable() {
-            std::vector<Hash> table;
+            std::vector<Hash> connections;
             {
                 boost::mutex::scoped_lock lock(m_registeredSharedInputsMutex);
                 for (size_t i = 0; i < m_registeredSharedInputs.size(); ++i) {
@@ -407,7 +407,7 @@ namespace karabo {
                     row.set("memoryLocation", channelInfo.get<std::string>("memoryLocation"));
                     row.set("dataDistribution","shared");
                     row.set("onSlowness", channelInfo.get<std::string>("onSlowness"));
-                    table.push_back(row);
+                    connections.push_back(row);
                 }
             }
             {
@@ -423,10 +423,10 @@ namespace karabo {
                     row.set("memoryLocation", channelInfo.get<std::string>("memoryLocation"));
                     row.set("dataDistribution","copy");
                     row.set("onSlowness", channelInfo.get<std::string>("onSlowness"));
-                    table.push_back(row);
+                    connections.push_back(row);
                 }
             }
-            m_showConnectionsHandler(table);
+            m_showConnectionsHandler(connections);
         }
 
 
