@@ -1,7 +1,7 @@
 from asyncio import (
     CancelledError, coroutine, Future, gather, get_event_loop,
     IncompleteReadError, Lock, open_connection, Queue, QueueFull, shield,
-    sleep, start_server)
+    start_server)
 from contextlib import closing
 import os
 from struct import pack, unpack, calcsize
@@ -9,8 +9,9 @@ import socket
 
 import numpy
 
+from karabo.middlelayer_api.synchronization import sleep
 from karabo.native.data.basetypes import isSet
-from karabo.native.data.enums import Assignment, AccessMode
+from karabo.native.data.enums import Assignment, AccessMode, Unit, MetricPrefix
 from karabo.native.data.hash import (
     Bool, Hash, VectorString, Schema, String, UInt32)
 from karabo.native.data.schema import Configurable, Node
@@ -186,6 +187,15 @@ class NetworkInput(Configurable):
         assignment=Assignment.OPTIONAL, defaultValue="wait",
         accessMode=AccessMode.RECONFIGURABLE)
 
+    delayOnInput = UInt32(
+        defaultValue=0,
+        displayedName="Delay on Input channel",
+        description="Some delay before informing output channel about "
+                    "readiness for next data.",
+        unitSymbol=Unit.SECOND,
+        metricPrefixSymbol=MetricPrefix.MILLI,
+        accessMode=AccessMode.INITONLY)
+
     def __init__(self, config):
         super().__init__(config)
         self.connected = {}
@@ -251,6 +261,7 @@ class NetworkInput(Configurable):
                 cmd = Hash("reason", "update",
                            "instanceId", self.parent.deviceId)
                 while (yield from self.readChunk(channel, cls)):
+                    yield from sleep(self.delayOnInput)
                     channel.writeHash(cmd)
         except CancelledError:
             # NOTE: Happens when we are destroyed
