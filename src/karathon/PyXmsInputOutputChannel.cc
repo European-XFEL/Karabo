@@ -193,6 +193,29 @@ namespace karathon {
     }
 
 
+    void OutputChannelWrap::registerShowConnectionsHandlerPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& handler) {
+        const std::string& channelName = self->getChannelName();
+        self->registerShowConnectionsHandler(boost::bind(OutputChannelWrap::proxyShowConnectionsHandler, handler, channelName, _1));
+    }
+
+
+    void OutputChannelWrap::proxyShowConnectionsHandler(const bp::object& handler, const std::string& channelName, const std::vector<karabo::util::Hash>& v) {
+        ScopedGILAcquire gil;
+        bp::object name  = bp::object(channelName);
+        bp::object table = Wrapper::fromStdVectorToPyHashList(v);
+        try {
+            if (handler) handler(name, table);
+        } catch (const bp::error_already_set& e) {
+            if (PyErr_Occurred()) PyErr_Print();
+            const std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
+            const std::string whichStr("proxyShowConnectionsHandler");
+            throw KARABO_PYTHON_EXCEPTION("Python " + whichStr + " handler'" + funcName + "' has thrown an exception.");
+        } catch (const std::exception& se) {
+            KARABO_LOG_FRAMEWORK_ERROR_C("karathon.OutputChannelWrap") << "proxyShowConnectionsHandler exception : " << se.what();
+        }
+    }
+
+
     void OutputChannelWrap::writePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& data, const bp::object& meta, bool copyAllData) {
         if (!bp::extract<karathon::ChannelMetaData>(meta).check()) {
             throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type for parameter 'meta'. Needs to be ChannelMetaData");
@@ -492,6 +515,8 @@ void exportPyXmsInputOutputChannel() {
                 .def("update", &karathon::OutputChannelWrap().updatePy)
 
                 .def("signalEndOfStream", &karathon::OutputChannelWrap().signalEndOfStreamPy)
+
+                .def("registerShowConnectionsHandler", &karathon::OutputChannelWrap().registerShowConnectionsHandlerPy, (bp::arg("handler")))
 
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(karabo::xms::OutputChannel)
                 ;
