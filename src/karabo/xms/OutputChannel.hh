@@ -140,6 +140,7 @@ namespace karabo {
             unsigned int m_channelId;
             unsigned int m_chunkId;
 
+            mutable boost::mutex m_showConnectionsHandlerMutex;
             ShowConnectionsHandler m_showConnectionsHandler;
 
         public:
@@ -263,6 +264,8 @@ namespace karabo {
             void triggerIOEvent();
 
             void onInputGone(const karabo::net::Channel::Pointer& channel);
+
+            void onInputGoneImpl(const karabo::net::Channel::Pointer& channel);
 
             void distributeQueue(karabo::util::Hash& channelInfo, std::deque<int>& chunkIds);
 
