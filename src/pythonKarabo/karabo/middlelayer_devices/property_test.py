@@ -1,8 +1,23 @@
+from asyncio import sleep
+
 from karabo.middlelayer import (
-    AccessLevel, AccessMode, Bool, Configurable, Device, Double, Float, Hash,
-    Int32, Int64, Node, Overwrite, UInt32, UInt64, State, String, VectorBool,
-    VectorChar, VectorDouble, VectorFloat, VectorHash, VectorInt32,
+    AccessLevel, AccessMode, background, Bool, Configurable, DaqDataType,
+    Device, Double, Float, Hash, InputChannel, Int32, Int64, Node,
+    OutputChannel, Overwrite, UInt32, UInt64, Unit, Slot, State, String,
+    VectorBool, VectorChar, VectorDouble, VectorFloat, VectorHash, VectorInt32,
     VectorInt64, VectorUInt32, VectorUInt64, VectorString)
+
+
+class DataNode(Configurable):
+    daqDataType = DaqDataType.TRAIN
+
+    counter = UInt64(
+        defaultValue=0,
+        accessMode=AccessMode.READONLY)
+
+
+class ChannelNode(Configurable):
+    data = Node(DataNode)
 
 
 class VectorNode(Configurable):
@@ -108,7 +123,7 @@ class TableRow(Configurable):
 class PropertyTestMDL(Device):
     __version__ = "2.3.0"
 
-    allowedStates = [State.INIT, State.ON]
+    allowedStates = [State.INIT, State.ON, State.ACQUIRING]
 
     state = Overwrite(
         defaultValue=State.INIT,
@@ -222,5 +237,69 @@ class PropertyTestMDL(Device):
                  'bool', True, 'boolReadOnly', True, 'floatProperty', 1.3,
                  'doubleProperty', 22.5)])
 
+    @InputChannel(displayedName="Input", raw=False)
+    async def input(self, data, meta):
+        print(data, "Data received")
+        print(meta, "Meta Received")
+        self.packetReceived = self.packetReceived.value + 1
+
+    @input.endOfStream
+    async def input(self, channel):
+        print("End of Stream handler called by", channel)
+
+    @input.close
+    async def input(self, channel):
+        print("Close handler called by", channel)
+
+    output = OutputChannel(
+        ChannelNode,
+        displayedName="Output")
+
+    frequency = Int32(
+        displayedName="Frequency",
+        unitSymbol=Unit.HERTZ,
+        defaultValue=2)
+
+    packetSend = Int32(
+        displayedName="Packets Send",
+        defaultValue=0,
+        accessMode=AccessMode.READONLY)
+
+    packetReceived = Int32(
+        displayedName="Packets Received",
+        defaultValue=0,
+        accessMode=AccessMode.READONLY)
+
     async def onInitialization(self):
         self.state = State.ON
+        self.packet_number = 0
+        self.acquiring = False
+        background(self._send_data_action())
+
+    @Slot(displayedName="Start", allowedStates=[State.ON])
+    async def start(self):
+        self.state = State.ACQUIRING
+        self.acquiring = True
+
+    @Slot(displayedName="Stop", allowedStates=[State.ACQUIRING])
+    async def stop(self):
+        self.state = State.ON
+        self.acquiring = False
+        self.counter = 0
+
+    @Slot(displayedName="Reset Counters", allowedStates=[State.ON])
+    async def resetCounter(self):
+        self.packet_number = 0
+        self.packetSend = 0
+        self.packetReceived = 0
+
+    async def _send_data_action(self):
+        while True:
+            if self.acquiring:
+                output = self.output.schema.data
+                output.counter = self.packet_number + 1
+                await self.output.writeData()
+                self.packet_number += 1
+                self.packetSend = self.packetSend.value + 1
+
+            await sleep(1 / self.frequency.value)
