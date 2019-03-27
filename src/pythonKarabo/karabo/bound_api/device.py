@@ -1186,7 +1186,7 @@ class PythonDevice(NoFsm):
         self._ss.registerSlot(self.slotLoggerPriority)
         self._ss.registerSlot(self.slotClearLock)
 
-    def updateConnectionTable(self, channelName, connections):
+    def __updateConnectionTable(self, channelName, connections):
         self.set(channelName + '.connections', connections)
 
     def initChannels(self, topLevel=""):
@@ -1208,7 +1208,7 @@ class PythonDevice(NoFsm):
                                        .format(key))
                     else:
                         outputChannel.registerShowConnectionsHandler(
-                                                 self.updateConnectionTable)
+                                                 self.__updateConnectionTable)
                 elif displayType == "InputChannel":
                     # Would best be INFO level, but without broadcasting:
                     self.log.DEBUG("Creating input channel \"{}\""

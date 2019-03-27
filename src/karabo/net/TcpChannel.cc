@@ -1635,6 +1635,7 @@ namespace karabo {
                                     "remoteAddress", "0.0.0.0",
                                     "remotePort", 0);
             try {
+                boost::mutex::scoped_lock lock(m_socketMutex);
                 info.set<std::string>("localAddress", m_socket.local_endpoint().address().to_string());
                 info.set<unsigned short>("localPort", m_socket.local_endpoint().port());
                 if (m_socket.is_open()) {
