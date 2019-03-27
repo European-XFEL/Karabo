@@ -77,53 +77,50 @@ namespace karabo {
 
             STRING_ELEMENT(columns).key("remoteId")
                     .displayedName("Remote ID")
-                    .description("Instance ID of remote device")
-                    .readOnly().initialValue("")
-                    .commit();
-
-            STRING_ELEMENT(columns).key("localAddress")
-                    .displayedName("Local IP")
-                    .description("Local TCP address of active connection")
-                    .readOnly().initialValue("0.0.0.0")
-                    .commit();
-
-            UINT16_ELEMENT(columns).key("localPort")
-                    .displayedName("Local port")
-                    .description("Local TCP port of active connection")
-                    .readOnly().initialValue(0)
-                    .commit();
-
-            STRING_ELEMENT(columns).key("remoteAddress")
-                    .displayedName("Remote IP")
-                    .description("Remote TCP address of active connection")
-                    .readOnly().initialValue("0.0.0.0")
-                    .commit();
-
-            UINT16_ELEMENT(columns).key("remotePort")
-                    .displayedName("Remote port")
-                    .description("Remote TCP port of active connection")
-                    .readOnly().initialValue(0)
-                    .commit();
-
-            STRING_ELEMENT(columns).key("memoryLocation")
-                    .displayedName("MemoryLocation")
-                    .description("Chache Memory class location: can be remote or local")
-                    .options("remote,local")
-                    .readOnly().initialValue("remote")
+                    .description("Id of remote input channel")
+                    .readOnly()
                     .commit();
 
             STRING_ELEMENT(columns).key("dataDistribution")
                     .displayedName("Distribution")
                     .description("Data distribution behavior by output channel: shared or copy")
-                    .options("copy,shared")
-                    .readOnly().initialValue("copy")
+                    .readOnly()
                     .commit();
 
             STRING_ELEMENT(columns).key("onSlowness")
                     .displayedName("On slowness")
                     .description("Data handling policy in case of slowness: drop, wait, queue, throw")
-                    .options("drop,wait,queue,throw")
-                    .readOnly().initialValue("drop")
+                    .readOnly()
+                    .commit();
+
+            STRING_ELEMENT(columns).key("memoryLocation")
+                    .displayedName("MemoryLocation")
+                    .description("Chache Memory class location: can be remote or local")
+                    .readOnly()
+                    .commit();
+
+            STRING_ELEMENT(columns).key("remoteAddress")
+                    .displayedName("Remote IP")
+                    .description("Remote TCP address of active connection")
+                    .readOnly()
+                    .commit();
+
+            UINT16_ELEMENT(columns).key("remotePort")
+                    .displayedName("Remote port")
+                    .description("Remote TCP port of active connection")
+                    .readOnly()
+                    .commit();
+
+            STRING_ELEMENT(columns).key("localAddress")
+                    .displayedName("Local IP")
+                    .description("Local TCP address of active connection")
+                    .readOnly()
+                    .commit();
+
+            UINT16_ELEMENT(columns).key("localPort")
+                    .displayedName("Local port")
+                    .description("Local TCP port of active connection")
+                    .readOnly()
                     .commit();
 
             TABLE_ELEMENT(expected).key("connections")
@@ -314,7 +311,6 @@ namespace karabo {
 
             // Unregister channel
             onInputGone(channel);
-            updateConnectionTable();
         }
 
 
@@ -388,7 +384,6 @@ namespace karabo {
                 channel->readAsyncHash(bind_weak(&karabo::xms::OutputChannel::onTcpChannelRead, this, _1, channel, _2));
             } else {
                 onInputGone(channel);
-                updateConnectionTable();
             }
         }
 
@@ -400,6 +395,7 @@ namespace karabo {
                 for (size_t i = 0; i < m_registeredSharedInputs.size(); ++i) {
                     Hash& channelInfo = m_registeredSharedInputs[i];
                     Channel::Pointer channel = channelInfo.get<boost::weak_ptr<Channel> >("tcpChannel").lock();
+                    if (!channel) continue;
                     TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
                     // Fill "localAddress", "localPort", "remoteAddress" and "remotePort"
                     Hash row = tcpChannel->getChannelInfo();
@@ -426,6 +422,7 @@ namespace karabo {
                     connections.push_back(row);
                 }
             }
+            boost::mutex::scoped_lock lock(m_showConnectionsHandlerMutex);
             m_showConnectionsHandler(connections);
         }
 
@@ -478,8 +475,13 @@ namespace karabo {
         }
 
 
-
         void OutputChannel::onInputGone(const karabo::net::Channel::Pointer& channel) {
+            onInputGoneImpl(channel);
+            updateConnectionTable();
+        }
+
+
+        void OutputChannel::onInputGoneImpl(const karabo::net::Channel::Pointer& channel) {
             using namespace karabo::net;
             KARABO_LOG_FRAMEWORK_DEBUG << "*** OutputChannel::onInputGone ***";
 
@@ -763,7 +765,12 @@ namespace karabo {
 
 
         void OutputChannel::registerShowConnectionsHandler(const ShowConnectionsHandler& handler) {
-            m_showConnectionsHandler = handler;
+            boost::mutex::scoped_lock lock(m_showConnectionsHandlerMutex);
+            if (!handler) {
+                m_showConnectionsHandler = [](const std::vector<karabo::util::Hash>&){};
+            } else {
+                m_showConnectionsHandler = handler;
+            }
         }
 
 
