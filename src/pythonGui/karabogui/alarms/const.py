@@ -77,6 +77,12 @@ ALARM_VARIANCE_HIGH = 'alarmVarianceHigh'
 INTERLOCK = 'interlock'
 ALARM_NONE = 'none'
 
+# Filters for the alarm panel
+ALARM_WARNING_TYPES = (WARN_GLOBAL, WARN_LOW, WARN_HIGH, WARN_VARIANCE_LOW,
+                       WARN_VARIANCE_HIGH, ALARM_GLOBAL, ALARM_LOW,
+                       ALARM_HIGH, ALARM_VARIANCE_LOW, ALARM_VARIANCE_HIGH)
+INTERLOCK_TYPES = (INTERLOCK)
+
 # --------------------------------------------------------------------------
 # Mapping alarm types to colors
 
