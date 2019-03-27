@@ -94,7 +94,12 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         } while (--trials >= 0);
         CPPUNIT_ASSERT(connected);
 
-        CPPUNIT_ASSERT_EQUAL(1uL, table.size());
+        CPPUNIT_ASSERT_EQUAL(1UL, table.size());
+
+        CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("remoteId"), input->getInstanceId());
+        CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("dataDistribution"), std::string("copy"));
+        CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("onSlowness"), std::string("wait"));
+        CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("memoryLocation"), std::string("local"));
 
         // Write data again (twice in one go...) - now input is connected.
         output->write(Hash("key", 43));
