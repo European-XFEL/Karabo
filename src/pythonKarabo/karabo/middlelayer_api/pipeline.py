@@ -630,13 +630,12 @@ class NetworkOutput(Configurable):
             assert message["reason"] == "hello"
 
             # Start parsing the hello message!
-            channel_name = message['instanceId']
+            channel_name = message["instanceId"]
             distribution = message["dataDistribution"]
             slowness = message["onSlowness"]
 
-            local_host, local_port = writer.get_extra_info('sockname')
-            remote_host, remote_port = writer.get_extra_info('peername')
-
+            local_host, local_port = writer.get_extra_info("sockname")
+            remote_host, remote_port = writer.get_extra_info("peername")
             # Set the connection table entry
             entry = (channel_name, distribution, slowness,
                      remote_host, remote_port, local_host, local_port)
@@ -681,6 +680,7 @@ class NetworkOutput(Configurable):
                 if (row['remoteAddress'] == remote_host
                         and row['remotePort'] == remote_port):
                     del self.connections[index]
+            yield from sleep(0)
             channel.close()
 
     def writeChunkNoWait(self, chunk):
