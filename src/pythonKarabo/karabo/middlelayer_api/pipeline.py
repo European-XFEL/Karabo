@@ -680,7 +680,6 @@ class NetworkOutput(Configurable):
                 if (row['remoteAddress'] == remote_host
                         and row['remotePort'] == remote_port):
                     del self.connections[index]
-            yield from sleep(0)
             channel.close()
 
     def writeChunkNoWait(self, chunk):
