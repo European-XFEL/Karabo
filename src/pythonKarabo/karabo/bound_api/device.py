@@ -1205,10 +1205,10 @@ class PythonDevice(NoFsm):
                         self.log.ERROR("Failed to create output channel \"{}\""
                                        .format(key))
                     else:
-                        def updateConnections(channelName, connections):
-                            self.set(channelName + ".connections", connections)
-                        cb = partial(updateConnections, key)
-                        outputChannel.registerShowConnectionsHandler(cb)
+                        outputChannel.registerShowConnectionsHandler(
+                            partial(lambda x, y :
+                                self.set(x + ".connections", y), key)
+                        )
 
                 elif displayType == "InputChannel":
                     # Would best be INFO level, but without broadcasting:
