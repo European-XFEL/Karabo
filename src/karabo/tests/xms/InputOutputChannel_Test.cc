@@ -51,7 +51,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel", Hash());
     output->setInstanceIdAndName("outputChannel", "output");
     std::vector<karabo::util::Hash> table;
-    output->registerShowConnectionsHandler([this, &table](const std::vector<karabo::util::Hash>& connections) {
+    output->registerShowConnectionsHandler([&table](const std::vector<karabo::util::Hash>& connections) {
         table = connections;
     });
 
