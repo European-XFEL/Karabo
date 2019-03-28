@@ -83,7 +83,7 @@ namespace karabo {
 
             STRING_ELEMENT(columns).key("dataDistribution")
                     .displayedName("Distribution")
-                    .description("Data distribution behavior by output channel: shared or copy")
+                    .description("Data distribution behavior by input channel: shared or copy")
                     .readOnly()
                     .commit();
 
