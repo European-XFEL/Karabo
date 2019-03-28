@@ -89,7 +89,7 @@ namespace karabo {
 
             STRING_ELEMENT(columns).key("onSlowness")
                     .displayedName("On slowness")
-                    .description("Data handling policy in case of slowness: drop, wait, queue, throw")
+                    .description("Data handling policy in case of slowness if data Distribution is copy: drop, wait, queue, throw")
                     .readOnly()
                     .commit();
 

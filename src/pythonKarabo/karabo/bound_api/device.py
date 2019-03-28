@@ -9,6 +9,7 @@ import socket
 import re
 import signal
 import traceback
+from functools import partial
 
 from karathon import (
     ALARM_ELEMENT, BOOL_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
@@ -1186,9 +1187,6 @@ class PythonDevice(NoFsm):
         self._ss.registerSlot(self.slotLoggerPriority)
         self._ss.registerSlot(self.slotClearLock)
 
-    def __updateConnectionTable(self, channelName, connections):
-        self.set(channelName + '.connections', connections)
-
     def initChannels(self, topLevel=""):
         # Keys under topLevel, without leading "topLevel.":
         subKeys = self.fullSchema.getKeys(topLevel)
@@ -1207,8 +1205,11 @@ class PythonDevice(NoFsm):
                         self.log.ERROR("Failed to create output channel \"{}\""
                                        .format(key))
                     else:
-                        outputChannel.registerShowConnectionsHandler(
-                                                 self.__updateConnectionTable)
+                        def updateConnections(channelName, connections):
+                            self.set(channelName + ".connections", connections)
+                        cb = partial(updateConnections, key)
+                        outputChannel.registerShowConnectionsHandler(cb)
+
                 elif displayType == "InputChannel":
                     # Would best be INFO level, but without broadcasting:
                     self.log.DEBUG("Creating input channel \"{}\""

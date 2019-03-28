@@ -194,17 +194,12 @@ namespace karathon {
 
 
     void OutputChannelWrap::registerShowConnectionsHandlerPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& handler) {
-        const std::string& channelName = self->getChannelName();
-        self->registerShowConnectionsHandler(boost::bind(OutputChannelWrap::proxyShowConnectionsHandler, handler, channelName, _1));
+        self->registerShowConnectionsHandler(boost::bind(OutputChannelWrap::proxyShowConnectionsHandler, handler, _1));
     }
 
 
-    void OutputChannelWrap::proxyShowConnectionsHandler(const bp::object& handler, const std::string& channelName, const std::vector<karabo::util::Hash>& v) {
-        // Acquiring the GIL can be nested!
-        ScopedGILAcquire gil;
-        bp::object name  = bp::object(channelName);
-        bp::object table = Wrapper::fromStdVectorToPyHashList(v);
-        Wrapper::proxyHandler(handler, "show connections", name, table);
+    void OutputChannelWrap::proxyShowConnectionsHandler(const bp::object& handler, const std::vector<karabo::util::Hash>& v) {
+        Wrapper::proxyHandler(handler, "show connections", v);
     }
 
 
