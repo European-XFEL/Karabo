@@ -237,7 +237,7 @@ namespace karabo {
 
             ImageDataElement& setDimensions(const std::string& dimensions) {
                 std::vector<unsigned long long> tmp = karabo::util::fromString<unsigned long long, std::vector>(dimensions);
-                return ParentType::setDefaultValue("dims", tmp);
+                return ParentType::setDefaultValue("pixels.shape", tmp).setDefaultValue("dims", tmp);
             }
 
             ImageDataElement& setEncoding(const EncodingType& encoding) {
