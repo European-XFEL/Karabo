@@ -200,19 +200,11 @@ namespace karathon {
 
 
     void OutputChannelWrap::proxyShowConnectionsHandler(const bp::object& handler, const std::string& channelName, const std::vector<karabo::util::Hash>& v) {
+        // Acquiring the GIL can be nested!
         ScopedGILAcquire gil;
         bp::object name  = bp::object(channelName);
         bp::object table = Wrapper::fromStdVectorToPyHashList(v);
-        try {
-            if (handler) handler(name, table);
-        } catch (const bp::error_already_set& e) {
-            if (PyErr_Occurred()) PyErr_Print();
-            const std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
-            const std::string whichStr("proxyShowConnectionsHandler");
-            throw KARABO_PYTHON_EXCEPTION("Python " + whichStr + " handler'" + funcName + "' has thrown an exception.");
-        } catch (const std::exception& se) {
-            KARABO_LOG_FRAMEWORK_ERROR_C("karathon.OutputChannelWrap") << "proxyShowConnectionsHandler exception : " << se.what();
-        }
+        Wrapper::proxyHandler(handler, "show connections", name, table);
     }
 
 
