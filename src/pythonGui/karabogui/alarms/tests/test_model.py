@@ -1,11 +1,12 @@
 from PyQt4.QtCore import QModelIndex, Qt
-
 from karabogui.testing import GuiTestCase
+
+from ..const import (
+    ADD_UPDATE_TYPE, AlarmEntry, ALARM_DATA, ALARM_HIGH,
+    ALARM_WARNING_TYPES, INIT_UPDATE_TYPE, INTERLOCK, INTERLOCK_TYPES,
+    REMOVE_UPDATE_TYPE)
+from ..filter_model import AlarmFilterModel
 from ..model import AlarmModel
-from ..const import (ACKNOWLEDGE, ADD_UPDATE_TYPE, AlarmEntry,
-                     ALARM_DATA, ALARM_HIGH,
-                     ALARM_TYPE, DEVICE_ID, INIT_UPDATE_TYPE,
-                     PROPERTY, REMOVE_UPDATE_TYPE)
 
 
 def _data():
@@ -22,6 +23,20 @@ def _data():
             acknowledge=(True, True),
             showDevice=None)
         ret.append(data)
+
+    # we add an interlock
+    data = AlarmEntry(
+        id=200,
+        timeOfFirstOccurrence='2017-04-20T09:32:22 UTC',
+        timeOfOccurrence='2017-04-20T09:32:22 UTC',
+        deviceId='dev{}'.format(i),
+        property='rent',
+        type=INTERLOCK,
+        description='rent is too damn high',
+        acknowledge=(True, True),
+        showDevice=None)
+    ret.append(data)
+
     return ret
 
 
@@ -32,94 +47,96 @@ def _type(typ):
 class TestModel(GuiTestCase):
     def setUp(self):
         super(TestModel, self).setUp()
-        self.model = AlarmModel(instanceId='Bob')
-        self.model.initAlarms('Bob', [], _data())
+        self.alarm_model = AlarmModel(instanceId='Bob')
+        self.alarm_model.initAlarms('Bob', [], _data())
+        self.model = AlarmFilterModel(self.alarm_model)
 
     def tearDown(self):
         pass
 
     def test_headers(self):
         hdrs = [v for k, v in ALARM_DATA.items()]
-        assert self.model.headers == hdrs
+        assert self.alarm_model.headers == hdrs
 
     def test_initAlarms(self):
         mdl = AlarmModel(instanceId='Vinny')
         mdl.initAlarms('jenny', [], _data())
-        assert mdl.allEntries == []
+        self.assertEqual(mdl.all_entries, [])
 
-    def test_columnCount(self):
-        assert self.model.columnCount() == 9
+    def test_columnCount_filter_model(self):
+        self.assertEqual(self.model.columnCount(), 9)
 
-    def test_rowCount(self):
-        assert self.model.rowCount() == 10
+    def test_rowCount_filter_model(self):
+        self.assertEqual(self.model.rowCount(), 10)
+
+    def test_columnCount_alarm(self):
+        self.assertEqual(self.alarm_model.columnCount(), 9)
+
+    def test_rowCount_alarm(self):
+        self.assertEqual(self.alarm_model.rowCount(), 11)
 
     def test_headerData(self):
-        header = self.model.headerData(
+        header = self.alarm_model.headerData(
             section=0,
             role=Qt.DisplayRole,
             orientation=Qt.Horizontal)
-        assert header == 'ID'
+        self.assertEqual(header, 'ID')
 
-    def test_updateAlarms(self):
+    def test_update_alarms(self):
         mdl = AlarmModel(instanceId='Vinny')
         mdl.initAlarms('Vinny', _type(INIT_UPDATE_TYPE), _data())
-        assert mdl.rowCount() == 10
+        self.assertEqual(mdl.rowCount(), 11)
 
-    def test_updateAlarms_wrongdev(self):
+    def test_update_alarms_wrongdev(self):
         mdl = AlarmModel(instanceId='Vinny')
         ret = mdl.initAlarms('jenny', _type(INIT_UPDATE_TYPE), _data())
-        assert ret is None
+        self.assertIsNone(ret)
 
-    def test_updateAlarms_remove(self):
-        self.model.updateAlarms('Bob',  _type(REMOVE_UPDATE_TYPE), _data())
-        assert self.model.rowCount() == 0
+    def test_update_alarms_remove(self):
+        self.assertEqual(self.alarm_model.rowCount(), 11)
+        self.alarm_model.updateAlarms('Bob', _type(REMOVE_UPDATE_TYPE),
+                                      _data())
+        self.assertEqual(self.alarm_model.rowCount(), 1)
 
-    def test_updateAlarms_realarm(self):
-        self.model.updateAlarms('Bob',  _type(REMOVE_UPDATE_TYPE), _data())
-        assert self.model.rowCount() == 0
-        self.model.updateAlarms('Bob',  _type(ADD_UPDATE_TYPE), _data())
+    def test_update_alarms_realarm(self):
+        self.assertEqual(self.alarm_model.rowCount(), 11)
+        self.alarm_model.updateAlarms('Bob', _type(REMOVE_UPDATE_TYPE),
+                                      _data())
+        self.assertEqual(self.alarm_model.rowCount(), 1)
+        self.alarm_model.updateAlarms('Bob', _type(ADD_UPDATE_TYPE), _data())
+        self.assertEqual(self.alarm_model.rowCount(), 11)
 
-    def test_updateFilter_device_id(self):
-        self.model.updateFilter(filterType=DEVICE_ID, text='dev0')
-        assert self.model.rowCount() == 1
+    # ------------------------------------------------------------
+    # Filter test
 
-    def test_updateFilter_wrong_property(self):
-        self.model.updateFilter(filterType=PROPERTY, text='prettyness')
-        assert self.model.rowCount() == 0
+    def test_updateFilter_alarms(self):
+        self.model.updateFilter(filter_type=ALARM_WARNING_TYPES)
+        self.assertEqual(self.model.rowCount(), 10)
 
-    def test_updateFilter_property(self):
-        self.model.updateFilter(filterType=PROPERTY, text='rent')
-        assert self.model.rowCount() == 10
+    def test_updateFilter_interlocks(self):
+        self.model.updateFilter(filter_type=INTERLOCK_TYPES)
+        self.assertEqual(self.model.rowCount(), 1)
 
-    def test_updateFilter_wrongtype(self):
-        self.model.updateFilter(filterType=ALARM_TYPE, text='warnLow')
-        assert self.model.rowCount() == 0
-
-    def test_updateFilter_righttype(self):
-        self.model.updateFilter(filterType=ALARM_TYPE, text='alarmHigh')
-        assert self.model.rowCount() == 10
-
-    def test_updateFilter_ack(self):
-        self.model.updateFilter(filterType=ACKNOWLEDGE, text='acknowledge')
-        assert self.model.rowCount() == 10
+    # ------------------------------------------------------------
+    # Basic alarm model stress test
 
     def test_data_bad_index(self):
-        assert self.model.data(QModelIndex(), Qt.DisplayRole) is None
+        self.assertIsNone(self.alarm_model.data(QModelIndex(), Qt.DisplayRole))
 
     def test_data_id(self):
-        idx = self.model.createIndex(0, 0)
-        cell = self.model.data(idx, Qt.DisplayRole)
-        assert cell == 0
-        idx = self.model.createIndex(1, 0)
-        cell = self.model.data(idx, Qt.DisplayRole)
-        assert cell == 1
+        idx = self.alarm_model.createIndex(0, 0)
+        cell = self.alarm_model.data(idx, Qt.DisplayRole)
+        self.assertEqual(cell, 0)
+        idx = self.alarm_model.createIndex(1, 0)
+        cell = self.alarm_model.data(idx, Qt.DisplayRole)
+        self.assertEqual(cell, 1)
 
     def test_data_alarmtype(self):
-        idx = self.model.createIndex(0, 5)
-        cell = self.model.data(idx, Qt.DisplayRole)
-        assert cell == 'alarmHigh'
+        idx = self.alarm_model.createIndex(0, 5)
+        cell = self.alarm_model.data(idx, Qt.DisplayRole)
+        self.assertEqual(cell, 'alarmHigh')
 
     def test_data_badrole(self):
-        idx = self.model.createIndex(0, 0)
-        cell = self.model.data(idx, Qt.CheckStateRole)
-        assert cell is None
+        idx = self.alarm_model.createIndex(0, 0)
+        cell = self.alarm_model.data(idx, Qt.CheckStateRole)
+        self.assertIsNone(cell)
