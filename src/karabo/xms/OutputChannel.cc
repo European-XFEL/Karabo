@@ -95,7 +95,7 @@ namespace karabo {
 
             STRING_ELEMENT(columns).key("memoryLocation")
                     .displayedName("MemoryLocation")
-                    .description("Chache Memory class location: can be remote or local")
+                    .description("Cache Memory class location: can be remote or local")
                     .readOnly()
                     .commit();
 
@@ -395,7 +395,15 @@ namespace karabo {
                 for (size_t i = 0; i < m_registeredSharedInputs.size(); ++i) {
                     Hash& channelInfo = m_registeredSharedInputs[i];
                     Channel::Pointer channel = channelInfo.get<boost::weak_ptr<Channel> >("tcpChannel").lock();
-                    if (!channel) continue;
+                    if (!channel) {
+                        Hash row("remoteAddress","?","remotePort",0,"localAddress","?","localPort",0);
+                        row.set("remoteId", "unknown");
+                        row.set("memoryLocation", "?");
+                        row.set("dataDistribution","shared");
+                        row.set("onSlowness", "?");
+                        connections.push_back(std::move(row));
+                        continue;
+                    }
                     TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
                     // Fill "localAddress", "localPort", "remoteAddress" and "remotePort"
                     Hash row = tcpChannel->getChannelInfo();
@@ -403,7 +411,7 @@ namespace karabo {
                     row.set("memoryLocation", channelInfo.get<std::string>("memoryLocation"));
                     row.set("dataDistribution","shared");
                     row.set("onSlowness", channelInfo.get<std::string>("onSlowness"));
-                    connections.push_back(row);
+                    connections.push_back(std::move(row));
                 }
             }
             {
@@ -411,7 +419,15 @@ namespace karabo {
                 for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
                     Hash &channelInfo = m_registeredCopyInputs[i];
                     Channel::Pointer channel = channelInfo.get<boost::weak_ptr<Channel> >("tcpChannel").lock();
-                    if (!channel) continue;
+                    if (!channel) {
+                        Hash row("remoteAddress","?","remotePort",0,"localAddress","?","localPort",0);
+                        row.set("remoteId", "unknown");
+                        row.set("memoryLocation", "?");
+                        row.set("dataDistribution","copy");
+                        row.set("onSlowness", "?");
+                        connections.push_back(std::move(row));
+                        continue;
+                    }
                     TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
                     // Fill "localAddress", "localPort", "remoteAddress" and "remotePort"
                     Hash row = tcpChannel->getChannelInfo();
@@ -419,7 +435,7 @@ namespace karabo {
                     row.set("memoryLocation", channelInfo.get<std::string>("memoryLocation"));
                     row.set("dataDistribution","copy");
                     row.set("onSlowness", channelInfo.get<std::string>("onSlowness"));
-                    connections.push_back(row);
+                    connections.push_back(std::move(row));
                 }
             }
             boost::mutex::scoped_lock lock(m_showConnectionsHandlerMutex);
