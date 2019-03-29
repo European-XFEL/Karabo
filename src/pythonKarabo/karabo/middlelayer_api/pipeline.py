@@ -526,8 +526,12 @@ class ConnectionTable(Configurable):
 
     onSlowness = String(
         displayedName="On slowness",
-        description="Data handling policy in case of slowness: drop, wait, "
-                    "queue, throw")
+        description="Data handling policy in case of slowness if data "
+                    "distribution is copy: drop, wait, queue, throw")
+
+    memoryLocation = String(
+        displayedName="MemoryLocation",
+        description="Cache Memory class location: can be remote or local")
 
     remoteAddress = String(
         displayedName="Remote IP",
@@ -637,7 +641,7 @@ class NetworkOutput(Configurable):
             local_host, local_port = writer.get_extra_info("sockname")
             remote_host, remote_port = writer.get_extra_info("peername")
             # Set the connection table entry
-            entry = (channel_name, distribution, slowness,
+            entry = (channel_name, distribution, slowness, "remote",
                      remote_host, remote_port, local_host, local_port)
             self.connections.extend(entry)
 
