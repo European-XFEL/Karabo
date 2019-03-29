@@ -226,11 +226,6 @@ namespace karabo {
         }
 
 
-        const std::string& OutputChannel::getChannelName() const {
-            return m_channelName;
-        }
-
-
         bool OutputChannel::hasRegisteredCopyInputChannel(const std::string& instanceId) const {
             boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
             for (const InputChannelInfo& channelInfo : m_registeredCopyInputs) {
@@ -397,10 +392,10 @@ namespace karabo {
                     Channel::Pointer channel = channelInfo.get<boost::weak_ptr<Channel> >("tcpChannel").lock();
                     if (!channel) {
                         Hash row("remoteAddress","?","remotePort",0,"localAddress","?","localPort",0);
-                        row.set("remoteId", "unknown");
-                        row.set("memoryLocation", "?");
+                        row.set("remoteId", channelInfo.get<std::string>("instanceId"));
+                        row.set("memoryLocation", channelInfo.get<std::string>("memoryLocation"));
                         row.set("dataDistribution","shared");
-                        row.set("onSlowness", "?");
+                        row.set("onSlowness", channelInfo.get<std::string>("onSlowness"));
                         connections.push_back(std::move(row));
                         continue;
                     }
@@ -421,10 +416,10 @@ namespace karabo {
                     Channel::Pointer channel = channelInfo.get<boost::weak_ptr<Channel> >("tcpChannel").lock();
                     if (!channel) {
                         Hash row("remoteAddress","?","remotePort",0,"localAddress","?","localPort",0);
-                        row.set("remoteId", "unknown");
-                        row.set("memoryLocation", "?");
+                        row.set("remoteId", channelInfo.get<std::string>("instanceId"));
+                        row.set("memoryLocation", channelInfo.get<std::string>("memoryLocation"));
                         row.set("dataDistribution","copy");
-                        row.set("onSlowness", "?");
+                        row.set("onSlowness", channelInfo.get<std::string>("onSlowness"));
                         connections.push_back(std::move(row));
                         continue;
                     }
