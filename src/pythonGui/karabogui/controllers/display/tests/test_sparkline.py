@@ -29,6 +29,8 @@ class TestDisplaySparkline(GuiTestCase):
         controller = DisplaySparkline(proxy=prop, model=model)
         controller.create(None)
         assert controller.widget is not None
+        # Make sure there is a value with timestamp on it
+        set_proxy_value(prop, 'prop', 12.0)
 
         with patch.object(controller.line_edit, 'setVisible'):
             sym = 'karabogui.controllers.display.sparkline.QInputDialog'
