@@ -1630,9 +1630,9 @@ namespace karabo {
 
 
         karabo::util::Hash TcpChannel::getChannelInfo() {
-            karabo::util::Hash info("localAddress", "0.0.0.0",
+            karabo::util::Hash info("localAddress", "?",
                                     "localPort", 0,
-                                    "remoteAddress", "0.0.0.0",
+                                    "remoteAddress", "?",
                                     "remotePort", 0);
             try {
                 boost::mutex::scoped_lock lock(m_socketMutex);
