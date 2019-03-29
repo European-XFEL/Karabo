@@ -264,7 +264,7 @@ class NetworkInput(Configurable):
                            "onSlowness", self.onSlowness)
                 channel.writeHash(cmd)
                 cmd = Hash("reason", "update",
-                           "instanceId", self.parent.deviceId)
+                           "instanceId", instance_id)
                 while (yield from self.readChunk(channel, cls)):
                     yield from sleep(self.delayOnInput)
                     channel.writeHash(cmd)
