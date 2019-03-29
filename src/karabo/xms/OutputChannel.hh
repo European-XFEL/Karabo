@@ -168,8 +168,6 @@ namespace karabo {
 
             const std::string& getInstanceId() const;
 
-            const std::string& getChannelName() const;
-
             /**
              * Check whether an InputChannel with given id is registered to receive all data
              *
