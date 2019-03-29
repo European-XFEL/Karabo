@@ -133,11 +133,13 @@ runPythonIntegrationTests() {
         # safeRunCommand and adding option --force.
         safeRunCommand $scriptDir/run_python_tests.sh \
             --runIntegrationTests \
+            --runLongTests \
             --collectCoverage \
             --rootDir $scriptDir
     else
         safeRunCommand $scriptDir/run_python_tests.sh \
             --runIntegrationTests \
+            --runLongTests \
             --rootDir $scriptDir
     fi
 }
