@@ -295,9 +295,11 @@ namespace karabo {
                 return result;
             }
             
-            karabo::util::Hash getChannelInfo();
-
+            static karabo::util::Hash getChannelInfo(boost::weak_ptr<karabo::net::Channel> ptr);
+            
         private:
+
+            karabo::util::Hash _getChannelInfo();
 
             void onBytesAvailable(const ErrorCode& error, const size_t length, const ReadRawHandler& handler);
 
