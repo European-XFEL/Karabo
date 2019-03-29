@@ -82,13 +82,13 @@ namespace karabo {
             VECTOR_UINT64_ELEMENT(s).key("roiOffsets")
                     .displayedName("ROI Offsets")
                     .description("The offset of the Region-of-Interest (ROI); "
-                    "it will contain zeros if the image has no ROI defined.")
+                                 "it will contain zeros if the image has no ROI defined.")
                     .readOnly()
                     .commit();
             VECTOR_UINT64_ELEMENT(s).key("binning")
                     .displayedName("Binning")
                     .description("The number of binned adjacent pixels. They "
-                    "are reported out of the camera as a single pixel.")
+                                 "are reported out of the camera as a single pixel.")
                     .readOnly()
                     .commit();
             INT32_ELEMENT(s).key("rotation")
@@ -191,6 +191,22 @@ namespace karabo {
 
 
         void ImageData::setROIOffsets(const karabo::util::Dims& offsets) {
+            // Make sure that ROI is within the image
+            auto imgSize = get<std::vector<unsigned long long> >("dims");
+            auto newOffset = offsets.toVector();
+            
+            if (newOffset.size() != imgSize.size()) {
+                std::string msg = "ImageData ROI must have the same length as the image shape: " + std::to_string(imgSize.size());
+                throw KARABO_PARAMETER_EXCEPTION(msg);
+            }
+
+            for (size_t i=0; i<newOffset.size(); ++i) {
+                if (newOffset[i] > imgSize[i]) {
+                    std::string msg = "ImageData ROI Offsets are outside of the image: " + std::to_string(newOffset[i]);
+                    throw KARABO_PARAMETER_EXCEPTION(msg);
+                }
+            }
+
             set<std::vector<unsigned long long> >("roiOffsets", offsets.toVector());
         }
 
@@ -273,9 +289,14 @@ namespace karabo {
                 set("dims", shape);
                 rank = shape.size();
             } else {
-                if (Encoding::isIndexable(getEncoding())) {
-                    // Make sure dimensions match the size of the data for indexable encodings
-                    get<NDArray>("pixels").setShape(dims); // throws if size does not fit
+                if (has("encoding")) {
+                    if (Encoding::isIndexable(getEncoding())) {
+                        // Make sure dimensions match the size of the data for indexable encodings
+                        get<NDArray>("pixels").setShape(dims); // throws if size does not fit
+                    }
+                } else {
+                    // Set the key, if it does not exist to avoid future exceptions
+                    set<int>("encoding", Encoding::UNDEFINED);
                 }
                 set<std::vector<unsigned long long> >("dims", dims.toVector());
             }
@@ -341,8 +362,47 @@ namespace karabo {
 
         void ImageData::setData(const karabo::util::NDArray& array) {
             set<karabo::util::NDArray >("pixels", array);
+           
+            // We can't set dimensions without setting the encoding
+            // First, make sure that the "encoding" key exists... 
+            // If you don't like the defaults set it yourself manually...
+            std::size_t shapeRank = array.getShape().rank();
+
+            if (!has("encoding")) {
+                if (shapeRank == 3) {
+                    if (array.getShape().x3() == 1) {
+                        set<int>("encoding", Encoding::GRAY);
+                    } else if (array.getShape().x3() == 3) {
+                        set<int>("encoding", Encoding::RGB);
+                    } else if (array.getShape().x3() == 4) {
+                        set<int>("encoding", Encoding::RGBA);
+                    } else {
+                        set<int>("encoding", Encoding::UNDEFINED);
+                    }
+                } else if (shapeRank == 2) {
+                    set<int>("encoding", Encoding::GRAY);
+                } else {
+                    set<int>("encoding", Encoding::UNDEFINED);
+                }
+            }
+
+            // Once the encoding is definitely set, we can set the dimensions
+            setDimensions(array.getShape());
+
+            // Finally we set the bits per pixels
+            defaultBitsPerPixel(get<int>("encoding"), array);
         }
 
+
+        karabo::util::Types::ReferenceType ImageData::getDataType() const {
+            return static_cast<karabo::util::Types::ReferenceType> (get<int>("pixels.type"));
+        }
+
+
+        void ImageData::setDataType(const karabo::util::Types::ReferenceType& type) {
+            set("pixels.type", static_cast<int> (type));
+        }
+        
 
         int ImageData::defaultBitsPerPixel(int encoding, const karabo::util::NDArray& data) {
             const size_t numBytes = karabo::util::Types::to<karabo::util::ToSize>(data.getType());

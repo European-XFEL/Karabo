@@ -70,6 +70,23 @@ namespace karabo {
 
         typedef Rotation::RotationType RotationType;
 
+
+        /**
+         * Helper class to store typical image data from color and monochrome cameras.
+         * Along the raw pixel values it also stores useful metadata (like encoding, bit depth, binning)
+         * and basic transformations (like flip, rotation, ROI).
+         * To make ImageData DAQ compliant, one needs to specify the image size and the datatype. The image size can
+         * be either 2 or 3D if it is a monochrome/color image.
+         *
+         * @code
+         * IMAGEDATA_ELEMENT(data).key("data.image")
+         *     .setDimensions(std::string("480,640,3"))
+         *     .setType(util::Types::UINT16)
+         *     .setEncoding(xms::Encoding::RGB)
+         *     .commit();
+         * @endcode
+         *
+         */
         class ImageData : protected karabo::util::Hash {
 
         public:
@@ -137,6 +154,10 @@ namespace karabo {
              *             * Note that the copy stored inside ImageData will refer to the same memory as the input.
              */
             void setData(const karabo::util::NDArray& array);
+
+            karabo::util::Types::ReferenceType getDataType() const;
+
+            void setDataType(const karabo::util::Types::ReferenceType&);
 
             karabo::util::Dims getROIOffsets() const;
 
@@ -236,8 +257,25 @@ namespace karabo {
             }
 
             ImageDataElement& setDimensions(const std::string& dimensions) {
+                // It is up to the user to explicitly specify the number of channels for RGB cameras.
+                // i.e. for monochrome image it's "480,640" and for color image it must be "480,640,3"
+                // Encoding should be set accordingly (but not necessary)
                 std::vector<unsigned long long> tmp = karabo::util::fromString<unsigned long long, std::vector>(dimensions);
-                return ParentType::setDefaultValue("pixels.shape", tmp).setDefaultValue("dims", tmp);
+
+                // Setting shapes
+                ImageDataElement& ret = ParentType::setDefaultValue("dims", tmp);
+                ret.setDefaultValue("pixels.shape", tmp);
+                // Setting maximum number of dimensions for all vectors for the DAQ
+                ret.setMaxSize("dims", tmp.size());
+                ret.setMaxSize("pixels.shape", tmp.size());
+                ret.setMaxSize("dimTypes", tmp.size());
+                ret.setMaxSize("roiOffsets", tmp.size());
+                ret.setMaxSize("binning", tmp.size());
+                return ret;
+            }
+
+            ImageDataElement& setType(const karabo::util::Types::ReferenceType type) {
+                return ParentType::setDefaultValue("pixels.type", static_cast<int> (type));
             }
 
             ImageDataElement& setEncoding(const EncodingType& encoding) {
