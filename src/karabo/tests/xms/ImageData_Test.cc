@@ -190,4 +190,58 @@ void ImageData_Test::testSetAndGetMethods() {
         CPPUNIT_ASSERT_EQUAL(8, image.getBitsPerPixel());
     }
 
+    // Unit tests for automatic assignments and range checks
+    {
+        ImageData image2;
+        Dims dims(640, 480, 4); // Dont care about dimension order
+        NDArray arr_v2(dims, Types::INT16); // Will be interpreted by default as RGBA
+
+
+        Dims offsets_valid(10, 50, 0);
+        Dims offsets_tobig(100, 500, 0); // Outside of image
+        Dims offsets_tosmall(10, 50); // Outside of image
+
+        // If the encoding was manually set, setData() should not change it
+        image2.setEncoding(EncodingType::BGRA);
+        // Fill the image (this automatically sets a few parameters)
+        image2.setData(arr_v2);
+
+        // Test valid and invalid values for offset
+        CPPUNIT_ASSERT_NO_THROW(image2.setROIOffsets(offsets_valid));
+        CPPUNIT_ASSERT_THROW(image2.setROIOffsets(offsets_tobig), std::exception);
+        CPPUNIT_ASSERT_THROW(image2.setROIOffsets(offsets_tosmall), std::exception);
+
+        CPPUNIT_ASSERT_EQUAL(image2.getEncoding(), static_cast<int> (EncodingType::BGRA));
+        CPPUNIT_ASSERT_EQUAL(image2.getDataType(), Types::INT16);
+        CPPUNIT_ASSERT_EQUAL(image2.getBitsPerPixel(), 64);
+
+        image2.setDataType(Types::UINT16);
+        CPPUNIT_ASSERT_EQUAL(image2.getDataType(), Types::UINT16);
+    }
+}
+
+
+void ImageData_Test::testImageDataElementMaxSize() {
+    // Testing if the shape, maximum size and data type was set correctly in the schema (required for DAQ)
+    Schema sch;
+    IMAGEDATA_ELEMENT(sch).key("ide").setDimensions("480,640,3")
+            .setType(Types::INT16).setEncoding(EncodingType::RGB).commit();
+
+    {
+        // Testing max size
+        CPPUNIT_ASSERT_EQUAL((int) sch.getMaxSize("ide.pixels.shape"), 3);
+        CPPUNIT_ASSERT_EQUAL((int) sch.getMaxSize("ide.dims"), 3);
+        CPPUNIT_ASSERT_EQUAL((int) sch.getMaxSize("ide.dimTypes"), 3);
+        CPPUNIT_ASSERT_EQUAL((int) sch.getMaxSize("ide.roiOffsets"), 3);
+        CPPUNIT_ASSERT_EQUAL((int) sch.getMaxSize("ide.binning"), 3);
+
+        // Testing shapes
+        CPPUNIT_ASSERT(sch.getDefaultValueAs<std::string>("ide.pixels.shape") == "480,640,3");
+        CPPUNIT_ASSERT(sch.getDefaultValueAs<std::string>("ide.dims") == "480,640,3");
+
+        // Testing datatypes
+        CPPUNIT_ASSERT_EQUAL(static_cast<int> (EncodingType::RGB), sch.getDefaultValueAs<int>("ide.encoding"));
+        CPPUNIT_ASSERT_EQUAL(static_cast<int> (Types::INT16), sch.getDefaultValueAs<int>("ide.pixels.type"));
+
+    }
 }
