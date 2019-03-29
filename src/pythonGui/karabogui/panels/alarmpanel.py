@@ -36,10 +36,12 @@ class AlarmPanel(BasePanelWidget):
             self.alarm_model.initAlarms(data.get('instance_id'),
                                         data.get('update_types'),
                                         data.get('alarm_entries'))
+            return True
         elif sender is KaraboEventSender.AlarmServiceUpdate:
             self.alarm_model.updateAlarms(data.get('instance_id'),
                                           data.get('update_types'),
                                           data.get('alarm_entries'))
+            return True
         elif sender is KaraboEventSender.NetworkConnectStatus:
             if not data['status']:
                 # If disconnected to server, unregister the alarm panel from
