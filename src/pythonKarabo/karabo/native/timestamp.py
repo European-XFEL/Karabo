@@ -25,7 +25,7 @@ class Timestamp(object):
     __slots__ = ['time', 'tid']
 
     def __init__(self, date=None):
-        self.tid = 0
+        self.tid = numpy.uint64(0)
         if date is None:
             self.time = int(time.time() * RESOLUTION)
         elif isinstance(date, Timestamp):
