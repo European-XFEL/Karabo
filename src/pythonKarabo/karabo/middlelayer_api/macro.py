@@ -1,5 +1,5 @@
-from asyncio import (async, coroutine, gather, get_event_loop, set_event_loop,
-                     TimeoutError, wait_for)
+from asyncio import (coroutine, ensure_future, gather, get_event_loop,
+                     set_event_loop, TimeoutError, wait_for)
 import atexit
 from contextlib import closing
 from functools import wraps
@@ -64,7 +64,7 @@ class EventThread(threading.Thread):
         def run_device():
             yield from device.startInstance(broadcast=False)
             lock.release()
-        self.loop.call_soon_threadsafe(async, run_device())
+        self.loop.call_soon_threadsafe(ensure_future, run_device())
         lock.acquire()
 
 
@@ -202,7 +202,7 @@ class Macro(Device):
         yield from gather(*(connect(k, v) for k, v in attributes
                           if isinstance(v, RemoteDevice)))
         for h in holders:
-            async(h)
+            ensure_future(h)
         self.state = State.PASSIVE
 
     def __holdDevice(self, d):

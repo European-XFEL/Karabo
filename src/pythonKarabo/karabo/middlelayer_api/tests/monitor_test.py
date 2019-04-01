@@ -1,4 +1,4 @@
-from asyncio import async, coroutine, sleep
+from asyncio import coroutine, ensure_future, sleep
 from contextlib import contextmanager
 import time
 from unittest import main
@@ -16,7 +16,7 @@ class Remote(Device):
     @Slot()
     @coroutine
     def count(self):
-        async(self.do_count())
+        ensure_future(self.do_count())
 
     @coroutine
     def do_count(self):
