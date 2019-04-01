@@ -24,7 +24,7 @@ class ProjectControllerUiData(HasStrictTraits):
     font = Instance(QFont, args=())
     brush = Instance(QBrush, args=())
     checkable = Bool(False)
-    check_state = Int(Qt.Unchecked)
+    check_state = Int(Qt.Checked)
     alarm_type = String
     status = Enum(*DeviceStatus)
 
@@ -117,12 +117,14 @@ class BaseProjectController(ABCHasStrictTraits):
         """ Whenever ``simple_name`` is modified the UI should repaint
         """
         if self._qt_model is not None:
+            self._qt_model.layoutAboutToBeChanged.emit()
             self._qt_model.layoutChanged.emit()
 
     @on_trait_change('ui_data.icon,ui_data.brush,ui_data.check_state,'
                      'ui_data.status,ui_data.alarm_type')
     def _request_repaint(self):
         if self._qt_model is not None:
+            self._qt_model.layoutAboutToBeChanged.emit()
             self._qt_model.layoutChanged.emit()
 
     def _get_display_name(self):
