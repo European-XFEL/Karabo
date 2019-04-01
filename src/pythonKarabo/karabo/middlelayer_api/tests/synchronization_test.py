@@ -1,4 +1,5 @@
-from asyncio import async, CancelledError, coroutine, Future, TimeoutError
+from asyncio import (
+    CancelledError, coroutine, ensure_future, Future, TimeoutError)
 from pint import DimensionalityError
 from unittest import main
 import time
@@ -310,9 +311,9 @@ class Tests(DeviceTest):
     def test_futuredict(self):
         futuredict = FutureDict()
 
-        task1 = async(futuredict["car"])
-        task2 = async(futuredict["car"])
-        task3 = async(futuredict["power"])
+        task1 = ensure_future(futuredict["car"])
+        task2 = ensure_future(futuredict["car"])
+        task3 = ensure_future(futuredict["power"])
         yield  # let the tasks start
         self.assertFalse(task1.done())
         futuredict["car"] = "DeLorean"
