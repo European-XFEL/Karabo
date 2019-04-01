@@ -53,7 +53,7 @@ class BoundDeviceTestCase(TestCase):
     _waitTime = 2  # seconds
     _retries = _timeout//_waitTime
 
-    serverProcesses = None
+    serverProcesses = {}
     dc = None
 
     def start_server(self, api, server_id, class_ids, plugin_dir=''):
@@ -63,8 +63,7 @@ class BoundDeviceTestCase(TestCase):
         class_ids: list of required device classes for this server
         """
 
-        if (self.serverProcesses is not None
-            and server_id in self.serverProcesses):
+        if server_id in self.serverProcesses:
             raise RuntimeError("Server with id {} already started"
                                .format(server_id))
 
@@ -103,8 +102,6 @@ class BoundDeviceTestCase(TestCase):
                 raise RuntimeError("Waiting for plugin to appear timed out")
             nTries += 1
 
-        if not self.serverProcesses:
-            self.serverProcesses = {}
         self.serverProcesses[server_id] = serverProcess
 
     def setUp(self):
@@ -113,7 +110,6 @@ class BoundDeviceTestCase(TestCase):
         self._eventLoopThread.daemon = True
         self._eventLoopThread.start()
 
-        self.serverProcesses = None
         if self.dc is None:
             self.dc = DeviceClient()
 
@@ -121,6 +117,8 @@ class BoundDeviceTestCase(TestCase):
         # Stop the servers
         for serverProcess in self.serverProcesses.values():
             serverProcess.terminate()
+        self.serverProcesses.clear()
+
         # Stop the event loop
         EventLoop.stop()
         self._eventLoopThread.join()
