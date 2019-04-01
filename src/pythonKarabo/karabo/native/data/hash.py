@@ -1576,8 +1576,10 @@ class Hash(OrderedDict):
 
     def _get(self, path, auto=False):
         if SEPARATOR not in path:
+            # We can use the fast path here for methods like ``__contains__``
             return OrderedDict.__getitem__(self, path)
-        return OrderedDict.__getitem__(*self._path(path))
+
+        return OrderedDict.__getitem__(*self._path(path, auto))
 
     def __repr__(self):
         r = ', '.join('{}{!r}: {!r}'.format(k, self[k, ...], self[k])
