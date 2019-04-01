@@ -535,6 +535,7 @@ class Slot(Descriptor):
         def wrapper(device):
             # device is self [configurable]
             return self.method(device)
+
         wrapper.slot = self.slot
         wrapper.descriptor = self
         if iscoroutinefunction(self.method):
@@ -572,6 +573,7 @@ class Slot(Descriptor):
                 _, exc, tb = sys.exc_info()
                 yield from device._onException(self, exc, tb)
                 device._ss.replyException(message, e)
+
         return ensure_future(wrapper())
 
     def _initialize(self, instance, value=None):
@@ -1190,6 +1192,7 @@ class VectorString(Vector):
             if not isinstance(s, str):
                 raise TypeError
             return s
+
         self.check(other)
         return [check(s) for s in other]
 
@@ -1518,9 +1521,13 @@ class HashElement(object):
             def _equal(d0, d1):
                 ret = (d0 == d1)
                 return all(ret) if isinstance(ret, Iterable) else ret
+
             return (_equal(self.data, other.data) and
                     _equal(self.attrs, other.attrs))
         return super().__eq__(other)
+
+
+SEPARATOR = "."
 
 
 class Hash(OrderedDict):
@@ -1548,8 +1555,7 @@ class Hash(OrderedDict):
             if isinstance(args[0], Hash):
                 OrderedDict.__init__(self)
                 for k, v, a in args[0].iterall():
-                    self[k] = v
-                    self[k, ...] = dict(a)
+                    OrderedDict.__setitem__(self, k, HashElement(v, a))
             else:
                 OrderedDict.__init__(self, args[0])
         else:
@@ -1558,18 +1564,20 @@ class Hash(OrderedDict):
                 self[k] = v
 
     def _path(self, path, auto=False):
-        path = path.split(".")
+        path = path.split(SEPARATOR)
         s = self
         for p in path[:-1]:
             if auto and p not in s:
                 OrderedDict.__setitem__(s, p, HashElement(Hash(), {}))
-            s = s[p]
+            s = OrderedDict.__getitem__(s, p).data
         if not isinstance(s, Hash):
             raise KeyError(path)
         return s, path[-1]
 
     def _get(self, path, auto=False):
-        return OrderedDict.__getitem__(*self._path(path, auto))
+        if SEPARATOR not in path:
+            return OrderedDict.__getitem__(self, path)
+        return OrderedDict.__getitem__(*self._path(path))
 
     def __repr__(self):
         r = ', '.join('{}{!r}: {!r}'.format(k, self[k, ...], self[k])
@@ -1591,12 +1599,21 @@ class Hash(OrderedDict):
             else:
                 self._get(key).attrs[attr] = value
         else:
-            s, p = self._path(str(item), True)
-            if p in s:
-                attrs = s[p, ...]
+            item = str(item)
+            if SEPARATOR not in item:
+                if item not in self:
+                    OrderedDict.__setitem__(self, item, HashElement(value, {}))
+                else:
+                    attrs = OrderedDict.__getitem__(self, item).attrs
+                    OrderedDict.__setitem__(self, item,
+                                            HashElement(value, attrs))
             else:
-                attrs = {}
-            OrderedDict.__setitem__(s, p, HashElement(value, attrs))
+                s, p = self._path(item, True)
+                if p in s:
+                    attrs = OrderedDict.__getitem__(s, p).attrs
+                else:
+                    attrs = {}
+                OrderedDict.__setitem__(s, p, HashElement(value, attrs))
 
     def __getitem__(self, item):
         if isinstance(item, tuple):
@@ -1606,6 +1623,8 @@ class Hash(OrderedDict):
             else:
                 return self._get(key).attrs[attr]
         else:
+            if SEPARATOR not in item:
+                return OrderedDict.__getitem__(self, item).data
             return self._get(item).data
 
     def __delitem__(self, item):
@@ -1638,7 +1657,7 @@ class Hash(OrderedDict):
 
     def items(self):
         for k in self:
-            yield k, self[k]
+            yield k, OrderedDict.__getitem__(self, k).data
 
     def merge(self, other, attribute_policy='merge'):
         """Merge the hash other into this hash.
