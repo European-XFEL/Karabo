@@ -57,7 +57,7 @@ class TestRunConfigurationGroup(BoundDeviceTestCase):
 
         own_dir = str(op.dirname(op.abspath(__file__)))
         class_ids = ['RunConfigurationGroup']
-        self.start_server(SERVER_ID, class_ids, plugin_dir=own_dir)
+        self.start_server("bound", SERVER_ID, class_ids, plugin_dir=own_dir)
 
     def test_rcg_sources(self):
         # Complete setup - do not do it in setup to ensure that even in case of

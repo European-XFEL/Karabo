@@ -228,6 +228,18 @@ runPythonIntegrationTests() {
     echo
 }
 
+runPythonLongTests() {
+    echo
+    echo Running Karabo Python long tests ...
+    echo
+
+    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.pipeline_cross_test"
+
+    echo
+    echo Karabo Python long tests complete
+    echo
+}
+
 generateCodeCoverageReport() {
     # What to omit when generating html coverage reports.
     OMIT="*/site-packages/karabo/*tests*","*/site-packages/karabo/*_test.py"
@@ -298,6 +310,7 @@ clean() {
 
 RUN_UNIT_TEST=false
 RUN_INTEGRATION_TEST=false
+RUN_LONG_TEST=false
 COLLECT_COVERAGE=false
 GENERATE_COVERAGE_REPORT=false
 DISPLAY_HELP=false
@@ -313,6 +326,9 @@ else
                 ;;
             --runIntegrationTests)
                 RUN_INTEGRATION_TEST=true
+                ;;
+            --runLongTests)
+                RUN_LONG_TEST=true
                 ;;
             --collectCoverage)
                 COLLECT_COVERAGE=true
@@ -401,6 +417,10 @@ fi
 
 if $RUN_INTEGRATION_TEST; then
     runPythonIntegrationTests
+fi
+
+if $RUN_LONG_TEST; then
+    runPythonLongTests
 fi
 
 
