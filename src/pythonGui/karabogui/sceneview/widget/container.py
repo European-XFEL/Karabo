@@ -1,9 +1,8 @@
 from PyQt4.QtCore import QRect, Qt
 from PyQt4.QtGui import QHBoxLayout, QLabel, QStackedLayout, QWidget
 
-from karabo.common.api import AlarmCondition, DeviceStatus, State
+from karabo.common.api import DeviceStatus, State
 from karabogui import globals as krb_globals
-from karabogui.const import PROPERTY_ALARM_COLOR_MAP
 from karabogui.indicators import get_device_status_pixmap, STATE_COLORS
 from karabogui.request import send_property_changes
 from karabogui.util import generateObjectName
@@ -35,7 +34,6 @@ class ControllerContainer(QWidget):
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
         self.setToolTip(', '.join(self.model.keys))
 
-        self.update_alarm()
         # Trigger the status change once (might be offline)
         device_proxy = self.widget_controller.proxy.root_proxy
         self._device_status_changed(device_proxy.status)
@@ -56,40 +54,6 @@ class ControllerContainer(QWidget):
             if controller.visualize_additional_property(proxy):
                 proxies_added.append(proxy)
         return len(proxies_added) == len(proxies)
-
-    def update_alarm(self):
-        """Update the color layout for display widgets given the ``alarm_type``
-         """
-        proxy = self.widget_controller.proxy
-        if self.is_editable or proxy.binding is None:
-            return
-
-        widget_alarms = []
-        for p in self.widget_controller.proxies:
-            system_topo_node = p.root_proxy.topology_node
-            if system_topo_node is None:
-                continue
-            alarm_dict = system_topo_node.alarm_info.alarm_dict
-            property_name = p.path
-            for alarm_type, properties in alarm_dict.items():
-                if property_name in properties:
-                    widget_alarms.append(AlarmCondition.fromString(alarm_type))
-
-        alarm_type = None
-        if widget_alarms:
-            widget_alarms.sort()  # AlarmCondition is sortable
-            alarm_type = widget_alarms[-1].asString()
-
-        # hook interested controllers to work with the alarm type
-        self.widget_controller.update_alarms(alarm_type)
-
-        # color background for controllers which can handle it nicely!
-        if alarm_type is not None:
-            color = PROPERTY_ALARM_COLOR_MAP[alarm_type]
-            formatted_sheet = self._style_sheet.format(color)
-            self.setStyleSheet(formatted_sheet)
-        else:
-            self.setStyleSheet('')
 
     def apply_changes(self):
         """Apply user-entered values to the remote device properties
