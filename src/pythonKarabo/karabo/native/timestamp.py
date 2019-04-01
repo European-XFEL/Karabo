@@ -22,10 +22,10 @@ class Timestamp(object):
     """
 
     # Reduce the memory needed for this _very_ common object
-    __slots__ = ['time', 'tid']
+    __slots__ = ['time', '_tid']
 
     def __init__(self, date=None):
-        self.tid = numpy.uint64(0)
+        self._tid = numpy.uint64(0)
         if date is None:
             self.time = int(time.time() * RESOLUTION)
         elif isinstance(date, Timestamp):
@@ -67,10 +67,20 @@ class Timestamp(object):
         """
         return numpy.uint64(self.time // RESOLUTION)
 
+    @property
+    def tid(self):
+        """The train Id associated with this Timestamp
+        """
+        return self._tid
+
+    @tid.setter
+    def tid(self, value):
+        self._tid = numpy.uint64(value)
+
     def toDict(self):
-        return {"frac": numpy.uint64(self.time % RESOLUTION),
-                "sec": numpy.uint64(self.time // RESOLUTION),
-                "tid": numpy.uint64(self.tid)}
+        return {"frac": self.time_frac,
+                "sec": self.time_sec,
+                "tid": self.tid}
 
     def toTimestamp(self):
         """Return the time as seconds since 1970-01-01 00:00 UTC"""
