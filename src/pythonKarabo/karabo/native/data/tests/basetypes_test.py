@@ -427,6 +427,10 @@ class Tests(TestCase):
         self.assertEqual(next(iter(v)), 2 * unit.m)
         self.assertIs(next(iter(v)).timestamp, self.t1)
 
+        self.assertEqual(str(v), '[2 3 4] m')
+        f = QuantityValue([2., 3., 4.], "m", timestamp=self.t1)
+        self.assertEqual(str(f), '[2. 3. 4.] m')
+
     def test_hash_equal(self):
         a = Hash('v', numpy.array([1, 2, 3]))
         b = Hash('v', numpy.array([1, 2, 3]))
