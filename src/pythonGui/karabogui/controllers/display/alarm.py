@@ -30,19 +30,19 @@ class DisplayAlarm(BaseBindingController):
 
     def add_proxy(self, proxy):
         """Add an alarm condition proxy to the widget"""
-        widget_alarms = [AlarmCondition(get_binding_value(p, "none"))
-                         for p in self.proxies if p]
-        widget_alarms.append(AlarmCondition(get_binding_value(proxy, "none")))
-        widget_alarms.sort()
-        alarm_type = widget_alarms[-1].asString()
-        svg = get_alarm_svg(alarm_type)
-        self.widget.load(svg)
+        self._update_alarm_widget(proxy)
         return True
 
-    def value_update(self, proxy):
+    def _update_alarm_widget(self, proxy=None):
         widget_alarms = [AlarmCondition(get_binding_value(p, "none"))
-                         for p in self.proxies if p]
+                         for p in self.proxies]
+        if proxy is not None:
+            widget_alarms.append(
+                AlarmCondition(get_binding_value(proxy, "none")))
         widget_alarms.sort()
         alarm_type = widget_alarms[-1].asString()
         svg = get_alarm_svg(alarm_type)
         self.widget.load(svg)
+
+    def value_update(self, proxy):
+        self._update_alarm_widget()
