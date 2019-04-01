@@ -396,10 +396,12 @@ class TableValue(MutableSequence, KaraboValue):
 
     def pop(self, index=-1):
         """Pops a single TableValue from the table
+
+        NOTE: This method can only be used with a descriptor!
         """
         v = self[index]
         self.value = numpy.delete(self.value, index)
-        self[index] = []
+        self.descriptor.__set__(self._parent, self.value)
         return v
 
     def __len__(self):
