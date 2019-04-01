@@ -13,7 +13,7 @@ from karabo.middlelayer_api.synchronization import sleep
 from karabo.native.data.basetypes import isSet
 from karabo.native.data.enums import Assignment, AccessMode, Unit, MetricPrefix
 from karabo.native.data.hash import (
-    Bool, Hash, VectorString, Schema, String, UInt32)
+    Bool, Hash, VectorHash, VectorString, Schema, String, UInt16, UInt32)
 from karabo.native.data.schema import Configurable, Node
 from karabo.native.data.serializers import decodeBinary, encodeBinary
 from karabo.native.time_mixin import get_timestamp
@@ -144,6 +144,9 @@ class NetworkInput(Configurable):
     """
     displayType = 'InputChannel'
 
+    # Internal name to be set by the input channel
+    _name = None
+
     @VectorString(
         displayedName="Connected Output Channels",
         description="A list of output channels to receive data from, format: "
@@ -252,14 +255,16 @@ class NetworkInput(Configurable):
                 info["hostname"], int(info["port"]))
             channel = Channel(reader, writer, channelName=output)
             with closing(channel):
+                instance_id = "{}:{}".format(self.parent.deviceId,
+                                             self._name)
                 cmd = Hash("reason", "hello",
-                           "instanceId", self.parent.deviceId,
+                           "instanceId", instance_id,
                            "memoryLocation", "remote",
                            "dataDistribution", self.dataDistribution,
                            "onSlowness", self.onSlowness)
                 channel.writeHash(cmd)
                 cmd = Hash("reason", "update",
-                           "instanceId", self.parent.deviceId)
+                           "instanceId", instance_id)
                 while (yield from self.readChunk(channel, cls)):
                     yield from sleep(self.delayOnInput)
                     channel.writeHash(cmd)
@@ -274,7 +279,7 @@ class NetworkInput(Configurable):
             # We still inform when the connection has been closed!
             with (yield from self.handler_lock):
                 yield from shield(get_event_loop().run_coroutine_or_thread(
-                                  self.close_handler, output))
+                    self.close_handler, output))
 
     @coroutine
     def readChunk(self, channel, cls):
@@ -368,6 +373,7 @@ class InputChannel(Node):
         channel.raw = self.raw
         channel.handler = self.handler.__get__(instance, type(instance))
         channel.parent = instance
+        channel._name = self.key
         if self.close_handler is not None:
             channel.close_handler = self.close_handler.__get__(
                 instance, type(instance))
@@ -393,6 +399,7 @@ class InputChannel(Node):
 
 class OutputProxyNode(ProxyNodeBase):
     """Descriptor representing a Proxy for an output channel"""
+
     def __init__(self, key, node, prefix, **kwargs):
         self.longkey = "{}{}.".format(prefix, key)
         sub = ProxyFactory.createNamespace(node, self.longkey)
@@ -514,6 +521,41 @@ class OutputProxy(SubProxyBase):
             self._parent._remote_output_channel.remove(self)
 
 
+class ConnectionTable(Configurable):
+    remoteId = String(
+        displayedName="Remote ID",
+        description="Id of remote input channel")
+
+    dataDistribution = String(
+        displayedName="Distribution",
+        description="Data distribution of the input channel: shared or copy")
+
+    onSlowness = String(
+        displayedName="On slowness",
+        description="Data handling policy in case of slowness if data "
+                    "distribution is copy: drop, wait, queue, throw")
+
+    memoryLocation = String(
+        displayedName="MemoryLocation",
+        description="Cache Memory class location: can be remote or local")
+
+    remoteAddress = String(
+        displayedName="Remote IP",
+        description="Remote TCP address of active connection")
+
+    remotePort = UInt16(
+        displayedName="Remote Port",
+        description="Remote port of active connection")
+
+    localAddress = String(
+        displayedName="Local IP",
+        description="Local TCP address of active connection")
+
+    localPort = UInt16(
+        displayedName="Local Port",
+        description="Local port of active connection")
+
+
 class NetworkOutput(Configurable):
     displayType = 'OutputChannel'
 
@@ -561,6 +603,13 @@ class NetworkOutput(Configurable):
                                               port=port)
         self.hostname = hostname
 
+    connections = VectorHash(
+        rows=ConnectionTable,
+        defaultValue=[],
+        displayedName="Connections",
+        description="Table of active connections",
+        accessMode=AccessMode.READONLY)
+
     def __init__(self, config):
         super().__init__(config)
         self.copy_queues = []
@@ -586,34 +635,44 @@ class NetworkOutput(Configurable):
     @coroutine
     def serve(self, reader, writer):
         channel = Channel(reader, writer, self.channelName)
-
         try:
             message = yield from channel.readHash()
             assert message["reason"] == "hello"
 
-            assert message["dataDistribution"] in {"shared", "copy"}
-            if message["dataDistribution"] == "shared":
+            # Start parsing the hello message!
+            channel_name = message["instanceId"]
+            distribution = message["dataDistribution"]
+            slowness = message["onSlowness"]
+
+            local_host, local_port = writer.get_extra_info("sockname")
+            remote_host, remote_port = writer.get_extra_info("peername")
+            # Set the connection table entry
+            entry = (channel_name, distribution, slowness, "remote",
+                     remote_host, remote_port, local_host, local_port)
+            self.connections.extend(entry)
+
+            if distribution == "shared":
                 self.has_shared = True
                 while True:
                     yield from channel.nextChunk(self.shared_queue.get())
-            elif message["onSlowness"] == "drop":
+            elif slowness == "drop":
                 while True:
                     future = Future()
                     self.copy_futures.append(future)
                     yield from channel.nextChunk(future)
             else:
-                if message["onSlowness"] == "queue":
+                if slowness == "queue":
                     queue = CancelQueue()
                 else:
                     queue = CancelQueue(1)
-                if message["onSlowness"] == "wait":
+                if slowness == "wait":
                     queues = self.wait_queues
                 else:
                     queues = self.copy_queues
                 queues.append(queue)
                 try:
                     while True:
-                        if queue.full() and message["onSlowness"] == "throw":
+                        if queue.full() and slowness == "throw":
                             return
                         yield from channel.nextChunk(queue.get())
                 finally:
@@ -626,6 +685,11 @@ class NetworkOutput(Configurable):
             if e.partial:  # if the input got properly closed, partial is empty
                 raise
         finally:
+            # XXX: Rewrite to channel name!
+            for index, row in enumerate(self.connections.value):
+                if (row['remoteAddress'] == remote_host
+                        and row['remotePort'] == remote_port):
+                    del self.connections[index]
             channel.close()
 
     def writeChunkNoWait(self, chunk):
@@ -693,8 +757,12 @@ class NetworkOutput(Configurable):
     def setChildValue(self, key, value, descriptor):
         """Set the child values on the Configurable
 
-        Overwrite the method of Configurable to prevent sending values.
+        Overwrite the method of Configurable to prevent sending values for
+        the pipeline data schema!
         """
+        if "." in key:
+            return
+        super().setChildValue(key, value, descriptor)
 
     @coroutine
     def close(self):
