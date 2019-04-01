@@ -3,10 +3,10 @@ from unittest.mock import patch
 from PyQt4.QtGui import QWidget
 
 from karabo.common.scenemodel.api import GlobalAlarmModel
-from karabo.native import Configurable, Hash, String
+from karabo.native import Configurable, String
 from karabogui.alarms.api import get_alarm_svg
-from karabogui.binding.api import apply_configuration
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..alarm import DisplayAlarm
 
 
@@ -25,7 +25,10 @@ class TestDisplayAlarm(GuiTestCase):
     def setUp(self):
         super(TestDisplayAlarm, self).setUp()
         schema = AlarmObject.getClassSchema()
+        new_schema = AlarmObject.getClassSchema()
         self.proxy = get_class_property_proxy(schema, 'alarmCondition')
+        self.new_proxy = get_class_property_proxy(new_schema, 'alarmCondition')
+
         self.model = GlobalAlarmModel()
 
     def test_basics(self):
@@ -36,7 +39,7 @@ class TestDisplayAlarm(GuiTestCase):
         controller.destroy()
         self.assertIsNone(controller.widget)
 
-    def test_icon_paths(self):
+    def test_alarms(self):
         target = 'karabogui.controllers.display.alarm.QSvgWidget'
         with patch(target, new=MockQSvgWidget):
             self.proxy.value = 'warn'
@@ -44,7 +47,20 @@ class TestDisplayAlarm(GuiTestCase):
             controller = DisplayAlarm(proxy=self.proxy, model=self.model)
             controller.create(None)
             for alarm_type in ('warn', 'interlock', 'alarm', 'none'):
-                apply_configuration(Hash('alarmCondition', alarm_type),
-                                    self.proxy.root_proxy.binding)
+                set_proxy_value(self.proxy, 'alarmCondition', alarm_type)
                 active = get_alarm_svg(alarm_type)
                 self.assertEqual(controller.widget.loaded_data, active)
+
+            none_svg = get_alarm_svg('none')
+            self.assertEqual(controller.widget.loaded_data, none_svg)
+
+            set_proxy_value(self.new_proxy, 'alarmCondition', 'warn')
+            # Add a new proxy
+            controller.add_proxy(self.new_proxy)
+            warn_svg = get_alarm_svg('warn')
+            self.assertEqual(controller.widget.loaded_data, warn_svg)
+
+            # Change the old ``none`` alarm to ``alarm``
+            set_proxy_value(self.proxy, 'alarmCondition', 'alarm')
+            alarm_svg = get_alarm_svg('alarm')
+            self.assertEqual(controller.widget.loaded_data, alarm_svg)
