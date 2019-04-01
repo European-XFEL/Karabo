@@ -17,7 +17,6 @@ class KaraboEventSender(Enum):
     ConnectMacroInstance = "Connect macro instance"
     CreateMainWindow = "Create the main window"
     DatabaseIsBusy = "Database is busy"
-    DeviceDataReceived = "Device class/schema/config received"
     DeviceInitReply = "Device instantiate reply"
     DeviceStateChanged = "Device state changed"
     LoadConfiguration = "Load device configuration"
