@@ -16,6 +16,8 @@ from .eventloop import DeviceTest, async_tst
 class ChecksumTransport(WriteTransport):
     def __init__(self):
         self.checksum = adler32(b"")
+        self._extra = {'sockname': ("Local", 8080),
+                       'peername': ("Remote", 8080)}
 
     def write(self, data):
         self.checksum = adler32(data, self.checksum)
@@ -195,7 +197,8 @@ class TestChannel(DeviceTest):
     @async_tst
     def test_shared_queue(self):
         output = NetworkOutput({"noInputShared": "queue"})
-        self.feedHash(Hash("reason", "hello", "dataDistribution", "shared"))
+        self.feedHash(Hash("reason", "hello", "dataDistribution", "shared",
+                           "onSlowness", "queue", "instanceId", "Test"))
         task = yield from self.write_something(output)
         self.assertChecksum(3020956469)
         for checksum in [452019817, 881158557, 14388433, 2145693701]:
@@ -209,7 +212,8 @@ class TestChannel(DeviceTest):
     @async_tst
     def test_shared_drop(self):
         output = NetworkOutput({"noInputShared": "drop"})
-        self.feedHash(Hash("reason", "hello", "dataDistribution", "shared"))
+        self.feedHash(Hash("reason", "hello", "dataDistribution", "shared",
+                           "onSlowness", "drop", "instanceId", "Test"))
         task = yield from self.write_something(output)
         yield from self.sleep()
         self.assertChecksum(3020956469)
@@ -231,7 +235,8 @@ class TestChannel(DeviceTest):
         output = NetworkOutput({"noInputShared": "throw"})
         output.channelName = "channelname"
         task = background(output.serve(self.reader, self.writer))
-        self.feedHash(Hash("reason", "hello", "dataDistribution", "shared"))
+        self.feedHash(Hash("reason", "hello", "dataDistribution", "shared",
+                           "onSlowness", "throw", "instanceId", "Test"))
         yield from self.sleep()
         output.writeChunkNoWait(self.sample_data)
         yield from self.sleep()
@@ -251,7 +256,8 @@ class TestChannel(DeviceTest):
         output = NetworkOutput({"noInputShared": "wait"})
         output.channelName = "channelname"
         task = background(output.serve(self.reader, self.writer))
-        self.feedHash(Hash("reason", "hello", "dataDistribution", "shared"))
+        self.feedHash(Hash("reason", "hello", "dataDistribution", "shared",
+                           "onSlowness", "wait", "instanceId", "Test"))
         yield from self.sleep()
         yield from output.writeChunk([(Hash("a", 5), FakeTimestamp())])
         yield from self.sleep()
@@ -274,7 +280,7 @@ class TestChannel(DeviceTest):
     def test_copy_queue(self):
         output = NetworkOutput({"noInputShared": "drop"})
         self.feedHash(Hash("reason", "hello", "dataDistribution", "copy",
-                           "onSlowness", "queue"))
+                           "onSlowness", "queue", "instanceId", "Test"))
         task = yield from self.write_something(output)
         self.assertChecksum(3020956469)
         for checksum in [452019817, 881158557, 14388433, 2145693701]:
@@ -289,19 +295,19 @@ class TestChannel(DeviceTest):
     def test_copy_drop(self):
         output = NetworkOutput({"noInputShared": "drop"})
         self.feedHash(Hash("reason", "hello", "dataDistribution", "copy",
-                           "onSlowness", "queue"))
+                           "onSlowness", "drop", "instanceId", "Test"))
         task = yield from self.write_something(output)
         yield from self.sleep()
         self.assertChecksum(3020956469)
         self.feedRequest()
         yield from self.sleep()
         for _ in range(100):
-            self.assertChecksum(452019817)
+            self.assertChecksum(3020956469)
             yield from self.sleep()
         output.writeChunkNoWait(self.sample_data)
         self.feedRequest()
         yield from self.sleep()
-        self.assertChecksum(881158557)
+        self.assertChecksum(452019817)
         self.reader.feed_eof()
         yield from task
         self.assertTrue(self.writer.transport.closed)
@@ -312,7 +318,7 @@ class TestChannel(DeviceTest):
         output.channelName = "channelname"
         task = background(output.serve(self.reader, self.writer))
         self.feedHash(Hash("reason", "hello", "dataDistribution", "copy",
-                           "onSlowness", "throw"))
+                           "onSlowness", "throw", "instanceId", "Test"))
         output.writeChunkNoWait(self.sample_data)
         yield from self.sleep()
         output.writeChunkNoWait(self.sample_data)
@@ -332,7 +338,7 @@ class TestChannel(DeviceTest):
         output.channelName = "channelname"
         task = background(output.serve(self.reader, self.writer))
         self.feedHash(Hash("reason", "hello", "dataDistribution", "copy",
-                           "onSlowness", "wait"))
+                           "onSlowness", "wait", "instanceId", "Test"))
         yield from output.writeChunk(self.sample_data)
         yield from self.sleep()
         yield from output.writeChunk(self.sample_data)
