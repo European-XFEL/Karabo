@@ -553,6 +553,16 @@ namespace karabo {
                     .dataSchema(pipeData) // re-use what the output channel sends
                     .commit();
 
+            UINT32_ELEMENT(expected).key("processingTime")
+                    .displayedName("Processing Time")
+                    .description("Processing time of input channel data handler")
+                    .assignmentOptional()
+                    .defaultValue(0u)
+                    .reconfigurable()
+                    .unit(util::Unit::SECOND)
+                    .metricPrefix(util::MetricPrefix::MILLI)
+                    .commit();
+
             INT32_ELEMENT(expected).key("currentInputId")
                     .displayedName("Current Input Id")
                     .description("Last value received as 'int32' on input channel (default: 0)")
@@ -728,6 +738,9 @@ namespace karabo {
 
 
         void PropertyTest::onData(const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta) {
+
+            // First sleep to simulate heavy work
+            boost::this_thread::sleep(boost::posix_time::milliseconds(get<unsigned int>("processingTime")));
 
             const int currentInputId = data.get<int>("node.int32");
             const unsigned int inputCounter = get<unsigned int>("inputCounter");
