@@ -48,6 +48,28 @@ class TestPipelineProcessing(BoundDeviceTestCase):
                                       self.KRB_TEST_MAX_TIMEOUT)
         self.assertTrue(ok, msg)
 
+        ctable1 = self.dc.get("p2pTestSender", "output1.connections")
+        ctable2 = self.dc.get("p2pTestSender", "output2.connections")
+        ctable3 = self.dc.get("p2pTestSender", "output3.connections")
+
+        self.assertTrue(len(ctable1) == 1)
+        self.assertTrue(ctable1[0]["remoteId"] == "pipeTestReceiver")
+        self.assertTrue(ctable1[0]["dataDistribution"] == "copy")
+        self.assertTrue(ctable1[0]["onSlowness"] == "wait")
+        self.assertTrue(ctable1[0]["memoryLocation"] == "remote")
+
+        self.assertTrue(len(ctable2) == 1)
+        self.assertTrue(ctable2[0]["remoteId"] == "pipeTestReceiver")
+        self.assertTrue(ctable2[0]["dataDistribution"] == "copy")
+        self.assertTrue(ctable2[0]["onSlowness"] == "wait")
+        self.assertTrue(ctable2[0]["memoryLocation"] == "remote")
+
+        self.assertTrue(len(ctable3) == 1)
+        self.assertTrue(ctable3[0]["remoteId"] == "pipeTestReceiver")
+        self.assertTrue(ctable3[0]["dataDistribution"] == "copy")
+        self.assertTrue(ctable3[0]["onSlowness"] == "wait")
+        self.assertTrue(ctable3[0]["memoryLocation"] == "remote")
+
         # wait for device to init
         state1 = None
         state2 = None
@@ -140,12 +162,12 @@ class TestPipelineProcessing(BoundDeviceTestCase):
 
     def _testMultiWrite(self):
         self.dc.set("p2pTestSender", "scenario", "multiSource")
-        nData = self.dc.get("p2pTestSender","nData")
+        nData = self.dc.get("p2pTestSender", "nData")
         self.dc.execute("p2pTestSender", "write", self.KRB_TEST_MAX_TIMEOUT)
         self.assertTrue(self.waitUntilEqual("pipeTestReceiver",
                                             "numSourceLength",
-                                             nData,
-                                             self.KRB_TEST_MAX_TIMEOUT))
+                                            nData,
+                                            self.KRB_TEST_MAX_TIMEOUT))
         sourceLengths = self.dc.get("pipeTestReceiver", "numSources")
         self.assertTrue(all([s == 2 for s in sourceLengths]))
         sourcesCorrect = self.dc.get("pipeTestReceiver", "sourcesCorrect")

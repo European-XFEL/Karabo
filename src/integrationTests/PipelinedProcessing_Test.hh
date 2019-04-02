@@ -47,6 +47,16 @@ private:
     void testPipeMinData();
     void testPipeTwoSharedReceiversWait();
     void testPipeTwoSharedReceiversDrop();
+    void printSenderOutputChannelConnections(const std::string& name);
+    void testSenderOutputChannelConnections(size_t tableSize = 0,
+                                            const std::vector<std::string>& receivers1=std::vector<std::string>(),
+                                            const std::string& distrib1="",
+                                            const std::string& slowness1="",
+                                            const std::string& mloc1="",
+                                            const std::vector<std::string>& receivers2=std::vector<std::string>(),
+                                            const std::string& distrib2="",
+                                            const std::string& slowness2="",
+                                            const std::string& mloc2="");
 
     /**
      * Tests pipe with two receivers with 'shared' value for their 'input.dataDistribution' setting
