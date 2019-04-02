@@ -32,7 +32,6 @@ class AlarmModel(QAbstractTableModel):
         if self.instanceId != instanceId:
             return
         # Insert updated entries in all entries list
-        self.beginResetModel()
 
         for upType, alarmEntry in zip(updateTypes, alarmEntries):
             entryIndex = self._getEntryIndex(alarmEntry.id)
@@ -40,12 +39,21 @@ class AlarmModel(QAbstractTableModel):
                 if 0 <= entryIndex < len(self.all_entries):
                     # Replace entry
                     self.all_entries[entryIndex] = alarmEntry
+                    row_begin = self.index(entryIndex, 0, QModelIndex())
+                    row_end = self.index(entryIndex, self.columnCount(),
+                                         QModelIndex())
+                    self.dataChanged.emit(row_begin, row_end)
                 else:
+                    row = self.rowCount()
+                    self.beginInsertRows(QModelIndex(), row, row)
                     self.all_entries.append(alarmEntry)
+                    self.endInsertRows()
             elif upType in REMOVE_ALARM_TYPES:
                 if self.all_entries:
+                    row  = entryIndex
+                    self.beginRemoveRows(QModelIndex(), row, row)
                     self.all_entries.pop(entryIndex)
-        self.endResetModel()
+                    self.endRemoveRows()
 
     def _getEntryIndex(self, entry_id):
         """ The index in ``self.all_entries`` for the given ``entry_id`` is
