@@ -295,7 +295,14 @@ namespace karabo {
                 return result;
             }
             
-            static karabo::util::Hash getChannelInfo(boost::shared_ptr<karabo::net::TcpChannel> ptr);
+            /**
+             * This function returns low level info about connection like ...
+             * "localIp", "localPort", "remoteIp", "remotePort" that constitute active connection.
+             * in form of Hash container
+             * @param ptr input TcpChannel boost shared pointer
+             * @return Hash with 4 key/value pairs
+             */
+            static karabo::util::Hash getChannelInfo(const boost::shared_ptr<karabo::net::TcpChannel>& ptr);
             
         private:
 
