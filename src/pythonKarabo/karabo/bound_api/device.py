@@ -1206,8 +1206,9 @@ class PythonDevice(NoFsm):
                                        .format(key))
                     else:
                         outputChannel.registerShowConnectionsHandler(
-                            partial(lambda x, y :
-                                self.set(x + ".connections", y), key)
+                            partial(
+                                lambda x, y: self.set(x + ".connections", y),
+                                key)
                         )
 
                 elif displayType == "InputChannel":
