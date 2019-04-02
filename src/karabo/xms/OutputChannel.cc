@@ -128,6 +128,7 @@ namespace karabo {
                     .description("Table of active connections")
                     .setColumns(columns)
                     .assignmentOptional().defaultValue(std::vector<util::Hash>())
+                    .expertAccess()
                     .commit();
 
         }
@@ -364,7 +365,8 @@ namespace karabo {
                 }
                 onInputAvailable(instanceId); // Immediately register for reading
                 updateConnectionTable();
-                KARABO_LOG_FRAMEWORK_INFO << "OutputChannel handshake (hello)...";
+                KARABO_LOG_FRAMEWORK_INFO << "OutputChannel handshake (hello)... from InputChannel : \"" << instanceId
+                        << "\", \"" << dataDistribution << "\", \"" << onSlowness << "\"";
             } else if (reason == "update") {
 
                 if (message.has("instanceId")) {
@@ -389,7 +391,10 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_registeredSharedInputsMutex);
                 for (size_t i = 0; i < m_registeredSharedInputs.size(); ++i) {
                     Hash& channelInfo = m_registeredSharedInputs[i];
-                    Hash row = TcpChannel::getChannelInfo(channelInfo.get<boost::weak_ptr<Channel> >("tcpChannel"));
+                    boost::weak_ptr<Channel> wptr = channelInfo.get<boost::weak_ptr<Channel> >("tcpChannel");
+                    boost::shared_ptr<Channel> channel = wptr.lock();
+                    boost::shared_ptr<TcpChannel> tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
+                    Hash row = TcpChannel::getChannelInfo(tcpChannel);
                     row.set("remoteId", channelInfo.get<std::string>("instanceId"));
                     row.set("memoryLocation", channelInfo.get<std::string>("memoryLocation"));
                     row.set("dataDistribution","shared");
@@ -401,7 +406,10 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
                 for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
                     Hash &channelInfo = m_registeredCopyInputs[i];
-                    Hash row = TcpChannel::getChannelInfo(channelInfo.get<boost::weak_ptr<Channel> >("tcpChannel"));
+                    boost::weak_ptr<Channel> wptr = channelInfo.get<boost::weak_ptr<Channel> >("tcpChannel");
+                    boost::shared_ptr<Channel> channel = wptr.lock();
+                    boost::shared_ptr<TcpChannel> tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
+                    Hash row = TcpChannel::getChannelInfo(tcpChannel);
                     row.set("remoteId", channelInfo.get<std::string>("instanceId"));
                     row.set("memoryLocation", channelInfo.get<std::string>("memoryLocation"));
                     row.set("dataDistribution","copy");
