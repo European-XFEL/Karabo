@@ -295,7 +295,7 @@ namespace karabo {
                 return result;
             }
             
-            static karabo::util::Hash getChannelInfo(boost::weak_ptr<karabo::net::Channel> ptr);
+            static karabo::util::Hash getChannelInfo(boost::shared_ptr<karabo::net::TcpChannel> ptr);
             
         private:
 

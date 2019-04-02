@@ -24,11 +24,8 @@ namespace karabo {
         const size_t kDefaultQueueCapacity = 5000; //JW: Moved from Queue.h
 
 
-        karabo::util::Hash TcpChannel::getChannelInfo(boost::weak_ptr<karabo::net::Channel> ptr) {
-            Hash info("remoteAddress", "?", "remotePort", 0, "localAddress", "?", "localPort", 0);
-            Channel::Pointer channel = ptr.lock();
-            if (!channel) return Hash("remoteAddress", "?", "remotePort", 0, "localAddress", "?", "localPort", 0);
-            TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
+        karabo::util::Hash TcpChannel::getChannelInfo(boost::shared_ptr<karabo::net::TcpChannel> tcpChannel) {
+            if (!tcpChannel) return Hash("remoteAddress", "?", "remotePort", uint16_t(0), "localAddress", "?", "localPort", uint16_t(0));
             return tcpChannel->_getChannelInfo();
         }
 
