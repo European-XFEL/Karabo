@@ -1596,7 +1596,14 @@ namespace karabo {
                         if (displayType == "OutputChannel") {
                             KARABO_LOG_FRAMEWORK_INFO << "'" << this->getInstanceId() << "' creates output channel '" << key << "'";
                             try {
-                                createOutputChannel(key, m_parameters);
+                                karabo::xms::OutputChannel::Pointer channel = createOutputChannel(key, m_parameters);
+                                if (!channel) {
+                                    KARABO_LOG_FRAMEWORK_ERROR << "*** \"createOutputChannel\" for channel name \"" << key << "\" failed to create output channel";
+                                } else {
+                                    channel->registerShowConnectionsHandler([this, key](const std::vector<karabo::util::Hash>& connections) {
+                                        this->set(key + ".connections", connections);
+                                    });
+                                }
                             } catch (const karabo::util::NetworkException& e) {
                                 KARABO_LOG_ERROR << e.userFriendlyMsg();
                             }

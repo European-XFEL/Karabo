@@ -24,6 +24,12 @@ namespace karabo {
         const size_t kDefaultQueueCapacity = 5000; //JW: Moved from Queue.h
 
 
+        karabo::util::Hash TcpChannel::getChannelInfo(const boost::shared_ptr<karabo::net::TcpChannel>& tcpChannel) {
+            if (!tcpChannel) return Hash("remoteAddress", "?", "remotePort", uint16_t(0), "localAddress", "?", "localPort", uint16_t(0));
+            return tcpChannel->_getChannelInfo();
+        }
+
+
         TcpChannel::TcpChannel(Connection::Pointer connection)
             : m_connectionPointer(boost::dynamic_pointer_cast<TcpConnection>(connection))
             , m_socket(EventLoop::getIOService())
@@ -359,12 +365,12 @@ namespace karabo {
         void TcpChannel::readAsyncVectorBufferSetPointerImpl(const std::vector<karabo::io::BufferSet::Pointer>& buffers,
                                                              const ReadVectorBufferSetPointerHandler& handler) {
             m_inboundMessagePrefix.clear();
-            m_inboundMessagePrefix.resize(sizeof(unsigned int));
+            m_inboundMessagePrefix.resize(sizeof (unsigned int));
             std::vector<boost::asio::mutable_buffer> boostBuffers;
             boostBuffers.push_back(buffer(m_inboundMessagePrefix));
             karabo::io::BufferSet::appendTo(boostBuffers, buffers);
 
-            size_t totalSize = sizeof(unsigned int);
+            size_t totalSize = sizeof (unsigned int);
             for (auto p : buffers) totalSize += p->totalSize();
             boost::mutex::scoped_lock lock(m_socketMutex);
             if (m_socket.available() >= totalSize) {
@@ -394,7 +400,7 @@ namespace karabo {
 
 
         void TcpChannel::onHashVectorBufferSetPointerVectorPointerRead(const boost::system::error_code& e,
-                                                                       const boost::shared_ptr<std::vector<char>>& data,
+                                                                       const boost::shared_ptr<std::vector<char>>&data,
                                                                        const ReadHashVectorBufferSetPointerHandler& handler) {
             Hash::Pointer header = m_inHashHeader;
             m_inHashHeader.reset();
@@ -478,8 +484,8 @@ namespace karabo {
                         if (m_inHashHeader->has("_bufferSetLayout_")) {
                             // This protocol for karabo 2.2.4 and later : c++ and bound python
                             std::vector<karabo::io::BufferSet::Pointer> buffers;
-                        
-                            for (const karabo::util::Hash& layout : m_inHashHeader->get<std::vector<karabo::util::Hash>>("_bufferSetLayout_")) {
+
+                            for (const karabo::util::Hash& layout : m_inHashHeader->get<std::vector < karabo::util::Hash >> ("_bufferSetLayout_")) {
                                 if (!layout.has("sizes") || !layout.has("types")) throw KARABO_LOGIC_EXCEPTION("Pipeline Protocol violation!");
                                 const auto& sizes = layout.get<vector<unsigned int>>("sizes");
                                 const auto& types = layout.get<vector<int>>("types");
@@ -491,9 +497,9 @@ namespace karabo {
                             this->readAsyncVectorBufferSetPointerImpl(buffers, util::bind_weak(&TcpChannel::onHashVectorBufferSetPointerRead, this, _1, _2));
                         } else if (m_inHashHeader->has("byteSizes")) {
                             // This is protocol for middle-layer devices and, in general, for karabo pre-2.2.4 
-                            const auto& sizes =  m_inHashHeader->get<std::vector<unsigned int>>("byteSizes");
+                            const auto& sizes = m_inHashHeader->get<std::vector<unsigned int>>("byteSizes");
                             std::vector<karabo::io::BufferSet::Pointer> buffers;
-                            
+
                             for (size_t ii = 0; ii < sizes.size(); ii++) {
                                 karabo::io::BufferSet::Pointer buffer(new karabo::io::BufferSet(false));
                                 buffer->add(sizes[ii], karabo::io::BufferSet::COPY);
@@ -635,7 +641,7 @@ namespace karabo {
                     boost::any_cast<ReadHashPointerHashPointerHandler>(m_readHandler) (e, header, body);
                     break;
                 }
-                
+
                 case HASH_VECTOR_BUFFERSET_POINTER:
                 {
                     // we will be here only if error code is not "success": "Operation canceled", "End of file"
@@ -780,7 +786,7 @@ namespace karabo {
 
             Hash header = hdr; // copy header
             // Add the BufferSet layout structure into header just before serialization ...
-            std::vector<Hash>& buffersVector = header.bindReference<std::vector<Hash>>("_bufferSetLayout_");
+            std::vector<Hash>& buffersVector = header.bindReference<std::vector < Hash >> ("_bufferSetLayout_");
             for (std::vector<BufferSet::Pointer>::const_iterator it = body.begin(); it != body.end(); ++it) {
                 buffersVector.push_back(Hash("sizes", (*it)->sizes(), "types", (*it)->types()));
             }
@@ -980,7 +986,7 @@ namespace karabo {
                 }
                 _KARABO_SIZE_TO_VECTOR(m_outboundHeaderPrefix, headerSize);
                 size_t total_size = 0;
-                for (const auto& b : body) total_size += b->totalSize(); 
+                for (const auto& b : body) total_size += b->totalSize();
                 _KARABO_SIZE_TO_VECTOR(m_outboundMessagePrefix, total_size);
                 vector<const_buffer> buf;
                 buf.push_back(buffer(m_outboundHeaderPrefix));
@@ -1616,6 +1622,7 @@ namespace karabo {
             acceptor.accept(m_socket);
         }
 
+
         std::string TcpChannel::remoteAddress() const {
             boost::mutex::scoped_lock lock(m_socketMutex);
             std::string address("unknown");
@@ -1626,6 +1633,25 @@ namespace karabo {
                 }
             }
             return address;
+        }
+
+
+        karabo::util::Hash TcpChannel::_getChannelInfo() {
+            karabo::util::Hash info("localAddress", "?",
+                                    "localPort", uint16_t(0),
+                                    "remoteAddress", "?",
+                                    "remotePort", uint16_t(0));
+            try {
+                boost::mutex::scoped_lock lock(m_socketMutex);
+                info.set<std::string>("localAddress", m_socket.local_endpoint().address().to_string());
+                info.set<unsigned short>("localPort", m_socket.local_endpoint().port());
+                if (m_socket.is_open()) {
+                    info.set<std::string>("remoteAddress", m_socket.remote_endpoint().address().to_string());
+                    info.set<unsigned short>("remotePort", m_socket.remote_endpoint().port());
+                }
+            } catch (...) {
+            }
+            return info;
         }
     }
 }
