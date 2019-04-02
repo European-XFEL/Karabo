@@ -57,7 +57,7 @@ class MyDevice(Device):
         rows=RowSchema,
         displayedName="Table",
         defaultValue=[Hash("x", 2.0, "y", 5.6),
-                      Hash(Hash("x", 1.0, "y", 1.6))],
+                      Hash("x", 1.0, "y", 1.6)],
         accessMode=AccessMode.RECONFIGURABLE)
 
     @Slot(displayedName="Increase", allowedStates=[State.ON])
