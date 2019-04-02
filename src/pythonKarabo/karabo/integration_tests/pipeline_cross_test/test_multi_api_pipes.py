@@ -1,76 +1,147 @@
+from datetime import datetime
 from time import sleep
 
 from karabo.integration_tests.utils import BoundDeviceTestCase
-from karathon import Hash
+from karabo.bound import Hash, State
 
 
 class TestCrossPipelining(BoundDeviceTestCase):
-    _cppServerId = "cppServer/1"
+    _max_timeout = 10
 
-#    def test_all(self):
-#        # Complete setup - do not do it in setup to ensure that even in case of
-#        # exceptions 'tearDown' is called and stops all processes.
-#
-#        return
-#        self.start_server("bound", "boundServer/1", ["PropertyTest"])
-#        
-#        self.start_server("cpp", self._cppServerId, ["PropertyTest"])
-#
-#        self.start_server("mdl", "mdlServer/1", ["PropertyTestMDL"])
-#
-#        with self.assertRaises(RuntimeError):
-#            self.start_server("invalidApi", "invalidServer/1", ["NoMatter"])
-#
-#        servers = self.dc.getServers()
-#
-#        self.assertEqual(len(servers), 3)
-#        self.assertTrue("boundServer/1" in servers)
-#        self.assertTrue(self._cppServerId in servers)
-#        self.assertTrue("mdlServer/1" in servers)
+    def test_example(self):
+        # Complete setup - do not do it in setup to ensure that even in case of
+        # exceptions 'tearDown' is called and stops all processes.
+        self.start_server_num("bound", 1)
+        self.start_server_num("cpp", 1)
+        self.start_server_num("mdl", 1)
+
+        with self.assertRaises(RuntimeError):
+            self.start_server_num("invalidApi", 1)
+
+        servers = self.dc.getServers()
+
+        self.assertEqual(len(servers), 3)
+        self.assertTrue("boundServer/1" in servers)
+        self.assertTrue("cppServer/1" in servers)
+        self.assertTrue("mdlServer/1" in servers)
 
 
     def test_1to1_wait_fastReceiver(self):
-        self.start_server("bound", "boundServer/1", ["PropertyTest"])
-        self.start_server("cpp", self._cppServerId, ["PropertyTest"])
-        self.start_server("mdl", "mdlServer/1", ["PropertyTestMDL"])
+        # Start all servers you need in the end:
+        self.start_server_num("cpp", 1)
+        # self.start_server_num("bound", 1)
+        # self.start_server_num("mdl", 1)
 
+        # First test is not a cross test, so remove later,
+        # rest to be implemented.
         self._test_1to1_wait_fastReceiver("cpp", "cpp")
+        # self._test_1to1_wait_fastReceiver("cpp", "bound")
+        # self._test_1to1_wait_fastReceiver("cpp", "mdl")
+        # self._test_1to1_wait_fastReceiver("bound", "cpp")
+        # self._test_1to1_wait_fastReceiver("bound", "mdl")
+        # self._test_1to1_wait_fastReceiver("mdl", "cpp")
+        # self._test_1to1_wait_fastReceiver("mdl", "bound")
 
-    def _test_1to1_wait_fastReceiver(self, senderApi, receiverApi):
-        senderCfg = Hash("updateFrequency", 10.)
-        self.start_device(senderApi, "sender", senderCfg)
+    def test_1to1_wait_slowReceiver(self):
+        return # FIXME: Does not yet seem to run...
+
+        # Start all servers you need in the end:
+        self.start_server_num("cpp", 1)
+        # self.start_server_num("bound", 1)
+        # self.start_server_num("mdl", 1)
+
+        # First test is not a cross test, so remove later,
+        # rest to be implemented.
+        self._test_1to1_wait_slowReceiver("cpp", "cpp")
+        # self._test_1to1_wait_slowReceiver("cpp", "bound")
+        # self._test_1to1_wait_slowReceiver("cpp", "mdl")
+        # self._test_1to1_wait_slowReceiver("bound", "cpp")
+        # self._test_1to1_wait_slowReceiver("bound", "mdl")
+        # self._test_1to1_wait_slowReceiver("mdl", "cpp")
+        # self._test_1to1_wait_slowReceiver("mdl", "bound")
+
+    def _test_1to1_wait_fastReceiver(self, sender_api, receiver_api):
+        """
+        Test single sender with single receiver where sender is slower
+        than receiver and receiver is configured to make sender wait.
+        """
+        self._test_1to1_wait(sender_api, 10., receiver_api, 0)
+
+    def _test_1to1_wait_slowReceiver(self, sender_api, receiver_api):
+        """
+        Test single sender with single receiver where sender is faster
+        than receiver and receiver is configured to make sender wait.
+        """
+        self._test_1to1_wait(sender_api, 0., receiver_api, 100)
+
+    def _test_1to1_wait(self, sender_api, sender_freq,
+                        receiver_api, processing_time):
+        """
+        Test single sender with given frequency (Hz) and single receiver with
+        given processing time (ms) where receiver is configured to make sender
+        wait.
+        """
+        test_duration = 5.  # seconds
+
+        sender_cfg = Hash("outputFrequency", sender_freq)
+        self.start_device(sender_api, 1, "sender", sender_cfg)
         
-        receiverCfg = Hash("input.connectedOutputChannels", "sender:output")
-        self.start_device(receiverApi, "receiver", receiverCfg)
+        receiver_cfg = Hash("input.connectedOutputChannels", "sender:output",
+                            "input.onSlowness", "wait",
+                            "processingTime", processing_time)
+        self.start_device(receiver_api, 1, "receiver", receiver_cfg)
 
         self.dc.execute("sender", "startWritingOutput")
 
-        time.sleep(5)
+        sleep(test_duration)
 
         self.dc.execute("sender", "stopWritingOutput")
 
-        # FIXME: wait until state of sender is normal
-        time.sleep(1)  # bad waiting... FIXME
+        self.assertTrue(self.waitUntilEqual("receiver", "state",
+                                            State.NORMAL, self._max_timeout))
+        out_count = self.dc.get("sender", "outputCounter")
 
-        outCount = self.dc.get("sender", "outputCounter")
-        self.assertTrue(outCount > 0)
+        # Test that duration and frequency match by +/-5%:
+        self.assertTrue(out_count > 0.95 * sender_freq * test_duration)
+        self.assertTrue(out_count < 1.05 * sender_freq * test_duration)
 
-        self.asserTrue(self.waitUntilEqual(self, "receiver", "inputCounter",
-                                           outCount, 10))
-        inCount = self.dc.get("receiver", "inputCounter")
-        self.assertEqual(outCount, inCount)
-                
-        
-    def start_device(self, senderApi, deviceId, cfg):
-        klass = "PropertyTest"
-        if senderApi == "mdl":
-            klass += "MDL"
-        cfg.set("deviceId", deviceId)
-        cfg.set("classId", klass)
+        # Could still take a while until all data is received
+        self.assertTrue(self.waitUntilEqual("receiver", "inputCounter",
+                                            out_count, self._max_timeout))
+        in_count = self.dc.get("receiver", "inputCounter")
+        self.assertEqual(out_count, in_count)
 
-        ok, msg = self.dc.instantiate("{}Server/1".format(senderApi), cfg)
+        ok, msg = self.dc.killDevice("sender", self._max_timeout)
         self.assertTrue(ok, msg)
         
+        ok, msg = self.dc.killDevice("receiver", self._max_timeout)
+        self.assertTrue(ok, msg)
+
+    def start_server_num(self, api, server_num):
+        """Start server of given api and number"""
+
+        klasses = ["PropertyTest"]
+        if api == "mdl":
+            klasses[0] += "MDL"
+        server_id = self.serverId(api, server_num)
+        self.start_server(api, server_id, klasses)
+
+    def start_device(self, api, server_num, dev_id, cfg):
+        """
+        Start device with id and config on server defined by api and number
+        """
+        klass = "PropertyTest"
+        if api == "mdl":
+            klass += "MDL"
+        cfg.set("deviceId", dev_id)
+
+        ok, msg = self.dc.instantiate(self.serverId(api, server_num),
+                                      klass, cfg)
+        self.assertTrue(ok, msg)
+
+    def serverId(self, api, num):
+        """Server id of server with given api and number"""
+        return "{}Server/{}".format(api, num)
 
     def waitUntilEqual(self, devId, propertyName, whatItShouldBe, timeout):
         """
