@@ -393,6 +393,9 @@ class TableValue(KaraboValue):
     def extend(self, value):
         self[len(self.value):] = value
 
+    def append(self, value):
+        self.extend(value)
+
     def pop(self, index=-1):
         """Pops a single TableValue from the table
 
