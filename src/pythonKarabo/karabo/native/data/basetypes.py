@@ -3,7 +3,6 @@
 Karabo keeps some metadata with its values. This module contains the
 classes which have the metadata attached."""
 from enum import Enum
-from collections.abc import MutableSequence
 from functools import wraps
 import inspect
 from itertools import chain
@@ -339,7 +338,7 @@ class VectorStringValue(KaraboValue, list):
         return self
 
 
-class TableValue(MutableSequence, KaraboValue):
+class TableValue(KaraboValue):
     """This wraps numpy structured arrays. Pint cannot deal with them."""
     def __init__(self, value, units, **kwargs):
         super(TableValue, self).__init__(value, **kwargs)
@@ -403,6 +402,11 @@ class TableValue(MutableSequence, KaraboValue):
         self.value = numpy.delete(self.value, index)
         self.descriptor.__set__(self._parent, self.value)
         return v
+
+    def clear(self):
+        """Clear the table element with a single message"""
+        self.value = numpy.array([], dtype=self.value.dtype)
+        self.descriptor.__set__(self._parent, self.value)
 
     def __len__(self):
         return len(self.value)
