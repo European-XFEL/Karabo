@@ -7,6 +7,7 @@
 from PyQt4.QtSvg import QSvgWidget
 from traits.api import Instance
 
+from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.scenemodel.api import GlobalAlarmModel
 from karabogui.alarms.api import get_alarm_svg
 
@@ -27,10 +28,21 @@ class DisplayAlarm(BaseBindingController):
         widget = QSvgWidget(parent)
         return widget
 
-    def value_update(self, proxy):
-        value = get_binding_value(proxy)
-        if self.widget is None or value is None:
-            return
+    def add_proxy(self, proxy):
+        """Add an alarm condition proxy to the widget"""
+        self._update_alarm_widget(proxy)
+        return True
 
-        svg = get_alarm_svg(value)
+    def _update_alarm_widget(self, proxy=None):
+        widget_alarms = [AlarmCondition(get_binding_value(p, "none"))
+                         for p in self.proxies]
+        if proxy is not None:
+            widget_alarms.append(
+                AlarmCondition(get_binding_value(proxy, "none")))
+        widget_alarms.sort()
+        alarm_type = widget_alarms[-1].asString()
+        svg = get_alarm_svg(alarm_type)
         self.widget.load(svg)
+
+    def value_update(self, proxy):
+        self._update_alarm_widget()
