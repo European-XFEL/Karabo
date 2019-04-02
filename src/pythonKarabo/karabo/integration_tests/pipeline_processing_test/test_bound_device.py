@@ -162,12 +162,12 @@ class TestPipelineProcessing(BoundDeviceTestCase):
 
     def _testMultiWrite(self):
         self.dc.set("p2pTestSender", "scenario", "multiSource")
-        nData = self.dc.get("p2pTestSender","nData")
+        nData = self.dc.get("p2pTestSender", "nData")
         self.dc.execute("p2pTestSender", "write", self.KRB_TEST_MAX_TIMEOUT)
         self.assertTrue(self.waitUntilEqual("pipeTestReceiver",
                                             "numSourceLength",
-                                             nData,
-                                             self.KRB_TEST_MAX_TIMEOUT))
+                                            nData,
+                                            self.KRB_TEST_MAX_TIMEOUT))
         sourceLengths = self.dc.get("pipeTestReceiver", "numSources")
         self.assertTrue(all([s == 2 for s in sourceLengths]))
         sourcesCorrect = self.dc.get("pipeTestReceiver", "sourcesCorrect")
