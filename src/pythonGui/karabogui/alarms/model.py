@@ -49,9 +49,8 @@ class AlarmModel(QAbstractTableModel):
                     self.all_entries.append(alarmEntry)
                     self.endInsertRows()
             elif upType in REMOVE_ALARM_TYPES:
-                if self.all_entries:
-                    row  = entryIndex
-                    self.beginRemoveRows(QModelIndex(), row, row)
+                if self.all_entries and entryIndex != -1:
+                    self.beginRemoveRows(QModelIndex(), entryIndex, entryIndex)
                     self.all_entries.pop(entryIndex)
                     self.endRemoveRows()
 
