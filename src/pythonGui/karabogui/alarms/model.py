@@ -40,8 +40,7 @@ class AlarmModel(QAbstractTableModel):
                     # Replace entry
                     self.all_entries[entryIndex] = alarmEntry
                     row_begin = self.index(entryIndex, 0, QModelIndex())
-                    row_end = self.index(entryIndex, self.columnCount(),
-                                         QModelIndex())
+                    row_end = self.index(entryIndex, 7, QModelIndex())
                     self.dataChanged.emit(row_begin, row_end)
                 else:
                     row = self.rowCount()
