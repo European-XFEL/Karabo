@@ -10,8 +10,8 @@ import numpy as np
 from karabo.bound import (
     Encoding,
     KARABO_CLASSINFO, PythonDevice, DaqDataType, Hash, ImageData,
-    Schema, State, Types, OVERWRITE_ELEMENT,
-    ADMIN, AlarmCondition,
+    Schema, State, Types, Unit, OVERWRITE_ELEMENT,
+    ADMIN, AlarmCondition, maxInc, minExc,
     BOOL_ELEMENT, FLOAT_ELEMENT, DOUBLE_ELEMENT, IMAGEDATA_ELEMENT,
     INT32_ELEMENT, UINT32_ELEMENT, INT64_ELEMENT, UINT64_ELEMENT,
     NDARRAY_ELEMENT, NODE_ELEMENT,
@@ -37,6 +37,9 @@ class PropertyTest(PythonDevice):
         self.KARABO_SLOT(self.setReadonly)
         self.KARABO_SLOT(self.setAlarm)
         self.KARABO_SLOT(self.writeOutput)
+        self.KARABO_SLOT(self.startWritingOutput)
+        self.KARABO_SLOT(self.stopWritingOutput)
+        self.KARABO_SLOT(self.resetChannelCounters)
         self.KARABO_SLOT(self.eosOutput)
 
         self.outputCounter = 0
@@ -388,15 +391,77 @@ class PropertyTest(PythonDevice):
             .description("Write once to output channel 'Output'")
             .commit(),
 
+            FLOAT_ELEMENT(expected).key("outputFrequency")
+            .displayedName("Output frequency")
+            .description("The target frequency for continously writing to 'Output'")
+            .unit(Unit.HERTZ)
+            .maxInc(1000)
+            .minExc(0.0)
+            .assignmentOptional().defaultValue(1.0)
+            .reconfigurable()
+            .commit(),
+
+            INT32_ELEMENT(expected).key("outputCounter")
+            .displayedName("Output Counter")
+            .description("Last value sent as 'int32' via output channel 'Output'")
+            .readOnly()
+            .initialValue(0)
+            .commit(),
+
+            SLOT_ELEMENT(expected).key("startWritingOutput")
+            .displayedName("Start Writing")
+            .description("Start writing continously to output channel 'Output'")
+            .allowedStates(State.NORMAL)
+            .commit(),
+
+            SLOT_ELEMENT(expected).key("stopWritingOutput")
+            .displayedName("Stop Writing")
+            .description("Stop writing continously to output channel 'Output'")
+            .allowedStates(State.STARTED)
+            .commit(),
+
             SLOT_ELEMENT(expected).key("eosOutput")
             .displayedName("EOS to Output")
             .description("Write end-of-stream to output channel 'Output'")
             .commit(),
+
+            INPUT_CHANNEL(expected).key("input")
+            .displayedName("Input")
+            .dataSchema(pipeData)  # re-use what the output channel sends
+            .commit(),
+
+            UINT32_ELEMENT(expected).key("processingTime")
+            .displayedName("Processing Time")
+            .description("Processing time of input channel data handler")
+            .assignmentOptional()
+            .defaultValue(0)
+            .reconfigurable()
+            .unit(Unit.SECOND)
+            .metricPrefix(MetricPrefix.MILLI)
+            .commit(),
+
+            INT32_ELEMENT(expected).key("currentInputId")
+            .displayedName("Current Input Id")
+            .description("Last value received as 'int32' on input channel (default: 0)")
+            .readOnly().initialValue(0)
+            .commit(),
+
+            UINT32_ELEMENT(expected).key("inputCounter")
+            .displayedName("Input Counter")
+            .description("Number of data items received on input channel")
+            .readOnly().initialValue(0)
+            .commit(),
+
+            SLOT_ELEMENT(expected).key("resetChannelCounters")
+            .displayedName("Reset Channels")
+            .description("Reset counters involved in input/output channel data flow")
+            .allowedStates(State.NORMAL)
+            .commit(),
         )
 
     def initialization(self):
-
         self.updateState(State.NORMAL)
+        self.KARABO_ON_DATA("input", self.onData)
 
     def setReadonly(self):
         props = ["int32Property", "uint32Property",
@@ -443,3 +508,19 @@ class PropertyTest(PythonDevice):
 
     def eosOutput(self):
         self.signalEndOfStream("output")
+
+    def startWritingOutput(self):
+        # TODO 
+        pass
+
+    def stopWritingOutput(self):
+        # TODO
+        pass
+
+    def resetChannelCounters(self):
+        # TODO
+        pass
+
+    def onData(self, data, meta):
+        # TODO
+        pass
