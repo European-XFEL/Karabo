@@ -193,6 +193,16 @@ namespace karathon {
     }
 
 
+    void OutputChannelWrap::registerShowConnectionsHandlerPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& handler) {
+        self->registerShowConnectionsHandler(boost::bind(OutputChannelWrap::proxyShowConnectionsHandler, handler, _1));
+    }
+
+
+    void OutputChannelWrap::proxyShowConnectionsHandler(const bp::object& handler, const std::vector<karabo::util::Hash>& v) {
+        Wrapper::proxyHandler(handler, "show connections", v);
+    }
+
+
     void OutputChannelWrap::writePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& data, const bp::object& meta, bool copyAllData) {
         if (!bp::extract<karathon::ChannelMetaData>(meta).check()) {
             throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type for parameter 'meta'. Needs to be ChannelMetaData");
@@ -492,6 +502,8 @@ void exportPyXmsInputOutputChannel() {
                 .def("update", &karathon::OutputChannelWrap().updatePy)
 
                 .def("signalEndOfStream", &karathon::OutputChannelWrap().signalEndOfStreamPy)
+
+                .def("registerShowConnectionsHandler", &karathon::OutputChannelWrap().registerShowConnectionsHandlerPy, (bp::arg("handler")))
 
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(karabo::xms::OutputChannel)
                 ;
