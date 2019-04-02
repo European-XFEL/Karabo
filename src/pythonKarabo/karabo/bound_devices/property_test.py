@@ -365,7 +365,7 @@ class PropertyTest(PythonDevice):
             VECTOR_INT64_ELEMENT(pipeData).key("node.vecInt64")
             .description("A vector of signed 64-bit integers sent via the "
                          "pipeline")
-            .maxSize(PropertyTest.defVectorMaxSize) # DAQ needs that
+            .maxSize(PropertyTest.defVectorMaxSize)  # DAQ needs that
             .readOnly()
             .commit(),
 
