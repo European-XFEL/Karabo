@@ -215,7 +215,8 @@ class ButtonDelegate(QStyledItemDelegate):
                 model = index.model()
                 alarm_id = model.index(index.row(), id_index).data()
                 get_network().onAcknowledgeAlarm(model.instanceId, alarm_id)
-        elif self.cellEditMode:
-            self.cellEditMode = False
-            if self.currentCellIndex.isValid():
-                self.parent().closePersistentEditor(self.currentCellIndex)
+        else:
+            if self.cellEditMode:
+                self.cellEditMode = False
+                if self.currentCellIndex.isValid():
+                    self.parent().closePersistentEditor(self.currentCellIndex)
