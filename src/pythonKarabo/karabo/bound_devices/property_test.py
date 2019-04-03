@@ -5,7 +5,9 @@ __date__ = "September, 2017, 13:45 PM"
 __copyright__ = """Copyright (c) 2010-2017 European XFEL GmbH Hamburg.
 All rights reserved."""
 
+import asyncio
 import numpy as np
+import time
 
 from karabo.bound import (
     Encoding,
@@ -42,7 +44,8 @@ class PropertyTest(PythonDevice):
         self.KARABO_SLOT(self.resetChannelCounters)
         self.KARABO_SLOT(self.eosOutput)
 
-        self.outputCounter = 0
+        self._writingOutput = False
+
         # Define first function to be called after the constructor has finished
         self.registerInitialFunction(self.initialization)
 
@@ -510,17 +513,36 @@ class PropertyTest(PythonDevice):
         self.signalEndOfStream("output")
 
     def startWritingOutput(self):
-        # TODO 
-        pass
+        self._writingOutput = True
+        self.updateState(State.STARTED)
+
+        asyncio.get_event_loop().run_until_complete(self.doWritingUntilStop())
 
     def stopWritingOutput(self):
-        # TODO
-        pass
+        self._writingOutput = False
+        self.updateState(State.STOPPING)
 
     def resetChannelCounters(self):
-        # TODO
-        pass
+        self.set("inputCounter", 0)
+        self.set("outputCounter", 0)
+        self.set("currentInputId", 0)
 
-    def onData(self, data, meta):
-        # TODO
-        pass
+    async def doWritingUntilStop(self):
+        while self._writingOutput:
+            self.writeOutput()
+
+            # Waits for an interval as close as possible to the interval defined by
+            # the nominal outputFrequency .
+            delayTime = 1.0 / self.get("outputFrequency")
+            await sleep(delayTime)
+
+    async def onData(self, data, meta):
+        # Sleeps to simulate heavy work.
+        procTimeSecs = self["processingTime"]/1000.0
+        await sleep(procTimeSecs)
+
+        currentInputId = data.get("node.int32")
+        inputCounter = self["inputCounter"]
+
+        self.set("currentInputId", currentInputId)
+        self.set("inputCounter", inputCounter + 1)
