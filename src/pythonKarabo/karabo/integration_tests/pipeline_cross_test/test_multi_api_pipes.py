@@ -29,13 +29,13 @@ class TestCrossPipelining(BoundDeviceTestCase):
     def test_1to1_wait_fastReceiver(self):
         # Start all servers you need in the end:
         self.start_server_num("cpp", 1)
-        # self.start_server_num("bound", 1)
+        self.start_server_num("bound", 1)
         # self.start_server_num("mdl", 1)
 
         # First test is not a cross test, so remove later,
         # rest to be implemented.
         self._test_1to1_wait_fastReceiver("cpp", "cpp")
-        # self._test_1to1_wait_fastReceiver("cpp", "bound")
+        self._test_1to1_wait_fastReceiver("cpp", "bound")
         # self._test_1to1_wait_fastReceiver("cpp", "mdl")
         # self._test_1to1_wait_fastReceiver("bound", "cpp")
         # self._test_1to1_wait_fastReceiver("bound", "mdl")
