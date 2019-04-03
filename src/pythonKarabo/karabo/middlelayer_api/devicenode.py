@@ -1,5 +1,5 @@
 from asyncio import (
-    async, CancelledError, coroutine, TimeoutError, wait_for, Queue)
+    CancelledError, coroutine, ensure_future, TimeoutError, wait_for, Queue)
 from itertools import chain
 
 from karabo.native.data.basetypes import isSet
@@ -159,7 +159,7 @@ class DeviceNode(String):
         if self.lock:
             instance._ss.exitStack.enter_context((yield from lock(proxy)))
         if self.properties:
-            async(self._main_loop(proxy, instance))
+            ensure_future(self._main_loop(proxy, instance))
 
     def toSchemaAndAttrs(self, device, state):
         h, attrs = super().toSchemaAndAttrs(device, state)
