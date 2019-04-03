@@ -193,6 +193,9 @@ class ButtonDelegate(QStyledItemDelegate):
 
     @pyqtSlot(object)
     def cellClicked(self, index):
+        if not index.isValid():
+            return
+
         isRelevant, text, clickable = self._isRelevantColumn(index)
         if isRelevant and clickable:
             if self.cellEditMode and self.currentCellIndex.isValid():
