@@ -5,8 +5,8 @@ __date__ = "September, 2017, 13:45 PM"
 __copyright__ = """Copyright (c) 2010-2017 European XFEL GmbH Hamburg.
 All rights reserved."""
 
-import asyncio
 import numpy as np
+import threading
 import time
 
 from karabo.bound import (
@@ -45,6 +45,8 @@ class PropertyTest(PythonDevice):
         self.KARABO_SLOT(self.eosOutput)
 
         self._writingOutput = False
+        self._writingMutex = threading.Lock()
+        self._writingWorker = None
 
         # Define first function to be called after the constructor has finished
         self.registerInitialFunction(self.initialization)
@@ -54,7 +56,7 @@ class PropertyTest(PythonDevice):
         '''Description of device parameters statically known'''
         (
             OVERWRITE_ELEMENT(expected).key("state")
-            .setNewOptions(State.INIT, State.NORMAL, State.ERROR)
+            .setNewOptions(State.INIT, State.NORMAL, State.ERROR, State.STARTED, State.STOPPING)
             .setNewDefaultValue(State.INIT)
             .commit(),
 
@@ -490,21 +492,23 @@ class PropertyTest(PythonDevice):
                                    description="Converted from stringProperty")
 
     def writeOutput(self):
-        self.outputCounter += 1
+        outputCounter = self["outputCounter"]
+        outputCounter += 1
+        self.set("outputCounter", outputCounter)
 
-        # Set all numbers inside to self.outputCounter:
+        # Set all numbers inside to outputCounter:
         data = Hash("node", Hash())
         node = data["node"]
 
         # setAs needed if counter exceeds INT32 range...
-        node.setAs("int32", self.outputCounter, Types.INT32)
-        node.set("string", str(self.outputCounter))
+        node.setAs("int32", outputCounter, Types.INT32)
+        node.set("string", str(outputCounter))
         # Using plain Hash.set(..), type of vector is determined from 1st elem.:
-        node.setAs("vecInt64", [self.outputCounter] * self.defVectorMaxSize,
+        node.setAs("vecInt64", outputCounter * self.defVectorMaxSize,
                    Types.VECTOR_INT64)
-        arr = np.full((100, 200), self.outputCounter, dtype=np.float32)
+        arr = np.full((100, 200), outputCounter, dtype=np.float32)
         node.set("ndarray", arr)
-        imArr = np.full((400, 500), self.outputCounter, dtype=np.uint16)
+        imArr = np.full((400, 500), outputCounter, dtype=np.uint16)
         node.set("image", ImageData(imArr, encoding=Encoding.GRAY))
 
         self.writeChannel("output", data)
@@ -515,31 +519,43 @@ class PropertyTest(PythonDevice):
     def startWritingOutput(self):
         self._writingOutput = True
         self.updateState(State.STARTED)
-
-        asyncio.get_event_loop().run_until_complete(self.doWritingUntilStop())
+        self._writingWorker = threading.Thread(target=self.writeLoop)
+        self._writingWorker.start()
 
     def stopWritingOutput(self):
-        self._writingOutput = False
-        self.updateState(State.STOPPING)
+        self._writingMutex.acquire()
+        try:
+            self._writingOutput = False
+            self.updateState(State.STOPPING)
+        finally:
+            self._writingMutex.release()
 
     def resetChannelCounters(self):
         self.set("inputCounter", 0)
         self.set("outputCounter", 0)
         self.set("currentInputId", 0)
 
-    async def doWritingUntilStop(self):
-        while self._writingOutput:
+    def writeLoop(self):
+        shouldWrite = True  # Always run at least once: write should start immediately
+        while shouldWrite:
             self.writeOutput()
+            self._writingMutex.acquire()
+            try:
+                shouldWrite = self._writingOutput
+            finally:
+                self._writingMutex.release()
 
-            # Waits for an interval as close as possible to the interval defined by
-            # the nominal outputFrequency .
-            delayTime = 1.0 / self.get("outputFrequency")
-            await sleep(delayTime)
+            if shouldWrite:
+                # Waits for an interval as close as possible to the interval defined by
+                # the nominal outputFrequency.
+                delayTime = 1.0 / self.get("outputFrequency")
+                time.sleep(delayTime)
+        self.updateState(State.NORMAL)
 
-    async def onData(self, data, meta):
+    def onData(self, data, meta):
         # Sleeps to simulate heavy work.
         procTimeSecs = self["processingTime"]/1000.0
-        await sleep(procTimeSecs)
+        time.sleep(procTimeSecs)
 
         currentInputId = data.get("node.int32")
         inputCounter = self["inputCounter"]
