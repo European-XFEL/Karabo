@@ -5,7 +5,6 @@ __date__ = "September, 2017, 13:45 PM"
 __copyright__ = """Copyright (c) 2010-2017 European XFEL GmbH Hamburg.
 All rights reserved."""
 
-import asyncio
 import numpy as np
 import threading
 import time
@@ -546,6 +545,7 @@ class PropertyTest(PythonDevice):
                 # the nominal outputFrequency.
                 delayTime = 1.0 / self.get("outputFrequency")
                 time.sleep(delayTime)
+
         self.updateState(State.NORMAL)
 
     def onData(self, data, meta):
