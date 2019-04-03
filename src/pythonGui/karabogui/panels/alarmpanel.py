@@ -195,8 +195,8 @@ class ButtonDelegate(QStyledItemDelegate):
     def cellClicked(self, index):
         isRelevant, text, clickable = self._isRelevantColumn(index)
         if isRelevant and clickable:
-            if self.cellEditMode:
-                # Remove old persistent model index
+            if self.cellEditMode and self.currentCellIndex.isValid():
+                # Remove old persistent model index if valid
                 self.parent().closePersistentEditor(self.currentCellIndex)
             # Current model index is stored and added to stay persistent until
             # editing mode is done
@@ -215,8 +215,7 @@ class ButtonDelegate(QStyledItemDelegate):
                 model = index.model()
                 alarm_id = model.index(index.row(), id_index).data()
                 get_network().onAcknowledgeAlarm(model.instanceId, alarm_id)
-        else:
-            if self.cellEditMode:
-                self.cellEditMode = False
-                # Persistent model index and data namely QPushButton cleaned up
+        elif self.cellEditMode:
+            self.cellEditMode = False
+            if self.currentCellIndex.isValid():
                 self.parent().closePersistentEditor(self.currentCellIndex)
