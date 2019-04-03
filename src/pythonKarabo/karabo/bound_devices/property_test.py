@@ -523,12 +523,9 @@ class PropertyTest(PythonDevice):
         self._writingWorker.start()
 
     def stopWritingOutput(self):
-        self._writingMutex.acquire()
-        try:
+        with self._writingMutex:
             self._writingOutput = False
-            self.updateState(State.STOPPING)
-        finally:
-            self._writingMutex.release()
+        self.updateState(State.STOPPING)
 
     def resetChannelCounters(self):
         self.set("inputCounter", 0)
@@ -539,11 +536,9 @@ class PropertyTest(PythonDevice):
         shouldWrite = True  # Always run at least once: write should start immediately
         while shouldWrite:
             self.writeOutput()
-            self._writingMutex.acquire()
-            try:
+
+            with self._writingMutex:
                 shouldWrite = self._writingOutput
-            finally:
-                self._writingMutex.release()
 
             if shouldWrite:
                 # Waits for an interval as close as possible to the interval defined by
