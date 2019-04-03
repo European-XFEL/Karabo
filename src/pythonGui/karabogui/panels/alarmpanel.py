@@ -118,8 +118,6 @@ class ButtonDelegate(QStyledItemDelegate):
         self.pbClick = QPushButton("")
         self.pbClick.hide()
         parent.clicked.connect(self.cellClicked)
-        self.cellEditMode = False
-        self.currentCellIndex = None  # QPersistentModelIndex
 
     def _isRelevantColumn(self, index):
         """ This methods checks whether the column of the given ``index``
@@ -158,7 +156,6 @@ class ButtonDelegate(QStyledItemDelegate):
         isRelevant, text, clickable = self._isRelevantColumn(index)
         if isRelevant:
             # This button is for the highlighting effect when clicking/editing
-            # the index, is deleted whenever `closePersistentEditor` is called
             button = QPushButton(parent)
             self._updateButton(button, text, clickable)
             return button
@@ -195,19 +192,8 @@ class ButtonDelegate(QStyledItemDelegate):
     def cellClicked(self, index):
         if not index.isValid():
             return
-
         isRelevant, text, clickable = self._isRelevantColumn(index)
         if isRelevant and clickable:
-            if self.cellEditMode and self.currentCellIndex.isValid():
-                # Remove old persistent model index if valid
-                self.parent().closePersistentEditor(self.currentCellIndex)
-            # Current model index is stored and added to stay persistent until
-            # editing mode is done
-            self.currentCellIndex = index
-            # If no editor exists, the delegate will create a new editor which
-            # means that here ``createEditor`` is called
-            self.parent().openPersistentEditor(self.currentCellIndex)
-            self.cellEditMode = True
             if text == ALARM_DATA[SHOW_DEVICE]:
                 # Send signal to show device
                 broadcast_event(KaraboEventSender.ShowDevice,
@@ -218,8 +204,3 @@ class ButtonDelegate(QStyledItemDelegate):
                 model = index.model()
                 alarm_id = model.index(index.row(), id_index).data()
                 get_network().onAcknowledgeAlarm(model.instanceId, alarm_id)
-        else:
-            if self.cellEditMode:
-                self.cellEditMode = False
-                if self.currentCellIndex.isValid():
-                    self.parent().closePersistentEditor(self.currentCellIndex)
