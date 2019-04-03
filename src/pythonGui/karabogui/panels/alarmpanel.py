@@ -193,10 +193,13 @@ class ButtonDelegate(QStyledItemDelegate):
 
     @pyqtSlot(object)
     def cellClicked(self, index):
+        if not index.isValid():
+            return
+
         isRelevant, text, clickable = self._isRelevantColumn(index)
         if isRelevant and clickable:
-            if self.cellEditMode:
-                # Remove old persistent model index
+            if self.cellEditMode and self.currentCellIndex.isValid():
+                # Remove old persistent model index if valid
                 self.parent().closePersistentEditor(self.currentCellIndex)
             # Current model index is stored and added to stay persistent until
             # editing mode is done
@@ -218,5 +221,5 @@ class ButtonDelegate(QStyledItemDelegate):
         else:
             if self.cellEditMode:
                 self.cellEditMode = False
-                # Persistent model index and data namely QPushButton cleaned up
-                self.parent().closePersistentEditor(self.currentCellIndex)
+                if self.currentCellIndex.isValid():
+                    self.parent().closePersistentEditor(self.currentCellIndex)
