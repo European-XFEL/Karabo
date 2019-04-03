@@ -1,5 +1,5 @@
 from asyncio import (
-    async, coroutine, get_event_loop, set_event_loop, sleep, wait_for)
+    coroutine, ensure_future, get_event_loop, set_event_loop, sleep, wait_for)
 from contextlib import closing
 import gc
 from itertools import count
@@ -58,7 +58,7 @@ class Other(Device):
     @Slot()
     @coroutine
     def count(self):
-        async(self.do_count())
+        ensure_future(self.do_count())
 
     @coroutine
     def onInitialization(self):
@@ -170,7 +170,7 @@ class Tests(TestCase):
             oel = get_event_loop()
             set_event_loop(NoEventLoop(devices))
             time.sleep(0.1)
-            thread.loop.call_soon_threadsafe(async, self.init_other())
+            thread.loop.call_soon_threadsafe(ensure_future, self.init_other())
             time.sleep(4)
 
             # test whether proxy stays alive while used

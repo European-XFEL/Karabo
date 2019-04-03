@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-from asyncio import (async, CancelledError, coroutine, get_event_loop,
+from asyncio import (CancelledError, coroutine, ensure_future, get_event_loop,
                      iscoroutinefunction, TimeoutError, wait_for)
 from collections import defaultdict
 import logging
@@ -65,7 +65,7 @@ def coslot(f, passMessage=False):
                 _log_exception(func, device, message)
         if passMessage:
             args.append(message)
-        async(inner())
+        ensure_future(inner())
 
     f.slot = outer
     return f
@@ -285,7 +285,7 @@ class SignalSlotable(Configurable):
     def _run(self, server=None, **kwargs):
         try:
             self._register_slots()
-            async(self._ss.main(self))
+            ensure_future(self._ss.main(self))
             yield from self._assert_name_unique()
             self._ss.notify_network(self._initInfo())
             if server is not None:

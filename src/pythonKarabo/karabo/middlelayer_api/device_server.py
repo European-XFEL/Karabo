@@ -1,4 +1,4 @@
-from asyncio import (async, coroutine, create_subprocess_exec, gather,
+from asyncio import (coroutine, create_subprocess_exec, ensure_future, gather,
                      get_event_loop, set_event_loop, sleep, TimeoutError, wait,
                      wait_for)
 import copy
@@ -76,7 +76,7 @@ class DeviceServerBase(SignalSlotable):
     @coroutine
     def scanPlugins(self, value):
         if value and self.scanPluginsTask is None:
-            self.scanPluginsTask = async(self.scanPluginsLoop())
+            self.scanPluginsTask = ensure_future(self.scanPluginsLoop())
         elif not value and self.scanPluginsTask is not None:
             self.scanPluginsTask.cancel()
             self.scanPluginsTask = None
@@ -278,7 +278,7 @@ class DeviceServerBase(SignalSlotable):
         server = cls(params)
         if server:
             server._device_initializer = _device_initializer
-            loop.add_signal_handler(SIGTERM, async, server.slotKillServer())
+            loop.add_signal_handler(SIGTERM, ensure_future, server.slotKillServer())
             # NOTE: The server listens to broadcasts and we set a flag in the
             # signal slotable
             server.is_server = True

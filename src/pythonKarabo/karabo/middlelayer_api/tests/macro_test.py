@@ -1,4 +1,4 @@
-from asyncio import async, coroutine, TimeoutError
+from asyncio import coroutine, ensure_future, TimeoutError
 from contextlib import contextmanager
 from flaky import flaky
 import sys
@@ -434,7 +434,7 @@ class Tests(DeviceTest):
         with (yield from getDevice("local")) as d:
             # cancel during time.sleep
             self.local.cancelled_slot = None
-            task = async(d.sleepalot())
+            task = ensure_future(d.sleepalot())
             # Sleep for a short time so that the macro gets started
             yield from karabo_sleep(0.01)
             # Cancel the macro, which is in a non-interruptable non-karabo
@@ -451,7 +451,7 @@ class Tests(DeviceTest):
 
             # cancel during karabo.sleep
             self.local.cancelled_slot = None
-            task = async(d.sleepalot())
+            task = ensure_future(d.sleepalot())
             # Sleep for long enough for the macro to end up in the really long
             # sleep at the end
             yield from karabo_sleep(0.13)
