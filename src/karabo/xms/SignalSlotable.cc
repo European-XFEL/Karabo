@@ -2182,7 +2182,7 @@ namespace karabo {
             Hash channelConfig = config.get<Hash>(channelName);
             if (channelConfig.has("schema")) channelConfig.erase("schema");
             InputChannel::Pointer channel = Configurator<InputChannel>::create("InputChannel", channelConfig);
-            channel->setInstanceId(m_instanceId);
+            channel->setInstanceId(m_instanceId + ":" + channelName);
             {
                 boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
                 m_inputChannels[channelName] = channel;
