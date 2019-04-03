@@ -1258,7 +1258,7 @@ namespace karabo {
             // Set an id for the input channel - since we do not allow to connect more than once to the same
             // output channel, our instance id is sufficient.
             const std::string myInstanceId(sigSlotPtr->getInstanceId());
-            input->setInstanceId(myInstanceId);
+            input->setInstanceId(myInstanceId + ":" + channelName);
             // Asynchronously connect to OutputChannel:
             auto handler = [myInstanceId, channelName](bool success) {
                 if (success) {
