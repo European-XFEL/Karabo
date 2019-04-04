@@ -558,6 +558,7 @@ class QuantityValue(KaraboValue, Quantity):
                 pass
 
         if absolute is not None and self.value != 0:
+            # FIXME: this branch is not covered by tests
             err = abs(absolute / self.value)
             if relative is not None:
                 err = max(err, relative)
@@ -570,6 +571,9 @@ class QuantityValue(KaraboValue, Quantity):
         if err > 0:
             return "{{:.{}~{}}}".format(err, fmt).format(1.0 * value)
         else:
+            # FIXME: the following string always return [0], regardless of the
+            #  size of the initial array
+            # FIXME: this branch is not covered by tests
             return "{{:~{}}}".format(fmt).format(0)
 
     def _repr_pretty_(self, p, cycle):
