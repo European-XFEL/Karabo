@@ -254,7 +254,7 @@ shift
 # Parse the commandline flags
 BUNDLE="n"
 RUNTESTS="n"
-RUNINTEGRATIONTESTS="y"
+RUNINTEGRATIONTESTS="n"
 PYOPT="normal"
 NUM_JOBS=0
 CODECOVERAGE="n"
