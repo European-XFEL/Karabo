@@ -546,6 +546,12 @@ class PropertyTest(PythonDevice):
                 delayTime = 1.0 / self.get("outputFrequency")
                 time.sleep(delayTime)
 
+                # "Refreshes" the shouldWrite flag before entering a new loop interaction
+                # During the sleep an stop command might have been issued and we want to
+                # avoid the extra writeOutput call.
+                with self._writingMutex:
+                    shouldWrite = self._writingOutput
+
         self.updateState(State.NORMAL)
 
     def onData(self, data, meta):
@@ -558,3 +564,4 @@ class PropertyTest(PythonDevice):
 
         self.set("currentInputId", currentInputId)
         self.set("inputCounter", inputCounter + 1)
+
