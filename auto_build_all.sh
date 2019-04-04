@@ -342,7 +342,7 @@ fi
 
 if [ "$RUNTESTS" = "y" ]; then
     # runUnitTests
-    runIntegrationTests
+    runPythonIntegrationTests
 fi
 
 if [ "$RUNINTEGRATIONTESTS" = "y" ]; then
