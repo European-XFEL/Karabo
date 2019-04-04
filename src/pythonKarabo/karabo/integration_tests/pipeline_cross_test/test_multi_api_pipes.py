@@ -106,9 +106,9 @@ class TestCrossPipelining(BoundDeviceTestCase):
                                             State.NORMAL, self._max_timeout))
         out_count = self.dc.get("sender", "outputCounter")
 
-        # Test that duration and frequency match by +/-15%:
-        self.assertTrue(out_count > 0.85 * sender_freq * elapsed_time)
-        self.assertTrue(out_count < 1.15 * sender_freq * elapsed_time)
+        # Test that duration and frequency match by +/-20%:
+        self.assertTrue(out_count > 0.80 * sender_freq * elapsed_time)
+        self.assertTrue(out_count < 1.20 * sender_freq * elapsed_time)
 
         # Could still take a while until all data is received
         self.assertTrue(self.waitUntilEqual("receiver", "inputCounter",
