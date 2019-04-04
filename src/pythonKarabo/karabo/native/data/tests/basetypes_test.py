@@ -10,7 +10,7 @@ from karabo.native.data.enums import Unit, MetricPrefix
 from karabo.native.data.basetypes import (
     NoneValue, QuantityValue, isSet, StringValue, VectorCharValue, BoolValue,
     EnumValue, TableValue, VectorStringValue, wrap)
-from karabo.native.data.hash import Hash, Int32, Float
+from karabo.native.data.hash import Hash, Int32, Float, VectorFloat
 from karabo.native.timestamp import Timestamp
 
 
@@ -428,8 +428,22 @@ class Tests(TestCase):
         self.assertIs(next(iter(v)).timestamp, self.t1)
 
         self.assertEqual(str(v), '[2 3 4] m')
-        f = QuantityValue([2., 3., 4.], "m", timestamp=self.t1)
-        self.assertEqual(str(f), '[2. 3. 4.] m')
+        f = QuantityValue([2., 3.3, 4.44], "m", timestamp=self.t1)
+        self.assertEqual(str(f), '[2.0 3.3 4.44] m')
+
+        a = Float(absoluteError=1e-8, relativeError=1e-12)
+        v = VectorFloat(minSize=1, maxSize=3, unitSymbol=Unit.METER)
+        F = v.toKaraboValue([a.toKaraboValue(2.),
+                             a.toKaraboValue(3.4),
+                             a.toKaraboValue(4.44)])
+        self.assertEqual(str(F), '[2.0 3.4 4.44] m')
+
+        # very small values:
+        F = v.toKaraboValue([a.toKaraboValue(1e-10),
+                             a.toKaraboValue(2e-20),
+                             a.toKaraboValue(-4e-30)])
+        # XXX: ideally we should have zeros for very small values here:
+        self.assertEqual(str(F), '[1e-10 2e-20 -4e-30] m')
 
     def test_hash_equal(self):
         a = Hash('v', numpy.array([1, 2, 3]))
