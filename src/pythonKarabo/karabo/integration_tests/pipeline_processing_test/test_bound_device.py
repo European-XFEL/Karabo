@@ -53,19 +53,19 @@ class TestPipelineProcessing(BoundDeviceTestCase):
         ctable3 = self.dc.get("p2pTestSender", "output3.connections")
 
         self.assertTrue(len(ctable1) == 1)
-        self.assertTrue(ctable1[0]["remoteId"] == "pipeTestReceiver")
+        self.assertTrue(ctable1[0]["remoteId"] == "pipeTestReceiver:input")
         self.assertTrue(ctable1[0]["dataDistribution"] == "copy")
         self.assertTrue(ctable1[0]["onSlowness"] == "wait")
         self.assertTrue(ctable1[0]["memoryLocation"] == "remote")
 
         self.assertTrue(len(ctable2) == 1)
-        self.assertTrue(ctable2[0]["remoteId"] == "pipeTestReceiver")
+        self.assertTrue(ctable2[0]["remoteId"] == "pipeTestReceiver:input2")
         self.assertTrue(ctable2[0]["dataDistribution"] == "copy")
         self.assertTrue(ctable2[0]["onSlowness"] == "wait")
         self.assertTrue(ctable2[0]["memoryLocation"] == "remote")
 
         self.assertTrue(len(ctable3) == 1)
-        self.assertTrue(ctable3[0]["remoteId"] == "pipeTestReceiver")
+        self.assertTrue(ctable3[0]["remoteId"] == "pipeTestReceiver:input3")
         self.assertTrue(ctable3[0]["dataDistribution"] == "copy")
         self.assertTrue(ctable3[0]["onSlowness"] == "wait")
         self.assertTrue(ctable3[0]["memoryLocation"] == "remote")

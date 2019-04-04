@@ -133,7 +133,7 @@ void PipelinedProcessing_Test::testPipeWait() {
     CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
 
     //printSenderOutputChannelConnections("testPipeWait");
-    testSenderOutputChannelConnections(1UL, {m_receiver}, "copy", "wait", "local", {m_receiver}, "copy", "wait", "local");
+    testSenderOutputChannelConnections(1UL, {m_receiver+":input"}, "copy", "wait", "local", {m_receiver+":input2"}, "copy", "wait", "local");
 
     testPipeWait(0, 0);
     testPipeWait(100, 0);
@@ -269,7 +269,7 @@ void PipelinedProcessing_Test::testPipeWaitPerf() {
     instantiateDeviceWithAssert("PipeReceiverDevice", config);
     CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
 
-    testSenderOutputChannelConnections(1UL, {m_receiver}, "copy", "wait", "local", {m_receiver}, "copy", "wait", "local");
+    testSenderOutputChannelConnections(1UL, {m_receiver+":input"}, "copy", "wait", "local", {m_receiver+":input2"}, "copy", "wait", "local");
 
     // We are looking for measures of pipeline data "transmission" performance - zero all
     // sender's delays and receivers processing times so we can focus on transmission times.
@@ -350,7 +350,7 @@ void PipelinedProcessing_Test::testPipeDrop() {
     instantiateDeviceWithAssert("PipeReceiverDevice", config);
     CPPUNIT_ASSERT_EQUAL(std::string("drop"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
 
-    testSenderOutputChannelConnections(1UL, {m_receiver}, "copy", "drop", "local", {m_receiver}, "copy", "wait", "local");
+    testSenderOutputChannelConnections(1UL, {m_receiver+":input"}, "copy", "drop", "local", {m_receiver+":input2"}, "copy", "wait", "local");
 
     testPipeDrop(10, 0, true);
     testPipeDrop(100, 0, true);
@@ -436,7 +436,7 @@ void PipelinedProcessing_Test::testPipeQueue() {
     CPPUNIT_ASSERT_EQUAL(std::string("queue"), m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
     CPPUNIT_ASSERT_EQUAL(std::string("copy"), m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
 
-    testSenderOutputChannelConnections(1UL, {m_receiver}, "copy", "queue", "local", {m_receiver}, "copy", "wait", "local");
+    testSenderOutputChannelConnections(1UL, {m_receiver+":input"}, "copy", "queue", "local", {m_receiver+":input2"}, "copy", "wait", "local");
 
     // Higher processing times are used to allow observation that data is sent faster than it is 
     // handled by the receiver.
@@ -555,7 +555,7 @@ void PipelinedProcessing_Test::testPipeMinData() {
     config += Hash("deviceId", m_receiver, "input.minData", minData);
     instantiateDeviceWithAssert("PipeReceiverDevice", config);
 
-    testSenderOutputChannelConnections(1UL, {m_receiver}, "copy", "wait", "local", {m_receiver}, "copy", "wait", "local");
+    testSenderOutputChannelConnections(1UL, {m_receiver+":input"}, "copy", "wait", "local", {m_receiver+":input2"}, "copy", "wait", "local");
 
     // make sure the sender has stopped sending data
     CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
@@ -616,7 +616,7 @@ void PipelinedProcessing_Test::testPipeTwoPots() {
     config += Hash("deviceId", m_receiver, "processingTime", 200);
     instantiateDeviceWithAssert("PipeReceiverDevice", config);
 
-    testSenderOutputChannelConnections(1UL, {m_receiver}, "copy", "wait", "local", {m_receiver}, "copy", "wait", "local");
+    testSenderOutputChannelConnections(1UL, {m_receiver+":input"}, "copy", "wait", "local", {m_receiver+":input2"}, "copy", "wait", "local");
 
     for (unsigned int nDataWhenStop = 3; nDataWhenStop < 8; ++nDataWhenStop) {
 
@@ -674,8 +674,8 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversWait() {
     // check that the default value of noInputShared is "wait"
     CPPUNIT_ASSERT_EQUAL(std::string("wait"), m_deviceClient->get<std::string>(m_sender, "output1.noInputShared"));
 
-    testSenderOutputChannelConnections(2UL, {m_receiver1,m_receiver2}, "shared", "wait", "local",
-                                            {m_receiver1,m_receiver2}, "copy", "wait", "local");
+    testSenderOutputChannelConnections(2UL, {m_receiver1+":input",m_receiver2+":input"}, "shared", "wait", "local",
+                                            {m_receiver1+":input2",m_receiver2+":input2"}, "copy", "wait", "local");
 
     testPipeTwoSharedReceivers(0, 0, 0, false, false);
     testPipeTwoSharedReceivers(200, 0, 0, false, false);
@@ -685,8 +685,8 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversWait() {
     killDeviceWithAssert(m_sender);
     instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", m_sender, "output1", Hash("distributionMode", "round-robin")));
 
-    testSenderOutputChannelConnections(2UL, {m_receiver1,m_receiver2}, "shared", "wait", "local",
-                                            {m_receiver1,m_receiver2}, "copy", "wait", "local");
+    testSenderOutputChannelConnections(2UL, {m_receiver1+":input",m_receiver2+":input"}, "shared", "wait", "local",
+                                            {m_receiver1+":input2",m_receiver2+":input2"}, "copy", "wait", "local");
 
 
     testPipeTwoSharedReceivers(0, 0, 20, false, true);
@@ -718,8 +718,8 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversDrop() {
     instantiateDeviceWithAssert("PipeReceiverDevice", config1);
     instantiateDeviceWithAssert("PipeReceiverDevice", config2);
 
-    testSenderOutputChannelConnections(2UL, {m_receiver1,m_receiver2}, "shared", "drop", "local",
-                                            {m_receiver1,m_receiver2}, "copy", "wait", "local");
+    testSenderOutputChannelConnections(2UL, {m_receiver1+":input",m_receiver2+":input"}, "shared", "drop", "local",
+                                            {m_receiver1+":input2",m_receiver2+":input2"}, "copy", "wait", "local");
 
     // check that even if the receiver has "onSlowness == drop", all data will still be received by shared
     // receivers if "onInputShared" from the output channel of the sender is "wait"!
@@ -731,8 +731,8 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversDrop() {
     killDeviceWithAssert(m_sender);
     instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", m_sender, "output1.noInputShared", "drop"));
 
-    testSenderOutputChannelConnections(2UL, {m_receiver1,m_receiver2}, "shared", "drop", "local",
-                                            {m_receiver1,m_receiver2}, "copy", "wait", "local");
+    testSenderOutputChannelConnections(2UL, {m_receiver1+":input",m_receiver2+":input"}, "shared", "drop", "local",
+                                            {m_receiver1+":input2",m_receiver2+":input2"}, "copy", "wait", "local");
 
     // check that the default value of distributionMode is "load-balanced"
     CPPUNIT_ASSERT_EQUAL(std::string("load-balanced"), m_deviceClient->get<std::string>(m_sender, "output1.distributionMode"));
@@ -750,8 +750,8 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversDrop() {
     killDeviceWithAssert(m_sender);
     instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", m_sender, "output1", Hash("noInputShared", "drop",
                                                                                               "distributionMode", "round-robin")));
-    testSenderOutputChannelConnections(2UL, {m_receiver1,m_receiver2}, "shared", "drop", "local",
-                                            {m_receiver1,m_receiver2}, "copy", "wait", "local");
+    testSenderOutputChannelConnections(2UL, {m_receiver1+":input",m_receiver2+":input"}, "shared", "drop", "local",
+                                            {m_receiver1+":input2",m_receiver2+":input2"}, "copy", "wait", "local");
 
     testPipeTwoSharedReceivers(0, 0, 20, false, true);
     testPipeTwoSharedReceivers(100, 40, 0, true, true); // receivers which have different "speed"
@@ -780,15 +780,15 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueue() {
     instantiateDeviceWithAssert("PipeReceiverDevice", config1);
     instantiateDeviceWithAssert("PipeReceiverDevice", config2);
 
-    testSenderOutputChannelConnections(2UL, {m_receiver1,m_receiver2}, "shared", "wait", "local",
-                                            {m_receiver1,m_receiver2}, "copy", "wait", "local");
+    testSenderOutputChannelConnections(2UL, {m_receiver1+":input",m_receiver2+":input"}, "shared", "wait", "local",
+                                            {m_receiver1+":input2",m_receiver2+":input2"}, "copy", "wait", "local");
 
     // restart the sender with "output1.noInputShared == queue"
     killDeviceWithAssert(m_sender);
     instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", m_sender, "output1.noInputShared", "queue"));
 
-    testSenderOutputChannelConnections(2UL, {m_receiver1,m_receiver2}, "shared", "wait", "local",
-                                            {m_receiver1,m_receiver2}, "copy", "wait", "local");
+    testSenderOutputChannelConnections(2UL, {m_receiver1+":input",m_receiver2+":input"}, "shared", "wait", "local",
+                                            {m_receiver1+":input2",m_receiver2+":input2"}, "copy", "wait", "local");
 
     // check that the default value of distributionMode is "load-balanced"
     CPPUNIT_ASSERT_EQUAL(std::string("load-balanced"), m_deviceClient->get<std::string>(m_sender, "output1.distributionMode"));
@@ -807,8 +807,8 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueue() {
     instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", m_sender, "output1", Hash("noInputShared", "queue",
                                                                                               "distributionMode", "round-robin")));
 
-    testSenderOutputChannelConnections(2UL, {m_receiver1,m_receiver2}, "shared", "wait", "local",
-                                            {m_receiver1,m_receiver2}, "copy", "wait", "local");
+    testSenderOutputChannelConnections(2UL, {m_receiver1+":input",m_receiver2+":input"}, "shared", "wait", "local",
+                                            {m_receiver1+":input2",m_receiver2+":input2"}, "copy", "wait", "local");
 
     // Set of tests for 'round-robin' distribution mode.
     testPipeTwoSharedReceivers(0, 0, 20, false, true);
