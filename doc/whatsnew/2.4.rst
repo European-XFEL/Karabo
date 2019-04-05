@@ -16,6 +16,7 @@ Minor **backward incompatibilities**:
 - a
 - b
 
+
 Detailed Merge-Log
 ==================
 
@@ -49,6 +50,9 @@ Bound/cpp core
 - Fix serialiser performance comparison !3241
 - C++: karabo/util must not include other karabo parts !3334
 - C++: Fix output channel chunk leaks when input/output channels disconnect. Looks like not the full story is covered... !3361
+- C++: Fix various race conditions in Tcp !3380 !3390
+- C++:  Fix races and more chunk leaks in pipelines !3381 !3390
+- C++: Fix pipeline chunk leakage - though not fully for local connectionCertainly not an elegant solution, but OK for 2.4.0 now. !3385
 
 Core Devices
 ++++++++++++
@@ -91,6 +95,7 @@ Dependencies and deployment
 Middlelayer core
 ++++++++++++++++
 
+- MDL: Convert python float to Timestamp in MDL !3378
 - MDL: Forcing unsigned shape in native NDArray Schema and toDataAndAttrs() !3367 !3372
 - MDL: Train ID ticking in Python 36 !3348
 - MDL: Accept read and send chunk swaps in the MDL output channel !3347
@@ -123,6 +128,10 @@ Middlelayer core
 Graphical user interface
 ++++++++++++++++++++++++
 
+- GUI: Update the wheelbox widget. Add test for min and max update and calculate… !3375
+- GUI: Update Dialog improvements !3343
+- GUI: Show wait cursor while loading topology !3383
+- GUI: Shutdown device in device topology !3382
 - GUI: Introducing Karabo Theater !3262
 - GUI: Adjust QPADDING to new QToolbar border size in scenepanel !3370
 - GUI: Notify client - notification message box !3355
