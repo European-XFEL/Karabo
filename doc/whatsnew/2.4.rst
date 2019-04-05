@@ -5,16 +5,31 @@ What's New in Karabo 2.4.0
 
 The **most relevant improvements**, fixes and changes are:
 
-- Older GUI clients are not compatible with GUI servers of Karabo 2.4.0:
-  They will not receive pipeline data.
-- The ProjectManager is now a MDL device!
+- GUI: Older GUI clients are not compatible with GUI servers of Karabo 2.4.0:
+  They will not receive pipeline data. Request - reply protocol!
+- GUI: Server forwards timestamp for pipeline data. The timestamp for images is now correct.
+- GUI: Addition of Weblink widget (in scene tools)
+- GUI: Addition of wheelbox widget
+- GUI: No interpolation in image widgets by default
+- GUI: Align fonts and style across different OS
+- GUI: Segmentation fault fixes in Tablelement and AlarmPanel
+- GUI: More drag & drop functionality from project panel: Scenes can be dragged on scenes
+- GUI: Implementation of the first device topology
+- GUI: Print support for each panel
+- GUI: Tooltips of last received data for image widgets
+- GUI: Enable of wheeling of widgets into the Karabo GUI - Extensions
+
+- MDL: Proxy (e.g. in ikarabo) uses now meta data timestamp for pipeline data.
+- MDL: Autostart implemented in device server to enable core devices startup
+- Core Devices: The ProjectManager is now a MDL device!
+- Core Devices: GUI Server now caches and forwards logs with loglevel INFO
+- C++: Several pipeline improvements and stabilization/fixes to race conditions
 
 Minor **backward incompatibilities**:
 - Invalid schema elements will not be ignored anymore, but trigger a LogicException.
   The specific cases are a leaf added to a non-existing node, a leaf where the
   parent is not node, and a leaf added to a list of nodes.
-- a
-- b
+- **OLD GUI Clients** (2.3.1) lack a new server protocol message and will not work with Karabo 2.4.0
 
 
 Detailed Merge-Log
