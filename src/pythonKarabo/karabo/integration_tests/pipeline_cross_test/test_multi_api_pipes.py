@@ -103,24 +103,35 @@ class TestCrossPipelining(BoundDeviceTestCase):
         elapsed_time = stop_time - start_time
 
         self.assertTrue(self.waitUntilEqual("receiver", "state",
-                                            State.NORMAL, self._max_timeout))
+                                            State.NORMAL, self._max_timeout),
+                                            "Receiver didn't reach NORMAL state within {} secs. after sender stop.".format(self._max_timeout))
         out_count = self.dc.get("sender", "outputCounter")
 
         # Test that duration and frequency match by +/-20%:
-        self.assertTrue(out_count > 0.80 * sender_freq * elapsed_time)
-        self.assertTrue(out_count < 1.20 * sender_freq * elapsed_time)
+        min_expected = 0.80 * sender_freq * elapsed_time
+        self.assertTrue(out_count > min_expected,
+                        "# of output data items, {}, is lower than the min. expected, {}."
+                        .format(out_count, min_expected))
+        max_expected = 1.20 * sender_freq * elapsed_time
+        self.assertTrue(out_count < max_expected,
+                        "# of output data items, {}, is higher than the max. expected, {}."
+                        .format(out_count, max_expected))
 
         # Could still take a while until all data is received
         self.assertTrue(self.waitUntilEqual("receiver", "inputCounter",
-                                            out_count, self._max_timeout))
-        in_count = self.dc.get("receiver", "inputCounter")
-        self.assertEqual(out_count, in_count)
+                                            out_count, self._max_timeout),
+                                            "Input ({}) and Output ({}) counters didn't converge within {} secs."
+                                            .format(self.dc.get("receiver", "inputCounter"), out_count, self._max_timeout))
+
+        # The assert below is redundant after the one above.
+        # in_count = self.dc.get("receiver", "inputCounter")
+        # self.assertEqual(out_count, in_count)
 
         ok, msg = self.dc.killDevice("sender", self._max_timeout)
-        self.assertTrue(ok, msg)
-        
+        self.assertTrue(ok, "Problem killing sender device: '{}'.".format(msg))
+
         ok, msg = self.dc.killDevice("receiver", self._max_timeout)
-        self.assertTrue(ok, msg)
+        self.assertTrue(ok, "Problem killing receiver device: '{}'.".format(msg))
 
     def start_server_num(self, api, server_num):
         """Start server of given api and number"""
