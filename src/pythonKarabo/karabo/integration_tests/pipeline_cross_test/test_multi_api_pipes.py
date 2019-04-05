@@ -5,7 +5,7 @@ from karabo.integration_tests.utils import BoundDeviceTestCase
 from karabo.bound import Hash, State
 
 class TestCrossPipelining(BoundDeviceTestCase):
-    _max_timeout = 20
+    _max_timeout = 30
 
     # def test_example(self):
     #     # Complete setup - do not do it in setup to ensure that even in case of
@@ -122,10 +122,6 @@ class TestCrossPipelining(BoundDeviceTestCase):
                                             out_count, self._max_timeout),
                                             "Input ({}) and Output ({}) counters didn't converge within {} secs."
                                             .format(self.dc.get("receiver", "inputCounter"), out_count, self._max_timeout))
-
-        # The assert below is redundant after the one above.
-        # in_count = self.dc.get("receiver", "inputCounter")
-        # self.assertEqual(out_count, in_count)
 
         ok, msg = self.dc.killDevice("sender", self._max_timeout)
         self.assertTrue(ok, "Problem killing sender device: '{}'.".format(msg))
