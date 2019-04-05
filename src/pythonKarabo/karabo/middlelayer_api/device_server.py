@@ -295,8 +295,7 @@ class DeviceServerBase(SignalSlotable):
         if not self._device_initializer:
             return
 
-        while not len(self.plugins):
-            yield from sleep(4)
+        yield from self.scanPluginsOnce()
 
         for deviceId, initializer in self._device_initializer.items():
             configuration = Hash(initializer)
