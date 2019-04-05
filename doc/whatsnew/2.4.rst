@@ -29,7 +29,7 @@ Minor **backward incompatibilities**:
 - Invalid schema elements will not be ignored anymore, but trigger a LogicException.
   The specific cases are a leaf added to a non-existing node, a leaf where the
   parent is not node, and a leaf added to a list of nodes.
-- OLD GUI Clients (2.3.1) lack a new server protocol message and will not work with Karabo 2.4.0
+- **OLD GUI Clients** (2.3.1) lack a new server protocol message and will not work with Karabo 2.4.0
 
 
 Detailed Merge-Log
