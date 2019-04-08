@@ -558,7 +558,7 @@ class QuantityValue(KaraboValue, Quantity):
                 pass
 
         if absolute is not None and self.value != 0:
-            # FIXME: this branch is not covered by tests
+            # TODO: this branch is not covered by tests
             err = abs(absolute / self.value)
             if relative is not None:
                 err = max(err, relative)
@@ -571,16 +571,17 @@ class QuantityValue(KaraboValue, Quantity):
         if err > 0:
             if isinstance(value.value, numpy.ndarray):
                 # XXX: [1., 2.] will be printed as '[1.0 2.0]'
-                _formatter = f'{{:.{err}{fmt}}}'.format
-                numpy.set_printoptions(formatter={'float_kind': _formatter})
-                ret = "{} {:~}".format(value.value, value.units)
+                _formatter = {'float_kind': f'{{:.{err}{fmt}}}'.format}
+                formatted_value = numpy.array2string(value.value,
+                                                     formatter=_formatter)
+                ret = "{} {:~}".format(formatted_value, value.units)
             else:
                 # old behaviour for floats
                 ret = "{{:.{}~{}}}".format(err, fmt).format(1.0 * value)
         else:
-            # FIXME: the following string always return [0], regardless of the
+            # XXX: the following string always return [0], regardless of the
             #  size of the initial array
-            # FIXME: this branch is not covered by tests
+            # TODO: this branch is not covered by tests
             return "{{:~{}}}".format(fmt).format(0)
         return ret
 
