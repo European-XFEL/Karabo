@@ -295,9 +295,8 @@ class DeviceServerBase(SignalSlotable):
         if not self._device_initializer:
             return
 
-        # We have to wait until our plugins are available, which is around
-        # 3 seconds after startup.
-        yield from sleep(4)
+        yield from self.scanPluginsOnce()
+
         for deviceId, initializer in self._device_initializer.items():
             configuration = Hash(initializer)
             configuration["_deviceId_"] = deviceId
