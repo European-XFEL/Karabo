@@ -134,7 +134,7 @@ class Tests(DeviceTest):
             self.fail("process didn't properly go down")
 
     @async_tst(timeout=90)
-    def test_cross(self):
+    def bla_cross(self):
         # it takes typically 2 s for the bound device to start
         self.process = yield from create_subprocess_exec(
             sys.executable, "-m", "karabo.bound_api.launcher",
@@ -147,7 +147,7 @@ class Tests(DeviceTest):
             <root KRB_Artificial="">
                 <_deviceId_>boundDevice</_deviceId_>
                 <Logger><priority>FATAL</priority></Logger>
-                <middlelayerDevice>middlelayerDevice<middlelayerDevice_>
+                <middlelayerDevice>middlelayerDevice</middlelayerDevice>
                 <input>
                     <connectedOutputChannels>
                         middlelayerDevice:output,middlelayerDevice:rawoutput
@@ -316,13 +316,13 @@ class Tests(DeviceTest):
         self.assertEqual(proxy.output1.schema.s, "hallo")
 
         # FIXME: Investigate why this does not work
-        #with proxy:
-        #    self.device.output.schema.number = 23
-        #    self.assertEqual(proxy.a, 22.8 * unit.milliampere)
-        #    yield from self.device.output.writeData()
-        #    # This waitUntil seems to hange since the channel handler on the
-        #    # bound side does not seem to be called...
-        #    yield from waitUntil(lambda: proxy.a != 22.8 * unit.mA)
+        with proxy:
+            self.device.output.schema.number = 23
+            self.assertEqual(proxy.a, 22.8 * unit.milliampere)
+            yield from self.device.output.writeData()
+            # This waitUntil seems to hange since the channel handler on the
+            # bound side does not seem to be called...
+            yield from waitUntil(lambda: proxy.a != 22.8 * unit.mA)
 
         proxy.output1.connect()
         task = background(waitUntilNew(proxy.output1.schema.s))
