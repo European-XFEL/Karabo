@@ -356,7 +356,8 @@ class Tests(DeviceTest):
 
         async(print_stdout())
 
-        print("*** test_history after={}".format(after.isoformat()))
+        print("*** test_history DataLogger-middlelayerDevice starts")
+
         with (yield from getDevice("DataLogger-middlelayerDevice")) as logger:
             yield from logger
             yield from waitUntil(lambda: logger.state == State.NORMAL)
@@ -367,7 +368,8 @@ class Tests(DeviceTest):
             self.device.update()
 
         after = datetime.now()
-        print("*** Get history from middlelayerDevice")
+        print("*** test_history after={}".format(after.isoformat()))
+
         # This is the first history request ever, so it returns an empty
         # list (see https://in.xfel.eu/redmine/issues/9414).
         yield from getHistory(
