@@ -571,7 +571,8 @@ class QuantityValue(KaraboValue, Quantity):
         if err > 0:
             if isinstance(value.value, numpy.ndarray):
                 # XXX: [1., 2.] will be printed as '[1.0 2.0]'
-                _formatter = {'float_kind': f'{{:.{err}{fmt}}}'.format}
+                _formatter = {'float_kind':
+                              '{{:.{}{}}}'.format(err, fmt).format}
                 formatted_value = numpy.array2string(value.value,
                                                      formatter=_formatter)
                 ret = "{} {:~}".format(formatted_value, value.units)
@@ -582,7 +583,7 @@ class QuantityValue(KaraboValue, Quantity):
             # XXX: the following string always return [0], regardless of the
             #  size of the initial array
             # TODO: this branch is not covered by tests
-            return "{{:~{}}}".format(fmt).format(0)
+            ret = "{{:~{}}}".format(fmt).format(0)
         return ret
 
     def _repr_pretty_(self, p, cycle):
