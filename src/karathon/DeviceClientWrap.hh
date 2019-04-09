@@ -150,9 +150,19 @@ namespace karathon {
             return this->DeviceClient::getClassSchema(serverId, classId);
         }
 
+        karabo::util::Schema cacheAndGetDeviceSchema(const std::string& deviceId) {
+            ScopedGILRelease nogil;
+            return this->DeviceClient::cacheAndGetDeviceSchema(deviceId);
+        }
+
         karabo::util::Hash cacheAndGetConfiguration(const std::string& deviceId) {
             ScopedGILRelease nogil;
             return this->DeviceClient::cacheAndGetConfiguration(deviceId);
+        }
+
+        bp::object getConfigurationNoWaitPy(const std::string& deviceId) {
+            ScopedGILRelease nogil;
+            return bp::object(this->DeviceClient::getConfigurationNoWait(deviceId));
         }
 
         void registerInstanceNewMonitor(const bp::object& handler) {
