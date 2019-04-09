@@ -341,7 +341,7 @@ class Tests(DeviceTest):
     @async_tst(timeout=90)
     def test_history(self):
         before = datetime.now()
-
+        print("\n*** test_history before={}".format(before.isoformat()))
         karabo = os.environ["KARABO"]
         xml = os.path.abspath('historytest.xml')
         self.process = yield from create_subprocess_exec(
@@ -356,17 +356,18 @@ class Tests(DeviceTest):
 
         async(print_stdout())
 
+        print("*** test_history after={}".format(after.isoformat()))
         with (yield from getDevice("DataLogger-middlelayerDevice")) as logger:
             yield from logger
             yield from waitUntil(lambda: logger.state == State.NORMAL)
-
+        print("*** DataLogger-middlelayerDevice reached NORMAL")
         for i in range(4):
             self.device.value = i
             self.device.child.number = -i
             self.device.update()
 
         after = datetime.now()
-
+        print("*** Get history from middlelayerDevice")
         # This is the first history request ever, so it returns an empty
         # list (see https://in.xfel.eu/redmine/issues/9414).
         yield from getHistory(
@@ -410,10 +411,11 @@ class Tests(DeviceTest):
             # Sort needed - see above.
             hist.sort(key=lambda x: x[0])
             self.assertEqual([-v for _, _, _, v in hist[-5:]], list(range(5)))
-
+        print("**** Finish playing with the History")
         yield from get_event_loop().instance()._ss.request(
             "karabo/dataLogger", "slotKillServer")
         yield from self.process.wait()
+        print("*** End of test_history")
 
     test_history.slow = True
 
