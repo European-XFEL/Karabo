@@ -146,8 +146,8 @@ class TestDevice(PythonDevice):
         # block forever since one cannot synchronously call back to a slot
         # caller due to thte way ordering per sender is implemented.
         mdlDevice = self.get("middlelayerDevice")
-        self.remote().getDeviceSchema(mdlDevice)
-        self.remote().get(mdlDevice)
+        self.remote().cacheAndGetDeviceSchema(mdlDevice)
+        self.remote().cacheAndGetConfiguration(mdlDevice)
 
     def setA(self):
         ts = Timestamp(Epochstamp("20090901T135522"), Trainstamp(0))
