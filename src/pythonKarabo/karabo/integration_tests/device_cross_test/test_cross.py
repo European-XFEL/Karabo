@@ -90,6 +90,8 @@ class MiddlelayerDevice(DeviceClientBase):
 
 
 class Tests(DeviceTest):
+    os.environ["KARABO_BROKER_TOPIC"] = "PID_" + str(os.getpid())
+    print("KARABO_BROKER_TOPIC=",os.environ["KARABO_BROKER_TOPIC"])
     __loggerMap = "loggermap.xml"
     @classmethod
     @contextmanager
