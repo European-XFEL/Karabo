@@ -133,15 +133,21 @@ runPythonIntegrationTests() {
         # safeRunCommand and adding option --force.
         safeRunCommand $scriptDir/run_python_tests.sh \
             --runIntegrationTests \
-            --runLongTests \
+            # --runLongTests \
             --collectCoverage \
             --rootDir $scriptDir
     else
         safeRunCommand $scriptDir/run_python_tests.sh \
             --runIntegrationTests \
-            --runLongTests \
+            # --runLongTests \
             --rootDir $scriptDir
     fi
+}
+
+runLongTests() {
+    safeRunCommand $scriptDir/run_python_tests.sh \
+        --runLongTests \
+        --rootDir $scriptDir
 }
 
 produceCodeCoverageReport() {
@@ -201,6 +207,8 @@ Available flags:
   --runTests   - Run unit tests after building (useful for Debug|Release)
   --runIntegrationTests
                - Run integration tests after building (for Debug|Release)
+  --runLongTests
+               - Run long running tests after building (for Debug|Release)
   --numJobs N  - Specify the number of jobs that make should use to run simultaneously
 
 Note: "Dependencies" builds only the external dependencies
@@ -255,6 +263,7 @@ shift
 BUNDLE="n"
 RUNTESTS="n"
 RUNINTEGRATIONTESTS="n"
+RUNLONGTESTS="n"
 PYOPT="normal"
 NUM_JOBS=0
 CODECOVERAGE="n"
@@ -275,6 +284,9 @@ while [ -n "$1" ]; do
         --runIntegrationTests)
             # Run the integration tests
             RUNINTEGRATIONTESTS="y"
+            ;;
+        --runLongTests)
+            RUNLONGTESTS="y"
             ;;
         --numJobs)
             # Limit the numbers of jobs for make runs
@@ -341,13 +353,17 @@ else
 fi
 
 if [ "$RUNTESTS" = "y" ]; then
-    # runUnitTests
-    runPythonIntegrationTests
+    runUnitTests
+    ## runPythonIntegrationTests
 fi
 
 if [ "$RUNINTEGRATIONTESTS" = "y" ]; then
     runIntegrationTests
     runPythonIntegrationTests
+fi
+
+if [ "$RUNLONGTESTS" = "y" ]; then
+    runLongTests
 fi
 
 if [ "$CODECOVERAGE" = "y" ]; then
