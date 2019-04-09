@@ -90,8 +90,7 @@ class MiddlelayerDevice(DeviceClientBase):
 
 
 class Tests(DeviceTest):
-    os.environ["KARABO_BROKER_TOPIC"] = "PID_" + str(os.getpid())
-    print("KARABO_BROKER_TOPIC=",os.environ["KARABO_BROKER_TOPIC"])
+    #os.environ["KARABO_BROKER_TOPIC"] = "PID_" + str(os.getpid())
     __loggerMap = "loggermap.xml"
     @classmethod
     @contextmanager
@@ -343,7 +342,8 @@ class Tests(DeviceTest):
     @async_tst(timeout=90)
     def test_history(self):
         before = datetime.now()
-        print("\n*** test_history before={}".format(before.isoformat()))
+        print("\n*** test_history ENV =",os.environ)
+        print("*** test_history before={}".format(before.isoformat()))
         karabo = os.environ["KARABO"]
         xml = os.path.abspath('historytest.xml')
         self.process = yield from create_subprocess_exec(
