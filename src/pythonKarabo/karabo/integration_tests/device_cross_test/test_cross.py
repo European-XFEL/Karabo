@@ -90,7 +90,10 @@ class MiddlelayerDevice(DeviceClientBase):
 
 
 class Tests(DeviceTest):
-    #os.environ["KARABO_BROKER_TOPIC"] = "PID_" + str(os.getpid())
+    if "KARABO_BROKER_TOPIC" not in os.environ:
+        os.environ["KARABO_BROKER_TOPIC"] = "PID_" + str(os.getpid())
+    if "HOME" not in os.environ:
+        os.environ["HOME"]="/root"
     krb = os.environ["KARABO"]
     os.environ["LD_LIBRARY_PATH"] = krb + "/lib:" + krb + "/extern/lib"
     __loggerMap = "loggermap.xml"
@@ -345,7 +348,7 @@ class Tests(DeviceTest):
     def test_history(self):
         before = datetime.now()
         print("\n*** test_history ENV =",os.environ)
-        print("*** test_history before={}".format(before.isoformat()))
+
         karabo = os.environ["KARABO"]
         xml = os.path.abspath('historytest.xml')
         self.process = yield from create_subprocess_exec(
@@ -365,7 +368,9 @@ class Tests(DeviceTest):
         with (yield from getDevice("DataLogger-middlelayerDevice")) as logger:
             yield from logger
             yield from waitUntil(lambda: logger.state == State.NORMAL)
-        print("*** DataLogger-middlelayerDevice reached NORMAL")
+
+        print("*** DataLogger-middlelayerDevice reached NORMAL state")
+
         for i in range(4):
             self.device.value = i
             self.device.child.number = -i
