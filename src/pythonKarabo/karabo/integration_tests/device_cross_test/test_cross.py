@@ -91,6 +91,8 @@ class MiddlelayerDevice(DeviceClientBase):
 
 class Tests(DeviceTest):
     #os.environ["KARABO_BROKER_TOPIC"] = "PID_" + str(os.getpid())
+    krb = os.environ["KARABO"]
+    os.environ["LD_LIBRARY_PATH"] = krb + "/lib:" + krb + "/extern/lib"
     __loggerMap = "loggermap.xml"
     @classmethod
     @contextmanager
