@@ -62,13 +62,10 @@ class TestDisplayLabel(GuiTestCase):
 
         set_proxy_value(self.alarms, 'alarms', 0.75)
         assert controller._internal_widget.text() == '0.75'
-        controller.update_alarms(None)
         assert controller._bg_color == ALL_OK_COLOR
 
         set_proxy_value(self.alarms, 'alarms', 3.0)
-        controller.update_alarms('alarm')
         assert controller._bg_color == PROPERTY_ALARM_COLOR
 
         set_proxy_value(self.alarms, 'alarms', 1.5)
-        controller.update_alarms('warn')
         assert controller._bg_color == PROPERTY_WARN_COLOR
