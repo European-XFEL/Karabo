@@ -9,12 +9,16 @@ The **most relevant improvements**, fixes and changes are:
   They will not receive pipeline data. Request - reply protocol!
 - GUI: Server forwards timestamp for pipeline data. The timestamp for images is now correct.
 - GUI: Addition of Weblink widget (in scene tools)
-- GUI: Addition of wheelbox widget
+- GUI: Addition of Wheelbox widget
+- GUI: Addition of editable options box widget
+- GUI: Addition of timestamp widget
+- GUI: Cinema enhancements with direct connect, username and multiple scenes
 - GUI: No interpolation in image widgets by default
+- GUI: More scene items are state aware
 - GUI: Align fonts and style across different OS
 - GUI: Segmentation fault fixes in Tablelement and AlarmPanel
 - GUI: More drag & drop functionality from project panel: Scenes can be dragged on scenes
-- GUI: Implementation of the first device topology
+- GUI: Implementation of the first device topology (domain - type - member)
 - GUI: Print support for each panel
 - GUI: Tooltips of last received data for image widgets
 - GUI: Enable of wheeling of widgets into the Karabo GUI - Extensions
@@ -24,6 +28,9 @@ The **most relevant improvements**, fixes and changes are:
 - Core Devices: The ProjectManager is now a MDL device!
 - Core Devices: GUI Server now caches and forwards logs with loglevel INFO
 - C++: Several pipeline improvements and stabilization/fixes to race conditions
+- C++/bound: Several pipeline and Tcp communication improvements/stabilizations including fixes to race conditions and indirect memory ("chunk") leakage
+- C++/bound: Fixes to uuid handling for asynchronous slot replies and for the request(..).receive[Async](..) patterns
+- C++: DataLoggers publish when last data arrived
 
 Minor **backward incompatibilities**:
 - Invalid schema elements will not be ignored anymore, but trigger a LogicException.
