@@ -11,15 +11,16 @@ from PyQt4.QtGui import QFrame, QLabel
 from traits.api import Instance, Str, Tuple
 
 from karabo.common.api import (
-    KARABO_SCHEMA_ABSOLUTE_ERROR, KARABO_SCHEMA_RELATIVE_ERROR
-)
+    KARABO_ALARM_LOW, KARABO_ALARM_HIGH, KARABO_WARN_LOW, KARABO_WARN_HIGH,
+    KARABO_SCHEMA_ABSOLUTE_ERROR, KARABO_SCHEMA_RELATIVE_ERROR)
 from karabo.common.scenemodel.api import DisplayLabelModel
 from karabogui.binding.api import (
     CharBinding, ComplexBinding, FloatBinding, get_binding_value, IntBinding,
     StringBinding
 )
 from karabogui.const import (
-    ALL_OK_COLOR, PROPERTY_ALARM_COLOR_MAP, WIDGET_MIN_HEIGHT)
+    ALL_OK_COLOR, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR,
+    WIDGET_MIN_HEIGHT)
 from karabogui.controllers.api import (
     BaseBindingController, add_unit_label, register_binding_controller)
 from karabogui.util import generateObjectName
@@ -67,6 +68,8 @@ class DisplayLabel(BaseBindingController):
             self._internal_widget.setText(value[:255])
             return
 
+        self._check_alarms(binding, value)
+
         disp_type = binding.display_type
         try:
             fmt = {
@@ -99,7 +102,19 @@ class DisplayLabel(BaseBindingController):
         ret = fmt.format(value)
         self._internal_widget.setText(ret)
 
-    def update_alarms(self, alarm_type):
-        self._bg_color = PROPERTY_ALARM_COLOR_MAP[alarm_type]
+    def _check_alarms(self, binding, value):
+        attributes = binding.attributes
+        alarm_low = attributes.get(KARABO_ALARM_LOW)
+        alarm_high = attributes.get(KARABO_ALARM_HIGH)
+        warn_low = attributes.get(KARABO_WARN_LOW)
+        warn_high = attributes.get(KARABO_WARN_HIGH)
+        if ((alarm_low is not None and value < alarm_low) or
+                (alarm_high is not None and value > alarm_high)):
+            self._bg_color = PROPERTY_ALARM_COLOR
+        elif ((warn_low is not None and value < warn_low) or
+                (warn_high is not None and value > warn_high)):
+            self._bg_color = PROPERTY_WARN_COLOR
+        else:
+            self._bg_color = ALL_OK_COLOR
         sheet = self._style_sheet.format(self._bg_color)
         self.widget.setStyleSheet(sheet)
