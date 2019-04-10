@@ -528,9 +528,9 @@ class PropertyTest(PythonDevice):
         self.updateState(State.STOPPING)
 
     def resetChannelCounters(self):
-        self.set("inputCounter", 0)
-        self.set("outputCounter", 0)
-        self.set("currentInputId", 0)
+        self.set(Hash("inputCounter", 0,
+                      "outputCounter", 0,
+                      "currentInputId", 0))
 
     def writeLoop(self):
         shouldWrite = True  # Always run at least once: write should start immediately
@@ -562,6 +562,5 @@ class PropertyTest(PythonDevice):
         currentInputId = data.get("node.int32")
         inputCounter = self["inputCounter"]
 
-        self.set("currentInputId", currentInputId)
-        self.set("inputCounter", inputCounter + 1)
-
+        self.set(Hash("currentInputId", currentInputId,
+                      "inputCounter", inputCounter+1))
