@@ -133,13 +133,11 @@ runPythonIntegrationTests() {
         # safeRunCommand and adding option --force.
         safeRunCommand $scriptDir/run_python_tests.sh \
             --runIntegrationTests \
-            # --runLongTests \
             --collectCoverage \
             --rootDir $scriptDir
     else
         safeRunCommand $scriptDir/run_python_tests.sh \
             --runIntegrationTests \
-            # --runLongTests \
             --rootDir $scriptDir
     fi
 }
@@ -170,6 +168,7 @@ produceCodeCoverageReport() {
     runUnitTests
     runIntegrationTests
     runPythonIntegrationTests
+    runLongTests
 
     # produce initial C++ coverage information
     safeRunCommand "$scriptDir/ci/coverage/report/gen_initial"
@@ -310,13 +309,14 @@ while [ -n "$1" ]; do
     shift
 done
 
-# selecting configuration CodeCoverage implies --runTests and --runIntegrationTests called by
-# the code coverage function. Also, other options are disabled.
+# selecting configuration CodeCoverage implies --runTests, --runIntegrationTests and
+# --runLongTests called by the code coverage function. Also, other options are disabled.
 # No need to run those separately, so we turn them off explicitly in case the user specified them.
 if [ "$CONF" = "CodeCoverage" ]; then
     CODECOVERAGE="y"
     RUNTESTS="n"
     RUNINTEGRATIONTESTS="n"
+    RUNLONGTESTS="n"
     PYOPT="normal"
 fi
 
@@ -358,7 +358,6 @@ fi
 
 if [ "$RUNTESTS" = "y" ]; then
     runUnitTests
-    ## runPythonIntegrationTests
 fi
 
 if [ "$RUNINTEGRATIONTESTS" = "y" ]; then
