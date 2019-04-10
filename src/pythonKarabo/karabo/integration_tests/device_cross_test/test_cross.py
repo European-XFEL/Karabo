@@ -347,10 +347,29 @@ class Tests(DeviceTest):
     @async_tst(timeout=90)
     def test_history(self):
         before = datetime.now()
-        print("\n*** test_history ENV =",os.environ)
 
         karabo = os.environ["KARABO"]
-        xml = os.path.abspath('historytest.xml')
+        xml = os.getcwd() + '/historytest.xml'
+        xml_file = open(xml,'wb')
+        xml_file.write(b"""\
+            <?xml version="1.0"?>
+            <DeviceServer>
+              <autoStart>
+                <KRB_Item>
+                  <DataLoggerManager>
+                    <!-- Frequent flushing of raw and index files every 1 s: -->
+                  <flushInterval KRB_Type="INT32">1</flushInterval>
+                  <directory KRB_Type="STRING">karaboHistory</directory>
+                  <serverList KRB_Type="VECTOR_STRING">karabo/dataLogger</serverList>
+                  </DataLoggerManager>
+                </KRB_Item>
+              </autoStart>
+              <scanPlugins KRB_Type="STRING">false</scanPlugins>
+              <serverId KRB_Type="STRING">karabo/dataLogger</serverId>
+              <visibility>4</visibility>
+              <Logger><priority>INFO</priority></Logger>
+            </DeviceServer>""")
+        xml_file.close()
         self.process = yield from create_subprocess_exec(
             os.path.join(karabo, "bin", "karabo-cppserver"),
             xml, stderr=PIPE, stdout=PIPE)
@@ -369,6 +388,8 @@ class Tests(DeviceTest):
             yield from logger
             yield from waitUntil(lambda: logger.state == State.NORMAL)
 
+        os.unlink("historytest.xml")
+        
         print("*** DataLogger-middlelayerDevice reached NORMAL state")
 
         for i in range(4):
