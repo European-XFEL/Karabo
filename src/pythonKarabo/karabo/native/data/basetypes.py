@@ -567,6 +567,7 @@ class QuantityValue(KaraboValue, Quantity):
                 pass
 
         if absolute is not None and self.value != 0:
+            # TODO: this branch is not covered by tests
             err = abs(absolute / self.value)
             if relative is not None:
                 err = max(err, relative)
@@ -577,9 +578,22 @@ class QuantityValue(KaraboValue, Quantity):
 
         err = 1 - int(numpy.log10(err))
         if err > 0:
-            return "{{:.{}~{}}}".format(err, fmt).format(1.0 * value)
+            if isinstance(value.value, numpy.ndarray):
+                # XXX: [1., 2.] will be printed as '[1.0 2.0]'
+                _formatter = {'float_kind':
+                              '{{:.{}{}}}'.format(err, fmt).format}
+                formatted_value = numpy.array2string(value.value,
+                                                     formatter=_formatter)
+                ret = "{} {:~}".format(formatted_value, value.units)
+            else:
+                # old behaviour for floats
+                ret = "{{:.{}~{}}}".format(err, fmt).format(1.0 * value)
         else:
-            return "{{:~{}}}".format(fmt).format(0)
+            # XXX: the following string always return [0], regardless of the
+            #  size of the initial array
+            # TODO: this branch is not covered by tests
+            ret = "{{:~{}}}".format(fmt).format(0)
+        return ret
 
     def _repr_pretty_(self, p, cycle):
         try:
