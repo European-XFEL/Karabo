@@ -139,7 +139,7 @@ class Tests(DeviceTest):
         if had_to_kill:
             self.fail("process didn't properly go down")
 
-    @async_tst(timeout=90)
+    @async_tst(timeout=40)
     def test_cross(self):
         yield from getDevice("middlelayerDevice")
         # it takes typically 2 s for the bound device to start
@@ -344,31 +344,31 @@ class Tests(DeviceTest):
         yield from self.process.wait()
         self.assertEqual(self.device.channelclose, "boundDevice:output1")
 
-    @async_tst(timeout=90)
+    @async_tst(timeout=40)
     def test_history(self):
         before = datetime.now()
 
         karabo = os.environ["KARABO"]
-        xml_path = 'historytest.xml'
+        xml_path = os.getcwd() + '/historytest.xml'
         xml = open(xml_path,'wb')
         xml.write(b"""\
-            <?xml version="1.0"?>
-            <DeviceServer>
-              <autoStart>
-                <KRB_Item>
-                  <DataLoggerManager>
-                    <!-- Frequent flushing of raw and index files every 1 s: -->
-                  <flushInterval KRB_Type="INT32">1</flushInterval>
-                  <directory KRB_Type="STRING">karaboHistory</directory>
-                  <serverList KRB_Type="VECTOR_STRING">karabo/dataLogger</serverList>
-                  </DataLoggerManager>
-                </KRB_Item>
-              </autoStart>
-              <scanPlugins KRB_Type="STRING">false</scanPlugins>
-              <serverId KRB_Type="STRING">karabo/dataLogger</serverId>
-              <visibility>4</visibility>
-              <Logger><priority>INFO</priority></Logger>
-            </DeviceServer>""")
+<?xml version="1.0"?>
+<DeviceServer>
+  <autoStart>
+    <KRB_Item>
+      <DataLoggerManager>
+        <!-- Frequent flushing of raw and index files every 1 s: -->
+        <flushInterval KRB_Type="INT32">1</flushInterval>
+        <directory KRB_Type="STRING">karaboHistory</directory>
+        <serverList KRB_Type="VECTOR_STRING">karabo/dataLogger</serverList>
+      </DataLoggerManager>
+    </KRB_Item>
+  </autoStart>
+  <scanPlugins KRB_Type="STRING">false</scanPlugins>
+  <serverId KRB_Type="STRING">karabo/dataLogger</serverId>
+  <visibility>4</visibility>
+  <Logger><priority>INFO</priority></Logger>
+</DeviceServer>""")
         xml.close()
         self.process = yield from create_subprocess_exec(
             os.path.join(karabo, "bin", "karabo-cppserver"),
@@ -382,23 +382,18 @@ class Tests(DeviceTest):
 
         async(print_stdout())
 
-        print("*** test_history DataLogger-middlelayerDevice starts")
-
         with (yield from getDevice("DataLogger-middlelayerDevice")) as logger:
             yield from logger
             yield from waitUntil(lambda: logger.state == State.NORMAL)
 
-        os.unlink(xml_path)
+        os.remove(xml_path)
         
-        print("*** DataLogger-middlelayerDevice reached NORMAL state")
-
-        for i in range(4):
+        for i in range(5):
             self.device.value = i
             self.device.child.number = -i
             self.device.update()
 
         after = datetime.now()
-        print("*** test_history after={}".format(after.isoformat()))
 
         # This is the first history request ever, so it returns an empty
         # list (see https://in.xfel.eu/redmine/issues/9414).
@@ -407,31 +402,35 @@ class Tests(DeviceTest):
         yield from getHistory(
             "middlelayerDevice.child.number", before.isoformat(),
             after.isoformat())
-
-        # We have to write another value to close the first archive file :-(...
-        self.device.value = 4
-        self.device.child.number = -4
-        self.device.update()
         # ... and finally need to wait until the new archive and index files
         # are flushed
         yield from logger.flush()
-
-        after = datetime.now()
 
         old_history = yield from getHistory(
             "middlelayerDevice", before.isoformat(), after.isoformat()).value
         str_history = yield from getHistory(
             "middlelayerDevice.value", before.isoformat(), after.isoformat())
+
+        before = datetime.now()
+        
+        # We have to write another value to close the first archive file :-(...
+        for i in range(5):
+            self.device.value = i
+            self.device.child.number = -i
+            self.device.update()
+
+        yield from logger.flush()
+
+        after = datetime.now()
+
         device = yield from getDevice("middlelayerDevice")
         proxy_history = yield from getHistory(
-            device.value, before.isoformat(), after.isoformat())
-
-        for hist in old_history, str_history, proxy_history:
-            # Sort according to timestamp - order is not guaranteed!
-            # (E.g. if shortcut communication between logged device and
-            #  logger is switched on...)
-            hist.sort(key=lambda x: x[0])
-            self.assertEqual([v for _, _, _, v in hist[-5:]], list(range(5)))
+                device.value, before.isoformat(), after.isoformat())
+        
+        # Sort according to timestamp - order is not guaranteed!
+        sorted_proxy_history = sorted(proxy_history, key=lambda x: x[0])
+        # Testing
+        self.assertEqual([v for _, _, _, v in sorted_proxy_history], list(range(5)))
 
         node_history = yield from getHistory(
             "middlelayerDevice.child.number", before.isoformat(),
@@ -442,7 +441,7 @@ class Tests(DeviceTest):
         for hist in node_history, node_proxy_history:
             # Sort needed - see above.
             hist.sort(key=lambda x: x[0])
-            #self.assertEqual([-v for _, _, _, v in hist[-5:]], list(range(5)))
+            self.assertEqual([-v for _, _, _, v in hist[-5:]], list(range(5)))
 
         yield from get_event_loop().instance()._ss.request(
             "karabo/dataLogger", "slotKillServer")
