@@ -14,7 +14,7 @@ from PyQt4.QtGui import (
 
 from karabogui import messagebox
 from karabogui.events import (
-    register_for_events, unregister_from_events, KaraboEvent,
+    register_for_broadcasts, unregister_from_broadcasts, KaraboEvent,
 )
 from karabogui.project.utils import show_trash_project_message
 from karabogui.singletons.api import get_config, get_db_conn
@@ -99,14 +99,14 @@ class LoadProjectDialog(QDialog):
             KaraboEvent.ProjectDomainsList: self._event_domain_list,
             KaraboEvent.ProjectAttributeUpdated: self._event_attribute
         }
-        register_for_events(self.event_map)
+        register_for_broadcasts(self.event_map)
 
     def done(self, result):
         """ Reimplement ``QDialog`` virtual slot
 
         Stop listening for broadcast events
         """
-        unregister_from_events(self.event_map)
+        unregister_from_broadcasts(self.event_map)
         super(LoadProjectDialog, self).done(result)
 
     def _event_item_list(self, data):
@@ -312,14 +312,14 @@ class NewProjectDialog(QDialog):
         self.event_map = {
             KaraboEvent.ProjectDomainsList: self._event_item_list
         }
-        register_for_events(self.event_map)
+        register_for_broadcasts(self.event_map)
 
     def done(self, result):
         """ Reimplement ``QDialog`` virtual slot
 
         Stop listening for broadcast events
         """
-        unregister_from_events(self.event_map)
+        unregister_from_broadcasts(self.event_map)
         super(NewProjectDialog, self).done(result)
 
     @property

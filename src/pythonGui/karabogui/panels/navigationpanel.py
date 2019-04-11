@@ -12,7 +12,7 @@ from PyQt4.QtGui import (
     QWidget)
 from karabogui import icons
 from karabogui.const import SEARCH_BUTTON_WIDTH, SEARCH_LABEL_WIDTH
-from karabogui.events import KaraboEvent, register_for_events
+from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.navigation.system_view import SystemTreeView
 
 from .base import BasePanelWidget
@@ -23,14 +23,14 @@ class TopologyPanel(BasePanelWidget):
         super(TopologyPanel, self).__init__("System Topology")
         self._reset_search_filter()
 
-        # Register to KaraboBroadcastEvent, Note: unregister_from_events is
+        # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
         # not necessary for self due to the fact that the singleton mediator
         # object and `self` are being destroyed when the GUI exists
         event_map = {
             KaraboEvent.AccessLevelChanged: self._event_access_level,
             KaraboEvent.NetworkConnectStatus: self._event_network
         }
-        register_for_events(event_map)
+        register_for_broadcasts(event_map)
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.

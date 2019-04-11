@@ -73,14 +73,14 @@ def broadcast_event(sender_enum, data):
     QApplication.postEvent(mediator, event)
 
 
-def register_for_events(event_map):
+def register_for_broadcasts(event_map):
     """ Register the given `qobject` to the events coming from the singleton
         `mediator`.
     """
     get_mediator().register_listener(event_map)
 
 
-def unregister_from_events(event_map):
+def unregister_from_broadcasts(event_map):
     """ Unregister the given `qobject` from the events coming from the
         singleton mediator object.
     """
