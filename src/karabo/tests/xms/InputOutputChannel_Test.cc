@@ -50,12 +50,17 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     // Setup output channel
     OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel", Hash());
     output->setInstanceIdAndName("outputChannel", "output");
+    std::vector<karabo::util::Hash> table;
+    output->registerShowConnectionsHandler([&table](const std::vector<karabo::util::Hash>& connections) {
+        table = connections;
+    });
 
     // Write first data - nobody connected yet.
     output->write(Hash("key", 42));
     output->update();
     boost::this_thread::sleep(boost::posix_time::milliseconds(20)); // time for call back
     CPPUNIT_ASSERT_EQUAL(0u, calls);
+    CPPUNIT_ASSERT_EQUAL(0uL, table.size());
 
     // Connect
     const std::string outputChannelId("outputChannelString");
@@ -89,6 +94,13 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         } while (--trials >= 0);
         CPPUNIT_ASSERT(connected);
 
+        CPPUNIT_ASSERT_EQUAL(1UL, table.size());
+
+        CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("remoteId"), input->getInstanceId());
+        CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("dataDistribution"), std::string("copy"));
+        CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("onSlowness"), std::string("wait"));
+        CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("memoryLocation"), std::string("local"));
+
         // Write data again (twice in one go...) - now input is connected.
         output->write(Hash("key", 43));
         output->write(Hash("key", -43));
@@ -114,6 +126,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
             boost::this_thread::sleep(boost::posix_time::milliseconds(2));
         } while (--trials >= 0);
         CPPUNIT_ASSERT(!connected);
+        CPPUNIT_ASSERT_EQUAL(0uL, table.size());
     }
 
     // Write data again - input does not anymore receive data.

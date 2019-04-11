@@ -57,9 +57,6 @@ class LabelWidget(QLabel):
     def set_visible(self, visible):
         """Satisfy the informal widget interface."""
 
-    def update_alarm(self):
-        """Satisfy the informal widget interface."""
-
     def update_global_access_level(self, level):
         """Satisfy the informal widget interface."""
 
