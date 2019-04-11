@@ -3,6 +3,8 @@
 # Created on November 24, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from collections import defaultdict
+
 from PyQt4.QtCore import QObject
 
 from karabogui.events import KaraboBroadcastEvent
@@ -17,7 +19,7 @@ class Mediator(QObject):
     def __init__(self, parent=None):
         super(Mediator, self).__init__(parent)
 
-        self._listeners = set()
+        self._listeners = defaultdict(set)
 
     def event(self, event):
         """Dispatch KaraboBroadcastEvents to all interested listeners.
@@ -27,26 +29,25 @@ class Mediator(QObject):
 
         # Make a copy to avoid a race condition in the case that processing
         # an event causes new listeners to be added
-        handlers = list(self._listeners)
-        for obj in handlers:
-            if obj.karaboBroadcastEvent(event):
-                break
+        sender = event.sender
+        data = event.data
+        handlers = list(self._listeners.get(sender, ()))
+        for handler in handlers:
+            handler(data)
 
         event.accept()
         return True
 
-    def register_listener(self, listener):
+    def register_listener(self, event_map):
         """Add an event listener.
         """
-        handler_method = getattr(listener, 'karaboBroadcastEvent', None)
-        if handler_method is None or not callable(handler_method):
-            msg = ('An object MUST implement a "karaboBroadcastEvent" method '
-                   'if it registers for broadcasts!')
-            raise RuntimeError(msg)
+        for event, handler in event_map.items():
+            self._listeners[event].add(handler)
 
-        self._listeners.add(listener)
-
-    def unregister_listener(self, listener):
+    def unregister_listener(self, event_map):
         """Remove an event listener.
         """
-        self._listeners.remove(listener)
+        for event, handler in event_map.items():
+            self._listeners[event].remove(handler)
+            if not self._listeners[event]:
+                del self._listeners[event]

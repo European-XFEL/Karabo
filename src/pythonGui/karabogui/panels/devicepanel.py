@@ -4,7 +4,7 @@
 
 from PyQt4.QtGui import QVBoxLayout, QWidget
 
-from karabogui.events import KaraboEventSender, register_for_broadcasts
+from karabogui.events import KaraboEvent, register_for_events
 from karabogui.navigation.device_view import DeviceTreeView
 from .base import BasePanelWidget
 
@@ -13,7 +13,10 @@ class DevicePanel(BasePanelWidget):
     def __init__(self):
         super(DevicePanel, self).__init__("Device Topology")
         # We need broadcasts!
-        register_for_broadcasts(self)
+        event_map = {
+            KaraboEvent.NetworkConnectStatus: self._event_network,
+        }
+        register_for_events(event_map)
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
@@ -26,15 +29,10 @@ class DevicePanel(BasePanelWidget):
         main_layout.addWidget(self.tree_view)
         return widget
 
-    def karaboBroadcastEvent(self, event):
-        sender = event.sender
-        data = event.data
-        if sender is KaraboEventSender.NetworkConnectStatus:
-            status = data.get('status', False)
-            if not status:
-                self.close_popup_widget()
-
-        return False
+    def _event_network(self, data):
+        status = data.get('status', False)
+        if not status:
+            self.close_popup_widget()
 
     def close_popup_widget(self):
         widget = self.tree_view.popupWidget

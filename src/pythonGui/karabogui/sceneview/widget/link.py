@@ -12,7 +12,7 @@ from PyQt4.QtGui import (
 from karabogui.dialogs.dialogs import SceneLinkDialog
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.dialogs.webdialog import WebDialog
-from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.events import broadcast_event, KaraboEvent
 from karabogui import messagebox
 
 
@@ -76,7 +76,7 @@ class SceneLinkWidget(QPushButton):
             # Broadcast an event
             data = {'name': name, 'target': target,
                     'target_window': target_window}
-            broadcast_event(KaraboEventSender.OpenSceneLink, data)
+            broadcast_event(KaraboEvent.OpenSceneLink, data)
 
     def add_proxies(self, proxies):
         """Satisfy the informal widget interface."""

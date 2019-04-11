@@ -6,7 +6,7 @@ from traits.api import (
 
 from karabo.common import const
 from karabo.common.api import DeviceStatus, ONLINE_STATUSES
-from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.singletons.api import get_network, get_topology
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .types import (
@@ -112,10 +112,10 @@ class DeviceProxy(BaseDeviceProxy):
             self.topology_node.monitoring = (new > 0)
 
         if old == 0 and new == 1:
-            broadcast_event(KaraboEventSender.StartMonitoringDevice,
+            broadcast_event(KaraboEvent.StartMonitoringDevice,
                             {'device_id': self.device_id})
         elif old == 1 and new == 0:
-            broadcast_event(KaraboEventSender.StopMonitoringDevice,
+            broadcast_event(KaraboEvent.StopMonitoringDevice,
                             {'device_id': self.device_id})
 
     def _topology_node_changed(self, new):
