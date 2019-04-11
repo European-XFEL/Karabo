@@ -13,7 +13,7 @@ from karabo.native import (
     Hash, read_project_model, write_project_model)
 from karabogui import messagebox
 from karabogui.events import (
-    broadcast_event, KaraboEvent, register_for_events
+    broadcast_event, KaraboEvent, register_for_broadcasts
 )
 from karabogui.singletons.api import get_config, get_network
 from karabogui.util import handle_scene_from_server
@@ -64,7 +64,7 @@ class ProjectDatabaseConnection(QObject):
             KaraboEvent.NetworkConnectStatus: self._event_network,
             KaraboEvent.ProjectDBConnect: self._event_db_connect
         }
-        register_for_events(event_map)
+        register_for_broadcasts(event_map)
 
         # Dictionaries to hold items which are awaiting network replies
         self._waiting_for_read = {}

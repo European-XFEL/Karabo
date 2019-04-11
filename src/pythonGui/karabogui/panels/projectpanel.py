@@ -14,7 +14,7 @@ from karabo.common.project.api import ProjectModel
 from karabogui import icons
 from karabogui.actions import build_qaction, KaraboAction
 from karabogui.const import SEARCH_BUTTON_WIDTH, SEARCH_LABEL_WIDTH
-from karabogui.events import KaraboEvent, register_for_events
+from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.utils import (
     load_project, maybe_save_modified_project, save_object)
@@ -41,7 +41,7 @@ class ProjectPanel(BasePanelWidget):
             KaraboEvent.DatabaseIsBusy: self._event_db_busy,
             KaraboEvent.ProjectFilterUpdated: self._event_filter_updated
         }
-        register_for_events(event_map)
+        register_for_broadcasts(event_map)
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.

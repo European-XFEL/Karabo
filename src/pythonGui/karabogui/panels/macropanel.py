@@ -13,8 +13,8 @@ except ImportError:
 
 from karabo.common.project.api import write_macro
 from karabogui.events import (
-    KaraboEvent, broadcast_event, register_for_events,
-    unregister_from_events)
+    KaraboEvent, broadcast_event, register_for_broadcasts,
+    unregister_from_broadcasts)
 from karabogui import icons, messagebox
 from karabogui.binding.api import PropertyProxy
 from karabogui.project.utils import run_macro
@@ -37,7 +37,7 @@ class MacroPanel(BasePanelWidget):
             KaraboEvent.ConnectMacroInstance: self._event_connect,
             KaraboEvent.DeviceInitReply: self._event_init_reply,
         }
-        register_for_events(self.event_map)
+        register_for_broadcasts(self.event_map)
 
         # Hook up a trait handler for the panel window title
         self.model.on_trait_change(self.set_title, 'simple_name')
@@ -106,7 +106,7 @@ class MacroPanel(BasePanelWidget):
         super(MacroPanel, self).closeEvent(event)
         if event.isAccepted():
             # Unregister to KaraboBroadcastEvent
-            unregister_from_events(self.event_map)
+            unregister_from_broadcasts(self.event_map)
             # Unregister the trait handler too
             self.model.on_trait_change(self.set_title, 'simple_name',
                                        remove=True)
