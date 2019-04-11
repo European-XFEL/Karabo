@@ -4,7 +4,7 @@ from karabo.common.api import DeviceStatus
 from karabo.native import (
     AccessMode, Configurable, Hash, Int32, Schema, Timestamp)
 from karabogui.binding.api import build_binding, DeviceClassProxy, DeviceProxy
-from karabogui.events import KaraboEventSender
+from karabogui.events import KaraboEvent
 from karabogui.testing import alarm_data, GuiTestCase, singletons, system_hash
 from ..manager import Manager, project_db_handler
 
@@ -131,7 +131,7 @@ class TestManager(GuiTestCase):
                     'servers': [('swerver', 'BIG_IRON', DeviceStatus.OK)]
                 }
                 broadcast_event.assert_called_with(
-                    KaraboEventSender.SystemTopologyUpdate, topo_update)
+                    KaraboEvent.SystemTopologyUpdate, topo_update)
 
     def test_handle_instance_gone(self):
         network, topology = Mock(), Mock()
@@ -142,9 +142,9 @@ class TestManager(GuiTestCase):
             topology.instance_gone.return_value = (devices, [])
 
             calls = [
-                call(KaraboEventSender.SystemTopologyUpdate,
+                call(KaraboEvent.SystemTopologyUpdate,
                      {'devices': devices, 'servers': []}),
-                call(KaraboEventSender.ClearConfigurator,
+                call(KaraboEvent.ClearConfigurator,
                      {'deviceId': 'orphan'})
             ]
 
@@ -288,7 +288,7 @@ class TestManager(GuiTestCase):
             with patch(target) as broadcast_event:
                 manager.onServerConnectionChanged(True)
                 broadcast_event.assert_called_with(
-                    KaraboEventSender.NetworkConnectStatus,
+                    KaraboEvent.NetworkConnectStatus,
                     {'status': True}
                 )
 
@@ -324,7 +324,7 @@ class TestManager(GuiTestCase):
             h = Hash('success', True, 'items', ['schleem', 'plumbus'])
             manager.handle_projectListItems(h)
             broadcast_event.assert_called_with(
-                KaraboEventSender.ProjectItemsList,
+                KaraboEvent.ProjectItemsList,
                 {'items': ['schleem', 'plumbus']}
             )
 
@@ -335,7 +335,7 @@ class TestManager(GuiTestCase):
             h = Hash('success', True, 'domains', ['WESTEROS'])
             manager.handle_projectListDomains(h)
             broadcast_event.assert_called_with(
-                KaraboEventSender.ProjectDomainsList,
+                KaraboEvent.ProjectDomainsList,
                 {'items': ['WESTEROS']}
             )
 
@@ -346,7 +346,7 @@ class TestManager(GuiTestCase):
             h = Hash('success', True, 'items', ['fast_eddy'])
             manager.handle_projectListProjectManagers(h)
             broadcast_event.assert_called_with(
-                KaraboEventSender.ProjectManagersList,
+                KaraboEvent.ProjectManagersList,
                 {'items': h}
             )
 
@@ -359,7 +359,7 @@ class TestManager(GuiTestCase):
         with patch(broadcast) as broadcast_event, patch(messagebox):
             manager.handle_projectLoadItems(h)
             broadcast_event.assert_called_with(
-                KaraboEventSender.ProjectItemsLoaded,
+                KaraboEvent.ProjectItemsLoaded,
                 {'success': False, 'items': ['load_me']}
             )
 
@@ -371,7 +371,7 @@ class TestManager(GuiTestCase):
         with patch(target) as broadcast_event:
             manager.handle_projectSaveItems(h)
             broadcast_event.assert_called_with(
-                KaraboEventSender.ProjectItemsSaved,
+                KaraboEvent.ProjectItemsSaved,
                 {'items': ['remember_this'], 'success': True}
             )
 
@@ -383,7 +383,7 @@ class TestManager(GuiTestCase):
         with patch(target) as broadcast_event:
             manager.handle_projectUpdateAttribute(h)
             broadcast_event.assert_called_with(
-                KaraboEventSender.ProjectAttributeUpdated,
+                KaraboEvent.ProjectAttributeUpdated,
                 {'items': ['new_stuff']}
             )
 
@@ -417,7 +417,7 @@ class TestManager(GuiTestCase):
 
             manager.handle_initReply('rick', True, 'wubbalubbadubdub')
             broadcast_event.assert_called_with(
-                KaraboEventSender.DeviceInitReply, ANY
+                KaraboEvent.DeviceInitReply, ANY
             )
             event_data = broadcast_event.mock_calls[0][1][1]
             assert event_data['success']

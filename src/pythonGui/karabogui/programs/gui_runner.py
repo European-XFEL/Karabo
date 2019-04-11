@@ -6,7 +6,7 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (
     QApplication, QIcon, QMessageBox, QPixmap, QSplashScreen, QStyleFactory)
 
-from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.controllers.api import populate_controller_registry
 from karabogui.singletons.api import (
     get_manager, get_network, get_panel_wrangler)
@@ -86,7 +86,7 @@ def run_gui(args):
     init_gui(app, splash)
 
     # Make the main window
-    broadcast_event(KaraboEventSender.CreateMainWindow, {})
+    broadcast_event(KaraboEvent.CreateMainWindow, {})
 
     # then start the event loop
     sys.exit(app.exec_())

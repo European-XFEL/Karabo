@@ -13,7 +13,7 @@ from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, find_parent_object)
 from karabogui import messagebox
 from karabogui.enums import ProjectItemTypes
-from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.project.dialog.object_handle import ObjectEditDialog
 from karabogui.project.utils import check_device_config_exists
 from karabo.native import Hash
@@ -97,7 +97,7 @@ class DeviceConfigurationController(BaseProjectController):
         proxy = project_device.proxy
         # Broadcast to configurator!
         data = {'proxy': proxy, 'configuration': configuration}
-        broadcast_event(KaraboEventSender.LoadConfiguration, data)
+        broadcast_event(KaraboEvent.LoadConfiguration, data)
 
     def _delete_config(self, project_controller):
         """ Remove the device associated with this item from its device server

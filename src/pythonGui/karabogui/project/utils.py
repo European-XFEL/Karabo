@@ -17,7 +17,7 @@ from karabo.common.scenemodel.api import (
 )
 from karabo.native import Hash, read_project_model
 from karabogui import globals as krb_globals, messagebox
-from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.singletons.api import (get_config, get_db_conn,
                                       get_project_model, get_network)
 from karabogui.topology.util import is_server_online
@@ -332,7 +332,7 @@ def show_trash_project_message(is_trashed, simple_name=''):
 def show_no_configuration():
     """Broadcast event to show no configuration in configuration panel
     """
-    broadcast_event(KaraboEventSender.ShowConfiguration, {'proxy': None})
+    broadcast_event(KaraboEvent.ShowConfiguration, {'proxy': None})
 
 
 def run_macro(macro_model):

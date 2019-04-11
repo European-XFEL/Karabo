@@ -11,7 +11,7 @@ from karabo.native import (
     Hash, decodeBinary, encodeBinary, AccessLevel, Timestamp, Authenticator)
 from karabogui import background
 from karabogui.dialogs.logindialog import LoginDialog
-from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.singletons.api import get_config
 import karabogui.globals as krb_globals
 
@@ -161,7 +161,7 @@ class Network(QObject):
 
             # Inform the GUI to change correspondingly the allowed
             # level-downgrade
-            broadcast_event(KaraboEventSender.LoginUserChanged, {})
+            broadcast_event(KaraboEvent.LoginUserChanged, {})
             self._sendLoginInformation(self.username, self.password,
                                        self.provider, self.sessionToken)
             return
@@ -175,7 +175,7 @@ class Network(QObject):
             return
 
         # Inform the GUI to change correspondingly the allowed level-downgrade
-        broadcast_event(KaraboEventSender.LoginUserChanged, {})
+        broadcast_event(KaraboEvent.LoginUserChanged, {})
         self._sendLoginInformation(self.username, self.password,
                                    self.provider, self.sessionToken)
 

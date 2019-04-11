@@ -7,7 +7,7 @@ from karabogui.singletons.api import get_mediator
 
 
 # Enum for karabo broadcast event senders
-class KaraboEventSender(Enum):
+class KaraboEvent(Enum):
     AccessLevelChanged = "Global Access Level changed"
     AlarmServiceInit = "Alarm service init"
     AlarmServiceUpdate = "Alarm service update"
@@ -66,22 +66,22 @@ class KaraboBroadcastEvent(QEvent):
 def broadcast_event(sender_enum, data):
     """ Broadcast the given `event`.
     """
-    assert isinstance(sender_enum, KaraboEventSender)
+    assert isinstance(sender_enum, KaraboEvent)
 
     mediator = get_mediator()
     event = KaraboBroadcastEvent(sender=sender_enum, data=data)
     QApplication.postEvent(mediator, event)
 
 
-def register_for_broadcasts(qobject):
+def register_for_events(event_map):
     """ Register the given `qobject` to the events coming from the singleton
         `mediator`.
     """
-    get_mediator().register_listener(qobject)
+    get_mediator().register_listener(event_map)
 
 
-def unregister_from_broadcasts(qobject):
+def unregister_from_events(event_map):
     """ Unregister the given `qobject` from the events coming from the
         singleton mediator object.
     """
-    get_mediator().unregister_listener(qobject)
+    get_mediator().unregister_listener(event_map)

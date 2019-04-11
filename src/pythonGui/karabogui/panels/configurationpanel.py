@@ -15,7 +15,7 @@ from karabogui.binding.api import (
     attr_fast_deepcopy, apply_configuration, extract_configuration,
     flat_iter_hash, has_changes)
 from karabogui.configurator.api import ConfigurationTreeView
-from karabogui.events import KaraboEventSender, register_for_broadcasts
+from karabogui.events import KaraboEvent, register_for_events
 from karabogui.singletons.api import get_manager
 from karabogui.util import (
     get_spin_widget, load_configuration_from_file, save_configuration_to_file
@@ -37,8 +37,47 @@ class ConfigurationPanel(BasePanelWidget):
         self._awaiting_schema = None
 
         # Register for broadcast events.
-        # This object lives as long as the app. No need to unregister.
-        register_for_broadcasts(self)
+        event_map = {
+            KaraboEvent.ShowConfiguration: self._event_show_configuration,
+            KaraboEvent.UpdateDeviceConfigurator: self._event_update_config,
+            KaraboEvent.UpdateValueConfigurator: self._event_display_update,
+            KaraboEvent.ClearConfigurator: self._event_clear_configurator,
+            KaraboEvent.LoadConfiguration: self._event_load_configuration,
+            KaraboEvent.ShowConfigurationFromPast: self._event_config_past,
+            KaraboEvent.NetworkConnectStatus: self._event_network
+        }
+        register_for_events(event_map)
+
+    def _event_show_configuration(self, data):
+        proxy = data.get('proxy')
+        self._show_configuration(proxy)
+
+    def _event_update_config(self, data):
+        proxy = data.get('proxy')
+        self._update_displayed_configuration(proxy)
+
+    def _event_display_update(self, data):
+        proxy = data.get('proxy')
+        self._update_displayed_values(proxy)
+
+    def _event_clear_configurator(self, data):
+        deviceId = data.get('deviceId', '')
+        self._remove_departed_device(deviceId)
+
+    def _event_load_configuration(self, data):
+        proxy = data.get('proxy')
+        configuration = data.get('configuration')
+        self._apply_loaded_configuration(proxy, configuration)
+
+    def _event_config_past(self, data):
+        deviceId = data.get('deviceId')
+        configuration = data.get('configuration')
+        self._apply_configuration_from_past(deviceId, configuration)
+
+    def _event_network(self, data):
+        connected = data['status']
+        if not connected:
+            self._reset_panel()
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
@@ -173,33 +212,33 @@ class ConfigurationPanel(BasePanelWidget):
         """
         sender = event.sender
         data = event.data
-        if sender is KaraboEventSender.ShowConfiguration:
+        if sender is KaraboEvent.ShowConfiguration:
             proxy = data.get('proxy')
             self._show_configuration(proxy)
             return True
-        elif sender is KaraboEventSender.UpdateDeviceConfigurator:
+        elif sender is KaraboEvent.UpdateDeviceConfigurator:
             proxy = data.get('proxy')
             self._update_displayed_configuration(proxy)
             return True
-        elif sender is KaraboEventSender.UpdateValueConfigurator:
+        elif sender is KaraboEvent.UpdateValueConfigurator:
             proxy = data.get('proxy')
             self._update_displayed_values(proxy)
             return True
-        elif sender is KaraboEventSender.ClearConfigurator:
+        elif sender is KaraboEvent.ClearConfigurator:
             deviceId = data.get('deviceId', '')
             self._remove_departed_device(deviceId)
             return True
-        elif sender is KaraboEventSender.LoadConfiguration:
+        elif sender is KaraboEvent.LoadConfiguration:
             proxy = data.get('proxy')
             configuration = data.get('configuration')
             self._apply_loaded_configuration(proxy, configuration)
             return True
-        elif sender is KaraboEventSender.ShowConfigurationFromPast:
+        elif sender is KaraboEvent.ShowConfigurationFromPast:
             deviceId = data.get('deviceId')
             configuration = data.get('configuration')
             self._apply_configuration_from_past(deviceId, configuration)
             return True
-        elif sender is KaraboEventSender.NetworkConnectStatus:
+        elif sender is KaraboEvent.NetworkConnectStatus:
             connected = data['status']
             if not connected:
                 self._reset_panel()
@@ -267,7 +306,7 @@ class ConfigurationPanel(BasePanelWidget):
                     continue
                 if prop_binding.access_mode is AccessMode.RECONFIGURABLE:
                     if (prop_binding.required_access_level <= access_level and
-                        prop_binding.is_allowed(state) and
+                            prop_binding.is_allowed(state) and
                             has_changes(prop_binding,
                                         prop_proxy.value, value)):
                         prop_proxy.edit_value = value
