@@ -120,11 +120,17 @@ class MainWindow(QMainWindow):
         }
         register_for_broadcasts(event_map)
 
-    # --------------------------------------
+    # -----------------------------------------------------------------------
     # Karabo Events
 
-    def _event_access_level(self, data):
-        self.onUpdateAccessLevel()
+    def _event_broker_connection(self, data):
+        self.update_broker_connection(data)
+
+    def _event_big_data(self, data):
+        """Show the big data latency including value set in the gui"""
+        name = data['name']
+        proc = data['proc']
+        self.ui_big_data.setText("{} - {:.3f} s".format(name, proc))
 
     def _event_db_processing(self, data):
         """This method gets called whenever the database is switching its
@@ -163,7 +169,12 @@ class MainWindow(QMainWindow):
             if area_container is not panel_container:
                 area_container.minimize(False)
 
-    def _event_broker_connection(self, data=None):
+    def _event_access_level(self, data):
+        self.onUpdateAccessLevel()
+
+    # -----------------------------------------------------------------------
+
+    def update_broker_connection(self, data=None):
         """Update the status bar with our broker connection information
         """
         if data is not None:
@@ -181,12 +192,6 @@ class MainWindow(QMainWindow):
         else:
             self.brokerInformation.setText("")
             self.guiServerHost.setText("")
-
-    def _event_big_data(self, data):
-        """Show the big data latency including value set in the gui"""
-        name = data['name']
-        proc = data['proc']
-        self.ui_big_data.setText("{} - {:.3f} s".format(name, proc))
 
     # --------------------------------------
     # Qt virtual methods
@@ -497,7 +502,7 @@ class MainWindow(QMainWindow):
             # Disconnecting AND need to save first
             self.acServerConnect.setChecked(True)
         else:
-            self._event_broker_connection()
+            self.update_broker_connection()
             # Either connecting or no need to save before disconnecting
             get_network().onServerConnection(connect)
 
