@@ -12,8 +12,8 @@ from traits.api import Bool, Instance, Property, on_trait_change
 from karabo.common.api import DeviceStatus, walk_traits_object
 from karabo.common.project.api import DeviceServerModel
 from karabogui.enums import ProjectItemTypes
-from karabogui.events import (KaraboEvent, register_for_events,
-                              unregister_from_events)
+from karabogui.events import (KaraboEvent, register_for_broadcasts,
+                              unregister_from_broadcasts)
 from karabogui.indicators import get_project_server_status_icon
 from karabogui.project.dialog.server_handle import ServerHandleDialog
 from karabogui.project.topo_listener import SystemTopologyListener
@@ -112,10 +112,10 @@ class DeviceServerController(BaseProjectGroupController):
         """Handle broadcast event registration/unregistration here.
         """
         if old is not None:
-            unregister_from_events(
+            unregister_from_broadcasts(
                 {KaraboEvent.SystemTopologyUpdate: old._event_topology})
         if new is not None:
-            register_for_events(
+            register_for_broadcasts(
                 {KaraboEvent.SystemTopologyUpdate: new._event_topology})
 
     # ----------------------------------------------------------------------

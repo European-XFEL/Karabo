@@ -22,7 +22,7 @@ from karabogui.dialogs.dialogs import AboutDialog
 from karabogui.dialogs.update_dialog import UpdateDialog
 from karabogui.indicators import get_processing_color
 from karabogui.events import (
-    KaraboEvent, broadcast_event, register_for_events)
+    KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.panels.api import (
     ConfigurationPanel, DevicePanel, PanelContainer, LoggingPanel,
     ProjectPanel, ScriptingPanel, TopologyPanel)
@@ -108,7 +108,7 @@ class MainWindow(QMainWindow):
         network.signalNetworkPerformance.connect(
             self.onNetworkPerformance)
 
-        # Register to KaraboBroadcastEvent, Note: unregister_from_events is
+        # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
         # not necessary
         event_map = {
             KaraboEvent.BrokerInformationUpdate: self._event_broker_connection,
@@ -118,7 +118,7 @@ class MainWindow(QMainWindow):
             KaraboEvent.MinimizePanel: self._event_container_minimized,
             KaraboEvent.LoginUserChanged: self._event_access_level,
         }
-        register_for_events(event_map)
+        register_for_broadcasts(event_map)
 
     # --------------------------------------
     # Karabo Events

@@ -23,8 +23,8 @@ from karabogui.alarms.api import ALARM_LOW, ALARM_HIGH, WARN_LOW, WARN_HIGH
 from karabogui.binding.api import (
     BaseBinding, DeviceProxy, PropertyProxy, VectorHashBinding)
 from karabogui.events import (
-    broadcast_event, KaraboEvent, register_for_events,
-    unregister_from_events)
+    broadcast_event, KaraboEvent, register_for_broadcasts,
+    unregister_from_broadcasts)
 from karabogui.generic_scenes import get_generic_scene
 from karabogui.widgets.popup import PopupWidget
 from .edit_delegate import EditDelegate
@@ -74,7 +74,7 @@ class ConfigurationTreeView(QTreeView):
             KaraboEvent.AccessLevelChanged: self._event_access_level
         }
         # Don't forget to unregister!
-        register_for_events(self.event_map)
+        register_for_broadcasts(self.event_map)
 
     # ------------------------------------
     # Public methods
@@ -283,7 +283,7 @@ class ConfigurationTreeView(QTreeView):
 
     def closeEvent(self, event):
         event.accept()
-        unregister_from_events(self.event_map)
+        unregister_from_broadcasts(self.event_map)
 
     def currentChanged(self, current, previous):
         """Pass selection changes along to the value delegate

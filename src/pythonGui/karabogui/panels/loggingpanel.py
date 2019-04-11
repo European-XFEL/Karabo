@@ -7,7 +7,7 @@ from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
 
 from karabogui import icons
 from karabogui.events import (
-    register_for_events, KaraboEvent, unregister_from_events
+    register_for_broadcasts, KaraboEvent, unregister_from_broadcasts
 )
 from karabogui.widgets.log import LogWidget
 from karabogui.widgets.toolbar import ToolBar
@@ -22,7 +22,7 @@ class LoggingPanel(BasePanelWidget):
             KaraboEvent.LogMessages: self._event_log_messages,
             KaraboEvent.NetworkConnectStatus: self._event_network,
         }
-        register_for_events(self.event_map)
+        register_for_broadcasts(self.event_map)
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
@@ -63,7 +63,7 @@ class LoggingPanel(BasePanelWidget):
         """
         super(LoggingPanel, self).closeEvent(event)
         if event.isAccepted():
-            unregister_from_events(self.event_map)
+            unregister_from_broadcasts(self.event_map)
             self.signalPanelClosed.emit(self.windowTitle())
 
     # -----------------------------------------------------------------------

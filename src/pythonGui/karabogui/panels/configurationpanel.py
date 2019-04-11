@@ -15,7 +15,7 @@ from karabogui.binding.api import (
     attr_fast_deepcopy, apply_configuration, extract_configuration,
     flat_iter_hash, has_changes)
 from karabogui.configurator.api import ConfigurationTreeView
-from karabogui.events import KaraboEvent, register_for_events
+from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.singletons.api import get_manager
 from karabogui.util import (
     get_spin_widget, load_configuration_from_file, save_configuration_to_file
@@ -46,7 +46,7 @@ class ConfigurationPanel(BasePanelWidget):
             KaraboEvent.ShowConfigurationFromPast: self._event_config_past,
             KaraboEvent.NetworkConnectStatus: self._event_network
         }
-        register_for_events(event_map)
+        register_for_broadcasts(event_map)
 
     # -----------------------------------------------------------------------
     # Karabo Events
