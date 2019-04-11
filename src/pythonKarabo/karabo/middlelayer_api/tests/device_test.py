@@ -56,7 +56,8 @@ class MyDevice(Device):
     table = VectorHash(
         rows=RowSchema,
         displayedName="Table",
-        defaultValue=[Hash("x", 2.0, "y", 5.6)],
+        defaultValue=[Hash("x", 2.0, "y", 5.6),
+                      Hash("x", 1.0, "y", 1.6)],
         accessMode=AccessMode.RECONFIGURABLE)
 
     @Slot(displayedName="Increase", allowedStates=[State.ON])
@@ -157,9 +158,18 @@ class Tests(DeviceTest):
     async def test_clear_table_external(self):
         with (await getDevice("MyDevice")) as d:
             dtype = d.table.descriptor.dtype
-            current_value = np.array((2.0, 5.6),
-                                     dtype=dtype)
-            self.assertEqual(d.table.value, current_value)
+            current_value = np.array((2.0, 5.6), dtype=dtype)
+            self.assertEqual(d.table[0].value, current_value)
+
+            # pop the first item and compare
+            check_value = d.table.pop(0)
+            self.assertEqual(check_value.value, current_value)
+
+            # The former second is now first
+            current_value = np.array((1.0, 1.6), dtype=dtype)
+            self.assertEqual(d.table[0].value, current_value)
+            self.assertEqual(len(d.table.value), 1)
+
             # clear the value on the device side. The values are popped.
             d.table.clear()
             empty_table = np.array([], dtype=dtype)

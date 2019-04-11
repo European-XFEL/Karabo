@@ -1,8 +1,8 @@
 """This module contains some synchronization routines for users"""
 
 import asyncio
-from asyncio import (async, CancelledError, coroutine, Future, get_event_loop,
-                     iscoroutine, iscoroutinefunction)
+from asyncio import (CancelledError, coroutine, ensure_future, Future,
+                     get_event_loop, iscoroutine, iscoroutinefunction)
 from functools import wraps
 
 from karabo.native.data.basetypes import KaraboValue, unit_registry as unit
@@ -39,7 +39,7 @@ def background(task, *args, timeout=-1):
 
     ret = inner(task, *args, wait=False, timeout=timeout)
     if iscoroutine(ret):
-        return async(ret)
+        return ensure_future(ret)
     else:
         return ret
 
@@ -86,7 +86,7 @@ def sleep(delay, result=None):
 @coroutine
 def _wait(return_when, *args, timeout=None, cancel_pending=True, **kwargs):
     kwargs.update(enumerate(args))
-    futures = {k: f if isinstance(f, KaraboFuture) else asyncio.async(f)
+    futures = {k: f if isinstance(f, KaraboFuture) else ensure_future(f)
                for k, f in kwargs.items()}
     names = {
         f.future if isinstance(f, KaraboFuture) else f: k

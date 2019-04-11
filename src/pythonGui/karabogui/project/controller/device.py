@@ -272,7 +272,6 @@ class DeviceInstanceController(BaseProjectGroupController):
     def _alarm_info_change(self):
         self._update_alarm_type()
 
-    @on_trait_change("children[]")
     def _update_check_state(self):
         """Update the Qt.CheckState of the ``DeviceConfigurationController``
         children

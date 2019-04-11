@@ -36,10 +36,12 @@ class AlarmPanel(BasePanelWidget):
             self.alarm_model.initAlarms(data.get('instance_id'),
                                         data.get('update_types'),
                                         data.get('alarm_entries'))
+            return True
         elif sender is KaraboEventSender.AlarmServiceUpdate:
             self.alarm_model.updateAlarms(data.get('instance_id'),
                                           data.get('update_types'),
                                           data.get('alarm_entries'))
+            return True
         elif sender is KaraboEventSender.NetworkConnectStatus:
             if not data['status']:
                 # If disconnected to server, unregister the alarm panel from
@@ -116,8 +118,6 @@ class ButtonDelegate(QStyledItemDelegate):
         self.pbClick = QPushButton("")
         self.pbClick.hide()
         parent.clicked.connect(self.cellClicked)
-        self.cellEditMode = False
-        self.currentCellIndex = None  # QPersistentModelIndex
 
     def _isRelevantColumn(self, index):
         """ This methods checks whether the column of the given ``index``
@@ -156,7 +156,6 @@ class ButtonDelegate(QStyledItemDelegate):
         isRelevant, text, clickable = self._isRelevantColumn(index)
         if isRelevant:
             # This button is for the highlighting effect when clicking/editing
-            # the index, is deleted whenever `closePersistentEditor` is called
             button = QPushButton(parent)
             self._updateButton(button, text, clickable)
             return button
@@ -191,18 +190,10 @@ class ButtonDelegate(QStyledItemDelegate):
 
     @pyqtSlot(object)
     def cellClicked(self, index):
+        if not index.isValid():
+            return
         isRelevant, text, clickable = self._isRelevantColumn(index)
         if isRelevant and clickable:
-            if self.cellEditMode:
-                # Remove old persistent model index
-                self.parent().closePersistentEditor(self.currentCellIndex)
-            # Current model index is stored and added to stay persistent until
-            # editing mode is done
-            self.currentCellIndex = index
-            # If no editor exists, the delegate will create a new editor which
-            # means that here ``createEditor`` is called
-            self.parent().openPersistentEditor(self.currentCellIndex)
-            self.cellEditMode = True
             if text == ALARM_DATA[SHOW_DEVICE]:
                 # Send signal to show device
                 broadcast_event(KaraboEventSender.ShowDevice,
@@ -213,8 +204,3 @@ class ButtonDelegate(QStyledItemDelegate):
                 model = index.model()
                 alarm_id = model.index(index.row(), id_index).data()
                 get_network().onAcknowledgeAlarm(model.instanceId, alarm_id)
-        else:
-            if self.cellEditMode:
-                self.cellEditMode = False
-                # Persistent model index and data namely QPushButton cleaned up
-                self.parent().closePersistentEditor(self.currentCellIndex)

@@ -13,7 +13,6 @@ from karabo.native.data.hash import _Byte
 
 
 class Hash_TestCase(unittest.TestCase):
-
     def test_constructors(self):
         h = Hash()
         self.assertEqual(len(h), 0)
@@ -28,7 +27,7 @@ class Hash_TestCase(unittest.TestCase):
         self.assertEqual(h['b'], 2.0)
 
         h = Hash("a.b.c", 1, "b.c", 2.0, "c", 3.7, "d.e", "4",
-                "e.f.g.h", [5,5,5,5,5], "F.f.f.f.f", Hash("x.y.z", 99))
+                 "e.f.g.h", [5, 5, 5, 5, 5], "F.f.f.f.f", Hash("x.y.z", 99))
         self.assertEqual(len(h), 6)
         self.assertEqual(h['a.b.c'], 1)
         self.assertEqual(h['b.c'], 2.0)
@@ -62,7 +61,7 @@ class Hash_TestCase(unittest.TestCase):
         self.assertEqual(h.get("a.b.c2.d"), 2.0)
 
         h = Hash()
-        h["a.b.c"] = 1    # statement is equivalent to h.set("a.b.c", 1)
+        h["a.b.c"] = 1  # statement is equivalent to h.set("a.b.c", 1)
         h["a.b.c"] = 2
         self.assertEqual(h["a.b.c"], 2)
         self.assertTrue(h.has("a.b"))
@@ -75,65 +74,61 @@ class Hash_TestCase(unittest.TestCase):
         self.assertIs(h.get("laber"), None)
         self.assertEqual(h.get("laber", "whatever"), "whatever")
 
-
     def test_getSetVectorHash(self):
         h = Hash('a', [])
-        g = [Hash('b', 1), Hash('b',2)]      # python list of Hashes
-        vh = h['a']    # get the reference because value is VectorHash
+        g = [Hash('b', 1), Hash('b', 2)]  # python list of Hashes
+        vh = h['a']  # get the reference because value is VectorHash
         vh.extend(g)
-        g1 = (Hash('c',10), Hash('c',20),)   # python tuple of Hashes
+        g1 = (Hash('c', 10), Hash('c', 20),)  # python tuple of Hashes
         vh.extend(g1)  # "extend" lists, tuples, VectorHash objects
-        vh.append(Hash('d',100))  # "append" Hash object
+        vh.append(Hash('d', 100))  # "append" Hash object
         self.assertEqual(len(vh), 5)
 
-
     def test_iteration(self):
-        h = Hash("should", 1, "be", 2, "iterated", 3, "in", 4, "correct", 5, "order", 6)
+        h = Hash("should", 1, "be", 2, "iterated", 3, "in", 4, "correct", 5,
+                 "order", 6)
         insertionOrder = [k for k in h]
-        self.assertEqual(insertionOrder, ["should","be","iterated","in",
-                                          "correct","order"])
-        h.set("be", "2") # Has no effect on order
+        self.assertEqual(insertionOrder, ["should", "be", "iterated", "in",
+                                          "correct", "order"])
+        h.set("be", "2")  # Has no effect on order
 
         insertionOrder = [k for k in h]
-        self.assertEqual(insertionOrder, ["should","be","iterated","in",
-                                          "correct","order"])
+        self.assertEqual(insertionOrder, ["should", "be", "iterated", "in",
+                                          "correct", "order"])
 
         h.erase("be")  # Remove
-        h.set("be", "2")   # Must be last element in sequence now
-
+        h.set("be", "2")  # Must be last element in sequence now
 
     def test_attributes(self):
         h = Hash("a.b.a.b", 42)
-        h.setAttribute("a.b.a.b","attr1", "someValue")
-        self.assertEqual(h.getAttribute("a.b.a.b","attr1"), "someValue")
+        h.setAttribute("a.b.a.b", "attr1", "someValue")
+        self.assertEqual(h.getAttribute("a.b.a.b", "attr1"), "someValue")
 
         h = Hash("a.b.a.b", 42)
-        h.setAttribute("a.b.a.b","attr1", "someValue")
-        self.assertEqual(h.getAttribute("a.b.a.b","attr1"), "someValue")
+        h.setAttribute("a.b.a.b", "attr1", "someValue")
+        self.assertEqual(h.getAttribute("a.b.a.b", "attr1"), "someValue")
 
         h.setAttribute("a.b.a.b", "attr2", 42)
-        self.assertEqual(h.getAttribute("a.b.a.b","attr1"), "someValue")
-        self.assertEqual(h.getAttribute("a.b.a.b","attr2"), 42)
+        self.assertEqual(h.getAttribute("a.b.a.b", "attr1"), "someValue")
+        self.assertEqual(h.getAttribute("a.b.a.b", "attr2"), 42)
 
         h.setAttribute("a.b.a.b", "attr2", 43)
-        self.assertEqual(h.getAttribute("a.b.a.b","attr1"), "someValue")
-        self.assertEqual(h.getAttribute("a.b.a.b","attr2"), 43)
+        self.assertEqual(h.getAttribute("a.b.a.b", "attr1"), "someValue")
+        self.assertEqual(h.getAttribute("a.b.a.b", "attr2"), 43)
 
         h.setAttribute("a.b.a.b", "attr1", True)
-        self.assertEqual(h.getAttribute("a.b.a.b","attr1"), True)
-        self.assertEqual(h.getAttribute("a.b.a.b","attr2"), 43)
+        self.assertEqual(h.getAttribute("a.b.a.b", "attr1"), True)
+        self.assertEqual(h.getAttribute("a.b.a.b", "attr2"), 43)
         attrs = h.getAttributes("a.b.a.b")
         self.assertEqual(attrs.get("attr1"), True)
         self.assertEqual(attrs["attr1"], True)
         self.assertEqual(attrs.get("attr2"), 43)
         self.assertEqual(attrs["attr2"], 43)
 
-
     def test_copy(self):
         h = self.create_hash()
         c = Hash(h)
         self.check_hash(c)
-
 
     def create_hash(self):
         h = Hash()
@@ -163,7 +158,6 @@ class Hash_TestCase(unittest.TestCase):
         sh["a", "nodeType"] = NodeType.Leaf
         h["schema"] = Schema("blub", hash=sh)
         return h
-
 
     def check_hash_simple(self, h):
         """check that the hash *h* is the same as created by `create_hash`
@@ -216,7 +210,6 @@ class Hash_TestCase(unittest.TestCase):
         self.assertFalse(sh["a"].keys())
         self.assertEqual(sh["a", "nodeType"], NodeType.Leaf)
 
-
     def test_xml_old(self):
         writer = XMLWriter()
         parser = XMLParser()
@@ -233,12 +226,10 @@ class Hash_TestCase(unittest.TestCase):
         s = encodeXML(h)
         self.check_hash(decodeXML(s)["bla"])
 
-
     def test_binary(self):
         s = encodeBinary(self.create_hash())
         self.check_hash(decodeBinary(s))
         self.assertEqual(adler32(s), 963145160)
-
 
     def test_cpp_bin(self):
         s = encodeBinary(self.create_hash())
@@ -247,7 +238,6 @@ class Hash_TestCase(unittest.TestCase):
         self.check_hash_simple(h)
         ret = decodeBinary(ser.save(h))
         self.check_hash(ret)
-
 
     def test_cpp_xml(self):
         s = encodeXML(self.create_hash())
@@ -273,4 +263,3 @@ class Hash_TestCase(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-

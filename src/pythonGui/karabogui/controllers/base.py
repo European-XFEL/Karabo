@@ -94,10 +94,6 @@ class BaseBindingController(HasStrictTraits):
         was declined.
         """
 
-    def update_alarms(self, alarm_type):
-        """Implemented by subclasses to receive alarm notifications
-        """
-
     # -------------------------------------------------------------------------
     # Public interface
 

@@ -3,7 +3,6 @@
 Karabo keeps some metadata with its values. This module contains the
 classes which have the metadata attached."""
 from enum import Enum
-from collections.abc import MutableSequence
 from functools import wraps
 import inspect
 from itertools import chain
@@ -339,7 +338,7 @@ class VectorStringValue(KaraboValue, list):
         return self
 
 
-class TableValue(MutableSequence, KaraboValue):
+class TableValue(KaraboValue):
     """This wraps numpy structured arrays. Pint cannot deal with them."""
     def __init__(self, value, units, **kwargs):
         super(TableValue, self).__init__(value, **kwargs)
@@ -394,13 +393,23 @@ class TableValue(MutableSequence, KaraboValue):
     def extend(self, value):
         self[len(self.value):] = value
 
+    def append(self, value):
+        self.extend(value)
+
     def pop(self, index=-1):
         """Pops a single TableValue from the table
+
+        NOTE: This method can only be used with a descriptor!
         """
         v = self[index]
         self.value = numpy.delete(self.value, index)
-        self[index] = []
+        self.descriptor.__set__(self._parent, self.value)
         return v
+
+    def clear(self):
+        """Clear the table element with a single message"""
+        self.value = numpy.array([], dtype=self.value.dtype)
+        self.descriptor.__set__(self._parent, self.value)
 
     def __len__(self):
         return len(self.value)
@@ -558,6 +567,7 @@ class QuantityValue(KaraboValue, Quantity):
                 pass
 
         if absolute is not None and self.value != 0:
+            # TODO: this branch is not covered by tests
             err = abs(absolute / self.value)
             if relative is not None:
                 err = max(err, relative)
@@ -568,9 +578,22 @@ class QuantityValue(KaraboValue, Quantity):
 
         err = 1 - int(numpy.log10(err))
         if err > 0:
-            return "{{:.{}~{}}}".format(err, fmt).format(1.0 * value)
+            if isinstance(value.value, numpy.ndarray):
+                # XXX: [1., 2.] will be printed as '[1.0 2.0]'
+                _formatter = {'float_kind':
+                              '{{:.{}{}}}'.format(err, fmt).format}
+                formatted_value = numpy.array2string(value.value,
+                                                     formatter=_formatter)
+                ret = "{} {:~}".format(formatted_value, value.units)
+            else:
+                # old behaviour for floats
+                ret = "{{:.{}~{}}}".format(err, fmt).format(1.0 * value)
         else:
-            return "{{:~{}}}".format(fmt).format(0)
+            # XXX: the following string always return [0], regardless of the
+            #  size of the initial array
+            # TODO: this branch is not covered by tests
+            ret = "{{:~{}}}".format(fmt).format(0)
+        return ret
 
     def _repr_pretty_(self, p, cycle):
         try:

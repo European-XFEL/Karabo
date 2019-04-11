@@ -34,6 +34,8 @@ namespace karabo {
 
 #define KARABO_P2P_SOURCE_INFO "__sourceInfo"
 
+        typedef boost::function<void(const std::vector<karabo::util::Hash>&)> ShowConnectionsHandler;
+
         /**
          * @class OutputChannel
          * @brief An OutputChannel for passing data to pipelined processing
@@ -138,6 +140,9 @@ namespace karabo {
             unsigned int m_channelId;
             unsigned int m_chunkId;
 
+            mutable boost::mutex m_showConnectionsHandlerMutex;
+            ShowConnectionsHandler m_showConnectionsHandler;
+
         public:
             typedef Memory::MetaData MetaData;
 
@@ -234,6 +239,8 @@ namespace karabo {
 
             void signalEndOfStream();
 
+            void registerShowConnectionsHandler(const ShowConnectionsHandler& handler);
+
         private:
 
             void initializeServerConnection(int countdown);
@@ -248,11 +255,15 @@ namespace karabo {
 
             void onTcpChannelRead(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel, const karabo::util::Hash& message);
 
+            void updateConnectionTable();
+
             void onInputAvailable(const std::string& instanceId);
 
             void triggerIOEvent();
 
             void onInputGone(const karabo::net::Channel::Pointer& channel);
+
+            void onInputGoneImpl(const karabo::net::Channel::Pointer& channel);
 
             void distributeQueue(karabo::util::Hash& channelInfo, std::deque<int>& chunkIds);
 

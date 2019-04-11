@@ -9,6 +9,7 @@ import socket
 import re
 import signal
 import traceback
+from functools import partial
 
 from karathon import (
     ALARM_ELEMENT, BOOL_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
@@ -1198,7 +1199,18 @@ class PythonDevice(NoFsm):
                     # Would best be INFO level, but without broadcasting:
                     self.log.DEBUG("Creating output channel \"{}\""
                                    .format(key))
-                    self._ss.createOutputChannel(key, self.parameters)
+                    outputChannel = self._ss.createOutputChannel(
+                                                 key, self.parameters)
+                    if not outputChannel:
+                        self.log.ERROR("Failed to create output channel \"{}\""
+                                       .format(key))
+                    else:
+                        outputChannel.registerShowConnectionsHandler(
+                            partial(
+                                lambda x, y: self.set(x + ".connections", y),
+                                key)
+                        )
+
                 elif displayType == "InputChannel":
                     # Would best be INFO level, but without broadcasting:
                     self.log.DEBUG("Creating input channel \"{}\""

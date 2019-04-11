@@ -8,7 +8,10 @@
 #ifndef KARABO_DEVICES_PROPERTYTEST_HH
 #define KARABO_DEVICES_PROPERTYTEST_HH
 
+#include <boost/asio/deadline_timer.hpp>
+
 #include "karabo/core/Device.hh"
+#include "karabo/xms/InputChannel.hh"
 
 namespace karabo {
     namespace util {
@@ -57,6 +60,16 @@ namespace karabo {
 
             void writeOutput();
 
+            void writeOutputHandler(const boost::system::error_code& e);
+
+            void startWritingOutput();
+
+            void stopWritingOutput();
+
+            void onData(const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta);
+
+            void resetChannelCounters();
+
             void eosOutput();
 
             void slotUpdateSchema();
@@ -67,7 +80,8 @@ namespace karabo {
 
             void replier(const karabo::xms::SignalSlotable::AsyncReply & areply);
 
-            long long m_outputCounter;
+            bool m_writingOutput;
+            boost::asio::deadline_timer m_writingOutputTimer;
         };
     } 
 }
