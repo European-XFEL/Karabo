@@ -13,7 +13,7 @@ from karabo.common.api import Capabilities
 from karabogui import icons
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.enums import NavigationItemTypes
-from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.request import call_device_slot
 from karabogui.singletons.api import get_manager, get_selection_tracker
 from karabogui.util import (
@@ -241,7 +241,7 @@ class SystemTreeView(QTreeView):
         if item_type not in ('class', 'device'):
             # servers and hosts clear the configurator
             proxy = None
-        broadcast_event(KaraboEventSender.ShowConfiguration, {'proxy': proxy})
+        broadcast_event(KaraboEvent.ShowConfiguration, {'proxy': proxy})
 
     @pyqtSlot()
     def onOpenFromFile(self):

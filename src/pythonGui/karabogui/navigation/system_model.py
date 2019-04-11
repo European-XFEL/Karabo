@@ -13,7 +13,7 @@ from PyQt4.QtGui import QItemSelection, QItemSelectionModel
 from karabo.common.api import DeviceStatus
 from karabogui import globals as krb_globals, icons
 from karabogui.alarms.api import get_alarm_icon
-from karabogui.events import KaraboEventSender, register_for_broadcasts
+from karabogui.events import KaraboEvent, register_for_events
 from karabogui.indicators import get_state_icon_for_status
 from karabogui.singletons.api import get_topology
 
@@ -39,24 +39,30 @@ class SystemTreeModel(QAbstractItemModel):
         self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
-        # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
-        # not necessary for self due to the fact that the singleton mediator
-        # object and `self` are being destroyed when the GUI exists
-        register_for_broadcasts(self)
+        # Register to KaraboBroadcastEvent, Note: unregister_from_events is
+        # not necessary
+        event_map = {
+            KaraboEvent.AccessLevelChanged: self._event_access,
+            KaraboEvent.StartMonitoringDevice: self._event_start_monitor,
+            KaraboEvent.StopMonitoringDevice: self._event_stop_monitor,
+            KaraboEvent.ShowDevice: self._event_show_device
+        }
+        register_for_events(event_map)
 
-    def karaboBroadcastEvent(self, event):
-        sender = event.sender
-        data = event.data
-        if sender in (KaraboEventSender.StartMonitoringDevice,
-                      KaraboEventSender.StopMonitoringDevice):
-            node_id = data['device_id']
-            self._update_device_info(node_id)
-            return True
-        elif sender is KaraboEventSender.ShowDevice:
-            self.selectNodeById(data.get('deviceId'))
-        elif sender is KaraboEventSender.AccessLevelChanged:
-            self._clear_tree_cache()
-        return False
+    def _event_access(self, data):
+        self._clear_tree_cache()
+
+    def _event_start_monitor(self, data):
+        node_id = data['device_id']
+        self._update_device_info(node_id)
+
+    def _event_stop_monitor(self, data):
+        node_id = data['device_id']
+        self._update_device_info(node_id)
+
+    def _event_show_device(self, data):
+        node_id = data['device_id']
+        self.selectNodeById(node_id)
 
     def index_ref(self, model_index):
         """Get the system node object for a ``QModelIndex``. This is
@@ -339,7 +345,7 @@ class SystemTreeModel(QAbstractItemModel):
             index = self.createIndex(node.row(), column, node)
             self.dataChanged.emit(index, index)
 
-    def _clear_tree_cache(self):
+    def _clear_tree_cache(self, data=None):
         def visitor(node):
             node.is_visible = not (node.visibility >
                                    krb_globals.GLOBAL_ACCESS_LEVEL)

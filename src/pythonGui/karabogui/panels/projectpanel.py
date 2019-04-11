@@ -14,7 +14,7 @@ from karabo.common.project.api import ProjectModel
 from karabogui import icons
 from karabogui.actions import build_qaction, KaraboAction
 from karabogui.const import SEARCH_BUTTON_WIDTH, SEARCH_LABEL_WIDTH
-from karabogui.events import KaraboEventSender, register_for_broadcasts
+from karabogui.events import KaraboEvent, register_for_events
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.utils import (
     load_project, maybe_save_modified_project, save_object)
@@ -36,7 +36,12 @@ class ProjectPanel(BasePanelWidget):
 
         # Register for broadcast events.
         # This object lives as long as the app. No need to unregister.
-        register_for_broadcasts(self)
+        event_map = {
+            KaraboEvent.NetworkConnectStatus: self._event_network,
+            KaraboEvent.DatabaseIsBusy: self._event_db_busy,
+            KaraboEvent.ProjectFilterUpdated: self._event_filter_updated
+        }
+        register_for_events(event_map)
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
@@ -170,19 +175,14 @@ class ProjectPanel(BasePanelWidget):
 
         return [toolbar]
 
-    def karaboBroadcastEvent(self, event):
-        """ Router for incoming broadcasts
-        """
-        data = event.data
-        if event.sender is KaraboEventSender.NetworkConnectStatus:
-            self._handle_network_status_change(data['status'])
-        elif event.sender is KaraboEventSender.DatabaseIsBusy:
-            self._handle_database_is_busy(data)
-        elif event.sender is KaraboEventSender.ProjectFilterUpdated:
-            self._init_search_filter(data['status'])
-            # we are the only one interested!
-            return True
-        return False
+    def _event_network(self, data):
+        self._handle_network_status_change(data['status'])
+
+    def _event_db_busy(self, data):
+        self._handle_database_is_busy(data)
+
+    def _event_filter_updated(self, data):
+        self._init_search_filter(data['status'])
 
     def _handle_network_status_change(self, status):
         if not status:

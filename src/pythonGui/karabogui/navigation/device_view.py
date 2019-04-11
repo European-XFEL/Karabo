@@ -11,7 +11,7 @@ from PyQt4.QtGui import (
 
 from karabogui import icons
 from karabogui.enums import NavigationItemTypes
-from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
 from karabogui.singletons.api import (
     get_manager, get_network, get_selection_tracker)
@@ -144,7 +144,7 @@ class DeviceTreeView(QTreeView):
         if item_type not in ('class', 'device'):
             # servers and hosts clear the configurator
             proxy = None
-        broadcast_event(KaraboEventSender.ShowConfiguration, {'proxy': proxy})
+        broadcast_event(KaraboEvent.ShowConfiguration, {'proxy': proxy})
 
     @pyqtSlot()
     def onDoubleClickHeader(self):

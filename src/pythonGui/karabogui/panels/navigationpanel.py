@@ -12,7 +12,7 @@ from PyQt4.QtGui import (
     QWidget)
 from karabogui import icons
 from karabogui.const import SEARCH_BUTTON_WIDTH, SEARCH_LABEL_WIDTH
-from karabogui.events import KaraboEventSender, register_for_broadcasts
+from karabogui.events import KaraboEvent, register_for_events
 from karabogui.navigation.system_view import SystemTreeView
 
 from .base import BasePanelWidget
@@ -23,10 +23,14 @@ class TopologyPanel(BasePanelWidget):
         super(TopologyPanel, self).__init__("System Topology")
         self._reset_search_filter()
 
-        # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
+        # Register to KaraboBroadcastEvent, Note: unregister_from_events is
         # not necessary for self due to the fact that the singleton mediator
         # object and `self` are being destroyed when the GUI exists
-        register_for_broadcasts(self)
+        event_map = {
+            KaraboEvent.AccessLevelChanged: self._event_access_level,
+            KaraboEvent.NetworkConnectStatus: self._event_network
+        }
+        register_for_events(event_map)
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
@@ -42,18 +46,14 @@ class TopologyPanel(BasePanelWidget):
         main_layout.addWidget(self.tree_view)
         return widget
 
-    def karaboBroadcastEvent(self, event):
-        sender = event.sender
-        data = event.data
-        if sender is KaraboEventSender.AccessLevelChanged:
-            self._reset_search_filter(connected_to_server=True)
-        elif sender is KaraboEventSender.NetworkConnectStatus:
-            status = data.get('status', False)
-            self._reset_search_filter(status)
-            if not status:
-                self.close_popup_widget()
+    def _event_access_level(self, data):
+        self._reset_search_filter(connected_to_server=True)
 
-        return False
+    def _event_network(self, data):
+        status = data.get('status', False)
+        self._reset_search_filter(status)
+        if not status:
+            self.close_popup_widget()
 
     def create_search_bar(self):
         """Returns a QHBoxLayout containing the search bar.

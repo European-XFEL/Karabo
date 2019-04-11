@@ -14,7 +14,7 @@ from PyQt4.QtGui import (
 
 from karabogui import messagebox
 from karabogui.events import (
-    register_for_broadcasts, unregister_from_broadcasts, KaraboEventSender,
+    register_for_events, unregister_from_events, KaraboEvent,
 )
 from karabogui.project.utils import show_trash_project_message
 from karabogui.singletons.api import get_config, get_db_conn
@@ -94,33 +94,33 @@ class LoadProjectDialog(QDialog):
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         self.leTitle.textChanged.connect(self._titleChanged)
 
-        register_for_broadcasts(self)
+        self.event_map = {
+            KaraboEvent.ProjectItemsList: self._event_item_list,
+            KaraboEvent.ProjectDomainsList: self._event_domain_list,
+            KaraboEvent.ProjectAttributeUpdated: self._event_attribute
+        }
+        register_for_events(self.event_map)
 
     def done(self, result):
         """ Reimplement ``QDialog`` virtual slot
 
         Stop listening for broadcast events
         """
-        unregister_from_broadcasts(self)
+        unregister_from_events(self.event_map)
         super(LoadProjectDialog, self).done(result)
 
-    def karaboBroadcastEvent(self, event):
-        sender = event.sender
-        data = event.data
-        if sender is KaraboEventSender.ProjectItemsList:
-            items = data.get('items', [])
-            self.twProjects.model().add_project_manager_data(items)
-            # NOTE: Resize all columns until PyQt5
-            self.twProjects.resizeColumnsToContents()
-            self._titleChanged(self.leTitle.text())
-            return True
-        elif sender is KaraboEventSender.ProjectDomainsList:
-            self._domains_updated(data.get('items', []))
-            return True
-        elif sender is KaraboEventSender.ProjectAttributeUpdated:
-            self._is_trashed_updated(data.get('items', []))
-            return True
-        return False
+    def _event_item_list(self, data):
+        items = data.get('items', [])
+        self.twProjects.model().add_project_manager_data(items)
+        # NOTE: Resize all columns until PyQt5
+        self.twProjects.resizeColumnsToContents()
+        self._titleChanged(self.leTitle.text())
+
+    def _event_domain_list(self, data):
+        self._domains_updated(data.get('items', []))
+
+    def _event_attribute(self, data):
+        self._is_trashed_updated(data.get('items', []))
 
     def _domains_updated(self, domains):
         # Domain combobox
@@ -309,24 +309,25 @@ class NewProjectDialog(QDialog):
         self.leTitle.selectAll()
         self.leTitle.setValidator(validator)
 
-        register_for_broadcasts(self)
+        self.event_map = {
+            KaraboEvent.ProjectDomainsList: self._event_item_list
+        }
+        register_for_events(self.event_map)
 
     def done(self, result):
         """ Reimplement ``QDialog`` virtual slot
 
         Stop listening for broadcast events
         """
-        unregister_from_broadcasts(self)
+        unregister_from_events(self.event_map)
         super(NewProjectDialog, self).done(result)
 
     @property
     def simple_name(self):
         return self.leTitle.text()
 
-    def karaboBroadcastEvent(self, event):
-        if event.sender is KaraboEventSender.ProjectDomainsList:
-            self._fill_domain_combo_box(event.data.get('items', []))
-        return False
+    def _event_item_list(self, data):
+        self._fill_domain_combo_box(data.get('items', []))
 
     @property
     def domain(self):

@@ -15,8 +15,8 @@ from karabo.common.project.api import MacroModel, read_macro, write_macro
 from karabogui import icons
 from karabogui.enums import ProjectItemTypes
 from karabogui.events import (
-    broadcast_event, register_for_broadcasts, unregister_from_broadcasts,
-    KaraboEventSender)
+    broadcast_event, register_for_events, unregister_from_events,
+    KaraboEvent)
 from karabogui.indicators import get_project_device_status_icon
 from karabogui.project.dialog.object_handle import (
     ObjectDuplicateDialog, ObjectEditDialog)
@@ -47,7 +47,7 @@ class MacroInstanceController(BaseProjectController):
 
     def single_click(self, project_controller, parent=None):
         proxy = get_topology().get_device(self.instance_id)
-        broadcast_event(KaraboEventSender.ShowConfiguration, {'proxy': proxy})
+        broadcast_event(KaraboEvent.ShowConfiguration, {'proxy': proxy})
 
     def _get_display_name(self):
         """Traits property getter for ``display_name``
@@ -106,7 +106,7 @@ class MacroController(BaseProjectGroupController):
                 'code': self.model.code}
 
     def double_click(self, project_controller, parent=None):
-        broadcast_event(KaraboEventSender.ShowMacroView,
+        broadcast_event(KaraboEvent.ShowMacroView,
                         {'model': self.model})
 
     def item_handler(self, added, removed):
@@ -141,7 +141,7 @@ class MacroController(BaseProjectGroupController):
                     running_instances.append(dev_id)
                     data['instance'] = dev_id
                     # Create KaraboBroadcastEvent
-                    broadcast_event(KaraboEventSender.ConnectMacroInstance,
+                    broadcast_event(KaraboEvent.ConnectMacroInstance,
                                     data)
 
     # ----------------------------------------------------------------------
@@ -172,9 +172,11 @@ class MacroController(BaseProjectGroupController):
         """Handle broadcast event registration/unregistration here.
         """
         if old is not None:
-            unregister_from_broadcasts(old)
+            unregister_from_events(
+                {KaraboEvent.SystemTopologyUpdate: old._event_topology})
         if new is not None:
-            register_for_broadcasts(new)
+            register_for_events(
+                {KaraboEvent.SystemTopologyUpdate: new._event_topology})
 
     # ----------------------------------------------------------------------
     # action handlers
@@ -195,7 +197,7 @@ class MacroController(BaseProjectGroupController):
             if macro in project.macros:
                 project.macros.remove(macro)
 
-            broadcast_event(KaraboEventSender.RemoveProjectModelViews,
+            broadcast_event(KaraboEvent.RemoveProjectModelViews,
                             {'models': [macro]})
 
     @pyqtSlot()
