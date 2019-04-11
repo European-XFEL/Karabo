@@ -93,10 +93,11 @@ class Tests(DeviceTest):
     if "KARABO_BROKER_TOPIC" not in os.environ:
         os.environ["KARABO_BROKER_TOPIC"] = "PID_" + str(os.getpid())
     if "HOME" not in os.environ:
-        os.environ["HOME"]="/root"
+        os.environ["HOME"] = "/root"
     krb = os.environ["KARABO"]
     os.environ["LD_LIBRARY_PATH"] = krb + "/lib:" + krb + "/extern/lib"
     __loggerMap = "loggermap.xml"
+
     @classmethod
     @contextmanager
     def lifetimeManager(cls):
@@ -350,7 +351,7 @@ class Tests(DeviceTest):
 
         karabo = os.environ["KARABO"]
         xml_path = os.getcwd() + '/historytest.xml'
-        xml = open(xml_path,'wb')
+        xml = open(xml_path, 'wb')
         xml.write(b"""\
 <?xml version="1.0"?>
 <DeviceServer>
@@ -387,7 +388,7 @@ class Tests(DeviceTest):
             yield from waitUntil(lambda: logger.state == State.NORMAL)
 
         os.remove(xml_path)
-        
+
         for i in range(5):
             self.device.value = i
             self.device.child.number = -i
@@ -406,13 +407,13 @@ class Tests(DeviceTest):
         # are flushed
         yield from logger.flush()
 
-        old_history = yield from getHistory(
+        yield from getHistory(
             "middlelayerDevice", before.isoformat(), after.isoformat()).value
-        str_history = yield from getHistory(
+        yield from getHistory(
             "middlelayerDevice.value", before.isoformat(), after.isoformat())
 
         before = datetime.now()
-        
+
         # We have to write another value to close the first archive file :-(...
         for i in range(5):
             self.device.value = i
@@ -426,11 +427,12 @@ class Tests(DeviceTest):
         device = yield from getDevice("middlelayerDevice")
         proxy_history = yield from getHistory(
                 device.value, before.isoformat(), after.isoformat())
-        
+
         # Sort according to timestamp - order is not guaranteed!
         sorted_proxy_history = sorted(proxy_history, key=lambda x: x[0])
         # Testing
-        self.assertEqual([v for _, _, _, v in sorted_proxy_history], list(range(5)))
+        self.assertEqual([v for _, _, _, v in sorted_proxy_history],
+                         list(range(5)))
 
         node_history = yield from getHistory(
             "middlelayerDevice.child.number", before.isoformat(),
