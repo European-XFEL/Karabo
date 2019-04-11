@@ -10,13 +10,13 @@ class TimeMixin(object):
     server.
     """
     # The tick trainId as an unsigned long long (Uint64)
-    _tid = 0
+    _tid = np.uint64(0)
     # time since epoch in seconds
-    _time_sec = 0
+    _time_sec = np.uint64(0)
     # the fractional seconds
-    _time_frac = 0
+    _time_frac = np.uint64(0)
     # the period between consecutive trains in microsec
-    _period = 0
+    _period = np.uint64(0)
 
     @classmethod
     def set_reference(cls, train_id, sec, frac, period):

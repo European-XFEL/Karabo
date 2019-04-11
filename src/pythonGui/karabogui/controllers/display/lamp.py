@@ -40,23 +40,24 @@ class LampWidget(BaseBindingController):
 
     def value_update(self, proxy):
         value = proxy.value
-        if State(value).isDerivedFrom(State.CHANGING):
+        state = State(value)
+        if state.isDerivedFrom(State.CHANGING):
             self._set_lamp(STATE_LAMP_PATH[State.CHANGING])
-        elif State(value).isDerivedFrom(State.RUNNING):
+        elif state.isDerivedFrom(State.RUNNING):
             self._set_lamp(STATE_LAMP_PATH[State.RUNNING])
-        elif State(value).isDerivedFrom(State.ACTIVE):
+        elif state.isDerivedFrom(State.ACTIVE):
             self._set_lamp(STATE_LAMP_PATH[State.ACTIVE])
-        elif State(value).isDerivedFrom(State.PASSIVE):
+        elif state.isDerivedFrom(State.PASSIVE):
             self._set_lamp(STATE_LAMP_PATH[State.PASSIVE])
-        elif State(value).isDerivedFrom(State.DISABLED):
+        elif state.isDerivedFrom(State.DISABLED):
             self._set_lamp(STATE_LAMP_PATH[State.DISABLED])
-        elif State(value) is State.STATIC:
+        elif state is State.STATIC:
             self._set_lamp(STATE_LAMP_PATH[State.STATIC])
-        elif State(value) is State.NORMAL:
+        elif state is State.NORMAL:
             self._set_lamp(STATE_LAMP_PATH[State.NORMAL])
-        elif State(value) is State.ERROR:
+        elif state is State.ERROR:
             self._set_lamp(STATE_LAMP_PATH[State.ERROR])
-        elif State(value) is State.INIT:
+        elif state is State.INIT:
             self._set_lamp(STATE_LAMP_PATH[State.INIT])
         else:
             self._set_lamp(STATE_LAMP_PATH[State.UNKNOWN])

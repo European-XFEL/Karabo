@@ -2,13 +2,12 @@ from PyQt4.QtCore import Qt, pyqtSlot
 from PyQt4.QtGui import QAction, QFrame, QLabel
 from traits.api import Instance, Str, on_trait_change
 
-from karabo.common.api import State
 from karabo.common.scenemodel.api import DisplayStateColorModel
 from karabogui.binding.api import StringBinding
 from karabogui.const import WIDGET_MIN_HEIGHT
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
-from karabogui.indicators import STATE_COLORS
+from karabogui.indicators import get_state_color
 from karabogui.util import generateObjectName
 
 
@@ -48,27 +47,7 @@ class DisplayStateColor(BaseBindingController):
 
     def value_update(self, proxy):
         value = proxy.value
-        if State(value).isDerivedFrom(State.CHANGING):
-            color = STATE_COLORS[State.CHANGING]
-        elif State(value).isDerivedFrom(State.RUNNING):
-            color = STATE_COLORS[State.RUNNING]
-        elif State(value).isDerivedFrom(State.ACTIVE):
-            color = STATE_COLORS[State.ACTIVE]
-        elif State(value).isDerivedFrom(State.PASSIVE):
-            color = STATE_COLORS[State.PASSIVE]
-        elif State(value).isDerivedFrom(State.DISABLED):
-            color = STATE_COLORS[State.DISABLED]
-        elif State(value) is State.STATIC:
-            color = STATE_COLORS[State.STATIC]
-        elif State(value) is State.NORMAL:
-            color = STATE_COLORS[State.NORMAL]
-        elif State(value) is State.ERROR:
-            color = STATE_COLORS[State.ERROR]
-        elif State(value) is State.INIT:
-            color = STATE_COLORS[State.INIT]
-        else:
-            color = STATE_COLORS[State.UNKNOWN]
-
+        color = get_state_color(value)
         sheet = self._style_sheet.format(color)
         self.widget.setStyleSheet(sheet)
 

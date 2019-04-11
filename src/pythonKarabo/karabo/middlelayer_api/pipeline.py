@@ -144,6 +144,9 @@ class NetworkInput(Configurable):
     """
     displayType = 'InputChannel'
 
+    # Internal name to be set by the input channel
+    _name = None
+
     @VectorString(
         displayedName="Connected Output Channels",
         description="A list of output channels to receive data from, format: "
@@ -252,14 +255,16 @@ class NetworkInput(Configurable):
                 info["hostname"], int(info["port"]))
             channel = Channel(reader, writer, channelName=output)
             with closing(channel):
+                instance_id = "{}:{}".format(self.parent.deviceId,
+                                             self._name)
                 cmd = Hash("reason", "hello",
-                           "instanceId", self.parent.deviceId,
+                           "instanceId", instance_id,
                            "memoryLocation", "remote",
                            "dataDistribution", self.dataDistribution,
                            "onSlowness", self.onSlowness)
                 channel.writeHash(cmd)
                 cmd = Hash("reason", "update",
-                           "instanceId", self.parent.deviceId)
+                           "instanceId", instance_id)
                 while (yield from self.readChunk(channel, cls)):
                     yield from sleep(self.delayOnInput)
                     channel.writeHash(cmd)
@@ -368,6 +373,7 @@ class InputChannel(Node):
         channel.raw = self.raw
         channel.handler = self.handler.__get__(instance, type(instance))
         channel.parent = instance
+        channel._name = self.key
         if self.close_handler is not None:
             channel.close_handler = self.close_handler.__get__(
                 instance, type(instance))

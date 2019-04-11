@@ -1,11 +1,13 @@
 #include "PropertyTest.hh"
 
+#include "karabo/net/EventLoop.hh"
 #include "karabo/util/Schema.hh"
 #include "karabo/util/Hash.hh"
 #include "karabo/util/State.hh"
 #include "karabo/util/Dims.hh"
 #include "karabo/util/NDArray.hh"
 #include "karabo/xms/ImageData.hh"
+#include "karabo/xms/InputChannel.hh"
 
 
 namespace karabo {
@@ -57,9 +59,9 @@ namespace karabo {
 
 
         void PropertyTest::expectedParameters(Schema& expected) {
-
             OVERWRITE_ELEMENT(expected).key("state")
-                    .setNewOptions(State::INIT, State::NORMAL, State::ERROR)
+                    .setNewOptions(State::INIT, State::NORMAL, State::STARTING, State::STARTED,
+                                   State::STOPPING, State::ERROR)
                     .setNewDefaultValue(State::INIT)
                     .commit();
 
@@ -509,16 +511,80 @@ namespace karabo {
             SLOT_ELEMENT(expected).key("writeOutput")
                     .displayedName("Write to Output")
                     .description("Write once to output channel 'Output'")
+                    .allowedStates(State::NORMAL)
+                    .commit();
+
+            FLOAT_ELEMENT(expected).key("outputFrequency")
+                    .displayedName("Output frequency")
+                    .description("The target frequency for continously writing to 'Output'")
+                    .unit(util::Unit::HERTZ)
+                    .maxInc(1000)
+                    .minExc(0.f)
+                    .assignmentOptional().defaultValue(1.f)
+                    .reconfigurable()
+                    .commit();
+
+            INT32_ELEMENT(expected).key("outputCounter")
+                    .displayedName("Output Counter")
+                    .description("Last value sent as 'int32' via output channel 'Output'")
+                    .readOnly().initialValue(0)
+                    .commit();
+
+            SLOT_ELEMENT(expected).key("startWritingOutput")
+                    .displayedName("Start Writing")
+                    .description("Start writing continously to output channel 'Output'")
+                    .allowedStates(State::NORMAL)
+                    .commit();
+
+            SLOT_ELEMENT(expected).key("stopWritingOutput")
+                    .displayedName("Stop Writing")
+                    .description("Stop writing continously to output channel 'Output'")
+                    .allowedStates(State::STARTED)
                     .commit();
 
             SLOT_ELEMENT(expected).key("eosOutput")
                     .displayedName("EOS to Output")
                     .description("Write end-of-stream to output channel 'Output'")
+                    .allowedStates(State::NORMAL)
+                    .commit();
+
+            INPUT_CHANNEL(expected).key("input")
+                    .displayedName("Input")
+                    .dataSchema(pipeData) // re-use what the output channel sends
+                    .commit();
+
+            UINT32_ELEMENT(expected).key("processingTime")
+                    .displayedName("Processing Time")
+                    .description("Processing time of input channel data handler")
+                    .assignmentOptional()
+                    .defaultValue(0u)
+                    .reconfigurable()
+                    .unit(util::Unit::SECOND)
+                    .metricPrefix(util::MetricPrefix::MILLI)
+                    .commit();
+
+            INT32_ELEMENT(expected).key("currentInputId")
+                    .displayedName("Current Input Id")
+                    .description("Last value received as 'int32' on input channel (default: 0)")
+                    .readOnly().initialValue(0)
+                    .commit();
+
+            UINT32_ELEMENT(expected).key("inputCounter")
+                    .displayedName("Input Counter")
+                    .description("Number of data items received on input channel")
+                    .readOnly().initialValue(0)
+                    .commit();
+
+            SLOT_ELEMENT(expected).key("resetChannelCounters")
+                    .displayedName("Reset Channels")
+                    .description("Reset counters involved in input/output channel data flow")
+                    .allowedStates(State::NORMAL)
                     .commit();
 
             SLOT_ELEMENT(expected).key("slotUpdateSchema")
                     .displayedName("Update Schema")
                     .description("Duplicate maxSize of vectors in schema")
+                    .allowedStates(State::NORMAL)
                     .commit();
 
             PATH_ELEMENT(expected).key("inputPath")
@@ -566,15 +632,20 @@ namespace karabo {
         }
 
 
-        PropertyTest::PropertyTest(const Hash& input) : Device<>(input), m_outputCounter(0ll) {
+        PropertyTest::PropertyTest(const Hash& input)
+            : Device<>(input),
+            m_writingOutput(false), m_writingOutputTimer(karabo::net::EventLoop::getIOService()) {
+
             KARABO_INITIAL_FUNCTION(initialize);
 
             KARABO_SLOT(writeOutput);
+            KARABO_SLOT(startWritingOutput);
+            KARABO_SLOT(stopWritingOutput);
+            KARABO_SLOT(resetChannelCounters);
             KARABO_SLOT(eosOutput);
             KARABO_SLOT(slotUpdateSchema);
             KARABO_SLOT(node_increment);
             KARABO_SLOT(node_reset);
-           
         }
 
 
@@ -584,6 +655,8 @@ namespace karabo {
 
         void PropertyTest::initialize() {
             // some initialization
+            KARABO_ON_DATA("input", onData); // not yet possible in constructor, since uses bind_weak
+
             updateState(State::NORMAL);
         }
 
@@ -603,23 +676,86 @@ namespace karabo {
 
         void PropertyTest::writeOutput() {
 
-            ++m_outputCounter;
+            const int outputCounter = get<int>("outputCounter") + 1;
 
             // Set all numbers inside to m_outputCounter:
             Hash data;
             Hash& node = data.bindReference<Hash>("node");
-            node.set("int32", static_cast<int> (m_outputCounter));
-            node.set("string", toString(m_outputCounter));
-            node.set("vecInt64", std::vector<long long>(defVectorMaxSize, m_outputCounter));
-            node.set("ndarray", NDArray(Dims(100ull, 200ull), static_cast<float> (m_outputCounter)));
-            node.set("image", ImageData(NDArray(Dims(400ull, 500ull), static_cast<unsigned short> (m_outputCounter)),
+            node.set("int32", outputCounter);
+            node.set("string", toString(outputCounter));
+            node.set("vecInt64", std::vector<long long>(defVectorMaxSize, static_cast<long long> (outputCounter)));
+            node.set("ndarray", NDArray(Dims(100ull, 200ull), static_cast<float> (outputCounter)));
+            node.set("image", ImageData(NDArray(Dims(400ull, 500ull), static_cast<unsigned short> (outputCounter)),
                                         Dims(), // use Dims of NDArray
                                         Encoding::GRAY, // gray scale as is default
                                         16)); // unsigned short is 16 bits
 
             writeChannel("output", data);
+            set("outputCounter", outputCounter);
         }
 
+
+        void PropertyTest::writeOutputHandler(const boost::system::error_code& e) {
+            if (e) {
+                this->updateState(State::NORMAL);
+                return; // most likely cancelled
+            }
+
+            writeOutput();
+
+            if (m_writingOutput) {
+                // get when fired the last time and add delay time
+                auto next = m_writingOutputTimer.expires_at(); // at first time set in startWritingOutput())
+                const int delayTime = 1000.f / this->get<float>("outputFrequency"); // minExc(0.f) guarantees non-zero value
+                next += boost::posix_time::milliseconds(delayTime);
+                // now fire again
+                m_writingOutputTimer.expires_at(next);
+                m_writingOutputTimer.async_wait(karabo::util::bind_weak(&PropertyTest::writeOutputHandler,
+                                                                        this, boost::asio::placeholders::error));
+            } else {
+                this->updateState(State::NORMAL);
+            }
+        }
+
+
+        void PropertyTest::startWritingOutput() {
+            m_writingOutput = true;
+            this->updateState(State::STARTED);
+
+            // Start right away
+            m_writingOutputTimer.expires_from_now(boost::posix_time::milliseconds(0)); // see writeOutputHandler
+            karabo::net::EventLoop::getIOService().post(karabo::util::bind_weak(&PropertyTest::writeOutputHandler,
+                                                                                this, boost::system::error_code()));
+        }
+
+
+        void PropertyTest::stopWritingOutput() {
+
+            m_writingOutput = false;
+            this->updateState(State::STOPPING);
+            m_writingOutputTimer.cancel();
+        }
+
+
+        void PropertyTest::onData(const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta) {
+
+            // First sleep to simulate heavy work
+            boost::this_thread::sleep(boost::posix_time::milliseconds(get<unsigned int>("processingTime")));
+
+            const int currentInputId = data.get<int>("node.int32");
+            const unsigned int inputCounter = get<unsigned int>("inputCounter");
+
+            set(Hash("inputCounter", inputCounter + 1,
+                     "currentInputId", currentInputId));
+        }
+
+
+        void PropertyTest::resetChannelCounters() {
+            set(Hash("inputCounter", 0u,
+                     "currentInputId", 0,
+                     "outputCounter", 0));
+
+        }
 
         void PropertyTest::eosOutput() {
             signalEndOfStream("output");

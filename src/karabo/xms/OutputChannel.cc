@@ -71,11 +71,71 @@ namespace karabo {
                     .assignmentOptional().defaultValue(0)
                     .init()
                     .commit();
+
+
+            Schema columns;
+
+            STRING_ELEMENT(columns).key("remoteId")
+                    .displayedName("Remote ID")
+                    .description("Id of remote input channel")
+                    .readOnly()
+                    .commit();
+
+            STRING_ELEMENT(columns).key("dataDistribution")
+                    .displayedName("Distribution")
+                    .description("Data distribution behavior by input channel: shared or copy")
+                    .readOnly()
+                    .commit();
+
+            STRING_ELEMENT(columns).key("onSlowness")
+                    .displayedName("On slowness")
+                    .description("Data handling policy in case of slowness if data Distribution is copy: drop, wait, queue, throw")
+                    .readOnly()
+                    .commit();
+
+            STRING_ELEMENT(columns).key("memoryLocation")
+                    .displayedName("MemoryLocation")
+                    .description("Cache Memory class location: can be remote or local")
+                    .readOnly()
+                    .commit();
+
+            STRING_ELEMENT(columns).key("remoteAddress")
+                    .displayedName("Remote IP")
+                    .description("Remote TCP address of active connection")
+                    .readOnly()
+                    .commit();
+
+            UINT16_ELEMENT(columns).key("remotePort")
+                    .displayedName("Remote port")
+                    .description("Remote TCP port of active connection")
+                    .readOnly()
+                    .commit();
+
+            STRING_ELEMENT(columns).key("localAddress")
+                    .displayedName("Local IP")
+                    .description("Local TCP address of active connection")
+                    .readOnly()
+                    .commit();
+
+            UINT16_ELEMENT(columns).key("localPort")
+                    .displayedName("Local port")
+                    .description("Local TCP port of active connection")
+                    .readOnly()
+                    .commit();
+
+            TABLE_ELEMENT(expected).key("connections")
+                    .displayedName("Connections")
+                    .description("Table of active connections")
+                    .setColumns(columns)
+                    .assignmentOptional().defaultValue(std::vector<util::Hash>())
+                    .expertAccess()
+                    .commit();
+
         }
 
 
         OutputChannel::OutputChannel(const karabo::util::Hash& config) : m_port(0), m_sharedInputIndex(0),
-            m_toUnregisterSharedInput(false) {
+            m_toUnregisterSharedInput(false), m_showConnectionsHandler([](const std::vector<Hash>&) {}) {
             //KARABO_LOG_FRAMEWORK_DEBUG << "*** OutputChannel::OutputChannel CTOR ***";
             config.get("distributionMode", m_distributionMode);
             config.get("noInputShared", m_onNoSharedInputChannelAvailable);
@@ -304,7 +364,9 @@ namespace karabo {
                     }
                 }
                 onInputAvailable(instanceId); // Immediately register for reading
-
+                updateConnectionTable();
+                KARABO_LOG_FRAMEWORK_INFO << "OutputChannel handshake (hello)... from InputChannel : \"" << instanceId
+                        << "\", \"" << dataDistribution << "\", \"" << onSlowness << "\"";
             } else if (reason == "update") {
 
                 if (message.has("instanceId")) {
@@ -320,6 +382,43 @@ namespace karabo {
             } else {
                 onInputGone(channel);
             }
+        }
+
+
+        void OutputChannel::updateConnectionTable() {
+            std::vector<Hash> connections;
+            {
+                boost::mutex::scoped_lock lock(m_registeredSharedInputsMutex);
+                for (size_t i = 0; i < m_registeredSharedInputs.size(); ++i) {
+                    Hash& channelInfo = m_registeredSharedInputs[i];
+                    boost::weak_ptr<Channel> wptr = channelInfo.get<boost::weak_ptr<Channel> >("tcpChannel");
+                    boost::shared_ptr<Channel> channel = wptr.lock();
+                    boost::shared_ptr<TcpChannel> tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
+                    Hash row = TcpChannel::getChannelInfo(tcpChannel);
+                    row.set("remoteId", channelInfo.get<std::string>("instanceId"));
+                    row.set("memoryLocation", channelInfo.get<std::string>("memoryLocation"));
+                    row.set("dataDistribution","shared");
+                    row.set("onSlowness", channelInfo.get<std::string>("onSlowness"));
+                    connections.push_back(std::move(row));
+                }
+            }
+            {
+                boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
+                for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
+                    Hash &channelInfo = m_registeredCopyInputs[i];
+                    boost::weak_ptr<Channel> wptr = channelInfo.get<boost::weak_ptr<Channel> >("tcpChannel");
+                    boost::shared_ptr<Channel> channel = wptr.lock();
+                    boost::shared_ptr<TcpChannel> tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
+                    Hash row = TcpChannel::getChannelInfo(tcpChannel);
+                    row.set("remoteId", channelInfo.get<std::string>("instanceId"));
+                    row.set("memoryLocation", channelInfo.get<std::string>("memoryLocation"));
+                    row.set("dataDistribution","copy");
+                    row.set("onSlowness", channelInfo.get<std::string>("onSlowness"));
+                    connections.push_back(std::move(row));
+                }
+            }
+            boost::mutex::scoped_lock lock(m_showConnectionsHandlerMutex);
+            m_showConnectionsHandler(connections);
         }
 
 
@@ -371,8 +470,13 @@ namespace karabo {
         }
 
 
-
         void OutputChannel::onInputGone(const karabo::net::Channel::Pointer& channel) {
+            onInputGoneImpl(channel);
+            updateConnectionTable();
+        }
+
+
+        void OutputChannel::onInputGoneImpl(const karabo::net::Channel::Pointer& channel) {
             using namespace karabo::net;
             KARABO_LOG_FRAMEWORK_DEBUG << "*** OutputChannel::onInputGone ***";
 
@@ -651,6 +755,16 @@ namespace karabo {
                 } catch (const std::exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "OutputChannel::signalEndOfStream (copy) :  " << e.what();
                 }
+            }
+        }
+
+
+        void OutputChannel::registerShowConnectionsHandler(const ShowConnectionsHandler& handler) {
+            boost::mutex::scoped_lock lock(m_showConnectionsHandlerMutex);
+            if (!handler) {
+                m_showConnectionsHandler = [](const std::vector<karabo::util::Hash>&){};
+            } else {
+                m_showConnectionsHandler = handler;
             }
         }
 

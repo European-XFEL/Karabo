@@ -8,13 +8,18 @@ from karabo.common.scenemodel.api import (
 from karabogui import icons
 from karabogui.controllers.api import populate_controller_registry
 from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.panels.alarmpanel import AlarmPanel
 from karabogui.panels.configurationpanel import ConfigurationPanel
-from karabogui.panels.navigationpanel import NavigationPanel
+from karabogui.panels.navigationpanel import TopologyPanel
 from karabogui.panels.projectpanel import ProjectPanel
 from karabogui.panels.scenepanel import ScenePanel
 from karabogui.singletons.api import (
     get_manager, get_mediator, get_panel_wrangler, get_network, get_topology)
 from karabogui.util import getOpenFileName
+
+
+def run_alarm(deviceId):
+    return AlarmPanel(deviceId), (600, 400)
 
 
 def run_configurator(ns):
@@ -25,7 +30,7 @@ def run_configurator(ns):
 
 
 def run_navigation():
-    return NavigationPanel(), (400, 600)
+    return TopologyPanel(), (400, 600)
 
 
 def run_project():
@@ -77,6 +82,8 @@ def run_panel(ns):
         panel, size = run_project()
     elif ns.scene_chooser:
         panel, size = run_scene()
+    elif ns.alarm_device:
+        panel, size = run_alarm(ns.alarm_device)
     elif ns.scene_file:
         panel, size = run_scene_file(
             ns.scene_file)
@@ -105,6 +112,7 @@ def main():
     ag.add_argument('-p', '--project', action='store_true')
     ag.add_argument('-s', '--scene_chooser', action='store_true')
     ag.add_argument('-S', '--scene_file', type=str, metavar='FILENAME')
+    ag.add_argument('-a', '--alarm_device',  type=str, metavar='ALARM_DEVICE')
     run_panel(ap.parse_args())
 
 

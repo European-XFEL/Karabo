@@ -1,5 +1,5 @@
 from asyncio import (
-    async, coroutine, Future, gather, get_event_loop, sleep, wait_for,
+    coroutine, ensure_future, Future, gather, get_event_loop, sleep, wait_for,
     TimeoutError)
 from contextlib import contextmanager
 from datetime import datetime
@@ -174,7 +174,7 @@ class Local(Device):
     @Slot()
     @coroutine
     def task_error(self):
-        async(self.error())
+        ensure_future(self.error())
 
     @coroutine
     def onException(self, slot, exc, tb):
@@ -406,7 +406,7 @@ class Tests(DeviceTest):
         # there are often still changes on the way that we don't want to see
         yield from sleep(0.1)
         d = yield from getDevice("remote")
-        task = async(d.count())
+        task = ensure_future(d.count())
         yield from sleep(0.1)
         self.assertEqual(d.counter, -1,
                          "we're not connected still seeing changes")
@@ -491,7 +491,7 @@ class Tests(DeviceTest):
             d.counter = 0
             yield from waitUntil(lambda: d.counter == 0)
             self.assertEqual(d.counter, 0)
-            task = async(d.count())
+            task = ensure_future(d.count())
             try:
                 with self.assertRaises(TimeoutError):
                     yield from wait_for(waitUntil(lambda: d.counter > 10),
@@ -657,7 +657,7 @@ class Tests(DeviceTest):
             self.assertEqual(d.counter, None)
             self.assertEqual(d.nested.val, None)
             yield from waitUntilNew(d.value, d.counter, d.nested.val)
-            task = async(d.count())
+            task = ensure_future(d.count())
             try:
                 for i in range(30):
                     yield from waitUntilNew(d.counter, d.value)
@@ -676,7 +676,7 @@ class Tests(DeviceTest):
         with (yield from getDevice("remote")) as d:
             d.counter = 0
             yield from sleep(0.1)
-            task = async(d.count())
+            task = ensure_future(d.count())
             try:
                 for i in range(30):
                     yield from waitUntilNew(d)
@@ -759,7 +759,7 @@ class Tests(DeviceTest):
             return delta.days * 3600 * 24 + delta.seconds + delta.microseconds * 1e-6
 
         with (yield from getDevice("remote")) as d:
-            t = async(d.read_log())
+            t = ensure_future(d.read_log())
             yield from sleep(0.1)
             self.local.logger.warning("this is an info")
             yield from t
@@ -770,7 +770,7 @@ class Tests(DeviceTest):
         self.assertEqual(hash["category"], "local")
         self.assertLessEqual(_absolute_delta_to_now(hash["timestamp"]), 10)
         with (yield from getDevice("remote")) as d:
-            t = async(d.read_log())
+            t = ensure_future(d.read_log())
             yield from sleep(0.1)
             try:
                 raise RuntimeError
@@ -811,7 +811,7 @@ class Tests(DeviceTest):
     def test_queue(self):
         """test queues of properties"""
         with (yield from getDevice("remote")) as d:
-            task = async(d.count())
+            task = ensure_future(d.count())
             yield from waitUntil(lambda: d.counter == 0)
             try:
                 q = Queue(d.counter)
@@ -1006,7 +1006,7 @@ class Tests(DeviceTest):
 
     @async_tst
     def test_prenatal_proxy(self):
-        task = async(getDevice("prenatal"))
+        task = ensure_future(getDevice("prenatal"))
         a = Remote({"_deviceId_": "prenatal"})
         yield from a.startInstance()
         proxy = yield from task
@@ -1157,8 +1157,8 @@ class Tests(DeviceTest):
         a, b = yield from gather(getDevice("remote"), getDevice("remote"))
         self.assertIs(a, b)
 
-        alive = async(getDevice("vivro"))
-        cancelled = async(getDevice("vivro"))
+        alive = ensure_future(getDevice("vivro"))
+        cancelled = ensure_future(getDevice("vivro"))
         yield  # start the tasks
         cancelled.cancel()
         remote = Remote({"_deviceId_": "vivro"})
