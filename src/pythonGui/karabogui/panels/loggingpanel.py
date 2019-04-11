@@ -57,30 +57,6 @@ class LoggingPanel(BasePanelWidget):
         toolBar.addAction(self.__acClearLog)
         return [toolBar]
 
-    def _event_log_messages(self, data):
-        messages = data.get('messages', [])
-        self._log_widget.onLogDataAvailable(messages)
-
-    def _event_network(self, data):
-        if not data['status']:
-            # on False status we only clear the logs
-            self._log_widget.onClearLog()
-
-    def karaboBroadcastEvent(self, event):
-        """ Router for incoming broadcasts
-        """
-        if event.sender is KaraboEvent.LogMessages:
-            messages = event.data.get('messages', [])
-            self._log_widget.onLogDataAvailable(messages)
-            return True  # Nobody else should handle this event!
-        elif event.sender is KaraboEvent.NetworkConnectStatus:
-            data = event.data
-            # on False status we only clear the logs
-            if not data['status']:
-                self._log_widget.onClearLog()
-
-        return False
-
     def closeEvent(self, event):
         """Unregister from broadcast events, tell main window to enable
         the button to add me back.
@@ -89,3 +65,15 @@ class LoggingPanel(BasePanelWidget):
         if event.isAccepted():
             unregister_from_events(self.event_map)
             self.signalPanelClosed.emit(self.windowTitle())
+
+    # -----------------------------------------------------------------------
+    # Karabo Events
+
+    def _event_log_messages(self, data):
+        messages = data.get('messages', [])
+        self._log_widget.onLogDataAvailable(messages)
+
+    def _event_network(self, data):
+        if not data['status']:
+            # on False status we only clear the logs
+            self._log_widget.onClearLog()
