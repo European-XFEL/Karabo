@@ -27,11 +27,9 @@ class Mediator(QObject):
         if not isinstance(event, KaraboBroadcastEvent):
             return super(Mediator, self).event(event)
 
-        # Make a copy to avoid a race condition in the case that processing
-        # an event causes new listeners to be added
         sender = event.sender
         data = event.data
-        handlers = list(self._listeners.get(sender, ()))
+        handlers = self._listeners.get(sender, ())
         for handler in handlers:
             handler(data)
 
@@ -39,13 +37,13 @@ class Mediator(QObject):
         return True
 
     def register_listener(self, event_map):
-        """Add an event listener.
+        """Add an event map.
         """
         for event, handler in event_map.items():
             self._listeners[event].add(handler)
 
     def unregister_listener(self, event_map):
-        """Remove an event listener.
+        """Remove an event map.
         """
         for event, handler in event_map.items():
             self._listeners[event].remove(handler)
