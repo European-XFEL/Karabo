@@ -48,6 +48,9 @@ class ConfigurationPanel(BasePanelWidget):
         }
         register_for_events(event_map)
 
+    # -----------------------------------------------------------------------
+    # Karabo Events
+
     def _event_show_configuration(self, data):
         proxy = data.get('proxy')
         self._show_configuration(proxy)
@@ -206,44 +209,6 @@ class ConfigurationPanel(BasePanelWidget):
         self.ui_save_config = toolbar.addWidget(tb_save_config)
 
         return [toolbar]
-
-    def karaboBroadcastEvent(self, event):
-        """Router for incoming broadcasts
-        """
-        sender = event.sender
-        data = event.data
-        if sender is KaraboEvent.ShowConfiguration:
-            proxy = data.get('proxy')
-            self._show_configuration(proxy)
-            return True
-        elif sender is KaraboEvent.UpdateDeviceConfigurator:
-            proxy = data.get('proxy')
-            self._update_displayed_configuration(proxy)
-            return True
-        elif sender is KaraboEvent.UpdateValueConfigurator:
-            proxy = data.get('proxy')
-            self._update_displayed_values(proxy)
-            return True
-        elif sender is KaraboEvent.ClearConfigurator:
-            deviceId = data.get('deviceId', '')
-            self._remove_departed_device(deviceId)
-            return True
-        elif sender is KaraboEvent.LoadConfiguration:
-            proxy = data.get('proxy')
-            configuration = data.get('configuration')
-            self._apply_loaded_configuration(proxy, configuration)
-            return True
-        elif sender is KaraboEvent.ShowConfigurationFromPast:
-            deviceId = data.get('deviceId')
-            configuration = data.get('configuration')
-            self._apply_configuration_from_past(deviceId, configuration)
-            return True
-        elif sender is KaraboEvent.NetworkConnectStatus:
-            connected = data['status']
-            if not connected:
-                self._reset_panel()
-
-        return False
 
     # -----------------------------------------------------------------------
     # private methods
