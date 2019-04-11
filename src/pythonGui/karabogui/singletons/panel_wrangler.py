@@ -66,13 +66,10 @@ class PanelWrangler(QObject):
         sender = event.sender
         data = event.data
 
-        if sender is KaraboEventSender.DeviceDataReceived:
-            self._update_scenes()
-
-        elif sender in (KaraboEventSender.ShowSceneView,
-                        KaraboEventSender.ShowUnattachedSceneView):
-            target_window = data.get(
-                'target_window', SceneTargetWindow.MainWindow)
+        if sender in (KaraboEventSender.ShowSceneView,
+                      KaraboEventSender.ShowUnattachedSceneView):
+            target_window = data.get('target_window',
+                                     SceneTargetWindow.MainWindow)
             model = data.get('model')
             attached = sender is KaraboEventSender.ShowSceneView
             self._open_scene(model, target_window, attached=attached)
@@ -104,17 +101,20 @@ class PanelWrangler(QObject):
 
         elif sender is KaraboEventSender.ShowMacroView:
             self._open_macro(data.get('model'))
+            return True
 
         elif sender is KaraboEventSender.ShowAlarmServices:
             instance_ids = data.get('instanceIds')
             for inst_id in instance_ids:
                 self._open_instance_panel(inst_id, AlarmPanel,
                                           PanelAreaEnum.MiddleBottom)
+            return True
 
         elif sender is KaraboEventSender.RemoveAlarmServices:
             instance_ids = data.get('instanceIds')
             for inst_id in instance_ids:
                 self._close_instance_panel(inst_id)
+            return True
 
         elif sender is KaraboEventSender.NetworkConnectStatus:
             self.connected_to_server = data.get('status', False)
@@ -243,15 +243,6 @@ class PanelWrangler(QObject):
         if not has_panel:
             self.main_window.addPanel(panel, PanelAreaEnum.MiddleTop)
         self.main_window.selectPanel(panel, PanelAreaEnum.MiddleTop)
-
-    def _update_scenes(self):
-        for model, panel in self._project_item_panels.items():
-            if not isinstance(model, SceneModel):
-                continue
-
-            scene_view = panel.scene_view
-            if scene_view is not None and scene_view.isVisible():
-                scene_view.update()
 
 
 def _find_scene_model(name, uuid):

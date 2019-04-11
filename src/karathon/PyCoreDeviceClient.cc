@@ -25,7 +25,7 @@ void exportPyCoreDeviceClient() {
             .def(bp::init<const string&>())
             ;
 
-    bp::class_<DeviceClientWrap, bp::bases<DeviceClient>, boost::noncopyable > ("DeviceClient")
+    bp::class_<DeviceClientWrap, boost::shared_ptr<DeviceClientWrap>, bp::bases<DeviceClient>, boost::noncopyable > ("DeviceClient")
 
             .def(bp::init<const string&>())
             .def(bp::init<boost::shared_ptr<SignalSlotableWrap>& >())

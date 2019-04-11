@@ -1,8 +1,8 @@
 from __future__ import absolute_import, unicode_literals
 
 from asyncio import (
-    AbstractEventLoop, async, CancelledError, coroutine, Future, gather,
-    get_event_loop, iscoroutinefunction, Queue, set_event_loop,
+    AbstractEventLoop, CancelledError, coroutine, ensure_future, Future,
+    gather, get_event_loop, iscoroutinefunction, Queue, set_event_loop,
     SelectorEventLoop, shield, sleep, Task, TimeoutError, wait_for)
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing, ExitStack
@@ -116,7 +116,7 @@ class Broker:
                 self.emit('call', {'*': ['slotInstanceGone']},
                           self.deviceId, self.info)
 
-        async(heartbeat())
+        ensure_future(heartbeat())
 
     def call(self, signal, targets, reply, args):
         if not targets:
@@ -414,7 +414,7 @@ class KaraboFuture(object):
     """
 
     def __init__(self, future):
-        self.future = async(future)
+        self.future = ensure_future(future)
 
     @synchronize
     def add_done_callback(self, fn):

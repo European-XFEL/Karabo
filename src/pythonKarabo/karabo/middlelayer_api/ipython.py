@@ -1,4 +1,4 @@
-from asyncio import async, coroutine, get_event_loop
+from asyncio import coroutine, ensure_future, get_event_loop
 from queue import Empty
 import pickle
 from textwrap import dedent
@@ -20,7 +20,7 @@ from .signalslot import coslot
 
 class ChannelMixin(ZMQSocketChannel, ChannelABC):
     def start(self):
-        self.task = async(self.loop())
+        self.task = ensure_future(self.loop())
         super().start()
 
     @coroutine

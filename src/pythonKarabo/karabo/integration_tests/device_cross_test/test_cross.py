@@ -1,7 +1,7 @@
 """This tests the communication between bound API and middlelayer API"""
 
 from asyncio import (
-    async, coroutine, create_subprocess_exec, get_event_loop)
+    coroutine, create_subprocess_exec, ensure_future, get_event_loop)
 from contextlib import contextmanager
 from datetime import datetime
 import os
@@ -385,7 +385,7 @@ class Tests(DeviceTest):
                 line = yield from self.process.stdout.readline()
                 print(line.decode("ascii"), end="")
 
-        async(print_stdout())
+        ensure_future(print_stdout())
 
         with (yield from getDevice("DataLogger-middlelayerDevice")) as logger:
             yield from logger
