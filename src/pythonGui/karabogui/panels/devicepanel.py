@@ -4,7 +4,7 @@
 
 from PyQt4.QtGui import QVBoxLayout, QWidget
 
-from karabogui.events import KaraboEvent, register_for_events
+from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.navigation.device_view import DeviceTreeView
 from .base import BasePanelWidget
 
@@ -16,7 +16,7 @@ class DevicePanel(BasePanelWidget):
         event_map = {
             KaraboEvent.NetworkConnectStatus: self._event_network,
         }
-        register_for_events(event_map)
+        register_for_broadcasts(event_map)
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.

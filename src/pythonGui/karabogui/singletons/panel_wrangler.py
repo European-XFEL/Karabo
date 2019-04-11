@@ -8,7 +8,7 @@ from PyQt4.QtCore import QObject, pyqtSlot
 from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
 from karabogui import messagebox
-from karabogui.events import KaraboEvent, register_for_events
+from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.mainwindow import MainWindow, PanelAreaEnum
 from karabogui.panels.api import AlarmPanel, MacroPanel, ScenePanel
 from karabogui.singletons.api import get_config, get_project_model, get_db_conn
@@ -37,7 +37,7 @@ class PanelWrangler(QObject):
         # Panels linked to instances {instance id: (panel, pos)}
         self._instance_panels = {}
 
-        # Register to KaraboBroadcastEvent, Note: unregister_from_events is
+        # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
         # not necessary due to the fact that the singleton mediator object and
         # `self` are being destroyed when the GUI exists
         event_map = {
@@ -52,7 +52,7 @@ class PanelWrangler(QObject):
             KaraboEvent.NetworkConnectStatus: self._event_network,
             KaraboEvent.CreateMainWindow: self._event_mainwindow
         }
-        register_for_events(event_map)
+        register_for_broadcasts(event_map)
 
     # -------------------------------------------------------------------
     # public interface

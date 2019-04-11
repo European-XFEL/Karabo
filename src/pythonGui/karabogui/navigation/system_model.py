@@ -13,7 +13,7 @@ from PyQt4.QtGui import QItemSelection, QItemSelectionModel
 from karabo.common.api import DeviceStatus
 from karabogui import globals as krb_globals, icons
 from karabogui.alarms.api import get_alarm_icon
-from karabogui.events import KaraboEvent, register_for_events
+from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.indicators import get_state_icon_for_status
 from karabogui.singletons.api import get_topology
 
@@ -39,7 +39,7 @@ class SystemTreeModel(QAbstractItemModel):
         self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
-        # Register to KaraboBroadcastEvent, Note: unregister_from_events is
+        # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
         # not necessary
         event_map = {
             KaraboEvent.AccessLevelChanged: self._event_access,
@@ -47,7 +47,7 @@ class SystemTreeModel(QAbstractItemModel):
             KaraboEvent.StopMonitoringDevice: self._event_stop_monitor,
             KaraboEvent.ShowDevice: self._event_show_device
         }
-        register_for_events(event_map)
+        register_for_broadcasts(event_map)
 
     def _event_access(self, data):
         self._clear_tree_cache()
@@ -61,7 +61,7 @@ class SystemTreeModel(QAbstractItemModel):
         self._update_device_info(node_id)
 
     def _event_show_device(self, data):
-        node_id = data['device_id']
+        node_id = data['deviceId']
         self.selectNodeById(node_id)
 
     def index_ref(self, model_index):
@@ -345,7 +345,7 @@ class SystemTreeModel(QAbstractItemModel):
             index = self.createIndex(node.row(), column, node)
             self.dataChanged.emit(index, index)
 
-    def _clear_tree_cache(self, data=None):
+    def _clear_tree_cache(self):
         def visitor(node):
             node.is_visible = not (node.visibility >
                                    krb_globals.GLOBAL_ACCESS_LEVEL)

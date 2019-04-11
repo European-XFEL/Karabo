@@ -15,7 +15,7 @@ from karabo.common.project.api import MacroModel, read_macro, write_macro
 from karabogui import icons
 from karabogui.enums import ProjectItemTypes
 from karabogui.events import (
-    broadcast_event, register_for_events, unregister_from_events,
+    broadcast_event, register_for_broadcasts, unregister_from_broadcasts,
     KaraboEvent)
 from karabogui.indicators import get_project_device_status_icon
 from karabogui.project.dialog.object_handle import (
@@ -172,10 +172,10 @@ class MacroController(BaseProjectGroupController):
         """Handle broadcast event registration/unregistration here.
         """
         if old is not None:
-            unregister_from_events(
+            unregister_from_broadcasts(
                 {KaraboEvent.SystemTopologyUpdate: old._event_topology})
         if new is not None:
-            register_for_events(
+            register_for_broadcasts(
                 {KaraboEvent.SystemTopologyUpdate: new._event_topology})
 
     # ----------------------------------------------------------------------

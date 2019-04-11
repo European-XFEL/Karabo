@@ -14,8 +14,8 @@ from karabogui.alarms.api import (
     SHOW_DEVICE, AlarmModel, AlarmFilterModel, INTERLOCK_TYPES,
     get_alarm_key_index)
 from karabogui.events import (
-    KaraboEvent, broadcast_event, register_for_events,
-    unregister_from_events)
+    KaraboEvent, broadcast_event, register_for_broadcasts,
+    unregister_from_broadcasts)
 from karabogui.singletons.api import get_network
 
 from .base import BasePanelWidget
@@ -33,7 +33,7 @@ class AlarmPanel(BasePanelWidget):
             KaraboEvent.AlarmServiceUpdate: self._event_alarm_update,
             KaraboEvent.NetworkConnectStatus: self._event_network,
         }
-        register_for_events(self.event_map)
+        register_for_broadcasts(self.event_map)
 
     # ----------------------------------------------------------------
     # Karabo Events
@@ -53,12 +53,12 @@ class AlarmPanel(BasePanelWidget):
             # If disconnected to server, unregister the alarm panel from
             # broadcast, otherwise we will get two times of the same info
             # next time
-            unregister_from_events(self.event_map)
+            unregister_from_broadcasts(self.event_map)
 
     def closeEvent(self, event):
         super(AlarmPanel, self).closeEvent(event)
         if event.isAccepted():
-            unregister_from_events(self.event_map)
+            unregister_from_broadcasts(self.event_map)
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.

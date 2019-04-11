@@ -9,7 +9,7 @@ from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
 
 from karabogui.events import (
-    register_for_events, unregister_from_events, KaraboEvent)
+    register_for_broadcasts, unregister_from_broadcasts, KaraboEvent)
 from karabogui.widgets.ipython import IPythonWidget
 from karabogui.widgets.toolbar import ToolBar
 from .base import BasePanelWidget
@@ -28,12 +28,12 @@ class ScriptingPanel(BasePanelWidget):
         self.event_map = {
             KaraboEvent.NetworkConnectStatus: self._event_network
         }
-        register_for_events(self.event_map)
+        register_for_broadcasts(self.event_map)
 
     def closeEvent(self, event):
         super(ScriptingPanel, self).closeEvent(event)
         if event.isAccepted():
-            unregister_from_events(self.event_map)
+            unregister_from_broadcasts(self.event_map)
             self._stop_ipython()
             self.signalPanelClosed.emit(self.windowTitle())
 
