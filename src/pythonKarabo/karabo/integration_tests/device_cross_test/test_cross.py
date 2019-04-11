@@ -393,27 +393,16 @@ class Tests(DeviceTest):
 
         os.remove(xml_path)
 
-        for i in range(5):
-            self.device.value = i
-            self.device.child.number = -i
-            self.device.update()
-
+        # Initiate indexing for selected parameters: "value" and "child.number"
         after = datetime.now()
 
-        # This is the first history request ever, so it returns an empty
-        # list (see https://in.xfel.eu/redmine/issues/9414).
         yield from getHistory(
             "middlelayerDevice.value", before.isoformat(), after.isoformat())
         yield from getHistory(
             "middlelayerDevice.child.number", before.isoformat(),
             after.isoformat())
-        # ... and finally need to wait until the new archive and index files
-        # are flushed
+        # flush (configuration) data and index registration ...
         yield from logger.flush()
-
-        # Now we dare to hope that logging is initialized ...
-        # ... so we have to start to archive data again ...
-        before = datetime.now()
 
         # We have to write another value to close the first archive file :-(...
         for i in range(5):
