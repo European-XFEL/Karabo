@@ -13,7 +13,7 @@ from PyQt4.QtCore import pyqtSlot, QTimer
 from karabo.native import Hash
 from karabogui import messagebox
 from karabogui.binding.api import extract_sparse_configurations
-from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.singletons.api import get_manager, get_network, get_topology
 
 # Devices which are waiting for a configuration to come back from the server
@@ -93,7 +93,7 @@ def send_property_changes(proxies):
 
         # NOTE: We have to send a signal to the view to asynchronously reset
         # the apply and decline buttons
-        broadcast_event(KaraboEventSender.UpdateValueConfigurator,
+        broadcast_event(KaraboEvent.UpdateValueConfigurator,
                         {'proxy': device_proxy})
 
     @pyqtSlot()

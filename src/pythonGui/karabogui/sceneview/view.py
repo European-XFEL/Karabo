@@ -15,8 +15,8 @@ from karabo.common.scenemodel.api import (
     SCENE_MIN_HEIGHT, SceneTargetWindow)
 from karabogui import globals as krb_globals
 from karabogui.events import (
-    broadcast_event, KaraboEventSender, register_for_broadcasts,
-    unregister_from_broadcasts)
+    broadcast_event, KaraboEvent, register_for_events,
+    unregister_from_events)
 from karabogui.generic_scenes import get_generic_scene
 from karabogui.request import send_property_changes
 from .bases import BaseSceneTool
@@ -118,7 +118,10 @@ class SceneView(QWidget):
 
         self.update_model(model)
 
-        register_for_broadcasts(self)
+        self.event_map = {
+            KaraboEvent.AccessLevelChanged: self._event_access_level
+        }
+        register_for_events(self.event_map)
 
     @property
     def design_mode(self):
@@ -197,7 +200,7 @@ class SceneView(QWidget):
                 model = get_generic_scene(proxy)
                 if model is not None:
                     window = SceneTargetWindow.Dialog
-                    broadcast_event(KaraboEventSender.ShowUnattachedSceneView,
+                    broadcast_event(KaraboEvent.ShowUnattachedSceneView,
                                     {'model': model, 'target_window': window})
 
         super(SceneView, self).mouseDoubleClickEvent(event)
@@ -280,10 +283,8 @@ class SceneView(QWidget):
                 return widget.event(event)
         return super(SceneView, self).event(event)
 
-    def karaboBroadcastEvent(self, event):
-        if event.sender is KaraboEventSender.AccessLevelChanged:
-            self._update_widget_states()
-        return False
+    def _event_access_level(self, data):
+        self._update_widget_states()
 
     def contextMenuEvent(self, event):
         """Show scene view specific context menu. """
@@ -330,7 +331,7 @@ class SceneView(QWidget):
                 obj.destroy()
         self.workflow_model.destroy()
 
-        unregister_from_broadcasts(self)
+        unregister_from_events(self.event_map)
         self._set_scene_model(None)
         self._scene_obj_cache.clear()
         self._widget_removal_queue.clear()

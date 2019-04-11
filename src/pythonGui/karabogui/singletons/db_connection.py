@@ -13,7 +13,7 @@ from karabo.native import (
     Hash, read_project_model, write_project_model)
 from karabogui import messagebox
 from karabogui.events import (
-    broadcast_event, KaraboEventSender, register_for_broadcasts
+    broadcast_event, KaraboEvent, register_for_events
 )
 from karabogui.singletons.api import get_config, get_network
 from karabogui.util import handle_scene_from_server
@@ -58,7 +58,13 @@ class ProjectDatabaseConnection(QObject):
         self.network = get_network()
 
         # Register for broadcast events
-        register_for_broadcasts(self)
+        event_map = {
+            KaraboEvent.ProjectItemsLoaded: self._event_items_loaded,
+            KaraboEvent.ProjectItemsSaved: self._event_items_saved,
+            KaraboEvent.NetworkConnectStatus: self._event_network,
+            KaraboEvent.ProjectDBConnect: self._event_db_connect
+        }
+        register_for_events(event_map)
 
         # Dictionaries to hold items which are awaiting network replies
         self._waiting_for_read = {}
@@ -73,32 +79,30 @@ class ProjectDatabaseConnection(QObject):
         # XXX: This is really asinine right now!
         self._have_logged_in = False
 
-    def karaboBroadcastEvent(self, event):
-        """ Router for incoming broadcasts
-        """
-        sender = event.sender
-        data = event.data
-        if sender is KaraboEventSender.ProjectItemsLoaded:
-            success = data.get('success')
-            items = data.get('items', [])
-            self._items_loaded(items, success)
-        elif sender is KaraboEventSender.ProjectItemsSaved:
-            success = data.get('success')
-            items = data.get('items', [])
-            self._items_saved(items, success)
-        elif sender is KaraboEventSender.NetworkConnectStatus:
-            self._have_logged_in = False
-        elif sender is KaraboEventSender.ProjectDBConnect:
-            # NOTE: The ProjectDB came online after we have logged into the
-            # GUI server. Hence we have to reestablish our connection to
-            # the project database.
-            instance_id = data.get('device', '')
-            if instance_id == self.project_manager:
-                self._have_logged_in = False
-                self._ensure_login()
-            return True
+    # -------------------------------------------------------------------
+    # Karabo Events
 
-        return False
+    def _event_items_loaded(self, data):
+        success = data.get('success')
+        items = data.get('items', [])
+        self._items_loaded(items, success)
+
+    def _event_items_saved(self, data):
+        success = data.get('success')
+        items = data.get('items', [])
+        self._items_saved(items, success)
+
+    def _event_network(self, data):
+        self._have_logged_in = False
+
+    def _event_db_connect(self, data):
+        # NOTE: The ProjectDB came online after we have logged into the
+        # GUI server. Hence we have to reestablish our connection to
+        # the project database.
+        instance_id = data.get('device', '')
+        if instance_id == self.project_manager:
+            self._have_logged_in = False
+            self._ensure_login()
 
     # -------------------------------------------------------------------
     # User interface
@@ -272,7 +276,7 @@ class ProjectDatabaseConnection(QObject):
         """
         if bail:
             # Tell the world reading or writing project failed
-            broadcast_event(KaraboEventSender.DatabaseIsBusy,
+            broadcast_event(KaraboEvent.DatabaseIsBusy,
                             {'is_processing': False,
                              'loading_failed': loading_failed})
 
@@ -281,7 +285,7 @@ class ProjectDatabaseConnection(QObject):
             return
 
         # Tell the world
-        broadcast_event(KaraboEventSender.DatabaseIsBusy,
+        broadcast_event(KaraboEvent.DatabaseIsBusy,
                         {'is_processing': self.is_processing()})
 
     def _push_reading(self, domain, uuid, existing):

@@ -15,7 +15,7 @@ from karabo.common.api import walk_traits_object
 from karabo.common.project.api import MacroModel
 from karabo.common.scenemodel.api import SceneModel
 from karabogui.alarms.api import get_alarm_icon
-from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.indicators import get_state_icon_for_status
 from karabogui.project.controller.build import (
     create_project_controller, destroy_project_controller)
@@ -228,7 +228,7 @@ class ProjectViewItemModel(QAbstractItemModel):
 
         # Request that views for every macro and scene be closed
         walk_traits_object(self._traits_model, visitor)
-        broadcast_event(KaraboEventSender.RemoveProjectModelViews,
+        broadcast_event(KaraboEvent.RemoveProjectModelViews,
                         {'models': models})
 
     def _controller_row(self, controller):
