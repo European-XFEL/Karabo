@@ -87,6 +87,9 @@ class MacroPanel(BasePanelWidget):
                 return True
         return False
 
+    # -----------------------------------------------------------------------
+    # Karabo Events
+
     def _event_connect(self, data):
         model = data.get('model')
         if model is self.model:
@@ -97,20 +100,7 @@ class MacroPanel(BasePanelWidget):
         if macro_instance.device_id in self.model.instance_id:
             self.init_reply(data.get('success'), data.get('message'))
 
-    def karaboBroadcastEvent(self, event):
-        sender = event.sender
-        data = event.data
-        if sender is KaraboEvent.ConnectMacroInstance:
-            model = data.get('model')
-            if model is self.model:
-                self.connect(data.get('instance'))
-            return True
-        elif sender is KaraboEvent.DeviceInitReply:
-            macro_instance = data.get('device')
-            if macro_instance.device_id in self.model.instance_id:
-                self.init_reply(data.get('success'), data.get('message'))
-            return True
-        return False
+    # -----------------------------------------------------------------------
 
     def closeEvent(self, event):
         super(MacroPanel, self).closeEvent(event)
