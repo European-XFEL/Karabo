@@ -29,8 +29,8 @@ class AlarmPanel(BasePanelWidget):
         # Register to broadcast events
 
         self.event_map = {
-            KaraboEvent.AlarmServiceInit: self._event_alarm_init,
-            KaraboEvent.AlarmServiceUpdate: self._event_alarm_update,
+            KaraboEvent.AlarmServiceInit: self._event_alarm_init_update,
+            KaraboEvent.AlarmServiceUpdate: self._event_alarm_init_update,
             KaraboEvent.NetworkConnectStatus: self._event_network,
         }
         register_for_broadcasts(self.event_map)
@@ -38,21 +38,18 @@ class AlarmPanel(BasePanelWidget):
     # ----------------------------------------------------------------
     # Karabo Events
 
-    def _event_alarm_init(self, data):
-        self.alarm_model.initAlarms(data.get('instance_id'),
-                                    data.get('update_types'),
-                                    data.get('alarm_entries'))
-
-    def _event_alarm_update(self, data):
+    def _event_alarm_init_update(self, data):
         self.alarm_model.updateAlarms(data.get('instance_id'),
                                       data.get('update_types'),
                                       data.get('alarm_entries'))
 
     def _event_network(self, data):
+        """If disconnected to server, unregister the alarm panel
+
+         We have to unregister, otherwise we will get two times of the same
+         info next time
+         """
         if not data['status']:
-            # If disconnected to server, unregister the alarm panel from
-            # broadcast, otherwise we will get two times of the same info
-            # next time
             unregister_from_broadcasts(self.event_map)
 
     def closeEvent(self, event):
