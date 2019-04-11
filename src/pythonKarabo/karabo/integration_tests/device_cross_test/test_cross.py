@@ -348,8 +348,9 @@ class Tests(DeviceTest):
     @async_tst(timeout=40)
     def test_history(self):
         before = datetime.now()
-
-        karabo = os.environ["KARABO"]
+        # Wherever we run this test (by hands or in CI) we should
+        # not depend on the exact location of 'historytest.xml' ...
+        # ... so let's create it on the fly ...
         xml_path = os.getcwd() + '/historytest.xml'
         xml = open(xml_path, 'wb')
         xml.write(b"""\
@@ -371,6 +372,9 @@ class Tests(DeviceTest):
   <Logger><priority>INFO</priority></Logger>
 </DeviceServer>""")
         xml.close()
+
+        # Use above configuration to start DataLoggerManager ...
+        karabo = os.environ["KARABO"]
         self.process = yield from create_subprocess_exec(
             os.path.join(karabo, "bin", "karabo-cppserver"),
             xml_path, stderr=PIPE, stdout=PIPE)
@@ -407,11 +411,8 @@ class Tests(DeviceTest):
         # are flushed
         yield from logger.flush()
 
-        yield from getHistory(
-            "middlelayerDevice", before.isoformat(), after.isoformat()).value
-        yield from getHistory(
-            "middlelayerDevice.value", before.isoformat(), after.isoformat())
-
+        # Now we dare to hope that logging is initialized ...
+        # ... so we have to start to archive data again ...
         before = datetime.now()
 
         # We have to write another value to close the first archive file :-(...
