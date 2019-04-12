@@ -337,7 +337,6 @@ class NewProjectDialog(QDialog):
     def simple_name(self):
         return self.leTitle.text()
 
-
     @property
     def domain(self):
         return self.cbDomain.currentText()
