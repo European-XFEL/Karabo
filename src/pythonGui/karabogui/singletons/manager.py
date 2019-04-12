@@ -10,7 +10,7 @@ from functools import wraps
 from PyQt4.QtCore import pyqtSlot, QObject
 from PyQt4.QtGui import QMessageBox
 
-from karabo.common.api import State, DeviceStatus
+from karabo.common.api import DeviceStatus
 from karabo.native import AccessMode, Hash, Timestamp
 from karabogui.alarms.api import extract_alarms_data
 from karabogui.background import executeLater, Priority
@@ -20,16 +20,6 @@ from karabogui.events import broadcast_event, KaraboEvent
 from karabogui import messagebox
 from karabogui.singletons.api import get_network, get_topology
 from karabogui.util import show_wait_cursor
-
-
-def handle_device_state_change(proxy, value):
-    """This forwards a device descriptor's state to the configuration panel
-
-    XXX: This might not be needed any longer.
-    """
-    data = {'configuration': proxy,
-            'is_changing': State(value).isDerivedFrom(State.CHANGING)}
-    broadcast_event(KaraboEvent.DeviceStateChanged, data)
 
 
 def project_db_handler(fall_through=False):
@@ -309,11 +299,6 @@ class Manager(QObject):
         if proxy is None:
             return
 
-        # XXX: Do we really need this?
-        # Listen to the Configuration object's state changes
-        # handler = partial(handle_device_state_change, proxy)
-        # proxy.state_binding.on_trait_change(handler, 'value')
-
         # Refresh the configurator iff this proxy is already showing
         broadcast_event(KaraboEvent.UpdateDeviceConfigurator,
                         {'proxy': proxy})
@@ -437,9 +422,6 @@ class Manager(QObject):
             self._topology.update_alarms_info(data)
 
             broadcast_event(KaraboEvent.AlarmServiceUpdate, data)
-
-    def handle_runConfigSourcesInGroup(self, reply):
-        pass  # DEPRECATED
 
     # ------------------------------------------------------------------
     # Private methods
