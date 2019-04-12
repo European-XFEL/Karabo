@@ -140,7 +140,7 @@ class Tests(DeviceTest):
         if had_to_kill:
             self.fail("process didn't properly go down")
 
-    @async_tst(timeout=40)
+    @async_tst(timeout=90)
     def test_cross(self):
         yield from getDevice("middlelayerDevice")
         # it takes typically 2 s for the bound device to start
@@ -330,7 +330,7 @@ class Tests(DeviceTest):
             yield from self.device.output.writeData()
             # This waitUntil seems to hange since the channel handler on the
             # bound side does not seem to be called...
-            yield from waitUntil(lambda: proxy.a != 22.8 * unit.mA)
+            yield from waitUntil(lambda: proxy.a == 23 * unit.mA)
 
         proxy.output1.connect()
         task = background(waitUntilNew(proxy.output1.schema.s))
@@ -345,7 +345,7 @@ class Tests(DeviceTest):
         yield from self.process.wait()
         self.assertEqual(self.device.channelclose, "boundDevice:output1")
 
-    @async_tst(timeout=40)
+    @async_tst(timeout=90)
     def test_history(self):
         before = datetime.now()
         # Wherever we run this test (by hands or in CI) we should
@@ -396,13 +396,13 @@ class Tests(DeviceTest):
         # Initiate indexing for selected parameters: "value" and "child.number"
         after = datetime.now()
 
+        # This is the first history request ever, so it returns an empty
+        # list (see https://in.xfel.eu/redmine/issues/9414).
         yield from getHistory(
             "middlelayerDevice.value", before.isoformat(), after.isoformat())
         yield from getHistory(
             "middlelayerDevice.child.number", before.isoformat(),
             after.isoformat())
-        # flush (configuration) data and index registration ...
-        yield from logger.flush()
 
         # We have to write another value to close the first archive file :-(...
         for i in range(5):
@@ -414,15 +414,20 @@ class Tests(DeviceTest):
 
         after = datetime.now()
 
+        old_history = yield from getHistory(
+            "middlelayerDevice", before.isoformat(), after.isoformat()).value
+        str_history = yield from getHistory(
+            "middlelayerDevice.value", before.isoformat(), after.isoformat())
         device = yield from getDevice("middlelayerDevice")
         proxy_history = yield from getHistory(
                 device.value, before.isoformat(), after.isoformat())
 
-        # Sort according to timestamp - order is not guaranteed!
-        sorted_proxy_history = sorted(proxy_history, key=lambda x: x[0])
-        # Testing
-        self.assertEqual([v for _, _, _, v in sorted_proxy_history],
-                         list(range(5)))
+        for hist in old_history, str_history, proxy_history:
+            # Sort according to timestamp - order is not guaranteed!
+            # (E.g. if shortcut communication between logged device and
+            #  logger is switched on...)
+            hist.sort(key=lambda x: x[0])
+            self.assertEqual([v for _, _, _, v in hist[-5:]], list(range(5)))
 
         node_history = yield from getHistory(
             "middlelayerDevice.child.number", before.isoformat(),
