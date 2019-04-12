@@ -317,13 +317,10 @@ class Tests(DeviceTest):
         yield from task
         self.assertEqual(proxy.output1.schema.s, "hallo")
 
-        # FIXME: Investigate why this does not work
         with proxy:
             self.device.output.schema.number = 23
             self.assertEqual(proxy.a, 22.8 * unit.milliampere)
             yield from self.device.output.writeData()
-            # This waitUntil seems to hange since the channel handler on the
-            # bound side does not seem to be called...
             yield from waitUntil(lambda: proxy.a == 23 * unit.mA)
 
         proxy.output1.connect()
