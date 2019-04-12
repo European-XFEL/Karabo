@@ -63,6 +63,11 @@ class SystemTopology(HasStrictTraits):
     def __init__(self, parent=None):
         super(SystemTopology, self).__init__()
 
+    def needs_update(self):
+        """The event firing of the underlying trees is required at init"""
+        self.system_tree.needs_update = True
+        self.device_tree.needs_update = True
+
     def clear(self):
         """Clear all saved devices and classes
         """
