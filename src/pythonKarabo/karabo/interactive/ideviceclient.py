@@ -3,6 +3,7 @@ from IPython import start_ipython
 from threading import Thread
 from karathon import EventLoop
 
+
 def main():
     # We need the (C++) event loop in the background:
     loopThread = Thread(target=EventLoop.work)
@@ -14,6 +15,7 @@ def main():
 
     EventLoop.stop()
     loopThread.join()
+
 
 if __name__ == '__main__':
     main()
