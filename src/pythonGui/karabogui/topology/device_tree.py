@@ -177,11 +177,14 @@ class DeviceSystemTree(HasStrictTraits):
     # ------------------------------------------------------------------
 
     def _handle_device_data(self, device_type, system_hash):
-        new_dev_nodes = {}
         assert device_type in ('device', 'macro')
 
         if device_type not in system_hash:
-            return new_dev_nodes
+            return
+
+        # NOTE: Notify outer world if a root child (domain) was appended
+        # to change the layout
+        notify = False
 
         for karabo_name, _, attrs in system_hash[device_type].iterall():
             if attrs.get('classId', '') in BLACKLIST_CLASSES:
@@ -201,6 +204,7 @@ class DeviceSystemTree(HasStrictTraits):
 
             domain_node = self.root.child(domain)
             if domain_node is None:
+                notify = True
                 domain_node = DeviceTreeNode(node_id=domain,
                                              parent=self.root,
                                              level=DOMAIN_LEVEL)
@@ -229,4 +233,5 @@ class DeviceSystemTree(HasStrictTraits):
 
             self._device_nodes[karabo_name] = member_node
 
-        return new_dev_nodes
+        if notify:
+            self.needs_update = True
