@@ -75,18 +75,22 @@ def build_setup_py_file(package_name, device_files):
     return SETUP_TEMPLATE.format(**kwargs)
 
 
+def strip_common_prefix(s, common_prefix):
+    return '...' + s[len(common_prefix):]
+
+
 def create_package_directory(package_name, directory, common_prefix,
                              use_svn=False):
     """ Move all the Python source files to a new package directory.
     """
     rename = svn_rename if use_svn else os.rename
-    strip_common_prefix = lambda s: '...' + s[len(common_prefix):]
     package_dir = op.join(directory, package_name)
     if op.exists(package_dir):
         print('Package directory:', package_dir, 'already exists!. Exiting.')
         sys.exit(1)
 
-    print('Creating package directory:', strip_common_prefix(package_dir))
+    print('Creating package directory:',
+          strip_common_prefix(package_dir, common_prefix))
     os.makedirs(package_dir)
     with open(op.join(package_dir, '__init__.py'), 'wt'):
         pass
@@ -100,7 +104,8 @@ def create_package_directory(package_name, directory, common_prefix,
     for fn in filenames:
         src = op.join(directory, fn)
         dst = op.join(package_dir, fn)
-        print(strip_common_prefix(src), '=>', strip_common_prefix(dst))
+        print(strip_common_prefix(src, common_prefix), '=>',
+              strip_common_prefix(dst, common_prefix))
         rename(src, dst)
 
 
