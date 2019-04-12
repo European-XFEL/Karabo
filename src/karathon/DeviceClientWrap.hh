@@ -130,6 +130,11 @@ namespace karathon {
             return Wrapper::toObject(value, HashWrap::isDefault(PyTypes::PYTHON_DEFAULT));
         }
 
+        bp::object getConfigurationPy(const std::string& instanceId) {
+            ScopedGILRelease nogil;
+            return bp::object(this->DeviceClient::get(instanceId));
+        }
+
         karabo::util::Schema getDeviceSchema(const std::string& instanceId) {
             ScopedGILRelease nogil;
             return this->DeviceClient::getDeviceSchema(instanceId);
