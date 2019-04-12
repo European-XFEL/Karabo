@@ -207,8 +207,8 @@ if (ip is not None):
 
 
 class DeviceClient(object):
-    """
-    The DeviceClient allows to remotely control a Karabo installation.
+    """The DeviceClient allows to remotely control a Karabo installation.
+
     A Karabo installation comprises all distributed end-points (servers,
     devices and clients), which talk to the same central message-broker as
     defined by its host, port and topic. The DeviceClient establishes a direct
@@ -276,8 +276,7 @@ class DeviceClient(object):
 
     def instantiate(self, serverId, classId, deviceId, config=Hash(),
                     timeout=None):
-        """
-        Instantiate (and configure) a device on a running server.
+        """Instantiate (and configure) a device on a running server.
 
         NOTE: This call is synchronous (blocking)
 
@@ -311,8 +310,7 @@ class DeviceClient(object):
                                serializer.load(data))
 
     def instantiateNoWait(self, serverId, classId, deviceId, config=Hash()):
-        """
-        Instantiate (and configure) a device on a running server.
+        """Instantiate (and configure) a device on a running server.
 
         NOTE: This call is asynchronous (non-blocking)
 
@@ -333,8 +331,7 @@ class DeviceClient(object):
         self.__client.instantiateNoWait(serverId, classId, config)
 
     def shutdownDevice(self, deviceId, timeout=None):
-        """
-        Shuts down a device.
+        """Shuts down a device.
 
         NOTE: This call is synchronous (blocking)
 
@@ -353,8 +350,7 @@ class DeviceClient(object):
         return self.__client.killDevice(deviceId, timeout)
 
     def shutdownDeviceNoWait(self, deviceId):
-        """
-        Shuts down a device.
+        """Shuts down a device.
 
         NOTE: This call is asynchronous (non-blocking)
 
@@ -365,8 +361,7 @@ class DeviceClient(object):
         self.__client.killDeviceNoWait(deviceId)
 
     def shutdownServer(self, serverId, timeout=None):
-        """
-        Shuts down a server.
+        """Shuts down a server.
 
         NOTE: This call is synchronous (blocking)
 
@@ -385,8 +380,7 @@ class DeviceClient(object):
         return self.__client.killServer(serverId, timeout)
 
     def shutdownServerNoWait(self, serverId):
-        """
-        Shuts down a server.
+        """Shuts down a server.
 
         NOTE: This call is asynchronous (non-blocking)
 
@@ -397,14 +391,11 @@ class DeviceClient(object):
         self.__client.killServerNoWait(serverId)
 
     def getServers(self):
-        """
-        Returns a list of currently running servers.
-        """
+        """Returns a list of currently running servers."""
         return self.__client.getServers()
 
     def getDevices(self, serverId=None):
-        """
-        Returns a list of currently running devices.
+        """Returns a list of currently running devices.
 
         Args:
             serverId: Optionally only the running devices of a given server
@@ -416,8 +407,7 @@ class DeviceClient(object):
         return self.__client.getDevices(serverId)
 
     def getClasses(self, serverId):
-        """
-        Returns a list of available device classes (plugins) on a server
+        """Returns a list of available device classes (plugins) on a server
 
         Args:
              serverId: The server of whose plugins should be listed.
@@ -448,10 +438,9 @@ class DeviceClient(object):
 
     def getPropertyHistory(self, deviceId, propertyName, t0, t1=None,
                            maxNumData=10000):
-        """
-        get the history of device properties
+        """Get the history of device properties
 
-        with this function one can get all values of a property in a given
+        With this function one can get all values of a property in a given
         timespan::
 
         getPropertyHistory(deviceId, propertyName, "2015-12-01", "2015-12-02")
