@@ -29,7 +29,8 @@ class Mediator(QObject):
 
         sender = event.sender
         data = event.data
-        handlers = self._listeners.get(sender, ())
+        # Make a copy in case listeners are added or removed!
+        handlers = list(self._listeners.get(sender, ()))
         for handler in handlers:
             handler(data)
 

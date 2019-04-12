@@ -175,26 +175,10 @@ class ProjectPanel(BasePanelWidget):
 
         return [toolbar]
 
-    def _event_network(self, data):
-        self._handle_network_status_change(data['status'])
+    # -----------------------------------------------------------------------
+    # Karabo Events
 
     def _event_db_busy(self, data):
-        self._handle_database_is_busy(data)
-
-    def _event_filter_updated(self, data):
-        self._init_search_filter(data['status'])
-
-    def _handle_network_status_change(self, status):
-        if not status:
-            # Don't show projects when there's no server connection
-            self.project_view.destroy()
-
-        self._enable_toolbar(status)
-
-        if not status:
-            self._init_search_filter(status)
-
-    def _handle_database_is_busy(self, data):
         loading_failed = data.get('loading_failed', False)
         is_processing = data['is_processing']
         if loading_failed:
@@ -203,6 +187,21 @@ class ProjectPanel(BasePanelWidget):
             self._enable_toolbar(not is_processing)
             self._init_search_filter(not is_processing)
         self.spin_action.setVisible(is_processing)
+
+    def _event_filter_updated(self, data):
+        self._init_search_filter(data['status'])
+
+    def _event_network(self, data):
+        status = data['status']
+        if not status:
+            # Don't show projects when there's no server connection
+            self.project_view.destroy()
+
+        self._enable_toolbar(status)
+        if not status:
+            self._init_search_filter(status)
+
+    # -----------------------------------------------------------------------
 
     def _enable_toolbar(self, enable):
         for qaction in self._toolbar_actions:

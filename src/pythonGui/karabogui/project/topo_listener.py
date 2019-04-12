@@ -20,6 +20,4 @@ class SystemTopologyListener(QObject):
     def _event_topology(self, data):
         """ Router for incoming broadcasts
         """
-        devices = data.get('devices', [])
-        servers = data.get('servers', [])
-        self.callback(devices, servers)
+        self.callback(data['devices'], data['servers'])

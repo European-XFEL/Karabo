@@ -42,21 +42,17 @@ class SystemTreeModel(QAbstractItemModel):
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
         # not necessary
         event_map = {
-            KaraboEvent.AccessLevelChanged: self._event_access,
-            KaraboEvent.StartMonitoringDevice: self._event_start_monitor,
-            KaraboEvent.StopMonitoringDevice: self._event_stop_monitor,
+            KaraboEvent.AccessLevelChanged: self._event_access_level,
+            KaraboEvent.StartMonitoringDevice: self._event_monitor,
+            KaraboEvent.StopMonitoringDevice: self._event_monitor,
             KaraboEvent.ShowDevice: self._event_show_device
         }
         register_for_broadcasts(event_map)
 
-    def _event_access(self, data):
+    def _event_access_level(self, data):
         self._clear_tree_cache()
 
-    def _event_start_monitor(self, data):
-        node_id = data['device_id']
-        self._update_device_info(node_id)
-
-    def _event_stop_monitor(self, data):
+    def _event_monitor(self, data):
         node_id = data['device_id']
         self._update_device_info(node_id)
 
