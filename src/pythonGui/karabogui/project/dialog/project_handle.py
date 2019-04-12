@@ -101,13 +101,8 @@ class LoadProjectDialog(QDialog):
         }
         register_for_broadcasts(self.event_map)
 
-    def done(self, result):
-        """ Reimplement ``QDialog`` virtual slot
-
-        Stop listening for broadcast events
-        """
-        unregister_from_broadcasts(self.event_map)
-        super(LoadProjectDialog, self).done(result)
+    # -----------------------------------------------------------------------
+    # Karabo Events
 
     def _event_item_list(self, data):
         items = data.get('items', [])
@@ -120,7 +115,26 @@ class LoadProjectDialog(QDialog):
         self._domains_updated(data.get('items', []))
 
     def _event_attribute(self, data):
-        self._is_trashed_updated(data.get('items', []))
+        items = data.get('items', [])
+        for it in items:
+            if (it.get('attr_name') != 'is_trashed'
+                    and it.get('item_type') != 'project'):
+                continue
+            if not it.get('success', True):
+                messagebox.show_error(it['reason'])
+                break
+            domain = it.get('domain')
+            self.on_cbDomain_currentIndexChanged(domain)
+
+    # -----------------------------------------------------------------------
+
+    def done(self, result):
+        """ Reimplement ``QDialog`` virtual slot
+
+        Stop listening for broadcast events
+        """
+        unregister_from_broadcasts(self.event_map)
+        super(LoadProjectDialog, self).done(result)
 
     def _domains_updated(self, domains):
         # Domain combobox
@@ -140,17 +154,6 @@ class LoadProjectDialog(QDialog):
             # Make sure the signal is triggered when setting the index below
             self.cbDomain.setCurrentIndex(-1)
         self.cbDomain.setCurrentIndex(index if index > -1 else 0)
-
-    def _is_trashed_updated(self, items):
-        for it in items:
-            if (it.get('attr_name') != 'is_trashed'
-                    and it.get('item_type') != 'project'):
-                continue
-            if not it.get('success', True):
-                messagebox.show_error(it['reason'])
-                break
-            domain = it.get('domain')
-            self.on_cbDomain_currentIndexChanged(domain)
 
     def selected_item(self):
         """Return selected domain and project
@@ -314,6 +317,14 @@ class NewProjectDialog(QDialog):
         }
         register_for_broadcasts(self.event_map)
 
+    # -----------------------------------------------------------------------
+    # Karabo Events
+
+    def _event_item_list(self, data):
+        self._fill_domain_combo_box(data.get('items', []))
+
+    # -----------------------------------------------------------------------
+
     def done(self, result):
         """ Reimplement ``QDialog`` virtual slot
 
@@ -326,8 +337,6 @@ class NewProjectDialog(QDialog):
     def simple_name(self):
         return self.leTitle.text()
 
-    def _event_item_list(self, data):
-        self._fill_domain_combo_box(data.get('items', []))
 
     @property
     def domain(self):
