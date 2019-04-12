@@ -209,7 +209,8 @@ class Manager(QObject):
     @show_wait_cursor
     def handle_systemTopology(self, systemTopology):
         self._topology.update(systemTopology)
-
+        # Update the initial views
+        self._topology.needs_update()
         # Tell the GUI about various devices that are alive
         instance_ids = self._collect_devices('AlarmService')
         self._announce_alarm_services(instance_ids.get('AlarmService', []))
