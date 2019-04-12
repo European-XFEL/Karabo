@@ -90,12 +90,6 @@ class MiddlelayerDevice(DeviceClientBase):
 
 
 class Tests(DeviceTest):
-    if "KARABO_BROKER_TOPIC" not in os.environ:
-        os.environ["KARABO_BROKER_TOPIC"] = "PID_" + str(os.getpid())
-    if "HOME" not in os.environ:
-        os.environ["HOME"] = "/root"
-    krb = os.environ["KARABO"]
-    os.environ["LD_LIBRARY_PATH"] = krb + "/lib:" + krb + "/extern/lib"
     __loggerMap = "loggermap.xml"
 
     @classmethod
