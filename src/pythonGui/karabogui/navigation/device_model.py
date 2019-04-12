@@ -34,11 +34,11 @@ class DeviceTreeModel(QAbstractItemModel):
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
         event_map = {
-            KaraboEvent.AccessLevelChanged: self._event_access,
+            KaraboEvent.AccessLevelChanged: self._event_access_level,
         }
         register_for_broadcasts(event_map)
 
-    def _event_access(self, data):
+    def _event_access_level(self, data):
         self._clear_tree_cache()
 
     def index_ref(self, model_index):

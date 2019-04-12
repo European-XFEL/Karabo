@@ -52,15 +52,15 @@ class ConfigurationPanel(BasePanelWidget):
     # Karabo Events
 
     def _event_show_configuration(self, data):
-        proxy = data.get('proxy')
+        proxy = data['proxy']
         self._show_configuration(proxy)
 
     def _event_update_config(self, data):
-        proxy = data.get('proxy')
+        proxy = data['proxy']
         self._update_displayed_configuration(proxy)
 
     def _event_display_update(self, data):
-        proxy = data.get('proxy')
+        proxy = data['proxy']
         self._update_displayed_values(proxy)
 
     def _event_clear_configurator(self, data):
@@ -68,19 +68,21 @@ class ConfigurationPanel(BasePanelWidget):
         self._remove_departed_device(deviceId)
 
     def _event_load_configuration(self, data):
-        proxy = data.get('proxy')
-        configuration = data.get('configuration')
+        proxy = data['proxy']
+        configuration = data['configuration']
         self._apply_loaded_configuration(proxy, configuration)
 
     def _event_config_past(self, data):
-        deviceId = data.get('deviceId')
-        configuration = data.get('configuration')
+        deviceId = data['deviceId']
+        configuration = data['configuration']
         self._apply_configuration_from_past(deviceId, configuration)
 
     def _event_network(self, data):
         connected = data['status']
         if not connected:
             self._reset_panel()
+
+    # -----------------------------------------------------------------------
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
