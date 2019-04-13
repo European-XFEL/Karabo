@@ -5,7 +5,7 @@ from asyncio import (
 from contextlib import contextmanager
 from datetime import datetime
 import os
-import os.path
+import shutil
 from subprocess import PIPE
 import sys
 from unittest import main
@@ -90,6 +90,8 @@ class MiddlelayerDevice(DeviceClientBase):
 
 
 class Tests(DeviceTest):
+    __loggerMap = "loggermap.xml"
+
     @classmethod
     @contextmanager
     def lifetimeManager(cls):
@@ -102,8 +104,15 @@ class Tests(DeviceTest):
             yield
 
     def setUp(self):
-        self.__starting_dir = os.curdir
+        self.__starting_dir = os.getcwd()
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
+        # The cpp server always changes into "var/data" and logger manager
+        # places its file into current directory - but we do not want to
+        # interfere our test with what a developer had there before.
+        loggerMap = "{}/var/data/{}".format(os.environ["KARABO"],
+                                            self.__loggerMap)
+        if os.path.exists(loggerMap):
+            shutil.move(loggerMap, os.getcwd())
         # Test the middlelayer - bound pipeline interface
         self.process = None
 
@@ -115,11 +124,11 @@ class Tests(DeviceTest):
             self.loop.run_until_complete(self.process.wait())
             had_to_kill = True
 
-        for fn in ("karabo.log", "serverId.xml", "loggermap.xml"):
-            try:
-                os.remove(fn)
-            except FileNotFoundError:
-                pass  # never mind
+        # Place back logger map if copied
+        if os.path.exists(self.__loggerMap):
+            karaboRunDir = "{}/var/data".format(os.environ["KARABO"])
+            shutil.copy2(self.__loggerMap, karaboRunDir)
+            os.remove(self.__loggerMap)
 
         os.chdir(self.__starting_dir)
         if had_to_kill:
@@ -127,17 +136,20 @@ class Tests(DeviceTest):
 
     @async_tst(timeout=90)
     def test_cross(self):
+        yield from getDevice("middlelayerDevice")
         # it takes typically 2 s for the bound device to start
         self.process = yield from create_subprocess_exec(
             sys.executable, "-m", "karabo.bound_api.launcher",
             "run", "karabo.bound_device_test", "TestDevice",
             stdin=PIPE)
-        # To get DEBUG output of the bound device, add
-        # <Logger><priority>DEBUG</priority></Logger>
-        # after the line with _deviceId_
+        # Logging set to FATAL to swallow the misleading ERROR that comes
+        # if we try (and fail as expected) to set a readOly property on
+        # For debugging you may switch to INFO or DEBUG.
         self.process.stdin.write(b"""\
             <root KRB_Artificial="">
                 <_deviceId_>boundDevice</_deviceId_>
+                <Logger><priority>FATAL</priority></Logger>
+                <middlelayerDevice>middlelayerDevice</middlelayerDevice>
                 <input>
                     <connectedOutputChannels>
                         middlelayerDevice:output,middlelayerDevice:rawoutput
@@ -196,12 +208,11 @@ class Tests(DeviceTest):
         self.assertEqual(a_desc.tags, {"bla", "blub"})
 
         self.assertEqual(len(proxy.table), 1)
-        self.assertEqual(proxy.table[0]["d"], 5 * unit.meter)
+        self.assertEqual(proxy.table[0]["d"], 5 * unit.kilometer)
 
         with proxy:
             self.assertEqual(proxy.maxSizeSchema, 0)
             # Test the maxSize from a vector property!
-            proxy.middlelayerDevice = "middlelayerDevice"
             yield from proxy.compareSchema()
             self.assertEqual(proxy.maxSizeSchema, 4)
 
@@ -253,7 +264,7 @@ class Tests(DeviceTest):
             self.assertEqual(len(proxy.table), 1)
             yield from waitUntilNew(proxy.table)
             self.assertEqual(len(proxy.table), 2)
-            self.assertEqual(proxy.table[1]["d"], 7 * unit.meter)
+            self.assertEqual(proxy.table[1]["d"], 7 * unit.kilometer)
             self.assertEqual(proxy.table[0]["s"], "african")
 
             yield from proxy.injectSchema()
@@ -267,9 +278,11 @@ class Tests(DeviceTest):
         self.assertEqual(proxy.injectedNode.number2, 2)
 
         yield from proxy.backfire()
+        yield from sleep(1)  # See FIXME in backfire slot of the bound device
         self.assertEqual(self.device.value, 99)
         self.assertTrue(self.device.marker)
 
+        # pipeline part
         yield from proxy.send()
         self.assertEqual(self.device.channelcount, 1)
         self.assertFalse(isSet(self.device.channeldata.d))
@@ -306,6 +319,7 @@ class Tests(DeviceTest):
 
         with proxy:
             self.device.output.schema.number = 23
+            self.assertEqual(proxy.a, 22.8 * unit.milliampere)
             yield from self.device.output.writeData()
             yield from waitUntil(lambda: proxy.a == 23 * unit.mA)
 
@@ -325,12 +339,36 @@ class Tests(DeviceTest):
     @async_tst(timeout=90)
     def test_history(self):
         before = datetime.now()
+        # Wherever we run this test (by hands or in CI) we should
+        # not depend on the exact location of 'historytest.xml' ...
+        # ... so let's create it on the fly ...
+        xml_path = os.getcwd() + '/historytest.xml'
+        xml = open(xml_path, 'wb')
+        xml.write(b"""\
+<?xml version="1.0"?>
+<DeviceServer>
+  <autoStart>
+    <KRB_Item>
+      <DataLoggerManager>
+        <!-- Frequent flushing of raw and index files every 1 s: -->
+        <flushInterval KRB_Type="INT32">1</flushInterval>
+        <directory KRB_Type="STRING">karaboHistory</directory>
+        <serverList KRB_Type="VECTOR_STRING">karabo/dataLogger</serverList>
+      </DataLoggerManager>
+    </KRB_Item>
+  </autoStart>
+  <scanPlugins KRB_Type="STRING">false</scanPlugins>
+  <serverId KRB_Type="STRING">karabo/dataLogger</serverId>
+  <visibility>4</visibility>
+  <Logger><priority>INFO</priority></Logger>
+</DeviceServer>""")
+        xml.close()
 
+        # Use above configuration to start DataLoggerManager ...
         karabo = os.environ["KARABO"]
-        xml = os.path.abspath('historytest.xml')
         self.process = yield from create_subprocess_exec(
             os.path.join(karabo, "bin", "karabo-cppserver"),
-            xml, stderr=PIPE, stdout=PIPE)
+            xml_path, stderr=PIPE, stdout=PIPE)
 
         @coroutine
         def print_stdout():
@@ -344,11 +382,9 @@ class Tests(DeviceTest):
             yield from logger
             yield from waitUntil(lambda: logger.state == State.NORMAL)
 
-        for i in range(4):
-            self.device.value = i
-            self.device.child.number = -i
-            self.device.update()
+        os.remove(xml_path)
 
+        # Initiate indexing for selected parameters: "value" and "child.number"
         after = datetime.now()
 
         # This is the first history request ever, so it returns an empty
@@ -360,13 +396,12 @@ class Tests(DeviceTest):
             after.isoformat())
 
         # We have to write another value to close the first archive file :-(...
-        self.device.value = 4
-        self.device.child.number = -4
-        self.device.update()
+        for i in range(5):
+            self.device.value = i
+            self.device.child.number = -i
+            self.device.update()
 
-        # ... and finally need to wait until the new archive and index files
-        # are flushed (see flushInterval in history.xml).
-        yield from sleep(1.1)
+        yield from logger.flush()
 
         after = datetime.now()
 
@@ -376,7 +411,7 @@ class Tests(DeviceTest):
             "middlelayerDevice.value", before.isoformat(), after.isoformat())
         device = yield from getDevice("middlelayerDevice")
         proxy_history = yield from getHistory(
-            device.value, before.isoformat(), after.isoformat())
+                device.value, before.isoformat(), after.isoformat())
 
         for hist in old_history, str_history, proxy_history:
             # Sort according to timestamp - order is not guaranteed!
