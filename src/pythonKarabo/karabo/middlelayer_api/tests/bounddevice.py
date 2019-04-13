@@ -64,7 +64,7 @@ class TestDevice(PythonDevice):
             .commit(),
 
             STRING_ELEMENT(expected).key("middlelayerDevice")
-            .assignmentOptional().noDefaultValue()
+            .assignmentMandatory()
             .reconfigurable()
             .commit(),
 
@@ -139,7 +139,15 @@ class TestDevice(PythonDevice):
         self.word_no = 1
 
     def initialize(self):
-        pass
+        # HACK/FIXME:
+        # We trigger a temporary (15 s) connection to our counterpart and fill
+        # the remote's cache already here in initialisation.
+        # Otherwise this will block in the slot calls where it is used - and
+        # block forever since one cannot synchronously call back to a slot
+        # caller due to thte way ordering per sender is implemented.
+        mdlDevice = self.get("middlelayerDevice")
+        self.remote().getDeviceSchema(mdlDevice)
+        self.remote().get(mdlDevice)
 
     def setA(self):
         ts = Timestamp(Epochstamp("20090901T135522"), Trainstamp(0))
@@ -150,19 +158,27 @@ class TestDevice(PythonDevice):
 
     def backfire(self):
         remote = self.remote()
+        instance_id = self.get("middlelayerDevice")
 
-        state = remote.get("middlelayerDevice", "state")
+        state = remote.get(instance_id, "state")
         # 'isinstance' instead of 'is' allows inheritance in future
         if not isinstance(state, State):
             raise RuntimeError("Middle layer 'state' property is of type",
                                type(state).__name__)
-        alarm = remote.get("middlelayerDevice", "alarmCondition")
+        alarm = remote.get(instance_id, "alarmCondition")
         if not isinstance(alarm, AlarmCondition):
             raise RuntimeError("Middle layer 'alarmCondition' property "
                                "is of type", type(alarm).__name__)
-
-        remote.set("middlelayerDevice", "value", 99)
-        remote.execute("middlelayerDevice", "slot")
+        # FIXME:
+        # In principle we should use set and execute here, i.e. no 'NoWait'.
+        # But, within a slot call, it does not work to call back synchronously
+        # to the caller of the slot: The reply we expect here will not be
+        # processed because we block here in backfire and messages are executed
+        # in order of arrival per sender...
+        # Could be fixed by posting the synchronous calls out of this thread
+        # and using an AsyncReply - which does not yet exist for bound Python.
+        remote.setNoWait(instance_id, "value", 99)
+        remote.executeNoWait(instance_id, "slot")
 
     def injectSchema(self):
         schema = Schema()
