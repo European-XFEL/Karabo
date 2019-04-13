@@ -130,6 +130,11 @@ namespace karathon {
             return Wrapper::toObject(value, HashWrap::isDefault(PyTypes::PYTHON_DEFAULT));
         }
 
+        bp::object getConfigurationPy(const std::string& instanceId) {
+            ScopedGILRelease nogil;
+            return bp::object(this->DeviceClient::get(instanceId));
+        }
+
         karabo::util::Schema getDeviceSchema(const std::string& instanceId) {
             ScopedGILRelease nogil;
             return this->DeviceClient::getDeviceSchema(instanceId);
@@ -148,11 +153,6 @@ namespace karathon {
         karabo::util::Schema getClassSchema(const std::string& serverId, const std::string& classId) {
             ScopedGILRelease nogil;
             return this->DeviceClient::getClassSchema(serverId, classId);
-        }
-
-        karabo::util::Hash cacheAndGetConfiguration(const std::string& deviceId) {
-            ScopedGILRelease nogil;
-            return this->DeviceClient::cacheAndGetConfiguration(deviceId);
         }
 
         void registerInstanceNewMonitor(const bp::object& handler) {
