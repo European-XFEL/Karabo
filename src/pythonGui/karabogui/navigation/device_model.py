@@ -10,7 +10,7 @@ from PyQt4.QtGui import QItemSelection, QItemSelectionModel
 
 from karabo.common.api import DeviceStatus
 from karabogui import globals as krb_globals, icons
-from karabogui.events import KaraboEventSender, register_for_broadcasts
+from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.singletons.api import get_topology
 from .context import _UpdateContext
 
@@ -33,13 +33,13 @@ class DeviceTreeModel(QAbstractItemModel):
         self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
-        register_for_broadcasts(self)
+        event_map = {
+            KaraboEvent.AccessLevelChanged: self._event_access_level,
+        }
+        register_for_broadcasts(event_map)
 
-    def karaboBroadcastEvent(self, event):
-        sender = event.sender
-        if sender is KaraboEventSender.AccessLevelChanged:
-            self._clear_tree_cache()
-        return False
+    def _event_access_level(self, data):
+        self._clear_tree_cache()
 
     def index_ref(self, model_index):
         """Get the system node object for a ``QModelIndex``. This is

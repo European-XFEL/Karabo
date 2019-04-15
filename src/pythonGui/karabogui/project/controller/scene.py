@@ -16,7 +16,7 @@ from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo.native import read_project_model
 from karabogui import icons, messagebox
 from karabogui.enums import ProjectItemTypes
-from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.project.dialog.object_handle import (
     ObjectDuplicateDialog, ObjectEditDialog)
 from karabogui.singletons.api import get_db_conn, get_panel_wrangler
@@ -69,7 +69,7 @@ class SceneController(BaseProjectController):
         return ProjectControllerUiData(icon=icons.image)
 
     def double_click(self, project_controller, parent=None):
-        broadcast_event(KaraboEventSender.ShowSceneView, {'model': self.model})
+        broadcast_event(KaraboEvent.ShowSceneView, {'model': self.model})
 
     # ----------------------------------------------------------------------
     # action handlers
@@ -102,7 +102,7 @@ class SceneController(BaseProjectController):
                 return
 
             # NOTE: We can successfully read the scene, now close the old one
-            broadcast_event(KaraboEventSender.RemoveProjectModelViews,
+            broadcast_event(KaraboEvent.RemoveProjectModelViews,
                             {'models': [scene]})
             # Only use copyable traits
             scene.copy_traits(new_scene, traits=['width', 'height',
@@ -124,7 +124,7 @@ class SceneController(BaseProjectController):
             if scene in project.scenes:
                 project.scenes.remove(scene)
 
-            broadcast_event(KaraboEventSender.RemoveProjectModelViews,
+            broadcast_event(KaraboEvent.RemoveProjectModelViews,
                             {'models': [scene]})
 
     @pyqtSlot()

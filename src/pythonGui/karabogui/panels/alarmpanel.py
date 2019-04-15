@@ -14,7 +14,7 @@ from karabogui.alarms.api import (
     SHOW_DEVICE, AlarmModel, AlarmFilterModel, INTERLOCK_TYPES,
     get_alarm_key_index)
 from karabogui.events import (
-    KaraboEventSender, broadcast_event, register_for_broadcasts,
+    KaraboEvent, broadcast_event, register_for_broadcasts,
     unregister_from_broadcasts)
 from karabogui.singletons.api import get_network
 
@@ -27,33 +27,35 @@ class AlarmPanel(BasePanelWidget):
         # Important: call the BasePanelWidget initializer
         super(AlarmPanel, self).__init__(instanceId)
         # Register to broadcast events
-        register_for_broadcasts(self)
 
-    def karaboBroadcastEvent(self, event):
-        sender = event.sender
-        data = event.data
-        if sender is KaraboEventSender.AlarmServiceInit:
-            self.alarm_model.initAlarms(data.get('instance_id'),
-                                        data.get('update_types'),
-                                        data.get('alarm_entries'))
-            return True
-        elif sender is KaraboEventSender.AlarmServiceUpdate:
-            self.alarm_model.updateAlarms(data.get('instance_id'),
-                                          data.get('update_types'),
-                                          data.get('alarm_entries'))
-            return True
-        elif sender is KaraboEventSender.NetworkConnectStatus:
-            if not data['status']:
-                # If disconnected to server, unregister the alarm panel from
-                # broadcast, otherwise we will get two times of the same info
-                # next time
-                unregister_from_broadcasts(self)
-        return False
+        self.event_map = {
+            KaraboEvent.AlarmServiceInit: self._event_alarm_init_update,
+            KaraboEvent.AlarmServiceUpdate: self._event_alarm_init_update,
+            KaraboEvent.NetworkConnectStatus: self._event_network,
+        }
+        register_for_broadcasts(self.event_map)
+
+    # ----------------------------------------------------------------
+    # Karabo Events
+
+    def _event_alarm_init_update(self, data):
+        self.alarm_model.updateAlarms(data.get('instance_id'),
+                                      data.get('update_types'),
+                                      data.get('alarm_entries'))
+
+    def _event_network(self, data):
+        """If disconnected to server, unregister the alarm panel
+
+         We have to unregister, otherwise we will get two times of the same
+         info next time
+         """
+        if not data['status']:
+            unregister_from_broadcasts(self.event_map)
 
     def closeEvent(self, event):
         super(AlarmPanel, self).closeEvent(event)
         if event.isAccepted():
-            unregister_from_broadcasts(self)
+            unregister_from_broadcasts(self.event_map)
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
@@ -196,7 +198,7 @@ class ButtonDelegate(QStyledItemDelegate):
         if isRelevant and clickable:
             if text == ALARM_DATA[SHOW_DEVICE]:
                 # Send signal to show device
-                broadcast_event(KaraboEventSender.ShowDevice,
+                broadcast_event(KaraboEvent.ShowDevice,
                                 {'deviceId': index.data()})
             else:
                 # Send signal to acknowledge alarm
