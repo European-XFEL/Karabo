@@ -35,7 +35,7 @@ void exportPyCoreDeviceClient() {
             .def("setInternalTimeout", (void (DeviceClient::*)(const unsigned int))(&DeviceClient::setInternalTimeout), bp::arg("internalTimeout"))
             .def("getInternalTimeout", (int (DeviceClient::*)() const) (&DeviceClient::getInternalTimeout))
             .def("exists", &DeviceClientWrap::existsPy, (bp::arg("instanceId")))
-            .def("enableInstanceTracking", &DeviceClient::enableInstanceTracking,
+            .def("enableInstanceTracking", &DeviceClientWrap::enableInstanceTrackingPy,
                  "Enables tracking of new and departing device instances\n\n"
                  "The handlers registered with registerInstance[New|Gone|Updated]Monitor\n"
                  "will be called accordingly. If the handler for instanceNew is registered before\n"
@@ -43,8 +43,8 @@ void exportPyCoreDeviceClient() {
                  "NOTE: Use wisely!\n"
                  "There is a performance cost to tracking all devices since it means\n"
                  "subscribing to the heartbeats of all servers and devices in the system.")
-            .def("getSystemInformation", (Hash(DeviceClient::*)())(&DeviceClient::getSystemInformation))
-            .def("getSystemTopology", (Hash(DeviceClient::*)())(&DeviceClient::getSystemTopology))
+            .def("getSystemInformation", &DeviceClientWrap::getSystemInformationPy)
+            .def("getSystemTopology", &DeviceClientWrap::getSystemTopologyPy)
             .def("getServers", &DeviceClientWrap::getServersPy)
             .def("getClasses", &DeviceClientWrap::getClassesPy, (bp::arg("instanceId")))
             .def("getDevices", (bp::object(DeviceClientWrap::*)())(&DeviceClientWrap::getDevicesPy))
@@ -88,7 +88,7 @@ void exportPyCoreDeviceClient() {
                  "\"schema\" is the updated schema")
             .def("registerPropertyMonitor", (bool (DeviceClientWrap::*)(const string&, const string&, const bp::object&, const bp::object&))(&DeviceClientWrap::registerPropertyMonitor), (bp::arg("instanceId"), bp::arg("key"), bp::arg("callbackFunction"), bp::arg("userData") = bp::object()))
             .def("registerDeviceMonitor", (void (DeviceClientWrap::*)(const string&, const bp::object&, const bp::object&))(&DeviceClientWrap::registerDeviceMonitor), (bp::arg("instanceId"), bp::arg("callbackFunction"), bp::arg("userData") = bp::object()))
-            .def("setDeviceMonitorInterval", (void (DeviceClient::*)(long int))(&DeviceClient::setDeviceMonitorInterval), bp::arg("milliseconds"))
+            .def("setDeviceMonitorInterval", &DeviceClientWrap::setDeviceMonitorIntervalPy, bp::arg("milliseconds"))
             .def("unregisterPropertyMonitor", (void (DeviceClient::*)(const string&, const string&))(&DeviceClient::unregisterPropertyMonitor), (bp::arg("instanceId"), bp::arg("key")))
             .def("unregisterDeviceMonitor", (void (DeviceClient::*)(const string&))(&DeviceClient::unregisterDeviceMonitor), bp::arg("instanceId"))
             .def("registerChannelMonitor", &DeviceClientWrap::registerChannelMonitorPy,
