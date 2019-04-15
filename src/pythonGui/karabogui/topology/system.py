@@ -445,6 +445,12 @@ class SystemTopology(HasStrictTraits):
             # Update all offline devices (project device proxies)
             self._project_device_proxies_server_update(server_id)
 
+    def initialize(self, server_hash):
+        """Initialize the system topology with the system hash"""
+        self._system_hash = server_hash
+        self.system_tree.initialize(server_hash)
+        self.device_tree.initialize(server_hash)
+
     def update(self, server_hash):
         """A new device or server was added, or an existing device or server
         was updated with new information
