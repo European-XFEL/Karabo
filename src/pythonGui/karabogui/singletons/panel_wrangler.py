@@ -8,7 +8,7 @@ from PyQt4.QtCore import QObject, pyqtSlot
 from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
 from karabogui import messagebox
-from karabogui.events import KaraboEventSender, register_for_broadcasts
+from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.mainwindow import MainWindow, PanelAreaEnum
 from karabogui.panels.api import AlarmPanel, MacroPanel, ScenePanel
 from karabogui.singletons.api import get_config, get_project_model, get_db_conn
@@ -40,7 +40,19 @@ class PanelWrangler(QObject):
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
         # not necessary due to the fact that the singleton mediator object and
         # `self` are being destroyed when the GUI exists
-        register_for_broadcasts(self)
+        event_map = {
+            KaraboEvent.ShowSceneView: self._event_attached_scene,
+            KaraboEvent.ShowUnattachedSceneView: self._event_unattached_scene,
+            KaraboEvent.OpenSceneLink: self._event_scene_link,
+            KaraboEvent.RemoveProjectModelViews: self._event_remove_model_view,
+            KaraboEvent.MiddlePanelClosed: self._event_middle_panel,
+            KaraboEvent.ShowMacroView: self._event_show_macro,
+            KaraboEvent.ShowAlarmServices: self._event_show_alarm,
+            KaraboEvent.RemoveAlarmServices: self._event_remove_alarm,
+            KaraboEvent.NetworkConnectStatus: self._event_network,
+            KaraboEvent.CreateMainWindow: self._event_mainwindow
+        }
+        register_for_broadcasts(event_map)
 
     # -------------------------------------------------------------------
     # public interface
@@ -59,79 +71,68 @@ class PanelWrangler(QObject):
 
         self.splash = splash
 
-    # -------------------------------------------------------------------
+    # --------------------  -----------------------------------------------
     # Qt callbacks
 
-    def karaboBroadcastEvent(self, event):
-        sender = event.sender
-        data = event.data
+    def _event_attached_scene(self, data):
+        target_window = data.get('target_window',
+                                 SceneTargetWindow.MainWindow)
+        model = data['model']
+        self._open_scene(model, target_window, attached=True)
 
-        if sender in (KaraboEventSender.ShowSceneView,
-                      KaraboEventSender.ShowUnattachedSceneView):
-            target_window = data.get('target_window',
-                                     SceneTargetWindow.MainWindow)
-            model = data.get('model')
-            attached = sender is KaraboEventSender.ShowSceneView
-            self._open_scene(model, target_window, attached=attached)
-            return True
+    def _event_unattached_scene(self, data):
+        target_window = data.get('target_window',
+                                 SceneTargetWindow.MainWindow)
+        model = data['model']
+        self._open_scene(model, target_window, attached=False)
 
-        elif sender is KaraboEventSender.OpenSceneLink:
-            name = data.get('name', '')
-            target_window = data.get('target_window')
-            uuid = data.get('target')
-            model = _find_scene_model(name, uuid)
-            if model is not None:
-                # We found the scene in our project!
-                self._open_scene(model, target_window)
-            else:
-                get_db_conn()._get_database_scene(name, uuid, target_window)
-            return True
+    def _event_scene_link(self, data):
+        name = data.get('name', '')
+        target_window = data.get('target_window')
+        uuid = data.get('target')
+        model = _find_scene_model(name, uuid)
+        if model is not None:
+            # We found the scene in our project!
+            self._open_scene(model, target_window)
+        else:
+            get_db_conn()._get_database_scene(name, uuid, target_window)
 
-        elif sender is KaraboEventSender.RemoveProjectModelViews:
-            self._close_project_item_panels(data.get('models'))
-            return True
+    def _event_remove_model_view(self, data):
+        self._close_project_item_panels(data['models'])
 
-        elif sender is KaraboEventSender.MiddlePanelClosed:
-            model = data.get('model')
-            if model in self._project_item_panels:
-                self._project_item_panels.pop(model)
-            elif model in self._unattached_scene_panels:
-                self._unattached_scene_panels.pop(model)
-            return True
+    def _event_middle_panel(self, data):
+        model = data.get('model')
+        if model in self._project_item_panels:
+            self._project_item_panels.pop(model)
+        elif model in self._unattached_scene_panels:
+            self._unattached_scene_panels.pop(model)
 
-        elif sender is KaraboEventSender.ShowMacroView:
-            self._open_macro(data.get('model'))
-            return True
+    def _event_show_macro(self, data):
+        self._open_macro(data['model'])
 
-        elif sender is KaraboEventSender.ShowAlarmServices:
-            instance_ids = data.get('instanceIds')
-            for inst_id in instance_ids:
-                self._open_instance_panel(inst_id, AlarmPanel,
-                                          PanelAreaEnum.MiddleBottom)
-            return True
+    def _event_show_alarm(self, data):
+        instance_ids = data.get('instanceIds')
+        for inst_id in instance_ids:
+            self._open_instance_panel(inst_id, AlarmPanel,
+                                      PanelAreaEnum.MiddleBottom)
 
-        elif sender is KaraboEventSender.RemoveAlarmServices:
-            instance_ids = data.get('instanceIds')
-            for inst_id in instance_ids:
+    def _event_remove_alarm(self, data):
+        instance_ids = data.get('instanceIds')
+        for inst_id in instance_ids:
+            self._close_instance_panel(inst_id)
+
+    def _event_network(self, data):
+        self.connected_to_server = data.get('status', False)
+        if not self.connected_to_server:
+            # Copy; _close_instance_panel will mutate
+            panel_ids = list(self._instance_panels.keys())
+            for inst_id in panel_ids:
                 self._close_instance_panel(inst_id)
-            return True
+            # Close panels not associated with projects
+            self._close_unattached_panels()
 
-        elif sender is KaraboEventSender.NetworkConnectStatus:
-            self.connected_to_server = data.get('status', False)
-            if not self.connected_to_server:
-                # Copy; _close_instance_panel will mutate
-                panel_ids = list(self._instance_panels.keys())
-                for inst_id in panel_ids:
-                    self._close_instance_panel(inst_id)
-                # Close panels not associated with projects
-                self._close_unattached_panels()
-
-        elif sender is KaraboEventSender.CreateMainWindow:
-            self._create_main_window()
-            # we are the only one interested!
-            return True
-
-        return False
+    def _event_mainwindow(self, data):
+        self._create_main_window()
 
     # -------------------------------------------------------------------
     # private interface
