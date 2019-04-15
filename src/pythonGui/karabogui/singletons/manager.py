@@ -20,7 +20,7 @@ from karabogui.events import broadcast_event, KaraboEventSender
 from karabogui import messagebox
 from karabogui.singletons.api import get_network, get_topology
 from karabogui.util import show_wait_cursor
-from karabo.common.decorators import timeit
+
 
 def project_db_handler(fall_through=False):
     """Decorator for project DB handlers to cut down on boilerplate"""
@@ -206,7 +206,7 @@ class Manager(QObject):
             info.get('host'), info.get('port'), info.get('topic'))
         broadcast_event(KaraboEventSender.BrokerInformationUpdate, info)
 
-    @timeit
+    @show_wait_cursor
     def handle_systemTopology(self, systemTopology):
         self._topology.initialize(systemTopology)
         # Tell the GUI about various devices that are alive

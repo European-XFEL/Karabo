@@ -63,11 +63,6 @@ class SystemTopology(HasStrictTraits):
     def __init__(self, parent=None):
         super(SystemTopology, self).__init__()
 
-    def needs_update(self):
-        """The event firing of the underlying trees is required at init"""
-        self.system_tree.needs_update = True
-        self.device_tree.needs_update = True
-
     def clear(self):
         """Clear all saved devices and classes
         """
@@ -451,11 +446,11 @@ class SystemTopology(HasStrictTraits):
             self._project_device_proxies_server_update(server_id)
 
     def initialize(self, server_hash):
+        """Initialize the system topology with the system hash"""
         if self._system_hash is None:
             self._system_hash = server_hash
         else:
             self._system_hash.merge(server_hash, "merge")
-
         self.system_tree.initialize(server_hash)
         self.device_tree.initialize(server_hash)
 
