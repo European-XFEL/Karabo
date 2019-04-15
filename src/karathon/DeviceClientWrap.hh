@@ -75,6 +75,21 @@ namespace karathon {
             return Wrapper::fromStdPairToPyTuple(this->exists(instanceId));
         }
 
+        void enableInstanceTrackingPy() {
+            ScopedGILRelease nogil;
+            enableInstanceTracking();
+        }
+
+        bp::object getSystemInformationPy() {
+            ScopedGILRelease nogil;
+            return bp::object(getSystemInformation());
+        }
+
+        bp::object getSystemTopologyPy() {
+            ScopedGILRelease nogil;
+            return bp::object(getSystemTopology());
+        }
+
         bp::object getServersPy() {
             ScopedGILRelease nogil;
             return Wrapper::fromStdVectorToPyList(this->getServers());
@@ -240,6 +255,11 @@ namespace karathon {
             return this->DeviceClient::unregisterChannelMonitor(channelName);
         }
 
+
+        void setDeviceMonitorIntervalPy(long int milliseconds) {
+            ScopedGILRelease nogil;
+            setDeviceMonitorInterval(milliseconds);
+        }
 
         void setPy(const std::string& instanceId, const std::string& key, const bp::object& value, const std::string& keySep = ".", int timeout = -1) {
             karabo::util::Hash tmp;
