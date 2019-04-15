@@ -157,6 +157,7 @@ runLongTests() {
        safeRunCommand $scriptDir/run_python_tests.sh \
            --runLongTests \
            --rootDir $scriptDir
+    fi
 }
 
 produceCodeCoverageReport() {
