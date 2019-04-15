@@ -406,8 +406,6 @@ namespace karabo {
              *
              * @param data a pointer to the vector of chars to be stored in the buffer set.
              * @return shared_ptr to the buffer set with the character in the vector stored.
-             *
-             * @note actually places a copy of the characters in the vector of chars into the buffer set.
              */
             karabo::io::BufferSet::Pointer bufferSetFromVectorCharPointer(const VectorCharPointer& dataVect);
 
@@ -415,14 +413,11 @@ namespace karabo {
              * Creates a buffer set with a given hash stored in its sole buffer.
              *
              * @param data the hash to be stored in the buffer set.
-             * @param pBuffSet a shared pointer that will be pointed to the newly created buffer set with the hash
-             *        (the shared pointer argument can be either pointing to an existing buffer set or nullptr; it
-             *         will always point to the new buffer after a successful execution of the method).
              * @param copyAllData if false no copy of any NDArray internal to the hash will be made upon storing the
              *        hash in the bufferset (the buffer set will actually become one of the "owners" of the NDArray).
+             * @return pBuffSet a shared pointer that will be pointed to the newly created buffer set with the hash.
              */
-            void bufferSetFromHash(const karabo::util::Hash& data, karabo::io::BufferSet::Pointer& pBuffSet,
-                                   bool copyAllData);
+            karabo::io::BufferSet::Pointer bufferSetFromHash(const karabo::util::Hash& data, bool copyAllData);
 
             void decompress(karabo::util::Hash& header, const std::vector<char>&source, char* data, const size_t& size);
             void decompress(karabo::util::Hash& header, const std::vector<char>&source, std::vector<char>& target);
