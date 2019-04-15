@@ -30,6 +30,7 @@ class DeviceTreeView(QTreeView):
         self.setModel(model)
         self.setSelectionModel(model.selectionModel)
         model.rowsInserted.connect(self._items_added)
+        model.modelReset.connect(self.expandReset)
         model.signalItemChanged.connect(self.onSelectionChanged)
 
         header = self.header()
@@ -120,6 +121,11 @@ class DeviceTreeView(QTreeView):
 
     # ----------------------------
     # Slots
+
+    @pyqtSlot()
+    def expandReset(self):
+        self.expanded = True
+        self.expandAll()
 
     @pyqtSlot(QModelIndex, int, int)
     def _items_added(self, parent_index, start, end):

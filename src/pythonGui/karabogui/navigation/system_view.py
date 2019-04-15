@@ -5,7 +5,7 @@
 #############################################################################
 from functools import partial
 
-from PyQt4.QtCore import Qt, pyqtSlot
+from PyQt4.QtCore import QModelIndex, Qt, pyqtSlot
 from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog, QMenu,
                          QTreeView)
 
@@ -34,7 +34,7 @@ class SystemTreeView(QTreeView):
         self.setSelectionModel(model.selectionModel)
         model.rowsInserted.connect(self._items_added)
         model.signalItemChanged.connect(self.onSelectionChanged)
-
+        model.modelReset.connect(self.expandReset)
         set_treeview_header(self)
 
         self.setSelectionMode(QAbstractItemView.SingleSelection)
@@ -154,6 +154,7 @@ class SystemTreeView(QTreeView):
     # ----------------------------
     # Slots
 
+    @pyqtSlot(QModelIndex, int, int)
     def _items_added(self, parent_index, start, end):
         """React to the addition of an item (or items).
         """
@@ -162,6 +163,11 @@ class SystemTreeView(QTreeView):
             return
 
         self.expand(parent_index)
+
+    @pyqtSlot()
+    def expandReset(self):
+        self.expanded = True
+        self.expandAll()
 
     @pyqtSlot()
     def onAbout(self):
