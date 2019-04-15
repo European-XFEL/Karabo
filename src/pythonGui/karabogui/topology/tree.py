@@ -266,6 +266,7 @@ class SystemTree(HasStrictTraits):
         nodes = self._handle_device_data('device', system_hash)
         nodes.update(self._handle_device_data('macro', system_hash))
 
+        self.needs_update = True
         return nodes
 
     def initialize(self, system_hash):
@@ -500,9 +501,6 @@ class SystemTree(HasStrictTraits):
                     server_node.children.append(class_node)
 
     def _init_device_data(self, device_type, system_hash):
-        new_dev_nodes = {}
-        assert device_type in ('device', 'macro')
-
         if device_type not in system_hash:
             return
 
@@ -565,10 +563,8 @@ class SystemTree(HasStrictTraits):
                                              parent=class_node,
                                              visibility=visibility,
                                              level=DEVICE_LEVEL)
-                self._append_child_node(class_node, device_node)
+                class_node.children.append(device_node)
                 device_node.monitoring = False
-                # new nodes should be returned
-                new_dev_nodes[device_id] = device_node
 
             device_node.status = status
             device_node.attributes = attrs

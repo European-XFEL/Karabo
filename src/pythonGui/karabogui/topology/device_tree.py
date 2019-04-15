@@ -133,6 +133,7 @@ class DeviceSystemTree(HasStrictTraits):
 
     def update(self, system_hash):
         nodes = self._handle_device_data('device', system_hash)
+        self.needs_update = True
 
         return nodes
 

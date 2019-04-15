@@ -47,7 +47,7 @@ class SystemTreeView(QTreeView):
 
         self.handler_list = [DeviceSceneHandler()]
         # by default all path are expanded
-        self.expanded = True
+        self.expanded = False
         self.popupWidget = None
         self.header().sectionDoubleClicked.connect(self.onDoubleClickHeader)
 

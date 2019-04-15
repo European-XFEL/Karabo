@@ -110,7 +110,7 @@ class TestManager(GuiTestCase):
         with singletons(topology=topology):
             manager = Manager()
             manager.handle_systemTopology(topo_hash)
-            topology.update.assert_called_with(topo_hash)
+            topology.initialize.assert_called_with(topo_hash)
 
     def test_handle_instance_new(self):
         network = Mock()
