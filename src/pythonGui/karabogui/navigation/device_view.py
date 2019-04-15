@@ -41,7 +41,7 @@ class DeviceTreeView(QTreeView):
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
 
         self.handler_list = [DeviceSceneHandler()]
-        self.expanded = True
+        self.expanded = False
         self.popupWidget = None
         self.header().sectionDoubleClicked.connect(self.onDoubleClickHeader)
 
