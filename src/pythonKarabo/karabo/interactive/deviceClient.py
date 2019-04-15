@@ -59,151 +59,220 @@ print("You may query servers and devices and set/get properties or execute "
 print("Hint: use the TAB key for auto-completion.")
 
 
-# The global autocompleter
+# Auto complete function for methods like: f( deviceId, attribute )
 def auto_complete_full(self, event):
     try:
-        if (re.match('.*\,\s*$', event.line)):
-            return [" \""]
-
-        if (re.match('.*\(\s*\".+\",\".+\"\\s*\).*$', event.line)):
-            return [" # What do you want to complete here, stupid?"]
-
-        if (re.match('.*\(.*\,\s*\".*', event.line)):
-            r = re.compile('\"(.*?)\"')
+        if re.match(r'.*\(\s*$', event.line) \
+                or re.match(r'.*\(\s*\"\w+\",\s*$', event.line):
+            return ["\""]
+        elif re.match(r'.*\(\s*\"\w+$', event.line)\
+                or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line):
+                # These REs match correctly but completion does not work
+            return ["\""]
+        elif re.match(r'.*\(\s*\"$', event.line):
+            dev = cpp_client.getDevices()
+            if len(dev) > 0:
+                return dev
+            else:
+                return ["NO_INSTANCES_AVAILABLE"]
+        elif re.match(r'.*\(.+,\s*\"$', event.line):
+            r = re.compile(r'\"(.*?)\"')
             m = r.search(event.line)
             if m:
                 deviceId = m.group(1)
                 return cpp_client.getProperties(deviceId)
-
-        if (re.match('.*\(\s*\"$', event.line)):
-            if len(cpp_client.getDevices()) > 0:
-                return cpp_client.getDevices()
             else:
-                return ["NO_INSTANCES_AVAILABLE"]
+                return [""]
+        else:
+            return [""]
+    except:
+        print("Distributed auto-completion failed")
 
-        if (re.match('.*\(\s*\"[^"]+$', event.line)):
-            if len(cpp_client.getDevices()) > 0:
-                return cpp_client.getDevices()
-            else:
-                return ["NO_INSTANCES_AVAILABLE"]
 
-        if (re.match('.*\($', event.line)):
+def auto_complete_devid(self, event):
+    try:
+        if re.match(r'.*\(\s*$', event.line):
             return ["\""]
+        elif re.match(r'.*\(\s*\"\w+$', event.line):
+            # These REs match correctly but completion does not work
+            return ["\""]
+        elif re.match(r'.*\(\s*\"$', event.line):
+            dev = cpp_client.getDevices()
+            if len(dev) > 0:
+                return dev
+            else:
+                return ["NO_INSTANCES_AVAILABLE"]
+        else:
+            return [""]
+    except:
+        print("Distributed auto-completion failed")
+
+
+def auto_complete_serverid(self, event):
+    try:
+        if re.match(r'.*\(\s*$', event.line):
+            return ["\""]
+        elif re.match(r'.*\(\s*\"\w+$', event.line):
+            # These REs match correctly but completion does not work
+            return ["\""]
+        elif re.match(r'.*\(\s*\"$', event.line):
+            dev = cpp_client.getServers()
+            if len(dev) > 0:
+                return dev
+            else:
+                return ["NO_SERVERS_AVAILABLE"]
+        else:
+            return [""]
     except:
         print("Distributed auto-completion failed")
 
 
 def auto_complete_set(self, event):
     try:
-        if (re.match('.*\,\s*$', event.line)):
-            return [" \""]
-
-        if (re.match('.*\(\s*\".+\",\".+\"\\s*\).*$', event.line)):
-            return [" # What do you want to complete here, stupid?"]
-
-        if (re.match('.*\(.*\,\s*\".*', event.line)):
-            r = re.compile('\"(.*?)\"')
+        if re.match(r'.*\(\s*$', event.line) \
+                or re.match(r'.*\(\s*\"\w+\",\s*$', event.line):
+            return ["\""]
+        elif re.match(r'.*\(\s*\"\w+$', event.line)\
+                or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line):
+                # These REs match correctly but completion does not work
+            return ["\""]
+        elif re.match(r'.*\(\s*\"$', event.line):
+            dev = cpp_client.getDevices()
+            if len(dev) > 0:
+                return dev
+            else:
+                return ["NO_INSTANCES_AVAILABLE"]
+        elif re.match(r'.*\(.+,\s*\"$', event.line):
+            r = re.compile(r'\"(.*?)\"')
             m = r.search(event.line)
             if m:
-                arg1 = m.group(1)
-                return cpp_client.getCurrentlySettableProperties(arg1)
-
-        if (re.match('.*\(\s*\"$', event.line)):
-            return cpp_client.getDevices()
-
-        if (re.match('.*\(\s*\"[^"]+$', event.line)):
-            return cpp_client.getDevices()
-
-        if (re.match('.*\($', event.line)):
-            return ["\""]
+                deviceId = m.group(1)
+                return cpp_client.getCurrentlySettableProperties(deviceId)
+            else:
+                return [""]
+        else:
+            return [""]
     except:
         print("Distributed auto-completion failed")
 
 
 def auto_complete_execute(self, event):
     try:
-        if (re.match('.*\,\s*$', event.line)):
-            return [" \""]
-
-        if (re.match('.*\(\s*\".+\",\".+\"\\s*\).*$', event.line)):
-            return [" # What do you want to complete here, stupid?"]
-
-        if (re.match('.*\(.*\,\s*\".*', event.line)):
-            r = re.compile('\"(.*?)\"')
+        if re.match(r'.*\(\s*$', event.line) \
+                or re.match(r'.*\(\s*\"\w+\",\s*$', event.line):
+            return ["\""]
+        elif re.match(r'.*\(\s*\"\w+$', event.line)\
+                or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line):
+                # These REs match correctly but completion does not work
+            return ["\""]
+        elif re.match(r'.*\(\s*\"$', event.line):
+            dev = cpp_client.getDevices()
+            if len(dev) > 0:
+                return dev
+            else:
+                return ["NO_INSTANCES_AVAILABLE"]
+        elif re.match(r'.*\(.+,\s*\"$', event.line):
+            r = re.compile(r'\"(.*?)\"')
             m = r.search(event.line)
             if m:
-                arg1 = m.group(1)
-                return cpp_client.getCurrentlyExecutableCommands(arg1)
-
-        if (re.match('.*\(\s*\"$', event.line)):
-            return cpp_client.getDevices()
-
-        if (re.match('.*\(\s*\"[^"]+$', event.line)):
-            return cpp_client.getDevices()
-
-        if (re.match('.*\($', event.line)):
-            return ["\""]
+                deviceId = m.group(1)
+                return cpp_client.getCurrentlyExecutableCommands(deviceId)
+            else:
+                return [""]
+        else:
+            # print("Opt 7")
+            return [""]
     except:
         print("Distributed auto-completion failed")
 
 
 def auto_complete_instantiate(self, event):
+    # print("AC: instantiate")
     try:
-        # Fourth argument
-        if (re.match('.*\(.*\,.*\,.*\,\s*$', event.line)):
-            return [' Hash("']
-
-        if (re.match('.*\(.*\,.*\,.*\,\s*Hash\(\"$', event.line)):
-            r = re.compile('\"(.*?)\"\,\s*\"(.*?)\"')
+        if re.match(r'.*\(\s*$', event.line) \
+                or re.match(r'.*\(\s*\"\w+\",\s*$', event.line):
+            return ["\""]
+        elif re.match(r'.*\(\s*\"\w+$', event.line)\
+                or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line):
+                # These REs match correctly but completion does not work
+            return ["\""]
+        elif re.match(r'.*\(\s*\"$', event.line):
+            dev = cpp_client.getServers()
+            if len(dev) > 0:
+                return dev
+            else:
+                return ["NO_INSTANCES_AVAILABLE"]
+        elif re.match(r'.*\(.+\,\s*$', event.line):
+            return ["\""]
+        elif re.match(r'.*\(.+,\s*\"$', event.line):
+            r = re.compile(r'\"(.*?)\"')
             m = r.search(event.line)
             if m:
                 serverId = m.group(1)
-                classId = m.group(2)
-                return cpp_client.getClassProperties(serverId, classId)
-
-        if (re.match('.*\,\s*$', event.line)):
-            return [" \""]
-
-        if (re.match('.*\(.*\,\s*\".*', event.line)):
-            r = re.compile('\"(.*?)\"')
-            m = r.search(event.line)
-            if m:
-                arg1 = m.group(1)
-                return cpp_client.getClasses(arg1)
-
-        if (re.match('.*\(\s*\"$', event.line)):
-            return cpp_client.getServers()
-
-        if (re.match('.*\(\s*\"[^"]+$', event.line)):
-            return cpp_client.getServers()
-
-        if (re.match('.*\($', event.line)):
+                return cpp_client.getClasses(serverId)
+            else:
+                return [""]
+        elif re.match(r'.*\(.+,.+,\s*$', event.line)\
+                or re.match(r'.*\(.+\,.+\,\s*\".*$', event.line):
             return ["\""]
+        else:
+            return [""]
     except:
         print("Distributed auto-completion failed")
 
 
-# Register hooks
-if (ip is not None):
-    ip.set_hook('complete_command', auto_complete_full, re_key='.*get')
+# Register hooks in IPython
+if ip is not None:
+    ip.set_hook('complete_command', auto_complete_full,
+                re_key='.*getFromPast')
+    ip.set_hook('complete_command', auto_complete_full,
+                re_key='.*getPropertyHistory')
     ip.set_hook('complete_command', auto_complete_full,
                 re_key='.*registerPropertyMonitor')
     ip.set_hook('complete_command', auto_complete_full,
-                re_key='.*registerDeviceMonitor')
-    ip.set_hook('complete_command', auto_complete_full, re_key='.*help')
+                re_key='.*unregisterPropertyMonitor')
     ip.set_hook('complete_command', auto_complete_full,
-                re_key='.*shutdownDevice')
+                re_key='.*help')
 
-    ip.set_hook('complete_command', auto_complete_set, re_key='.*set')
-    ip.set_hook('complete_command', auto_complete_execute, re_key='.*execute')
+    ip.set_hook('complete_command', auto_complete_serverid,
+                re_key='.*shutdownServer')
+    ip.set_hook('complete_command', auto_complete_serverid,
+                re_key='.*getClasses')
+    ip.set_hook('complete_command', auto_complete_serverid,
+                re_key='.*getDevices')
+
+    ip.set_hook('complete_command', auto_complete_devid,
+                re_key='.*shutdownDevice')
+    ip.set_hook('complete_command', auto_complete_devid,
+                re_key='.*setHash')
+    ip.set_hook('complete_command', auto_complete_devid,
+                re_key='.*setPrio')
+    ip.set_hook('complete_command', auto_complete_devid,
+                re_key='.*lock')
+    ip.set_hook('complete_command', auto_complete_devid,
+                re_key='.*registerDeviceMonitor')
+    ip.set_hook('complete_command', auto_complete_devid,
+                re_key='.*unregisterDeviceMonitor')
+    ip.set_hook('complete_command', auto_complete_devid,
+                re_key='.*getDeviceHistory')
+    ip.set_hook('complete_command', auto_complete_devid,
+                re_key='.*getConfigurationFromPast')
+
+    ip.set_hook('complete_command', auto_complete_set,
+                re_key='.*setNoWait')
+    ip.set_hook('complete_command', auto_complete_execute,
+                re_key='.*execute')
+
     ip.set_hook('complete_command', auto_complete_instantiate,
                 re_key='.*instantiate')
     ip.set_hook('complete_command', auto_complete_instantiate,
                 re_key='.*getClassSchema')
-    ip.set_hook('complete_command', auto_complete_instantiate,
-                re_key='.*shutdownServer')
-    ip.set_hook('complete_command', auto_complete_instantiate,
-                re_key='.*getClasses')
+
+    # Short keys go to end
+    ip.set_hook('complete_command', auto_complete_full,
+                re_key='.*get')
+    ip.set_hook('complete_command', auto_complete_set,
+                re_key='.*set')
 
 
 class DeviceClient(object):
