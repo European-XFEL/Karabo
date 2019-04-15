@@ -207,8 +207,9 @@ if (ip is not None):
 
 
 class DeviceClient(object):
-    """The DeviceClient allows to remotely control a Karabo installation.
+    """DeviceClient to remotely control Karabo
 
+    The DeviceClient allows to remotely control a Karabo installation.
     A Karabo installation comprises all distributed end-points (servers,
     devices and clients), which talk to the same central message-broker as
     defined by its host, port and topic. The DeviceClient establishes a direct
@@ -228,18 +229,12 @@ class DeviceClient(object):
             cpp_client = BoundDeviceClient()
         self.__client = cpp_client
 
-        # Flags whether we tried to run Qapp
-        self.triedStartQapp = False
-
-        # Flags whether we can use GuiData
-        self.hasGuiData = True
-
         # Spec like container holding counters and pseudo counters
         self.monitor = Hash()
 
         try:
             self.reloadMonitorFile()
-        except:
+        except Exception:
             pass
 
         self.values = dict()
@@ -251,14 +246,13 @@ class DeviceClient(object):
         and the auto-completion (in interactive mode) adapts accordingly.
 
         Args:
-
-            username: The username (currently you may use observer, operator,
-                        expert, admin)
-            passwordFile: Optionally provide a plain text file with containing
-                        the password
-            provider: Optionally choose the authorization provider
+        :param username: The username (currently you may use observer,
+                                operator, expert, admin)
+        :param passwordFile: Optionally provide a plain text file with
+                                containing the password
+        :param provider: Optionally choose the authorization provider
                         (LOCAL or KERBEROS)
-
+        :returns Boolean value whether login was successful.
         """
         password = None
         if passwordFile is None:
@@ -269,9 +263,7 @@ class DeviceClient(object):
         return self.__client.login(username, password, provider)
 
     def logout(self):
-        """
-        Logs the current user out.
-        """
+        """Logs the current user out."""
         return self.__client.logout()
 
     def instantiate(self, serverId, classId, deviceId, config=Hash(),
@@ -281,21 +273,18 @@ class DeviceClient(object):
         NOTE: This call is synchronous (blocking)
 
         Args:
-            serverId: The serverId of the server on which the device should be
-                        started.
-            classId:  The classId of the device (corresponding plugin must be
-                        loaded on the server)
-            deviceId: The future name of the device in the Karabo installation
-                        (will fail if not unique)
-            config:   The initial configuration of the device (optional if all
-                        parameters of the device are optional)
-            timeout : Timeout in seconds until this function will be forced to
-                        return
-
-        Returns:
-            Tuple with (True, <deviceId>) in case of success or tuple with
-            (False, <errorMessage>) in case of failure
-
+        :param serverId: The serverId of the server on which the device should
+                        be started.
+        :param classId:  The classId of the device (corresponding plugin must
+                        be loaded on the server)
+        :param deviceId: The future name of the device in the Karabo
+                        installation (will fail if not unique)
+        :param config:   The initial configuration of the device (optional if
+                        all parameters of the device are optional)
+        :param timeout : Timeout in seconds until this function will be forced
+                        to return
+        :returns Tuple with (True, <deviceId>) in case of success or tuple with
+                        (False, <errorMessage>) in case of failure
         """
         # This is hacked here and should be added to c++
         config.set("deviceId", deviceId)
@@ -315,17 +304,15 @@ class DeviceClient(object):
         NOTE: This call is asynchronous (non-blocking)
 
         Args:
-            serverId: The serverId of the server on which the device should be
-                        started.
-            classId:  The classId of the device (corresponding plugin must be
-                        loaded on the server)
-            deviceId: The future name of the device in the Karabo installation
-                        (will fail if not unique)
-            config:   The initial configuration of the device (optional if all
-                        parameters of the device are optional)
-
+        :param serverId: The serverId of the server on which the device should
+                        be started.
+        :param classId:  The classId of the device (corresponding plugin must
+                        be loaded on the server)
+        :param deviceId: The future name of the device in the Karabo
+                        installation (will fail if not unique)
+        :param config:   The initial configuration of the device (optional if
+                        all parameters of the device are optional)
         """
-
         # This is hacked here and should be added to c++
         config.set("deviceId", deviceId)
         self.__client.instantiateNoWait(serverId, classId, config)
@@ -336,14 +323,11 @@ class DeviceClient(object):
         NOTE: This call is synchronous (blocking)
 
         Args:
-            deviceId: The deviceId of the device to be destructed.
-            timeout : Timeout in seconds until this function will be forced to
-                        return
-
-        Returns:
-            Tuple with (True, <deviceId>) in case of success or tuple with
-            (False, <errorMessage>) in case of failure
-
+        :param deviceId: The deviceId of the device to be destructed.
+        :param timeout : Timeout in seconds until this function will be forced
+                        to return
+        :returns Tuple with (True, <deviceId>) in case of success or tuple with
+                        (False, <errorMessage>) in case of failure
         """
         if timeout is None:
             return self.__client.killDevice(deviceId)
@@ -355,8 +339,7 @@ class DeviceClient(object):
         NOTE: This call is asynchronous (non-blocking)
 
         Args:
-            deviceId: The deviceId of the device to be destructed.
-
+        :param deviceId: The deviceId of the device to be destructed.
         """
         self.__client.killDeviceNoWait(deviceId)
 
@@ -366,14 +349,11 @@ class DeviceClient(object):
         NOTE: This call is synchronous (blocking)
 
         Args:
-            serverId: The serverId of the server to be destructed.
-            timeout : Timeout in seconds until this function will be forced to
-                        return
-
-        Returns:
-            Tuple with (True, <serverId>) in case of success or tuple with
-            (False, <errorMessage>) in case of failure
-
+        :param serverId: The serverId of the server to be destructed.
+        :param timeout : Timeout in seconds until this function will be forced
+                        to return
+        :returns Tuple with (True, <serverId>) in case of success or tuple with
+                (False, <errorMessage>) in case of failure
         """
         if timeout is None:
             return self.__client.killServer(serverId)
@@ -385,8 +365,7 @@ class DeviceClient(object):
         NOTE: This call is asynchronous (non-blocking)
 
         Args:
-            serverId: The serverId of the server to be destructed.
-
+        :param serverId: The serverId of the server to be destructed.
         """
         self.__client.killServerNoWait(serverId)
 
@@ -398,9 +377,8 @@ class DeviceClient(object):
         """Returns a list of currently running devices.
 
         Args:
-            serverId: Optionally only the running devices of a given server
-            can be listed.
-
+        :param serverId: Optionally only the running devices of a given server
+                        can be listed.
         """
         if serverId is None:
             return self.__client.getDevices()
@@ -410,15 +388,16 @@ class DeviceClient(object):
         """Returns a list of available device classes (plugins) on a server
 
         Args:
-             serverId: The server of whose plugins should be listed.
-
+        :param serverId: The server of whose plugins should be listed.
         """
         return self.__client.getClasses(serverId)
 
     def help(self, instanceId, parameter=None):
-        """
-        This function provides help on a full instance or a specific parameter
-        of an instance.
+        """Provides help on device instance or parameter
+
+        This function provides help on a full instance or a specific
+        parameter of an instance. Instance is also called the name or address
+        of the specific device.
         """
         if parameter is None:
             self.__client.getDeviceSchema(instanceId).help()
@@ -426,6 +405,11 @@ class DeviceClient(object):
             self.__client.getDeviceSchema(instanceId).help(parameter)
 
     def get(self, instanceId, propertyName=None):
+        """Retrieves attribute values from device
+
+        It only retrieves attributes marked for DAQ, throws an exception
+        otherwise.
+        """
         if propertyName is None:
             return self.__client.get(instanceId)
         return self.__client.get(instanceId, propertyName)
@@ -471,17 +455,17 @@ class DeviceClient(object):
                                          utc_t1, maxNumData)
 
     def getDeviceHistory(self, deviceId, timepoint):
-        """
-        Get full configuration and schema of device at given time point,
-        similar to 'getConfigurationFromPast' of the C++ DeviceClient.
+        """Get configuration of a device at a given time point
+
+        Similar to 'getConfigurationFromPast' of the C++ DeviceClient.
         Concerning the format of the timepoint, see getPropertyHistory.
         """
         return self.getConfigurationFromPast(deviceId, timepoint)
 
     def getConfigurationFromPast(self, deviceId, timepoint):
-        """
-        Same as getDeviceHistory, kept for interface similarity with the C++
-        DeviceClient.
+        """Same as getDeviceHistory
+
+        Kept for interface similarity with the C++ DeviceClient.
         """
         utc_timepoint = self._fromTimeStringToUtcString(timepoint)
         return self.__client.getConfigurationFromPast(deviceId, utc_timepoint)
@@ -502,13 +486,14 @@ class DeviceClient(object):
         return self.__client.getDeviceSchemaNoWait(deviceId)
 
     def registerSchemaUpdatedMonitor(self, callbackFunction):
-        """
+        """Registers an async call-back on schema update
+
         This function can be used to register an asynchronous call-back on
         schema update from the distributed system.
 
         Args:
-            callbackFunction: the call-back function to be registered.
-                It must have the following signature: f(str, Schema)
+        :param callbackFunction: the call-back function to be registered.
+                    It must have the following signature: f(str, Schema)
 
         Example:
 
@@ -523,7 +508,8 @@ class DeviceClient(object):
 
     def registerDeviceMonitor(self, instanceId, callbackFunction,
                               userData=None):
-        """
+        """Registers an async call-back on change of device property
+
         This function can be used to register an asynchronous call-back on
         change of any device property. The call-back function must have the
         following signature: f(str, Hash)
@@ -537,38 +523,36 @@ class DeviceClient(object):
 
         c = DeviceClient();
         c.registerDeviceMonitor("Test_MyDevice_0", onDeviceChange)
-
         """
         if userData is None:
-            return self.__client.registerDeviceMonitor(instanceId,
-                                                       callbackFunction)
-        return self.__client.registerDeviceMonitor(instanceId,
-                                                   callbackFunction, userData)
+            return self.__client.registerDeviceMonitor(
+                instanceId, callbackFunction)
+        return self.__client.registerDeviceMonitor(
+            instanceId, callbackFunction, userData)
 
     def unregisterDeviceMonitor(self, instanceId):
         self.__client.unregisterDeviceMonitor(instanceId)
 
     def registerChannelMonitor(self, channelName, dataHandler,
                                inputChannelCfg=None, eosHandler=None):
-        """
-        Register an asynchronous call-back to monitor defined output channel.
+        """Register an asynchronous call-back to monitor defined output channel
 
         Internally, an InputChannel is created and configured.
-        @param channelName identifies the channel as a concatenation of the id
+        :param channelName identifies the channel as a concatenation of the id
                             of its device, a colon (:) and the name of the
                             output channel (e.g. A/COOL/DEVICE:output)
-        @param dataHandler called when data arrives, arguments are data (Hash)
+        :param dataHandler called when data arrives, arguments are data (Hash)
                             and meta data (Hash/MetaData)
-        @param inputChannelCfg configures the channel via
+        :param inputChannelCfg configures the channel via
                         InputChannel.create(..) use default except you know
                         what your are doing.
                         For experts: "connectedOutputChannels" will be
                                         overwritten,
                                       "onSlowness" default is overwritten
                                         to "drop"
-        @param eosHandler called on end of stream, argument is the InputChannel
+        :param eosHandler called on end of stream, argument is the InputChannel
 
-        @return False if channel is already registered
+        :returns False if channel is already registered
 
         Example:
 
@@ -584,18 +568,18 @@ class DeviceClient(object):
                                                     eosHandler)
 
     def unregisterChannelMonitor(self, channelName):
-        """
-        Unregister monitoring of output channel
+        """Unregister monitoring of output channel
 
-        @param channelName identifies the channel as a concatenation of the id
+        :param channelName identifies the channel as a concatenation of the id
                             of its devices, a colon (:) and the name of the
                             output channel (e.g. A/COOL/DEVICE:output)
-        @return False if channel was not registered
+        :return False if channel was not registered
         """
         return self.__client.unregisterChannelMonitor(channelName)
 
     def setDeviceMonitorInterval(self, milliseconds):
-        """
+        """Set wait interval between subsequent handlers
+
         Set interval to wait between subsequent (for the same instance)
         calls to handlers registered via registerDeviceMonitor.
         Changes received within that interval will be cached and, in case of
@@ -607,7 +591,8 @@ class DeviceClient(object):
 
     def registerPropertyMonitor(self, instanceId, propertyName,
                                 callbackFunction, userData=None):
-        """
+        """Register an asynchronous call-back on change of property
+
         This function can be used to register an asynchronous call-back on
         change of the specified property. The call-back function must have the
         following signature: f(str, str, object, Timestamp)
@@ -624,17 +609,13 @@ class DeviceClient(object):
 
         c = DeviceClient()
         c.registerPropertyMonitor("Test_Device_0", "result", onPropertyChange)
-
         """
         if userData is None:
-            return self.__client.registerPropertyMonitor(instanceId,
-                                                         propertyName,
-                                                         callbackFunction)
+            return self.__client.registerPropertyMonitor(
+                instanceId, propertyName, callbackFunction)
         else:
-            return self.__client.registerPropertyMonitor(instanceId,
-                                                         propertyName,
-                                                         callbackFunction,
-                                                         userData)
+            return self.__client.registerPropertyMonitor(
+                instanceId, propertyName, callbackFunction, userData)
 
     def unregisterPropertyMonitor(self, instanceId, propertyName):
         self.__client.unregisterPropertyMonitor(instanceId, propertyName)
@@ -669,7 +650,7 @@ class DeviceClient(object):
             raise NotImplementedError("Too many arguments.")
 
     def executeNoWait(self, deviceId, command, *args):
-        """Executes a command"""
+        """Executes a command without waiting"""
         if len(args) == 0:
             self.__client.executeNoWait(deviceId, command)
         elif len(args) == 1:
@@ -698,7 +679,7 @@ class DeviceClient(object):
             monitorName = node.getKey()
 
             # Skip if disabled
-            if (entry.has("disabled") and entry.get("disabled")):
+            if entry.has("disabled") and entry.get("disabled"):
                 continue
 
             if entry.has("deviceId"):
@@ -748,7 +729,8 @@ class DeviceClient(object):
             print("Missing \"monitor\" section")
 
     def loadProject(self, filename):
-        """
+        """Load project from file
+
         Load a project via \filename and returns a project object.
         """
         project = DeviceClientProject(filename, self)
@@ -762,14 +744,12 @@ class DeviceClient(object):
         return project
 
     def setPrio(self, deviceId, priority):
-        """
-        This function changes the Logger priority of the deviceId
+        """This function changes the Logger priority of the deviceId
 
         Example:
 
             setPrio('Karabo_DataLoggerServer', 'DEBUG')
             setPrio('Karabo_DataLoggerServer", 'INFO')
-
         """
         self.executeNoWait(deviceId, "slotLoggerPriority", priority)
 
