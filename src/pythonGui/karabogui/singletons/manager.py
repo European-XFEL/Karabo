@@ -209,14 +209,14 @@ class Manager(QObject):
     @show_wait_cursor
     def handle_systemTopology(self, systemTopology):
         self._topology.initialize(systemTopology)
-        # Tell the GUI about various devices that are alive
-        instance_ids = self._collect_devices('AlarmService')
-        self._announce_alarm_services(instance_ids.get('AlarmService', []))
 
-        # Tell the world about new devices/servers
         devices, servers = _extract_topology_devices(systemTopology)
         broadcast_event(KaraboEvent.SystemTopologyUpdate,
                         {'devices': devices, 'servers': servers})
+
+        for instance_id, class_id, _ in devices:
+            if class_id == 'AlarmService':
+                self._announce_alarm_services([instance_id])
 
     def handle_systemVersion(self, **info):
         """Handle the version number reply from the GUI server"""
@@ -444,21 +444,6 @@ class Manager(QObject):
                 broadcast_event(event_type, {'instanceIds': [instance_id]})
                 return True
         return False
-
-    def _collect_devices(self, *class_ids):
-        """Walk the system tree and collect all the instance ids of devices
-        whose type is in the list `class_ids`.
-        """
-        instance_ids = defaultdict(list)
-
-        def visitor(node):
-            attrs = node.attributes
-            dev_class_id = attrs.get('classId', 'UNKNOWN')
-            if attrs.get('type') == 'device' and dev_class_id in class_ids:
-                instance_ids[dev_class_id].append(node.node_id)
-
-        self._topology.visit_system_tree(visitor)
-        return instance_ids
 
 # ------------------------------------------------------------------
 
