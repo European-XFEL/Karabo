@@ -526,6 +526,8 @@ class PropertyTest(PythonDevice):
         with self._writingMutex:
             self._writingOutput = False
         self.updateState(State.STOPPING)
+        self._writingWorker.join()
+        self._writingWorker = None
 
     def resetChannelCounters(self):
         self.set(Hash("inputCounter", 0,
