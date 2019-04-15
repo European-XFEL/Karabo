@@ -129,7 +129,7 @@ class DeviceSystemTree(HasStrictTraits):
 
     def initialize(self, system_hash):
         with self.update_context.reset_context():
-            self._handle_device_data('device', system_hash)
+            self._init_device_data('device', system_hash)
 
     def update(self, system_hash):
         nodes = self._handle_device_data('device', system_hash)

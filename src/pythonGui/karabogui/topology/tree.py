@@ -265,8 +265,8 @@ class SystemTree(HasStrictTraits):
         self._handle_server_data(system_hash)
         nodes = self._handle_device_data('device', system_hash)
         nodes.update(self._handle_device_data('macro', system_hash))
-
         self.needs_update = True
+
         return nodes
 
     def initialize(self, system_hash):
@@ -452,7 +452,8 @@ class SystemTree(HasStrictTraits):
         return class_node
 
     # ------------------------------------------------------------------
-    # Initializer
+    # XXX: Yes, for the sake of performance we have duplicated code and
+    # initialize the topology
 
     def _init_server_data(self, system_hash):
         """Put the contents of Hash `system_hash` into the internal tree
@@ -485,6 +486,8 @@ class SystemTree(HasStrictTraits):
                                              visibility=visibility,
                                              level=SERVER_LEVEL)
                 host_node.children.append(server_node)
+                self._server_nodes[server_id] = server_node
+
             server_node.attributes = attrs
 
             for class_id, vis in zip(attrs.get('deviceClasses', []),
@@ -533,6 +536,7 @@ class SystemTree(HasStrictTraits):
                                                  parent=host_node,
                                                  level=SERVER_LEVEL)
                     host_node.children.append(server_node)
+                    self._server_nodes[server_id] = server_node
                 else:
                     continue
 
@@ -564,6 +568,7 @@ class SystemTree(HasStrictTraits):
                                              visibility=visibility,
                                              level=DEVICE_LEVEL)
                 class_node.children.append(device_node)
+                self._device_nodes[device_id] = device_node
                 device_node.monitoring = False
 
             device_node.status = status
