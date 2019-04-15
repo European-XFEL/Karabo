@@ -129,7 +129,7 @@ class DeviceSystemTree(HasStrictTraits):
 
     def initialize(self, system_hash):
         with self.update_context.reset_context():
-            self._init_device_data('device', system_hash)
+            self._handle_device_data('device', system_hash, append=False)
 
     def update(self, system_hash):
         nodes = self._handle_device_data('device', system_hash)
@@ -179,10 +179,14 @@ class DeviceSystemTree(HasStrictTraits):
         with self.update_context.insertion_context(parent_node, first, last):
             parent_node.children.append(child_node)
 
+    def _set_child_node(self, parent_node, child_node):
+        parent_node.children.append(child_node)
+
     # ------------------------------------------------------------------
 
-    def _handle_device_data(self, device_type, system_hash):
+    def _handle_device_data(self, device_type, system_hash, append=True):
         assert device_type in ('device', 'macro')
+        handler = self._append_child_node if append else self._set_child_node
 
         if device_type not in system_hash:
             return
@@ -208,14 +212,14 @@ class DeviceSystemTree(HasStrictTraits):
                 domain_node = DeviceTreeNode(node_id=domain,
                                              parent=self.root,
                                              level=DOMAIN_LEVEL)
-                self._append_child_node(self.root, domain_node)
+                handler(self.root, domain_node)
 
             type_node = domain_node.child(dev_type)
             if type_node is None:
                 type_node = DeviceTreeNode(node_id=dev_type,
                                            parent=domain_node,
                                            level=TYPE_LEVEL)
-                self._append_child_node(domain_node, type_node)
+                handler(domain_node, type_node)
 
             member_node = type_node.child(member)
             if member_node is None:
@@ -225,61 +229,7 @@ class DeviceSystemTree(HasStrictTraits):
                                              server_id=server_id,
                                              visibility=visibility,
                                              level=MEMBER_LEVEL)
-                self._append_child_node(type_node, member_node)
-
-            member_node.status = status
-            member_node.attributes = attrs
-            member_node.capabilities = capabilities
-
-            self._device_nodes[karabo_name] = member_node
-
-    # ------------------------------------------------------------------
-
-    def _init_device_data(self, device_type, system_hash):
-        assert device_type in ('device', 'macro')
-
-        if device_type not in system_hash:
-            return
-
-        for karabo_name, _, attrs in system_hash[device_type].iterall():
-            if attrs.get('classId', '') in BLACKLIST_CLASSES:
-                continue
-
-            # If we don't follow karabo naming convention, we are out!
-            device = karabo_name.split('/')
-            if not len(device) == 3:
-                continue
-
-            domain, dev_type, member = device
-            visibility = AccessLevel(attrs.get('visibility',
-                                               AccessLevel.OBSERVER))
-            capabilities = attrs.get('capabilities', 0)
-            server_id = attrs.get('serverId', 'unknown-server')
-            status = DeviceStatus(attrs.get('status', 'ok'))
-
-            domain_node = self.root.child(domain)
-            if domain_node is None:
-                domain_node = DeviceTreeNode(node_id=domain,
-                                             parent=self.root,
-                                             level=DOMAIN_LEVEL)
-                self.root.children.append(domain_node)
-
-            type_node = domain_node.child(dev_type)
-            if type_node is None:
-                type_node = DeviceTreeNode(node_id=dev_type,
-                                           parent=domain_node,
-                                           level=TYPE_LEVEL)
-                domain_node.children.append(type_node)
-
-            member_node = type_node.child(member)
-            if member_node is None:
-                member_node = DeviceTreeNode(node_id=member,
-                                             device_id=karabo_name,
-                                             parent=type_node,
-                                             server_id=server_id,
-                                             visibility=visibility,
-                                             level=MEMBER_LEVEL)
-                type_node.children.append(member_node)
+                handler(type_node, member_node)
 
             member_node.status = status
             member_node.attributes = attrs
