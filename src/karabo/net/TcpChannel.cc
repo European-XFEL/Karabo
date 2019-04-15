@@ -248,9 +248,6 @@ namespace karabo {
 
 
         void TcpChannel::byteSizeAvailableHandler(const size_t byteSize) {
-            // byteSizeAvailableHandler is only used as handler argument of readAsyncSizeInBytes
-            // and readAsyncSizeInBytes binds it to another handler which is protected by a bind_weak
-            // so we do not have to bind_weak here again.
             m_inboundData->resize(byteSize);
             boost::mutex::scoped_lock lock(m_socketMutex);
             if (m_socket.available() >= byteSize) {
@@ -1549,7 +1546,8 @@ namespace karabo {
 
 
         karabo::io::BufferSet::Pointer TcpChannel::bufferSetFromVectorCharPointer(const VectorCharPointer& dataVect) {
-            karabo::io::BufferSet::Pointer datapBs = boost::make_shared<karabo::io::BufferSet>();
+            // BufferSet's copyAllData ctor parameter set to false to prevent copy.
+            karabo::io::BufferSet::Pointer datapBs = boost::make_shared<karabo::io::BufferSet>(false);
             datapBs->emplaceBack(dataVect);
             return datapBs;
         }
