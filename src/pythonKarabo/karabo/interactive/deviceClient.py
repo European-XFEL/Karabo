@@ -298,14 +298,6 @@ class DeviceClient(object):
             cpp_client = BoundDeviceClient()
         self.__client = cpp_client
 
-        # Spec like container holding counters and pseudo counters
-        self.monitor = Hash()
-
-        try:
-            self.reloadMonitorFile()
-        except Exception:
-            pass
-
         self.values = dict()
 
     def login(self, username, passwordFile=None, provider="LOCAL"):
@@ -737,65 +729,6 @@ class DeviceClient(object):
 
     def sleep(self, secs):
         time.sleep(secs)
-
-    def getMonitorValues(self):
-        d = dict()
-        s = str()
-        t = krb.Epochstamp()
-        s += '{:f}'.format(t.toTimestamp())
-        for node in self.monitor:
-            entry = node.getValue()
-            monitorName = node.getKey()
-
-            # Skip if disabled
-            if entry.has("disabled") and entry.get("disabled"):
-                continue
-
-            if entry.has("deviceId"):
-                deviceId = entry.get("deviceId")
-                propertyName = entry.get("property")
-                d[monitorName] = self.__client.get(deviceId, propertyName)
-            if entry.has("eval"):
-                evalString = entry.get("eval")
-                evalString = re.sub(r'\$(\w+)', r'd["\1"]', evalString)
-                d[monitorName] = eval(evalString)
-            if entry.has("format"):
-                valueType = type(d[monitorName])
-                tmp = '{:' + entry.get("format") + '}'
-                formattedString = tmp.format(d[monitorName])
-                s += ' ' + formattedString
-                if valueType == float:
-                    d[monitorName] = float(formattedString)
-                elif valueType == int:
-                    d[monitorName] = int(formattedString)
-                elif valueType == int:
-                    d[monitorName] = int(formattedString)
-                elif valueType == complex:
-                    d[monitorName] = complex(formattedString)
-                else:
-                    d[monitorName] = formattedString
-            else:
-                s += ' ' + str(d[monitorName])
-        self.values = d
-        return s
-
-    def getMonitorHeadline(self):
-        s = str()
-        s += '# timestamp'
-        for node in self.monitor:
-            entry = node.getValue()
-            monitorName = node.getKey()
-            if entry.has("unit"):
-                monitorName += '[' + entry.get("unit") + ']'
-            s += ' ' + monitorName
-        return s
-
-    def reloadMonitorFile(self, filename="monitor.xml"):
-        self.__monitorFile = krb.loadFromFile(filename)
-        if (self.__monitorFile.has("monitor")):
-            self.monitor = self.__monitorFile.get("monitor")
-        else:
-            print("Missing \"monitor\" section")
 
     def loadProject(self, filename):
         """Load project from file
