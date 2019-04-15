@@ -10,7 +10,7 @@ from PyQt4.QtGui import (QAction, QActionGroup, QApplication, QKeySequence,
                          QMenu, QPalette, QScrollArea, QSizePolicy)
 
 from karabogui import icons
-from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.indicators import get_topic_color
 from karabogui.sceneview.api import SceneView
 from karabogui.sceneview.const import QT_CURSORS, SCENE_BORDER_WIDTH
@@ -144,7 +144,7 @@ class ScenePanel(BasePanelWidget):
             self.model.on_trait_change(self.set_title, 'simple_name',
                                        remove=True)
             # Tell the world we're closing
-            broadcast_event(KaraboEventSender.MiddlePanelClosed,
+            broadcast_event(KaraboEvent.MiddlePanelClosed,
                             {'model': self.model})
 
     def hideEvent(self, event):

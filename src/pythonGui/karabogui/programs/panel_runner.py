@@ -7,7 +7,7 @@ from karabo.common.scenemodel.api import (
     read_scene, DeviceSceneLinkModel, SceneModel)
 from karabogui import icons
 from karabogui.controllers.api import populate_controller_registry
-from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.panels.alarmpanel import AlarmPanel
 from karabogui.panels.configurationpanel import ConfigurationPanel
 from karabogui.panels.navigationpanel import TopologyPanel
@@ -25,7 +25,7 @@ def run_alarm(deviceId):
 def run_configurator(ns):
     device_id = ns.configurator
     device = get_topology().get_device(device_id)
-    broadcast_event(KaraboEventSender.ShowConfiguration, {'proxy': device})
+    broadcast_event(KaraboEvent.ShowConfiguration, {'proxy': device})
     return ConfigurationPanel(), (600, 800)
 
 
