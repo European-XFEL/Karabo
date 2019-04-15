@@ -327,6 +327,11 @@ class SystemTree(HasStrictTraits):
 
         NOTE: This function can be only used in a reset context!
         """
+        if child_node.level == SERVER_LEVEL:
+            self._server_nodes[child_node.node_id] = child_node
+        elif child_node.level == DEVICE_LEVEL:
+            self._device_nodes[child_node.node_id] = child_node
+
         parent_node.children.append(child_node)
 
     # ------------------------------------------------------------------
