@@ -16,11 +16,9 @@ class EventLoop_Test : public CPPUNIT_NS::TestFixture {
     bool m_finished;
 
     CPPUNIT_TEST_SUITE(EventLoop_Test);
-    /*
     CPPUNIT_TEST(testMethod);
     CPPUNIT_TEST(testMethod2);
     CPPUNIT_TEST(testSignalCapture);
-     */
     CPPUNIT_TEST_SUITE_END();
 
 public:

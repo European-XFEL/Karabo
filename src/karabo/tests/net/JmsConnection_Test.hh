@@ -16,13 +16,10 @@
 class JmsConnection_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(JmsConnection_Test);
-    /*
     CPPUNIT_TEST(testConnect);
     CPPUNIT_TEST(testCommunication1);
     CPPUNIT_TEST(testCommunication2);
     CPPUNIT_TEST(testPermanentRead);
-     */
-
     CPPUNIT_TEST_SUITE_END();
 
     karabo::net::JmsConnection::Pointer m_connection;
