@@ -455,10 +455,7 @@ class SystemTopology(HasStrictTraits):
         """A new device or server was added, or an existing device or server
         was updated with new information
         """
-        if self._system_hash is None:
-            self._system_hash = server_hash
-        else:
-            self._system_hash.merge(server_hash, "merge")
+        self._system_hash.merge(server_hash, "merge")
 
         # Update high-level representation
         # Error and alarm information are also get updated to nodes appear in
