@@ -147,9 +147,16 @@ runLongTests() {
         source $scriptDir/karabo/activate
     fi
 
-    safeRunCommand $scriptDir/run_python_tests.sh \
-        --runLongTests \
-        --rootDir $scriptDir
+    if [ $CODECOVERAGE = "y"]; then
+       # Collect code coverage.
+       safeRunCommand $scriptDir/run_python_tests.sh \
+           --runLongTests \
+           --collectCoverage \
+           --rootDir $scriptDir
+    else
+       safeRunCommand $scriptDir/run_python_tests.sh \
+           --runLongTests \
+           --rootDir $scriptDir
 }
 
 produceCodeCoverageReport() {
@@ -358,7 +365,6 @@ fi
 
 if [ "$RUNTESTS" = "y" ]; then
     runUnitTests
-    runLongTests
 fi
 
 if [ "$RUNINTEGRATIONTESTS" = "y" ]; then
