@@ -127,6 +127,10 @@ class DeviceSystemTree(HasStrictTraits):
         self._device_nodes.pop(instance_id)
         return True
 
+    def initialize(self, system_hash):
+        with self.update_context.reset_context():
+            self._handle_device_data('device', system_hash, append=False)
+
     def update(self, system_hash):
         nodes = self._handle_device_data('device', system_hash)
         self.needs_update = True
@@ -175,14 +179,17 @@ class DeviceSystemTree(HasStrictTraits):
         with self.update_context.insertion_context(parent_node, first, last):
             parent_node.children.append(child_node)
 
+    def _set_child_node(self, parent_node, child_node):
+        parent_node.children.append(child_node)
+
     # ------------------------------------------------------------------
 
-    def _handle_device_data(self, device_type, system_hash):
-        new_dev_nodes = {}
+    def _handle_device_data(self, device_type, system_hash, append=True):
         assert device_type in ('device', 'macro')
+        handler = self._append_child_node if append else self._set_child_node
 
         if device_type not in system_hash:
-            return new_dev_nodes
+            return
 
         for karabo_name, _, attrs in system_hash[device_type].iterall():
             if attrs.get('classId', '') in BLACKLIST_CLASSES:
@@ -205,14 +212,14 @@ class DeviceSystemTree(HasStrictTraits):
                 domain_node = DeviceTreeNode(node_id=domain,
                                              parent=self.root,
                                              level=DOMAIN_LEVEL)
-                self._append_child_node(self.root, domain_node)
+                handler(self.root, domain_node)
 
             type_node = domain_node.child(dev_type)
             if type_node is None:
                 type_node = DeviceTreeNode(node_id=dev_type,
                                            parent=domain_node,
                                            level=TYPE_LEVEL)
-                self._append_child_node(domain_node, type_node)
+                handler(domain_node, type_node)
 
             member_node = type_node.child(member)
             if member_node is None:
@@ -222,12 +229,10 @@ class DeviceSystemTree(HasStrictTraits):
                                              server_id=server_id,
                                              visibility=visibility,
                                              level=MEMBER_LEVEL)
-                self._append_child_node(type_node, member_node)
+                handler(type_node, member_node)
 
             member_node.status = status
             member_node.attributes = attrs
             member_node.capabilities = capabilities
 
             self._device_nodes[karabo_name] = member_node
-
-        return new_dev_nodes
