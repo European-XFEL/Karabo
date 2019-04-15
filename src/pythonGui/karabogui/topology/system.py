@@ -447,10 +447,7 @@ class SystemTopology(HasStrictTraits):
 
     def initialize(self, server_hash):
         """Initialize the system topology with the system hash"""
-        if self._system_hash is None:
-            self._system_hash = server_hash
-        else:
-            self._system_hash.merge(server_hash, "merge")
+        self._system_hash = server_hash
         self.system_tree.initialize(server_hash)
         self.device_tree.initialize(server_hash)
 
