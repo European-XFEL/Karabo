@@ -271,13 +271,11 @@ class SystemTree(HasStrictTraits):
 
     def initialize(self, system_hash):
         """Initialize the system topology with a reset context
-
-        This gives a fairly big speed up!
         """
         with self.update_context.reset_context():
-            self._init_server_data(system_hash)
-            self._init_device_data('device', system_hash)
-            self._init_device_data('macro', system_hash)
+            self._handle_server_data(system_hash, append=False)
+            self._handle_device_data('device', system_hash, append=False)
+            self._handle_device_data('macro', system_hash, append=False)
 
     def visit(self, visitor):
         """Walk every node in the system tree and run a `visitor` function on
@@ -324,15 +322,23 @@ class SystemTree(HasStrictTraits):
         with self.update_context.insertion_context(parent_node, first, last):
             parent_node.children.append(child_node)
 
+    def _set_child_node(self, parent_node, child_node):
+        """Set the child node directly without announcing layout change
+
+        NOTE: This function can be only used in a reset context!
+        """
+        parent_node.children.append(child_node)
+
     # ------------------------------------------------------------------
 
-    def _handle_server_data(self, system_hash):
+    def _handle_server_data(self, system_hash, append=True):
         """Put the contents of Hash `system_hash` into the internal tree
         structure.
         """
         if 'server' not in system_hash:
             return
 
+        handler = self._append_child_node if append else self._set_child_node
         for server_id, _, attrs in system_hash['server'].iterall():
             if len(attrs) == 0:
                 continue
@@ -347,7 +353,7 @@ class SystemTree(HasStrictTraits):
                 host_node = SystemTreeNode(node_id=host, path=host,
                                            parent=self.root,
                                            level=HOST_LEVEL)
-                self._append_child_node(self.root, host_node)
+                handler(self.root, host_node)
 
             # Create node for server
             server_node = host_node.child(server_id)
@@ -360,9 +366,9 @@ class SystemTree(HasStrictTraits):
             server_node.attributes = attrs
             for class_id, vis in zip(attrs.get('deviceClasses', []),
                                      attrs.get('visibilities', [])):
-                self._handle_class_data(server_node, class_id, vis)
+                self._handle_class_data(server_node, class_id, vis, append)
 
-    def _handle_device_data(self, device_type, system_hash):
+    def _handle_device_data(self, device_type, system_hash, append=True):
         """Put the contents of Hash `system_hash` into the internal tree
         structure. Returns a dictionary of any newly added device
         ``SystemTreeNode`` instances.
@@ -373,6 +379,7 @@ class SystemTree(HasStrictTraits):
         if device_type not in system_hash:
             return new_dev_nodes
 
+        handler = self._append_child_node if append else self._set_child_node
         for device_id, _, attrs in system_hash[device_type].iterall():
             if len(attrs) == 0:
                 continue
@@ -391,7 +398,7 @@ class SystemTree(HasStrictTraits):
                 host_node = SystemTreeNode(node_id=host, path=host,
                                            parent=self.root,
                                            level=HOST_LEVEL)
-                self._append_child_node(self.root, host_node)
+                handler(self.root, host_node)
 
             # Server node
             server_node = host_node.child(server_id)
@@ -401,7 +408,7 @@ class SystemTree(HasStrictTraits):
                                                  path=server_id,
                                                  parent=host_node,
                                                  level=SERVER_LEVEL)
-                    self._append_child_node(host_node, server_node)
+                    handler(host_node, server_node)
                 else:
                     continue
 
@@ -413,13 +420,14 @@ class SystemTree(HasStrictTraits):
                     class_node = SystemTreeNode(node_id=class_id, path=path,
                                                 parent=server_node,
                                                 level=CLASS_LEVEL)
-                    self._append_child_node(server_node, class_node)
+                    handler(server_node, class_node)
                 else:
                     # XXX: a fix to see running devices - the actual bug lies
                     # in the DeviceClient of the GuiServerDevice which _forgot_
                     # about the attributes "deviceClasses" and "visibilities"
                     class_node = self._handle_class_data(server_node, class_id,
-                                                         visibility)
+                                                         visibility,
+                                                         append=append)
 
             # Device node
             device_node = class_node.child(device_id)
@@ -428,7 +436,7 @@ class SystemTree(HasStrictTraits):
                                              parent=class_node,
                                              visibility=visibility,
                                              level=DEVICE_LEVEL)
-                self._append_child_node(class_node, device_node)
+                handler(class_node, device_node)
                 device_node.monitoring = False
                 # new nodes should be returned
                 new_dev_nodes[device_id] = device_node
@@ -439,7 +447,8 @@ class SystemTree(HasStrictTraits):
 
         return new_dev_nodes
 
-    def _handle_class_data(self, server_node, class_id, visibility):
+    def _handle_class_data(self, server_node, class_id, visibility, append):
+        handler = self._append_child_node if append else self._set_child_node
         class_node = server_node.child(class_id)
         if class_node is None:
             server_id = server_node.node_id
@@ -448,129 +457,5 @@ class SystemTree(HasStrictTraits):
                                         path=path, parent=server_node,
                                         visibility=AccessLevel(visibility),
                                         level=CLASS_LEVEL)
-            self._append_child_node(server_node, class_node)
+            handler(server_node, class_node)
         return class_node
-
-    # ------------------------------------------------------------------
-    # XXX: Yes, for the sake of performance we have duplicated code and
-    # initialize the topology
-
-    def _init_server_data(self, system_hash):
-        """Put the contents of Hash `system_hash` into the internal tree
-        structure.
-        """
-        if 'server' not in system_hash:
-            return
-
-        for server_id, _, attrs in system_hash['server'].iterall():
-            if len(attrs) == 0:
-                continue
-
-            host = attrs.get('host', 'UNKNOWN')
-            visibility = AccessLevel(attrs.get('visibility',
-                                               AccessLevel.OBSERVER))
-
-            # Create node for host
-            host_node = self.root.child(host)
-            if host_node is None:
-                host_node = SystemTreeNode(node_id=host, path=host,
-                                           parent=self.root,
-                                           level=HOST_LEVEL)
-                self.root.children.append(host_node)
-
-            # Create node for server
-            server_node = host_node.child(server_id)
-            if server_node is None:
-                server_node = SystemTreeNode(node_id=server_id,
-                                             path=server_id, parent=host_node,
-                                             visibility=visibility,
-                                             level=SERVER_LEVEL)
-                host_node.children.append(server_node)
-                self._server_nodes[server_id] = server_node
-
-            server_node.attributes = attrs
-
-            for class_id, vis in zip(attrs.get('deviceClasses', []),
-                                     attrs.get('visibilities', [])):
-                class_node = server_node.child(class_id)
-                if class_node is None:
-                    server_id = server_node.node_id
-                    path = '{}.{}'.format(server_id, class_id)
-                    class_node = SystemTreeNode(node_id=class_id,
-                                                path=path, parent=server_node,
-                                                visibility=AccessLevel(
-                                                    visibility),
-                                                level=CLASS_LEVEL)
-                    server_node.children.append(class_node)
-
-    def _init_device_data(self, device_type, system_hash):
-        if device_type not in system_hash:
-            return
-
-        for device_id, _, attrs in system_hash[device_type].iterall():
-            if len(attrs) == 0:
-                continue
-
-            host = attrs.get('host', 'UNKNOWN')
-            visibility = AccessLevel(attrs.get('visibility',
-                                               AccessLevel.OBSERVER))
-            capabilities = attrs.get('capabilities', 0)
-            server_id = attrs.get('serverId', 'unknown-server')
-            class_id = attrs.get('classId', 'unknown-class')
-            status = DeviceStatus(attrs.get('status', 'ok'))
-
-            # Host node
-            host_node = self.root.child(host)
-            if host_node is None:
-                host_node = SystemTreeNode(node_id=host, path=host,
-                                           parent=self.root,
-                                           level=HOST_LEVEL)
-                self.root.children.append(host_node)
-
-            # Server node
-            server_node = host_node.child(server_id)
-            if server_node is None:
-                if server_id == "__none__":
-                    server_node = SystemTreeNode(node_id=server_id,
-                                                 path=server_id,
-                                                 parent=host_node,
-                                                 level=SERVER_LEVEL)
-                    host_node.children.append(server_node)
-                    self._server_nodes[server_id] = server_node
-                else:
-                    continue
-
-            # Class node
-            class_node = server_node.child(class_id)
-            if class_node is None:
-                if server_id == "__none__" or device_type == 'macro':
-                    path = "{}.{}".format(server_id, class_id)
-                    class_node = SystemTreeNode(node_id=class_id, path=path,
-                                                parent=server_node,
-                                                level=CLASS_LEVEL)
-                    server_node.children.append(class_node)
-                else:
-                    # Fake a class node here in case the GUI server forgot
-                    # about its classes
-                    server_id = server_node.node_id
-                    path = '{}.{}'.format(server_id, class_id)
-                    class_node = SystemTreeNode(node_id=class_id,
-                                                path=path, parent=server_node,
-                                                visibility=AccessLevel(
-                                                    visibility),
-                                                level=CLASS_LEVEL)
-
-            # Device node
-            device_node = class_node.child(device_id)
-            if device_node is None:
-                device_node = SystemTreeNode(node_id=device_id, path=device_id,
-                                             parent=class_node,
-                                             visibility=visibility,
-                                             level=DEVICE_LEVEL)
-                class_node.children.append(device_node)
-                self._device_nodes[device_id] = device_node
-                device_node.monitoring = False
-
-            device_node.status = status
-            device_node.attributes = attrs
-            device_node.capabilities = capabilities
