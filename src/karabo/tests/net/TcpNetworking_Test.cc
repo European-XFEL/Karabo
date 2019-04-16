@@ -221,6 +221,7 @@ private:
 
 //<editor-fold desc="Server, client and parameters for testWriteAsync">
 
+#define CHAR_ARRAY_SIZE 4
 
 struct WriteAsyncTestsParams {
     const karabo::util::Hash dataHash = karabo::util::Hash("Name", "DataHash", "PiField", 3.14159);
@@ -231,15 +232,15 @@ struct WriteAsyncTestsParams {
     const karabo::net::VectorCharPointer vectorCharPointer =
             boost::make_shared<std::vector<char>>(std::vector<char>(10, 'A'));
     const std::vector<char> vectorChar = std::vector<char>(20, 'B');
-    const char charArray[4] = {'1', '2', '5', 'A'};
-    const std::size_t charArraySize = sizeof (charArray) / sizeof (char);
+    const std::size_t charArraySize = CHAR_ARRAY_SIZE;
+    const char charArray[CHAR_ARRAY_SIZE] = {'1', '2', '5', 'A'};
     const int writePriority = 4;
 
 
     bool equalsTestDataHash(const karabo::util::Hash& other) {
         return (other == dataHash &&
                 other.get<std::string>("Name") == dataHash.get<std::string>("Name") &&
-                other.get<double>("PiField") == dataHash.get<double>("PiField"));
+                other.get<double>("PiField") - dataHash.get<double>("PiField") < 1.e-14);
     }
 
 
@@ -493,14 +494,19 @@ private:
             return;
         }
         std::clog << "[Srv]\t 8.1. Read header hash and VectorCharPointer body." << std::endl;
+
         if (!m_params.equalsTestHeaderHash(header) ||
             *data != *(m_params.vectorCharPointer)) {
             m_testReportFn(TestOutcome::FAILURE,
                            std::string("Data read doesn't match the data written:\n") +
                            "Expected header:\n" + karabo::util::toString(m_params.headerHash) +
                            "\nActual header:\n" + karabo::util::toString(header) +
-                           "Expected body vector:" + std::string((*m_params.vectorCharPointer).begin(), (*m_params.vectorCharPointer).end()) +
-                           "\nActual body vector: " + std::string((*data).begin(), (*data).end()),
+                           "Expected body vector:"
+                           + karabo::util::toString(std::vector<char>((*m_params.vectorCharPointer).begin(),
+                                                                      (*m_params.vectorCharPointer).end()), 80)
+                           +
+                           "\nActual body vector: "
+                           + karabo::util::toString(std::vector<char>((*data).begin(), (*data).end()), 80),
                            "#8. readAsyncHashVectorPointerHandler");
         } else {
             std::clog << "[Srv]\t 8.2. Hash header and VectorCharPointer body checked to be OK." << std::endl;
