@@ -298,10 +298,9 @@ class TestCrossPipelining(BoundDeviceTestCase):
         if (sender_delay_ms - processing_time > 50):
             # Receiver is faster than sender by a large margin (50 ms.). Almost no drop is expected.
             min_received_expected = 0.90 * out_count
-            max_received_expected = 1.10 * out_count
-            self.assertTrue(min_received_expected < inputCounter < max_received_expected,
-                            "# of input data items, {}, is not in the expected interval ({:.2f}, {:.2f})."
-                            .format(inputCounter, min_received_expected, max_received_expected))
+            self.assertTrue(min_received_expected < inputCounter <= out_count,
+                            "# of input data items, {}, is not in the expected interval ({:.2f}, {:.2f}]."
+                            .format(inputCounter, min_received_expected, out_count))
         else:
             # Receiver is not much faster (or is slower) than the sender. Some drop is expected.
             # Assert that at least some data has arrived.
