@@ -142,6 +142,9 @@ namespace karabo {
 
             mutable boost::mutex m_showConnectionsHandlerMutex;
             ShowConnectionsHandler m_showConnectionsHandler;
+            std::vector<karabo::util::Hash> m_connections;
+            boost::asio::deadline_timer m_updateDeadline;
+            int m_period;
 
         public:
             typedef Memory::MetaData MetaData;
@@ -256,6 +259,8 @@ namespace karabo {
             void onTcpChannelRead(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel, const karabo::util::Hash& message);
 
             void updateConnectionTable();
+
+            void updateNetworkStatistics(const boost::system::error_code& e);
 
             void onInputAvailable(const std::string& instanceId);
 
