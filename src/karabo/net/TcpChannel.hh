@@ -265,36 +265,57 @@ namespace karabo {
              */
             std::string remoteAddress() const;
 
-            // Writes a copy from the data array.
+            /**
+             *  Writes a copy from the data array.
+             */
             void writeAsync(const char* data, const size_t& size, int prio);
 
-            // Writes a copy of the data vector
+            /**
+             *  Writes a copy of the data vector.
+             */
             void writeAsync(const std::vector<char>& data, int prio);
 
-            // Writes a copy of the vector pointed by data.
+            /**
+             *  Sends the vector pointed by data. The data vector must not be changed after the call to
+             *  writeAsync.
+             */
             void writeAsync(const boost::shared_ptr<std::vector<char> >& data, int prio);
 
-            // Writes a copy of the data string.
+            /**
+             *  Writes a copy of the data string.
+             */
             void writeAsync(const std::string& data, int prio);
 
-            // When copyAllData is false, elements of type NDArray in the hash won't be copied before being sent.
+            /**
+             *  When copyAllData is false, elements of type NDArray in the hash won't be copied before being sent.
+             */
             void writeAsync(const karabo::util::Hash& data, int prio, bool copyAllData);
 
-            // Writes copies of the header hash and the data array.
+            /**
+             *  Writes copies of the header hash and the data array.
+             */
             void writeAsync(const karabo::util::Hash& header, const char* data, const size_t& size, int prio);
 
-            // Writes copies of the header hash and of the data vector.
+            /**
+             *  Writes copies of the header hash and of the data vector.
+             */
             void writeAsync(const karabo::util::Hash& header, const std::vector<char>& data, int prio);
 
-            // Writes a copy of the header hash. Sends the vector pointed by data, not a copy of it. The data vector
-            // cannot be used again after the call to writeAsync.
+            /**
+             *  Writes a copy of the header hash. Sends the vector pointed by data, not a copy of it. The data vector
+             *  must not be changed after the call to writeAsync.
+             */
             void writeAsync(const karabo::util::Hash& header, const boost::shared_ptr<std::vector<char> >& data, int prio);
 
-            // Writes copies of the header hash and of the data string.
+            /**
+             *  Writes copies of the header hash and of the data string.
+             */
             void writeAsync(const karabo::util::Hash& header, const std::string& data, int prio);
 
-            // When copyAllData is false, elements of type NDArray in the body hash won't be copied before being sent.
-            // copyAllData doesn't influence the handling of the header hash.
+            /**
+             *  When copyAllData is false, elements of type NDArray in the body hash won't be copied before being sent.
+             *  copyAllData doesn't influence the handling of the header hash.
+             */
             void writeAsync(const karabo::util::Hash& header, const karabo::util::Hash& data, int prio, bool copyAllData);
 
             virtual void setAsyncChannelPolicy(int priority, const std::string& policy, const size_t capacity = 0);
