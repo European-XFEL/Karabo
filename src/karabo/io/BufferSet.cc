@@ -25,7 +25,7 @@ namespace karabo {
 
         void BufferSet::add() {
             updateSize();
-            if (!m_buffers.size() || m_buffers.back().size
+            if (m_buffers.empty() || m_buffers.back().size
                 || m_buffers.back().contentType == BufferSet::NO_COPY_BYTEARRAY_CONTENTS) { // empty ByteArray
                 m_buffers.push_back(Buffer());
                 m_currentBuffer++;
@@ -46,7 +46,7 @@ namespace karabo {
                     m_buffers[m_buffers.size() - 1] = Buffer(vec, ptr, size, BufferContents::COPY);
                 }
             } else if (type == BufferContents::NO_COPY_BYTEARRAY_CONTENTS) { // allocate space as char array
-                if (!m_buffers.size() || m_buffers.back().size) {
+                if (m_buffers.empty() || m_buffers.back().size) {
                     // See https://www.boost.org/doc/libs/1_61_0/libs/smart_ptr/sp_techniques.html#array
                     m_buffers.push_back(Buffer(boost::shared_ptr<BufferType>(new BufferType()),
                                                boost::shared_ptr<char>(new char[size], boost::checked_array_deleter<char>()),
@@ -75,8 +75,8 @@ namespace karabo {
 
 
         void BufferSet::emplaceBack(const karabo::util::ByteArray& array, bool writeSize) {
-            BufferType& buffer = current();
             if (writeSize) {
+                BufferType& buffer = current();
                 buffer.reserve(buffer.size() + sizeof(unsigned int) + array.second);
                 {
                     unsigned int size = static_cast<unsigned int> (array.second);
@@ -87,23 +87,27 @@ namespace karabo {
                     std::memcpy(buffer.data() + pos, src, n);
                 }
             }
+
+            updateSize();
+            const size_t size = array.second;
             if (m_copyAllData) {
-                {
-                    const char* src = array.first.get();
-                    const size_t n = array.second;
-                    const size_t pos = buffer.size();
-                    buffer.resize(pos + n);
-                    std::memcpy(buffer.data() + pos, src, n);
-                }
+                // Copy, but keep an extra buffer: That's beneficial when further processed, e.g. de-serialised.
+                m_buffers.push_back(Buffer(boost::shared_ptr<BufferType>(new BufferType()),
+                                           boost::shared_ptr<char>(new char[size], boost::checked_array_deleter<char>()),
+                                           size,
+                                           BufferContents::NO_COPY_BYTEARRAY_CONTENTS));
+
+                auto* rawPtrDest = m_buffers.back().ptr.get();
+                const auto* rawPtrSrc = array.first.get();
+                std::memcpy(rawPtrDest, rawPtrSrc, size);
             } else {
-                updateSize();
                 m_buffers.push_back(Buffer(boost::shared_ptr<BufferType>(new BufferType()),
                                            boost::const_pointer_cast<BufferType::value_type>(array.first),
-                                           array.second,
+                                           size,
                                            BufferContents::NO_COPY_BYTEARRAY_CONTENTS));
-                m_currentBuffer++;
-                add();
             }
+            m_currentBuffer++;
+            add();
         }
 
 
@@ -119,6 +123,7 @@ namespace karabo {
                 const size_t pos = buffer.size();
                 buffer.resize(pos + n);
                 std::memcpy(buffer.data() + pos, src, n);
+                updateSize();
             } else {
                 if (m_buffers.back().size == 0) {
                     Buffer & buffer = m_buffers.back();
