@@ -6,15 +6,17 @@ __copyright__ = """Copyright (c) 2010-2017 European XFEL GmbH Hamburg.
 All rights reserved."""
 
 import numpy as np
+import threading
+import time
 
 from karabo.bound import (
     Encoding,
     KARABO_CLASSINFO, PythonDevice, DaqDataType, Hash, ImageData,
-    Schema, State, Types, OVERWRITE_ELEMENT,
-    ADMIN, AlarmCondition,
+    Schema, State, Types, Unit, OVERWRITE_ELEMENT,
+    ADMIN, AlarmCondition, MetricPrefix,
     BOOL_ELEMENT, FLOAT_ELEMENT, DOUBLE_ELEMENT, IMAGEDATA_ELEMENT,
     INT32_ELEMENT, UINT32_ELEMENT, INT64_ELEMENT, UINT64_ELEMENT,
-    NDARRAY_ELEMENT, NODE_ELEMENT,
+    NDARRAY_ELEMENT, NODE_ELEMENT, INPUT_CHANNEL,
     OUTPUT_CHANNEL, SLOT_ELEMENT, STRING_ELEMENT, TABLE_ELEMENT,
     VECTOR_BOOL_ELEMENT, VECTOR_CHAR_ELEMENT,
     VECTOR_FLOAT_ELEMENT, VECTOR_DOUBLE_ELEMENT,
@@ -37,9 +39,15 @@ class PropertyTest(PythonDevice):
         self.KARABO_SLOT(self.setReadonly)
         self.KARABO_SLOT(self.setAlarm)
         self.KARABO_SLOT(self.writeOutput)
+        self.KARABO_SLOT(self.startWritingOutput)
+        self.KARABO_SLOT(self.stopWritingOutput)
+        self.KARABO_SLOT(self.resetChannelCounters)
         self.KARABO_SLOT(self.eosOutput)
 
-        self.outputCounter = 0
+        self._writingOutput = False
+        self._writingMutex = threading.Lock()
+        self._writingWorker = None
+
         # Define first function to be called after the constructor has finished
         self.registerInitialFunction(self.initialization)
 
@@ -48,7 +56,7 @@ class PropertyTest(PythonDevice):
         '''Description of device parameters statically known'''
         (
             OVERWRITE_ELEMENT(expected).key("state")
-            .setNewOptions(State.INIT, State.NORMAL, State.ERROR)
+            .setNewOptions(State.INIT, State.NORMAL, State.ERROR, State.STARTED, State.STOPPING)
             .setNewDefaultValue(State.INIT)
             .commit(),
 
@@ -357,7 +365,7 @@ class PropertyTest(PythonDevice):
             VECTOR_INT64_ELEMENT(pipeData).key("node.vecInt64")
             .description("A vector of signed 64-bit integers sent via the "
                          "pipeline")
-            .maxSize(PropertyTest.defVectorMaxSize) # DAQ needs that
+            .maxSize(PropertyTest.defVectorMaxSize)  # DAQ needs that
             .readOnly()
             .commit(),
 
@@ -388,15 +396,77 @@ class PropertyTest(PythonDevice):
             .description("Write once to output channel 'Output'")
             .commit(),
 
+            FLOAT_ELEMENT(expected).key("outputFrequency")
+            .displayedName("Output frequency")
+            .description("The target frequency for continously writing to 'Output'")
+            .unit(Unit.HERTZ)
+            .maxInc(1000)
+            .minExc(0.0)
+            .assignmentOptional().defaultValue(1.0)
+            .reconfigurable()
+            .commit(),
+
+            INT32_ELEMENT(expected).key("outputCounter")
+            .displayedName("Output Counter")
+            .description("Last value sent as 'int32' via output channel 'Output'")
+            .readOnly()
+            .initialValue(0)
+            .commit(),
+
+            SLOT_ELEMENT(expected).key("startWritingOutput")
+            .displayedName("Start Writing")
+            .description("Start writing continously to output channel 'Output'")
+            .allowedStates(State.NORMAL)
+            .commit(),
+
+            SLOT_ELEMENT(expected).key("stopWritingOutput")
+            .displayedName("Stop Writing")
+            .description("Stop writing continously to output channel 'Output'")
+            .allowedStates(State.STARTED)
+            .commit(),
+
             SLOT_ELEMENT(expected).key("eosOutput")
             .displayedName("EOS to Output")
             .description("Write end-of-stream to output channel 'Output'")
             .commit(),
+
+            INPUT_CHANNEL(expected).key("input")
+            .displayedName("Input")
+            .dataSchema(pipeData)  # re-use what the output channel sends
+            .commit(),
+
+            UINT32_ELEMENT(expected).key("processingTime")
+            .displayedName("Processing Time")
+            .description("Processing time of input channel data handler")
+            .assignmentOptional()
+            .defaultValue(0)
+            .reconfigurable()
+            .unit(Unit.SECOND)
+            .metricPrefix(MetricPrefix.MILLI)
+            .commit(),
+
+            INT32_ELEMENT(expected).key("currentInputId")
+            .displayedName("Current Input Id")
+            .description("Last value received as 'int32' on input channel (default: 0)")
+            .readOnly().initialValue(0)
+            .commit(),
+
+            UINT32_ELEMENT(expected).key("inputCounter")
+            .displayedName("Input Counter")
+            .description("Number of data items received on input channel")
+            .readOnly().initialValue(0)
+            .commit(),
+
+            SLOT_ELEMENT(expected).key("resetChannelCounters")
+            .displayedName("Reset Channels")
+            .description("Reset counters involved in input/output channel data flow")
+            .allowedStates(State.NORMAL)
+            .commit(),
         )
 
     def initialization(self):
-
         self.updateState(State.NORMAL)
+        self.KARABO_ON_DATA("input", self.onData)
 
     def setReadonly(self):
         props = ["int32Property", "uint32Property",
@@ -422,24 +492,77 @@ class PropertyTest(PythonDevice):
                                    description="Converted from stringProperty")
 
     def writeOutput(self):
-        self.outputCounter += 1
+        outputCounter = self["outputCounter"]
+        outputCounter += 1
+        self.set("outputCounter", outputCounter)
 
-        # Set all numbers inside to self.outputCounter:
+        # Set all numbers inside to outputCounter:
         data = Hash("node", Hash())
         node = data["node"]
 
         # setAs needed if counter exceeds INT32 range...
-        node.setAs("int32", self.outputCounter, Types.INT32)
-        node.set("string", str(self.outputCounter))
+        node.setAs("int32", outputCounter, Types.INT32)
+        node.set("string", str(outputCounter))
         # Using plain Hash.set(..), type of vector is determined from 1st elem.:
-        node.setAs("vecInt64", [self.outputCounter] * self.defVectorMaxSize,
+        node.setAs("vecInt64", outputCounter * self.defVectorMaxSize,
                    Types.VECTOR_INT64)
-        arr = np.full((100, 200), self.outputCounter, dtype=np.float32)
+        arr = np.full((100, 200), outputCounter, dtype=np.float32)
         node.set("ndarray", arr)
-        imArr = np.full((400, 500), self.outputCounter, dtype=np.uint16)
+        imArr = np.full((400, 500), outputCounter, dtype=np.uint16)
         node.set("image", ImageData(imArr, encoding=Encoding.GRAY))
 
         self.writeChannel("output", data)
 
     def eosOutput(self):
         self.signalEndOfStream("output")
+
+    def startWritingOutput(self):
+        self._writingOutput = True
+        self.updateState(State.STARTED)
+        self._writingWorker = threading.Thread(target=self.writeLoop)
+        self._writingWorker.start()
+
+    def stopWritingOutput(self):
+        with self._writingMutex:
+            self._writingOutput = False
+        self.updateState(State.STOPPING)
+        self._writingWorker.join()
+        self._writingWorker = None
+
+    def resetChannelCounters(self):
+        self.set(Hash("inputCounter", 0,
+                      "outputCounter", 0,
+                      "currentInputId", 0))
+
+    def writeLoop(self):
+        shouldWrite = True  # Always run at least once: write should start immediately
+        while shouldWrite:
+            self.writeOutput()
+
+            with self._writingMutex:
+                shouldWrite = self._writingOutput
+
+            if shouldWrite:
+                # Waits for an interval as close as possible to the interval defined by
+                # the nominal outputFrequency.
+                delayTime = 1.0 / self.get("outputFrequency")
+                time.sleep(delayTime)
+
+                # "Refreshes" the shouldWrite flag before entering a new loop interaction
+                # During the sleep an stop command might have been issued and we want to
+                # avoid the extra writeOutput call.
+                with self._writingMutex:
+                    shouldWrite = self._writingOutput
+
+        self.updateState(State.NORMAL)
+
+    def onData(self, data, meta):
+        # Sleeps to simulate heavy work.
+        procTimeSecs = self["processingTime"]/1000.0
+        time.sleep(procTimeSecs)
+
+        currentInputId = data.get("node.int32")
+        inputCounter = self["inputCounter"]
+
+        self.set(Hash("currentInputId", currentInputId,
+                      "inputCounter", inputCounter+1))
