@@ -30,13 +30,13 @@ namespace karabo {
 
             typedef boost::shared_ptr<Message> Pointer;
 
-            Message() : m_body(new std::vector<char>), m_header() {
+            Message() : m_body(new karabo::io::BufferSet()), m_header() {
             }
 
-            Message(const VectorCharPointer& data) : m_body(data), m_header() {
+            explicit Message(const karabo::io::BufferSet::Pointer& data) : m_body(data), m_header() {
             }
 
-            Message(const VectorCharPointer& data, const VectorCharPointer& header) : m_body(data), m_header(header) {
+            Message(const karabo::io::BufferSet::Pointer& data, const VectorCharPointer& header) : m_body(data), m_header(header) {
             }
 
             Message(const Message& other) : m_body(other.body()), m_header(other.header()) {
@@ -49,7 +49,7 @@ namespace karabo {
              * Return the body of the message
              * @return 
              */
-            const VectorCharPointer& body() const {
+            const karabo::io::BufferSet::Pointer& body() const {
                 return m_body;
             }
 
@@ -64,7 +64,7 @@ namespace karabo {
 
         private:
 
-            VectorCharPointer m_body;
+            karabo::io::BufferSet::Pointer m_body;
             VectorCharPointer m_header;
         };
 

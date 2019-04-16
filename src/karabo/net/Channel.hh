@@ -603,8 +603,10 @@ namespace karabo {
              * @param data is contained in a Hash with no particular structure, but serializable, i.e. containing no
              *        non-karabo data types or Hash derived types
              * @param prio the priority of this write operation
+             * @param copyAllData When false, raw data (ByteArray) inside an NDArray won't be copied. For other kind of
+             * data, the value of this flag is ignored and a copy will take place.
              */
-            virtual void writeAsync(const karabo::util::Hash& data, int prio = 4) {
+            virtual void writeAsync(const karabo::util::Hash& data, int prio = 4, bool copyAllData = true) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
@@ -655,9 +657,11 @@ namespace karabo {
              * @param header containing metadata for the data being written
              * @param data is contained in a Hash with no particular structure, but serializable, i.e. containing no
              *        non-karabo data types or Hash derived types
-             * @param prio the priority of this write operation
+             * @param prio the priority of this write operation.
+             * @param copyAllData When false, raw data (ByteArray) inside an NDArray won't be copied. For other kind of
+             * data, the value of this flag is ignored and a copy will take place.
              */
-            virtual void writeAsync(const karabo::util::Hash& header, const karabo::util::Hash& data, int prio = 4) {
+            virtual void writeAsync(const karabo::util::Hash& header, const karabo::util::Hash& data, int prio = 4, bool copyAllData = true) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
 
