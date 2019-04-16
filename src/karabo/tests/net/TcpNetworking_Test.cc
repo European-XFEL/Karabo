@@ -414,7 +414,7 @@ private:
             return;
         }
         std::clog << "[Srv]\t 5.1. Read hashes sent in header and body with copyAllData true." << std::endl;
-        if (header != m_params.headerHash || body != m_params.dataHash) {
+        if (!m_params.equalsTestHeaderHash(header) || !m_params.equalsTestDataHash(body)) {
             m_testReportFn(TestOutcome::FAILURE,
                            std::string("Hashes read don't match the ones written:\n") +
                            "Expected header:\n" + karabo::util::toString(m_params.headerHash) +
@@ -582,7 +582,7 @@ private:
         }
         std::clog << "[Srv]\t 11.1. Read header hash and body as a vector of chars." << std::endl;
 
-        if (headerHash != m_params.headerHash || dataVect.size() != m_params.charArraySize) {
+        if (!m_params.equalsTestHeaderHash(headerHash) || dataVect.size() != m_params.charArraySize) {
             m_testReportFn(TestOutcome::FAILURE,
                            std::string("Data read doesn't match the data written:\n") +
                            "Expected header:\n" + karabo::util::toString(m_params.headerHash) +
@@ -610,7 +610,7 @@ private:
         }
         std::clog << "[Srv]\t 12.1. Read header hash and body as a string." << std::endl;
 
-        if (headerHash != m_params.headerHash || dataStr != m_params.dataString) {
+        if (!m_params.equalsTestHeaderHash(headerHash) || dataStr != m_params.dataString) {
             m_testReportFn(TestOutcome::FAILURE,
                            std::string("Data read doesn't match the data written:\n") +
                            "Expected header:\n" + karabo::util::toString(m_params.headerHash) +
@@ -638,7 +638,8 @@ private:
         }
         std::clog << "[Srv]\t 13.1. Read header hash and body as a vector of char." << std::endl;
 
-        if (headerHash != m_params.headerHash || dataVect.size() != m_params.vectorChar.size()) {
+
+        if (!m_params.equalsTestHeaderHash(headerHash) || dataVect != m_params.vectorChar) {
             m_testReportFn(TestOutcome::FAILURE,
                            std::string("Data read doesn't match the data written:\n") +
                            "Expected header:\n" + karabo::util::toString(m_params.headerHash) +
@@ -665,7 +666,7 @@ private:
         }
         std::clog << "[Srv]\t 14.1. Read body as a vector of char." << std::endl;
 
-        if (dataVect.size() != m_params.vectorChar.size()) {
+        if (dataVect != m_params.vectorChar) {
             m_testReportFn(TestOutcome::FAILURE,
                            std::string("Data read doesn't match the data written:\n") +
                            "\nExpected vector size: " + karabo::util::toString(m_params.vectorChar.size()) +
