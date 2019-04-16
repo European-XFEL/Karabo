@@ -44,20 +44,17 @@ void BufferSet_Test::testEmplaceAppend() {
 
     // a simple vector buffer
     bufferCopy.emplaceBack(boost::make_shared<BufferSet::BufferType>(bufferSize, 1));
-    std::clog << bufferCopy << std::endl;
     // a raw data buffer without writing its size first
     bufferCopy.emplaceBack(karabo::util::ByteArray(boost::shared_ptr<char>(new char[bufferSize],
                                                                            boost::checked_array_deleter<char>()), bufferSize),
                        false);
-    std::clog << bufferCopy << std::endl;
     // a raw data buffer with writing its size first (as unsigned int)
     bufferCopy.emplaceBack(karabo::util::ByteArray(boost::shared_ptr<char>(new char[bufferSize],
                                                                            boost::checked_array_deleter<char>()), bufferSize),
                        true);
-    std::clog << bufferCopy << std::endl;
     // another simple vector buffer at the end
     bufferCopy.emplaceBack(boost::make_shared<BufferSet::BufferType>(bufferSize, 2));
-    std::clog << bufferCopy << std::endl;
+
     CPPUNIT_ASSERT_EQUAL(4 * bufferSize + sizeof (unsigned int), bufferCopy.totalSize());
     bufferCopy.appendTo(boostBuffers);
     CPPUNIT_ASSERT_EQUAL(expectedNumBuff, boostBuffers.size());
