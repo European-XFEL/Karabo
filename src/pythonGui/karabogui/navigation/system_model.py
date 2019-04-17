@@ -114,7 +114,7 @@ class SystemTreeModel(QAbstractItemModel):
             if parent_node is None:
                 return QModelIndex()
 
-        children = parent_node.get_visible_children()
+        children = parent_node.children
         return self.createIndex(row, column, children[row])
 
     def parent(self, index):
@@ -151,7 +151,7 @@ class SystemTreeModel(QAbstractItemModel):
             if parent_node is None:
                 return 0
 
-        return len(parent_node.get_visible_children())
+        return len(parent_node.children)
 
     def columnCount(self, parentIndex=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
@@ -269,7 +269,6 @@ class SystemTreeModel(QAbstractItemModel):
         node = self.tree.get_instance_node(node_id)
         if node is not None:
             index = self.createIndex(node.row(), column, node)
-            self.setData(index, node, role)
             self.dataChanged.emit(index, index)
 
     def _clear_tree_cache(self):
