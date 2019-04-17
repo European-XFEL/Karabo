@@ -100,7 +100,7 @@ class TopologyFilterModel(QSortFilterProxyModel):
         elif level == SERVER_LEVEL:
             proxy = None
             item_type = 'server'
-        if level == CLASS_LEVEL:
+        elif level == CLASS_LEVEL:
             classId = node.node_id
             serverId = node.parent.node_id
             proxy = get_topology().get_class(serverId, classId)
