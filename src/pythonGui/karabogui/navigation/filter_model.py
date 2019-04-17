@@ -37,11 +37,11 @@ class TopologyFilterModel(QSortFilterProxyModel):
 
     def filterAcceptsRow(self, source_row, source_parent):
         if self.filterRegExp().isEmpty():
-            return True
+            pass
         # XXX: More filters later
         model = self.sourceModel()
-        source_index = self.sourceModel().index(
-            source_row, self.filterKeyColumn(), source_parent)
+        source_index = model.index(source_row, self.filterKeyColumn(),
+                                   source_parent)
         node = model.index_ref(source_index)
         if node.level in [CLASS_LEVEL, DEVICE_LEVEL] and not node.is_visible:
             return False
