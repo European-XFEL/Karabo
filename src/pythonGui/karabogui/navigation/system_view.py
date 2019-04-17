@@ -45,7 +45,6 @@ class SystemTreeView(QTreeView):
         # by default all path are expanded
         self.expanded = False
         self.popupWidget = None
-        self.header().sectionDoubleClicked.connect(self.onDoubleClickHeader)
 
     def _setupContextMenu(self):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
