@@ -8,7 +8,6 @@ from weakref import WeakValueDictionary
 
 from PyQt4.QtCore import (QAbstractItemModel, QMimeData, QModelIndex,
                           Qt, pyqtSignal)
-from PyQt4.QtGui import QItemSelection, QItemSelectionModel
 
 from karabo.common.api import DeviceStatus
 from karabogui import globals as krb_globals, icons
@@ -31,8 +30,7 @@ class SystemTreeModel(QAbstractItemModel):
         # Our hierarchy tree
         self.tree = get_topology().system_tree
         self.tree.update_context = _UpdateContext(item_model=self)
-        # Add listeners for ``needs_update`` change event
-        self.tree.on_trait_change(self._needs_update, 'needs_update')
+        # Add listeners for ``alarm_update`` change event
         self.tree.on_trait_change(self._alarm_update, 'alarm_update')
 
         self.setSupportedDragActions(Qt.CopyAction)
@@ -83,23 +81,6 @@ class SystemTreeModel(QAbstractItemModel):
 
     def clear(self):
         self.tree.clear_all()
-
-    def currentIndex(self):
-        return self.selectionModel.currentIndex()
-
-    def selectIndex(self, index):
-        """Select the given `index` of type `QModelIndex` if this is not None
-        """
-        if index is None:
-            self.selectionModel.selectionChanged.emit(QItemSelection(),
-                                                      QItemSelection())
-            return
-
-        self.selectionModel.setCurrentIndex(index,
-                                            QItemSelectionModel.ClearAndSelect)
-
-        treeview = super(SystemTreeModel, self).parent()
-        treeview.scrollTo(index)
 
     def index(self, row, column, parent=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
@@ -243,13 +224,6 @@ class SystemTreeModel(QAbstractItemModel):
         mimeData = QMimeData()
         mimeData.setData('treeItems', json.dumps(data))
         return mimeData
-
-    def _needs_update(self):
-        """ Whenever the ``needs_update`` event of a ``SystemTree`` is changed
-        the view needs to be updated
-        """
-        self.layoutAboutToBeChanged.emit()
-        self.layoutChanged.emit()
 
     def _alarm_update(self, node_ids):
         """ Whenever the ``alarm_update`` event of a ``SystemTree`` is changed
