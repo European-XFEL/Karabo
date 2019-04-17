@@ -29,8 +29,8 @@ from .tools import DeviceSceneHandler
 class SystemTreeView(QTreeView):
     def __init__(self, parent):
         super(SystemTreeView, self).__init__(parent)
-
         self._selected_proxy = None  # A BaseDeviceProxy
+
         model = SystemTreeModel(parent=self)
         proxy_model = TopologyFilterModel(parent=self,
                                           source_model=model)
@@ -40,6 +40,11 @@ class SystemTreeView(QTreeView):
         proxy_model.setFilterKeyColumn(0)
         proxy_model.signalItemChanged.connect(self.onSelectionChanged)
         proxy_model.modelReset.connect(self.expandReset)
+        self._setupContextMenu()
+        self.customContextMenuRequested.connect(
+            self.onCustomContextMenuRequested)
+        self.setDragEnabled(True)
+        set_treeview_header(self)
 
         self.handler_list = [DeviceSceneHandler()]
         # by default all path are expanded
@@ -234,6 +239,7 @@ class SystemTreeView(QTreeView):
         """Called by the data model when an item is selected
         """
         self._selected_proxy = proxy
+
         # Grab control of the global selection
         get_selection_tracker().grab_selection(self.model().selectionModel)
 
