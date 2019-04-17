@@ -36,8 +36,6 @@ class SystemTreeModel(QAbstractItemModel):
         self.tree.on_trait_change(self._alarm_update, 'alarm_update')
 
         self.setSupportedDragActions(Qt.CopyAction)
-        self.selectionModel = QItemSelectionModel(self, self)
-        self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
         # not necessary
@@ -59,6 +57,9 @@ class SystemTreeModel(QAbstractItemModel):
     def _event_show_device(self, data):
         node_id = data['deviceId']
         self.selectNodeById(node_id)
+        # not necessary for self due to the fact that the singleton mediator
+        # object and `self` are being destroyed when the GUI exists
+        register_for_broadcasts(self)
 
     def index_ref(self, model_index):
         """Get the system node object for a ``QModelIndex``. This is
@@ -280,40 +281,6 @@ class SystemTreeModel(QAbstractItemModel):
         mimeData.setData('treeItems', json.dumps(data))
         return mimeData
 
-    def onSelectionChanged(self, selected, deselected):
-        selectedIndexes = selected.indexes()
-
-        if not selectedIndexes:
-            return
-
-        node = None
-        index = selectedIndexes[0]
-        if not index.isValid():
-            level = 0
-        else:
-            node = self.index_ref(index)
-            if node is None:
-                return
-            level = node.level
-
-        if level == 0:
-            proxy = None
-            item_type = 'other'
-        elif level == 1:
-            proxy = None
-            item_type = 'server'
-        if level == 2:
-            classId = node.node_id
-            serverId = node.parent.node_id
-            proxy = get_topology().get_class(serverId, classId)
-            item_type = 'class'
-        elif level == 3:
-            deviceId = node.node_id
-            proxy = get_topology().get_device(deviceId)
-            item_type = 'device'
-
-        self.signalItemChanged.emit(item_type, proxy)
-
     def _needs_update(self):
         """ Whenever the ``needs_update`` event of a ``SystemTree`` is changed
         the view needs to be updated
@@ -332,20 +299,26 @@ class SystemTreeModel(QAbstractItemModel):
         for node_id in node_ids:
             self._update_device_info(node_id, column=2)
 
-    def _update_device_info(self, node_id, column=0):
+    def _update_device_info(self, node_id, column=0, role=Qt.DecorationRole):
         """This function is used to launch a dataChanged signal for a specific
            device Id
         """
         node = self.tree.get_instance_node(node_id)
         if node is not None:
             index = self.createIndex(node.row(), column, node)
+            self.setData(index, node, role)
             self.dataChanged.emit(index, index)
 
     def _clear_tree_cache(self):
+        """Clear the tree and reset the model to account visibility
+        """
+        self.beginResetModel()
+        self._model_index_refs.clear()
+
         def visitor(node):
             node.is_visible = not (node.visibility >
                                    krb_globals.GLOBAL_ACCESS_LEVEL)
             node.clear_cache = True
 
         self.tree.visit(visitor)
-        self._needs_update()
+        self.endResetModel()
