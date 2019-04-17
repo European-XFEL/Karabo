@@ -103,8 +103,6 @@ class SystemTree(HasStrictTraits):
 
     # A context manager to enter when manipulating the tree
     update_context = Instance(object)
-    # An event which is triggered whenever the tree needs to be updated
-    needs_update = Event
 
     # An event which is triggered whenenver a device has an alarm update
     alarm_update = Event
@@ -253,7 +251,6 @@ class SystemTree(HasStrictTraits):
         self._handle_server_data(system_hash)
         nodes = self._handle_device_data('device', system_hash)
         nodes.update(self._handle_device_data('macro', system_hash))
-        self.needs_update = True
 
         return nodes
 
