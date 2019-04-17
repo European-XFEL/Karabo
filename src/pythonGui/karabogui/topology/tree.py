@@ -93,10 +93,6 @@ class SystemTreeNode(HasStrictTraits):
         self.alarm_info.remove_alarm_type(dev_property, alarm_type)
         return pre_change != self.alarm_info.alarm_type
 
-    def get_visible_children(self):
-        # XXX: Remove
-        return self.children
-
 
 class SystemTree(HasStrictTraits):
     """A data model which holds data concerning the devices and servers in a
