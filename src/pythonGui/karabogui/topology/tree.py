@@ -7,7 +7,7 @@ from contextlib import contextmanager
 import re
 
 from traits.api import (HasStrictTraits, Bool, Dict, Enum, Event, Instance,
-                        Int, List, on_trait_change, String, WeakRef)
+                        Int, List, String, WeakRef)
 
 from karabo.common.api import DeviceStatus
 from karabo.native import AccessLevel
