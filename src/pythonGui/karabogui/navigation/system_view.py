@@ -29,6 +29,7 @@ from .tools import DeviceSceneHandler
 class SystemTreeView(QTreeView):
     def __init__(self, parent):
         super(SystemTreeView, self).__init__(parent)
+
         self._selected_proxy = None  # A BaseDeviceProxy
         model = SystemTreeModel(parent=self)
         proxy_model = TopologyFilterModel(parent=self,
@@ -156,6 +157,7 @@ class SystemTreeView(QTreeView):
         # Bail immediately if not the first item
         if start != 0:
             return
+
         self.expand(parent_index)
 
     @pyqtSlot()
