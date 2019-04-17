@@ -57,9 +57,6 @@ class SystemTreeModel(QAbstractItemModel):
     def _event_show_device(self, data):
         node_id = data['deviceId']
         self.selectNodeById(node_id)
-        # not necessary for self due to the fact that the singleton mediator
-        # object and `self` are being destroyed when the GUI exists
-        register_for_broadcasts(self)
 
     def index_ref(self, model_index):
         """Get the system node object for a ``QModelIndex``. This is
