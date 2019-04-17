@@ -47,8 +47,6 @@ class SystemTreeView(QTreeView):
         set_treeview_header(self)
 
         self.handler_list = [DeviceSceneHandler()]
-        # by default all path are expanded
-        self.expanded = False
         self.popupWidget = None
 
     def _setupContextMenu(self):
@@ -166,7 +164,6 @@ class SystemTreeView(QTreeView):
 
     @pyqtSlot()
     def expandReset(self):
-        self.expanded = True
         self.expandAll()
 
     @pyqtSlot()
