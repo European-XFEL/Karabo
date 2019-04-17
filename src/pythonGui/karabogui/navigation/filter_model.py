@@ -4,13 +4,16 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt4.QtCore import pyqtSignal
+from PyQt4.QtCore import pyqtSignal, Qt
 from PyQt4.QtGui import (
     QItemSelection, QItemSelectionModel, QSortFilterProxyModel)
 
 from karabogui import globals as krb_globals
-from karabogui.events import KaraboEventSender, register_for_broadcasts
+from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.singletons.api import get_topology
+
+CLASS_LEVEL = 2
+DEVICE_LEVEL = 3
 
 
 class TopologyFilterModel(QSortFilterProxyModel):
@@ -19,37 +22,30 @@ class TopologyFilterModel(QSortFilterProxyModel):
     def __init__(self, source_model=None, parent=None):
         super(TopologyFilterModel, self).__init__(parent)
         self.setSourceModel(source_model)
-
+        self.setFilterKeyColumn(0)
+        self.setFilterRole(Qt.DisplayRole)
         self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
-        # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
-        # not necessary for self due to the fact that the singleton mediator
-        # object and `self` are being destroyed when the GUI exists
-        register_for_broadcasts(self)
+        event_map = {
+            KaraboEvent.ShowDevice: self._event_show_device
+        }
+        register_for_broadcasts(event_map)
 
-    def karaboBroadcastEvent(self, event):
-        sender = event.sender
-        data = event.data
-        if sender is KaraboEventSender.ShowDevice:
-            # Triggered via alarm panel, we are the only one interested!
-            self.selectNodeById(data.get('deviceId'))
-            return True
-        return False
+    def _event_show_device(self, data):
+        self.selectNodeById(data['deviceId'])
 
     def filterAcceptsRow(self, source_row, source_parent):
         if self.filterRegExp().isEmpty():
             return True
+        # XXX: More filters later
+        model = self.sourceModel()
         source_index = self.sourceModel().index(
             source_row, self.filterKeyColumn(), source_parent)
-        node = self.sourceModel().index_ref(source_index)
-        row_count = self.sourceModel().rowCount(source_index)
-        for row in range(row_count):
-            if node.is_visible and self.filterAcceptsRow(row, source_index):
-                return True
-
-        return super(TopologyFilterModel, self).filterAcceptsRow(
-            source_row, source_parent)
+        node = model.index_ref(source_index)
+        if node.level in [CLASS_LEVEL, DEVICE_LEVEL] and not node.is_visible:
+            return False
+        return True
 
     def currentIndex(self):
         """Retrieve the current index for context menu actions
