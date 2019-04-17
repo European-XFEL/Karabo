@@ -37,8 +37,6 @@ class SystemTreeNode(HasStrictTraits):
 
     parent = WeakRef('SystemTreeNode')
     children = List(Instance('SystemTreeNode'))
-    _visible_children = List(Instance('SystemTreeNode'))
-    clear_cache = Bool(True)
 
     # cached current visibility
     is_visible = Bool(True)
@@ -95,15 +93,9 @@ class SystemTreeNode(HasStrictTraits):
         self.alarm_info.remove_alarm_type(dev_property, alarm_type)
         return pre_change != self.alarm_info.alarm_type
 
-    @on_trait_change('children[]')
-    def _register_clear_cache(self):
-        self.clear_cache = True
-
     def get_visible_children(self):
-        if self.clear_cache:
-            self._visible_children = [c for c in self.children if c.is_visible]
-            self.clear_cache = False
-        return self._visible_children
+        # XXX: Remove
+        return self.children
 
 
 class SystemTree(HasStrictTraits):
