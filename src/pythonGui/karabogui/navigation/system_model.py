@@ -43,7 +43,6 @@ class SystemTreeModel(QAbstractItemModel):
             KaraboEvent.AccessLevelChanged: self._event_access_level,
             KaraboEvent.StartMonitoringDevice: self._event_monitor,
             KaraboEvent.StopMonitoringDevice: self._event_monitor,
-            KaraboEvent.ShowDevice: self._event_show_device
         }
         register_for_broadcasts(event_map)
 
@@ -53,10 +52,6 @@ class SystemTreeModel(QAbstractItemModel):
     def _event_monitor(self, data):
         node_id = data['device_id']
         self._update_device_info(node_id)
-
-    def _event_show_device(self, data):
-        node_id = data['deviceId']
-        self.selectNodeById(node_id)
 
     def index_ref(self, model_index):
         """Get the system node object for a ``QModelIndex``. This is
@@ -105,35 +100,6 @@ class SystemTreeModel(QAbstractItemModel):
 
         treeview = super(SystemTreeModel, self).parent()
         treeview.scrollTo(index)
-
-    def selectNodeById(self, node_id):
-        """Select the `SystemTreeNode` with the given `node_id`.
-
-        :param node_id: A string which we are looking for in the tree
-        """
-        nodes = self.findNodes(node_id, full_match=True)
-        assert len(nodes) <= 1
-        if nodes:
-            # Select first entry
-            self.selectNode(nodes[0])
-
-    def selectNode(self, node):
-        """Select the given `node` of type `SystemTreeNode` if this is not None,
-        otherwise nothing is selected
-
-        :param node: The `SystemTreeNode` which should be selected
-        """
-        if node is not None:
-            index = self.createIndex(node.row(), 0, node)
-        else:
-            # Select nothing
-            index = None
-        self.selectIndex(index)
-
-    def findNodes(self, node_id, **kwargs):
-        if kwargs.get('access_level') is None:
-            kwargs['access_level'] = krb_globals.GLOBAL_ACCESS_LEVEL
-        return self.tree.find(node_id, **kwargs)
 
     def index(self, row, column, parent=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
@@ -312,10 +278,11 @@ class SystemTreeModel(QAbstractItemModel):
         self.beginResetModel()
         self._model_index_refs.clear()
 
+        access = krb_globals.GLOBAL_ACCESS_LEVEL
+
         def visitor(node):
-            node.is_visible = not (node.visibility >
-                                   krb_globals.GLOBAL_ACCESS_LEVEL)
-            node.clear_cache = True
+            nonlocal access
+            node.is_visible = not (node.visibility > access)
 
         self.tree.visit(visitor)
         self.endResetModel()
