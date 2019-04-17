@@ -78,32 +78,31 @@ namespace karabo {
             if (writeSize) {
                 BufferType& buffer = current();
                 buffer.reserve(buffer.size() + sizeof(unsigned int) + array.second);
-                {
-                    unsigned int size = static_cast<unsigned int> (array.second);
-                    const char* src = reinterpret_cast<const char*> (&size);
-                    const size_t n = sizeof (unsigned int);
-                    const size_t pos = buffer.size();
-                    buffer.resize(pos + n);
-                    std::memcpy(buffer.data() + pos, src, n);
-                }
+
+                const unsigned int size = static_cast<unsigned int> (array.second);
+                const char* src = reinterpret_cast<const char*> (&size);
+                const size_t n = sizeof (unsigned int);
+                const size_t pos = buffer.size();
+                buffer.resize(pos + n);
+                std::memcpy(buffer.data() + pos, src, n);
             }
 
             updateSize();
-            const size_t size = array.second;
+            const size_t arraySize = array.second;
             if (m_copyAllData) {
                 // Copy, but keep an extra buffer: That's beneficial when further processed, e.g. de-serialised.
                 m_buffers.push_back(Buffer(boost::shared_ptr<BufferType>(new BufferType()),
-                                           boost::shared_ptr<char>(new char[size], boost::checked_array_deleter<char>()),
-                                           size,
+                                           boost::shared_ptr<char>(new char[arraySize], boost::checked_array_deleter<char>()),
+                                           arraySize,
                                            BufferContents::NO_COPY_BYTEARRAY_CONTENTS));
 
                 auto* rawPtrDest = m_buffers.back().ptr.get();
                 const auto* rawPtrSrc = array.first.get();
-                std::memcpy(rawPtrDest, rawPtrSrc, size);
+                std::memcpy(rawPtrDest, rawPtrSrc, arraySize);
             } else {
                 m_buffers.push_back(Buffer(boost::shared_ptr<BufferType>(new BufferType()),
                                            boost::const_pointer_cast<BufferType::value_type>(array.first),
-                                           size,
+                                           arraySize,
                                            BufferContents::NO_COPY_BYTEARRAY_CONTENTS));
             }
             m_currentBuffer++;
