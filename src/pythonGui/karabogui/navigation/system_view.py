@@ -35,8 +35,10 @@ class SystemTreeView(QTreeView):
                                           source_model=model)
         self.setModel(proxy_model)
         self.setSelectionModel(proxy_model.selectionModel)
+        
         proxy_model.setFilterKeyColumn(0)
         proxy_model.signalItemChanged.connect(self.onSelectionChanged)
+        proxy_model.modelReset.connect(self.expandReset)
 
         self.handler_list = [DeviceSceneHandler()]
         # by default all path are expanded
