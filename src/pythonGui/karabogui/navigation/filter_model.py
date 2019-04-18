@@ -25,6 +25,7 @@ class TopologyFilterModel(QSortFilterProxyModel):
         super(TopologyFilterModel, self).__init__(parent)
         self.setSourceModel(source_model)
         self.setFilterKeyColumn(0)
+        self.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.setFilterRole(Qt.DisplayRole)
         self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)

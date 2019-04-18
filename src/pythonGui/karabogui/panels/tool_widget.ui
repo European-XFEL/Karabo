@@ -41,65 +41,6 @@
     </widget>
    </item>
    <item>
-    <widget class="QPushButton" name="ui_case_sensitive">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>40</width>
-       <height>16777215</height>
-      </size>
-     </property>
-     <property name="focusPolicy">
-      <enum>Qt::NoFocus</enum>
-     </property>
-     <property name="toolTip">
-      <string>Case  sensitive</string>
-     </property>
-     <property name="text">
-      <string>Aa</string>
-     </property>
-     <property name="checkable">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QPushButton" name="ui_full_match">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>40</width>
-       <height>16777215</height>
-      </size>
-     </property>
-     <property name="focusPolicy">
-      <enum>Qt::NoFocus</enum>
-     </property>
-     <property name="toolTip">
-      <string>Match whole word</string>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">text-decoration:overline underline;</string>
-     </property>
-     <property name="text">
-      <string>Aa|</string>
-     </property>
-     <property name="checkable">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item>
     <widget class="QPushButton" name="ui_search_button">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">

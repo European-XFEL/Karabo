@@ -6,7 +6,7 @@
 import os.path as op
 
 from PyQt4 import uic
-from PyQt4.QtCore import pyqtSlot, QRegExp, Qt
+from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QVBoxLayout, QWidget
 
 from karabogui.events import KaraboEvent, register_for_broadcasts
@@ -63,11 +63,7 @@ class TopologyPanel(BasePanelWidget):
     def _search_clicked(self):
         pattern = str(self.tool_widget.ui_search_filter.text())
         proxy_model = self.tree_view.model()
-        case_sensitive = self.tool_widget.ui_case_sensitive.isChecked()
-        cs = Qt.CaseSensitive if case_sensitive else Qt.CaseInsensitive
-        if self.tool_widget.ui_full_match.isChecked():
-            pattern = '^{}$'.format(pattern)
-        proxy_model.setFilterRegExp(QRegExp(pattern, cs, QRegExp.RegExp))
+        proxy_model.setFilterFixedString(pattern)
         # The regex is accounted in the filter, we do not have to invalidate
         # again!
         self.tree_view.expandAll()
