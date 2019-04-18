@@ -30,6 +30,8 @@ class SystemTreeModel(QAbstractItemModel):
         # Our hierarchy tree
         self.tree = get_topology().system_tree
         self.tree.update_context = _UpdateContext(item_model=self)
+        # Add listeners for ``needs_update`` change event
+        self.tree.on_trait_change(self._needs_update, 'needs_update')
         # Add listeners for ``alarm_update`` change event
         self.tree.on_trait_change(self._alarm_update, 'alarm_update')
 
@@ -224,6 +226,13 @@ class SystemTreeModel(QAbstractItemModel):
         mimeData = QMimeData()
         mimeData.setData('treeItems', json.dumps(data))
         return mimeData
+
+    def _needs_update(self):
+        """ Whenever the ``needs_update`` event of a ``SystemTree`` is changed
+        the view needs to be updated
+        """
+        self.layoutAboutToBeChanged.emit()
+        self.layoutChanged.emit()
 
     def _alarm_update(self, node_ids):
         """ Whenever the ``alarm_update`` event of a ``SystemTree`` is changed
