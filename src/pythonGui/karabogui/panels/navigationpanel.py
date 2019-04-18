@@ -20,7 +20,6 @@ class TopologyPanel(BasePanelWidget):
     def __init__(self):
         super(TopologyPanel, self).__init__("System Topology")
         event_map = {
-            KaraboEvent.AccessLevelChanged: self._event_access_level,
             KaraboEvent.NetworkConnectStatus: self._event_network
         }
         register_for_broadcasts(event_map)
@@ -41,9 +40,6 @@ class TopologyPanel(BasePanelWidget):
         main_layout.addWidget(self.tree_view)
 
         return widget
-
-    def _event_access_level(self, data):
-        pass
 
     def _event_network(self, data):
         status = data.get('status', False)
