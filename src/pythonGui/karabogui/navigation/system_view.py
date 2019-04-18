@@ -5,7 +5,7 @@
 #############################################################################
 from functools import partial
 
-from PyQt4.QtCore import pyqtSlot, QModelIndex, Qt
+from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import (
     QAbstractItemView, QAction, QCursor, QDialog, QMenu, QTreeView)
 
