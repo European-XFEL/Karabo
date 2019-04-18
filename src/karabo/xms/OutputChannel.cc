@@ -229,12 +229,7 @@ namespace karabo {
 
         bool OutputChannel::hasRegisteredCopyInputChannel(const std::string& instanceId) const {
             boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
-            for (const InputChannelInfo& channelInfo : m_registeredCopyInputs) {
-                if (channelInfo.get<std::string>("instanceId") == instanceId) {
-                    return true;
-                }
-            }
-            return false;
+            return (m_registeredCopyInputs.find(instanceId) != m_registeredCopyInputs.end());
         }
 
 
@@ -345,23 +340,10 @@ namespace karabo {
                     boost::mutex::scoped_lock lock(m_registeredSharedInputsMutex);
                     m_registeredSharedInputs.push_back(info);
                 } else {
-                    bool isNew = true;
                     boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
-                    for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
-                        karabo::util::Hash& channelInfo = m_registeredCopyInputs[i];
-                        if (channelInfo.get<std::string>("instanceId") == instanceId) {
-                            KARABO_LOG_FRAMEWORK_DEBUG << "Registering copy-input channel of (used before) instance: " << instanceId;
-                            channelInfo.set("memoryLocation", memoryLocation);
-                            channelInfo.set("tcpChannel", boost::weak_ptr<Channel>(channel));
-                            channelInfo.set("onSlowness", onSlowness);
-                            isNew = false;
-                            break;
-                        }
-                    }
-                    if (isNew) {
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Registering copy-input channel of (new) instance: " << instanceId;
-                        m_registeredCopyInputs.push_back(info);
-                    }
+                    eraseOldChannel(m_registeredCopyInputs, instanceId, channel);
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Registering copy-input channel of instance: " << instanceId;
+                    m_registeredCopyInputs[instanceId] = info;
                 }
                 onInputAvailable(instanceId); // Immediately register for reading
                 updateConnectionTable();
@@ -385,6 +367,30 @@ namespace karabo {
         }
 
 
+        void OutputChannel::eraseOldChannel(OutputChannel::InputChannels& channelContainer,
+                                            const std::string& instanceId, const karabo::net::Channel::Pointer& newChannel) const {
+            auto it = channelContainer.find(instanceId);
+            if (it != channelContainer.end()) {
+                const Hash& channelInfo = it->second;
+                Channel::Pointer oldChannel = channelInfo.get<boost::weak_ptr<Channel> >("tcpChannel").lock();
+                if (oldChannel) {
+                    if (oldChannel == newChannel) {
+                        // Ever reached? Let's not close, but try to go on...
+                        KARABO_LOG_FRAMEWORK_WARN << "Existing channel '" << instanceId << "' sent hello message again.";
+                    } else {
+                        const TcpChannel::Pointer oldTcpChannel = boost::static_pointer_cast<TcpChannel>(oldChannel);
+                        const Hash oldTcpInfo(TcpChannel::getChannelInfo(oldTcpChannel));
+                        KARABO_LOG_FRAMEWORK_INFO << "New channel says hello with existing id '" << instanceId << "'. "
+                                << "Close old one to " << oldTcpInfo.get<std::string>("remoteAddress") << ":"
+                                << oldTcpInfo.get<unsigned short>("remotePort") << ".";
+                        oldChannel->close();
+                    }
+                } // else some dangling weak pointer which can safely be removed
+                channelContainer.erase(it);
+            }
+        }
+
+
         void OutputChannel::updateConnectionTable() {
             std::vector<Hash> connections;
             {
@@ -404,8 +410,8 @@ namespace karabo {
             }
             {
                 boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
-                for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
-                    Hash &channelInfo = m_registeredCopyInputs[i];
+                for (const auto& idInfoPair : m_registeredCopyInputs) {
+                    const Hash &channelInfo = idInfoPair.second;
                     boost::weak_ptr<Channel> wptr = channelInfo.get<boost::weak_ptr<Channel> >("tcpChannel");
                     boost::shared_ptr<Channel> channel = wptr.lock();
                     boost::shared_ptr<TcpChannel> tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
@@ -449,24 +455,23 @@ namespace karabo {
                 }
             }
             boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
-            for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
-                karabo::util::Hash &channelInfo = m_registeredCopyInputs[i];
-                if (channelInfo.get<std::string>("instanceId") == instanceId) {
-                    if (!channelInfo.get<std::deque<int>>("queuedChunks").empty()) {
-                        KARABO_LOG_FRAMEWORK_TRACE << debugId() << " Writing queued (copied) data to instance " << instanceId;
-                        copyQueue(channelInfo);
-                        return;
-                    }
-                    // Be safe and unlock before pushCopyNext locks another mutex.
-                    // One also never knows what handlers are registered for io event...
-                    lock.unlock();
-                    pushCopyNext(instanceId);
-                    KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " New (copied) input on instance " << instanceId << " available for writing ";
-                    this->triggerIOEvent();
+            auto itIdChannelInfo = m_registeredCopyInputs.find(instanceId);
+            if (itIdChannelInfo != m_registeredCopyInputs.end()) {
+                Hash &channelInfo = itIdChannelInfo->second;
+                if (!channelInfo.get<std::deque<int>>("queuedChunks").empty()) {
+                    KARABO_LOG_FRAMEWORK_TRACE << debugId() << " Writing queued (copied) data to instance " << instanceId;
+                    copyQueue(channelInfo);
                     return;
                 }
+                // Be safe and unlock before pushCopyNext locks another mutex.
+                // One also never knows what handlers are registered for io event...
+                lock.unlock();
+                pushCopyNext(instanceId);
+                KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " New (copied) input on instance " << instanceId << " available for writing ";
+                this->triggerIOEvent();
+                return;
             }
-            KARABO_LOG_FRAMEWORK_WARN << this->debugId() << " An input channel wants to connect (" << instanceId << ") that was not registered before.";
+            KARABO_LOG_FRAMEWORK_WARN << this->debugId() << " An input channel (" << instanceId << ") updated, but is not registered.";
         }
 
 
@@ -486,7 +491,7 @@ namespace karabo {
             {
                 // SHARED Inputs
                 boost::mutex::scoped_lock lock(m_registeredSharedInputsMutex);
-                for (InputChannels::iterator it = m_registeredSharedInputs.begin(); it != m_registeredSharedInputs.end();) {
+                for (auto it = m_registeredSharedInputs.begin(); it != m_registeredSharedInputs.end();) {
                     auto tcpChannel = it->get<ChannelWeakPointer>("tcpChannel").lock();
 
                     // Cleaning expired or specific channels only
@@ -530,20 +535,20 @@ namespace karabo {
             // COPY Inputs
             boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
             for (InputChannels::iterator it = m_registeredCopyInputs.begin(); it != m_registeredCopyInputs.end();) {
-                auto tcpChannel = it->get<ChannelWeakPointer>("tcpChannel").lock();
+                const Hash& channelInfo = it->second;
+                auto tcpChannel = channelInfo.get<ChannelWeakPointer>("tcpChannel").lock();
                 if (!tcpChannel || tcpChannel == channel) {
 
-                    std::string instanceId = it->get<std::string>("instanceId");
+                    const std::string& instanceId = it->first;
 
                     KARABO_LOG_FRAMEWORK_DEBUG << "Connected (copy) input on instanceId " << instanceId << " disconnected";
                     // Release any queued chunks:
-                    for (const int chunkId : it->get<std::deque<int> >("queuedChunks")) {
+                    for (const int chunkId : channelInfo.get<std::deque<int> >("queuedChunks")) {
                         unregisterWriterFromChunk(chunkId);
                     }
-                    it = m_registeredCopyInputs.erase(it);
-
                     // Delete from input queue
                     eraseCopyInput(instanceId);
+                    it = m_registeredCopyInputs.erase(it); // after last use of instanceId which gets invalidated here
                 } else {
                     ++it;
                 }
@@ -716,9 +721,10 @@ namespace karabo {
                 }
                 {
                     boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
-                    for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
-                        if (!m_registeredCopyInputs[i].get<std::deque<int> >("queuedChunks").empty()) {
+                    for (const auto& idChannelInfo : m_registeredCopyInputs) {
+                        if (!idChannelInfo.second.get<std::deque<int> >("queuedChunks").empty()) {
                             doWait = true;
+                            break;
                         }
                     }
                 }
@@ -744,9 +750,8 @@ namespace karabo {
                 }
             }
             boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
-            for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
-                const karabo::util::Hash& channelInfo = m_registeredCopyInputs[i];
-                Channel::Pointer tcpChannel = channelInfo.get<ChannelWeakPointer > ("tcpChannel").lock();
+            for (const auto& idChannelInfo : m_registeredCopyInputs) {
+                Channel::Pointer tcpChannel = idChannelInfo.second.get<ChannelWeakPointer> ("tcpChannel").lock();
                 if (!tcpChannel) continue;
 
                 try {
@@ -785,9 +790,9 @@ namespace karabo {
             {
                 m_toUnregisterCopyInputs.clear();
                 boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
-                for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
+                for (const auto& idChannelInfo : m_registeredCopyInputs) {
                     Memory::incrementChunkUsage(m_channelId, chunkId);
-                    m_toUnregisterCopyInputs.insert(m_registeredCopyInputs[i].get<std::string>("instanceId"));
+                    m_toUnregisterCopyInputs.insert(idChannelInfo.first);
                 }
             }
             KARABO_LOG_FRAMEWORK_TRACE << "OUTPUT Registered " << Memory::getChunkStatus(m_channelId, chunkId) << " uses for [" << m_channelId << "][" << chunkId << "]";
@@ -1064,10 +1069,10 @@ namespace karabo {
                 // If no copied input channels are registered at all, we do not go on
                 if (m_registeredCopyInputs.empty()) return;
 
-                for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
+                for (auto& idChannelInfo : m_registeredCopyInputs) { // not const since queue might be extended
 
-                    const InputChannelInfo& channelInfo = m_registeredCopyInputs[i];
-                    const std::string& instanceId = channelInfo.get<std::string>("instanceId");
+                    InputChannelInfo& channelInfo = idChannelInfo.second;
+                    const std::string& instanceId = idChannelInfo.first;
                     const std::string& onSlowness = channelInfo.get<std::string>("onSlowness");
 
                     const auto unregisterIter = m_toUnregisterCopyInputs.find(instanceId);
@@ -1096,16 +1101,16 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Queuing (copied) data package for "
                                 << instanceId << ", chunk " << chunkId;
                         Memory::assureAllDataIsCopied(m_channelId, chunkId);
-                        m_registeredCopyInputs[i].get<std::deque<int> >("queuedChunks").push_back(chunkId);
+                        channelInfo.get<std::deque<int> >("queuedChunks").push_back(chunkId);
                     } else if (onSlowness == "wait") {
                         // Blocking actions must not happen under the mutex that is also needed to unblock (in onInputAvailable)
-                        waitingInstances.push_back(channelInfo);
+                        waitingInstances.insert(idChannelInfo);
                     }
                 }
             } // end of mutex lock
 
-            for (const InputChannelInfo& channelInfo : waitingInstances) {
-                const std::string& instanceId = channelInfo.get<std::string>("instanceId");
+            for (const InputChannels::value_type& idChannelInfo : waitingInstances) {
+                const std::string& instanceId = idChannelInfo.first;
                 KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Data (copied) is waiting for input channel of "
                                            << instanceId << " to be available";
                 bool instanceDisconnected = false;
@@ -1124,6 +1129,7 @@ namespace karabo {
                 }
                 KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " found (copied) input channel after waiting, copying now";
                 eraseCopyInput(instanceId);
+                const Hash& channelInfo = idChannelInfo.second;
                 if (channelInfo.get<std::string > ("memoryLocation") == "local") {
                     KARABO_LOG_FRAMEWORK_TRACE << this->debugId() << " Now copying data (local)";
                     copyLocal(chunkId, channelInfo);
