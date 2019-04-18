@@ -154,16 +154,6 @@ class SystemTreeView(QTreeView):
     # ----------------------------
     # Slots
 
-    @pyqtSlot(QModelIndex, int, int)
-    def _items_added(self, parent_index, start, end):
-        """React to the addition of an item (or items).
-        """
-        # Bail immediately if not the first item
-        if start != 0:
-            return
-
-        self.expand(parent_index)
-
     @pyqtSlot()
     def expandReset(self):
         self.expandAll()

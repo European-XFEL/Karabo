@@ -42,6 +42,7 @@ class TopologyFilterModel(QSortFilterProxyModel):
         source_index = model.index(source_row, self.filterKeyColumn(),
                                    source_parent)
         node = model.index_ref(source_index)
+        # NOTE: We should always have a valid element here!
         if not node.is_visible:
             return False
 
@@ -93,7 +94,6 @@ class TopologyFilterModel(QSortFilterProxyModel):
         node = None
         index = selectedIndexes[0]
         source_index = self.mapToSource(index)
-        # XXX: More indexes to validate?
         if not source_index.isValid():
             level = 0
         else:
