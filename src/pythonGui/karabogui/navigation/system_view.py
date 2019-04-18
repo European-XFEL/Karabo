@@ -47,7 +47,9 @@ class SystemTreeView(QTreeView):
         set_treeview_header(self)
 
         self.handler_list = [DeviceSceneHandler()]
+        self.expanded = True
         self.popupWidget = None
+        self.header().sectionDoubleClicked.connect(self.onDoubleClickHeader)
 
     def _setupContextMenu(self):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -255,3 +257,11 @@ class SystemTreeView(QTreeView):
     def onSaveToFile(self):
         if self._selected_proxy is not None:
             save_configuration_to_file(self._selected_proxy)
+
+    @pyqtSlot()
+    def onDoubleClickHeader(self):
+        if self.expanded:
+            self.collapseAll()
+        else:
+            self.expandAll()
+        self.expanded = not self.expanded
