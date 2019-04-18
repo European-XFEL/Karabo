@@ -40,16 +40,21 @@ class SystemTreeView(QTreeView):
         proxy_model.setFilterKeyColumn(0)
         proxy_model.signalItemChanged.connect(self.onSelectionChanged)
         proxy_model.modelReset.connect(self.expandReset)
-        self._setupContextMenu()
-        self.customContextMenuRequested.connect(
-            self.onCustomContextMenuRequested)
+
         self.setDragEnabled(True)
+
+        self.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
         set_treeview_header(self)
 
         self.handler_list = [DeviceSceneHandler()]
         self.expanded = False
         self.popupWidget = None
         self.header().sectionDoubleClicked.connect(self.onDoubleClickHeader)
+
+        self._setupContextMenu()
+        self.customContextMenuRequested.connect(
+            self.onCustomContextMenuRequested)
 
     def _setupContextMenu(self):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
