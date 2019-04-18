@@ -47,7 +47,7 @@ class SystemTreeView(QTreeView):
         set_treeview_header(self)
 
         self.handler_list = [DeviceSceneHandler()]
-        self.expanded = True
+        self.expanded = False
         self.popupWidget = None
         self.header().sectionDoubleClicked.connect(self.onDoubleClickHeader)
 
@@ -156,6 +156,7 @@ class SystemTreeView(QTreeView):
 
     @pyqtSlot()
     def expandReset(self):
+        self.expanded = True
         self.expandAll()
 
     @pyqtSlot()
