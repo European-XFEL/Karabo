@@ -29,7 +29,6 @@ class TopologyFilterModel(QSortFilterProxyModel):
         self.setFilterRole(Qt.DisplayRole)
         self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
-
         event_map = {
             KaraboEvent.ShowDevice: self._event_show_device
         }
@@ -46,16 +45,18 @@ class TopologyFilterModel(QSortFilterProxyModel):
             node = model.index_ref(source_index)
             if not node.is_visible:
                 return False
-
             # Use the short cut here!
             if self.filterRegExp().isEmpty():
                 return True
+
+            # XXX: We do not take into account dataLoggers, fast forward!
+            if node.node_id.startswith('DataLogger'):
+                return False
 
             row_count = self.sourceModel().rowCount(source_index)
             for row in range(row_count):
                 if self.filterAcceptsRow(row, source_index):
                     return True
-
         return super(TopologyFilterModel, self).filterAcceptsRow(
             source_row, source_parent)
 
