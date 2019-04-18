@@ -50,7 +50,18 @@ namespace karabo {
 
             /*
             * @class Buffer
-            * @brief The Buffer groups vectors, pointers, sizes and contents of a BufferSet
+            * @brief The Buffer can contain data in either of two ways
+            *
+            * - either data in a shared_ptr to a BufferType (member 'vec')
+            * - or shared_ptr to BufferType::value_type ('ptr') where the length of the data is
+            *   given by member 'size' (useful to keep ByteArray data).
+            *
+            * If the data is kept in the first way, it is the responsibility of the user of the
+            * Buffer to synchronize 'size' and 'vec.size()'. To synchronize its current Buffer,
+            * the BufferSet provides the method updateSize().
+            *
+            * The member 'contentType' shall take values of the enum BufferSetContents only
+            * to indicate which kind of buffer we have.
             */
             struct Buffer {
                 boost::shared_ptr<BufferType::value_type> ptr;
