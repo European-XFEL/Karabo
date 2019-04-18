@@ -68,6 +68,6 @@ class TopologyPanel(BasePanelWidget):
         if self.tool_widget.ui_full_match.isChecked():
             pattern = '^{}$'.format(pattern)
         proxy_model.setFilterRegExp(QRegExp(pattern, cs, QRegExp.RegExp))
-        proxy_model.selectionModel.clearSelection()
-        proxy_model.invalidateFilter()
+        # The regex is accounted in the filter, we do not have to invalidate
+        # again!
         self.tree_view.expandAll()
