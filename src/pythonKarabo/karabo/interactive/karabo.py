@@ -346,8 +346,8 @@ def clean_dir(path, args):
         # Note: "real" tags are marked with a trailing '^{}',
         #       eg "refs/tags/3.1.1^{}"
         new_sha1 = ""
-        remote_refs = run_cmd('cd {}; git ls-remote origin {tag} {tag}^{{}}'.\
-                              format(path, tag=new_tag)).decode("utf-8")
+        remote_refs = run_cmd('cd {}; git ls-remote origin {tag} {tag}^{{}}'
+                              .format(path, tag=new_tag)).decode("utf-8")
         for line in remote_refs.splitlines():
             # A line for a "real" tag will look like:
             # "91c91b5ed3ad86869f9c05e15692966579fcaa90\trefs/tags/3.1.1^{}"
