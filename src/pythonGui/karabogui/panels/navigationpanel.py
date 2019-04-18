@@ -9,7 +9,6 @@ from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot, QRegExp, Qt
 from PyQt4.QtGui import QVBoxLayout, QWidget
 
-from karabogui import icons
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.navigation.system_view import SystemTreeView
 
@@ -64,12 +63,11 @@ class TopologyPanel(BasePanelWidget):
     def _search_clicked(self):
         pattern = str(self.tool_widget.ui_search_filter.text())
         proxy_model = self.tree_view.model()
-        proxy_model.invalidateFilter()
         case_sensitive = self.tool_widget.ui_case_sensitive.isChecked()
         cs = Qt.CaseSensitive if case_sensitive else Qt.CaseInsensitive
         if self.tool_widget.ui_full_match.isChecked():
             pattern = '^{}$'.format(pattern)
         proxy_model.setFilterRegExp(QRegExp(pattern, cs, QRegExp.RegExp))
         proxy_model.selectionModel.clearSelection()
-
+        proxy_model.invalidateFilter()
         self.tree_view.expandAll()
