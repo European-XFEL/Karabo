@@ -11,7 +11,7 @@ from PyQt4.QtGui import QVBoxLayout, QWidget
 
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.navigation.system_view import SystemTreeView
-
+from karabogui.util import wait_cursor
 from .base import BasePanelWidget
 
 
@@ -61,10 +61,8 @@ class TopologyPanel(BasePanelWidget):
 
     @pyqtSlot()
     def _search_clicked(self):
-        pattern = str(self.tool_widget.ui_search_filter.text())
-        proxy_model = self.tree_view.model()
-        proxy_model.invalidateFilter()
-        proxy_model.setFilterFixedString(pattern)
-        # The regex is accounted in the filter, we do not have to invalidate
-        # again!
-        self.tree_view.expandAll()
+        with wait_cursor():
+            pattern = str(self.tool_widget.ui_search_filter.text())
+            proxy_model = self.tree_view.model()
+            proxy_model.setFilterFixedString(pattern)
+            self.tree_view.expandAll()
