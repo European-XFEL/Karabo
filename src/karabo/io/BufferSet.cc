@@ -54,6 +54,7 @@ namespace karabo {
                                                BufferContents::NO_COPY_BYTEARRAY_CONTENTS));
                     m_currentBuffer++;
                 } else {
+                    // Last buffer in BufferSet has size 0 - assign it a newly allocated buffer of size.
                     m_buffers[m_buffers.size() - 1] = Buffer(boost::shared_ptr<BufferType>(new BufferType()),
                                                              boost::shared_ptr<char>(new char[size], boost::checked_array_deleter<char>()),
                                                              size,
