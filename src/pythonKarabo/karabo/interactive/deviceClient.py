@@ -5,7 +5,6 @@
 
 from karathon import Hash
 from karathon import TextSerializerHash
-import karathon as krb
 
 from karabo.bound import DeviceClient as BoundDeviceClient
 from karabo.middlelayer_api.deviceclientproject import DeviceClientProject
