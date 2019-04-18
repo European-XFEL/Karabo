@@ -56,6 +56,10 @@ class TopologyFilterModel(QSortFilterProxyModel):
     # --------------------------------------------------------------------
     # Index Methods
 
+    def index_ref(self, index):
+        source_index = self.mapToSource(index)
+        return self.sourceModel().index_ref(source_index)
+
     def currentIndex(self):
         """Retrieve the current index for context menu actions"""
         return self.selectionModel.currentIndex()
