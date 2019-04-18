@@ -36,12 +36,6 @@ class TopologyPanel(BasePanelWidget):
         self.tool_widget = self._create_tool_widget()
         self.tool_widget.ui_search_button.clicked.connect(
             self._search_clicked)
-        self.tool_widget.ui_collapse.setIcon(icons.collapse)
-        self.tool_widget.ui_expand.setIcon(icons.expand)
-        self.tool_widget.ui_collapse.clicked.connect(
-            self._collapse_clicked)
-        self.tool_widget.ui_expand.clicked.connect(
-            self._expand_clicked)
 
         main_layout.addWidget(self.tool_widget)
         main_layout.addWidget(self.tree_view)
@@ -83,15 +77,3 @@ class TopologyPanel(BasePanelWidget):
         proxy_model.selectionModel.clearSelection()
 
         self.tree_view.expandAll()
-
-    @pyqtSlot()
-    def _expand_clicked(self):
-        """Expand the tree in the navigation panel
-        """
-        self.tree_view.expandAll()
-
-    @pyqtSlot()
-    def _collapse_clicked(self):
-        """Expand the tree in the navigation panel
-        """
-        self.tree_view.collapseAll()
