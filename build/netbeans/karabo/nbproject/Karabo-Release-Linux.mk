@@ -796,7 +796,7 @@ ${TESTDIR}/TestFiles/f7: ${TESTDIR}/_ext/1033645296/DeviceClient_Test.o ${TESTDI
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f7 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
 
-${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o ${TESTDIR}/_ext/861493463/H5File_Test.o ${TESTDIR}/_ext/861493463/H5Format_Test.o ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o ${TESTDIR}/_ext/861493463/Hdf5_Test.o ${TESTDIR}/_ext/861493463/SchemaSerializer_Test.o ${TESTDIR}/_ext/861493463/ioTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/861493463/BufferSet_Test.o ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o ${TESTDIR}/_ext/861493463/H5File_Test.o ${TESTDIR}/_ext/861493463/H5Format_Test.o ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o ${TESTDIR}/_ext/861493463/Hdf5_Test.o ${TESTDIR}/_ext/861493463/SchemaSerializer_Test.o ${TESTDIR}/_ext/861493463/ioTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f2 $^ ${LDLIBSOPTIONS} -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
 
@@ -837,6 +837,12 @@ ${TESTDIR}/_ext/1033645296/coreTestRunner.o: ../../../src/karabo/tests/core/core
 	${MKDIR} -p ${TESTDIR}/_ext/1033645296
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 -I. -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033645296/coreTestRunner.o ../../../src/karabo/tests/core/coreTestRunner.cc
+
+
+${TESTDIR}/_ext/861493463/BufferSet_Test.o: ../../../src/karabo/tests/io/BufferSet_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/861493463
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/861493463/BufferSet_Test.o ../../../src/karabo/tests/io/BufferSet_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o: ../../../src/karabo/tests/io/FileInputOutput_Test.cc 
