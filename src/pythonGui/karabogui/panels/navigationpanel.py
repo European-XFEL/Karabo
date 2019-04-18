@@ -63,6 +63,7 @@ class TopologyPanel(BasePanelWidget):
     def _search_clicked(self):
         pattern = str(self.tool_widget.ui_search_filter.text())
         proxy_model = self.tree_view.model()
+        proxy_model.invalidateFilter()
         proxy_model.setFilterFixedString(pattern)
         # The regex is accounted in the filter, we do not have to invalidate
         # again!
