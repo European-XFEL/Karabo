@@ -41,19 +41,19 @@ class TopologyFilterModel(QSortFilterProxyModel):
         model = self.sourceModel()
         source_index = model.index(source_row, self.filterKeyColumn(),
                                    source_parent)
-        node = model.index_ref(source_index)
-        # NOTE: We should always have a valid element here!
-        if not node.is_visible:
-            return False
+        if source_index.isValid():
+            node = model.index_ref(source_index)
+            if not node.is_visible:
+                return False
 
-        # Use the short cut here!
-        if self.filterRegExp().isEmpty():
-            return True
-
-        row_count = self.sourceModel().rowCount(source_index)
-        for row in range(row_count):
-            if self.filterAcceptsRow(row, source_index):
+            # Use the short cut here!
+            if self.filterRegExp().isEmpty():
                 return True
+
+            row_count = self.sourceModel().rowCount(source_index)
+            for row in range(row_count):
+                if self.filterAcceptsRow(row, source_index):
+                    return True
 
         return super(TopologyFilterModel, self).filterAcceptsRow(
             source_row, source_parent)
