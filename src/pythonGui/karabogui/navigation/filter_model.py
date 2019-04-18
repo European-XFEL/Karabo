@@ -3,6 +3,7 @@
 # Created on May 22, 2018
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from functools import partial
 
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, Qt
 from PyQt4.QtGui import (
@@ -25,6 +26,7 @@ class TopologyFilterModel(QSortFilterProxyModel):
         super(TopologyFilterModel, self).__init__(parent)
         self.setSourceModel(source_model)
         self.setFilterKeyColumn(0)
+
         self.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.setFilterRole(Qt.DisplayRole)
         self.selectionModel = QItemSelectionModel(self, self)
@@ -52,10 +54,12 @@ class TopologyFilterModel(QSortFilterProxyModel):
             # XXX: We do not take into account dataLoggers, fast forward!
             if node.node_id.startswith('DataLogger'):
                 return False
-
             row_count = self.sourceModel().rowCount(source_index)
-            for row in range(row_count):
-                if self.filterAcceptsRow(row, source_index):
+
+            # Speed up with some gymnastics!
+            func = partial(self.filterAcceptsRow, source_parent=source_index)
+            for match in map(func, range(row_count)):
+                if match:
                     return True
         return super(TopologyFilterModel, self).filterAcceptsRow(
             source_row, source_parent)
