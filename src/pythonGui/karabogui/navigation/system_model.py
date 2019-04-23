@@ -6,8 +6,7 @@
 import json
 from weakref import WeakValueDictionary
 
-from PyQt4.QtCore import (QAbstractItemModel, QMimeData, QModelIndex,
-                          Qt, pyqtSignal)
+from PyQt4.QtCore import QAbstractItemModel, QMimeData, QModelIndex, Qt
 
 from karabo.common.api import DeviceStatus
 from karabogui import globals as krb_globals, icons
@@ -20,7 +19,6 @@ from .context import _UpdateContext
 
 
 class SystemTreeModel(QAbstractItemModel):
-    signalItemChanged = pyqtSignal(str, object)  # type, BaseDeviceProxy
 
     def __init__(self, parent=None):
         super(SystemTreeModel, self).__init__(parent)
