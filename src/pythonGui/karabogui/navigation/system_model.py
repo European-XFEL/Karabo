@@ -259,7 +259,6 @@ class SystemTreeModel(QAbstractItemModel):
         access = krb_globals.GLOBAL_ACCESS_LEVEL
 
         def visitor(node):
-            nonlocal access
             node.is_visible = not (node.visibility > access)
 
         self.tree.visit(visitor)
