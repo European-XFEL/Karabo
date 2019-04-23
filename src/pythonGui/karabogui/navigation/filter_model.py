@@ -17,6 +17,7 @@ HOST_LEVEL = 0
 SERVER_LEVEL = 1
 CLASS_LEVEL = 2
 DEVICE_LEVEL = 3
+DATALOGGER = 'DataLogger'
 
 
 class TopologyFilterModel(QSortFilterProxyModel):
@@ -52,11 +53,11 @@ class TopologyFilterModel(QSortFilterProxyModel):
                 return True
 
             # XXX: We do not take into account dataLoggers, fast forward!
-            if node.node_id.startswith('DataLogger'):
+            if node.node_id.startswith(DATALOGGER):
                 return False
-            row_count = self.sourceModel().rowCount(source_index)
 
             # Speed up with some gymnastics!
+            row_count = self.sourceModel().rowCount(source_index)
             func = partial(self.filterAcceptsRow, source_parent=source_index)
             for match in map(func, range(row_count)):
                 if match:

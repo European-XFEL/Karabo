@@ -36,6 +36,8 @@ class TopologyPanel(BasePanelWidget):
             self._search_clicked)
         self.tool_widget.ui_clear_button.clicked.connect(
             self._clear_clicked)
+        self.tool_widget.ui_search_filter.returnPressed.connect(
+            self._search_clicked)
 
         main_layout.addWidget(self.tool_widget)
         main_layout.addWidget(self.tree_view)
@@ -71,9 +73,9 @@ class TopologyPanel(BasePanelWidget):
 
     @pyqtSlot()
     def _clear_clicked(self):
-        print("CLEAR CLICKED")
         with wait_cursor():
-            self.tool_widget.ui_search_filter.setText('')
+            pattern = ''
+            self.tool_widget.ui_search_filter.setText(pattern)
             proxy_model = self.tree_view.model()
-            proxy_model.setFilterFixedString('')
+            proxy_model.setFilterFixedString(pattern)
             self.tree_view.expandAll()
