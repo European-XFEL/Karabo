@@ -1,5 +1,4 @@
 import os
-import os.path as op
 import subprocess
 import sys
 from threading import Thread
@@ -127,3 +126,5 @@ class BoundDeviceTestCase(TestCase):
         # Stop the event loop
         EventLoop.stop()
         self._eventLoopThread.join()
+
+        sleep(1)
