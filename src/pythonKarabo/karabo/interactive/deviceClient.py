@@ -61,20 +61,20 @@ print("Hint: use the TAB key for auto-completion.")
 # Auto complete function for methods like: f( deviceId, attribute )
 def auto_complete_full(self, event):
     try:
-        if re.match(r'.*\(\s*$', event.line) \
-                or re.match(r'.*\(\s*\"\w+\",\s*$', event.line):
+        if (re.match(r'.*\(\s*$', event.line)
+                or re.match(r'.*\(\s*\"\w+\",\s*$', event.line)):
             return ["\""]
-        elif re.match(r'.*\(\s*\"\w+$', event.line)\
-                or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line):
+        elif (re.match(r'.*\(\s*\"\w+$', event.line)
+              or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line)):
                 # These REs match correctly but completion does not work
             return ["\""]
-        elif re.match(r'.*\(\s*\"$', event.line):
+        elif (re.match(r'.*\(\s*\"$', event.line)):
             dev = cpp_client.getDevices()
             if len(dev) > 0:
                 return dev
             else:
                 return ["NO_INSTANCES_AVAILABLE"]
-        elif re.match(r'.*\(.+,\s*\"$', event.line):
+        elif (re.match(r'.*\(.+,\s*\"$', event.line)):
             r = re.compile(r'\"(.*?)\"')
             m = r.search(event.line)
             if m:
@@ -90,12 +90,12 @@ def auto_complete_full(self, event):
 
 def auto_complete_devid(self, event):
     try:
-        if re.match(r'.*\(\s*$', event.line):
+        if (re.match(r'.*\(\s*$', event.line)):
             return ["\""]
-        elif re.match(r'.*\(\s*\"\w+$', event.line):
+        elif (re.match(r'.*\(\s*\"\w+$', event.line)):
             # These REs match correctly but completion does not work
             return ["\""]
-        elif re.match(r'.*\(\s*\"$', event.line):
+        elif (re.match(r'.*\(\s*\"$', event.line)):
             dev = cpp_client.getDevices()
             if len(dev) > 0:
                 return dev
@@ -109,12 +109,12 @@ def auto_complete_devid(self, event):
 
 def auto_complete_serverid(self, event):
     try:
-        if re.match(r'.*\(\s*$', event.line):
+        if (re.match(r'.*\(\s*$', event.line)):
             return ["\""]
-        elif re.match(r'.*\(\s*\"\w+$', event.line):
+        elif (re.match(r'.*\(\s*\"\w+$', event.line)):
             # These REs match correctly but completion does not work
             return ["\""]
-        elif re.match(r'.*\(\s*\"$', event.line):
+        elif (re.match(r'.*\(\s*\"$', event.line)):
             dev = cpp_client.getServers()
             if len(dev) > 0:
                 return dev
@@ -128,20 +128,20 @@ def auto_complete_serverid(self, event):
 
 def auto_complete_set(self, event):
     try:
-        if re.match(r'.*\(\s*$', event.line) \
-                or re.match(r'.*\(\s*\"\w+\",\s*$', event.line):
+        if (re.match(r'.*\(\s*$', event.line)
+                or re.match(r'.*\(\s*\"\w+\",\s*$', event.line)):
             return ["\""]
-        elif re.match(r'.*\(\s*\"\w+$', event.line)\
-                or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line):
+        elif (re.match(r'.*\(\s*\"\w+$', event.line)
+              or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line)):
                 # These REs match correctly but completion does not work
             return ["\""]
-        elif re.match(r'.*\(\s*\"$', event.line):
+        elif (re.match(r'.*\(\s*\"$', event.line)):
             dev = cpp_client.getDevices()
             if len(dev) > 0:
                 return dev
             else:
                 return ["NO_INSTANCES_AVAILABLE"]
-        elif re.match(r'.*\(.+,\s*\"$', event.line):
+        elif (re.match(r'.*\(.+,\s*\"$', event.line)):
             r = re.compile(r'\"(.*?)\"')
             m = r.search(event.line)
             if m:
@@ -157,20 +157,20 @@ def auto_complete_set(self, event):
 
 def auto_complete_execute(self, event):
     try:
-        if re.match(r'.*\(\s*$', event.line) \
-                or re.match(r'.*\(\s*\"\w+\",\s*$', event.line):
+        if (re.match(r'.*\(\s*$', event.line)
+                or re.match(r'.*\(\s*\"\w+\",\s*$', event.line)):
             return ["\""]
-        elif re.match(r'.*\(\s*\"\w+$', event.line)\
-                or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line):
+        elif (re.match(r'.*\(\s*\"\w+$', event.line)
+              or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line)):
                 # These REs match correctly but completion does not work
             return ["\""]
-        elif re.match(r'.*\(\s*\"$', event.line):
+        elif (re.match(r'.*\(\s*\"$', event.line)):
             dev = cpp_client.getDevices()
             if len(dev) > 0:
                 return dev
             else:
                 return ["NO_INSTANCES_AVAILABLE"]
-        elif re.match(r'.*\(.+,\s*\"$', event.line):
+        elif (re.match(r'.*\(.+,\s*\"$', event.line)):
             r = re.compile(r'\"(.*?)\"')
             m = r.search(event.line)
             if m:
@@ -179,31 +179,29 @@ def auto_complete_execute(self, event):
             else:
                 return [""]
         else:
-            # print("Opt 7")
             return [""]
     except:
         print("Distributed auto-completion failed")
 
 
 def auto_complete_instantiate(self, event):
-    # print("AC: instantiate")
     try:
-        if re.match(r'.*\(\s*$', event.line) \
-                or re.match(r'.*\(\s*\"\w+\",\s*$', event.line):
+        if (re.match(r'.*\(\s*$', event.line)
+                or re.match(r'.*\(\s*\"\w+\",\s*$', event.line)):
             return ["\""]
-        elif re.match(r'.*\(\s*\"\w+$', event.line)\
-                or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line):
+        elif (re.match(r'.*\(\s*\"\w+$', event.line)
+              or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line)):
                 # These REs match correctly but completion does not work
             return ["\""]
-        elif re.match(r'.*\(\s*\"$', event.line):
+        elif (re.match(r'.*\(\s*\"$', event.line)):
             dev = cpp_client.getServers()
             if len(dev) > 0:
                 return dev
             else:
                 return ["NO_INSTANCES_AVAILABLE"]
-        elif re.match(r'.*\(.+\,\s*$', event.line):
+        elif (re.match(r'.*\(.+\,\s*$', event.line)):
             return ["\""]
-        elif re.match(r'.*\(.+,\s*\"$', event.line):
+        elif (re.match(r'.*\(.+,\s*\"$', event.line)):
             r = re.compile(r'\"(.*?)\"')
             m = r.search(event.line)
             if m:
@@ -211,8 +209,8 @@ def auto_complete_instantiate(self, event):
                 return cpp_client.getClasses(serverId)
             else:
                 return [""]
-        elif re.match(r'.*\(.+,.+,\s*$', event.line)\
-                or re.match(r'.*\(.+\,.+\,\s*\".*$', event.line):
+        elif (re.match(r'.*\(.+,.+,\s*$', event.line)
+              or re.match(r'.*\(.+\,.+\,\s*\".*$', event.line)):
             return ["\""]
         else:
             return [""]
