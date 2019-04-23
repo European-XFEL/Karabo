@@ -245,7 +245,7 @@ class SystemTreeModel(QAbstractItemModel):
         for node_id in node_ids:
             self._update_device_info(node_id, column=2)
 
-    def _update_device_info(self, node_id, column=0, role=Qt.DecorationRole):
+    def _update_device_info(self, node_id, column=0):
         """This function is used to launch a dataChanged signal for a specific
            device Id
         """
