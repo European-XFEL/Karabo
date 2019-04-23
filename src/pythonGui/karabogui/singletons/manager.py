@@ -309,6 +309,10 @@ class Manager(QObject):
         device_proxy = self._topology.get_device(deviceId)
         device_proxy.publish_historic_data(property, data)
 
+    def handle_runConfigSourcesInGroup(self, **info):
+        # This is DEPRECATED
+        pass
+
     # ---------------------------------------------------------------------
     # Current Project Interface
 
