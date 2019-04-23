@@ -5,6 +5,10 @@ import karabo.interactive as interactive
 
 
 BLACKLIST = ['__init__.py', 'convert_device_project.py']
+WHITELIST = ['__init__.py','convert_device_project.py', 'deviceClient.py',
+             'ideviceclient.py','ikarabo.py', 'jupyter_kernel.py', 'karabo.py',
+             'scene2python.py', 'startkarabo.py', 'webserver.py']
+
 
 
 def get_python_files():
@@ -24,7 +28,7 @@ def get_python_files():
 
 
 def test_code_quality_flake8():
-    files = get_python_files()
+    files = WHITELIST
     for py_file in files:
         command = ['flake8', os.path.abspath(py_file)]
         subprocess.check_call(command)
