@@ -177,11 +177,11 @@ class TestCrossPipelining(BoundDeviceTestCase):
                                             .format(receiver_api, self._max_timeout))
         out_count = self.dc.get("sender", "outputCounter")
 
-        # Test that duration and frequency match by +/-20%:
+        # Test that duration and frequency match by +/-25%:
         cycle_time = max(1.0/self._sender_freq, processing_time/1000.0)  # for wait, processing_time "holds" the sender.
         expected_out_count = elapsed_time / cycle_time
-        min_expected = 0.80 * expected_out_count
-        max_expected = 1.20 * expected_out_count
+        min_expected = 0.75 * expected_out_count
+        max_expected = 1.25 * expected_out_count
         self.assertTrue(min_expected < out_count < max_expected,
                         "# of output data items, {}, is not in the expected interval, ({:.2f}, {:.2f})."
                         .format(out_count, min_expected, max_expected))
@@ -232,9 +232,9 @@ class TestCrossPipelining(BoundDeviceTestCase):
                                             .format(receiver_api, self._max_timeout))
         out_count = self.dc.get("sender", "outputCounter")
 
-        # Test that duration and frequency match by +/-20%:
-        min_expected = 0.80 * sender_freq * elapsed_time
-        max_expected = 1.20 * sender_freq * elapsed_time
+        # Test that duration and frequency match by +/-25%:
+        min_expected = 0.75 * sender_freq * elapsed_time
+        max_expected = 1.25 * sender_freq * elapsed_time
         self.assertTrue(min_expected < out_count < max_expected,
                         "# of output data items, {}, is not in the expected interval, ({:.2f}, {:.2f})."
                         .format(out_count, min_expected, max_expected))
@@ -285,9 +285,9 @@ class TestCrossPipelining(BoundDeviceTestCase):
                                             .format(receiver_api, self._max_timeout))
         out_count = self.dc.get("sender", "outputCounter")
 
-        # Test that duration and frequency match by +/-20%:
-        min_expected = 0.80 * sender_freq * elapsed_time
-        max_expected = 1.20 * sender_freq * elapsed_time
+        # Test that duration and frequency match by +/-25%:
+        min_expected = 0.75 * sender_freq * elapsed_time
+        max_expected = 1.25 * sender_freq * elapsed_time
         self.assertTrue(min_expected < out_count < max_expected,
                         "# of output data items, {}, is not in the expected interval ({:.2f}, {:.2f})."
                         .format(out_count, min_expected, max_expected))
