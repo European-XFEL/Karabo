@@ -805,16 +805,6 @@ namespace karabo {
                 m_signalSlotable.lock()->request(serverInstanceId, "slotStartDevice", configuration).timeout(timeoutInMillis).receive(ok, reply);
             } catch (const karabo::util::Exception& e) {
                 reply = e.userFriendlyMsg();
-                // Tries to locate the requested device in the topology
-                auto curr_devices = this->getDevices();
-                auto device_it = std::find(curr_devices.begin(), curr_devices.end(), configuration.get<std::string>("deviceId"));
-                if (device_it != curr_devices.end()) {
-                    reply += std::string(" [Device found in topology (among ") + karabo::util::toString(curr_devices.size())
-                            + std::string(" devices)]");
-                } else {
-                    reply += std::string(" [Device not found in topology (not one of the ") + karabo::util::toString(curr_devices.size())
-                            + std::string(" devices)]");
-                }
                 ok = false;
                 return std::make_pair(ok, reply);
             }
