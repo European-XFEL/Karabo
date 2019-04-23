@@ -234,6 +234,17 @@ namespace karathon {
             registerReply(reply);
         }
 
+        bool connectPy(const std::string& signalInstanceId, const std::string& signalFunction,
+                       const std::string& slotInstanceId, const std::string& slotFunction) {
+            ScopedGILRelease nogil;
+            return this->connect(signalInstanceId, signalFunction, slotInstanceId, slotFunction);
+        }
+
+        bool connectPy_old(const std::string& signalFunction, const std::string& slotFunction) {
+            ScopedGILRelease nogil;
+            return this->connect(signalFunction, slotFunction);
+        }
+
         void registerInstanceNewHandlerPy(const bp::object& handler) {
             registerInstanceNewHandler(boost::bind(&SignalSlotableWrap::proxyInstanceNewHandler,
                                                    this, handler, _1, _2));
