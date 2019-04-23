@@ -117,8 +117,8 @@ class BoundDeviceTestCase(TestCase):
             serverProcess.terminate()
         self.serverProcesses.clear()
 
+        self.dc = None
+
         # Stop the event loop
         EventLoop.stop()
         self._eventLoopThread.join()
-
-        self.dc = None
