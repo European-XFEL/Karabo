@@ -15,7 +15,6 @@ from .context import _UpdateContext
 
 
 class DeviceTreeModel(QAbstractItemModel):
-    signalItemChanged = pyqtSignal(str, object)  # type, BaseDeviceProxy
 
     def __init__(self, parent=None):
         super(DeviceTreeModel, self).__init__(parent)
