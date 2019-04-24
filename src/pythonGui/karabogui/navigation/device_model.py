@@ -5,7 +5,7 @@
 #############################################################################
 from weakref import WeakValueDictionary
 
-from PyQt4.QtCore import QAbstractItemModel, QModelIndex, Qt, pyqtSignal
+from PyQt4.QtCore import QAbstractItemModel, QModelIndex, Qt
 
 from karabo.common.api import DeviceStatus
 from karabogui import globals as krb_globals, icons
