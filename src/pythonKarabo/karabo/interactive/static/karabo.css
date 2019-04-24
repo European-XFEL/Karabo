@@ -1,0 +1,31 @@
+body {
+    background: white;
+    margin: 10px;
+  }
+  
+  body,
+  input {
+    font-family: sans-serif;
+    font-size: 10pt;
+    color: black;
+  }
+  
+  table {
+    border-collapse: collapse;
+    border: 0;
+  }
+  
+  td {
+    border: 0;
+    padding: 0;
+  }
+  
+  #body {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+  }
+    
+  #daemonlog .row {
+    padding-top: 0.25em;
+  }
