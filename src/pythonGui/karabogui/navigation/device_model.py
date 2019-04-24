@@ -5,8 +5,7 @@
 #############################################################################
 from weakref import WeakValueDictionary
 
-from PyQt4.QtCore import QAbstractItemModel, QModelIndex, Qt, pyqtSignal
-from PyQt4.QtGui import QItemSelection, QItemSelectionModel
+from PyQt4.QtCore import QAbstractItemModel, QModelIndex, Qt
 
 from karabo.common.api import DeviceStatus
 from karabogui import globals as krb_globals, icons
@@ -16,7 +15,6 @@ from .context import _UpdateContext
 
 
 class DeviceTreeModel(QAbstractItemModel):
-    signalItemChanged = pyqtSignal(str, object)  # type, BaseDeviceProxy
 
     def __init__(self, parent=None):
         super(DeviceTreeModel, self).__init__(parent)
@@ -30,9 +28,6 @@ class DeviceTreeModel(QAbstractItemModel):
         self.tree.on_trait_change(self._needs_update, 'needs_update')
 
         self.setSupportedDragActions(Qt.CopyAction)
-        self.selectionModel = QItemSelectionModel(self, self)
-        self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
-
         event_map = {
             KaraboEvent.AccessLevelChanged: self._event_access_level,
         }
@@ -59,23 +54,6 @@ class DeviceTreeModel(QAbstractItemModel):
     def clear(self):
         self.tree.clear_all()
 
-    def currentIndex(self):
-        return self.selectionModel.currentIndex()
-
-    def selectIndex(self, index):
-        """Select the given `index` of type `QModelIndex` if this is not None
-        """
-        if index is None:
-            self.selectionModel.selectionChanged.emit(QItemSelection(),
-                                                      QItemSelection())
-            return
-
-        self.selectionModel.setCurrentIndex(index,
-                                            QItemSelectionModel.ClearAndSelect)
-
-        treeview = super(DeviceTreeModel, self).parent()
-        treeview.scrollTo(index)
-
     def index(self, row, column, parent=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
         """
@@ -89,7 +67,7 @@ class DeviceTreeModel(QAbstractItemModel):
             if parent_node is None:
                 return QModelIndex()
 
-        children = parent_node.get_visible_children()
+        children = parent_node.children
         return self.createIndex(row, column, children[row])
 
     def parent(self, index):
@@ -123,7 +101,7 @@ class DeviceTreeModel(QAbstractItemModel):
             if parent_node is None:
                 return 0
 
-        return len(parent_node.get_visible_children())
+        return len(parent_node.children)
 
     def columnCount(self, parentIndex=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
@@ -182,35 +160,6 @@ class DeviceTreeModel(QAbstractItemModel):
 
         return node.info()
 
-    def onSelectionChanged(self, selected, deselected):
-        selectedIndexes = selected.indexes()
-
-        if not selectedIndexes:
-            return
-
-        node = None
-        index = selectedIndexes[0]
-        if not index.isValid():
-            level = 0
-        else:
-            node = self.index_ref(index)
-            if node is None:
-                return
-            level = node.level
-
-        if level == 0:
-            proxy = None
-            item_type = 'domain'
-        elif level == 1:
-            proxy = None
-            item_type = 'type'
-        if level == 2:
-            deviceId = node.device_id
-            proxy = get_topology().get_device(deviceId)
-            item_type = 'device'
-
-        self.signalItemChanged.emit(item_type, proxy)
-
     def _needs_update(self):
         """ Whenever the ``needs_update`` event of a ``SystemTree`` is changed
         the view needs to be updated
@@ -219,10 +168,12 @@ class DeviceTreeModel(QAbstractItemModel):
         self.layoutChanged.emit()
 
     def _clear_tree_cache(self):
+
+        self.layoutAboutToBeChanged.emit()
+        access = krb_globals.GLOBAL_ACCESS_LEVEL
+
         def visitor(node):
-            node.is_visible = not (node.visibility >
-                                   krb_globals.GLOBAL_ACCESS_LEVEL)
-            node.clear_cache = True
+            node.is_visible = not (node.visibility > access)
 
         self.tree.visit(visitor)
-        self._needs_update()
+        self.layoutChanged.emit()

@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt4.QtCore import pyqtSlot, QModelIndex, Qt
+from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import (
     QAbstractItemView, QAction, QCursor, QDialog, QHeaderView, QMenu,
     QTreeView)
@@ -18,6 +18,7 @@ from karabogui.singletons.api import (
 from karabogui.widgets.popup import PopupWidget
 
 from .device_model import DeviceTreeModel
+from .device_filter_model import DeviceFilterModel
 from .tools import DeviceSceneHandler
 
 
@@ -27,11 +28,14 @@ class DeviceTreeView(QTreeView):
         self._selected_proxy = None  # A BaseDeviceProxy
 
         model = DeviceTreeModel(parent=self)
-        self.setModel(model)
-        self.setSelectionModel(model.selectionModel)
-        model.rowsInserted.connect(self._items_added)
-        model.modelReset.connect(self.expandReset)
-        model.signalItemChanged.connect(self.onSelectionChanged)
+        proxy_model = DeviceFilterModel(parent=self,
+                                        source_model=model)
+        proxy_model.setFilterKeyColumn(0)
+
+        self.setModel(proxy_model)
+        self.setSelectionModel(proxy_model.selectionModel)
+        proxy_model.modelReset.connect(self.expandReset)
+        proxy_model.signalItemChanged.connect(self.onSelectionChanged)
 
         header = self.header()
         header.setResizeMode(QHeaderView.ResizeToContents)
@@ -126,16 +130,6 @@ class DeviceTreeView(QTreeView):
     def expandReset(self):
         self.expanded = True
         self.expandAll()
-
-    @pyqtSlot(QModelIndex, int, int)
-    def _items_added(self, parent_index, start, end):
-        """React to the addition of an item (or items).
-        """
-        # Bail immediately if not the first item
-        if start != 0:
-            return
-
-        self.expand(parent_index)
 
     @pyqtSlot(str, object)
     def onSelectionChanged(self, item_type, proxy):
