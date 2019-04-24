@@ -87,7 +87,7 @@ class DeviceFilterModel(QSortFilterProxyModel):
         elif level == 1:
             proxy = None
             item_type = 'type'
-        if level == 2:
+        elif level == 2:
             deviceId = node.device_id
             proxy = get_topology().get_device(deviceId)
             item_type = 'device'
