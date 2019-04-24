@@ -163,11 +163,11 @@ namespace karabo {
             void forwardLogs(const boost::system::error_code& error);
 
             /**
-             * Deferred disconnect handler launched by a deadline timer. 
+             * Deferred disconnect handler launched by a deadline timer.
              */
             void deferredDisconnect(const boost::system::error_code& err, WeakChannelPointer channel,
                                     boost::shared_ptr<boost::asio::deadline_timer> timer);
-            
+
             void safeClientWrite(const WeakChannelPointer channel, const karabo::util::Hash& message, int prio = LOSSLESS);
 
             /**
@@ -188,7 +188,7 @@ namespace karabo {
             /**
              * The GUI-server will attempt to close the connection on this channels,
              * and perform a clean-up of members related to this channel.
-             * 
+             *
              * @param channel
              */
             void disconnectChannel(WeakChannelPointer channel);
@@ -640,12 +640,6 @@ namespace karabo {
             void connectPotentialAlarmService(const karabo::util::Hash& topologyEntry);
 
             /**
-             * Checks if an instance at instanceId is a run configurator and connects to its signals if it is.
-             * @param topologyEntry: the topology Hash, from which the class of instanceId will be deduced
-             */
-            void connectPotentialRunConfigurator(const karabo::util::Hash& topologyEntry);
-
-            /**
              * Returns the instance type and instance id from a topology entry
              * @param topologyEntry: a Hash of the topology format
              * @param type: string which will afterwards contain type
@@ -806,20 +800,6 @@ namespace karabo {
             bool checkProjectManagerId(WeakChannelPointer channel, const std::string& deviceId, const std::string & type, const std::string & reason);
 
             /**
-             * Request sources for a run configuration group
-             * @param channel to forward reply to
-             * @param info is a Hash that shoudl contain the deviceId of the run configurator and the group id to request sources for
-             */
-            void onRunConfigSourcesInGroup(WeakChannelPointer channel, const karabo::util::Hash& info);
-
-            /**
-             * Slot to be called upon signal from run configurator that an update was received.
-             * @param info
-             * @param deviceId
-             */
-            void slotRunConfigSourcesUpdate(const karabo::util::Hash& info, const std::string& deviceId);
-
-            /**
              * Calls the ``request`` slot on the device specified by ``deviceId``
              * in ``info`` with args given in ``info.args`` and returns its reply.
              * @param info
@@ -830,7 +810,6 @@ namespace karabo {
              * Error handler to be called in case of remote errors resulting from requests.
              */
             void onRequestFromSlotErrorHandler(WeakChannelPointer channel, const karabo::util::Hash& info, const std::string& token);
-
 
             /**
              * Utility for getting a "name" from client connections.
