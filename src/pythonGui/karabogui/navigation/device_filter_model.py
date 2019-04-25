@@ -3,6 +3,7 @@
 # Created on April 18, 2019
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from functools import partial
 
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, Qt
 from PyQt4.QtGui import (
@@ -18,6 +19,7 @@ class DeviceFilterModel(QSortFilterProxyModel):
         super(DeviceFilterModel, self).__init__(parent)
         self.setSourceModel(source_model)
         self.setFilterKeyColumn(0)
+        self.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.setFilterRole(Qt.DisplayRole)
         self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
@@ -26,9 +28,28 @@ class DeviceFilterModel(QSortFilterProxyModel):
         model = self.sourceModel()
         source_index = model.index(source_row, self.filterKeyColumn(),
                                    source_parent)
+        node = model.index_ref(source_index)
+        if not node.is_visible:
+            return False
+
+        # Use the short cut here!
+        if self.filterRegExp().isEmpty():
+            return True
+
+        # NOTE: This is special, if our parent matches we also accept this
+        # search in order to enable searching by ``TYPE``
+        if source_parent.isValid():
+            row = source_parent.row()
+            parent = source_parent.parent()
+            if super(DeviceFilterModel, self).filterAcceptsRow(row, parent):
+                return True
+
         if source_index.isValid():
-            node = model.index_ref(source_index)
-            return node.is_visible
+            row_count = self.sourceModel().rowCount(source_index)
+            func = partial(self.filterAcceptsRow, source_parent=source_index)
+            for match in map(func, range(row_count)):
+                if match:
+                    return True
 
         return super(DeviceFilterModel, self).filterAcceptsRow(
             source_row, source_parent)
