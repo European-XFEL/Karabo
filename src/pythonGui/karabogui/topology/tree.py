@@ -296,6 +296,10 @@ class SystemTree(HasStrictTraits):
             def removal_context(self, tree_node):
                 yield
 
+            @contextmanager
+            def layout_context(self):
+                yield
+
         return Dummy()
 
     def _append_child_node(self, parent_node, child_node):
