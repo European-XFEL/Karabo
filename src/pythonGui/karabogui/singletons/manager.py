@@ -221,6 +221,18 @@ class Manager(QObject):
         """Handle the version number reply from the GUI server"""
         pass
 
+    def handle_topologyUpdate(self, changes):
+        gone_devices, gone_servers = self._topology.topology_update(changes)
+
+        # Update topology interested listeners!
+        devices, servers = _extract_topology_devices(changes['new'])
+        broadcast_event(KaraboEvent.SystemTopologyUpdate,
+                        {'devices': devices, 'servers': servers})
+
+        # XXX: This has to be worked on once the old protocol goes away
+        broadcast_event(KaraboEvent.SystemTopologyUpdate,
+                        {'devices': gone_devices, 'servers': gone_servers})
+
     def handle_instanceNew(self, topologyEntry):
         """This function receives the configuration for a new instance.
 
@@ -258,8 +270,7 @@ class Manager(QObject):
         self._topology.instance_updated(topologyEntry)
 
     def handle_instanceGone(self, instanceId, instanceType):
-        """Remove ``instance_id`` from topology and update
-        """
+        """Remove ``instance_id`` from topology and update"""
         # Tell the GUI about various devices that are now gone
         self._broadcast_if_of_type('AlarmService', instanceId,
                                    KaraboEvent.RemoveAlarmServices)
