@@ -13,22 +13,20 @@ Detailed Merge-Log
 Bound/cpp core
 ++++++++++++++
 
-C++: Visualize the connections made to OutputChannel object !3425
-C++: Bug and performance fixes for BufferSet copies !3460
-C++: As copyLocal, queueing requires to copy the data !3464
-
-C++/bound: Add input channel key to id of input channel !3426 !3433
-C++/bound: Fix sub-permille chance to screw up pipelining !3451
-Bound: Make bind_weak work in DeviceClient's C++ object (for 2.4.1) !3421
-Bound: Release GIL when connecting to a signal (for 2.4.1)When a (potentially) blocking C++ function is bound to Python, we should
-release the global interpreter lock before. !3463
-Fix pipeline integration test wrt changed remoteId !3434
+- C++: Visualize the connections made to OutputChannel object !3425
+- C++: Bug and performance fixes for BufferSet copies !3460
+- C++: As copyLocal, queueing requires to copy the data !3464
+- C++/bound: Add input channel key to id of input channel !3426 !3433
+- C++/bound: Fix sub-permille chance to screw up pipelining !3451
+- Bound: Make bind_weak work in DeviceClient's C++ object (for 2.4.1) !3421
+- Bound: Release GIL when connecting to a signal !3463
+- Fix pipeline integration test wrt changed remoteId !3434
 
 Middlelayer core
 ++++++++++++++++
 
-MDL: Send channel name in input channel for tracking (2.4.1)Cheery picked Karabo/Framework!3404 !3432
-MDL: Track channel connections in output channel (for 2.4.X)Cherry picked from master (4d407473) !3420
+- MDL: Send channel name in input channel for tracking !3404 !3432
+- MDL: Track channel connections in output channel !3420
 
 
 **************************
