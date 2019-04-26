@@ -464,6 +464,7 @@ class SystemTopology(HasStrictTraits):
         # Error and alarm information are also get updated to nodes appear in
         # the system topology in the navigation panel
         new_topology_nodes = self.system_tree.update(server_hash)
+
         self.device_tree.update(server_hash)
         for proxy in self._device_proxies.values():
             # extract this device's information from system hash
@@ -510,6 +511,96 @@ class SystemTopology(HasStrictTraits):
         # NOTE: this should actually be called in the system_tree itself
         if needs_update:
             self.system_tree.alarm_update = node_ids
+
+    # ---------------------------------------------------------------------
+    # Topology interface
+
+    def topology_update(self, changes):
+        """Handle the bulk system topology update from the server"""
+        devices, servers = [], []
+
+        new = changes['new']
+        if not new.empty():
+            self.instance_new(new)
+        update = changes['update']
+        if not update.empty():
+            self.instance_updated(update)
+        gone = changes['gone']
+        if not gone.empty():
+            devices, servers = self.topology_gone(gone)
+
+        return devices, servers
+
+    def topology_gone(self, system_hash):
+        devices, servers = [], []
+
+        if 'device' in system_hash:
+            self.topology_device_gone('device', system_hash, devices)
+        if 'macro' in system_hash:
+            self.topology_device_gone('macro', system_hash, devices)
+        if 'server' in system_hash:
+            for instance_id, _, attr in system_hash['server'].iterall():
+                path = 'server' + '.' + instance_id
+                attributes = self.get_attributes(path)
+                if attributes is None:
+                    continue
+
+                # Remove instance from system hash
+                if self._system_hash is not None and path in self._system_hash:
+                    del self._system_hash[path]
+
+                self.system_tree.remove_server(instance_id)
+                for key in self._class_proxies.keys():
+                    if key[0] == instance_id:
+                        # Clear the class proxy binding values when device
+                        # server goes offline
+                        self._class_proxies[key].binding.value.clear()
+                # Update status of all offline project device proxies
+                self._project_device_proxies_server_update(instance_id)
+
+                # Note the details of what device is gone
+                host = attributes.get('host', 'UNKNOWN')
+                servers.append((instance_id, host, 'offline'))
+
+            # Update the status of all online devices (device proxies)
+            self._update_online_device_status()
+
+        return devices, servers
+
+    def topology_device_gone(self, instance_type, system_hash, devices):
+        """Check if devices or macros are gone in the system topology
+
+        :param devices: List of devices and macros for collection
+        """
+        for instance_id, _, attr in system_hash[instance_type].iterall():
+            # Get the attributes of the instance which is now gone
+            path = instance_type + '.' + instance_id
+            attributes = self.get_attributes(path)
+            if attributes is None:
+                continue
+
+            # Remove instance from system hash
+            if self._system_hash is not None and path in self._system_hash:
+                del self._system_hash[path]
+
+            # Set the DeviceProxy to offline, but keep it.
+            proxy = self._device_proxies.get(instance_id)
+            if proxy is not None:
+                proxy.status = DeviceStatus.OFFLINE
+                # XXX: We used to clear the configuration tree widget here
+
+            # Update system tree
+            self.system_tree.remove_device(instance_id)
+
+            # And the device tree
+            self.device_tree.remove_device(instance_id)
+
+            # Use pop() for removal in case there's nothing there
+            self._device_schemas.pop(instance_id, None)
+
+            # Note the details of what device is gone
+            class_id = attributes.get('classId', 'unknown-class')
+            devices.append((instance_id, class_id, 'offline'))
 
     # ---------------------------------------------------------------------
     # Utilities
