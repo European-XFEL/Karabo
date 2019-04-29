@@ -230,6 +230,14 @@ class Manager(QObject):
         devices.extend(extra_devices)
         servers.extend(extra_servers)
 
+        # Tell the GUI about various devices or servers that are alive
+        for instance_id, class_id, _ in extra_devices:
+            if class_id == 'AlarmService':
+                self._announce_alarm_services([instance_id])
+            elif class_id == 'ProjectManager':
+                broadcast_event(KaraboEvent.ProjectDBConnect,
+                                {'device': instance_id})
+
         # XXX: This has to be worked on once the old protocol goes away
         broadcast_event(KaraboEvent.SystemTopologyUpdate,
                         {'devices': devices, 'servers': servers})
