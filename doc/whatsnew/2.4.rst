@@ -4,8 +4,14 @@ What's New in Karabo 2.4.1
 
 The hotfix release for Karabo pipelining includes many stabilization fixes and a new feature to visualize
 pipeline connections in output channels with a table element.
-In addition, for bound python the global interpreter lock is released for many additional functions in the deviceclient
-when calling c++ code.
+
+- fix bound Python device client ('bad weak_ptr' => no ageing),
+- fix bound Python SignalSlotable::connect not releasing global interpreter lock (fixes pipeline connection problems)
+- feature: output channel connections table (all APIs)
+- input channel id includes channel name (in addition to device id)
+- fix deduction of "remoteness" of remote input channels with same process id
+- fix "queue" behaviour of pipelines wrt. copying data
+- performance fix when pipelines have to copy data (i.e. "queue" or local [same process] receiver)
 
 Detailed Merge-Log
 ==================
