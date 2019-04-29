@@ -112,7 +112,7 @@ namespace karabo {
             std::string m_distributionMode;
 
             mutable boost::mutex m_registeredSharedInputsMutex;
-            std::vector<InputChannelInfo> m_registeredSharedInputs; // keep as vector for now
+            InputChannels m_registeredSharedInputs;
             // Used for storing chunks for shared input channels when
             // distribution mode is "load-balanced" and the strategy for
             // NoSharedInputChannel available is "queue".
@@ -322,19 +322,19 @@ namespace karabo {
             void distributeLoadBalanced(unsigned int chunkId, boost::mutex::scoped_lock& lock);
 
             /**
-             * Get index of next one of the shared inputs.
+             * Get iterator to next one of the shared inputs - round-robin case.
              *
              * Requires protection of m_registeredSharedInputsMutex and m_registeredSharedInputs.size() > 0
              */
-            unsigned int getNextSharedInputIdx();
+            InputChannels::iterator getNextRoundRobinChannel();
 
             /**
-             * Undo a previous getNextSharedInputIdx()
+             * Undo a previous getNextRoundRobinChannel()
              *
              * Requires protection of m_registeredSharedInputsMutex.
              * Even more, that mutex must not have been unlocked after the getNextSharedInputIdx() it should undo.
              */
-            void undoGetNextSharedInputIdx();
+            void undoGetNextRoundRobinChannel();
 
             void distributeLocal(unsigned int chunkId, const InputChannelInfo & channelInfo);
 
