@@ -330,18 +330,22 @@ namespace karabo {
                 info.set("onSlowness", onSlowness);
                 info.set("queuedChunks", std::deque<int>());
 
-                if (dataDistribution == "shared") {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Registering shared-input channel of instance: " << instanceId;
-                    boost::mutex::scoped_lock lock(m_registeredSharedInputsMutex);
-                    // FIXME: Take care that instanceId not in m_registeredCopyInputs, either.
+                {
+                    // Need to lock both mutexes since eraseOldChannel has to look into both m_registered*Inputs
+                    // since a "shared" input could become a "copy" one and vice versa. And removal and adding
+                    // registered inputs has to be done under the same mutex lock to ensure consistency.
+                    boost::mutex::scoped_lock lockShared(m_registeredSharedInputsMutex);
+                    boost::mutex::scoped_lock lockCopy(m_registeredCopyInputsMutex);
                     eraseOldChannel(m_registeredSharedInputs, instanceId, channel);
-                    m_registeredSharedInputs[instanceId] = info;
-                } else {
-                    boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
-                    // FIXME: Take care that instanceId not in m_registeredSharedInputs, either.
                     eraseOldChannel(m_registeredCopyInputs, instanceId, channel);
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Registering copy-input channel of instance: " << instanceId;
-                    m_registeredCopyInputs[instanceId] = info;
+
+                    if (dataDistribution == "shared") {
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Registering shared-input channel of instance: " << instanceId;
+                        m_registeredSharedInputs[instanceId] = info;
+                    } else {
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Registering copy-input channel of instance: " << instanceId;
+                        m_registeredCopyInputs[instanceId] = info;
+                    }
                 }
                 onInputAvailable(instanceId); // Immediately register for reading
                 updateConnectionTable();
@@ -514,7 +518,7 @@ namespace karabo {
                         } else if (m_distributionMode == "round-robin" && !queuedChunks.empty()) {
                             // Append queued chunks to other shared input
                             // Note: if load-balanced, queuedChunks is empty anyway...
-                            //FIXME (GF): I think the correct logic is to just clean the queue, as in copy case...
+                            // TODO: GF thinks the correct logic is to just clean the queue, as in copy case...
                             InputChannels::iterator itIdChannelInfo = getNextRoundRobinChannel();
                             Hash& nextChannelInfo = itIdChannelInfo->second;
                             std::deque<int>& src = nextChannelInfo.get<std::deque<int> >("queuedChunks");
