@@ -111,6 +111,8 @@ class DeviceSystemTree(HasStrictTraits):
             if not len(domain_node.children):
                 with self.update_context.removal_context(domain_node):
                     self.root.children.remove(domain_node)
+                # Give a layout change announcement!
+                self.needs_update = True
 
         self._device_nodes.pop(instance_id)
         return True
