@@ -222,16 +222,17 @@ class Manager(QObject):
         pass
 
     def handle_topologyUpdate(self, changes):
-        gone_devices, gone_servers = self._topology.topology_update(changes)
+        devices, servers = self._topology.topology_update(changes)
 
         # Update topology interested listeners!
-        devices, servers = _extract_topology_devices(changes['new'])
-        broadcast_event(KaraboEvent.SystemTopologyUpdate,
-                        {'devices': devices, 'servers': servers})
+        extra_devices, extra_servers = _extract_topology_devices(
+            changes['new'])
+        devices.extend(extra_devices)
+        servers.extend(extra_servers)
 
         # XXX: This has to be worked on once the old protocol goes away
         broadcast_event(KaraboEvent.SystemTopologyUpdate,
-                        {'devices': gone_devices, 'servers': gone_servers})
+                        {'devices': devices, 'servers': servers})
 
     def handle_instanceNew(self, topologyEntry):
         """This function receives the configuration for a new instance.
