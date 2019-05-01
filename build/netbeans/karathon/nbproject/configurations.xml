@@ -4,6 +4,7 @@
     <logicalFolder name="SourceFiles"
                    displayName="binding specific"
                    projectFiles="true">
+      <itemPath>../../../src/karathon/ScopedGILAcquire.cc</itemPath>
       <itemPath>../../../src/karathon/ScopedGILAcquire.hh</itemPath>
       <itemPath>../../../src/karathon/ScopedGILRelease.hh</itemPath>
       <itemPath>../../../src/karathon/Wrapper.cc</itemPath>
@@ -431,6 +432,11 @@
       <item path="../../../src/karathon/PythonOutputHandler.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ScopedGILAcquire.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karathon/ScopedGILAcquire.hh"
@@ -867,6 +873,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karathon/ScopedGILAcquire.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karathon/ScopedGILAcquire.hh"
             ex="false"
             tool="3"
@@ -1287,6 +1298,11 @@
       <item path="../../../src/karathon/PythonOutputHandler.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ScopedGILAcquire.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karathon/ScopedGILAcquire.hh"
