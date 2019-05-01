@@ -466,10 +466,12 @@ namespace karathon {
                     handler(bp::object(args)...);
                 }
             } catch (const bp::error_already_set& e) {
-                if (PyErr_Occurred()) PyErr_Print();
+                std::string errstr = "";
+                if (PyErr_Occurred()) errstr = getPyErrString();
                 const std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
                 const std::string whichStr(which ? which : "undefined");
-                throw KARABO_PYTHON_EXCEPTION("Python " + whichStr + " handler'" + funcName + "' has thrown an exception.");
+                throw KARABO_PYTHON_EXCEPTION("Python " + whichStr + " handler'" + funcName
+                        + "' has thrown an exception.\n" + errstr);
             } catch (...) {
                 KARABO_RETHROW
             }

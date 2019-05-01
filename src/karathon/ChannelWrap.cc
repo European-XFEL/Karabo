@@ -146,10 +146,9 @@ namespace karathon {
         try {
             handler(bp::object(channel), bp::object(size));
         } catch (const bp::error_already_set& e) {
-            if (PyErr_Occurred()) {
-                PyErr_Print();
-            }
-            throw KARABO_PYTHON_EXCEPTION("ReadSizeInBytesHandler has thrown an exception.");
+            std::string errstr = "";
+            if (PyErr_Occurred()) errstr = getPyErrString();
+            throw KARABO_PYTHON_EXCEPTION("ReadSizeInBytesHandler has thrown an exception.\n" + errstr);
         } catch (...) {
             KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
         }
@@ -169,10 +168,9 @@ namespace karathon {
         try {
             handler(bp::object(code), bp::object(channel), bp::object(s));
         } catch (const bp::error_already_set& e) {
-            if (PyErr_Occurred()) {
-                PyErr_Print();
-            }
-            throw KARABO_PYTHON_EXCEPTION("ReadStringHandler has thrown an exception.");
+            std::string errstr = "";
+            if (PyErr_Occurred()) errstr = getPyErrString();
+            throw KARABO_PYTHON_EXCEPTION("ReadSizeInBytesHandler has thrown an exception.\n" + errstr);
         } catch (...) {
             KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
         }
@@ -192,10 +190,9 @@ namespace karathon {
         try {
             handler(bp::object(code), bp::object(channel), bp::object(h));
         } catch (const bp::error_already_set& e) {
-            if (PyErr_Occurred()) {
-                PyErr_Print();
-            }
-            throw KARABO_PYTHON_EXCEPTION("ReadHashHandler has thrown an exception.");
+            std::string errstr = "";
+            if (PyErr_Occurred()) errstr = getPyErrString();
+            throw KARABO_PYTHON_EXCEPTION("ReadHashHandler has thrown an exception.\n" + errstr);
         } catch (...) {
             KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
         }
@@ -216,10 +213,9 @@ namespace karathon {
         try {
             handler(bp::object(code), bp::object(channel), bp::object(h), bp::object(v));
         } catch (const bp::error_already_set& e) {
-            if (PyErr_Occurred()) {
-                PyErr_Print();
-            }
-            throw KARABO_PYTHON_EXCEPTION("ReadHashVectorHandler has thrown an exception.");
+            std::string errstr = "";
+            if (PyErr_Occurred()) errstr = getPyErrString();
+            throw KARABO_PYTHON_EXCEPTION("ReadHashVectorHandler has thrown an exception.\n" + errstr);
         } catch (...) {
             KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
         }
@@ -241,10 +237,9 @@ namespace karathon {
         try {
             handler(bp::object(code), bp::object(channel), bp::object(h), bp::object(b));
         } catch (const bp::error_already_set& e) {
-            if (PyErr_Occurred()) {
-                PyErr_Print();
-            }
-            throw KARABO_PYTHON_EXCEPTION("ReadHashHashHandler has thrown an exception.");
+            std::string errstr = "";
+            if (PyErr_Occurred()) errstr = getPyErrString();
+            throw KARABO_PYTHON_EXCEPTION("ReadHashHashHandler has thrown an exception.\n" + errstr);
         } catch (...) {
             KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
         }
@@ -284,10 +279,9 @@ namespace karathon {
         try {
             handler(bp::object(code), bp::object(channel));
         } catch (const bp::error_already_set& e) {
-            if (PyErr_Occurred()) {
-                PyErr_Print();
-            }
-            throw KARABO_PYTHON_EXCEPTION("WriteCompleteHandler has thrown an exception.");
+            std::string errstr = "";
+            if (PyErr_Occurred()) errstr = getPyErrString();
+            throw KARABO_PYTHON_EXCEPTION("WriteCompleteHandler has thrown an exception.\n" + errstr);
         } catch (...) {
             KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
         }
