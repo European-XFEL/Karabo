@@ -1,4 +1,41 @@
 **************************
+What's New in Karabo 2.4.1
+**************************
+
+The hotfix release for Karabo pipelining includes many stabilization fixes and a new feature to visualize
+pipeline connections in output channels with a table element.
+
+- fix bound Python device client ('bad weak_ptr' => no ageing),
+- fix bound Python SignalSlotable::connect not releasing global interpreter lock (fixes pipeline connection problems)
+- feature: output channel connections table (all APIs)
+- input channel id includes channel name (in addition to device id)
+- fix deduction of "remoteness" of remote input channels with same process id
+- fix "queue" behaviour of pipelines wrt. copying data
+- performance fix when pipelines have to copy data (i.e. "queue" or local [same process] receiver)
+
+Detailed Merge-Log
+==================
+
+Bound/cpp core
+++++++++++++++
+
+- C++: Visualize the connections made to OutputChannel object !3425
+- C++: Bug and performance fixes for BufferSet copies !3460
+- C++: As copyLocal, queueing requires to copy the data !3464
+- C++/bound: Add input channel key to id of input channel !3426 !3433
+- C++/bound: Fix sub-permille chance to screw up pipelining !3451
+- Bound: Make bind_weak work in DeviceClient's C++ object (for 2.4.1) !3421
+- Bound: Release GIL when connecting to a signal !3463
+- Fix pipeline integration test wrt changed remoteId !3434
+
+Middlelayer core
+++++++++++++++++
+
+- MDL: Send channel name in input channel for tracking !3404 !3432
+- MDL: Track channel connections in output channel !3420
+
+
+**************************
 What's New in Karabo 2.4.0
 **************************
 
