@@ -26,6 +26,9 @@ namespace karathon {
     private:
         PyGILState_STATE m_gstate;
     };
+
+    std::string getPyErrString();
+
 }
 
 
