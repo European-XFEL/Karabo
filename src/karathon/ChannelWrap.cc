@@ -7,6 +7,7 @@
 
 #include "ChannelWrap.hh"
 #include "ScopedGILAcquire.hh"
+#include "Wrapper.hh"
 
 namespace bp = boost::python;
 using namespace std;
@@ -142,16 +143,7 @@ namespace karathon {
 
 
     void ChannelWrap::proxyReadSizeInBytesHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const size_t& size) {
-        ScopedGILAcquire gil;
-        try {
-            handler(bp::object(channel), bp::object(size));
-        } catch (const bp::error_already_set& e) {
-            std::string errstr = "";
-            if (PyErr_Occurred()) errstr = getPythonExceptionAsString();
-            throw KARABO_PYTHON_EXCEPTION("ReadSizeInBytesHandler has thrown an exception.\n" + errstr);
-        } catch (...) {
-            KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
-        }
+        Wrapper::proxyHandler(handler, "ReadSizeInBytesHandler(channel,size)", channel, size);
     }
 
 
@@ -164,16 +156,7 @@ namespace karathon {
 
 
     void ChannelWrap::proxyReadStringHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel, const std::string& s) {
-        ScopedGILAcquire gil;
-        try {
-            handler(bp::object(code), bp::object(channel), bp::object(s));
-        } catch (const bp::error_already_set& e) {
-            std::string errstr = "";
-            if (PyErr_Occurred()) errstr = getPythonExceptionAsString();
-            throw KARABO_PYTHON_EXCEPTION("ReadSizeInBytesHandler has thrown an exception.\n" + errstr);
-        } catch (...) {
-            KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
-        }
+        Wrapper::proxyHandler(handler, "ReadStringHandler(error_code,channel,string)", code, channel, s);
     }
 
 
@@ -186,16 +169,7 @@ namespace karathon {
 
 
     void ChannelWrap::proxyReadHashHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::util::Hash& h) {
-        ScopedGILAcquire gil;
-        try {
-            handler(bp::object(code), bp::object(channel), bp::object(h));
-        } catch (const bp::error_already_set& e) {
-            std::string errstr = "";
-            if (PyErr_Occurred()) errstr = getPythonExceptionAsString();
-            throw KARABO_PYTHON_EXCEPTION("ReadHashHandler has thrown an exception.\n" + errstr);
-        } catch (...) {
-            KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
-        }
+        Wrapper::proxyHandler(handler, "ReadHashHandler(error_code,channel,Hash)", code, channel, h);
     }
 
 
@@ -209,16 +183,7 @@ namespace karathon {
 
     void ChannelWrap::proxyReadHashVectorHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel,
                                                  const karabo::util::Hash& h, const std::vector<char>& v) {
-        ScopedGILAcquire gil;
-        try {
-            handler(bp::object(code), bp::object(channel), bp::object(h), bp::object(v));
-        } catch (const bp::error_already_set& e) {
-            std::string errstr = "";
-            if (PyErr_Occurred()) errstr = getPythonExceptionAsString();
-            throw KARABO_PYTHON_EXCEPTION("ReadHashVectorHandler has thrown an exception.\n" + errstr);
-        } catch (...) {
-            KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
-        }
+        Wrapper::proxyHandler(handler, "ReadHashVectorHandler(error_code,channel,Hash,vector)", code, channel, h, v);
     }
 
 
@@ -233,16 +198,7 @@ namespace karathon {
     void ChannelWrap::proxyReadHashHashHandler(const karabo::net::ErrorCode& code, const bp::object& handler,
                                                karabo::net::Channel::Pointer channel,
                                                const karabo::util::Hash& h, const karabo::util::Hash& b) {
-        ScopedGILAcquire gil;
-        try {
-            handler(bp::object(code), bp::object(channel), bp::object(h), bp::object(b));
-        } catch (const bp::error_already_set& e) {
-            std::string errstr = "";
-            if (PyErr_Occurred()) errstr = getPythonExceptionAsString();
-            throw KARABO_PYTHON_EXCEPTION("ReadHashHashHandler has thrown an exception.\n" + errstr);
-        } catch (...) {
-            KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
-        }
+        Wrapper::proxyHandler(handler, "ReadHashHashHandler(error_code,channel,Hash,vector)", code, channel, h, b);
     }
 
 
@@ -275,16 +231,7 @@ namespace karathon {
 
 
     void ChannelWrap::proxyWriteCompleteHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel) {
-        ScopedGILAcquire gil;
-        try {
-            handler(bp::object(code), bp::object(channel));
-        } catch (const bp::error_already_set& e) {
-            std::string errstr = "";
-            if (PyErr_Occurred()) errstr = getPythonExceptionAsString();
-            throw KARABO_PYTHON_EXCEPTION("WriteCompleteHandler has thrown an exception.\n" + errstr);
-        } catch (...) {
-            KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
-        }
+        Wrapper::proxyHandler(handler, "WriteCompleteHandler(error_code,channel)", code, channel);
     }
 
 
