@@ -265,25 +265,58 @@ namespace karabo {
              */
             std::string remoteAddress() const;
 
+            /**
+             *  Writes a copy from the data array.
+             */
             void writeAsync(const char* data, const size_t& size, int prio);
 
+            /**
+             *  Writes a copy of the data vector.
+             */
             void writeAsync(const std::vector<char>& data, int prio);
 
+            /**
+             *  Sends the vector pointed by data. The data vector must not be changed after the call to
+             *  writeAsync.
+             */
             void writeAsync(const boost::shared_ptr<std::vector<char> >& data, int prio);
 
+            /**
+             *  Writes a copy of the data string.
+             */
             void writeAsync(const std::string& data, int prio);
 
-            void writeAsync(const karabo::util::Hash& data, int prio);
+            /**
+             *  When copyAllData is false, elements of type NDArray in the hash won't be copied before being sent.
+             */
+            void writeAsync(const karabo::util::Hash& data, int prio, bool copyAllData);
 
+            /**
+             *  Writes copies of the header hash and the data array.
+             */
             void writeAsync(const karabo::util::Hash& header, const char* data, const size_t& size, int prio);
 
+            /**
+             *  Writes copies of the header hash and of the data vector.
+             */
             void writeAsync(const karabo::util::Hash& header, const std::vector<char>& data, int prio);
 
+            /**
+             *  Writes a copy of the header hash. Sends the vector pointed by data, not a copy of it. The data vector
+             *  must not be changed after the call to writeAsync.
+             */
             void writeAsync(const karabo::util::Hash& header, const boost::shared_ptr<std::vector<char> >& data, int prio);
 
+            /**
+             *  Writes copies of the header hash and of the data string.
+             */
             void writeAsync(const karabo::util::Hash& header, const std::string& data, int prio);
 
-            void writeAsync(const karabo::util::Hash& header, const karabo::util::Hash& data, int prio);
+            /**
+             *  When copyAllData is false, elements of type NDArray in the body hash won't be copied before being sent.
+             *  copyAllData doesn't influence the handling of the header hash.
+             */
+            void writeAsync(const karabo::util::Hash& header, const karabo::util::Hash& data, int prio, bool copyAllData);
 
             virtual void setAsyncChannelPolicy(int priority, const std::string& policy, const size_t capacity = 0);
             
@@ -376,6 +409,46 @@ namespace karabo {
 
             void prepareHashFromData(karabo::util::Hash& hash) const;
 
+            /**
+             * Creates a buffer set with the given string stored in its sole buffer.
+             *
+             * @param str the string to be stored in the buffer set.
+             * @return shared_ptr to the buffer set with the string stored.
+             *
+             * @note actually places a copy of the string into the buffer set.
+             */
+            karabo::io::BufferSet::Pointer bufferSetFromString(const std::string& str);
+
+            /**
+             * Creates a buffer set with contents of a given buffer of chars stored
+             * in its sole buffer.
+             *
+             * @param data a pointer to the first char in the input sequence.
+             * @return shared_ptr to the buffer set with the input buffer contents stored.
+             *
+             * @note actually places a copy of the contents of the input buffer into the buffer set.
+             */
+            karabo::io::BufferSet::Pointer bufferSetFromPointerToChar(const char* data, size_t size);
+
+            /**
+             * Creates a buffer set with characters in a given vector of chars stored
+             * in its sole buffer.
+             *
+             * @param data a pointer to the vector of chars to be stored in the buffer set.
+             * @return shared_ptr to the buffer set with the character in the vector stored.
+             */
+            karabo::io::BufferSet::Pointer bufferSetFromVectorCharPointer(const VectorCharPointer& dataVect);
+
+            /**
+             * Creates a buffer set with a given hash stored in its sole buffer.
+             *
+             * @param data the hash to be stored in the buffer set.
+             * @param copyAllData if false no copy of any NDArray internal to the hash will be made upon storing the
+             *        hash in the bufferset (the buffer set will actually become one of the "owners" of the NDArray).
+             * @return pBuffSet a shared pointer that will be pointed to the newly created buffer set with the hash.
+             */
+            karabo::io::BufferSet::Pointer bufferSetFromHash(const karabo::util::Hash& data, bool copyAllData);
+
             void decompress(karabo::util::Hash& header, const std::vector<char>&source, char* data, const size_t& size);
             void decompress(karabo::util::Hash& header, const std::vector<char>&source, std::vector<char>& target);
             void decompress(karabo::util::Hash& header, const std::vector<char>&source, std::string& target);
@@ -403,9 +476,7 @@ namespace karabo {
 
             void prepareHashFromVector(const std::vector<char>& vec, karabo::util::Hash& hash) const;
 
-            void writeAsync(const Message::Pointer& mp, int prio);
-
-            void writeAsync(const char* header, const size_t& hsize, const char* data, const size_t& dsize, int prio);
+            void dispatchWriteAsync(const Message::Pointer& mp, int prio);
 
             void doWrite();
 

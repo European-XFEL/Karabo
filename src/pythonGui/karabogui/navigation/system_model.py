@@ -6,14 +6,12 @@
 import json
 from weakref import WeakValueDictionary
 
-from PyQt4.QtCore import (QAbstractItemModel, QMimeData, QModelIndex,
-                          Qt, pyqtSignal)
-from PyQt4.QtGui import QItemSelection, QItemSelectionModel
+from PyQt4.QtCore import QAbstractItemModel, QMimeData, QModelIndex, Qt
 
 from karabo.common.api import DeviceStatus
 from karabogui import globals as krb_globals, icons
 from karabogui.alarms.api import get_alarm_icon
-from karabogui.events import KaraboEventSender, register_for_broadcasts
+from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.indicators import get_state_icon_for_status
 from karabogui.singletons.api import get_topology
 
@@ -21,7 +19,6 @@ from .context import _UpdateContext
 
 
 class SystemTreeModel(QAbstractItemModel):
-    signalItemChanged = pyqtSignal(str, object)  # type, BaseDeviceProxy
 
     def __init__(self, parent=None):
         super(SystemTreeModel, self).__init__(parent)
@@ -33,30 +30,26 @@ class SystemTreeModel(QAbstractItemModel):
         self.tree.update_context = _UpdateContext(item_model=self)
         # Add listeners for ``needs_update`` change event
         self.tree.on_trait_change(self._needs_update, 'needs_update')
+        # Add listeners for ``alarm_update`` change event
         self.tree.on_trait_change(self._alarm_update, 'alarm_update')
 
         self.setSupportedDragActions(Qt.CopyAction)
-        self.selectionModel = QItemSelectionModel(self, self)
-        self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
-        # not necessary for self due to the fact that the singleton mediator
-        # object and `self` are being destroyed when the GUI exists
-        register_for_broadcasts(self)
+        # not necessary
+        event_map = {
+            KaraboEvent.AccessLevelChanged: self._event_access_level,
+            KaraboEvent.StartMonitoringDevice: self._event_monitor,
+            KaraboEvent.StopMonitoringDevice: self._event_monitor,
+        }
+        register_for_broadcasts(event_map)
 
-    def karaboBroadcastEvent(self, event):
-        sender = event.sender
-        data = event.data
-        if sender in (KaraboEventSender.StartMonitoringDevice,
-                      KaraboEventSender.StopMonitoringDevice):
-            node_id = data['device_id']
-            self._update_device_info(node_id)
-            return True
-        elif sender is KaraboEventSender.ShowDevice:
-            self.selectNodeById(data.get('deviceId'))
-        elif sender is KaraboEventSender.AccessLevelChanged:
-            self._clear_tree_cache()
-        return False
+    def _event_access_level(self, data):
+        self._clear_tree_cache()
+
+    def _event_monitor(self, data):
+        node_id = data['device_id']
+        self._update_device_info(node_id)
 
     def index_ref(self, model_index):
         """Get the system node object for a ``QModelIndex``. This is
@@ -89,52 +82,6 @@ class SystemTreeModel(QAbstractItemModel):
     def clear(self):
         self.tree.clear_all()
 
-    def currentIndex(self):
-        return self.selectionModel.currentIndex()
-
-    def selectIndex(self, index):
-        """Select the given `index` of type `QModelIndex` if this is not None
-        """
-        if index is None:
-            self.selectionModel.selectionChanged.emit(QItemSelection(),
-                                                      QItemSelection())
-            return
-
-        self.selectionModel.setCurrentIndex(index,
-                                            QItemSelectionModel.ClearAndSelect)
-
-        treeview = super(SystemTreeModel, self).parent()
-        treeview.scrollTo(index)
-
-    def selectNodeById(self, node_id):
-        """Select the `SystemTreeNode` with the given `node_id`.
-
-        :param node_id: A string which we are looking for in the tree
-        """
-        nodes = self.findNodes(node_id, full_match=True)
-        assert len(nodes) <= 1
-        if nodes:
-            # Select first entry
-            self.selectNode(nodes[0])
-
-    def selectNode(self, node):
-        """Select the given `node` of type `SystemTreeNode` if this is not None,
-        otherwise nothing is selected
-
-        :param node: The `SystemTreeNode` which should be selected
-        """
-        if node is not None:
-            index = self.createIndex(node.row(), 0, node)
-        else:
-            # Select nothing
-            index = None
-        self.selectIndex(index)
-
-    def findNodes(self, node_id, **kwargs):
-        if kwargs.get('access_level') is None:
-            kwargs['access_level'] = krb_globals.GLOBAL_ACCESS_LEVEL
-        return self.tree.find(node_id, **kwargs)
-
     def index(self, row, column, parent=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
         """
@@ -148,7 +95,7 @@ class SystemTreeModel(QAbstractItemModel):
             if parent_node is None:
                 return QModelIndex()
 
-        children = parent_node.get_visible_children()
+        children = parent_node.children
         return self.createIndex(row, column, children[row])
 
     def parent(self, index):
@@ -185,7 +132,7 @@ class SystemTreeModel(QAbstractItemModel):
             if parent_node is None:
                 return 0
 
-        return len(parent_node.get_visible_children())
+        return len(parent_node.children)
 
     def columnCount(self, parentIndex=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
@@ -278,40 +225,6 @@ class SystemTreeModel(QAbstractItemModel):
         mimeData.setData('treeItems', json.dumps(data))
         return mimeData
 
-    def onSelectionChanged(self, selected, deselected):
-        selectedIndexes = selected.indexes()
-
-        if not selectedIndexes:
-            return
-
-        node = None
-        index = selectedIndexes[0]
-        if not index.isValid():
-            level = 0
-        else:
-            node = self.index_ref(index)
-            if node is None:
-                return
-            level = node.level
-
-        if level == 0:
-            proxy = None
-            item_type = 'other'
-        elif level == 1:
-            proxy = None
-            item_type = 'server'
-        if level == 2:
-            classId = node.node_id
-            serverId = node.parent.node_id
-            proxy = get_topology().get_class(serverId, classId)
-            item_type = 'class'
-        elif level == 3:
-            deviceId = node.node_id
-            proxy = get_topology().get_device(deviceId)
-            item_type = 'device'
-
-        self.signalItemChanged.emit(item_type, proxy)
-
     def _needs_update(self):
         """ Whenever the ``needs_update`` event of a ``SystemTree`` is changed
         the view needs to be updated
@@ -340,10 +253,13 @@ class SystemTreeModel(QAbstractItemModel):
             self.dataChanged.emit(index, index)
 
     def _clear_tree_cache(self):
+        """Clear the tree and reset the model to account visibility
+        """
+        self.layoutAboutToBeChanged.emit()
+        access = krb_globals.GLOBAL_ACCESS_LEVEL
+
         def visitor(node):
-            node.is_visible = not (node.visibility >
-                                   krb_globals.GLOBAL_ACCESS_LEVEL)
-            node.clear_cache = True
+            node.is_visible = not (node.visibility > access)
 
         self.tree.visit(visitor)
-        self._needs_update()
+        self.layoutChanged.emit()

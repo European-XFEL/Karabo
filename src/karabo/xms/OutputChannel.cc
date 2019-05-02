@@ -652,7 +652,8 @@ namespace karabo {
             std::deque<int>& chunkIds = channelInfo.get<std::deque<int> >("queuedChunks");
             int chunkId = chunkIds.front();
             chunkIds.pop_front();
-            KARABO_LOG_FRAMEWORK_DEBUG << "Copying from queue: " << chunkId;
+            KARABO_LOG_FRAMEWORK_DEBUG << "Copying chunk " << chunkId << " from queue, "
+                    << chunkIds.size() << " queue items left ";
             if (channelInfo.get<std::string > ("memoryLocation") == "local") copyLocal(chunkId, channelInfo);
             else copyRemote(chunkId, channelInfo);
         }
@@ -922,6 +923,7 @@ namespace karabo {
                     // Since distributing round-robin, it is really this instance's turn.
                     // So we queue for exactly this one.
                     KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Queuing (shared) data package with chunkId: " << chunkId;
+                    Memory::assureAllDataIsCopied(m_channelId, chunkId);
                     m_registeredSharedInputs[sharedInputIdx].get<std::deque<int> >("queuedChunks").push_back(chunkId); // channelInfo is const...
                 } else if (m_onNoSharedInputChannelAvailable == "wait") {
                     // Blocking actions must not happen under the mutex that is also needed to unblock (in onInputAvailable)
@@ -994,7 +996,8 @@ namespace karabo {
                 } else if (m_onNoSharedInputChannelAvailable == "queue") {
                     // For load-balanced mode the chunks should be put on a single queue.
                     KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
-                            << "Placing chunk in single queue (load-balanced distribution mode)";
+                            << "Placing chunk in single queue (load-balanced distribution mode): " << chunkId;
+                    Memory::assureAllDataIsCopied(m_channelId, chunkId);
                     m_sharedLoadBalancedQueuedChunks.push_back(chunkId);
                 } else if (m_onNoSharedInputChannelAvailable == "wait") {
                     // Blocking actions must not happen under the mutex that is also needed to unblock (in onInputAvailable)
@@ -1156,7 +1159,9 @@ namespace karabo {
                         unregisterWriterFromChunk(chunkId);
                         throw KARABO_IO_EXCEPTION("Can not write (copied) data because input channel of " + instanceId + " was too late");
                     } else if (onSlowness == "queue") {
-                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Queuing (copied) data package for " << instanceId;
+                        KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Queuing (copied) data package for "
+                                << instanceId << ", chunk " << chunkId;
+                        Memory::assureAllDataIsCopied(m_channelId, chunkId);
                         m_registeredCopyInputs[i].get<std::deque<int> >("queuedChunks").push_back(chunkId);
                     } else if (onSlowness == "wait") {
                         // Blocking actions must not happen under the mutex that is also needed to unblock (in onInputAvailable)

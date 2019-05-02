@@ -9,7 +9,7 @@ from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
 
 from karabogui.events import (
-    register_for_broadcasts, unregister_from_broadcasts, KaraboEventSender)
+    register_for_broadcasts, unregister_from_broadcasts, KaraboEvent)
 from karabogui.widgets.ipython import IPythonWidget
 from karabogui.widgets.toolbar import ToolBar
 from .base import BasePanelWidget
@@ -24,23 +24,24 @@ STATUS_TIP = {
 class ScriptingPanel(BasePanelWidget):
     def __init__(self):
         super(ScriptingPanel, self).__init__("Console", allow_closing=True)
-        register_for_broadcasts(self)
+
+        self.event_map = {
+            KaraboEvent.NetworkConnectStatus: self._event_network
+        }
+        register_for_broadcasts(self.event_map)
 
     def closeEvent(self, event):
         super(ScriptingPanel, self).closeEvent(event)
         if event.isAccepted():
-            unregister_from_broadcasts(self)
+            unregister_from_broadcasts(self.event_map)
             self._stop_ipython()
             self.signalPanelClosed.emit(self.windowTitle())
 
-    def karaboBroadcastEvent(self, event):
-        if event.sender is KaraboEventSender.NetworkConnectStatus:
-            connected = event.data.get('status', False)
-            if not connected and self.console:
-                self.console.stop()
-                self._stop_ipython()
-
-        return False
+    def _event_network(self, data):
+        connected = data.get('status', False)
+        if not connected and self.console:
+            self.console.stop()
+            self._stop_ipython()
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.

@@ -22,7 +22,7 @@ from karabo.native import decodeXML, Hash, writeXML
 from karabogui import globals as krb_globals, icons, messagebox
 from karabogui.binding.api import (
     DeviceClassProxy, DeviceProxy, extract_configuration)
-from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.request import call_device_slot
 from karabogui.singletons.api import get_config, get_db_conn
 
@@ -142,7 +142,7 @@ def load_configuration_from_file(device_proxy):
     get_config()['config_dir'] = op.dirname(filename)
     # Broadcast so the configurator can handle the complexities of applying
     # a configuration.
-    broadcast_event(KaraboEventSender.LoadConfiguration,
+    broadcast_event(KaraboEvent.LoadConfiguration,
                     {'proxy': device_proxy, 'configuration': config})
 
 
@@ -267,12 +267,12 @@ def handle_scene_from_server(dev_id, name, project, target_window, success,
         scene.reset_uuid()
 
     # Add to the project AND open it
-    event_type = KaraboEventSender.ShowUnattachedSceneView
+    event_type = KaraboEvent.ShowUnattachedSceneView
     window = SceneTargetWindow.MainWindow
     if target_window is not None:
         window = target_window
     if project is not None:
-        event_type = KaraboEventSender.ShowSceneView
+        event_type = KaraboEvent.ShowSceneView
         project.scenes.append(scene)
     broadcast_event(event_type, {'model': scene, 'target_window': window})
 
@@ -300,7 +300,7 @@ def handle_macro_from_server(dev_id, name, project, success, reply):
     # Macro's can only be added to project. Hence, add first to the project
     project.macros.append(macro)
     # and then open it
-    broadcast_event(KaraboEventSender.ShowMacroView, {'model': macro})
+    broadcast_event(KaraboEvent.ShowMacroView, {'model': macro})
 
 
 def is_database_processing():
