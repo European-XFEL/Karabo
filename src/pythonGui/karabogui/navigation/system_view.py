@@ -5,21 +5,23 @@
 #############################################################################
 from functools import partial
 
-from PyQt4.QtCore import Qt, pyqtSlot
-from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog, QMenu,
-                         QTreeView)
+from PyQt4.QtCore import pyqtSlot, Qt
+from PyQt4.QtGui import (
+    QAbstractItemView, QAction, QCursor, QDialog, QMenu, QTreeView)
 
 from karabo.common.api import Capabilities
 from karabogui import icons
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.enums import NavigationItemTypes
-from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.request import call_device_slot
 from karabogui.singletons.api import get_manager, get_selection_tracker
 from karabogui.util import (
     handle_scene_from_server, load_configuration_from_file,
     save_configuration_to_file, set_treeview_header)
 from karabogui.widgets.popup import PopupWidget
+
+from .filter_model import TopologyFilterModel
 from .system_model import SystemTreeModel
 from .tools import DeviceSceneHandler
 
@@ -30,26 +32,29 @@ class SystemTreeView(QTreeView):
         self._selected_proxy = None  # A BaseDeviceProxy
 
         model = SystemTreeModel(parent=self)
-        self.setModel(model)
-        self.setSelectionModel(model.selectionModel)
-        model.rowsInserted.connect(self._items_added)
-        model.signalItemChanged.connect(self.onSelectionChanged)
+        proxy_model = TopologyFilterModel(parent=self,
+                                          source_model=model)
+        self.setModel(proxy_model)
+        self.setSelectionModel(proxy_model.selectionModel)
 
-        set_treeview_header(self)
+        proxy_model.setFilterKeyColumn(0)
+        proxy_model.signalItemChanged.connect(self.onSelectionChanged)
+        proxy_model.modelReset.connect(self.expandReset)
+
+        self.setDragEnabled(True)
 
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
+        set_treeview_header(self)
+
+        self.handler_list = [DeviceSceneHandler()]
+        self.expanded = False
+        self.popupWidget = None
+        self.header().sectionDoubleClicked.connect(self.onDoubleClickHeader)
 
         self._setupContextMenu()
         self.customContextMenuRequested.connect(
             self.onCustomContextMenuRequested)
-        self.setDragEnabled(True)
-
-        self.handler_list = [DeviceSceneHandler()]
-        # by default all path are expanded
-        self.expanded = True
-        self.popupWidget = None
-        self.header().sectionDoubleClicked.connect(self.onDoubleClickHeader)
 
     def _setupContextMenu(self):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -154,14 +159,10 @@ class SystemTreeView(QTreeView):
     # ----------------------------
     # Slots
 
-    def _items_added(self, parent_index, start, end):
-        """React to the addition of an item (or items).
-        """
-        # Bail immediately if not the first item
-        if start != 0:
-            return
-
-        self.expand(parent_index)
+    @pyqtSlot()
+    def expandReset(self):
+        self.expanded = True
+        self.expandAll()
 
     @pyqtSlot()
     def onAbout(self):
@@ -241,7 +242,7 @@ class SystemTreeView(QTreeView):
         if item_type not in ('class', 'device'):
             # servers and hosts clear the configurator
             proxy = None
-        broadcast_event(KaraboEventSender.ShowConfiguration, {'proxy': proxy})
+        broadcast_event(KaraboEvent.ShowConfiguration, {'proxy': proxy})
 
     @pyqtSlot()
     def onOpenFromFile(self):
