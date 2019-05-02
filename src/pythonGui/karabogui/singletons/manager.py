@@ -3,7 +3,6 @@
 # Created on February 1, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from collections import defaultdict
 from datetime import datetime
 from functools import wraps
 
@@ -16,7 +15,7 @@ from karabogui.alarms.api import extract_alarms_data
 from karabogui.background import executeLater, Priority
 from karabogui.binding.api import (
     apply_fast_data, extract_attribute_modifications, extract_configuration)
-from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.events import broadcast_event, KaraboEvent
 from karabogui import messagebox
 from karabogui.singletons.api import get_network, get_topology
 from karabogui.util import show_wait_cursor
@@ -159,7 +158,7 @@ class Manager(QObject):
         """If the server connection is changed, the model needs an update.
         """
         # Broadcast event to all panels which need a reset
-        broadcast_event(KaraboEventSender.NetworkConnectStatus,
+        broadcast_event(KaraboEvent.NetworkConnectStatus,
                         {'status': isConnected})
 
         # Clear the system topology
@@ -188,7 +187,7 @@ class Manager(QObject):
             print(msg.format(type(ex).__name__, handler, hsh))
 
     def handle_log(self, messages):
-        broadcast_event(KaraboEventSender.LogMessages, {'messages': messages})
+        broadcast_event(KaraboEvent.LogMessages, {'messages': messages})
 
     def handle_configurationFromPast(self, **info):
         success = info.get('success', False)
@@ -198,26 +197,25 @@ class Manager(QObject):
             return
         deviceId = info.get('deviceId')
         config = info.get('config')
-        broadcast_event(KaraboEventSender.ShowConfigurationFromPast,
+        broadcast_event(KaraboEvent.ShowConfigurationFromPast,
                         {'deviceId': deviceId, 'configuration': config})
 
     def handle_brokerInformation(self, **info):
         get_network()._handleBrokerInformation(
             info.get('host'), info.get('port'), info.get('topic'))
-        broadcast_event(KaraboEventSender.BrokerInformationUpdate, info)
+        broadcast_event(KaraboEvent.BrokerInformationUpdate, info)
 
     @show_wait_cursor
     def handle_systemTopology(self, systemTopology):
-        self._topology.update(systemTopology)
+        self._topology.initialize(systemTopology)
 
-        # Tell the GUI about various devices that are alive
-        instance_ids = self._collect_devices('AlarmService')
-        self._announce_alarm_services(instance_ids.get('AlarmService', []))
-
-        # Tell the world about new devices/servers
         devices, servers = _extract_topology_devices(systemTopology)
-        broadcast_event(KaraboEventSender.SystemTopologyUpdate,
+        broadcast_event(KaraboEvent.SystemTopologyUpdate,
                         {'devices': devices, 'servers': servers})
+
+        for instance_id, class_id, _ in devices:
+            if class_id == 'AlarmService':
+                self._announce_alarm_services([instance_id])
 
     def handle_systemVersion(self, **info):
         """Handle the version number reply from the GUI server"""
@@ -245,7 +243,7 @@ class Manager(QObject):
 
         devices, servers = _extract_topology_devices(topologyEntry)
         # Broadcast the change to listeners
-        broadcast_event(KaraboEventSender.SystemTopologyUpdate,
+        broadcast_event(KaraboEvent.SystemTopologyUpdate,
                         {'devices': devices, 'servers': servers})
 
         # Tell the GUI about various devices or servers that are alive
@@ -253,7 +251,7 @@ class Manager(QObject):
             if class_id == 'AlarmService':
                 self._announce_alarm_services([instance_id])
             elif class_id == 'ProjectManager':
-                broadcast_event(KaraboEventSender.ProjectDBConnect,
+                broadcast_event(KaraboEvent.ProjectDBConnect,
                                 {'device': instance_id})
 
     def handle_instanceUpdated(self, topologyEntry):
@@ -264,13 +262,13 @@ class Manager(QObject):
         """
         # Tell the GUI about various devices that are now gone
         self._broadcast_if_of_type('AlarmService', instanceId,
-                                   KaraboEventSender.RemoveAlarmServices)
+                                   KaraboEvent.RemoveAlarmServices)
 
         # Update the system topology
         devices, servers = self._topology.instance_gone(instanceId,
                                                         instanceType)
         # Broadcast the change to listeners
-        broadcast_event(KaraboEventSender.SystemTopologyUpdate,
+        broadcast_event(KaraboEvent.SystemTopologyUpdate,
                         {'devices': devices, 'servers': servers})
 
         if instanceType == 'server':
@@ -283,7 +281,7 @@ class Manager(QObject):
 
         # Once everything has calmed down, tell the configurator to clear
         # NOTE: Doing this last avoids resetting displayed project devices
-        broadcast_event(KaraboEventSender.ClearConfigurator,
+        broadcast_event(KaraboEvent.ClearConfigurator,
                         {'deviceId': instanceId})
 
     def handle_attributesUpdated(self, reply):
@@ -300,7 +298,7 @@ class Manager(QObject):
             return
 
         # Refresh the configurator iff this proxy is already showing
-        broadcast_event(KaraboEventSender.UpdateDeviceConfigurator,
+        broadcast_event(KaraboEvent.UpdateDeviceConfigurator,
                         {'proxy': proxy})
 
     def handle_deviceConfiguration(self, deviceId, configuration):
@@ -309,6 +307,10 @@ class Manager(QObject):
     def handle_propertyHistory(self, deviceId, property, data):
         device_proxy = self._topology.get_device(deviceId)
         device_proxy.publish_historic_data(property, data)
+
+    def handle_runConfigSourcesInGroup(self, **info):
+        # This is DEPRECATED
+        pass
 
     # ---------------------------------------------------------------------
     # Current Project Interface
@@ -322,18 +324,18 @@ class Manager(QObject):
     @project_db_handler()
     def handle_projectListDomains(self, reply):
         # ``reply`` is a Hash containing a list of domain names
-        broadcast_event(KaraboEventSender.ProjectDomainsList,
+        broadcast_event(KaraboEvent.ProjectDomainsList,
                         {'items': reply['domains']})
 
     @project_db_handler()
     def handle_projectListItems(self, reply):
         # ``reply`` is a Hash containing a list of item hashes
-        broadcast_event(KaraboEventSender.ProjectItemsList,
+        broadcast_event(KaraboEvent.ProjectItemsList,
                         {'items': reply.get('items', [])})
 
     def handle_projectListProjectManagers(self, reply):
         # ``reply`` is a list of strings
-        broadcast_event(KaraboEventSender.ProjectManagersList,
+        broadcast_event(KaraboEvent.ProjectManagersList,
                         {'items': reply})
 
     @project_db_handler(fall_through=True)
@@ -341,19 +343,19 @@ class Manager(QObject):
         # ``reply`` is a Hash containing a list of item hashes
         success = reply.get('success', True)
         d = {'success': success, 'items': reply.get('items', [])}
-        broadcast_event(KaraboEventSender.ProjectItemsLoaded, d)
+        broadcast_event(KaraboEvent.ProjectItemsLoaded, d)
 
     @project_db_handler(fall_through=True)
     def handle_projectSaveItems(self, reply):
         # ``reply`` is a Hash containing a list of item hashes
         success = reply.get('success', True)
         d = {'success': success, 'items': reply.get('items', [])}
-        broadcast_event(KaraboEventSender.ProjectItemsSaved, d)
+        broadcast_event(KaraboEvent.ProjectItemsSaved, d)
 
     @project_db_handler()
     def handle_projectUpdateAttribute(self, reply):
         # ``reply`` is a Hash containing a list of item hashes
-        broadcast_event(KaraboEventSender.ProjectAttributeUpdated,
+        broadcast_event(KaraboEvent.ProjectAttributeUpdated,
                         {'items': reply['items']})
 
     # ---------------------------------------------------------------------
@@ -389,7 +391,7 @@ class Manager(QObject):
             if self._show_big_data_proc:
                 proc = Timestamp().toTimestamp() - timestamp.toTimestamp()
                 info = {'name': name, 'proc': proc}
-                broadcast_event(KaraboEventSender.BigDataProcessing, info)
+                broadcast_event(KaraboEvent.BigDataProcessing, info)
             # Let the GUI server know we have processed this chunk
             get_network().onRequestNetwork(name)
 
@@ -401,7 +403,7 @@ class Manager(QObject):
         if device is not None:
             data = {'device': device, 'success': success, 'message': message}
             # Create KaraboBroadcastEvent
-            broadcast_event(KaraboEventSender.DeviceInitReply, data)
+            broadcast_event(KaraboEvent.DeviceInitReply, data)
 
     def handle_alarmInit(self, instanceId, rows):
         """Show initial update for ``AlarmService`` with given ``instanceId``
@@ -411,7 +413,7 @@ class Manager(QObject):
             data = extract_alarms_data(instanceId, rows)
             self._topology.update_alarms_info(data)
 
-            broadcast_event(KaraboEventSender.AlarmServiceInit, data)
+            broadcast_event(KaraboEvent.AlarmServiceInit, data)
 
     def handle_alarmUpdate(self, instanceId, rows):
         """Show update for ``AlarmService`` with given ``instanceId`` and all
@@ -421,7 +423,7 @@ class Manager(QObject):
             data = extract_alarms_data(instanceId, rows)
             self._topology.update_alarms_info(data)
 
-            broadcast_event(KaraboEventSender.AlarmServiceUpdate, data)
+            broadcast_event(KaraboEvent.AlarmServiceUpdate, data)
 
     # ------------------------------------------------------------------
     # Private methods
@@ -430,7 +432,7 @@ class Manager(QObject):
         """Handle the arrival of one or more `AlarmService` devices.
         """
         if instance_ids:
-            broadcast_event(KaraboEventSender.ShowAlarmServices,
+            broadcast_event(KaraboEvent.ShowAlarmServices,
                             {'instanceIds': instance_ids})
         for inst_id in instance_ids:
             # Request all current alarms for the given alarm service device
@@ -445,21 +447,6 @@ class Manager(QObject):
                 broadcast_event(event_type, {'instanceIds': [instance_id]})
                 return True
         return False
-
-    def _collect_devices(self, *class_ids):
-        """Walk the system tree and collect all the instance ids of devices
-        whose type is in the list `class_ids`.
-        """
-        instance_ids = defaultdict(list)
-
-        def visitor(node):
-            attrs = node.attributes
-            dev_class_id = attrs.get('classId', 'UNKNOWN')
-            if attrs.get('type') == 'device' and dev_class_id in class_ids:
-                instance_ids[dev_class_id].append(node.node_id)
-
-        self._topology.visit_system_tree(visitor)
-        return instance_ids
 
 # ------------------------------------------------------------------
 

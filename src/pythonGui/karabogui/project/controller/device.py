@@ -20,7 +20,7 @@ from karabo.native import (
 from karabogui import messagebox
 from karabogui.binding.api import extract_configuration
 from karabogui.enums import ProjectItemTypes
-from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.indicators import get_project_device_status_icon
@@ -302,7 +302,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         self._broadcast_item_click()
 
     def _broadcast_item_click(self):
-        broadcast_event(KaraboEventSender.ShowConfiguration,
+        broadcast_event(KaraboEvent.ShowConfiguration,
                         {'proxy': self.project_device.proxy})
 
     def _update_icon(self, ui_data):
@@ -327,7 +327,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         self.ui_data.alarm_type = alarm_type
 
     def _update_configurator(self):
-        broadcast_event(KaraboEventSender.UpdateDeviceConfigurator,
+        broadcast_event(KaraboEvent.UpdateDeviceConfigurator,
                         {'proxy': self.project_device.proxy})
 
     def _create_sub_menu(self, parent_menu, project_controller):
