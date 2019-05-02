@@ -75,6 +75,8 @@ namespace karathon {
     finish:
 
         Py_XDECREF(obResult);
+        PyErr_Clear();
+        // debug printing
         std::cerr << result << std::endl;
         return result;
     }
