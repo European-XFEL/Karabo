@@ -428,7 +428,7 @@ namespace karathon {
                 if (handler) handler(bp::object(arg1));
             } catch (const bp::error_already_set& e) {
                 std::string errstr = "";
-                if (PyErr_Occurred()) errstr = getPyErrString();
+                if (PyErr_Occurred()) errstr = getPythonExceptionAsString();
                 std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
                 throw KARABO_PYTHON_EXCEPTION("Python handler '" + funcName + "' has thrown an exception.\n" + errstr);
             } catch (...) {
@@ -442,7 +442,7 @@ namespace karathon {
                 if (handler) handler(bp::object(arg1), bp::object(arg2));
             } catch (const bp::error_already_set& e) {
                 std::string errstr = "";
-                if (PyErr_Occurred()) errstr = getPyErrString();
+                if (PyErr_Occurred()) errstr = getPythonExceptionAsString();
                 std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
                 throw KARABO_PYTHON_EXCEPTION("Python handler '" + funcName + "' has thrown an exception.\n" + errstr);
             } catch (...) {
@@ -456,7 +456,7 @@ namespace karathon {
                 if (handler) handler(bp::object(arg1), bp::object(arg2));
             } catch (const bp::error_already_set& e) {
                 std::string errstr = "";
-                if (PyErr_Occurred()) errstr = getPyErrString();
+                if (PyErr_Occurred()) errstr = getPythonExceptionAsString();
                 std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
                 throw KARABO_PYTHON_EXCEPTION("Python handler '" + funcName + "' has thrown an exception.\n" + errstr);
             } catch (...) {
@@ -470,7 +470,7 @@ namespace karathon {
                 if (handler) handler(bp::object(arg1), bp::object(arg2), boost::any_cast<const bp::object&>(arg3));
             } catch (const bp::error_already_set& e) {
                 std::string errstr = "";
-                if (PyErr_Occurred()) errstr = getPyErrString();
+                if (PyErr_Occurred()) errstr = getPythonExceptionAsString();
                 std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
                 throw KARABO_PYTHON_EXCEPTION("Python handler '" + funcName + "' has thrown an exception.\n" + errstr);
             } catch (...) {

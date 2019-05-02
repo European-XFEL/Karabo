@@ -27,7 +27,12 @@ namespace karathon {
         PyGILState_STATE m_gstate;
     };
 
-    std::string getPyErrString();
+    /**
+     * Extract traceback using "error indicator"
+     * NOTE: It should be called under the GIL protection!
+     * @return python traceback represented as a (multi-lined) string  
+     */
+    std::string getPythonExceptionAsString();
 
 }
 
