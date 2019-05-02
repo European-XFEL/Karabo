@@ -9,7 +9,18 @@ namespace karathon {
     static PyObject* functionFormatException = NULL;
 
 
-    std::string getPyErrString() {
+    /**
+     * Here we are implementing C API version of what is similar to the following Python code
+     * 
+     * exc = ""
+     * try:
+     *    ... <Python code that can raise exception...>
+     * except:
+     *     exc_type, exc_value, exc_traceback = sys.exc_info()
+     *     import traceback
+     *     exc = traceback.format_exception(exc_type, exc_value, exc_traceback)
+     */
+    std::string getPythonExceptionAsString() {
         PyObject* obResult = NULL;
         PyObject* ptype = NULL;
         PyObject* pvalue = NULL;
@@ -19,7 +30,7 @@ namespace karathon {
         // Fetch parameters of error indicator
         PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 
-        // 'import sys' module ...
+        // 'import sys' module ... otherwise 'import traceback' will fail (?!)
         if (!moduleSys) {
         moduleSys = PyImport_ImportModule("sys");
             if (!moduleSys) {

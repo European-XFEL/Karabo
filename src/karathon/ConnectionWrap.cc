@@ -30,7 +30,7 @@ namespace karathon {
             connectionHandler(bp::object(code), bp::object(channel));
         } catch (const bp::error_already_set& e) {
             std::string errstr = "";
-            if (PyErr_Occurred()) errstr = getPyErrString();
+            if (PyErr_Occurred()) errstr = getPythonExceptionAsString();
             throw KARABO_PYTHON_EXCEPTION("ConnectionHandler has thrown an exception. See above.\n" + errstr);
         } catch (...) {
             KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
