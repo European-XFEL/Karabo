@@ -13,7 +13,7 @@ except ImportError:
 
 from karabo.common.project.api import write_macro
 from karabogui.events import (
-    KaraboEventSender, broadcast_event, register_for_broadcasts,
+    KaraboEvent, broadcast_event, register_for_broadcasts,
     unregister_from_broadcasts)
 from karabogui import icons, messagebox
 from karabogui.binding.api import PropertyProxy
@@ -33,7 +33,11 @@ class MacroPanel(BasePanelWidget):
         self.already_connected = {}
 
         # Register to KaraboBroadcastEvent
-        register_for_broadcasts(self)
+        self.event_map = {
+            KaraboEvent.ConnectMacroInstance: self._event_connect,
+            KaraboEvent.DeviceInitReply: self._event_init_reply,
+        }
+        register_for_broadcasts(self.event_map)
 
         # Hook up a trait handler for the panel window title
         self.model.on_trait_change(self.set_title, 'simple_name')
@@ -83,31 +87,31 @@ class MacroPanel(BasePanelWidget):
                 return True
         return False
 
-    def karaboBroadcastEvent(self, event):
-        sender = event.sender
-        data = event.data
-        if sender is KaraboEventSender.ConnectMacroInstance:
-            model = data.get('model')
-            if model is self.model:
-                self.connect(data.get('instance'))
-            return True
-        elif sender is KaraboEventSender.DeviceInitReply:
-            macro_instance = data.get('device')
-            if macro_instance.device_id in self.model.instance_id:
-                self.init_reply(data.get('success'), data.get('message'))
-            return True
-        return False
+    # -----------------------------------------------------------------------
+    # Karabo Events
+
+    def _event_connect(self, data):
+        model = data.get('model')
+        if model is self.model:
+            self.connect(data.get('instance'))
+
+    def _event_init_reply(self, data):
+        macro_instance = data.get('device')
+        if macro_instance.device_id in self.model.instance_id:
+            self.init_reply(data.get('success'), data.get('message'))
+
+    # -----------------------------------------------------------------------
 
     def closeEvent(self, event):
         super(MacroPanel, self).closeEvent(event)
         if event.isAccepted():
             # Unregister to KaraboBroadcastEvent
-            unregister_from_broadcasts(self)
+            unregister_from_broadcasts(self.event_map)
             # Unregister the trait handler too
             self.model.on_trait_change(self.set_title, 'simple_name',
                                        remove=True)
             # Tell the world we're closing
-            broadcast_event(KaraboEventSender.MiddlePanelClosed,
+            broadcast_event(KaraboEvent.MiddlePanelClosed,
                             {'model': self.model})
             # Unregister all trait handlers
             for instance in self.model.instances:

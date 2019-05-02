@@ -2,7 +2,7 @@ from PyQt4.QtCore import Qt, QRect, QPoint
 from traits.api import HasStrictTraits, Any, Enum, Instance, String
 
 from karabogui.binding.api import DeviceProxy
-from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.sceneview.bases import BaseSceneTool
 from karabogui.sceneview.utils import save_painter_state
 
@@ -21,7 +21,7 @@ class ProxySelectionTool(BaseSceneTool):
             if isinstance(device, DeviceProxy):  # ignore DeviceClassProxy
                 if not device.online:
                     return  # ignore offline devices
-                broadcast_event(KaraboEventSender.ShowConfiguration,
+                broadcast_event(KaraboEvent.ShowConfiguration,
                                 {'proxy': device})
             return
 
@@ -30,7 +30,7 @@ class ProxySelectionTool(BaseSceneTool):
             # Simply launch the event to show the device with the deviceId
             # from the workflow widget!
             deviceId = workflow.model.device_id
-            broadcast_event(KaraboEventSender.ShowDevice,
+            broadcast_event(KaraboEvent.ShowDevice,
                             {'deviceId': deviceId})
 
     def mouse_move(self, scene_view, event):

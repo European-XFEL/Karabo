@@ -186,9 +186,9 @@ namespace karabo {
                 return; // all good, no need to copy
             }
 
-            Data copiedData(data.size(), DataPointer(new DataType(true)));
-
+            Data copiedData(data.size());
             for (size_t i = 0; i < data.size(); ++i) {
+                copiedData[i] = DataPointer(new DataType(true));
                 data[i]->appendTo(*(copiedData[i]), false);
                 copiedData[i]->rewind();
             }
