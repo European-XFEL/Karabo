@@ -224,6 +224,12 @@ class Manager(QObject):
     def handle_topologyUpdate(self, changes):
         devices, servers = self._topology.topology_update(changes)
 
+        # Did an alarm system leave our topology?
+        for instance_id, class_id, _ in devices:
+            if class_id == 'AlarmService':
+                broadcast_event(KaraboEvent.RemoveAlarmServices,
+                                {'instanceIds': [instance_id]})
+
         # Update topology interested listeners!
         extra_devices, extra_servers = _extract_topology_devices(
             changes['new'])

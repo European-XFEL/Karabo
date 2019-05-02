@@ -539,7 +539,7 @@ class SystemTopology(HasStrictTraits):
         if 'macro' in system_hash:
             self.topology_device_gone('macro', system_hash, devices)
         if 'server' in system_hash:
-            for instance_id, _, attr in system_hash['server'].iterall():
+            for instance_id in system_hash['server'].keys():
                 path = 'server' + '.' + instance_id
                 attributes = self.get_attributes(path)
                 if attributes is None:
