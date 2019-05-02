@@ -27,7 +27,8 @@ namespace karathon {
         PyObject* ptraceback = NULL;
         std::string result = "";
 
-        // Fetch parameters of error indicator
+        // Fetch parameters of error indicator ... the error indicator is getting cleared!
+        // ... the new references returned!
         PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 
         // 'import sys' module ... otherwise 'import traceback' will fail (?!)
@@ -66,16 +67,21 @@ namespace karathon {
             for (Py_ssize_t i = 0; i < length; ++i) {
                 PyObject* item = PySequence_GetItem(obResult, i);
                 result += std::string(PyUnicode_AsUTF8(item));
+                Py_XDECREF(item);
             }
         } else if (pvalue) {
             PyObject* pystr = PyObject_Str(pvalue);
-            result = std::string(PyUnicode_AsUTF8(pystr));           
+            result = std::string(PyUnicode_AsUTF8(pystr));
+            Py_XDECREF(pystr);
         }
 
     finish:
 
         Py_XDECREF(obResult);
-        PyErr_Clear();
+        Py_XDECREF(ptype);
+        Py_XDECREF(pvalue);
+        Py_XDECREF(ptraceback);
+
         // debug printing
         std::cerr << result << std::endl;
         return result;
