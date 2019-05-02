@@ -3,12 +3,6 @@
 
 namespace karathon {
 
-
-    static PyObject* moduleSys = NULL;
-    static PyObject* moduleTraceback  = NULL;
-    static PyObject* functionFormatException = NULL;
-
-
     /**
      * Here we are implementing C API version of what is similar to the following Python code
      * 
@@ -21,6 +15,9 @@ namespace karathon {
      *     exc = traceback.format_exception(exc_type, exc_value, exc_traceback)
      */
     std::string getPythonExceptionAsString() {
+        PyObject* moduleSys = NULL;
+        PyObject* moduleTraceback  = NULL;
+        PyObject* functionFormatException = NULL;
         PyObject* obResult = NULL;
         PyObject* ptype = NULL;
         PyObject* pvalue = NULL;
@@ -32,28 +29,22 @@ namespace karathon {
         PyErr_Fetch(&ptype, &pvalue, &ptraceback);
 
         // 'import sys' module ... otherwise 'import traceback' will fail (?!)
-        if (!moduleSys) {
         moduleSys = PyImport_ImportModule("sys");
-            if (!moduleSys) {
-                std::cerr << "*** ERROR *** getPyErrString : 'import sys' failed\n" << std::endl;
-                goto finish;
-            }
+        if (!moduleSys) {
+            std::cerr << "*** ERROR *** getPyErrString : 'import sys' failed\n" << std::endl;
+            goto finish;
         }
         // 'import traceback' module ...
+        moduleTraceback = PyImport_ImportModule("traceback");
         if (!moduleTraceback) {
-            moduleTraceback = PyImport_ImportModule("traceback");
-            if (!moduleTraceback) {
-                std::cerr << "*** ERROR *** getPyErrString : 'import traceback' failed\n" << std::endl;
-                goto finish;
-            }
+            std::cerr << "*** ERROR *** getPyErrString : 'import traceback' failed\n" << std::endl;
+            goto finish;
         }
         // get attribute 'format_exception'
+        functionFormatException = PyObject_GetAttrString(moduleTraceback, "format_exception");
         if (!functionFormatException) {
-            functionFormatException = PyObject_GetAttrString(moduleTraceback, "format_exception");
-            if (!functionFormatException) {
-                std::cerr << "*** ERROR *** getPyErrString : getattr(traceback,'format_exception') failed\n" << std::endl;
-                goto finish;
-            }
+            std::cerr << "*** ERROR *** getPyErrString : getattr(traceback,'format_exception') failed\n" << std::endl;
+            goto finish;
         }
 
         if (ptraceback) {
@@ -66,24 +57,28 @@ namespace karathon {
             Py_ssize_t length = PySequence_Length(obResult);
             for (Py_ssize_t i = 0; i < length; ++i) {
                 PyObject* item = PySequence_GetItem(obResult, i);
+                if (!item) continue;
                 result += std::string(PyUnicode_AsUTF8(item));
-                Py_XDECREF(item);
+                Py_DECREF(item);
             }
         } else if (pvalue) {
             PyObject* pystr = PyObject_Str(pvalue);
-            result = std::string(PyUnicode_AsUTF8(pystr));
-            Py_XDECREF(pystr);
+            if (pystr) {
+                result = std::string(PyUnicode_AsUTF8(pystr));
+                Py_DECREF(pystr);
+            }
         }
 
     finish:
 
+        Py_XDECREF(moduleSys);
+        Py_XDECREF(moduleTraceback);
+        Py_XDECREF(functionFormatException);
         Py_XDECREF(obResult);
         Py_XDECREF(ptype);
         Py_XDECREF(pvalue);
         Py_XDECREF(ptraceback);
 
-        // debug printing
-        std::cerr << result << std::endl;
         return result;
     }
 }
