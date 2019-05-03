@@ -92,7 +92,8 @@ namespace karabo {
              */
             typedef karabo::util::Hash InputChannelInfo;
 
-            typedef std::vector<InputChannelInfo> InputChannels;
+            // With C++14, can use unordered map (since then standard allows to erase items while looping on map)
+            typedef std::map<std::string, InputChannelInfo> InputChannels; // input channel id is key
 
             // Callback on available input
             boost::function<void (const boost::shared_ptr<OutputChannel>&) > m_ioEventHandler;
@@ -255,6 +256,9 @@ namespace karabo {
 
             void onTcpChannelRead(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel, const karabo::util::Hash& message);
 
+            /// Erase instance with 'instanceId' from 'channelContainer' if existing - if same as 'newChannel', do not close
+            void eraseOldChannel(InputChannels& channelContainer, const std::string& instanceId, const karabo::net::Channel::Pointer& newChannel) const;
+
             void updateConnectionTable();
 
             void onInputAvailable(const std::string& instanceId);
@@ -318,19 +322,19 @@ namespace karabo {
             void distributeLoadBalanced(unsigned int chunkId, boost::mutex::scoped_lock& lock);
 
             /**
-             * Get index of next one of the shared inputs.
+             * Get iterator to next one of the shared inputs - round-robin case.
              *
              * Requires protection of m_registeredSharedInputsMutex and m_registeredSharedInputs.size() > 0
              */
-            unsigned int getNextSharedInputIdx();
+            InputChannels::iterator getNextRoundRobinChannel();
 
             /**
-             * Undo a previous getNextSharedInputIdx()
+             * Undo a previous getNextRoundRobinChannel()
              *
              * Requires protection of m_registeredSharedInputsMutex.
              * Even more, that mutex must not have been unlocked after the getNextSharedInputIdx() it should undo.
              */
-            void undoGetNextSharedInputIdx();
+            void undoGetNextRoundRobinChannel();
 
             void distributeLocal(unsigned int chunkId, const InputChannelInfo & channelInfo);
 
