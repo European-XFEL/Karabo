@@ -140,7 +140,7 @@ namespace karabo {
 
             VECTOR_UINT64_ELEMENT(expected).key("bytesRead")
                     .displayedName("Read bytes")
-                    .description("Vector of bytes read so far per connection from 'connections' table.")
+                    .description("Vector of bytes read so far per connection taken from 'connections' table.")
                     .readOnly()
                     .expertAccess()
                     .archivePolicy(Schema::NO_ARCHIVING)
@@ -148,7 +148,7 @@ namespace karabo {
 
             VECTOR_UINT64_ELEMENT(expected).key("bytesWritten")
                     .displayedName("Written bytes")
-                    .description("Vector of bytes written so far per connection from 'connections' table.")
+                    .description("Vector of bytes written so far per connection taken from 'connections' table.")
                     .readOnly()
                     .expertAccess()
                     .archivePolicy(Schema::NO_ARCHIVING)
