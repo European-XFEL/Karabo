@@ -72,13 +72,6 @@ namespace karabo {
                     .init()
                     .commit();
 
-            INT32_ELEMENT(expected).key("updatePeriod")
-                    .displayedName("Update period")
-                    .description("Time period for updating network statistics of OutputChannel")
-                    .unit(Unit::SECOND)
-                    .assignmentOptional().defaultValue(10)
-                    .commit();
-
             Schema columns;
 
             STRING_ELEMENT(columns).key("remoteId")
@@ -137,9 +130,17 @@ namespace karabo {
                     .expertAccess()
                     .commit();
 
+            INT32_ELEMENT(expected).key("updatePeriod")
+                    .displayedName("Update period")
+                    .description("Time period for updating network statistics of OutputChannel")
+                    .unit(Unit::SECOND)
+                    .assignmentOptional().defaultValue(10)
+                    .expertAccess()
+                    .commit();
+
             VECTOR_UINT64_ELEMENT(expected).key("bytesRead")
                     .displayedName("Read bytes")
-                    .description("Number of bytes read so far")
+                    .description("Vector of bytes read so far per connection from 'connections' table.")
                     .readOnly()
                     .expertAccess()
                     .archivePolicy(Schema::NO_ARCHIVING)
@@ -147,7 +148,7 @@ namespace karabo {
 
             VECTOR_UINT64_ELEMENT(expected).key("bytesWritten")
                     .displayedName("Written bytes")
-                    .description("Number of bytes written so far")
+                    .description("Vector of bytes written so far per connection from 'connections' table.")
                     .readOnly()
                     .expertAccess()
                     .archivePolicy(Schema::NO_ARCHIVING)
