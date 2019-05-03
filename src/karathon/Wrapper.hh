@@ -471,7 +471,7 @@ namespace karathon {
                 const std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
                 const std::string whichStr(which ? which : "undefined");
                 throw KARABO_PYTHON_EXCEPTION("Python " + whichStr + " handler '" + funcName
-                        + "' has thrown an exception.\n\n" + errstr);
+                        + "' has thrown an exception ...\n...\n" + errstr + "...");
             } catch (...) {
                 KARABO_RETHROW
             }
