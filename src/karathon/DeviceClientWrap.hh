@@ -18,6 +18,7 @@
 #include "ScopedGILRelease.hh"
 #include "ScopedGILAcquire.hh"
 #include "PyCoreLockWrap.hh"
+#include "Wrapper.hh"
 
 namespace bp = boost::python;
 
@@ -423,55 +424,19 @@ namespace karathon {
         }
 
         void proxyPythonCallbackHash(const bp::object& handler, const karabo::util::Hash& arg1) {
-            ScopedGILAcquire gil;
-            try {
-                if (handler) handler(bp::object(arg1));
-            } catch (const bp::error_already_set& e) {
-                if (PyErr_Occurred()) PyErr_Print();
-                std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
-                throw KARABO_PYTHON_EXCEPTION("Python handler '" + funcName + "' has thrown an exception.");
-            } catch (...) {
-                KARABO_RETHROW
-            }
+            Wrapper::proxyHandler(handler, "ProxyCallbackHash type", arg1);
         }
 
         void proxyPythonCallbackStringHash(const bp::object& handler, const std::string& arg1, const karabo::util::Hash& arg2) {
-            ScopedGILAcquire gil;
-            try {
-                if (handler) handler(bp::object(arg1), bp::object(arg2));
-            } catch (const bp::error_already_set& e) {
-                if (PyErr_Occurred()) PyErr_Print();
-                std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
-                throw KARABO_PYTHON_EXCEPTION("Python handler '" + funcName + "' has thrown an exception.");
-            } catch (...) {
-                KARABO_RETHROW
-            }
+            Wrapper::proxyHandler(handler, "ProxyCallbackStringHash type", arg1, arg2);
         }
 
         void proxyPythonCallbackStringSchema(const bp::object& handler, const std::string& arg1, const karabo::util::Schema& arg2) {
-            ScopedGILAcquire gil;
-            try {
-                if (handler) handler(bp::object(arg1), bp::object(arg2));
-            } catch (const bp::error_already_set& e) {
-                if (PyErr_Occurred()) PyErr_Print();
-                std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
-                throw KARABO_PYTHON_EXCEPTION("Python handler '" + funcName + "' has thrown an exception.");
-            } catch (...) {
-                KARABO_RETHROW
-            }
+            Wrapper::proxyHandler(handler, "ProxyCallbackStringSchema type", arg1, arg2);
         }
 
         void proxyPythonCallbackStringHashAny(const bp::object& handler, const std::string& arg1, const karabo::util::Hash& arg2, const boost::any& arg3) {
-            ScopedGILAcquire gil;
-            try {
-                if (handler) handler(bp::object(arg1), bp::object(arg2), boost::any_cast<const bp::object&>(arg3));
-            } catch (const bp::error_already_set& e) {
-                if (PyErr_Occurred()) PyErr_Print();
-                std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
-                throw KARABO_PYTHON_EXCEPTION("Python handler '" + funcName + "' has thrown an exception.");
-            } catch (...) {
-                KARABO_RETHROW
-            }
+            Wrapper::proxyHandler(handler, "ProxyCallbackStringHashAny type", arg1, arg2, arg3);
         }
 
     private: // members
