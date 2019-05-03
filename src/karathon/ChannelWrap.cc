@@ -143,7 +143,7 @@ namespace karathon {
 
 
     void ChannelWrap::proxyReadSizeInBytesHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const size_t& size) {
-        Wrapper::proxyHandler(handler, "ReadSizeInBytesHandler(channel,size)", channel, size);
+        Wrapper::proxyHandler(handler, "ReadSizeInBytes type", channel, size);
     }
 
 
@@ -156,7 +156,7 @@ namespace karathon {
 
 
     void ChannelWrap::proxyReadStringHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel, const std::string& s) {
-        Wrapper::proxyHandler(handler, "ReadStringHandler(error_code,channel,string)", code, channel, s);
+        Wrapper::proxyHandler(handler, "ReadString type", code, channel, s);
     }
 
 
@@ -169,7 +169,7 @@ namespace karathon {
 
 
     void ChannelWrap::proxyReadHashHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::util::Hash& h) {
-        Wrapper::proxyHandler(handler, "ReadHashHandler(error_code,channel,Hash)", code, channel, h);
+        Wrapper::proxyHandler(handler, "ReadHash type", code, channel, h);
     }
 
 
@@ -183,7 +183,7 @@ namespace karathon {
 
     void ChannelWrap::proxyReadHashVectorHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel,
                                                  const karabo::util::Hash& h, const std::vector<char>& v) {
-        Wrapper::proxyHandler(handler, "ReadHashVectorHandler(error_code,channel,Hash,vector)", code, channel, h, v);
+        Wrapper::proxyHandler(handler, "ReadHashVector type", code, channel, h, v);
     }
 
 
@@ -198,7 +198,7 @@ namespace karathon {
     void ChannelWrap::proxyReadHashHashHandler(const karabo::net::ErrorCode& code, const bp::object& handler,
                                                karabo::net::Channel::Pointer channel,
                                                const karabo::util::Hash& h, const karabo::util::Hash& b) {
-        Wrapper::proxyHandler(handler, "ReadHashHashHandler(error_code,channel,Hash,vector)", code, channel, h, b);
+        Wrapper::proxyHandler(handler, "ReadHashHash type", code, channel, h, b);
     }
 
 
@@ -231,7 +231,7 @@ namespace karathon {
 
 
     void ChannelWrap::proxyWriteCompleteHandler(const karabo::net::ErrorCode& code, const bp::object& handler, karabo::net::Channel::Pointer channel) {
-        Wrapper::proxyHandler(handler, "WriteCompleteHandler(error_code,channel)", code, channel);
+        Wrapper::proxyHandler(handler, "WriteComplete type", code, channel);
     }
 
 
