@@ -424,19 +424,19 @@ namespace karathon {
         }
 
         void proxyPythonCallbackHash(const bp::object& handler, const karabo::util::Hash& arg1) {
-            Wrapper::proxyHandler(handler, "pythonCallback(Hash)", arg1);
+            Wrapper::proxyHandler(handler, "ProxyCallbackHash type", arg1);
         }
 
         void proxyPythonCallbackStringHash(const bp::object& handler, const std::string& arg1, const karabo::util::Hash& arg2) {
-            Wrapper::proxyHandler(handler, "pythonCallback(String,Hash)", arg1, arg2);
+            Wrapper::proxyHandler(handler, "ProxyCallbackStringHash type", arg1, arg2);
         }
 
         void proxyPythonCallbackStringSchema(const bp::object& handler, const std::string& arg1, const karabo::util::Schema& arg2) {
-            Wrapper::proxyHandler(handler, "pythonCallback(String,Schema)", arg1, arg2);
+            Wrapper::proxyHandler(handler, "ProxyCallbackStringSchema type", arg1, arg2);
         }
 
         void proxyPythonCallbackStringHashAny(const bp::object& handler, const std::string& arg1, const karabo::util::Hash& arg2, const boost::any& arg3) {
-            Wrapper::proxyHandler(handler, "pythonCallback(String,Hash,Any)", arg1, arg2, arg3);
+            Wrapper::proxyHandler(handler, "ProxyCallbackStringHashAny type", arg1, arg2, arg3);
         }
 
     private: // members
