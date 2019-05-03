@@ -326,7 +326,7 @@ namespace karabo {
                 karabo::util::Hash info;
                 info.set("instanceId", instanceId);
                 info.set("memoryLocation", memoryLocation);
-                info.set("tcpChannel", boost::weak_ptr<Channel>(channel));
+                info.set("tcpChannel", ChannelWeakPointer(channel));
                 info.set("onSlowness", onSlowness);
                 info.set("queuedChunks", std::deque<int>());
 
@@ -374,7 +374,7 @@ namespace karabo {
             auto it = channelContainer.find(instanceId);
             if (it != channelContainer.end()) {
                 const Hash& channelInfo = it->second;
-                Channel::Pointer oldChannel = channelInfo.get<boost::weak_ptr<Channel> >("tcpChannel").lock();
+                Channel::Pointer oldChannel = channelInfo.get<ChannelWeakPointer>("tcpChannel").lock();
                 if (oldChannel) {
                     if (oldChannel == newChannel) {
                         // Ever reached? Let's not close, but try to go on...
@@ -387,7 +387,11 @@ namespace karabo {
                                 << oldTcpInfo.get<unsigned short>("remotePort") << ".";
                         oldChannel->close();
                     }
-                } // else some dangling weak pointer which can safely be removed
+                }
+                // Remove channel entry now - it is
+                // - either superseeded by a new connection with same id,
+                // - or a misbehaving connection that 'hellos' again - it will be added again
+                // - or some dangling weak pointer which can safely be removed
                 channelContainer.erase(it);
             }
         }
