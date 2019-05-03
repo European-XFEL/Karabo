@@ -129,24 +129,28 @@ namespace karabo {
                     .readOnly()
                     .commit();
 
-            UINT64_ELEMENT(columns).key("bytesRead")
-                    .displayedName("Read bytes")
-                    .description("Number of bytes read so far")
-                    .readOnly()
-                    .commit();
-
-            UINT64_ELEMENT(columns).key("bytesWritten")
-                    .displayedName("Written bytes")
-                    .description("Number of bytes written so far")
-                    .readOnly()
-                    .commit();
-
             TABLE_ELEMENT(expected).key("connections")
                     .displayedName("Connections")
                     .description("Table of active connections")
                     .setColumns(columns)
                     .assignmentOptional().defaultValue(std::vector<util::Hash>())
                     .expertAccess()
+                    .commit();
+
+            VECTOR_UINT64_ELEMENT(expected).key("bytesRead")
+                    .displayedName("Read bytes")
+                    .description("Number of bytes read so far")
+                    .readOnly()
+                    .expertAccess()
+                    .archivePolicy(Schema::NO_ARCHIVING)
+                    .commit();
+
+            VECTOR_UINT64_ELEMENT(expected).key("bytesWritten")
+                    .displayedName("Written bytes")
+                    .description("Number of bytes written so far")
+                    .readOnly()
+                    .expertAccess()
+                    .archivePolicy(Schema::NO_ARCHIVING)
                     .commit();
 
         }
@@ -157,6 +161,7 @@ namespace karabo {
                 , m_sharedInputIndex(0)
                 , m_toUnregisterSharedInput(false)
                 , m_showConnectionsHandler([](const std::vector<Hash>&) {})
+                , m_showStatisticsHandler([](const std::vector<unsigned long long>&, const std::vector<unsigned long long>&) {})
                 , m_connections()
                 , m_updateDeadline(karabo::net::EventLoop::getIOService()) {
             //KARABO_LOG_FRAMEWORK_DEBUG << "*** OutputChannel::OutputChannel CTOR ***";
@@ -455,7 +460,11 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_showConnectionsHandlerMutex);
             // Copy and remove "weakChannel" column.  Otherwise the validator is getting upset
             auto connections = m_connections;
-            for (Hash& h : connections) h.erase("weakChannel");
+            for (Hash& h : connections) {
+                h.erase("weakChannel");
+                h.erase("bytesRead");
+                h.erase("bytesWritten");
+            }
             // Send filtered out table
             m_showConnectionsHandler(connections);
             // Check if we have to update this table periodically ...
@@ -471,17 +480,20 @@ namespace karabo {
             if (m_period <= 0) return;
 
             boost::mutex::scoped_lock lock(m_showConnectionsHandlerMutex);
-            for (Hash& h : m_connections) {
+            std::vector<unsigned long long> vBytesRead(m_connections.size());
+            std::vector<unsigned long long> vBytesWritten(m_connections.size());
+            for (size_t i = 0; i < m_connections.size(); ++i) {
+                Hash& h = m_connections[i];
                 boost::weak_ptr<Channel> wptr = h.get<boost::weak_ptr<Channel> >("weakChannel");
                 boost::shared_ptr<Channel> channel = wptr.lock();
                 if (channel) {
-                    h.set<unsigned long long>("bytesRead", h.get<unsigned long long>("bytesRead") + channel->dataQuantityRead());
-                    h.set<unsigned long long>("bytesWritten", h.get<unsigned long long>("bytesWritten") + channel->dataQuantityWritten());
+                    vBytesRead[i] =  h.get<unsigned long long>("bytesRead") + channel->dataQuantityRead();
+                    vBytesWritten[i] =  h.get<unsigned long long>("bytesWritten") + channel->dataQuantityWritten();
+                    h.set<unsigned long long>("bytesRead", vBytesRead[i]);
+                    h.set<unsigned long long>("bytesWritten", vBytesWritten[i]);
                 }
             }
-            std::vector<Hash> connections = m_connections;
-            for (Hash& h : connections) h.erase("weakChannel");
-            m_showConnectionsHandler(connections);
+            m_showStatisticsHandler(vBytesRead, vBytesWritten);
 
             m_updateDeadline.expires_from_now(boost::posix_time::seconds(m_period));
             m_updateDeadline.async_wait(bind_weak(&OutputChannel::updateNetworkStatistics, this, boost::asio::placeholders::error));
@@ -832,6 +844,16 @@ namespace karabo {
                 m_showConnectionsHandler = [](const std::vector<karabo::util::Hash>&){};
             } else {
                 m_showConnectionsHandler = handler;
+            }
+        }
+
+
+        void OutputChannel::registerShowStatisticsHandler(const ShowStatisticsHandler& handler) {
+            boost::mutex::scoped_lock lock(m_showConnectionsHandlerMutex);
+            if (!handler) {
+                m_showStatisticsHandler = [](const std::vector<unsigned long long>&, const std::vector<unsigned long long>&){};
+            } else {
+                m_showStatisticsHandler = handler;
             }
         }
 
