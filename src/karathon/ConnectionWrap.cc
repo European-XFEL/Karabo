@@ -26,6 +26,6 @@ namespace karathon {
 
 
     void ConnectionWrap::proxyConnectionHandler(const karabo::net::ErrorCode& code, const bp::object& connectionHandler, karabo::net::Channel::Pointer channel) {
-        Wrapper::proxyHandler(connectionHandler, "ConnectionHandler(error_code,channel)", code, channel);
+        Wrapper::proxyHandler(connectionHandler, "Connection type", code, channel);
     }
 }
