@@ -292,11 +292,11 @@ namespace karabo {
 
 
         void OutputChannel::onTcpChannelError(const karabo::net::ErrorCode& error, const karabo::net::Channel::Pointer& channel) {
-            KARABO_LOG_FRAMEWORK_INFO << "Tcp channel error on \"" << m_instanceId << "\", code #" << error.value() << " -- \"" 
+            KARABO_LOG_FRAMEWORK_DEBUG << "Tcp channel error on \"" << m_instanceId << "\", code #" << error.value() << " -- \""
                     << error.message() << "\".  Channel closed.";
 
             // Unregister channel
-            onInputGone(channel);
+            onInputGone(channel, error);
         }
 
 
@@ -364,7 +364,7 @@ namespace karabo {
             if (channel->isOpen()) {
                 channel->readAsyncHash(bind_weak(&karabo::xms::OutputChannel::onTcpChannelRead, this, _1, channel, _2));
             } else {
-                onInputGone(channel);
+                onInputGone(channel, karabo::net::ErrorCode());
             }
         }
 
@@ -481,15 +481,11 @@ namespace karabo {
         }
 
 
-        void OutputChannel::onInputGone(const karabo::net::Channel::Pointer& channel) {
-            onInputGoneImpl(channel);
-            updateConnectionTable();
-        }
-
-
-        void OutputChannel::onInputGoneImpl(const karabo::net::Channel::Pointer& channel) {
+        void OutputChannel::onInputGone(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& error) {
             using namespace karabo::net;
-            KARABO_LOG_FRAMEWORK_DEBUG << "*** OutputChannel::onInputGone ***";
+            const Hash tcpInfo(TcpChannel::getChannelInfo(boost::static_pointer_cast<TcpChannel>(channel)));
+            const std::string tcpAddress(tcpInfo.get<std::string>("remoteAddress") + ':'
+                                         + toString(tcpInfo.get<unsigned short>("remotePort")));
 
             // Clean specific channel from bookkeeping structures and ... 
             // ... clean expired entries as well (we are not expecting them but we want to be on the safe side!)
@@ -504,7 +500,10 @@ namespace karabo {
                     // Cleaning expired or specific channels only
                     if (!tcpChannel || tcpChannel == channel) {
                         const std::string& instanceId = it->first;
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Connected (shared) input on instanceId " << instanceId << " disconnected";
+                        KARABO_LOG_FRAMEWORK_INFO << m_instanceId << " : Shared input channel '" << instanceId
+                                << "' (ip/port " << (tcpChannel ? tcpAddress : "?") << ") disconnected since '"
+                                << error.message() << "' (#" << error.value() << ").";
+
 
                         // Transfer queued chunks or release them
                         const std::deque<int>& queuedChunks = channelInfo.get<std::deque<int> >("queuedChunks");
@@ -548,7 +547,9 @@ namespace karabo {
 
                     const std::string& instanceId = it->first;
 
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Connected (copy) input on instanceId " << instanceId << " disconnected";
+                    KARABO_LOG_FRAMEWORK_INFO << m_instanceId << " : Copy input channel '" << instanceId
+                            << "' (ip/port " << (tcpChannel ? tcpAddress : "?") << ") disconnected since '"
+                            << error.message() << "' (#" << error.value() << ").";
                     // Release any queued chunks:
                     for (const int chunkId : channelInfo.get<std::deque<int> >("queuedChunks")) {
                         unregisterWriterFromChunk(chunkId);
@@ -560,6 +561,7 @@ namespace karabo {
                     ++it;
                 }
             }
+            updateConnectionTable();
             // TODO:
             // In case onInputGone(..) is called in parallel to update(), we have to unregisterWriterFromChunk(..)
             // if (but only if) 'channel' was supposed to be served, but was not yet...
