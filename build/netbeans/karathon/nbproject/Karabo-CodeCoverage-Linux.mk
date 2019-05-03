@@ -107,12 +107,12 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/karathon.${CND_DLIB_EXT}: ${OBJEC
 ${OBJECTDIR}/_ext/381567218/ChannelWrap.o: ../../../src/karathon/ChannelWrap.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${PYTHON_HEADER_DIR} -I${NUMPY_HEADER_DIR} -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/ChannelWrap.o ../../../src/karathon/ChannelWrap.cc
+	$(COMPILE.cc) -g -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${PYTHON_HEADER_DIR} -I${NUMPY_HEADER_DIR} -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/ChannelWrap.o ../../../src/karathon/ChannelWrap.cc
 
 ${OBJECTDIR}/_ext/381567218/ConnectionWrap.o: ../../../src/karathon/ConnectionWrap.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${PYTHON_HEADER_DIR} -I${NUMPY_HEADER_DIR} -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/ConnectionWrap.o ../../../src/karathon/ConnectionWrap.cc
+	$(COMPILE.cc) -g -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${PYTHON_HEADER_DIR} -I${NUMPY_HEADER_DIR} -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/ConnectionWrap.o ../../../src/karathon/ConnectionWrap.cc
 
 ${OBJECTDIR}/_ext/381567218/FromNumpy.o: ../../../src/karathon/FromNumpy.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -309,7 +309,7 @@ ${OBJECTDIR}/_ext/381567218/ChannelWrap_nomain.o: ${OBJECTDIR}/_ext/381567218/Ch
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${PYTHON_HEADER_DIR} -I${NUMPY_HEADER_DIR} -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/ChannelWrap_nomain.o ../../../src/karathon/ChannelWrap.cc;\
+	    $(COMPILE.cc) -g -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${PYTHON_HEADER_DIR} -I${NUMPY_HEADER_DIR} -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/ChannelWrap_nomain.o ../../../src/karathon/ChannelWrap.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/ChannelWrap.o ${OBJECTDIR}/_ext/381567218/ChannelWrap_nomain.o;\
 	fi
@@ -322,7 +322,7 @@ ${OBJECTDIR}/_ext/381567218/ConnectionWrap_nomain.o: ${OBJECTDIR}/_ext/381567218
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${PYTHON_HEADER_DIR} -I${NUMPY_HEADER_DIR} -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/ConnectionWrap_nomain.o ../../../src/karathon/ConnectionWrap.cc;\
+	    $(COMPILE.cc) -g -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${PYTHON_HEADER_DIR} -I${NUMPY_HEADER_DIR} -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/ConnectionWrap_nomain.o ../../../src/karathon/ConnectionWrap.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/ConnectionWrap.o ${OBJECTDIR}/_ext/381567218/ConnectionWrap_nomain.o;\
 	fi
