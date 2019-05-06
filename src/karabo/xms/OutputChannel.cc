@@ -430,6 +430,7 @@ namespace karabo {
 
 
         void OutputChannel::updateConnectionTable() {
+            boost::mutex::scoped_lock lock(m_showConnectionsHandlerMutex);
             m_updateDeadline.cancel();
             m_connections.clear();
             {
@@ -468,7 +469,6 @@ namespace karabo {
                     m_connections.push_back(std::move(row));
                 }
             }
-            boost::mutex::scoped_lock lock(m_showConnectionsHandlerMutex);
             // Copy and remove "weakChannel" column.  Otherwise the validator is getting upset
             auto connections = m_connections;
             for (Hash& h : connections) {
@@ -491,18 +491,20 @@ namespace karabo {
             if (m_period <= 0) return;
 
             boost::mutex::scoped_lock lock(m_showConnectionsHandlerMutex);
-            std::vector<unsigned long long> vBytesRead(m_connections.size());
-            std::vector<unsigned long long> vBytesWritten(m_connections.size());
-            for (size_t i = 0; i < m_connections.size(); ++i) {
+            size_t length = m_connections.size();
+            std::vector<unsigned long long> vBytesRead(length);
+            std::vector<unsigned long long> vBytesWritten(length);
+            for (size_t i = 0; i < length; ++i) {
                 Hash& h = m_connections[i];
                 boost::weak_ptr<Channel> wptr = h.get<boost::weak_ptr<Channel> >("weakChannel");
                 boost::shared_ptr<Channel> channel = wptr.lock();
-                if (channel) {
-                    vBytesRead[i] =  h.get<unsigned long long>("bytesRead") + channel->dataQuantityRead();
-                    vBytesWritten[i] =  h.get<unsigned long long>("bytesWritten") + channel->dataQuantityWritten();
-                    h.set<unsigned long long>("bytesRead", vBytesRead[i]);
-                    h.set<unsigned long long>("bytesWritten", vBytesWritten[i]);
-                }
+                vBytesRead[i] =  h.get<unsigned long long>("bytesRead");
+                vBytesWritten[i] =  h.get<unsigned long long>("bytesWritten");
+                if (!channel) continue;
+                vBytesRead[i] +=  channel->dataQuantityRead();
+                vBytesWritten[i] +=  channel->dataQuantityWritten();
+                h.set<unsigned long long>("bytesRead", vBytesRead[i]);
+                h.set<unsigned long long>("bytesWritten", vBytesWritten[i]);
             }
             m_showStatisticsHandler(vBytesRead, vBytesWritten);
 
