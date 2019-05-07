@@ -16,29 +16,39 @@ var updater = {
         updater.socket.onmessage = updater.process.bind(updater);
     },
 
+    startstop: function() {
+        // Close the connection, if open.
+        var btn = document.getElementById("livecontrolplay")
+        if (updater.socket.readyState === WebSocket.OPEN) {
+            btn.value = "Restart";
+            updater.socket.close();
+        } else {
+            window.location.reload();
+        }
+    },
+
     open: function() {
         var s = JSON.stringify({"type": "log",
                                 "server": this.server_name});
-        console.log(s);
         this.socket.send(s);
-        console.log('SENT!');
     },
 
     process: function(event) {
+        if (event.data == "PING") {
+            this.socket.send("PONG");
+            // remove invisible rows
+            while (this.node.firstChild.offsetWidth > 0 && this.node.firstChild.offsetHeight > 0) {
+                this.node.removeChild(this.node.firstChild);
+            }
+            window.scrollTo(0,document.body.scrollHeight);
+            return;
+        }
         var row = JSON.parse(event.data);
-        var existing = document.getElementById("r" + row.id);
-        if (!!existing) return;
         var div = document.createElement("div");
         div.textContent = row.text;
         div.setAttribute('class', 'row');
         div.setAttribute('id', "r" + row.id);
         this.node.appendChild(div);
-    },
-
-    request: function(req) {
-        if (this.socket.readyState == WebSocket.OPEN) {
-            this.socket.send(req);
-        }
     },
 };
 

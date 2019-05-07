@@ -1,3 +1,4 @@
+#from asyncio import Future
 import json
 import os
 from struct import unpack
@@ -8,6 +9,7 @@ from argparse import ArgumentParser
 from datetime import datetime
 
 from tornado import gen, ioloop, web
+from tornado.concurrent import Future
 from tornado.escape import json_decode
 from tornado.websocket import WebSocketHandler
 
@@ -84,7 +86,7 @@ def getdata(name):
 
 
 def get_log_row(text):
-    row = {"id": str(uuid.uuid4()), "text": text}
+    row = {"text": text}
     return row
 
 
@@ -124,10 +126,19 @@ class DaemonHandler(web.RequestHandler):
 
 
 class LogWebSocket(WebSocketHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.flush = None
+
     def on_message(self, message):
         # this function is called by Tornado's event loop
         # to execute the notification in background
         # we need to spawn a callback
+        if message == "PONG":
+            if self.flush:
+                self.flush.set_result(None)
+            return
+
         msg = json.loads(message)
         if msg['type'] == 'log':
             ioloop.IOLoop.current().spawn_callback(
@@ -137,19 +148,29 @@ class LogWebSocket(WebSocketHandler):
         path = absolute("var", "log", name, "current")
         with open(path) as f:
             while True:
+                self.flush = Future()
+                self.write_message("PING")
+                await self.flush
+                self.flush = None
+                # send line by line until the file is read
                 content = f.readline()
-
-                if content:
+                while content:
                     row = get_log_row(content)
                     self.write_message(row)
-                else:
-                    await gen.sleep(1)
+                    content = f.readline()
 
 
 class LogHandler(web.RequestHandler):
     def get(self, server):
-        rows = []
-        self.render("log.html", server_name=server, rows=rows)
+        self.render("log.html", server_name=server)
+
+
+class FileHandler(web.RequestHandler):
+    def get(self, server):
+        path = absolute("var", "log", server, "current")
+        self.add_header('Content-Type', 'text/plain')
+        with open(path) as logfile:
+            self.write(logfile.read())
 
 
 class MainHandler(web.RequestHandler):
@@ -225,6 +246,8 @@ def run_webserver():
                            ('/api/servers.json', StatusHandler),
                            ('/api/servers/([a-zA-Z0-9_]+)/log.html',
                             LogHandler),
+                           ('/api/servers/logs/([a-zA-Z0-9_]+).txt',
+                            FileHandler),
                            ('/api/servers/([a-zA-Z0-9_]+).json',
                             DaemonHandler, server_dict),
                            ('/api/servers/logsocket', LogWebSocket)

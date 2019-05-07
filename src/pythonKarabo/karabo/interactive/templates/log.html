@@ -8,9 +8,11 @@
   <body>
     <div id="body">
       <div class="deamonlog" id="{{ server_name }}">
-        {% for row in rows %}
-          {% include "log_row.html" %}
-        {% end %}
+      </div>
+      <hr>
+      <div class="livecontrol">
+        <a href="/api/servers/logs/{{ server_name }}.txt">Download this file</a>
+        <input type="button" value="Stop" onclick="updater.startstop()" id="livecontrolplay">
       </div>
     </div>
     <script src="{{ static_url('logger.js') }}" type="text/javascript"></script>
