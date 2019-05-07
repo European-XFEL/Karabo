@@ -516,7 +516,11 @@ class SystemTopology(HasStrictTraits):
     # Topology interface
 
     def topology_update(self, changes):
-        """Handle the bulk system topology update from the server"""
+        """Handle the bulk system topology update from the server
+
+        This function will return the devices and servers which have been
+        removed from the topology via ``slotInstanceGone``
+        """
         devices, servers = [], []
 
         new = changes['new']
@@ -532,6 +536,11 @@ class SystemTopology(HasStrictTraits):
         return devices, servers
 
     def topology_gone(self, system_hash):
+        """Remove servers, devices and macros from the system topology
+
+        This function will return the devices and servers which have been
+        removed from the topology in separate lists ``devices`` and ``servers``
+        """
         devices, servers = [], []
 
         if 'device' in system_hash:
@@ -570,7 +579,8 @@ class SystemTopology(HasStrictTraits):
     def topology_device_gone(self, instance_type, system_hash, devices):
         """Check if devices or macros are gone in the system topology
 
-        :param devices: List of devices and macros for collection
+        :param devices: Extended ist of devices and macros for which are
+                        removed from the topology
         """
         for instance_id, _, attr in system_hash[instance_type].iterall():
             # Get the attributes of the instance which is now gone
