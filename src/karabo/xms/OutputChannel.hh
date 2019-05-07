@@ -35,6 +35,8 @@ namespace karabo {
 #define KARABO_P2P_SOURCE_INFO "__sourceInfo"
 
         typedef boost::function<void(const std::vector<karabo::util::Hash>&)> ShowConnectionsHandler;
+        typedef boost::function<void(const std::vector<unsigned long long>&,
+                                     const std::vector<unsigned long long>&)> ShowStatisticsHandler;
 
         /**
          * @class OutputChannel
@@ -143,6 +145,10 @@ namespace karabo {
 
             mutable boost::mutex m_showConnectionsHandlerMutex;
             ShowConnectionsHandler m_showConnectionsHandler;
+            ShowStatisticsHandler m_showStatisticsHandler;
+            std::vector<karabo::util::Hash> m_connections;
+            boost::asio::deadline_timer m_updateDeadline;
+            int m_period;
 
         public:
             typedef Memory::MetaData MetaData;
@@ -242,6 +248,8 @@ namespace karabo {
 
             void registerShowConnectionsHandler(const ShowConnectionsHandler& handler);
 
+            void registerShowStatisticsHandler(const ShowStatisticsHandler& handler);
+
         private:
 
             void initializeServerConnection(int countdown);
@@ -260,6 +268,8 @@ namespace karabo {
             void eraseOldChannel(InputChannels& channelContainer, const std::string& instanceId, const karabo::net::Channel::Pointer& newChannel) const;
 
             void updateConnectionTable();
+
+            void updateNetworkStatistics(const boost::system::error_code& e);
 
             void onInputAvailable(const std::string& instanceId);
 
