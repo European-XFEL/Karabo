@@ -240,8 +240,6 @@ class SystemTree(HasStrictTraits):
             with self.update_context.removal_context(host_node):
                 self.root.children.remove(host_node)
 
-            self.needs_update = True
-
         return server_class_keys
 
     def update(self, system_hash):
