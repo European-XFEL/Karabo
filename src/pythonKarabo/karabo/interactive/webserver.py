@@ -1,4 +1,3 @@
-#from asyncio import Future
 import json
 import os
 from struct import unpack
