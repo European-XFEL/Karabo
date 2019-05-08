@@ -1309,6 +1309,11 @@ class VectorHash(Vector):
             if isinstance(data, basetypes.KaraboValue):
                 timestamp = data.timestamp
                 data = data.value
+            elif isinstance(data, list) and data:
+                # NOTE: We assume a list of Hashes here!
+                if isinstance(data[0], Hash):
+                    data = [tuple(ele[name] for name in self.dtype.names)
+                            for ele in data]
             table = np.array(data, dtype=self.dtype)
         else:
             table = []
