@@ -558,7 +558,12 @@ namespace karabo {
             ifs.close();
 
             if (!tail.empty()) {
-                this->extractTailOfArchiveIndex(tail, entry);
+                try {
+                    this->extractTailOfArchiveIndex(tail, entry);
+                } catch (const exception &e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader - error extracting tail of selected event: "
+                            << e.what();
+                }
             }
 
             KARABO_LOG_FRAMEWORK_DEBUG << "findLoggerIndexTimepoint - entry: " << entry.m_event << " "
