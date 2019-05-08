@@ -36,10 +36,6 @@ var updater = {
     process: function(event) {
         if (event.data == "PING") {
             this.socket.send("PONG");
-            // remove invisible rows
-            while (this.node.firstChild.offsetWidth > 0 && this.node.firstChild.offsetHeight > 0) {
-                this.node.removeChild(this.node.firstChild);
-            }
             window.scrollTo(0,document.body.scrollHeight);
             return;
         }
@@ -47,7 +43,6 @@ var updater = {
         var div = document.createElement("div");
         div.textContent = row.text;
         div.setAttribute('class', 'row');
-        div.setAttribute('id', "r" + row.id);
         this.node.appendChild(div);
     },
 };
