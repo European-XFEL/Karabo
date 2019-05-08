@@ -142,6 +142,9 @@ class SystemTreeModel(QAbstractItemModel):
     def data(self, index, role=Qt.DisplayRole):
         """Reimplemented function of QAbstractItemModel.
         """
+        if not index.isValid():
+            return
+
         node = self.index_ref(index)
         if node is None:
             return
