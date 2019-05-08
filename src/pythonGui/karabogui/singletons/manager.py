@@ -221,6 +221,33 @@ class Manager(QObject):
         """Handle the version number reply from the GUI server"""
         pass
 
+    def handle_topologyUpdate(self, changes):
+        devices, servers = self._topology.topology_update(changes)
+
+        # Did an alarm system leave our topology?
+        for instance_id, class_id, _ in devices:
+            if class_id == 'AlarmService':
+                broadcast_event(KaraboEvent.RemoveAlarmServices,
+                                {'instanceIds': [instance_id]})
+
+        # Update topology interested listeners!
+        extra_devices, extra_servers = _extract_topology_devices(
+            changes['new'])
+        devices.extend(extra_devices)
+        servers.extend(extra_servers)
+
+        # Tell the GUI about various devices or servers that are alive
+        for instance_id, class_id, _ in extra_devices:
+            if class_id == 'AlarmService':
+                self._announce_alarm_services([instance_id])
+            elif class_id == 'ProjectManager':
+                broadcast_event(KaraboEvent.ProjectDBConnect,
+                                {'device': instance_id})
+
+        # XXX: This has to be worked on once the old protocol goes away
+        broadcast_event(KaraboEvent.SystemTopologyUpdate,
+                        {'devices': devices, 'servers': servers})
+
     def handle_instanceNew(self, topologyEntry):
         """This function receives the configuration for a new instance.
 
@@ -258,8 +285,7 @@ class Manager(QObject):
         self._topology.instance_updated(topologyEntry)
 
     def handle_instanceGone(self, instanceId, instanceType):
-        """Remove ``instance_id`` from topology and update
-        """
+        """Remove ``instance_id`` from topology and update"""
         # Tell the GUI about various devices that are now gone
         self._broadcast_if_of_type('AlarmService', instanceId,
                                    KaraboEvent.RemoveAlarmServices)
