@@ -76,6 +76,11 @@ namespace karabo {
                     .setNewDefaultValue(false)
                     .commit();
 
+            // Evaluate performance to trigger alarms if processing is delayed
+            OVERWRITE_ELEMENT(expected).key("performanceStatistics.enable")
+                    .setNewDefaultValue(true)
+                    .commit();
+
             // Hide the loggers from the standard view in clients
             OVERWRITE_ELEMENT(expected).key("visibility")
                     .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
