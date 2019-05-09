@@ -2,7 +2,7 @@ import weakref
 
 import numpy as np
 
-from karabo.bound import Encoding, Hash, ImageData, Rotation
+from karabo.bound import Encoding, Hash, ImageData, Rotation, Types
 from karabo.testing.utils import compare_ndarray_data_ptrs
 
 
@@ -101,11 +101,13 @@ def test_ndarry_refcounting():
     assert img_data_weak() is None
 
 
+# This is the original test...
 def test_imagedata_set_and_get():
     a = np.arange(20000, dtype='uint8').reshape(100, 200)
     imageData = ImageData()
 
-    imageData.setData(a)  # Also set dataType
+    imageData.setData(a)  # Also set dataType, shape, dimensions and encoding
+
     imageData.setDimensionTypes((0, 1))
     imageData.setEncoding(Encoding.GRAY)
     imageData.setROIOffsets((20, 10))  # y, x
@@ -130,6 +132,23 @@ def test_imagedata_set_and_get():
     assert imageData.getRotation() == Rotation.ROT_180
     assert imageData.getFlipX() is False
     assert imageData.getFlipY() is True
+
+
+def test_imagedata_type_set_and_get():
+    a = np.arange(20000, dtype='float32').reshape(100, 200)
+    imageData = ImageData()
+    imageData.setData(a)  # Also set dataType, shape, dimensions and encoding
+
+    # Check the default data type from the NumPy array...
+    assert (imageData.getType() == Types.FLOAT)
+
+    # Setting data type to int32
+    imageData.setType(Types.INT32)
+    assert (imageData.getType() == Types.INT32)
+
+    # Setting data type to uint32
+    imageData.setType(Types.UINT32)
+    assert (imageData.getType() == Types.UINT32)
 
 
 def test_imagedata_in_hash():
