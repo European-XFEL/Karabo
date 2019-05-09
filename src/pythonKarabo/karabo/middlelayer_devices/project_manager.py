@@ -83,7 +83,7 @@ class ProjectManager(Device):
         """Resetting the device brings it into `State.INIT`
         """
         self.state = State.INIT
-        self.initialization()
+        await self.onInitialization()
 
     def _getCurrentConfig(self):
         """
