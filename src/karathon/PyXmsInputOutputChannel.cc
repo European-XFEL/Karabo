@@ -46,6 +46,28 @@ namespace karathon {
     }
 
 
+    bp::object ImageDataWrap::getTypePy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
+        return bp::object(static_cast<int> (self->getDataType()));
+    }
+
+
+    void ImageDataWrap::setTypePy(const boost::shared_ptr<karabo::xms::ImageData >& self, const bp::object& obj) {
+        using namespace karabo::util;
+        Types::ReferenceType reftype = Types::UNKNOWN;
+
+        if (bp::extract<std::string>(obj).check()) {
+            std::string type = bp::extract<std::string>(obj);
+            reftype = Types::from<FromLiteral>(type);
+        } else if (bp::extract<karathon::PyTypes::ReferenceType>(obj).check()) {
+            karathon::PyTypes::ReferenceType type = bp::extract<karathon::PyTypes::ReferenceType>(obj);
+            reftype = karathon::PyTypes::to(type);
+        } else {
+            throw KARABO_PYTHON_EXCEPTION("Python type of setType() of ImageData must be a string or Types enumerated value.");
+        }
+        self ->setDataType(reftype);
+    }
+
+
     bp::object ImageDataWrap::getDimensionsPy(const boost::shared_ptr<karabo::xms::ImageData >& self) {
         karabo::util::Dims dims = self->getDimensions();
         return Wrapper::fromStdVectorToPyTuple(dims.toVector());
@@ -365,6 +387,10 @@ void exportPyXmsInputOutputChannel() {
 
                 .def("setData", &karathon::ImageDataWrap::setDataPy, (bp::arg("data")))
 
+                .def("getType", &karathon::ImageDataWrap::getTypePy)
+
+                .def("setType", &karathon::ImageDataWrap::setTypePy, (bp::arg("dtype")))
+
                 .def("getDimensions", &karathon::ImageDataWrap::getDimensionsPy)
 
                 .def("setDimensions", &karathon::ImageDataWrap::setDimensionsPy, (bp::arg("dims")))
@@ -462,13 +488,33 @@ void exportPyXmsInputOutputChannel() {
                      , (bp::arg("scales"))
                      , bp::return_internal_reference<> ())
 
-                .def("setDimensions", &karabo::xms::ImageDataElement::setDimensions
+                .def("setDimensions", &karathon::ImageDataElementWrap::setDimensions
                      , (bp::arg("dims"))
-                     , bp::return_internal_reference<> ())
+                     , bp::return_internal_reference<> (),
+                     "h.setDimensions(dims) set the shape of an image in the schema. This is required by the DAQ,"
+                     "otherwise silent data-loss or segfaults can occur. The shape can be a list or string with 2 or 3 "
+                     "dimensions (for color images).\nExample:\n\t"
+                     "IMAGEDATA_ELEMENT(s)\n\t\t.key('data.image')\n\t\t.setDimensions('480,640,3')\n\t\t.commit()\n\t"
+                     "IMAGEDATA_ELEMENT(s)\n\t\t.key('data.image')\n\t\t.setDimensions([480,640])\n\t\t.commit()"
+                     )
 
-                .def("setEncoding", &karabo::xms::ImageDataElement::setEncoding
+                .def("setType", &karathon::ImageDataElementWrap::setType
+                     , (bp::arg("type"))
+                     , bp::return_internal_reference<> (),
+                     "h.setType(type) set the datatype of an image in the schema. This is required by the DAQ,"
+                     "otherwise silent data-loss or segfaults can occur. The type can be a member of the 'Types' "
+                     "class or a string (all capitals).\nExample:\n\t"
+                     "IMAGEDATA_ELEMENT(s)\n\t\t.key('data.image')\n\t\t.setType('UINT16')\n\t\t.commit()\n\t"
+                     "IMAGEDATA_ELEMENT(s)\n\t\t.key('data.image')\n\t\t.setType(Types.UINT16)\n\t\t.commit()"
+                     )
+
+                .def("setEncoding", &karathon::ImageDataElementWrap::setEncoding
                      , (bp::arg("encoding"))
-                     , bp::return_internal_reference<> ())
+                     , bp::return_internal_reference<> (),
+                     "h.setEncoding(encoding) set the encoding of an image in the schema. The encoding name must be a "
+                     "string (all capitals).\nExample:\n\t"
+                     "IMAGEDATA_ELEMENT(s)\n\t\t.key('data.image')\n\t\t.setEncoding('RGB')\n\t\t.commit()"
+                     )
 
                 .def("setGeometry", &karabo::xms::ImageDataElement::setGeometry
                      , (bp::arg("geometry"))
