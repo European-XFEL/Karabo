@@ -6,7 +6,7 @@
 from contextlib import contextmanager
 
 from traits.api import (HasStrictTraits, Bool, Dict, Enum, Event, Instance,
-                        Int, List, on_trait_change, String, WeakRef)
+                        Int, List, String, WeakRef)
 
 import karabogui.globals as krb_globals
 from karabo.common.api import DeviceStatus
@@ -34,8 +34,6 @@ class DeviceTreeNode(HasStrictTraits):
 
     parent = WeakRef('DeviceTreeNode')
     children = List(Instance('DeviceTreeNode'))
-    _visible_children = List(Instance('DeviceTreeNode'))
-    clear_cache = Bool(True)
 
     # cached current visibility
     is_visible = Bool(True)
@@ -68,16 +66,6 @@ class DeviceTreeNode(HasStrictTraits):
         if self.parent is None:
             return 0
         return self.parent.children.index(self)
-
-    @on_trait_change('children[]')
-    def _register_clear_cache(self):
-        self.clear_cache = True
-
-    def get_visible_children(self):
-        if self.clear_cache:
-            self._visible_children = [c for c in self.children if c.is_visible]
-            self.clear_cache = False
-        return self._visible_children
 
 
 class DeviceSystemTree(HasStrictTraits):
@@ -127,6 +115,10 @@ class DeviceSystemTree(HasStrictTraits):
         self._device_nodes.pop(instance_id)
         return True
 
+    def initialize(self, system_hash):
+        with self.update_context.reset_context():
+            self._handle_device_data('device', system_hash, append=False)
+
     def update(self, system_hash):
         nodes = self._handle_device_data('device', system_hash)
         self.needs_update = True
@@ -165,6 +157,10 @@ class DeviceSystemTree(HasStrictTraits):
             def removal_context(self, tree_node):
                 yield
 
+            @contextmanager
+            def layout_context(self):
+                yield
+
         return Dummy()
 
     def _append_child_node(self, parent_node, child_node):
@@ -175,14 +171,17 @@ class DeviceSystemTree(HasStrictTraits):
         with self.update_context.insertion_context(parent_node, first, last):
             parent_node.children.append(child_node)
 
+    def _set_child_node(self, parent_node, child_node):
+        parent_node.children.append(child_node)
+
     # ------------------------------------------------------------------
 
-    def _handle_device_data(self, device_type, system_hash):
-        new_dev_nodes = {}
+    def _handle_device_data(self, device_type, system_hash, append=True):
         assert device_type in ('device', 'macro')
+        handler = self._append_child_node if append else self._set_child_node
 
         if device_type not in system_hash:
-            return new_dev_nodes
+            return
 
         for karabo_name, _, attrs in system_hash[device_type].iterall():
             if attrs.get('classId', '') in BLACKLIST_CLASSES:
@@ -205,14 +204,14 @@ class DeviceSystemTree(HasStrictTraits):
                 domain_node = DeviceTreeNode(node_id=domain,
                                              parent=self.root,
                                              level=DOMAIN_LEVEL)
-                self._append_child_node(self.root, domain_node)
+                handler(self.root, domain_node)
 
             type_node = domain_node.child(dev_type)
             if type_node is None:
                 type_node = DeviceTreeNode(node_id=dev_type,
                                            parent=domain_node,
                                            level=TYPE_LEVEL)
-                self._append_child_node(domain_node, type_node)
+                handler(domain_node, type_node)
 
             member_node = type_node.child(member)
             if member_node is None:
@@ -222,12 +221,10 @@ class DeviceSystemTree(HasStrictTraits):
                                              server_id=server_id,
                                              visibility=visibility,
                                              level=MEMBER_LEVEL)
-                self._append_child_node(type_node, member_node)
+                handler(type_node, member_node)
 
             member_node.status = status
             member_node.attributes = attrs
             member_node.capabilities = capabilities
 
             self._device_nodes[karabo_name] = member_node
-
-        return new_dev_nodes

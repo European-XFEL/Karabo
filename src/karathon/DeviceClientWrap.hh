@@ -18,6 +18,7 @@
 #include "ScopedGILRelease.hh"
 #include "ScopedGILAcquire.hh"
 #include "PyCoreLockWrap.hh"
+#include "Wrapper.hh"
 
 namespace bp = boost::python;
 
@@ -75,6 +76,21 @@ namespace karathon {
             return Wrapper::fromStdPairToPyTuple(this->exists(instanceId));
         }
 
+        void enableInstanceTrackingPy() {
+            ScopedGILRelease nogil;
+            enableInstanceTracking();
+        }
+
+        bp::object getSystemInformationPy() {
+            ScopedGILRelease nogil;
+            return bp::object(getSystemInformation());
+        }
+
+        bp::object getSystemTopologyPy() {
+            ScopedGILRelease nogil;
+            return bp::object(getSystemTopology());
+        }
+
         bp::object getServersPy() {
             ScopedGILRelease nogil;
             return Wrapper::fromStdVectorToPyList(this->getServers());
@@ -130,6 +146,11 @@ namespace karathon {
             return Wrapper::toObject(value, HashWrap::isDefault(PyTypes::PYTHON_DEFAULT));
         }
 
+        bp::object getConfigurationPy(const std::string& instanceId) {
+            ScopedGILRelease nogil;
+            return bp::object(this->DeviceClient::get(instanceId));
+        }
+
         karabo::util::Schema getDeviceSchema(const std::string& instanceId) {
             ScopedGILRelease nogil;
             return this->DeviceClient::getDeviceSchema(instanceId);
@@ -148,11 +169,6 @@ namespace karathon {
         karabo::util::Schema getClassSchema(const std::string& serverId, const std::string& classId) {
             ScopedGILRelease nogil;
             return this->DeviceClient::getClassSchema(serverId, classId);
-        }
-
-        karabo::util::Hash cacheAndGetConfiguration(const std::string& deviceId) {
-            ScopedGILRelease nogil;
-            return this->DeviceClient::cacheAndGetConfiguration(deviceId);
         }
 
         void registerInstanceNewMonitor(const bp::object& handler) {
@@ -240,6 +256,11 @@ namespace karathon {
             return this->DeviceClient::unregisterChannelMonitor(channelName);
         }
 
+
+        void setDeviceMonitorIntervalPy(long int milliseconds) {
+            ScopedGILRelease nogil;
+            setDeviceMonitorInterval(milliseconds);
+        }
 
         void setPy(const std::string& instanceId, const std::string& key, const bp::object& value, const std::string& keySep = ".", int timeout = -1) {
             karabo::util::Hash tmp;
@@ -403,55 +424,19 @@ namespace karathon {
         }
 
         void proxyPythonCallbackHash(const bp::object& handler, const karabo::util::Hash& arg1) {
-            ScopedGILAcquire gil;
-            try {
-                if (handler) handler(bp::object(arg1));
-            } catch (const bp::error_already_set& e) {
-                if (PyErr_Occurred()) PyErr_Print();
-                std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
-                throw KARABO_PYTHON_EXCEPTION("Python handler '" + funcName + "' has thrown an exception.");
-            } catch (...) {
-                KARABO_RETHROW
-            }
+            Wrapper::proxyHandler(handler, "ProxyCallbackHash type", arg1);
         }
 
         void proxyPythonCallbackStringHash(const bp::object& handler, const std::string& arg1, const karabo::util::Hash& arg2) {
-            ScopedGILAcquire gil;
-            try {
-                if (handler) handler(bp::object(arg1), bp::object(arg2));
-            } catch (const bp::error_already_set& e) {
-                if (PyErr_Occurred()) PyErr_Print();
-                std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
-                throw KARABO_PYTHON_EXCEPTION("Python handler '" + funcName + "' has thrown an exception.");
-            } catch (...) {
-                KARABO_RETHROW
-            }
+            Wrapper::proxyHandler(handler, "ProxyCallbackStringHash type", arg1, arg2);
         }
 
         void proxyPythonCallbackStringSchema(const bp::object& handler, const std::string& arg1, const karabo::util::Schema& arg2) {
-            ScopedGILAcquire gil;
-            try {
-                if (handler) handler(bp::object(arg1), bp::object(arg2));
-            } catch (const bp::error_already_set& e) {
-                if (PyErr_Occurred()) PyErr_Print();
-                std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
-                throw KARABO_PYTHON_EXCEPTION("Python handler '" + funcName + "' has thrown an exception.");
-            } catch (...) {
-                KARABO_RETHROW
-            }
+            Wrapper::proxyHandler(handler, "ProxyCallbackStringSchema type", arg1, arg2);
         }
 
         void proxyPythonCallbackStringHashAny(const bp::object& handler, const std::string& arg1, const karabo::util::Hash& arg2, const boost::any& arg3) {
-            ScopedGILAcquire gil;
-            try {
-                if (handler) handler(bp::object(arg1), bp::object(arg2), boost::any_cast<const bp::object&>(arg3));
-            } catch (const bp::error_already_set& e) {
-                if (PyErr_Occurred()) PyErr_Print();
-                std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
-                throw KARABO_PYTHON_EXCEPTION("Python handler '" + funcName + "' has thrown an exception.");
-            } catch (...) {
-                KARABO_RETHROW
-            }
+            Wrapper::proxyHandler(handler, "ProxyCallbackStringHashAny type", arg1, arg2, arg3);
         }
 
     private: // members

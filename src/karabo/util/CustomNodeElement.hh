@@ -262,6 +262,24 @@ namespace karabo {
 
                 return *(static_cast<Derived*> (this));
             }
+            
+            /**
+             * Set the maximum size of a subkey of the CustomNodeElement. This is required by the DAQ for all vector 
+             * attributes if its not assigned automatically or just to use a different value then the DAQ's default
+             * length of 1000.
+             *
+             * @param subKey: Key of the vector attribute (like <b>"pixels.shape"</b>)
+             * @param maxSize: Number as the maximum size (like <b>3</b>)
+             * @return
+             */
+            Derived& setMaxSize(const std::string& subKey, const unsigned int maxSize) {
+                using namespace karabo::util;
+                OVERWRITE_ELEMENT(m_schema).key(m_key + "." + subKey)
+                        .setNewMaxSize<unsigned int>(maxSize)
+                        .commit();
+
+                return *(static_cast<Derived*> (this));
+            }
 
             /**
              * Set the unit for a subkey of the CustomNodeElement

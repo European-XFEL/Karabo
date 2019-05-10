@@ -23,7 +23,7 @@ from karabogui.alarms.api import ALARM_LOW, ALARM_HIGH, WARN_LOW, WARN_HIGH
 from karabogui.binding.api import (
     BaseBinding, DeviceProxy, PropertyProxy, VectorHashBinding)
 from karabogui.events import (
-    broadcast_event, KaraboEventSender, register_for_broadcasts,
+    broadcast_event, KaraboEvent, register_for_broadcasts,
     unregister_from_broadcasts)
 from karabogui.generic_scenes import get_generic_scene
 from karabogui.widgets.popup import PopupWidget
@@ -67,11 +67,14 @@ class ConfigurationTreeView(QTreeView):
         self.popup_widget = None
         self._popup_showing_index = None
 
-        # Don't forget to unregister!
-        register_for_broadcasts(self)
-
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._show_context_menu)
+
+        self.event_map = {
+            KaraboEvent.AccessLevelChanged: self._event_access_level
+        }
+        # Don't forget to unregister!
+        register_for_broadcasts(self.event_map)
 
     # ------------------------------------
     # Public methods
@@ -280,7 +283,7 @@ class ConfigurationTreeView(QTreeView):
 
     def closeEvent(self, event):
         event.accept()
-        unregister_from_broadcasts(self)
+        unregister_from_broadcasts(self.event_map)
 
     def currentChanged(self, current, previous):
         """Pass selection changes along to the value delegate
@@ -288,15 +291,11 @@ class ConfigurationTreeView(QTreeView):
         self.edit_delegate.current_changed(current)
         super(ConfigurationTreeView, self).currentChanged(current, previous)
 
-    def karaboBroadcastEvent(self, event):
-        sender = event.sender
-        if sender is KaraboEventSender.AccessLevelChanged:
-            model = self.model()
-            proxy = model.root
-            self.assign_proxy(None)
-            self.assign_proxy(proxy)
-
-        return False
+    def _event_access_level(self, data):
+        model = self.model()
+        proxy = model.root
+        self.assign_proxy(None)
+        self.assign_proxy(proxy)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -313,7 +312,7 @@ class ConfigurationTreeView(QTreeView):
                 model = get_generic_scene(proxy)
                 if model is not None:
                     window = SceneTargetWindow.Dialog
-                    broadcast_event(KaraboEventSender.ShowUnattachedSceneView,
+                    broadcast_event(KaraboEvent.ShowUnattachedSceneView,
                                     {'model': model, 'target_window': window})
                 event.accept()
 

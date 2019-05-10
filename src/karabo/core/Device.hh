@@ -1603,6 +1603,14 @@ namespace karabo {
                                     channel->registerShowConnectionsHandler([this, key](const std::vector<karabo::util::Hash>& connections) {
                                         this->set(key + ".connections", connections);
                                     });
+                                    channel->registerShowStatisticsHandler(
+                                        [this, key](const std::vector<unsigned long long>& rb, const std::vector<unsigned long long>& wb) {
+                                            karabo::util::Hash h;
+                                            h.set(key + ".bytesRead", rb);
+                                            h.set(key + ".bytesWritten", wb);
+                                            this->set(h);
+                                        }
+                                    );
                                 }
                             } catch (const karabo::util::NetworkException& e) {
                                 KARABO_LOG_ERROR << e.userFriendlyMsg();

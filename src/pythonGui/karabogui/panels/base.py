@@ -10,7 +10,7 @@ from PyQt4.QtGui import (
     QAction, QFrame, QHBoxLayout, QPainter, QPixmap, QPrinter,
     QPrintPreviewDialog, QSizePolicy, QVBoxLayout, QWidget)
 from karabogui import icons
-from karabogui.events import KaraboEventSender, broadcast_event
+from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.util import generateObjectName
 from karabogui.widgets.toolbar import ToolBar
 
@@ -165,7 +165,7 @@ class BasePanelWidget(QFrame):
             if w != self:
                 self.panel_container.removeTab(i)
 
-        broadcast_event(KaraboEventSender.MaximizePanel,
+        broadcast_event(KaraboEvent.MaximizePanel,
                         {'container': self.panel_container})
         self.panel_container.maximized = True
 
@@ -174,7 +174,7 @@ class BasePanelWidget(QFrame):
         self.minimize()
         self.panel_container.insert_panels_after_maximize(self.index)
 
-        broadcast_event(KaraboEventSender.MinimizePanel,
+        broadcast_event(KaraboEvent.MinimizePanel,
                         {'container': self.panel_container})
         self.panel_container.maximized = False
 

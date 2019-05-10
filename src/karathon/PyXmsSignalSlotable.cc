@@ -99,8 +99,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("registerBrokerErrorHandler", &SignalSlotableWrap::registerBrokerErrorHandlerPy
                  , (bp::arg("handler")))
 
-            .def("connect",
-                 (bool (SignalSlotable::*)(const string&, const string&, const string&, const string&))(&SignalSlotable::connect),
+            .def("connect", &SignalSlotableWrap::connectPy,
                  (bp::arg("signalInstanceId"),
                   bp::arg("signalFunction"),
                   bp::arg("slotInstanceId"),
@@ -110,8 +109,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  "ss = SignalSlotable(\"a\")\n\tss.connect(\"\", \"moin\", \"b\", \"onMoin\")\n\tss.emit(\"moin\", 12)\n"
                  )
 
-            .def("connect",
-                 (bool (SignalSlotable::*)(const string&, const string&))(&SignalSlotable::connect),
+            .def("connect", &SignalSlotableWrap::connectPy_old,
                  (bp::arg("signalFunction"),
                   bp::arg("slotFunction")))
 
