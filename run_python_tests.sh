@@ -222,6 +222,7 @@ runPythonIntegrationTests() {
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_provided_scenes_test"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.run_configuration_group"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.pipeline_processing_test"
+    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_cross_test"
 
     echo
     echo Karabo Python integration tests complete

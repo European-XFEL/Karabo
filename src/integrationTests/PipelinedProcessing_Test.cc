@@ -886,7 +886,9 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processin
                                           % (nTotalData1 + nTotalData2 + m_nDataPerRun) % (nTotalData1New + nTotalData2New)).str(),
                                          nTotalData1 + nTotalData2 + m_nDataPerRun, nTotalData1New + nTotalData2New);
         } else {
-            CPPUNIT_ASSERT(nTotalData1New + nTotalData2New < nTotalData1 + nTotalData2 + m_nDataPerRun);
+            CPPUNIT_ASSERT_MESSAGE((boost::format("DataLoss assertion: %d < %d")
+                                    % (nTotalData1New + nTotalData2New) % (nTotalData1 + nTotalData2 + m_nDataPerRun)).str(),
+                                   nTotalData1New + nTotalData2New < nTotalData1 + nTotalData2 + m_nDataPerRun);
         }
 
         // update nTotalData
@@ -1057,8 +1059,6 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectSharedQueue(bool useRou
                                      "output1", Hash("noInputShared", "queue",
                                                      "distributionMode", (useRoundRobin ? "round-robin" : "load-balanced"))));
 
-    unsigned int nDataExpected = 0, nDataReceived = 0, nDataFlushed = 0;
-
     // Instantiates the receiver with a really high processing time (in order of seconds) so that the sender won't
     // be able to send all the data before the receiver disconnects.
     karabo::util::Hash config(m_receiverBaseConfig);
@@ -1079,15 +1079,19 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectSharedQueue(bool useRou
     // Checks that at least one data item has been received before the receiver entered in "processing" state.
     CPPUNIT_ASSERT(receivedBeforeDisc > 0); // Not redundant: the property polling might have timed out.
 
-    nDataExpected += m_nDataPerRun;
-    nDataFlushed += (m_nDataPerRun - receivedBeforeDisc);
-    nDataReceived += receivedBeforeDisc;
+    const unsigned int nDataExpected = m_nDataPerRun;
+    const unsigned int nDataFlushed = (m_nDataPerRun - receivedBeforeDisc);
+    const unsigned int nDataReceived = receivedBeforeDisc;
+
+    // Asserts that there's still data to be sent - data already received lower than expected data.
+    CPPUNIT_ASSERT(3 * (nDataExpected - receivedBeforeDisc) > m_nDataPerRun * 2);
 
     // Disconnects the receiver by killing it.
     killDeviceWithAssert(m_receiver);
 
-    // Asserts that there's still data to be sent - data already received lower than expected data.
-    CPPUNIT_ASSERT(3 * (nDataExpected - receivedBeforeDisc) > m_nDataPerRun * 2);
+    // Check that sender has done its part and will not send anything after receiver is re-instantiated.
+    // Otherwise it could be that not all data is put into queue and will be flushed as we want to test here.
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
 
     // Re-instantiates the receiver - this time there's no need to use a high processingTime.
     karabo::util::Hash configAfterDisc(m_receiverBaseConfig);

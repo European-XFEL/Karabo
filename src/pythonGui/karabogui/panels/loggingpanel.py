@@ -7,7 +7,7 @@ from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
 
 from karabogui import icons
 from karabogui.events import (
-    register_for_broadcasts, KaraboEventSender, unregister_from_broadcasts
+    register_for_broadcasts, KaraboEvent, unregister_from_broadcasts
 )
 from karabogui.widgets.log import LogWidget
 from karabogui.widgets.toolbar import ToolBar
@@ -18,7 +18,11 @@ class LoggingPanel(BasePanelWidget):
     def __init__(self):
         super(LoggingPanel, self).__init__("Log", allow_closing=True)
         # Register for broadcast events.
-        register_for_broadcasts(self)
+        self.event_map = {
+            KaraboEvent.LogMessages: self._event_log_messages,
+            KaraboEvent.NetworkConnectStatus: self._event_network,
+        }
+        register_for_broadcasts(self.event_map)
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
@@ -53,26 +57,23 @@ class LoggingPanel(BasePanelWidget):
         toolBar.addAction(self.__acClearLog)
         return [toolBar]
 
-    def karaboBroadcastEvent(self, event):
-        """ Router for incoming broadcasts
-        """
-        if event.sender is KaraboEventSender.LogMessages:
-            messages = event.data.get('messages', [])
-            self._log_widget.onLogDataAvailable(messages)
-            return True  # Nobody else should handle this event!
-        elif event.sender is KaraboEventSender.NetworkConnectStatus:
-            data = event.data
-            # on False status we only clear the logs
-            if not data['status']:
-                self._log_widget.onClearLog()
-
-        return False
-
     def closeEvent(self, event):
         """Unregister from broadcast events, tell main window to enable
         the button to add me back.
         """
         super(LoggingPanel, self).closeEvent(event)
         if event.isAccepted():
-            unregister_from_broadcasts(self)
+            unregister_from_broadcasts(self.event_map)
             self.signalPanelClosed.emit(self.windowTitle())
+
+    # -----------------------------------------------------------------------
+    # Karabo Events
+
+    def _event_log_messages(self, data):
+        messages = data.get('messages', [])
+        self._log_widget.onLogDataAvailable(messages)
+
+    def _event_network(self, data):
+        if not data['status']:
+            # on False status we only clear the logs
+            self._log_widget.onClearLog()

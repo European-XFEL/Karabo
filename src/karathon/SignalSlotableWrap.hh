@@ -9,10 +9,15 @@
 #ifndef KARATHON_SIGNALSLOTABLE_HH
 #define	KARATHON_SIGNALSLOTABLE_HH
 
+#include <karabo/util/ClassInfo.hh>
+#include <karabo/log/Logger.hh>
+#include <karabo/xms/SignalSlotable.hh>
+
 #include <boost/python.hpp>
 #include <boost/function.hpp>
-#include <karabo/xms.hpp>
+
 #include <iostream>
+
 #include "SignalWrap.hh"
 #include "SlotWrap.hh"
 #include "ScopedGILRelease.hh"
@@ -26,6 +31,7 @@ namespace karathon {
     class SignalSlotableWrap : public karabo::xms::SignalSlotable {
 
     public:
+        KARABO_CLASSINFO(SignalSlotableWrap, "SignalSlotableWrap", "1.0")
 
         class RequestorWrap : public karabo::xms::SignalSlotable::Requestor {
 
@@ -142,7 +148,13 @@ namespace karathon {
 
         void start() {
             ScopedGILRelease nogil;
-            karabo::xms::SignalSlotable::start();
+            try {
+                karabo::xms::SignalSlotable::start();
+            } catch (const std::exception& e) {
+                // Make sure that we get something in the log file and not only in standard output/error
+                KARABO_LOG_FRAMEWORK_ERROR << e.what();
+                KARABO_RETHROW;
+            }
         }
 
         bp::object getInstanceId() {
@@ -232,6 +244,17 @@ namespace karathon {
             auto reply(boost::make_shared<karabo::util::Hash>());
             packPy(*reply, args...);
             registerReply(reply);
+        }
+
+        bool connectPy(const std::string& signalInstanceId, const std::string& signalFunction,
+                       const std::string& slotInstanceId, const std::string& slotFunction) {
+            ScopedGILRelease nogil;
+            return this->connect(signalInstanceId, signalFunction, slotInstanceId, slotFunction);
+        }
+
+        bool connectPy_old(const std::string& signalFunction, const std::string& slotFunction) {
+            ScopedGILRelease nogil;
+            return this->connect(signalFunction, slotFunction);
         }
 
         void registerInstanceNewHandlerPy(const bp::object& handler) {

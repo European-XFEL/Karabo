@@ -4,20 +4,21 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt4.QtCore import pyqtSlot, QModelIndex, Qt
+from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import (
     QAbstractItemView, QAction, QCursor, QDialog, QHeaderView, QMenu,
     QTreeView)
 
 from karabogui import icons
 from karabogui.enums import NavigationItemTypes
-from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
 from karabogui.singletons.api import (
     get_manager, get_network, get_selection_tracker)
 from karabogui.widgets.popup import PopupWidget
 
 from .device_model import DeviceTreeModel
+from .device_filter_model import DeviceFilterModel
 from .tools import DeviceSceneHandler
 
 
@@ -27,10 +28,14 @@ class DeviceTreeView(QTreeView):
         self._selected_proxy = None  # A BaseDeviceProxy
 
         model = DeviceTreeModel(parent=self)
-        self.setModel(model)
-        self.setSelectionModel(model.selectionModel)
-        model.rowsInserted.connect(self._items_added)
-        model.signalItemChanged.connect(self.onSelectionChanged)
+        proxy_model = DeviceFilterModel(parent=self,
+                                        source_model=model)
+        proxy_model.setFilterKeyColumn(0)
+
+        self.setModel(proxy_model)
+        self.setSelectionModel(proxy_model.selectionModel)
+        proxy_model.modelReset.connect(self.expandReset)
+        proxy_model.signalItemChanged.connect(self.onSelectionChanged)
 
         header = self.header()
         header.setResizeMode(QHeaderView.ResizeToContents)
@@ -41,7 +46,7 @@ class DeviceTreeView(QTreeView):
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
 
         self.handler_list = [DeviceSceneHandler()]
-        self.expanded = True
+        self.expanded = False
         self.popupWidget = None
         self.header().sectionDoubleClicked.connect(self.onDoubleClickHeader)
 
@@ -121,15 +126,10 @@ class DeviceTreeView(QTreeView):
     # ----------------------------
     # Slots
 
-    @pyqtSlot(QModelIndex, int, int)
-    def _items_added(self, parent_index, start, end):
-        """React to the addition of an item (or items).
-        """
-        # Bail immediately if not the first item
-        if start != 0:
-            return
-
-        self.expand(parent_index)
+    @pyqtSlot()
+    def expandReset(self):
+        self.expanded = True
+        self.expandAll()
 
     @pyqtSlot(str, object)
     def onSelectionChanged(self, item_type, proxy):
@@ -144,7 +144,7 @@ class DeviceTreeView(QTreeView):
         if item_type not in ('class', 'device'):
             # servers and hosts clear the configurator
             proxy = None
-        broadcast_event(KaraboEventSender.ShowConfiguration, {'proxy': proxy})
+        broadcast_event(KaraboEvent.ShowConfiguration, {'proxy': proxy})
 
     @pyqtSlot()
     def onDoubleClickHeader(self):
