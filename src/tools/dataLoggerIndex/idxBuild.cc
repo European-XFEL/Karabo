@@ -10,8 +10,10 @@
 #include <sstream>
 #include <algorithm>
 #include <vector>
-#include <boost/filesystem.hpp>
 #include <boost/algorithm/string/predicate.hpp> 
+#include <boost/chrono.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/thread.hpp>
 #include <karabo/util/Epochstamp.hh>
 #include <karabo/util/Exception.hh>
 #include <karabo/util/DataLogUtils.hh>
@@ -287,9 +289,15 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
 
     while (irs.good()) {
         string line;
-        size_t position = irs.tellg();
+        int position = irs.tellg();
+
         if (getline(irs, line)) {
-            if (line.empty()) continue;
+            if (line.empty() || position == -1) {
+                // Skips the writing of the index entry if the log
+                // entry to be indexed was empty or its position in
+                // the log file could not be obtained.
+                continue;
+            }
             boost::smatch tokens;
             bool search_res = boost::regex_search(line, tokens, lineRegex);
             if (!search_res){
