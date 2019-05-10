@@ -94,6 +94,9 @@ class DeviceTreeModel(QAbstractItemModel):
 
         Counts number of children for a given node in the tree view.
         """
+        if parent.column() > 0:
+            return 0
+
         if not parent.isValid():
             parent_node = self.tree.root
         else:
