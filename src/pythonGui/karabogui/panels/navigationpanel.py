@@ -79,3 +79,7 @@ class TopologyPanel(BasePanelWidget):
             proxy_model = self.tree_view.model()
             proxy_model.setFilterFixedString(pattern)
             self.tree_view.expandAll()
+            # After search, the operator can clear and maintain his selection!
+            index = proxy_model.currentIndex()
+            if index.isValid():
+                self.tree_view.scrollTo(index)
