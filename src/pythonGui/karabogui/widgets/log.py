@@ -13,7 +13,7 @@ from PyQt4.QtGui import (QAbstractItemView, QColor, QDateTimeEdit,
                          QToolButton, QVBoxLayout, QWidget)
 
 from karabogui import icons
-from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.util import getSaveFileName
 
 DEVICE_COLUMN = 3
@@ -306,7 +306,7 @@ class LogWidget(QWidget):
             return
         index = self.queryModel.index(index.row(), DEVICE_COLUMN)
         deviceId = self.queryModel.data(index, Qt.DisplayRole)
-        broadcast_event(KaraboEventSender.ShowDevice, {'deviceId': deviceId})
+        broadcast_event(KaraboEvent.ShowDevice, {'deviceId': deviceId})
 
     @pyqtSlot()
     def onSaveToFile(self):

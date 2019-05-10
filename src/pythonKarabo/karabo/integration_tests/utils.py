@@ -1,5 +1,4 @@
 import os
-import os.path as op
 import subprocess
 import sys
 from threading import Thread
@@ -110,13 +109,7 @@ class BoundDeviceTestCase(TestCase):
         self._eventLoopThread.daemon = True
         self._eventLoopThread.start()
 
-        # Looks like testing framework parses the class scope again and
-        # again for each test, so self.dc mightbe None for the second
-        # test, but the first client is not yet properly destructed
-        # (as Python does not offer any control for that :-().
-        # But that is fine, we can live witha single client for everybody.
-        if BoundDeviceTestCase.dc is None:
-            BoundDeviceTestCase.dc = DeviceClient()
+        self.dc = DeviceClient()
 
     def tearDown(self):
         # Stop the servers
@@ -127,3 +120,6 @@ class BoundDeviceTestCase(TestCase):
         # Stop the event loop
         EventLoop.stop()
         self._eventLoopThread.join()
+
+        self.dc = None
+

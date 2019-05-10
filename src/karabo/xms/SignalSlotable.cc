@@ -2662,10 +2662,21 @@ namespace karabo {
             OutputChannels::const_iterator it = m_outputChannels.find(ioChannelId);
             if (it != m_outputChannels.end()) {
                 karabo::util::Hash h(it->second->getInformation());
+                // Almost always the receiver is remote, i.e. in another process:
+                h.set("memoryLocation", "remote");
+                // But better check whether it is not
                 if (processId == static_cast<int> (getpid()) && !std::getenv("KARABO_NO_PIPELINE_SHORTCUT")) {
-                    h.set("memoryLocation", "local");
-                } else {
-                    h.set("memoryLocation", "remote");
+                    // HACK/workaround:
+                    // The host name should be given as slot argument. But for now let's stay backward compatible...
+                    const SlotInstancePointer slot(getSlot("slotGetOutputChannelInformation"));
+                    if (slot) {
+                        const Hash::Pointer header(slot->getHeaderOfSender());
+                        if (header && header->has("hostName")
+                            && header->get<std::string>("hostName") == boost::asio::ip::host_name()) {
+                            // Same pid on same host means same process:
+                            h.set("memoryLocation", "local");
+                        }
+                    }
                 }
                 reply(true, h);
             } else {

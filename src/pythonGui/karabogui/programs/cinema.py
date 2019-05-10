@@ -9,7 +9,7 @@ from PyQt4.QtGui import (
 from karabo.common.scenemodel.api import SceneTargetWindow
 from karabogui import icons
 from karabogui.controllers.api import populate_controller_registry
-from karabogui.events import broadcast_event, KaraboEventSender
+from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.singletons.api import (
     get_db_conn, get_manager, get_mediator, get_panel_wrangler, get_network)
 
@@ -74,7 +74,7 @@ def run_cinema(ns):
             db_scene = {'name': "Cinema",
                         'target_window': SceneTargetWindow.MainWindow,
                         'target': uuid}
-            broadcast_event(KaraboEventSender.OpenSceneLink, db_scene)
+            broadcast_event(KaraboEvent.OpenSceneLink, db_scene)
 
         sys.exit(app.exec_())
     else:

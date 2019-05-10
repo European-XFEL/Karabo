@@ -22,7 +22,7 @@ from karabogui.dialogs.dialogs import AboutDialog
 from karabogui.dialogs.update_dialog import UpdateDialog
 from karabogui.indicators import get_processing_color
 from karabogui.events import (
-    KaraboEventSender, broadcast_event, register_for_broadcasts)
+    KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.panels.api import (
     ConfigurationPanel, DevicePanel, PanelContainer, LoggingPanel,
     ProjectPanel, ScriptingPanel, TopologyPanel)
@@ -109,9 +109,89 @@ class MainWindow(QMainWindow):
             self.onNetworkPerformance)
 
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
-        # not necessary for self due to the fact that the singleton mediator
-        # object and `self` are being destroyed when the GUI exists
-        register_for_broadcasts(self)
+        # not necessary
+        event_map = {
+            KaraboEvent.BrokerInformationUpdate: self._event_broker_connection,
+            KaraboEvent.BigDataProcessing: self._event_big_data,
+            KaraboEvent.DatabaseIsBusy: self._event_db_processing,
+            KaraboEvent.MaximizePanel: self._event_container_maximized,
+            KaraboEvent.MinimizePanel: self._event_container_minimized,
+            KaraboEvent.LoginUserChanged: self._event_access_level,
+        }
+        register_for_broadcasts(event_map)
+
+    # -----------------------------------------------------------------------
+    # Karabo Events
+
+    def _event_broker_connection(self, data):
+        self.update_broker_connection(data)
+
+    def _event_big_data(self, data):
+        """Show the big data latency including value set in the gui"""
+        name = data['name']
+        proc = data['proc']
+        self.ui_big_data.setText("{} - {:.3f} s".format(name, proc))
+
+    def _event_db_processing(self, data):
+        """This method gets called whenever the database is switching its
+        processing mode.
+
+        Scenes, Macros, and Configurations should not be editable while the
+        project DB is saving data.
+        """
+        enable = not data.get('is_processing')
+        # Update toolbar
+        self._enable_toolbar(enable)
+
+        # Update all open scenes and macros
+        container = self._panel_areas[PanelAreaEnum.MiddleTop]
+        for panel in container.panel_set:
+            panel.setEnabled(enable)
+
+        # Update configuration panels
+        container = self._panel_areas[PanelAreaEnum.Right]
+        for panel in container.panel_set:
+            panel.setEnabled(enable)
+
+    def _event_container_maximized(self, data):
+        """The given `panel_container` is about to be maximized.
+        """
+        panel_container = data['container']
+        for area_enum, area_container in self._panel_areas.items():
+            if area_container is not panel_container:
+                area_container.minimize(True)
+
+    def _event_container_minimized(self, data):
+        """The given `panel_container` is about to be minimized.
+        """
+        panel_container = data['container']
+        for area_enum, area_container in self._panel_areas.items():
+            if area_container is not panel_container:
+                area_container.minimize(False)
+
+    def _event_access_level(self, data):
+        self.onUpdateAccessLevel()
+
+    # -----------------------------------------------------------------------
+
+    def update_broker_connection(self, data=None):
+        """Update the status bar with our broker connection information
+        """
+        if data is not None:
+            info = 'KARABO TOPIC: <b>{}</b>'.format(data['topic'])
+            self.brokerInformation.setText(info)
+            # Store this information in the config singleton!
+            get_config()["broker_topic"] = data['topic']
+
+            # Don't show for older GUI servers
+            hostname = data.get('hostname', None)
+            hostport = data.get('hostport', None)
+            if hostname is not None and hostport is not None:
+                info = 'GUI SERVER: <b>{}:{}</b>'.format(hostname, hostport)
+                self.guiServerHost.setText(info)
+        else:
+            self.brokerInformation.setText("")
+            self.guiServerHost.setText("")
 
     # --------------------------------------
     # Qt virtual methods
@@ -124,28 +204,6 @@ class MainWindow(QMainWindow):
         event.accept()
         QMainWindow.closeEvent(self, event)
         qApp.quit()
-
-    def karaboBroadcastEvent(self, event):
-        sender = event.sender
-        data = event.data
-        if sender is KaraboEventSender.BrokerInformationUpdate:
-            self._update_broker_connection(data)
-            return True  # Nobody else should handle this event!
-        elif sender is KaraboEventSender.BigDataProcessing:
-            self._show_big_data_processing(data)
-            return True
-        elif sender is KaraboEventSender.DatabaseIsBusy:
-            self._database_is_processing(data.get('is_processing'))
-        elif sender is KaraboEventSender.MaximizePanel:
-            self._panelContainerMaximized(data.get('container'))
-            return True
-        elif sender is KaraboEventSender.MinimizePanel:
-            self._panelContainerMinimized(data.get('container'))
-            return True
-        elif sender is KaraboEventSender.LoginUserChanged:
-            self.onUpdateAccessLevel()
-            return True
-        return False
 
     # --------------------------------------
     # public methods
@@ -346,27 +404,6 @@ class MainWindow(QMainWindow):
         self.acServerConnect.setEnabled(enable)
         self.tbAccessLevel.setEnabled(enable)
 
-    def _database_is_processing(self, is_processing):
-        """This method gets called whenever the database is switching its
-        processing mode.
-
-        Scenes, Macros, and Configurations should not be editable while the
-        project DB is saving data.
-        """
-        enable = not is_processing
-        # Update toolbar
-        self._enable_toolbar(enable)
-
-        # Update all open scenes and macros
-        container = self._panel_areas[PanelAreaEnum.MiddleTop]
-        for panel in container.panel_set:
-            panel.setEnabled(enable)
-
-        # Update configuration panels
-        container = self._panel_areas[PanelAreaEnum.Right]
-        for panel in container.panel_set:
-            panel.setEnabled(enable)
-
     def _open_panel(self, name):
         panel_info = _PANELS.get(name)
         if panel_info is None:
@@ -392,20 +429,6 @@ class MainWindow(QMainWindow):
         action = self.panelActions.get(name)
         if action is not None:
             action.setEnabled(False)
-
-    def _panelContainerMaximized(self, panel_container):
-        """The given `panel_container` is about to be maximized.
-        """
-        for area_enum, area_container in self._panel_areas.items():
-            if area_container is not panel_container:
-                area_container.minimize(True)
-
-    def _panelContainerMinimized(self, panel_container):
-        """The given `panel_container` is about to be minimized.
-        """
-        for area_enum, area_container in self._panel_areas.items():
-            if area_container is not panel_container:
-                area_container.minimize(False)
 
     def _unminimize_remaining_panels(self):
         """Reset the maximization of any child panels
@@ -439,31 +462,6 @@ class MainWindow(QMainWindow):
             return msg_box.exec() != QMessageBox.Yes
         return False
 
-    def _update_broker_connection(self, data=None):
-        """Update the status bar with our broker connection information
-        """
-        if data is not None:
-            info = 'KARABO TOPIC: <b>{}</b>'.format(data['topic'])
-            self.brokerInformation.setText(info)
-            # Store this information in the config singleton!
-            get_config()["broker_topic"] = data['topic']
-
-            # Don't show for older GUI servers
-            hostname = data.get('hostname', None)
-            hostport = data.get('hostport', None)
-            if hostname is not None and hostport is not None:
-                info = 'GUI SERVER: <b>{}:{}</b>'.format(hostname, hostport)
-                self.guiServerHost.setText(info)
-        else:
-            self.brokerInformation.setText("")
-            self.guiServerHost.setText("")
-
-    def _show_big_data_processing(self, data):
-        """Show the big data latency including value set in the gui"""
-        name = data.get('name')
-        proc = data.get('proc')
-        self.ui_big_data.setText("{} - {:.3f} s".format(name, proc))
-
     # --------------------------------------
     # Qt slots
 
@@ -493,7 +491,7 @@ class MainWindow(QMainWindow):
         krb_globals.GLOBAL_ACCESS_LEVEL = level
 
         # Tell the world
-        broadcast_event(KaraboEventSender.AccessLevelChanged, {})
+        broadcast_event(KaraboEvent.AccessLevelChanged, {})
 
     @pyqtSlot(bool)
     def onConnectionButtonPress(self, connect):
@@ -504,7 +502,7 @@ class MainWindow(QMainWindow):
             # Disconnecting AND need to save first
             self.acServerConnect.setChecked(True)
         else:
-            self._update_broker_connection()
+            self.update_broker_connection()
             # Either connecting or no need to save before disconnecting
             get_network().onServerConnection(connect)
 

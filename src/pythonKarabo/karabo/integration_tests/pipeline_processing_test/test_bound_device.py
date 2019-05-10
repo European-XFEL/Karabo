@@ -118,6 +118,8 @@ class TestPipelineProcessing(BoundDeviceTestCase):
                                       "dataSourcesFromIndex")
                 self.assertEqual(sources[0], "p2pTestSender:output1")
 
+            self.waitUntilEqual("pipeTestReceiver", "nTotalOnEos",
+                                12 * (n + 1), self.KRB_TEST_MAX_TIMEOUT)
             nTotalOnEos = self.dc.get("pipeTestReceiver", "nTotalOnEos")
             self.assertEqual(12 * (n + 1), nTotalOnEos)
 
