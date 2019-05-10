@@ -11,9 +11,7 @@
 #include <algorithm>
 #include <vector>
 #include <boost/algorithm/string/predicate.hpp> 
-#include <boost/chrono.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/thread.hpp>
 #include <karabo/util/Epochstamp.hh>
 #include <karabo/util/Exception.hh>
 #include <karabo/util/DataLogUtils.hh>
