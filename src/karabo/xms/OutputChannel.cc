@@ -538,33 +538,32 @@ namespace karabo {
                 }
             }
 
-            // COPY Inputs
-            boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
-            for (InputChannels::iterator it = m_registeredCopyInputs.begin(); it != m_registeredCopyInputs.end();) {
-                const Hash& channelInfo = it->second;
-                auto tcpChannel = channelInfo.get<ChannelWeakPointer>("tcpChannel").lock();
-                if (!tcpChannel || tcpChannel == channel) {
+            {
+                // COPY Inputs
+                boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
+                for (InputChannels::iterator it = m_registeredCopyInputs.begin(); it != m_registeredCopyInputs.end();) {
+                    const Hash& channelInfo = it->second;
+                    auto tcpChannel = channelInfo.get<ChannelWeakPointer>("tcpChannel").lock();
+                    if (!tcpChannel || tcpChannel == channel) {
 
-                    const std::string& instanceId = it->first;
+                        const std::string& instanceId = it->first;
 
-                    KARABO_LOG_FRAMEWORK_INFO << m_instanceId << " : Copy input channel '" << instanceId
-                            << "' (ip/port " << (tcpChannel ? tcpAddress : "?") << ") disconnected since '"
-                            << error.message() << "' (#" << error.value() << ").";
-                    // Release any queued chunks:
-                    for (const int chunkId : channelInfo.get<std::deque<int> >("queuedChunks")) {
-                        unregisterWriterFromChunk(chunkId);
+                        KARABO_LOG_FRAMEWORK_INFO << m_instanceId << " : Copy input channel '" << instanceId
+                                << "' (ip/port " << (tcpChannel ? tcpAddress : "?") << ") disconnected since '"
+                                << error.message() << "' (#" << error.value() << ").";
+                        // Release any queued chunks:
+                        for (const int chunkId : channelInfo.get<std::deque<int> >("queuedChunks")) {
+                            unregisterWriterFromChunk(chunkId);
+                        }
+                        // Delete from input queue
+                        eraseCopyInput(instanceId);
+                        it = m_registeredCopyInputs.erase(it); // after last use of instanceId which gets invalidated here
+                    } else {
+                        ++it;
                     }
-                    // Delete from input queue
-                    eraseCopyInput(instanceId);
-                    it = m_registeredCopyInputs.erase(it); // after last use of instanceId which gets invalidated here
-                } else {
-                    ++it;
                 }
             }
             updateConnectionTable();
-            // TODO:
-            // In case onInputGone(..) is called in parallel to update(), we have to unregisterWriterFromChunk(..)
-            // if (but only if) 'channel' was supposed to be served, but was not yet...
         }
 
 
