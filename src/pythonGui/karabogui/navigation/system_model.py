@@ -258,11 +258,11 @@ class SystemTreeModel(QAbstractItemModel):
     def _clear_tree_cache(self):
         """Clear the tree and reset the model to account visibility
         """
-        self.layoutAboutToBeChanged.emit()
+        self.beginResetModel()
         access = krb_globals.GLOBAL_ACCESS_LEVEL
 
         def visitor(node):
             node.is_visible = not (node.visibility > access)
 
         self.tree.visit(visitor)
-        self.layoutChanged.emit()
+        self.endResetModel()
