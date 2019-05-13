@@ -108,11 +108,8 @@ class DeviceSystemTree(HasStrictTraits):
             with self.update_context.removal_context(type_node):
                 domain_node.children.remove(type_node)
 
-            if not len(domain_node.children):
-                with self.update_context.removal_context(domain_node):
-                    self.root.children.remove(domain_node)
-
         self._device_nodes.pop(instance_id)
+
         return True
 
     def initialize(self, system_hash):
