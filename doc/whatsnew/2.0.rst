@@ -1,4 +1,80 @@
 **************************
+What's New in Karabo 2.0.4
+**************************
+
+
+Detailed Merge-Log
+==================
+
+bound/cpp core
+++++++++++++++
+
+- C++/bound: Add attributes for DaqDataType !963
+- C++/bound: Always broadcast when the network connection changes
+- C++/bound: Simplify binding for MetaData
+- C++/bound: Add noded slots to C++ !968
+- C++/bound: The 'writeChannel' with correct trainId.Use channel's 'write' with MetaData parameter.
+- C++/bound: Reply to slotPing always via broker !964
+- Bound: fail nicely for wrong plugin to bound server. !995
+- C++: Make sure the versioning namespace is used for some attrs`key` and `path` weren't being grabbed with the correct namespace
+- C++: Add a thread per SignalSlotable !1006
+- C++: Fix PointToPoint::Consumer to avoid locking a mutex !1004
+
+core Devices
+++++++++++++
+
+- Project DB: Really fix the DB root attrs copy !1000
+- ProjectDB: Add an alias for revisions in project DB !966
+- ProjectDB: Handle project DB revisions correctly !948
+- Core Devices: Fix some problems in RunConfiguration !978
+- Add a Python implementation of device template filling
+
+Dependencies and deployment
++++++++++++++++++++++++++++
+
+- DEPS: Fixed wrongly behaving auto-developing during karabo checkout !1013
+- DEPS: Added dependency tracking and from-file installation to karabo script.
+- DEPS: Changed run directory of all servers to be $KARABO/var/data !994
+- DEPS: Make 'karabo' a proper python "program". Now you can edit the code and test your changes without needing to reinstall. !982
+
+Middlelayer core
+++++++++++++++++
+
+- MDL: properly support dir for proxies !997
+- MDL: fix not set values in proxies !1008
+- MDL: schema injection in middle layer proxies. Now a middle layer device sees schema changes !984
+- MDL: fix sending nothing if disconnected !1012
+- MDL: fix race condition for dead devices. Sometimes, when a dead device was accessed via a proxy, a ``CancelledError`` slipped out of the code. !987
+- MDL: We invent a new ``KaraboValue`` called ``NoneValue``, which represents the absence of a value. !958
+- MDL: properly support tables in middle layer !960
+
+Graphical user interface
+++++++++++++++++++++++++
+
+- GUI: Add double click handling to the project view
+- GUI: Watch revision changes of ``DeviceConfigurationModel`` to update active configuration properly
+- GUI: Add device configuration to existing device instance model
+- GUI: Start the newfangled project server.This also fixes some problems with Python device auto instantiation
+- GUI: Show indicator for modified projects
+- GUI: Set visibility of scene widgets properly #13335
+- GUI: Handle selection of project list items
+- GUI: ProjectViewItemModel becomes a singleton
+- GUI: Add class_id to DeviceInstanceModel
+- GUI: Fix bug check for correct model item when looking for parent
+- GUI: Rename karabo_gui.mediator to karabo_gui.events
+- GUI: fix logger panel filter option !999
+- GUI: Add duplicate dialog for scenes and macro
+- GUI: Show alias in project list !966
+- GUI: Save and duplicate active device configuration implemented
+- GUI: Show when scenes have unsaved changes
+- GUI: Fix save subproject and remove obsolete code
+- GUI: Add a pop-up window widget !967
+- Common: SceneModel: `write_scene` returns string now not bytes anymore
+- Common: Remove the three API hash benchmark script
+- Common: Use a common base class for savable objects. This introduces `BaseSavableModel`  !965
+
+
+**************************
 What's New in Karabo 2.0.3
 **************************
 
