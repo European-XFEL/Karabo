@@ -57,6 +57,13 @@ namespace karabo {
                     .assignmentOptional().defaultValue(100)
                     .commit();
 
+            BOOL_ELEMENT(expected).key("enablePerformanceStats")
+                    .displayedName("Performance stats on/off")
+                    .description("Value of 'performanceStatistics.enable' used when instantiating loggers")
+                    .reconfigurable()
+                    .assignmentOptional().defaultValue(true) // true will cause alarms when loggers are too slow
+                    .commit();
+
             PATH_ELEMENT(expected).key("directory")
                     .displayedName("Directory")
                     .description("The directory where the log files should be placed")
@@ -92,8 +99,8 @@ namespace karabo {
             UINT32_ELEMENT(expected).key("instantiationDelay")
                     .displayedName("Instantiation Delay")
                     .description("Time to wait between dataloggers instantiation."
-                                 "If it is 0 no wait is done. "
-                                 "WARNING: if a value greater than 0 but lower than 10 ms is spevcified, 10 ms will be used"
+                                 "If it is 0, no wait is done. "
+                                 "WARNING: if a value greater than 0 but lower than 10 ms is specified, 10 ms will be used"
                                  "NOTE: on a single datalogger server delay time will be instantiationDelay * n_of_servers")
                     .unit(karabo::util::Unit::SECOND).metricPrefix(MetricPrefix::MILLI)
                     .adminAccess()
@@ -312,9 +319,10 @@ namespace karabo {
                                 newMap = true;
                             }
                             const Hash config("deviceToBeLogged", deviceId,
-                                    "directory", get<string>("directory"),
-                                    "maximumFileSize", get<int>("maximumFileSize"),
-                                    "flushInterval", get<int>("flushInterval"));
+                                              "directory", get<string>("directory"),
+                                              "maximumFileSize", get<int>("maximumFileSize"),
+                                              "flushInterval", get<int>("flushInterval"),
+                                              "performanceStatistics.enable", get<bool>("enablePerformanceStats"));
                             const Hash hash("classId", "DataLogger", "deviceId", loggerId, "configuration", config);
                             KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << loggerId << "' on server '"
                                     << serverId << "' since device '" << deviceId << "' appeared (or its logger died)";
@@ -359,8 +367,9 @@ namespace karabo {
                         }
                         // Now, without mutex lock, treat the collected deviceIds (to keep mutex lock short)
                         const Hash config("directory", get<string>("directory"),
-                                "maximumFileSize", get<int>("maximumFileSize"),
-                                "flushInterval", get<int>("flushInterval"));
+                                          "maximumFileSize", get<int>("maximumFileSize"),
+                                          "flushInterval", get<int>("flushInterval"),
+                                          "performanceStatistics.enable", get<bool>("enablePerformanceStats"));
                         Hash hash("classId", "DataLogger", "configuration", config);
 
                         BOOST_FOREACH(const std::string& deviceId, devicesToLog) {
