@@ -13,6 +13,7 @@
 #include <karabo/util/Timestamp.hh>
 #include <karabo/util/Schema.hh>
 #include <karabo/core/Lock.hh>
+#include <karabo/core/InstanceChangeThrottler.hh>
 
 #include <map>
 #include <unordered_map>
@@ -134,6 +135,8 @@ namespace karabo {
             InstanceGoneHandler m_instanceGoneHandler;
             SchemaUpdatedHandler m_schemaUpdatedHandler;
             ClassSchemaHandler m_classSchemaHandler;
+
+            boost::shared_ptr<karabo::core::InstanceChangeThrottler> m_instanceChangeThrottler;
 
             std::set<std::string> m_immortals;
             mutable boost::mutex m_immortalsMutex;
@@ -680,6 +683,21 @@ namespace karabo {
             std::pair<karabo::util::Hash, karabo::util::Schema> getConfigurationFromPast(const std::string& deviceId, const std::string& timepoint);
 
             /**
+             * Register a throttled callback handler to be triggered when a new device instance appears, updates its
+             * instance info record or goes away in the distributed system. The throtter that dispatches the instance
+             * changes events to the handler uses a given interval between its running cycles.
+             *
+             * @param callBackFunction Function to be invoked with information about the instances changes events.
+             * @param throttlerInterval Interval, in milliseconds, between successive cycles of the throttle.
+             * @param maxChangesPerCycle Maximum number of instance changes to be dispatched per cycle of the throttler
+             * - upon reaching this limit the throttler immediately dispatches the changes, despite the elapsed time
+             * from the last cycle.
+             */
+            void registerInstanceChangeMonitor(const InstanceChangeThrottler::InstanceChangeHandler& callBackFunction,
+                                               unsigned int throttlerIntervalMs = 500u,
+                                               unsigned int maxChangesPerCycle = 100u);
+
+            /**
              * Register a callback handler to be triggered if a new instance appears in the distributed system.
              * @param callBackFunction which will receive the instanceInfo Hash
              */
@@ -983,7 +1001,7 @@ namespace karabo {
              * @param accessMode     criteria used for filtering the data source's properties
              */
             void getDataSourceSchemaAsHash(const std::string& dataSourceId, karabo::util::Hash& properties,
-                                           int accessMode = karabo::util::INIT|karabo::util::READ|karabo::util::WRITE);
+                                           int accessMode = karabo::util::INIT | karabo::util::READ | karabo::util::WRITE);
 
         protected: // functions
 

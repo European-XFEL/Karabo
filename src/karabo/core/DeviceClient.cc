@@ -39,7 +39,8 @@ namespace karabo {
             , m_getOlder(false) // Sic! To start aging in setAgeing below.
             , m_runSignalsChangedThread(false)
             , m_signalsChangedInterval(-1)
-            , m_loggerMapCached(false) {
+            , m_loggerMapCached(false)
+            , m_instanceChangeThrottler(nullptr) {
 
             const std::string ownInstanceId(instanceId.empty() ? generateOwnInstanceId() : instanceId);
             Hash instanceInfo;
@@ -71,7 +72,8 @@ namespace karabo {
             , m_getOlder(false) // Sic! To start aging in setAgeing below.
             , m_runSignalsChangedThread(false)
             , m_signalsChangedInterval(-1)
-            , m_loggerMapCached(false) {
+            , m_loggerMapCached(false)
+            , m_instanceChangeThrottler(nullptr) {
 
             this->setAgeing(true);
             this->setupSlots();
@@ -183,6 +185,11 @@ namespace karabo {
                 connectAndRequest(instanceId);
             }
             if (m_instanceNewHandler) m_instanceNewHandler(entry);
+
+            if (m_instanceChangeThrottler) {
+                m_instanceChangeThrottler->submitInstanceNew(instanceId, instanceInfo);
+            }
+
             if (m_loggerMapCached && instanceId == util::DATALOGMANAGER_ID) {
                 karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
                 if (p) {
@@ -239,6 +246,10 @@ namespace karabo {
 
             if (m_instanceUpdatedHandler) m_instanceUpdatedHandler(entry);
 
+            if (m_instanceChangeThrottler) {
+                m_instanceChangeThrottler->submitInstanceUpdate(instanceId, instanceInfo);
+            }
+
         }
 
 
@@ -266,7 +277,12 @@ namespace karabo {
                         disconnect(instanceId);
                     }
                 }
+
                 if (m_instanceGoneHandler) m_instanceGoneHandler(instanceId, instanceInfo);
+
+                if (m_instanceChangeThrottler) {
+                    m_instanceChangeThrottler->submitInstanceGone(instanceId, instanceInfo);
+                }
 
                 if (getInstanceType(instanceInfo) != "server") return;
 
@@ -1125,6 +1141,16 @@ namespace karabo {
             }
 
             return make_pair(hash, schema);
+        }
+
+
+        void DeviceClient::registerInstanceChangeMonitor(const InstanceChangeThrottler::InstanceChangeHandler& callBackFunction,
+                                                         unsigned int throttlerIntervalMs,
+                                                         unsigned int maxChangesPerCycle) {
+
+            m_instanceChangeThrottler = karabo::core::InstanceChangeThrottler::createThrottler(callBackFunction,
+                                                                                               throttlerIntervalMs,
+                                                                                               maxChangesPerCycle);
         }
 
 
