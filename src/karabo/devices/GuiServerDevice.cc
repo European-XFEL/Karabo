@@ -14,6 +14,8 @@
 #include "karabo/net/TcpChannel.hh"
 #include "karabo/util/Version.hh"
 
+#include "karabo/core/InstanceChangeThrottler.hh"
+
 using namespace std;
 using namespace karabo::util;
 using namespace karabo::core;
@@ -217,11 +219,10 @@ namespace karabo {
                 // Register handlers
                 // NOTE: boost::bind() is OK for these handlers because SignalSlotable calls them directly instead
                 // of dispatching them via the event loop.
-                remote().registerInstanceNewMonitor(boost::bind(&karabo::devices::GuiServerDevice::instanceNewHandler, this, _1));
-                remote().registerInstanceUpdatedMonitor(boost::bind(&karabo::devices::GuiServerDevice::instanceUpdatedHandler, this, _1));
-                remote().registerInstanceGoneMonitor(boost::bind(&karabo::devices::GuiServerDevice::instanceGoneHandler, this, _1, _2));
                 remote().registerSchemaUpdatedMonitor(boost::bind(&karabo::devices::GuiServerDevice::schemaUpdatedHandler, this, _1, _2));
                 remote().registerClassSchemaMonitor(boost::bind(&karabo::devices::GuiServerDevice::classSchemaHandler, this, _1, _2, _3));
+
+                remote().registerInstanceChangeMonitor(boost::bind(&karabo::devices::GuiServerDevice::instanceChangeHandler, this, _1));
 
                 // If someone manages to bind_weak(&karabo::devices::GuiServerDevice::requestNoWait<>, this, ...),
                 // we would not need loggerMapConnectedHandler...
@@ -237,7 +238,7 @@ namespace karabo {
                     const Hash& deviceEntry = devices->getValue<Hash>();
                     for (Hash::const_iterator it = deviceEntry.begin(); it != deviceEntry.end(); ++it) {
                         const std::string& deviceId = it->getKey();
-                        Hash topologyEntry; // prepare input as instanceNewHandler expects it
+                        Hash topologyEntry;
                         Hash::Node& hn = topologyEntry.set("device." + deviceId, it->getValue<Hash>());
                         hn.setAttributes(it->getAttributes());
                         checkForConnectingP2p(deviceId);
@@ -1133,20 +1134,12 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::instanceNewHandler(const karabo::util::Hash& topologyEntry) {
-            // topologyEntry is prepared in DeviceClient::prepareTopologyEntry:
-            // an empty Hash at path <type>.<instanceId> with all the instanceInfo as attributes
+        void GuiServerDevice::instanceNewHandler(const std::string& instanceId, const karabo::util::Hash& topologyEntry) {
+            // topologyEntry is an empty Hash at path <type>.<instanceId> with all the instanceInfo as attributes
             try {
-
-                std::string type, instanceId;
-                typeAndInstanceFromTopology(topologyEntry, type, instanceId);
-
-                KARABO_LOG_FRAMEWORK_INFO << "instanceNewHandler --> instanceId: '" << instanceId
-                        << "', type: '" << type << "'";
-
-                Hash h("type", "instanceNew", "topologyEntry", topologyEntry);
-                safeAllClientsWrite(h);
-
+                vector<std::string> keys;
+                topologyEntry.getKeys(keys);
+                const std::string& type = keys[0];
                 if (type == "device") {
                     // Check whether someone already noted interest in it
                     bool registerMonitor = false;
@@ -1177,37 +1170,44 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::instanceUpdatedHandler(const karabo::util::Hash& topologyEntry) {
+        void GuiServerDevice::instanceChangeHandler(const karabo::util::Hash& instChangeData) {
             try {
-                const std::string& type = topologyEntry.begin()->getKey();
-                const std::string& instanceId = topologyEntry.begin()->getValue<Hash>().begin()->getKey();
-                KARABO_LOG_FRAMEWORK_INFO << "instanceUpdatedHandler --> instanceId: '" << instanceId << "'"
-                        << ", type: '" << type << "'";
-                Hash h("type", "instanceUpdated", "topologyEntry", topologyEntry);
+
+                // Calls the handlers for new and gone instance events to do the additional bookkeeping for those cases.
+                const Hash& instancesNewHash = instChangeData.get<Hash>("new");
+                for (Hash::const_iterator it = instancesNewHash.begin(); it != instancesNewHash.end(); ++it) {
+                    vector<std::string> instanceIds;
+                    it->getValue<Hash>().getKeys(instanceIds);
+                    for (const std::string& instanceId : instanceIds) {
+                        instanceNewHandler(instanceId, it->getValue<Hash>());
+                    }
+                }
+                const Hash& instancesGoneHash = instChangeData.get<Hash>("gone");
+                for (Hash::const_iterator it = instancesGoneHash.begin(); it != instancesGoneHash.end(); ++it) {
+                    for (Hash::const_iterator iit = it->getValue<Hash>().begin(); iit != it->getValue<Hash>().end(); ++iit) {
+                        const std::string& instanceId = iit->getKey();
+                        instanceGoneHandler(instanceId);
+                    }
+                }
+
+                // Sends the instance changes to all the connected GUI clients.
+                Hash h("type", "topologyUpdate", "changes", instChangeData);
                 safeAllClientsWrite(h);
 
             } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in instanceUpdatedHandler(): " << e.what();
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in instanceChangeHandler(): " << e.what();
             }
         }
 
-
-        void GuiServerDevice::instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+        
+        void GuiServerDevice::instanceGoneHandler(const std::string& instanceId) {
             try {
-                // const ref is fine even for temporary std::string
-                const std::string& type = (instanceInfo.has("type") && instanceInfo.is<std::string>("type") ?
-                                           instanceInfo.get<std::string>("type") : std::string("unknown"));
-                KARABO_LOG_FRAMEWORK_INFO << "instanceGoneHandler --> instanceId: '" << instanceId
-                        << "', type: '" << type << "'";
-
-                Hash h("type", "instanceGone", "instanceId", instanceId, "instanceType", type);
                 {
                     boost::mutex::scoped_lock lock(m_channelMutex);
 
-                    // Broadcast to all GUIs
+                    // Removes the instance from channel
                     for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                        it->first->writeAsync(h);
-                        // and remove the instance from channel
+                        // it->first->writeAsync(h);
                         it->second.erase(instanceId);
                     }
                 }
@@ -1649,7 +1649,6 @@ namespace karabo {
                              bind_weak(&GuiServerDevice::onRequestAlarms, this,
                                        WeakChannelPointer(), Hash("alarmInstanceId", instanceId), true));
             }
-
         }
 
 
@@ -1661,7 +1660,6 @@ namespace karabo {
                 boost::unique_lock<boost::shared_mutex> lk(m_projectManagerMutex);
                 m_projectManagers.insert(instanceId);
             }
-
         }
 
 
