@@ -275,9 +275,7 @@ namespace karabo {
 
             void triggerIOEvent();
 
-            void onInputGone(const karabo::net::Channel::Pointer& channel);
-
-            void onInputGoneImpl(const karabo::net::Channel::Pointer& channel);
+            void onInputGone(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& error);
 
             void distributeQueue(karabo::util::Hash& channelInfo, std::deque<int>& chunkIds);
 
