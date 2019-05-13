@@ -248,7 +248,7 @@ def handle_scene_from_server(dev_id, name, project, target_window, success,
     """Callback handler for a request to a device to load one of its scenes.
     """
     if not (success and reply.get('payload.success', False)):
-        msg = 'Scene "{}" from device "{}" was not retreived!'
+        msg = 'Scene "{}" from device "{}" was not retrieved!'
         messagebox.show_warning(msg.format(name, dev_id),
                                 title='Load Scene from Device Failed')
         return
@@ -279,7 +279,7 @@ def handle_scene_from_server(dev_id, name, project, target_window, success,
 
 def handle_macro_from_server(dev_id, name, project, success, reply):
     if not (success and reply.get('payload.success', False)):
-        msg = 'Macro "{}" from device "{}" was not retreived!'
+        msg = 'Macro "{}" from device "{}" was not retrieved!'
         messagebox.show_warning(msg.format(name, dev_id),
                                 title='Load Macro from Device Failed')
         return
