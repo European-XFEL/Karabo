@@ -20,7 +20,8 @@ Protocol
 ^^^^^^^^
 
 * The communication protocol uses the binary serialized Hash
-* Each TCP message encodes one Hash which must have the key "type"
+* Each TCP message encodes one Hash which must have the key "type". Depending
+on the type, other keys are incuded as documented below.
 
 **Message types OUT (send from the server to the client):**
 
@@ -50,15 +51,40 @@ deviceId (string)
 property (string)
 data (vector<Hash>)
 
-*instanceNew*
+[depr]_ *instanceNew*
 topologyEntry (Hash)
 
-*instanceUpdated*
+[depr]_ *instanceUpdated*
 topologyEntry (Hash)
 
-*instanceGone*
+[depr]_ *instanceGone*
 instanceId (string)
 instanceType (string)
+
+[2.5.0]_ *topologyUpdate*
+topologyUpdates (Hash)
+
+This Hash groups information about updates to the topology, i.e. "new", "gone" and "update"d instances.
+These three first level keys are always present. One level down is the instance type (e.g. device, server,...)
+and at the final third level the keys are instanceIds. For the "new" and "update"
+case, attributes carry their "instance info".
+An example Hash of the ``topologyUpdates`` is shown below.
+
+::
+
+     'type' => topologyUpdate STRING
+     'changes' +
+       'new' +
+         'device' +
+           'DataLogger-clog_0' type="device" classId="DataLogger" serverId="karabo/dataLogger" visibility="4" compatibility="1.0" host="exflqr30450" status="ok" archive="0" capabilities="0" heartbeatInterval="60" KaraboVersion="3913949" p2p_connection="tcp://exflqr30450.desy.de:60517" +
+           'DataLogger-Karabo_AlarmService' type="device" classId="DataLogger" serverId="karabo/dataLogger" visibility="4" compatibility="1.0" host="exflqr30450" status="ok" archive="0" capabilities="0" heartbeatInterval="60" karaboVersion="3913949" p2p_connection="tcp://exflqr30450.desy.de:60517" +
+       'update' +
+         'device' +
+           'cppServer/1_PropertyTest' type="device" classId="PropertyTest" serverId="cppServer/1" visibility="4" compatibility="1.0" host="exflqr30450" status="ok" archive="1" capabilities="0" heartbeatInterval="120" karaboVersion="3913949" p2p_connection="tcp://exflqr30450.desy.de:60517" +
+       'gone' +
+         'server' +
+           'karabo/macroServer' +
+
 
 *notification*
 deviceId
@@ -122,4 +148,7 @@ maxNumData (int)
 *error*
 traceback (string)
 
-*NOTE: The names in brackets are the new protocol names and will deprecate over time the ones without brackets*
+.. rubric:: Footnotes
+.. [depr] Deprecated in Karabo 2.5.0: GUI client shall still understand them to connect to older GUI Server versions. GUI client legacy support will be dropped in 2.6.0.
+.. [2.5.0] Introduced in Karabo 2.5.0 to replace *instanceNew*, *instanceUpdated* and *instanceGone*.
+

@@ -25,6 +25,8 @@
       <itemPath>../../../src/karabo/core/DeviceClient.hh</itemPath>
       <itemPath>../../../src/karabo/core/DeviceServer.cc</itemPath>
       <itemPath>../../../src/karabo/core/DeviceServer.hh</itemPath>
+      <itemPath>../../../src/karabo/core/InstanceChangeThrottler.cc</itemPath>
+      <itemPath>../../../src/karabo/core/InstanceChangeThrottler.hh</itemPath>
       <itemPath>../../../src/karabo/core/Runner.cc</itemPath>
       <itemPath>../../../src/karabo/core/Runner.hh</itemPath>
       <itemPath>../../../src/karabo/core.hpp</itemPath>
@@ -358,6 +360,8 @@
                      kind="TEST">
         <itemPath>../../../src/karabo/tests/core/DeviceClient_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/core/DeviceClient_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/core/InstanceChangeThrottler_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/core/InstanceChangeThrottler_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/core/Runner_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/core/Runner_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/core/coreTestRunner.cc</itemPath>
@@ -584,6 +588,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/FsmMacros.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/InstanceChangeThrottler.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/InstanceChangeThrottler.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1293,6 +1307,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/core/DeviceClient_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/core/InstanceChangeThrottler_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/core/InstanceChangeThrottler_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2564,6 +2588,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/core/InstanceChangeThrottler.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/InstanceChangeThrottler.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/core/Lock.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/core/Lock.hh" ex="false" tool="3" flavor2="0">
@@ -3266,6 +3300,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/core/DeviceClient_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/core/InstanceChangeThrottler_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/core/InstanceChangeThrottler_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -4522,6 +4566,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/core/InstanceChangeThrottler.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/InstanceChangeThrottler.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/core/Lock.cc" ex="false" tool="1" flavor2="8">
       </item>
       <item path="../../../src/karabo/core/Lock.hh" ex="false" tool="3" flavor2="0">
@@ -5227,6 +5281,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/core/DeviceClient_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/core/InstanceChangeThrottler_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/core/InstanceChangeThrottler_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
