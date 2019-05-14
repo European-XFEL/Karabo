@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Karabo server log {{ server_name }}</title>
+    <link rel="stylesheet" href="{{ static_url('karabo.css') }}" type="text/css">
+    <script src="{{ static_url('logger.js') }}" type="text/javascript" async></script>
+  </head>
+  <body>
+    <div id="body">
+      <div class="deamonlog" id="{{ server_name }}">
+      </div>
+      <hr>
+      <div class="livecontrol">
+        <a href="/api/servers/logs/{{ server_name }}.txt">Download this file</a>
+        <input type="button" value="Stop" onclick="updater.startstop()" id="livecontrolplay">
+      </div>
+    </div>
+  </body>
+</html>

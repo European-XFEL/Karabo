@@ -1,0 +1,39 @@
+html {
+	font-family: sans-serif;
+	-ms-text-size-adjust: 100%;
+	-webkit-text-size-adjust: 100%;
+}
+body {
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 14px;
+	line-height: 1.42857143;
+	color: #333333;
+	background-color: #fff;
+}
+html, body {
+	width: 100%;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+a {
+	background-color: transparent;
+}
+table {
+  border-collapse: collapse;
+  border: 0;
+}
+td {
+  border: 0;
+  padding: 0;
+}
+#daemonlog {
+  line-height: 3em;
+  overflow-y: scroll;
+  padding: 15px;
+}
+#daemonlog .row {
+  padding-top: 0.25em;
+}
+#livecontrol {
+  color: green;
+}
