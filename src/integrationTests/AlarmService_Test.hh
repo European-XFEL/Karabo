@@ -46,6 +46,21 @@ private:
     void testTriggerGlobalAck();
     void testTriggerGlobal();
 
+    /**
+     * Waits, for a maximum amount of time, for a condition checked by a
+     * given function.
+     *
+     * @param checker the function that will evaluate if the target condition has
+     *        been reached.
+     *
+     * @param timeoutMillis the maximum amount of time to wait for the condition
+     *        (in milliseconds).
+     *
+     * @return true if the condition has been reached; false if time expired before
+     *         the condition could have been reached.
+     */
+    bool waitForCondition(boost::function<bool() > checker, unsigned int timeoutMillis);
+
 
     //alarm service device
     karabo::core::DeviceServer::Pointer m_deviceServer;
