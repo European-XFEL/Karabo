@@ -516,11 +516,11 @@ namespace karabo {
                     } catch (const std::exception& e) {
                         KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception when handling reply from '"
                                 << signalId << "', but error handler throws exception:\n"
-                                << e.what();
+                                << e.what() << "\nmessage body: " << *body;
                     }
                 } else {
                     KARABO_LOG_FRAMEWORK_ERROR << m_instanceId << ": Exception when handling reply from '"
-                            << signalId << "': " << e.what();
+                            << signalId << "': " << e.what() << "\nmessage body: " << *body;
                 }
             }
             removeSlot(replyId);
