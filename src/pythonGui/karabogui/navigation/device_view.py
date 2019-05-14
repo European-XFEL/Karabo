@@ -103,7 +103,7 @@ class DeviceTreeView(QTreeView):
         """Reimplementation of the Qt function
         """
         self.setExpanded(index, True)
-        super(DeviceTreeView, self).scrollTo(index)
+        super(DeviceTreeView, self).scrollTo(index, hint)
 
     # ----------------------------
     # Events

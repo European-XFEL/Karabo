@@ -136,7 +136,7 @@ class SystemTreeView(QTreeView):
         """Reimplementation of the Qt function
         """
         self.setExpanded(index, True)
-        super(SystemTreeView, self).scrollTo(index)
+        super(SystemTreeView, self).scrollTo(index, hint)
 
     # ----------------------------
     # Events
