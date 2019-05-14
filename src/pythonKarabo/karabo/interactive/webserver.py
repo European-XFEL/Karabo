@@ -1,58 +1,19 @@
+import json
+import os
 from struct import unpack
 import time
 import sys
+import uuid
 from argparse import ArgumentParser
 from datetime import datetime
 
-from tornado import ioloop, web
+from tornado import gen, ioloop, web
+from tornado.concurrent import Future
 from tornado.escape import json_decode
+from tornado.websocket import WebSocketHandler
 
 from .startkarabo import absolute, defaultall, entrypoint
 
-mainpage = """
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>Karabo server control</title>
-  </head>
-  <body>
-    <form method="post">
-      <table>
-        <tr><th/><th>Name</th><th>Status</th><th>Since</th><tr>
-        {table}
-      </table>
-      <button name="cmd" value="up">Start</button>
-      <button name="cmd" value="down">Stop</button>
-      <button name="cmd" value="once">Start once</button>
-      <button name="cmd" value="kill">Kill</button>
-      <button name="cmd" value="group">Kill Group</button>
-    </form>
-  </body>
-</html>
-"""
-
-row = """
-<tr>
-<td><input type="checkbox" name="servers" value="{name}"/></td>
-<td>{name}</td>
-<td>{status}</td>
-<td>{since}</td>
-</tr>
-"""
-
-refresh = """
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="refresh" content="3; URL=/">
-  </head>
-  <body>
-     Wait a second...
-  </body>
-</html>
-"""
 
 EMPTY_RESPONSE = {'version': '1.0.0',
                   'success': False,
@@ -123,6 +84,11 @@ def getdata(name):
                 'since': '', 'duration': -1}
 
 
+def get_log_row(text):
+    row = {"text": text}
+    return row
+
+
 def server_up(server):
     return (server['status'].startswith('up')
             and server['duration'] > MINIMUM_UP_DURATION)
@@ -158,6 +124,54 @@ class DaemonHandler(web.RequestHandler):
         self.write(response)
 
 
+class LogWebSocket(WebSocketHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.flush = None
+
+    def on_message(self, message):
+        # this function is called by Tornado's event loop
+        # to execute the notification in background
+        # we need to spawn a callback
+        if message == "PONG":
+            if self.flush:
+                self.flush.set_result(None)
+            return
+
+        msg = json.loads(message)
+        if msg['type'] == 'log':
+            ioloop.IOLoop.current().spawn_callback(
+                self.send_logs, msg['server'])
+
+    async def send_logs(self, name):
+        path = absolute("var", "log", name, "current")
+        with open(path) as f:
+            while True:
+                self.flush = Future()
+                self.write_message("PING")
+                await self.flush
+                self.flush = None
+                # send line by line until the file is read
+                content = f.readline()
+                while content:
+                    row = get_log_row(content)
+                    self.write_message(row)
+                    content = f.readline()
+
+
+class LogHandler(web.RequestHandler):
+    def get(self, server):
+        self.render("log.html", server_name=server)
+
+
+class FileHandler(web.RequestHandler):
+    def get(self, server):
+        path = absolute("var", "log", server, "current")
+        self.add_header('Content-Type', 'text/plain')
+        with open(path) as logfile:
+            self.write(logfile.read())
+
+
 class MainHandler(web.RequestHandler):
     def initialize(self, service_list=None, service_id=None):
         self.service_list = service_list
@@ -166,12 +180,10 @@ class MainHandler(web.RequestHandler):
     def get(self):
         data = [getdata(d) for d in filter_services(self.service_id,
                                                     self.service_list)]
-        table = "".join(row.format(**d)
-                        for d in data)
-        self.write(mainpage.format(table=table))
+        self.render("index.html", table=data)
 
     def post(self):
-        self.write(refresh)
+        self.render("refresh.html")
         cmd = self.get_argument("cmd")
         servers = self.get_arguments("servers")
         allowed = filter_services(self.service_id, self.service_list)
@@ -231,8 +243,17 @@ def run_webserver():
     server_dict = {'service_list': service_list, 'service_id': service_id}
     app = web.Application([('/', MainHandler, server_dict),
                            ('/api/servers.json', StatusHandler),
+                           ('/api/servers/([a-zA-Z0-9_]+)/log.html',
+                            LogHandler),
+                           ('/api/servers/logs/([a-zA-Z0-9_]+).txt',
+                            FileHandler),
                            ('/api/servers/([a-zA-Z0-9_]+).json',
-                            DaemonHandler, server_dict)
-                           ])
+                            DaemonHandler, server_dict),
+                           ('/api/servers/logsocket', LogWebSocket)
+                           ],
+                          template_path=os.path.join(
+                              os.path.dirname(__file__), "templates"),
+                          static_path=os.path.join(
+                              os.path.dirname(__file__), "static"),)
     app.listen(args.port)
     ioloop.IOLoop.current().start()

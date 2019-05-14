@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Karabo server control</title>
+    <link rel="stylesheet" href="{{ static_url('karabo.css') }}" type="text/css">
+  </head>
+  <body>
+    <form method="post">
+      <table>
+        <tr><th/><th>Name</th><th>Status</th><th>Since</th><th>Log File</th><th>Live Log</th><tr>
+        {% for row in table %}
+            {% include "index_row.html" %}
+        {% end %}
+      </table>
+      <button name="cmd" value="up">Start</button>
+      <button name="cmd" value="down">Stop</button>
+      <button name="cmd" value="once">Start once</button>
+      <button name="cmd" value="kill">Kill</button>
+      <button name="cmd" value="group">Kill Group</button>
+    </form>
+  </body>
+</html>
