@@ -24,8 +24,6 @@ class DeviceTreeModel(QAbstractItemModel):
         # Our hierarchy tree
         self.tree = get_topology().device_tree
         self.tree.update_context = _UpdateContext(item_model=self)
-        # Add listeners for ``needs_update`` change event
-        self.tree.on_trait_change(self._needs_update, 'needs_update')
 
         self.setSupportedDragActions(Qt.CopyAction)
         event_map = {

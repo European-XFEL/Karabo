@@ -57,7 +57,7 @@ class DeviceWaiter():
         self.timer = QTimer()
         # start listening to topology
         self.topology.system_tree.on_trait_change(
-            self._topo_update, 'needs_update')
+            self._topo_update, 'initialized')
         # call once in case the topology is already built
         self._topo_update()
         # timeout in case devices are not found.
@@ -73,7 +73,7 @@ class DeviceWaiter():
     def _timeout_handler(self):
         # stop listening to the topology
         self.topology.system_tree.on_trait_change(
-            self._topo_update, 'needs_update', remove=True)
+            self._topo_update, 'initialized', remove=True)
 
         # this dialog building is rather complex but will avoid
         # multiple error dialogs to the user.
