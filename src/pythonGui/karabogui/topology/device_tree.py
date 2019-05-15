@@ -5,7 +5,7 @@
 #############################################################################
 from contextlib import contextmanager
 
-from traits.api import (HasStrictTraits, Bool, Dict, Enum, Event, Instance,
+from traits.api import (HasStrictTraits, Bool, Dict, Enum, Instance,
                         Int, List, String, WeakRef)
 
 import karabogui.globals as krb_globals
@@ -74,8 +74,6 @@ class DeviceSystemTree(HasStrictTraits):
 
     # A context manager to enter when manipulating the tree
     update_context = Instance(object)
-    # An event which is triggered whenever the tree needs to be updated
-    needs_update = Event
 
     # device/server node lookup dicts
     _device_nodes = Dict
@@ -117,8 +115,8 @@ class DeviceSystemTree(HasStrictTraits):
             self._handle_device_data('device', system_hash, append=False)
 
     def update(self, system_hash):
-        nodes = self._handle_device_data('device', system_hash)
-        self.needs_update = True
+        with self.update_context.layout_context():
+            nodes = self._handle_device_data('device', system_hash)
 
         return nodes
 
