@@ -311,6 +311,44 @@ class ProjectManager(Device):
                     'reason', exceptionReason)
 
     @slot
+    def slotListNamedItems(self, token, domain, item_type, simple_name):
+        """
+        List items in domain which match item_type and simple_name
+
+        :param token: database user token
+        :param domain: domain to list items from
+        :param item_type: item_type to match
+        :param simple_name: simple_name to match
+        :return: a list of Hashes where each entry has keys: uuid, date,
+                 item_type and simple_name sorted by date
+        """
+        self._checkDbInitialized(token)
+
+        with self.user_db_sessions[token] as db_session:
+            exceptionReason = ""
+            success = True
+            resHashes = []
+            try:
+                res = db_session.list_named_items(
+                    domain, item_type, simple_name)
+                for r in res:
+                    h = Hash('uuid', r['uuid'],
+                             'item_type', r['item_type'],
+                             'simple_name', r['simple_name'],
+                             'is_trashed', r['is_trashed'],
+                             'date', r['date'],
+                             'user', r['user'])
+                    h.set('description', r['description'])
+                    resHashes.append(h)
+                resHashes.sort(key=lambda x: x['date'])
+            except ProjectDBError as e:
+                exceptionReason = str(e)
+                success = False
+        return Hash('items', resHashes,
+                    'success', success,
+                    'reason', exceptionReason)
+
+    @slot
     def slotListDomains(self, token):
         """
         List domains available on this database
