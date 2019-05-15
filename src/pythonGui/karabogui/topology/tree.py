@@ -104,15 +104,15 @@ class SystemTree(HasStrictTraits):
     # A context manager to enter when manipulating the tree
     update_context = Instance(object)
 
-    # An event which is triggered whenever the tree needs to be updated
-    needs_update = Event
-
     # An event which is triggered whenenver a device has an alarm update
     alarm_update = Event
 
     # device/server node lookup dicts
     _device_nodes = Dict
     _server_nodes = Dict
+
+    # initialized hook
+    initialized = Event
 
     def clear_all(self):
         """Removes all data from the model.
@@ -247,10 +247,10 @@ class SystemTree(HasStrictTraits):
         Returns a dictionary of ``SystemTreeNode`` instances for newly added
         device instances.
         """
-        self._handle_server_data(system_hash)
-        nodes = self._handle_device_data('device', system_hash)
-        nodes.update(self._handle_device_data('macro', system_hash))
-        self.needs_update = True
+        with self.update_context.layout_context():
+            self._handle_server_data(system_hash)
+            nodes = self._handle_device_data('device', system_hash)
+            nodes.update(self._handle_device_data('macro', system_hash))
 
         return nodes
 
@@ -261,6 +261,7 @@ class SystemTree(HasStrictTraits):
             self._handle_server_data(system_hash, append=False)
             self._handle_device_data('device', system_hash, append=False)
             self._handle_device_data('macro', system_hash, append=False)
+        self.initialized = True
 
     def visit(self, visitor):
         """Walk every node in the system tree and run a `visitor` function on
