@@ -15,7 +15,7 @@ from .types import (
     BoolBinding, ByteArrayBinding, CharBinding,
     ComplexBinding, FloatBinding, HashBinding, ImageBinding,
     IntBinding, Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-    NodeBinding, NoneBinding, PipelineOutputBinding,
+    NDArrayBinding, NodeBinding, NoneBinding, PipelineOutputBinding,
     SchemaBinding, SignedIntBinding, SlotBinding, StringBinding, TableBinding,
     Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
     UnsignedIntBinding, VectorBinding, VectorNumberBinding, VectorBoolBinding,
