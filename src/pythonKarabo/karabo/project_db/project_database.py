@@ -364,6 +364,64 @@ class ProjectDatabase(ContextDecorator):
         except ExistDBException as e:
                 raise ProjectDBError(e)
 
+    def list_named_items(self, domain, item_type, simple_name):
+        """
+        List items in domain which match item_type and simple_name
+
+        :param domain: domain to list items from
+        :param item_type: item_type to match
+        :param simple_name: iterable of names to match
+        :return: a list of dicts where each entry has keys: uuid, item_type
+                 and simple_name
+        """
+        # path to where the possible entries are located
+        path = "{}/{}".format(self.root, domain)
+        query = """
+        xquery version "3.0";
+        declare namespace functx = "http://www.functx.com";
+        declare function functx:if-absent(
+            $arg as item()* , $value as item()*)  as item()*
+        {{ if (exists($arg)) then $arg else $value }};
+
+        let $path := "{path}"
+        return <items>{{
+        for $doc in collection($path)/xml{where}
+        let $uuid := $doc/@uuid
+        let $simple_name := $doc/@simple_name
+        let $item_type := $doc/@item_type
+        let $is_trashed := functx:if-absent($doc/@is_trashed, 'false')
+        let $user := functx:if-absent($doc/@user, '')
+        let $date := functx:if-absent($doc/@date, '')
+        let $description := functx:if-absent($doc/@description, '')
+        group by $uuid, $simple_name, $item_type, $is_trashed, $user, $date,
+        $description
+        return <item uuid="{{$uuid}}"
+                simple_name="{{$simple_name}}"
+                item_type="{{$item_type}}"
+                is_trashed="{{$is_trashed}}"
+                user="{{$user}}"
+                date="{{$date}}"
+                description="{{$description}}" />
+        }}</items>
+        """
+        where = "[@item_type=('{}') and @simple_name=('{}')]".format(
+            item_type, simple_name)
+
+        query = query.format(where=where,
+                             path=path)
+        try:
+            res = self.dbhandle.query(query)
+            return [{'uuid': r.attrib['uuid'],
+                     'item_type': r.attrib['item_type'],
+                     'simple_name': r.attrib['simple_name'],
+                     'is_trashed': r.attrib['is_trashed'],
+                     'user': r.attrib['user'],
+                     'date': r.attrib['date'],
+                     'description': r.attrib['description']}
+                    for r in res.results[0].getchildren()]
+        except ExistDBException as e:
+                raise ProjectDBError(e)
+
     def list_domains(self):
         """
         List top level domains in database
