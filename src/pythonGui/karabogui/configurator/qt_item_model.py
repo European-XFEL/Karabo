@@ -15,8 +15,8 @@ from karabo.common.api import (
 from karabogui.binding.api import (
     BaseBinding, BindingRoot, ChoiceOfNodesBinding,
     DeviceClassProxy, DeviceProxy, ImageBinding, ListOfNodesBinding,
-    NodeBinding, ProjectDeviceProxy, PropertyProxy, SlotBinding,
-    get_binding_value, has_changes, WidgetNodeBinding)
+    NDArrayBinding, NodeBinding, ProjectDeviceProxy, PropertyProxy,
+    SlotBinding, get_binding_value, has_changes, WidgetNodeBinding)
 from karabogui.const import (
     OK_COLOR, ERROR_COLOR_ALPHA, LOCKED_COLOR, PROPERTY_ALARM_COLOR,
     PROPERTY_ALARM_COLOR_MAP, PROPERTY_READONLY_COLOR, PROPERTY_WARN_COLOR)
@@ -26,6 +26,10 @@ from .utils import (
     dragged_configurator_items, get_attr_icon, get_child_names,
     get_device_locked_string, get_device_state_string, get_icon,
     get_proxy_value, is_mandatory, threshold_triggered)
+
+
+SPECIAL_BINDINGS = (SlotBinding, ImageBinding,
+                    NDArrayBinding, WidgetNodeBinding)
 
 
 def _friendly_repr(proxy, value):
@@ -324,8 +328,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
         # Check for draggable rows
         binding = getattr(obj, 'binding', None)
         is_node = isinstance(binding, (ChoiceOfNodesBinding, NodeBinding))
-        is_special = isinstance(binding,
-                                (SlotBinding, ImageBinding, WidgetNodeBinding))
+        is_special = isinstance(binding, SPECIAL_BINDINGS)
         if is_special or (binding is not None and not is_node):
             flags |= Qt.ItemIsDragEnabled
 

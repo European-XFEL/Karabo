@@ -272,6 +272,10 @@ class ImageBinding(NodeBinding):
     pass  # Nothing to add. We just need a different class for Image
 
 
+class NDArrayBinding(NodeBinding):
+    pass  # Nothing to add. We just need a different class for NDArray
+
+
 class WidgetNodeBinding(NodeBinding):
     pass  # Nothing to add. We just need a different class for WidgetNode
 
