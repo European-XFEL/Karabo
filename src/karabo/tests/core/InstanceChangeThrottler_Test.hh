@@ -83,6 +83,8 @@ class InstanceChangeThrottler_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testMaxChangesPerCycle);
     CPPUNIT_TEST(testBigUpdateSequence);
     CPPUNIT_TEST(testThrottlerLifecycle);
+    CPPUNIT_TEST(testChangesWithFlushes);
+
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -182,12 +184,21 @@ private:
     void testBigUpdateSequence();
 
     /**
-     * Tests the stability of the throttler across multiple instantiations. To pass
-     * this test the throttler must be able to be reinstantiated multiple times and
-     * always flush the instance changes it has stored internally before being
-     * destructed.
+     * Tests the stability of the throttler across its lifecycle. To pass
+     * this test the throttler must be able to always flush the instance 
+     * changes it has stored internally before being destructed.
      */
     void testThrottlerLifecycle();
+
+
+    /**
+     * Tests the stability of the throttler across multiple flushes requests in
+     * the middle of a large sequence of changes. To pass this test the
+     * throttler must be able to dispatch all the submitted instance changes.
+     * The alternation between flushes and dispatches from the normal throttler
+     * cycle must not compromisse the dispatches.
+     */
+    void testChangesWithFlushes();
 
 };
 
