@@ -1177,9 +1177,6 @@ namespace karabo {
                 // Sends the instance changes to all the connected GUI clients.
                 Hash h("type", "topologyUpdate", "changes", instChangeData);
                 safeAllClientsWrite(h);
-
-                // TODO: send the cached alarm info to the clients after modifying slotAlarmSignalUpdate to cache the alarm info.
-
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in instanceChangeHandler(): " << e.what();
             }
