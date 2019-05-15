@@ -28,8 +28,6 @@ class SystemTreeModel(QAbstractItemModel):
         # Our hierarchy tree
         self.tree = get_topology().system_tree
         self.tree.update_context = _UpdateContext(item_model=self)
-        # Add listeners for ``needs_update`` change event
-        self.tree.on_trait_change(self._needs_update, 'needs_update')
         # Add listeners for ``alarm_update`` change event
         self.tree.on_trait_change(self._alarm_update, 'alarm_update')
 
