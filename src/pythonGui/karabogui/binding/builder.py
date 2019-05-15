@@ -120,6 +120,7 @@ _NODE_BINDING_MAP = {
     'ImageData': types.ImageBinding,
     'WidgetNode': types.WidgetNodeBinding,
     'Image': types.ImageBinding,
+    'NDArray': types.NDArrayBinding,
     'Slot': types.SlotBinding,
     'OutputChannel': types.PipelineOutputBinding,
     'Table': types.TableBinding,
