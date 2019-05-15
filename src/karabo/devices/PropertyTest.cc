@@ -101,8 +101,8 @@ namespace karabo {
                     .initialValue(33)
                     .alarmLow(std::numeric_limits<signed char>::lowest()).info("alarmLow").needsAcknowledging(true)
                     .warnLow(std::numeric_limits<signed char>::lowest()).info("warnLow").needsAcknowledging(false)
-                    .warnHigh(std::numeric_limits<signed char>::max()).info("warnHigh").needsAcknowledging(false)
-                    .alarmHigh(std::numeric_limits<signed char>::max()).info("alarmHigh").needsAcknowledging(true)
+                    .warnHigh(std::numeric_limits<signed char>::max() - 4).info("warnHigh").needsAcknowledging(false)
+                    .alarmHigh(std::numeric_limits<signed char>::max() - 4).info("alarmHigh").needsAcknowledging(true)
                     .commit();
 
             UINT8_ELEMENT(expected).key("uint8Property")

@@ -511,9 +511,9 @@ namespace karabo {
              */
             void sendSystemVersion(WeakChannelPointer channel);
 
-            void instanceNewHandler(const std::string& instanceId, const karabo::util::Hash& topologyEntry);
+            void instanceNewHandler(const karabo::util::Hash& topologyEntry);
 
-            void instanceGoneHandler(const std::string& instanceId);
+            void instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instInfo);
 
             /**
              * Handles events related to instances: new instance, instance updated, instance gone.
