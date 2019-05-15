@@ -1154,6 +1154,13 @@ namespace karabo {
         }
 
 
+        void DeviceClient::flushThrottledInstanceChanges() {
+            if (m_instanceChangeThrottler) {
+                m_instanceChangeThrottler->flush();
+            }
+        }
+
+
         void DeviceClient::registerInstanceNewMonitor(const InstanceNewHandler& callBackFunction) {
             m_instanceNewHandler = callBackFunction;
         }

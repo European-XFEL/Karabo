@@ -1553,6 +1553,11 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_INFO << "@GuiServerDevice::slotAlarmSignalsUpdate -> alarmServiceId = '"
                         << alarmServiceId << "'; type = '" << type << "'; updateRows = \n" << updateRows;
                 KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting alarm update";
+                // Flushes all the instance changes that are waiting for the next throttler cycle to be dispatched.
+                // This is done to guarantee that the clients will receive those instance changes before the alarm
+                // updates. An alarm info, for instance, may refer to a device whose instanceNew event was being
+                // held by the Throttler.
+                remote().flushThrottledInstanceChanges();
                 Hash h("type", type, "instanceId", alarmServiceId, "rows", updateRows);
                 // Broadcast to all GUIs
                 safeAllClientsWrite(h, LOSSLESS);

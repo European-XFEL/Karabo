@@ -253,6 +253,12 @@ namespace karabo {
         }
 
 
+        void InstanceChangeThrottler::flush() {
+            boost::mutex::scoped_lock lock(m_instChangesMutex);
+            flushThrottler(true);
+        }
+
+
         void InstanceChangeThrottler::flushThrottler(bool kickNextCycle) {
             // Note: this method assumes it runs under the protection of m_instChangesMutex.
 
