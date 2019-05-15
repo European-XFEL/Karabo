@@ -536,11 +536,10 @@ void InstanceChangeThrottler_Test::testChangesWithFlushes() {
     // Sends a sequence with a large number of updates.
     for (unsigned int j = 0; j < kChangesToSubmit; j++) {
         updatedInstInfo.set<int>("hashCount", j);
-        if (j % 1000 == 0) {
+        if (j % 500 == 0) {
             throttler->flush();
-        } else {
-            throttler->submitInstanceUpdate(m_instIdDevice + std::string("_") + std::to_string(j), updatedInstInfo);
         }
+        throttler->submitInstanceUpdate(m_instIdDevice + std::string("_") + std::to_string(j), updatedInstInfo);
     }
 
     // Waits long enough for the updates to arrive.
