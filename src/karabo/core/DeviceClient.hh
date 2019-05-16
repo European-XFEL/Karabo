@@ -699,8 +699,11 @@ namespace karabo {
 
             /**
              * Flushes, asap, the throttled instance changes that are waiting to be dispatched.
+             *
+             * @param fnPostFlush function to be executed after the flush - guaranteed to run in the same thread and
+             * under the same thread-safety conditions of the flush.
              */
-            void flushThrottledInstanceChanges();
+            void flushThrottledInstanceChanges(boost::function<void() > fnPostFlush);
 
             /**
              * Register a callback handler to be triggered if a new instance appears in the distributed system.
