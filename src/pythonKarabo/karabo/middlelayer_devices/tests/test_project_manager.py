@@ -19,6 +19,16 @@ class TestProjectManager(DeviceTest):
     def _createTestData(self):
         with ProjectDatabase(self._user, self._password, server='localhost',
                              test_mode=True) as db:
+
+            path = "{}/{}".format(db.root, 'LOCAL')
+            if db.dbhandle.hasCollection(path):
+                db.dbhandle.removeCollection(path)
+
+            # make sure we have the LOCAL collection and subcollections
+            path = "{}/{}".format(db.root, 'LOCAL')
+            if not db.dbhandle.hasCollection(path):
+                db.dbhandle.createCollection(path)
+
             # create a device server and multiple config entries
             xml_reps = ['<test uuid="{0}">foo</test>'.format(UUIDS[0]),
                         '<test uuid="{0}">goo</test>'.format(UUIDS[1]),
@@ -125,3 +135,13 @@ class TestProjectManager(DeviceTest):
                 if i.get("item_type") == "scene":
                     scenecnt += 1
             self.assertEqual(scenecnt, 4)
+
+        with self.subTest(msg="Test named list items"):
+            # in the project hierarchy created by create_hierarchy
+            # there should be only one project and is called "Project"
+            ret = await wait_for(call("projManTest",
+                                      "slotListNamedItems", 'admin',
+                                      "LOCAL", "project",
+                                      "Project"), timeout=5)
+            items = ret.get('items')
+            self.assertEqual(len(items), 1)
