@@ -18,7 +18,7 @@ def create_hierarchy(db):
     uuid = _gen_uuid()
     xml = ('<xml item_type="{atype}" uuid="{uuid}" '
            'simple_name="{name}">').format(uuid=uuid, atype='project',
-                                           name=uuid)
+                                           name='Project')
 
     xml += "<children>"
 
@@ -64,6 +64,18 @@ def create_trashed_project(db, is_trashed=True):
 
     db.save_item("LOCAL", uuid, xml)
     return uuid
+
+
+def create_unattached_scenes(db):
+    # create scenes with the same simple_name
+    # unattached to the project
+    for i in range(4):
+        sub_uuid = _gen_uuid()
+        scene_xml = ('<xml item_type="scene" uuid="{uuid}"'
+                        ' simple_name="Scene!" >中文</xml>'
+                        .format(uuid=sub_uuid))
+
+        db.save_item("LOCAL", sub_uuid, scene_xml)
 
 
 class TestProjectDatabase(TestCase):
@@ -209,6 +221,17 @@ class TestProjectDatabase(TestCase):
                 res = db.load_item('LOCAL', [versioned_uuid])
                 itemxml = db._make_xml_if_needed(res[0]['xml'])
                 self.assertEqual(itemxml.get('revision'), '0')
+
+            with self.subTest(msg='test_named_items'):
+                create_unattached_scenes(db)
+                items = db.list_named_items('LOCAL', 'scene', 'Scene!')
+                self.assertEqual(len(items), 4)
+                scenecnt = 0
+                for i in items:
+                    if i["item_type"] == "scene":
+                        scenecnt += 1
+                    self.assertEqual(i["simple_name"], "Scene!")
+                self.assertGreaterEqual(scenecnt, 4)
 
             stop_database()
 
