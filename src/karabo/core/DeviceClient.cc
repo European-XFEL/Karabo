@@ -1154,9 +1154,12 @@ namespace karabo {
         }
 
 
-        void DeviceClient::flushThrottledInstanceChanges() {
+        void DeviceClient::flushThrottledInstanceChanges(boost::function<void() > fnPostFlush) {
             if (m_instanceChangeThrottler) {
                 m_instanceChangeThrottler->flush();
+                if (fnPostFlush) {
+                    fnPostFlush();
+                }
             }
         }
 
