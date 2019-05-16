@@ -1547,17 +1547,16 @@ namespace karabo {
 
         void GuiServerDevice::slotAlarmSignalsUpdate(const std::string& alarmServiceId, const std::string& type, const karabo::util::Hash& updateRows) {
             try {
-                KARABO_LOG_FRAMEWORK_INFO << "@GuiServerDevice::slotAlarmSignalsUpdate -> alarmServiceId = '"
-                        << alarmServiceId << "'; type = '" << type << "'; updateRows = \n" << updateRows;
                 KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting alarm update";
                 // Flushes all the instance changes that are waiting for the next throttler cycle to be dispatched.
                 // This is done to guarantee that the clients will receive those instance changes before the alarm
                 // updates. An alarm info, for instance, may refer to a device whose instanceNew event was being
                 // held by the Throttler.
-                remote().flushThrottledInstanceChanges();
-                Hash h("type", type, "instanceId", alarmServiceId, "rows", updateRows);
-                // Broadcast to all GUIs
-                safeAllClientsWrite(h, LOSSLESS);
+                remote().flushThrottledInstanceChanges([this, &type, &alarmServiceId, &updateRows]() {
+                    Hash h("type", type, "instanceId", alarmServiceId, "rows", updateRows);
+                    // Broadcast to all GUIs
+                    safeAllClientsWrite(h, LOSSLESS);
+                });
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in broad casting alarms(): " << e.userFriendlyMsg();
             }
@@ -1592,12 +1591,18 @@ namespace karabo {
         void GuiServerDevice::onRequestedAlarmsReply(WeakChannelPointer channel, const karabo::util::Hash& reply, const bool replyToAllClients) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onRequestedAlarmsReply : info ...\n" << reply;
-                Hash h("type", "alarmInit", "instanceId", reply.get<std::string>("instanceId"), "rows", reply.get<Hash>("alarms"));
-                if (replyToAllClients) {
-                    safeAllClientsWrite(h, LOSSLESS);
-                } else {
-                    safeClientWrite(channel, h, LOSSLESS);
-                }
+                // Flushes all the instance changes that are waiting for the next throttler cycle to be dispatched.
+                // This is done to guarantee that the clients will receive those instance changes before the alarm
+                // updates. An alarm info, for instance, may refer to a device whose instanceNew event was being
+                // held by the Throttler.
+                remote().flushThrottledInstanceChanges([this, channel, &reply, replyToAllClients]() {
+                    Hash h("type", "alarmInit", "instanceId", reply.get<std::string>("instanceId"), "rows", reply.get<Hash>("alarms"));
+                    if (replyToAllClients) {
+                        safeAllClientsWrite(h, LOSSLESS);
+                    } else {
+                        safeClientWrite(channel, h, LOSSLESS);
+                    }
+                });
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestedAlarmsReply(): " << e.userFriendlyMsg();
             }
