@@ -263,7 +263,6 @@ USING_KARABO_NAMESPACES
 
     void AlarmTester::triggerAlarmHighAck() {
         set("intPropNeedsAck", 5);
-
         KARABO_LOG_INFO << getAlarmInfo();
         set("result", "triggerAlarmHighAck");
     }
