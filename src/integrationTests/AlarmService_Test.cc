@@ -77,11 +77,16 @@ void AlarmService_Test::appTestRunner() {
 
     // in order to avoid recurring setup and tear down call all tests are run in a single runner
     // here we start the server and service devices, as well as an alarm test device
-    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServer", "AlarmService", Hash("deviceId", "testAlarmService", "flushInterval", 1, "storagePath", std::string(KARABO_TESTPATH)), KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success =
+            m_deviceClient->instantiate("testServer", "AlarmService",
+                                        Hash("deviceId", "testAlarmService", "flushInterval", 1, "storagePath", std::string(KARABO_TESTPATH)),
+                                        KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
     waitForCondition([this]() {
         return m_deviceClient->get<karabo::util::State>("testAlarmService", "state") == karabo::util::State::NORMAL;
     }, 2000u);
+    CPPUNIT_ASSERT_EQUAL(karabo::util::State::NORMAL.name(),
+                         m_deviceClient->get<karabo::util::State>("testAlarmService", "state").name());
 
     success = m_deviceClient->instantiate("testServer", "AlarmTester", Hash("deviceId", "alarmTester"), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
@@ -90,11 +95,13 @@ void AlarmService_Test::appTestRunner() {
     waitForCondition([this]() {
         return m_deviceClient->get<karabo::util::State>("testGuiServer", "state") == karabo::util::State::ON;
     }, 4000u);
-
-    //boost::this_thread::sleep(boost::posix_time::milliseconds(4000)); // instead wait for gi server state to become ON
+    CPPUNIT_ASSERT_EQUAL(karabo::util::State::ON.name(),
+                         m_deviceClient->get<karabo::util::State>("testGuiServer", "state").name());
 
     m_tcpAdapter = boost::shared_ptr<karabo::TcpAdapter>(new karabo::TcpAdapter(Hash("port", 44446u/*, "debug", true*/)));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(3000));
+    waitForCondition([this]() {
+        return m_tcpAdapter->connected();
+    }, 3000u);
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
 
     // the actual tests
