@@ -13,6 +13,7 @@
 #include <boost/interprocess/sync/file_lock.hpp>
 #include <boost/interprocess/sync/sharable_lock.hpp>
 #include <karabo/util/Hash.hh>
+#include <karabo/util/State.hh>
 
 
 USING_KARABO_NAMESPACES;
@@ -76,16 +77,32 @@ void AlarmService_Test::appTestRunner() {
 
     // in order to avoid recurring setup and tear down call all tests are run in a single runner
     // here we start the server and service devices, as well as an alarm test device
-    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServer", "GuiServerDevice", Hash("deviceId", "testGuiServer", "port", 44446), KRB_TEST_MAX_TIMEOUT);
-    boost::this_thread::sleep(boost::posix_time::milliseconds(4000));
-    m_tcpAdapter = boost::shared_ptr<karabo::TcpAdapter>(new karabo::TcpAdapter(Hash("port", 44446u/*, "debug", true*/)));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(3000));
-    CPPUNIT_ASSERT(m_tcpAdapter->connected());
-    success = m_deviceClient->instantiate("testServer", "AlarmService", Hash("deviceId", "testAlarmService", "flushInterval", 1, "storagePath", std::string(KARABO_TESTPATH)), KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success =
+            m_deviceClient->instantiate("testServer", "AlarmService",
+                                        Hash("deviceId", "testAlarmService", "flushInterval", 1, "storagePath", std::string(KARABO_TESTPATH)),
+                                        KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
-    boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
+    waitForCondition([this]() {
+        return m_deviceClient->get<karabo::util::State>("testAlarmService", "state") == karabo::util::State::NORMAL;
+    }, 2000u);
+    CPPUNIT_ASSERT_EQUAL(karabo::util::State::NORMAL.name(),
+                         m_deviceClient->get<karabo::util::State>("testAlarmService", "state").name());
+
     success = m_deviceClient->instantiate("testServer", "AlarmTester", Hash("deviceId", "alarmTester"), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
+
+    success = m_deviceClient->instantiate("testServer", "GuiServerDevice", Hash("deviceId", "testGuiServer", "port", 44446), KRB_TEST_MAX_TIMEOUT);
+    waitForCondition([this]() {
+        return m_deviceClient->get<karabo::util::State>("testGuiServer", "state") == karabo::util::State::ON;
+    }, 4000u);
+    CPPUNIT_ASSERT_EQUAL(karabo::util::State::ON.name(),
+                         m_deviceClient->get<karabo::util::State>("testGuiServer", "state").name());
+
+    m_tcpAdapter = boost::shared_ptr<karabo::TcpAdapter>(new karabo::TcpAdapter(Hash("port", 44446u/*, "debug", true*/)));
+    waitForCondition([this]() {
+        return m_tcpAdapter->connected();
+    }, 3000u);
+    CPPUNIT_ASSERT(m_tcpAdapter->connected());
 
     // the actual tests
     CPPUNIT_ASSERT_NO_THROW(testDeviceRegistration());
@@ -480,13 +497,12 @@ void AlarmService_Test::testRecovery() {
     //first we bring down the alarm service.
     //at this state it should hold a warnHigh for floatPropNeedsAck2 which cannot be acknowledged
     std::pair<bool, std::string> success;
-    TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("instanceGone", 1, [&] {
+    TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("topologyUpdate", 1, [&] {
         m_deviceClient->killDevice("testAlarmService", KRB_TEST_MAX_TIMEOUT);
     });
     Hash lastMessage;
     messageQ->pop(lastMessage);
-    CPPUNIT_ASSERT(lastMessage.has("instanceId"));
-    CPPUNIT_ASSERT(lastMessage.get<std::string>("instanceId") == "testAlarmService");
+    CPPUNIT_ASSERT(lastMessage.has("changes.gone.device.testAlarmService"));
 
     // now we raise an alarm on intPropNeedsAck again and ma nodeA.floatPropNoAck2 acknowledgeable
     m_deviceClient->execute("alarmTester", "triggerNormalAckNode", KRB_TEST_MAX_TIMEOUT);
@@ -536,8 +552,8 @@ void AlarmService_Test::testRecovery() {
         boost::this_thread::sleep(boost::posix_time::milliseconds(50));
         // Check testAlarmService is started
         if (!topologyMessage) {
-            for (const Hash& msg : m_tcpAdapter->getAllMessages("instanceNew")) {
-                if (msg.has("topologyEntry.device.testAlarmService")) {
+            for (const Hash& msg : m_tcpAdapter->getAllMessages("topologyUpdate")) {
+                if (msg.has("changes.new.device.testAlarmService")) {
                     topologyMessage = true; // testAlarmService is started
                 }
             }
@@ -643,6 +659,18 @@ void AlarmService_Test::testDeviceReappeared() {
     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
 
     std::clog << "Tested device reappearance.. Ok" << std::endl;
+}
+
+
+bool AlarmService_Test::waitForCondition(boost::function<bool() > checker, unsigned int timeoutMillis) {
+    const unsigned int sleepIntervalMillis = 5;
+    unsigned int numOfWaits = 0;
+    const unsigned int maxNumOfWaits = static_cast<unsigned int> (std::ceil(timeoutMillis / sleepIntervalMillis));
+    while (numOfWaits < maxNumOfWaits && !checker()) {
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(sleepIntervalMillis));
+        numOfWaits++;
+    }
+    return (numOfWaits < maxNumOfWaits);
 }
 
 #undef KRB_TEST_MAX_TIMEOUT
