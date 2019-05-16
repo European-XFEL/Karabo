@@ -1141,8 +1141,8 @@ namespace karabo {
             try {
                 const std::string& type = topologyEntry.begin()->getKey();
                 if (type == "device") {
-                    const Hash deviceHash = topologyEntry.get<Hash>(type);
-                    const std::string instanceId = deviceHash.begin()->getKey();
+                    const Hash& deviceHash = topologyEntry.get<Hash>(type);
+                    const std::string& instanceId = deviceHash.begin()->getKey();
                     // Check whether someone already noted interest in it
                     bool registerMonitor = false;
                     {
@@ -1183,7 +1183,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instInfo) {
+        void GuiServerDevice::instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& /*instInfo*/) {
             try {
                 {
                     boost::mutex::scoped_lock lock(m_channelMutex);
@@ -1552,11 +1552,10 @@ namespace karabo {
                 // This is done to guarantee that the clients will receive those instance changes before the alarm
                 // updates. An alarm info, for instance, may refer to a device whose instanceNew event was being
                 // held by the Throttler.
-                remote().flushThrottledInstanceChanges([this, &type, &alarmServiceId, &updateRows]() {
-                    Hash h("type", type, "instanceId", alarmServiceId, "rows", updateRows);
-                    // Broadcast to all GUIs
-                    safeAllClientsWrite(h, LOSSLESS);
-                });
+                remote().flushThrottledInstanceChanges();
+                Hash h("type", type, "instanceId", alarmServiceId, "rows", updateRows);
+                // Broadcast to all GUIs
+                safeAllClientsWrite(h, LOSSLESS);                
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in broad casting alarms(): " << e.userFriendlyMsg();
             }
@@ -1595,14 +1594,13 @@ namespace karabo {
                 // This is done to guarantee that the clients will receive those instance changes before the alarm
                 // updates. An alarm info, for instance, may refer to a device whose instanceNew event was being
                 // held by the Throttler.
-                remote().flushThrottledInstanceChanges([this, channel, &reply, replyToAllClients]() {
-                    Hash h("type", "alarmInit", "instanceId", reply.get<std::string>("instanceId"), "rows", reply.get<Hash>("alarms"));
-                    if (replyToAllClients) {
-                        safeAllClientsWrite(h, LOSSLESS);
-                    } else {
-                        safeClientWrite(channel, h, LOSSLESS);
-                    }
-                });
+                remote().flushThrottledInstanceChanges();
+                Hash h("type", "alarmInit", "instanceId", reply.get<std::string>("instanceId"), "rows", reply.get<Hash>("alarms"));
+                if (replyToAllClients) {
+                    safeAllClientsWrite(h, LOSSLESS);
+                } else {
+                    safeClientWrite(channel, h, LOSSLESS);
+                }
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestedAlarmsReply(): " << e.userFriendlyMsg();
             }
