@@ -1,0 +1,273 @@
+/* 
+ * File:   InputOutputChannel_LongTest.cc
+ * Author: gero.flucke@xfel.eu
+ * 
+ * Created on May 2019
+ */
+
+#include <future>
+
+#include "InputOutputChannel_LongTest.hh"
+
+#include "karabo/xms/InputChannel.hh"
+#include "karabo/xms/OutputChannel.hh"
+#include "karabo/util/Configurator.hh"
+#include "karabo/util/Hash.hh"
+#include "karabo/net/EventLoop.hh"
+
+using namespace karabo;
+using xms::InputChannel;
+using xms::OutputChannel;
+using util::Configurator;
+using util::Hash;
+
+/// A class that adds threads following the RAII principle
+/// to safely (exceptions!) remove them when going out of scope.
+class ThreadAdder {
+public:
+    ThreadAdder(int nThreads) : m_nThreads(nThreads) {
+        karabo::net::EventLoop::addThread(m_nThreads);
+    }
+
+    ~ThreadAdder() {
+        karabo::net::EventLoop::removeThread(m_nThreads);
+    }
+private:
+    const int m_nThreads;
+};
+
+
+CPPUNIT_TEST_SUITE_REGISTRATION(InputOutputChannel_LongTest);
+
+
+InputOutputChannel_LongTest::InputOutputChannel_LongTest() {
+}
+
+
+void InputOutputChannel_LongTest::setUp() {
+    // Event loop started in xmsTestRunner.cc's main().
+}
+
+
+void InputOutputChannel_LongTest::tearDown() {
+}
+
+
+// copy case - sender is irrelevant, so keep its defaults
+
+
+void InputOutputChannel_LongTest::testDisconnectWhileSending1() {
+    testDisconnectWhileSending_impl("copy", "wait", "load-balanced", "wait");
+}
+
+
+void InputOutputChannel_LongTest::testDisconnectWhileSending2() {
+    testDisconnectWhileSending_impl("copy", "drop", "load-balanced", "wait");
+}
+
+
+void InputOutputChannel_LongTest::testDisconnectWhileSending3() {
+    testDisconnectWhileSending_impl("copy", "queue", "load-balanced", "wait");
+}
+
+
+// load-balanced shared case - onSlowness of receiver is irrelevant, so keep default "wait"
+
+
+void InputOutputChannel_LongTest::testDisconnectWhileSending4() {
+    testDisconnectWhileSending_impl("shared", "wait", "load-balanced", "wait");
+}
+
+
+void InputOutputChannel_LongTest::testDisconnectWhileSending5() {
+    testDisconnectWhileSending_impl("shared", "wait", "load-balanced", "drop");
+}
+
+
+void InputOutputChannel_LongTest::testDisconnectWhileSending6() {
+    testDisconnectWhileSending_impl("shared", "wait", "load-balanced", "queue");
+}
+
+
+// round-robin shared case - onSlowness of receiver is irrelevant, so keep default "wait"
+
+
+void InputOutputChannel_LongTest::testDisconnectWhileSending7() {
+    testDisconnectWhileSending_impl("shared", "wait", "round-robin", "wait");
+}
+
+
+void InputOutputChannel_LongTest::testDisconnectWhileSending8() {
+    testDisconnectWhileSending_impl("shared", "wait", "round-robin", "drop");
+}
+
+
+void InputOutputChannel_LongTest::testDisconnectWhileSending9() {
+    testDisconnectWhileSending_impl("shared", "wait", "round-robin", "queue");
+}
+
+
+void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::string& sender_dataDistribution,
+                                                              const std::string& sender_onSlowness,
+                                                              const std::string& receiver_distributionMode,
+                                                              const std::string& receiver_noInputShared) {
+    std::clog << "\ntestDisconnectWhileSending: sender " << sender_dataDistribution << "/" << sender_onSlowness
+            << ", receiver (for shared sender) "
+            << receiver_distributionMode << "/" << receiver_noInputShared << std::endl;
+
+    const unsigned int numData = 100000; // overall number of data items the output channel sends
+    const int processTime = 1; // ms that receiving input channel will block on data
+    const int writeIntervall = 0; // ms in between output channel writing data
+    const int reconnectCycle = 4; // ms between dis- and reconnect trials
+    const int maxDuration = 300; // s of maximum test duration
+
+    ThreadAdder extraThreads(3); // 3 for sender, receiver's callback, dis-/reconnection
+
+    // Setup input channel
+    InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel",
+                                                                     Hash("dataDistribution", sender_dataDistribution,
+                                                                          "onSlowness", sender_onSlowness));
+    input->setInstanceId("inputChannel");
+    unsigned int calls = 0;
+    input->registerDataHandler([&calls, processTime](const Hash& data, const InputChannel::MetaData & meta) {
+        ++calls;
+                               boost::this_thread::sleep(boost::posix_time::milliseconds(processTime));
+    });
+
+    // Setup output channel - configure only for "shared" InputChannel
+    OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel",
+                                                                        Hash("distributionMode", receiver_distributionMode,
+                                                                             "noInputShared", receiver_noInputShared));
+    output->setInstanceIdAndName("outputChannel", "output");
+    // Wait a little bit until OutputChannel has properly initialised, i.e. a proper port is attached
+    // (see its constructor...) FIXME :-(
+    Hash outputInfo;
+    int trials = 500;
+    while (--trials >= 0) {
+        outputInfo = output->getInformation();
+        if (outputInfo.get<unsigned int>("port") > 0) {
+            break;
+        }
+        boost::this_thread::sleep(boost::posix_time::milliseconds(20));
+    }
+    CPPUNIT_ASSERT_MESSAGE("OutputChannel keeps port 0!", outputInfo.get<unsigned int>("port") > 0);
+
+    //
+    // Connect
+    //
+    const std::string outputChannelId("outputChannelString");
+    outputInfo.set("outputChannelString", outputChannelId);
+    // Tests with "local" fail with chunk leaks, see OutputChannel::copyLocal and ::distributeLocal:
+    outputInfo.set("memoryLocation", "remote");
+    // Setup connection handler
+    std::promise<karabo::net::ErrorCode> connectErrorCode;
+    auto connectFuture = connectErrorCode.get_future();
+    auto connectHandler = [&connectErrorCode](const karabo::net::ErrorCode& ec) {
+        connectErrorCode.set_value(ec);
+    };
+    // initiate connect and block until done (fail test if timeout)
+    karabo::net::ErrorCode ec;
+    input->connect(outputInfo, connectHandler);
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture.wait_for(std::chrono::milliseconds(1000)));
+    ec = connectFuture.get(); // Can get() only once...
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), karabo::net::ErrorCode(), ec); // i.e. no error
+
+    //
+    // Prepare handlers for sending data and in parallel dis-/reconnecting:
+    //
+    std::promise<unsigned int> numSent;
+    auto numSentFuture = numSent.get_future();
+    std::string exceptionText;
+    bool doGoOn = true;
+    auto send = [output, numData, &numSent, &exceptionText, &doGoOn, writeIntervall]() {
+        unsigned int num = 0;
+        while (num < numData && doGoOn) {
+            try {
+                output->write(Hash("a", 42));
+            } catch (const std::exception& e) {
+                (exceptionText += "output->write(..): ") += e.what();
+                break;
+            }
+            try {
+                output->update();
+            } catch (const std::exception& e) {
+                (exceptionText += "output->update(): ") += e.what();
+                break;
+            }
+            boost::this_thread::sleep(boost::posix_time::milliseconds(writeIntervall));
+            ++num;
+        }
+        numSent.set_value(num);
+        doGoOn = false; // inform disReconnect to stop since test is done
+    };
+
+    std::string disreconnectFailure;
+    std::promise<void> disReconnectDone;
+    auto disReconnectFuture = disReconnectDone.get_future();
+    unsigned int disconCounter = 0;
+    auto disReconnect = [input, output, outputInfo, &disreconnectFailure, &disReconnectDone,
+            &doGoOn, &disconCounter, reconnectCycle]() {
+        while (doGoOn) {
+            input->disconnect(outputInfo.get<std::string>("outputChannelString"));
+            ++disconCounter;
+            std::promise<karabo::net::ErrorCode> connectErrorCode;
+            auto connectFuture = connectErrorCode.get_future();
+            auto connectHandler = [&connectErrorCode, &doGoOn](const karabo::net::ErrorCode & ec) {
+                if (doGoOn) connectErrorCode.set_value(ec); // protect since connectErrorCode could be gone!
+            };
+            // initiate connect and block until done
+            input->connect(outputInfo, connectHandler);
+            int trials = 200;
+            while (--trials >= 0 && doGoOn) {
+                // NOTE:
+                // After about 14100 to 14200 reconnection cycles, 'trials' every (second?) time goes down to exactly
+                // 102 (with 10 ms sleep above) on my local tests - and then connect succeeds....
+                // Maybe some tcp internal port cleaning done about every second only?
+                if (std::future_status::timeout != connectFuture.wait_for(std::chrono::milliseconds(10))) {
+                    break;
+                }
+            }
+            if (!doGoOn) {
+                break;
+            }
+            if (trials < 0) {
+                disreconnectFailure = "Failed to reconnect within 1 s -- " + karabo::util::toString(disconCounter);
+                doGoOn = false;
+                break;
+            }
+            const karabo::net::ErrorCode ec = connectFuture.get(); // Can get only once...
+            if (ec != karabo::net::ErrorCode()) {
+                disreconnectFailure = "Failed reconnection: " + (ec.message() += " -- ") += karabo::util::toString(disconCounter);
+                doGoOn = false;
+                break;
+            }
+            boost::this_thread::sleep(boost::posix_time::milliseconds(reconnectCycle));
+        }
+        disReconnectDone.set_value();
+    };
+
+    //
+    // Actually start sending data and parallel disconnections:
+    //
+    karabo::net::EventLoop::getIOService().post(send);
+    karabo::net::EventLoop::getIOService().post(disReconnect);
+
+    //
+    // Take care that both posted methods are done, so they cannot access local variables anymore
+    // (worst case: doing that when the test method is left due to a failure)
+    //
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, numSentFuture.wait_for(std::chrono::seconds(maxDuration)));
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, disReconnectFuture.wait_for(std::chrono::seconds(2)));
+
+
+    const unsigned int totalSent = numSentFuture.get();
+    std::clog << "DONE: output sent " << totalSent << " data items out of which only " << calls << " reached input "
+            << "since input disconnected " << disconCounter << " times" << std::endl;
+    // Finally do all the necessary asserts:
+    CPPUNIT_ASSERT_MESSAGE(exceptionText, exceptionText.empty());
+    CPPUNIT_ASSERT_EQUAL(numData, totalSent);
+
+    CPPUNIT_ASSERT_MESSAGE(disreconnectFailure, disreconnectFailure.empty());
+
+    CPPUNIT_ASSERT(calls > 0);
+}
