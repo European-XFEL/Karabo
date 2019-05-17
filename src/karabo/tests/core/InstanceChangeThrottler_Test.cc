@@ -523,6 +523,7 @@ void InstanceChangeThrottler_Test::testChangesWithFlushes() {
     auto instChangeHandler = boost::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
 
     const unsigned int kChangesToSubmit = 5000u;
+    const unsigned int kIntervalBetweenFlushes = 500u;
     const unsigned int kThrottlerIntervalMs = 500u;
     const unsigned int kThrottlerMaxChanges = 6000u;
 
@@ -536,7 +537,7 @@ void InstanceChangeThrottler_Test::testChangesWithFlushes() {
     // Sends a sequence with a large number of updates.
     for (unsigned int j = 0; j < kChangesToSubmit; j++) {
         updatedInstInfo.set<int>("hashCount", j);
-        if (j % 500 == 0) {
+        if (j % kIntervalBetweenFlushes == 0) {
             throttler->flush();
         }
         throttler->submitInstanceUpdate(m_instIdDevice + std::string("_") + std::to_string(j), updatedInstInfo);
@@ -549,6 +550,11 @@ void InstanceChangeThrottler_Test::testChangesWithFlushes() {
                                int nReceived = m_instChangeObserver.newestInstChange().instanceInfo.get<int>("hashCount");
                                             return nReceived == (kChangesToSubmit - 1);
                            }, 15000u));
+
+    // Each flush should cause an immediate burst of the throttler.
+    CPPUNIT_ASSERT_MESSAGE(std::string("Number of throttler bursts inferior to the minimum expected of ") +
+                           karabo::util::toString(kChangesToSubmit / kIntervalBetweenFlushes) + std::string(" bursts."),
+                           m_instChangeObserver.numOfThrottlerBursts() >= static_cast<int> (kChangesToSubmit / kIntervalBetweenFlushes));
 
     m_instChangeObserver.clearInstChanges();
 
