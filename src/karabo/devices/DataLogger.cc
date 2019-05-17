@@ -252,14 +252,21 @@ namespace karabo {
                     boost::mutex::scoped_lock lock(m_lastTimestampMutex);
                     m_configStream << m_lastDataTimestamp.toIso8601Ext() << "|" << fixed << m_lastDataTimestamp.toTimestamp()
                             << "|" << m_lastDataTimestamp.getTrainId() << "|.|||" << m_user << "|LOGOUT\n";
-                    long position = m_configStream.tellp();
+                    m_configStream.flush();
+                    std::ostream::pos_type position = m_configStream.tellp();
                     m_configStream.close();
-                    string contentPath = get<string>("directory") + "/" + m_deviceToBeLogged + "/raw/archive_index.txt";
-                    ofstream contentStream(contentPath.c_str(), ios::app);
-                    contentStream << "-LOG " << m_lastDataTimestamp.toIso8601Ext() << " " << fixed << m_lastDataTimestamp.toTimestamp()
-                            << " " << m_lastDataTimestamp.getTrainId() << " " << position << " " << (m_user.empty() ? "." : m_user) << " " << m_lastIndex << "\n";
-                    contentStream.close();
-                    //KARABO_LOG_FRAMEWORK_DEBUG << "slotTagDeviceToBeDiscontinued index stream closed";
+                    if (position >= 0) {
+                        string contentPath = get<string>("directory") + "/" + m_deviceToBeLogged + "/raw/archive_index.txt";
+                        ofstream contentStream(contentPath.c_str(), ios::app);
+                        contentStream << "-LOG " << m_lastDataTimestamp.toIso8601Ext() << " " << fixed << m_lastDataTimestamp.toTimestamp()
+                                      << " " << m_lastDataTimestamp.getTrainId() << " " << position << " " << (m_user.empty() ? "." : m_user) << " " << m_lastIndex << "\n";
+                        contentStream.close();
+                        //KARABO_LOG_FRAMEWORK_DEBUG << "slotTagDeviceToBeDiscontinued index stream closed";
+                    }
+                    else {
+                        KARABO_LOG_FRAMEWORK_ERROR << "Error retrieving position of LOGOUT entry in archive with index '"
+                                << m_lastIndex << "': skipped writting index entry.";
+                    }
 
                     for (map<string, MetaData::Pointer>::iterator it = m_idxMap.begin(); it != m_idxMap.end(); it++) {
                         MetaData::Pointer mdp = it->second;
