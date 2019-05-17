@@ -150,7 +150,9 @@ nbproject/Makefile-variables.mk: nbproject/Karabo-variables-$(CURRENT_PLATFORM).
 	$(CP) -fp nbproject/Karabo-variables-$(CURRENT_PLATFORM).mk nbproject/Makefile-variables.mk
 
 nbproject/Makefile-$(CONF).mk: nbproject/Karabo-$(CONF)-$(CURRENT_PLATFORM).mk
-	$(CP) -fp nbproject/Karabo-$(CONF)-$(CURRENT_PLATFORM).mk nbproject/Makefile-$(CONF).mk15m11 # The following two includes lead to warnings from make ("No such file or
+	$(CP) -fp nbproject/Karabo-$(CONF)-$(CURRENT_PLATFORM).mk nbproject/Makefile-$(CONF).mk
+
+# The following two includes lead to warnings from make ("No such file or
 # directory") when compiling the first time after a fresh checkout
 # (see https://www.gnu.org/software/make/manual/html_node/Include.html).
 # But then it will create the files according to the above rules. In fact, even
