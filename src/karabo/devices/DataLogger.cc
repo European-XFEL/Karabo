@@ -253,7 +253,7 @@ namespace karabo {
                     m_configStream << m_lastDataTimestamp.toIso8601Ext() << "|" << fixed << m_lastDataTimestamp.toTimestamp()
                             << "|" << m_lastDataTimestamp.getTrainId() << "|.|||" << m_user << "|LOGOUT\n";
                     m_configStream.flush();
-                    long position = m_configStream.tellp();
+                    std::ostream::pos_type position = m_configStream.tellp();
                     m_configStream.close();
                     if (position >= 0) {
                         string contentPath = get<string>("directory") + "/" + m_deviceToBeLogged + "/raw/archive_index.txt";
