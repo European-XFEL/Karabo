@@ -18,7 +18,6 @@ from karabogui.singletons.api import (
 from karabogui.widgets.popup import PopupWidget
 
 from .device_model import DeviceTreeModel
-from .device_filter_model import DeviceFilterModel
 from .tools import DeviceSceneHandler
 
 
@@ -28,15 +27,10 @@ class DeviceTreeView(QTreeView):
         self._selected_proxy = None  # A BaseDeviceProxy
 
         model = DeviceTreeModel(parent=self)
-        proxy_model = DeviceFilterModel(parent=self,
-                                        source_model=model)
-        proxy_model.setFilterKeyColumn(0)
-
-        self.setModel(proxy_model)
-        self.setSelectionModel(proxy_model.selectionModel)
-        proxy_model.modelReset.connect(self.expandReset)
-        proxy_model.signalItemChanged.connect(self.onSelectionChanged)
-
+        self.setModel(model)
+        self.setSelectionModel(model.selectionModel)
+        model.signalItemChanged.connect(self.onSelectionChanged)
+        model.modelReset.connect(self.resetExpand)
         header = self.header()
         header.setResizeMode(QHeaderView.ResizeToContents)
         # Prevent drag reorder of the header
@@ -126,11 +120,6 @@ class DeviceTreeView(QTreeView):
     # ----------------------------
     # Slots
 
-    @pyqtSlot()
-    def expandReset(self):
-        self.expanded = True
-        self.expandAll()
-
     @pyqtSlot(str, object)
     def onSelectionChanged(self, item_type, proxy):
         """Called by the data model when an item is selected
@@ -145,14 +134,6 @@ class DeviceTreeView(QTreeView):
             # servers and hosts clear the configurator
             proxy = None
         broadcast_event(KaraboEvent.ShowConfiguration, {'proxy': proxy})
-
-    @pyqtSlot()
-    def onDoubleClickHeader(self):
-        if self.expanded:
-            self.collapseAll()
-        else:
-            self.expandAll()
-        self.expanded = not self.expanded
 
     @pyqtSlot()
     def onAbout(self):
@@ -199,3 +180,22 @@ class DeviceTreeView(QTreeView):
         if node_type is NavigationItemTypes.DEVICE:
             deviceId = info.get('deviceId')
             manager.shutdownDevice(deviceId)
+
+    @pyqtSlot()
+    def onDoubleClickHeader(self):
+        if self.expanded:
+            self.collapseAll()
+        else:
+            self.expandAll()
+
+    @pyqtSlot()
+    def resetExpand(self):
+        self.expanded = False
+
+    def collapseAll(self):
+        self.expanded = False
+        super(DeviceTreeView, self).collapseAll()
+
+    def expandAll(self):
+        self.expanded = True
+        super(DeviceTreeView, self).expandAll()
