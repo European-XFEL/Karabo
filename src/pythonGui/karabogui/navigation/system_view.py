@@ -5,9 +5,9 @@
 #############################################################################
 from functools import partial
 
-from PyQt4.QtCore import pyqtSlot, Qt
-from PyQt4.QtGui import (
-    QAbstractItemView, QAction, QCursor, QDialog, QMenu, QTreeView)
+from PyQt4.QtCore import Qt, pyqtSlot
+from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog, QMenu,
+                         QTreeView)
 
 from karabo.common.api import Capabilities
 from karabogui import icons
@@ -20,8 +20,6 @@ from karabogui.util import (
     handle_scene_from_server, load_configuration_from_file,
     save_configuration_to_file, set_treeview_header)
 from karabogui.widgets.popup import PopupWidget
-
-from .filter_model import TopologyFilterModel
 from .system_model import SystemTreeModel
 from .tools import DeviceSceneHandler
 
@@ -32,29 +30,24 @@ class SystemTreeView(QTreeView):
         self._selected_proxy = None  # A BaseDeviceProxy
 
         model = SystemTreeModel(parent=self)
-        proxy_model = TopologyFilterModel(parent=self,
-                                          source_model=model)
-        self.setModel(proxy_model)
-        self.setSelectionModel(proxy_model.selectionModel)
-
-        proxy_model.setFilterKeyColumn(0)
-        proxy_model.signalItemChanged.connect(self.onSelectionChanged)
-        proxy_model.modelReset.connect(self.expandReset)
-
-        self.setDragEnabled(True)
+        self.setModel(model)
+        self.setSelectionModel(model.selectionModel)
+        model.signalItemChanged.connect(self.onSelectionChanged)
+        model.modelReset.connect(self.resetExpand)
+        set_treeview_header(self)
 
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
-        set_treeview_header(self)
+
+        self._setupContextMenu()
+        self.customContextMenuRequested.connect(
+            self.onCustomContextMenuRequested)
+        self.setDragEnabled(True)
 
         self.handler_list = [DeviceSceneHandler()]
         self.expanded = False
         self.popupWidget = None
         self.header().sectionDoubleClicked.connect(self.onDoubleClickHeader)
-
-        self._setupContextMenu()
-        self.customContextMenuRequested.connect(
-            self.onCustomContextMenuRequested)
 
     def _setupContextMenu(self):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -160,11 +153,6 @@ class SystemTreeView(QTreeView):
     # Slots
 
     @pyqtSlot()
-    def expandReset(self):
-        self.expanded = True
-        self.expandAll()
-
-    @pyqtSlot()
     def onAbout(self):
         index = self.currentIndex()
         node = self.model().index_ref(index)
@@ -260,4 +248,15 @@ class SystemTreeView(QTreeView):
             self.collapseAll()
         else:
             self.expandAll()
-        self.expanded = not self.expanded
+
+    @pyqtSlot()
+    def resetExpand(self):
+        self.expandAll()
+
+    def collapseAll(self):
+        self.expanded = False
+        super(SystemTreeView, self).collapseAll()
+
+    def expandAll(self):
+        self.expanded = True
+        super(SystemTreeView, self).expandAll()
