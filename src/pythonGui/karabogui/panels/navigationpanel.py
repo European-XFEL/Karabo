@@ -21,6 +21,8 @@ from .base import BasePanelWidget
 class TopologyPanel(BasePanelWidget):
     def __init__(self):
         super(TopologyPanel, self).__init__("System Topology")
+        self._reset_search_filter()
+
         event_map = {
             KaraboEvent.NetworkConnectStatus: self._event_network,
             KaraboEvent.AccessLevelChanged: self._event_access_level
