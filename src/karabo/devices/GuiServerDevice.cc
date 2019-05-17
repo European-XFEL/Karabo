@@ -219,6 +219,8 @@ namespace karabo {
                 // Register handlers
                 // NOTE: boost::bind() is OK for these handlers because SignalSlotable calls them directly instead
                 // of dispatching them via the event loop.
+                remote().registerInstanceNewMonitor(boost::bind(&karabo::devices::GuiServerDevice::instanceNewHandler, this, _1));
+                remote().registerInstanceGoneMonitor(boost::bind(&karabo::devices::GuiServerDevice::instanceGoneHandler, this, _1, _2));
                 remote().registerSchemaUpdatedMonitor(boost::bind(&karabo::devices::GuiServerDevice::schemaUpdatedHandler, this, _1, _2));
                 remote().registerClassSchemaMonitor(boost::bind(&karabo::devices::GuiServerDevice::classSchemaHandler, this, _1, _2, _3));
 
@@ -1134,13 +1136,13 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::instanceNewHandler(const std::string& instanceId, const karabo::util::Hash& topologyEntry) {
+        void GuiServerDevice::instanceNewHandler(const karabo::util::Hash& topologyEntry) {
             // topologyEntry is an empty Hash at path <type>.<instanceId> with all the instanceInfo as attributes
             try {
-                vector<std::string> keys;
-                topologyEntry.getKeys(keys);
-                const std::string& type = keys[0];
+                const std::string& type = topologyEntry.begin()->getKey();
                 if (type == "device") {
+                    const Hash& deviceHash = topologyEntry.get<Hash>(type);
+                    const std::string& instanceId = deviceHash.begin()->getKey();
                     // Check whether someone already noted interest in it
                     bool registerMonitor = false;
                     {
@@ -1172,35 +1174,16 @@ namespace karabo {
 
         void GuiServerDevice::instanceChangeHandler(const karabo::util::Hash& instChangeData) {
             try {
-
-                // Calls the handlers for new and gone instance events to do the additional bookkeeping for those cases.
-                const Hash& instancesNewHash = instChangeData.get<Hash>("new");
-                for (Hash::const_iterator it = instancesNewHash.begin(); it != instancesNewHash.end(); ++it) {
-                    vector<std::string> instanceIds;
-                    it->getValue<Hash>().getKeys(instanceIds);
-                    for (const std::string& instanceId : instanceIds) {
-                        instanceNewHandler(instanceId, it->getValue<Hash>());
-                    }
-                }
-                const Hash& instancesGoneHash = instChangeData.get<Hash>("gone");
-                for (Hash::const_iterator it = instancesGoneHash.begin(); it != instancesGoneHash.end(); ++it) {
-                    for (Hash::const_iterator iit = it->getValue<Hash>().begin(); iit != it->getValue<Hash>().end(); ++iit) {
-                        const std::string& instanceId = iit->getKey();
-                        instanceGoneHandler(instanceId);
-                    }
-                }
-
                 // Sends the instance changes to all the connected GUI clients.
                 Hash h("type", "topologyUpdate", "changes", instChangeData);
                 safeAllClientsWrite(h);
-
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in instanceChangeHandler(): " << e.what();
             }
         }
 
-        
-        void GuiServerDevice::instanceGoneHandler(const std::string& instanceId) {
+
+        void GuiServerDevice::instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& /*instInfo*/) {
             try {
                 {
                     boost::mutex::scoped_lock lock(m_channelMutex);
@@ -1565,9 +1548,14 @@ namespace karabo {
         void GuiServerDevice::slotAlarmSignalsUpdate(const std::string& alarmServiceId, const std::string& type, const karabo::util::Hash& updateRows) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting alarm update";
+                // Flushes all the instance changes that are waiting for the next throttler cycle to be dispatched.
+                // This is done to guarantee that the clients will receive those instance changes before the alarm
+                // updates. An alarm info, for instance, may refer to a device whose instanceNew event was being
+                // held by the Throttler.
+                remote().flushThrottledInstanceChanges();
                 Hash h("type", type, "instanceId", alarmServiceId, "rows", updateRows);
                 // Broadcast to all GUIs
-                safeAllClientsWrite(h, LOSSLESS);
+                safeAllClientsWrite(h, LOSSLESS);                
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in broad casting alarms(): " << e.userFriendlyMsg();
             }
@@ -1602,6 +1590,11 @@ namespace karabo {
         void GuiServerDevice::onRequestedAlarmsReply(WeakChannelPointer channel, const karabo::util::Hash& reply, const bool replyToAllClients) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onRequestedAlarmsReply : info ...\n" << reply;
+                // Flushes all the instance changes that are waiting for the next throttler cycle to be dispatched.
+                // This is done to guarantee that the clients will receive those instance changes before the alarm
+                // updates. An alarm info, for instance, may refer to a device whose instanceNew event was being
+                // held by the Throttler.
+                remote().flushThrottledInstanceChanges();
                 Hash h("type", "alarmInit", "instanceId", reply.get<std::string>("instanceId"), "rows", reply.get<Hash>("alarms"));
                 if (replyToAllClients) {
                     safeAllClientsWrite(h, LOSSLESS);

@@ -126,6 +126,13 @@ namespace karabo {
              */
             std::string getInstChangeTypeStr(InstChangeType changeType) const;
 
+            /**
+             * Flushes the throttler by making it dispatch the instance changes it has stored asap.
+             *
+             * @note this is a wrapper for the private flushThrottler(bool) method.
+             */
+            void flush();
+
         private:
 
             explicit InstanceChangeThrottler(const InstanceChangeHandler& instChangeHandler,
