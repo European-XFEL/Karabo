@@ -518,6 +518,48 @@ void InstanceChangeThrottler_Test::testThrottlerLifecycle() {
 
 }
 
+
+void InstanceChangeThrottler_Test::testChangesWithFlushes() {
+    auto instChangeHandler = boost::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
+
+    const unsigned int kChangesToSubmit = 5000u;
+    const unsigned int kIntervalBetweenFlushes = 500u;
+    const unsigned int kThrottlerIntervalMs = 500u;
+    const unsigned int kThrottlerMaxChanges = 6000u;
+
+    boost::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
+            karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, kThrottlerIntervalMs, kThrottlerMaxChanges);
+
+    // InstanceInfo that will be the payload for the updates.
+    karabo::util::Hash updatedInstInfo = karabo::util::Hash(m_instInfoDevice);
+    updatedInstInfo.set<int>("hashCount", -1);
+
+    // Sends a sequence with a large number of updates.
+    for (unsigned int j = 0; j < kChangesToSubmit; j++) {
+        updatedInstInfo.set<int>("hashCount", j);
+        if (j % kIntervalBetweenFlushes == 0) {
+            throttler->flush();
+        }
+        throttler->submitInstanceUpdate(m_instIdDevice + std::string("_") + std::to_string(j), updatedInstInfo);
+    }
+
+    // Waits long enough for the updates to arrive.
+    // The test is considered successfull if all the instance updates are received.
+    CPPUNIT_ASSERT_MESSAGE("Timeout waiting for instance updates to arrive.",
+                           waitForCondition([this]() {
+                               int nReceived = m_instChangeObserver.newestInstChange().instanceInfo.get<int>("hashCount");
+                                            return nReceived == (kChangesToSubmit - 1);
+                           }, 15000u));
+
+    // Each flush should cause an immediate burst of the throttler.
+    CPPUNIT_ASSERT_MESSAGE(std::string("Number of throttler bursts inferior to the minimum expected of ") +
+                           karabo::util::toString(kChangesToSubmit / kIntervalBetweenFlushes) + std::string(" bursts."),
+                           m_instChangeObserver.numOfThrottlerBursts() >= static_cast<int> (kChangesToSubmit / kIntervalBetweenFlushes));
+
+    m_instChangeObserver.clearInstChanges();
+
+}
+
 //</editor-fold>
 
 

@@ -698,6 +698,12 @@ namespace karabo {
                                                unsigned int maxChangesPerCycle = 100u);
 
             /**
+             * Flushes, asap, the throttled instance changes that are waiting to be dispatched.
+             *
+             */
+            void flushThrottledInstanceChanges();
+
+            /**
              * Register a callback handler to be triggered if a new instance appears in the distributed system.
              * @param callBackFunction which will receive the instanceInfo Hash
              */
