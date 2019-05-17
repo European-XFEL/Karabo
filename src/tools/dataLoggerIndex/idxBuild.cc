@@ -287,13 +287,19 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
 
     while (irs.good()) {
         string line;
-        int position = irs.tellg();
+        std::istream::pos_type position = irs.tellg();
 
         if (getline(irs, line)) {
             if (line.empty() || position == -1) {
                 // Skips the writing of the index entry if the log
                 // entry to be indexed was empty or its position in
                 // the log file could not be obtained.
+                if (position == -1) {
+                    cout << "Skip processing of record " << recnum + 1 << " of file '" <<
+                            infile << "':\n"
+                            << "\tProcessing that record would result on an entry with position -1 in the archive_index.txt file"
+                            << std::endl;
+                }
                 continue;
             }
             boost::smatch tokens;
