@@ -9,14 +9,13 @@ from PyQt4.QtGui import (QPixmap, QDialog, QListView, QStandardItemModel,
 from PyQt4.QtSvg import QSvgWidget
 from traits.api import Instance
 
-from karabo.common.api import State
 from karabo.common.scenemodel.api import StatefulIconWidgetModel
 from karabogui.binding.api import StringBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
-from karabogui.indicators import STATE_COLORS
 from karabogui.icons.statefulicons import ICONS
 from karabogui.icons.statefulicons.color_change_icon import ColorChangeIcon
+from karabogui.indicators import get_state_color
 
 WHITE = '#ffffff'
 
@@ -44,28 +43,8 @@ class StatefulIconWidget(BaseBindingController):
     def value_update(self, proxy):
         if self._icon is None:
             return  # We haven't been configured correctly!
-
-        value = State(proxy.value)
-        if value.isDerivedFrom(State.CHANGING):
-            color = STATE_COLORS[State.CHANGING]
-        elif value.isDerivedFrom(State.RUNNING):
-            color = STATE_COLORS[State.RUNNING]
-        elif value.isDerivedFrom(State.ACTIVE):
-            color = STATE_COLORS[State.ACTIVE]
-        elif value.isDerivedFrom(State.PASSIVE):
-            color = STATE_COLORS[State.PASSIVE]
-        elif value.isDerivedFrom(State.DISABLED):
-            color = STATE_COLORS[State.DISABLED]
-        elif value is State.STATIC:
-            color = STATE_COLORS[State.STATIC]
-        elif value is State.NORMAL:
-            color = STATE_COLORS[State.NORMAL]
-        elif value is State.ERROR:
-            color = STATE_COLORS[State.ERROR]
-        elif value is State.INIT:
-            color = STATE_COLORS[State.INIT]
-        else:
-            color = STATE_COLORS[State.UNKNOWN]
+        value = proxy.value
+        color = get_state_color(value)
 
         svg = self._icon.with_color(color)
         self.widget.load(QByteArray(svg))
