@@ -21,22 +21,6 @@ using xms::OutputChannel;
 using util::Configurator;
 using util::Hash;
 
-/// A class that adds threads following the RAII principle
-/// to safely (exceptions!) remove them when going out of scope.
-class ThreadAdder {
-public:
-    ThreadAdder(int nThreads) : m_nThreads(nThreads) {
-        karabo::net::EventLoop::addThread(m_nThreads);
-    }
-
-    ~ThreadAdder() {
-        karabo::net::EventLoop::removeThread(m_nThreads);
-    }
-private:
-    const int m_nThreads;
-};
-
-
 CPPUNIT_TEST_SUITE_REGISTRATION(InputOutputChannel_Test);
 
 
@@ -67,7 +51,9 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel", Hash());
     output->setInstanceIdAndName("outputChannel", "output");
     std::vector<karabo::util::Hash> table;
-    output->registerShowConnectionsHandler([&table](const std::vector<karabo::util::Hash>& connections) {
+    boost::mutex tableMutex;
+    output->registerShowConnectionsHandler([&table, &tableMutex](const std::vector<karabo::util::Hash>& connections) {
+        boost::mutex::scoped_lock lock(tableMutex);
         table = connections;
     });
 
@@ -76,7 +62,10 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     output->update();
     boost::this_thread::sleep(boost::posix_time::milliseconds(20)); // time for call back
     CPPUNIT_ASSERT_EQUAL(0u, calls);
-    CPPUNIT_ASSERT_EQUAL(0uL, table.size());
+    {
+        boost::mutex::scoped_lock lock(tableMutex);
+        CPPUNIT_ASSERT_EQUAL(0uL, table.size());
+    }
 
     // Connect
     const std::string outputChannelId("outputChannelString");
@@ -98,20 +87,17 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         CPPUNIT_ASSERT_EQUAL(connectFuture.get(), karabo::net::ErrorCode()); // i.e. no error
 
         // Now ensure that output channel took note of input registration:
-        bool connected = false;
         int trials = 200;
         do {
-            // By default, InputChannel is configured to receive a "copy" of all data and not to share with others
-            if (output->hasRegisteredCopyInputChannel(input->getInstanceId())) {
-              connected = true;
-              break;
-            }
             boost::this_thread::sleep(boost::posix_time::milliseconds(2));
+            boost::mutex::scoped_lock lock(tableMutex);
+            if (!table.empty()) {
+                break;
+            }
         } while (--trials >= 0);
-        CPPUNIT_ASSERT(connected);
-
+        // No further call back, so no need to lock tableMutex here
         CPPUNIT_ASSERT_EQUAL(1UL, table.size());
-
+        // ... and check the published connection information
         CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("remoteId"), input->getInstanceId());
         CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("dataDistribution"), std::string("copy"));
         CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("onSlowness"), std::string("wait"));
@@ -133,15 +119,13 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         input->disconnect(outputChannelId);
         // Some time to travel for message
         trials = 200;
-        connected = true;
         do {
-            if (!output->hasRegisteredCopyInputChannel(input->getInstanceId())) {
-                connected = false;
+            boost::this_thread::sleep(boost::posix_time::milliseconds(2));
+            boost::mutex::scoped_lock lock(tableMutex);
+            if (table.empty()) {
                 break;
             }
-            boost::this_thread::sleep(boost::posix_time::milliseconds(2));
         } while (--trials >= 0);
-        CPPUNIT_ASSERT(!connected);
         CPPUNIT_ASSERT_EQUAL(0uL, table.size());
     }
 
@@ -153,7 +137,9 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     // still 2:
     CPPUNIT_ASSERT_EQUAL(2u, calls);
 
+    //
     // Now test connection attempts that fail
+    //
     std::vector<karabo::util::Hash> badOutputInfos;
     // Not supported protocol (only tcp works):
     badOutputInfos.push_back(outputInfo);
