@@ -42,6 +42,20 @@ namespace karabo {
                     .description("The topic on which the log messages should be published")
                     .assignmentOptional().noDefaultValue()
                     .commit();
+
+            UINT32_ELEMENT(s).key("interval")
+                    .displayedName("Interval")
+                    .description("Time between subsequent sending of messages")
+                    .assignmentOptional().defaultValue(1000u)
+                    .unit(Unit::SECOND)
+                    .metricPrefix(MetricPrefix::MILLI)
+                    .commit();
+
+            UINT32_ELEMENT(s).key("maxNumMessages")
+                    .displayedName("Max. Num. Messages")
+                    .description("Maximum number of messages - if mor per interval arrive, they are dropped")
+                    .assignmentOptional().defaultValue(1000u)
+                    .commit();
         }
 
 
@@ -61,6 +75,8 @@ namespace karabo {
             LayoutAppender(config.get<std::string>("name")),
             m_connection(Configurator<JmsConnection>::createNode("connection", config)),
             m_topic(config.get<std::string>("topic")),
+            m_interval(config.get<unsigned int>("interval")),
+            m_maxMessages(config.get<unsigned int>("maxNumMessages")),
             m_ok(true) {
 
             // If we created the connection ourselves we are still disconnected
@@ -112,14 +128,14 @@ namespace karabo {
                 try {
                     writeNow();
                 } catch (const karabo::util::Exception& e) {
+                    boost::mutex::scoped_lock lock(m_mutex);
                     KARABO_LOG_FRAMEWORK_ERROR << "Writing failed for "
                             << m_logCache.size() << " message(s): " << e;
                     // Clean up, i.e. do not try to send again since messages
                     // should anyway be in server log:
-                    boost::mutex::scoped_lock lock(m_mutex);
                     m_logCache.clear();
                 }
-                boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+                boost::this_thread::sleep(boost::posix_time::milliseconds(m_interval));
             }
         }
 
@@ -129,6 +145,11 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_mutex);
             if (m_logCache.empty()) return;
 
+            if (m_logCache.size() > m_maxMessages) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Send only maximum of " << m_maxMessages
+                        << " messages instead of the " << m_logCache.size() << " accumulated ones.";
+                m_logCache.resize(m_maxMessages);
+            }
             auto header = Hash::Pointer(new Hash("target", "log"));
             auto body = Hash::Pointer(new Hash("messages", m_logCache));
             m_producer->write(m_topic, header, body, 0);
