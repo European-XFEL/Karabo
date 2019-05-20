@@ -248,7 +248,7 @@ Note: "Dependencies" builds only the external dependencies
       "Clean" cleans all Karabo code (src folder)
       "Clean-All" additionally cleans all external dependencies (extern folder)
       "CodeCoverage" builds the Karabo framework with CodeCoverage configuration,
-                     but also implicitly runs the unit and integration tests
+                     but also implicitly runs the unit, integration and long tests
                      and produces code coverage reports. The CodeCoverage configuration
                      also disables --pyDevelop option.
 
