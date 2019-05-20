@@ -96,6 +96,8 @@ namespace karabo {
             krb_log4cpp::PatternLayout m_messageLayout;
             /// cash for messages
             std::vector<karabo::util::Hash> m_logCache;
+            unsigned int m_interval;
+            unsigned int m_maxMessages;
             bool m_ok;
         };
 
