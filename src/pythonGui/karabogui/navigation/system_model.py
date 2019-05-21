@@ -6,7 +6,9 @@
 import json
 from weakref import WeakValueDictionary
 
-from PyQt4.QtCore import QAbstractItemModel, QMimeData, QModelIndex, Qt
+from PyQt4.QtCore import (
+    pyqtSignal, pyqtSlot, QAbstractItemModel, QMimeData, QModelIndex, Qt)
+from PyQt4.QtGui import QItemSelection, QItemSelectionModel
 
 from karabo.common.api import DeviceStatus
 from karabogui import globals as krb_globals, icons
@@ -19,6 +21,7 @@ from .context import _UpdateContext
 
 
 class SystemTreeModel(QAbstractItemModel):
+    signalItemChanged = pyqtSignal(str, object)  # type, BaseDeviceProxy
 
     def __init__(self, parent=None):
         super(SystemTreeModel, self).__init__(parent)
@@ -39,8 +42,12 @@ class SystemTreeModel(QAbstractItemModel):
             KaraboEvent.AccessLevelChanged: self._event_access_level,
             KaraboEvent.StartMonitoringDevice: self._event_monitor,
             KaraboEvent.StopMonitoringDevice: self._event_monitor,
+            KaraboEvent.ShowDevice: self._event_show_device
         }
         register_for_broadcasts(event_map)
+        self.setSupportedDragActions(Qt.CopyAction)
+        self.selectionModel = QItemSelectionModel(self, self)
+        self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
     def _event_access_level(self, data):
         self._clear_tree_cache()
@@ -48,6 +55,10 @@ class SystemTreeModel(QAbstractItemModel):
     def _event_monitor(self, data):
         node_id = data['device_id']
         self._update_device_info(node_id)
+
+    def _event_show_device(self, data):
+        node_id = data['deviceId']
+        self.selectNodeById(node_id)
 
     def index_ref(self, model_index):
         """Get the system node object for a ``QModelIndex``. This is
@@ -93,7 +104,7 @@ class SystemTreeModel(QAbstractItemModel):
             if parent_node is None:
                 return QModelIndex()
 
-        children = parent_node.children
+        children = parent_node.get_visible_children()
         return self.createIndex(row, column, children[row])
 
     def parent(self, index):
@@ -130,7 +141,7 @@ class SystemTreeModel(QAbstractItemModel):
             if parent_node is None:
                 return 0
 
-        return len(parent_node.children)
+        return len(parent_node.get_visible_children())
 
     def columnCount(self, parentIndex=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
@@ -226,12 +237,40 @@ class SystemTreeModel(QAbstractItemModel):
         mimeData.setData('treeItems', json.dumps(data))
         return mimeData
 
-    def _needs_update(self):
-        """ Whenever the ``needs_update`` event of a ``SystemTree`` is changed
-        the view needs to be updated
-        """
-        self.layoutAboutToBeChanged.emit()
-        self.layoutChanged.emit()
+    @pyqtSlot(QItemSelection, QItemSelection)
+    def onSelectionChanged(self, selected, deselected):
+        selectedIndexes = selected.indexes()
+
+        if not selectedIndexes:
+            return
+
+        node = None
+        index = selectedIndexes[0]
+        if not index.isValid():
+            level = 0
+        else:
+            node = self.index_ref(index)
+            if node is None:
+                return
+            level = node.level
+
+        if level == 0:
+            proxy = None
+            item_type = 'other'
+        elif level == 1:
+            proxy = None
+            item_type = 'server'
+        if level == 2:
+            classId = node.node_id
+            serverId = node.parent.node_id
+            proxy = get_topology().get_class(serverId, classId)
+            item_type = 'class'
+        elif level == 3:
+            deviceId = node.node_id
+            proxy = get_topology().get_device(deviceId)
+            item_type = 'device'
+
+        self.signalItemChanged.emit(item_type, proxy)
 
     def _alarm_update(self, node_ids):
         """ Whenever the ``alarm_update`` event of a ``SystemTree`` is changed
@@ -256,11 +295,58 @@ class SystemTreeModel(QAbstractItemModel):
     def _clear_tree_cache(self):
         """Clear the tree and reset the model to account visibility
         """
-        self.beginResetModel()
+        self.layoutAboutToBeChanged.emit()
         access = krb_globals.GLOBAL_ACCESS_LEVEL
 
         def visitor(node):
             node.is_visible = not (node.visibility > access)
+            node.clear_cache = True
 
         self.tree.visit(visitor)
-        self.endResetModel()
+        self.layoutChanged.emit()
+
+    def currentIndex(self):
+        return self.selectionModel.currentIndex()
+
+    def selectIndex(self, index):
+        """Select the given `index` of type `QModelIndex` if this is not None
+        """
+        if index is None:
+            self.selectionModel.selectionChanged.emit(QItemSelection(),
+                                                      QItemSelection())
+            return
+
+        self.selectionModel.setCurrentIndex(index,
+                                            QItemSelectionModel.ClearAndSelect)
+
+        treeview = super(SystemTreeModel, self).parent()
+        treeview.scrollTo(index)
+
+    def selectNodeById(self, node_id):
+        """Select the `SystemTreeNode` with the given `node_id`.
+
+        :param node_id: A string which we are looking for in the tree
+        """
+        nodes = self.findNodes(node_id, full_match=True)
+        assert len(nodes) <= 1
+        if nodes:
+            # Select first entry
+            self.selectNode(nodes[0])
+
+    def selectNode(self, node):
+        """Select the given `node` of type `SystemTreeNode` if this is not None,
+        otherwise nothing is selected
+
+        :param node: The `SystemTreeNode` which should be selected
+        """
+        if node is not None:
+            index = self.createIndex(node.row(), 0, node)
+        else:
+            # Select nothing
+            index = None
+        self.selectIndex(index)
+
+    def findNodes(self, node_id, **kwargs):
+        if kwargs.get('access_level') is None:
+            kwargs['access_level'] = krb_globals.GLOBAL_ACCESS_LEVEL
+        return self.tree.find(node_id, **kwargs)
