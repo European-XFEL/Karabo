@@ -13,6 +13,7 @@
 #include "karabo/util/NodeElement.hh"
 #include "karabo/util/SimpleElement.hh"
 #include "karabo/net/JmsConnection.hh"
+#include "karabo/net/EventLoop.hh"
 #include <krb_log4cpp/LoggingEvent.hh>
 #include <iostream>
 
@@ -42,6 +43,20 @@ namespace karabo {
                     .description("The topic on which the log messages should be published")
                     .assignmentOptional().noDefaultValue()
                     .commit();
+
+            UINT32_ELEMENT(s).key("interval")
+                    .displayedName("Interval")
+                    .description("Time between subsequent sending of messages")
+                    .assignmentOptional().defaultValue(1000u)
+                    .unit(Unit::SECOND)
+                    .metricPrefix(MetricPrefix::MILLI)
+                    .commit();
+
+            UINT32_ELEMENT(s).key("maxNumMessages")
+                    .displayedName("Max. Num. Messages")
+                    .description("Maximum number of messages - if mor per interval arrive, they are dropped")
+                    .assignmentOptional().defaultValue(1000u)
+                    .commit();
         }
 
 
@@ -61,7 +76,9 @@ namespace karabo {
             LayoutAppender(config.get<std::string>("name")),
             m_connection(Configurator<JmsConnection>::createNode("connection", config)),
             m_topic(config.get<std::string>("topic")),
-            m_ok(true) {
+            m_interval(config.get<unsigned int>("interval")),
+            m_maxMessages(config.get<unsigned int>("maxNumMessages")),
+            m_timer(EventLoop::getIOService()) {
 
             // If we created the connection ourselves we are still disconnected
             if (!m_connection->isConnected()) m_connection->connect();
@@ -74,17 +91,18 @@ namespace karabo {
             m_categoryLayout.setConversionPattern("%c"); // deviceId
             m_messageLayout.setConversionPattern("%m"); // message text
 
-            // Start thread
-            m_thread = boost::thread(boost::bind(&karabo::log::Log4CppNetApp::checkLogCache, this));
+            startLogWriting();
         }
 
 
         Log4CppNetApp::~Log4CppNetApp() {
+            // Take care that m_timer.cancel() really cancels something:
+            // If not, our handler (checkLogCache) is already posted to the event loop and will access data members
+            // and bind a bare this pointer again - all this must not happen after this destructor is finished.
+            while (m_timer.cancel() == 0) {
+                boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+            }
             close();
-
-            // Stop checkLogCache and join thread
-            m_ok = false;
-            m_thread.join();
         }
 
 
@@ -107,20 +125,37 @@ namespace karabo {
         }
 
 
-        void Log4CppNetApp::checkLogCache() {
-            while (m_ok) {
-                try {
-                    writeNow();
-                } catch (const karabo::util::Exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Writing failed for "
-                            << m_logCache.size() << " message(s): " << e;
-                    // Clean up, i.e. do not try to send again since messages
-                    // should anyway be in server log:
-                    boost::mutex::scoped_lock lock(m_mutex);
-                    m_logCache.clear();
-                }
-                boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+        void Log4CppNetApp::startLogWriting() {
+            m_timer.expires_from_now(boost::posix_time::milliseconds(m_interval));
+            // We cannot use bind_weak here: Even if Log4CppNetApp inherits from enable_shared_from_this and
+            // NetworkAppender keeps a shared_ptr to this Log4CppNetApp, this does not help: NetworkAppender does not
+            // live long enough to be responsible for the Log4CppNetApp it creates.
+            // As way out the destructor of Log4CppNetApp takes care that there is no problem using boost::bind with
+            // a bare 'this' pointer.
+            m_timer.async_wait(boost::bind(&Log4CppNetApp::checkLogCache, this, boost::asio::placeholders::error));
+        }
+
+
+        void Log4CppNetApp::checkLogCache(const boost::system::error_code& e) {
+
+            if (e) {
+                // cancelled
+                return;
             }
+
+            try {
+                writeNow();
+            } catch (const karabo::util::Exception& e) {
+                boost::mutex::scoped_lock lock(m_mutex);
+                KARABO_LOG_FRAMEWORK_ERROR << "Writing failed for "
+                        << m_logCache.size() << " message(s): " << e;
+                // Clean up, i.e. do not try to send again since messages
+                // should anyway be in server log:
+                m_logCache.clear();
+            }
+
+            // Fire again:
+            startLogWriting();
         }
 
 
@@ -129,6 +164,11 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_mutex);
             if (m_logCache.empty()) return;
 
+            if (m_logCache.size() > m_maxMessages) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Send only maximum of " << m_maxMessages
+                        << " messages instead of the " << m_logCache.size() << " accumulated ones.";
+                m_logCache.resize(m_maxMessages);
+            }
             auto header = Hash::Pointer(new Hash("target", "log"));
             auto body = Hash::Pointer(new Hash("messages", m_logCache));
             m_producer->write(m_topic, header, body, 0);
