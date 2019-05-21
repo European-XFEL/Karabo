@@ -221,7 +221,7 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
             while (--trials >= 0 && doGoOn) {
                 // NOTE:
                 // After about 14100 to 14200 reconnection cycles, 'trials' every (second?) time goes down to exactly
-                // 102 (with 10 ms sleep above) on my local tests - and then connect succeeds....
+                // 102 (with 10 ms sleep below) on my local tests - and then connect succeeds....
                 // Maybe some tcp internal port cleaning done about every second only?
                 if (std::future_status::timeout != connectFuture.wait_for(std::chrono::milliseconds(10))) {
                     break;
@@ -231,7 +231,7 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
                 break;
             }
             if (trials < 0) {
-                disreconnectFailure = "Failed to reconnect within 1 s -- " + karabo::util::toString(disconCounter);
+                disreconnectFailure = "Failed to reconnect within 2 s -- " + karabo::util::toString(disconCounter);
                 doGoOn = false;
                 break;
             }
