@@ -5,7 +5,9 @@
 #############################################################################
 from weakref import WeakValueDictionary
 
-from PyQt4.QtCore import QAbstractItemModel, QModelIndex, Qt
+from PyQt4.QtCore import (
+    pyqtSignal, pyqtSlot, QAbstractItemModel, QModelIndex, Qt)
+from PyQt4.QtGui import QItemSelection, QItemSelectionModel
 
 from karabo.common.api import DeviceStatus
 from karabogui import globals as krb_globals, icons
@@ -15,6 +17,7 @@ from .context import _UpdateContext
 
 
 class DeviceTreeModel(QAbstractItemModel):
+    signalItemChanged = pyqtSignal(str, object)  # type, BaseDeviceProxy
 
     def __init__(self, parent=None):
         super(DeviceTreeModel, self).__init__(parent)
@@ -24,8 +27,10 @@ class DeviceTreeModel(QAbstractItemModel):
         # Our hierarchy tree
         self.tree = get_topology().device_tree
         self.tree.update_context = _UpdateContext(item_model=self)
-
         self.setSupportedDragActions(Qt.CopyAction)
+        self.selectionModel = QItemSelectionModel(self, self)
+        self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
+
         event_map = {
             KaraboEvent.AccessLevelChanged: self._event_access_level,
         }
@@ -65,7 +70,7 @@ class DeviceTreeModel(QAbstractItemModel):
             if parent_node is None:
                 return QModelIndex()
 
-        children = parent_node.children
+        children = parent_node.get_visible_children()
         return self.createIndex(row, column, children[row])
 
     def parent(self, index):
@@ -103,7 +108,7 @@ class DeviceTreeModel(QAbstractItemModel):
             if parent_node is None:
                 return 0
 
-        return len(parent_node.children)
+        return len(parent_node.get_visible_children())
 
     def columnCount(self, parentIndex=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
@@ -165,21 +170,48 @@ class DeviceTreeModel(QAbstractItemModel):
 
         return node.info()
 
-    def _needs_update(self):
-        """ Whenever the ``needs_update`` event of a ``SystemTree`` is changed
-        the view needs to be updated
-        """
-        self.layoutAboutToBeChanged.emit()
-        self.layoutChanged.emit()
-
     def _clear_tree_cache(self):
         """Clear the tree and reset the model to account visibility
         """
-        self.beginResetModel()
+        self.layoutAboutToBeChanged.emit()
         access = krb_globals.GLOBAL_ACCESS_LEVEL
 
         def visitor(node):
             node.is_visible = not (node.visibility > access)
+            node.clear_cache = True
 
         self.tree.visit(visitor)
-        self.endResetModel()
+        self.layoutChanged.emit()
+
+    def currentIndex(self):
+        return self.selectionModel.currentIndex()
+
+    @pyqtSlot(QItemSelection, QItemSelection)
+    def onSelectionChanged(self, selected, deselected):
+        selectedIndexes = selected.indexes()
+
+        if not selectedIndexes:
+            return
+
+        node = None
+        index = selectedIndexes[0]
+        if not index.isValid():
+            level = 0
+        else:
+            node = self.index_ref(index)
+            if node is None:
+                return
+            level = node.level
+
+        if level == 0:
+            proxy = None
+            item_type = 'domain'
+        elif level == 1:
+            proxy = None
+            item_type = 'type'
+        if level == 2:
+            deviceId = node.device_id
+            proxy = get_topology().get_device(deviceId)
+            item_type = 'device'
+
+        self.signalItemChanged.emit(item_type, proxy)
