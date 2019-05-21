@@ -11,6 +11,7 @@
 #include "karabo/net/JmsProducer.hh"
 #include <krb_log4cpp/LayoutAppender.hh>
 #include <krb_log4cpp/PatternLayout.hh>
+#include <boost/asio/deadline_timer.hpp>
 #include <vector>
 
 
@@ -23,6 +24,9 @@ namespace karabo {
     }
 
     namespace log {
+
+        // Forward declare
+        class Log4CppNetApp;
 
         /**
          * Helper class to configure an underlying log4cpp appender.
@@ -39,13 +43,14 @@ namespace karabo {
 
             NetworkAppender(const karabo::util::Hash& config);
 
-            virtual ~NetworkAppender() {}
+            virtual ~NetworkAppender() {
+            }
 
             krb_log4cpp::Appender* getAppender();
 
         private:
 
-            krb_log4cpp::Appender* m_appender;
+            Log4CppNetApp* m_appender;
         };
 
         /** This class is used to propagate log messages through the broker.
@@ -76,18 +81,19 @@ namespace karabo {
 
         private: // functions
 
-            void checkLogCache(); // runs in thread
+            void startLogWriting();
 
-            void writeNow(); // called within thread
+            void checkLogCache(const boost::system::error_code& e);
+
+            void writeNow();
 
         private: // members
 
             boost::shared_ptr<karabo::net::JmsConnection> m_connection;
             boost::shared_ptr<karabo::net::JmsProducer> m_producer;
             std::string m_topic;
-
-            boost::thread m_thread;
-            boost::mutex m_mutex;
+            unsigned int m_interval;
+            unsigned int m_maxMessages;
 
             /// layouts for each component
             krb_log4cpp::PatternLayout m_timeLayout;
@@ -95,10 +101,9 @@ namespace karabo {
             krb_log4cpp::PatternLayout m_categoryLayout;
             krb_log4cpp::PatternLayout m_messageLayout;
             /// cash for messages
+            boost::mutex m_mutex;
             std::vector<karabo::util::Hash> m_logCache;
-            unsigned int m_interval;
-            unsigned int m_maxMessages;
-            bool m_ok;
+            boost::asio::deadline_timer m_timer;
         };
 
     }
