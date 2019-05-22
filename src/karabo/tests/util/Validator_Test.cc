@@ -96,16 +96,60 @@ void Validator_Test::testTableDefault() {
     CPPUNIT_ASSERT(1u == validated.get<std::vector<util::Hash> >("table").size());
     CPPUNIT_ASSERT_EQUAL(-2, validated.get<std::vector<util::Hash> >("table")[0].get<int>("int"));
 
-    // Test to refuse a table with a bad row - wrong number of columns.
+    // Test to accept a table with an "initially bad" row - there's a missing column, but the table validation
+    // attributes allow injection of missing columns.
     res = validator.validate(schema,
-                             util::Hash("table", std::vector<util::Hash>(1, util::Hash("int", -2))),
+                             util::Hash("table", std::vector<util::Hash>(1, util::Hash("int", 2))),
                              validated);
-    CPPUNIT_ASSERT(!res.first);
+    CPPUNIT_ASSERT(res.first);
+    // Checks that the missing column has been injected by the validator - see tableValidationAttributes.
+    CPPUNIT_ASSERT(validated.has("table"));
+    CPPUNIT_ASSERT(validated.is<std::vector<util::Hash> >("table"));
+    CPPUNIT_ASSERT(1u == validated.get<std::vector<util::Hash> >("table").size());
+    CPPUNIT_ASSERT(validated.get<std::vector<util::Hash> >("table")[0].has("str"));
 
-    // Test to refuse a table with a bad row - bad column name.
+    // Test to refuse a table with a bad row - unknown column name.
     res = validator.validate(schema,
                              util::Hash("table", std::vector<util::Hash>(1, util::Hash("unknownKey", 123, "str", "testing"))),
                              validated);
     CPPUNIT_ASSERT(!res.first);
+
+    // Test to accept a table with an "initially bad" value - the value of the int column is the string form of an int.
+    // The validator should do the conversion.
+    res = validator.validate(schema,
+                             util::Hash("table", std::vector<util::Hash>(1, util::Hash("int", "2", "str", "testing"))),
+                             validated);
+    CPPUNIT_ASSERT(res.first);
+    // Checks that the string value has been properly converted to an int by the validator.
+    CPPUNIT_ASSERT(validated.has("table"));
+    CPPUNIT_ASSERT(validated.is<std::vector<util::Hash> >("table"));
+    CPPUNIT_ASSERT(1u == validated.get<std::vector<util::Hash> >("table").size());
+    CPPUNIT_ASSERT_EQUAL(2, validated.get<std::vector<util::Hash> >("table")[0].get<int>("int"));
+
+    // Test to accept a table with a "bad" value - wrong type - value not convertible to the value type in the schema.
+    // Value in the validated table should become the standard default value for an int, 0.
+    res = validator.validate(schema,
+                             util::Hash("table", std::vector<util::Hash>(1, util::Hash("int", "ba", "str", "testing"))),
+                             validated);
+    CPPUNIT_ASSERT(res.first);
+    // Checks that upon not being able to convert the string "ba" to an int, the int value has been set to the
+    // standard default value, 0.
+    CPPUNIT_ASSERT(validated.has("table"));
+    CPPUNIT_ASSERT(validated.is<std::vector<util::Hash> >("table"));
+    CPPUNIT_ASSERT(1u == validated.get<std::vector<util::Hash> >("table").size());
+    CPPUNIT_ASSERT_EQUAL(0, validated.get<std::vector<util::Hash> >("table")[0].get<int>("int"));
+
+    // Test to accept a table with an "initially bad" value - the value of the int column is a floating point number.
+    // The validator should do the conversion.
+    res = validator.validate(schema,
+                             util::Hash("table", std::vector<util::Hash>(1, util::Hash("int", 4.6, "str", "testing"))),
+                             validated);
+    CPPUNIT_ASSERT(res.first);
+    // Checks that the float value for the int column has been propertly truncated by the validator.
+    CPPUNIT_ASSERT(validated.has("table"));
+    CPPUNIT_ASSERT(validated.is<std::vector<util::Hash> >("table"));
+    CPPUNIT_ASSERT(1u == validated.get<std::vector<util::Hash> >("table").size());
+    CPPUNIT_ASSERT_EQUAL(4, validated.get<std::vector<util::Hash> >("table")[0].get<int>("int"));
+
 }
 

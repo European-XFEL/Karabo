@@ -62,7 +62,8 @@ namespace karabo {
                     Hash validatedHash;
                     std::pair<bool, std::string> validationResult = validator.validate(m_genericElement->m_nodeSchema, *it, validatedHash);
                     if (!validationResult.first) {
-                        throw KARABO_PARAMETER_EXCEPTION("Node schema didn't validate against present node schema");
+                        throw KARABO_PARAMETER_EXCEPTION("Node schema didn't validate against present node schema: "
+                                                         + validationResult.second);
                     }
                     validated.push_back(validatedHash);
                 }
