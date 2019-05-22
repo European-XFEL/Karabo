@@ -19,6 +19,7 @@ using std::vector;
 namespace karabo {
     namespace util {
 
+        extern const Validator::ValidationRules tableValidationRules;
 
         Validator::Validator()
             : m_injectDefaults(true)
@@ -548,44 +549,34 @@ namespace karabo {
                     }
                 }
             } else if (referenceCategory == Types::VECTOR_HASH) {
-                // A vector of hashes may be a table element - if it has a RowSchema attribute it is assumed to
-                // be a table element.
-                if (workNode.hasAttribute(KARABO_SCHEMA_ROW_SCHEMA)) {
-                    const auto rowSchema = workNode.getAttribute<karabo::util::Schema>(KARABO_SCHEMA_ROW_SCHEMA);
-                    const std::vector<karabo::util::Hash> table = workNode.getValue<std::vector < karabo::util::Hash >> ();
-                    if (table.size() > 0) {
-                        // Table has at least one row. Will check its rows against the row schema.
-                        std::vector<std::string> rowSchemaCols;
-                        rowSchema.getParameterHash().getKeys(rowSchemaCols);
-                        bool noErrorFound = true;
-                        for (decltype(table.size()) i = 0; i < table.size() && noErrorFound; i++) {
-                            const karabo::util::Hash& rowHash = table[i];
-                            if (rowHash.size() != rowSchemaCols.size()) {
-                                report << "Number of columns in row '" << i << "' of table '" << workNode.getKey()
-                                        << "' is '" << rowHash.size() << "'. It should have '" << rowSchemaCols.size()
-                                        << "' column(s).'" << endl;
-                                noErrorFound = false;
-                            } else {
-                                // Checks the column names one by one.
-                                decltype(rowHash.size()) nCol = 0;
-                                for (util::Hash::const_iterator it = rowHash.begin();
-                                     it != rowHash.end() && noErrorFound;
-                                     it++) {
-                                    if (it->getKey() != rowSchemaCols[nCol]) {
-                                        report << "Name of column '" << nCol << "' in row '" << i << "' of table '"
-                                                << workNode.getKey() << "' is '"
-                                                << it->getKey() << "': it doesn't match the column name in the schema, '"
-                                                << rowSchemaCols[nCol] << "'." << endl;
-                                        noErrorFound = false;
-                                    }
-                                    nCol++;
-                                }
-                            }
+                validateVectorOfHashesLeaf(masterNode, workNode, report);
+            }
+        }
+
+
+        void Validator::validateVectorOfHashesLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report) {
+            // A vector of hashes may be a table element - if it has a RowSchema attribute it is assumed to
+            // be a table element.
+            if (workNode.hasAttribute(KARABO_SCHEMA_ROW_SCHEMA)) {
+                const auto& rowSchema = masterNode.getAttribute<karabo::util::Schema>(KARABO_SCHEMA_ROW_SCHEMA);
+                std::vector<karabo::util::Hash>& table = workNode.getValue<std::vector < karabo::util::Hash >> ();
+                if (table.size() > 0) {
+                    Validator rowValidator(tableValidationRules);
+                    bool noErrorFound = true;
+                    for (decltype(table.size()) i = 0; i < table.size() && noErrorFound; i++) {
+                        util::Hash validatedHash;
+                        auto valResult = rowValidator.validate(rowSchema, table[i], validatedHash);
+                        if (!valResult.first) {
+                            report << valResult.second;
+                            noErrorFound = false;
+                        } else {
+                            // Updates the table row - the table validator may have injected columns, converted
+                            // values, ....
+                            table[i] = validatedHash;
                         }
                     }
-                } // workNode.hasAttribute(KARABO_SCHEMA_ROW_SCHEMA)
-            } // referenceCategory == Types::VECTOR_HASH
-
+                }
+            }
         }
 
 
