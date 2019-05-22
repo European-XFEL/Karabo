@@ -318,6 +318,33 @@ namespace hashfilter {
                     .readOnly().initialValue("Initialized")
                     .commit();
 
+            Schema data;
+
+            INT32_ELEMENT(data).key("number")
+                    .displayedName("Number")
+                    .description("Integer number")
+                    .tags("LM")
+                    .readOnly().initialValue(12)
+                    .commit();
+
+            STRING_ELEMENT(data).key("state")
+                    .displayedName("State")
+                    .description("Status of application")
+                    .tags("LM")
+                    .readOnly().initialValue("Initialized")
+                    .commit();
+
+            BOOL_ELEMENT(data).key("bold")
+                    .displayedName("Bold")
+                    .description("Toggles bold painting")
+                    .readOnly().initialValue(false)
+                    .commit();
+
+            TABLE_ELEMENT(expected).key("table")
+                    .tags("LM")
+                    .setColumns(data)
+                    .assignmentOptional().defaultValue(std::vector<karabo::util::Hash>())
+                    .commit();
 
         }
 
@@ -467,6 +494,7 @@ void HashFilter_Test::testFilterByTag() {
         CPPUNIT_ASSERT(result.has("chars[1].P3.k") == true);
         CPPUNIT_ASSERT(result.has("chars[1].P3.l") == true);
         CPPUNIT_ASSERT(result.has("chars[1].P3.m") == true);
+        CPPUNIT_ASSERT(result.has("table") == true);
 
 
         result.clear();
@@ -617,7 +645,7 @@ void HashFilter_Test::testFilterByAccessMode() {
         CPPUNIT_ASSERT(result.has("chars[1].P3.m") == true);
         CPPUNIT_ASSERT(result.has("number") == false);
         CPPUNIT_ASSERT(result.has("state") == false);
-
+        CPPUNIT_ASSERT(result.has("table") == false);
 
         result.clear();
         HashFilter::byAccessMode(schema, config, result, karabo::util::READ);
@@ -652,6 +680,7 @@ void HashFilter_Test::testFilterByAccessMode() {
         CPPUNIT_ASSERT(result.has("chars[1].P3.m") == false);
         CPPUNIT_ASSERT(result.has("number") == true);
         CPPUNIT_ASSERT(result.has("state") == true);
+        CPPUNIT_ASSERT(result.has("table") == false);
 
 
         result.clear();
@@ -687,6 +716,7 @@ void HashFilter_Test::testFilterByAccessMode() {
         CPPUNIT_ASSERT(result.has("chars[1].P3.m") == false);
         CPPUNIT_ASSERT(result.has("number") == false);
         CPPUNIT_ASSERT(result.has("state") == false);
+        CPPUNIT_ASSERT(result.has("table") == false);
 
     } catch (karabo::util::Exception e) {
         KARABO_LOG_FRAMEWORK_DEBUG << e;
