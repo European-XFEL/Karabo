@@ -25,7 +25,6 @@ public:
 private:
 
     void testConnectDisconnect();
-
 };
 
 #endif	/* INPUTOUTPUTCHANNEL_TEST_HH */

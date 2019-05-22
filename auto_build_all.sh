@@ -68,7 +68,28 @@ runIntegrationTests() {
     local testDir=$scriptDir/build/netbeans/integrationTests
 
     echo
-    echo Running Karabo integration tests ...
+    echo Running Karabo C++ integration tests ...
+    echo
+    cd $testDir
+    rm -rf testresults/
+    safeRunCommand "make CONF=$CONF -j$NUM_JOBS test"
+    cd $scriptDir
+
+    # Parse the XML test outputs
+    checkCppUnitTestResults "$testDir" "$testNames"
+
+}
+
+runCppLongTests() {
+    if [ -z "$KARABO" ]; then
+        source $scriptDir/karabo/activate
+    fi
+
+    local testNames=$(ls $scriptDir/src/cppLongTests)
+    local testDir=$scriptDir/build/netbeans/cppLongTests
+
+    echo
+    echo Running Karabo C++ long tests ...
     echo
     cd $testDir
     rm -rf testresults/
@@ -142,7 +163,7 @@ runPythonIntegrationTests() {
     fi
 }
 
-runLongTests() {
+runPythonLongTests() {
     if [ -z "$KARABO" ]; then
         source $scriptDir/karabo/activate
     fi
@@ -176,7 +197,8 @@ produceCodeCoverageReport() {
     runUnitTests
     runIntegrationTests
     runPythonIntegrationTests
-    runLongTests
+    runCppLongTests
+    runPythonLongTests
 
     # produce initial C++ coverage information
     safeRunCommand "$scriptDir/ci/coverage/report/gen_initial"
@@ -226,7 +248,7 @@ Note: "Dependencies" builds only the external dependencies
       "Clean" cleans all Karabo code (src folder)
       "Clean-All" additionally cleans all external dependencies (extern folder)
       "CodeCoverage" builds the Karabo framework with CodeCoverage configuration,
-                     but also implicitly runs the unit and integration tests
+                     but also implicitly runs the unit, integration and long tests
                      and produces code coverage reports. The CodeCoverage configuration
                      also disables --pyDevelop option.
 
@@ -374,7 +396,8 @@ if [ "$RUNINTEGRATIONTESTS" = "y" ]; then
 fi
 
 if [ "$RUNLONGTESTS" = "y" ]; then
-    runLongTests
+    runCppLongTests
+    runPythonLongTests
 fi
 
 if [ "$CODECOVERAGE" = "y" ]; then
