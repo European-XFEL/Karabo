@@ -523,15 +523,15 @@ class SystemTopology(HasStrictTraits):
         """
         devices, servers = [], []
 
+        gone = changes['gone']
+        if not gone.empty():
+            devices, servers = self.topology_gone(gone)
         new = changes['new']
         if not new.empty():
             self.instance_new(new)
         update = changes['update']
         if not update.empty():
             self.instance_updated(update)
-        gone = changes['gone']
-        if not gone.empty():
-            devices, servers = self.topology_gone(gone)
 
         return devices, servers
 
