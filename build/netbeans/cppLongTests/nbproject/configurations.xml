@@ -8,6 +8,8 @@
       <logicalFolder name="f2" displayName="xms_test" projectFiles="true" kind="TEST">
         <itemPath>../../../src/cppLongTests/xms/InputOutputChannel_LongTest.cc</itemPath>
         <itemPath>../../../src/cppLongTests/xms/InputOutputChannel_LongTest.hh</itemPath>
+        <itemPath>../../../src/cppLongTests/xms/SignalSlotable_LongTest.cc</itemPath>
+        <itemPath>../../../src/cppLongTests/xms/SignalSlotable_LongTest.hh</itemPath>
         <itemPath>../../../src/cppLongTests/xms/xmsLongTestRunner.cc</itemPath>
       </logicalFolder>
     </logicalFolder>
@@ -64,6 +66,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/cppLongTests/xms/InputOutputChannel_LongTest.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/cppLongTests/xms/SignalSlotable_LongTest.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/cppLongTests/xms/SignalSlotable_LongTest.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -145,6 +157,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/cppLongTests/xms/SignalSlotable_LongTest.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/cppLongTests/xms/SignalSlotable_LongTest.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/cppLongTests/xms/xmsLongTestRunner.cc"
             ex="false"
             tool="1"
@@ -207,6 +229,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/cppLongTests/xms/InputOutputChannel_LongTest.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/cppLongTests/xms/SignalSlotable_LongTest.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/cppLongTests/xms/SignalSlotable_LongTest.hh"
             ex="false"
             tool="3"
             flavor2="0">
