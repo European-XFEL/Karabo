@@ -72,7 +72,7 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libcppLongTests.${CND_DLIB_EXT}: ${OB
 
 # Build Test Targets
 .build-tests-conf: .build-conf ${TESTFILES}
-${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/783893685/InputOutputChannel_LongTest.o ${TESTDIR}/_ext/783893685/xmsLongTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/783893685/InputOutputChannel_LongTest.o ${TESTDIR}/_ext/783893685/SignalSlotable_LongTest.o ${TESTDIR}/_ext/783893685/xmsLongTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f2 $^ ${LDLIBSOPTIONS} 
 
@@ -81,6 +81,12 @@ ${TESTDIR}/_ext/783893685/InputOutputChannel_LongTest.o: ../../../src/cppLongTes
 	${MKDIR} -p ${TESTDIR}/_ext/783893685
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/783893685/InputOutputChannel_LongTest.o ../../../src/cppLongTests/xms/InputOutputChannel_LongTest.cc
+
+
+${TESTDIR}/_ext/783893685/SignalSlotable_LongTest.o: ../../../src/cppLongTests/xms/SignalSlotable_LongTest.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/783893685
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/783893685/SignalSlotable_LongTest.o ../../../src/cppLongTests/xms/SignalSlotable_LongTest.cc
 
 
 ${TESTDIR}/_ext/783893685/xmsLongTestRunner.o: ../../../src/cppLongTests/xms/xmsLongTestRunner.cc 
