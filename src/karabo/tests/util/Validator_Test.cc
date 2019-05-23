@@ -48,17 +48,21 @@ void Validator_Test::testTableDefault() {
     util::Schema rowSchema;
     INT32_ELEMENT(rowSchema).key("int")
             .assignmentOptional().defaultValue(1)
-            .readOnly()
             .commit();
     STRING_ELEMENT(rowSchema).key("str")
             .assignmentOptional().defaultValue("a string")
-            .readOnly()
             .commit();
 
     util::Schema schema;
     TABLE_ELEMENT(schema).key("table")
             .setColumns(rowSchema)
             .assignmentOptional().defaultValue(std::vector<util::Hash>())
+            .commit();
+
+    util::Schema nonEmptySchema;
+    TABLE_ELEMENT(nonEmptySchema).key("nonEmptyTable")
+            .setColumns(rowSchema)
+            .assignmentOptional().defaultValue({util::Hash("int", 128, "str", "first row")})
             .commit();
 
     util::Validator validator;
@@ -71,6 +75,19 @@ void Validator_Test::testTableDefault() {
     CPPUNIT_ASSERT(validated.has("table"));
     CPPUNIT_ASSERT(validated.is<std::vector<util::Hash> >("table"));
     CPPUNIT_ASSERT(validated.get<std::vector<util::Hash> >("table").empty());
+
+    validated.clear();
+
+
+    // Test to get non-empty default if nothing is provided.
+    res = validator.validate(nonEmptySchema, util::Hash(), validated);
+
+    CPPUNIT_ASSERT(res.first);
+    CPPUNIT_ASSERT(validated.has("nonEmptyTable"));
+    CPPUNIT_ASSERT(validated.is<std::vector<util::Hash> >("nonEmptyTable"));
+    CPPUNIT_ASSERT(validated.get<std::vector<util::Hash> >("nonEmptyTable").size() == 1);
+    CPPUNIT_ASSERT_EQUAL(128, validated.get<std::vector<util::Hash> >("nonEmptyTable")[0].get<int>("int"));
+    CPPUNIT_ASSERT_EQUAL(std::string("first row"), validated.get<std::vector<util::Hash> >("nonEmptyTable")[0].get<std::string>("str"));
 
     validated.clear();
 
@@ -95,6 +112,9 @@ void Validator_Test::testTableDefault() {
     CPPUNIT_ASSERT(validated.is<std::vector<util::Hash> >("table"));
     CPPUNIT_ASSERT(1u == validated.get<std::vector<util::Hash> >("table").size());
     CPPUNIT_ASSERT_EQUAL(-2, validated.get<std::vector<util::Hash> >("table")[0].get<int>("int"));
+    CPPUNIT_ASSERT_EQUAL(std::string("testing"), validated.get<std::vector<util::Hash> >("table")[0].get<std::string>("str"));
+
+    validated.clear();
 
     // Test to accept a table with an "initially bad" row - there's a missing column, but the table validation
     // attributes allow injection of missing columns.
@@ -107,6 +127,10 @@ void Validator_Test::testTableDefault() {
     CPPUNIT_ASSERT(validated.is<std::vector<util::Hash> >("table"));
     CPPUNIT_ASSERT(1u == validated.get<std::vector<util::Hash> >("table").size());
     CPPUNIT_ASSERT(validated.get<std::vector<util::Hash> >("table")[0].has("str"));
+    CPPUNIT_ASSERT_EQUAL(std::string("a string"),
+                         validated.get<std::vector < util::Hash >> ("table")[0].get<std::string>("str"));
+
+    validated.clear();
 
     // Test to refuse a table with a bad row - unknown column name.
     res = validator.validate(schema,
@@ -114,8 +138,15 @@ void Validator_Test::testTableDefault() {
                              validated);
     CPPUNIT_ASSERT(!res.first);
 
+    validated.clear();
+
     // Test to accept a table with an "initially bad" value - the value of the int column is the string form of an int.
     // The validator should do the conversion.
+    // Caveat: The validator currently enforces a "best effort" policy to convert really "bad" values into a "good"
+    //         values that match the value type stated in the schema for the column. Examples of those edge cases that
+    //         could lead to unacceptable behavior (bugs) depending on the use cases: a value "2a" would be converted
+    //         to int 2; a float 4.6 would be truncated to 4; a value "abc" would become int 0 (the initial default value
+    //         for an int).
     res = validator.validate(schema,
                              util::Hash("table", std::vector<util::Hash>(1, util::Hash("int", "2", "str", "testing"))),
                              validated);
@@ -126,30 +157,5 @@ void Validator_Test::testTableDefault() {
     CPPUNIT_ASSERT(1u == validated.get<std::vector<util::Hash> >("table").size());
     CPPUNIT_ASSERT_EQUAL(2, validated.get<std::vector<util::Hash> >("table")[0].get<int>("int"));
 
-    // Test to accept a table with a "bad" value - wrong type - value not convertible to the value type in the schema.
-    // Value in the validated table should become the standard default value for an int, 0.
-    res = validator.validate(schema,
-                             util::Hash("table", std::vector<util::Hash>(1, util::Hash("int", "ba", "str", "testing"))),
-                             validated);
-    CPPUNIT_ASSERT(res.first);
-    // Checks that upon not being able to convert the string "ba" to an int, the int value has been set to the
-    // standard default value, 0.
-    CPPUNIT_ASSERT(validated.has("table"));
-    CPPUNIT_ASSERT(validated.is<std::vector<util::Hash> >("table"));
-    CPPUNIT_ASSERT(1u == validated.get<std::vector<util::Hash> >("table").size());
-    CPPUNIT_ASSERT_EQUAL(0, validated.get<std::vector<util::Hash> >("table")[0].get<int>("int"));
-
-    // Test to accept a table with an "initially bad" value - the value of the int column is a floating point number.
-    // The validator should do the conversion.
-    res = validator.validate(schema,
-                             util::Hash("table", std::vector<util::Hash>(1, util::Hash("int", 4.6, "str", "testing"))),
-                             validated);
-    CPPUNIT_ASSERT(res.first);
-    // Checks that the float value for the int column has been propertly truncated by the validator.
-    CPPUNIT_ASSERT(validated.has("table"));
-    CPPUNIT_ASSERT(validated.is<std::vector<util::Hash> >("table"));
-    CPPUNIT_ASSERT(1u == validated.get<std::vector<util::Hash> >("table").size());
-    CPPUNIT_ASSERT_EQUAL(4, validated.get<std::vector<util::Hash> >("table")[0].get<int>("int"));
-
+    validated.clear();
 }
-
