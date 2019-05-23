@@ -323,14 +323,13 @@ namespace hashfilter {
             INT32_ELEMENT(data).key("number")
                     .displayedName("Number")
                     .description("Integer number")
-                    .tags("LM")
+                    .tags("LM")   // The tags inside row schema are ignored: TableElement is LEAF
                     .readOnly().initialValue(12)
                     .commit();
 
             STRING_ELEMENT(data).key("state")
                     .displayedName("State")
                     .description("Status of application")
-                    .tags("LM")
                     .readOnly().initialValue("Initialized")
                     .commit();
 
@@ -341,7 +340,7 @@ namespace hashfilter {
                     .commit();
 
             TABLE_ELEMENT(expected).key("table")
-                    .tags("LM")
+                    .tags("LM")   // The tags for the "whole" TableElement CAN work like for other parameters
                     .setColumns(data)
                     .assignmentOptional().defaultValue(std::vector<karabo::util::Hash>())
                     .commit();
@@ -428,6 +427,7 @@ void HashFilter_Test::testFilterByTag() {
         CPPUNIT_ASSERT(result.has("chars[1].P3.k") == false);
         CPPUNIT_ASSERT(result.has("chars[1].P3.l") == false);
         CPPUNIT_ASSERT(result.has("chars[1].P3.m") == false);
+        CPPUNIT_ASSERT(result.has("table") == false);
 
 
         result.clear();
@@ -461,6 +461,7 @@ void HashFilter_Test::testFilterByTag() {
         CPPUNIT_ASSERT(result.has("chars[1].P3.k") == false);
         CPPUNIT_ASSERT(result.has("chars[1].P3.l") == false);
         CPPUNIT_ASSERT(result.has("chars[1].P3.m") == false);
+        CPPUNIT_ASSERT(result.has("table") == false);
 
 
         result.clear();
@@ -528,6 +529,7 @@ void HashFilter_Test::testFilterByTag() {
         CPPUNIT_ASSERT(result.has("chars[1].P3.k") == false);
         CPPUNIT_ASSERT(result.has("chars[1].P3.l") == true);
         CPPUNIT_ASSERT(result.has("chars[1].P3.m") == true);
+        CPPUNIT_ASSERT(result.has("table") == false);
 
 
 
@@ -562,6 +564,7 @@ void HashFilter_Test::testFilterByTag() {
         CPPUNIT_ASSERT(result.has("chars[1].P3.k") == false);
         CPPUNIT_ASSERT(result.has("chars[1].P3.l") == false);
         CPPUNIT_ASSERT(result.has("chars[1].P3.m") == true);
+        CPPUNIT_ASSERT(result.has("table") == false);
 
 
         result.clear();
@@ -595,6 +598,7 @@ void HashFilter_Test::testFilterByTag() {
         CPPUNIT_ASSERT(result.has("chars[1].P3.k") == false);
         CPPUNIT_ASSERT(result.has("chars[1].P3.l") == false);
         CPPUNIT_ASSERT(result.has("chars[1].P3.m") == false);
+        CPPUNIT_ASSERT(result.has("table") == false);
 
 
     } catch (karabo::util::Exception e) {
