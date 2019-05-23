@@ -558,7 +558,7 @@ namespace karabo {
             // A vector of hashes may be a table element - if it has a RowSchema attribute it is assumed to
             // be a table element.
             if (workNode.hasAttribute(KARABO_SCHEMA_ROW_SCHEMA)) {
-                const auto& rowSchema = masterNode.getAttribute<karabo::util::Schema>(KARABO_SCHEMA_ROW_SCHEMA);
+                const auto& rowSchema = workNode.getAttribute<karabo::util::Schema>(KARABO_SCHEMA_ROW_SCHEMA);
                 std::vector<karabo::util::Hash>& table = workNode.getValue<std::vector < karabo::util::Hash >> ();
                 if (table.size() > 0) {
                     Validator rowValidator(tableValidationRules);
