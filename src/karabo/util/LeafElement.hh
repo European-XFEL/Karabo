@@ -17,6 +17,7 @@
 #include "State.hh"
 #include "AlarmConditions.hh"
 
+#include <karabo/log/Logger.hh>
 
 namespace karabo {
     namespace util {
@@ -189,12 +190,16 @@ namespace karabo {
              * @return reference to the Element (to allow method's chaining)
              */
             virtual ReadOnlySpecific<Derived, ValueType>& readOnly() {
+                if (this->m_node->hasAttribute(KARABO_SCHEMA_ASSIGNMENT)
+                    && this->m_node->template getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT) == Schema::OPTIONAL_PARAM) {
+                    KARABO_LOG_FRAMEWORK_WARN_C("karabo::util::LeafElement") << "readOnly is not compatible with assignmentOptional.\n"
+                            << "The sequence assignmentOptional().defaultValue().readOnly() for defining schema entries may be turned into an exception in the future.\n"
+                            << "Please use readOnly().initialValue() instead.";
+                }
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
                 // Set the assignment and defaults here, as the API would look strange to assign something to a read-only
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ASSIGNMENT, Schema::OPTIONAL_PARAM);
-                if (!this->m_node->hasAttribute(KARABO_SCHEMA_DEFAULT_VALUE)) {
-                    this->m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, ValueType());
-                }
+                this->m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, ValueType());
                 return m_readOnlySpecific;
             }
             
