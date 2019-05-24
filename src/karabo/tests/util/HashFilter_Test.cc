@@ -649,7 +649,7 @@ void HashFilter_Test::testFilterByAccessMode() {
         CPPUNIT_ASSERT(result.has("chars[1].P3.m") == true);
         CPPUNIT_ASSERT(result.has("number") == false);
         CPPUNIT_ASSERT(result.has("state") == false);
-        CPPUNIT_ASSERT(result.has("table") == false);
+        CPPUNIT_ASSERT(result.has("table") == true);
 
         result.clear();
         HashFilter::byAccessMode(schema, config, result, karabo::util::READ);
