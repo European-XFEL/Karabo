@@ -14,7 +14,8 @@ class SignalSlotable_LongTest : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(SignalSlotable_LongTest);
 
-    CPPUNIT_TEST(testStressReplies);
+    CPPUNIT_TEST(testStressSyncReplies);
+    CPPUNIT_TEST(testStressAsyncReplies);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -25,9 +26,9 @@ public:
     void tearDown();
 
 private:
-    //    void waitDemoOk(const boost::shared_ptr<SignalSlotDemo>& demo, int messageCalls, int trials = 10);
 
-    void testStressReplies();
+    void testStressSyncReplies();
+    void testStressAsyncReplies();
 };
 
 #endif	/* SIGNALSLOTABLE_LONGTEST_HH */
