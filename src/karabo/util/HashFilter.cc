@@ -141,7 +141,10 @@ namespace karabo {
                 //}
 
                 // Check if the path is pointing to the LEAF node ... for example, TableElement
-                if (master.getAttribute<int>(path, KARABO_SCHEMA_NODE_TYPE) == Schema::LEAF) return;
+                if (master.getAttribute<int>(path, KARABO_SCHEMA_NODE_TYPE) == Schema::LEAF) {
+                    processNodeForAccessMode(master, inputNode, result, path, value);
+                    return;
+                }
 
                 // For vector<Hash> the following policy is implemented
                 // The size of the vector is preserved unless all Hashes in the vector are empty
