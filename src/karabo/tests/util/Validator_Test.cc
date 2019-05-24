@@ -43,7 +43,43 @@ void Validator_Test::tearDown() {
 }
 
 
-void Validator_Test::testTableDefault() {
+void Validator_Test::testTableMandatoryColumn() {
+
+    util::Validator validator;
+    util::Hash validated;
+
+    util::Schema mandatoryRowSchema;
+    INT32_ELEMENT(mandatoryRowSchema).key("reqInt")
+            .assignmentMandatory()
+            .commit();
+    INT32_ELEMENT(mandatoryRowSchema).key("int")
+            .assignmentOptional().defaultValue(2)
+            .commit();
+
+    util::Schema mandTblSchema;
+    TABLE_ELEMENT(mandTblSchema).key("mandRowTable")
+            .setColumns(mandatoryRowSchema).assignmentMandatory()
+            .commit();
+
+    // Tests that table schema with mandatory column missing in its default value will throw exception.
+    util::Schema corruptedTblSchema;
+    CPPUNIT_ASSERT_THROW(TABLE_ELEMENT(corruptedTblSchema).key("corruptedTable")
+                         .setColumns(mandatoryRowSchema)
+                         .assignmentOptional().defaultValue({util::Hash("int", 128)})
+                         .commit(),
+                         karabo::util::ParameterException);
+
+    // Test to reject a table with a missing mandatory column.
+    std::pair<bool, std::string> res = validator.validate(mandTblSchema,
+                             util::Hash("mandRowTable", std::vector<util::Hash>(1, util::Hash("int", -2))),
+                             validated);
+    CPPUNIT_ASSERT(!res.first);
+
+    validated.clear();
+}
+
+
+void Validator_Test::testTableOptionalColumn() {
 
     util::Schema rowSchema;
     INT32_ELEMENT(rowSchema).key("int")
@@ -63,7 +99,7 @@ void Validator_Test::testTableDefault() {
     TABLE_ELEMENT(nonEmptySchema).key("nonEmptyTable")
             .setColumns(rowSchema)
             .assignmentOptional().defaultValue({util::Hash("int", 128, "str", "first row")})
-            .commit();
+    .commit();
 
     util::Validator validator;
     util::Hash validated;
@@ -77,7 +113,6 @@ void Validator_Test::testTableDefault() {
     CPPUNIT_ASSERT(validated.get<std::vector<util::Hash> >("table").empty());
 
     validated.clear();
-
 
     // Test to get non-empty default if nothing is provided.
     res = validator.validate(nonEmptySchema, util::Hash(), validated);
@@ -132,7 +167,7 @@ void Validator_Test::testTableDefault() {
 
     validated.clear();
 
-    // Test to refuse a table with a bad row - unknown column name.
+    // Test to reject a table with a bad row - unknown column name.
     res = validator.validate(schema,
                              util::Hash("table", std::vector<util::Hash>(1, util::Hash("unknownKey", 123, "str", "testing"))),
                              validated);
