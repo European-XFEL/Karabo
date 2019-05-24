@@ -104,11 +104,6 @@ void Validator_Test::testTableOptionalColumn() {
     util::Validator validator;
     util::Hash validated;
 
-    std::clog << "\n--------" << std::endl;
-    std::clog << "@Validator_Test::testDefaultTable -> rowSchema =\n"
-            << rowSchema.getParameterHash() << std::endl;
-    std::clog << "--------" << std::endl;
-
     // Test to get default if nothing provided
     std::pair<bool, std::string> res = validator.validate(schema, util::Hash(), validated);
 
