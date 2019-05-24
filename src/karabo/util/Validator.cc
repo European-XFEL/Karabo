@@ -11,6 +11,7 @@
 #include "FromLiteral.hh"
 #include "Epochstamp.hh"
 #include "NDArray.hh"
+#include "TableElement.hh"
 
 using std::string;
 using std::endl;
@@ -18,8 +19,6 @@ using std::vector;
 
 namespace karabo {
     namespace util {
-
-        extern const Validator::ValidationRules tableValidationRules;
 
         Validator::Validator()
             : m_injectDefaults(true)
@@ -557,22 +556,21 @@ namespace karabo {
         void Validator::validateVectorOfHashesLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report) {
             // A vector of hashes may be a table element - if it has a RowSchema attribute it is assumed to
             // be a table element.
-            if (workNode.hasAttribute(KARABO_SCHEMA_ROW_SCHEMA)) {
-                const auto& rowSchema = workNode.getAttribute<karabo::util::Schema>(KARABO_SCHEMA_ROW_SCHEMA);
+            if (masterNode.hasAttribute(KARABO_SCHEMA_ROW_SCHEMA)) {
+                const auto& rowSchema = masterNode.getAttribute<karabo::util::Schema>(KARABO_SCHEMA_ROW_SCHEMA);
                 std::vector<karabo::util::Hash>& table = workNode.getValue<std::vector < karabo::util::Hash >> ();
                 if (table.size() > 0) {
-                    Validator rowValidator(tableValidationRules);
-                    bool noErrorFound = true;
-                    for (decltype(table.size()) i = 0; i < table.size() && noErrorFound; i++) {
+                    Validator rowValidator(util::tableValidationRules);
+                    for (decltype(table.size()) i = 0; i < table.size(); i++) {
                         util::Hash validatedHash;
                         auto valResult = rowValidator.validate(rowSchema, table[i], validatedHash);
                         if (!valResult.first) {
                             report << valResult.second;
-                            noErrorFound = false;
+                            break;
                         } else {
                             // Updates the table row - the table validator may have injected columns, converted
                             // values, ....
-                            table[i] = validatedHash;
+                            table[i] = std::move(validatedHash);
                         }
                     }
                 }
