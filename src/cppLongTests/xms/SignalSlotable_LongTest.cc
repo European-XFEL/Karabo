@@ -78,9 +78,10 @@ void SignalSlotable_LongTest::testStressSyncReplies() {
     CPPUNIT_ASSERT_EQUAL(sentRequests, firstCalledCounter.load());
     CPPUNIT_ASSERT_EQUAL(sentRequests, receivedReplies);
 
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - testStartTime).count();
-    std::clog << "Test duration: " << ms << " ms, i.e. " << numIterations / static_cast<float> (ms)
-            << " request-receive per ms" << std::endl;
+    float sec = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - testStartTime).count();
+    sec /= 1000.f;
+    std::clog << "Test duration: " << sec << " s, i.e. request-receive at " << numIterations / sec << " Hz"
+            << std::endl;
 }
 
 
@@ -123,7 +124,8 @@ void SignalSlotable_LongTest::testStressAsyncReplies() {
     CPPUNIT_ASSERT_EQUAL(0u, future.get());
     CPPUNIT_ASSERT_EQUAL(numIterations, counter);
 
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - testStartTime).count();
-    std::clog << "Test duration: " << ms << " ms, i.e. " << numIterations / static_cast<float> (ms)
-            << " request-receiveAsync per ms" << std::endl;
+    float sec = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - testStartTime).count();
+    sec /= 1000.f;
+    std::clog << "Test duration: " << sec << " s, i.e. request-receiveAsync at " << numIterations / sec << " Hz"
+            << std::endl;
 }
