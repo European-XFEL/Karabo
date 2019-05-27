@@ -452,11 +452,13 @@ namespace karabo {
          */
         template <class T>
         inline std::vector<T> fromStringForSchemaOptions(const std::string& value, const std::string& sep) {
-            const std::vector<std::string> items = karabo::util::fromString<std::string, std::vector>(value, sep);
             std::vector<T> converted;
-            converted.reserve(items.size());
-            BOOST_FOREACH(std::string item, items) {
-                converted.push_back(karabo::util::fromString<T>(item));
+            if (!value.empty()) {
+                const std::vector<std::string> items = karabo::util::fromString<std::string, std::vector>(value, sep);
+                converted.reserve(items.size());
+                for (const std::string& item : items) {
+                    converted.push_back(karabo::util::fromString<T>(item));
+                }
             }
             return converted;
         }
