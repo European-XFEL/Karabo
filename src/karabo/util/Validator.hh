@@ -222,6 +222,8 @@ namespace karabo {
 
             void validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope);
 
+            void validateVectorOfHashesLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report);
+
             void attachTimestampIfNotAlreadyThere(Hash::Node& node);
 
             void assureRollingStatsInitialized(const std::string & scope, const unsigned int & evalInterval);
