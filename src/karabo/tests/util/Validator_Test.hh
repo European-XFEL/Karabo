@@ -14,7 +14,8 @@ class Validator_Test : public CPPUNIT_NS::TestFixture {
 
 
     CPPUNIT_TEST_SUITE(Validator_Test);
-    CPPUNIT_TEST(testTableDefault);
+    CPPUNIT_TEST(testTableOptionalColumn);
+    CPPUNIT_TEST(testTableMandatoryColumn);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -24,7 +25,8 @@ public:
     void tearDown();
 
 private:
-    void testTableDefault();
+    void testTableOptionalColumn();
+    void testTableMandatoryColumn();
 };
 
 #endif	/* VALIDATOR_TEST_HH */
