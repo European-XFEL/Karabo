@@ -11,6 +11,7 @@
 #include "FromLiteral.hh"
 #include "Epochstamp.hh"
 #include "NDArray.hh"
+#include "TableElement.hh"
 
 using std::string;
 using std::endl;
@@ -18,7 +19,6 @@ using std::vector;
 
 namespace karabo {
     namespace util {
-
 
         Validator::Validator()
             : m_injectDefaults(true)
@@ -405,8 +405,6 @@ namespace karabo {
         };
 
         void Validator::validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope) {
-
-
             if (m_injectTimestamps) attachTimestampIfNotAlreadyThere(workNode);
 
             Types::ReferenceType referenceType = Types::from<FromLiteral>(masterNode.getAttribute<string>(KARABO_SCHEMA_VALUE_TYPE));
@@ -547,6 +545,33 @@ namespace karabo {
                     int maxSize = masterNode.getAttribute<unsigned int>(KARABO_SCHEMA_MAX_SIZE);
                     if (currentSize > maxSize) {
                         report << "Number of elements (" << currentSize << ") for (vector-)parameter \"" << scope << "\" is greater than upper bound (" << maxSize << ")" << endl;
+                    }
+                }
+            } else if (referenceCategory == Types::VECTOR_HASH) {
+                validateVectorOfHashesLeaf(masterNode, workNode, report);
+            }
+        }
+
+
+        void Validator::validateVectorOfHashesLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report) {
+            // A vector of hashes may be a table element - if it has a RowSchema attribute it is assumed to
+            // be a table element.
+            if (masterNode.hasAttribute(KARABO_SCHEMA_ROW_SCHEMA)) {
+                const auto& rowSchema = masterNode.getAttribute<karabo::util::Schema>(KARABO_SCHEMA_ROW_SCHEMA);
+                std::vector<karabo::util::Hash>& table = workNode.getValue<std::vector < karabo::util::Hash >> ();
+                if (table.size() > 0) {
+                    Validator rowValidator(util::tableValidationRules);
+                    for (decltype(table.size()) i = 0; i < table.size(); i++) {
+                        util::Hash validatedHash;
+                        auto valResult = rowValidator.validate(rowSchema, table[i], validatedHash);
+                        if (!valResult.first) {
+                            report << valResult.second;
+                            break;
+                        } else {
+                            // Updates the table row - the table validator may have injected columns, converted
+                            // values, ....
+                            table[i] = std::move(validatedHash);
+                        }
                     }
                 }
             }
