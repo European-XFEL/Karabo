@@ -534,6 +534,11 @@ namespace karabo {
             // Insert reply and notify only if it is expected
             if (!bmc) return;
             {
+                // Caveat: Need to lock two mutices - and in that order:
+                //         - The first one protects changing the condition that bmc->m_cond is waiting for.
+                //         - The second protects adding reply to m_receivedReplies.
+                //         - Order of locks must be as in SignalSlotable::timedWaitAndPopReceivedReply(...)
+                boost::mutex::scoped_lock lock0(bmc->m_mutex);
                 boost::mutex::scoped_lock lock(m_receivedRepliesMutex);
                 m_receivedReplies[replyId] = std::make_pair(header, body);
             }
