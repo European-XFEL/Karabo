@@ -44,7 +44,8 @@ namespace karabo {
 
             /**
              * The <b>key</b> method serves for setting up a unique name for the element.
-             * @param name Unique name for the key
+             * @param name Unique name for the key - can be a nested path if all but its last sub-key are
+             *              added as node elements before. Must not be an empty string.
              * @return reference to the Element (to allow method's chaining)
              *
              * <b>Example:</b>
@@ -56,6 +57,12 @@ namespace karabo {
              * @endcode
              */
             virtual Derived& key(const std::string& name) {
+                // Check whether full path (that in fact has to be specified here!) or its last
+                // key is empty - empty non-last keys are caught elsewhere.
+                // Empty keys cannot work with instance proxies in Python.
+                if (name.empty() || name.back() == '.') {
+                    throw KARABO_PARAMETER_EXCEPTION("Empty key not allowed.");
+                }
                 m_node->m_key = name;
                 return *(static_cast<Derived*> (this));
             }

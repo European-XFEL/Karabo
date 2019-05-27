@@ -38,8 +38,7 @@ namespace karabo {
              * @return reference to the SimpleElement
              */
             SimpleElement& options(const std::string& opts, const std::string& sep = " ,;") {
-                this->m_node->setAttribute(KARABO_SCHEMA_OPTIONS, karabo::util::fromStringForSchemaOptions<ValueType>(opts, sep));
-                return *this;
+                return options(karabo::util::fromStringForSchemaOptions<ValueType>(opts, sep));
             }
 
             /**
@@ -49,6 +48,9 @@ namespace karabo {
              * @return reference to the SimpleElement
              */
             SimpleElement& options(const std::vector<ValueType>& opts) {
+                if (opts.empty()) {
+                    throw KARABO_PARAMETER_EXCEPTION("Empty list of options rejected for " + this->m_node->getKey());
+                }
                 this->m_node->setAttribute(KARABO_SCHEMA_OPTIONS, opts);
                 return *this;
             }
