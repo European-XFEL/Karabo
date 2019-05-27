@@ -5,6 +5,8 @@
  * Created on September 28, 2012, 1:14 PM
  */
 
+#include <cppunit/TestAssert.h>
+
 #include "Schema_Test.hh"
 
 using namespace std;
@@ -279,6 +281,16 @@ void Schema_Test::testGetOptions() {
     CPPUNIT_ASSERT(m_schema.getOptions<float>("exampleKey4")[1] == -2.22f);
     CPPUNIT_ASSERT(m_schema.getOptions<float>("exampleKey4")[2] == 5.55f);
     CPPUNIT_ASSERT(m_schema.getOptions<unsigned char>("exampleKey8")[2] == 3);
+
+    // Hijack test to check exception for invalid (empty) options.
+    Schema schema;
+    CPPUNIT_ASSERT_THROW(DOUBLE_ELEMENT(schema).key("some")
+                         .options(std::vector<double>()),
+                         karabo::util::ParameterException);
+
+    CPPUNIT_ASSERT_THROW(INT32_ELEMENT(schema).key("someOther")
+                         .options(""),
+                         karabo::util::ParameterException);
 }
 
 
@@ -808,6 +820,16 @@ void Schema_Test::testInvalidNodes() {
                          .commit(),
                          karabo::util::LogicException);
 
+    // Empty strings are forbidden as keys:
+    CPPUNIT_ASSERT_THROW(INT32_ELEMENT(schema)
+                         .key("")
+                         .description("Empty key is forbidden"),
+                         karabo::util::ParameterException);
+
+    CPPUNIT_ASSERT_THROW(FLOAT_ELEMENT(schema)
+                         .key("shapeList.BizarreForm.")
+                         .description("Also an empty key at the end of a longer path is invalid"),
+                         karabo::util::ParameterException);
 
 }
 
