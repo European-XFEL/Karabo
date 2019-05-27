@@ -1,0 +1,7 @@
+**************************
+What's New in Karabo 2.5.0
+**************************
+
+The **most relevant improvements**, fixes and changes are:
+
+- C++/bound: Elements in schema must not have an empty key or an empty list of options.
