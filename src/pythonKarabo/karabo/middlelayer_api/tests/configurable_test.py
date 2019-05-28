@@ -903,6 +903,16 @@ class Tests(TestCase):
         a = A()
         self.assertEqual(a.node.daqDataType, DaqDataType.TRAIN)
 
+    def test_allowedActions(self):
+        class B(Configurable):
+            allowedActions = ["ROI", "CROP"]
+
+        class A(StoreChanges):
+            node = Node(B)
+
+        a = A()
+        self.assertEqual(a.node.allowedActions, ["ROI", "CROP"])
+
     def test_daqPolicy(self):
         class MyNode(Configurable):
             string = String()

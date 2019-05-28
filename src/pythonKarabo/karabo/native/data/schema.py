@@ -32,6 +32,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
     """
     _subclasses = {}
     daqDataType = None
+    allowedActions = None
     displayType = None
     schema = None
 
@@ -282,6 +283,8 @@ class Node(Descriptor):
         attrs["nodeType"] = NodeType.Node
         if self.cls.daqDataType is not None:
             attrs["daqDataType"] = self.cls.daqDataType.value
+        if self.cls.allowedActions is not None:
+            attrs["allowedActions"] = set(self.cls.allowedActions)
         if self.cls.displayType is not None:
             attrs["displayType"] = self.cls.displayType
         return self.cls.getClassSchema(device, state).hash, attrs
