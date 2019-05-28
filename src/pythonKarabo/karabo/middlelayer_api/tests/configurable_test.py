@@ -905,13 +905,13 @@ class Tests(TestCase):
 
     def test_allowedActions(self):
         class B(Configurable):
-            allowedActions = ["ROI", "CROP"]
+            actions = ["ROI", "CROP"]
 
         class A(StoreChanges):
             node = Node(B)
 
         a = A()
-        self.assertEqual(a.node.allowedActions, ["ROI", "CROP"])
+        self.assertEqual(a.node.actions, ["ROI", "CROP"])
 
     def test_daqPolicy(self):
         class MyNode(Configurable):
