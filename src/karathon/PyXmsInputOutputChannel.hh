@@ -121,6 +121,13 @@ namespace karathon {
             }
             return self.setEncoding(encType);
         }
+
+        static karabo::xms::ImageDataElement& setAllowedActions(karabo::xms::ImageDataElement& self,
+                                                                const bp::object& actions) {
+            // Accept any Python iterable that provides strings
+            return self.setAllowedActions(karathon::Wrapper::fromPyIterableToCppContainer<std::string>(actions));
+
+        }
     };
 
     class ChannelMetaData : public karabo::xms::Memory::MetaData {

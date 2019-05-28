@@ -519,6 +519,15 @@ void exportPyXmsInputOutputChannel() {
                 .def("setGeometry", &karabo::xms::ImageDataElement::setGeometry
                      , (bp::arg("geometry"))
                      , bp::return_internal_reference<>())
+
+                .def("setAllowedActions", &karathon::ImageDataElementWrap::setAllowedActions
+                     , (bp::arg("actions"))
+                     , bp::return_internal_reference<> ()
+                     , "Specify one or more actions that are allowed on this node.\n"
+                     "If a Karabo device specifies allowed actions for a node,\n"
+                     "that means that it offers a specific slot interface to operate\n"
+                     "on this node. Which allowed actions require which interface\n"
+                     "is defined elsewhere.")
                 ;
     }
 
