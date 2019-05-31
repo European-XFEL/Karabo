@@ -11,6 +11,8 @@ class States_TestCase(unittest.TestCase):
         self.assertIs(signifier.returnMostSignificant(s), State.STOPPED)
         s.append(State.RUNNING)
         self.assertIs(signifier.returnMostSignificant(s), State.RUNNING)
+        s.append(State.PAUSED)
+        self.assertIs(signifier.returnMostSignificant(s), State.PAUSED)
         s.append(State.HEATING)
         self.assertIs(signifier.returnMostSignificant(s), State.HEATING)
         s.append(State.INCREASING)
@@ -22,7 +24,7 @@ class States_TestCase(unittest.TestCase):
         s.append(State.MOVING)
         self.assertIs(signifier.returnMostSignificant(s), State.DECREASING)
         s.append(State.CHANGING)
-        self.assertIs(signifier.returnMostSignificant(s), State.CHANGING)
+        self.assertIs(signifier.returnMostSignificant(s), State.DECREASING)
         s.append(State.INTERLOCKED)
         self.assertIs(signifier.returnMostSignificant(s), State.INTERLOCKED)
         s.append(State.ERROR)
@@ -39,6 +41,8 @@ class States_TestCase(unittest.TestCase):
         self.assertIs(signifier.returnMostSignificant(s), State.ON)
         s.append(State.RUNNING)
         self.assertIs(signifier.returnMostSignificant(s), State.RUNNING)
+        s.append(State.PAUSED)
+        self.assertIs(signifier.returnMostSignificant(s), State.PAUSED)
         s.append(State.HEATING)
         self.assertIs(signifier.returnMostSignificant(s), State.HEATING)
         s.append(State.INCREASING)
@@ -50,7 +54,7 @@ class States_TestCase(unittest.TestCase):
         s.append(State.MOVING)
         self.assertIs(signifier.returnMostSignificant(s), State.DECREASING)
         s.append(State.CHANGING)
-        self.assertIs(signifier.returnMostSignificant(s), State.CHANGING)
+        self.assertIs(signifier.returnMostSignificant(s), State.DECREASING)
         s.append(State.INTERLOCKED)
         self.assertIs(signifier.returnMostSignificant(s), State.INTERLOCKED)
         s.append(State.ERROR)
@@ -67,6 +71,8 @@ class States_TestCase(unittest.TestCase):
         self.assertIs(signifier.returnMostSignificant(s), State.STOPPED)
         s.append(State.RUNNING)
         self.assertIs(signifier.returnMostSignificant(s), State.RUNNING)
+        s.append(State.PAUSED)
+        self.assertIs(signifier.returnMostSignificant(s), State.PAUSED)
         s.append(State.COOLING)  # decrease
         self.assertIs(signifier.returnMostSignificant(s), State.COOLING)
         s.append(State.DECREASING)  # decrease parent
@@ -95,6 +101,8 @@ class States_TestCase(unittest.TestCase):
         self.assertIs(signifier.returnMostSignificant(s), State.ON)
         s.append(State.RUNNING)
         self.assertIs(signifier.returnMostSignificant(s), State.RUNNING)
+        s.append(State.PAUSED)
+        self.assertIs(signifier.returnMostSignificant(s), State.PAUSED)
         s.append(State.COOLING)  # decrease
         self.assertIs(signifier.returnMostSignificant(s), State.COOLING)
         s.append(State.DECREASING)  # decrease parent
@@ -138,10 +146,12 @@ class States_TestCase(unittest.TestCase):
 
     def test_states_signifier_non_def_list(self):
         trumpList = [State.INTERLOCKED, State.UNKNOWN, State.KNOWN]
-        s = [State.DISABLED, State.CHANGING, State.ON, State.DECREASING,
-             State.RUNNING, State.UNKNOWN, State.INTERLOCKED]
+        s = [State.DISABLED, State.CHANGING, State.ON,
+             State.RUNNING, State.PAUSED, State.UNKNOWN, State.INTERLOCKED]
         signifier = StateSignifier(trumplist=trumpList)
         self.assertIs(signifier.returnMostSignificant(s), State.CHANGING)
+        s.append(State.DECREASING)
+        self.assertIs(signifier.returnMostSignificant(s), State.DECREASING)
 
     def test_states_round_trip(self):
         s = State.ROTATING_CLK.name
@@ -154,6 +164,7 @@ class States_TestCase(unittest.TestCase):
         # direct parentage
         self.assertTrue(State.RUNNING.isDerivedFrom(State.NORMAL))
         self.assertTrue(State.CHANGING.isDerivedFrom(State.NORMAL))
+        self.assertTrue(State.PAUSED.isDerivedFrom(State.DISABLED))
         self.assertTrue(State.INCREASING.isDerivedFrom(State.CHANGING))
         self.assertTrue(State.DECREASING.isDerivedFrom(State.CHANGING))
         # direct parentage the other way round
@@ -180,6 +191,7 @@ class States_TestCase(unittest.TestCase):
         self.assertNotEqual(State.OFF, State.OPENED)
         self.assertIs(State.INIT.parent, None)
         self.assertIs(State.STOPPED.parent, State.PASSIVE)
+        self.assertIs(State.PAUSED.parent, State.DISABLED)
 
     def test_circlefree(self):
         for s in State:
