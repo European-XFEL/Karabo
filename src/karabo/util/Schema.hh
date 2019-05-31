@@ -167,7 +167,7 @@ namespace karabo {
 #define KARABO_SCHEMA_DISPLAY_TYPE_INPUT_CHANNEL "InputChannel"
 #define KARABO_SCHEMA_DISPLAY_TYPE_STATE "State"
 
-#define KARABO_SCHEMA_ALLOWED_ACTIONS "actions"
+#define KARABO_SCHEMA_ALLOWED_ACTIONS "allowedActions"
 
             // Grant friendship to the GenericElement
             // GenericElement is the base class for all schema build-up helper classes
