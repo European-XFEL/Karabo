@@ -1018,8 +1018,8 @@ class Schema_TestCase(unittest.TestCase):
         self.assertFalse(s.hasAllowedActions("node.int"))
         actions = s.getAllowedActions("node")
         self.assertEqual(len(actions), 2)
-        self.assertEqual(actions[0], "action1");
-        self.assertEqual(actions[1], "action2");
+        self.assertEqual(actions[0], "action1")
+        self.assertEqual(actions[1], "action2")
 
         self.assertTrue(s.hasAllowedActions("node.arr"))
         actions = s.getAllowedActions("node.arr")
@@ -1033,7 +1033,7 @@ class Schema_TestCase(unittest.TestCase):
         # Check setAllowedActions from Schema
         # and validate that also keys of a dict are taken:
         s.setAllowedActions("node",
-                            {"actA" : 1, "actB" : 2, "actC": "who care"})
+                            {"actA": 1, "actB": 2, "actC": "who care"})
         actions = s.getAllowedActions("node")
         self.assertEqual(len(actions), 3)
         self.assertEqual(actions[0], "actA")
