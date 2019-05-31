@@ -166,7 +166,7 @@ class State(StateBase, metaclass=ParentEnumMeta):
     ENGAGING = INCREASING
     SWITCHING_ON = INCREASING
 
-    PAUSED = DISABLED # noqa
+    PAUSED = DISABLED  # noqa
 
     RUNNING = NORMAL
 
