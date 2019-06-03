@@ -190,6 +190,11 @@ struct NodeElementWrap {
         return self;
     }
 
+
+    static NodeElement& setAllowedActions(NodeElement& self, const bp::object& actions) {
+        // Accept any Python iterable that provides strings
+        return self.setAllowedActions(karathon::Wrapper::fromPyIterableToCppContainer<std::string>(actions));
+    }
 };
 
 
@@ -1506,6 +1511,27 @@ namespace schemawrap {
     }
 
 
+    bp::object getAllowedActions(const Schema& self, const std::string& path) {
+        const std::vector<string>& actions = self.getAllowedActions(path);
+        return karathon::Wrapper::fromStdVectorToPyList(actions);
+    }
+
+
+    void setAllowedActions(Schema& self, const std::string& path, const bp::object& actions) {
+        // Accept any Python iterable that provides strings
+        self.setAllowedActions(path,
+                               karathon::Wrapper::fromPyIterableToCppContainer<std::string>(actions));
+    }
+}
+
+
+namespace ndarrayelementwrap {
+
+
+    NDArrayElement& setAllowedActions(NDArrayElement& self, const bp::object& actions) {
+        // Accept any Python iterable that provides strings
+        return self.setAllowedActions(karathon::Wrapper::fromPyIterableToCppContainer<std::string>(actions));
+    }
 }
 
 
@@ -1978,6 +2004,15 @@ void exportPyUtilSchema() {
         s.def("isCustomNode", &Schema::isCustomNode, (bp::arg("path")));
         s.def("getCustomNodeClass", &Schema::getCustomNodeClass, (bp::arg("path")),
               bp::return_value_policy< bp::copy_const_reference >());
+        s.def("hasAllowedActions", &Schema::hasAllowedActions, (bp::arg("path")),
+              "Check if element given by argument has allowed actions.");
+        s.def("getAllowedActions", &schemawrap::getAllowedActions, (bp::arg("path")),
+              "Return allowed actions of element given by argument.");
+        s.def("setAllowedActions", &schemawrap::setAllowedActions, (bp::arg("path"), bp::arg("actions")),
+              "Specify one or more actions that are allowed on the element.\n"
+              "If a Karabo device specifies allowed actions, that means that it offers\n"
+              "a specific slot interface to operate on this element.\n"
+              "Which allowed actions require which interface is defined elsewhere.");
     }// end Schema
 
     /////////////////////////////////////////////////////////////
@@ -2201,6 +2236,13 @@ void exportPyUtilSchema() {
                      , bp::return_internal_reference<> ())
                 .def("reconfigurable", &NDArrayElement::reconfigurable
                      , bp::return_internal_reference<> ())
+                .def("setAllowedActions", &ndarrayelementwrap::setAllowedActions, bp::arg("actions"),
+                     "Specify one or more actions that are allowed on this node.\n"
+                     "If a Karabo device specifies allowed actions for a node,\n"
+                     "that means that it offers a specific slot interface to operate\n"
+                     "on this node. Which allowed actions require which interface\n"
+                     "is defined elsewhere"
+                     , bp::return_internal_reference<> ())
                 .def("skipValidation", &NDArrayElement::skipValidation
                      , bp::return_internal_reference<> ())
                 .def("commit", &NDArrayElement::commit
@@ -2234,6 +2276,15 @@ void exportPyUtilSchema() {
                 .def("setSpecialDisplayType"
                      , &NodeElementWrap::setSpecialDisplayType, (bp::arg("displayType"))
                      , bp::return_internal_reference<> ())
+                .def("setAllowedActions"
+                     , &NodeElementWrap::setAllowedActions, (bp::arg("actions"))
+                     , bp::return_internal_reference<> ()
+                     , "Specify one or more actions that are allowed on this node.\n"
+                     "If a Karabo device specifies allowed actions for a node,\n"
+                     "that means that it offers a specific slot interface to operate\n"
+                     "on this node. Which allowed actions require which interface\n"
+                     "is defined elsewhere."
+                     )
                 ;
     }
 
@@ -2340,7 +2391,7 @@ void exportPyUtilSchema() {
                      , (TableElement & (TableElement::*)(int const &))(&TableElement::minSize)
                      , bp::return_internal_reference<> ())
                 .def("setNodeSchema"
-                     , &TableElement::setNodeSchema, (bp::arg("nodeSchema"))
+                     , &TableElement::setColumns, (bp::arg("nodeSchema"))
                      , bp::return_internal_reference<> ()
                      , "DEPRECATED - use 'setColumns' instead")
                 .def("setColumns"
