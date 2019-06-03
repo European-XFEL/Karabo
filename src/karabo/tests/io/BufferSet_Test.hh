@@ -14,7 +14,7 @@ class BufferSet_Test : public CPPUNIT_NS::TestFixture {
 
 
     CPPUNIT_TEST_SUITE(BufferSet_Test);
-    CPPUNIT_TEST(testEmplaceAppend);
+    //CPPUNIT_TEST(testEmplaceAppend);
     CPPUNIT_TEST_SUITE_END();
 
 public:

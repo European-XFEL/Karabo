@@ -222,8 +222,8 @@ void SchemaSerializer_Test::testBinarySerializer() {
 
     p->save(inputSchema, archive2);
 
-    //std::clog << "\nOriginal:\n" << testSchema << std::endl;
-    //std::clog << "\nSerialized:\n" << inputSchema << std::endl;
+    std::clog << "\nOriginal:\n" << testSchema << std::endl;
+    std::clog << "\nSerialized:\n" << inputSchema << std::endl;
 
     CPPUNIT_ASSERT(archive2.size() == archive1.size());
 
@@ -234,11 +234,11 @@ void SchemaSerializer_Test::testBinarySerializer() {
     std::string archive4;
     p2->save(testSchema, archive4);
 
-    //std::clog << "Xml:\n" << archive4 << std::endl;
+    std::clog << "Xml:\n" << archive4 << std::endl;
 
-    //    std::clog << "Binary: " << archive2.size()   << " bytes" << std::endl;
-    //    std::clog << "Xml   : " << archive4.length() << " bytes" << std::endl;
-    //    std::clog << "Xsd   : " << archive3.length() << " bytes" << std::endl;
+    std::clog << "Binary: " << archive2.size()   << " bytes" << std::endl;
+    std::clog << "Xml   : " << archive4.length() << " bytes" << std::endl;
+    //std::clog << "Xsd   : " << archive3.length() << " bytes" << std::endl;
 }
 
 

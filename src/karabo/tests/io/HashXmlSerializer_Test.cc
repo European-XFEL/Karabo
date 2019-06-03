@@ -9,12 +9,17 @@
 #include "HashXmlSerializer_Test.hh"
 #include "karabo/io/BinarySerializer.hh"
 
+#include <iostream>
+
 CPPUNIT_TEST_SUITE_REGISTRATION(HashXmlSerializer_Test);
 
 using namespace karabo::io;
 using namespace karabo::util;
 using std::vector;
 using std::string;
+
+using std::cout;
+using std::endl;
 
 HashXmlSerializer_Test::HashXmlSerializer_Test() {
 }
@@ -71,10 +76,10 @@ void HashXmlSerializer_Test::testSerialization() {
         Hash schemaIncluded("a1", 3.2, "a2", s);
         string garbage;
         p->save(schemaIncluded, garbage);
-        //cout << "GARBAGE: " << garbage << endl;
+        cout << "@HashXmlSerializer_Test::testSerialization -> GARBAGE: \n" << garbage << endl;
         Hash fresh;
         p->load(fresh, garbage);
-        //cout << "HASH: " << fresh.get<Schema>("a2") << endl;
+        cout << "HashXmlSerializer_Test::testSerialization -> HASH: \n" << fresh.get<Schema>("a2") << endl;
 
     }
 
