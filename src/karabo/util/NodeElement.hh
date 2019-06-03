@@ -127,6 +127,20 @@ namespace karabo {
                 this->m_node->setAttribute<std::string>(KARABO_SCHEMA_DISPLAY_TYPE, displaytype);
                 return *this;
             }
+
+            /**
+             * Specify one or more actions that are allowed on this node.
+             *
+             * If a Karabo device specifies allowed actions for a node, that means that it offers a specific slot
+             * interface to operate on this node.
+             * Which allowed actions require which interface will be defined elsewhere.
+             * @return reference to the Element (to allow method's chaining)
+             */
+            NodeElement& setAllowedActions(const std::vector<std::string>& actions) {
+                this->m_node->setAttribute(KARABO_SCHEMA_ALLOWED_ACTIONS, actions);
+                return *this;
+            }
+
         protected:
 
             void beforeAddition() {
