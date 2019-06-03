@@ -15,6 +15,7 @@
 class Hdf5_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(Hdf5_Test);
+    /*
     CPPUNIT_TEST(testPureHdf5);
     CPPUNIT_TEST(testKaraboHdf5);
     CPPUNIT_TEST(testManyDatasets);
@@ -23,6 +24,7 @@ class Hdf5_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testKaraboNDArray);
     CPPUNIT_TEST(testKaraboPtr);
     CPPUNIT_TEST(testKaraboImageData);
+     */
     CPPUNIT_TEST_SUITE_END();
 
 public:
