@@ -19,6 +19,7 @@ class H5File_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(H5File_Test);
 
+    /*
     CPPUNIT_TEST(testBuffer);
 
     CPPUNIT_TEST(testWrite);
@@ -34,6 +35,7 @@ class H5File_Test : public CPPUNIT_NS::TestFixture {
     //        CPPUNIT_TEST(testVLWrite);
     CPPUNIT_TEST(testTrainFormat);
     CPPUNIT_TEST(testClose);
+    */
     //CPPUNIT_TEST(testArray);
 
     //    CPPUNIT_TEST(testExternalHdf5);

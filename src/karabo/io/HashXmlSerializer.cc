@@ -207,7 +207,7 @@ namespace karabo {
                     if (attr.second != Types::UNKNOWN && m_readDataTypes) {
                         switch (attr.second) {
                             case Types::SCHEMA:
-                            case Types::VECTOR_HASH:
+                                //case Types::VECTOR_HASH:
                                 // FIXME: Schema and vector_hash attributes
                                 // (e.g. "rowSchema" and "defaultValue" of a TABLE_ELEMENT) are currently
                                 // not correctly serialised. To avoid exceptions, we interpret them as
