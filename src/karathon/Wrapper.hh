@@ -15,6 +15,7 @@
 #include <string>
 
 #include <boost/python.hpp>
+#include <boost/python/stl_iterator.hpp>
 #include <boost/any.hpp>
 
 #include <karabo/util/Exception.hh>
@@ -400,6 +401,25 @@ namespace karathon {
                 v[i] = bp::extract<T > (tpl[i]);
             }
             return v;
+        }
+
+        /**
+         * Convert a Python iterable containing objects convertible to T to C++ container CONT<T>.
+         * The container type must be constructable from an iterator range.
+         *
+         * Example:
+         * const bp::object& obj = ...; // list, tuple, dictionary [where you get the keys],...
+         * const std::set<int> setOfInt = fromPyIterableToContainer<int, std::set>(o);
+         *
+         * @param obj the Python object
+         * @return C++ container of type CONT<T>
+         */
+        template<typename T,
+        template <typename ELEM, typename = std::allocator<ELEM> > class CONT = std::vector>
+        static CONT<T> fromPyIterableToCppContainer(const bp::object& obj) {
+
+            bp::stl_input_iterator<T> begin(obj), end;
+            return CONT<T>(begin, end);
         }
 
         static bp::object toObject(const boost::any& operand, bool numpyFlag = false);

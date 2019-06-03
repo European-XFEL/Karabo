@@ -1280,8 +1280,32 @@ namespace karabo {
         const std::string& Schema::getCustomNodeClass(const std::string& path) const {
             return m_hash.getAttribute<std::string>(path, KARABO_SCHEMA_CLASS_ID);
         }
-        
-        
+
+
+        //**********************************************
+        //            allowed actions                  *
+        //**********************************************
+
+
+        void Schema::setAllowedActions(const std::string& path, const std::vector<std::string>& actions) {
+            if (!isNode(path)) {
+                throw KARABO_PARAMETER_EXCEPTION("Allowed actions so far only allowed for node elements. Element at "
+                                                 + path + " is not a node element!");
+            }
+            m_hash.setAttribute(path, KARABO_SCHEMA_ALLOWED_ACTIONS, actions);
+        }
+
+
+        bool Schema::hasAllowedActions(const std::string& path) const {
+            return m_hash.hasAttribute(path, KARABO_SCHEMA_ALLOWED_ACTIONS);
+        }
+
+
+        const std::vector<std::string>& Schema::getAllowedActions(const std::string& path) const {
+            return m_hash.getAttribute<std::vector<std::string> >(path, KARABO_SCHEMA_ALLOWED_ACTIONS);
+        }
+
+
         //**********************************************
         //               DAQPolicy                     *
         //**********************************************
