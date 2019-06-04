@@ -37,17 +37,6 @@ namespace karabo {
 
                 //default value of requiredAccessLevel for Slot element: USER
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, karabo::util::Schema::USER);
-
-                m_child.set("connectedSignals", 0);
-                m_child.setAttribute("connectedSignals", KARABO_SCHEMA_DISPLAYED_NAME, "Connected Signals");
-                m_child.setAttribute("connectedSignals", KARABO_SCHEMA_DESCRIPTION, "Signals already connected to this slot");
-                m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, karabo::util::Schema::ADMIN);
-                m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_ASSIGNMENT, karabo::util::Schema::OPTIONAL_PARAM);
-                m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_NODE_TYPE, karabo::util::Schema::LEAF);
-                m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_LEAF_TYPE, karabo::util::Schema::COMMAND);
-                m_child.setAttribute("connectedSignals", KARABO_SCHEMA_VALUE_TYPE, karabo::util::ToLiteral::to<karabo::util::Types::VECTOR_STRING>());
-
-                connectionsAreReconfigurable();
             }
 
             /**
@@ -92,26 +81,6 @@ namespace karabo {
             Derived& allowedStates(const karabo::util::State& s1, const karabo::util::State& s2, const karabo::util::State& s3, const karabo::util::State& s4, const karabo::util::State& s5, const karabo::util::State& s6) {
                 const karabo::util::State arr[] = {s1, s2, s3, s4, s5, s6};
                 return allowedStates(std::vector<karabo::util::State>(arr, arr+6));
-            }
-
-            Derived& connectionAssignmentIsMandatory() {
-                m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_ASSIGNMENT, karabo::util::Schema::MANDATORY_PARAM);
-                return *(static_cast<Derived*> (this));
-            }
-
-            Derived& connectionAssignmentIsOptional() {
-                m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_ASSIGNMENT, karabo::util::Schema::OPTIONAL_PARAM);
-                return *(static_cast<Derived*> (this));
-            }
-
-            Derived& connectionsAreNotReconfigurable() {
-                m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_ACCESS_MODE, karabo::util::INIT);
-                return *(static_cast<Derived*> (this));
-            }
-
-            Derived& connectionsAreReconfigurable() {
-                m_child.setAttribute<int>("connectedSignals", KARABO_SCHEMA_ACCESS_MODE, karabo::util::WRITE);
-                return *(static_cast<Derived*> (this));
             }
 
             virtual void beforeAddition() = 0;

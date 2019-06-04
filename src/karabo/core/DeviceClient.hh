@@ -1069,10 +1069,7 @@ namespace karabo {
 
             void castAndCall(const std::string& instanceId, const karabo::util::Hash& registered, const karabo::util::Hash& current, std::string path = "") const;
 
-            void extractCommandsForCurrentState(const karabo::util::Schema& schema,
-                                                const std::string& parentKey,
-                                                const karabo::util::State currentState,
-                                                std::vector<std::string>& commands);
+            void extractCommands(const karabo::util::Schema& schema, const std::string& parentKey, std::vector<std::string>& commands);
 
             std::vector<std::string> filterProperties(const karabo::util::Schema& schema, const int accessLevel);
 
