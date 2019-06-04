@@ -21,6 +21,8 @@ from karabo.common.scenemodel.api import (
 )
 from .run_configuration_group import RunControlDataSource
 
+OUTPUT_CHANNEL_SEPARATOR = ':'
+
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO('_RunConfiguratorGroup', '2.2')
@@ -90,10 +92,34 @@ class _RunConfiguratorGroup(object):
 
 @KARABO_CLASSINFO('RunConfigurator', '2.2')
 class RunConfigurator(PythonDevice):
+    """RunConfigurator karabo device
 
+    The RunConfigurator device aggregates all RunConfigurationGroups into a
+    single table and -on demand- sends this table to the DAQ in a compatible
+    format. It does not check whether the sources exist or not!
+
+    The operation of the device:
+    The RunConfigurator device constantly monitors the system topology.
+    Whenever a RunConfigurationGroup device comes up, it ads it to the
+    available configuration groups. You can select which groups you want to
+    record and push your selection to the DAQ. This will convert the selection
+    to the Hash format required by the DAQ and send it to reconfigure the
+    RunController.
+    """
     def __init__(self, configuration):
         super(RunConfigurator, self).__init__(configuration)
+
+        # Declare member variables
+        self._runConfigGroups = OrderedDict()
+        self._groupToDevice = {}
+
+        # Define the signals & slots
+        self._ss.registerSystemSignal('signalRunConfiguration', Hash, str)
+        self.KARABO_SLOT(self.buildConfigurationInUse)
+        self.KARABO_SLOT(self.requestScene)
+
         self.registerInitialFunction(self.initialization)
+
 
     @staticmethod
     def expectedParameters(expected):
@@ -180,25 +206,16 @@ class RunConfigurator(PythonDevice):
         )
 
     def initialization(self):
-        # Define the signals & slots
-        self._ss.registerSystemSignal('signalRunConfiguration', Hash, str)
-        self._ss.registerSystemSignal('signalGroupSourceChanged', Hash, str)
-        self.KARABO_SLOT(self.buildConfigurationInUse)
-        self.KARABO_SLOT(self.updateAvailableGroups)
-        self.KARABO_SLOT(self.slotGetSourcesInGroup)
-        self.KARABO_SLOT(self.requestScene)
-
-        # Register instance handlers
+        # Register instance handlers for devices joining/leaving the topology
+        # `_newDeviceHandler` will be called for each new instance joining
+        # `_deviceGoneHandler` will be called for each instance leaving
+        # If the device is a RunConfigurationGroup they add/remove it from the
+        # list of available groups.
         self.remote().registerInstanceNewMonitor(self._newDeviceHandler)
         self.remote().registerInstanceGoneMonitor(self._deviceGoneHandler)
 
         # Switch on the heartbeat tracking
-        # `_newDeviceHandler` will be called for each instance arriving in the
-        # system topology (and `_deviceGoneHandler` for the ones leaving)
         self.remote().enableInstanceTracking()
-
-        self._runConfigGroups = OrderedDict()
-        self._groupToDevice = {}
 
         # Ready to go!
         self.updateState(State.NORMAL)
@@ -224,67 +241,76 @@ class RunConfigurator(PythonDevice):
         if needs_update:
             self._updateDependentProperties()
 
-    # ----------------------------
-    # SLOT methods
+    ###########################################################################
+    #                         Slot methods                                    #
+    ###########################################################################
 
     def buildConfigurationInUse(self):
+        """This is the slot that initiates DAQ reconfiguration
+
+        It follows good WYSIWYG principles and generates the Hash() of active
+        sources from the displayed entries 'configurations' table. Each entry
+        is added by _gatherSourceProperties(...), so that function does the
+        actual formatting. Finally it emits a signal with the prepared Hash.
+        """
         result = Hash()
-        for group in self._runConfigGroups.values():
-            instance_id = group.get('id')
-            self._gatherSourceProperties(group.get('expert'), instance_id,
-                                         True, False, result)
-            self._gatherSourceProperties(group.get('user'), instance_id,
-                                         False, True, result)
+        for group in self.get('configurations'):
+            self._gatherSourceProperties(group, result)
         configuration = Hash('configuration', result)
 
-        self.log.INFO('Current Run Configuration is ...\n{}'
-                      ''.format(configuration))
+        self.log.INFO('Current Run Configuration is ...\n%s' % configuration)
 
         self._ss.emit('signalRunConfiguration',
                       configuration, self.getInstanceId())
 
-    def updateAvailableGroups(self):
-        """Do nothing. This SLOT is deprecated.
+    def _gatherSourceProperties(self, group, result):
+        """This method formats an entry in `configurations` to the Hash()
+        format required by the DAQ. It does not use any non-visible information
+        as this is a high risk bug source...).
         """
-        pass
+        # Abort if the group is not used
+        if not group.get('_RunConfiguratorGroup.use'):
+            return
 
-    def slotGetSourcesInGroup(self, group):
-        device_id = self._groupToDevice.get(group, '')
-        result = Hash('group', group,
-                      'instanceId', self.getInstanceId(),
-                      'sources', self._getGroupSources(device_id))
-        self.reply(result)
+        groupId = group.get('_RunConfiguratorGroup.groupId')
 
-    def requestScene(self, params):
-        """Fulfill a scene request from another device.
+        for source in group.get('_RunConfiguratorGroup.sources'):
+            source_id = source.get('source')
+            # This is the same as in RunConfigurationGroup
+            pipeline = True if OUTPUT_CHANNEL_SEPARATOR in source_id else False
+            behavior = source.get('behavior')
+            monitorOut = source.get('monitored')
 
-        NOTE: Required by Scene Supply Protocol, which is defined in KEP 21.
-              The format of the reply is also specified there.
+            expert = True if source.get('access') == 'expert' else False
+            user = True if source.get('access') == 'user' else False
 
-        :param params: A `Hash` containing the method parameters
-        """
-        payload = Hash('success', False)
+            self.log.DEBUG('buildDataSourceProperties source_id : {}, '
+                           'pipeline : {}'.format(source_id, pipeline))
 
-        name = params.get('name', default='')
-        if name == 'scene':
-            payload.set('success', True)
-            payload.set('name', name)
-            payload.set('data', _createScene(self.getInstanceId()))
-        elif name == 'link':
-            groups = {val['id']: group
-                      for group, val in self._runConfigGroups.items()}
-            payload.set('success', True)
-            payload.set('name', name)
-            payload.set('data', _createLink(self.getInstanceId(), groups))
+            # Instead here we just send a stub
+            # ('data source' granularity level)
+            properties = Hash(source_id, Hash())
+            properties.setAttribute(source_id, 'configurationGroupId', groupId)
+            properties.setAttribute(source_id, 'pipeline', pipeline)
+            properties.setAttribute(source_id, 'expertData', expert)
+            properties.setAttribute(source_id, 'userData', user)
+            properties.setAttribute(source_id, 'behavior', behavior)
+            properties.setAttribute(source_id, 'monitorOut', monitorOut)
+            result.merge(properties, HashMergePolicy.REPLACE_ATTRIBUTES)
 
-        self.reply(Hash('type', 'deviceScene',
-                        'origin', self.getInstanceId(),
-                        'payload', payload))
-
-    # ----------------------------
-    # Callback methods
+    ###########################################################################
+    #                            Callback methods                             #
+    ###########################################################################
+    #
+    #     These methods register RunConfigurationGroups going up or down and
+    # being updated. Once triggered, they update the internal state and call
+    # for reconfiguration.
 
     def _deviceGoneHandler(self, instanceId, instanceInfo):
+        """This method is called whenever a device goes down. If it was one of
+        the RunConfigurationGroups, it removes it from the list of available
+        groups and triggers a reconfiguration.
+        """
         inst_type = instanceInfo.get('type', default='unknown')
         classId = instanceInfo.get('classId', default='?')
 
@@ -298,9 +324,14 @@ class RunConfigurator(PythonDevice):
 
         if instanceId in self._runConfigGroups:
             del self._runConfigGroups[instanceId]
+
             self._updateDependentProperties()
 
     def _newDeviceHandler(self, topologyEntry):
+        """This method is called whenever a new device is registered in the
+        system topology. If it's a RunConfigurationGroup, it will automatically
+        append it to the available groups and registers a monitor for updates.
+        """
         inst_type = topologyEntry.getKeys()[0]  # fails if empty...
         if inst_type != 'device':
             return
@@ -310,84 +341,30 @@ class RunConfigurator(PythonDevice):
         if instance_id == '?':
             return
 
-        if (not inst.hasAttribute(instance_id, 'classId') or
-                inst.getAttribute(instance_id, 'classId')
-                != 'RunConfigurationGroup'):
-            return
-
-        # Add new configuration group into the map
-        self._runConfigGroups[instance_id] = Hash()
-
-        # register monitor to device
-        self.remote().registerDeviceMonitor(instance_id,
-                                            self._deviceUpdatedHandler)
+        # If the new device is a RunConfiguratorGroup
+        #     We have already checked that its a device with valid id
+        if inst.getAttribute(instance_id, 'classId') \
+                == 'RunConfigurationGroup':
+            # Add new configuration group into the map
+            self._runConfigGroups[instance_id] = Hash()
+            # register monitor to device
+            self.remote().registerDeviceMonitor(
+                instance_id, self._deviceUpdatedHandler)
 
     def _deviceUpdatedHandler(self, deviceId, update):
+        """This method is called whenever it's associated RunConfigurationGroup
+         is updated. It takes care of properly updating `self.configurations`
+         and all the internal states by first updating the internal state then
+         triggering a reconfiguration.
+         """
         group = update.get('group', default=None)
         if group is not None:
             self._updateRunConfiguratorGroupInstance(deviceId, group)
             self._updateDependentProperties()
-            # now notify clients
-            result = Hash('group',
-                          group.get('id', self.remote().get(deviceId,
-                                                            'group.id')),
-                          'instanceId', self.getInstanceId(),
-                          'sources', self._getGroupSources(deviceId))
-            self._ss.emit('signalGroupSourceChanged', result, deviceId)
 
-    # ----------------------------
-    # Private methods
-
-    def _gatherSourceProperties(self, table, groupId, expert, user, result):
-        for group in table:
-            source_id = group.get('source')
-            pipeline = (group.getAttribute('source', 'pipeline')
-                        if group.hasAttribute('source', 'pipeline') else False)
-            behavior = group.get('behavior')
-            monitorOut = group.get('monitored')
-
-            self.log.DEBUG('buildDataSourceProperties source_id : {}, '
-                           'pipeline : {}'.format(source_id, pipeline))
-
-            if not group.get('use'):
-                continue
-
-            # It was decided not to send all properties to the PCLayer.
-            # The call to 'getDataSourceSchemaAsHash()' will be done by PCLayer
-            # software like ...
-            # ----------------------------------------------------------------
-            # int access = 0;
-            # if (behavior == 'record-all') access = INIT|READ|WRITE;
-            # else if (behavior == 'read-only') access = INIT|READ;
-            # else access = INIT;
-            # remote().getDataSourceSchemaAsHash(source_id, properties,
-            #                                    access);
-            # ----------------------------------------------------------------
-            # The PCLayer software may call this many times ...
-
-            # Instead here we just send a stub
-            # ('data source' granularity level)
-            properties = Hash(source_id, Hash())
-            properties.setAttribute(source_id, 'configurationGroupId', groupId)
-            properties.setAttribute(source_id, 'pipeline', pipeline)
-            properties.setAttribute(source_id, 'expertData', expert)
-            properties.setAttribute(source_id, 'userData', user)
-            properties.setAttribute(source_id, 'behavior', behavior)
-            properties.setAttribute(source_id, 'monitorOut', monitorOut)
-            result.merge(properties, HashMergePolicy.REPLACE_ATTRIBUTES)
-
-    def _getGroupSources(self, device_id):
-        sources = []
-        group = self._runConfigGroups.get(device_id)
-        if group is not None:
-            for src_type in ('expert', 'user'):
-                src_group = group.get(src_type, default=[])
-                for src in src_group:
-                    src.erase('use')
-                    src.set('access', src_type)
-                    sources.append(src)
-        return sources
-
+    ###########################################################################
+    #                         State update methods                            #
+    ###########################################################################
     def _updateAvailableGroups(self, groups):
         """Update the `_runConfigGroups` dict when the `availableGroups`
         property is modified.
@@ -426,6 +403,8 @@ class RunConfigurator(PythonDevice):
     def _updateDependentProperties(self):
         """Update the `configurations`, `availableGroups`, and `sources`
         properties after an action modifies the `_runConfigGroups` dict.
+
+        I.E.: It generates the visible entries from the internal state.
         """
         h = Hash()
         configurations, available_groups, sources = [], [], {}
@@ -465,26 +444,31 @@ class RunConfigurator(PythonDevice):
         h.set('configurations', configurations)
         h.set('availableGroups', available_groups)
         h.set('sources', list(sources.values()))
+
+        # Assignment of empty hash for table element is invalid, so we purge
+        if len(configurations) == 0:
+            while len(self.get('configurations')) > 0:
+                del self.get('configurations')[0]
         self.set(h)
 
     def _updateRunConfiguratorGroupInstance(self, deviceId, update):
-        """Update the local configuration Hash stored for a
+        """Update the local configuration Hash (internal state) stored for a
         RunConfigurationGroup device instance.
         """
         group = self._runConfigGroups[deviceId]
+        use_group = group.get('use', default=False)
+
         if group.empty() or update.empty():
             # remote().get(..) is potentially blocking and should generally be
-            # avoided.
-            # Here, however, it will only block if `deviceId` sends an update
-            # before the configuration/schema requests triggered by
+            # avoided. Here, however, it will only block if `deviceId` sends
+            # an update before the configuration/schema requests triggered by
             # remote().registerDeviceMonitor(..) have not yet been answered.
             group = self.remote().get(deviceId, 'group')
             self._runConfigGroups[deviceId] = group
             group.set('use', False)
         else:
-            use = group.get('use')
             group.merge(update)
-            group.set('use', use)
+            group.set('use', use_group)
 
         self._groupToDevice[group.get('id')] = deviceId
         for src_type in ('expert', 'user'):
@@ -492,10 +476,40 @@ class RunConfigurator(PythonDevice):
                 group.set(src_type, [])
             else:
                 for s in group.get(src_type):
-                    s.set('use', False)
+                    s.set('use', use_group)
 
-        self.log.DEBUG('Updated RunConfigurationGroup --> instanceId: {}'
-                       ''.format(deviceId))
+        msg = 'Updated RunConfigurationGroup --> instanceId: %s\n' \
+              'The new value is:\n%s' % (deviceId, group)
+        self.log.DEBUG(msg)
+
+    ###########################################################################
+    #                         Scene related methods                           #
+    ###########################################################################
+    def requestScene(self, params):
+        """Fulfill a scene request from another device.
+
+        NOTE: Required by Scene Supply Protocol, which is defined in KEP 21.
+              The format of the reply is also specified there.
+
+        :param params: A `Hash` containing the method parameters
+        """
+        payload = Hash('success', False)
+
+        name = params.get('name', default='')
+        if name == 'scene':
+            payload.set('success', True)
+            payload.set('name', name)
+            payload.set('data', _createScene(self.getInstanceId()))
+        elif name == 'link':
+            groups = {val['id']: group
+                      for group, val in self._runConfigGroups.items()}
+            payload.set('success', True)
+            payload.set('name', name)
+            payload.set('data', _createLink(self.getInstanceId(), groups))
+
+        self.reply(Hash('type', 'deviceScene',
+                        'origin', self.getInstanceId(),
+                        'payload', payload))
 
 
 def _createScene(instance_id):
