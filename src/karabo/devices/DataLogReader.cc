@@ -538,7 +538,7 @@ namespace karabo {
 
                         const Epochstamp epochstamp(stringDoubleToEpochstamp(timestampAsDouble));
                         if (epochstamp > target) {
-                            KARABO_LOG_FRAMEWORK_ERROR << "findLoggerIndexTimepoint: done looping. Line tail:" << tail;
+                            KARABO_LOG_FRAMEWORK_DEBUG << "findLoggerIndexTimepoint: done looping. Line tail:" << tail;
                             break;
                         } else {
                             // store selected event
