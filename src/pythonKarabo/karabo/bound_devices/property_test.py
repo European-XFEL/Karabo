@@ -56,7 +56,8 @@ class PropertyTest(PythonDevice):
         '''Description of device parameters statically known'''
         (
             OVERWRITE_ELEMENT(expected).key("state")
-            .setNewOptions(State.INIT, State.NORMAL, State.ERROR, State.STARTED, State.STOPPING)
+            .setNewOptions(State.INIT, State.NORMAL, State.ERROR,
+                           State.STARTED, State.STOPPING)
             .setNewDefaultValue(State.INIT)
             .commit(),
 
@@ -398,7 +399,8 @@ class PropertyTest(PythonDevice):
 
             FLOAT_ELEMENT(expected).key("outputFrequency")
             .displayedName("Output frequency")
-            .description("The target frequency for continously writing to 'Output'")
+            .description("The target frequency for continously writing to "
+                         "'Output'")
             .unit(Unit.HERTZ)
             .maxInc(1000)
             .minExc(0.0)
@@ -408,20 +410,23 @@ class PropertyTest(PythonDevice):
 
             INT32_ELEMENT(expected).key("outputCounter")
             .displayedName("Output Counter")
-            .description("Last value sent as 'int32' via output channel 'Output'")
+            .description("Last value sent as 'int32' via output channel "
+                         "'Output'")
             .readOnly()
             .initialValue(0)
             .commit(),
 
             SLOT_ELEMENT(expected).key("startWritingOutput")
             .displayedName("Start Writing")
-            .description("Start writing continously to output channel 'Output'")
+            .description("Start writing continously to output channel "
+                         "'Output'")
             .allowedStates(State.NORMAL)
             .commit(),
 
             SLOT_ELEMENT(expected).key("stopWritingOutput")
             .displayedName("Stop Writing")
-            .description("Stop writing continously to output channel 'Output'")
+            .description("Stop writing continously to output channel "
+                         "'Output'")
             .allowedStates(State.STARTED)
             .commit(),
 
@@ -447,7 +452,8 @@ class PropertyTest(PythonDevice):
 
             INT32_ELEMENT(expected).key("currentInputId")
             .displayedName("Current Input Id")
-            .description("Last value received as 'int32' on input channel (default: 0)")
+            .description("Last value received as 'int32' on input channel "
+                         "(default: 0)")
             .readOnly().initialValue(0)
             .commit(),
 
@@ -459,7 +465,8 @@ class PropertyTest(PythonDevice):
 
             SLOT_ELEMENT(expected).key("resetChannelCounters")
             .displayedName("Reset Channels")
-            .description("Reset counters involved in input/output channel data flow")
+            .description("Reset counters involved in input/output channel "
+                         "data flow")
             .allowedStates(State.NORMAL)
             .commit(),
         )
@@ -503,7 +510,7 @@ class PropertyTest(PythonDevice):
         # setAs needed if counter exceeds INT32 range...
         node.setAs("int32", outputCounter, Types.INT32)
         node.set("string", str(outputCounter))
-        # Using plain Hash.set(..), type of vector is determined from 1st elem.:
+        # Using plain Hash.set(..), type of vector is determined from 1st elem:
         node.setAs("vecInt64", outputCounter * self.defVectorMaxSize,
                    Types.VECTOR_INT64)
         arr = np.full((100, 200), outputCounter, dtype=np.float32)
@@ -535,7 +542,8 @@ class PropertyTest(PythonDevice):
                       "currentInputId", 0))
 
     def writeLoop(self):
-        shouldWrite = True  # Always run at least once: write should start immediately
+        # Always run at least once: write should start immediately
+        shouldWrite = True
         while shouldWrite:
             self.writeOutput()
 
@@ -543,14 +551,14 @@ class PropertyTest(PythonDevice):
                 shouldWrite = self._writingOutput
 
             if shouldWrite:
-                # Waits for an interval as close as possible to the interval defined by
-                # the nominal outputFrequency.
+                # Waits for an interval as close as possible to the interval
+                # defined by the nominal outputFrequency.
                 delayTime = 1.0 / self.get("outputFrequency")
                 time.sleep(delayTime)
 
-                # "Refreshes" the shouldWrite flag before entering a new loop interaction
-                # During the sleep an stop command might have been issued and we want to
-                # avoid the extra writeOutput call.
+                # "Refreshes" the shouldWrite flag before entering a new loop
+                # interaction During the sleep an stop command might have been
+                # issued and we want to avoid the extra writeOutput call.
                 with self._writingMutex:
                     shouldWrite = self._writingOutput
 
