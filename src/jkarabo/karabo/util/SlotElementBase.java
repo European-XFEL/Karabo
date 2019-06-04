@@ -26,17 +26,6 @@ public abstract class SlotElementBase<Derived extends SlotElementBase> extends L
                 
         //default value of requiredAccessLevel for Slot element: USER
         m_node.setAttribute(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, karabo.util.Schema.AccessLevel.USER.ordinal());
-
-        m_child.set("connectedSignals", 0);
-        m_child.setAttribute("connectedSignals", KARABO_SCHEMA_DISPLAYED_NAME, "Connected Signals");
-        m_child.setAttribute("connectedSignals", KARABO_SCHEMA_DESCRIPTION, "Signals already connected to this slot");
-        m_child.setAttribute("connectedSignals", KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, karabo.util.Schema.AccessLevel.EXPERT.ordinal());
-        m_child.setAttribute("connectedSignals", KARABO_SCHEMA_ASSIGNMENT, karabo.util.Schema.AssignmentType.OPTIONAL_PARAM.ordinal());
-        m_child.setAttribute("connectedSignals", KARABO_SCHEMA_NODE_TYPE, karabo.util.Schema.NodeType.LEAF.ordinal());
-        m_child.setAttribute("connectedSignals", KARABO_SCHEMA_LEAF_TYPE, karabo.util.Schema.LeafType.COMMAND.ordinal());
-        m_child.setAttribute("connectedSignals", KARABO_SCHEMA_VALUE_TYPE, karabo.util.types.ToLiteral.to(karabo.util.types.Types.ReferenceType.VECTOR_STRING));
-
-        this.connectionsAreReconfigurable();
     }
     
     /**
@@ -51,26 +40,6 @@ public abstract class SlotElementBase<Derived extends SlotElementBase> extends L
         String[] sa = states.split("[" + sep + "]");
         for (String s : sa) if (!"".equals(s)) vs.add(s);
         m_node.setAttribute(KARABO_SCHEMA_ALLOWED_STATES, vs);
-        return (Derived) this;
-    }
-
-    public final Derived connectionAssignmentIsMandatory() {
-        m_child.setAttribute("connectedSignals", KARABO_SCHEMA_ASSIGNMENT, karabo.util.Schema.AssignmentType.MANDATORY_PARAM.ordinal());
-        return (Derived) this;
-    }
-
-    public final Derived connectionAssignmentIsOptional() {
-        m_child.setAttribute("connectedSignals", KARABO_SCHEMA_ASSIGNMENT, karabo.util.Schema.AssignmentType.OPTIONAL_PARAM.ordinal());
-        return (Derived) this;
-    }
-
-    public final Derived connectionsAreNotReconfigurable() {
-        m_child.setAttribute("connectedSignals", KARABO_SCHEMA_ACCESS_MODE, karabo.util.AccessType.INIT.ordinal());
-        return (Derived) this;
-    }
-
-    public final Derived connectionsAreReconfigurable() {
-        m_child.setAttribute("connectedSignals", KARABO_SCHEMA_ACCESS_MODE, karabo.util.AccessType.WRITE.ordinal());
         return (Derived) this;
     }
 
