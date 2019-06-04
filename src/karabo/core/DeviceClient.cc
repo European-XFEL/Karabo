@@ -697,16 +697,12 @@ namespace karabo {
         std::vector<std::string> DeviceClient::getCurrentlyExecutableCommands(const std::string& instanceId) {
             Schema schema = cacheAndGetActiveSchema(instanceId);
             vector<string> commands;
-            karabo::util::State currentDeviceState = get<karabo::util::State>(instanceId, "state");
-            extractCommandsForCurrentState(schema, "", currentDeviceState, commands);
+            extractCommands(schema, "", commands);
             return commands;
         }
 
 
-        void DeviceClient::extractCommandsForCurrentState(const karabo::util::Schema& schema,
-                                                          const std::string& parentKey,
-                                                          const karabo::util::State currentState,
-                                                          std::vector<std::string>& commands) {
+        void DeviceClient::extractCommands(const karabo::util::Schema& schema, const std::string& parentKey, std::vector<std::string>& commands) {
             vector<string> keys = schema.getKeys(parentKey);
 
             for (const std::string& key : keys) {
@@ -718,18 +714,9 @@ namespace karabo {
                 }
 
                 if (schema.isCommand(path)) {
-                    if (schema.hasAllowedStates(path)) {
-                        vector<karabo::util::State> allowedStates = schema.getAllowedStates(path);
-                        if (std::count(allowedStates.begin(), allowedStates.end(), currentState) > 0) {
-                            // The command has allowedStates constraint and the current state is allowed.
-                            commands.push_back(path);
-                        }
-                    } else {
-                        // The command has no allowedStates constraint.
-                        commands.push_back(path);
-                    }
+                    commands.push_back(path);
                 } else if (!schema.isLeaf(path)) {
-                    extractCommandsForCurrentState(schema, path, currentState, commands);
+                    extractCommands(schema, path, commands);
                 }
             }
         }
