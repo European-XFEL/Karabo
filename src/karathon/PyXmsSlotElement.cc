@@ -96,22 +96,6 @@ void exportPyXmsSlotElement() {
            , bp::pure_virtual((void (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase< SLOT_ELEMENT >::commit))
            , bp::return_internal_reference<> ());
 
-    sl.def("connectionAssignmentIsMandatory"
-           , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase< SLOT_ELEMENT>::connectionAssignmentIsMandatory)
-           , bp::return_internal_reference<> ());
-
-    sl.def("connectionAssignmentIsOptional"
-           , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase< SLOT_ELEMENT>::connectionAssignmentIsOptional)
-           , bp::return_internal_reference<> ());
-
-    sl.def("connectionsAreNotReconfigurable"
-           , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase< SLOT_ELEMENT>::connectionsAreNotReconfigurable)
-           , bp::return_internal_reference<> ());
-
-    sl.def("connectionsAreReconfigurable"
-           , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)())(&SlotElementBase< SLOT_ELEMENT>::connectionsAreReconfigurable)
-           , bp::return_internal_reference<> ());
-
     sl.def("description"
            , (SLOT_ELEMENT & (SlotElementBase<SLOT_ELEMENT>::*)(string const &))(&SlotElementBase<SLOT_ELEMENT >::description)
            , (bp::arg("desc"))
