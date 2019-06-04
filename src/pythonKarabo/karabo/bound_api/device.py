@@ -1334,7 +1334,6 @@ class PythonDevice(NoFsm):
         """
         self.set("lockedBy", "")
 
-
     def slotGetTime(self):
         """
         Return the actual time information of this device
@@ -1342,7 +1341,7 @@ class PythonDevice(NoFsm):
         This slot returns a Hash with key ``time`` and the attributes
         provide an actual timestamp with train Id information.
         """
-        result = Hash();
+        result = Hash()
 
         result.set("time", True)
         stamp = self.getActualTimestamp()
