@@ -286,9 +286,15 @@ class NewProjectDialog(QDialog):
 
         # Domain combobox
         db_conn = get_db_conn()
-        self.default_domain = db_conn.default_domain
-
-        self._fill_domain_combo_box(db_conn.get_available_domains())
+        domains = db_conn.get_available_domains()
+        if default:
+            default_domain = db_conn.default_domain
+        else:
+            topic = get_config()['broker_topic']
+            default_domain = (topic if topic in domains
+                              else db_conn.default_domain)
+        self.default_domain = default_domain
+        self._fill_domain_combo_box(domains)
         # Subprojects reside in the domain of the parent project, only allow
         # the default!
         self.cbDomain.setEnabled(not default)
