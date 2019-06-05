@@ -63,8 +63,7 @@ namespace karabo {
 
             /** Start the event loop and block until EventLoop::stop() is called.
              *
-             *  The system signals SIGINT, SIGTERM and SIGSEGV will be caught and trigger the following actions:
-             *  - for SIGSEGV, a stack trace is put out to std::cerr,
+             *  The system signals SIGINT and SIGTERM will be caught and trigger the following actions:
              *  - a signal handler set via setSignalHandler is called,
              *  - and the event loop is stopped.
              */
