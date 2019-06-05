@@ -1184,6 +1184,8 @@ class PythonDevice(NoFsm):
         self._ss.registerSlot(self.slotReSubmitAlarms)
         # Timeserver related slots
         self._ss.registerSlot(self.slotTimeTick)
+        self._ss.registerSlot(self.slotGetTime)
+
         self._ss.registerSlot(self.slotLoggerPriority)
         self._ss.registerSlot(self.slotClearLock)
 
@@ -1331,6 +1333,21 @@ class PythonDevice(NoFsm):
         """ Clear the lock on this device
         """
         self.set("lockedBy", "")
+
+    def slotGetTime(self):
+        """
+        Return the actual time information of this device
+
+        This slot returns a Hash with key ``time`` and the attributes
+        provide an actual timestamp with train Id information.
+        """
+        result = Hash()
+
+        result.set("time", True)
+        stamp = self.getActualTimestamp()
+        stamp.toHashAttributes(result.getAttributes("time"))
+
+        self.reply(result)
 
     def _ensureSlotIsValidUnderCurrentLock(self, slotName, callee):
         lockHolder = self["lockedBy"]

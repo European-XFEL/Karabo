@@ -12,7 +12,7 @@ from unittest import main
 
 from karabo.common.enums import Capabilities, Interfaces
 from karabo.middlelayer import (
-    AccessLevel, AlarmCondition, Assignment, background, Configurable,
+    AccessLevel, AlarmCondition, Assignment, background, call, Configurable,
     DeviceClientBase, getDevice, getHistory, isSet, InputChannel,
     Int32, KaraboError, MetricPrefix, NDArray, Node,
     OutputChannel, setWait, shutdown, sleep, Slot, State, String,
@@ -282,7 +282,33 @@ class Tests(DeviceTest):
         self.assertEqual(self.device.value, 99)
         self.assertTrue(self.device.marker)
 
+        ####################################
+        # check slotGetTime of bound device
+        ####################################
+        hTime = yield from call("boundDevice", "slotGetTime")
+        self.assertIsNotNone(hTime)
+        self.assertTrue(hTime["time"])
+        sec = hTime.getAttributes("time")["sec"]
+        frac = hTime.getAttributes("time")["frac"]
+        t1 = sec + frac / 1.e18
+        # non-zero time, but zero tid
+        self.assertGreater(t1, 0)
+        self.assertEqual(hTime.getAttributes("time")["tid"], 0)
+        # Now send tid info to device (1559600000 is June 3rd, 2019)
+        yield from call("boundDevice", "slotTimeTick",
+                        # id sec       frac periodInMicroSec
+                        100, 1559600000, 0, 100000)
+        # ask again, now non-zero tid and a later point in time
+        hTime = yield from call("boundDevice", "slotGetTime")
+        sec = hTime.getAttributes("time")["sec"]
+        frac = hTime.getAttributes("time")["frac"]
+        t2 = sec + frac / 1.e18
+        self.assertGreater(t2, t1)
+        self.assertGreaterEqual(hTime.getAttributes("time")["tid"], 100)
+
+        ####################################
         # pipeline part
+        ####################################
         yield from proxy.send()
         self.assertEqual(self.device.channelcount, 1)
         self.assertFalse(isSet(self.device.channeldata.d))
@@ -331,6 +357,9 @@ class Tests(DeviceTest):
         yield from task
         self.assertEqual(proxy.output1.schema.s, "hallo")
 
+        ####################################
+        # clean up
+        ####################################
         yield from shutdown(proxy)
         # it takes up to 5 s for the bound device to actually shut down
         yield from self.process.wait()
