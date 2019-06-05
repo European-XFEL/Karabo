@@ -1472,8 +1472,8 @@ namespace karabo {
 
                 instanceInfo.set("capabilities", capabilities);
 
-                unsigned int interfaces = 0;
                 if (hasAvailableInterfaces) {
+                    unsigned int interfaces = 0;
                     const std::vector < std::string >& availableInterfaces = get<std::vector < std::string >> ("interfaces");
                     for (const std::string& desc : availableInterfaces)
                         if (desc == "Motor") interfaces |= Interfaces::Motor;
@@ -1796,9 +1796,9 @@ namespace karabo {
                 this->preDestruction(); // Give devices a chance to react
                 this->stopFsm();
                 if (senderId == m_serverId) { // Our server killed us
-                    KARABO_LOG_FRAMEWORK_INFO << "Device is going down as instructed by server";
+                    KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << " is going down as instructed by server";
                 } else { // Someone else wants to see us dead, we should inform our server
-                    KARABO_LOG_FRAMEWORK_INFO << "Device is going down as instructed by \"" << senderId << "\"";
+                    KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << " is going down as instructed by \"" << senderId << "\"";
                     call(m_serverId, "slotDeviceGone", m_deviceId);
                 }
             }
