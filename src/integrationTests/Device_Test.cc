@@ -106,7 +106,8 @@ void Device_Test::appTestRunner() {
 
 
 void Device_Test::testGetTimestamp() {
-    // This tests the extrapolations done in Device::getTimestamp(Epochstamp& epoch).
+    // This tests the extrapolations done in Device::getTimestamp(Epochstamp& epoch)
+    // and Device::slotGetTime().
 
     // Setup a communication helper
     auto sigSlotA = boost::make_shared<SignalSlotable>("sigSlotA");
@@ -122,66 +123,83 @@ void Device_Test::testGetTimestamp() {
                             .timeout(timeOutInMs).receive(id));
     CPPUNIT_ASSERT_EQUAL(0ull, id);
 
+    // Also slotGetTime has zero train id
+    Epochstamp now;
+    Hash timeHash;
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotGetTime").timeout(timeOutInMs).receive(timeHash));
+    CPPUNIT_ASSERT(timeHash.has("time"));
+    CPPUNIT_ASSERT(timeHash.get<bool>("time"));
+    const Timestamp stamp(Timestamp::fromHashAttributes(timeHash.getAttributes("time")));
+    CPPUNIT_ASSERT_EQUAL(0ull, stamp.getTrainId());
+    CPPUNIT_ASSERT(stamp.getEpochstamp() > now);
+
     // Now send a time tick...
+    const unsigned long long seconds = 1559600000ull; // About June 3rd, 2019, 10 pm GMT
+    const unsigned long long startId = 100ull;
     CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotTimeTick",
                                               // id,     sec,    frac (attosec), period (microsec)
-                                              100ull, 11500000000ull, 2ull * periodInAttoSec + 1100ull, periodInMicroSec)
+                                              startId, seconds, 2ull * periodInAttoSec + 1100ull, periodInMicroSec)
                             .timeout(timeOutInMs).receive());
+
+    timeHash.clear();
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotGetTime").timeout(timeOutInMs).receive(timeHash));
+    const Timestamp stamp2(Timestamp::fromHashAttributes(timeHash.getAttributes("time")));
+    CPPUNIT_ASSERT_GREATEREQUAL(startId, stamp2.getTrainId());
 
     // ...and test real calculations of id
     // 1) exact match
     id = 0ull;
     CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotIdOfEpochstamp",
-                                              11500000000ull, 2ull * periodInAttoSec + 1100ull)
+                                              seconds, 2ull * periodInAttoSec + 1100ull)
                             .timeout(timeOutInMs).receive(id));
-    CPPUNIT_ASSERT_EQUAL(100ull, id);
+    CPPUNIT_ASSERT_EQUAL(startId, id);
 
     // 2) end of id
     id = 0ull;
     CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotIdOfEpochstamp",
-                                              11500000000ull, 3ull * periodInAttoSec + 1099ull)
+                                              seconds, 3ull * periodInAttoSec + 1099ull)
                             .timeout(timeOutInMs).receive(id));
-    CPPUNIT_ASSERT_EQUAL(100ull, id);
+    CPPUNIT_ASSERT_EQUAL(startId, id);
 
     // 3) multiple of period above - but same second
     id = 0ull;
     CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotIdOfEpochstamp",
-                                              11500000000ull, 5ull * periodInAttoSec + 1100ull)
+                                              seconds, 5ull * periodInAttoSec + 1100ull)
                             .timeout(timeOutInMs).receive(id));
-    CPPUNIT_ASSERT_EQUAL(103ull, id);
+    CPPUNIT_ASSERT_EQUAL(startId + 3ull, id);
 
     // 4) multiple of period plus a bit above - next second
     id = 0ull;
     CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotIdOfEpochstamp",
-                                              11500000001ull, 5ull * periodInAttoSec + 1105ull)
+                                              seconds + 1ull, 5ull * periodInAttoSec + 1105ull)
                             .timeout(timeOutInMs).receive(id));
-    CPPUNIT_ASSERT_EQUAL(113ull, id);
+    CPPUNIT_ASSERT_EQUAL(startId + 13ull, id);
 
     // 5) just before
     id = 0ull;
     CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotIdOfEpochstamp",
-                                              11500000000ull, 2ull * periodInAttoSec + 1090ull)
+                                              seconds, 2ull * periodInAttoSec + 1090ull)
                             .timeout(timeOutInMs).receive(id));
-    CPPUNIT_ASSERT_EQUAL(99ull, id);
+    CPPUNIT_ASSERT_EQUAL(startId - 1ull, id);
 
     // 6) several before - but same second
     id = 0ull;
     CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotIdOfEpochstamp",
-                                              11500000000ull, 1ull)
+                                              seconds, 1ull)
                             .timeout(timeOutInMs).receive(id));
-    CPPUNIT_ASSERT_EQUAL(97ull, id);
+    CPPUNIT_ASSERT_EQUAL(startId - 3ull, id);
 
     // 7) several before - previous second
     id = 0ull;
     CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotIdOfEpochstamp",
-                                              11499999999ull, 5ull * periodInAttoSec + 1110ull)
+                                              seconds - 1ull, 5ull * periodInAttoSec + 1110ull)
                             .timeout(timeOutInMs).receive(id));
-    CPPUNIT_ASSERT_EQUAL(93ull, id);
+    CPPUNIT_ASSERT_EQUAL(startId - 7ull, id);
 
     // 8) so much in the past that a negative id would be calculated which leads to zero
     id = 1111ull;
     CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotIdOfEpochstamp",
-                                              11499999000ull, 1110ull)
+                                              seconds - 100ull, 1110ull)
                             .timeout(timeOutInMs).receive(id));
     CPPUNIT_ASSERT_EQUAL(0ull, id);
 }

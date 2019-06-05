@@ -1573,7 +1573,9 @@ namespace karabo {
                 KARABO_SLOT(slotUpdateSchemaAttributes, std::vector<karabo::util::Hash>);
 
                 KARABO_SLOT(slotClearLock);
-            }
+
+                KARABO_SLOT(slotGetTime);
+           }
 
             /**
              *  Called in beginning of run() to setup pipeline channels, will
@@ -2010,6 +2012,22 @@ namespace karabo {
              */
             void slotClearLock() {
                 set("lockedBy", std::string());
+            }
+
+            /**
+             * Return the actual time information of this device
+             *
+             * This slot returns a Hash with key ``time`` and the attributes
+             * provide an actual timestamp with train Id information.
+             */
+            void slotGetTime() {
+                karabo::util::Hash result;
+
+                karabo::util::Hash::Node& node = result.set("time", true);
+                const karabo::util::Timestamp stamp(getActualTimestamp());
+                stamp.toHashAttributes(node.getAttributes());
+
+                reply(result);
             }
 
             /**
