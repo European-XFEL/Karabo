@@ -21,8 +21,16 @@ class States_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testRunningTrumpActivePassive);
     CPPUNIT_TEST(testChainStatesPassive);
     CPPUNIT_TEST(testChainStatesActive);
-
     CPPUNIT_TEST(testComparisons);
+    
+    CPPUNIT_TEST(testStatesSignifierDefault);
+    CPPUNIT_TEST(testStatesSignifierActiveDecreasing);
+    CPPUNIT_TEST(testStatesSignifierPassiveIncreasing);
+    CPPUNIT_TEST(testStatesSignifierActiveIncreasing);
+    CPPUNIT_TEST(testAcquiringChangingOnPassive);
+    CPPUNIT_TEST(testAcquiringChangingOnActive);
+    CPPUNIT_TEST(testStatesSignifierNonDefList);
+
     CPPUNIT_TEST_SUITE_END();
 
 
@@ -44,6 +52,17 @@ private:
     void testComparisons();
     void testChainStatesPassive();
     void testChainStatesActive();
+
+    // Test cases to match the ones for Bound-Python.
+    // The cases are named after their Python counterparts.
+    void testStatesSignifierDefault();
+    void testStatesSignifierActiveDecreasing();
+    void testStatesSignifierPassiveIncreasing();
+    void testStatesSignifierActiveIncreasing();
+    void testAcquiringChangingOnPassive();
+    void testAcquiringChangingOnActive();
+    void testStatesSignifierNonDefList();
+
 };
 
 
