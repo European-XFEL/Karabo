@@ -6,6 +6,7 @@ import sys
 from PyQt4.QtCore import Qt, QTimer
 from PyQt4.QtGui import (
     qApp, QApplication, QIcon, QPixmap, QSplashScreen, QStyleFactory)
+from pyqtgraph import setConfigOptions
 
 from karabo.common.api import Capabilities
 from karabogui import icons
@@ -152,6 +153,8 @@ def run_theatre(ns):
     # This is needed to make the splash screen show up...
     splash.showMessage(" ")
     app.processEvents()
+
+    setConfigOptions(background=None, foreground="k")
     # Run the lazy initializers (icons, widget controllers)
     icons.init()
     populate_controller_registry()

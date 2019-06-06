@@ -5,6 +5,7 @@ import sys
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (
     QApplication, QIcon, QPixmap, QSplashScreen, QStyleFactory)
+from pyqtgraph import setConfigOptions
 
 from karabo.common.scenemodel.api import SceneTargetWindow
 from karabogui import icons
@@ -49,6 +50,8 @@ def run_cinema(ns):
     # This is needed to make the splash screen show up...
     splash.showMessage(" ")
     app.processEvents()
+
+    setConfigOptions(background=None, foreground="k")
     # Run the lazy initializers (icons, widget controllers)
     icons.init()
     populate_controller_registry()
