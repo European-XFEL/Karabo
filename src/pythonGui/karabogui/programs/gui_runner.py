@@ -5,6 +5,7 @@ from traceback import print_exception, format_exception
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (
     QApplication, QIcon, QMessageBox, QPixmap, QSplashScreen, QStyleFactory)
+from pyqtgraph import setConfigOptions
 
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.controllers.api import populate_controller_registry
@@ -41,6 +42,7 @@ def init_gui(app, splash):
     import numpy
 
     numpy.set_printoptions(suppress=True, threshold=10)
+    setConfigOptions(background=None, foreground="k")
 
     # Load the icons
     icons.init()
