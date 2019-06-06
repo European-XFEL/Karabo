@@ -26,8 +26,6 @@ namespace karabo {
 
         KARABO_REGISTER_FOR_CONFIGURATION(OutputChannel);
 
-        typedef boost::weak_ptr<karabo::net::Channel> ChannelWeakPointer;
-
         void OutputChannel::expectedParameters(karabo::util::Schema& expected) {
             using namespace karabo::util;
 
@@ -317,7 +315,13 @@ namespace karabo {
             // Prepare to accept more connections
             if (m_dataConnection) m_dataConnection->startAsync(bind_weak(&karabo::xms::OutputChannel::onTcpConnect, this, _1, _2));
             KARABO_LOG_FRAMEWORK_DEBUG << "***** Connection established *****";
-            channel->readAsyncHash(bind_weak(&karabo::xms::OutputChannel::onTcpChannelRead, this, _1, channel, _2));
+            {
+                // Move responsibility to keep channel alive to one place
+                boost::mutex::scoped_lock lock(m_inputNetChannelsMutex);
+                m_inputNetChannels.insert(channel);
+            }
+            channel->readAsyncHash(bind_weak(&karabo::xms::OutputChannel::onTcpChannelRead, this,
+                                             _1, Channel::WeakPointer(channel), _2));
         }
 
 
@@ -330,7 +334,8 @@ namespace karabo {
         }
 
 
-        void OutputChannel::onTcpChannelRead(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel, const karabo::util::Hash& message) {
+        void OutputChannel::onTcpChannelRead(const karabo::net::ErrorCode& ec, const karabo::net::Channel::WeakPointer& weakChannel, const karabo::util::Hash& message) {
+            Channel::Pointer channel = weakChannel.lock();
             if (ec) {
                 onTcpChannelError(ec, channel);
                 return;
@@ -356,7 +361,7 @@ namespace karabo {
                 karabo::util::Hash info;
                 info.set("instanceId", instanceId);
                 info.set("memoryLocation", memoryLocation);
-                info.set("tcpChannel", ChannelWeakPointer(channel));
+                info.set("tcpChannel", weakChannel);
                 info.set("onSlowness", onSlowness);
                 info.set("queuedChunks", std::deque<int>());
                 info.set("bytesRead", 0ull);
@@ -393,8 +398,8 @@ namespace karabo {
                 }
 
             }
-            if (channel->isOpen()) {
-                channel->readAsyncHash(bind_weak(&karabo::xms::OutputChannel::onTcpChannelRead, this, _1, channel, _2));
+            if (channel && channel->isOpen()) {
+                channel->readAsyncHash(bind_weak(&karabo::xms::OutputChannel::onTcpChannelRead, this, _1, weakChannel, _2));
             } else {
                 onInputGone(channel, karabo::net::ErrorCode());
             }
@@ -406,7 +411,7 @@ namespace karabo {
             auto it = channelContainer.find(instanceId);
             if (it != channelContainer.end()) {
                 const Hash& channelInfo = it->second;
-                Channel::Pointer oldChannel = channelInfo.get<ChannelWeakPointer>("tcpChannel").lock();
+                Channel::Pointer oldChannel = channelInfo.get<Channel::WeakPointer>("tcpChannel").lock();
                 if (oldChannel) {
                     if (oldChannel == newChannel) {
                         // Ever reached? Let's not close, but try to go on...
@@ -437,9 +442,9 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_registeredSharedInputsMutex);
                 for (const auto& idInfoPair : m_registeredSharedInputs) {
                     const Hash &channelInfo = idInfoPair.second;
-                    boost::weak_ptr<Channel> wptr = channelInfo.get<boost::weak_ptr<Channel> >("tcpChannel");
-                    boost::shared_ptr<Channel> channel = wptr.lock();
-                    boost::shared_ptr<TcpChannel> tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
+                    Channel::WeakPointer wptr = channelInfo.get<Channel::WeakPointer>("tcpChannel");
+                    Channel::Pointer channel = wptr.lock();
+                    net::TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
                     Hash row = TcpChannel::getChannelInfo(tcpChannel);
                     row.set("remoteId", channelInfo.get<std::string>("instanceId"));
                     row.set("memoryLocation", channelInfo.get<std::string>("memoryLocation"));
@@ -568,13 +573,13 @@ namespace karabo {
 
             // Clean specific channel from bookkeeping structures and ... 
             // ... clean expired entries as well (we are not expecting them but we want to be on the safe side!)
-
+            unsigned int inputsLeft = 0;
             {
                 // SHARED Inputs
                 boost::mutex::scoped_lock lock(m_registeredSharedInputsMutex);
                 for (InputChannels::iterator it = m_registeredSharedInputs.begin(); it != m_registeredSharedInputs.end();) {
                     const Hash& channelInfo = it->second;
-                    auto tcpChannel = channelInfo.get<ChannelWeakPointer>("tcpChannel").lock();
+                    auto tcpChannel = channelInfo.get<Channel::WeakPointer>("tcpChannel").lock();
 
                     // Cleaning expired or specific channels only
                     if (!tcpChannel || tcpChannel == channel) {
@@ -615,6 +620,7 @@ namespace karabo {
                         ++it;
                     }
                 }
+                inputsLeft += m_registeredSharedInputs.size();
             }
 
             {
@@ -622,7 +628,7 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
                 for (InputChannels::iterator it = m_registeredCopyInputs.begin(); it != m_registeredCopyInputs.end();) {
                     const Hash& channelInfo = it->second;
-                    auto tcpChannel = channelInfo.get<ChannelWeakPointer>("tcpChannel").lock();
+                    auto tcpChannel = channelInfo.get<Channel::WeakPointer>("tcpChannel").lock();
                     if (!tcpChannel || tcpChannel == channel) {
 
                         const std::string& instanceId = it->first;
@@ -640,6 +646,18 @@ namespace karabo {
                     } else {
                         ++it;
                     }
+                }
+                inputsLeft += m_registeredCopyInputs.size();
+            }
+            {
+                // Erase from container that keeps channel alive - and warn about inconsistencies:
+                boost::mutex::scoped_lock lock(m_inputNetChannelsMutex);
+                if (m_inputNetChannels.erase(channel) < 1u) {
+                    KARABO_LOG_FRAMEWORK_WARN << m_instanceId << " : Failed to remove channel with address " << channel.get();
+                }
+                if (m_inputNetChannels.size() != inputsLeft) {
+                    KARABO_LOG_FRAMEWORK_WARN << m_instanceId << " : Inconsistent number of channels left: "
+                            << m_inputNetChannels.size() << " / " << inputsLeft;
                 }
             }
             updateConnectionTable();
@@ -823,7 +841,7 @@ namespace karabo {
                 // Need to lock - even around synchronous tcp write... :-(
                 boost::mutex::scoped_lock lock(m_registeredSharedInputsMutex);
                 for (const auto& idChannelInfo : m_registeredSharedInputs) {
-                    Channel::Pointer tcpChannel = idChannelInfo.second.get<ChannelWeakPointer > ("tcpChannel").lock();
+                    Channel::Pointer tcpChannel = idChannelInfo.second.get<Channel::WeakPointer > ("tcpChannel").lock();
                     if (!tcpChannel) continue;
 
                     try {
@@ -837,7 +855,7 @@ namespace karabo {
             }
             boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
             for (const auto& idChannelInfo : m_registeredCopyInputs) {
-                Channel::Pointer tcpChannel = idChannelInfo.second.get<ChannelWeakPointer> ("tcpChannel").lock();
+                Channel::Pointer tcpChannel = idChannelInfo.second.get<Channel::WeakPointer> ("tcpChannel").lock();
                 if (!tcpChannel) continue;
 
                 try {
@@ -1108,7 +1126,7 @@ namespace karabo {
         void OutputChannel::distributeLocal(unsigned int chunkId, const InputChannelInfo& channelInfo) {
             using namespace karabo::net;
 
-            Channel::Pointer tcpChannel = channelInfo.get<ChannelWeakPointer > ("tcpChannel").lock();
+            Channel::Pointer tcpChannel = channelInfo.get<Channel::WeakPointer > ("tcpChannel").lock();
 
             bool notSent = true;
             if (tcpChannel) {
@@ -1143,7 +1161,7 @@ namespace karabo {
         void OutputChannel::distributeRemote(const unsigned int& chunkId, const InputChannelInfo& channelInfo) {
             using namespace karabo::net;
 
-            Channel::Pointer tcpChannel = channelInfo.get<ChannelWeakPointer > ("tcpChannel").lock();
+            Channel::Pointer tcpChannel = channelInfo.get<Channel::WeakPointer > ("tcpChannel").lock();
 
             if (tcpChannel) {
                 karabo::util::Hash header;
@@ -1251,7 +1269,7 @@ namespace karabo {
 
         void OutputChannel::copyLocal(const unsigned int& chunkId, const InputChannelInfo& channelInfo) {
             using namespace karabo::net;
-            Channel::Pointer tcpChannel = channelInfo.get<ChannelWeakPointer > ("tcpChannel").lock();
+            Channel::Pointer tcpChannel = channelInfo.get<Channel::WeakPointer > ("tcpChannel").lock();
 
             bool notSent = true;
             if (tcpChannel) {
@@ -1288,7 +1306,7 @@ namespace karabo {
         void OutputChannel::copyRemote(const unsigned int& chunkId, const InputChannelInfo& channelInfo) {
             using namespace karabo::net;
 
-            Channel::Pointer tcpChannel = channelInfo.get<ChannelWeakPointer > ("tcpChannel").lock();
+            Channel::Pointer tcpChannel = channelInfo.get<Channel::WeakPointer > ("tcpChannel").lock();
 
             if (tcpChannel) {
                 karabo::util::Hash header;
