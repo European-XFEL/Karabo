@@ -11,6 +11,7 @@ from karabo.native.exceptions import KaraboError
 from karabo.native.data.hash import (
     Bool, Hash, HashType, Int32, SchemaHashType, Slot, String)
 from karabo.native.data.schema import Node
+from karabo.native.time_mixin import get_timestamp
 
 from .alarm import AlarmMixin
 from .injectable import InjectMixin
@@ -202,6 +203,18 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
     @slot
     def slotGetConfiguration(self):
         return self.configurationAsHash(), self.deviceId
+
+    @slot
+    def slotGetTime(self):
+        """Return the actual time information of this device
+
+        This slot call return a Hash with key ``time`` and the attributes
+        provide an actual timestamp with train Id information.
+        """
+        h = Hash("time", True)
+        h["time", ...] = get_timestamp().toDict()
+
+        return h
 
     def _checkLocked(self, message):
         """return an error message if device is locked or None if not"""
