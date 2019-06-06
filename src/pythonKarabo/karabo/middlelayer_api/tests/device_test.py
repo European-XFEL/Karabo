@@ -8,8 +8,9 @@ from karabo.common.states import State
 from karabo.middlelayer import (
     AccessMode, background, getDevice, Int32, waitUntil, waitWhile)
 from karabo.middlelayer_api.device import Device
-from karabo.middlelayer_api.device_client import getSchema
+from karabo.middlelayer_api.device_client import call, getSchema
 from karabo.native.data.hash import Float, Hash, Slot, VectorHash
+from karabo.native.timestamp import Timestamp
 from karabo.middlelayer_api.pipeline import InputChannel, OutputChannel
 from karabo.native.data.schema import Configurable, Node
 
@@ -226,6 +227,19 @@ class Tests(DeviceTest):
                         'value', 100.0)]
         reply = await self.myDevice.slotUpdateSchemaAttributes(updates)
         self.assertFalse(reply['success'])
+
+    @async_tst
+    async def test_slot_time(self):
+        h = await call("MyDevice", "slotGetTime")
+        self.assertIsNotNone(h)
+        self.assertTrue(h["time"])
+        self.assertGreater(h.getAttributes("time")["sec"], 0)
+        self.assertIsNotNone(h.getAttributes("time")["frac"], 0)
+        self.assertEqual(h.getAttributes("time")["tid"], 0)
+        timestamp_first = Timestamp.fromHashAttributes(h["time", ...])
+        h = await call("MyDevice", "slotGetTime")
+        timestamp_second = Timestamp.fromHashAttributes(h["time", ...])
+        self.assertGreater(timestamp_second, timestamp_first)
 
 
 if __name__ == '__main__':
