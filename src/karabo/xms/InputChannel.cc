@@ -27,13 +27,6 @@ namespace karabo {
 
         KARABO_REGISTER_FOR_CONFIGURATION(InputChannel);
 
-        //        KARABO_REGISTER_FOR_CONFIGURATION(AbstractInput, Input<Hash >, InputChannel<Hash>)
-        //        KARABO_REGISTER_FOR_CONFIGURATION(Input<Hash >, InputChannel<Hash>)
-        //                
-        //        KARABO_REGISTER_FOR_CONFIGURATION(AbstractInput, Input<std::vector<char> >, InputChannel<std::vector<char> >)
-        //        KARABO_REGISTER_FOR_CONFIGURATION(Input<std::vector<char> >, InputChannel<std::vector<char> >)
-
-
         void InputChannel::expectedParameters(karabo::util::Schema& expected) {
             using namespace karabo::util;
 
@@ -331,7 +324,8 @@ namespace karabo {
 
             // synchronous write could throw if connection broken again - but that will be caught by outer event loop:
             channel->write(karabo::util::Hash("reason", "hello", "instanceId", this->getInstanceId(), "memoryLocation", memoryLocation, "dataDistribution", m_dataDistribution, "onSlowness", m_onSlowness)); // Say hello!
-            channel->readAsyncHashVectorBufferSetPointer(util::bind_weak(&karabo::xms::InputChannel::onTcpChannelRead, this, _1, channel, _2, _3));
+            channel->readAsyncHashVectorBufferSetPointer(util::bind_weak(&karabo::xms::InputChannel::onTcpChannelRead, this,
+                                                                         _1, net::Channel::WeakPointer(channel), _2, _3));
 
             boost::mutex::scoped_lock lock(m_outputChannelsMutex);
             string outputChannelString;
@@ -361,8 +355,26 @@ namespace karabo {
 
         void InputChannel::onTcpChannelError(const karabo::net::ErrorCode& error, const karabo::net::Channel::Pointer& channel) {
 
-            string outputChannelString;
+            {
+                boost::mutex::scoped_lock(m_isEndOfStreamMutex);
+                for (auto it = m_eosChannels.begin(); it != m_eosChannels.end(); ++it) {
+                    net::Channel::Pointer ptr = it->lock();
+                    if (!ptr // should not happen, but if it does clean up nevertheless
+                        || ptr == channel) {
+                        m_eosChannels.erase(it);
+                    }
+                }
+            }
 
+            if (!channel) {
+                // Should never come here...
+                KARABO_LOG_FRAMEWORK_WARN << "onTcpChannelError on '" << m_instanceId << "' called for empty channel "
+                        << "together with error code #" << error.value() << " -- '" << error.message() << "'.";
+                return;
+            }
+
+
+            string outputChannelString;
             boost::mutex::scoped_lock lock(m_outputChannelsMutex);
             for (OpenConnections::iterator ii = m_openConnections.begin(); ii != m_openConnections.end(); ++ii) {
                 if (ii->second.second == channel) {
@@ -385,11 +397,12 @@ namespace karabo {
 
 
         void InputChannel::onTcpChannelRead(const karabo::net::ErrorCode& ec,
-                                            karabo::net::Channel::Pointer channel,
+                                            karabo::net::Channel::WeakPointer channel,
                                             const karabo::util::Hash& header,
                                             const std::vector<karabo::io::BufferSet::Pointer>& data) {
-            if (ec) {
-                onTcpChannelError(ec, channel);
+            net::Channel::Pointer channelPtr = channel.lock();
+            if (ec || !channelPtr) {
+                onTcpChannelError(ec, channelPtr);
                 return;
             }
 
@@ -426,7 +439,8 @@ namespace karabo {
                         // Reset eos tracker
                         m_eosChannels.clear();
                     }
-                    channel->readAsyncHashVectorBufferSetPointer(util::bind_weak(&karabo::xms::InputChannel::onTcpChannelRead, this, _1, channel, _2, _3));
+                    channelPtr->readAsyncHashVectorBufferSetPointer(util::bind_weak(&karabo::xms::InputChannel::onTcpChannelRead, this,
+                                                                                    _1, channel, _2, _3));
                     return;
                 }
 
@@ -473,7 +487,8 @@ namespace karabo {
                         }
                     }
                 }
-                channel->readAsyncHashVectorBufferSetPointer(util::bind_weak(&karabo::xms::InputChannel::onTcpChannelRead, this, _1, channel, _2, _3));
+                channelPtr->readAsyncHashVectorBufferSetPointer(util::bind_weak(&karabo::xms::InputChannel::onTcpChannelRead, this,
+                                                                                _1, channel, _2, _3));
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onTcpChannelRead (std::exception) : " << e.what();
             }
@@ -660,8 +675,9 @@ namespace karabo {
         }
 
 
-        void InputChannel::deferredNotificationOfOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel) {
-            if (channel->isOpen()) {
+        void InputChannel::deferredNotificationOfOutputChannelForPossibleRead(const karabo::net::Channel::WeakPointer& channelW) {
+            const net::Channel::Pointer channel = channelW.lock();
+            if (channel && channel->isOpen()) {
                 const std::string traceId("(" + boost::lexical_cast<std::string>(boost::this_thread::get_id()) + ": deferredNotificationOfOutputChannel...) ");
                 KARABO_LOG_FRAMEWORK_TRACE << traceId << "INPUT Notifying output channel that " << this->getInstanceId() << " is ready for next read.";
                 // write can fail if disconnected in wrong moment - but then channel should be closed afterwards:
@@ -678,14 +694,12 @@ namespace karabo {
         }
 
 
-        void InputChannel::notifyOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel) {
-            if (channel->isOpen()) {
-                if (m_delayOnInput <= 0) // no delay
-                    deferredNotificationOfOutputChannelForPossibleRead(channel);
-                else {
-                    m_deadline.expires_from_now(boost::posix_time::milliseconds(m_delayOnInput));
-                    m_deadline.async_wait(util::bind_weak(&InputChannel::deferredNotificationOfOutputChannelForPossibleRead, this, channel));
-                }
+        void InputChannel::notifyOutputChannelForPossibleRead(const karabo::net::Channel::WeakPointer& channel) {
+            if (m_delayOnInput <= 0) { // no delay
+                deferredNotificationOfOutputChannelForPossibleRead(channel);
+            } else {
+                m_deadline.expires_from_now(boost::posix_time::milliseconds(m_delayOnInput));
+                m_deadline.async_wait(util::bind_weak(&InputChannel::deferredNotificationOfOutputChannelForPossibleRead, this, channel));
             }
         }
 
