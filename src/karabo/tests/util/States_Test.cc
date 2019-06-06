@@ -94,6 +94,7 @@ void States_Test::testSignifierNonDefaultList() {
     std::vector<State> s;
     s.push_back(State::DISABLED);
     s.push_back(State::RUNNING);
+    s.push_back(State::PAUSED);
     s.push_back(State::CHANGING);
     s.push_back(State::COOLED);
     s.push_back(State::DECREASING);
@@ -108,9 +109,11 @@ void States_Test::testRunningTrumpActivePassive() {
     std::vector<State> s;
     s.push_back(State::DISABLED);
     s.push_back(State::RUNNING);
+    CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s) == State::RUNNING);
+    s.push_back(State::PAUSED);
     s.push_back(State::ACTIVE);
     s.push_back(State::PASSIVE);
-    CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s) == State::RUNNING);
+    CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s) == State::PAUSED);
 }
 
 
@@ -166,6 +169,7 @@ void States_Test::testComparisons() {
     CPPUNIT_ASSERT(!State::ERROR.isDerivedFrom(State::CHANGING)); // the other way round
     CPPUNIT_ASSERT(State::HEATED.isDerivedFrom(State::NORMAL)); // longer list of ancestors
     CPPUNIT_ASSERT(!State::KNOWN.isDerivedFrom(State::INCREASING)); // longer list of ancestors the other way round should not compare
+    CPPUNIT_ASSERT(State::PAUSED.isDerivedFrom(State::DISABLED));
 
     const State state(State::fromString("ON"));
     CPPUNIT_ASSERT(state == State::ON);
