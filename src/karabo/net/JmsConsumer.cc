@@ -77,12 +77,13 @@ namespace karabo {
                     // via m_connection->waitForConnectionAvailable().
                     // But very unlikely... Or better play with thread interruptions as in DataLogger in version 1.4.7?
                     m_readThread.join();
-                } else {
-                    // Prevent exception about "boost thread: trying joining itself: Resource deadlock avoided"
-                    // that can happen when stopReading is called in destructor. Since consumeMessages holds a
-                    // 'self'-guard shared_ptr, this is even the normal scenario.
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Avoided that thread joins itself in 'stopReading'.";
                 }
+                // Else prevent exception about "boost thread: trying joining itself: Resource deadlock avoided"
+                // that can happen when stopReading is called in destructor. Since consumeMessages holds a
+                // 'self'-guard shared_ptr, this is even the normal scenario.
+                // But do not use Karabo logging in this else case:
+                // The extra thread might call this when the logger singleton is already being cleaned-up.
+
                 // Better reset to avoid dangling handlers:
                 m_messageHandler = MessageHandler();
                 m_errorNotifier = ErrorNotifier();
