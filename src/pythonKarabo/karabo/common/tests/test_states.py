@@ -24,7 +24,7 @@ class States_TestCase(unittest.TestCase):
         s.append(State.MOVING)
         self.assertIs(signifier.returnMostSignificant(s), State.DECREASING)
         s.append(State.CHANGING)
-        self.assertIs(signifier.returnMostSignificant(s), State.DECREASING)
+        self.assertIs(signifier.returnMostSignificant(s), State.CHANGING)
         s.append(State.INTERLOCKED)
         self.assertIs(signifier.returnMostSignificant(s), State.INTERLOCKED)
         s.append(State.ERROR)
@@ -54,7 +54,7 @@ class States_TestCase(unittest.TestCase):
         s.append(State.MOVING)
         self.assertIs(signifier.returnMostSignificant(s), State.DECREASING)
         s.append(State.CHANGING)
-        self.assertIs(signifier.returnMostSignificant(s), State.DECREASING)
+        self.assertIs(signifier.returnMostSignificant(s), State.CHANGING)
         s.append(State.INTERLOCKED)
         self.assertIs(signifier.returnMostSignificant(s), State.INTERLOCKED)
         s.append(State.ERROR)
@@ -150,8 +150,6 @@ class States_TestCase(unittest.TestCase):
              State.RUNNING, State.PAUSED, State.UNKNOWN, State.INTERLOCKED]
         signifier = StateSignifier(trumplist=trumpList)
         self.assertIs(signifier.returnMostSignificant(s), State.CHANGING)
-        s.append(State.DECREASING)
-        self.assertIs(signifier.returnMostSignificant(s), State.DECREASING)
 
     def test_states_round_trip(self):
         s = State.ROTATING_CLK.name
