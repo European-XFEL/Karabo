@@ -41,7 +41,6 @@ namespace karabo {
             public:
 
             KARABO_CLASSINFO(Channel, "Channel", "1.0")
-            typedef boost::weak_ptr<Channel> WeakPointer;
 
             typedef boost::function<void (const size_t&) > ReadSizeInBytesHandler;
             typedef boost::function<void (const boost::system::error_code&) > ReadRawHandler;
