@@ -79,7 +79,8 @@ static karabo::util::ClassInfo classInfo() { return karabo::util::ClassInfo(clas
 virtual karabo::util::ClassInfo getClassInfo() const { return classInfo(); } \
 typedef className Self; \
 typedef boost::shared_ptr<className> Pointer; \
-typedef boost::shared_ptr<const className> ConstPointer;
+typedef boost::shared_ptr<const className> ConstPointer; \
+typedef boost::weak_ptr<className> WeakPointer;
 
 
 #endif
