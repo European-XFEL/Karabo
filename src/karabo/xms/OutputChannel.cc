@@ -460,9 +460,9 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
                 for (const auto& idInfoPair : m_registeredCopyInputs) {
                     const Hash &channelInfo = idInfoPair.second;
-                    boost::weak_ptr<Channel> wptr = channelInfo.get<boost::weak_ptr<Channel> >("tcpChannel");
-                    boost::shared_ptr<Channel> channel = wptr.lock();
-                    boost::shared_ptr<TcpChannel> tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
+                    Channel::WeakPointer wptr = channelInfo.get<Channel::WeakPointer>("tcpChannel");
+                    Channel::Pointer channel = wptr.lock();
+                    TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(channel);
                     Hash row = TcpChannel::getChannelInfo(tcpChannel);
                     row.set("remoteId", channelInfo.get<std::string>("instanceId"));
                     row.set("memoryLocation", channelInfo.get<std::string>("memoryLocation"));
@@ -501,8 +501,8 @@ namespace karabo {
             std::vector<unsigned long long> vBytesWritten(length);
             for (size_t i = 0; i < length; ++i) {
                 Hash& h = m_connections[i];
-                boost::weak_ptr<Channel> wptr = h.get<boost::weak_ptr<Channel> >("weakChannel");
-                boost::shared_ptr<Channel> channel = wptr.lock();
+                Channel::WeakPointer wptr = h.get<Channel::WeakPointer>("weakChannel");
+                Channel::Pointer channel = wptr.lock();
                 vBytesRead[i] =  h.get<unsigned long long>("bytesRead");
                 vBytesWritten[i] =  h.get<unsigned long long>("bytesWritten");
                 if (!channel) continue;
