@@ -101,6 +101,7 @@ namespace karabo {
             static const State DISABLED;
             static const State ERROR;
             static const State NORMAL;
+            static const State PAUSED;
             static const State STATIC;
             static const State RUNNING;
             static const State CHANGING;
