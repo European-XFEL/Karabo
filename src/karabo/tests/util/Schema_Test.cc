@@ -1176,4 +1176,26 @@ void Schema_Test::testAllowedActions() {
     // Only (custom) nodes can have allowed actions:
     CPPUNIT_ASSERT_THROW(s.setAllowedActions("node.int",{"bla", "blue"}),
                          karabo::util::ParameterException);
+
+                         
+void Schema_Test::testDefaultReadOnlyThrows() {
+
+    karabo::util::Schema invalidSchema;
+
+    CPPUNIT_ASSERT_THROW(
+                          INT32_ELEMENT(invalidSchema).key("int")
+                          .assignmentOptional().defaultValue(1)
+                          .readOnly()
+                          .commit(),
+                          karabo::util::LogicException
+                         );
+
+    karabo::util::Schema validReadOnlySchema;
+
+    CPPUNIT_ASSERT_NO_THROW(
+                            INT32_ELEMENT(validReadOnlySchema).key("int")
+                            .readOnly().initialValue(1)
+                            .commit()
+                            );
+
 }

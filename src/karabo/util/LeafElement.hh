@@ -190,10 +190,7 @@ namespace karabo {
             virtual ReadOnlySpecific<Derived, ValueType>& readOnly() {
                 if (this->m_node->hasAttribute(KARABO_SCHEMA_ASSIGNMENT)
                     && this->m_node->template getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT) == Schema::OPTIONAL_PARAM) {
-                    std::cerr << "WARNING: karabo::util::LeafElement\n"
-                            << "readOnly is not compatible with assignmentOptional.\n"
-                            << "The sequence assignmentOptional().defaultValue().readOnly() for schema entries may throw an exception in the future.\n"
-                            << "Please use readOnly().initialValue() instead." << std::endl;
+                    throw KARABO_LOGIC_EXCEPTION("readOnly() is not compatible with assignmentOptional(). Use readOnly().initialVale(v) instead.");
                 }
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
                 // Set the assignment and defaults here, as the API would look strange to assign something to a read-only
