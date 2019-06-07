@@ -327,7 +327,7 @@ namespace karabo {
 
         void OutputChannel::onTcpChannelError(const karabo::net::ErrorCode& error, const karabo::net::Channel::Pointer& channel) {
             KARABO_LOG_FRAMEWORK_DEBUG << "Tcp channel error on \"" << m_instanceId << "\", code #" << error.value() << " -- \""
-                    << error.message() << "\".  Channel closed.";
+                    << error.message() << "\".  Close channel at address " << channel.get();
 
             // Unregister channel
             onInputGone(channel, error);
@@ -336,7 +336,7 @@ namespace karabo {
 
         void OutputChannel::onTcpChannelRead(const karabo::net::ErrorCode& ec, const karabo::net::Channel::WeakPointer& weakChannel, const karabo::util::Hash& message) {
             Channel::Pointer channel = weakChannel.lock();
-            if (ec) {
+            if (ec || !channel) {
                 onTcpChannelError(ec, channel);
                 return;
             }
@@ -398,7 +398,7 @@ namespace karabo {
                 }
 
             }
-            if (channel && channel->isOpen()) {
+            if (channel->isOpen()) {
                 channel->readAsyncHash(bind_weak(&karabo::xms::OutputChannel::onTcpChannelRead, this, _1, weakChannel, _2));
             } else {
                 onInputGone(channel, karabo::net::ErrorCode());
