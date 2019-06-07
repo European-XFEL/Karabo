@@ -112,8 +112,7 @@ namespace karabo {
                             m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::CHANGING), State::DECREASING);
                             m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::CHANGING), State::INCREASING);
                         }
-                    }
-                    else if (!inList(m_trumpList, State::INCREASING)) {
+                    } else if (!inList(m_trumpList, State::INCREASING)) {
                         m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::CHANGING), State::INCREASING);
                     } else if (!inList(m_trumpList, State::DECREASING)) {
                         m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::CHANGING), State::DECREASING);
