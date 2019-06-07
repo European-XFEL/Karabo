@@ -106,7 +106,7 @@ namespace karabo {
             bool m_respondToEndOfStream;
 
             // Tracks channels that send EOS
-            std::set<karabo::net::Channel::Pointer> m_eosChannels;
+            std::set<karabo::net::Channel::WeakPointer> m_eosChannels;
 
             int m_delayOnInput;
 
@@ -212,14 +212,14 @@ namespace karabo {
 
             void onTcpChannelError(const karabo::net::ErrorCode&, const karabo::net::Channel::Pointer&);
 
-            void onTcpChannelRead(const karabo::net::ErrorCode& ec, karabo::net::Channel::Pointer channel,
+            void onTcpChannelRead(const karabo::net::ErrorCode& ec, karabo::net::Channel::WeakPointer channel,
                                   const karabo::util::Hash& header, const std::vector<karabo::io::BufferSet::Pointer>& data);
                                   
             bool canCompute() const;
 
             void notifyOutputChannelsForPossibleRead();
 
-            void notifyOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel);
+            void notifyOutputChannelForPossibleRead(const karabo::net::Channel::WeakPointer& channel);
 
             bool respondsToEndOfStream();
 
@@ -272,7 +272,7 @@ namespace karabo {
 
             void deferredNotificationsOfOutputChannelsForPossibleRead();
 
-            void deferredNotificationOfOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel);
+            void deferredNotificationOfOutputChannelForPossibleRead(const karabo::net::Channel::WeakPointer& channel);
 
             bool needsDeviceConnection() const;
 
