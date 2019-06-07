@@ -10,15 +10,10 @@ import sys
 
 from mccabe import get_code_complexity
 from pycodestyle import Checker
-from pyflakes.api import checkPath
 
 from karabo import middlelayer
 
 pep8_exceptions = {
-}
-
-flakes_exceptions = {
-    "states.py": 1,
 }
 
 
@@ -37,13 +32,6 @@ class Tests(TestCase):
                 checker = Checker(mod)
                 errs = checker.check_all()
                 self.assertEqual(errs, pep8_exceptions.get(base, 0))
-
-    def test_flakes(self):
-        for mod in self.modules:
-            base = os.path.basename(mod)
-            with self.subTest(module=base):
-                errs = checkPath(mod)
-                self.assertEqual(errs, flakes_exceptions.get(base, 0))
 
     def test_mmcabe(self):
         for mod in self.modules:
