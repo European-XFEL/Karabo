@@ -256,12 +256,10 @@ class StateSignifier:
         """return the most significant state in `iterable`"""
         return min(iterable, key=self.trumpdict.get)
 
-    passive_decrease = [State.INTERLOCKED, State.DECREASING, State.CHANGING,
-                        State.INCREASING, State.PAUSED, State.NORMAL,
-                        State.PASSIVE, State.ACTIVE, State.DISABLED]
-    active_decrease = [State.INTERLOCKED, State.DECREASING, State.CHANGING,
-                       State.INCREASING, State.PAUSED, State.NORMAL,
-                       State.ACTIVE, State.PASSIVE, State.DISABLED]
+    passive_decrease = []
+    active_decrease = [State.INTERLOCKED, State.CHANGING, State.PAUSED,
+                       State.RUNNING, State.NORMAL, State.ACTIVE,
+                       State.PASSIVE, State.DISABLED]
     passive_increase = [State.INTERLOCKED, State.INCREASING, State.CHANGING,
                         State.DECREASING, State.PAUSED, State.RUNNING,
                         State.STATIC, State.DISABLED]
