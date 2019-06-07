@@ -110,9 +110,10 @@ void States_Test::testRunningTrumpActivePassive() {
     s.push_back(State::DISABLED);
     s.push_back(State::RUNNING);
     CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s) == State::RUNNING);
-    s.push_back(State::PAUSED);
     s.push_back(State::ACTIVE);
     s.push_back(State::PASSIVE);
+    CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s) == State::RUNNING);
+    s.push_back(State::PAUSED);
     CPPUNIT_ASSERT(StateSignifier().returnMostSignificant(s) == State::PAUSED);
 }
 
