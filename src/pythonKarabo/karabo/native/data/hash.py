@@ -1269,6 +1269,11 @@ class HashType(Type):
 class VectorHash(Vector):
     """A VectorHash is a table
 
+    The VectorHash value setting can be for example done via:
+
+    - list of tuples: [(value1, value2), ...]
+    - list of Hashes: [Hash('key1', value1, 'key2', value2), ...]
+
     :param row: The structure of each row. This is a :class:`Configurable`
     class.
     """
