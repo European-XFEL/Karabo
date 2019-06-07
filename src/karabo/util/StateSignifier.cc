@@ -93,6 +93,7 @@ namespace karabo {
                 }
 
                 m_trumpList.push_back(State::RUNNING);
+                m_trumpList.push_back(State::PAUSED);
                 m_trumpList.push_back(State::CHANGING);
                 m_trumpList.push_back(State::INTERLOCKED);
                 m_trumpList.push_back(State::ERROR);
@@ -173,6 +174,10 @@ namespace karabo {
 
                     if (!inList(m_trumpList, State::RUNNING)) {
                         m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::RUNNING);
+                    }
+
+                    if (!inList(m_trumpList, State::PAUSED)) {
+                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::RUNNING), State::PAUSED);
                     }
 
                     if (!inList(m_trumpList, State::CHANGING)) {
