@@ -1269,6 +1269,11 @@ class HashType(Type):
 class VectorHash(Vector):
     """A VectorHash is a table
 
+    The VectorHash value setting can be for example done via:
+
+    - list of tuples: [(value1, value2), ...]
+    - list of Hashes: [Hash('key1', value1, 'key2', value2), ...]
+
     :param row: The structure of each row. This is a :class:`Configurable`
     class.
     """
@@ -1309,6 +1314,11 @@ class VectorHash(Vector):
             if isinstance(data, basetypes.KaraboValue):
                 timestamp = data.timestamp
                 data = data.value
+            elif isinstance(data, list) and data:
+                # NOTE: We assume a list of Hashes here!
+                if isinstance(data[0], Hash):
+                    data = [tuple(ele[name] for name in self.dtype.names)
+                            for ele in data]
             table = np.array(data, dtype=self.dtype)
         else:
             table = []
