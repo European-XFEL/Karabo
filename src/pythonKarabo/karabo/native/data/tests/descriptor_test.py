@@ -443,6 +443,37 @@ class Tests(TestCase):
         self.assertEqual(v[1], "b")
         self.assertEqual(len(v), 3)
 
+    def test_vector_hash_init(self):
+        rowSchema = Hash("int", None, "string", None)
+        rowSchema["int", "valueType"] = "INT32"
+        rowSchema["int", "unitSymbol"] = "m"
+        rowSchema["int", "metricPrefixSymbol"] = "m"
+        rowSchema["string", "valueType"] = "STRING"
+
+        d = VectorHash(rowSchema=Schema("rs", hash=rowSchema))
+        # NOTE: Explicitly change order of keyValue
+        v = d.toKaraboValue([Hash("int", 3, "string", "hallo"),
+                             Hash("string", "hallo", "int", 20)])
+        self.assertEqual(len(v), 2)
+        self.assertEqual(v[1]["int"], 20 * unit.millimeter)
+        self.assertEqual(v[1]["string"], "hallo")
+        self.assertEqual(v.dtype.names, ("int", "string"))
+        d.toKaraboValue(v)
+        data, _ = d.toDataAndAttrs(v)
+        self.assertEqual(len(data), 2)
+        self.assertIsNone(v.timestamp)
+        v.timestamp = self.timestamp
+        d.toKaraboValue(v)
+        data, timestamp = d.toDataAndAttrs(v)
+        self.assertEqual(self.timestamp,
+                         Timestamp.fromHashAttributes(timestamp))
+        self.assertEqual(len(data), 2)
+
+        # NOTE: Force error with missing key!
+        with self.assertRaises(KeyError):
+            v = d.toKaraboValue([Hash("int", 3),
+                                 Hash("string", "hallo", "int", 20)])
+
     def test_vector_hash(self):
         rowSchema = Hash("int", None, "string", None, "vector", None,
                          "bytes", None, "array", None)
