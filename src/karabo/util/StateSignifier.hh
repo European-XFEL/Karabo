@@ -46,14 +46,6 @@ namespace karabo {
              */
             karabo::util::State returnMostSignificant(const std::vector<karabo::util::State>& listOfStates);
 
-            /**
-             * Return the trump list used by this Signifier
-             * @return 
-             */
-            const std::vector<karabo::util::State>& getTrumpList() const {
-                return m_trumpList;
-            }
-
         private:
 
             size_t rankedAt(const karabo::util::State& sp);
