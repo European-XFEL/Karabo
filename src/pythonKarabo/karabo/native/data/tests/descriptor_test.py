@@ -469,6 +469,11 @@ class Tests(TestCase):
                          Timestamp.fromHashAttributes(timestamp))
         self.assertEqual(len(data), 2)
 
+        # NOTE: Force error with missing key!
+        with self.assertRaises(KeyError):
+            v = d.toKaraboValue([Hash("int", 3),
+                                 Hash("string", "hallo", "int", 20)])
+
     def test_vector_hash(self):
         rowSchema = Hash("int", None, "string", None, "vector", None,
                          "bytes", None, "array", None)
