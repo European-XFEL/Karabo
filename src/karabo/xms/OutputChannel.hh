@@ -94,7 +94,7 @@ namespace karabo {
              */
             typedef karabo::util::Hash InputChannelInfo;
 
-            // With C++14, can use unordered map (since then standard allows to erase items while looping on map)
+            // With C++14, can use unordered map (since then standard allows to erase items while looping on unordered_map)
             typedef std::map<std::string, InputChannelInfo> InputChannels; // input channel id is key
 
             // Callback on available input
@@ -112,6 +112,9 @@ namespace karabo {
 
             std::string m_onNoSharedInputChannelAvailable;
             std::string m_distributionMode;
+
+            boost::mutex m_inputNetChannelsMutex;
+            std::set<karabo::net::Channel::Pointer> m_inputNetChannels;
 
             mutable boost::mutex m_registeredSharedInputsMutex;
             InputChannels m_registeredSharedInputs;
@@ -262,7 +265,7 @@ namespace karabo {
 
             void onTcpChannelError(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel);
 
-            void onTcpChannelRead(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel, const karabo::util::Hash& message);
+            void onTcpChannelRead(const karabo::net::ErrorCode& ec, const karabo::net::Channel::WeakPointer& channel, const karabo::util::Hash& message);
 
             /// Erase instance with 'instanceId' from 'channelContainer' if existing - if same as 'newChannel', do not close
             void eraseOldChannel(InputChannels& channelContainer, const std::string& instanceId, const karabo::net::Channel::Pointer& newChannel) const;
