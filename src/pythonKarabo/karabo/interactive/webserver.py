@@ -125,17 +125,16 @@ class DaemonHandler(web.RequestHandler):
 
 
 class LogWebSocket(WebSocketHandler):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.flush = None
+    def initialize(self):
+        self.flush_fut = None
 
     def on_message(self, message):
         # this function is called by Tornado's event loop
         # to execute the notification in background
         # we need to spawn a callback
         if message == "PONG":
-            if self.flush:
-                self.flush.set_result(None)
+            if self.flush_fut:
+                self.flush_fut.set_result(None)
             return
 
         msg = json.loads(message)
@@ -147,10 +146,10 @@ class LogWebSocket(WebSocketHandler):
         path = absolute("var", "log", name, "current")
         with open(path) as f:
             while True:
-                self.flush = Future()
+                self.flush_fut = Future()
                 self.write_message("PING")
-                await self.flush
-                self.flush = None
+                await self.flush_fut
+                self.flush_fut = None
                 # send line by line until the file is read
                 content = f.readline()
                 while content:
