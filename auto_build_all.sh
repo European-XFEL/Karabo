@@ -168,7 +168,7 @@ runPythonLongTests() {
         source $scriptDir/karabo/activate
     fi
 
-    if [ $CODECOVERAGE = "y"]; then
+    if [ $CODECOVERAGE = "y" ]; then
        # Collect code coverage.
        safeRunCommand $scriptDir/run_python_tests.sh \
            --runLongTests \
