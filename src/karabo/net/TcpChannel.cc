@@ -396,8 +396,12 @@ namespace karabo {
                                                           const std::vector<karabo::io::BufferSet::Pointer>& buffers) {
             Hash::Pointer header = m_inHashHeader;
             m_inHashHeader.reset();
+            // Reset handler variables - as in TcpChannel::bytesAvailableHandler
             m_activeHandler = TcpChannel::NONE;
-            boost::any_cast<ReadHashVectorBufferSetPointerHandler>(m_readHandler) (e, *header, buffers);
+            boost::any readHandler;
+            readHandler.swap(m_readHandler);
+
+            boost::any_cast<ReadHashVectorBufferSetPointerHandler>(readHandler) (e, *header, buffers);
         }
 
 
@@ -513,6 +517,7 @@ namespace karabo {
                             KARABO_LOG_FRAMEWORK_WARN << "Received header for ReadHashVectorBufferSetPointerHandler lacks"
                                     << " both keys '_bufferSetLayout_' and 'byteSizes' - treat data as single BufferSet.";
                             ReadHashVectorBufferSetPointerHandler handler = boost::any_cast<ReadHashVectorBufferSetPointerHandler>(m_readHandler);
+                            m_readHandler.clear(); // see also below about clearing/swapping m_readHandler
                             this->readAsyncVectorPointerImpl(util::bind_weak(&TcpChannel::onHashVectorBufferSetPointerVectorPointerRead, this, _1, _2, handler));
                         }
                         return;
@@ -522,16 +527,22 @@ namespace karabo {
                     return;
                 }
             }
+            // Reset handler variables since they usually are re-assigned when m_readHandler is called.
+            // Swapping m_readHandler protects against the case that a shared pointer to this TcpChannel is bound to
+            // m_readHandler and m_readHandler does not re-assign it, e.g. due to an error condition/disconnection:
+            // This TcpChannel would continue to keep a shared pointer to itself and thus could never be destructed.
             HandlerType type = m_activeHandler;
             m_activeHandler = TcpChannel::NONE;
+            boost::any readHandler;
+            readHandler.swap(m_readHandler);
             switch (type) {
                 case VECTOR:
                 {
                     if (!e)
-                        boost::any_cast<ReadVectorHandler>(m_readHandler) (e, *m_inboundData);
+                        boost::any_cast<ReadVectorHandler>(readHandler) (e, *m_inboundData);
                     else {
                         std::vector<char> vec;
-                        boost::any_cast<ReadVectorHandler>(m_readHandler) (e, vec);
+                        boost::any_cast<ReadVectorHandler>(readHandler) (e, vec);
                     }
                     break;
                 }
@@ -539,28 +550,28 @@ namespace karabo {
                 {
                     boost::shared_ptr<std::vector<char> > vec(new std::vector<char>());
                     if (!e) vec.swap(m_inboundData);
-                    boost::any_cast<ReadVectorPointerHandler>(m_readHandler) (e, vec);
+                    boost::any_cast<ReadVectorPointerHandler>(readHandler) (e, vec);
                     break;
                 }
                 case STRING:
                 {
                     string tmp;
                     if (!e) tmp.assign(m_inboundData->begin(), m_inboundData->end());
-                    boost::any_cast<ReadStringHandler>(m_readHandler) (e, tmp);
+                    boost::any_cast<ReadStringHandler>(readHandler) (e, tmp);
                     break;
                 }
                 case HASH:
                 {
                     Hash h;
                     if (!e) this->prepareHashFromData(h);
-                    boost::any_cast<ReadHashHandler>(m_readHandler) (e, h);
+                    boost::any_cast<ReadHashHandler>(readHandler) (e, h);
                     break;
                 }
                 case HASH_POINTER:
                 {
                     Hash::Pointer h(new Hash);
                     if (!e) this->prepareHashFromData(*h);
-                    boost::any_cast<ReadHashPointerHandler>(m_readHandler) (e, h);
+                    boost::any_cast<ReadHashPointerHandler>(readHandler) (e, h);
                     break;
                 }
 
@@ -573,11 +584,11 @@ namespace karabo {
                         if (header.has("__compression__"))
                             decompress(header, *m_inboundData, inData);
                         else {
-                            boost::any_cast<ReadHashVectorHandler>(m_readHandler) (e, header, *m_inboundData);
+                            boost::any_cast<ReadHashVectorHandler>(readHandler) (e, header, *m_inboundData);
                             break;
                         }
                     }
-                    boost::any_cast<ReadHashVectorHandler>(m_readHandler) (e, header, inData);
+                    boost::any_cast<ReadHashVectorHandler>(readHandler) (e, header, inData);
                     break;
                 }
                 case HASH_VECTOR_POINTER:
@@ -591,7 +602,7 @@ namespace karabo {
                         else
                             inData.swap(m_inboundData);
                     }
-                    boost::any_cast<ReadHashVectorPointerHandler>(m_readHandler) (e, header, inData);
+                    boost::any_cast<ReadHashVectorPointerHandler>(readHandler) (e, header, inData);
                     break;
                 }
 
@@ -606,7 +617,7 @@ namespace karabo {
                         else
                             tmp.assign(m_inboundData->begin(), m_inboundData->end());
                     }
-                    boost::any_cast<ReadHashStringHandler>(m_readHandler) (e, header, tmp);
+                    boost::any_cast<ReadHashStringHandler>(readHandler) (e, header, tmp);
                     break;
                 }
 
@@ -623,7 +634,7 @@ namespace karabo {
                         }
                         this->prepareHashFromData(body);
                     }
-                    boost::any_cast<ReadHashHashHandler>(m_readHandler) (e, header, body);
+                    boost::any_cast<ReadHashHashHandler>(readHandler) (e, header, body);
                     break;
                 }
 
@@ -640,14 +651,14 @@ namespace karabo {
                         }
                         this->prepareHashFromData(*body);
                     }
-                    boost::any_cast<ReadHashPointerHashPointerHandler>(m_readHandler) (e, header, body);
+                    boost::any_cast<ReadHashPointerHashPointerHandler>(readHandler) (e, header, body);
                     break;
                 }
 
                 case HASH_VECTOR_BUFFERSET_POINTER:
                 {
                     // we will be here only if error code is not "success": "Operation canceled", "End of file"
-                    boost::any_cast<ReadHashVectorBufferSetPointerHandler>(m_readHandler) (e, Hash(), std::vector<karabo::io::BufferSet::Pointer>());
+                    boost::any_cast<ReadHashVectorBufferSetPointerHandler>(readHandler) (e, Hash(), std::vector<karabo::io::BufferSet::Pointer>());
                     break;
                 }
 
