@@ -1,0 +1,103 @@
+import numpy as np
+from PyQt4.QtCore import QPoint, Qt
+from PyQt4.QtGui import QMenu
+from pyqtgraph import ViewBox
+
+from .enums import MouseMode
+
+ZOOM_IN = 1
+ZOOM_OUT = -1
+
+
+class KaraboViewBox(ViewBox):
+    def __init__(self, parent=None):
+        super(KaraboViewBox, self).__init__(parent, enableMenu=False)
+        self.mouse_mode = MouseMode.Pointer
+        self.setBackgroundColor(None)
+        self.menu = QMenu(parent)
+        self.menu.addAction("View all", self.enableAutoRange)
+
+    # ---------------------------------------------------------------------
+    # mouse events
+
+    def mouseClickEvent(self, event):
+        if event.button() == Qt.MiddleButton:
+            self.enableAutoRange()
+
+        if self.mouse_mode is MouseMode.Zoom:
+            if event.button() == Qt.LeftButton:
+                self._click_zoom_mode(event, ZOOM_IN)
+            elif event.button() == Qt.RightButton:
+                self._click_zoom_mode(event, ZOOM_OUT)
+        else:
+            super(KaraboViewBox, self).mouseClickEvent(event)
+
+    def mouseDragEvent(self, event, axis=None):
+        if event.buttons() == Qt.MiddleButton:
+            event.ignore()
+            return
+
+        if (self.mouse_mode is MouseMode.Pointer
+                and event.buttons() == Qt.LeftButton):
+            event.ignore()
+        elif self.mouse_mode is MouseMode.Move:
+            super(KaraboViewBox, self).mouseDragEvent(event, axis)
+            if event.isStart():
+                self.setCursor(Qt.ClosedHandCursor)
+            elif event.isFinish():
+                self.setCursor(Qt.OpenHandCursor)
+        else:
+            super(KaraboViewBox, self).mouseDragEvent(event, axis)
+
+    def wheelEvent(self, event, axis=None):
+        """Ignore mouse scroll since it also catches scene scroll"""
+        event.ignore()
+
+    # ---------------------------------------------------------------------
+    # Public methods
+
+    def set_mouse_mode(self, mode):
+        if mode is MouseMode.Pointer:
+            vb_mode = ViewBox.PanMode
+            cursor = Qt.ArrowCursor
+        elif mode is MouseMode.Zoom:
+            vb_mode = ViewBox.RectMode
+            cursor = Qt.CrossCursor
+        elif mode is MouseMode.Move:
+            vb_mode = ViewBox.PanMode
+            cursor = Qt.OpenHandCursor
+        else:
+            raise LookupError("Invalid mouse mode.")
+
+        self.setMouseMode(vb_mode)
+        self.setCursor(cursor)
+        self.mouse_mode = mode
+
+    # ---------------------------------------------------------------------
+    # pyqtgraph methods
+
+    def removeItem(self, item):
+        if item in self.allChildItems():
+            super(KaraboViewBox, self).removeItem(item)
+
+    def raiseContextMenu(self, event):
+        if self.menu is None or not self.menuEnabled():
+            return
+        pos = event.screenPos()
+        self.menu.popup(QPoint(pos.x(), pos.y()))
+
+    # ---------------------------------------------------------------------
+    # private methods
+
+    def _click_zoom_mode(self, event, direction):
+        # Lifted from the PyQtGraph wheelEvent(). wheelScaleFactor can be
+        # increased for larger scale/zoom
+        mask = np.array([1, 1])
+        s = ((mask * 0.02) + 1) ** \
+            (120 * direction * self.state['wheelScaleFactor'])
+
+        center = self.mapToView(event.pos())
+        self._resetTarget()
+        self.scaleBy(s, center)
+        self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
+        event.accept()
