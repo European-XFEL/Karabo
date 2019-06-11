@@ -1,0 +1,82 @@
+from PyQt4.QtCore import pyqtSlot
+
+from graph.common.enums import ROITool
+from graph.common.roi.utils import ImageRegion
+from graph.common.const import SCALING, TRANSLATION
+
+from .base import BaseROIController
+
+
+class ImageROIController(BaseROIController):
+
+    def __init__(self, plotItem):
+        super(ImageROIController, self).__init__(plotItem)
+        plotItem.imageItem.sigImageChanged.connect(self._update)
+        plotItem.imageTransformed.connect(self._update_geometry)
+
+        # Enable movement wrt image pixels
+        self._scale_snap = True
+        self._translate_snap = True
+
+    def show(self, roi):
+        super(ImageROIController, self).show(roi)
+        if self.plotItem.image_set:
+            # Create a first ROI read
+            self._update()
+
+    def _show_roi_item(self, roi_item):
+        super(ImageROIController, self)._show_roi_item(roi_item)
+        self._update_geometry(roi_item)
+
+    def destroy(self):
+        self.plotItem.imageItem.sigImageChanged.disconnect(self._update)
+        self.plotItem.imageTransformed.disconnect(self._update_geometry)
+        super(ImageROIController, self).destroy()
+
+    def _update(self):
+        """Emits the ROI information, which can be either from the whole plot
+           or the ROI rectangle."""
+        if not self.plotItem.image_set or not self._updates_enabled:
+            return
+
+        image = self.plotItem.image
+
+        # Get current ROI item
+        if self._current_tool is ROITool.NoROI:
+            current_item = None
+        else:
+            current_item = self._current_item[self._current_tool]
+
+        # Get data of the region. If ROI is none, get the whole image.
+        if current_item is None:
+            region = ImageRegion(image, ImageRegion.Area,
+                                 *self.plotItem.transformed_axes)
+        else:
+            region = current_item.get_region(
+                self.plotItem.imageItem,
+                *self.plotItem.transformed_axes)
+
+        self.updated.emit(region)
+
+    @pyqtSlot()
+    def _update_geometry(self, roi=None):
+        """Adjusts ROI item geometry with the current image transform"""
+        if self._current_tool == ROITool.NoROI:
+            return
+
+        # If roi is None, transform all visible ROI items
+        if roi is None:
+            roi_items = self._rois[self._current_tool]
+        else:
+            roi_items = [roi]
+
+        for item in roi_items:
+            item.update_geometry_from_transform(
+                self.plotItem.axes_transform[SCALING],
+                self.plotItem.axes_transform[TRANSLATION], update=False)
+
+    @pyqtSlot(object)
+    def _set_current_item(self, roi_item, update=True):
+        super(ImageROIController, self)._set_current_item(roi_item, update)
+        if update and self.plotItem.image_set:
+            self._update()
