@@ -15,11 +15,22 @@ namespace karabo {
             if (listOfStates.empty())
                 throw KARABO_PARAMETER_EXCEPTION("Empty list of states in StateSignifier::returnMostSignificant");
 
+            std::clog << "Will returnMostSignificant for: " << std::endl;
+            for (auto state : listOfStates) {
+                std::clog << state.name() << " ";
+            }
+            std::clog << std::endl;
+
             const State* state = 0;
             size_t stateRank = 0;
             for (vector<State>::const_iterator ii = listOfStates.begin(); ii != listOfStates.end(); ++ii) {
                 size_t rank = rankedAt(*ii);
-                if (rank > stateRank) {
+                std::clog << "Rank for '" << (*ii).name() << "': " << rank << std::endl;
+                if (state) {
+                    std::clog << "Current stateRank of '" << stateRank << "' for '" << state->name() << "'." << std::endl;
+                }
+                if (rank >= stateRank) {
+                    std::clog << "stateRank overriden" << std::endl;
                     state = &(*ii);
                     stateRank = rank;
                 }
@@ -38,6 +49,11 @@ namespace karabo {
         size_t StateSignifier::rankedAt(const State& s) {
             vector<string> allnames;
             fillAncestorNames_r(s, allnames); // fill array of state name and all its parent names
+            std::clog << "\tList of ancestors:" << std::endl << "\t";
+            for (auto stateName : allnames) {
+                std::clog << stateName << " ";
+            }
+            std::clog << std::endl;
             for (vector<string>::const_iterator ii = allnames.begin(); ii != allnames.end(); ii++) {
                 for (size_t i = 0; i < m_trumpList.size(); i++) {
                     if (*ii == m_trumpList[i].name()) return i + 1;
@@ -73,6 +89,8 @@ namespace karabo {
             if (trumpList.empty()) {
                 m_trumpList.push_back(State::DISABLED);
 
+                m_trumpList.push_back(State::STATIC);
+                
                 // Take care to compare the objects, not the pointers:
                 if (staticMoreSignificant == State::PASSIVE) {
                     m_trumpList.push_back(State::ACTIVE);
@@ -82,7 +100,10 @@ namespace karabo {
                     m_trumpList.push_back(State::ACTIVE);
                 }
 
-                m_trumpList.push_back(State::STATIC);
+                m_trumpList.push_back(State::RUNNING);
+                m_trumpList.push_back(State::PAUSED);
+
+                m_trumpList.push_back(State::CHANGING);
 
                 if (changingMoreSignificant == State::DECREASING) {
                     m_trumpList.push_back(State::INCREASING);
@@ -92,9 +113,6 @@ namespace karabo {
                     m_trumpList.push_back(State::INCREASING);
                 }
 
-                m_trumpList.push_back(State::RUNNING);
-                m_trumpList.push_back(State::PAUSED);
-                m_trumpList.push_back(State::CHANGING);
                 m_trumpList.push_back(State::INTERLOCKED);
                 m_trumpList.push_back(State::ERROR);
                 m_trumpList.push_back(State::INIT);
@@ -159,10 +177,10 @@ namespace karabo {
                     }
 
                     if (!inList(m_trumpList, State::INCREASING) && !inList(m_trumpList, State::DECREASING)) {
-                        if (staticMoreSignificant == State::DECREASING) {
+                        if (changingMoreSignificant == State::DECREASING) {
                             m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::INCREASING);
                             m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::DECREASING);
-                        } else if (staticMoreSignificant == State::INCREASING) {
+                        } else if (changingMoreSignificant == State::INCREASING) {
                             m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::DECREASING);
                             m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::INCREASING);
                         }
@@ -192,9 +210,13 @@ namespace karabo {
                         m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::ERROR);
                     }
                 }
-
-
             }
+
+            std::clog << "Trump List: " << std::endl;
+            for (auto state : m_trumpList) {
+                std::clog << state.name() << " ";
+            }
+            std::clog << std::endl;
         }
     }
 }
