@@ -64,8 +64,8 @@ class ConfigurationPanel(BasePanelWidget):
         self._update_displayed_values(proxy)
 
     def _event_clear_configurator(self, data):
-        deviceId = data.get('deviceId', '')
-        self._remove_departed_device(deviceId)
+        devices = data.get('devices', [])
+        self._remove_departed_device(devices)
 
     def _event_load_configuration(self, data):
         proxy = data['proxy']
@@ -304,15 +304,19 @@ class ConfigurationPanel(BasePanelWidget):
         self.pbResetAll.setVisible(False)
         self.acResetAll.setVisible(False)
 
-    def _remove_departed_device(self, device_id):
+    def _remove_departed_device(self, devices):
         """Clear the configuration panel when a device goes away
+
+        :param devices: List of devices that are gone!
         """
         proxy = self._showing_proxy
         if proxy is None:
             return
 
-        if isinstance(proxy, DeviceProxy) and device_id == proxy.device_id:
-            self._show_configuration(None)
+        for device_id in devices:
+            if isinstance(proxy, DeviceProxy) and device_id == proxy.device_id:
+                self._show_configuration(None)
+                return
 
     def _reset_panel(self):
         """This is called when the configurator needs a reset which means all
