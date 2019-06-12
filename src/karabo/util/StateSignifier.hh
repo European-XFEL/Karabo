@@ -56,7 +56,7 @@ namespace karabo {
              * @param s    input state
              * @param all  vector for accumulating of output list of ancestors
              */
-            void fillAncestorNames_r(const karabo::util::State& s, std::vector<std::string>& all);
+            void fillAncestorNames(const karabo::util::State& s, std::vector<std::string>& all);
 
 
             const bool inList(const std::vector<karabo::util::State> & list, const karabo::util::State & s) const;
