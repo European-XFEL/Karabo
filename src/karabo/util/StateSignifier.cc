@@ -70,135 +70,154 @@ namespace karabo {
         }
 
 
+        void StateSignifier::initDefaultTrumpList(const karabo::util::State& staticMoreSignificant,
+                                                  const karabo::util::State& changingMoreSignificant) {
+            m_trumpList.push_back(State::DISABLED);
+
+            m_trumpList.push_back(State::STATIC);
+
+            // Take care to compare the objects, not the pointers:
+            if (staticMoreSignificant == State::PASSIVE) {
+                m_trumpList.push_back(State::ACTIVE);
+                m_trumpList.push_back(State::PASSIVE);
+            } else if (staticMoreSignificant == State::ACTIVE) {
+                m_trumpList.push_back(State::PASSIVE);
+                m_trumpList.push_back(State::ACTIVE);
+            }
+
+            m_trumpList.push_back(State::RUNNING);
+            m_trumpList.push_back(State::PAUSED);
+
+            m_trumpList.push_back(State::CHANGING);
+
+            if (changingMoreSignificant == State::DECREASING) {
+                m_trumpList.push_back(State::INCREASING);
+                m_trumpList.push_back(State::DECREASING);
+            } else if (changingMoreSignificant == State::INCREASING) {
+                m_trumpList.push_back(State::DECREASING);
+                m_trumpList.push_back(State::INCREASING);
+            }
+
+            m_trumpList.push_back(State::INTERLOCKED);
+            m_trumpList.push_back(State::ERROR);
+            m_trumpList.push_back(State::INIT);
+            m_trumpList.push_back(State::UNKNOWN);
+        }
+
+
+        void StateSignifier::completeChangingSubstates(const karabo::util::State& changingMoreSignificant) {
+            if (inList(m_trumpList, State::CHANGING)) {
+                if (!inList(m_trumpList, State::INCREASING) && !inList(m_trumpList, State::DECREASING)) {
+                    if (changingMoreSignificant == State::DECREASING) {
+                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::CHANGING), State::INCREASING);
+                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::CHANGING), State::DECREASING);
+                    } else if (changingMoreSignificant == State::INCREASING) {
+                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::CHANGING), State::DECREASING);
+                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::CHANGING), State::INCREASING);
+                    }
+                } else if (!inList(m_trumpList, State::INCREASING)) {
+                    m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::CHANGING), State::INCREASING);
+                } else if (!inList(m_trumpList, State::DECREASING)) {
+                    m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::CHANGING), State::DECREASING);
+                }
+            }
+        }
+
+
+        void StateSignifier::completeStaticSubstates(const karabo::util::State& staticMoreSignificant) {
+            if (inList(m_trumpList, State::STATIC)) {
+                if (!inList(m_trumpList, State::ACTIVE) && !inList(m_trumpList, State::PASSIVE)) {
+                    if (staticMoreSignificant == State::PASSIVE) {
+                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::STATIC), State::ACTIVE);
+                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::STATIC), State::PASSIVE);
+                    } else if (staticMoreSignificant == State::ACTIVE) {
+                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::STATIC), State::PASSIVE);
+                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::STATIC), State::ACTIVE);
+                    }
+                } else if (!inList(m_trumpList, State::ACTIVE)) {
+                    m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::STATIC), State::ACTIVE);
+                } else if (!inList(m_trumpList, State::PASSIVE)) {
+                    m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::STATIC), State::PASSIVE);
+                }
+            }
+        }
+
+
+        void StateSignifier::completeKnownSubstates(const karabo::util::State& staticMoreSignificant,
+                                                    const karabo::util::State& changingMoreSignificant) {
+            if (inList(m_trumpList, State::KNOWN)) {
+                if (!inList(m_trumpList, State::DISABLED)) {
+                    m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::DISABLED);
+                }
+
+                if (!inList(m_trumpList, State::ACTIVE) && !inList(m_trumpList, State::PASSIVE)) {
+                    if (staticMoreSignificant == State::PASSIVE) {
+                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::ACTIVE);
+                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::PASSIVE);
+                    } else if (staticMoreSignificant == State::ACTIVE) {
+                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::PASSIVE);
+                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::ACTIVE);
+                    }
+                } else if (!inList(m_trumpList, State::ACTIVE)) {
+                    m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::ACTIVE);
+                } else if (!inList(m_trumpList, State::PASSIVE)) {
+                    m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::PASSIVE);
+                }
+
+                if (!inList(m_trumpList, State::STATIC)) {
+                    m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::STATIC);
+                }
+
+                if (!inList(m_trumpList, State::INCREASING) && !inList(m_trumpList, State::DECREASING)) {
+                    if (changingMoreSignificant == State::DECREASING) {
+                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::INCREASING);
+                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::DECREASING);
+                    } else if (changingMoreSignificant == State::INCREASING) {
+                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::DECREASING);
+                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::INCREASING);
+                    }
+                } else if (!inList(m_trumpList, State::INCREASING)) {
+                    m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::INCREASING);
+                } else if (!inList(m_trumpList, State::DECREASING)) {
+                    m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::DECREASING);
+                }
+
+                if (!inList(m_trumpList, State::RUNNING)) {
+                    m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::RUNNING);
+                }
+                if (!inList(m_trumpList, State::PAUSED)) {
+                    m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::RUNNING), State::PAUSED);
+                }
+                if (!inList(m_trumpList, State::CHANGING)) {
+                    m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::CHANGING);
+                }
+                if (!inList(m_trumpList, State::INTERLOCKED)) {
+                    m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::INTERLOCKED);
+                }
+                if (!inList(m_trumpList, State::ERROR)) {
+                    m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::ERROR);
+                }
+            }
+        }
+
+
         void StateSignifier::initTrumpList(const std::vector<karabo::util::State>& trumpList,
                                            const karabo::util::State& staticMoreSignificant,
                                            const karabo::util::State& changingMoreSignificant) {
 
             if (trumpList.empty()) {
-                m_trumpList.push_back(State::DISABLED);
 
-                m_trumpList.push_back(State::STATIC);
-                
-                // Take care to compare the objects, not the pointers:
-                if (staticMoreSignificant == State::PASSIVE) {
-                    m_trumpList.push_back(State::ACTIVE);
-                    m_trumpList.push_back(State::PASSIVE);
-                } else if (staticMoreSignificant == State::ACTIVE) {
-                    m_trumpList.push_back(State::PASSIVE);
-                    m_trumpList.push_back(State::ACTIVE);
-                }
+                initDefaultTrumpList(staticMoreSignificant, changingMoreSignificant);
 
-                m_trumpList.push_back(State::RUNNING);
-                m_trumpList.push_back(State::PAUSED);
-
-                m_trumpList.push_back(State::CHANGING);
-
-                if (changingMoreSignificant == State::DECREASING) {
-                    m_trumpList.push_back(State::INCREASING);
-                    m_trumpList.push_back(State::DECREASING);
-                } else if (changingMoreSignificant == State::INCREASING) {
-                    m_trumpList.push_back(State::DECREASING);
-                    m_trumpList.push_back(State::INCREASING);
-                }
-
-                m_trumpList.push_back(State::INTERLOCKED);
-                m_trumpList.push_back(State::ERROR);
-                m_trumpList.push_back(State::INIT);
-                m_trumpList.push_back(State::UNKNOWN);
-                
             } else {
+
                 m_trumpList = trumpList;
+                completeChangingSubstates(changingMoreSignificant);
+                completeStaticSubstates(staticMoreSignificant);
+                completeKnownSubstates(staticMoreSignificant, changingMoreSignificant);
 
-                if (inList(m_trumpList, State::CHANGING)) {
-                    if (!inList(m_trumpList, State::INCREASING) && !inList(m_trumpList, State::DECREASING)) {
-                        if (staticMoreSignificant == State::DECREASING) {
-                            m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::CHANGING), State::INCREASING);
-                            m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::CHANGING), State::DECREASING);
-                        } else if (staticMoreSignificant == State::INCREASING) {
-                            m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::CHANGING), State::DECREASING);
-                            m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::CHANGING), State::INCREASING);
-                        }
-                    } else if (!inList(m_trumpList, State::INCREASING)) {
-                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::CHANGING), State::INCREASING);
-                    } else if (!inList(m_trumpList, State::DECREASING)) {
-                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::CHANGING), State::DECREASING);
-                    }
-                }
-
-                if (inList(m_trumpList, State::STATIC)) {
-                    if (!inList(m_trumpList, State::ACTIVE) && !inList(m_trumpList, State::PASSIVE)) {
-                        if (staticMoreSignificant == State::PASSIVE) {
-                            m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::STATIC), State::ACTIVE);
-                            m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::STATIC), State::PASSIVE);
-                        } else if (staticMoreSignificant == State::ACTIVE) {
-                            m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::STATIC), State::PASSIVE);
-                            m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::STATIC), State::ACTIVE);
-                        }
-                    } else if (!inList(m_trumpList, State::ACTIVE)) {
-                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::STATIC), State::ACTIVE);
-                    } else if (!inList(m_trumpList, State::PASSIVE)) {
-                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::STATIC), State::PASSIVE);
-                    }
-                }
-
-                if (inList(m_trumpList, State::KNOWN)) {
-                    if (!inList(m_trumpList, State::DISABLED)) {
-                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::DISABLED);
-                    }
-
-                    if (!inList(m_trumpList, State::ACTIVE) && !inList(m_trumpList, State::PASSIVE)) {
-                        if (staticMoreSignificant == State::PASSIVE) {
-                            m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::ACTIVE);
-                            m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::PASSIVE);
-                        } else if (staticMoreSignificant == State::ACTIVE) {
-                            m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::PASSIVE);
-                            m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::ACTIVE);
-                        }
-                    } else if (!inList(m_trumpList, State::ACTIVE)) {
-                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::ACTIVE);
-                    } else if (!inList(m_trumpList, State::PASSIVE)) {
-                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::PASSIVE);
-                    }
-
-                    if (!inList(m_trumpList, State::STATIC)) {
-                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::STATIC);
-                    }
-
-                    if (!inList(m_trumpList, State::INCREASING) && !inList(m_trumpList, State::DECREASING)) {
-                        if (changingMoreSignificant == State::DECREASING) {
-                            m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::INCREASING);
-                            m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::DECREASING);
-                        } else if (changingMoreSignificant == State::INCREASING) {
-                            m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::DECREASING);
-                            m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::INCREASING);
-                        }
-                    } else if (!inList(m_trumpList, State::INCREASING)) {
-                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::INCREASING);
-                    } else if (!inList(m_trumpList, State::DECREASING)) {
-                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::DECREASING);
-                    }
-
-                    if (!inList(m_trumpList, State::RUNNING)) {
-                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::RUNNING);
-                    }
-
-                    if (!inList(m_trumpList, State::PAUSED)) {
-                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::RUNNING), State::PAUSED);
-                    }
-
-                    if (!inList(m_trumpList, State::CHANGING)) {
-                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::CHANGING);
-                    }
-
-                    if (!inList(m_trumpList, State::INTERLOCKED)) {
-                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::INTERLOCKED);
-                    }
-
-                    if (!inList(m_trumpList, State::ERROR)) {
-                        m_trumpList.insert(std::find(m_trumpList.begin(), m_trumpList.end(), State::KNOWN), State::ERROR);
-                    }
-                }
             }
         }
+
     }
 }
