@@ -29,15 +29,19 @@ namespace karabo {
         }
 
 
-        void StateSignifier::fillAncestorNames_r(const State& s, std::vector<std::string>& all) {
+        void StateSignifier::fillAncestorNames(const State& s, std::vector<std::string>& all) {
             all.push_back(s.name());
-            if (s.parent()) fillAncestorNames_r(*(s.parent()), all);
+            State sCpy = s;
+            while (sCpy.parent()) {
+                sCpy = *sCpy.parent();
+                all.push_back(sCpy.name());
+            }
         }
 
 
         size_t StateSignifier::rankedAt(const State& s) {
             vector<string> allnames;
-            fillAncestorNames_r(s, allnames); // fill array of state name and all its parent names
+            fillAncestorNames(s, allnames); // fill array of state name and all its parent names
             for (vector<string>::const_iterator ii = allnames.begin(); ii != allnames.end(); ii++) {
                 for (size_t i = 0; i < m_trumpList.size(); i++) {
                     if (*ii == m_trumpList[i].name()) return i + 1;
