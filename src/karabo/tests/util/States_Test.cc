@@ -100,7 +100,7 @@ void States_Test::testSignifierNonDefaultList() {
     s.push_back(State::DECREASING);
     s.push_back(State::UNKNOWN);
     s.push_back(State::INTERLOCKED);
-    CPPUNIT_ASSERT(StateSignifier(trumpList).returnMostSignificant(s) == State::CHANGING);
+    CPPUNIT_ASSERT_EQUAL(State::CHANGING, StateSignifier(trumpList).returnMostSignificant(s));
 }
 
 
@@ -188,8 +188,6 @@ void States_Test::testStatesSignifierDefault() {
     CPPUNIT_ASSERT_EQUAL(State::RUNNING, signifier.returnMostSignificant(states));
     states.push_back(State::PAUSED);
     CPPUNIT_ASSERT_EQUAL(State::PAUSED, signifier.returnMostSignificant(states));
-    // TODO: Fix all the tests that have been commented out temporarily.
-    /*
     states.push_back(State::HEATING);
     CPPUNIT_ASSERT_EQUAL(signifier.returnMostSignificant(states), State::HEATING);
     states.push_back(State::INCREASING);
@@ -202,7 +200,6 @@ void States_Test::testStatesSignifierDefault() {
     CPPUNIT_ASSERT_EQUAL(State::DECREASING, signifier.returnMostSignificant(states));
     states.push_back(State::CHANGING);
     CPPUNIT_ASSERT_EQUAL(State::DECREASING, signifier.returnMostSignificant(states));
-     */
     states.push_back(State::INTERLOCKED);
     CPPUNIT_ASSERT_EQUAL(State::INTERLOCKED, signifier.returnMostSignificant(states));
     states.push_back(State::ERROR);
@@ -223,8 +220,6 @@ void States_Test::testStatesSignifierActiveDecreasing() {
     CPPUNIT_ASSERT_EQUAL(State::RUNNING, signifier.returnMostSignificant(states));
     states.push_back(State::PAUSED);
     CPPUNIT_ASSERT_EQUAL(State::PAUSED, signifier.returnMostSignificant(states));
-    // TODO: Fix all the tests that have been commented out temporarily.
-    /*
     states.push_back(State::HEATING);
     CPPUNIT_ASSERT_EQUAL(signifier.returnMostSignificant(states), State::HEATING);
     states.push_back(State::INCREASING);
@@ -237,7 +232,6 @@ void States_Test::testStatesSignifierActiveDecreasing() {
     CPPUNIT_ASSERT_EQUAL(State::DECREASING, signifier.returnMostSignificant(states));
     states.push_back(State::CHANGING);
     CPPUNIT_ASSERT_EQUAL(State::DECREASING, signifier.returnMostSignificant(states));
-     */
     states.push_back(State::INTERLOCKED);
     CPPUNIT_ASSERT_EQUAL(State::INTERLOCKED, signifier.returnMostSignificant(states));
     states.push_back(State::ERROR);
@@ -258,8 +252,6 @@ void States_Test::testStatesSignifierPassiveIncreasing() {
     CPPUNIT_ASSERT_EQUAL(State::RUNNING, signifier.returnMostSignificant(states));
     states.push_back(State::PAUSED);
     CPPUNIT_ASSERT_EQUAL(State::PAUSED, signifier.returnMostSignificant(states));
-    // TODO: Fix all the tests that have been commented out temporarily.
-    /*
     states.push_back(State::COOLING);
     CPPUNIT_ASSERT_EQUAL(signifier.returnMostSignificant(states), State::COOLING);
     states.push_back(State::DECREASING);
@@ -272,7 +264,6 @@ void States_Test::testStatesSignifierPassiveIncreasing() {
     CPPUNIT_ASSERT_EQUAL(State::INCREASING, signifier.returnMostSignificant(states));
     states.push_back(State::CHANGING);
     CPPUNIT_ASSERT_EQUAL(State::INCREASING, signifier.returnMostSignificant(states));
-    */
     states.push_back(State::INTERLOCKED);
     CPPUNIT_ASSERT_EQUAL(State::INTERLOCKED, signifier.returnMostSignificant(states));
     states.push_back(State::ERROR);
@@ -293,8 +284,6 @@ void States_Test::testStatesSignifierActiveIncreasing() {
     CPPUNIT_ASSERT_EQUAL(State::RUNNING, signifier.returnMostSignificant(states));
     states.push_back(State::PAUSED);
     CPPUNIT_ASSERT_EQUAL(State::PAUSED, signifier.returnMostSignificant(states));
-    // TODO: Fix all the tests that have been commented out temporarily.
-    /*
     states.push_back(State::COOLING);
     CPPUNIT_ASSERT_EQUAL(signifier.returnMostSignificant(states), State::COOLING);
     states.push_back(State::DECREASING);
@@ -307,7 +296,6 @@ void States_Test::testStatesSignifierActiveIncreasing() {
     CPPUNIT_ASSERT_EQUAL(State::INCREASING, signifier.returnMostSignificant(states));
     states.push_back(State::CHANGING);
     CPPUNIT_ASSERT_EQUAL(State::INCREASING, signifier.returnMostSignificant(states));
-    */
     states.push_back(State::INTERLOCKED);
     CPPUNIT_ASSERT_EQUAL(State::INTERLOCKED, signifier.returnMostSignificant(states));
     states.push_back(State::ERROR);
@@ -335,6 +323,7 @@ void States_Test::testAcquiringChangingOnActive() {
     std::vector<State> states{State::ON, State::OFF};
     auto signifier = StateSignifier(State::ACTIVE, // staticMoreSignificant
                                     State::DECREASING); // changingMoreSignificant
+    
     CPPUNIT_ASSERT_EQUAL(State::ON, signifier.returnMostSignificant(states));
     states.push_back(State::ACQUIRING);
     CPPUNIT_ASSERT_EQUAL(State::ACQUIRING, signifier.returnMostSignificant(states));
@@ -349,10 +338,5 @@ void States_Test::testStatesSignifierNonDefList() {
                               State::RUNNING, State::PAUSED, State::UNKNOWN, State::INTERLOCKED};
     auto signifier = StateSignifier(trumpList);
     CPPUNIT_ASSERT_EQUAL(State::CHANGING, signifier.returnMostSignificant(states));
-    // TODO: Fix the StateSignifier so the assert commented out below becomes true.
-    /*
-    states.push_back(State::DECREASING);
-    CPPUNIT_ASSERT_EQUAL(State::DECREASING, signifier.returnMostSignificant(states));
-    */
 }
 
