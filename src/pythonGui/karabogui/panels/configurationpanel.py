@@ -310,13 +310,11 @@ class ConfigurationPanel(BasePanelWidget):
         :param devices: List of devices that are gone!
         """
         proxy = self._showing_proxy
-        if proxy is None:
+        if proxy is None or not isinstance(proxy, DeviceProxy):
             return
 
-        for device_id in devices:
-            if isinstance(proxy, DeviceProxy) and device_id == proxy.device_id:
-                self._show_configuration(None)
-                return
+        if proxy.device_id in devices:
+            self._show_configuration(None)
 
     def _reset_panel(self):
         """This is called when the configurator needs a reset which means all
