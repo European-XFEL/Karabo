@@ -65,6 +65,39 @@ namespace karabo {
                                const karabo::util::State& staticMoreSignificant,
                                const karabo::util::State& changingMoreSignificant);
 
+            void initDefaultTrumpList(const karabo::util::State& staticMoreSignificant,
+                                      const karabo::util::State& changingMoreSignificant);
+
+            /**
+             * Completes a non default trump list with some substates of CHANGING if that
+             * list contains CHANGING.
+             * 
+             * @param changingMoreSignificant which CHANGING substate is more significant between
+             * INCREASING and DECREASING?
+             */
+            void completeChangingSubstates(const karabo::util::State& changingMoreSignificant);
+
+            /**
+             * Completes a non default trump list with some substates of STATIC if that
+             * list contains STATIC.
+             * 
+             * @param staticMoreSignificant which STATIC substate is more significant between
+             * ACTIVE and PASSIVE?
+             */
+            void completeStaticSubstates(const karabo::util::State& staticMoreSignificant);
+
+            /**
+             * Completes a non default trump list with some substates of KNOWN if that
+             * list contains KNOWN.
+             * 
+             * @param staticgMoreSignificant which STATIC substate is more significant between
+             * ACTIVE and PASSIVE?
+             * @param changingMoreSignificant which CHANGING substate is more significant between
+             * INCREASING and DECREASING?
+             */
+            void completeKnownSubstates(const karabo::util::State& staticMoreSignificant,
+                                        const karabo::util::State& changingMoreSignificant);
+
         protected:
             std::vector<karabo::util::State> m_trumpList;
         };
