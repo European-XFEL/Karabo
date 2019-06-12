@@ -64,7 +64,7 @@ namespace karabo {
 
             void connectHandler(const karabo::net::ErrorCode& e, const karabo::net::Channel::Pointer& channel);
 
-            void onSubscribe(const ErrorCode& e, const karabo::net::Channel::Pointer& channel, const std::string& subscription);
+            void onSubscribe(const ErrorCode& e, const karabo::net::Channel::WeakPointer& channel, const std::string& subscription);
 
             void stop();
 
@@ -204,7 +204,7 @@ namespace karabo {
                 // channel will be destructed (and thus closed) since not in any container anymore
             } else {
                 // Output also raw pointer to check whether it is null:
-                KARABO_LOG_FRAMEWORK_ERROR << "channelErrorHandler called for unknown channel " << channel.get();
+                KARABO_LOG_FRAMEWORK_ERROR << "channelErrorHandler called for unknown channel at " << channel.get();
                 // Better close this zombie guy:
                 if (channel) channel->close();
             }
@@ -215,16 +215,31 @@ namespace karabo {
             if (e) {
                 return;
             }
+            // Stay open for next connections:
             m_connection->startAsync(bind_weak(&PointToPoint::Producer::connectHandler, this, _1, _2));
+
+            // Register - and warn about inconsistencies...
+            {
+                boost::unique_lock<boost::shared_mutex> lock(m_registeredChannelsMutex);
+                auto& slotInstanceIds = m_registeredChannels[channel]; // Should create (empty) slotInstanceIds...
+                if (!slotInstanceIds.empty()) {
+                    KARABO_LOG_FRAMEWORK_WARN << "Channel connects again: " << channel.get();
+                }
+            }
+
+            // Setup and wait for (un-)subscriptions:
             channel->setAsyncChannelPolicy(3, "REMOVE_OLDEST");
             channel->setAsyncChannelPolicy(4, "LOSSLESS");
-            channel->readAsyncString(bind_weak(&PointToPoint::Producer::onSubscribe, this, _1, channel, _2));
-            // No need to put already something into m_registeredChannels - will happen in onSubscribe.
+            channel->readAsyncString(bind_weak(&PointToPoint::Producer::onSubscribe, this,
+                                               _1, Channel::WeakPointer(channel), _2));
         }
 
 
-        void PointToPoint::Producer::onSubscribe(const ErrorCode& e, const karabo::net::Channel::Pointer& channel, const std::string& subscription) {
-            if (e) {
+        void PointToPoint::Producer::onSubscribe(const ErrorCode& e, const karabo::net::Channel::WeakPointer& weakChannel,
+                                                 const std::string& subscription) {
+
+            Channel::Pointer channel = weakChannel.lock();
+            if (e || !channel) {
                 channelErrorHandler(e, channel);
                 return;
             }
@@ -260,7 +275,7 @@ namespace karabo {
                 return; // channel will be destructed (and thus closed) since not in any container anymore
             }
             // wait for next command
-            channel->readAsyncString(bind_weak(&PointToPoint::Producer::onSubscribe, this, _1, channel, _2));
+            channel->readAsyncString(bind_weak(&PointToPoint::Producer::onSubscribe, this, _1, weakChannel, _2));
         }
 
 
