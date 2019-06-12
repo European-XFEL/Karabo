@@ -1177,3 +1177,29 @@ void Schema_Test::testAllowedActions() {
     CPPUNIT_ASSERT_THROW(s.setAllowedActions("node.int",{"bla", "blue"}),
                          karabo::util::ParameterException);
 }
+
+                         
+void Schema_Test::testDefaultReadOnlyThrows() {
+
+    karabo::util::Schema invalidSchema;
+
+    // The assignmentOptional().defaultValue(1).readOnly() sequence below,
+    // if accepted, would reset the element value to 0, overriding the
+    // defaultValue setting.
+    CPPUNIT_ASSERT_THROW(
+                          INT32_ELEMENT(invalidSchema).key("int")
+                          .assignmentOptional().defaultValue(1)
+                          .readOnly()
+                          .commit(),
+                          karabo::util::LogicException
+                         );
+
+    karabo::util::Schema validReadOnlySchema;
+
+    CPPUNIT_ASSERT_NO_THROW(
+                            INT32_ELEMENT(validReadOnlySchema).key("int")
+                            .readOnly().initialValue(1)
+                            .commit()
+                            );
+
+}
