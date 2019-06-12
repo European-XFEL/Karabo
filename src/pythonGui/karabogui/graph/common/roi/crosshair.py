@@ -3,8 +3,8 @@ from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QPainterPathStroker, QPainterPath
 from pyqtgraph import Point
 
-from graph.common.roi.base import KaraboROI
-from graph.image.utils import float_to_string
+from karabogui.graph.common.roi.base import KaraboROI
+from .utils import float_to_string
 
 from .utils import ROI_CENTER_HTML, ImageRegion
 
