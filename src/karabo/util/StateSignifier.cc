@@ -15,22 +15,11 @@ namespace karabo {
             if (listOfStates.empty())
                 throw KARABO_PARAMETER_EXCEPTION("Empty list of states in StateSignifier::returnMostSignificant");
 
-            std::clog << "Will returnMostSignificant for: " << std::endl;
-            for (auto state : listOfStates) {
-                std::clog << state.name() << " ";
-            }
-            std::clog << std::endl;
-
             const State* state = 0;
             size_t stateRank = 0;
             for (vector<State>::const_iterator ii = listOfStates.begin(); ii != listOfStates.end(); ++ii) {
                 size_t rank = rankedAt(*ii);
-                std::clog << "Rank for '" << (*ii).name() << "': " << rank << std::endl;
-                if (state) {
-                    std::clog << "Current stateRank of '" << stateRank << "' for '" << state->name() << "'." << std::endl;
-                }
                 if (rank >= stateRank) {
-                    std::clog << "stateRank overriden" << std::endl;
                     state = &(*ii);
                     stateRank = rank;
                 }
@@ -49,11 +38,6 @@ namespace karabo {
         size_t StateSignifier::rankedAt(const State& s) {
             vector<string> allnames;
             fillAncestorNames_r(s, allnames); // fill array of state name and all its parent names
-            std::clog << "\tList of ancestors:" << std::endl << "\t";
-            for (auto stateName : allnames) {
-                std::clog << stateName << " ";
-            }
-            std::clog << std::endl;
             for (vector<string>::const_iterator ii = allnames.begin(); ii != allnames.end(); ii++) {
                 for (size_t i = 0; i < m_trumpList.size(); i++) {
                     if (*ii == m_trumpList[i].name()) return i + 1;
@@ -211,12 +195,6 @@ namespace karabo {
                     }
                 }
             }
-
-            std::clog << "Trump List: " << std::endl;
-            for (auto state : m_trumpList) {
-                std::clog << state.name() << " ";
-            }
-            std::clog << std::endl;
         }
     }
 }
