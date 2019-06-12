@@ -3,7 +3,6 @@ from .axis_item import AxisItem, get_axis_items
 
 from .roi.base import KaraboROI
 from .roi.controllers.base import BaseROIController
-from .roi.controllers.image import ImageROIController
 from .roi.crosshair import CrosshairROI
 from .roi.rect import RectROI
 from .roi.utils import ImageRegion
