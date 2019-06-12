@@ -22,6 +22,12 @@ from .widgets.complex import (
 from .widgets.icon import (
     BaseIconsModel, DigitIconsModel, DisplayIconsetModel, IconData,
     SelectionIconsModel, TextIconsModel)
+from .widgets.graph_utils import (
+    BaseROIData, CrossROIData, RectROIData, read_base_karabo_image_model,
+    write_base_karabo_image_model, read_roi_info, write_roi_info,
+    read_transforms, write_transforms, read_axes_set, write_axes_set,
+    read_basic_label, write_basic_label, read_range_set, write_range_set,
+    build_graph_config, build_model_config, restore_graph_config)
 from .widgets.image import (
     DisplayAlignedImageModel, DisplayImageElementModel, DisplayImageModel,
     ScientificImageModel, WebcamImageModel)
