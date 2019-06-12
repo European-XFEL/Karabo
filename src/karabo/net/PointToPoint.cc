@@ -123,7 +123,7 @@ namespace karabo {
 
             void consume(const karabo::net::ErrorCode& ec,
                          const std::string& signalConnectionString,
-                         const karabo::net::Channel::Pointer& channel,
+                         const karabo::net::Channel::WeakPointer& channel,
                          karabo::util::Hash::Pointer& header,
                          karabo::util::Hash::Pointer& body);
 
@@ -396,7 +396,7 @@ namespace karabo {
             }
             if (channel) {
                 channel->close();
-                // We have only this channel per connection - always. So close it:
+                // We have only this channel per connection - always. So better close it:
                 channel->getConnection()->stop();
             }
         }
@@ -470,8 +470,8 @@ namespace karabo {
             }
 
             // ... and, finally, wait for publications ...
-            channel->readAsyncHashPointerHashPointer(bind_weak(&Consumer::consume, this, _1,
-                                                               signalConnectionString, channel, _2, _3));
+            channel->readAsyncHashPointerHashPointer(bind_weak(&Consumer::consume, this, _1, signalConnectionString,
+                                                               Channel::WeakPointer(channel), _2, _3));
         }
 
 
@@ -619,11 +619,12 @@ namespace karabo {
 
         void PointToPoint::Consumer::consume(const karabo::net::ErrorCode& ec,
                                              const std::string& signalConnectionString,
-                                             const karabo::net::Channel::Pointer& channel,
+                                             const karabo::net::Channel::WeakPointer& weakChannel,
                                              karabo::util::Hash::Pointer& header,
                                              karabo::util::Hash::Pointer& body) {
 
-            if (ec) {
+            Channel::Pointer channel = weakChannel.lock();
+            if (ec || !channel) {
                 channelErrorHandler(ec, signalConnectionString, channel);
                 return;
             }
@@ -659,7 +660,7 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_WARN << "Received message from '" << signalInstanceId << "' (to '"
                                 << slotInstanceId << "'), but no connection known for that.";
                         channel->readAsyncHashPointerHashPointer(bind_weak(&Consumer::consume, this, _1, signalConnectionString,
-                                                                           channel, _2, _3));
+                                                                           weakChannel, _2, _3));
                         return;
                     }
                     SlotInstanceIds& slotInstanceIds = ii->second.second;
@@ -677,7 +678,7 @@ namespace karabo {
             }
             // Re-register itself - do at the very end to guarantee correct order of handler execution.
             channel->readAsyncHashPointerHashPointer(bind_weak(&Consumer::consume, this, _1, signalConnectionString,
-                                                               channel, _2, _3));
+                                                               weakChannel, _2, _3));
         }
 
 
