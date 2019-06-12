@@ -1,8 +1,8 @@
 from PyQt4.QtCore import pyqtSlot
 
-from graph.common.enums import ROITool
-from graph.common.roi.utils import ImageRegion
-from graph.common.const import SCALING, TRANSLATION
+from karabogui.graph.common.enums import ROITool
+from karabogui.graph.common.roi.utils import ImageRegion
+from karabogui.graph.common.const import SCALING, TRANSLATION
 
 from .base import BaseROIController
 

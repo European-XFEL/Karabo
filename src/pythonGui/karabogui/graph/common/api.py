@@ -24,7 +24,4 @@ from .toolbar import (
     BaseToolsetController, MouseModeToolset, ExportToolset, KaraboToolBar,
     create_tool_button, create_dropdown_button, DropDownMenu, WidgetAction,
     ROIToolset)
-from .utils import (
-    build_model_config, build_graph_config, get_configuration,
-    restore_graph_config)
 from .viewbox import KaraboViewBox
