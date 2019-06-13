@@ -1,7 +1,6 @@
 from collections import defaultdict
 
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
-from functools import partial
 from pyqtgraph import ROI
 
 from karabogui.graph.common.toolbar import ROITool
