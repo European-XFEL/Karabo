@@ -3,7 +3,7 @@ from PyQt4.QtCore import QPointF
 
 from karabogui.testing import GuiTestCase
 
-from karabogui.graph.common.enums import AuxPlots, ROITool
+from karabogui.graph.common.api import AuxPlots, ROITool
 from ..base import KaraboImageView
 
 

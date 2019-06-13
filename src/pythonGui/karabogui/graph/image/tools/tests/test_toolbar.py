@@ -1,10 +1,10 @@
 from PyQt4.QtCore import pyqtSlot
 
 from karabogui.testing import GuiTestCase
+from karabogui.graph.common.api import (
+    AuxPlots, ExportTool, ExportToolset, KaraboToolBar, ROITool, ROIToolset)
 
-from karabogui.graph.common.toolbar import ExportToolset, KaraboToolBar, ROIToolset
-from karabogui.graph.common.enums import AuxPlots, ExportTool, ROITool
-from karabogui.graph.image.api import AuxPlotsToolset
+from karabogui.graph.image.tools.toolbar import AuxPlotsToolset
 
 
 class TestCase(GuiTestCase):

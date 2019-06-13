@@ -1,8 +1,7 @@
 from PyQt4.QtCore import Qt
 from pyqtgraph import ViewBox
 
-from karabogui.graph.common.enums import MouseMode
-from karabogui.graph.common.viewbox import KaraboViewBox
+from karabogui.graph.common.api import KaraboViewBox, MouseMode
 
 
 class KaraboImageViewBox(KaraboViewBox):
