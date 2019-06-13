@@ -224,11 +224,13 @@ class Manager(QObject):
     def handle_topologyUpdate(self, changes):
         gone_devices, gone_servers = self._topology.topology_update(changes)
 
+        gone_instanceIds = []
         # Did an alarm system leave our topology?
         for instance_id, class_id, _ in gone_devices:
             if class_id == 'AlarmService':
                 broadcast_event(KaraboEvent.RemoveAlarmServices,
                                 {'instanceIds': [instance_id]})
+            gone_instanceIds.append(instance_id)
 
         # Update topology interested listeners!
         devices, servers = _extract_topology_devices(
@@ -250,7 +252,7 @@ class Manager(QObject):
                         {'devices': devices, 'servers': servers})
 
         broadcast_event(KaraboEvent.ClearConfigurator,
-                        {'devices': gone_devices})
+                        {'devices': gone_instanceIds})
 
     def handle_instanceNew(self, topologyEntry):
         """This function receives the configuration for a new instance.
