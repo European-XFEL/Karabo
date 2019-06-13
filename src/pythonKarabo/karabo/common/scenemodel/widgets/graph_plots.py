@@ -1,0 +1,251 @@
+from traits.api import Bool, Float, Int, List, String
+from xml.etree.ElementTree import SubElement
+
+from karabo.common.scenemodel.api import BaseWidgetObjectData
+from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
+from karabo.common.scenemodel.io_utils import (
+    read_base_widget_data, write_base_widget_data)
+from karabo.common.scenemodel.registry import (
+    register_scene_reader, register_scene_writer)
+
+from .graph_utils import (
+    BaseROIData, read_axes_set, read_basic_label, read_range_set,
+    read_roi_info, write_axes_set, write_basic_label, write_range_set,
+    write_roi_info)
+
+
+class BasePlotModel(BaseWidgetObjectData):
+    """ A base model for the plot graphs"""
+    x_label = String
+    y_label = String
+    x_units = String
+    y_units = String
+    autorange = Bool(True)
+    x_grid = Bool(False)
+    y_grid = Bool(False)
+    x_log = Bool(False)
+    y_log = Bool(False)
+    x_invert = Bool(False)
+    y_invert = Bool(False)
+    x_min = Float(0.0)
+    x_max = Float(0.0)
+    y_min = Float(0.0)
+    y_max = Float(0.0)
+
+
+class ScatterGraphModel(BasePlotModel):
+    """ A model for the Scatter Graph"""
+    maxlen = Int(100)
+    psize = Float(7.0)
+
+
+class VectorScatterGraphModel(BasePlotModel):
+    """ A model for the VectorScatter Graph"""
+    psize = Float(7.0)
+
+
+class VectorBarGraphModel(BasePlotModel):
+    """ A model for the Vector Bar Graph"""
+    bar_width = Float(0.1)
+
+
+class NDArrayGraphModel(BasePlotModel):
+    """ A model for the NDArray Graph"""
+    half_samples = Int(6000)
+    roi_items = List(BaseROIData)
+    roi_tool = Int(0)
+
+
+class VectorHistGraphModel(BasePlotModel):
+    """ A model for the VectorHist Graph"""
+    bins = Int(10)
+    auto = Bool(True)
+    start = Float(0.0)
+    stop = Float(0.0)
+
+
+class VectorFillGraphModel(BasePlotModel):
+    """ A model for the Vector Fill Graph"""
+
+
+class VectorGraphModel(BasePlotModel):
+    """ A model for the Vector Graph"""
+    half_samples = Int(6000)
+    roi_items = List(BaseROIData)
+    roi_tool = Int(0)
+
+
+@register_scene_reader('ScatterGraph')
+def _scatter_graph_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    traits.update(read_basic_label(element))
+    traits.update(read_axes_set(element))
+    traits.update(read_range_set(element))
+    traits['maxlen'] = int(element.get(NS_KARABO + 'maxlen', 100))
+    traits['psize'] = float(element.get(NS_KARABO + 'psize', 7))
+
+    return ScatterGraphModel(**traits)
+
+
+@register_scene_writer(ScatterGraphModel)
+def _scatter_graph_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'ScatterGraph')
+    write_basic_label(model, element)
+    write_axes_set(model, element)
+    write_range_set(model, element)
+    element.set(NS_KARABO + 'maxlen', str(model.maxlen))
+    element.set(NS_KARABO + 'psize', str(model.psize))
+
+    return element
+
+
+@register_scene_reader('VectorScatterGraph')
+def _vector_scatter_graph_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    traits.update(read_basic_label(element))
+    traits.update(read_axes_set(element))
+    traits.update(read_range_set(element))
+    traits['psize'] = float(element.get(NS_KARABO + 'psize', 7))
+
+    return VectorScatterGraphModel(**traits)
+
+
+@register_scene_writer(VectorScatterGraphModel)
+def _vector_scatter_graph_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'VectorScatterGraph')
+    write_basic_label(model, element)
+    write_axes_set(model, element)
+    write_range_set(model, element)
+    element.set(NS_KARABO + 'psize', str(model.psize))
+
+    return element
+
+
+@register_scene_reader('VectorBarGraph')
+def _vector_bar_graph_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    traits.update(read_basic_label(element))
+    traits.update(read_axes_set(element))
+    traits.update(read_range_set(element))
+    traits['bar_width'] = float(element.get(NS_KARABO + 'bar_width', 0.1))
+
+    return VectorBarGraphModel(**traits)
+
+
+@register_scene_writer(VectorBarGraphModel)
+def _vector_bar_graph_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'VectorBarGraph')
+    write_basic_label(model, element)
+    write_axes_set(model, element)
+    write_range_set(model, element)
+    element.set(NS_KARABO + 'bar_width', str(model.bar_width))
+
+    return element
+
+
+@register_scene_reader('VectorHistGraph')
+def _vector_hist_graph_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    traits.update(read_basic_label(element))
+    traits.update(read_axes_set(element))
+    traits.update(read_range_set(element))
+    traits['bins'] = int(element.get(NS_KARABO + 'bins', 10))
+    auto = element.get(NS_KARABO + 'auto', 'true')
+    traits['auto'] = auto.lower() == 'true'
+    traits['start'] = float(element.get(NS_KARABO + 'start', 0.0))
+    traits['stop'] = float(element.get(NS_KARABO + 'stop', 0.0))
+
+    return VectorHistGraphModel(**traits)
+
+
+@register_scene_writer(VectorHistGraphModel)
+def _vector_hist_graph_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'VectorHistGraph')
+    write_basic_label(model, element)
+    write_axes_set(model, element)
+    write_range_set(model, element)
+    element.set(NS_KARABO + 'bins', str(model.bins))
+    element.set(NS_KARABO + 'start', str(model.start))
+    element.set(NS_KARABO + 'stop', str(model.stop))
+    element.set(NS_KARABO + 'auto', str(model.auto))
+
+    return element
+
+
+@register_scene_reader('NDArrayGraph')
+def _ndarray_graph_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    traits.update(read_basic_label(element))
+    traits.update(read_axes_set(element))
+    traits.update(read_range_set(element))
+    traits['roi_items'] = read_roi_info(element)
+    traits['roi_tool'] = int(element.get(NS_KARABO + 'roi_tool', 0))
+    traits['half_samples'] = int(element.get(NS_KARABO + 'half_samples', 6000))
+
+    return NDArrayGraphModel(**traits)
+
+
+@register_scene_writer(NDArrayGraphModel)
+def _ndarray_graph_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'NDArrayGraph')
+    write_basic_label(model, element)
+    write_axes_set(model, element)
+    write_range_set(model, element)
+    write_roi_info(model, element)
+    element.set(NS_KARABO + 'roi_tool', str(model.roi_tool))
+    element.set(NS_KARABO + 'half_samples', str(model.half_samples))
+
+    return element
+
+
+@register_scene_reader('VectorFillGraph')
+def _vector_fill_graph_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    traits.update(read_basic_label(element))
+    traits.update(read_axes_set(element))
+    traits.update(read_range_set(element))
+
+    return VectorFillGraphModel(**traits)
+
+
+@register_scene_writer(VectorFillGraphModel)
+def _vector_fill_graph_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'VectorFillGraph')
+    write_basic_label(model, element)
+    write_axes_set(model, element)
+    write_range_set(model, element)
+
+    return element
+
+
+@register_scene_reader('VectorGraph')
+def _vector_graph_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    traits.update(read_basic_label(element))
+    traits.update(read_axes_set(element))
+    traits.update(read_range_set(element))
+    traits['roi_items'] = read_roi_info(element)
+    traits['roi_tool'] = int(element.get(NS_KARABO + 'roi_tool', 0))
+    traits['half_samples'] = int(element.get(NS_KARABO + 'half_samples', 6000))
+
+    return VectorGraphModel(**traits)
+
+
+@register_scene_writer(VectorGraphModel)
+def _vector_graph_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'VectorGraph')
+    write_basic_label(model, element)
+    write_axes_set(model, element)
+    write_range_set(model, element)
+    write_roi_info(model, element)
+    element.set(NS_KARABO + 'roi_tool', str(model.roi_tool))
+    element.set(NS_KARABO + 'half_samples', str(model.half_samples))
+
+    return element

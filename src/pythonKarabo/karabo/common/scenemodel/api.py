@@ -28,6 +28,10 @@ from .widgets.graph_utils import (
     read_transforms, write_transforms, read_axes_set, write_axes_set,
     read_basic_label, write_basic_label, read_range_set, write_range_set,
     build_graph_config, build_model_config, restore_graph_config)
+from .widgets.graph_plots import (
+    BasePlotModel, NDArrayGraphModel, ScatterGraphModel, VectorGraphModel,
+    VectorHistGraphModel, VectorBarGraphModel, VectorScatterGraphModel,
+    VectorFillGraphModel)
 from .widgets.image import (
     DisplayAlignedImageModel, DisplayImageElementModel, DisplayImageModel,
     ScientificImageModel, WebcamImageModel)
