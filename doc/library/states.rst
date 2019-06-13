@@ -289,7 +289,7 @@ Especially for middle-layer devices a recurring scenario is the evaluation of
 the most significant state, or composite state of a group of states. This is
 where state trumping must be used. In Karabo, state trumping is centralized
 in the sense that a set of standard trumping rules are provided, giving the
-base states are particular order.
+base states a particular order.
 In the flat base-state hierarchy the following graph is being followed
 in *trump* evaluation, where ``DISABLED`` is trumped by all other states and
 ``UNKNOWN`` will trump all other states.
@@ -419,6 +419,25 @@ in *trump* evaluation, where ``DISABLED`` is trumped by all other states and
     to determine the proper state. Thus the conservative assumption is
     that the device is in an error state.
 
+.. note::
+
+    When the input list of states contains two or more states that derive from 
+    a common state in the trump list and that common parent is the most 
+    significant among all the input states, the most significant state will 
+    be the one that comes last in the input list. 
+    
+    To exemplify: if ``COOLING`` and ``RAMPING_DOWN``, which are derived from 
+    ``DECREASING``,  are in the input list along with other states that are 
+    less significant than ``DECREASING``, the most significant state will be 
+    ``COOLING`` if it comes after ``RAMPING_DOWN`` in the input list. Otherwise, 
+    the most significant will be ``RAMPING_DOWN``. 
+    
+    It is important to add in here that a state is considered to derive from itself
+    (like classes are subclasses of themselves in most OOP languages). So, if in the 
+    example above the classes were ``COOLING`` and ``DECREASING``, the same rule of the
+    most significant being the one that comes closest to the end of the input
+    list would apply. 
+
 Device developers should however not implement trumping functionality themselves,
 but instead use the ``StateSignifier().returnMostSignificant`` function
 provided by Karabo.
@@ -437,9 +456,10 @@ provided by Karabo.
 
 Calling ``returnMostSignificant`` from the ``StateSignifier`` without
 additional keywords will result in returning evaluation substates
-of ``STATIC`` and ``CHANGING`` as these base states, i.e. no differentiation
-between ``ACTIVE`` and ``PASSIVE`` or ``INCREASING`` and ``DECREASING`` is
-made. If a differentiation is needed it can be controlled by the following
+of ``STATIC`` and ``CHANGING``. A priority can be established between
+the two direct descendants of ``STATIC``, ``ACTIVE`` and ``PASSIVE``, and
+between the two direct descendants of ``CHANGING``, ``INCREASING`` and
+``DECREASING``. Those priorities can be controlled by the following
 two keywords:
 
 staticSignificant = ``ACTIVE|PASSIVE``
