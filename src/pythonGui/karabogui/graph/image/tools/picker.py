@@ -3,7 +3,7 @@ from PyQt4.QtCore import pyqtSlot, QObject, QPointF, QRectF, Qt
 from PyQt4.QtGui import (
     QColor, QGraphicsObject, QGraphicsRectItem, QPen)
 
-from karabogui.graph.common.legend import CoordsLegend
+from karabogui.graph.common.api import CoordsLegend
 from karabogui.graph.common.const import SCALING, TRANSLATION
 from karabogui.graph.image.legends.picker import PickerLegend
 

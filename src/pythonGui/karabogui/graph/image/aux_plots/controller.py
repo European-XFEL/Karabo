@@ -1,7 +1,7 @@
 from PyQt4.QtCore import QObject, pyqtSlot
 from pyqtgraph import LabelItem
 
-from karabogui.graph.common.enums import AuxPlots
+from karabogui.graph.common.api import AuxPlots
 
 from ..aux_plots.profile_plot import ProfilePlot
 from ..utils import beam_profile_table_html

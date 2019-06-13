@@ -3,7 +3,7 @@ from PyQt4.QtCore import pyqtSignal, Qt, QPointF
 from PyQt4.QtGui import QTransform
 from pyqtgraph import ImageItem
 
-from karabogui.graph.common.enums import MouseMode
+from karabogui.graph.common.api import MouseMode
 from .utils import map_rect_to_transform
 
 

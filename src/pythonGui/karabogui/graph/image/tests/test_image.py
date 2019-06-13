@@ -1,6 +1,5 @@
 from PyQt4.QtCore import QPointF
-from karabogui.graph.common.enums import ROITool
-from karabogui.graph.common.roi.controllers.image import ImageROIController
+from karabogui.graph.common.api import ImageROIController, ROITool
 from karabogui.graph.image.plot import KaraboImagePlot
 from karabogui.testing import GuiTestCase
 

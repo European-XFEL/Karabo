@@ -5,8 +5,7 @@ from PyQt4.QtCore import pyqtSlot
 from karabogui import icons
 
 from karabogui.graph.common.api import (
-    BaseToolsetController, create_tool_button)
-from karabogui.graph.common.enums import AuxPlots
+    AuxPlots, BaseToolsetController, create_tool_button)
 
 
 class AuxPlotsToolset(BaseToolsetController):

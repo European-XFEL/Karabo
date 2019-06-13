@@ -6,7 +6,7 @@ from PyQt4.QtGui import (
     QAction, QActionGroup, QBrush, QColor, QIcon, QLinearGradient, QMenu,
     QPainter, QPixmap)
 
-from karabogui.graph.common.colors import COLORMAPS
+from karabogui.graph.common.api import COLORMAPS
 from karabogui.graph.common.const import ICON_SIZE
 
 GRADIENT_ICON_SIZE = (50, ICON_SIZE)
