@@ -48,3 +48,6 @@ from .widgets.simple import (
     WorkflowItemModel, WidgetNodeModel, XYPlotModel)
 from .widgets.vacuum import VacuumWidgetModel
 from .widgets.statefulicon import StatefulIconWidgetModel
+
+# Graph widgets
+from .widgets.graph_image import WebCamGraphModel
