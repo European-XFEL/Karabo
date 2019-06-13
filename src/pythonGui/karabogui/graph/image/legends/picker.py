@@ -3,8 +3,7 @@ from PyQt4.QtGui import QBrush, QPen, QColor
 from pyqtgraph import LabelItem
 from pyqtgraph.graphicsItems.LegendItem import ItemSample
 
-from karabogui.graph.common.legend import KaraboLegend
-from karabogui.graph.image.utils import float_to_string
+from karabogui.graph.common.api import float_to_string, KaraboLegend
 
 
 class PickerLegend(KaraboLegend):

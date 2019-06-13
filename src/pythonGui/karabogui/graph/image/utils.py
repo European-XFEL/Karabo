@@ -53,10 +53,6 @@ def levels_almost_equal(image_level, image_range, rtol=0.01):
                 for lvl, rng, in zip(image_level, image_range)])
 
 
-def float_to_string(f):
-    return "{:.2f}".format(f).rstrip('0').rstrip('.')
-
-
 def create_icon_from_colormap(colormap):
     """Creates a gradient icon from a given color map
 
