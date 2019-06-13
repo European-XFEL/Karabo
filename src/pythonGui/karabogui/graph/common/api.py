@@ -27,3 +27,5 @@ from .toolbar import (
 from .viewbox import KaraboViewBox
 
 from .dialogs.axes_labels import AxesLabelsDialog
+
+from .utils import float_to_string
