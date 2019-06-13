@@ -9,7 +9,7 @@ from karabogui import icons
 
 from karabogui.graph.common.api import (
     BaseROIController, get_axis_items, get_default_brush, get_default_pen,
-    get_configuration, MouseMode, KaraboLegend, KaraboToolBar, KaraboViewBox,
+    MouseMode, KaraboLegend, KaraboToolBar, KaraboViewBox,
     PointCanvas, ROITool, ROIToolset)
 from karabogui.graph.common.const import (
     AXIS_ITEMS, AXIS_X, AXIS_Y, DEFAULT_BAR_WIDTH,
@@ -62,7 +62,7 @@ class KaraboPlotView(QWidget):
             self.plotItem.showAxis(axis)
             self.plotItem.getAxis(axis).enableAutoSIPrefix(False)
 
-        self.configuration = get_configuration()
+        self.configuration = {}
         self.qactions = {}
         self.setup_qactions()
 
@@ -150,7 +150,7 @@ class KaraboPlotView(QWidget):
             callback(state)
         self.qactions[name].setChecked(state)
         self.configuration[name] = state
-        self.stateChanged.emit(self.configuration)
+        self.stateChanged.emit({name: state})
 
     def set_grid_x(self, state):
         alpha_value = ALPHA_GRID if state else False
@@ -185,7 +185,7 @@ class KaraboPlotView(QWidget):
             self.set_label('left', text=config['y_label'],
                            units=config['y_units'])
             self.configuration.update(**config)
-            self.stateChanged.emit(self.configuration)
+            self.stateChanged.emit(config)
 
     @pyqtSlot()
     def configure_ranges(self):
@@ -206,7 +206,7 @@ class KaraboPlotView(QWidget):
                 self.set_range_y(config['y_min'], config['y_max'])
             else:
                 self.set_autorange(autorange)
-            self.stateChanged.emit(self.configuration)
+            self.stateChanged.emit(config)
 
     @pyqtSlot()
     def reset_range(self):
@@ -315,7 +315,7 @@ class KaraboPlotView(QWidget):
         config['roi_tool'] = self._roi.current_tool
         config['roi_items'] = items
         self.configuration.update(**config)
-        self.stateChanged.emit(self.configuration)
+        self.stateChanged.emit(config)
 
     def add_toolbar(self):
         """Enable the standard toolbar on the widget
