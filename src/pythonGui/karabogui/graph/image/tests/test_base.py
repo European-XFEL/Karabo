@@ -19,6 +19,7 @@ class TestKaraboImageView(GuiTestCase):
         self.roi.destroy()
         self.aux_plots.destroy()
         self.widget.destroy()
+        self.widget = None
 
     def test_first_image(self):
         """ This test checks when the image is set,
@@ -45,6 +46,36 @@ class TestKaraboImageView(GuiTestCase):
         self.assertTrue(np.array_equal(self.widget.plotItem.image, image))
 
         self._assert_aux_plots_data(has_data=True)
+
+    def test_empty_np_image(self):
+        """This test checks empty image with np.empty as input"""
+        # Set image
+        image = np.empty((100, 100))
+        self.widget.plotItem.set_image(image)
+
+        # Check if image is properly set
+        self.assertTrue(self.widget.plotItem.image_set)
+        np.testing.assert_array_equal(self.widget.plotItem.image, image)
+
+        self._assert_aux_plots_data(has_data=False)
+
+    def test_empty_list_image(self):
+        """This test checks empty image with [] as input"""
+        # Set image
+        image = np.array([])
+        self.widget.plotItem.set_image(image)
+
+        # Check if image is properly set
+        self.assertFalse(self.widget.plotItem.image_set)
+
+    def test_none_image(self):
+        """This test checks empty image with None as input"""
+        # Set image
+        image = None
+        self.widget.plotItem.set_image(image)
+
+        # Check if image is properly set
+        self.assertFalse(self.widget.plotItem.image_set)
 
     def _assert_aux_plots_data(self, has_data=True):
         assert_method = self.assertIsNotNone if has_data else self.assertIsNone

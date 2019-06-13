@@ -157,7 +157,7 @@ class KaraboImagePlot(PlotItem):
         self.set_image(data, update)
 
     def set_image(self, image, update=True):
-        if image is None:
+        if image is None or image.size == 0:
             return
 
         if not self._image_set:

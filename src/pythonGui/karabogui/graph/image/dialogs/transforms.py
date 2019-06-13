@@ -13,7 +13,7 @@ class ImageTransformsDialog(QDialog):
         self.setModal(False)
         # load ui file
         ui_path = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                               'image_transforms.ui')
+                               'transforms.ui')
         uic.loadUi(ui_path, self)
 
         # populate transform fields

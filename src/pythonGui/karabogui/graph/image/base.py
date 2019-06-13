@@ -7,14 +7,13 @@ from pyqtgraph import GraphicsLayoutWidget
 from karabogui import icons
 
 from karabogui.graph.common.api import (
-    AuxPlots, COLORMAPS, ExportToolset, ImageROIController, KaraboToolBar,
-    MouseMode, PointCanvas, RectCanvas, ROITool, ROIToolset)
+    AxesLabelsDialog, AuxPlots, COLORMAPS, ExportToolset, ImageROIController,
+    KaraboToolBar, MouseMode, PointCanvas, RectCanvas, ROITool, ROIToolset)
 from karabogui.graph.common.const import X_AXIS_HEIGHT, UNITS
 
 from .aux_plots.controller import AuxPlotsController
 from .colorbar import ColorBarWidget
-from .dialogs.axes_labels import AxesLabelsDialog
-from .dialogs.image_transforms import ImageTransformsDialog
+from .dialogs.transforms import ImageTransformsDialog
 from .legends.scale import ScaleLegend
 from .plot import KaraboImagePlot
 from .tools.picker import PickerController
@@ -62,6 +61,8 @@ class KaraboImageView(QWidget):
         self._colormap_action = None
         self._apply_action = None
         self._scale_legend = None
+
+        self.configuration = {}
 
     # -----------------------------------------------------------------------
     # Public tool methods
@@ -239,7 +240,9 @@ class KaraboImageView(QWidget):
             self._picker.update()
 
         if update:
-            self.stateChanged.emit({'colormap': color_map})
+            config = {'colormap': color_map}
+            self.configuration.update(**config)
+            self.stateChanged.emit(config)
 
     def add_widget(self, widget, row, col, row_span=1, col_span=1):
         self.layout().addWidget(widget, row, col, row_span, col_span)
@@ -253,6 +256,8 @@ class KaraboImageView(QWidget):
         Ideally this should be called at the end of the widget setup.
         """
         # Restore colormap
+        self.configuration.update(**configuration)
+
         colormap = configuration.get('colormap')
         if colormap is not None:
             self.set_colormap(colormap, update=False)
@@ -341,7 +346,7 @@ class KaraboImageView(QWidget):
 
     @pyqtSlot()
     def _show_labels_dialog(self):
-        config, result = AxesLabelsDialog.get(self.plotItem.axes_labels,
+        config, result = AxesLabelsDialog.get(self.configuration,
                                               parent=self)
 
         if not result:
@@ -354,6 +359,7 @@ class KaraboImageView(QWidget):
                                 text=config["y_label"],
                                 units=config["y_units"])
 
+        self.configuration.update(**config)
         self.stateChanged.emit(config)
 
     @pyqtSlot()
@@ -377,6 +383,7 @@ class KaraboImageView(QWidget):
         self._show_scale_legend(show=config["show_scale"])
         self._update_scale_legend(config["x_scale"], config["y_scale"])
 
+        self.configuration.update(**config)
         self.stateChanged.emit(config)
 
     @pyqtSlot()
@@ -402,6 +409,7 @@ class KaraboImageView(QWidget):
                 items.append(traits)
 
         config['roi_items'] = items
+        self.configuration.update(**config)
         self.stateChanged.emit(config)
 
     # -----------------------------------------------------------------------
