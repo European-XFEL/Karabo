@@ -187,9 +187,10 @@ namespace karabo {
              * to be included  in monitoring schema only.
              * @return reference to the Element (to allow method's chaining)
              */
-            virtual ReadOnlySpecific<Derived, ValueType> &readOnly()
-{
-                if (this->m_node->hasAttribute(KARABO_SCHEMA_ASSIGNMENT) && this->m_node->template getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT) == Schema::OPTIONAL_PARAM && this->m_node->hasAttribute(KARABO_SCHEMA_DEFAULT_VALUE)) {
+            virtual ReadOnlySpecific<Derived, ValueType> &readOnly() {
+                if (this->m_node->hasAttribute(KARABO_SCHEMA_ASSIGNMENT)
+                    && this->m_node->template getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT) == Schema::OPTIONAL_PARAM
+                    && this->m_node->hasAttribute(KARABO_SCHEMA_DEFAULT_VALUE)) {
                     std::string msg;
                     msg.append("Error in element '")
                             .append(this->m_node->getKey())
