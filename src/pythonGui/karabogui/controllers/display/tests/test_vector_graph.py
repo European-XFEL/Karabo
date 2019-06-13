@@ -1,5 +1,7 @@
 from unittest.mock import patch
 
+import numpy as np
+
 from karabo.common.scenemodel.api import VectorGraphModel
 from ..display_vector_graph import DisplayVectorGraph
 
@@ -37,6 +39,26 @@ class TestVectorGraph(GuiTestCase):
         value = [2, 4, 6]
         set_proxy_value(self.proxy, 'prop', value)
         self.assertEqual(list(curve.yData), value)
+
+    def test_set_value_inf(self):
+        self.assertEqual(len(self.controller._curves), 1)
+        curve = self.controller._curves.get(self.proxy)
+        self.assertIsNotNone(curve)
+        value = [2, 4, 6]
+        set_proxy_value(self.proxy, 'prop', value)
+        self.assertEqual(list(curve.yData), value)
+
+        value = [2, np.inf, 6]
+        set_proxy_value(self.proxy, 'prop', value)
+        self.assertEqual(list(curve.yData), value)
+
+        value = [np.inf, np.inf, np.inf]
+        set_proxy_value(self.proxy, 'prop', value)
+        self.assertIsNone(curve.yData)
+
+        value = [np.NaN, np.NaN, np.NaN]
+        set_proxy_value(self.proxy, 'prop', value)
+        np.testing.assert_almost_equal(list(curve.yData), value)
 
     def test_visualize_prop(self):
         self.controller.visualize_additional_property(self.value)
