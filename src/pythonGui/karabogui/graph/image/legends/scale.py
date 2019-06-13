@@ -1,7 +1,6 @@
 from pyqtgraph import LabelItem
 
-from karabogui.graph.common.legend import KaraboLegend
-from karabogui.graph.image.utils import float_to_string
+from karabogui.graph.common.api import float_to_string, KaraboLegend
 
 
 class ScaleLegend(KaraboLegend):

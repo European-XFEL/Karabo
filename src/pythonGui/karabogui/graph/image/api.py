@@ -23,6 +23,6 @@ from .item import KaraboImageItem
 from .plot import KaraboImagePlot
 from .utils import (
     beam_profile_table_html, create_colormap_menu,
-    create_icon_from_colormap, float_to_string, get_transformation,
+    create_icon_from_colormap, get_transformation,
     levels_almost_equal)
 from .viewbox import KaraboImageViewBox
