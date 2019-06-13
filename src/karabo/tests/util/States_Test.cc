@@ -189,7 +189,7 @@ void States_Test::testStatesSignifierDefault() {
     states.push_back(State::PAUSED);
     CPPUNIT_ASSERT_EQUAL(State::PAUSED, signifier.returnMostSignificant(states));
     states.push_back(State::HEATING);
-    CPPUNIT_ASSERT_EQUAL(signifier.returnMostSignificant(states), State::HEATING);
+    CPPUNIT_ASSERT_EQUAL(State::HEATING, signifier.returnMostSignificant(states));
     states.push_back(State::INCREASING);
     CPPUNIT_ASSERT_EQUAL(State::INCREASING, signifier.returnMostSignificant(states));
     states.push_back(State::COOLING);
