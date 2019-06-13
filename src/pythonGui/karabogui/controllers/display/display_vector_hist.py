@@ -10,11 +10,9 @@ from traits.api import Instance
 
 from karabo.common.scenemodel.api import (
     build_model_config, VectorHistGraphModel)
-
 from karabogui.binding.api import VectorNumberBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
-
 from karabogui.graph.plots.api import HistogramDialog, KaraboPlotView
 
 
