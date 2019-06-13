@@ -187,12 +187,15 @@ namespace karabo {
              * to be included  in monitoring schema only.
              * @return reference to the Element (to allow method's chaining)
              */
-            virtual ReadOnlySpecific<Derived, ValueType>& readOnly() {
-                if (this->m_node->hasAttribute(KARABO_SCHEMA_ASSIGNMENT)
-                    && this->m_node->template getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT) == Schema::OPTIONAL_PARAM
-                    && this->m_node->hasAttribute(KARABO_SCHEMA_DEFAULT_VALUE)
-                    ) {
-                    throw KARABO_LOGIC_EXCEPTION("readOnly() is not compatible with assignmentOptional().defaultValue(v). Use readOnly().initialVale(v) instead.");
+            virtual ReadOnlySpecific<Derived, ValueType> &readOnly()
+{
+                if (this->m_node->hasAttribute(KARABO_SCHEMA_ASSIGNMENT) && this->m_node->template getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT) == Schema::OPTIONAL_PARAM && this->m_node->hasAttribute(KARABO_SCHEMA_DEFAULT_VALUE)) {
+                    std::string msg;
+                    msg.append("Error in element '")
+                            .append(this->m_node->getKey())
+                            .append("': readOnly() is not compatible with assignmentOptional().defaultValue(v). ")
+                            .append("Use readOnly().initialVale(v) instead.");
+                    throw KARABO_LOGIC_EXCEPTION(msg);
                 }
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
                 // Set the assignment and defaults here, as the API would look strange to assign something to a read-only
@@ -200,7 +203,7 @@ namespace karabo {
                 this->m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, ValueType());
                 return m_readOnlySpecific;
             }
-            
+
             /**
              * The <b>daqPolicy</b> sets the DAQ policy for a parameter.
              * @return reference to the Element (to allow method's chaining)
