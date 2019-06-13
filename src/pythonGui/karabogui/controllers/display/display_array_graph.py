@@ -10,11 +10,9 @@ from traits.api import Instance, Undefined
 
 from karabo.common.scenemodel.api import (
     build_graph_config, NDArrayGraphModel, restore_graph_config)
-
 from karabogui.binding.api import NDArrayBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
-
 from karabogui.graph.common.const import MIN_DOWNSAMPLE, MAX_DOWNSAMPLE
 from karabogui.graph.plots.api import (
     KaraboPlotView, generate_down_sample, get_view_range)
