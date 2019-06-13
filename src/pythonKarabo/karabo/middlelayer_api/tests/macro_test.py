@@ -23,6 +23,9 @@ from karabo.middlelayer_api.synchronization import background, sleep
 
 from .eventloop import DeviceTest, sync_tst, async_tst
 
+FLAKY_MAX_RUNS=7
+FLAKY_MIN_PASSES=3
+
 
 class Superslot(Slot):
     @coroutine
@@ -296,7 +299,7 @@ class Tests(DeviceTest):
             self.assertGreaterEqual(d.counter, 10)
 
     @sync_tst
-    @flaky(max_runs=5, min_passes=3)
+    @flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
     def test_waituntilnew(self):
         """test the waitUntilNew function
 
