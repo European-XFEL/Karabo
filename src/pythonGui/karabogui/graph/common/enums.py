@@ -28,3 +28,9 @@ class ROITool(IntEnum):
 
     DrawRect = 11
     DrawCrosshair = 12
+
+
+class AspectRatio(IntEnum):
+    NoAspectRatio = 0
+    PixelDependent = 1
+    ScaleDependent = 2
