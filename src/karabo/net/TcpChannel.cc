@@ -527,10 +527,14 @@ namespace karabo {
                     return;
                 }
             }
-            // Reset handler variables since they usually are re-assigned when m_readHandler is called.
-            // Swapping m_readHandler protects against the case that a shared pointer to this TcpChannel is bound to
-            // m_readHandler and m_readHandler does not re-assign it, e.g. due to an error condition/disconnection:
-            // This TcpChannel would continue to keep a shared pointer to itself and thus could never be destructed.
+            // Reset handler variables since they usually are re-assigned when m_readHandler is called
+            // by registering again via e.g. TcpChannel::readAsync[HashHash|HashString|String|...](handler).
+            //
+            // Clearing data member m_readHandler before calling the handler it holds protects against the case that a
+            // shared pointer to this TcpChannel is bound to this handler and calling it does not re-assign
+            // m_readHandler, e.g. due to an error condition like disconnection on remote side:
+            // If m_readHandler would not be cleared, this TcpChannel would continue to keep a shared pointer to itself
+            // and thus could never be destructed.
             HandlerType type = m_activeHandler;
             m_activeHandler = TcpChannel::NONE;
             boost::any readHandler;
