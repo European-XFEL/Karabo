@@ -5,7 +5,6 @@ from .aux_plots.items import AuxPlotAxisItem, AuxPlotViewBox
 from .aux_plots.profile_plot import BaseStepPlot
 
 from .dialogs.levels import LevelsDialog
-from .dialogs.axes_labels import AxesLabelsDialog
 
 from .image_node import KaraboImageNode
 
