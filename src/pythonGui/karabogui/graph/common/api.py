@@ -25,3 +25,5 @@ from .toolbar import (
     create_tool_button, create_dropdown_button, DropDownMenu, WidgetAction,
     ROIToolset)
 from .viewbox import KaraboViewBox
+
+from .dialogs.axes_labels import AxesLabelsDialog
