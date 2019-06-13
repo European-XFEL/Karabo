@@ -31,4 +31,3 @@ class TestRollImage(unittest.TestCase):
         np.testing.assert_array_almost_equal(image.data[0], value)
         self.assertEqual(len(image.data), image.stack)
         np.testing.assert_array_almost_equal(image.data[1], arange_value)
-

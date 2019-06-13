@@ -3,7 +3,7 @@ from pyqtgraph import AxisItem, ColorMap, GraphicsWidget, ImageItem, ViewBox
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, QPoint
 from PyQt4.QtGui import QDialog, QFont, QGraphicsGridLayout, QMenu, QTransform
 
-from karabogui.graph.common.colors import COLORMAPS
+from karabogui.graph.common.api import COLORMAPS
 
 from .dialogs.levels import LevelsDialog
 from .utils import levels_almost_equal

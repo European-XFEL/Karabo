@@ -1,13 +1,12 @@
 from karabo.common.scenemodel.api import WebCamGraphModel
 
-from karabogui.graph.common.const import AXIS_ITEMS
 from karabogui.binding.builder import build_binding
 from karabogui.binding.config import apply_configuration
 from karabogui.binding.proxy import DeviceProxy, PropertyProxy
 from karabogui.controllers.display.tests.image import (
     PipelineData, get_image_hash)
+from karabogui.graph.common.const import AXIS_ITEMS
 from karabogui.testing import GuiTestCase
-
 
 from ..display_webcam_image import DisplayWebCamGraph
 
