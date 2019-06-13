@@ -1,0 +1,161 @@
+#############################################################################
+# Author: <dennis.goeries@xfel.eu>
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
+
+from collections import deque
+from functools import partial
+
+from PyQt4.QtCore import pyqtSlot
+from PyQt4.QtGui import QAction, QInputDialog
+from traits.api import Any, Callable, Instance
+
+from karabogui.binding.api import (
+    get_binding_value, BoolBinding, FloatBinding, IntBinding, PropertyProxy)
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller)
+from karabogui import icons
+
+from karabogui.graph.common.api import create_tool_button
+
+from karabo.common.scenemodel.api import (
+    build_model_config, ScatterGraphModel)
+
+from karabogui.graph.plots.api import KaraboPlotView, ScatterGraphPlot
+
+BUTTON_SIZE = (52, 32)
+NUMERICAL_BINDINGS = (BoolBinding, FloatBinding, IntBinding)
+MAX_NUM_POINTS = 1000
+
+MIN_POINT_SIZE = 0.1
+MAX_POINT_SIZE = 10.0
+
+
+@register_binding_controller(ui_name='Scatter Graph', klassname='ScatterGraph',
+                             binding_type=NUMERICAL_BINDINGS,
+                             can_show_nothing=False)
+class DisplayScatterGraph(BaseBindingController):
+    """The scatter graph widget provides a scatter plot from property proxies
+
+    - First property proxy (dragged) will declare the x axis
+    - Second property proxy (added) will declare the y axis
+    """
+    model = Instance(ScatterGraphModel, args=())
+
+    # Internal traits
+    _x_proxy = Instance(PropertyProxy)
+    _y_proxy = Instance(PropertyProxy)
+    _reset_proxy = Instance(PropertyProxy)
+    _x_values = Instance(deque)
+    _y_values = Instance(deque)
+    _last_x_value = Any
+    _plot = Instance(ScatterGraphPlot)
+    _resetbox_linked = Callable
+
+    def create_widget(self, parent):
+
+        widget = KaraboPlotView(parent=parent)
+        widget.add_cross_target()
+        toolbar = widget.add_toolbar()
+
+        _btn_reset = create_tool_button(
+            checkable=False,
+            icon=icons.reset,
+            tooltip="Reset the plot",
+            on_clicked=partial(self._reset_plot, True))
+        toolbar.add_button(name="reset", button=_btn_reset)
+        widget.stateChanged.connect(self._change_model)
+
+        model = self.model
+        self._x_values = deque(maxlen=model.maxlen)
+        self._y_values = deque(maxlen=model.maxlen)
+
+        self._plot = widget.add_scatter_item()
+
+        # assigning proxy is safe and wanted here!
+        self._x_proxy = self.proxy
+        self._last_x_value = get_binding_value(self.proxy)
+
+        widget.restore(build_model_config(self.model))
+        self._plot.setSize(self.model.psize)
+
+        deque_action = QAction("Queue Size", widget)
+        deque_action.triggered.connect(self._configure_deque)
+        widget.addAction(deque_action)
+
+        point_size_action = QAction("Point Size", widget)
+        point_size_action.triggered.connect(self._configure_point_size)
+        widget.addAction(point_size_action)
+
+        # A closure to change the button style once a boolean is linked
+        def _changestyle():
+            _btn_reset.setIcon(icons.resetTilted)
+
+        self._resetbox_linked = _changestyle
+
+        return widget
+
+    # ----------------------------------------------------------------
+
+    def add_proxy(self, proxy):
+        binding = proxy.binding
+        if self._reset_proxy is None and isinstance(binding, BoolBinding):
+            self._reset_proxy = proxy
+            self._resetbox_linked()
+            return True
+        if self._y_proxy is None:
+            self._y_proxy = proxy
+            return True
+
+        return False
+
+    def value_update(self, proxy):
+        value = proxy.value
+        if proxy is self._reset_proxy:
+            self._reset_plot(reset=value)
+        elif proxy is self._x_proxy:
+            self._last_x_value = value
+        elif proxy is self._y_proxy:
+            if self._last_x_value is not None:
+                self._x_values.append(self._last_x_value)
+                self._y_values.append(value)
+                if self.widget is not None:
+                    self._plot.setData(self._x_values, self._y_values)
+
+    # ----------------------------------------------------------------
+    # Qt Slots
+
+    @pyqtSlot(object)
+    def _change_model(self, content):
+        self.model.trait_set(**content)
+
+    @pyqtSlot()
+    def _reset_plot(self, reset=True):
+        if not reset:
+            # when adding a boolean as resetbox, it may send a False value
+            return
+        self._last_x_value = None
+        self._x_values.clear()
+        self._y_values.clear()
+        self._plot.setData([], [])
+
+    @pyqtSlot()
+    def _configure_deque(self):
+        maxlen, ok = QInputDialog.getInt(self.widget, 'Number of Values',
+                                         'Maxlen:', self.model.maxlen, 5,
+                                         MAX_NUM_POINTS)
+        if ok:
+            self._last_x_value = None
+            self._x_values, self._y_values = None, None
+            self._x_values = deque(maxlen=maxlen)
+            self._y_values = deque(maxlen=maxlen)
+            self.model.maxlen = maxlen
+
+    @pyqtSlot()
+    def _configure_point_size(self):
+        psize, ok = QInputDialog.getDouble(self.widget, 'Size of points',
+                                           'Pointsize:', self.model.psize,
+                                           MIN_POINT_SIZE, MAX_POINT_SIZE)
+        if ok:
+            self._plot.setSize(psize)
+            self.model.psize = psize
