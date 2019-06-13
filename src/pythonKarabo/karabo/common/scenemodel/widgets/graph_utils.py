@@ -56,6 +56,7 @@ def read_base_karabo_image_model(element):
     traits['colormap'] = element.get(NS_KARABO + 'colormap', "viridis")
     traits['roi_tool'] = int(element.get(NS_KARABO + 'roi_tool', 0))
     traits['roi_items'] = read_roi_info(element)
+    traits['aspect_ratio'] = int(element.get(NS_KARABO + 'aspect_ratio', 1))
 
     show_scale = element.get(NS_KARABO + 'show_scale', '1')
     traits['show_scale'] = bool(int(show_scale))
@@ -70,6 +71,7 @@ def write_base_karabo_image_model(model, element):
     element.set(NS_KARABO + 'colormap', model.colormap)
     element.set(NS_KARABO + 'aux_plots', str(model.aux_plots))
     element.set(NS_KARABO + 'roi_tool', str(model.roi_tool))
+    element.set(NS_KARABO + 'aspect_ratio', str(model.aspect_ratio))
 
     show_scale = str(int(model.show_scale))
     element.set(NS_KARABO + 'show_scale', show_scale)
