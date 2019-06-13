@@ -9,7 +9,7 @@ from karabogui import icons
 
 from karabogui.graph.common.api import (
     AxesLabelsDialog, BaseROIController, get_axis_items, get_default_brush,
-    get_default_pen, get_configuration, MouseMode, KaraboLegend, KaraboToolBar,
+    get_default_pen, MouseMode, KaraboLegend, KaraboToolBar,
     KaraboViewBox, PointCanvas, ROITool, ROIToolset)
 from karabogui.graph.common.const import (
     AXIS_ITEMS, AXIS_X, AXIS_Y, DEFAULT_BAR_WIDTH,
