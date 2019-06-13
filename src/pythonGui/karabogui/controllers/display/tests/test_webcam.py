@@ -1,5 +1,3 @@
-from karabo.common.scenemodel.api import WebCamGraphModel
-
 from karabogui.binding.builder import build_binding
 from karabogui.binding.config import apply_configuration
 from karabogui.binding.proxy import DeviceProxy, PropertyProxy
@@ -24,7 +22,6 @@ class TestCase(GuiTestCase):
         self.img_proxy = PropertyProxy(root_proxy=root_proxy,
                                        path='output.data.image')
         self.controller = DisplayWebCamGraph(proxy=self.img_proxy)
-        self.controller.model = WebCamGraphModel()
 
     def tearDown(self):
         self.controller.destroy()

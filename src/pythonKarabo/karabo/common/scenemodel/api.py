@@ -50,4 +50,6 @@ from .widgets.vacuum import VacuumWidgetModel
 from .widgets.statefulicon import StatefulIconWidgetModel
 
 # Graph widgets
-from .widgets.graph_image import WebCamGraphModel
+from .widgets.graph_image import (
+    WebCamGraphModel, DetectorGraphModel, ImageGraphModel,
+    VectorRollGraphModel)
