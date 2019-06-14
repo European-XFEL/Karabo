@@ -1,0 +1,483 @@
+from functools import partial
+
+from PyQt4.QtCore import pyqtSignal, pyqtSlot, Qt
+from PyQt4.QtGui import QAction, QGridLayout, QWidget
+from pyqtgraph import GraphicsLayoutWidget
+
+from karabogui import icons
+
+from karabogui.graph.common.api import (
+    AxesLabelsDialog, AuxPlots, COLORMAPS, ExportToolset, ImageROIController,
+    KaraboToolBar, MouseMode, PointCanvas, RectCanvas, ROITool, ROIToolset)
+from karabogui.graph.common.const import X_AXIS_HEIGHT, UNITS
+
+from .aux_plots.controller import AuxPlotsController
+from .colorbar import ColorBarWidget
+from .dialogs.transforms import ImageTransformsDialog
+from .legends.scale import ScaleLegend
+from .plot import KaraboImagePlot
+from .tools.picker import PickerController
+from .tools.toolbar import AuxPlotsToolset
+from .utils import create_colormap_menu, create_icon_from_colormap
+
+
+class KaraboImageView(QWidget):
+    stateChanged = pyqtSignal(object)
+
+    def __init__(self, parent=None):
+        """ The main image view widget for a single ImagePlot
+
+        Acts as a container of the graphics layout, the image plotitem,
+        the toolbar and other tooling features.
+        """
+        super(KaraboImageView, self).__init__(parent)
+
+        # Main layout to organize
+        layout = QGridLayout()
+        self.setLayout(layout)
+
+        self.image_layout = GraphicsLayoutWidget()
+        self.image_layout.setMinimumHeight(300)
+        self.image_layout.setMinimumWidth(300)
+        self.layout().addWidget(self.image_layout, 0, 0, 1, 1)
+
+        # Add our basic plotItem to this widget
+        self.plotItem = KaraboImagePlot()
+
+        # row, col, row_span, col_span
+        self.image_layout.addItem(self.plotItem, 1, 1, 1, 1)
+        self.image_layout.ci.layout.setRowStretchFactor(1, 3)
+        self.image_layout.ci.layout.setColumnStretchFactor(1, 3)
+
+        # Our tooling instances
+        self._aux_plots = None
+        self._colorbar = None
+        self._canvas = None
+        self._picker = None
+
+        self.toolbar = None
+        self.roi = None
+
+        self._colormap_action = None
+        self._apply_action = None
+        self._scale_legend = None
+
+        self.configuration = {}
+
+    # -----------------------------------------------------------------------
+    # Public tool methods
+
+    def add_toolbar(self):
+        """Enable the standard toolbar on the widget
+
+        This is the finalizer of the `KaraboImageView` widget. All signals
+        should be connected here!
+        """
+        if self.toolbar is not None:
+            raise ValueError('Toolbar already added')
+
+        # Instantiate toolbar, has a default mouse mode toolset
+        self.toolbar = tb = KaraboToolBar(orientation=Qt.Vertical,
+                                          parent=self)
+        tb.toolset[MouseMode].clicked.connect(self.set_mouse_mode)
+
+        # Add the optional mouse mode: picker tool
+        if self._picker is not None:
+            tb.add_tool(MouseMode.Picker)
+
+        # Add Aux Plots toolset
+        if self._aux_plots is not None:
+            aux_plots_toolset = tb.add_toolset(AuxPlotsToolset)
+            aux_plots_toolset.clicked.connect(self.show_aux_plots)
+
+        # Add ROI toolset
+        if self.roi is not None:
+            roi_toolset = tb.add_toolset(ROIToolset)
+            roi_toolset.clicked.connect(self._activate_roi_tool)
+            # Connect signals from the items
+            self.roi.selected.connect(roi_toolset.check_button)
+            self.roi.removed.connect(roi_toolset.uncheck_all)
+
+        # Add Export toolset
+        export_toolset = tb.add_toolset(ExportToolset)
+        export_toolset.clicked.connect(self.plotItem.export)
+
+        # row, col, row_span, col_span
+        self.layout().addWidget(tb, 0, 1, 1, 1)
+
+        return self.toolbar
+
+    def add_colorbar(self):
+        """Enable the standard colorbar of this widget"""
+        if self._colorbar is None:
+            image = self.plotItem.imageItem
+            self._colorbar = ColorBarWidget(image)
+
+            top_axis_checked = self.plotItem.getAxis("top").has_ticks
+            top_margin = X_AXIS_HEIGHT * top_axis_checked
+
+            bottom_axis_checked = self.plotItem.getAxis("bottom").has_ticks
+            bottom_margin = X_AXIS_HEIGHT * bottom_axis_checked
+
+            self._colorbar.set_margins(top=top_margin, bottom=bottom_margin)
+            self._colorbar.levelsChanged.connect(
+                self.plotItem.set_image_levels)
+
+            self.image_layout.addItem(self._colorbar, row=1, col=2)
+            self.image_layout.ci.layout.setColumnStretchFactor(2, 1)
+
+            # Set default colormap to viridis
+            self.add_colormap_action("viridis")
+
+        return self._colorbar
+
+    def add_roi(self, enable=True):
+        if enable and self.roi is None:
+            # Initialize ROI controller
+            self.roi = ImageROIController(self.plotItem)
+            if self._apply_action is None:
+                self._apply_action = QAction(self)
+                self._apply_action.setIcon(icons.apply)
+                self._apply_action.setIconText('Set ROI and Aux')
+                self._apply_action.triggered.connect(
+                    self._set_roi_configuration)
+                self.addAction(self._apply_action)
+
+        elif not enable and self.roi is not None:
+            # Remove ROI items and destroy controller
+            self.roi.remove_all()
+            self.roi.destroy()
+            self.roi = None
+            self._apply_action.disconnect()
+            self.removeAction(self._apply_action)
+            self._apply_action = None
+
+        return self.roi
+
+    def add_picker(self, enable=True):
+        if enable and self._picker is None:
+            self._picker = PickerController(self.plotItem)
+        elif not enable and self._picker is not None:
+            self._picker.destroy()
+            self._picker = None
+
+        return self._picker
+
+    def add_aux(self, plot_type=None, enable=True):
+        """Add a auxiliary plots to the ImageView"""
+        if plot_type and enable:
+            if self._aux_plots is None:
+                # Create an instance of the aux plots controller with the klass
+                self._aux_plots = AuxPlotsController(self.image_layout)
+
+                # If ROI exists
+                if self.roi is not None:
+                    self.roi.updated.connect(self._aux_plots.analyze)
+
+            plots = self._aux_plots.add_from_type(plot_type)
+            for ax, plot in enumerate(plots):
+                plot.vb.linkView(ax, self.plotItem.vb)
+        else:
+            if plot_type is AuxPlots.NoPlot:
+                for ax, plot in enumerate(self._aux_plots.current_plots):
+                    plot.vb.linkView(ax, None)
+                self._aux_plots.clear()
+
+                # If ROI exists
+                if self.roi is None:
+                    self.roi.updated.disconnect(self._aux_plots.analyze)
+
+        return self._aux_plots
+
+    def add_colormap_action(self, cmap):
+        if self._colormap_action is None:
+            menu = create_colormap_menu(COLORMAPS, cmap, self.set_colormap)
+            self._colormap_action = QAction(self)
+            self._colormap_action.setIconText("Colormap")
+            self._colormap_action.setMenu(menu)
+            self.addAction(self._colormap_action)
+
+        return self._colormap_action
+
+    def add_apply_action(self):
+        apply_action = QAction(self)
+        apply_action.setIcon(icons.apply)
+        apply_action.setIconText('Set ROI and Aux')
+        self.addAction(apply_action)
+
+        return apply_action
+
+    def add_axes_labels_dialog(self):
+        axes_action = QAction("Axes Labels", self)
+        axes_action.triggered.connect(self._show_labels_dialog)
+        self.addAction(axes_action)
+
+        return axes_action
+
+    def add_transforms_dialog(self):
+        transforms_action = QAction("Transformations", self)
+        transforms_action.triggered.connect(self._show_transforms_dialog)
+        self.addAction(transforms_action)
+
+        return transforms_action
+
+    # -----------------------------------------------------------------------
+    # Public Interface
+
+    def plot(self):
+        return self.plotItem
+
+    def set_colormap(self, color_map, update=True):
+        self.plotItem.set_colormap(color_map)
+        if self._colorbar is not None:
+            self._colorbar.set_colormap(color_map)
+
+        # NOTE: We might have a colormap action without colorbar!
+        if self._colormap_action is not None:
+            self._colormap_action.setIcon(create_icon_from_colormap(color_map))
+
+        if self._picker is not None:
+            self._picker.update()
+
+        if update:
+            config = {'colormap': color_map}
+            self.configuration.update(**config)
+            self.stateChanged.emit(config)
+
+    def add_widget(self, widget, row, col, row_span=1, col_span=1):
+        self.layout().addWidget(widget, row, col, row_span, col_span)
+
+    def add_layout(self, layout, row, col, row_span=1, col_span=1):
+        self.layout().addLayout(layout, row, col, row_span, col_span)
+
+    def restore(self, configuration):
+        """This method is responsible for restoring the state of all widgets.
+
+        Ideally this should be called at the end of the widget setup.
+        """
+        # Restore colormap
+        self.configuration.update(**configuration)
+
+        colormap = configuration.get('colormap')
+        if colormap is not None:
+            self.set_colormap(colormap, update=False)
+
+        # Restore transforms
+        transforms = {k: v for k, v in configuration.items()
+                      if k in ['x_scale', 'y_scale',
+                               'x_translate', 'y_translate',
+                               'aspect_ratio']}
+        if transforms:
+            self.plotItem.set_transform(**transforms, default=True)
+            # Restore scale legend
+            show_legend = configuration.get('show_scale')
+            self._show_scale_legend(show_legend)
+            self._update_scale_legend(transforms['x_scale'],
+                                      transforms['y_scale'])
+
+        # Restore labels
+        x_units = configuration.get('x_units', 'pixels')
+        self.plotItem.set_label(axis=0,
+                                text=configuration.get('x_label', 'X-axis'),
+                                units=x_units)
+
+        y_units = configuration.get('y_units', 'pixels')
+        self.plotItem.set_label(axis=1,
+                                text=configuration.get('y_label', 'Y-axis'),
+                                units=y_units)
+
+        # Restore ROIs
+        current_roi_tool = ROITool.NoROI
+
+        if self.roi is not None:
+            self.roi.remove_all()
+            current_roi_tool = configuration.get('roi_tool')
+            roi_items = configuration.get('roi_items', [])
+            for roi_data in roi_items:
+                roi_type = roi_data['roi_type']
+                if roi_type == ROITool.Rect:
+                    x, y, w, h = (roi_data['x'], roi_data['y'],
+                                  roi_data['w'], roi_data['h'])
+                    pos = x, y
+                    size = w, h
+                elif roi_type == ROITool.Crosshair:
+                    pos = (roi_data['x'], roi_data['y'])
+                    size = None
+                else:
+                    continue
+
+                self.roi.add(roi_type, pos, size=size)
+
+            self.roi.show(current_roi_tool)
+
+        # Restore toolbar state
+        aux_plots_class = configuration.get('aux_plots', AuxPlots.NoPlot)
+        if self.toolbar is not None:
+            if not aux_plots_class == AuxPlots.NoPlot:
+                toolset = self.toolbar.toolset[AuxPlots]
+                toolset.buttons[aux_plots_class].setChecked(True)
+
+            if current_roi_tool != ROITool.NoROI:
+                toolset = self.toolbar.toolset[ROITool]
+                toolset.buttons[current_roi_tool].setChecked(True)
+
+        # Restore auxiliar plots
+        if self._aux_plots is not None:
+            if aux_plots_class is not AuxPlots.NoPlot:
+                self.show_aux_plots(aux_plots_class)
+
+    # -----------------------------------------------------------------------
+    # Qt Slots
+
+    @pyqtSlot(MouseMode)
+    def set_mouse_mode(self, mode):
+        self.plotItem.vb.set_mouse_mode(mode)
+        if self._picker is not None:
+            self._picker.activate(mode is MouseMode.Picker)
+
+    @pyqtSlot(AuxPlots)
+    def show_aux_plots(self, plot_class):
+        """Hides/shows the auxiliar plots set for this controller"""
+        if self._aux_plots is not None:
+            self._aux_plots.show(plot_class != AuxPlots.NoPlot)
+
+        if self.roi is not None:
+            self.roi.enable_updates(plot_class != AuxPlots.NoPlot)
+
+    @pyqtSlot()
+    def _show_labels_dialog(self):
+        config, result = AxesLabelsDialog.get(self.configuration,
+                                              parent=self)
+
+        if not result:
+            return
+
+        self.plotItem.set_label(axis=0,
+                                text=config["x_label"],
+                                units=config["x_units"])
+        self.plotItem.set_label(axis=1,
+                                text=config["y_label"],
+                                units=config["y_units"])
+
+        self.configuration.update(**config)
+        self.stateChanged.emit(config)
+
+    @pyqtSlot()
+    def _show_transforms_dialog(self):
+        transform = self.plotItem.axes_transform
+        aspect_ratio = self.plotItem.aspect_ratio
+        show_legend = self._scale_legend is not None
+
+        config, result = ImageTransformsDialog.get(
+            transform, aspect_ratio, show_legend, parent=self)
+
+        if not result:
+            return
+
+        self.plotItem.set_transform(x_scale=config["x_scale"],
+                                    y_scale=config["y_scale"],
+                                    x_translate=config["x_translate"],
+                                    y_translate=config["y_translate"],
+                                    aspect_ratio=config["aspect_ratio"])
+
+        self._show_scale_legend(show=config["show_scale"])
+        self._update_scale_legend(config["x_scale"], config["y_scale"])
+
+        self.configuration.update(**config)
+        self.stateChanged.emit(config)
+
+    @pyqtSlot()
+    def _set_roi_configuration(self):
+        config = {}
+        aux_plots_tool = self.toolbar.toolset[AuxPlots].current_tool
+        if aux_plots_tool is not None:
+            config['aux_plots'] = aux_plots_tool
+
+        config['roi_tool'] = self.roi.current_tool
+        items = []
+        # Save ROI information
+        for tool, roi_items in self.roi.roi_items.items():
+            # Each tool has multiple roi objects
+            for roi in roi_items:
+                traits = {'roi_type': tool}
+                if tool == ROITool.Crosshair:
+                    x, y = roi.coords
+                    traits.update({'x': x, 'y': y})
+                else:
+                    x, y, w, h = roi.coords
+                    traits.update({'x': x, 'y': y, 'w': w, 'h': h})
+                items.append(traits)
+
+        config['roi_items'] = items
+        self.configuration.update(**config)
+        self.stateChanged.emit(config)
+
+    # -----------------------------------------------------------------------
+    # ROI methods
+
+    @pyqtSlot(object)
+    def _activate_roi_tool(self, roi_tool):
+        if self._canvas is not None:
+            self._deactivate_canvas()
+
+        if roi_tool in [ROITool.NoROI, ROITool.Rect, ROITool.Crosshair]:
+            self.roi.show(roi_tool)
+        elif roi_tool in [ROITool.DrawRect, ROITool.DrawCrosshair]:
+            # Hide shown ROIs to give way to the canvas
+            self.roi.show(ROITool.NoROI)
+            self._activate_canvas(roi_tool)
+
+    def _activate_canvas(self, draw_tool):
+        roi_canvas_map = {
+            ROITool.DrawRect: (RectCanvas, ROITool.Rect),
+            ROITool.DrawCrosshair: (PointCanvas, ROITool.Crosshair)}
+
+        canvas_class, roi_tool = roi_canvas_map[draw_tool]
+
+        rect = self.plotItem.vb.viewRect()
+        self._canvas = canvas_class(rect)
+        self.plotItem.vb.addItem(self._canvas)
+        self._canvas.editingFinished.connect(partial(self._draw_roi, roi_tool))
+
+    @pyqtSlot(object)
+    def _draw_roi(self, roi_tool, rect):
+        self._deactivate_canvas()
+        if rect.isValid():
+            # Draw the ROI and show corresponding ROI tool
+            new_rect = self.plotItem.mapRectFromTransform(rect)
+            self.roi.add(roi_tool, new_rect.topLeft(), size=new_rect.size())
+            self.roi.show(roi_tool)
+            self.roi.selected.emit(roi_tool)
+        else:
+            # Do nothing and unselect the button
+            self.roi.selected.emit(ROITool.NoROI)
+
+    def _deactivate_canvas(self):
+        self.plotItem.vb.removeItem(self._canvas)
+        self._canvas.destroy()
+        self._canvas = None
+
+    # -----------------------------------------------------------------------
+    # Scale legend
+
+    def _show_scale_legend(self, show=True):
+        if show:
+            # Create the legend object
+            if self._scale_legend is None:
+                self._scale_legend = ScaleLegend()
+                self._scale_legend.setParentItem(self.plotItem.vb)
+                self._scale_legend.anchor(itemPos=(0, 1),
+                                          parentPos=(0, 1),
+                                          offset=(5, -5))
+        else:
+            # Destroy object
+            if self._scale_legend is not None:
+                self._scale_legend.setParentItem(None)
+                self._scale_legend.deleteLater()
+                self._scale_legend = None
+
+    def _update_scale_legend(self, x_scale, y_scale):
+        if self._scale_legend is not None:
+            x_units, y_units = [labels[UNITS] for labels in
+                                self.plotItem.axes_labels]
+            self._scale_legend.set_value(x_scale, y_scale, x_units, y_units)

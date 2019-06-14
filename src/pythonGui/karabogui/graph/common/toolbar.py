@@ -173,12 +173,14 @@ class KaraboToolBar(QToolBar):
         """Add toolset"""
         if klass.tool_type in self.toolset:
             return
+
         controller = klass(tools)
         for name, button in controller.buttons.items():
             self._add_button(button)
             self.buttons[name] = button
 
         self.toolset[klass.tool_type] = controller
+
         # Add and bookkeep separators for inserting buttons
         self._separators[klass.tool_type] = self.addSeparator()
 
@@ -203,6 +205,8 @@ class KaraboToolBar(QToolBar):
 
     def add_button(self, name, button):
         """Add button to the toolbar"""
+        assert name not in self.buttons
+
         self._add_button(button)
         self.buttons[name] = button
 
@@ -367,7 +371,9 @@ class WidgetAction(QWidgetAction):
     def deleteWidget(self, widget):
         # Clean the menu signal
         if widget.menu():
-            widget.parent().aboutToShow.disconnect(self._update_menu_button)
+            parent = widget.parent()
+            if isinstance(parent, QMenu):
+                parent.aboutToShow.disconnect(self._update_menu_button)
             self._actions.clear()
 
         self._menu_button = None
@@ -394,7 +400,12 @@ class ROIToolset(BaseToolsetController):
 
     @pyqtSlot(ROITool)
     def _select(self, tool):
+        """The toolset has can have one or more buttons, with check states
+           being exclusive. When a button is unchecked, the toolset returns
+           ROITool.NoROI. When selected, on the other hand, the other button
+           (if existing), should be unchecked."""
         if set(self._default_buttons()) == set(self.buttons.keys()):
+            # Toolset has two buttons, check state are then exclusive
             cross_button = self.buttons[ROITool.Crosshair]
             rect_button = self.buttons[ROITool.Rect]
 
@@ -407,6 +418,17 @@ class ROIToolset(BaseToolsetController):
             elif tool in [ROITool.Crosshair, ROITool.DrawCrosshair]:
                 if cross_button.isChecked():
                     rect_button.setChecked(False)
+        else:
+            # Only one button is present.
+            if tool in [ROITool.Rect, ROITool.DrawRect]:
+                button = self.buttons[ROITool.Rect]
+            elif tool in [ROITool.Crosshair, ROITool.DrawCrosshair]:
+                button = self.buttons[ROITool.Crosshair]
+            else:
+                return
+
+            if not button.isChecked():
+                tool = ROITool.NoROI
 
         super(ROIToolset, self)._select(tool)
 
@@ -474,8 +496,6 @@ class ROIToolset(BaseToolsetController):
             if action.data() is tool:
                 button.setDefaultAction(action)
             action.setChecked(action.data() is tool)
-
-        super(ROIToolset, self).check_button(tool)
 
     def _default_buttons(self):
         return [ROITool.Rect, ROITool.Crosshair]

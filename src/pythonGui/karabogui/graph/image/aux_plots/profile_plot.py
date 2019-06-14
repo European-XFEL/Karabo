@@ -1,0 +1,130 @@
+from PyQt4.QtGui import QAction, QMenu, QTransform
+from pyqtgraph import PlotItem
+
+from karabogui.graph.common.const import (
+    AXIS_ITEMS, AXIS_X, AXIS_Y, ROTATION_FACTOR)
+from karabogui.graph.common.api import (
+    get_axis_items, make_pen, get_default_brush, get_default_pen)
+
+from ..aux_plots.items import AuxPlotAxisItem, AuxPlotViewBox
+from ..tools.profiler import IntensityProfiler
+
+LABEL_STYLE = {'color': '#000000', 'font-size': '12px'}
+
+
+class BaseStepPlot(PlotItem):
+
+    def __init__(self, orientation="top"):
+        # Create axis items for different plot orientations
+        if orientation == "top":
+            # Normal plot orientation, where x-axis is shown in the bottom
+            # and y-axis on the left of the plot
+            self._shown_axes = ["bottom", "left"]
+        else:
+            # Plot orientation is on the left of the layout, thus the x-axis
+            # must be shown on the top and the y-axis on the left of the plot.
+            self._shown_axes = ["right", "top"]
+        axis_items = get_axis_items(self._shown_axes, klass=AuxPlotAxisItem)
+
+        super(BaseStepPlot, self).__init__(axisItems=axis_items,
+                                           viewBox=AuxPlotViewBox())
+        self.orientation = orientation
+
+        # Initialize plot data items
+        self._line = self.plot([], pen=(0, 0, 255))
+        self._superimposed = self.plot([], pen=(255, 0, 0))
+
+        self._initialize_widget()
+        self._pen = get_default_pen()
+        self._brush = get_default_brush()
+        self._second_pen = make_pen('r', width=1)
+
+    # ---------------------------------------------------------------------
+    # Public methods
+
+    def set_data(self, x_data, y_data):
+        self._line.setData(x_data, y_data[:-1], stepMode=True,
+                           pen=self._pen, fillLevel=0,
+                           brush=self._brush)
+
+    def set_superimposed_data(self, x_data, y_data):
+        self._superimposed.setData(x_data, y_data, pen=self._second_pen)
+
+    def clear_data(self):
+        self._line.setData([], [], fillLevel=None, stepMode=False)
+
+    # ---------------------------------------------------------------------
+    # Private methods
+
+    def _initialize_widget(self):
+        if self.orientation == "left":
+            # The view and data must be rotated.
+            self.vb.invertY()
+            self.vb.invertX()
+            angle = 270
+            transform = QTransform()
+            transform.rotate(angle)
+            transform.scale(*ROTATION_FACTOR[angle])
+
+            self._line.setTransform(transform)
+            self._superimposed.setTransform(transform)
+
+            # Add fixed width to not overlap with main plot axes
+            self.getAxis("right").setFixedWidth(35)
+
+        # Show y-axis label
+        self.setLabel(self._shown_axes[1], "Intensity", **LABEL_STYLE)
+
+        # Polish axes rendering
+        for axis in AXIS_ITEMS:
+            axis_item = self.getAxis(axis)
+            axis_item.setZValue(0)
+            axis_item.setVisible(True)
+            axis_x = (AXIS_X if self.orientation in ["top", "bottom"]
+                      else AXIS_Y)
+            if axis in axis_x:
+                axis_item.enableAutoSIPrefix(False)
+
+        self.hideButtons()
+
+
+class ProfilePlot(BaseStepPlot):
+    """Beam Profile plot is a StepPlot that has the calculations..
+
+    Insert more details here.
+    """
+
+    def __init__(self, orientation="top"):
+        super(ProfilePlot, self).__init__(orientation)
+        self._profiler = IntensityProfiler()
+        self._fitted = False
+
+        # Add context menu
+        menu = QMenu()
+        self.enable_fit_action = QAction("Gaussian fitting", menu)
+        self.enable_fit_action.setCheckable(True)
+        menu.addAction(self.enable_fit_action)
+        self.vb.set_menu(menu)
+
+    def analyze(self, region):
+        # Set axis to process
+        axis = 1 if (self.orientation in ["left", "right"]) else 0
+
+        # Check if region wrt to the axis is valid
+        if not region.valid(axis):
+            self.clear_data()
+            return
+
+        self.set_data(*self._profiler.profile(region, axis=axis))
+
+        if self._fitted:
+            self.set_superimposed_data(*self._profiler.fit())
+            return self._profiler.analyze()
+
+    def enable_fit(self, enabled):
+        self._fitted = enabled
+        self.enable_fit_action.setChecked(enabled)
+
+        # Clear superimposed data
+        if not enabled:
+            self.set_superimposed_data([], [])
