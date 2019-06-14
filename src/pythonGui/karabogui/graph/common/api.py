@@ -14,7 +14,7 @@ from .colors import (
     Colors, COLORMAPS, get_default_pen, get_default_brush, get_brush_cycler,
     make_brush, make_pen, get_pen_cycler)
 
-from .enums import MouseMode, ExportTool, AuxPlots, ROITool
+from .enums import MouseMode, ExportTool, AuxPlots, ROITool, AspectRatio
 
 from .exporters import NumpyExporter, ImageExporter
 
@@ -25,3 +25,7 @@ from .toolbar import (
     create_tool_button, create_dropdown_button, DropDownMenu, WidgetAction,
     ROIToolset)
 from .viewbox import KaraboViewBox
+
+from .dialogs.axes_labels import AxesLabelsDialog
+
+from .utils import float_to_string

@@ -8,14 +8,14 @@ from karabogui.actions import build_qaction, KaraboAction
 from karabogui import icons
 
 from karabogui.graph.common.api import (
-    BaseROIController, get_axis_items, get_default_brush, get_default_pen,
-    MouseMode, KaraboLegend, KaraboToolBar, KaraboViewBox,
-    PointCanvas, ROITool, ROIToolset)
+    AxesLabelsDialog, BaseROIController, get_axis_items, get_default_brush,
+    get_default_pen, MouseMode, KaraboLegend, KaraboToolBar,
+    KaraboViewBox, PointCanvas, ROITool, ROIToolset)
 from karabogui.graph.common.const import (
     AXIS_ITEMS, AXIS_X, AXIS_Y, DEFAULT_BAR_WIDTH,
     WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH)
 
-from karabogui.graph.plots.dialogs import AxesDialog, RangeDialog
+from karabogui.graph.plots.dialogs import RangeDialog
 from karabogui.graph.plots.items import (
     ScatterGraphPlot, VectorBarGraphPlot, VectorFillGraphPlot)
 from karabogui.graph.plots.tools import CrossTargetController
@@ -178,7 +178,7 @@ class KaraboPlotView(QWidget):
 
     @pyqtSlot()
     def configure_axes(self):
-        config, ok = AxesDialog.get(self.configuration, parent=self)
+        config, ok = AxesLabelsDialog.get(self.configuration, parent=self)
         if ok:
             self.set_label('bottom', text=config['x_label'],
                            units=config['x_units'])

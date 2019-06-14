@@ -4,14 +4,14 @@ from PyQt4 import uic
 from PyQt4.QtGui import QDialog
 
 
-class AxesDialog(QDialog):
+class AxesLabelsDialog(QDialog):
 
     def __init__(self, config, parent=None):
-        super(AxesDialog, self).__init__(parent)
+        super(AxesLabelsDialog, self).__init__(parent)
         self.setModal(False)
         # load ui file
         ui_path = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                               'axes_config.ui')
+                               'axes_labels.ui')
         uic.loadUi(ui_path, self)
 
         self.ui_xlabel.setText(config['x_label'])
@@ -34,7 +34,7 @@ class AxesDialog(QDialog):
 
     @staticmethod
     def get(configuration, parent=None):
-        dialog = AxesDialog(configuration, parent)
+        dialog = AxesLabelsDialog(configuration, parent)
         result = dialog.exec_() == QDialog.Accepted
         content = {}
         content.update(dialog.labels)

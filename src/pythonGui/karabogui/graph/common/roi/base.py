@@ -3,8 +3,9 @@ from PyQt4.QtCore import Qt, QRectF, pyqtSlot, QPoint
 from PyQt4.QtGui import QMenu, QAction, QTransform
 from pyqtgraph import ROI, TextItem, functions as fn, Point
 
+from karabogui.graph.common.utils import float_to_string
+
 from .utils import ROI_CENTER_HTML, ROI_CENTER_SIZE_HTML
-from .utils import float_to_string
 
 
 class KaraboROI(ROI):
