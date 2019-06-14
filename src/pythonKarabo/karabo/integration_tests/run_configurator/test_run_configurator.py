@@ -112,6 +112,8 @@ class TestRunConfigurator(BoundDeviceTestCase):
 
     def test_run_configurator(self):
         global hash_updated
+        global emitted_hash
+
         ####################################################################
         # We instantiate devices here to avoid teardown problems
         ####################################################################
@@ -141,12 +143,14 @@ class TestRunConfigurator(BoundDeviceTestCase):
         self.assertEqual(len(config), 2, msg=msg)
 
         # buildConfigurationInUse should emmit an empty string
-        # It will also crash the DAQ...
+        # It will also crash the DAQ so we don't reply
+        emitted_hash = None
         self.ss.request("TEST/DAQ_CONFIGURATOR", "buildConfigurationInUse")\
             .waitForReply(1000)
-        msg = "Expected an empty configuration, got length: %d" \
-              % len(emitted_hash.get('configuration'))
-        self.assertEqual(len(emitted_hash.get('configuration')), 0, msg=msg)
+
+        msg = "RunConfigurator should not emmit an empty hash, but it " \
+              "sent:\n%s" % str(emitted_hash)
+        self.assertIsNone(emitted_hash, msg)
 
         ###################################################################
         # Here we tick in some groups an check the config
