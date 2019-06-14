@@ -145,7 +145,7 @@ class TestManager(GuiTestCase):
                 call(KaraboEvent.SystemTopologyUpdate,
                      {'devices': devices, 'servers': []}),
                 call(KaraboEvent.ClearConfigurator,
-                     {'deviceId': 'orphan'})
+                     {'devices': ['orphan']})
             ]
 
             target = 'karabogui.singletons.manager.broadcast_event'
