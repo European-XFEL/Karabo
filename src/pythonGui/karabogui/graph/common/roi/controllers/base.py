@@ -1,7 +1,6 @@
 from collections import defaultdict
 
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
-from functools import partial
 from pyqtgraph import ROI
 
 from karabogui.graph.common.toolbar import ROITool
@@ -17,12 +16,10 @@ class BaseROIController(QObject):
         - updated: when the ROI information is refreshed
         - removed: when an ROI is removed
         - selected: when one of the ROIs is selected
-        - geometryChanged: when the geometry of the ROI changes
     """
     updated = pyqtSignal(object)
     removed = pyqtSignal()
     selected = pyqtSignal(object)
-    geometryChanged = pyqtSignal(object)
 
     TOOL_MAP = {
         ROITool.Rect: RectROI,
@@ -87,8 +84,6 @@ class BaseROIController(QObject):
         # Connect some signals
         roi_item.sigRegionChangeStarted.connect(self._set_current_item)
         roi_item.sigRegionChanged.connect(self._update)
-        roi_item.sigRegionChanged.connect(
-            partial(self.geometryChanged.emit, roi_item))
         roi_item.sigRemoveRequested.connect(self._remove_roi_item)
         roi_item.sigClicked.connect(self._set_current_item)
 
@@ -148,7 +143,6 @@ class BaseROIController(QObject):
         return roi_coords
 
     def destroy(self):
-        self.geometryChanged.disconnect()
         self.updated.disconnect()
         self.deleteLater()
 

@@ -19,10 +19,6 @@ ROI_CENTER_SIZE_HTML = (
     '</div>')
 
 
-def float_to_string(f):
-    return "{:.2f}".format(f).rstrip('0').rstrip('.')
-
-
 class ImageRegion:
     Point = 0
     Line = 1
@@ -30,6 +26,7 @@ class ImageRegion:
 
     def __init__(self, region=None, region_type=None,
                  x_data=None, y_data=None):
+
         if region is None:
             region = np.empty((0, 0))
         if x_data is None:
