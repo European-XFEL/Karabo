@@ -42,6 +42,8 @@ class BaseROIController(QObject):
         self._scale_snap = False
         self._translate_snap = False
 
+        self._pen = None
+
     # ---------------------------------------------------------------------
     # Public methods
 
@@ -75,11 +77,13 @@ class BaseROIController(QObject):
         if size is not None:
             roi_item = roi_class(pos=pos, size=size,
                                  scale_snap=self._scale_snap,
-                                 translate_snap=self._translate_snap)
+                                 translate_snap=self._translate_snap,
+                                 pen=self._pen)
         else:
             roi_item = roi_class(pos=pos,
                                  scale_snap=self._scale_snap,
-                                 translate_snap=self._translate_snap)
+                                 translate_snap=self._translate_snap,
+                                 pen=self._pen)
 
         # Connect some signals
         roi_item.sigRegionChangeStarted.connect(self._set_current_item)
@@ -99,6 +103,9 @@ class BaseROIController(QObject):
             self._set_current_item(roi_item, update=False)
 
         return roi_item
+
+    def set_pen(self, pen):
+        self._pen = pen
 
     def _add_to_plot(self, roi_item, ignore_bounds=True):
         self.plotItem.vb.addItem(roi_item, ignoreBounds=ignore_bounds)

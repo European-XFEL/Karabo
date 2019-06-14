@@ -120,7 +120,6 @@ class RunConfigurator(PythonDevice):
 
         self.registerInitialFunction(self.initialization)
 
-
     @staticmethod
     def expectedParameters(expected):
         """Description of device parameters
