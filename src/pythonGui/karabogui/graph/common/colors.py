@@ -18,6 +18,7 @@ class Colors(object):
         self.o = (255, 127, 0, alpha)  # orange
         self.s = (178, 223, 138, alpha)  # grass green
         self.d = (202, 178, 214, alpha)  # orchid
+        self.k = (0, 0, 0, alpha)  # black
 
 
 def make_brush(color, alpha=255):
