@@ -12,6 +12,7 @@ from karabo.middlelayer_api.device_client import call, getSchema
 from karabo.native.data.hash import Float, Hash, Slot, VectorHash
 from karabo.native.timestamp import Timestamp
 from karabo.middlelayer_api.pipeline import InputChannel, OutputChannel
+from karabo.middlelayer_api.utils import get_property
 from karabo.native.data.schema import Configurable, Node
 
 from .eventloop import async_tst, DeviceTest, sync_tst
@@ -23,7 +24,8 @@ class RowSchema(Configurable):
 
 
 class Data(Configurable):
-    floatProperty = Float(displayedName="Float")
+    floatProperty = Float(defaultValue=10,
+                          displayedName="Float")
 
 
 class MyNode(Configurable):
@@ -48,6 +50,7 @@ class MyDevice(Device):
     dataOutput = OutputChannel(Data)
 
     deep = Node(MyNode)
+    nested = Node(Data)
 
     @InputChannel()
     async def input(self, data, meta):
@@ -227,6 +230,17 @@ class Tests(DeviceTest):
                         'value', 100.0)]
         reply = await self.myDevice.slotUpdateSchemaAttributes(updates)
         self.assertFalse(reply['success'])
+
+    @async_tst
+    async def test_get_property(self):
+        prop = get_property(self.myDevice, "integer")
+        self.assertEqual(prop, 0)
+        prop = get_property(self.myDevice, "nested.floatProperty")
+        self.assertEqual(prop, 10)
+        with self.assertRaises(AttributeError):
+            get_property(self.myDevice, "nested.notthere")
+        with self.assertRaises(AttributeError):
+            get_property(self.myDevice, "notthere")
 
     @async_tst
     async def test_slot_time(self):
