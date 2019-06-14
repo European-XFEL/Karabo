@@ -12,9 +12,10 @@ from .utils import ROI_CENTER_HTML, ImageRegion
 class CrosshairROI(KaraboROI):
 
     def __init__(self, pos=None, size=(1, 1),
-                 scale_snap=False, translate_snap=False):
+                 scale_snap=False, translate_snap=False, pen=None):
         super(CrosshairROI, self).__init__(pos, size,
-                                           scale_snap, translate_snap)
+                                           scale_snap, translate_snap,
+                                           pen=pen)
         self._shape = None
         self._path = None
         self._selected = False
