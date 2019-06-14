@@ -16,7 +16,7 @@ from karabogui.controllers.images import DIMENSIONS
                              binding_type=ImageBinding, priority=0,
                              can_show_nothing=False)
 class DisplayWebCamGraph(BaseBindingController):
-    model = Instance(WebCamGraphModel)
+    model = Instance(WebCamGraphModel, args=())
 
     _plot = Instance(KaraboImagePlot)
 
