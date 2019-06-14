@@ -222,31 +222,37 @@ class Manager(QObject):
         pass
 
     def handle_topologyUpdate(self, changes):
-        devices, servers = self._topology.topology_update(changes)
+        gone_devices, gone_servers = self._topology.topology_update(changes)
 
+        gone_instanceIds = []
         # Did an alarm system leave our topology?
-        for instance_id, class_id, _ in devices:
+        for instance_id, class_id, _ in gone_devices:
             if class_id == 'AlarmService':
                 broadcast_event(KaraboEvent.RemoveAlarmServices,
                                 {'instanceIds': [instance_id]})
+            gone_instanceIds.append(instance_id)
 
         # Update topology interested listeners!
-        extra_devices, extra_servers = _extract_topology_devices(
+        devices, servers = _extract_topology_devices(
             changes['new'])
-        devices.extend(extra_devices)
-        servers.extend(extra_servers)
 
         # Tell the GUI about various devices or servers that are alive
-        for instance_id, class_id, _ in extra_devices:
+        for instance_id, class_id, _ in devices:
             if class_id == 'AlarmService':
                 self._announce_alarm_services([instance_id])
             elif class_id == 'ProjectManager':
                 broadcast_event(KaraboEvent.ProjectDBConnect,
                                 {'device': instance_id})
 
+        devices.extend(gone_devices)
+        servers.extend(gone_servers)
+
         # XXX: This has to be worked on once the old protocol goes away
         broadcast_event(KaraboEvent.SystemTopologyUpdate,
                         {'devices': devices, 'servers': servers})
+
+        broadcast_event(KaraboEvent.ClearConfigurator,
+                        {'devices': gone_instanceIds})
 
     def handle_instanceNew(self, topologyEntry):
         """This function receives the configuration for a new instance.
@@ -308,7 +314,7 @@ class Manager(QObject):
         # Once everything has calmed down, tell the configurator to clear
         # NOTE: Doing this last avoids resetting displayed project devices
         broadcast_event(KaraboEvent.ClearConfigurator,
-                        {'deviceId': instanceId})
+                        {'devices': [instanceId]})
 
     def handle_attributesUpdated(self, reply):
         instanceId = reply["instanceId"]
