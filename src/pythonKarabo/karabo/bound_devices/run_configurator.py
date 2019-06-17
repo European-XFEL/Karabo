@@ -256,6 +256,12 @@ class RunConfigurator(PythonDevice):
         result = Hash()
         for group in self.get('configurations'):
             self._gatherSourceProperties(group, result)
+
+        if result.empty():
+            self.log.WARN("Skipping sending empty configuration to DAQ "
+                          "to protect the RunController.")
+            return
+
         configuration = Hash('configuration', result)
 
         self.log.INFO('Current Run Configuration is ...\n%s' % configuration)
