@@ -64,6 +64,11 @@ class DisplayStateColorModel(BaseWidgetObjectData):
     show_string = Bool(False)
 
 
+class ErrorBoolModel(BaseWidgetObjectData):
+    """ A model for ErrorBool Widget"""
+    invert = Bool(False)
+
+
 class EvaluatorModel(BaseWidgetObjectData):
     """ A model for Evaluator
     """
@@ -197,6 +202,22 @@ def _color_bool_reader(read_func, element):
 def _color_bool_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DisplayColorBool')
+    element.set(NS_KARABO + 'invert', str(model.invert).lower())
+    return element
+
+
+@register_scene_reader('DisplayErrorBool')
+def _error_bool_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    value = element.get(NS_KARABO + 'invert')
+    traits['invert'] = (value.lower() == 'true')
+    return ErrorBoolModel(**traits)
+
+
+@register_scene_writer(ErrorBoolModel)
+def _error_bool_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'DisplayErrorBool')
     element.set(NS_KARABO + 'invert', str(model.invert).lower())
     return element
 
