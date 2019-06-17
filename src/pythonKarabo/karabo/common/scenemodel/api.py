@@ -17,8 +17,8 @@ from .shapes import LineModel, PathModel, RectangleModel
 from .widgets.complex import (
     ColorBoolModel, DeviceSceneLinkModel, DisplayCommandModel,
     DisplayProgressBarModel, DisplayStateColorModel, DoubleLineEditModel,
-    EditableOptionComboBoxModel, EvaluatorModel, FloatSpinBoxModel,
-    MonitorModel, SingleBitModel, TableElementModel)
+    EditableOptionComboBoxModel, ErrorBoolModel, EvaluatorModel,
+    FloatSpinBoxModel, MonitorModel, SingleBitModel, TableElementModel)
 from .widgets.icon import (
     BaseIconsModel, DigitIconsModel, DisplayIconsetModel, IconData,
     SelectionIconsModel, TextIconsModel)
