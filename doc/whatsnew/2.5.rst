@@ -5,3 +5,147 @@ What's New in Karabo 2.5.0
 The **most relevant improvements**, fixes and changes are:
 
 - C++/bound: Elements in schema must not have an empty key or an empty list of options.
+
+
+Detailed Merge-Log
+==================
+
+Bound/cpp core
+++++++++++++++
+
+- C++: Bug and performance fixes for BufferSet copies after a call to emplaceBack(..) !3453
+- C++: As copyLocal, queueing requires to copy the dataOtherwise it might be sent when the sender already has modified the data. !3455
+- C++: Add message body to log message if reply handling failed. !3481
+- C++: SignalSlotable stress test !3508
+- C++: Addition of State::PAUSED to the cpp facet of the Framework. !3522
+- C++: Cleaner handling of readHandler variable in TcpChannel !3535
+- C++: Fix memory/resource leaks in point to point shortcut !3537
+
+- C++/bound: Fix sub-permille chance to screw up pipelining !3446
+- C++/bound: Treat duplicated pipe connection - keep most recent !3471
+- C++/bound: Make c++ ImageData element DAQ compliant when specifying setDimensions() !3403
+- C++/bound: when an InputChannel disconnects, log instanceId, ip and port !3474
+- C++/bound: Limit log messages sent via Network !3500
+- C++/bound: Fix bug in handling TableElement by HashFilter class
+- C++/bound: Validation of TABLE_ELEMENT !3502
+- C++/bound: Don't tolerate empty strings as keys or empty list of options !3509
+- C++/bound: allowed actions for (custom) nodes !3511
+- C++/bound: Fix for DeviceClient::getCurrentlyExecutableCommands. !3513
+- C++/bound: slotGetTime for Device !3520
+- C++/bound: Avoid risk that logging singleton is called when being destructed. !3527
+- C++/bound: fix potential memory leak in InputChannel. Avoid cyclic shared pointers in InputChannel. !3524
+- C++/bound: fix potential memory leak in OutputChannelAvoid cyclic shared pointers in OutputChannel. !3528
+- C++/bound: Add connections table to the OutputChannel !3394
+
+- Bound: Make bind_weak work in DeviceClient's underlying C++ object. Achieved by making it be pointed to by shared_ptr. !3407
+- Bound: Fix missing GIL release in karathon
+- Bound: Release GIL when connecting to a signal !3462
+- Bound: Explicitely log SignalSlotableWrap::start() failures !3470
+- Bound: Get Python traceback as a string into C++
+- Bound: PEP the bound device client !3445
+
+Core Devices
+++++++++++++
+
+- C++ PropertyTest: Add input channel and continous writing to output !3412
+- Gui Server: Avoid data copies in GUI server !3354
+- Gui Server: Cleanup runconfigurator and runconfiguration group !3452
+- Gui Server: Throttle guiserver instanceinfo updates. !3289
+- Gui Server: Throttler with alarm !3494
+- Project Manager: ProjectManager reset !3477
+- Project Manager: ProjectDB can list items by type and name !3495
+- Data Logger: Enable performance statistics of DataLoggers to trigger alarms !3480
+- Alarm Service: Fixes for the broken integration test cases for AlarmService. !3491
+- DataLogReader: Fix for unhandled exception on DataLogReader::findLoggerIndexTimepoint. !3478
+- Run Configurator: Fix for RunConfigurator unchecking updated groups !3472
+
+Dependencies and deployment
++++++++++++++++++++++++++++
+
+- DEPS: Backbone of multi api test setup, introducing "long" tests !3409
+- DEPS: Update libzmq and pyzmq !3450
+- DEPS: Update pip version 7.1.0 -> 19.1 !3476
+- DEPS: Move PyQtGraph to 0.11-develop !3510
+- DEPS: update Tornado to latest release !3531
+- Core: Cross api pipeline test template !3417
+- Core: Enhancing Webserver with logs !3475
+
+Middlelayer core
+++++++++++++++++
+
+- MDL: Karabo number to dtype conversion !3391
+- Native Schema: getAliasAsString returns None when no alias present !3392
+- MDL: Property Test MDL has an inputchannel and outputchannel !3401
+- MDL: Enable delayOnInput in input channel !3400
+- MDL: Track channel connections in output channel !3402
+- MDL: Send channel name in input channel for table element tracking !3404
+- MDL: consistent type in Timestamp.tid !3410
+- MDL: Fix table element pop !3416
+- MDL: replace deprecated asyncio.async by asyncio.ensure_future !3423
+- MDL: Enhance Tablelement with bulk clear and remove collections dependency !3418
+- MDL: Adjust autostart for devices !3436
+- MDL: Performance boost for Hash !3411
+- MDL: Fix VectorFloat to string !3415
+- MDL: Extract image data from Hash !3504
+- MDL: Add allowedActions to Nodes !3512 !3515
+- MDL: Provide slotGetTime in MDL device !3516
+- MDL: Remove flakes test in middlelayer !3529
+- MDL/Bound: Implement State.PAUSED !3514
+- MDL: Add List Of Hash Setting to TableElement !3482
+- MDL: Flaky, Require 3 successes out of 7 instead out of 5 runs !3278
+- MDL: Get property in getattr fashion in utils !3551
+
+Graphical user interface
+++++++++++++++++++++++++
+
+- GUI: Speed up events in main window !3388
+- GUI: Rework alarm panel !3377
+- GUI: Remove the latching alarm system from the scene !3405
+- GUI: Optimize panel wrangler events !3413
+- GUI: Project performance increase !3414
+- GUI: Sparkline test uses a value with timestamp !3408
+- GUI: Alarm widget can have multiple proxies !3406
+- GUI: Make the Alarm Panel lazy in updating - Performance !3419
+- GUI: State widget cleanup and little performance increase !3429
+- GUI: Remove persistent index lookup in alarmpanel !3427
+- GUI: Speed up configurator events !3428
+- GUI: panel-runner aligned to new Topology !3430
+- GUI: Implement alarm behavior for label widget !3439
+- GUI: Implement alarm coloring in evaluate expression widget !3440
+- GUI: Remove dead code from manager !3443
+- GUI: Remove "broadcast principle" events in GUI and explicity call handlers !3441
+- GUI: Performance boost for initial topology (~factor 2 faster) !3442
+- GUI: Clean unused icons !3447
+- GUI: Make the initial topology a little bit faster again !3448
+- GUI: Introduce layout context for topology updates !3465
+- GUI: Account for new topology updates in the GUI client !3469
+- GUI: Invalid index check in data for topology models !3479
+- GUI: Parent shortcut in device model !3483
+- GUI: Remove invalid index source !3488
+- GUI: Fix spelling of scene retrieval message !3490
+- GUI: Ensure visibility in scrollTo in system views !3489
+- GUI: Remove race between Qt and traits in instance Updates !3492
+- GUI: Introduce NDArrayBinding !3496
+- GUI: Cleanup standard icon controller !3499
+- GUI: Use classic filtering !3497
+- GUI: Change order of New and Gone processing !3501
+- GUI: Add about message box to device in project !3373
+- GUI: Add reset icons !3517
+- GUI: Add target icon and new image zoom icon !3521
+- GUI: More icons for the new widget toolbar !3523
+- GUI: Adjust pointer icon !3525
+- GUI: Configure pyqtgraph !3526
+- GUI: Also find out the default domain on project new !3518
+- GUI: VectorGraph Plot !3538
+- GUI: Add ScatterGraph !3541
+- GUI: Add VectorHistGraph !3544
+- GUI: Add NDArrayGraph !3543
+- GUI: Add VectorBarGraph !3542
+- GUI: Add VectorScatterGraph !3546
+- GUI: Add VectorFillGraph !3545
+- GUI: Add WebCamGraph !3540
+- GUI: Don't show device in configurator when instance is gone !3533
+- GUI: Move remaining image graphs !3549
+- GUI: Set graph common environment !3532
+- GUI: Implement graph plot package !3536
+- GUI: More icons for scatter, histogram, downsample !3530
