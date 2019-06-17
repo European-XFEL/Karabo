@@ -11,10 +11,11 @@ from .utils import ROI_CENTER_HTML, ROI_CENTER_SIZE_HTML
 class KaraboROI(ROI):
 
     def __init__(self, pos, size=Point(1, 1),
-                 scale_snap=False, translate_snap=False):
+                 scale_snap=False, translate_snap=False, pen=None):
         super(KaraboROI, self).__init__(pos, size,
                                         scaleSnap=scale_snap,
                                         translateSnap=translate_snap,
+                                        pen=pen,
                                         removable=True)
         self.setZValue(100)
         self._scaling = np.array([1, 1])
