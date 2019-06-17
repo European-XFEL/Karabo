@@ -195,9 +195,9 @@ namespace karabo {
                     msg.append(this->m_node->getKey())
                             .append("': readOnly() is not compatible with assignmentOptional().defaultValue(v). ")
                             .append("Use readOnly().initialVale(v) instead.");
-                    throw KARABO_LOGIC_EXCEPTION(msg); intended for 2.6.0 and beyond
+                    // throw KARABO_LOGIC_EXCEPTION(msg); intended for 2.6.0 and beyond
                     // Do not use KARABO_LOG_* to avoid that util depends on log.
-                        std::cerr << msg << " This will become a uogicException in 2.6.0." << std::endl;
+                    std::cerr << msg << " This will become a uogicException in 2.6.0." << std::endl;
                 }
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
                 // Set the assignment and defaults here, as the API would look strange to assign something to a read-only
