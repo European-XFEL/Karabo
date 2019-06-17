@@ -1,0 +1,51 @@
+from unittest.mock import patch
+
+from PyQt4.QtGui import QWidget
+from karabo.common.scenemodel.api import ErrorBoolModel
+from karabo.native import Configurable, Bool, Hash
+from karabogui.binding.api import apply_configuration
+from karabogui.testing import GuiTestCase, get_class_property_proxy
+
+from ..errorbool import DisplayErrorBool, OK_BOOL, ERROR_BOOL
+
+
+class MockQSvgWidget(QWidget):
+    def load(self, svg):
+        self.loaded_data = svg
+
+
+class Object(Configurable):
+    prop = Bool(defaultValue=True)
+
+
+class TestErrorBool(GuiTestCase):
+    def setUp(self):
+        super(TestErrorBool, self).setUp()
+
+        schema = Object.getClassSchema()
+        self.proxy = get_class_property_proxy(schema, 'prop')
+        self.model = ErrorBoolModel()
+
+    def test_basics(self):
+        controller = DisplayErrorBool(proxy=self.proxy, model=self.model)
+        controller.create(None)
+        assert controller.widget is not None
+
+        controller.destroy()
+        assert controller.widget is None
+
+    def test_exercise_code_paths(self):
+        target = 'karabogui.controllers.display.errorbool.QSvgWidget'
+        with patch(target, new=MockQSvgWidget):
+            self.proxy.value = False
+
+            controller = DisplayErrorBool(proxy=self.proxy, model=self.model)
+            controller.create(None)
+
+            apply_configuration(Hash('prop', True),
+                                self.proxy.root_proxy.binding)
+            assert controller.widget.loaded_data == OK_BOOL
+
+            apply_configuration(Hash('prop', False),
+                                self.proxy.root_proxy.binding)
+            assert controller.widget.loaded_data == ERROR_BOOL
