@@ -171,7 +171,7 @@ namespace karabo {
                     .displayedName("Minimum Client Version")
                     .description("If this variable does not respect the N.N.N(.N) convention,"
                                  " the Server will not enforce a version check")
-                    .assignmentOptional().defaultValue("")
+                    .assignmentOptional().defaultValue("2.4.999") // instanceNew|Update|Gone protocol changed in 2.5.0
                     .reconfigurable()
                     .commit();
         }
@@ -538,11 +538,12 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onLogin";
                 // Check valid login
-                KARABO_LOG_INFO << "Login request of user: " << hash.get<string > ("username");
                 Version clientVersion(hash.get<string>("version"));
                 Version minVersion(get<std::string>("minClientVersion"));
                 Version notificationVersion("2.4.0");
                 if (clientVersion >= minVersion) {
+                    KARABO_LOG_INFO << "Login request of user: " << hash.get<string > ("username")
+                            << " (version " << clientVersion.getString() << ")";
                     sendSystemVersion(channel);
                     sendSystemTopology(channel);
                     return;
@@ -554,6 +555,8 @@ namespace karabo {
                     const Hash h("type", "notification", "message", message);
                     safeClientWrite(channel, h);
                 }
+                KARABO_LOG_FRAMEWORK_WARN << "Refused login request of user '" << hash.get<string > ("username")
+                        << "' using GUI client version " << clientVersion.getString();
                 auto timer(boost::make_shared<boost::asio::deadline_timer>(karabo::net::EventLoop::getIOService()));
                 timer->expires_from_now(boost::posix_time::milliseconds(500));
                 timer->async_wait(bind_weak(&GuiServerDevice::deferredDisconnect, this,
