@@ -9,7 +9,7 @@ from karabogui import icons
 
 from karabogui.graph.common.api import (
     AxesLabelsDialog, BaseROIController, get_axis_items, get_default_brush,
-    get_default_pen, MouseMode, KaraboLegend, KaraboToolBar,
+    get_default_pen, make_pen, MouseMode, KaraboLegend, KaraboToolBar,
     KaraboViewBox, PointCanvas, ROITool, ROIToolset)
 from karabogui.graph.common.const import (
     AXIS_ITEMS, AXIS_X, AXIS_Y, DEFAULT_BAR_WIDTH,
@@ -282,6 +282,7 @@ class KaraboPlotView(QWidget):
         if enable and self._roi is None:
             # Initialize ROI controller
             self._roi = BaseROIController(self.plotItem)
+            self._roi.set_pen(make_pen('k'))
             set_roi = KaraboAction(
                 text="Set ROI",
                 icon=icons.apply,
