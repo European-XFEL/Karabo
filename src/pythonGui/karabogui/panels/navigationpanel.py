@@ -127,7 +127,11 @@ class TopologyPanel(BasePanelWidget):
         """Pick the first number in index array, select the corresponding node
         """
         idx = next(iter(self.index_array))
-        self.tree_view.model().selectNode(self.found[idx])
+        node = self.found[idx]
+        parent = node.parent
+        # NOTE: The node might have left the topology already!
+        if parent is not None and node in parent.children:
+            self.tree_view.model().selectNode(node)
 
     # -----------------------------------------
     # Qt Slots
