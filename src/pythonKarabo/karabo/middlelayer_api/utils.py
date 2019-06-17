@@ -22,8 +22,12 @@ def get_property(device, path):
     :param device: The device instance or proxy object
     :param path: The full path of the property as string
 
-    This function is used with::
+    This function is similar to python's builtin ``getattr`` and used with::
 
-        prop = get_property(proxy, 'node.subnode.value')
+        prop = get_property(proxy, 'node.subnode.property')
+
+    which is equivalent to::
+
+        prop = proxy.node.subnode.property
     """
     return reduce(lambda obj, key: getattr(obj, key), path.split('.'), device)
