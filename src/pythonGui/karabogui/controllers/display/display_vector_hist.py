@@ -14,6 +14,7 @@ from karabogui.binding.api import VectorNumberBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.graph.plots.api import HistogramDialog, KaraboPlotView
+from karabogui import icons
 
 
 @register_binding_controller(ui_name='Vector HistoGram Graph',
@@ -37,6 +38,7 @@ class DisplayHistGraph(BaseBindingController):
 
         hist_action = QAction("Histogram settings ...", widget)
         hist_action.triggered.connect(self.configure_histogram)
+        hist_action.setIcon(icons.histogram)
         widget.addAction(hist_action)
 
         return widget
