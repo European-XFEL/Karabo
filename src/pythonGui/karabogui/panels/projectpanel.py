@@ -218,7 +218,11 @@ class ProjectPanel(BasePanelWidget):
         """Pick the first number in index array, select the corresponding node
         """
         idx = next(iter(self.index_array))
-        self.project_view.model().selectNode(self.found[idx])
+        node = self.found[idx]
+        parent = node.parent
+        # NOTE: The node might have left the project already!
+        if parent is not None and node in parent.children:
+            self.project_view.model().selectNode(node)
 
     # -----------------------------------------
     # Qt Slots
