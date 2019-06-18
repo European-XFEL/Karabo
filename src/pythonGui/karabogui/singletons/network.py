@@ -8,12 +8,20 @@ from PyQt4.QtCore import (
 from PyQt4.QtGui import QDialog, QMessageBox, qApp
 
 from karabo.native import (
-    Hash, decodeBinary, encodeBinary, AccessLevel, Timestamp, Authenticator)
+    AccessLevel, decodeBinary, encodeBinary, Hash, Timestamp)
 from karabogui import background
 from karabogui.dialogs.logindialog import LoginDialog
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.singletons.api import get_config
 import karabogui.globals as krb_globals
+
+ACCESS_LEVEL_MAP = {
+    "observer": 0,
+    "user": 1,
+    "operator": 2,
+    "expert": 3,
+    "admin": 4,
+    "god": 5}
 
 
 class Network(QObject):
@@ -24,8 +32,6 @@ class Network(QObject):
 
     def __init__(self, parent=None):
         super(Network, self).__init__(parent=parent)
-
-        self.authenticator = None
 
         self.brokerHost = ""
         self.brokerPort = ""
@@ -123,7 +129,6 @@ class Network(QObject):
     def endServerConnection(self):
         """End connection to server and database
         """
-        self._logout()
         self.requestQueue = []
 
         if self.tcpSocket is None:
@@ -138,58 +143,6 @@ class Network(QObject):
 
     def togglePerformanceMonitor(self):
         self._show_proc_delay = not self._show_proc_delay
-
-    def _login(self):
-        """Authentification login.
-        """
-        # System variables definition
-        ipAddress = socket.gethostname()  # Machine Name
-
-        # Execute Login
-        success = False
-        try:
-            self.authenticator = Authenticator(
-                self.username, self.password, self.provider, ipAddress,
-                self.brokerHost, self.brokerPort, self.brokerTopic)
-            success = self.authenticator.login()
-        except Exception as e:
-            # XXX Fall back to inbuild access level
-            default = krb_globals.KARABO_DEFAULT_ACCESS_LEVEL
-            krb_globals.GLOBAL_ACCESS_LEVEL = default
-            print("Login problem. Please verify, if service is running. {}"
-                  "".format(e))
-
-            # Inform the GUI to change correspondingly the allowed
-            # level-downgrade
-            broadcast_event(KaraboEvent.LoginUserChanged, {})
-            self._sendLoginInformation(self.username, self.password,
-                                       self.provider, self.sessionToken)
-            return
-
-        if success:
-            krb_globals.GLOBAL_ACCESS_LEVEL = AccessLevel(
-                self.authenticator.defaultAccessLevelId)
-        else:
-            print("Login failed")
-            self.onSocketError(QAbstractSocket.ConnectionRefusedError)
-            return
-
-        # Inform the GUI to change correspondingly the allowed level-downgrade
-        broadcast_event(KaraboEvent.LoginUserChanged, {})
-        self._sendLoginInformation(self.username, self.password,
-                                   self.provider, self.sessionToken)
-
-    def _logout(self):
-        """Authentification logout
-        """
-        if self.authenticator is None:
-            return
-
-        try:
-            self.authenticator.logout()
-        except Exception as e:
-            print("Logout problem. Please verify, if service is running. {}"
-                  "".format(e))
 
     @pyqtSlot()
     def onReadServerData(self):
@@ -535,8 +488,16 @@ class Network(QObject):
 
     def _handleBrokerInformation(self, host=None, port=None, topic=None,
                                  **kwargs):
-        # XXX: Kwargs is for forward compatibility
+        """We get the reply from the GUI Server and get more information"""
         self.brokerHost = host
         self.brokerPort = port
         self.brokerTopic = topic
-        self._login()
+
+        default = AccessLevel(ACCESS_LEVEL_MAP.get(
+            self.username, AccessLevel.ADMIN))
+        krb_globals.GLOBAL_ACCESS_LEVEL = default
+        # Inform the GUI to change correspondingly the allowed
+        # level-downgrade
+        broadcast_event(KaraboEvent.LoginUserChanged, {})
+        self._sendLoginInformation(self.username, self.password,
+                                   self.provider, self.sessionToken)
