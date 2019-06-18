@@ -171,7 +171,7 @@ namespace karabo {
                     .displayedName("Minimum Client Version")
                     .description("If this variable does not respect the N.N.N(.N) convention,"
                                  " the Server will not enforce a version check")
-                    .assignmentOptional().defaultValue("2.4.999") // instanceNew|Update|Gone protocol changed in 2.5.0
+                    .assignmentOptional().defaultValue("2.5.0") // instanceNew|Update|Gone protocol changed in 2.5.0
                     .reconfigurable()
                     .commit();
         }
