@@ -1181,18 +1181,19 @@ void Schema_Test::testAllowedActions() {
                          
 void Schema_Test::testDefaultReadOnlyThrows() {
 
-    karabo::util::Schema invalidSchema;
-
-    // The assignmentOptional().defaultValue(1).readOnly() sequence below,
-    // if accepted, would reset the element value to 0, overriding the
-    // defaultValue setting.
-    CPPUNIT_ASSERT_THROW(
-                          INT32_ELEMENT(invalidSchema).key("int")
-                          .assignmentOptional().defaultValue(1)
-                          .readOnly()
-                          .commit(),
-                          karabo::util::LogicException
-                         );
+    // Re-enable this test in 2.6.0:
+    //    karabo::util::Schema invalidSchema;
+    //
+    //    // The assignmentOptional().defaultValue(1).readOnly() sequence below,
+    //    // if accepted, would reset the element value to 0, overriding the
+    //    // defaultValue setting.
+    //    CPPUNIT_ASSERT_THROW(
+    //                          INT32_ELEMENT(invalidSchema).key("int")
+    //                          .assignmentOptional().defaultValue(1)
+    //                          .readOnly()
+    //                          .commit(),
+    //                          karabo::util::LogicException
+    //                         );
 
     karabo::util::Schema validReadOnlySchema;
 
