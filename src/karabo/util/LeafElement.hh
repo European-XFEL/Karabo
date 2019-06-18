@@ -191,13 +191,12 @@ namespace karabo {
                 if (this->m_node->hasAttribute(KARABO_SCHEMA_ASSIGNMENT)
                     && this->m_node->template getAttribute<int>(KARABO_SCHEMA_ASSIGNMENT) == Schema::OPTIONAL_PARAM
                     && this->m_node->hasAttribute(KARABO_SCHEMA_DEFAULT_VALUE)) {
-                    std::string msg("Error in element '");
-                    msg.append(this->m_node->getKey())
+                    std::string msg;
+                    msg.append("Error in element '")
+                            .append(this->m_node->getKey())
                             .append("': readOnly() is not compatible with assignmentOptional().defaultValue(v). ")
                             .append("Use readOnly().initialVale(v) instead.");
-                    // throw KARABO_LOGIC_EXCEPTION(msg); intended for 2.6.0 and beyond
-                    // Do not use KARABO_LOG_* to avoid that util depends on log.
-                    std::cerr << msg << " This will become a uogicException in 2.6.0." << std::endl;
+                    throw KARABO_LOGIC_EXCEPTION(msg);
                 }
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
                 // Set the assignment and defaults here, as the API would look strange to assign something to a read-only
