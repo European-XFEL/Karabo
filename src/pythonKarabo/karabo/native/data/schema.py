@@ -34,6 +34,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
     daqDataType = None
     allowedActions = None
     displayType = None
+    classId = None
     schema = None
 
     def __init__(self, configuration={}):
@@ -287,6 +288,8 @@ class Node(Descriptor):
             attrs["allowedActions"] = set(self.cls.allowedActions)
         if self.cls.displayType is not None:
             attrs["displayType"] = self.cls.displayType
+        if self.cls.classId is not None:
+            attrs["classId"] = self.cls.classId
         return self.cls.getClassSchema(device, state).hash, attrs
 
     def _initialize(self, instance, value):

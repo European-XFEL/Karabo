@@ -143,6 +143,7 @@ class NetworkInput(Configurable):
     instead you should just declare a :cls:`InputChannel`.
     """
     displayType = 'InputChannel'
+    classId = 'InputChannel'
 
     # Internal name to be set by the input channel
     _name = None
@@ -558,7 +559,7 @@ class ConnectionTable(Configurable):
 
 class NetworkOutput(Configurable):
     displayType = 'OutputChannel'
-
+    classId = 'OutputChannel'
     server = None
 
     port = UInt32(
