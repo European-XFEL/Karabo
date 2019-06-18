@@ -346,12 +346,15 @@ class Tests(DeviceTest):
         self.assertEqual(proxy.output1.schema.s, "hallo")
 
         with proxy:
+            # The yield below fixes a race condition in the context initialization
+            # performed by with. As soon as the MR with the 'async with' implementation
+            # (MR !3210) is merged, the 'yield from proxy' can be removed.
             yield from proxy
             self.device.output.schema.number = 23
             self.assertEqual(proxy.a, 22.8 * unit.milliampere)
             yield from self.device.output.writeData()
             yield from waitUntil(lambda: proxy.a == 23 * unit.mA)
- 
+
         proxy.output1.connect()
         task = background(waitUntilNew(proxy.output1.schema.s))
         while not task.done():
@@ -370,7 +373,6 @@ class Tests(DeviceTest):
 
     @async_tst(timeout=90)
     def test_history(self):
-        return
         before = datetime.now()
         # Wherever we run this test (by hands or in CI) we should
         # not depend on the exact location of 'historytest.xml' ...
