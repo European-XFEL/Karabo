@@ -325,10 +325,11 @@ class Descriptor(object):
     allowedStates = None
     tags = None
     archivePolicy = None
+    classId = None
 
     def __init__(self, strict=True, key="(unknown key)",
                  allowedStates=None, archivePolicy=None, tags=None,
-                 **kwargs):
+                 classId=None, **kwargs):
         """Create a new descriptor with appropriate attributes
 
         The attributes are given as keyword arguments. If we define
@@ -371,6 +372,8 @@ class Descriptor(object):
                                 format(tags))
         if archivePolicy is not None:
             self.archivePolicy = ArchivePolicy(archivePolicy)
+        if classId is not None:
+            self.classId = classId
 
         self.__doc__ = self.description
 
@@ -395,6 +398,9 @@ class Descriptor(object):
             attrs["tags"] = list(self.tags)
         if self.archivePolicy is not None:
             attrs["archivePolicy"] = self.archivePolicy.value
+        if self.classId is not None:
+            attrs["classId"] = self.classId
+
         return Hash(), attrs
 
     def __get__(self, instance, owner):
@@ -518,7 +524,10 @@ class Slot(Descriptor):
     def toSchemaAndAttrs(self, device, state):
         h, attrs = super(Slot, self).toSchemaAndAttrs(device, state)
         attrs["nodeType"] = NodeType.Node
+        # Explicitly calling super's schema sets Descriptor's displayType and
+        # classId attributes, not Slot's
         attrs["displayType"] = "Slot"
+        attrs["classId"] = "Slot"
         return h, attrs
 
     def toDataAndAttrs(self, value):
