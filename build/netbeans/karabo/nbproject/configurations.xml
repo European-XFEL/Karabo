@@ -459,14 +459,6 @@
         <itemPath>../../../src/karabo/tests/util/utilTestRunner.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/resources/utiltestdll.hh</itemPath>
       </logicalFolder>
-      <logicalFolder name="f6"
-                     displayName="webAuth_test"
-                     projectFiles="true"
-                     kind="TEST">
-        <itemPath>../../../src/karabo/tests/webAuth/Authenticate_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/webAuth/Authenticate_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/webAuth/webAuthTestRunner.cc</itemPath>
-      </logicalFolder>
       <logicalFolder name="f5" displayName="xms_test" projectFiles="true" kind="TEST">
         <itemPath>../../../src/karabo/tests/xms/ImageData_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/xms/ImageData_Test.hh</itemPath>
@@ -1746,24 +1738,6 @@
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/webAuth/Authenticate_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-        <ccTool>
-          <additionalDep></additionalDep>
-        </ccTool>
-      </item>
-      <item path="../../../src/karabo/tests/webAuth/Authenticate_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/webAuth/webAuthTestRunner.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/tests/xms/ImageData_Test.cc"
             ex="false"
             tool="1"
@@ -2431,20 +2405,6 @@
           <linkerLibItems>
             <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
           </linkerLibItems>
-        </linkerTool>
-      </folder>
-      <folder path="TestFiles/f6">
-        <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
-        </cTool>
-        <ccTool>
-          <preprocessorList>
-            <Elem>WITH_NONAMESPACES</Elem>
-            <Elem>WITH_OPENSSL</Elem>
-          </preprocessorList>
-        </ccTool>
-        <linkerTool>
-          <output>${TESTDIR}/TestFiles/f6</output>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f7">
@@ -3739,21 +3699,6 @@
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/webAuth/Authenticate_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/webAuth/Authenticate_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/webAuth/webAuthTestRunner.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/tests/xms/ImageData_Test.cc"
             ex="false"
             tool="1"
@@ -4419,20 +4364,6 @@
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f5</output>
-          <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
-          </linkerLibItems>
-        </linkerTool>
-      </folder>
-      <folder path="TestFiles/f6">
-        <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
-        </cTool>
-        <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
-        </ccTool>
-        <linkerTool>
-          <output>${TESTDIR}/TestFiles/f6</output>
           <linkerLibItems>
             <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
           </linkerLibItems>
@@ -5720,24 +5651,6 @@
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/webAuth/Authenticate_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-        <ccTool>
-          <additionalDep></additionalDep>
-        </ccTool>
-      </item>
-      <item path="../../../src/karabo/tests/webAuth/Authenticate_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/webAuth/webAuthTestRunner.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/tests/xms/ImageData_Test.cc"
             ex="false"
             tool="1"
@@ -6405,20 +6318,6 @@
           <linkerLibItems>
             <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
           </linkerLibItems>
-        </linkerTool>
-      </folder>
-      <folder path="TestFiles/f6">
-        <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
-        </cTool>
-        <ccTool>
-          <preprocessorList>
-            <Elem>WITH_NONAMESPACES</Elem>
-            <Elem>WITH_OPENSSL</Elem>
-          </preprocessorList>
-        </ccTool>
-        <linkerTool>
-          <output>${TESTDIR}/TestFiles/f6</output>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f7">
