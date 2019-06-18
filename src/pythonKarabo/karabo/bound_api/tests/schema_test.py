@@ -6,7 +6,7 @@ from karabo.bound import (
     AccessLevel, AccessType, ArchivePolicy, AssemblyRules, AssignmentType,
     Hash, Logger, MetricPrefix, NodeType, Schema, Types, Unit, Validator,
     AlarmCondition, DaqDataType, State, IMAGEDATA_ELEMENT, INT32_ELEMENT,
-    NDARRAY_ELEMENT, OVERWRITE_ELEMENT,
+    NDARRAY_ELEMENT, OVERWRITE_ELEMENT
 )
 from .configuration_example_classes import (
     Base, GraphicsRenderer, GraphicsRenderer1, GraphicsRenderer2, SomeClass,
