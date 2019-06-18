@@ -1,7 +1,7 @@
 
 __deps_build_tests() {
     export FORCED_DEPS_TAG=$CI_COMMIT_REF_SLUG
-    bash ./auto_build_all.sh Debug --runTests
+    bash ./auto_build_all.sh Debug --runIntegrationTests
 }
 
 __unit_tests() {

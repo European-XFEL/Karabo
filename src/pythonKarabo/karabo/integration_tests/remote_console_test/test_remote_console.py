@@ -1,4 +1,4 @@
-"""This tests the communication between bound API and middlelayer API"""
+"""This tests the functionality of the IPythonKernel device"""
 import pickle
 from contextlib import contextmanager
 
@@ -42,6 +42,7 @@ class IPClient(InProcessKernelClient):
         self.shell_input = ""
 
     def _dispatch_to_kernel(self, msg):
+        """implement _dispatch_to_kernel for the parent"""
         self.device.shell = pickle.dumps(msg)
 
     async def start(self):
@@ -51,7 +52,6 @@ class IPClient(InProcessKernelClient):
         background(self.monitor)
 
     async def monitor(self):
-        await waitUntilNew(self.device.doNotCompressEvents)
         mapping = {
             "iopub": self.iopub_channel,
             "shell": self.shell_channel,
@@ -60,6 +60,8 @@ class IPClient(InProcessKernelClient):
         for prop, channel in mapping.items():
             channel.name = prop
         while True:
+            # one cannot unfortunately wait on the channels
+            # self.device.iopub, etc. therefore we use this.
             await waitUntilNew(self.device)
             for prop, channel in mapping.items():
                 d = getattr(self.device, prop)
