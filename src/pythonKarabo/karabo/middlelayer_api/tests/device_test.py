@@ -114,6 +114,28 @@ class Tests(DeviceTest):
     def test_displayType_input(self):
         self.assertEqual(self.myDevice.input.displayType, 'InputChannel')
 
+    @sync_tst
+    def test_classId_output(self):
+        self.assertEqual(self.myDevice.output.classId, 'OutputChannel')
+        self.assertEqual(self.myDevice.dataOutput.classId, 'OutputChannel')
+
+    @sync_tst
+    def test_classId_input(self):
+        self.assertEqual(self.myDevice.input.classId, 'InputChannel')
+
+    @async_tst
+    async def test_classId_slot(self):
+        s = await getSchema("MyDevice")
+        self.assertTrue(s.hash.hasAttribute('start', 'classId'),
+                        "Attribute 'classId' is missing from Slot schema.")
+        self.assertEqual(s.hash.getAttribute('start', 'classId'), 'Slot')
+
+    @async_tst
+    async def test_classId_node(self):
+        s = await getSchema("MyDevice")
+        self.assertFalse(s.hash.hasAttribute('deep', 'classId'),
+                         "Node should not have a 'classId' attribute.")
+
     @async_tst
     async def test_send_raw(self):
         hsh = Hash("Itchy", 10)
