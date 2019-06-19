@@ -34,8 +34,8 @@ class DisplayWebCamGraph(BaseBindingController):
         self._plot.hide_all_axis()
 
         # Colormap
-        widget.add_colormap_action(self.model.colormap)
-        widget.set_colormap(self.model.colormap, update=False)
+        widget.add_colormap_action()
+        widget.restore({"colormap": self.model.colormap})
 
         return widget
 
