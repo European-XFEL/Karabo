@@ -57,6 +57,8 @@ class DisplayHistGraph(BaseBindingController):
                            endpoint=True)
         hist, edges = np.histogram(value, bins=bins)
         if len(edges) > 1:
+            bin_w = (stop - start) / len(bins)
+            edges = edges - (bin_w / 2)
             self._plot.setData(edges, hist, stepMode=True, fillLevel=0)
 
     # ----------------------------------------------------------------
@@ -72,3 +74,5 @@ class DisplayHistGraph(BaseBindingController):
                                           parent=self.widget)
         if ok:
             self.model.trait_set(**content)
+            if len(self.proxy.value):
+                self.value_update(self.proxy)
