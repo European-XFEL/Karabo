@@ -222,32 +222,30 @@ class Manager(QObject):
         pass
 
     def handle_topologyUpdate(self, changes):
-        gone_devices, gone_servers = self._topology.topology_update(changes)
+        devices, servers = self._topology.topology_update(changes)
 
         gone_instanceIds = []
         # Did an alarm system leave our topology?
-        for instance_id, class_id, _ in gone_devices:
+        for instance_id, class_id, _ in devices:
             if class_id == 'AlarmService':
                 broadcast_event(KaraboEvent.RemoveAlarmServices,
                                 {'instanceIds': [instance_id]})
             gone_instanceIds.append(instance_id)
 
         # Update topology interested listeners!
-        devices, servers = _extract_topology_devices(
+        new_devices, new_servers = _extract_topology_devices(
             changes['new'])
 
         # Tell the GUI about various devices or servers that are alive
-        for instance_id, class_id, _ in devices:
+        for instance_id, class_id, _ in new_devices:
             if class_id == 'AlarmService':
                 self._announce_alarm_services([instance_id])
             elif class_id == 'ProjectManager':
                 broadcast_event(KaraboEvent.ProjectDBConnect,
                                 {'device': instance_id})
 
-        devices.extend(gone_devices)
-        servers.extend(gone_servers)
-
-        # XXX: This has to be worked on once the old protocol goes away
+        devices.extend(new_devices)
+        servers.extend(new_servers)
         broadcast_event(KaraboEvent.SystemTopologyUpdate,
                         {'devices': devices, 'servers': servers})
 
