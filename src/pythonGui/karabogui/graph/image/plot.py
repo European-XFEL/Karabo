@@ -202,8 +202,10 @@ class KaraboImagePlot(PlotItem):
         :param str cmap:
             Colormap name. Should be among COLORMAPS.
         """
-        lut = (ColorMap(*zip(*COLORMAPS[cmap]), mode="RGB")
-               .getLookupTable(alpha=False, mode="RGB"))
+        lut = None
+        if cmap != "none":
+            lut = (ColorMap(*zip(*COLORMAPS[cmap]), mode="RGB")
+                   .getLookupTable(alpha=False, mode="RGB"))
         self.imageItem.setLookupTable(lut)
 
     @pyqtSlot(object)
