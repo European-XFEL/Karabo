@@ -60,6 +60,7 @@ class KaraboImageView(QWidget):
 
         self._colormap_action = None
         self._apply_action = None
+        self._downsample_action = None
         self._scale_legend = None
 
         self.configuration = {}
@@ -198,13 +199,15 @@ class KaraboImageView(QWidget):
 
         return self._colormap_action
 
-    def add_apply_action(self):
-        apply_action = QAction(self)
-        apply_action.setIcon(icons.apply)
-        apply_action.setIconText('Set ROI and Aux')
-        self.addAction(apply_action)
+    def add_downsample_action(self):
+        action = QAction(self)
+        action.setIconText('Auto downsample')
+        action.setCheckable(True)
+        action.triggered.connect(self._set_autodownsample)
+        self.addAction(action)
 
-        return apply_action
+        self._downsample_action = action
+        return action
 
     def add_axes_labels_dialog(self):
         axes_action = QAction("Axes Labels", self)
@@ -264,6 +267,12 @@ class KaraboImageView(QWidget):
             for cmap_action in self._colormap_action.menu().actions():
                 if cmap_action.text() == colormap:
                     cmap_action.setChecked(True)
+
+        # Restore autodownsampling
+        autodownsample = configuration.get('downsample')
+        self.plotItem.imageItem.setAutoDownsample(autodownsample)
+        if self._downsample_action is not None:
+            self._downsample_action.setChecked(autodownsample)
 
         # Restore transforms
         transforms = {k: v for k, v in configuration.items()
@@ -412,6 +421,13 @@ class KaraboImageView(QWidget):
                 items.append(traits)
 
         config['roi_items'] = items
+        self.configuration.update(**config)
+        self.stateChanged.emit(config)
+
+    @pyqtSlot(bool)
+    def _set_autodownsample(self, enable):
+        self.plotItem.imageItem.setAutoDownsample(enable)
+        config = {"downsample": enable}
         self.configuration.update(**config)
         self.stateChanged.emit(config)
 
