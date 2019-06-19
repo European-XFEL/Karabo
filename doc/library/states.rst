@@ -468,10 +468,10 @@ staticSignificant = ``ACTIVE|PASSIVE``
 changingSignificant = ``INCREASING|DECREASING``
     defines whether ``INCREASING`` or  ``DECREASING`` should evaluate as more significant.
 
-In rare scenarios states might to be trumped differently. Developers can
+In rare scenarios states might need to be trumped differently. Developers can
 provide for a different trumping method in initialization of the ``StateSignifier``.
-It expects a complete list of base states as input, the order of which determines
-trumping and provides the same ``returnMostSignificant`` method as in the
+A complete list of base states should be provided as the trump list, the order of which
+determines trumping and provides the same ``returnMostSignificant`` method as in the
 default trumping implementation.
 
 .. code-block:: Python
