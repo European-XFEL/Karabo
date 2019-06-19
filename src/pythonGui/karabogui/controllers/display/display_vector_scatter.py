@@ -14,6 +14,7 @@ from karabo.common.scenemodel.api import (
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.graph.plots.api import KaraboPlotView, ScatterGraphPlot
+from karabogui import icons
 
 MIN_POINT_SIZE = 0.1
 MAX_POINT_SIZE = 10.0
@@ -49,6 +50,7 @@ class DisplayVectorScatterGraph(BaseBindingController):
 
         point_size_action = QAction("Point Size", widget)
         point_size_action.triggered.connect(self._configure_point_size)
+        point_size_action.setIcon(icons.scatter)
         widget.addAction(point_size_action)
 
         return widget
