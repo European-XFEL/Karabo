@@ -1111,5 +1111,5 @@ COLORMAPS = {
     "inferno": INFERNO,
     "plasma": PLASMA,
     "magma": MAGMA,
-    "gray": GRAYSCALE,
+    "none": GRAYSCALE,
 }
