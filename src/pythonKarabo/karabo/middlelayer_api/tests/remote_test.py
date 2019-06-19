@@ -1059,6 +1059,7 @@ class Tests(DeviceTest):
             'requiredAccessLevel': 0,
             'assignment': 0,
             'displayType': 'Slot',
+            'classId': 'Slot',
             'nodeType': 1,
             'accessMode': 4})
         self.assertIn("allow", h)
