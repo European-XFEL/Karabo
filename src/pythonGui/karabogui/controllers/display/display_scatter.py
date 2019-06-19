@@ -10,17 +10,14 @@ from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QAction, QInputDialog
 from traits.api import Any, Callable, Instance
 
+
+from karabo.common.scenemodel.api import build_model_config, ScatterGraphModel
 from karabogui.binding.api import (
     get_binding_value, BoolBinding, FloatBinding, IntBinding, PropertyProxy)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui import icons
-
 from karabogui.graph.common.api import create_tool_button
-
-from karabo.common.scenemodel.api import (
-    build_model_config, ScatterGraphModel)
-
 from karabogui.graph.plots.api import KaraboPlotView, ScatterGraphPlot
 
 BUTTON_SIZE = (52, 32)
@@ -85,6 +82,7 @@ class DisplayScatterGraph(BaseBindingController):
 
         point_size_action = QAction("Point Size", widget)
         point_size_action.triggered.connect(self._configure_point_size)
+        point_size_action.setIcon(icons.scatter)
         widget.addAction(point_size_action)
 
         # A closure to change the button style once a boolean is linked
@@ -137,7 +135,7 @@ class DisplayScatterGraph(BaseBindingController):
         self._last_x_value = None
         self._x_values.clear()
         self._y_values.clear()
-        self._plot.setData([], [])
+        self._plot.clear()
 
     @pyqtSlot()
     def _configure_deque(self):

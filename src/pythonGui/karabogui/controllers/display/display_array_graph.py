@@ -16,6 +16,7 @@ from karabogui.controllers.api import (
 from karabogui.graph.common.const import MIN_DOWNSAMPLE, MAX_DOWNSAMPLE
 from karabogui.graph.plots.api import (
     KaraboPlotView, generate_down_sample, get_view_range)
+from karabogui import icons
 
 
 @register_binding_controller(ui_name='NDArray Graph',
@@ -38,6 +39,7 @@ class DisplayNDArrayGraph(BaseBindingController):
 
         downsample_action = QAction("Downsample", widget)
         downsample_action.triggered.connect(self.configure_downsample)
+        downsample_action.setIcon(icons.downsample)
         widget.addAction(downsample_action)
 
         return widget

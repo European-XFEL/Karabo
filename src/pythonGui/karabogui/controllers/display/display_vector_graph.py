@@ -10,15 +10,15 @@ from PyQt4.QtCore import pyqtSlot
 from traits.api import Dict, Instance
 
 from karabogui.binding.api import VectorNumberBinding
-from karabogui.controllers.api import (
-    BaseBindingController, register_binding_controller)
-
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config, VectorGraphModel)
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller)
 from karabogui.graph.common.api import get_pen_cycler
 from karabogui.graph.common.const import MIN_DOWNSAMPLE, MAX_DOWNSAMPLE
 from karabogui.graph.plots.api import (
     KaraboPlotView, generate_down_sample, get_view_range)
+from karabogui import icons
 
 
 @register_binding_controller(ui_name='Vector Graph', klassname='VectorGraph',
@@ -42,6 +42,7 @@ class DisplayVectorGraph(BaseBindingController):
 
         downsample_action = QAction("Downsample", widget)
         downsample_action.triggered.connect(self.configure_downsample)
+        downsample_action.setIcon(icons.downsample)
         widget.addAction(downsample_action)
 
         return widget
