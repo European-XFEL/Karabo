@@ -433,7 +433,7 @@ namespace karabo {
                         // Safety check
                         if (!deviceExists) {
                             if (loggerExists) {
-                                this->call(loggerId, "slotTagDeviceToBeDiscontinued", true, 'D');
+                                this->call(loggerId, "slotTagDeviceToBeDiscontinued", true, 'D', instanceId);
                                 remote().killDeviceNoWait(loggerId);
                             } else {
                                 //check if logger is still in some queue to be instantiated
