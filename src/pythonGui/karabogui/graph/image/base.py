@@ -126,8 +126,7 @@ class KaraboImageView(QWidget):
             self.image_layout.addItem(self._colorbar, row=1, col=2)
             self.image_layout.ci.layout.setColumnStretchFactor(2, 1)
 
-            # Set default colormap to viridis
-            self.add_colormap_action("viridis")
+            self.add_colormap_action()
 
         return self._colorbar
 
@@ -189,7 +188,7 @@ class KaraboImageView(QWidget):
 
         return self._aux_plots
 
-    def add_colormap_action(self, cmap):
+    def add_colormap_action(self, cmap="none"):
         if self._colormap_action is None:
             menu = create_colormap_menu(COLORMAPS, cmap, self.set_colormap)
             self._colormap_action = QAction(self)
@@ -261,6 +260,10 @@ class KaraboImageView(QWidget):
         colormap = configuration.get('colormap')
         if colormap is not None:
             self.set_colormap(colormap, update=False)
+            # We check the action as well.
+            for cmap_action in self._colormap_action.menu().actions():
+                if cmap_action.text() == colormap:
+                    cmap_action.setChecked(True)
 
         # Restore transforms
         transforms = {k: v for k, v in configuration.items()
