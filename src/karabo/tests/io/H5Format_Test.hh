@@ -21,7 +21,7 @@ class H5Format_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testEmptyFormat);
     CPPUNIT_TEST(testManualFormat);
     CPPUNIT_TEST(testDiscoverFromHash);
-     */
+    */
 
 
     CPPUNIT_TEST_SUITE_END();
