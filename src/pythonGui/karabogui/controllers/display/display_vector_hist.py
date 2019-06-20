@@ -58,7 +58,7 @@ class DisplayHistGraph(BaseBindingController):
             stop = max([self.model.start, self.model.stop])
         bins = np.linspace(start=start, stop=stop, num=self.model.bins + 1,
                            endpoint=True)
-        bin_w = (stop - start) / (self.model.bins + 1)
+        bin_w = (stop - start) / (self.model.bins)
         bins = bins - bin_w / 2
         hist, edges = np.histogram(value, bins=bins)
         if len(edges) > 1:
