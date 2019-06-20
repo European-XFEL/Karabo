@@ -17,6 +17,8 @@ using namespace karabo::io;
 using namespace karabo::util;
 using std::vector;
 using std::string;
+using std::cout;
+using std::endl;
 
 using std::cout;
 using std::endl;
@@ -76,10 +78,10 @@ void HashXmlSerializer_Test::testSerialization() {
         Hash schemaIncluded("a1", 3.2, "a2", s);
         string garbage;
         p->save(schemaIncluded, garbage);
-        cout << "@HashXmlSerializer_Test::testSerialization -> GARBAGE: \n" << garbage << endl;
+        cout << "\n@HashXmlSerializer_Test::testSerialization -> GARBAGE: " << garbage << endl;
         Hash fresh;
         p->load(fresh, garbage);
-        cout << "HashXmlSerializer_Test::testSerialization -> HASH: \n" << fresh.get<Schema>("a2") << endl;
+        cout << "@HashXmlSerializer_Test::testSerialization -> HASH: \n" << fresh.get<Schema>("a2") << endl;
 
     }
 
@@ -89,17 +91,17 @@ void HashXmlSerializer_Test::testSerialization() {
 
         p->save(m_rootedHash, archive1);
 
-        //cout << "\n\n  archive1: \n" << archive1 << endl;
+        cout << "\n\n@HashXmlSerializer_Test::testSerialization -> archive1: \n" << archive1 << endl;
 
         Hash h;
         p->load(h, archive1);
-        //cout << "\n\n  h: \n" << h << endl;
+        cout << "\n\n@HashXmlSerializer_Test::testSerialization ->  h: \n" << h << endl;
 
         CPPUNIT_ASSERT(karabo::util::similar(m_rootedHash, h) == true);
 
         p->save(h, archive2);
 
-        //cout << "\n\n archive2: \n" << archive2 << endl;
+        cout << "\n\n@HashXmlSerializer_Test::testSerialization -> archive2: \n" << archive2 << endl;
 
         CPPUNIT_ASSERT(archive1 == archive2);
 
@@ -112,7 +114,7 @@ void HashXmlSerializer_Test::testSerialization() {
 
         p->save(m_bigHash, archive1);
 
-        //cout << "\n\nXML string size: " << archive.size() / 1024 / 1024 << " MB" << endl;
+        cout << "\n\n@HashXmlSerializer_Test::testSerialization -> XML string size: " << archive1.size() / 1024 / 1024 << " MB" << endl;
 
         Hash h;
         p->load(h, archive1);
@@ -128,7 +130,7 @@ void HashXmlSerializer_Test::testSerialization() {
         std::string archive1;
         std::string archive2;
         p->save(m_unrootedHash, archive1);
-        //cout << "\n\nXML string size: " << archive.size() / 1024 / 1024 << " MB" << endl;
+        cout << "\n\n@HashXmlSerializer_Test::testSerialization -> XML string size: " << archive1.size() / 1024 / 1024 << " MB" << endl;
 
         Hash h;
         p->load(h, archive1);
