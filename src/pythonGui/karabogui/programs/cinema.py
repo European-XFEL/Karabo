@@ -88,7 +88,9 @@ def run_cinema(ns):
         success = get_network().connectToServer()
 
     if success:
-        sys.exit(app.exec_())
+        app.exec_()
+        app.deleteLater()
+        sys.exit()
     else:
         # If we are not successful in connection, we don't leave a remnant!
         topology.system_tree.on_trait_change(
