@@ -28,11 +28,11 @@ class TestVectorHistGraph(GuiTestCase):
     def test_scatter_graph_basics(self):
         self.controller.model.auto = False
         self.controller.model.start = 0
-        self.controller.model.stop = 1
-        set_proxy_value(self.proxy, 'prop', [1, 1, 1, 1, 1, 1, 1, 1])
+        self.controller.model.stop = 10
+        set_proxy_value(self.proxy, 'prop', [1, 2, 2, 3, 3, 3, 3, 8])
         curve = self.controller._plot
         x, y = curve.getData()
         np.testing.assert_array_almost_equal(
-            x, [-0.05, 0.061111, 0.172222, 0.283333, 0.394444, 0.505556,
-                0.616667, 0.727778, 0.838889, 0.95])
-        np.testing.assert_array_almost_equal(y, [0, 0, 0, 0, 0, 0, 0, 0, 8])
+            x, [-0.454545, 0.545455, 1.545455, 2.545455, 3.545455, 4.545455,
+                5.545455, 6.545455, 7.545455, 8.545455, 9.545455])
+        np.testing.assert_array_almost_equal(y, [0, 1, 2, 4, 0, 0, 0, 0, 1, 0])

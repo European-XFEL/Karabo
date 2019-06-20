@@ -53,13 +53,14 @@ class DisplayHistGraph(BaseBindingController):
         else:
             start = min([self.model.start, self.model.stop])
             stop = max([self.model.start, self.model.stop])
-        bins = np.linspace(start=start, stop=stop, num=self.model.bins,
+        bins = np.linspace(start=start, stop=stop, num=self.model.bins + 1,
                            endpoint=True)
+        bin_w = (stop - start) / (self.model.bins + 1)
+        bins = bins - bin_w / 2
         hist, edges = np.histogram(value, bins=bins)
         if len(edges) > 1:
-            bin_w = (stop - start) / len(bins)
-            edges = edges - (bin_w / 2)
-            self._plot.setData(edges, hist, stepMode=True, fillLevel=0)
+            self._plot.setData(edges, hist, fillLevel=0,
+                               stepMode=True)
 
     # ----------------------------------------------------------------
     # Qt Slots
