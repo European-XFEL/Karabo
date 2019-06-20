@@ -2,9 +2,9 @@
 # Author: <dennis.goeries@xfel.eu>
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
 from itertools import cycle
 
+import numpy as np
 from PyQt4.QtGui import QAction, QInputDialog
 from PyQt4.QtCore import pyqtSlot
 from traits.api import Dict, Instance
@@ -73,6 +73,11 @@ class DisplayVectorGraph(BaseBindingController):
 
         y = proxy.value
         plot = self._curves[proxy]
+        # NOTE: With empty data or only inf we clear as NaN will clear as well!
+        if not len(y) or np.isinf(y).all():
+            plot.clear()
+            return
+
         rect = get_view_range(plot)
         x, y = generate_down_sample(y, rect=rect,
                                     half_samples=self.model.half_samples,
