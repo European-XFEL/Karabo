@@ -33,8 +33,7 @@ class TestVectorHistGraph(GuiTestCase):
         curve = self.controller._plot
         x, y = curve.getData()
         np.testing.assert_array_almost_equal(
-            x, [-0.454545, 0.545455, 1.545455, 2.545455, 3.545455, 4.545455,
-                5.545455, 6.545455, 7.545455, 8.545455, 9.545455])
+            x, [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5])
         np.testing.assert_array_almost_equal(y, [0, 1, 2, 4, 0, 0, 0, 0, 1, 0])
 
     def test_hist_empty(self):
