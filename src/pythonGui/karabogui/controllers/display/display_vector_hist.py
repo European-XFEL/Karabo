@@ -6,7 +6,7 @@
 import numpy as np
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QAction
-from traits.api import Instance
+from traits.api import Instance, Undefined
 
 from karabo.common.scenemodel.api import (
     build_model_config, VectorHistGraphModel)
@@ -47,6 +47,9 @@ class DisplayHistGraph(BaseBindingController):
 
     def value_update(self, proxy):
         value = proxy.value
+        if value is not Undefined and not len(value):
+            self._plot.clear()
+            return
 
         if self.model.auto:
             start, stop = value.min(), value.max()
