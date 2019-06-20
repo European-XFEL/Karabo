@@ -17,7 +17,7 @@ from .graph_utils import (
 class KaraboImageModel(BaseWidgetObjectData):
     """The KaraboImageModel Base"""
     aux_plots = Int(0)
-    colormap = String("viridis")
+    colormap = String("none")
 
     roi_items = List(BaseROIData)
     roi_tool = Int(0)
@@ -48,7 +48,7 @@ class VectorRollGraphModel(BaseWidgetObjectData):
     """A model of the VectorRoll Graph"""
     # Image trait base
     aux_plots = Int(0)
-    colormap = String("viridis")
+    colormap = String("none")
     roi_items = List(BaseROIData)
     roi_tool = Int(0)
     x_label = String("X-axis")
@@ -61,7 +61,7 @@ class VectorRollGraphModel(BaseWidgetObjectData):
 
 class WebCamGraphModel(BaseWidgetObjectData):
     """A model of the WebCam Graph"""
-    colormap = String("viridis")
+    colormap = String("none")
 
 
 @register_scene_reader('ImageGraph')
