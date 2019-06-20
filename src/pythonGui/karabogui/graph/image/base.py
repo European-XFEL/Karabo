@@ -37,8 +37,8 @@ class KaraboImageView(QWidget):
         self.setLayout(layout)
 
         self.image_layout = GraphicsLayoutWidget()
-        self.image_layout.setMinimumHeight(300)
-        self.image_layout.setMinimumWidth(300)
+        self.image_layout.setMinimumHeight(100)
+        self.image_layout.setMinimumWidth(100)
         self.layout().addWidget(self.image_layout, 0, 0, 1, 1)
 
         # Add our basic plotItem to this widget
