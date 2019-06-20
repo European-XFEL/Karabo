@@ -12,7 +12,8 @@ from karabogui import icons
 from karabogui.controllers.api import populate_controller_registry
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.singletons.api import (
-    get_db_conn, get_manager, get_mediator, get_panel_wrangler, get_network)
+    get_db_conn, get_manager, get_mediator, get_panel_wrangler, get_network,
+    get_topology)
 
 
 def run_cinema(ns):
@@ -63,6 +64,21 @@ def run_cinema(ns):
     # Init the panel wrangler singleton
     get_panel_wrangler().use_splash_screen(splash)
 
+    def trigger_scenes():
+        topology.system_tree.on_trait_change(
+            trigger_scenes, 'initialized', remove=True)
+        get_db_conn().default_domain = ns.domain
+        for uuid in ns.scene_uuid:
+            db_scene = {'name': "Cinema",
+                        'target_window': SceneTargetWindow.MainWindow,
+                        'target': uuid}
+            broadcast_event(KaraboEvent.OpenSceneLink, db_scene)
+
+    topology = get_topology()
+    # Attach to the topology
+    topology.system_tree.on_trait_change(
+        trigger_scenes, 'initialized')
+
     # We might want to connect directly to the gui server
     if ns.host and ns.port:
         success = get_network().connectToServerDirectly(
@@ -72,16 +88,11 @@ def run_cinema(ns):
         success = get_network().connectToServer()
 
     if success:
-        get_db_conn().default_domain = ns.domain
-        for uuid in ns.scene_uuid:
-            db_scene = {'name': "Cinema",
-                        'target_window': SceneTargetWindow.MainWindow,
-                        'target': uuid}
-            broadcast_event(KaraboEvent.OpenSceneLink, db_scene)
-
         sys.exit(app.exec_())
     else:
         # If we are not successful in connection, we don't leave a remnant!
+        topology.system_tree.on_trait_change(
+            trigger_scenes, 'initialized', remove=True)
         app.quit()
 
 
