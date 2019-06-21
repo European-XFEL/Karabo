@@ -89,7 +89,7 @@ class TestDetectorGraph(GuiTestCase):
     def setUp(self):
         super(TestDetectorGraph, self).setUp()
 
-        schema = PipelineData.getClassSchema()
+        schema = PipelineData().getDeviceSchema()
         binding = build_binding(schema)
         root_proxy = DeviceProxy(binding=binding)
 

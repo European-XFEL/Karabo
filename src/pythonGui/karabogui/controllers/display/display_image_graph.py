@@ -61,13 +61,14 @@ class DisplayImageGraph(BaseBindingController):
         self.model.trait_set(**restore_graph_config(content))
 
     def value_update(self, proxy):
-        image_node = KaraboImageNode(proxy.value)
+        image_data = proxy.value
+        image_node = KaraboImageNode(image_data)
 
         if not image_node.is_valid:
             return
 
-        if "stackAxis" in image_node.node:
-            self._axis = image_node.node.stackAxis.value
+        if "stackAxis" in image_data:
+            self._axis = image_data.stackAxis.value
         else:
             # NOTE: this might happen for RGB image
             self._axis = DIMENSIONS['Z']
