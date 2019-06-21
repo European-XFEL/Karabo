@@ -855,15 +855,18 @@ namespace karabo {
         template<typename KeyType, typename AttributeType>
         inline std::string Element<KeyType, AttributeType>::getValueAsString() const {
             Types::ReferenceType type = this->getType();
+            //std::cout << "@Element::getValueAsString() -> refType = " << (int) this->getType() << std::endl;
             std::string result;
             GetValueAsString<KeyType, AttributeType> processor(*this, result);
             if (templatize(type, processor)) {
+                //std::cout << "@Element::getValueAsString() -> result = " << result << std::endl;
                 return result;
             }
             switch(type) {
                 case Types::HASH:
                     return karabo::util::toString(getValue<Hash>());
                 case Types::VECTOR_HASH:
+                    //std::cout << "@Element::getValueAsString() -> will call toString for vector<Hash>" << std::endl;
                     return karabo::util::toString(getValue<std::vector<Hash> >());
                 case Types::NONE:
                     return karabo::util::toString(getValue<CppNone>());

@@ -129,13 +129,33 @@ namespace karabo {
         }
 
 
+        static const std::string& kExtendedAttributesNodeName{"KRB_EXT_ATTRIBS"};
+        
         void HashXmlSerializer::writeAttributes(const Hash::Attributes& attrs, pugi::xml_node& node) const {
             for (Hash::Attributes::const_iterator it = attrs.begin(); it != attrs.end(); ++it) {
-                if (m_writeDataTypes) {
-                    Types::ReferenceType attrType = it->getType();
-                    node.append_attribute(it->getKey().c_str()) = (m_prefix + Types::to<ToLiteral > (attrType) + ":" + it->getValueAs<string > ()).c_str();
+                Types::ReferenceType attrType = it->getType();
+                if (attrType == Types::VECTOR_HASH) {
+                    // Attributes that are Vector of Hashes are serialized as children of the node that holds the 
+                    // attribute. The name of the serialized attribute node is the path of the node that contains
+                    // the attribute plus the attribute name.
+                    std::string attrPath = "_attr" + node.path('_') + '_' + it->getKey();
+                    if (m_writeDataTypes) {
+                        node.append_attribute(it->getKey().c_str()) =
+                                (m_prefix + Types::to<ToLiteral > (attrType) +
+                                 ":" + attrPath).c_str();
+                        pugi::xml_node attrSerialNode = node.append_child(attrPath.c_str());
+                        Hash hashVectHash(attrPath + "_value", it->getValue<vector < Hash >> ());
+                        createXml(hashVectHash, attrSerialNode);
+                    }
                 } else {
-                    node.append_attribute(it->getKey().c_str()) = it->getValueAs<string > ().c_str();
+                    if (m_writeDataTypes) {
+                        node.append_attribute(it->getKey().c_str()) =
+                                (m_prefix + Types::to<ToLiteral > (attrType) +
+                                 ":" +
+                                 it->getValueAs<string > ()).c_str();
+                    } else {
+                        node.append_attribute(it->getKey().c_str()) = it->getValueAs<string > ().c_str();
+                    }
                 }
             }
         }
@@ -203,23 +223,42 @@ namespace karabo {
                 string attributeName(it->name());
                 if (attributeName.substr(0, m_prefix.size()) != m_prefix) {
                     std::pair<std::string, Types::ReferenceType> attr = this->readXmlAttribute(std::string(it->value()));
-                    Hash::Attributes::Node& attrNode = attrs.set<std::string > (it->name(), attr.first); // Sets as string
-                    if (attr.second != Types::UNKNOWN && m_readDataTypes) {
-                        switch (attr.second) {
-                            case Types::SCHEMA:
-                                //case Types::VECTOR_HASH:
-                                // FIXME: Schema and vector_hash attributes
-                                // (e.g. "rowSchema" and "defaultValue" of a TABLE_ELEMENT) are currently
-                                // not correctly serialised. To avoid exceptions, we interpret them as
-                                // strings here for now.
-                                // Note that the serialisation is an interplay of
-                                // void HashXmlSerializer::writeAttributes(..) and
-                                // std::string Element<KeyType, AttributeType>::getValueAsString()
-                                attrNode.setType(Types::STRING);
-                                break;
-                            default:
-                                // Shapes it into correct type
-                                attrNode.setType(attr.second);
+                    if (attr.second == Types::VECTOR_HASH) {
+                        // Special case: Attributes of type VECTOR_HASH are serialized as a child node of the node
+                        // containing the attribute.
+                        string attrNodeName = attr.first;
+                        pugi::xml_node attrNode = node.child(attrNodeName.c_str());
+                        pugi::xml_node attrValueNode = attrNode.child((attrNodeName + "_value").c_str());
+                        Hash h;
+                        createHash(h, attrValueNode);
+                        std::cout << "@readAttributes: hash for vector of hashes attr:\n" << h << std::endl;
+                        vector<Hash> vh = h.get<vector < Hash >> (attrValueNode.name());
+                        std::cout << "@readAttributes: vector of hashes attr has '" << vh.size() << "' elements." << std::endl;
+                        // TODO: add attribute to Hash passed as argument - refactor method to receive Hash instead of
+                        // Hash::Attributes.
+                        // Clean-up of auxiliary node used to keep the value of the attribute of type vector of hash.
+                        attrNode.remove_child(attrValueNode);
+                        pugi::xml_node nodeCpy = node;
+                        nodeCpy.remove_child(attrNode);
+                    } else {
+                        Hash::Attributes::Node& attrNode = attrs.set<std::string > (it->name(), attr.first); // Sets as string
+                        if (attr.second != Types::UNKNOWN && m_readDataTypes) {
+                            switch (attr.second) {
+                                case Types::SCHEMA:
+                                    //case Types::VECTOR_HASH:
+                                    // FIXME : Schema and vector_hash attributes
+                                    // (e.g. "rowSchema" and "defaultValue" of a TABLE_ELEMENT) are currently
+                                    // not correctly serialised. To avoid exceptions, we interpret them as
+                                    // strings here for now.
+                                    // Note that the serialisation is an interplay of
+                                    // void HashXmlSerializer::writeAttributes(..) and
+                                    // std::string Element<KeyType, AttributeType>::getValueAsString()
+                                    attrNode.setType(Types::STRING);
+                                    break;
+                                default:
+                                    // Shapes it into correct type
+                                    attrNode.setType(attr.second);
+                            }
                         }
                     }
                 }
@@ -281,8 +320,8 @@ namespace karabo {
                         pugi::xml_attribute attr = node.attribute(m_typeFlag.c_str());
                         if (!attr.empty()) {
                             string attributeValue(attr.value());
-                            // Special case: Schema
                             if (attributeValue == "SCHEMA") {
+                                // Special case: Schema
                                 TextSerializer<Schema>::Pointer p = TextSerializer<Schema>::create("Xml", Hash("indentation", -1));
                                 Schema s;
                                 p->load(s, hashNode.getValue<string>());

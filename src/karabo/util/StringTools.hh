@@ -36,6 +36,8 @@
 #include "Exception.hh"
 #include "State.hh"
 
+#include <typeinfo>
+
 namespace karabo {
     namespace util {
 
@@ -62,6 +64,7 @@ namespace karabo {
          */
         template <class T>
         inline std::string toString(const T& value) {
+            //std::cout << "@StringTools::toString(T): T = " << typeid(T).name() << std::endl;
             std::ostringstream s;
             s << std::fixed << value;
             return s.str();
@@ -156,6 +159,11 @@ namespace karabo {
         template <typename T>
         inline std::string toString(const std::vector<T>& value, size_t maxElementsShown = 0) {
             if (value.empty()) return "";
+
+            /*
+            std::cout << "@StringTools::toString(vector<T>): size = " << value.size() << std::endl;
+            std::cout << "@StringTools::toString(vector<T>): " << typeid (T).name() << std::endl;
+             */
 
             std::ostringstream s;
             const size_t size = value.size();
