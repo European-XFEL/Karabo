@@ -23,6 +23,7 @@ from karabogui import icons
 
 @register_binding_controller(ui_name='Vector Graph', klassname='VectorGraph',
                              binding_type=VectorNumberBinding,
+                             priority=90,
                              can_show_nothing=False)
 class DisplayVectorGraph(BaseBindingController):
     """The VectorGraph controller for display basic vector data
