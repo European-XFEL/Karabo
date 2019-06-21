@@ -7,6 +7,13 @@ from karabo.middlelayer_api.alarm import AlarmMixin
 
 
 class Tests(TestCase):
+    def test_classId(self):
+        schema_hash = AlarmMixin.getClassSchema().hash
+        classId = schema_hash.getAttribute("alarmCondition", "classId")
+        self.assertEqual(classId, "AlarmCondition")
+        classId = schema_hash.getAttribute("globalAlarmCondition", "classId")
+        self.assertEqual(classId, "AlarmCondition")
+
     def test_simple(self):
         class A(AlarmMixin):
             amin = Int32(alarmLow=3)
