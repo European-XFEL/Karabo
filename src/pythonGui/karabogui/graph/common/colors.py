@@ -21,7 +21,7 @@ class Colors(object):
         self.k = (0, 0, 0, alpha)  # black
 
 
-def make_brush(color, alpha=255):
+def make_brush(color, alpha=180):
     return mkBrush(getattr(Colors(alpha=alpha), color[0]))
 
 
