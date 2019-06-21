@@ -34,6 +34,7 @@ class TestDisplayCheckBox(GuiTestCase):
         self.controller.create(None)
 
     def tearDown(self):
+        super(TestDisplayCheckBox, self).tearDown()
         self.controller.destroy()
         assert self.controller.widget is None
 
