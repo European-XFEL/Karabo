@@ -53,6 +53,7 @@ class TestMultiCurvePlot(GuiTestCase):
         self.controller.visualize_additional_property(self.value)
 
     def tearDown(self):
+        super(TestMultiCurvePlot, self).tearDown()
         self.controller.destroy()
         assert self.controller.widget is None
         self.patcher.stop()

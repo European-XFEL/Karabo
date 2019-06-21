@@ -36,6 +36,7 @@ class TestImageGraph(GuiTestCase):
             self.controller.create(None)
 
     def tearDown(self):
+        super(TestImageGraph, self).tearDown()
         self.controller.destroy()
         self.assertIsNone(self.controller.widget)
 

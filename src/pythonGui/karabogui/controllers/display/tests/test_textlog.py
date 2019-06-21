@@ -20,6 +20,7 @@ class TestDisplayTextLog(GuiTestCase):
         assert self.controller.widget is not None
 
     def tearDown(self):
+        super(TestDisplayTextLog, self).tearDown()
         self.controller.destroy()
         assert self.controller.widget is None
 

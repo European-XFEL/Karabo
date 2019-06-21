@@ -24,6 +24,7 @@ class TestCase(GuiTestCase):
         self.controller = DisplayWebCamGraph(proxy=self.img_proxy)
 
     def tearDown(self):
+        super(TestCase, self).tearDown()
         self.controller.destroy()
         self.assertIsNone(self.controller.widget)
 

@@ -29,6 +29,7 @@ class TestSingleBit(GuiTestCase):
         assert self.controller.widget is not None
 
     def tearDown(self):
+        super(TestSingleBit, self).tearDown()
         self.controller.destroy()
         assert self.controller.widget is None
 
