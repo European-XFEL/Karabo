@@ -90,11 +90,10 @@ class AuxPlotsController(QObject):
         if not self._visible:
             return
 
-        profiles = [plot.analyze(region) for plot
-                    in self.current_plots]
-
+        profile_x, profile_y = [plot.analyze(region) for plot
+                                in self.current_plots]
         if self._fitted and region is not None:
-            table = beam_profile_table_html(*profiles)
+            table = beam_profile_table_html(profile_x, profile_y)
             self.labelItem.item.setHtml(table)
 
     # -----------------------------------------------------------------------
