@@ -9,7 +9,7 @@ from karabogui import icons
 from karabogui.graph.common.api import (
     AxesLabelsDialog, AuxPlots, COLORMAPS, ExportToolset, ImageROIController,
     KaraboToolBar, MouseMode, PointCanvas, RectCanvas, ROITool, ROIToolset)
-from karabogui.graph.common.const import X_AXIS_HEIGHT, UNITS
+from karabogui.graph.common.const import SCALING, X_AXIS_HEIGHT, UNITS
 
 from .aux_plots.controller import AuxPlotsController
 from .colorbar import ColorBarWidget
@@ -274,19 +274,6 @@ class KaraboImageView(QWidget):
         if self._downsample_action is not None:
             self._downsample_action.setChecked(autodownsample)
 
-        # Restore transforms
-        transforms = {k: v for k, v in configuration.items()
-                      if k in ['x_scale', 'y_scale',
-                               'x_translate', 'y_translate',
-                               'aspect_ratio']}
-        if transforms:
-            self.plotItem.set_transform(**transforms, default=True)
-            # Restore scale legend
-            show_legend = configuration.get('show_scale')
-            self._show_scale_legend(show_legend)
-            self._update_scale_legend(transforms['x_scale'],
-                                      transforms['y_scale'])
-
         # Restore labels
         x_units = configuration.get('x_units', 'pixels')
         self.plotItem.set_label(axis=0,
@@ -297,6 +284,18 @@ class KaraboImageView(QWidget):
         self.plotItem.set_label(axis=1,
                                 text=configuration.get('y_label', 'Y-axis'),
                                 units=y_units)
+
+        # Restore transforms
+        transforms = {k: v for k, v in configuration.items()
+                      if k in ['x_scale', 'y_scale',
+                               'x_translate', 'y_translate',
+                               'aspect_ratio']}
+        if transforms:
+            self.plotItem.set_transform(**transforms, default=True)
+            # Restore scale legend
+            show_legend = configuration.get('show_scale')
+            self._show_scale_legend(show_legend)
+            self._update_scale_legend()
 
         # Restore ROIs
         current_roi_tool = ROITool.NoROI
@@ -371,6 +370,9 @@ class KaraboImageView(QWidget):
                                 text=config["y_label"],
                                 units=config["y_units"])
 
+        if self._scale_legend is not None:
+            self._update_scale_legend()
+
         self.configuration.update(**config)
         self.stateChanged.emit(config)
 
@@ -393,7 +395,9 @@ class KaraboImageView(QWidget):
                                     aspect_ratio=config["aspect_ratio"])
 
         self._show_scale_legend(show=config["show_scale"])
-        self._update_scale_legend(config["x_scale"], config["y_scale"])
+
+        if self._scale_legend is not None:
+            self._update_scale_legend()
 
         self.configuration.update(**config)
         self.stateChanged.emit(config)
@@ -495,8 +499,8 @@ class KaraboImageView(QWidget):
                 self._scale_legend.deleteLater()
                 self._scale_legend = None
 
-    def _update_scale_legend(self, x_scale, y_scale):
-        if self._scale_legend is not None:
-            x_units, y_units = [labels[UNITS] for labels in
-                                self.plotItem.axes_labels]
-            self._scale_legend.set_value(x_scale, y_scale, x_units, y_units)
+    def _update_scale_legend(self):
+        x_scale, y_scale = self.plotItem.axes_transform[SCALING]
+        x_units, y_units = [labels[UNITS] for labels in
+                            self.plotItem.axes_labels]
+        self._scale_legend.set_value(x_scale, y_scale, x_units, y_units)
