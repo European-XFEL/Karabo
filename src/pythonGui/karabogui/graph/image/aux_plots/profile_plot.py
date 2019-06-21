@@ -1,3 +1,4 @@
+from numpy import append
 from PyQt4.QtGui import QAction, QMenu, QTransform
 from pyqtgraph import PlotItem
 
@@ -43,7 +44,12 @@ class BaseStepPlot(PlotItem):
     # Public methods
 
     def set_data(self, x_data, y_data):
-        self._line.setData(x_data, y_data[:-1], stepMode=True,
+        # Assuming that data is discrete, we add the difference to the last
+        # value and feed it to the plot. This last is needed to plot all values
+        # when stepMode=True, which is then not used.
+        offset = x_data[1] - x_data[0]
+        self._line.setData(append(x_data, x_data[-1] + offset), y_data,
+                           stepMode=True,
                            pen=self._pen, fillLevel=0,
                            brush=self._brush)
 
