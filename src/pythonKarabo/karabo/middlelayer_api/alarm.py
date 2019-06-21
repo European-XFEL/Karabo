@@ -23,6 +23,7 @@ class AlarmMixin(Configurable):
                     "if not set manually.",
         accessMode=AccessMode.READONLY,
         defaultValue=AlarmCondition.NONE,
+        classId="AlarmCondition",
         daqPolicy=DaqPolicy.OMIT)
 
     globalAlarmCondition = Alarm(
@@ -34,6 +35,7 @@ class AlarmMixin(Configurable):
         accessMode=AccessMode.READONLY,
         requiredAccessLevel=AccessLevel.ADMIN,
         defaultValue=AlarmCondition.NONE,
+        classId="AlarmCondition",
         daqPolicy=DaqPolicy.OMIT)
 
     signalAlarmUpdate = Signal(String(), HashType())
