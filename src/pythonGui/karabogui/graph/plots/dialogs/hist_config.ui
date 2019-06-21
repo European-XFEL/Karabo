@@ -143,8 +143,11 @@
        <property name="alignment">
         <set>Qt::AlignCenter</set>
        </property>
+       <property name="minimum">
+        <number>5</number>
+       </property>
        <property name="maximum">
-        <number>1000</number>
+        <number>999999999</number>
        </property>
       </widget>
      </item>
