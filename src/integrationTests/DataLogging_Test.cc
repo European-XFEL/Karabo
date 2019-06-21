@@ -165,12 +165,10 @@ void DataLogging_Test::allTestRunner() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
-    /*
     testInt();
     testFloat();
     testString();
     testVectorString();
-     */
     testTable();
 }
 
