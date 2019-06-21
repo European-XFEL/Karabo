@@ -25,14 +25,23 @@ class TestVectorHistGraph(GuiTestCase):
         self.controller.destroy()
         self.assertIsNone(self.controller.widget)
 
-    def test_scatter_graph_basics(self):
+    def test_hist_basics(self):
         self.controller.model.auto = False
         self.controller.model.start = 0
-        self.controller.model.stop = 1
-        set_proxy_value(self.proxy, 'prop', [1, 1, 1, 1, 1, 1, 1, 1])
+        self.controller.model.stop = 10
+        set_proxy_value(self.proxy, 'prop', [1, 2, 2, 3, 3, 3, 3, 8])
         curve = self.controller._plot
         x, y = curve.getData()
         np.testing.assert_array_almost_equal(
-            x, [0., 0.11111111, 0.22222222, 0.33333333, 0.44444444, 0.55555556,
-                0.66666667, 0.77777778, 0.88888889, 1.])
-        np.testing.assert_array_almost_equal(y, [0, 0, 0, 0, 0, 0, 0, 0, 8])
+            x, [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5])
+        np.testing.assert_array_almost_equal(y, [0, 1, 2, 4, 0, 0, 0, 0, 1, 0])
+
+    def test_hist_empty(self):
+        self.controller.model.auto = False
+        self.controller.model.start = 0
+        self.controller.model.stop = 10
+        set_proxy_value(self.proxy, 'prop', [])
+        curve = self.controller._plot
+        x, y = curve.getData()
+        self.assertIsNone(x)
+        self.assertIsNone(y)
