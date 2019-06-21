@@ -1,4 +1,5 @@
 import os.path as op
+import warnings
 import sys
 from traceback import print_exception, format_exception
 
@@ -43,6 +44,10 @@ def init_gui(app, splash):
 
     numpy.set_printoptions(suppress=True, threshold=10)
     setConfigOptions(background=None, foreground="k")
+
+    # Suppress some warnings
+    # 1. From scipy.ndimage.zoom
+    warnings.filterwarnings('ignore', '.*output shape of zoom.*')
 
     # Load the icons
     icons.init()

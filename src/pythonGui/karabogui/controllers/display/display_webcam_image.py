@@ -25,6 +25,7 @@ class DisplayWebCamGraph(BaseBindingController):
         widget.stateChanged.connect(self._change_model)
 
         self._plot = widget.plot()
+        self._plot.imageItem.setAutoDownsample(True)
 
         # Disable Context Menu!
         self._plot.set_context_menu(None)
