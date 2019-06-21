@@ -41,6 +41,7 @@ class TestDisplayDeviceSceneLink(GuiTestCase):
         self.mbox = 'karabogui.controllers.display.devicescenelink.messagebox'
 
     def tearDown(self):
+        super(TestDisplayDeviceSceneLink, self).tearDown()
         self.controller.destroy()
         assert self.controller.widget is None
 

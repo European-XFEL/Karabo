@@ -24,6 +24,7 @@ class TestXYVector(GuiTestCase):
         self.controller.visualize_additional_property(self.value)
 
     def tearDown(self):
+        super(TestXYVector, self).tearDown()
         self.controller.destroy()
         assert self.controller.widget is None
 
