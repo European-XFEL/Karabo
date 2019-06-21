@@ -24,7 +24,7 @@ MAX_NUM_VECTORS = 500
 @register_binding_controller(ui_name='VectorRoll Graph',
                              klassname='VectorRollGraph',
                              binding_type=VectorNumberBinding,
-                             priority=10,
+                             priority=0,
                              can_show_nothing=False)
 class DisplayVectorRollGraph(BaseBindingController):
     # Our VectorRollGraph Model

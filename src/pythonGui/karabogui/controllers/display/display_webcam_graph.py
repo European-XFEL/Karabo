@@ -13,7 +13,7 @@ from karabogui.controllers.images import DIMENSIONS
 
 @register_binding_controller(ui_name='WebCam Graph',
                              klassname='WebCamGraph',
-                             binding_type=ImageBinding, priority=0,
+                             binding_type=ImageBinding, priority=90,
                              can_show_nothing=False)
 class DisplayWebCamGraph(BaseBindingController):
     model = Instance(WebCamGraphModel, args=())
