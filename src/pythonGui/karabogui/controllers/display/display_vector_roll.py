@@ -85,10 +85,13 @@ class DisplayVectorRollGraph(BaseBindingController):
 
     def value_update(self, proxy):
         value = get_binding_value(proxy.binding)
-        if value is None or not len(value):
+        if value is None:
             return
 
         self._image.add(value)
+        if self._image.data is None:
+            return
+
         if not self._plot.image_set:
             self._plot.vb.setRange(xRange=(0, len(value)),
                                    yRange=(0, self._image.stack))
