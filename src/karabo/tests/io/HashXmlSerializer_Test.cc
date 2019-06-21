@@ -5,6 +5,9 @@
  * Created on February 25, 2013, 6:03 PM
  */
 
+#include <vector>
+
+
 #include <karabo/io/HashXmlSerializer.hh>
 #include "HashXmlSerializer_Test.hh"
 #include "karabo/io/BinarySerializer.hh"
@@ -17,9 +20,6 @@ using namespace karabo::io;
 using namespace karabo::util;
 using std::vector;
 using std::string;
-using std::cout;
-using std::endl;
-
 using std::cout;
 using std::endl;
 
@@ -36,6 +36,7 @@ void HashXmlSerializer_Test::setUp() {
     Hash rooted("a.b.c", 1, "a.b.d", vector<int>(5, 1), "a.b.e", vector<Hash > (2, Hash("a", 1)), "a.d", std::complex<double>(1.2, 4.2));
     rooted.setAttribute("a", "a1", true);
     rooted.setAttribute("a", "a2", 3.4);
+    rooted.setAttribute("a", "a3", vector<Hash>{Hash("row1", "value1"), Hash("row2", "value2")});
     rooted.setAttribute("a.b", "b1", "3");
     rooted.setAttribute("a.b.c", "c1", 2);
     rooted.setAttribute("a.b.c", "c2", vector<string > (3, "bla"));
@@ -72,18 +73,19 @@ void HashXmlSerializer_Test::testSerialization() {
 
     TextSerializer<Hash>::Pointer p = TextSerializer<Hash>::create("Xml");
 
+    /*
     {
-
         Schema s = TextSerializer<Hash>::getSchema("Xml");
         Hash schemaIncluded("a1", 3.2, "a2", s);
-        string garbage;
-        p->save(schemaIncluded, garbage);
-        cout << "\n@HashXmlSerializer_Test::testSerialization -> GARBAGE: " << garbage << endl;
-        Hash fresh;
-        p->load(fresh, garbage);
-        cout << "@HashXmlSerializer_Test::testSerialization -> HASH: \n" << fresh.get<Schema>("a2") << endl;
+        string serialized;
+        p->save(schemaIncluded, serialized);
+        Hash deserialized;
+        p->load(deserialized, serialized);
 
+        CPPUNIT_ASSERT_EQUAL(schemaIncluded, deserialized);
+        CPPUNIT_ASSERT_EQUAL(s.getParameterHash(), deserialized.get<Schema>("a2").getParameterHash());
     }
+    */
 
     {
         std::string archive1;
@@ -98,6 +100,23 @@ void HashXmlSerializer_Test::testSerialization() {
         cout << "\n\n@HashXmlSerializer_Test::testSerialization ->  h: \n" << h << endl;
 
         CPPUNIT_ASSERT(karabo::util::similar(m_rootedHash, h) == true);
+
+        // Checks serialization of attribute of type vector<string>.
+        const vector<std::string> serVectStrAttr = h.getAttribute<vector < std::string >> ("a.b.e", "eAttr");
+        const vector<std::string> origVectStrAttr = m_rootedHash.getAttribute<vector < std::string >> ("a.b.e", "eAttr");
+        for (vector<std::string>::size_type i = 0; i < serVectStrAttr.size(); i++) {
+            CPPUNIT_ASSERT_EQUAL(origVectStrAttr[i], serVectStrAttr[i]);
+        }
+        
+        // Checks serialization of path of type vector<Hash>.
+
+
+        // Checks serialization of attribute of type vector<Hash>.
+        const vector<Hash> serVectHashAttr = h.getAttribute<vector < Hash >> ("a", "a3");
+        const vector<Hash> origVectHashAttr = m_rootedHash.getAttribute<vector < Hash >> ("a", "a3");
+        for (vector<std::string>::size_type i = 0; i < serVectHashAttr.size(); i++) {
+            CPPUNIT_ASSERT_EQUAL(origVectHashAttr[i], serVectHashAttr[i]);
+        }
 
         p->save(h, archive2);
 

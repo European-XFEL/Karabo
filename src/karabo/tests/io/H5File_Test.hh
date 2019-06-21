@@ -19,8 +19,6 @@ class H5File_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(H5File_Test);
     /*
-
-    /*
     CPPUNIT_TEST(testBuffer);
 
     CPPUNIT_TEST(testWrite);
@@ -63,10 +61,6 @@ private:
 
     size_t m_v4Size;
     std::vector<std::complex<float> > m_v4;
-
-
-
-
 
     const size_t m_maxRec;
     karabo::util::Dims m_dimsVec;
