@@ -6,7 +6,7 @@
 import numpy as np
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QAction
-from traits.api import Instance
+from traits.api import Instance, Undefined
 
 from karabo.common.scenemodel.api import (
     build_model_config, VectorHistGraphModel)
@@ -47,17 +47,23 @@ class DisplayHistGraph(BaseBindingController):
 
     def value_update(self, proxy):
         value = proxy.value
+        if value is not Undefined and not len(value):
+            self._plot.clear()
+            return
 
         if self.model.auto:
             start, stop = value.min(), value.max()
         else:
             start = min([self.model.start, self.model.stop])
             stop = max([self.model.start, self.model.stop])
-        bins = np.linspace(start=start, stop=stop, num=self.model.bins,
+        bins = np.linspace(start=start, stop=stop, num=self.model.bins + 1,
                            endpoint=True)
+        bin_w = (stop - start) / (self.model.bins)
+        bins = bins - bin_w / 2
         hist, edges = np.histogram(value, bins=bins)
         if len(edges) > 1:
-            self._plot.setData(edges, hist, stepMode=True, fillLevel=0)
+            self._plot.setData(edges, hist, fillLevel=0,
+                               stepMode=True)
 
     # ----------------------------------------------------------------
     # Qt Slots
@@ -72,3 +78,5 @@ class DisplayHistGraph(BaseBindingController):
                                           parent=self.widget)
         if ok:
             self.model.trait_set(**content)
+            if len(self.proxy.value):
+                self.value_update(self.proxy)
