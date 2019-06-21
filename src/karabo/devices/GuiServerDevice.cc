@@ -927,7 +927,12 @@ namespace karabo {
                                          channel, deviceId, time, _1, _2);
                 auto failureHandler = bind_weak(&karabo::devices::GuiServerDevice::configurationFromPastError, this,
                                                 channel, deviceId, time);
-                request(readerId, "slotGetConfigurationFromPast", deviceId, time).timeout(10000)
+                // Two minutes timeout since current implementation of slotGetConfigurationFromPast:
+                // The amount of data it has to read depends on the time when the device (more precisely: its datalogger)
+                // was started the last time before the point in time that you requested and all the parameter updates
+                // in between these two time points.
+                request(readerId, "slotGetConfigurationFromPast", deviceId, time)
+                        .timeout(120000) // 2 minutes - if we do not specify it will be 2*KARABO_SYS_TTL, i.e. 4 minutes
                         .receiveAsync<Hash, Schema>(handler, failureHandler);
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetConfigurationFromPast(): " << e.what();
