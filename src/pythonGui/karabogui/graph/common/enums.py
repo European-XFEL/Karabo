@@ -1,6 +1,12 @@
 from enum import Enum, IntEnum
 
 
+class Axes(Enum):
+    Y = 1
+    X = 0
+    Z = 2
+
+
 class MouseMode(IntEnum):
     # Default
     Pointer = 0
