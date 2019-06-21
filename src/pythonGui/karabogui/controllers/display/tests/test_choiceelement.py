@@ -30,6 +30,7 @@ class TestDisplayChoiceElement(GuiTestCase):
         self.controller.create(None)
 
     def tearDown(self):
+        super(TestDisplayChoiceElement, self).tearDown()
         self.controller.destroy()
         assert self.controller.widget is None
 

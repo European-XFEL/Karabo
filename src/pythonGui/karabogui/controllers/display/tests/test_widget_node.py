@@ -27,6 +27,7 @@ class TestWidgetNode(GuiTestCase):
         self.controller.create(None)
 
     def tearDown(self):
+        super(TestWidgetNode, self).tearDown()
         self.controller.destroy()
         assert self.controller.widget is None
 

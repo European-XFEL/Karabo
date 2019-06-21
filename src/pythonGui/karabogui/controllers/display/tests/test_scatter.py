@@ -28,6 +28,7 @@ class TestScatterGraph(GuiTestCase):
         self.assertIsNotNone(self.controller.widget)
 
     def tearDown(self):
+        super(TestScatterGraph, self).tearDown()
         self.controller.destroy()
         self.assertIsNone(self.controller.widget)
 

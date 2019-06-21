@@ -100,6 +100,7 @@ class TestDetectorGraph(GuiTestCase):
             self.controller.create(None)
 
     def tearDown(self):
+        super(TestDetectorGraph, self).tearDown()
         self.controller.destroy()
         self.assertIsNone(self.controller.widget)
 

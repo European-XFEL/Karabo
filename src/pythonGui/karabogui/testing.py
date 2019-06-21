@@ -35,6 +35,9 @@ class GuiTestCase(unittest.TestCase):
         icons.init()
         populate_controller_registry()
 
+    def tearDown(self):
+        self.app.deleteLater()
+
     def process_qt_events(self):
         # Give the event loop 10ms to process its events
         self.app.processEvents(QEventLoop.AllEvents, 10)
