@@ -97,6 +97,8 @@ def create_colormap_menu(colormaps, current_cmap, on_selection):
 
 
 def beam_profile_table_html(x_peak, y_peak):
+    if x_peak is None or y_peak is None:
+        return
     x_string = [_to_string(value) for value in x_peak]
     y_string = [_to_string(value) for value in y_peak]
 
