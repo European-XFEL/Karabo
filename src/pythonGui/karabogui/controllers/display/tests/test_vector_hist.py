@@ -22,6 +22,7 @@ class TestVectorHistGraph(GuiTestCase):
         self.assertIsNotNone(self.controller.widget)
 
     def tearDown(self):
+        super(TestVectorHistGraph, self).tearDown()
         self.controller.destroy()
         self.assertIsNone(self.controller.widget)
 

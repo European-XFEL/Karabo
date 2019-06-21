@@ -19,6 +19,7 @@ class TestDisplayPlot(GuiTestCase):
         assert self.controller.widget is not None
 
     def tearDown(self):
+        super(TestDisplayPlot, self).tearDown()
         self.controller.destroy()
         assert self.controller.widget is None
 
