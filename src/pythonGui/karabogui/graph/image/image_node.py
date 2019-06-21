@@ -1,8 +1,9 @@
 from traits.api import Any, ArrayOrNone, Enum, Int, HasStrictTraits
 
 from karabo.native import EncodingType
+from karabogui.graph.common.api import Axes
 from karabogui.controllers.images import (
-    get_dimensions_and_encoding, get_image_data, DIMENSIONS)
+    get_dimensions_and_encoding, get_image_data)
 
 # Special image dimensions
 YUV422 = 2
@@ -37,11 +38,11 @@ class KaraboImageNode(HasStrictTraits):
 
     def get_axis_dimension(self, axis):
         """Return the correct dimension from a given axis"""
-        if axis == DIMENSIONS['Y']:
+        if axis == Axes.Y:
             return self.dim_y
-        if axis == DIMENSIONS['X']:
+        if axis == Axes.X:
             return self.dim_x
-        if axis == DIMENSIONS['Z']:
+        if axis == Axes.Z:
             return self.dim_z
         else:
             raise ValueError('Invalid axis value: {}'.format(axis))
@@ -51,11 +52,12 @@ class KaraboImageNode(HasStrictTraits):
         if not self.dim_z or self._data is None:
             return self._data
         else:
-            if axis == DIMENSIONS['Y']:
-                return self._data[:, cell, :]
-            if axis == DIMENSIONS['X']:
+            # Numpy arrays are received as x, y, z
+            if axis == Axes.Y:
                 return self._data[cell, :, :]
-            if axis == DIMENSIONS['Z']:
+            if axis == Axes.X:
+                return self._data[:, cell, :]
+            if axis == Axes.Z:
                 return self._data[:, :, cell]
 
     @property

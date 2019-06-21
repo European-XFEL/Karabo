@@ -7,19 +7,20 @@ from traits.api import Instance, Int
 
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config, DetectorGraphModel)
+from karabo.native import EncodingType
 
-from karabogui.graph.common.api import AuxPlots
+from karabogui.graph.common.api import AuxPlots, Axes
 from karabogui.graph.image.api import (
     KaraboImagePlot, KaraboImageNode, KaraboImageView)
-from karabo.native import EncodingType
 from karabogui.binding.api import ImageBinding
-from karabogui.controllers.api import (BaseBindingController, DIMENSIONS,
-                                       register_binding_controller)
+from karabogui.controllers.api import (
+    BaseBindingController, register_binding_controller)
 from karabogui.util import SignalBlocker
+from traits.trait_types import Enum
 
 
 class FrameSlider(QWidget):
-    axisChanged = pyqtSignal(int)
+    axisChanged = pyqtSignal(str)
     cellChanged = pyqtSignal(int)
 
     def __init__(self, parent=None):
@@ -27,20 +28,24 @@ class FrameSlider(QWidget):
         ui_file = op.join(op.dirname(__file__), 'frame_slider.ui')
         uic.loadUi(ui_file, self)
 
-        self.ui_axis.currentIndexChanged.connect(self.axisChanged.emit)
-        self.ui_slider_cell.valueChanged.connect(self.on_slider_moved)
-        self.ui_cell.valueChanged.connect(self.on_value_changed)
+        # Populate our axis combobox
+        self.cb_axis.addItems([Axes.X.name, Axes.Y.name, Axes.Z.name])
+
+        self.cb_axis.currentIndexChanged['const QString &'].connect(
+            self.axisChanged.emit)
+        self.sl_cell.valueChanged.connect(self.on_slider_moved)
+        self.sb_cell.valueChanged.connect(self.on_value_changed)
 
     @pyqtSlot(int)
     def on_slider_moved(self, value):
-        with SignalBlocker(self.ui_cell):
-            self.ui_cell.setValue(value)
+        with SignalBlocker(self.sb_cell):
+            self.sb_cell.setValue(value)
         self.cellChanged.emit(value)
 
     @pyqtSlot(int)
     def on_value_changed(self, value):
-        with SignalBlocker(self.ui_slider_cell):
-            self.ui_slider_cell.setSliderPosition(value)
+        with SignalBlocker(self.sl_cell):
+            self.sl_cell.setSliderPosition(value)
         self.cellChanged.emit(value)
 
     def set_slider_maximum(self, max_value):
@@ -48,32 +53,28 @@ class FrameSlider(QWidget):
 
         :param int max_value:
         """
-        self.ui_slider_cell.setMaximum(max_value)
-        self.ui_cell.setMaximum(max_value)
+        self.sl_cell.setMaximum(max_value)
+        self.sb_cell.setMaximum(max_value)
 
     def set_axis(self, axis):
-        """Sets the combo box axis
+        """Sets the combo box axis based on the given axis name
 
-        :param axis: the axis value
-        :type axis: int
+        :param axis: the selected axes
+        :type axis: Enum (Axes)
         """
-        self.ui_axis.setCurrentIndex(axis)
+        self.cb_axis.setCurrentIndex(Axes(axis).value)
 
     def set_cell(self, cell):
-        self.ui_cell.setValue(cell)
+        self.sb_cell.setValue(cell)
 
     def reset(self):
-        spinbox_blocker = SignalBlocker(self.ui_cell)
-        slider_blocker = SignalBlocker(self.ui_slider_cell)
+        spinbox_blocker = SignalBlocker(self.sb_cell)
+        slider_blocker = SignalBlocker(self.sl_cell)
 
         with spinbox_blocker, slider_blocker:
-            self.ui_slider_cell.setSliderPosition(0)
-            self.ui_cell.setValue(0)
+            self.sl_cell.setSliderPosition(0)
+            self.sb_cell.setValue(0)
         self.cellChanged.emit(0)
-
-
-AXIS_DEFAULT = 2
-FRAME_DEFAULT = 0
 
 
 @register_binding_controller(ui_name='Detector Graph',
@@ -84,8 +85,8 @@ class DisplayDetectorGraph(BaseBindingController):
     model = Instance(DetectorGraphModel, args=())
 
     # internal traits
-    _axis = Int(AXIS_DEFAULT)
-    _cell = Int(FRAME_DEFAULT)
+    _axis = Enum(*Axes)
+    _cell = Int(0)
 
     _frame_slider = Instance(FrameSlider)
     _image_node = Instance(KaraboImageNode)
@@ -108,9 +109,10 @@ class DisplayDetectorGraph(BaseBindingController):
         widget.add_toolbar()
 
         self._frame_slider = FrameSlider(parent=widget)
-        self._frame_slider.axisChanged.connect(self._axisChanged)
-        self._frame_slider.cellChanged.connect(self._cellChanged)
+        self._frame_slider.axisChanged.connect(self._axis_changed)
+        self._frame_slider.cellChanged.connect(self._cell_changed)
         widget.add_widget(self._frame_slider, row=0, col=2)
+        self._frame_slider.setVisible(False)
 
         # Get a reference for our plotting
         self._plot = widget.plot()
@@ -120,32 +122,47 @@ class DisplayDetectorGraph(BaseBindingController):
         widget.add_transforms_dialog()
         widget.add_downsample_action()
 
+        # Default axes
+        self._axis = Axes.Z
+
         # Restore the model information
         widget.restore(build_graph_config(self.model))
 
-        self._frame_slider.set_axis(AXIS_DEFAULT)
-        self._frame_slider.set_cell(FRAME_DEFAULT)
+        self._frame_slider.set_axis(self._axis)
+        self._frame_slider.set_cell(self._cell)
 
         return widget
 
     # -----------------------------------------------------------------------
     # Qt Slots
 
-    @pyqtSlot(int)
-    def _axisChanged(self, value):
+    @pyqtSlot(str)
+    def _axis_changed(self, axis):
+        """
+        Called whenever an axis is selected in the FrameSlider
+
+        :param axis: the selected axis
+        :type axis: basestring
+        """
         if self._image_node is None:
             return
-        self._set_slider(self._image_node.get_axis_dimension(value))
+
+        self._axis = Axes[axis]
+        self._set_slider_max(self._image_node.get_axis_dimension(self._axis))
         self._frame_slider.reset()
-        self._axis = value
 
     @pyqtSlot(int)
-    def _cellChanged(self, value):
+    def _cell_changed(self, value):
         if self._image_node is None:
             return
+
+        self._cell = value
+        self._update_image()
+
+    def _update_image(self):
+        # Get region to plot
         np_image = self._image_node.get_slice(self._axis, self._cell)
         self._plot.set_image(np_image)
-        self._cell = value
 
     @pyqtSlot(object)
     def _change_model(self, content):
@@ -155,27 +172,20 @@ class DisplayDetectorGraph(BaseBindingController):
 
     def value_update(self, proxy):
         self._image_node = KaraboImageNode(proxy.value)
+
         if not self._image_node.is_valid:
             return
 
         if not self._image_node.dim_z:
-            self._unset_slider()
+            # Hide the slider when there's no multiple images
+            self._frame_slider.setVisible(False)
         elif self._image_node.encoding == EncodingType.GRAY:
-            if self._axis == DIMENSIONS['Y']:
-                self._set_slider(self._image_node.dim_x)
-            if self._axis == DIMENSIONS['X']:
-                self._set_slider(self._image_node.dim_y)
-            if self._axis == DIMENSIONS['Z']:
-                self._set_slider(self._image_node.dim_z)
+            slider_max = self._image_node.get_axis_dimension(self._axis)
+            self._set_slider_max(slider_max)
 
-        # Get region to plot
-        np_image = self._image_node.get_slice(self._axis, self._cell)
-        self._plot.set_image(np_image)
-
-    def _set_slider(self, dim_z):
-        self._frame_slider.set_slider_maximum(dim_z - 1)
         self._frame_slider.setVisible(True)
 
-    def _unset_slider(self):
-        """Hide the slider when there's no multiple images"""
-        self._frame_slider.setVisible(False)
+        self._update_image()
+
+    def _set_slider_max(self, value):
+        self._frame_slider.set_slider_maximum(value - 1)
