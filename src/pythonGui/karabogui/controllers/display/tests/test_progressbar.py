@@ -30,6 +30,7 @@ class TestDisplayProgressBar(GuiTestCase):
         self.controller.create(None)
 
     def tearDown(self):
+        super(TestDisplayProgressBar, self).tearDown()
         self.controller.destroy()
         assert self.controller.widget is None
 

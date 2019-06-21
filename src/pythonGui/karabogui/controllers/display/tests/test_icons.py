@@ -43,6 +43,7 @@ class TestDigitIcons(GuiTestCase):
         assert self.controller.widget is not None
 
     def tearDown(self):
+        super(TestDigitIcons, self).tearDown()
         self.controller.destroy()
         assert self.controller.widget is None
 
@@ -62,6 +63,7 @@ class TestSelectionIcons(GuiTestCase):
         assert self.controller.widget is not None
 
     def tearDown(self):
+        super(TestSelectionIcons, self).tearDown()
         self.controller.destroy()
         assert self.controller.widget is None
 
@@ -80,6 +82,7 @@ class TestTextIcons(GuiTestCase):
         assert self.controller.widget is not None
 
     def tearDown(self):
+        super(TestTextIcons, self).tearDown()
         self.controller.destroy()
         assert self.controller.widget is None
 

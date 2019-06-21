@@ -46,6 +46,7 @@ class TestWebcamImageDisplay(GuiTestCase):
         self.process_qt_events()
 
     def tearDown(self):
+        super(TestWebcamImageDisplay, self).tearDown()
         self.controller.destroy()
         assert self.controller.widget is None
 
