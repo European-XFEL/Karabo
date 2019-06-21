@@ -184,7 +184,9 @@ def run_theatre(ns):
     waiter = DeviceWaiter(ns.scene_ids, ns.timeout)
 
     if waiter.device_scenes:
-        sys.exit(app.exec_())
+        app.exec_()
+        app.deleteLater()
+        sys.exit()
     else:
         app.quit()
 
