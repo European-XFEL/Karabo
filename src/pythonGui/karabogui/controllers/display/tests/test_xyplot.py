@@ -32,6 +32,7 @@ class TestXYPlot(GuiTestCase):
         self.controller.visualize_additional_property(self.value)
 
     def tearDown(self):
+        super(TestXYPlot, self).tearDown()
         self.controller.destroy()
         self.patcher.stop()
         assert self.controller.widget is None

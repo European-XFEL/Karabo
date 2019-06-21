@@ -24,6 +24,7 @@ class TestStateColorModel(GuiTestCase):
         assert self.controller.widget is not None
 
     def tearDown(self):
+        super(TestStateColorModel, self).tearDown()
         self.controller.destroy()
         assert self.controller.widget is None
 

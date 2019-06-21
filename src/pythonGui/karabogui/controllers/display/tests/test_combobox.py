@@ -23,6 +23,7 @@ class TestDisplayComboBox(GuiTestCase):
         self.controller.create(None)
 
     def tearDown(self):
+        super(TestDisplayComboBox, self).tearDown()
         self.controller.destroy()
         assert self.controller.widget is None
 
