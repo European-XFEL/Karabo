@@ -36,25 +36,10 @@
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="ui_axis">
+      <widget class="QComboBox" name="cb_axis">
        <property name="toolTip">
         <string>Sets the axis over which the cell/pulse indexing is performed</string>
        </property>
-       <item>
-        <property name="text">
-         <string>0</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>1</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>2</string>
-        </property>
-       </item>
       </widget>
      </item>
     </layout>
@@ -81,7 +66,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QSpinBox" name="ui_cell"/>
+      <widget class="QSpinBox" name="sb_cell"/>
      </item>
     </layout>
    </item>
@@ -101,7 +86,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QSlider" name="ui_slider_cell">
+      <widget class="QSlider" name="sl_cell">
        <property name="toolTip">
         <string>Pulse/train ID to display</string>
        </property>

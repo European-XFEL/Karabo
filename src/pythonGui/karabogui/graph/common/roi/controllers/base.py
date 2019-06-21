@@ -155,6 +155,7 @@ class BaseROIController(QObject):
 
     def enable_updates(self, enable=True):
         self._updates_enabled = enable
+        self._update()
 
     # ---------------------------------------------------------------------
     # Private methods
