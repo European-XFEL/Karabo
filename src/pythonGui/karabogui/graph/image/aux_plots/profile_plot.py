@@ -4,7 +4,7 @@ from pyqtgraph import PlotItem
 from karabogui.graph.common.const import (
     AXIS_ITEMS, AXIS_X, AXIS_Y, ROTATION_FACTOR)
 from karabogui.graph.common.api import (
-    get_axis_items, make_pen, get_default_brush, get_default_pen)
+    get_axis_items, make_brush, make_pen, get_default_pen)
 
 from ..aux_plots.items import AuxPlotAxisItem, AuxPlotViewBox
 from ..tools.profiler import IntensityProfiler
@@ -36,7 +36,7 @@ class BaseStepPlot(PlotItem):
 
         self._initialize_widget()
         self._pen = get_default_pen()
-        self._brush = get_default_brush()
+        self._brush = make_brush('b', 140)
         self._second_pen = make_pen('r', width=1)
 
     # ---------------------------------------------------------------------
