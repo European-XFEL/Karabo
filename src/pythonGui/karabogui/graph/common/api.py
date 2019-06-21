@@ -14,7 +14,7 @@ from .colors import (
     Colors, COLORMAPS, get_default_pen, get_default_brush, get_brush_cycler,
     make_brush, make_pen, get_pen_cycler)
 
-from .enums import MouseMode, ExportTool, AuxPlots, ROITool, AspectRatio
+from .enums import MouseMode, ExportTool, AuxPlots, ROITool, AspectRatio, Axes
 
 from .exporters import NumpyExporter, ImageExporter
 
