@@ -20,7 +20,7 @@ def get_generic_scene(proxy):
         path = proxy.path
         return get_trendline_scene(instance_id, path)
 
-    if isinstance(binding, (VectorNumberBinding)):
+    elif isinstance(binding, VectorNumberBinding):
         path = proxy.path
         return get_vector_scene(instance_id, path)
 

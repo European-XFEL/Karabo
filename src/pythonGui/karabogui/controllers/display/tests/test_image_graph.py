@@ -1,18 +1,17 @@
-from PyQt4 import QtGui
 from unittest import mock
 
-from karabo.common.scenemodel.api import (
-    ImageGraphModel, CrossROIData, RectROIData)
-
-from karabogui.graph.common.enums import MouseMode
-from karabogui.graph.common.enums import AuxPlots, ROITool
+from PyQt4 import QtGui
 
 from karabogui.binding.builder import build_binding
 from karabogui.binding.config import apply_configuration
 from karabogui.binding.proxy import DeviceProxy, PropertyProxy
-from karabogui.testing import GuiTestCase
+from karabo.common.scenemodel.api import (
+    ImageGraphModel, CrossROIData, RectROIData)
 from karabogui.controllers.display.tests.image import (
     PipelineData, get_image_hash)
+from karabogui.graph.common.enums import MouseMode
+from karabogui.graph.common.enums import AuxPlots, ROITool
+from karabogui.testing import GuiTestCase
 
 from ..display_image_graph import DisplayImageGraph
 
@@ -22,7 +21,7 @@ class TestImageGraph(GuiTestCase):
     def setUp(self):
         super(TestImageGraph, self).setUp()
 
-        schema = PipelineData.getClassSchema()
+        schema = PipelineData().getDeviceSchema()
         binding = build_binding(schema)
         root_proxy = DeviceProxy(binding=binding)
 
@@ -45,7 +44,7 @@ class TestImageGraph(GuiTestCase):
         toolbar.toolset[tool].clicked.emit(button)
 
     def test_toolbar_apply(self):
-        """Rewrite this to the QAction"""
+        """The the toolbar apply in the image graph"""
         image_hash = get_image_hash()
         apply_configuration(image_hash, self.output_proxy.binding)
 
@@ -84,7 +83,7 @@ class TestImageGraph(GuiTestCase):
         self.assertEqual(len(model.roi_items), 3)
 
     def test_restore_widget(self):
-        """Create a model with ROI settings and check for restore"""
+        """Create a model with ROI settings and restore in Image Graph"""
         model = ImageGraphModel()
         model.aux_plots = AuxPlots.ProfilePlot
 
@@ -100,7 +99,7 @@ class TestImageGraph(GuiTestCase):
             controller.create(None)
 
         # Assert the information was loaded
-        widget = self.controller.widget
+        widget = controller.widget
 
         # Assert ROI configuration
         expected_roi_config = {ROITool.Crosshair: (14.5, 14.5),

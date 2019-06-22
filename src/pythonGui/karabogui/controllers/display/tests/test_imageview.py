@@ -15,7 +15,7 @@ class TestDisplayImage(GuiTestCase):
     def setUp(self):
         super(TestDisplayImage, self).setUp()
 
-        schema = PipelineData.getClassSchema()
+        schema = PipelineData().getDeviceSchema()
         binding = build_binding(schema)
         self.root_proxy = DeviceProxy(binding=binding)
 

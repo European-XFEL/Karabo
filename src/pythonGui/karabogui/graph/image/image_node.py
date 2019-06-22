@@ -1,4 +1,4 @@
-from traits.api import Any, ArrayOrNone, Enum, Int, HasStrictTraits
+from traits.api import ArrayOrNone, Enum, Int, HasStrictTraits
 
 from karabo.native import EncodingType
 from karabogui.graph.common.api import Axes
@@ -15,14 +15,12 @@ class KaraboImageNode(HasStrictTraits):
     dim_y = Int
     dim_z = Int
     encoding = Enum(*EncodingType)
-    node = Any
 
     # Internal traits
     _data = ArrayOrNone
 
     def __init__(self, image_node):
         super(KaraboImageNode, self).__init__()
-        self.node = image_node
 
         dim_x, dim_y, dim_z, encoding = get_dimensions_and_encoding(image_node)
 
@@ -30,7 +28,7 @@ class KaraboImageNode(HasStrictTraits):
         self.dim_y = dim_y
         self.dim_z = dim_z if dim_z is not None else 0
         self.encoding = encoding
-        self._data = get_image_data(self.node,
+        self._data = get_image_data(image_node,
                                     self.dim_x, self.dim_y, self.dim_z)
 
     def get_data(self):
