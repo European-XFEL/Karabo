@@ -30,7 +30,7 @@ class TestWebcamImageDisplay(GuiTestCase):
     def setUp(self):
         super(TestWebcamImageDisplay, self).setUp()
 
-        schema = PipelineData.getClassSchema()
+        schema = PipelineData().getDeviceSchema()
         binding = build_binding(schema)
         root_proxy = DeviceProxy(binding=binding)
         self.model = WebcamImageModel()
