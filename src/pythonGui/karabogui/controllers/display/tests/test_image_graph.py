@@ -42,6 +42,8 @@ class TestImageGraph(GuiTestCase):
     def _click_toolbar(self, tool, button):
         toolbar = self.controller.widget.toolbar
         toolbar.toolset[tool].clicked.emit(button)
+        # give some process event time
+        self.process_qt_events()
 
     def test_toolbar_apply(self):
         """The the toolbar apply in the image graph"""
@@ -76,8 +78,9 @@ class TestImageGraph(GuiTestCase):
 
         # Save to model
         apply_action.triggered.emit(True)
-        # Bug when double applying, multiple ROIs were added
-        apply_action.triggered.emit(True)
+        # give some process event time
+        self.process_qt_events()
+
         model = self.controller.model
         self.assertEqual(model.aux_plots, AuxPlots.ProfilePlot)
         self.assertEqual(len(model.roi_items), 3)
