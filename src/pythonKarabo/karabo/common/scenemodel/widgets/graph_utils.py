@@ -61,9 +61,6 @@ def read_base_karabo_image_model(element):
     show_scale = element.get(NS_KARABO + 'show_scale', '1')
     traits['show_scale'] = bool(int(show_scale))
 
-    downsample = element.get(NS_KARABO + 'downsample', '1')
-    traits['downsample'] = bool(int(downsample))
-
     traits.update(read_transforms(element))
     traits.update(read_basic_label(element))
 
@@ -78,9 +75,6 @@ def write_base_karabo_image_model(model, element):
 
     show_scale = str(int(model.show_scale))
     element.set(NS_KARABO + 'show_scale', show_scale)
-
-    downsample = str(int(model.downsample))
-    element.set(NS_KARABO + 'downsample', downsample)
 
     # Save ROI configuration
     write_roi_info(model, element)
