@@ -120,7 +120,6 @@ class DisplayDetectorGraph(BaseBindingController):
         # QActions
         widget.add_axes_labels_dialog()
         widget.add_transforms_dialog()
-        widget.add_downsample_action()
 
         # Default axes
         self._axis = Axes.Z
