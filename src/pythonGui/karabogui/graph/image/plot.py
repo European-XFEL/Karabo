@@ -2,7 +2,7 @@ from copy import deepcopy
 
 import numpy as np
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, QRectF
-from PyQt4.QtGui import QFont
+from PyQt4.QtGui import QAction, QFont
 from pyqtgraph import ColorMap, PlotItem
 
 from karabogui.graph.common.api import (
@@ -82,6 +82,14 @@ class KaraboImagePlot(PlotItem):
         self.setMinimumHeight(200)
         self._set_default_transform()
         self._flip()
+
+        # Add viewbox actions
+        downsample_action = QAction(self.vb)
+        downsample_action.setIconText('Auto downsample')
+        downsample_action.setCheckable(True)
+        downsample_action.setChecked(self.imageItem.autoDownsample)
+        downsample_action.triggered.connect(self.imageItem.setAutoDownsample)
+        self.vb.add_action(downsample_action, separator=True)
 
     # ---------------------------------------------------------------------
     # PyQt slots
