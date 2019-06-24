@@ -23,7 +23,10 @@ namespace karabo {
      */
     namespace devices {
 
-/**
+        struct DeviceData;
+        typedef boost::shared_ptr<DeviceData> DeviceDataPointer;
+
+        /**
          * @class DataLogger
          * @brief A DataLogger device is assigned devices in the distributed
          * system and logs their slow control data.
@@ -35,44 +38,8 @@ namespace karabo {
          */
         class DataLogger : public karabo::core::Device<> {
 
-            struct DeviceData {
-
-                DeviceData();
-
-                karabo::net::Strand::Pointer m_strand;
-                // move all the "per device logged" data here
-
-                //  std::string m_deviceToBeLogged; // key for "per device logged"
-
-                boost::mutex m_currentSchemaMutex; // per device logged
-                karabo::util::Schema m_currentSchema; // per device logged
-                bool m_currentSchemaChanged; // per device logged
-
-                karabo::util::Schema m_schemaForSlotChanged; // only use within slotChanged  // per device logged
-
-                boost::mutex m_configMutex; // per device logged
-                std::fstream m_configStream; // per device logged
-
-                unsigned int m_lastIndex; // per device logged
-                std::string m_user; // per device logged
-                boost::mutex m_lastTimestampMutex; // per device logged
-                karabo::util::Timestamp m_lastDataTimestamp; // per device logged
-                bool m_updatedLastTimestamp; // per device logged
-                bool m_pendingLogin; // per device logged
-
-                std::map<std::string, karabo::util::MetaData::Pointer> m_idxMap; // protect by m_configMutex! // per device logged
-                std::vector<std::string> m_idxprops; // needs no mutex as long as used only in slotChanged // per device logged
-                size_t m_propsize; // per device logged
-                time_t m_lasttime; // per device logged
-
-                karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_serializer; // per device logged??
-
-                // Only for initialisation - counting connections to signalChanged and signalStateChanged
-                boost::mutex m_numChangedConnectedMutex;
-                int m_numChangedConnected; // not needed, replace by multi async connect provided by framework
-            };
             // https://www.quora.com/Is-it-thread-safe-to-write-to-distinct-keys-different-key-for-each-thread-in-a-std-map-in-C-for-keys-that-have-existing-entries-in-the-map
-            typedef std::unordered_map<std::string, DeviceData> DeviceDataMap;
+            typedef std::unordered_map<std::string, DeviceDataPointer> DeviceDataMap;
             DeviceDataMap m_perDeviceData;
             boost::mutex m_perDeviceDataMutex;
             std::atomic<unsigned int> m_numConnected;
@@ -101,19 +68,19 @@ namespace karabo {
             void slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId);
 
             // FIXME: May want AsyncReply??
-            void handleChanged(const karabo::util::Hash& config, DeviceDataMap::iterator iter);
+            void handleChanged(const karabo::util::Hash& config, const DeviceDataPointer& data);
 
             /// Helper function to update data.m_idxprops, returns whether data.m_idxprops changed.
-            bool updatePropsToIndex(DeviceData& data, const std::string& deviceId);
+            bool updatePropsToIndex(DeviceData& data);
 
             /// Helper to ensure archive file is closed.
             /// Must be called under protection of the 'data.m_configMutex' mutex.
-            void ensureFileClosed(DeviceData& data, const std::string& deviceId);
+            void ensureFileClosed(DeviceData& data);
 
             void slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
 
             // FIXME: May want AsyncReply??
-            void handleSchemaUpdated(const karabo::util::Schema& schema, DeviceDataMap::iterator iter);
+            void handleSchemaUpdated(const karabo::util::Schema& schema, const DeviceDataPointer& data);
             /**
              * This tags a device to be discontinued, three cases have to be distinguished
              *
@@ -127,7 +94,7 @@ namespace karabo {
             void slotTagDeviceToBeDiscontinued(const bool wasValidUpToNow, const char reason, const std::string& deviceId);
 
             // FIXME: May need AsyncReply??
-            void handleTagDeviceToBeDiscontinued(const bool wasValidUpToNow, const char reason, DeviceDataMap::iterator iter);
+            void handleTagDeviceToBeDiscontinued(const bool wasValidUpToNow, const char reason, DeviceDataPointer data);
 
             /// Helper used as error callback that triggers device suicide.
             void errorToDieHandle(const std::string& reason) const;
