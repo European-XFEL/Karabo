@@ -274,7 +274,9 @@ class KaraboImageView(QWidget):
                                'x_translate', 'y_translate',
                                'aspect_ratio']}
         if transforms:
-            self.plotItem.set_transform(**transforms, default=True)
+            kwargs = transforms
+            kwargs.update({'default': True})
+            self.plotItem.set_transform(**kwargs)
             # Restore scale legend
             show_legend = configuration.get('show_scale')
             self._show_scale_legend(show_legend)
