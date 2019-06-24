@@ -352,7 +352,7 @@ class KaraboImagePlot(PlotItem):
         size = np.array([rect.width(), rect.height()])
         abs_size = np.round(size / scaling)
 
-        return QRectF(*abs_pos, *abs_size)
+        return QRectF(*(tuple(abs_pos) + tuple(abs_size)))
 
     def mapRectToTransform(self, rect):
         translation = self._transform[TRANSLATION]
@@ -364,7 +364,7 @@ class KaraboImagePlot(PlotItem):
         size = np.array([rect.width(), rect.height()])
         trans_size = size * scaling
 
-        return QRectF(*trans_pos, *trans_size)
+        return QRectF(*(tuple(trans_pos) + tuple(trans_size)))
 
     def _flip(self):
         """Flips the image by inverting the viewbox

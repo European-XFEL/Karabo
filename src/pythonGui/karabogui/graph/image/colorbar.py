@@ -17,8 +17,8 @@ class ColorBarWidget(GraphicsWidget):
     def __init__(self, imageItem, label=None, parent=None):
         super(ColorBarWidget, self).__init__(parent)
 
-        self._colorbar_levels = [0, NUM_SAMPLES - 1]
-        data = np.linspace(*self._colorbar_levels, NUM_SAMPLES)[None, :]
+        self._colorbar_levels = min_level, max_level = [0, NUM_SAMPLES - 1]
+        data = np.linspace(min_level, max_level, NUM_SAMPLES)[None, :]
 
         self.grid_layout = QGraphicsGridLayout()
         self.grid_layout.setHorizontalSpacing(0)
