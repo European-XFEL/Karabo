@@ -73,6 +73,14 @@ class KaraboViewBox(ViewBox):
         self.setCursor(cursor)
         self.mouse_mode = mode
 
+    def add_action(self, action, separator=True):
+        if self.menu is None:
+            return
+
+        if separator:
+            self.menu.addSeparator()
+        self.menu.addAction(action)
+
     # ---------------------------------------------------------------------
     # pyqtgraph methods
 

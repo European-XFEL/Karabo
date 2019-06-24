@@ -46,7 +46,6 @@ class DisplayImageGraph(BaseBindingController):
         # QActions
         widget.add_axes_labels_dialog()
         widget.add_transforms_dialog()
-        widget.add_downsample_action()
 
         # Restore the model information
         widget.restore(build_graph_config(self.model))
