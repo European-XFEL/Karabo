@@ -84,7 +84,7 @@ class TestCase(GuiTestCase):
         """Tests if the outgoing messages are called with the right
         parameters"""
         expected_wheel = ('http://exflserv05.desy.de/karabo/karaboExtensions'
-                          '/tags/0.0.0/GUI_Extensions-0.0.0-py3-none-any.whl')
+                          '/tags/0.0.0/GUIExtensions-0.0.0-py3-none-any.whl')
 
         get_mock.return_value = MockResponse(b'', requests.codes.ok)
         with update_dialog.download_file_for_tag('0.0.0'):
