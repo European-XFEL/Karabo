@@ -6,7 +6,6 @@ The **most relevant improvements**, fixes and changes are:
 
 - C++/bound: Elements in schema must not have an empty key or an empty list of options.
 
-
 Detailed Merge-Log
 ==================
 
@@ -53,12 +52,14 @@ Core Devices
 - Gui Server: Throttle guiserver instanceinfo updates. !3289
 - Gui Server: Throttler with alarm !3494
 - Gui Server: Increase timeout for getConfigurationFromPast in gui server !3580
+- Gui Server: Require GUI client version >= 2.5.0 !3554
 - Project Manager: ProjectManager reset !3477
 - Project Manager: ProjectDB can list items by type and name !3495
 - Data Logger: Enable performance statistics of DataLoggers to trigger alarms !3480
 - Alarm Service: Fixes for the broken integration test cases for AlarmService. !3491
 - DataLogReader: Fix for unhandled exception on DataLogReader::findLoggerIndexTimepoint. !3478
 - Run Configurator: Fix for RunConfigurator unchecking updated groups !3472
+- Run Configurator: protecting the RunController from empty configuration !3548
 
 Dependencies and deployment
 +++++++++++++++++++++++++++
@@ -174,3 +175,7 @@ Graphical user interface
 - GUI: Fix profile plot set_data !3585
 - GUI: Move downsample action to viewbox !3588
 - GUI: Solve test interference !3587
+- GUI: Add a gui timeit decorator !3553
+- GUI: Fix a search case when the node is already gone !3555
+- GUI: Add error bool controller !3550
+- GUI: Set ROI pen to black on graph plots !3552
