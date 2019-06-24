@@ -28,12 +28,10 @@ def test_webcam_graph_model():
 def test_detector_graph_model():
     traits = _geometry_traits()
     traits['colormap'] = 'magma'
-    traits['downsample'] = False
     model = api.DetectorGraphModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
     assert read_model.colormap == 'magma'
-    assert read_model.downsample is False
 
 
 def test_vector_roll_graph_model():
@@ -66,7 +64,6 @@ def test_image_graph_model():
     traits['y_label'] = 'N-Y-axis'
     traits['y_units'] = 'nm'
     traits['show_scale'] = False
-    traits['downsample'] = False
 
     model = api.ImageGraphModel(**traits)
     read_model = single_model_round_trip(model)
@@ -84,7 +81,6 @@ def test_image_graph_model():
     assert read_model.y_label == 'N-Y-axis'
     assert read_model.y_units == 'nm'
     assert read_model.show_scale is False
-    assert read_model.downsample is False
 
     # Assert ROI data
     for orig, read in zip(model.roi_items, read_model.roi_items):

@@ -18,7 +18,6 @@ class KaraboImageModel(BaseWidgetObjectData):
     """The KaraboImageModel Base"""
     aux_plots = Int(0)
     colormap = String("none")
-    downsample = Bool(True)
 
     roi_items = List(BaseROIData)
     roi_tool = Int(0)
