@@ -87,7 +87,7 @@ class KaraboROI(ROI):
         self.textItem.setPos(*(self.pos() + (self.size() * direction)))
         center = [float_to_string(coord) for coord in self.center]
         size = [float_to_string(s) for s in self.size()]
-        self.textItem.setHtml(ROI_CENTER_SIZE_HTML.format(*center, *size))
+        self.textItem.setHtml(ROI_CENTER_SIZE_HTML.format(*(center + size)))
 
     # ---------------------------------------------------------------------
     # Properties
@@ -106,7 +106,7 @@ class KaraboROI(ROI):
 
     @property
     def coords(self):
-        return (*self._absolute_position, *self._absolute_size)
+        return tuple(self._absolute_position) + tuple(self._absolute_size)
 
     # ---------------------------------------------------------------------
     # PyQtGraph methods
