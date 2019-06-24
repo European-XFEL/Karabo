@@ -73,7 +73,6 @@ void HashXmlSerializer_Test::testSerialization() {
 
     TextSerializer<Hash>::Pointer p = TextSerializer<Hash>::create("Xml");
 
-    /*
     {
         Schema s = TextSerializer<Hash>::getSchema("Xml");
         Hash schemaIncluded("a1", 3.2, "a2", s);
@@ -85,7 +84,7 @@ void HashXmlSerializer_Test::testSerialization() {
         CPPUNIT_ASSERT_EQUAL(schemaIncluded, deserialized);
         CPPUNIT_ASSERT_EQUAL(s.getParameterHash(), deserialized.get<Schema>("a2").getParameterHash());
     }
-    */
+
 
     {
         std::string archive1;
@@ -126,6 +125,7 @@ void HashXmlSerializer_Test::testSerialization() {
 
 
     }
+
 
     {
         std::string archive1;
@@ -174,4 +174,5 @@ void HashXmlSerializer_Test::testSerialization() {
         p->save(hs, archive2);
         CPPUNIT_ASSERT(archive1 == archive2);
     }
+
 }
