@@ -45,7 +45,7 @@ def map_rect_to_transform(rect, scaling, translation):
     size = np.array([rect.width(), rect.height()])
     trans_size = size * scaling
 
-    return QRectF(*trans_pos, *trans_size)
+    return QRectF(*(tuple(trans_pos) + tuple(trans_size)))
 
 
 def levels_almost_equal(image_level, image_range, rtol=0.01):

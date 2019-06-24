@@ -39,7 +39,8 @@ class IntensityProfiler:
         # Calculate the offset of the x-axis with the half of the difference
         # of data points (it is assumed that the data is uniformly spaced)
         offset = abs(np.diff(self._profile[0][:2])[0]) / 2
-        self._fit = gaussian_fit(*self._profile, offset)
+        x_data, y_data = self._profile
+        self._fit = gaussian_fit(x_data, y_data, offset)
         return self._fit
 
     def analyze(self):
