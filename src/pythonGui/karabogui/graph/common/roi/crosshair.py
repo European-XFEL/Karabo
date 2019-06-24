@@ -41,7 +41,7 @@ class CrosshairROI(KaraboROI):
 
     @property
     def coords(self):
-        return (*self._absolute_position - (self._scaling / 2),)
+        return tuple(self._absolute_position - (self._scaling / 2))
 
     # ---------------------------------------------------------------------
     # Public methods
