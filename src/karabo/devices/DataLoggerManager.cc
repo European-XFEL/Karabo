@@ -318,7 +318,7 @@ namespace karabo {
                                 emit<Hash>("signalLoggerMap", m_loggerMap);
                                 newMap = true;
                             }
-                            const Hash config("deviceToBeLogged", deviceId,
+                            const Hash config("devicesToBeLogged", std::vector<std::string>(1, deviceId),
                                               "directory", get<string>("directory"),
                                               "maximumFileSize", get<int>("maximumFileSize"),
                                               "flushInterval", get<int>("flushInterval"),
@@ -372,11 +372,11 @@ namespace karabo {
                                           "performanceStatistics.enable", get<bool>("enablePerformanceStats"));
                         Hash hash("classId", "DataLogger", "configuration", config);
 
-                        BOOST_FOREACH(const std::string& deviceId, devicesToLog) {
+                        for (const std::string& deviceId : devicesToLog) {
                             const string loggerId = DATALOGGER_PREFIX + deviceId;
                             // No need to check whether loggerId already exists: if yes, this instantiation will fail
                             hash.set("deviceId", loggerId);
-                            hash.set("configuration.deviceToBeLogged", deviceId);
+                            hash.set("configuration.devicesToBeLogged", std::vector<std::string>(1, deviceId)),
                             KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << loggerId << "' on server '" << serverId
                                     << "' which just appeared";
                             delayedInstantiation(serverId, hash);
@@ -440,10 +440,10 @@ namespace karabo {
                                 boost::mutex::scoped_lock lock(m_instantiateMutex);
                                 for (auto &q : m_instantiationQueues) {
                                     for (auto it = q.second.begin(); it != q.second.end();) {
-                                        const std::string& loggedId = it->get<std::string>("configuration.deviceToBeLogged");
+                                     const auto& loggedIds = it->get<std::vector < std::string >> ("configuration.devicesToBeLogged");
 
                                         //erase item from queue if loggedId matches instanceId
-                                        if (loggedId == instanceId) {
+                                     if (loggedIds[0] == instanceId) { // so far exactly one logged device
                                             it = q.second.erase(it); // erase return iterator pointing to next element
                                         } else {
                                             ++it;
