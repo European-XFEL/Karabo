@@ -19,8 +19,8 @@ from karabogui.controllers.util import load_extensions
 
 _TIMEOUT = 0.1
 _TAG_REGEX = r'^\d+.\d+.\d+$'
-_PKG_NAME = 'GUI-Extensions'
-_WHEEL_TEMPLATE = 'GUI_Extensions-{}-py3-none-any.whl'
+_PKG_NAME = 'GUIExtensions'
+_WHEEL_TEMPLATE = 'GUIExtensions-{}-py3-none-any.whl'
 _REMOTE_SVR = 'http://exflserv05.desy.de/karabo/karaboExtensions/tags/'
 
 UNDEFINED_VERSION = 'Undefined'
@@ -30,7 +30,7 @@ def get_current_version():
     """Gets the current version of the package"""
     try:
         importlib.reload(pkg_resources)
-        package = pkg_resources.get_distribution('GUI-Extensions')
+        package = pkg_resources.get_distribution(_PKG_NAME)
         return package.version
     except pkg_resources.DistributionNotFound:
         return UNDEFINED_VERSION
@@ -120,7 +120,7 @@ def install_package(wheel_file):
         load_extensions()
         return output.decode()
     except CalledProcessError as e:
-        return 'Error installing GUI-Extensions package: {}'.format(str(e))
+        return 'Error installing {} package: {}'.format(_PKG_NAME, str(e))
 
 
 def update_package(tag):
@@ -229,7 +229,7 @@ class UpdateDialog(QDialog):
         self._start_process(cmd, is_update=True)
 
     def _start_uninstall_process(self):
-        """Uninstalls the current GUI-Extensions package"""
+        """Uninstalls the current GUIExtensions package"""
         cmd = 'pip uninstall --yes {}'.format(_PKG_NAME)
         self._start_process(cmd, is_update=False)
 
@@ -318,8 +318,8 @@ class UpdateDialog(QDialog):
 
 
 def main():
-    description = """Command-line tool to update the GUI-Extensions package"""
-    ap = ArgumentParser(description=description)
+    description = """Command-line tool to update the {} package"""
+    ap = ArgumentParser(description=description.format(_PKG_NAME))
     ap.add_argument('-t', '--tag', nargs=1, type=str,
                     help='Desired package version (tag)')
     ap.add_argument('-u', '--uninstall', action='store_true', required=False,
@@ -332,14 +332,14 @@ def main():
         return
 
     if args.uninstall:
-        print('Uninstalling GUI-Extensions package')
+        print('Uninstalling {} package'.format(_PKG_NAME))
         output = uninstall_package()
         print(output)
 
     if args.tag:
         tag = args.tag[0]
 
-        print('Installing GUI-Extensions version {}\n'.format(tag))
+        print('Installing {} version {}\n'.format(_PKG_NAME, tag))
         output = update_package(tag)
         print(output)
 
