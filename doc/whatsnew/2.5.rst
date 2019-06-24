@@ -4,8 +4,6 @@ What's New in Karabo 2.5.0
 
 The **most relevant improvements**, fixes and changes are:
 
-- C++/bound: Elements in schema must not have an empty key or an empty list of options.
-
 
 Detailed Merge-Log
 ==================
@@ -21,6 +19,7 @@ Bound/cpp core
 - C++: Cleaner handling of readHandler variable in TcpChannel !3535
 - C++: Fix memory/resource leaks in point to point shortcut !3537
 
+- C++/bound: Elements in schema must not have an empty key or an empty list of options.
 - C++/bound: Fix sub-permille chance to screw up pipelining !3446
 - C++/bound: Treat duplicated pipe connection - keep most recent !3471
 - C++/bound: Make c++ ImageData element DAQ compliant when specifying setDimensions() !3403
@@ -52,6 +51,7 @@ Core Devices
 - Gui Server: Cleanup runconfigurator and runconfiguration group !3452
 - Gui Server: Throttle guiserver instanceinfo updates. !3289
 - Gui Server: Throttler with alarm !3494
+- Gui Server: Increase timeout for getConfigurationFromPast in gui server !3580
 - Project Manager: ProjectManager reset !3477
 - Project Manager: ProjectDB can list items by type and name !3495
 - Data Logger: Enable performance statistics of DataLoggers to trigger alarms !3480
@@ -63,12 +63,11 @@ Dependencies and deployment
 +++++++++++++++++++++++++++
 
 - DEPS: Backbone of multi api test setup, introducing "long" tests !3409
-- DEPS: Update libzmq and pyzmq !3450
 - DEPS: Update pip version 7.1.0 -> 19.1 !3476
 - DEPS: Move PyQtGraph to 0.11-develop !3510
-- DEPS: update Tornado to latest release !3531
 - Core: Cross api pipeline test template !3417
 - Core: Enhancing Webserver with logs !3475
+- TEST: removed dead tests on webAuth !3566
 
 Middlelayer core
 ++++++++++++++++
@@ -94,6 +93,8 @@ Middlelayer core
 - MDL: Add List Of Hash Setting to TableElement !3482
 - MDL: Flaky, Require 3 successes out of 7 instead out of 5 runs !3278
 - MDL: Get property in getattr fashion in utils !3551
+- MDL: Adding classId attribute to certain Node children schema elements in the middlelayer, like InputChannel, OutputChannel and Slot. !3562
+- MDL: Implement classId for alarms !3577
 
 Graphical user interface
 ++++++++++++++++++++++++
@@ -149,3 +150,26 @@ Graphical user interface
 - GUI: Set graph common environment !3532
 - GUI: Implement graph plot package !3536
 - GUI: More icons for scatter, histogram, downsample !3530
+- GUI: fix karabo-theatre error handling !3564
+- GUI: Remove Authenticator !3565
+- GUI: Arrange order in new and gone processing !3567
+- GUI: Activate new icons in graph plots !3560
+- GUI: Reduce min size for images !3570
+- GUI: Handle all infs in Vector Graph !3547
+- GUI: Adjust cinema to race condition in topology !3563
+- GUI: Add 'None' colormap action on image graphs !3568
+- GUI: Segfault prevention on GUI exit !3574
+- GUI: Catch None in profiling !3576
+- GUI: Centralize bins on histogram and update on dialog !3571
+- GUI: Delete app later in testing !3578
+- GUI: Alpha correction in graph plots and images !3575
+- GUI: Graph image autodownsampling !3572
+- GUI: Adjust priorities of Graph Widgets !3582
+- GUI: Detector was not updating accordingly to the chosen axis !3579
+- GUI: Adjust generic scenes to graphs and add vectors !3581
+- GUI: Add vector roll protection from invalid numbers !3583
+- GUI: Update scale legend when updating axes labels !3586
+- GUI: Test image models and cleanup !3584
+- GUI: Fix profile plot set_data !3585
+- GUI: Move downsample action to viewbox !3588
+- GUI: Solve test interference !3587
