@@ -4,6 +4,8 @@ What's New in Karabo 2.5.0
 
 The **most relevant improvements**, fixes and changes are:
 
+- C++/bound: Elements in schema must not have an empty key or an empty list of options.
+
 
 Detailed Merge-Log
 ==================
@@ -19,7 +21,6 @@ Bound/cpp core
 - C++: Cleaner handling of readHandler variable in TcpChannel !3535
 - C++: Fix memory/resource leaks in point to point shortcut !3537
 
-- C++/bound: Elements in schema must not have an empty key or an empty list of options.
 - C++/bound: Fix sub-permille chance to screw up pipelining !3446
 - C++/bound: Treat duplicated pipe connection - keep most recent !3471
 - C++/bound: Make c++ ImageData element DAQ compliant when specifying setDimensions() !3403
