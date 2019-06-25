@@ -134,8 +134,8 @@ namespace karabo {
         void HashXmlSerializer::writeAttributes(const Hash::Attributes& attrs, pugi::xml_node& node) const {
             for (Hash::Attributes::const_iterator it = attrs.begin(); it != attrs.end(); ++it) {
                 Types::ReferenceType attrType = it->getType();
-                if (attrType == Types::VECTOR_HASH) {
-                    // Attributes that are Vector of Hashes are serialized as children of the node that holds the 
+                if (attrType == Types::VECTOR_HASH || attrType == Types::SCHEMA) {
+                    // Attributes that are vector<Hash> or Schema are serialized as children of the node that holds the
                     // attribute. The name of the serialized attribute node is the path of the node that contains
                     // the attribute plus the attribute name.
                     std::string attrPath = "_attr" + node.path('_') + '_' + it->getKey();
@@ -144,8 +144,13 @@ namespace karabo {
                                 (m_prefix + Types::to<ToLiteral > (attrType) +
                                  ":" + attrPath).c_str();
                         pugi::xml_node attrSerialNode = node.append_child(attrPath.c_str());
-                        Hash hashVectHash(attrPath + "_value", it->getValue<vector < Hash >> ());
-                        createXml(hashVectHash, attrSerialNode);
+                        if (attrType == Types::VECTOR_HASH) {
+                            Hash hashVectHash(attrPath + "_value", it->getValue<vector < Hash >> ());
+                            createXml(hashVectHash, attrSerialNode);
+                        } else if (attrType == Types::SCHEMA) {
+                            Hash hashSchema(attrPath + "_value", it->getValue<Schema>());
+                            createXml(hashSchema, attrSerialNode);
+                        }
                     }
                 } else {
                     if (m_writeDataTypes) {
@@ -249,26 +254,31 @@ namespace karabo {
                 string attributeName(it->name());
                 if (attributeName.substr(0, m_prefix.size()) != m_prefix) {
                     std::pair<std::string, Types::ReferenceType> attr = this->readXmlAttribute(std::string(it->value()));
-                    if (attr.second == Types::VECTOR_HASH) {
-                        // Attributes of type VECTOR_HASH are serialized as a child node of the node containing
-                        // the attribute.
+                    if (attr.second == Types::VECTOR_HASH || attr.second == Types::SCHEMA) {
+                        // Attributes of types VECTOR_HASH or SCHEMA are serialized as a child node of the node
+                        // containing the attribute.
                         string attrNodeName = attr.first;
                         pugi::xml_node attrNode = node.child(attrNodeName.c_str());
                         pugi::xml_node attrValueNode = attrNode.child((attrNodeName + "_value").c_str());
                         Hash h;
                         createHash(h, attrValueNode);
-                        //std::cout << "@extractNonStringfiedAttrs: hash for vector of hashes attr:\n" << h << std::endl;
-                        vector<Hash> vh = h.get<vector < Hash >> (attrValueNode.name());
-                        //std::cout << "@extractNonStringfiedAttrs: vector of hashes attr has '" << vh.size() << "' elements." << std::endl;
-                        // Adds attribute to the output vector of hashes with the non stringfied attributes.
-                        nonStrAttrs.push_back(Hash(attributeName, vh));
+                        if (attr.second == Types::VECTOR_HASH) {
+                            //std::cout << "@extractNonStringfiedAttrs: hash for vector of hashes attr:\n" << h << std::endl;
+                            vector<Hash> vh = h.get<vector < Hash >> (attrValueNode.name());
+                            //std::cout << "@extractNonStringfiedAttrs: vector of hashes attr has '" << vh.size() << "' elements." << std::endl;
+                            // Adds attribute to the output vector of hashes with the non stringfied attributes.
+                            nonStrAttrs.push_back(Hash(attributeName, vh));
+                        } else if (attr.second == Types::SCHEMA) {
+                            //std::cout << "@extractNonStringfiedAttrs: hash for Schema attr:\n" << h << std::endl;
+                            Schema sch = h.get<Schema>(attrValueNode.name());
+                            // Adds attribute to the output vector of hashes with the non stringfied attributes.
+                            nonStrAttrs.push_back(Hash(attributeName, sch));
+                        }
                         // Clean-up of auxiliary node used to keep the value of the attribute of type vector of hash.
                         attrNode.remove_child(attrValueNode);
                         pugi::xml_node nodeCpy = node;
                         nodeCpy.remove_child(attrNode);
-                    } else if (attr.second == Types::SCHEMA) {
-                        // TODO: process attributes of type SCHEMA
-                    }
+                    } 
                 }
             }
         }
