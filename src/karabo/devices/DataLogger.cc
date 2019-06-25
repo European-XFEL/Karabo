@@ -117,28 +117,28 @@ namespace karabo {
 
             karabo::net::Strand::Pointer m_strand;
 
-            boost::mutex m_currentSchemaMutex; // per device logged
-            karabo::util::Schema m_currentSchema; // per device logged
-            bool m_currentSchemaChanged; // per device logged
+            boost::mutex m_currentSchemaMutex;
+            karabo::util::Schema m_currentSchema;
+            bool m_currentSchemaChanged;
 
-            karabo::util::Schema m_schemaForSlotChanged; // only use within slotChanged  // per device logged
+            karabo::util::Schema m_schemaForSlotChanged; // only use within slotChanged
 
-            boost::mutex m_configMutex; // per device logged
-            std::fstream m_configStream; // per device logged
+            boost::mutex m_configMutex;
+            std::fstream m_configStream;
 
-            unsigned int m_lastIndex; // per device logged
-            std::string m_user; // per device logged
-            boost::mutex m_lastTimestampMutex; // per device logged
-            karabo::util::Timestamp m_lastDataTimestamp; // per device logged
-            bool m_updatedLastTimestamp; // per device logged
-            bool m_pendingLogin; // per device logged
+            unsigned int m_lastIndex;
+            std::string m_user;
+            boost::mutex m_lastTimestampMutex;
+            karabo::util::Timestamp m_lastDataTimestamp;
+            bool m_updatedLastTimestamp;
+            bool m_pendingLogin;
 
-            std::map<std::string, karabo::util::MetaData::Pointer> m_idxMap; // protect by m_configMutex! // per device logged
-            std::vector<std::string> m_idxprops; // needs no mutex as long as used only in slotChanged // per device logged
-            size_t m_propsize; // per device logged
-            time_t m_lasttime; // per device logged
+            std::map<std::string, karabo::util::MetaData::Pointer> m_idxMap; // protect by m_configMutex!
+            std::vector<std::string> m_idxprops; // needs no mutex as long as used only in slotChanged
+            size_t m_propsize;
+            time_t m_lasttime;
 
-            karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_serializer; // per device logged??
+            karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_serializer;
 
             // Only for initialisation - counting connections to signalChanged and signalStateChanged
             boost::mutex m_numChangedConnectedMutex;
@@ -171,13 +171,7 @@ namespace karabo {
 
         DataLogger::DataLogger(const Hash& input)
             : karabo::core::Device<>(input)
-            //, m_currentSchemaChanged(true)
-            //, m_lastDataTimestamp(Epochstamp(0ull, 0ull), Trainstamp())
-            //, m_updatedLastTimestamp(false)
-            //, m_pendingLogin(true)
-            //, m_propsize(0)
-            //, m_lasttime(0)
-            , m_numConnected(0u) //, m_numChangedConnected(0)
+            , m_numConnected(0u)
             , m_flushDeadline(karabo::net::EventLoop::getIOService())
             , m_doFlushFiles(true)
         {
@@ -188,7 +182,7 @@ namespace karabo {
             // Register slots in constructor to ensure existence when sending instanceNew
             KARABO_SLOT(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
             KARABO_SLOT(slotSchemaUpdated, Schema /*changedSchema*/, string /*deviceId*/);
-            KARABO_SLOT(slotTagDeviceToBeDiscontinued, bool /*wasValidUpToNow*/, char /*reason*/, std::string /*devceId*/);
+            KARABO_SLOT(slotTagDeviceToBeDiscontinued, bool /*wasValidUpToNow*/, char /*reason*/, std::string /*deviceId*/);
             KARABO_SLOT(flush);
 
             KARABO_INITIAL_FUNCTION(initialize)
@@ -197,7 +191,6 @@ namespace karabo {
 
         DataLogger::~DataLogger() {
             // Locking mutex maybe not needed since no parallelism anymore (?) - but cannot harm.
-            KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << " Entered destructor";
             {
                 boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
                 for (auto it = m_perDeviceData.begin(), itEnd = m_perDeviceData.end(); it != itEnd; ++it) {
@@ -209,8 +202,6 @@ namespace karabo {
             m_doFlushFiles = false;
             if (m_flushDeadline.cancel())
                 doFlush();
-
-            KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << " Leaving destructor";
         }
 
 
@@ -306,7 +297,7 @@ namespace karabo {
             // Now connect concurrently both, signalStateChanged and signalChanged, to the same slot.
             // The same pollConfig is callback (in case of success) for both connection requests. The second
             // time it is called it will request the configuration.
-            // FIXME: upgrade to asyncConnect with many connections!
+            // FIXME: upgrade to interface for one asyncConnect with many connections!
             const std::string failMsgBegin("Failed to connect to " + deviceId + ".");
             asyncConnect(deviceId, "signalStateChanged", "", "slotChanged",
                          util::bind_weak(&DataLogger::handleConfigConnected, this, deviceId),
@@ -746,7 +737,7 @@ namespace karabo {
             fstream fileout(filename.c_str(), ios::out | ios::app);
             if (fileout.is_open()) {
                 Timestamp t;
-                // FIXME: use data->m_serializer? Check options!
+                // Since schema updates are rare, do not store this serialiser as the one for Hash (data->m_serializer):
                 TextSerializer<Schema>::Pointer serializer = TextSerializer<Schema>::create(Hash("Xml.indentation", -1));
                 string archive;
                 serializer->save(schema, archive);
