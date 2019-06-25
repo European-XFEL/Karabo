@@ -47,9 +47,14 @@ class DisplayHistGraph(BaseBindingController):
 
     def value_update(self, proxy):
         value = proxy.value
-        if value is not Undefined and not len(value):
-            self._plot.clear()
+        if value is Undefined or not len(value):
+            self._plot.setData([], stepMode=None)
             return
+
+        finite = np.isfinite(value)
+        if not np.all(finite):
+            value = value.copy()
+            value[~finite] = 0
 
         if self.model.auto:
             start, stop = value.min(), value.max()
