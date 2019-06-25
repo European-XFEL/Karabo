@@ -43,6 +43,7 @@ class KaraboImagePlot(PlotItem):
 
         # Initialize widgets
         self.imageItem = KaraboImageItem()
+        self.imageItem.axisOrder = KaraboImagePlot.AXIS_ORDER
         self.addItem(self.imageItem)
 
         # Improve axes rendering
@@ -180,8 +181,7 @@ class KaraboImagePlot(PlotItem):
             self._update_axes_transforms(image)
             should_update = True
 
-        self.imageItem.setImage(image, axisOrder=KaraboImagePlot.AXIS_ORDER,
-                                autoLevels=self.imageItem.auto_levels)
+        self.imageItem.setImage(image, autoLevels=self.imageItem.auto_levels)
         if should_update and update:
             self._restore_view()
 
