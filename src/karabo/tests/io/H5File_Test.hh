@@ -18,7 +18,7 @@
 class H5File_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(H5File_Test);
-    /*
+
     CPPUNIT_TEST(testBuffer);
 
     CPPUNIT_TEST(testWrite);
@@ -31,12 +31,12 @@ class H5File_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST(testManyGroups);
     CPPUNIT_TEST(testManyTables);
-     */
+
     //        CPPUNIT_TEST(testVLWrite);
-    /*
+
     CPPUNIT_TEST(testTrainFormat);
     CPPUNIT_TEST(testClose);
-    */
+
     //CPPUNIT_TEST(testArray);
 
     //    CPPUNIT_TEST(testExternalHdf5);
@@ -61,6 +61,10 @@ private:
 
     size_t m_v4Size;
     std::vector<std::complex<float> > m_v4;
+
+
+
+
 
     const size_t m_maxRec;
     karabo::util::Dims m_dimsVec;

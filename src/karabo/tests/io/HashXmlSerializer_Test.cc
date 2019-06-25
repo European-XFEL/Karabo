@@ -22,8 +22,6 @@ using namespace karabo::io;
 using namespace karabo::util;
 using std::vector;
 using std::string;
-using std::cout;
-using std::endl;
 
 HashXmlSerializer_Test::HashXmlSerializer_Test() {
 }
@@ -98,11 +96,8 @@ void HashXmlSerializer_Test::testSerialization() {
 
         p->save(m_rootedHash, archive1);
 
-        cout << "\n\n@HashXmlSerializer_Test::testSerialization -> archive1: \n" << archive1 << endl;
-
         Hash h;
         p->load(h, archive1);
-        cout << "\n\n@HashXmlSerializer_Test::testSerialization ->  h: \n" << h << endl;
 
         CPPUNIT_ASSERT(karabo::util::similar(m_rootedHash, h) == true);
 
@@ -112,7 +107,7 @@ void HashXmlSerializer_Test::testSerialization() {
         for (vector<std::string>::size_type i = 0; i < serVectStrAttr.size(); i++) {
             CPPUNIT_ASSERT_EQUAL(origVectStrAttr[i], serVectStrAttr[i]);
         }
-        
+
         // Checks serialization of attribute of type vector<Hash>.
         const vector<Hash> serVectHashAttr = h.getAttribute<vector < Hash >> ("a", "a3");
         const vector<Hash> origVectHashAttr = m_rootedHash.getAttribute<vector < Hash >> ("a", "a3");
@@ -127,8 +122,6 @@ void HashXmlSerializer_Test::testSerialization() {
 
         p->save(h, archive2);
 
-        cout << "\n\n@HashXmlSerializer_Test::testSerialization -> archive2: \n" << archive2 << endl;
-
         CPPUNIT_ASSERT(archive1 == archive2);
     }
 
@@ -138,8 +131,6 @@ void HashXmlSerializer_Test::testSerialization() {
         std::string archive2;
 
         p->save(m_bigHash, archive1);
-
-        cout << "\n\n@HashXmlSerializer_Test::testSerialization -> XML string size: " << archive1.size() / 1024 / 1024 << " MB" << endl;
 
         Hash h;
         p->load(h, archive1);
@@ -155,7 +146,6 @@ void HashXmlSerializer_Test::testSerialization() {
         std::string archive1;
         std::string archive2;
         p->save(m_unrootedHash, archive1);
-        cout << "\n\n@HashXmlSerializer_Test::testSerialization -> XML string size: " << archive1.size() / 1024 / 1024 << " MB" << endl;
 
         Hash h;
         p->load(h, archive1);
