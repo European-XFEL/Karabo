@@ -145,8 +145,10 @@ class KaraboImageItem(ImageItem):
             xds = x_scale if x_scale > x_min_ds else x_min_ds
             yds = y_scale if y_scale > y_min_ds else y_min_ds
 
-            scale = [1/yds, 1/xds]
-            image = zoom(self.image, scale, order=1)
+            # Scale only if downsampling of (one of) the axis is greater than 1
+            if xds > 1 or yds > 1:
+                scale = [1/yds, 1/xds]
+                image = zoom(self.image, scale, order=1)
 
         self._lastDownsample = (xds, yds)
         # --- End patching ---
