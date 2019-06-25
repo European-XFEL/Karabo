@@ -12,11 +12,10 @@
 
 class SchemaSerializer_Test : public CPPUNIT_NS::TestFixture {
 
+
     CPPUNIT_TEST_SUITE(SchemaSerializer_Test);
-    /*
     CPPUNIT_TEST(testBinarySerializer);
     CPPUNIT_TEST(testXmlSerializer);
-    */
     CPPUNIT_TEST_SUITE_END();
 
 public:
