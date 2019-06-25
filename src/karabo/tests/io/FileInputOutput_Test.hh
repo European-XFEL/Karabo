@@ -12,6 +12,7 @@
 
 class FileInputOutput_Test : public CPPUNIT_NS::TestFixture {
 
+
     CPPUNIT_TEST_SUITE(FileInputOutput_Test);
     CPPUNIT_TEST(writeTextFile);
     CPPUNIT_TEST(readTextFile);
