@@ -196,15 +196,21 @@ namespace karabo {
 
 
         DataLogger::~DataLogger() {
-            for (auto it = m_perDeviceData.begin(), itEnd = m_perDeviceData.end(); it != itEnd; ++it) {
-                // Although not posted to it->second.m_strand, no problem with synchronisation since posted handlers
-                // won't run anymore due to their bind_weak and the fact that we are already in the destructor.
-                handleTagDeviceToBeDiscontinued(true, 'L', it->second);
+            // Locking mutex maybe not needed since no parallelism anymore (?) - but cannot harm.
+            KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << " Entered destructor";
+            {
+                boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
+                for (auto it = m_perDeviceData.begin(), itEnd = m_perDeviceData.end(); it != itEnd; ++it) {
+                    // Although not posted to it->second.m_strand, no problem with synchronisation since posted handlers
+                    // won't run anymore due to their bind_weak and the fact that we are already in the destructor.
+                    handleTagDeviceToBeDiscontinued(true, 'L', it->second);
+                }
             }
             m_doFlushFiles = false;
             if (m_flushDeadline.cancel())
                 doFlush();
 
+            KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << " Leaving destructor";
         }
 
 
@@ -212,6 +218,7 @@ namespace karabo {
 
             std::string allFailures;
             for (const std::string& deviceId : get<std::vector < std::string >> ("devicesToBeLogged")) {
+                // Locking mutex not yet needed - no parallelism on content of m_perDeviceData yet.
                 auto result = m_perDeviceData.insert(std::make_pair(deviceId, boost::make_shared<DeviceData>(deviceId)));
                 DeviceDataPointer& data = result.first->second;
                 boost::system::error_code ec;
@@ -242,6 +249,7 @@ namespace karabo {
             }
 
             // Then connect to schema updates and afterwards request Schema (in other order we might miss an update).
+            boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
             for (DeviceDataMap::value_type& pair : m_perDeviceData) {
                 const std::string& deviceId = pair.first; // or pair.second->m_deviceToBeLogged
 
@@ -312,9 +320,13 @@ namespace karabo {
 
 
         void DataLogger::handleConfigConnected(const std::string& deviceId) {
-            // FIXME: deal with potential races (or even changing m_perDeviceData!) later
-            auto it = m_perDeviceData.find(deviceId);
-            DeviceDataPointer& data = it->second;
+
+            DeviceDataPointer data;
+            {
+                boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
+                auto it = m_perDeviceData.find(deviceId);
+                data = it->second;
+            }
 
             boost::mutex::scoped_lock lock(data->m_numChangedConnectedMutex);
             if (++(data->m_numChangedConnected) == 2) {
@@ -349,10 +361,14 @@ namespace karabo {
 
             boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
             DeviceDataMap::iterator it = m_perDeviceData.find(deviceId);
-            // FIXME: treat it == m_perDeviceData.end() (also elsewhere)
-            DeviceDataPointer& data = it->second;
-            data->m_strand->post(karabo::util::bind_weak(&DataLogger::handleTagDeviceToBeDiscontinued, this,
-                                                         wasValidUpToNow, reason, data));
+            if (it != m_perDeviceData.end()) {
+                DeviceDataPointer& data = it->second;
+                data->m_strand->post(karabo::util::bind_weak(&DataLogger::handleTagDeviceToBeDiscontinued, this,
+                                                             wasValidUpToNow, reason, data));
+            } else {
+                // FIXME: Downgrade to DEBUG since can happen when list of treated devices is just reduced
+                KARABO_LOG_FRAMEWORK_WARN << "slotTagDeviceToBeDiscontinued called for non-treated device " << deviceId << ".";
+            }
         }
 
 
@@ -683,6 +699,8 @@ namespace karabo {
                                                   "lastUpdateUtc", data->m_lastDataTimestamp.toFormattedString()));
                     }
 
+                    // FIXME: May post flushing on m_data->_strand to avoid need of m_configMutex, but how to reply that
+                    //        flush slot did its job?
                     boost::mutex::scoped_lock lock(data->m_configMutex);
                     if (data->m_configStream.is_open()) {
                         data->m_configStream.flush();
