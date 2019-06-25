@@ -130,7 +130,7 @@ namespace karabo {
 
 
         static const std::string& kExtendedAttributesNodeName{"KRB_EXT_ATTRIBS"};
-        
+
         void HashXmlSerializer::writeAttributes(const Hash::Attributes& attrs, pugi::xml_node& node) const {
             for (Hash::Attributes::const_iterator it = attrs.begin(); it != attrs.end(); ++it) {
                 Types::ReferenceType attrType = it->getType();
@@ -263,13 +263,10 @@ namespace karabo {
                         Hash h;
                         createHash(h, attrValueNode);
                         if (attr.second == Types::VECTOR_HASH) {
-                            //std::cout << "@extractNonStringfiedAttrs: hash for vector of hashes attr:\n" << h << std::endl;
                             vector<Hash> vh = h.get<vector < Hash >> (attrValueNode.name());
-                            //std::cout << "@extractNonStringfiedAttrs: vector of hashes attr has '" << vh.size() << "' elements." << std::endl;
                             // Adds attribute to the output vector of hashes with the non stringfied attributes.
                             nonStrAttrs.push_back(Hash(attributeName, vh));
                         } else if (attr.second == Types::SCHEMA) {
-                            //std::cout << "@extractNonStringfiedAttrs: hash for Schema attr:\n" << h << std::endl;
                             Schema sch = h.get<Schema>(attrValueNode.name());
                             // Adds attribute to the output vector of hashes with the non stringfied attributes.
                             nonStrAttrs.push_back(Hash(attributeName, sch));
@@ -278,7 +275,7 @@ namespace karabo {
                         attrNode.remove_child(attrValueNode);
                         pugi::xml_node nodeCpy = node;
                         nodeCpy.remove_child(attrNode);
-                    } 
+                    }
                 }
             }
         }
