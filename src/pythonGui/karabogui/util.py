@@ -316,11 +316,11 @@ def is_database_processing():
     return False
 
 
-def get_spin_widget(scaled_size=QSize(), parent=None):
+def get_spin_widget(*, icon, scaled_size=QSize(), parent=None):
     """Return a ``QLabel`` containing a spinning icon.
     """
     spin_widget = QLabel(parent)
-    movie = QMovie(op.join(op.abspath(op.dirname(icons.__file__)), 'wait'))
+    movie = QMovie(op.join(op.abspath(op.dirname(icons.__file__)), icon))
     movie.setScaledSize(scaled_size)
     spin_widget.setMovie(movie)
     movie.start()
