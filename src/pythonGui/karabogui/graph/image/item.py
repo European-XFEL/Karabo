@@ -189,3 +189,13 @@ class KaraboImageItem(ImageItem):
 
         argb, alpha = fn.makeARGB(image, lut=lut, levels=levels)
         self.qimage = fn.makeQImage(argb, alpha, transpose=False)
+
+    def setLevels(self, levels, update=True):
+        """Reimplemented function for version conflict"""
+        if levels is not None:
+            levels = np.asarray(levels)
+        if not fn.eq(levels, self.levels):
+            self.levels = levels
+            self._effectiveLut = None
+            if update:
+                self.updateImage()
