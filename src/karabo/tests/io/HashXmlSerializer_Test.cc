@@ -11,6 +11,8 @@
 #include <karabo/io/HashXmlSerializer.hh>
 #include "HashXmlSerializer_Test.hh"
 #include "karabo/io/BinarySerializer.hh"
+#include "karabo/util/GenericElement.hh"
+#include "karabo/util/SimpleElement.hh"
 
 #include <iostream>
 
@@ -33,10 +35,14 @@ HashXmlSerializer_Test::~HashXmlSerializer_Test() {
 
 void HashXmlSerializer_Test::setUp() {
 
+    Schema sch("schema_attr");
+    INT32_ELEMENT(sch).key("metric").assignmentOptional().defaultValue(12).commit();
+
     Hash rooted("a.b.c", 1, "a.b.d", vector<int>(5, 1), "a.b.e", vector<Hash > (2, Hash("a", 1)), "a.d", std::complex<double>(1.2, 4.2));
     rooted.setAttribute("a", "a1", true);
     rooted.setAttribute("a", "a2", 3.4);
     rooted.setAttribute("a", "a3", vector<Hash>{Hash("row1", "value1"), Hash("row2", "value2")});
+    rooted.setAttribute("a", "a4", sch);
     rooted.setAttribute("a.b", "b1", "3");
     rooted.setAttribute("a.b.c", "c1", 2);
     rooted.setAttribute("a.b.c", "c2", vector<string > (3, "bla"));
@@ -107,9 +113,6 @@ void HashXmlSerializer_Test::testSerialization() {
             CPPUNIT_ASSERT_EQUAL(origVectStrAttr[i], serVectStrAttr[i]);
         }
         
-        // Checks serialization of path of type vector<Hash>.
-
-
         // Checks serialization of attribute of type vector<Hash>.
         const vector<Hash> serVectHashAttr = h.getAttribute<vector < Hash >> ("a", "a3");
         const vector<Hash> origVectHashAttr = m_rootedHash.getAttribute<vector < Hash >> ("a", "a3");
@@ -117,13 +120,16 @@ void HashXmlSerializer_Test::testSerialization() {
             CPPUNIT_ASSERT_EQUAL(origVectHashAttr[i], serVectHashAttr[i]);
         }
 
+        // Checks serialization of attribute of type Schema.
+        const Schema serSchemaAttr = h.getAttribute<Schema>("a", "a4");
+        const Schema origSchemaAttr = m_rootedHash.getAttribute<Schema>("a", "a4");
+        CPPUNIT_ASSERT_EQUAL(origSchemaAttr.getParameterHash(), serSchemaAttr.getParameterHash());
+
         p->save(h, archive2);
 
         cout << "\n\n@HashXmlSerializer_Test::testSerialization -> archive2: \n" << archive2 << endl;
 
         CPPUNIT_ASSERT(archive1 == archive2);
-
-
     }
 
 
