@@ -1,5 +1,5 @@
 from PyQt4 import QtGui
-from unittest import mock
+from unittest import mock, skip
 
 from karabo.native import EncodingType
 
@@ -110,6 +110,27 @@ class TestDetectorGraph(GuiTestCase):
     def _assert_image_shape(self, shape):
         image = self.controller.widget.plot().imageItem.image
         self.assertEqual(image.shape, shape)
+
+    @skip(reason='Visibility tests are not working')
+    def test_2d_image(self):
+        """When a 2D image is supplied, the detector shouldn't show the
+        frameslider"""
+        frame_slider = self.controller._frame_slider
+
+        # Assert initial state
+        self.assertFalse(frame_slider.isVisible())
+
+        image_hash = get_image_hash(dimZ=1)
+        apply_configuration(image_hash, self.output_proxy.binding)
+
+        self.process_qt_events()
+        self.process_qt_events()
+        self.assertTrue(frame_slider.isVisible())
+
+        image_hash = get_image_hash()
+        apply_configuration(image_hash, self.output_proxy.binding)
+
+        self.assertTrue(frame_slider.isVisible())
 
     def test_basics(self):
         frame_slider = self.controller._frame_slider

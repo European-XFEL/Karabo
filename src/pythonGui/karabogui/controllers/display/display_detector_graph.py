@@ -175,14 +175,12 @@ class DisplayDetectorGraph(BaseBindingController):
         if not self._image_node.is_valid:
             return
 
-        if not self._image_node.dim_z:
-            # Hide the slider when there's no multiple images
-            self._frame_slider.setVisible(False)
-        elif self._image_node.encoding == EncodingType.GRAY:
+        # Hide the slider when there's no multiple images
+        self._frame_slider.setVisible(self._image_node.dim_z != 0)
+
+        if self._image_node.encoding == EncodingType.GRAY:
             slider_max = self._image_node.get_axis_dimension(self._axis)
             self._set_slider_max(slider_max)
-
-        self._frame_slider.setVisible(True)
 
         self._update_image()
 
