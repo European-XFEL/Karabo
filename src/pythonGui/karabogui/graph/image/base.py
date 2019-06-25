@@ -355,8 +355,7 @@ class KaraboImageView(QWidget):
                                 text=config["y_label"],
                                 units=config["y_units"])
 
-        if self._scale_legend is not None:
-            self._update_scale_legend()
+        self._update_scale_legend()
 
         self.configuration.update(**config)
         self.stateChanged.emit(config)
@@ -381,8 +380,7 @@ class KaraboImageView(QWidget):
 
         self._show_scale_legend(show=config["show_scale"])
 
-        if self._scale_legend is not None:
-            self._update_scale_legend()
+        self._update_scale_legend()
 
         self.configuration.update(**config)
         self.stateChanged.emit(config)
@@ -478,7 +476,8 @@ class KaraboImageView(QWidget):
                 self._scale_legend = None
 
     def _update_scale_legend(self):
-        x_scale, y_scale = self.plotItem.axes_transform[SCALING]
-        x_units, y_units = [labels[UNITS] for labels in
-                            self.plotItem.axes_labels]
-        self._scale_legend.set_value(x_scale, y_scale, x_units, y_units)
+        if self._scale_legend is not None:
+            x_scale, y_scale = self.plotItem.axes_transform[SCALING]
+            x_units, y_units = [labels[UNITS] for labels in
+                                self.plotItem.axes_labels]
+            self._scale_legend.set_value(x_scale, y_scale, x_units, y_units)
