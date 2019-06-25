@@ -168,7 +168,8 @@ class ProjectPanel(BasePanelWidget):
 
         # Add a spinner which is visible whenever database is processing
         toolbar.add_expander()
-        spin_widget = get_spin_widget(scaled_size=QSize(20, 20),
+        spin_widget = get_spin_widget(icon='wait-black',
+                                      scaled_size=QSize(20, 20),
                                       parent=toolbar)
         spin_widget.setVisible(False)
         self.spin_action = toolbar.addWidget(spin_widget)
