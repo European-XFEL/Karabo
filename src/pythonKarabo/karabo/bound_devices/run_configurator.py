@@ -244,7 +244,7 @@ class RunConfigurator(PythonDevice):
     #                         Slot methods                                    #
     ###########################################################################
 
-    def buildConfigurationInUse(self):
+    def buildConfigurationInUse(self, dummy=None):
         """This is the slot that initiates DAQ reconfiguration
 
         It follows good WYSIWYG principles and generates the Hash() of active
@@ -526,9 +526,9 @@ def _createScene(instance_id):
         keys=[instance_id + '.configurations'],
         height=400, width=600, x=4, y=36,
         parent_component='EditableApplyLaterComponent')
-    button = DisplayCommandModel(
-        keys=[instance_id + '.buildConfigurationInUse'],
-        height=29, width=101, x=495, y=440)
+    # button = DisplayCommandModel(
+    #     keys=[instance_id + '.buildConfigurationInUse'],
+    #     height=29, width=101, x=495, y=440)
     link = DeviceSceneLinkModel(
         keys=[instance_id + '.availableScenes'], target='link',
         font=DEFAULT_FONT, foreground='#000000', frame_width=1,
@@ -536,7 +536,7 @@ def _createScene(instance_id):
         height=29, width=101, x=495, y=475)
 
     layout = FixedLayoutModel(height=490, width=600, x=4, y=4,
-                              children=[button, table, label, link])
+                              children=[table, label, link])
 
     exp_0 = LabelModel(font=DEFAULT_FONT,
                        height=28, width=338, x=644, y=15,
