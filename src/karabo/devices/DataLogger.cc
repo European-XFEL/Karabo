@@ -139,10 +139,6 @@ namespace karabo {
             time_t m_lasttime;
 
             karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_serializer;
-
-            // Only for initialisation - counting connections to signalChanged and signalStateChanged
-            boost::mutex m_numChangedConnectedMutex;
-            int m_numChangedConnected; // not needed, replace by multi async connect provided by framework
         };
 
         DeviceData::DeviceData(const std::string& deviceId)
@@ -164,9 +160,7 @@ namespace karabo {
             , m_idxprops() // needs no mutex as long as used only in handleChanged
             , m_propsize(0u)
             , m_lasttime(0)
-            , m_serializer(TextSerializer<Hash>::create(Hash("Xml.indentation", -1)))
-            , m_numChangedConnectedMutex()
-            , m_numChangedConnected(0) {
+            , m_serializer(TextSerializer<Hash>::create(Hash("Xml.indentation", -1))) {
         }
 
         DataLogger::DataLogger(const Hash& input)
@@ -295,18 +289,11 @@ namespace karabo {
             slotSchemaUpdated(schema, deviceId); // FIXME: fine to call slot directly? Problems with parallelity? strand?
 
             // Now connect concurrently both, signalStateChanged and signalChanged, to the same slot.
-            // The same pollConfig is callback (in case of success) for both connection requests. The second
-            // time it is called it will request the configuration.
-            // FIXME: upgrade to interface for one asyncConnect with many connections!
-            const std::string failMsgBegin("Failed to connect to " + deviceId + ".");
-            asyncConnect(deviceId, "signalStateChanged", "", "slotChanged",
+            asyncConnect({SignalSlotConnection(deviceId, "signalStateChanged", "", "slotChanged"),
+                         SignalSlotConnection(deviceId, "signalChanged", "", "slotChanged")},
                          util::bind_weak(&DataLogger::handleConfigConnected, this, deviceId),
-                         util::bind_weak(&DataLogger::errorToDieHandle, this, failMsgBegin + "signalStateChanged")
-                         );
-            asyncConnect(deviceId, "signalChanged", "", "slotChanged",
-                         util::bind_weak(&DataLogger::handleConfigConnected, this, deviceId),
-                         util::bind_weak(&DataLogger::errorToDieHandle, this, failMsgBegin + "signalChanged")
-                         );
+                         util::bind_weak(&DataLogger::errorToDieHandle, this,
+                                         "Failed to connect to " + deviceId + ".signal[State]Changed"));
         }
 
 
@@ -319,18 +306,14 @@ namespace karabo {
                 data = it->second;
             }
 
-            boost::mutex::scoped_lock lock(data->m_numChangedConnectedMutex);
-            if (++(data->m_numChangedConnected) == 2) {
-                KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Requesting " << deviceId << ".slotGetConfiguration (no wait)";
-                requestNoWait(deviceId, "slotGetConfiguration", "", "slotChanged");
+            KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Requesting " << deviceId << ".slotGetConfiguration (no wait)";
+            requestNoWait(deviceId, "slotGetConfiguration", "", "slotChanged");
 
+            if (m_perDeviceData.size() == ++m_numConnected) {
+                // Done with initialisation: FIXME: refine once variable device to log...
                 m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
                 m_flushDeadline.async_wait(util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
-
-                if (m_perDeviceData.size() == ++m_numConnected) {
-                    // Done with initialisation: FIXME: refine once variable device to log...
-                    updateState(State::NORMAL);
-                }
+                updateState(State::NORMAL);
             }
         }
 
