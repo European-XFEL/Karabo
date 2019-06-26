@@ -167,12 +167,15 @@ class RunConfigurator(PythonDevice):
             .setNewDefaultValue(EXPERT)
             .commit(),
 
-            SLOT_ELEMENT(expected).key('buildConfigurationInUse')
-            .displayedName('Push to DAQ')
-            .description('Push current configuration structure to the DAQ Run '
-                         'controller.')
-            .allowedStates(State.NORMAL)
-            .commit(),
+            # Temporarily removed the button because the RunController can not
+            # handle an unprepared state transition. The slot is still callable
+            # by name (tested, working).
+            # SLOT_ELEMENT(expected).key('buildConfigurationInUse')
+            # .displayedName('Push to DAQ')
+            # .description('Push current configuration structure to the DAQ Run '
+            #              'controller.')
+            # .allowedStates(State.NORMAL)
+            # .commit(),
 
             LIST_ELEMENT(expected).key('configurations')
             .displayedName('Configurations')
@@ -244,7 +247,7 @@ class RunConfigurator(PythonDevice):
     #                         Slot methods                                    #
     ###########################################################################
 
-    def buildConfigurationInUse(self, dummy=None):
+    def buildConfigurationInUse(self):
         """This is the slot that initiates DAQ reconfiguration
 
         It follows good WYSIWYG principles and generates the Hash() of active
