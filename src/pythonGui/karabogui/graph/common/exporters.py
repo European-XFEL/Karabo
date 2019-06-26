@@ -34,6 +34,10 @@ class ImageExporter(object):
         params["background"] = mkColor('w')
 
     def export(self):
+        """Exports the plot to an image"""
+        # First we export the contents to a QImage
+        qimage = self._exporter.export(toBytes=True)
+
         filename = util.getSaveFileName(caption="Save Snapshot",
                                         filter="PNG (*.png)",
                                         suffix="png",
@@ -45,4 +49,4 @@ class ImageExporter(object):
         if not filename.endswith('.png'):
             filename = '{}.png'.format(filename)
 
-        self._exporter.export(filename)
+        qimage.save(filename)
