@@ -84,14 +84,6 @@ class KaraboImagePlot(PlotItem):
         self._set_default_transform()
         self._flip()
 
-        # Add viewbox actions
-        downsample_action = QAction(self.vb)
-        downsample_action.setIconText('Auto downsample')
-        downsample_action.setCheckable(True)
-        downsample_action.setChecked(self.imageItem.autoDownsample)
-        downsample_action.triggered.connect(self.imageItem.setAutoDownsample)
-        self.vb.add_action(downsample_action, separator=True)
-
     # ---------------------------------------------------------------------
     # PyQt slots
 
@@ -287,6 +279,18 @@ class KaraboImagePlot(PlotItem):
     def _revert_transform(self):
         self._transform = deepcopy(self._original_transform)
         self._units = deepcopy(self._original_units)
+
+    def enable_downsampling(self, enabled):
+        if enabled:
+            downsample_action = QAction(self.vb)
+            downsample_action.setIconText('Auto downsample')
+            downsample_action.setCheckable(True)
+            downsample_action.setChecked(True)
+            downsample_action.triggered.connect(
+                self.imageItem.setAutoDownsample)
+            self.vb.add_action(downsample_action, separator=True)
+
+        self.imageItem.enable_downsampling(enabled)
 
     # ---------------------------------------------------------------------
     # Transform methods
