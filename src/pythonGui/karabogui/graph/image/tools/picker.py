@@ -190,7 +190,7 @@ class IndicatorRectangle(QGraphicsRectItem):
         pass
 
     def update_geometry_from_transform(self, scaling, translation):
-        x, y = (self.absolute_position + translation) * scaling
+        x, y = (self.absolute_position * scaling) + translation
         w, h = self._absolute_size * scaling
         self._scaling = scaling
         self._translation = translation
@@ -202,8 +202,8 @@ class IndicatorRectangle(QGraphicsRectItem):
     @property
     def absolute_position(self):
         pos = self.pos()
-        scaled = np.array([pos.x(), pos.y()]) / self._scaling
-        return scaled - self._translation
+        scaled = np.array([pos.x(), pos.y()]) - self._translation
+        return scaled / self._scaling
 
     @property
     def _absolute_size(self):
