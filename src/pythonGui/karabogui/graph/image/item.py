@@ -17,14 +17,14 @@ class KaraboImageItem(ImageItem):
     clicked = pyqtSignal(float, float)
     hovered = pyqtSignal(object, object)
 
-    def __init__(self, image=np.zeros((50, 50), dtype=int),
-                 autodownsample=True):
+    def __init__(self, image=np.zeros((50, 50), dtype=int)):
         super(KaraboImageItem, self).__init__(image)
 
         self._origin = np.array([0, 0])
         self.auto_levels = True
         self._rect = None
-        self.autoDownsample = autodownsample
+        self.autoDownsample = False
+        self._downsampling_enabled = False
 
     # ---------------------------------------------------------------------
     # Public methods
@@ -50,6 +50,10 @@ class KaraboImageItem(ImageItem):
         if self._rect is None:
             return self.boundingRect()
         return self._rect
+
+    def enable_downsampling(self, enable):
+        self._downsampling_enabled = enable
+        self.autoDownsample = enable
 
     # ---------------------------------------------------------------------
     # Events
@@ -101,8 +105,6 @@ class KaraboImageItem(ImageItem):
         else:
             lut = self.lut
 
-        image = self.image
-
         # --- Start patching ---
         # Reduce dimensions of image based on screen resolution
         o = self.mapToDevice(QPointF(0, 0))
@@ -114,44 +116,9 @@ class KaraboImageItem(ImageItem):
             self.qimage = None
             return
 
-        # Calculate scale on the nearest hundredths. Don't scale if the
-        # item dimension is bigger than the image dimensions.
-        image_y, image_x = image.shape
-
-        # Swap dimensions if ImageItem is in row-major
-        if self.axisOrder == 'row-major':
-            w, h = h, w
-
-        # Calculate scaling factor for each axis.
-        # - if dimension >= 1000, min scale is 2
-        # - if dimension in [500, 1000), min scale is 2
-        # - if dimension is smaller than 500, no scaling is done
-        xds, yds = (1, 1)
-        x_scale = round(1.0 / w * 100) / 100
-        y_scale = round(1.0 / h * 100) / 100
-
-        # Get minimum downsampling wrt image dimensions
-        x_min_ds, y_min_ds = (1, 1)
-        for dim, min_ds in DIMENSION_DOWNSAMPLE:
-            if image_x > dim:
-                x_min_ds = min_ds
-            if image_y > dim:
-                y_min_ds = min_ds
-
-        # Scale the image if autodownsampling is specified or (one of) the axis
-        # has a bigger scale than the minimum
-        if x_scale >= x_min_ds or y_scale >= x_min_ds or self.autoDownsample:
-            # Correct downsampling wrt if less than prescribed minimum
-            xds = x_scale if x_scale > x_min_ds else x_min_ds
-            yds = y_scale if y_scale > y_min_ds else y_min_ds
-
-            # Scale only if downsampling of (one of) the axis is greater than 1
-            if xds > 1 or yds > 1:
-                scale = [1/yds, 1/xds]
-                image = zoom(self.image, scale, order=1)
-
-        self._lastDownsample = (xds, yds)
-        # --- End patching ---
+        image = self.image
+        if self._downsampling_enabled:
+            image = self._downsample_image(image, w, h)
 
         # if the image data is a small int, then we can combine levels + lut
         # into a single lut for better performance
@@ -191,6 +158,46 @@ class KaraboImageItem(ImageItem):
 
         argb, alpha = fn.makeARGB(image, lut=lut, levels=levels)
         self.qimage = fn.makeQImage(argb, alpha, transpose=False)
+
+    def _downsample_image(self, image, w, h):
+        # Calculate scale on the nearest hundredths. Don't scale if the
+        # item dimension is bigger than the image dimensions.
+        image_y, image_x = image.shape
+
+        # Swap dimensions if ImageItem is in row-major
+        if self.axisOrder == 'row-major':
+            w, h = h, w
+
+        # Calculate scaling factor for each axis.
+        # - if dimension >= 1000, min scale is 2
+        # - if dimension in [500, 1000), min scale is 2
+        # - if dimension is smaller than 500, no scaling is done
+        xds, yds = (1, 1)
+        x_scale = round(1.0 / w * 100) / 100
+        y_scale = round(1.0 / h * 100) / 100
+
+        # Get minimum downsampling wrt image dimensions
+        x_min_ds, y_min_ds = (1, 1)
+        for dim, min_ds in DIMENSION_DOWNSAMPLE:
+            if image_x > dim:
+                x_min_ds = min_ds
+            if image_y > dim:
+                y_min_ds = min_ds
+
+        # Scale the image if autodownsampling is specified or (one of) the axis
+        # has a bigger scale than the minimum
+        if x_scale >= x_min_ds or y_scale >= x_min_ds or self.autoDownsample:
+            # Correct downsampling wrt if less than prescribed minimum
+            xds = x_scale if x_scale > x_min_ds else x_min_ds
+            yds = y_scale if y_scale > y_min_ds else y_min_ds
+
+            # Scale only if downsampling of (one of) the axis is greater than 1
+            if xds > 1 or yds > 1:
+                scale = [1 / yds, 1 / xds]
+                image = zoom(self.image, scale, order=1)
+        self._lastDownsample = (xds, yds)
+
+        return image
 
     def setLevels(self, levels, update=True):
         """Reimplemented function for version conflict"""
