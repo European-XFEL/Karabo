@@ -44,6 +44,7 @@ void HashXmlSerializer_Test::setUp() {
     rooted.setAttribute("a.b", "b1", "3");
     rooted.setAttribute("a.b.c", "c1", 2);
     rooted.setAttribute("a.b.c", "c2", vector<string > (3, "bla"));
+    rooted.setAttribute("a.b.c", "c3", vector<Hash>{Hash("row1", 1), Hash("row2", 2)});
     rooted.setAttribute("a.b.e", "myAttr", "Hallo");
     rooted.setAttribute("a.b.e", "eAttr", vector<string > (2, "abc"));
     rooted.set("an/element/with/slashes", true);
@@ -94,10 +95,16 @@ void HashXmlSerializer_Test::testSerialization() {
         std::string archive1;
         std::string archive2;
 
+        std::cout << "m_rootedPath with clashing node:\n" << m_rootedHash << std::endl;
+
         p->save(m_rootedHash, archive1);
+
+        std::cout << "archive1 = \n" << archive1 << std::endl;
 
         Hash h;
         p->load(h, archive1);
+
+        std::cout << "loaded Hash (h) = \n" << h << std::endl;
 
         CPPUNIT_ASSERT(karabo::util::similar(m_rootedHash, h) == true);
 
@@ -121,6 +128,38 @@ void HashXmlSerializer_Test::testSerialization() {
         CPPUNIT_ASSERT_EQUAL(origSchemaAttr.getParameterHash(), serSchemaAttr.getParameterHash());
 
         p->save(h, archive2);
+
+        std::cout << "Serialized loaded hash (archive2) = \n" << archive2 << std::endl;
+
+        CPPUNIT_ASSERT(archive1 == archive2);
+    }
+
+
+    {
+        // Checks that a specially crafted hash node won't cause a name clash between the xml element for the
+        // hash node and the xml element created to contain the serialized form of the vector<Hash> attribute.
+        std::string archive1;
+        std::string archive2;
+
+        Hash rooted("a._attr_a_a3", "something");
+        rooted.setAttribute("a", "a3", vector<Hash>{Hash("row1", "value1"), Hash("row2", "value2")});
+
+        std::cout << "Hash with clashing node:\n" << rooted << std::endl;
+
+        p->save(rooted, archive1);
+
+        std::cout << "archive1 = \n" << archive1 << std::endl;
+
+        Hash h;
+        p->load(h, archive1);
+
+        std::cout << "loaded Hash (h) = \n" << h << std::endl;
+
+        CPPUNIT_ASSERT(karabo::util::similar(rooted, h) == true);
+
+        p->save(h, archive2);
+
+        std::cout << "Serialized loaded hash (archive2) = \n" << archive2 << std::endl;
 
         CPPUNIT_ASSERT(archive1 == archive2);
     }
