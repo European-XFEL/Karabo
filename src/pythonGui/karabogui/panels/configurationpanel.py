@@ -97,7 +97,7 @@ class ConfigurationPanel(BasePanelWidget):
         self._stacked_tree_widgets.addWidget(ConfigurationTreeView(widget))
 
         # WAITING_PAGE
-        wait_widget = get_spin_widget(parent=widget)
+        wait_widget = get_spin_widget(icon='wait', parent=widget)
         wait_widget.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
         wait_widget.setAutoFillBackground(True)
         wait_widget.setBackgroundRole(QPalette.Base)
