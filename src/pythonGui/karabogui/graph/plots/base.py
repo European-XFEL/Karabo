@@ -12,15 +12,14 @@ from karabogui.graph.common.api import (
     get_default_pen, make_pen, MouseMode, KaraboLegend, KaraboToolBar,
     KaraboViewBox, PointCanvas, ROITool, ROIToolset)
 from karabogui.graph.common.const import (
-    AXIS_ITEMS, AXIS_X, AXIS_Y, DEFAULT_BAR_WIDTH,
-    WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH)
+    AXIS_ITEMS, DEFAULT_BAR_WIDTH, WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH)
 
 from karabogui.graph.plots.dialogs import RangeDialog
 from karabogui.graph.plots.items import (
     ScatterGraphPlot, VectorBarGraphPlot, VectorFillGraphPlot)
 from karabogui.graph.plots.tools import CrossTargetController
 
-ALPHA_GRID = 80
+ALPHA_GRID = 80 / 255
 
 
 class KaraboPlotView(QWidget):
@@ -154,21 +153,17 @@ class KaraboPlotView(QWidget):
 
     def set_grid_x(self, state):
         alpha_value = ALPHA_GRID if state else False
-        for axis in AXIS_X:
-            self.plotItem.getAxis(axis).setGrid(alpha_value)
+        self.plotItem.showGrid(x=state, alpha=alpha_value)
 
     def set_grid_y(self, state):
         alpha_value = ALPHA_GRID if state else False
-        for name in AXIS_Y:
-            self.plotItem.getAxis(name).setGrid(alpha_value)
+        self.plotItem.showGrid(y=state, alpha=alpha_value)
 
     def set_log_x(self, state):
-        for name in AXIS_X:
-            self.plotItem.getAxis(name).setLogMode(state)
+        self.plotItem.setLogMode(x=state)
 
     def set_log_y(self, state):
-        for name in AXIS_Y:
-            self.plotItem.getAxis(name).setLogMode(state)
+        self.plotItem.setLogMode(y=state)
 
     def set_invert_x(self, state):
         self.plotItem.invertX(state)
