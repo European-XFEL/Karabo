@@ -172,6 +172,17 @@ namespace karabo {
 
                 pugi::xml_node nextNode = node.append_child(escapeElementName(it->getKey()).c_str());
 
+                /*
+                 * Note:
+                 * Writting the attributes before its parent Hash node is what guarantees proper serialization in
+                 * the (unlikely) scenarios where a name clash happens between an Xml node created to hold the
+                 * serialized form of a Hash attribute of type vector<Hash> or Schema and an Xml node corresponding to
+                 * the actual Hash node.
+                 * The deserialization code will always pick the Xml node corresponding to the serialized Hash attribute,
+                 * process and remove it from the Xml hierarchy before the node corresponding to the Hash node is
+                 * processed.
+                 * A test for that unlikely scenario can be found on HashXmlSerializer_Test.cc.
+                 */
                 writeAttributes(it->getAttributes(), nextNode);
 
                 if (type == Types::HASH) {
