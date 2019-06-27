@@ -111,6 +111,7 @@ void HashXmlSerializer_Test::testSerialization() {
         // Checks serialization of attribute of type vector<string>.
         const vector<std::string> serVectStrAttr = h.getAttribute<vector < std::string >> ("a.b.e", "eAttr");
         const vector<std::string> origVectStrAttr = m_rootedHash.getAttribute<vector < std::string >> ("a.b.e", "eAttr");
+        CPPUNIT_ASSERT_EQUAL(origVectStrAttr.size(), serVectStrAttr.size());
         for (vector<std::string>::size_type i = 0; i < serVectStrAttr.size(); i++) {
             CPPUNIT_ASSERT_EQUAL(origVectStrAttr[i], serVectStrAttr[i]);
         }
@@ -118,6 +119,7 @@ void HashXmlSerializer_Test::testSerialization() {
         // Checks serialization of attribute of type vector<Hash>.
         const vector<Hash> serVectHashAttr = h.getAttribute<vector < Hash >> ("a", "a3");
         const vector<Hash> origVectHashAttr = m_rootedHash.getAttribute<vector < Hash >> ("a", "a3");
+        CPPUNIT_ASSERT_EQUAL(origVectStrAttr.size(), serVectStrAttr.size());
         for (vector<std::string>::size_type i = 0; i < serVectHashAttr.size(); i++) {
             CPPUNIT_ASSERT_EQUAL(origVectHashAttr[i], serVectHashAttr[i]);
         }
