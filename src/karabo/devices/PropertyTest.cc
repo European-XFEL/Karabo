@@ -628,7 +628,6 @@ namespace karabo {
                     .readOnly()
                     .initialValue(0)
                     .commit();
-
         }
 
 
@@ -760,6 +759,7 @@ namespace karabo {
         void PropertyTest::eosOutput() {
             signalEndOfStream("output");
         }
+
 
         void PropertyTest::slotUpdateSchema() {
             const Schema schema(getFullSchema());
