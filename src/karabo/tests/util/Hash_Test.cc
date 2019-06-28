@@ -2152,12 +2152,30 @@ void Hash_Test::testSimilarIsNotFullyEqual() {
     CPPUNIT_ASSERT_MESSAGE("h4 and h2 shouldn't be fullyEquals - they differ in element attributes.",
                            !h2.fullyEquals(h4));
 
+    Hash h5("a", 13.14159,
+            "b[0]", Hash("hKey_0", "hValue_0"),
+            "b[1]", Hash("hKey_1", "hValue_1"),
+            "c", "1, 1, 2, 3, 5, 8, 11, 19, 30");
+    Hash h6("a", 13.14159,
+            "b[0]", Hash("hKey_0", "hValue_0"),
+            "b[1]", Hash("hKey_1", "hValue_1"),
+            "c", "1, 1, 2, 3, 5, 8, 11, 19, 30, 49, 79");
+    // Repeats the test for hashes differing in node value, but this time with one
+    // complex node, of type vector of hashes, that matches. The hashes are similar ...
+    CPPUNIT_ASSERT_EQUAL(h5, h6); // 'Hash::operator==' actually checks for similarity.
+    // But are not fullyEqual
+    CPPUNIT_ASSERT_MESSAGE("h5 and h6 shouldn't be fullyEquals - they differ in element values.",
+                           !h5.fullyEquals(h6));
 
+    vector<Hash>vhAttr{Hash("key_0", "val_0"), Hash("key_1", "val_1")};
+    h5.setAttribute("a", "attr", vhAttr);
+    h6.setAttribute("a", "attr", 2);
+    h6.set<std::string>("c", "1, 1, 2, 3, 5, 8, 11, 19, 30");
+    CPPUNIT_ASSERT_MESSAGE("h5 and h6 shouldn't be fullyEquals - they differ in vector of hash attribute",
+                           !h5.fullyEquals(h6));
 
-
-}
-
-
-void Hash_Test::testFullyEqualIsSimilar() {
-
+    // Finally a case where two hashes with complex attributes and nodes are fullyEquals.
+    h6.setAttribute("a", "attr", vhAttr);
+    CPPUNIT_ASSERT_MESSAGE("h5 and h6 should be fullyEquals!",
+                           h5.fullyEquals(h6));
 }
