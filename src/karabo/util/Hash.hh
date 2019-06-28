@@ -594,7 +594,7 @@ namespace karabo {
              *
              * A Hash is considered fully equal to another if both
              * are similar and their corresponding elements have
-             * the same keys and values.
+             * the same keys, values and attributes.
              */
             bool fullyEquals(const Hash& other) const;
 
