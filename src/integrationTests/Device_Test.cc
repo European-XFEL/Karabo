@@ -9,7 +9,9 @@
 #include <karabo/core/Device.hh>
 #include <karabo/net/EventLoop.hh>
 #include <karabo/xms/SignalSlotable.hh>
+#include <karabo/util/SimpleElement.hh>
 #include <karabo/util/Epochstamp.hh>
+#include <karabo/util/Schema.hh>
 #include <karabo/util/Timestamp.hh>
 
 #define KRB_TEST_MAX_TIMEOUT 5
@@ -17,7 +19,9 @@
 using karabo::net::EventLoop;
 using karabo::util::Hash;
 using karabo::util::Epochstamp;
+using karabo::util::Schema;
 using karabo::util::Timestamp;
+using karabo::util::INT32_ELEMENT;
 using karabo::core::DeviceServer;
 using karabo::core::DeviceClient;
 using karabo::xms::SignalSlotable;
@@ -37,6 +41,10 @@ public:
         KARABO_SLOT(slotTimeTick, unsigned long long /*id*/, unsigned long long /*sec*/, unsigned long long /*frac*/, unsigned long long /*period*/)
 
         KARABO_SLOT(slotIdOfEpochstamp, unsigned long long /*sec*/, unsigned long long /*frac*/)
+
+        KARABO_SLOT(slotAppendSchema, const karabo::util::Schema);
+
+        KARABO_SLOT(slotUpdateSchema, const karabo::util::Schema);
     }
 
 
@@ -47,6 +55,16 @@ public:
     void slotIdOfEpochstamp(unsigned long long sec, unsigned long long frac) {
         const Timestamp stamp(getTimestamp(Epochstamp(sec, frac)));
         reply(stamp.getTrainId());
+    }
+
+
+    void slotAppendSchema(const Schema sch) {
+        appendSchema(sch);
+    }
+
+
+    void slotUpdateSchema(const Schema sch) {
+        updateSchema(sch);
     }
 
 };
@@ -100,8 +118,9 @@ void Device_Test::appTestRunner() {
                                                                        KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
-    // Now all possible individual tests - one only for now
+    // Now all possible individual tests.
     testGetTimestamp();
+    testSchemaInjection();
 }
 
 
@@ -202,4 +221,226 @@ void Device_Test::testGetTimestamp() {
                                               seconds - 100ull, 1110ull)
                             .timeout(timeOutInMs).receive(id));
     CPPUNIT_ASSERT_EQUAL(0ull, id);
+}
+
+
+void Device_Test::testSchemaInjection() {
+
+    // Setup a communication helper
+    auto sigSlotA = boost::make_shared<SignalSlotable>("sigSlotA");
+    sigSlotA->start();
+
+    // Timeout, in milliseconds, for a request for one of the test device slots.
+    const int requestTimeoutMs = 2000;
+    // Time, in milliseconds, to wait for DeviceClient to update its internal cache after a schema change.
+    const int cacheUpdateWaitMs = 1000;
+
+    // Checks that appendSchema really appends.
+    // ----------
+    Schema schema;
+    INT32_ELEMENT(schema).key("injectedInt32")
+            .assignmentOptional().defaultValue(1)
+            .reconfigurable()
+            .commit();
+
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotAppendSchema", schema)
+                           .timeout(requestTimeoutMs)
+                           .receive());
+
+    // Waits for the updated schema to be available from the DeviceClient.
+    CPPUNIT_ASSERT(waitForCondition([this]{
+        return m_deviceClient->getActiveSchema("TestDevice").has("injectedInt32");
+    }, cacheUpdateWaitMs));
+
+    int injectedInt32;
+    m_deviceClient->get("TestDevice", "injectedInt32", injectedInt32);
+    CPPUNIT_ASSERT(injectedInt32 == 1);
+    m_deviceClient->set("TestDevice", "injectedInt32", 5);
+    m_deviceClient->get("TestDevice", "injectedInt32", injectedInt32);
+    CPPUNIT_ASSERT(injectedInt32 == 5);
+
+    // Checks that injecting a new attribute keeps the previously set value.
+    // ----------
+    INT32_ELEMENT(schema).key("injectedInt32")
+            .assignmentOptional().defaultValue(2)
+            .reconfigurable().minInc(1)
+            .commit();
+
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotAppendSchema", schema)
+                            .timeout(requestTimeoutMs)
+                            .receive());
+
+    // Waits for the updated schema to be available from the DeviceClient
+    CPPUNIT_ASSERT(waitForCondition([this] {
+        return m_deviceClient->getActiveSchema("TestDevice").getDefaultValue<int>("injectedInt32") == 2;
+    }, cacheUpdateWaitMs));
+
+    m_deviceClient->get("TestDevice", "injectedInt32", injectedInt32);
+    CPPUNIT_ASSERT(injectedInt32 == 5);
+    Schema devFullSchema;
+    devFullSchema = m_deviceClient->getDeviceSchema("TestDevice");
+    CPPUNIT_ASSERT(devFullSchema.getMinInc<int>("injectedInt32") == 1);
+
+    // Checks that doing updateSchema keeps previously set value.
+    // ----------
+    INT32_ELEMENT(schema).key("injectedInt32")
+            .assignmentOptional().defaultValue(3)
+            .reconfigurable().minInc(2).maxInc(10)
+            .commit();
+
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotUpdateSchema", schema)
+                            .timeout(requestTimeoutMs)
+                            .receive());
+
+    // Waits for the updated schema to be available from the DeviceClient
+    CPPUNIT_ASSERT(waitForCondition([this]() {
+        return m_deviceClient->getActiveSchema("TestDevice").getDefaultValue<int>("injectedInt32") == 3;
+    }, cacheUpdateWaitMs));
+
+    m_deviceClient->get("TestDevice", "injectedInt32", injectedInt32);
+    CPPUNIT_ASSERT(injectedInt32 == 5);
+    devFullSchema = m_deviceClient->getDeviceSchema("TestDevice");
+    CPPUNIT_ASSERT(devFullSchema.getMinInc<int>("injectedInt32") == 2);
+    CPPUNIT_ASSERT(devFullSchema.getMaxInc<int>("injectedInt32") == 10);
+
+    // Checks that doing updateSchema with something else loses injectedInt32.
+    // ----------
+    Schema sndSchema;
+    INT32_ELEMENT(sndSchema).key("somethingElse")
+            .assignmentOptional().defaultValue(4)
+            .reconfigurable()
+            .commit();
+
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotUpdateSchema", sndSchema)
+                            .timeout(requestTimeoutMs)
+                            .receive());
+
+    // Waits for the updated schema to be available from the DeviceClient
+    CPPUNIT_ASSERT(waitForCondition([this]() {
+        return m_deviceClient->getActiveSchema("TestDevice").has("somethingElse");
+    }, cacheUpdateWaitMs));
+
+    std::vector<std::string> propertiesPaths = m_deviceClient->getProperties("TestDevice");
+    int freq = std::count(propertiesPaths.begin(), propertiesPaths.end(), "injectedInt32");
+    CPPUNIT_ASSERT(freq == 0);
+    freq = std::count(propertiesPaths.begin(), propertiesPaths.end(), "somethingElse");
+    CPPUNIT_ASSERT(freq == 1);
+
+    // Checks that updateSchema for a parameter three times keeps the original value.
+    // This verifies that the schema parsing check is correct.
+    // ----------
+    m_deviceClient->set<int>("TestDevice", "somethingElse", 42);
+    Schema trdSchema;
+    INT32_ELEMENT(trdSchema).key("somethingElse")
+            .assignmentOptional().defaultValue(5)
+            .reconfigurable()
+            .commit();
+
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotUpdateSchema", trdSchema)
+                            .timeout(requestTimeoutMs)
+                            .receive());
+
+    // Waits for the updated schema to be available from the DeviceClient
+    CPPUNIT_ASSERT(waitForCondition([this] {
+        return m_deviceClient->getActiveSchema("TestDevice").getDefaultValue<int>("somethingElse") == 5;
+    }, cacheUpdateWaitMs));
+
+    Schema forthSchema;
+    INT32_ELEMENT(forthSchema).key("somethingElse")
+            .assignmentOptional().defaultValue(6)
+            .reconfigurable()
+            .commit();
+
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotUpdateSchema", forthSchema)
+                            .timeout(requestTimeoutMs)
+                            .receive());
+
+    // Waits for the updated schema to be available from the DeviceClient
+    CPPUNIT_ASSERT(waitForCondition([this] {
+        return m_deviceClient->getActiveSchema("TestDevice").getDefaultValue<int>("somethingElse") == 6;
+    }, cacheUpdateWaitMs));
+
+    Schema fifthSchema;
+
+    INT32_ELEMENT(fifthSchema).key("somethingElse")
+            .assignmentOptional().defaultValue(7)
+            .minInc(3)
+            .reconfigurable()
+            .commit();
+
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotUpdateSchema", fifthSchema)
+                            .timeout(requestTimeoutMs)
+                            .receive());
+
+    // Waits for the updated schema to be available from the DeviceClient
+    CPPUNIT_ASSERT(waitForCondition([this] {
+        return m_deviceClient->getActiveSchema("TestDevice").getDefaultValue<int>("somethingElse") == 7;
+    }, cacheUpdateWaitMs));
+
+    CPPUNIT_ASSERT(m_deviceClient->get<int>("TestDevice", "somethingElse") == 42);
+
+    // Checks that doing updateSchema with an empty schema resets the device to its
+    // base schema.
+    // ----------
+    Schema emptySchema;
+
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotUpdateSchema", emptySchema)
+                            .timeout(requestTimeoutMs)
+                            .receive());
+
+    // Waits for the updated schema to be available from the DeviceClient.
+    CPPUNIT_ASSERT(waitForCondition([this]() {
+        return !m_deviceClient->getActiveSchema("TestDevice").has("somethingElse");
+    }, cacheUpdateWaitMs));
+
+    propertiesPaths = m_deviceClient->getProperties("TestDevice");
+    freq = std::count(propertiesPaths.begin(), propertiesPaths.end(), "somethingElse");
+    CPPUNIT_ASSERT(freq == 0);
+    devFullSchema = m_deviceClient->getDeviceSchema("TestDevice");
+    Schema devStaticSchema = m_deviceClient->getClassSchema("testServerDevice", "TestDevice");
+    CPPUNIT_ASSERT(karabo::util::similar(devFullSchema, devStaticSchema));
+
+    // Checks that appending several times in a row, quickly, sets all values.
+    // ----------
+    const std::string propertyStr("property");
+    for (int i = 0; i < 10; i++) {
+        Schema schemaIdx;
+
+        INT32_ELEMENT(schemaIdx).key(propertyStr + std::to_string(i))
+                .assignmentOptional().defaultValue(i)
+                .reconfigurable()
+                .commit();
+
+        CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotAppendSchema", schemaIdx)
+                                .timeout(requestTimeoutMs)
+                                .receive());
+    }
+
+    // Waits for the updated schema to be available from the DeviceClient.
+    CPPUNIT_ASSERT(waitForCondition([this, &propertyStr]() {
+        return m_deviceClient->getActiveSchema("TestDevice").has(propertyStr + "9");
+    }, cacheUpdateWaitMs));
+
+    propertiesPaths = m_deviceClient->getProperties("TestDevice");
+    devFullSchema = m_deviceClient->getDeviceSchema("TestDevice");
+    for (int i = 0; i < 10; i++) {
+        std::string keyStr = propertyStr + std::to_string(i);
+        freq = std::count(propertiesPaths.begin(), propertiesPaths.end(), keyStr);
+        CPPUNIT_ASSERT(freq == 1);
+        CPPUNIT_ASSERT(devFullSchema.has(keyStr));
+        CPPUNIT_ASSERT(m_deviceClient->get<int>("TestDevice", keyStr) == i);
+    }
+
+}
+
+
+bool Device_Test::waitForCondition(boost::function<bool() > checker, unsigned int timeoutMillis) {
+    constexpr unsigned int sleepIntervalMillis = 5;
+    unsigned int numOfWaits = 0;
+    const unsigned int maxNumOfWaits = static_cast<unsigned int> (std::ceil(timeoutMillis / sleepIntervalMillis));
+    while (numOfWaits < maxNumOfWaits && !checker()) {
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(sleepIntervalMillis));
+        numOfWaits++;
+    }
+    return (numOfWaits < maxNumOfWaits);
 }

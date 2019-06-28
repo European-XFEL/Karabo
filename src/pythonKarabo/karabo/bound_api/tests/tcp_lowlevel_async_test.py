@@ -154,7 +154,8 @@ class P2p_asyncTestCase(unittest.TestCase):
                 print("ASync client onWriteComplete exit")
 
         def onReadHashHash(ec, channel, header, h):
-            print("ASync client onReadHashHash entry: ec.value = ", ec.value())
+            print("ASync client onReadHashHash entry: ec.value = ",
+                  ec.value())
             if ec.value() != 0:
                 self.onError(ec, channel)
                 return
