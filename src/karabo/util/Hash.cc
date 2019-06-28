@@ -714,6 +714,23 @@ namespace karabo {
                     return false;
                 }
 
+                auto leftNodeAttrs = (*itl).getAttributes();
+                auto rightNodeAttrs = (*itr).getAttributes();
+
+                if (leftNodeAttrs.size() != rightNodeAttrs.size()) {
+                    return false;
+                }
+
+                for (Hash::Attributes::const_iterator lAttrIt = leftNodeAttrs.begin(), rAttrIt = rightNodeAttrs.begin();
+                     lAttrIt != leftNodeAttrs.end(), rAttrIt != rightNodeAttrs.end();
+                     ++lAttrIt, ++rAttrIt) {
+                    if (lAttrIt->getKey() != rAttrIt->getKey() ||
+                        lAttrIt->getType() != rAttrIt->getType() ||
+                        lAttrIt->getValueAs<std::string>() != rAttrIt->getValueAs<std::string>()) {
+                        return false;
+                    }
+                }
+
                 if ((*itl).getType() == Types::HASH) {
                     if (!(*itl).getValue<Hash>().fullyEquals((*itr).getValue<Hash>())) {
                         return false;
