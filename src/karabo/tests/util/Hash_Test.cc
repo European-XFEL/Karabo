@@ -2121,3 +2121,21 @@ void Hash_Test::testKeys() {
     CPPUNIT_ASSERT(c1.has("b"));
     CPPUNIT_ASSERT_EQUAL(1ul, c1.size()); // dito
 }
+
+
+void Hash_Test::testSimilarIsNotFullyEqual() {
+    Hash h1("a", 1, "a.b", "value", "a.c", true);
+    Hash h2("a1", 1, "a1.b", "value", "a1.c", true);
+
+    // Checks that hashes with elements with different keys of the same type and in the same order
+    // are still similar
+    CPPUNIT_ASSERT_EQUAL(h1, h2); // 'Hash::operator==' actually checks for similarity.
+    // But are not fullyEqual
+    CPPUNIT_ASSERT_MESSAGE("h1 and h2 shouldn't be fullyEquals - they differ in key names.",
+                           !h1.fullyEquals(h2));
+}
+
+
+void Hash_Test::testFullyEqualIsSimilar() {
+
+}
