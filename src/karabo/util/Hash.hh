@@ -574,7 +574,30 @@ namespace karabo {
              */
             friend std::ostream& operator<<(std::ostream& os, const Hash& hash);
 
+            /**
+             * Checks if this Hash is similar to other.
+             *
+             * A Hash is considered similar to another if both have
+             * the same number of elements, of the same type and in
+             * the same order.
+             *
+             * @param other the Hash this Hash will be compared to.
+             * @return true if both hashes are similar.
+             * 
+             * @note: this is not the full equality operator as the
+             * values of the elements are not considered.
+             */
             bool operator==(const Hash& other) const;
+
+            /**
+             * Checks if this Hash is equal to other.
+             *
+             * A Hash is considered fully equal to another if both
+             * are similar and their corresponding elements have
+             * the same keys and values.
+             */
+            bool fullyEquals(const Hash& other) const;
+
             bool operator!=(const Hash& other) const;
 
             /**
