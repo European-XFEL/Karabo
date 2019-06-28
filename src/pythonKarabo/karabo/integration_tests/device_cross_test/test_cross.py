@@ -174,8 +174,8 @@ class Tests(DeviceTest):
             capas = mdl_proxy.foundCapabilities.value
             interfaces = mdl_proxy.foundInterfaces.value
             self.assertEqual(capas, Capabilities.PROVIDES_INTERFACES)
-            interface_detail = (Interfaces.Motor + Interfaces.Camera
-                                + Interfaces.Processor)
+            interface_detail = (Interfaces.Motor + Interfaces.Camera +
+                                Interfaces.Processor)
             self.assertEqual(interfaces, interface_detail)
 
             def _test_mask(mask, bit):
@@ -324,12 +324,14 @@ class Tests(DeviceTest):
 
         yield from proxy.send()
         self.assertEqual(self.device.channelcount, 2)
+
         yield from proxy.end()
         # The end of stream is no longer setting the data to None
         self.assertEqual(self.device.channeldata.s, "hallo")
         self.assertEqual(self.device.channelmeta.source,
                          "boundDevice:output1")
         self.assertEqual(self.device.channelcount, 2)
+
         yield from proxy.send()
         self.assertEqual(self.device.channeldata.s, "hallo")
         self.assertEqual(self.device.channelmeta.source, "boundDevice:output1")
@@ -344,6 +346,10 @@ class Tests(DeviceTest):
         self.assertEqual(proxy.output1.schema.s, "hallo")
 
         with proxy:
+            # The yield below fixes a race condition in the context initialization
+            # performed by with. As soon as the MR with the 'async with' implementation
+            # (MR !3210) is merged, the 'yield from proxy' can be removed.
+            yield from proxy
             self.device.output.schema.number = 23
             self.assertEqual(proxy.a, 22.8 * unit.milliampere)
             yield from self.device.output.writeData()
