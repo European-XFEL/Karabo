@@ -699,6 +699,41 @@ namespace karabo {
         }
 
 
+        bool Hash::fullyEquals(const Hash& other) const {
+            if (this->size() != other.size()) {
+                return false;
+            }
+            for (Hash::const_iterator itl = this->begin(), itr = other.begin();
+                 itl != this->end() && itr != other.end();
+                 ++itl, itr++) {
+
+                if ((*itl).getKey() != (*itr).getKey()) {
+                    return false;
+                }
+                if ((*itl).getType() != (*itr).getType()) {
+                    return false;
+                }
+
+                if ((*itl).getType() == Types::HASH) {
+                    if (!(*itl).getValue<Hash>().fullyEquals((*itr).getValue<Hash>())) {
+                        return false;
+                    }
+                } else if ((*itl).getType() == Types::VECTOR_HASH) {
+                    const auto& leftHashVector = (*itl).getValue<std::vector < Hash >> ();
+                    const auto& rightHashVector = (*itr).getValue<std::vector < Hash >> ();
+                    for (size_t i = 0; i < leftHashVector.size(); i++) {
+                        if (leftHashVector[i].fullyEquals(rightHashVector[i])) {
+                            return false;
+                        }
+                    }
+                } else if ((*itl).getValueAs<std::string>() != (*itr).getValueAs<std::string>()) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+
         bool Hash::operator!=(const Hash& other) const {
             return !similar(*this, other);
         }
