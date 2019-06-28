@@ -96,15 +96,20 @@ namespace karabo {
             // FIXME: May need AsyncReply??
             void handleTagDeviceToBeDiscontinued(const bool wasValidUpToNow, const char reason, DeviceDataPointer data);
 
-            /// Helper used as error callback that triggers device suicide.
-            void errorToDieHandle(const std::string& reason) const;
+            void handleSchemaConnected(bool failure, const DeviceDataPointer& data,
+                                       const boost::shared_ptr<std::atomic<unsigned int> >& counter);
 
-            void handleSchemaConnected(const std::string& deviceId);
-
-            void handleSchemaReceived(const karabo::util::Schema& schema, const std::string& deviceId);
+            void handleSchemaReceived(bool failure, const karabo::util::Schema& schema, const std::string& deviceId,
+                                      const DeviceDataPointer& data,
+                                      const boost::shared_ptr<std::atomic<unsigned int> >& counter);
 
             /// Helper for connecting to both signalChanged and signalStateChanged
-            void handleConfigConnected(const std::string& deviceId);
+            void handleConfigConnected(bool failure, const DeviceDataPointer& data,
+                                       const boost::shared_ptr<std::atomic<unsigned int> >& counter);
+
+            void checkReady(std::atomic<unsigned int>& counter);
+
+            void stopLogging(const std::string& deviceId);
 
             int determineLastIndex(const std::string& deviceId);
 
