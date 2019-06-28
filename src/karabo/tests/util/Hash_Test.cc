@@ -2128,11 +2128,33 @@ void Hash_Test::testSimilarIsNotFullyEqual() {
     Hash h2("a1", 1, "a1.b", "value", "a1.c", true);
 
     // Checks that hashes with elements with different keys of the same type and in the same order
-    // are still similar
+    // are still similar.
     CPPUNIT_ASSERT_EQUAL(h1, h2); // 'Hash::operator==' actually checks for similarity.
     // But are not fullyEqual
     CPPUNIT_ASSERT_MESSAGE("h1 and h2 shouldn't be fullyEquals - they differ in key names.",
                            !h1.fullyEquals(h2));
+
+    Hash h3("a1", 1, "a1.b", "value", "a1.c", false);
+    // Checks that hashes with elements with different values of the same type and in the same
+    // order are still similar.
+    CPPUNIT_ASSERT_EQUAL(h2, h3); // 'Hash::operator==' actually checks for similarity.
+    // But are not fullyEqual
+    CPPUNIT_ASSERT_MESSAGE("h2 and h3 shouldn't be fullyEquals - they differ in key values.",
+                           !h2.fullyEquals(h3));
+
+    Hash h4("a1", 1, "a1.b", "value", "a1.c", true);
+    h4.setAttribute("a1", "attr", true);
+    h2.setAttribute("a1", "attr", 4);
+    // Checks that hashes with elements with different attributes, with the same value, of the
+    // same type and in the same order are still similar.
+    CPPUNIT_ASSERT_EQUAL(h2, h4); // 'Hash::operator==' actually checks for similarity.
+    // But are not fullyEqual
+    CPPUNIT_ASSERT_MESSAGE("h4 and h2 shouldn't be fullyEquals - they differ in element attributes.",
+                           !h2.fullyEquals(h4));
+
+
+
+
 }
 
 
