@@ -707,10 +707,8 @@ namespace karabo {
                  itl != this->end() && itr != other.end();
                  ++itl, itr++) {
 
-                if ((*itl).getKey() != (*itr).getKey()) {
-                    return false;
-                }
-                if ((*itl).getType() != (*itr).getType()) {
+                if ((*itl).getKey() != (*itr).getKey() ||
+                    (*itl).getType() != (*itr).getType()) {
                     return false;
                 }
 
@@ -720,7 +718,6 @@ namespace karabo {
                 if (leftNodeAttrs.size() != rightNodeAttrs.size()) {
                     return false;
                 }
-
                 for (Hash::Attributes::const_iterator lAttrIt = leftNodeAttrs.begin(), rAttrIt = rightNodeAttrs.begin();
                      lAttrIt != leftNodeAttrs.end(), rAttrIt != rightNodeAttrs.end();
                      ++lAttrIt, ++rAttrIt) {
@@ -738,8 +735,11 @@ namespace karabo {
                 } else if ((*itl).getType() == Types::VECTOR_HASH) {
                     const auto& leftHashVector = (*itl).getValue<std::vector < Hash >> ();
                     const auto& rightHashVector = (*itr).getValue<std::vector < Hash >> ();
+                    if (leftHashVector.size() != rightHashVector.size()) {
+                        return false;
+                    }
                     for (size_t i = 0; i < leftHashVector.size(); i++) {
-                        if (leftHashVector[i].fullyEquals(rightHashVector[i])) {
+                        if (!leftHashVector[i].fullyEquals(rightHashVector[i])) {
                             return false;
                         }
                     }
