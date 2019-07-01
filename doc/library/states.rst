@@ -475,9 +475,9 @@ provided by Karabo.
 Calling ``returnMostSignificant`` from the ``StateSignifier`` without
 additional keywords will result in returning evaluation substates
 of ``STATIC`` and ``CHANGING``. A priority can be established between
-the two direct descendants of ``STATIC``, ``ACTIVE`` and ``PASSIVE``, and
-between the two direct descendants of ``CHANGING``, ``INCREASING`` and
-``DECREASING``. Those priorities can be controlled by the following
+the two direct descendants of ``STATIC`` (``ACTIVE`` and ``PASSIVE``) and
+between the two direct descendants of ``CHANGING`` (``INCREASING`` and
+``DECREASING``). Those priorities can be controlled by the following
 two keywords:
 
 staticSignificant = ``ACTIVE|PASSIVE``
