@@ -2,18 +2,15 @@ import operator
 import os
 
 from PyQt4 import uic
-from PyQt4.QtCore import pyqtSignal, pyqtSlot, Qt
+from PyQt4.QtCore import pyqtSlot, Qt
 from PyQt4.QtGui import QDialog, QSizePolicy, QSlider, QVBoxLayout
 
 from karabogui.util import SignalBlocker
 
-from ..utils import levels_almost_equal
-
 
 class LevelsDialog(QDialog):
-    set_image_levels_signal = pyqtSignal(object)
 
-    def __init__(self, levels, image_range, parent=None):
+    def __init__(self, levels, image_range, auto_levels, parent=None):
         super(LevelsDialog, self).__init__(parent)
         ui_path = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                'levels_dialog.ui')
@@ -21,8 +18,7 @@ class LevelsDialog(QDialog):
 
         # Check if autolevel: image levels and range are almost equal.
         # This is with a tolerance of 1%.
-        autolevel = levels_almost_equal(levels, image_range)
-        self.automatic_checkbox.setChecked(autolevel)
+        self.automatic_checkbox.setChecked(auto_levels)
         self.automatic_checkbox.stateChanged.connect(self.set_automatic_levels)
 
         self.min_slider = FloatSlider(FloatSlider.Minimum)
@@ -35,7 +31,7 @@ class LevelsDialog(QDialog):
         max_vbox.addWidget(self.max_slider)
         self.max_slider_widget.setLayout(max_vbox)
         self.max_slider.setTickPosition(QSlider.TicksBelow)
-        self.values_widget.setEnabled(not autolevel)
+        self.values_widget.setEnabled(not auto_levels)
 
         self.min_slider.valueChanged.connect(self._change_min_by_slider)
         self.min_spinbox.valueChanged.connect(self._change_min_by_spinbox)
@@ -50,36 +46,36 @@ class LevelsDialog(QDialog):
         self._set_minmax_values(image_range)
 
         # Set widget default values
-        default = image_range if autolevel else levels
+        default = image_range if auto_levels else levels
         self._set_default_values(default)
 
     def _set_minmax_values(self, levels):
         # Set widget min and max values
-        _min, _max = levels
+        min_level, max_level = levels
 
         for widget in self._min_widgets:
-            widget.setMinimumWidth(_min)
-            widget.setMaximum(_max)
+            widget.setMinimum(min_level)
+            widget.setMaximum(max_level)
         for widget in self._max_widgets:
-            widget.setMinimumWidth(_min)
-            widget.setMaximum(_max)
+            widget.setMinimum(min_level)
+            widget.setMaximum(max_level)
 
-        self.min_label.setText(str(_min))
-        self.max_label.setText(str(_max))
-        self.max_slider.setTickInterval(_max)
+        self.min_label.setText(str(min_level))
+        self.max_label.setText(str(max_level))
+        self.max_slider.setTickInterval(max_level)
 
     def _set_default_values(self, levels):
-        _min, _max = levels
+        min_level, max_level = levels
 
         for widget in self._min_widgets:
             with SignalBlocker(widget):
-                widget.setValue(_min)
+                widget.setValue(min_level)
         for widget in self._max_widgets:
             with SignalBlocker(widget):
-                widget.setValue(_max)
+                widget.setValue(max_level)
 
-        self.min_slider.setRestrictedValue(_max)
-        self.max_slider.setRestrictedValue(_min)
+        self.min_slider.setRestrictedValue(max_level)
+        self.max_slider.setRestrictedValue(min_level)
 
     @pyqtSlot()
     def _change_min_by_slider(self):
@@ -146,9 +142,8 @@ class FloatSlider(QSlider):
                  parent=None):
         super(FloatSlider, self).__init__(orientation, parent)
         self._multi = 10 ** decimals
-        self.setMinimum(self.minimum())
-        self.setMaximum(self.maximum())
-        self._restricted_value = self.minimum()
+        self._type = type_
+        self._restricted_value = None
         self.valueChanged.connect(self.restrictMove)
 
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
@@ -160,11 +155,23 @@ class FloatSlider(QSlider):
     def value(self):
         return float(super(FloatSlider, self).value()) / self._multi
 
+    def minimum(self):
+        return super(FloatSlider, self).minimum() / self._multi
+
+    def maximum(self):
+        return super(FloatSlider, self).maximum() / self._multi
+
     def setMinimum(self, value):
-        return super(FloatSlider, self).setMinimum(value * self._multi)
+        super(FloatSlider, self).setMinimum(value * self._multi)
+        if (self._restricted_value is None
+                and self._type == FloatSlider.Maximum):
+            self._restricted_value = value
 
     def setMaximum(self, value):
-        return super(FloatSlider, self).setMaximum(value * self._multi)
+        super(FloatSlider, self).setMaximum(value * self._multi)
+        if (self._restricted_value is None
+                and self._type == FloatSlider.Minimum):
+            self._restricted_value = value
 
     def setValue(self, value):
         super(FloatSlider, self).setValue(int(value * self._multi))
@@ -177,5 +184,6 @@ class FloatSlider(QSlider):
 
     @pyqtSlot()
     def restrictMove(self):
-        if self._compare(self.value(), self._restricted_value):
+        if (self._restricted_value is not None and
+                self._compare(self.value(), self._restricted_value)):
             self.setSliderPosition(int(self._restricted_value * self._multi))
