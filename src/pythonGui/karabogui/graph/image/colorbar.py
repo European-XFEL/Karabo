@@ -59,7 +59,9 @@ class ColorBarWidget(GraphicsWidget):
     @pyqtSlot()
     def _show_levels_dialog(self):
         image_range = self.imageItem.image.min(), self.imageItem.image.max()
-        dialog = LevelsDialog(self.imageItem.levels, image_range,
+        dialog = LevelsDialog(self.imageItem.levels,
+                              image_range,
+                              self.imageItem.auto_levels,
                               self.parent())
 
         if dialog.exec_() == QDialog.Accepted:
