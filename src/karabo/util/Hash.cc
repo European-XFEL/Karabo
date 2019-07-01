@@ -700,9 +700,26 @@ namespace karabo {
 
 
         bool Hash::fullyEquals(const Hash& other) const {
+
+            // Local lambda that verifies if two vectors of hashes are fully equal.
+            auto vectorsHashesEqual = [](const std::vector<Hash>& lvh, const std::vector<Hash>&rvh) -> bool {
+                if (lvh.size() != rvh.size()) {
+                    return false;
+                }
+                for (size_t i = 0; i < lvh.size(); i++) {
+                    if (!lvh[i].fullyEquals(rvh[i])) {
+                        return false;
+                    }
+                }
+                return true;
+            };
+
             if (this->size() != other.size()) {
                 return false;
             }
+
+            // Visits all the corresponding nodes of both hashes checking for equality of keys, values and
+            // attributes.
             for (Hash::const_iterator itl = this->begin(), itr = other.begin();
                  itl != this->end() && itr != other.end();
                  ++itl, itr++) {
@@ -712,41 +729,45 @@ namespace karabo {
                     return false;
                 }
 
-                auto leftNodeAttrs = (*itl).getAttributes();
-                auto rightNodeAttrs = (*itr).getAttributes();
-
+                // Checks the hash node attributes.
+                const Attributes& leftNodeAttrs = (*itl).getAttributes();
+                const Attributes& rightNodeAttrs = (*itr).getAttributes();
                 if (leftNodeAttrs.size() != rightNodeAttrs.size()) {
                     return false;
                 }
                 for (Hash::Attributes::const_iterator lAttrIt = leftNodeAttrs.begin(), rAttrIt = rightNodeAttrs.begin();
-                     lAttrIt != leftNodeAttrs.end(), rAttrIt != rightNodeAttrs.end();
-                     ++lAttrIt, ++rAttrIt) {
+                     lAttrIt != leftNodeAttrs.end(); ++lAttrIt, ++rAttrIt) {
                     if (lAttrIt->getKey() != rAttrIt->getKey() ||
-                        lAttrIt->getType() != rAttrIt->getType() ||
-                        lAttrIt->getValueAs<std::string>() != rAttrIt->getValueAs<std::string>()) {
+                        lAttrIt->getType() != rAttrIt->getType()) {
+                        return false;
+                    }
+                    if (lAttrIt->getType() == Types::HASH &&
+                        !lAttrIt->getValue<Hash>().fullyEquals(rAttrIt->getValue<Hash>())) {
+                        return false;
+                    } else if (lAttrIt->getType() == Types::VECTOR_HASH &&
+                               !vectorsHashesEqual(lAttrIt->getValue<std::vector < Hash >> (),
+                                                   rAttrIt->getValue<std::vector < Hash >> ())) {
+                        return false;
+                    } else if (lAttrIt->getValueAs<std::string>() != rAttrIt->getValueAs<std::string>()) {
                         return false;
                     }
                 }
 
+                // Checks the hash node values.
                 if ((*itl).getType() == Types::HASH) {
                     if (!(*itl).getValue<Hash>().fullyEquals((*itr).getValue<Hash>())) {
                         return false;
                     }
-                } else if ((*itl).getType() == Types::VECTOR_HASH) {
-                    const auto& leftHashVector = (*itl).getValue<std::vector < Hash >> ();
-                    const auto& rightHashVector = (*itr).getValue<std::vector < Hash >> ();
-                    if (leftHashVector.size() != rightHashVector.size()) {
-                        return false;
-                    }
-                    for (size_t i = 0; i < leftHashVector.size(); i++) {
-                        if (!leftHashVector[i].fullyEquals(rightHashVector[i])) {
-                            return false;
-                        }
-                    }
+                } else if ((*itl).getType() == Types::VECTOR_HASH &&
+                           !vectorsHashesEqual((*itl).getValue<std::vector < Hash >> (),
+                                               (*itr).getValue<std::vector < Hash >> ())) {
+                    return false;
                 } else if ((*itl).getValueAs<std::string>() != (*itr).getValueAs<std::string>()) {
                     return false;
                 }
             }
+
+            // If this point has been reached, all checks have been made and the input hashes are fully equal.
             return true;
         }
 
