@@ -22,9 +22,11 @@ glance.
     "KNOWN"[shape = box style=filled, fillcolor="#C8C8C8"]
     "STATIC"[shape = box style=filled, fillcolor="#00AA00"]
     "NORMAL"[shape = box style=filled, fillcolor="#C8C8C8"]
+    "PAUSED"[shape = box style=filled, fillcolor="#FF00FF"]
     "KNOWN" -> "NORMAL"
     "KNOWN" -> "ERROR"
     "KNOWN" -> "DISABLED"
+    "DISABLED" -> "PAUSED"
     "NORMAL" -> "STATIC"
     "NORMAL" -> "RUNNING"
     "RUNNING"[shape = box style=filled, fillcolor="#99CCFF"]
@@ -103,6 +105,13 @@ equal to ``NORMAL``.
 
 ``STATIC`` is itself a base state to the ``ACTIVE`` and ``PASSIVE`` states.
 It is the counterpart to the changing states and rarely used.
+
+.. graphviz::
+
+    digraph paused {PAUSED [shape=box, style=filled, fillcolor="#FF00FF"]}
+
+``PAUSED`` Data Acquisition will be paused while the device is in this state.
+[TODO: add better (or more complete) description for ``PAUSED``]
 
 .. graphviz::
 
@@ -345,6 +354,14 @@ in *trump* evaluation, where ``DISABLED`` is trumped by all other states and
             label = "RUNNING"
         ]
 
+        paused
+        [
+            shape = box
+            style = filled
+            fillcolor = "#FF00FF"
+            label = "PAUSED"
+        ]
+
         subgraph cluster1 {
             label = "CHANGING";
             style = filled
@@ -404,7 +421,8 @@ in *trump* evaluation, where ``DISABLED`` is trumped by all other states and
 
         disabled -> active [lhead=cluster0]
         active  -> running [ltail=cluster0]
-        running -> increasing [lhead=cluster1]
+        running -> paused
+        paused -> increasing [lhead=cluster1]
         decreasing -> interlocked [ltail=cluster1]
         interlocked -> error
         error -> init
@@ -470,7 +488,7 @@ changingSignificant = ``INCREASING|DECREASING``
 
 In rare scenarios states might need to be trumped differently. Developers can
 provide for a different trumping method in initialization of the ``StateSignifier``.
-A complete list of base states should be provided as the trump list, the order of which
+A list of base states should be provided as the trump list, the order of which
 determines trumping and provides the same ``returnMostSignificant`` method as in the
 default trumping implementation.
 
