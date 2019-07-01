@@ -2174,8 +2174,39 @@ void Hash_Test::testSimilarIsNotFullyEqual() {
     CPPUNIT_ASSERT_MESSAGE("h5 and h6 shouldn't be fullyEquals - they differ in vector of hash attribute",
                            !h5.fullyEquals(h6));
 
-    // Finally a case where two hashes with complex attributes and nodes are fullyEquals.
+    // A case where two hashes with complex attributes and nodes are fullyEquals.
     h6.setAttribute("a", "attr", vhAttr);
     CPPUNIT_ASSERT_MESSAGE("h5 and h6 should be fullyEquals!",
                            h5.fullyEquals(h6));
+
+    Hash h7("a", 1, "b", 2, "c", 3);
+    Hash h8("b", 2, "a", 1, "c", 3);
+    // Checks that hashes with keys in different order are still similar.
+    CPPUNIT_ASSERT_EQUAL(h7, h8);
+    // But are not fullyEqual.
+    CPPUNIT_ASSERT_MESSAGE("h7 and h8 shouldn't be fullyEquals - they differ in the order of their elements.",
+                           !h7.fullyEquals(h8));
+
+    Hash h9("a", 1, "b", 2, "c", "3");
+    // Checks that hashes with different value types for values that have the same string representation form are
+    // neither similar nor fullyEquals.
+    CPPUNIT_ASSERT_MESSAGE("h7 and h9 should not be similar, as their 'c' elements differ in type.",
+                           h7 != h9);
+    CPPUNIT_ASSERT_MESSAGE("h7 and h9 should not be fullyEquals, as their 'c' elements differ in type.",
+                           !h7.fullyEquals(h9));
+
+    Schema sch("hashSchema");
+    INT32_ELEMENT(sch).key("a").tags("prop").assignmentOptional().defaultValue(10).commit();
+    Hash h10("b", 2, "a", 1, "c", 3);
+    h10.setAttribute("c", "schema", sch);
+    h8.setAttribute("c", "schema", Schema("test"));
+    // Checks that hashes with different attributes of type schema are similar
+    CPPUNIT_ASSERT_EQUAL(h8, h10);
+    /*
+       TODO: this last assertion will only be true after the changes in MR !3592 (which fixes the text serialization
+             of Schema and vector<Hash> attributes) are merged. Until then, the assertion has been commented out.
+    */
+    // But are not fullyEquals
+    // CPPUNIT_ASSERT_MESSAGE("h8 and h10 should not be fullyEquals, as they have different values for attributes of type Schema ",
+    //                        !h8.fullyEquals(h10));
 }
