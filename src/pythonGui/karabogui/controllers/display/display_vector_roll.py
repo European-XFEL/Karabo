@@ -8,7 +8,7 @@ from PyQt4.QtGui import QAction, QInputDialog
 
 from karabo.common.scenemodel.api import (
     restore_graph_config, build_graph_config, VectorRollGraphModel)
-
+from karabo.native import Timestamp
 from karabogui.graph.common.api import AuxPlots
 from karabogui.graph.image.api import (
     KaraboImagePlot, KaraboImageView, RollImage)
@@ -32,6 +32,7 @@ class DisplayVectorRollGraph(BaseBindingController):
 
     _plot = Instance(KaraboImagePlot)
     _image = Instance(RollImage)
+    _timestamp = Instance(Timestamp, args=())
 
     def create_widget(self, parent):
         widget = KaraboImageView(parent=parent)
@@ -89,12 +90,17 @@ class DisplayVectorRollGraph(BaseBindingController):
         if value is None:
             return
 
-        self._image.add(value)
-        if self._image.data is None:
-            return
+        timestamp = proxy.binding.timestamp
+        if timestamp != self._timestamp:
+            # Get new timestamp reference!
+            self._timestamp = timestamp
 
-        if not self._plot.image_set:
-            self._plot.vb.setRange(xRange=(0, len(value)),
-                                   yRange=(0, self._image.stack))
+            self._image.add(value)
+            if self._image.data is None:
+                return
 
-        self._plot.setData(self._image.data, update=False)
+            if not self._plot.image_set:
+                self._plot.vb.setRange(xRange=(0, len(value)),
+                                       yRange=(0, self._image.stack))
+
+            self._plot.setData(self._image.data, update=False)
