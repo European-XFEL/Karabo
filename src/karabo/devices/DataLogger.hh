@@ -42,8 +42,7 @@ namespace karabo {
             typedef std::unordered_map<std::string, DeviceDataPointer> DeviceDataMap;
             DeviceDataMap m_perDeviceData;
             boost::mutex m_perDeviceDataMutex;
-            std::atomic<unsigned int> m_numConnected;
-
+            boost::mutex m_devicesNotLoggedMutex;
 
             boost::asio::deadline_timer m_flushDeadline;
             bool m_doFlushFiles;
