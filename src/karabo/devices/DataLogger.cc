@@ -46,6 +46,13 @@ namespace karabo {
                     .assignmentMandatory()
                     .commit();
 
+            VECTOR_STRING_ELEMENT(expected).key("devicesNotLogged")
+                    .displayedName("Devices not logged")
+                    .description("The devices that are not (yet or due to connection failures) logged")
+                    .readOnly()
+                    .initialValue(std::vector<std::string>())
+                    .commit();
+
             PATH_ELEMENT(expected).key("directory")
                     .displayedName("Directory")
                     .description("The directory where the log files should be placed")
@@ -176,7 +183,6 @@ namespace karabo {
 
         DataLogger::DataLogger(const Hash& input)
             : karabo::core::Device<>(input)
-            , m_numConnected(0u)
             , m_flushDeadline(karabo::net::EventLoop::getIOService())
             , m_doFlushFiles(true)
         {
@@ -212,8 +218,12 @@ namespace karabo {
 
         void DataLogger::initialize() {
 
+            const auto devsToLog(get<std::vector < std::string >> ("devicesToBeLogged"));
+            // In the beginning, all are not yet logged (no mutex needed since no parallel action triggered yet):
+            set("devicesNotLogged", devsToLog);
+
             std::string allFailures;
-            for (const std::string& deviceId : get<std::vector < std::string >> ("devicesToBeLogged")) {
+            for (const std::string& deviceId : devsToLog) {
                 // Locking mutex not yet needed - no parallelism on content of m_perDeviceData yet.
                 auto result = m_perDeviceData.insert(std::make_pair(deviceId, boost::make_shared<DeviceData>(deviceId)));
                 DeviceDataPointer& data = result.first->second;
@@ -367,7 +377,6 @@ namespace karabo {
 
             boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
             m_perDeviceData.erase(deviceId);
-            // FIXME: Should also update devicesToBeLogged and extend a new property of "failed devices".
             if (m_perDeviceData.empty()) {
                 // Nothing to do anymore, so commit suicide.
                 // FIXME: Maybe only as long as DataLoggerManager instantiates each DataLogger for a single device?
@@ -451,6 +460,18 @@ namespace karabo {
                            && configuration.has("_deviceId_")) {
                     // configuration is the requested full configuration at the beginning
                     data->m_initLevel = DeviceData::InitLevel::COMPLETE;
+
+                    // Update that now this device is logged (under lock to protect for parallel actions):
+                    boost::mutex::scoped_lock lock(m_devicesNotLoggedMutex);
+                    std::vector<std::string> notLogged = get<std::vector < std::string >> ("devicesNotLogged");
+                    const auto it = std::find(notLogged.begin(), notLogged.end(), deviceId);
+                    if (it != notLogged.end()) {
+                        notLogged.erase(it);
+                        set("devicesNotLogged", notLogged);
+                    } else {
+                        // Should never come here...
+                        KARABO_LOG_FRAMEWORK_WARN << "Erasing '" << deviceId << "' from not yet logged devices failed!";
+                    }
                 } else {
                     // connected, but requested full configuration not yet arrived - ignore these updates
                     // FIXME: to DEBUG?
