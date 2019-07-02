@@ -116,14 +116,13 @@ class DisplayScatterGraph(BaseBindingController):
             self._reset_plot(reset=value)
         elif proxy is self._x_proxy:
             self._last_x_value = value
-        elif proxy is self._y_proxy:
-            if self._last_x_value is not None:
+        elif proxy is self._y_proxy and self._last_x_value is not None:
+            timestamp = proxy.binding.timestamp
+            if self.widget is not None and timestamp != self._timestamp:
+                self._timestamp = timestamp
                 self._x_values.append(self._last_x_value)
                 self._y_values.append(value)
-                timestamp = proxy.binding.timestamp
-                if self.widget is not None and timestamp != self._timestamp:
-                    self._plot.setData(self._x_values, self._y_values)
-                    self._timestamp = timestamp
+                self._plot.setData(self._x_values, self._y_values)
 
     # ----------------------------------------------------------------
     # Qt Slots
