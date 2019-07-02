@@ -2180,7 +2180,7 @@ void Hash_Test::testSimilarIsNotFullyEqual() {
                            h5.fullyEquals(h6));
 
     Hash h7("a", 1, "b", 2, "c", 3);
-    Hash h8("b", 2, "a", 1, "c", 3);
+    Hash h8("b", 1, "a", 2, "c", 3);
     // Checks that hashes with keys in different order are still similar.
     CPPUNIT_ASSERT_EQUAL(h7, h8);
     // But are not fullyEqual.
