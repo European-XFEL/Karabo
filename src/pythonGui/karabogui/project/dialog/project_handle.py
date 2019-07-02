@@ -317,11 +317,21 @@ class NewProjectDialog(QDialog):
         self.leTitle.setFocus()
         self.leTitle.selectAll()
         self.leTitle.setValidator(validator)
+        self.leTitle.textChanged.connect(self.validate)
+        self.validate()
 
         self.event_map = {
             KaraboEvent.ProjectDomainsList: self._event_item_list
         }
         register_for_broadcasts(self.event_map)
+
+    # -----------------------------------------------------------------------
+    # PyQt Slots
+
+    @pyqtSlot()
+    def validate(self):
+        enabled = self.leTitle.hasAcceptableInput()
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
 
     # -----------------------------------------------------------------------
     # Karabo Events
