@@ -65,7 +65,7 @@ class TestImageGraph(GuiTestCase):
         roi_controller.add(ROITool.Crosshair, (35, 35))
         roi_controller.add(ROITool.Rect, (15, 15), (10, 10))
 
-        expected_configs = {ROITool.Crosshair: [(49.5, 49.5), (34.5, 34.5)],
+        expected_configs = {ROITool.Crosshair: [(50, 50), (35, 35)],
                             ROITool.Rect: [(15, 15, 10, 10)]}
 
         # Assert the expected configuration
@@ -105,7 +105,7 @@ class TestImageGraph(GuiTestCase):
         widget = controller.widget
 
         # Assert ROI configuration
-        expected_roi_config = {ROITool.Crosshair: (14.5, 14.5),
+        expected_roi_config = {ROITool.Crosshair: (15, 15),
                                ROITool.Rect: (25, 25, 10, 10)}
 
         for tool, roi_items in widget.roi.roi_items.items():

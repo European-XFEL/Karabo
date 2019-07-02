@@ -13,7 +13,14 @@ class CrosshairROI(KaraboROI):
 
     def __init__(self, pos=None, size=(1, 1),
                  scale_snap=False, translate_snap=False, pen=None):
-        super(CrosshairROI, self).__init__(pos, size,
+        """Reimplementation of pyqtgraph CrosshairROI to support transforms
+        and add a few fixes/performance improvements:
+
+        - Correct position according to snap rules
+          (+ scale/2, where scale = 1)
+        - Force redraw the crosshair shape with sigRegionChanged"""
+
+        super(CrosshairROI, self).__init__(pos + 0.5, size,
                                            scale_snap, translate_snap,
                                            pen=pen)
         self._shape = None

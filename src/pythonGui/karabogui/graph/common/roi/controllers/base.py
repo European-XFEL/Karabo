@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
-from pyqtgraph import ROI
+from pyqtgraph import Point, ROI
 
 from karabogui.graph.common.toolbar import ROITool
 from karabogui.graph.common.roi.crosshair import CrosshairROI
@@ -73,6 +73,7 @@ class BaseROIController(QObject):
             current_item=True):
         # Get the ROI class
         roi_class = self.TOOL_MAP[tool]
+        pos = Point(pos)
 
         if size is not None:
             roi_item = roi_class(pos=pos, size=size,
