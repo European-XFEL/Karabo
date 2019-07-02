@@ -12,6 +12,7 @@ from traits.api import Any, Callable, Instance
 
 
 from karabo.common.scenemodel.api import build_model_config, ScatterGraphModel
+from karabo.native import Timestamp
 from karabogui.binding.api import (
     get_binding_value, BoolBinding, FloatBinding, IntBinding, PropertyProxy)
 from karabogui.controllers.api import (
@@ -48,6 +49,8 @@ class DisplayScatterGraph(BaseBindingController):
     _last_x_value = Any
     _plot = Instance(ScatterGraphPlot)
     _resetbox_linked = Callable
+
+    _timestamp = Instance(Timestamp, args=())
 
     def create_widget(self, parent):
 
@@ -113,12 +116,13 @@ class DisplayScatterGraph(BaseBindingController):
             self._reset_plot(reset=value)
         elif proxy is self._x_proxy:
             self._last_x_value = value
-        elif proxy is self._y_proxy:
-            if self._last_x_value is not None:
+        elif proxy is self._y_proxy and self._last_x_value is not None:
+            timestamp = proxy.binding.timestamp
+            if self.widget is not None and timestamp != self._timestamp:
+                self._timestamp = timestamp
                 self._x_values.append(self._last_x_value)
                 self._y_values.append(value)
-                if self.widget is not None:
-                    self._plot.setData(self._x_values, self._y_values)
+                self._plot.setData(self._x_values, self._y_values)
 
     # ----------------------------------------------------------------
     # Qt Slots

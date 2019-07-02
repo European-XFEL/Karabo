@@ -3,10 +3,10 @@ from unittest.mock import patch
 from ..display_scatter import DisplayScatterGraph
 from karabo.common.scenemodel.api import ScatterGraphModel
 
-from karabo.native import Configurable, Double
+from karabo.native import Configurable, Double, Hash, Timestamp
 from karabogui.binding.proxy import PropertyProxy
 from karabogui.testing import (GuiTestCase, get_class_property_proxy,
-                               set_proxy_value)
+                               set_proxy_hash, set_proxy_value)
 
 
 class Object(Configurable):
@@ -36,6 +36,17 @@ class TestScatterGraph(GuiTestCase):
         set_proxy_value(self.x, 'x', 2.1)
         set_proxy_value(self.y, 'y', 3.2)
         curve = self.controller._plot
+        self.assertEqual(list(curve.getData()), [2.1, 3.2])
+
+    def test_scatter_timestamp(self):
+        timestamp = Timestamp()
+        set_proxy_value(self.x, 'x', 2.1)
+        h = Hash('y', 3.2)
+        set_proxy_hash(self.y, h, timestamp)
+        curve = self.controller._plot
+        self.assertEqual(list(curve.getData()), [2.1, 3.2])
+        h = Hash('y', 13.2)
+        set_proxy_hash(self.y, h, timestamp)
         self.assertEqual(list(curve.getData()), [2.1, 3.2])
 
     def test_deque(self):
