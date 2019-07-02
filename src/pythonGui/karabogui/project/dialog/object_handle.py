@@ -7,7 +7,7 @@ import os.path as op
 
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QDialog
+from PyQt4.QtGui import QDialog, QDialogButtonBox
 
 from karabogui.util import InputValidator, SignalBlocker
 
@@ -79,8 +79,14 @@ class ObjectEditDialog(QDialog):
 
         validator = InputValidator()
         self.leTitle.setValidator(validator)
-
+        self.leTitle.textChanged.connect(self.validate)
         self.setWindowTitle(title)
+        self.validate()
+
+    @pyqtSlot()
+    def validate(self):
+        enabled = self.leTitle.hasAcceptableInput()
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
 
     @property
     def simple_name(self):
