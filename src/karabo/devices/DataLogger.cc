@@ -274,8 +274,8 @@ namespace karabo {
                 // Now connect to device
                 data->m_initLevel = DeviceData::InitLevel::STARTED;
                 asyncConnect(deviceId, "signalSchemaUpdated", "", "slotSchemaUpdated",
-                             util::bind_weak(&DataLogger::handleSchemaConnected, this, false, data, counter),
-                             util::bind_weak(&DataLogger::handleSchemaConnected, this, true, data, counter));
+                             util::bind_weak(&DataLogger::handleSchemaConnected, this, data, counter),
+                             util::bind_weak(&DataLogger::handleFailure, this, "connecting to schema for", data, counter));
                 // Final steps until DataLogger is properly initialised for this device are treated in a chain of async handlers:
                 // - If signalSchemaUpdated connected, request current schema;
                 // - if that arrived, connect to both signal(State)Changed;
@@ -288,69 +288,59 @@ namespace karabo {
         }
 
 
-        void DataLogger::handleSchemaConnected(bool failure, const DeviceDataPointer& data,
+        void DataLogger::handleFailure(const std::string& reason, const DeviceDataPointer& data,
+                                       const boost::shared_ptr<std::atomic<unsigned int> >& counter) {
+
+            const std::string& deviceId = data->m_deviceToBeLogged;
+            try {
+                throw; // This will tell us which exception triggered the call to this error handler.
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_INFO << "Failed " << reason << " " << deviceId << ": " << e.what();
+            }
+            checkReady(*counter);
+            stopLogging(deviceId);
+        }
+
+
+        void DataLogger::handleSchemaConnected(const DeviceDataPointer& data,
                                                const boost::shared_ptr<std::atomic<unsigned int> >& counter) {
             const std::string& deviceId = data->m_deviceToBeLogged;
-            if (failure) {
-                try {
-                    throw; // This will tell us which exception triggered the call to this error handler.
-                } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_INFO << "Failed connecting to schema for " << deviceId << ": " << e.what();
-                }
-                checkReady(*counter);
-                stopLogging(deviceId);
-                return;
-            }
             KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Requesting slotGetSchema (receiveAsync) for " << deviceId;
 
             request(deviceId, "slotGetSchema", false)
                     .receiveAsync<karabo::util::Schema, std::string>
-                    (util::bind_weak(&DataLogger::handleSchemaReceived, this, false, _1, _2, data, counter),
-                     util::bind_weak(&DataLogger::handleSchemaReceived, this, true, Schema(), deviceId, data, counter));
+                    (util::bind_weak(&DataLogger::handleSchemaReceived, this, _1, _2, data, counter),
+                     util::bind_weak(&DataLogger::handleFailure, this, "receiving schema from", data, counter));
         }
 
 
-        void DataLogger::handleSchemaReceived(bool failure, const karabo::util::Schema& schema, const std::string& deviceId,
+        void DataLogger::handleSchemaReceived(const karabo::util::Schema& schema, const std::string& deviceId,
                                               const DeviceDataPointer& data,
                                               const boost::shared_ptr<std::atomic<unsigned int> >& counter) {
-
-            if (failure) {
-                try {
-                    throw; // This will tell us which exception triggered the call to this error handler.
-                } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_INFO << "Failed receiving schema from " << deviceId << ": " << e.what();
-                }
-                checkReady(*counter);
-                stopLogging(deviceId);
-                return;
-            }
-            // Should request slot to be able to get rid of mutexes in DeviceData!:
-            // Set initial Schema - needed for receiving properly in slotChanged
-            slotSchemaUpdated(schema, deviceId); // FIXME: fine to call slot directly? Problems with parallelity? strand?
-
-            // Now connect concurrently both, signalStateChanged and signalChanged, to the same slot.
-            asyncConnect({SignalSlotConnection(deviceId, "signalStateChanged", "", "slotChanged"),
-                         SignalSlotConnection(deviceId, "signalChanged", "", "slotChanged")},
-                         util::bind_weak(&DataLogger::handleConfigConnected, this, false, data, counter),
-                         util::bind_weak(&DataLogger::handleConfigConnected, this, true, data, counter));
+            // We need to store the received schema and then connect to configuration updates.
+            // Since the first should not be done concurrently, we just post to the strand here:
+            data->m_strand->post(util::bind_weak(&DataLogger::handleSchemaReceived2, this, schema, data, counter));
         }
 
 
-        void DataLogger::handleConfigConnected(bool failure, const DeviceDataPointer& data,
+        void DataLogger::handleSchemaReceived2(const karabo::util::Schema& schema, const DeviceDataPointer& data,
+                                               const boost::shared_ptr<std::atomic<unsigned int> >& counter) {
+
+            // Set initial Schema - needed for receiving properly in slotChanged
+            handleSchemaUpdated(schema, data);
+
+            // Now connect concurrently both, signalStateChanged and signalChanged, to the same slot.
+            asyncConnect({SignalSlotConnection(data->m_deviceToBeLogged, "signalStateChanged", "", "slotChanged"),
+                         SignalSlotConnection(data->m_deviceToBeLogged, "signalChanged", "", "slotChanged")},
+                         util::bind_weak(&DataLogger::handleConfigConnected, this, data, counter),
+                         util::bind_weak(&DataLogger::handleFailure, this, "receiving configuration from", data, counter));
+        }
+
+
+        void DataLogger::handleConfigConnected(const DeviceDataPointer& data,
                                                const boost::shared_ptr<std::atomic<unsigned int> >& counter) {
 
             const std::string& deviceId = data->m_deviceToBeLogged;
-            if (failure) {
-                try {
-                    throw; // This will tell us which exception triggered the call to this error handler.
-                } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_INFO << "Failed receiving configuration from " << deviceId << ": " << e.what();
-                }
-                checkReady(*counter);
-                stopLogging(deviceId);
-                return;
-            }
-
             data->m_initLevel = DeviceData::InitLevel::CONNECTED;
             KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Requesting " << deviceId << ".slotGetConfiguration (no wait)";
             requestNoWait(deviceId, "slotGetConfiguration", "", "slotChanged");

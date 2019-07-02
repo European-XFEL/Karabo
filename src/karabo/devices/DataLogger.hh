@@ -96,15 +96,21 @@ namespace karabo {
             // FIXME: May need AsyncReply??
             void handleTagDeviceToBeDiscontinued(const bool wasValidUpToNow, const char reason, DeviceDataPointer data);
 
-            void handleSchemaConnected(bool failure, const DeviceDataPointer& data,
+            void handleFailure(const std::string& reason, const DeviceDataPointer& data,
+                               const boost::shared_ptr<std::atomic<unsigned int> >& counter);
+
+            void handleSchemaConnected(const DeviceDataPointer& data,
                                        const boost::shared_ptr<std::atomic<unsigned int> >& counter);
 
-            void handleSchemaReceived(bool failure, const karabo::util::Schema& schema, const std::string& deviceId,
+            void handleSchemaReceived(const karabo::util::Schema& schema, const std::string& deviceId,
                                       const DeviceDataPointer& data,
                                       const boost::shared_ptr<std::atomic<unsigned int> >& counter);
 
+            void handleSchemaReceived2(const karabo::util::Schema& schema, const DeviceDataPointer& data,
+                                       const boost::shared_ptr<std::atomic<unsigned int> >& counter);
+
             /// Helper for connecting to both signalChanged and signalStateChanged
-            void handleConfigConnected(bool failure, const DeviceDataPointer& data,
+            void handleConfigConnected(const DeviceDataPointer& data,
                                        const boost::shared_ptr<std::atomic<unsigned int> >& counter);
 
             void checkReady(std::atomic<unsigned int>& counter);
