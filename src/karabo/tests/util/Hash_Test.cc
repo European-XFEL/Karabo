@@ -2202,11 +2202,7 @@ void Hash_Test::testSimilarIsNotFullyEqual() {
     h8.setAttribute("c", "schema", Schema("test"));
     // Checks that hashes with different attributes of type schema are similar
     CPPUNIT_ASSERT_EQUAL(h8, h10);
-    /*
-       TODO: this last assertion will only be true after the changes in MR !3592 (which fixes the text serialization
-             of Schema and vector<Hash> attributes) are merged. Until then, the assertion has been commented out.
-    */
     // But are not fullyEquals
-    // CPPUNIT_ASSERT_MESSAGE("h8 and h10 should not be fullyEquals, as they have different values for attributes of type Schema ",
-    //                        !h8.fullyEquals(h10));
+    CPPUNIT_ASSERT_MESSAGE("h8 and h10 should not be fullyEquals, as they have different values for attributes of type Schema ",
+                           !h8.fullyEquals(h10));
 }
