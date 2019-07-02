@@ -5,9 +5,9 @@ from PyQt4 import QtGui
 
 from ..display_vector_roll import DisplayVectorRollGraph
 from karabo.common.scenemodel.api import VectorRollGraphModel
-from karabo.native import Configurable, VectorInt32
+from karabo.native import Configurable, Hash, Timestamp, VectorInt32
 from karabogui.testing import (
-    GuiTestCase, get_class_property_proxy, set_proxy_value)
+    GuiTestCase, get_class_property_proxy, set_proxy_hash, set_proxy_value)
 
 
 class Object(Configurable):
@@ -40,6 +40,20 @@ class TestVectorRollGraph(GuiTestCase):
         set_proxy_value(self.proxy, 'prop', value)
         image = self.controller._image
         np.testing.assert_almost_equal(image.data[0], value)
+
+    def test_set_value_timestamp(self):
+        """Test the value setting with same timestamp in VectorRollGraph"""
+        plot = self.controller._plot
+        self.assertIsNotNone(plot)
+        timestamp = Timestamp()
+        h = Hash('prop', [2, 4, 6])
+        set_proxy_hash(self.proxy, h, timestamp)
+        image = self.controller._image
+        np.testing.assert_almost_equal(image.data[0], [2, 4, 6])
+        h = Hash('prop', [22, 34, 16])
+        set_proxy_hash(self.proxy, h, timestamp)
+        image = self.controller._image
+        np.testing.assert_almost_equal(image.data[0], [2, 4, 6])
 
     def test_image_stack_configuration(self):
         controller = DisplayVectorRollGraph(proxy=self.proxy,
