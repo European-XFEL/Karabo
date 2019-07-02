@@ -2121,3 +2121,92 @@ void Hash_Test::testKeys() {
     CPPUNIT_ASSERT(c1.has("b"));
     CPPUNIT_ASSERT_EQUAL(1ul, c1.size()); // dito
 }
+
+
+void Hash_Test::testSimilarIsNotFullyEqual() {
+    Hash h1("a", 1, "a.b", "value", "a.c", true);
+    Hash h2("a1", 1, "a1.b", "value", "a1.c", true);
+
+    // Checks that hashes with elements with different keys of the same type and in the same order
+    // are still similar.
+    CPPUNIT_ASSERT_EQUAL(h1, h2); // 'Hash::operator==' actually checks for similarity.
+    // But are not fullyEqual
+    CPPUNIT_ASSERT_MESSAGE("h1 and h2 shouldn't be fullyEquals - they differ in key names.",
+                           !h1.fullyEquals(h2));
+
+    Hash h3("a1", 1, "a1.b", "value", "a1.c", false);
+    // Checks that hashes with elements with different values of the same type and in the same
+    // order are still similar.
+    CPPUNIT_ASSERT_EQUAL(h2, h3); // 'Hash::operator==' actually checks for similarity.
+    // But are not fullyEqual
+    CPPUNIT_ASSERT_MESSAGE("h2 and h3 shouldn't be fullyEquals - they differ in key values.",
+                           !h2.fullyEquals(h3));
+
+    Hash h4("a1", 1, "a1.b", "value", "a1.c", true);
+    h4.setAttribute("a1", "attr", true);
+    h2.setAttribute("a1", "attr", 4);
+    // Checks that hashes with elements with different attributes, with the same value, of the
+    // same type and in the same order are still similar.
+    CPPUNIT_ASSERT_EQUAL(h2, h4); // 'Hash::operator==' actually checks for similarity.
+    // But are not fullyEqual
+    CPPUNIT_ASSERT_MESSAGE("h4 and h2 shouldn't be fullyEquals - they differ in element attributes.",
+                           !h2.fullyEquals(h4));
+
+    Hash h5("a", 13.14159,
+            "b[0]", Hash("hKey_0", "hValue_0"),
+            "b[1]", Hash("hKey_1", "hValue_1"),
+            "c", "1, 1, 2, 3, 5, 8, 11, 19, 30");
+    Hash h6("a", 13.14159,
+            "b[0]", Hash("hKey_0", "hValue_0"),
+            "b[1]", Hash("hKey_1", "hValue_1"),
+            "c", "1, 1, 2, 3, 5, 8, 11, 19, 30, 49, 79");
+    // Repeats the test for hashes differing in node value, but this time with one
+    // complex node, of type vector of hashes, that matches. The hashes are similar ...
+    CPPUNIT_ASSERT_EQUAL(h5, h6); // 'Hash::operator==' actually checks for similarity.
+    // But are not fullyEqual
+    CPPUNIT_ASSERT_MESSAGE("h5 and h6 shouldn't be fullyEquals - they differ in element values.",
+                           !h5.fullyEquals(h6));
+
+    vector<Hash>vhAttr{Hash("key_0", "val_0"), Hash("key_1", "val_1")};
+    h5.setAttribute("a", "attr", vhAttr);
+    h6.setAttribute("a", "attr", 2);
+    h6.set<std::string>("c", "1, 1, 2, 3, 5, 8, 11, 19, 30");
+    CPPUNIT_ASSERT_MESSAGE("h5 and h6 shouldn't be fullyEquals - they differ in vector of hash attribute",
+                           !h5.fullyEquals(h6));
+
+    // A case where two hashes with complex attributes and nodes are fullyEquals.
+    h6.setAttribute("a", "attr", vhAttr);
+    CPPUNIT_ASSERT_MESSAGE("h5 and h6 should be fullyEquals!",
+                           h5.fullyEquals(h6));
+
+    Hash h7("a", 1, "b", 2, "c", 3);
+    Hash h8("b", 1, "a", 2, "c", 3);
+    // Checks that hashes with keys in different order are still similar.
+    CPPUNIT_ASSERT_EQUAL(h7, h8);
+    // But are not fullyEqual.
+    CPPUNIT_ASSERT_MESSAGE("h7 and h8 shouldn't be fullyEquals - they differ in the order of their elements.",
+                           !h7.fullyEquals(h8));
+
+    Hash h9("a", 1, "b", 2, "c", "3");
+    // Checks that hashes with different value types for values that have the same string representation form are
+    // neither similar nor fullyEquals.
+    CPPUNIT_ASSERT_MESSAGE("h7 and h9 should not be similar, as their 'c' elements differ in type.",
+                           h7 != h9);
+    CPPUNIT_ASSERT_MESSAGE("h7 and h9 should not be fullyEquals, as their 'c' elements differ in type.",
+                           !h7.fullyEquals(h9));
+
+    Schema sch("hashSchema");
+    INT32_ELEMENT(sch).key("a").tags("prop").assignmentOptional().defaultValue(10).commit();
+    Hash h10("b", 2, "a", 1, "c", 3);
+    h10.setAttribute("c", "schema", sch);
+    h8.setAttribute("c", "schema", Schema("test"));
+    // Checks that hashes with different attributes of type schema are similar
+    CPPUNIT_ASSERT_EQUAL(h8, h10);
+    /*
+       TODO: this last assertion will only be true after the changes in MR !3592 (which fixes the text serialization
+             of Schema and vector<Hash> attributes) are merged. Until then, the assertion has been commented out.
+    */
+    // But are not fullyEquals
+    // CPPUNIT_ASSERT_MESSAGE("h8 and h10 should not be fullyEquals, as they have different values for attributes of type Schema ",
+    //                        !h8.fullyEquals(h10));
+}
