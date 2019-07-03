@@ -1,8 +1,4 @@
-/*
- * $Id$
- *
- * Author:
- *
+/**
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
@@ -13,6 +9,7 @@
 #include <fstream>
 
 #include "karabo/util/DataLogUtils.hh"
+#include "karabo/net/Strand.hh"
 #include "karabo/core/Device.hh"
 
 
@@ -26,54 +23,37 @@ namespace karabo {
      */
     namespace devices {
 
+        struct DeviceData;
+        typedef boost::shared_ptr<DeviceData> DeviceDataPointer;
+
         /**
          * @class DataLogger
-         * @brief A DataLogger device is created on a 1:1 mapping for each device in the distributed
-         *        system and logs its slow control data.
+         * @brief A DataLogger device is assigned devices in the distributed
+         * system and logs their slow control data.
          * 
-         * A DataLogger device is created on a 1:1 mapping for each device in the distributed
-         * system and logs its slow control data. DataLoggers are managed by the
-         * karabo::devices::DataLoggerManager. Information is passed to them using a dedicated p2p
-         * channel, thus logging does not result in additional broker load.
+         * DataLoggers are managed by the karabo::devices::DataLoggerManager.
+         *
+         * FIXME:
          * When it is ready to log data its state changes from INIT to NORMAL.
          */
         class DataLogger : public karabo::core::Device<> {
 
-            std::string m_deviceToBeLogged;
+            // https://www.quora.com/Is-it-thread-safe-to-write-to-distinct-keys-different-key-for-each-thread-in-a-std-map-in-C-for-keys-that-have-existing-entries-in-the-map
+            typedef std::unordered_map<std::string, DeviceDataPointer> DeviceDataMap;
+            DeviceDataMap m_perDeviceData;
+            boost::mutex m_perDeviceDataMutex;
+            std::atomic<unsigned int> m_numConnected;
 
-            boost::mutex m_currentSchemaMutex;
-            karabo::util::Schema m_currentSchema;
-            bool m_currentSchemaChanged;
-
-            karabo::util::Schema m_schemaForSlotChanged; // only use within slotChanged
-
-            boost::mutex m_configMutex;
-            std::fstream m_configStream;
-
-            unsigned int m_lastIndex;
-            std::string m_user;
-            boost::mutex m_lastTimestampMutex;
-            karabo::util::Timestamp m_lastDataTimestamp;
-            bool m_updatedLastTimestamp;
-            bool m_pendingLogin;
-
-            std::map<std::string, karabo::util::MetaData::Pointer> m_idxMap; // protect by m_configMutex!
-            std::vector<std::string> m_idxprops; // needs no mutex as long as used only in slotChanged
-            size_t m_propsize;
-            time_t m_lasttime;
 
             boost::asio::deadline_timer m_flushDeadline;
             bool m_doFlushFiles;
             unsigned int m_flushInterval;
 
-            // Only for initialisation - counting connections to signalChanged and signalStateChanged
-            boost::mutex m_numChangedConnectedMutex;
-            int m_numChangedConnected;
-            karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_serializer;
+
 
         public:
 
-            KARABO_CLASSINFO(DataLogger, "DataLogger", "1.0")
+            KARABO_CLASSINFO(DataLogger, "DataLogger", "2.6")
 
             static void expectedParameters(karabo::util::Schema& expected);
 
@@ -87,15 +67,20 @@ namespace karabo {
 
             void slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId);
 
-            /// Helper function to update m_idxprops, returns whether m_idxprops changed.
-            bool updatePropsToIndex();
+            // FIXME: May want AsyncReply??
+            void handleChanged(const karabo::util::Hash& config, const DeviceDataPointer& data);
+
+            /// Helper function to update data.m_idxprops, returns whether data.m_idxprops changed.
+            bool updatePropsToIndex(DeviceData& data);
 
             /// Helper to ensure archive file is closed.
-            /// Must be called under protection of the 'm_configMutex' mutex.
-            void ensureFileClosed();
+            /// Must be called under protection of the 'data.m_configMutex' mutex.
+            void ensureFileClosed(DeviceData& data);
 
             void slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
 
+            // FIXME: May want AsyncReply??
+            void handleSchemaUpdated(const karabo::util::Schema& schema, const DeviceDataPointer& data);
             /**
              * This tags a device to be discontinued, three cases have to be distinguished
              *
@@ -106,17 +91,20 @@ namespace karabo {
              * This slot will be called by the DataLoggerManager
              *
              */
-            void slotTagDeviceToBeDiscontinued(const bool wasValidUpToNow, const char reason);
+            void slotTagDeviceToBeDiscontinued(const bool wasValidUpToNow, const char reason, const std::string& deviceId);
+
+            // FIXME: May need AsyncReply??
+            void handleTagDeviceToBeDiscontinued(const bool wasValidUpToNow, const char reason, DeviceDataPointer data);
 
             /// Helper used as error callback that triggers device suicide.
             void errorToDieHandle(const std::string& reason) const;
 
-            void handleSchemaConnected();
+            void handleSchemaConnected(const std::string& deviceId);
 
             void handleSchemaReceived(const karabo::util::Schema& schema, const std::string& deviceId);
 
             /// Helper for connecting to both signalChanged and signalStateChanged
-            void handleConfigConnected();
+            void handleConfigConnected(const std::string& deviceId);
 
             int determineLastIndex(const std::string& deviceId);
 
@@ -150,7 +138,7 @@ namespace karabo {
              */
             void getPathsForConfiguration(const karabo::util::Hash& configuration,
                                           const karabo::util::Schema& schema,
-                                          std::vector<std::string>& paths);
+                                          std::vector<std::string>& paths) const;
 
         };
     }
