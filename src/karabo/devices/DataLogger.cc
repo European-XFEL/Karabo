@@ -193,7 +193,7 @@ namespace karabo {
             // Register slots in constructor to ensure existence when sending instanceNew
             KARABO_SLOT(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
             KARABO_SLOT(slotSchemaUpdated, Schema /*changedSchema*/, string /*deviceId*/);
-            KARABO_SLOT(slotTagDeviceToBeDiscontinued, bool /*wasValidUpToNow*/, char /*reason*/, std::string /*deviceId*/);
+            KARABO_SLOT(slotTagDeviceToBeDiscontinued, string /*reason*/, string /*deviceId*/);
             KARABO_SLOT(flush);
 
             KARABO_INITIAL_FUNCTION(initialize)
@@ -207,7 +207,7 @@ namespace karabo {
                 for (auto it = m_perDeviceData.begin(), itEnd = m_perDeviceData.end(); it != itEnd; ++it) {
                     // Although not posted to it->second.m_strand, no problem with synchronisation since posted handlers
                     // won't run anymore due to their bind_weak and the fact that we are already in the destructor.
-                    handleTagDeviceToBeDiscontinued(true, 'L', it->second);
+                    handleTagDeviceToBeDiscontinued("L", it->second);
                 }
             }
             m_doFlushFiles = false;
@@ -370,7 +370,7 @@ namespace karabo {
         void DataLogger::stopLogging(const std::string& deviceId) {
 
             // Avoid automatic reconnects -
-            // if not all signals connected or device is already dead, this triggers some WARNings:
+            // if not all signals connected or device is already dead, this triggers some (delayed) WARNings:
             asyncDisconnect(deviceId, "signalSchemaUpdated", "", "slotSchemaUpdated");
             asyncDisconnect(deviceId, "signalStateChanged", "", "slotChanged");
             asyncDisconnect(deviceId, "signalChanged", "", "slotChanged");
@@ -384,9 +384,12 @@ namespace karabo {
             }
         }
 
-        void DataLogger::slotTagDeviceToBeDiscontinued(const bool wasValidUpToNow, const char reason, const std::string& deviceId) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "slotTagDeviceToBeDiscontinued " << wasValidUpToNow << " '" << reason
-                    << "' for " << deviceId;
+
+        void DataLogger::slotTagDeviceToBeDiscontinued(const std::string& reason, const std::string& deviceId) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "slotTagDeviceToBeDiscontinued '" << reason << "' for " << deviceId;
+
+            removeFrom(deviceId, "devicesToBeLogged");
+            removeFrom(deviceId, "devicesNotLogged"); // just in case it was a problematic one
 
             boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
             DeviceDataMap::iterator it = m_perDeviceData.find(deviceId);
@@ -395,8 +398,13 @@ namespace karabo {
                 // called by DeviceData destructor? (After check that it was CONNECTED or COMPLETE?)
                 DeviceDataPointer& data = it->second;
                 data->m_strand->post(karabo::util::bind_weak(&DataLogger::handleTagDeviceToBeDiscontinued, this,
-                                                             wasValidUpToNow, reason, data));
+                                                             reason, data));
                 m_perDeviceData.erase(it);
+                // Disconnect to avoid further messages and automatic reconnects.
+                // If not all signals connected or device is already dead, this triggers some (delayed) WARNings:
+                asyncDisconnect(deviceId, "signalSchemaUpdated", "", "slotSchemaUpdated");
+                asyncDisconnect(deviceId, "signalStateChanged", "", "slotChanged");
+                asyncDisconnect(deviceId, "signalChanged", "", "slotChanged");
             } else {
                 // FIXME: Downgrade to DEBUG since can happen when list of treated devices is just reduced
                 KARABO_LOG_FRAMEWORK_WARN << "slotTagDeviceToBeDiscontinued called for non-treated device " << deviceId << ".";
@@ -404,10 +412,9 @@ namespace karabo {
         }
 
 
-        void DataLogger::handleTagDeviceToBeDiscontinued(const bool wasValidUpToNow, const char reason, DeviceDataPointer data) {
+        void DataLogger::handleTagDeviceToBeDiscontinued(const std::string& reason, DeviceDataPointer data) {
             const std::string& deviceId = data->m_deviceToBeLogged;
-            KARABO_LOG_FRAMEWORK_DEBUG << "handleTagDeviceToBeDiscontinued " << wasValidUpToNow << " '" << reason
-                    << "' for " << deviceId;
+            KARABO_LOG_FRAMEWORK_DEBUG << "handleTagDeviceToBeDiscontinued '" << reason << "' for " << deviceId;
 
             try {
                 boost::mutex::scoped_lock lock(data->m_configMutex);
@@ -462,16 +469,7 @@ namespace karabo {
                     data->m_initLevel = DeviceData::InitLevel::COMPLETE;
 
                     // Update that now this device is logged (under lock to protect for parallel actions):
-                    boost::mutex::scoped_lock lock(m_devicesNotLoggedMutex);
-                    std::vector<std::string> notLogged = get<std::vector < std::string >> ("devicesNotLogged");
-                    const auto it = std::find(notLogged.begin(), notLogged.end(), deviceId);
-                    if (it != notLogged.end()) {
-                        notLogged.erase(it);
-                        set("devicesNotLogged", notLogged);
-                    } else {
-                        // Should never come here...
-                        KARABO_LOG_FRAMEWORK_WARN << "Erasing '" << deviceId << "' from not yet logged devices failed!";
-                    }
+                    removeFrom(deviceId, "devicesNotLogged");
                 } else {
                     // connected, but requested full configuration not yet arrived - ignore these updates
                     // FIXME: to DEBUG?
@@ -484,6 +482,21 @@ namespace karabo {
             } else {
                 // FIXME: Downgrade to DEBUG since can happen when list of treated devices is just reduced?
                 KARABO_LOG_FRAMEWORK_WARN << "slotChanged called from non-treated device " << deviceId << ".";
+            }
+        }
+
+
+        void DataLogger::removeFrom(const std::string& str, const std::string& vectorProp) {
+            // lock mutex to avoid that another thread interferes in between get and set
+            boost::mutex::scoped_lock lock(m_removeFromMutex);
+            std::vector<std::string> vec = get<std::vector < std::string >> (vectorProp);
+            const auto it = std::find(vec.begin(), vec.end(), str);
+            if (it != vec.end()) {
+                vec.erase(it);
+                set(vectorProp, vec);
+            } else {
+                // FIXME: to DEBUG or remove since sometimes is as expected...
+                KARABO_LOG_FRAMEWORK_WARN << "Erasing '" << str << "' from not '" << vectorProp << "' failed!";
             }
         }
 
