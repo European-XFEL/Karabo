@@ -3,7 +3,9 @@
 import asyncio
 from asyncio import (CancelledError, coroutine, ensure_future, Future,
                      get_event_loop, iscoroutine, iscoroutinefunction)
-from functools import wraps
+from functools import partial, wraps
+import logging
+import traceback
 
 from karabo.native.data.basetypes import KaraboValue, unit_registry as unit
 
@@ -28,6 +30,18 @@ def background(task, *args, timeout=-1):
         task = background(do_something_in_background, "some value")
         task.cancel()
     """
+
+    def show_traceback(fut, instance=None):
+        if instance is None:
+            return
+
+        if fut.exception() is not None and not fut.cancelled():
+            logger = logging.getLogger(instance.deviceId)
+            exception = fut.exception()
+            trace = ''.join(traceback.format_exception(
+                type(exception), exception, exception.__traceback__))
+            logger.log(logging.ERROR, trace)
+
     @synchronize
     def inner(task, *args):
         loop = get_event_loop()
@@ -38,9 +52,16 @@ def background(task, *args, timeout=-1):
             return (yield from loop.run_coroutine_or_thread(task, *args))
 
     ret = inner(task, *args, wait=False, timeout=timeout)
+
+    loop = get_event_loop()
+    instance = loop.instance()
+
     if iscoroutine(ret):
-        return ensure_future(ret)
+        task = ensure_future(ret)
+        task.add_done_callback(partial(show_traceback, instance=instance))
+        return task
     else:
+        ret.add_done_callback(partial(show_traceback, instance=instance))
         return ret
 
 
