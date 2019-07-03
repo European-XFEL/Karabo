@@ -4,6 +4,7 @@ from datetime import datetime
 import logging
 import traceback
 
+from karabo.native.data.enums import AccessMode
 from karabo.native.data.hash import Hash, String
 from karabo.native.data.schema import Configurable, ListOfNodes
 
@@ -86,7 +87,8 @@ class Logger(Configurable):
         Handler,
         description="Handlers for logging",
         displayedName="Handlers",
-        defaultValue=["NetworkHandler", "PrintHandler"])
+        defaultValue=["NetworkHandler", "PrintHandler"],
+        accessMode=AccessMode.READONLY)
 
     filters = ListOfNodes(
         Filter,
