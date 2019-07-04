@@ -57,6 +57,15 @@ class KaraboImageItem(ImageItem):
         self._downsampling_enabled = enable
         self.autoDownsample = enable
 
+    def set_lookup_table(self, lut, update=True):
+        self.lut = lut
+        self._effectiveLut = None
+        stride = self.lut.shape[0] // 256
+        self._qlut = [qRgb(*v) for v in lut[::stride, :]]
+
+        if update:
+            self.updateImage()
+
     # ---------------------------------------------------------------------
     # Events
 
@@ -117,7 +126,8 @@ class KaraboImageItem(ImageItem):
             image = np.clip(image, levels[0], levels[1])
 
         # 3. Rescale values to 0-255 for the QImage
-        image = rescale(image, low=0, high=255)
+        if image.dtype != np.uint8:
+            image = rescale(image, low=0, high=255)
 
         # 4. Transpose image array to match axis orientation. There is a need
         # to copy since QImage need the array copy (pointers), not the view.
@@ -136,7 +146,7 @@ class KaraboImageItem(ImageItem):
     def _downsample_image(self, image):
         if self._lastDownsample is None:
             # Calculate downsample image
-            self._lastDownsample = self._calculate_downsample_scale(image)
+            self._lastDownsample = self._calculate_downsample_factor(image)
 
             # If still None, do nothing
             if self._lastDownsample is None:
@@ -151,7 +161,7 @@ class KaraboImageItem(ImageItem):
 
         return image
 
-    def _calculate_downsample_scale(self, image):
+    def _calculate_downsample_factor(self, image):
         # Reduce dimensions of image based on screen resolution
         o = self.mapToDevice(QPointF(0, 0))
         x = self.mapToDevice(QPointF(1, 0))
@@ -205,41 +215,20 @@ class KaraboImageItem(ImageItem):
             if update:
                 self.updateImage()
 
-    def setLookupTable(self, lut, update=True):
-        """
-        Set the lookup table (numpy array) to use for this image. (see
-        :func:`makeARGB <pyqtgraph.makeARGB>` for more information on how this
-        is used).
-        Optionally, lut can be a callable that accepts the current image as an
-        argument and returns the lookup table to use.
-
-        Ordinarily, this table is supplied by a :class:`HistogramLUTItem
-        <pyqtgraph.HistogramLUTItem>`
-        or :class:`GradientEditorItem <pyqtgraph.GradientEditorItem>`.
-        """
-        if lut is not self.lut:
-            self.lut = lut
-            self._effectiveLut = None
-            stride = self.lut.shape[0] // 256
-            self._qlut = [qRgb(*v) for v in lut[::stride, :]]
-
-            if update:
-                self.updateImage()
-
     def viewTransformChanged(self):
         """Reimplemented because we do not want to recalculate downsample"""
 
     def informViewBoundsChanged(self):
         """Reimplemented because we want to catch image shape changes"""
         super(KaraboImageItem, self).informViewBoundsChanged()
-        self.reset_downsampling_scale(update=False)
+        self.reset_downsampling(update=False)
 
     def set_downsample_order(self, order):
         self.downsample_order = order
-        self.reset_downsampling_scale()
+        self.reset_downsampling()
 
     @pyqtSlot()
-    def reset_downsampling_scale(self, update=True):
+    def reset_downsampling(self, update=True):
         self._lastDownsample = None
         if update:
             self.updateImage()
