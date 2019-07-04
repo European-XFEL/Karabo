@@ -11,8 +11,8 @@ by availability of almost all packages required by karaboGUI (such as PyQwt,
 guiqwt, guidata).
 
 
-.. warning:: 
-    When updating version, ensure to remove the previous installation before 
+.. warning::
+    When updating version, ensure to remove the previous installation before
     continuing, as otherwise the GUI may have unpredictable behavior.
     Navigate to::
 
@@ -44,7 +44,7 @@ Upgrading and installing additional packages
 Before installing Karabo, certain packages need to be installed, and a few more
 installed.
 
-To do so, open the `WinPython Command Prompt` and type in the following 
+To do so, open the `WinPython Command Prompt` and type in the following
 commands.
 
 First, upgrade `pip`, `setuptools`, and `matplotlib`::
@@ -55,6 +55,7 @@ First, upgrade `pip`, `setuptools`, and `matplotlib`::
 
 
 There are four additional packages needed:
+
 - `suds-jurko <http://pypi.python.org/packages/source/s/suds-jurko/suds-jurko-0.6.zip>`_
 - `traits 4.6.0 <https://www.lfd.uci.edu/~gohlke/pythonlibs/#traits>`_
 - `pint 0.7.2 <https://pypi.python.org/pypi/Pint/>`_
@@ -67,11 +68,19 @@ Install these from the links above, or as follows::
     pip install pint==0.7.2
     pip install cycler==0.10.0
 
+Since **Karabo 2.5** an additional wheel file must to be downloaded and installed.
+
+- `pyqtgraph 0.11dev <http://exflserv05.desy.de/karabo/karaboGui/deps/pyqtgraph-0.11.0.dev0-py3-none-any.whl>`_
+
+The installation can then be done via pip by providing the path to the wheel file::
+
+    pip install DIR_PATH/pyqtgraph-0.11.0.dev0-py3-none-any.whl
+
 
 Get and install karaboGUI
 -------------------------
 Download `karabo-gui for windows from here <http://exflserv05.desy.de/karabo/karaboGui/>`_ .
-Then, open the `WinPython Control Panel`, found in the WinPython installation 
+Then, open the `WinPython Control Panel`, found in the WinPython installation
 folder and load in the downloaded executable.
 Finally, click `Install packages`.
 
@@ -82,8 +91,8 @@ to be created by going to the path where WinPython is installed::
 
  [WinPython_Installation_Dir]\python-3.4.3\Lib\site-packages\karabogui\programs
 
-Right-click on *gui_runner.py* then select *Send to Desktop*. 
-You can now easily start karaboGui from the desktop. 
+Right-click on *gui_runner.py* then select *Send to Desktop*.
+You can now easily start karaboGui from the desktop.
 
 If Windows prompts you to ask what software to use to launch this file, select::
 
