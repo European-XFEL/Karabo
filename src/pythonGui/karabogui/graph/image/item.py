@@ -119,9 +119,10 @@ class KaraboImageItem(ImageItem):
         # 3. Rescale values to 0-255 for the QImage
         image = rescale(image, low=0, high=255)
 
-        # 4. Transpose image array to match axis orientation
+        # 4. Transpose image array to match axis orientation. There is a need
+        # to copy since QImage need the array copy (pointers), not the view.
         if self.axisOrder == 'col-major':
-            image = image.transpose((1, 0, 2)[:image.ndim])
+            image = image.transpose((1, 0, 2)[:image.ndim]).copy()
 
         # 5. Create QImage
         ny, nx = image.shape[:2]
@@ -246,7 +247,7 @@ class KaraboImageItem(ImageItem):
 
 def rescale(image, low=0.0, high=100.0):
     min_value, max_value = np.min(image), np.max(image)
-    value_range = max_value - min_value
+    value_range = np.subtract(max_value, min_value)
 
     if value_range == 0:
         return image
