@@ -394,4 +394,3 @@ class TestKaraboImageItem(GuiTestCase):
         self.assertIsNotNone(qimage)
         self.assertLess(qimage.width(), WIDTH)
         self.assertLess(qimage.height(), HEIGHT)
-
