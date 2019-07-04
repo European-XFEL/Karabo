@@ -85,7 +85,7 @@ class KaraboImagePlot(PlotItem):
         self._flip()
 
         # Connect signals
-        self.vb.sigResized.connect(self.imageItem.reset_downsampling_scale)
+        self.vb.sigResized.connect(self.imageItem.reset_downsampling)
 
     # ---------------------------------------------------------------------
     # PyQt slots
@@ -207,7 +207,7 @@ class KaraboImagePlot(PlotItem):
         """
         lut = (ColorMap(*zip(*COLORMAPS[cmap]), mode="RGB")
                .getLookupTable(alpha=False, mode="RGB"))
-        self.imageItem.setLookupTable(lut)
+        self.imageItem.set_lookup_table(lut)
 
     @pyqtSlot(object)
     def set_image_levels(self, levels):
@@ -290,6 +290,7 @@ class KaraboImagePlot(PlotItem):
 
         self.imageItem.enable_downsampling(enabled)
 
+    @pyqtSlot()
     def _get_downsample_order(self):
         selection = [
             "0: Nearest neighbors",
