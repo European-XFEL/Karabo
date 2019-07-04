@@ -4,7 +4,7 @@ from traits.api import Instance, Int
 
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config, ImageGraphModel)
-
+from karabo.native import Timestamp
 from karabogui.graph.common.api import AuxPlots
 from karabogui.graph.image.api import (
     KaraboImagePlot, KaraboImageNode, KaraboImageView)
@@ -31,7 +31,7 @@ class DisplayImageGraph(BaseBindingController):
     def create_widget(self, parent):
         widget = KaraboImageView(parent=parent)
         widget.stateChanged.connect(self._change_model)
-
+        widget.toolTipChanged.connect(self.show_timestamp_tooltip)
         widget.add_colorbar()
         widget.add_picker()
         widget.add_roi()
@@ -55,6 +55,16 @@ class DisplayImageGraph(BaseBindingController):
 
     # -----------------------------------------------------------------------
     # Qt Slots
+
+    @pyqtSlot()
+    def show_timestamp_tooltip(self):
+        image_node = self.proxy.value
+        if image_node is None:
+            return
+        timestamp = image_node.pixels.value.data.timestamp
+        diff = Timestamp().toTimestamp() - timestamp.toTimestamp()
+        self.widget.setToolTip("{} --- Last image received {:.3f} s "
+                               "ago".format(self.proxy.key, diff))
 
     @pyqtSlot(object)
     def _change_model(self, content):

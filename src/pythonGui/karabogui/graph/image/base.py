@@ -1,6 +1,6 @@
 from functools import partial
 
-from PyQt4.QtCore import pyqtSignal, pyqtSlot, Qt
+from PyQt4.QtCore import pyqtSignal, pyqtSlot, QEvent, Qt
 from PyQt4.QtGui import QAction, QGridLayout, QWidget
 from pyqtgraph import GraphicsLayoutWidget
 
@@ -23,6 +23,7 @@ from .utils import create_colormap_menu, create_icon_from_colormap
 
 class KaraboImageView(QWidget):
     stateChanged = pyqtSignal(object)
+    toolTipChanged = pyqtSignal()
 
     def __init__(self, parent=None):
         """ The main image view widget for a single ImagePlot
@@ -481,3 +482,10 @@ class KaraboImageView(QWidget):
             x_units, y_units = [labels[UNITS] for labels in
                                 self.plotItem.axes_labels]
             self._scale_legend.set_value(x_scale, y_scale, x_units, y_units)
+
+    # -----------------------------------------------------------------------
+
+    def event(self, event):
+        if event.type() == QEvent.ToolTip:
+            self.toolTipChanged.emit()
+        return super(KaraboImageView, self).event(event)
