@@ -3,20 +3,19 @@ from os import path as op
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSignal, pyqtSlot
 from PyQt4.QtGui import QWidget
-from traits.api import Instance, Int
+from traits.api import Enum, Instance, Int
 
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config, DetectorGraphModel)
-from karabo.native import EncodingType
+from karabo.native import EncodingType, Timestamp
 
-from karabogui.graph.common.api import AuxPlots, Axes
-from karabogui.graph.image.api import (
-    KaraboImagePlot, KaraboImageNode, KaraboImageView)
 from karabogui.binding.api import ImageBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.util import SignalBlocker
-from traits.trait_types import Enum
+from karabogui.graph.common.api import Axes, AuxPlots
+from karabogui.graph.image.api import (
+    KaraboImagePlot, KaraboImageNode, KaraboImageView)
 
 
 class FrameSlider(QWidget):
@@ -101,6 +100,7 @@ class DisplayDetectorGraph(BaseBindingController):
         # Setup parent widget
         widget = KaraboImageView(parent=parent)
         widget.stateChanged.connect(self._change_model)
+        widget.toolTipChanged.connect(self.show_timestamp_tooltip)
         widget.add_picker()
         widget.add_roi()
         widget.add_colorbar()
@@ -136,10 +136,19 @@ class DisplayDetectorGraph(BaseBindingController):
     # -----------------------------------------------------------------------
     # Qt Slots
 
+    @pyqtSlot()
+    def show_timestamp_tooltip(self):
+        image_node = self.proxy.value
+        if image_node is None:
+            return
+        timestamp = image_node.pixels.value.data.timestamp
+        diff = Timestamp().toTimestamp() - timestamp.toTimestamp()
+        self.widget.setToolTip("{} --- Last image received {:.3f} s "
+                               "ago".format(self.proxy.key, diff))
+
     @pyqtSlot(str)
     def _axis_changed(self, axis):
-        """
-        Called whenever an axis is selected in the FrameSlider
+        """Called whenever an axis is selected in the FrameSlider
 
         :param axis: the selected axis
         :type axis: basestring
