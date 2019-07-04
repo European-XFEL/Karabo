@@ -174,7 +174,7 @@ class KaraboImageItem(ImageItem):
 
         # Calculate scale on the nearest hundredths. Don't scale if the
         # item dimension is bigger than the image dimensions.
-        image_y, image_x = image.shape
+        image_y, image_x = image.shape[:2]
 
         # Swap dimensions if ImageItem is in row-major
         if self.axisOrder == 'row-major':
@@ -184,7 +184,6 @@ class KaraboImageItem(ImageItem):
         # - if dimension >= 1000, min scale is 2
         # - if dimension in [500, 1000), min scale is 2
         # - if dimension is smaller than 500, no scaling is done
-        xds, yds = (1, 1)
         x_scale = round(1.0 / w * 100) / 100
         y_scale = round(1.0 / h * 100) / 100
 
@@ -198,6 +197,7 @@ class KaraboImageItem(ImageItem):
 
         # Scale the image if autodownsampling is specified or (one of) the axis
         # has a bigger scale than the minimum
+        xds, yds = (1, 1)
         if x_scale >= x_min_ds or y_scale >= x_min_ds or self.autoDownsample:
             # Correct downsampling wrt if less than prescribed minimum
             xds = x_scale if x_scale > x_min_ds else x_min_ds

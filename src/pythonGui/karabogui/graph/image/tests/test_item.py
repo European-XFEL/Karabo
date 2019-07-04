@@ -15,7 +15,6 @@ class TestKaraboImageItem(GuiTestCase):
         self.imageItem = self.imageView.plot().imageItem
         self.imageItem.enable_downsampling(True)
         self.imageView.setFixedSize(300, 300)
-        self.imageView.show()
 
     def tearDown(self):
         super(TestKaraboImageItem, self).tearDown()
@@ -353,30 +352,6 @@ class TestKaraboImageItem(GuiTestCase):
 
         # Setup imageItem with test image
         image = np.random.uniform(-50000, 50000, (HEIGHT, WIDTH))
-        self.imageItem.setImage(image)
-        np.testing.assert_array_equal(image, self.imageItem.image)
-        self.assertIsNone(self.imageItem.qimage)
-
-        # Render QImage
-        self.imageItem.render()
-
-        # Check downsample ratio
-        xds, yds = self.imageItem._lastDownsample
-        self.assertGreaterEqual(xds, 2)
-        self.assertGreaterEqual(yds, 2)
-
-        # Check generated QImage
-        qimage = self.imageItem.qimage
-        self.assertIsNotNone(qimage)
-        self.assertLess(qimage.width(), WIDTH)
-        self.assertLess(qimage.height(), HEIGHT)
-
-    @unittest.skip(reason="Needs to return support for 3d arrays")
-    def test_uint8_3d_image_small(self):
-        HEIGHT, WIDTH = (150, 100)
-
-        # Setup imageItem with test image
-        image = np.random.uniform(0, 256, (HEIGHT, WIDTH, 3))
         self.imageItem.setImage(image)
         np.testing.assert_array_equal(image, self.imageItem.image)
         self.assertIsNone(self.imageItem.qimage)
