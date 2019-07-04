@@ -118,6 +118,7 @@ namespace karabo {
 
         struct DeviceData {
 
+            KARABO_CLASSINFO(DeviceData, "DataLoggerDeviceData", "2.6")
 
             enum class InitLevel {
 
@@ -126,9 +127,13 @@ namespace karabo {
                 CONNECTED,
                 COMPLETE
             };
-            DeviceData(const std::string& deviceId);
+            DeviceData(const std::string& deviceId, const std::string& directory);
+
+            ~DeviceData();
 
             std::string m_deviceToBeLogged; // same as this DeviceData's key in DeviceDataMap
+
+            const std::string m_directory;
 
             InitLevel m_initLevel;
 
@@ -158,8 +163,9 @@ namespace karabo {
             karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_serializer;
         };
 
-        DeviceData::DeviceData(const std::string& deviceId)
+        DeviceData::DeviceData(const std::string& deviceId, const std::string& directory)
             : m_deviceToBeLogged(deviceId)
+            , m_directory(directory)
             , m_initLevel(InitLevel::NONE)
             , m_strand(boost::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService()))
             , m_currentSchemaMutex()
@@ -201,13 +207,13 @@ namespace karabo {
 
 
         DataLogger::~DataLogger() {
+            // When m_perDeviceData will be destructed, all the DeviceData destructors will run and tag
+            // the remaining devices as discontinued.
             // Locking mutex maybe not needed since no parallelism anymore (?) - but cannot harm.
             {
                 boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
                 for (auto it = m_perDeviceData.begin(), itEnd = m_perDeviceData.end(); it != itEnd; ++it) {
-                    // Although not posted to it->second.m_strand, no problem with synchronisation since posted handlers
-                    // won't run anymore due to their bind_weak and the fact that we are already in the destructor.
-                    handleTagDeviceToBeDiscontinued("L", it->second);
+                    disconnectP2P(it->first);
                 }
             }
             m_doFlushFiles = false;
@@ -225,7 +231,7 @@ namespace karabo {
             std::string allFailures;
             for (const std::string& deviceId : devsToLog) {
                 // Locking mutex not yet needed - no parallelism on content of m_perDeviceData yet.
-                auto result = m_perDeviceData.insert(std::make_pair(deviceId, boost::make_shared<DeviceData>(deviceId)));
+                auto result = m_perDeviceData.insert(std::make_pair(deviceId, boost::make_shared<DeviceData>(deviceId, get<string>("directory"))));
                 DeviceDataPointer& data = result.first->second;
                 boost::system::error_code ec;
 
@@ -283,6 +289,7 @@ namespace karabo {
 
                 // Now connect to device
                 data->m_initLevel = DeviceData::InitLevel::STARTED;
+                KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Connecting to " << deviceId << ".slotSchemaUpdated";
                 asyncConnect(deviceId, "signalSchemaUpdated", "", "slotSchemaUpdated",
                              util::bind_weak(&DataLogger::handleSchemaConnected, this, data, counter),
                              util::bind_weak(&DataLogger::handleFailure, this, "connecting to schema for", data, counter));
@@ -308,7 +315,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_INFO << "Failed " << reason << " " << deviceId << ": " << e.what();
             }
             checkReady(*counter);
-            stopLogging(deviceId);
+            stopLogging(deviceId, true);
         }
 
 
@@ -367,7 +374,7 @@ namespace karabo {
         }
 
 
-        void DataLogger::stopLogging(const std::string& deviceId) {
+        bool DataLogger::stopLogging(const std::string& deviceId, bool suicideIfEmpty) {
 
             // Avoid automatic reconnects -
             // if not all signals connected or device is already dead, this triggers some (delayed) WARNings:
@@ -376,75 +383,77 @@ namespace karabo {
             asyncDisconnect(deviceId, "signalChanged", "", "slotChanged");
 
             boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
-            m_perDeviceData.erase(deviceId);
-            if (m_perDeviceData.empty()) {
+            const bool result = (m_perDeviceData.erase(deviceId) > 0);
+            if (result) {
+                disconnectP2P(deviceId);
+            }
+            if (suicideIfEmpty && m_perDeviceData.empty()) {
                 // Nothing to do anymore, so commit suicide.
                 // FIXME: Maybe only as long as DataLoggerManager instantiates each DataLogger for a single device?
                 call("", "slotKillDevice");
             }
+            return result;
         }
 
 
         void DataLogger::slotTagDeviceToBeDiscontinued(const std::string& reason, const std::string& deviceId) {
+            KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Stop logging '" << deviceId
+                                      << "' requested since: " << reason;
 
             removeFrom(deviceId, "devicesToBeLogged");
             removeFrom(deviceId, "devicesNotLogged"); // just in case it was a problematic one
 
-            boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
-            DeviceDataMap::iterator it = m_perDeviceData.find(deviceId);
-            if (it != m_perDeviceData.end()) {
-                // First disconnect to avoid further messages and automatic reconnects.
-                // If not all signals connected or device is already dead, this triggers some (delayed) WARNings:
-                asyncDisconnect(deviceId, "signalSchemaUpdated", "", "slotSchemaUpdated");
-                asyncDisconnect(deviceId, "signalStateChanged", "", "slotChanged");
-                asyncDisconnect(deviceId, "signalChanged", "", "slotChanged");
-
-                DeviceDataPointer& data = it->second;
-                data->m_strand->post(karabo::util::bind_weak(&DataLogger::handleTagDeviceToBeDiscontinued, this,
-                                                             reason, data));
-                m_perDeviceData.erase(it);
-            } else {
+            // (Try to) Remove device from m_perDeviceData, but do not commit suicide:
+            if (!stopLogging(deviceId, false)) {
+                // Inform caller about failure by exception
                 throw KARABO_LOGIC_EXCEPTION("Device '" + deviceId + "' not treated.");
             }
         }
 
 
-        void DataLogger::handleTagDeviceToBeDiscontinued(const std::string& reason, DeviceDataPointer data) {
-            const std::string& deviceId = data->m_deviceToBeLogged;
-            KARABO_LOG_FRAMEWORK_DEBUG << "handleTagDeviceToBeDiscontinued '" << reason << "' for " << deviceId;
+        // FIXME: Move code upwards close to DeviceData constructor - keep here for easier review
+        DeviceData::~DeviceData() {
+            if (m_initLevel != InitLevel::COMPLETE) {
+                // We have not yet started logging this device, so nothing to mark about being done.
+                return;
+            }
 
+            const std::string& deviceId = m_deviceToBeLogged;
+            // Mark as logger stopped.
+            // Although this destructor is not running on the strand, accessing all members is safe:
+            // All other actions touching the members are posted on the strand and have a shared  pointer
+            // to the DeviceData - so this destructor can only run when all these actions are done.
             try {
-                boost::mutex::scoped_lock lock(data->m_configMutex);
-                if (data->m_configStream.is_open()) {
+                boost::mutex::scoped_lock lock(m_configMutex);
+                if (m_configStream.is_open()) {
                     // Take care: order of locking m_configMutex and m_lastTimestampMutex!
-                    boost::mutex::scoped_lock lock(data->m_lastTimestampMutex);
-                    karabo::util::Timestamp& lastTs = data->m_lastDataTimestamp;
-                    data->m_configStream << lastTs.toIso8601Ext() << "|" << fixed << lastTs.toTimestamp()
-                            << "|" << lastTs.getTrainId() << "|.|||" << data->m_user << "|LOGOUT\n";
-                    data->m_configStream.flush();
-                    std::ostream::pos_type position = data->m_configStream.tellp();
-                    data->m_configStream.close();
+                    boost::mutex::scoped_lock lock(m_lastTimestampMutex);
+                    karabo::util::Timestamp& lastTs = m_lastDataTimestamp;
+                    m_configStream << lastTs.toIso8601Ext() << "|" << fixed << lastTs.toTimestamp()
+                            << "|" << lastTs.getTrainId() << "|.|||" << m_user << "|LOGOUT\n";
+                    m_configStream.flush();
+                    std::ostream::pos_type position = m_configStream.tellp();
+                    m_configStream.close();
                     if (position >= 0) {
-                        string contentPath = get<string>("directory") + "/" + deviceId + "/raw/archive_index.txt";
+                        string contentPath = m_directory + "/" + deviceId + "/raw/archive_index.txt";
                         ofstream contentStream(contentPath.c_str(), ios::app);
                         contentStream << "-LOG " << lastTs.toIso8601Ext() << " " << fixed << lastTs.toTimestamp()
                                 << " " << lastTs.getTrainId() << " " << position << " "
-                                << (data->m_user.empty() ? "." : data->m_user) << " " << data->m_lastIndex << "\n";
+                                << (m_user.empty() ? "." : m_user) << " " << m_lastIndex << "\n";
                         contentStream.close();
                         //KARABO_LOG_FRAMEWORK_DEBUG << "slotTagDeviceToBeDiscontinued index stream closed";
                     }
                     else {
                         KARABO_LOG_FRAMEWORK_ERROR << "Error retrieving position of LOGOUT entry in archive with index '"
-                                << data->m_lastIndex << "': skipped writing index entry for " << deviceId;
+                                << m_lastIndex << "': skipped writing index entry for " << deviceId;
                     }
 
-                    for (map<string, MetaData::Pointer>::iterator it = data->m_idxMap.begin(); it != data->m_idxMap.end(); it++) {
+                    for (map<string, MetaData::Pointer>::iterator it = m_idxMap.begin(); it != m_idxMap.end(); it++) {
                         MetaData::Pointer mdp = it->second;
                         if (mdp && mdp->idxStream.is_open()) mdp->idxStream.close();
                     }
-                    data->m_idxMap.clear();
+                    m_idxMap.clear();
                     //KARABO_LOG_FRAMEWORK_DEBUG << "slotTagDeviceToBeDiscontinued idxMap is cleaned";
-                    disconnectP2P(deviceId);
                 }
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_LOGIC_EXCEPTION("Problems tagging " + deviceId + " to be discontinued"));
