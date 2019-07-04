@@ -66,16 +66,18 @@ namespace karabo {
 
             void slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId);
 
-            // FIXME: May want AsyncReply??
             void handleChanged(const karabo::util::Hash& config, const DeviceDataPointer& data);
 
             /**
-             * Helper to remove an element from a vector<string> element
+             * Helper to remove an element from a vector<string> element.
+             * Note that if the same element is in the vector mor than once, only the first one is removed.
              *
              * @param str the element to remove
              * @param vectorProp the key of the the vector<string> element
+             *
+             * @return whether could be removed
              */
-            void removeFrom(const std::string& str, const std::string& vectorProp);
+            bool removeFrom(const std::string& str, const std::string& vectorProp);
 
             /// Helper function to update data.m_idxprops, returns whether data.m_idxprops changed.
             bool updatePropsToIndex(DeviceData& data);
@@ -86,7 +88,6 @@ namespace karabo {
 
             void slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
 
-            // FIXME: May want AsyncReply??
             void handleSchemaUpdated(const karabo::util::Schema& schema, const DeviceDataPointer& data);
             /**
              * This tags a device to be discontinued, three cases have to be distinguished

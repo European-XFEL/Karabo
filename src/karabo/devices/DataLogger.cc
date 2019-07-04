@@ -386,7 +386,6 @@ namespace karabo {
 
 
         void DataLogger::slotTagDeviceToBeDiscontinued(const std::string& reason, const std::string& deviceId) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "slotTagDeviceToBeDiscontinued '" << reason << "' for " << deviceId;
 
             removeFrom(deviceId, "devicesToBeLogged");
             removeFrom(deviceId, "devicesNotLogged"); // just in case it was a problematic one
@@ -394,20 +393,18 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
             DeviceDataMap::iterator it = m_perDeviceData.find(deviceId);
             if (it != m_perDeviceData.end()) {
-                // FIXME: Basically just call stopLogging(deviceId) and make content of handleTagDeviceToBeDiscontinued
-                // called by DeviceData destructor? (After check that it was CONNECTED or COMPLETE?)
-                DeviceDataPointer& data = it->second;
-                data->m_strand->post(karabo::util::bind_weak(&DataLogger::handleTagDeviceToBeDiscontinued, this,
-                                                             reason, data));
-                m_perDeviceData.erase(it);
-                // Disconnect to avoid further messages and automatic reconnects.
+                // First disconnect to avoid further messages and automatic reconnects.
                 // If not all signals connected or device is already dead, this triggers some (delayed) WARNings:
                 asyncDisconnect(deviceId, "signalSchemaUpdated", "", "slotSchemaUpdated");
                 asyncDisconnect(deviceId, "signalStateChanged", "", "slotChanged");
                 asyncDisconnect(deviceId, "signalChanged", "", "slotChanged");
+
+                DeviceDataPointer& data = it->second;
+                data->m_strand->post(karabo::util::bind_weak(&DataLogger::handleTagDeviceToBeDiscontinued, this,
+                                                             reason, data));
+                m_perDeviceData.erase(it);
             } else {
-                // FIXME: Downgrade to DEBUG since can happen when list of treated devices is just reduced
-                KARABO_LOG_FRAMEWORK_WARN << "slotTagDeviceToBeDiscontinued called for non-treated device " << deviceId << ".";
+                throw KARABO_LOGIC_EXCEPTION("Device '" + deviceId + "' not treated.");
             }
         }
 
@@ -472,21 +469,21 @@ namespace karabo {
                     removeFrom(deviceId, "devicesNotLogged");
                 } else {
                     // connected, but requested full configuration not yet arrived - ignore these updates
-                    // FIXME: to DEBUG?
-                    KARABO_LOG_FRAMEWORK_WARN << "Ignore slotChanged for " << deviceId << ":\n" << configuration;
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Ignore slotChanged for " << deviceId
+                            << " - not connected or initial full config not yet arrived:\n" << configuration;
                     return;
                 }
+                // UserId only available in real slot call, before posting to event loop:
                 data->m_user = getSenderInfo("slotChanged")->getUserIdOfSender();
                 data->m_strand->post(karabo::util::bind_weak(&DataLogger::handleChanged, this,
                                                              configuration, data));
             } else {
-                // FIXME: Downgrade to DEBUG since can happen when list of treated devices is just reduced?
                 KARABO_LOG_FRAMEWORK_WARN << "slotChanged called from non-treated device " << deviceId << ".";
             }
         }
 
 
-        void DataLogger::removeFrom(const std::string& str, const std::string& vectorProp) {
+        bool DataLogger::removeFrom(const std::string& str, const std::string& vectorProp) {
             // lock mutex to avoid that another thread interferes in between get and set
             boost::mutex::scoped_lock lock(m_removeFromMutex);
             std::vector<std::string> vec = get<std::vector < std::string >> (vectorProp);
@@ -494,9 +491,9 @@ namespace karabo {
             if (it != vec.end()) {
                 vec.erase(it);
                 set(vectorProp, vec);
+                return true;
             } else {
-                // FIXME: to DEBUG or remove since sometimes is as expected...
-                KARABO_LOG_FRAMEWORK_WARN << "Erasing '" << str << "' from not '" << vectorProp << "' failed!";
+                return false;
             }
         }
 
@@ -797,7 +794,6 @@ namespace karabo {
                 DeviceDataPointer& data = it->second;
                 data->m_strand->post(karabo::util::bind_weak(&DataLogger::handleSchemaUpdated, this, schema, data));
             } else {
-                // FIXME: Downgrade to DEBUG since can happen when list of treated devices is just reduced?
                 KARABO_LOG_FRAMEWORK_WARN << "slotSchemaUpdated called from non-treated device " << deviceId << ".";
             }
         }
