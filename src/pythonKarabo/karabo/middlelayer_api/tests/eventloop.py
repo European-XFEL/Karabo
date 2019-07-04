@@ -3,6 +3,7 @@ from contextlib import contextmanager, ExitStack
 from functools import partial, wraps
 from unittest import TestCase
 from unittest.mock import Mock
+import uuid
 
 from karabo.middlelayer_api.eventloop import EventLoop
 
@@ -33,6 +34,7 @@ def sync_tst(f=None, *, timeout=None):
 
 
 class DeviceTest(TestCase):
+
     @classmethod
     def setUpClass(cls):
         with ExitStack() as cls.exit_stack:
@@ -52,6 +54,8 @@ class DeviceTest(TestCase):
     def lifetimeManager(cls):
         """This context manager is run around the test class"""
         cls.lead = Mock()
+        my_uuid = uuid.uuid4()
+        cls.lead.deviceId = "test-mdl-{}".format(my_uuid)
         cls.lead._ss = Mock()
         cls.lead._ss.loop = cls.loop
         cls.lead._ss.tasks = set()

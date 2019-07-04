@@ -3,9 +3,8 @@
 import asyncio
 from asyncio import (CancelledError, coroutine, ensure_future, Future,
                      get_event_loop, iscoroutine, iscoroutinefunction)
-from functools import partial, wraps
+from functools import wraps
 import logging
-import traceback
 
 from karabo.native.data.basetypes import KaraboValue, unit_registry as unit
 
@@ -31,37 +30,28 @@ def background(task, *args, timeout=-1):
         task.cancel()
     """
 
-    def show_traceback(fut, instance=None):
-        if instance is None:
-            return
-
-        if fut.exception() is not None and not fut.cancelled():
-            logger = logging.getLogger(instance.deviceId)
-            exception = fut.exception()
-            trace = ''.join(traceback.format_exception(
-                type(exception), exception, exception.__traceback__))
-            logger.log(logging.ERROR, trace)
-
     @synchronize
     def inner(task, *args):
-        loop = get_event_loop()
-        if iscoroutine(task):
-            assert not args
-            return (yield from task)
-        else:
-            return (yield from loop.run_coroutine_or_thread(task, *args))
+        try:
+            if iscoroutine(task):
+                assert not args
+                return (yield from task)
+            else:
+                loop = get_event_loop()
+                return (yield from loop.run_coroutine_or_thread(task, *args))
+        except CancelledError:
+            raise
+        except Exception:
+            instance = get_event_loop().instance()
+            logger = logging.getLogger(instance.deviceId)
+            logger.exception("Error in background task ...")
+            raise
 
     ret = inner(task, *args, wait=False, timeout=timeout)
-
-    loop = get_event_loop()
-    instance = loop.instance()
-
     if iscoroutine(ret):
         task = ensure_future(ret)
-        task.add_done_callback(partial(show_traceback, instance=instance))
         return task
     else:
-        ret.add_done_callback(partial(show_traceback, instance=instance))
         return ret
 
 
