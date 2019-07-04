@@ -54,12 +54,13 @@ First, upgrade `pip`, `setuptools`, and `matplotlib`::
   pip install --no-deps matplotlib==1.5.3
 
 
-There are four additional packages needed:
+There are five additional packages needed:
 
 - `suds-jurko <http://pypi.python.org/packages/source/s/suds-jurko/suds-jurko-0.6.zip>`_
 - `traits 4.6.0 <https://www.lfd.uci.edu/~gohlke/pythonlibs/#traits>`_
 - `pint 0.7.2 <https://pypi.python.org/pypi/Pint/>`_
 - `cycler 0.10.0 <https://pypi.python.org/pypi/cycler/>`_
+- `pyqtgraph 0.11.0-dev0 <http://exflserv05.desy.de/karabo/karaboGui/deps/pyqtgraph-0.11.0.dev0-py3-none-any.whl>`_
 
 Install these from the links above, or as follows::
 
@@ -67,14 +68,7 @@ Install these from the links above, or as follows::
     pip install traits==4.6.0
     pip install pint==0.7.2
     pip install cycler==0.10.0
-
-Since **Karabo 2.5** an additional wheel file must to be downloaded and installed.
-
-- `pyqtgraph 0.11dev <http://exflserv05.desy.de/karabo/karaboGui/deps/pyqtgraph-0.11.0.dev0-py3-none-any.whl>`_
-
-The installation can then be done via pip by providing the path to the wheel file::
-
-    pip install DIR_PATH/pyqtgraph-0.11.0.dev0-py3-none-any.whl
+    pip install http://exflserv05.desy.de/karabo/karaboGui/deps/pyqtgraph-0.11.0.dev0-py3-none-any.whl
 
 
 Get and install karaboGUI
