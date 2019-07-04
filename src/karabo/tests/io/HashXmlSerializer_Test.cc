@@ -86,27 +86,24 @@ void HashXmlSerializer_Test::testSerialization() {
         Hash deserialized;
         p->load(deserialized, serialized);
 
-        CPPUNIT_ASSERT_EQUAL(schemaIncluded, deserialized);
-        CPPUNIT_ASSERT_EQUAL(s.getParameterHash(), deserialized.get<Schema>("a2").getParameterHash());
-    }
+        CPPUNIT_ASSERT_MESSAGE("'schemaIncluded' and 'deserialized' hashes should be fullyEquals.",
+                               schemaIncluded.fullyEquals(deserialized));
+        CPPUNIT_ASSERT_MESSAGE("Hashes for original schema 's' and the deserialized schema node in key 'a2' should be fullyEquals.",
+                               s.getParameterHash().fullyEquals(deserialized.get<Schema>("a2").getParameterHash()));
+      }
 
 
     {
         std::string archive1;
         std::string archive2;
 
-        std::cout << "m_rootedPath with clashing node:\n" << m_rootedHash << std::endl;
-
         p->save(m_rootedHash, archive1);
-
-        std::cout << "archive1 = \n" << archive1 << std::endl;
 
         Hash h;
         p->load(h, archive1);
 
-        std::cout << "loaded Hash (h) = \n" << h << std::endl;
-
-        CPPUNIT_ASSERT(karabo::util::similar(m_rootedHash, h) == true);
+        CPPUNIT_ASSERT_MESSAGE("Deserialized version of m_rootedHash, 'h', and 'm_rootedHash' itself should be fullyEquals.",
+                               h.fullyEquals(m_rootedHash));
 
         // Checks serialization of attribute of type vector<string>.
         const vector<std::string> serVectStrAttr = h.getAttribute<vector < std::string >> ("a.b.e", "eAttr");
@@ -121,17 +118,17 @@ void HashXmlSerializer_Test::testSerialization() {
         const vector<Hash> origVectHashAttr = m_rootedHash.getAttribute<vector < Hash >> ("a", "a3");
         CPPUNIT_ASSERT_EQUAL(origVectStrAttr.size(), serVectStrAttr.size());
         for (vector<std::string>::size_type i = 0; i < serVectHashAttr.size(); i++) {
-            CPPUNIT_ASSERT_EQUAL(origVectHashAttr[i], serVectHashAttr[i]);
+            CPPUNIT_ASSERT_MESSAGE("Hashes at vector<Hash> attribute 'a.a3' of 'origVectHashAttr' and 'serVectHashAttr' are not fullyEquals.",
+                                   origVectHashAttr[i].fullyEquals(serVectHashAttr[i]));
         }
 
         // Checks serialization of attribute of type Schema.
         const Schema serSchemaAttr = h.getAttribute<Schema>("a", "a4");
         const Schema origSchemaAttr = m_rootedHash.getAttribute<Schema>("a", "a4");
-        CPPUNIT_ASSERT_EQUAL(origSchemaAttr.getParameterHash(), serSchemaAttr.getParameterHash());
+        CPPUNIT_ASSERT_MESSAGE("Hashes corresponding to original schema attribute, 'origSchemaAttr', and its serialized version, 'serSchemaAttr', are not fullyEquals.",
+                               origSchemaAttr.getParameterHash().fullyEquals(serSchemaAttr.getParameterHash()));
 
         p->save(h, archive2);
-
-        std::cout << "Serialized loaded hash (archive2) = \n" << archive2 << std::endl;
 
         CPPUNIT_ASSERT(archive1 == archive2);
     }
@@ -146,22 +143,15 @@ void HashXmlSerializer_Test::testSerialization() {
         Hash rooted("a._attr_a_a3", "something");
         rooted.setAttribute("a", "a3", vector<Hash>{Hash("row1", "value1"), Hash("row2", "value2")});
 
-        std::cout << "Hash with clashing node:\n" << rooted << std::endl;
-
         p->save(rooted, archive1);
-
-        std::cout << "archive1 = \n" << archive1 << std::endl;
 
         Hash h;
         p->load(h, archive1);
 
-        std::cout << "loaded Hash (h) = \n" << h << std::endl;
-
-        CPPUNIT_ASSERT(karabo::util::similar(rooted, h) == true);
+        CPPUNIT_ASSERT_MESSAGE("Specially crafted hash, 'rooted', with node named to try to provoque collision, and its serialized form, 'h', should be fullyEquals.",
+                               rooted.fullyEquals(h));
 
         p->save(h, archive2);
-
-        std::cout << "Serialized loaded hash (archive2) = \n" << archive2 << std::endl;
 
         CPPUNIT_ASSERT(archive1 == archive2);
     }
@@ -191,7 +181,8 @@ void HashXmlSerializer_Test::testSerialization() {
         Hash h;
         p->load(h, archive1);
 
-        CPPUNIT_ASSERT(karabo::util::similar(m_unrootedHash, h) == true);
+        CPPUNIT_ASSERT_MESSAGE("UnrootedHash, 'm_unrootedHash', and its serialized form, 'h', should be fullyEquals.",
+                               m_unrootedHash.fullyEquals(h));
 
         p->save(h, archive2);
         CPPUNIT_ASSERT(archive1 == archive2);
@@ -205,7 +196,8 @@ void HashXmlSerializer_Test::testSerialization() {
         vector<Hash> hs;
         p->load(hs, archive1);
         for (size_t i = 0; i < 10; ++i) {
-            CPPUNIT_ASSERT(karabo::util::similar(m_rootedHash, hs[i]) == true);
+            CPPUNIT_ASSERT_MESSAGE("Serialized hash in vector of hashes, hs[i] should be fullyEquals to its original form, 'm_rootedHash'.",
+                                   m_rootedHash.fullyEquals(hs[i]));
         }
 
         p->save(hs, archive2);
