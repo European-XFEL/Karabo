@@ -122,10 +122,10 @@ namespace karabo {
 
             enum class InitLevel {
 
-                NONE = 0,
-                STARTED,
-                CONNECTED,
-                COMPLETE
+                NONE = 0, /// DeviceData is created
+                STARTED, /// connecting to device's signals has started
+                CONNECTED, /// all connections are established (and first Schema received in between)
+                COMPLETE /// the initial configuration has arrived
             };
             DeviceData(const std::string& deviceId, const std::string& directory);
 
