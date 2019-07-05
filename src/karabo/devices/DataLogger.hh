@@ -42,7 +42,7 @@ namespace karabo {
             typedef std::unordered_map<std::string, DeviceDataPointer> DeviceDataMap;
             DeviceDataMap m_perDeviceData;
             boost::mutex m_perDeviceDataMutex;
-            boost::mutex m_removeFromMutex;
+            boost::mutex m_changeVectorPropMutex;
 
             boost::asio::deadline_timer m_flushDeadline;
             bool m_doFlushFiles;
@@ -64,20 +64,36 @@ namespace karabo {
 
             void initialize();
 
+            void setupDirectory(const DeviceDataPointer& data) const;
+
+            void initConnection(const DeviceDataPointer& data,
+                                const boost::shared_ptr<std::atomic<unsigned int> >& counter);
+
             void slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId);
 
             void handleChanged(const karabo::util::Hash& config, const DeviceDataPointer& data);
 
             /**
              * Helper to remove an element from a vector<string> element.
-             * Note that if the same element is in the vector mor than once, only the first one is removed.
+             * Note that if the same element is in the vector more than once, only the first one is removed.
              *
              * @param str the element to remove
-             * @param vectorProp the key of the the vector<string> element
+             * @param vectorProp the key of the vector<string> element
              *
              * @return whether could be removed
              */
             bool removeFrom(const std::string& str, const std::string& vectorProp);
+
+            /**
+             * Helper to add an element to a vector<string> element.
+             * Note that if the same element is already in, it will not be added again.
+             *
+             * @param str the element to add
+             * @param vectorProp the key of the vector<string> element
+             *
+             * @return whether it was added (i.e. false if 'str' was already in the vectorProperty
+             */
+            bool appendTo(const std::string& str, const std::string& vectorProp);
 
             /// Helper function to update data.m_idxprops, returns whether data.m_idxprops changed.
             bool updatePropsToIndex(DeviceData& data);
@@ -102,6 +118,8 @@ namespace karabo {
              */
             void slotTagDeviceToBeDiscontinued(const std::string& reason, const std::string& deviceId);
 
+            void slotAddDeviceToBeLogged(const std::string& deviceId);
+
             void handleFailure(const std::string& reason, const DeviceDataPointer& data,
                                const boost::shared_ptr<std::atomic<unsigned int> >& counter);
 
@@ -123,7 +141,7 @@ namespace karabo {
 
             bool stopLogging(const std::string& deviceId, bool suicideIfEmpty);
 
-            int determineLastIndex(const std::string& deviceId);
+            int determineLastIndex(const std::string& deviceId) const;
 
             int incrementLastIndex(const std::string& deviceId);
 
