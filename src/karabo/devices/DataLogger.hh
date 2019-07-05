@@ -42,8 +42,7 @@ namespace karabo {
             typedef std::unordered_map<std::string, DeviceDataPointer> DeviceDataMap;
             DeviceDataMap m_perDeviceData;
             boost::mutex m_perDeviceDataMutex;
-            std::atomic<unsigned int> m_numConnected;
-
+            boost::mutex m_removeFromMutex;
 
             boost::asio::deadline_timer m_flushDeadline;
             bool m_doFlushFiles;
@@ -67,8 +66,18 @@ namespace karabo {
 
             void slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId);
 
-            // FIXME: May want AsyncReply??
             void handleChanged(const karabo::util::Hash& config, const DeviceDataPointer& data);
+
+            /**
+             * Helper to remove an element from a vector<string> element.
+             * Note that if the same element is in the vector mor than once, only the first one is removed.
+             *
+             * @param str the element to remove
+             * @param vectorProp the key of the the vector<string> element
+             *
+             * @return whether could be removed
+             */
+            bool removeFrom(const std::string& str, const std::string& vectorProp);
 
             /// Helper function to update data.m_idxprops, returns whether data.m_idxprops changed.
             bool updatePropsToIndex(DeviceData& data);
@@ -79,9 +88,9 @@ namespace karabo {
 
             void slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
 
-            // FIXME: May want AsyncReply??
             void handleSchemaUpdated(const karabo::util::Schema& schema, const DeviceDataPointer& data);
             /**
+             * FIXME: Update text
              * This tags a device to be discontinued, three cases have to be distinguished
              *
              * (a) Regular shut-down of the device (wasValidUpToNow = true, reason = 'D')
@@ -91,20 +100,28 @@ namespace karabo {
              * This slot will be called by the DataLoggerManager
              *
              */
-            void slotTagDeviceToBeDiscontinued(const bool wasValidUpToNow, const char reason, const std::string& deviceId);
+            void slotTagDeviceToBeDiscontinued(const std::string& reason, const std::string& deviceId);
 
-            // FIXME: May need AsyncReply??
-            void handleTagDeviceToBeDiscontinued(const bool wasValidUpToNow, const char reason, DeviceDataPointer data);
+            void handleFailure(const std::string& reason, const DeviceDataPointer& data,
+                               const boost::shared_ptr<std::atomic<unsigned int> >& counter);
 
-            /// Helper used as error callback that triggers device suicide.
-            void errorToDieHandle(const std::string& reason) const;
+            void handleSchemaConnected(const DeviceDataPointer& data,
+                                       const boost::shared_ptr<std::atomic<unsigned int> >& counter);
 
-            void handleSchemaConnected(const std::string& deviceId);
+            void handleSchemaReceived(const karabo::util::Schema& schema, const std::string& deviceId,
+                                      const DeviceDataPointer& data,
+                                      const boost::shared_ptr<std::atomic<unsigned int> >& counter);
 
-            void handleSchemaReceived(const karabo::util::Schema& schema, const std::string& deviceId);
+            void handleSchemaReceived2(const karabo::util::Schema& schema, const DeviceDataPointer& data,
+                                       const boost::shared_ptr<std::atomic<unsigned int> >& counter);
 
             /// Helper for connecting to both signalChanged and signalStateChanged
-            void handleConfigConnected(const std::string& deviceId);
+            void handleConfigConnected(const DeviceDataPointer& data,
+                                       const boost::shared_ptr<std::atomic<unsigned int> >& counter);
+
+            void checkReady(std::atomic<unsigned int>& counter);
+
+            bool stopLogging(const std::string& deviceId, bool suicideIfEmpty);
 
             int determineLastIndex(const std::string& deviceId);
 
