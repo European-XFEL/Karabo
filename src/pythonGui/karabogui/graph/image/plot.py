@@ -295,8 +295,6 @@ class KaraboImagePlot(PlotItem):
         selection = [
             "0: Nearest neighbors",
             "1: Linear spline",
-            "2: Quadratic spline",
-            "3: Cubic spline"
         ]
         order, ok = QInputDialog.getItem(
             self.parent(),
