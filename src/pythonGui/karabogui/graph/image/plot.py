@@ -2,7 +2,7 @@ from copy import deepcopy
 
 import numpy as np
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, QRectF
-from PyQt4.QtGui import QAction, QFont
+from PyQt4.QtGui import QAction, QFont, QInputDialog
 from pyqtgraph import ColorMap, PlotItem
 
 from karabogui.graph.common.api import (
@@ -83,6 +83,9 @@ class KaraboImagePlot(PlotItem):
         self.setMinimumHeight(200)
         self._set_default_transform()
         self._flip()
+
+        # Connect signals
+        self.vb.sigResized.connect(self.imageItem.reset_downsampling)
 
     # ---------------------------------------------------------------------
     # PyQt slots
@@ -202,11 +205,9 @@ class KaraboImagePlot(PlotItem):
         :param str cmap:
             Colormap name. Should be among COLORMAPS.
         """
-        lut = None
-        if cmap != "none":
-            lut = (ColorMap(*zip(*COLORMAPS[cmap]), mode="RGB")
-                   .getLookupTable(alpha=False, mode="RGB"))
-        self.imageItem.setLookupTable(lut)
+        lut = (ColorMap(*zip(*COLORMAPS[cmap]), mode="RGB")
+               .getLookupTable(alpha=False, mode="RGB"))
+        self.imageItem.set_lookup_table(lut)
 
     @pyqtSlot(object)
     def set_image_levels(self, levels):
@@ -283,14 +284,27 @@ class KaraboImagePlot(PlotItem):
     def enable_downsampling(self, enabled):
         if enabled:
             downsample_action = QAction(self.vb)
-            downsample_action.setIconText('Auto downsample')
-            downsample_action.setCheckable(True)
-            downsample_action.setChecked(True)
-            downsample_action.triggered.connect(
-                self.imageItem.setAutoDownsample)
+            downsample_action.setIconText('Downsample order')
+            downsample_action.triggered.connect(self._get_downsample_order)
             self.vb.add_action(downsample_action, separator=True)
 
         self.imageItem.enable_downsampling(enabled)
+
+    @pyqtSlot()
+    def _get_downsample_order(self):
+        selection = [
+            "0: Nearest neighbors",
+            "1: Linear spline",
+        ]
+        order, ok = QInputDialog.getItem(
+            self.parent(),
+            'Downsample order',
+            'Select interpolation kind:',
+            selection,
+            current=self.imageItem.downsample_order,
+            editable=False)
+        if ok:
+            self.imageItem.set_downsample_order(selection.index(order))
 
     # ---------------------------------------------------------------------
     # Transform methods

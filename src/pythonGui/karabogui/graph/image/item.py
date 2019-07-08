@@ -1,8 +1,6 @@
-from collections import Callable
-
 import numpy as np
-from PyQt4.QtCore import pyqtSignal, QPointF, Qt
-from PyQt4.QtGui import QTransform
+from PyQt4.QtCore import pyqtSignal, pyqtSlot, QPointF, Qt
+from PyQt4.QtGui import QImage, qRgb, QTransform
 from pyqtgraph import functions as fn, ImageItem, Point
 from scipy.ndimage import zoom
 
@@ -24,7 +22,11 @@ class KaraboImageItem(ImageItem):
         self.auto_levels = True
         self._rect = None
         self.autoDownsample = False
+
+        self.downsample_order = 0
         self._downsampling_enabled = False
+        self._qlut = None
+        self._lastDownsample = None
 
     # ---------------------------------------------------------------------
     # Public methods
@@ -54,6 +56,15 @@ class KaraboImageItem(ImageItem):
     def enable_downsampling(self, enable):
         self._downsampling_enabled = enable
         self.autoDownsample = enable
+
+    def set_lookup_table(self, lut, update=True):
+        self.lut = lut
+        self._effectiveLut = None
+        stride = self.lut.shape[0] // 256
+        self._qlut = [qRgb(*v) for v in lut[::stride, :]]
+
+        if update:
+            self.updateImage()
 
     # ---------------------------------------------------------------------
     # Events
@@ -93,19 +104,64 @@ class KaraboImageItem(ImageItem):
     # Render patches
 
     def render(self):
-        """Reimplementing for performance improvements"""
+        """Reimplementing for performance improvements patches"""
 
-        # Convert data to QImage for display.
-
-        # profile = debug.Profiler()
-        if self.image is None or self.image.size == 0:
+        # 0. Check if image is valid
+        image = self.image
+        if image is None or image.size == 0:
             return
-        if isinstance(self.lut, Callable):
-            lut = self.lut(self.image)
-        else:
-            lut = self.lut
 
-        # --- Start patching ---
+        # 1. Downsample image according to the image geometry ratio
+        #  and interpolation order
+        if self._downsampling_enabled:
+            image = self._downsample_image(image)
+
+            # Check if downsampling returns an image
+            if image is None:
+                return
+
+        # 2. Clip values according to levels
+        levels = self.levels
+        if levels is not None and levels.ndim == 1:
+            image = np.clip(image, levels[0], levels[1])
+
+        # 3. Rescale values to 0-255 for the QImage
+        if image.dtype != np.uint8:
+            image = rescale(image, low=0, high=255)
+
+        # 4. Transpose image array to match axis orientation. There is a need
+        # to copy since QImage need the array copy (pointers), not the view.
+        if self.axisOrder == 'col-major':
+            image = image.transpose((1, 0, 2)[:image.ndim]).copy()
+
+        # 5. Create QImage
+        ny, nx = image.shape[:2]
+        stride = image.strides[0]
+        self.qimage = QImage(image, nx, ny, stride, QImage.Format_Indexed8)
+
+        # 6. Set color table
+        if self._qlut is not None:
+            self.qimage.setColorTable(self._qlut)
+
+    def _downsample_image(self, image):
+        if self._lastDownsample is None:
+            # Calculate downsample image
+            self._lastDownsample = self._calculate_downsample_factor(image)
+
+            # If still None, do nothing
+            if self._lastDownsample is None:
+                return
+
+        xds, yds = self._lastDownsample
+
+        # Scale only if downsampling of (one of) the axis is greater than 1
+        if xds > 1 or yds > 1:
+            scale = [1 / yds, 1 / xds]
+            image = zoom(image, scale, order=self.downsample_order)
+
+        return image
+
+    def _calculate_downsample_factor(self, image):
         # Reduce dimensions of image based on screen resolution
         o = self.mapToDevice(QPointF(0, 0))
         x = self.mapToDevice(QPointF(1, 0))
@@ -116,53 +172,9 @@ class KaraboImageItem(ImageItem):
             self.qimage = None
             return
 
-        image = self.image
-        if self._downsampling_enabled:
-            image = self._downsample_image(image, w, h)
-
-        # if the image data is a small int, then we can combine levels + lut
-        # into a single lut for better performance
-        levels = self.levels
-        if (levels is not None and levels.ndim == 1
-                and image.dtype in (np.ubyte, np.uint16)):
-            if self._effectiveLut is None:
-                eflsize = 2 ** (image.itemsize * 8)
-                ind = np.arange(eflsize)
-                minlev, maxlev = levels
-                levdiff = maxlev - minlev
-                # don't allow division by 0
-                levdiff = 1 if levdiff == 0 else levdiff
-                if lut is None:
-                    efflut = fn.rescaleData(ind,
-                                            scale=255. / levdiff,
-                                            offset=minlev,
-                                            dtype=np.ubyte)
-                else:
-                    lutdtype = np.min_scalar_type(lut.shape[0] - 1)
-                    efflut = fn.rescaleData(ind,
-                                            scale=(lut.shape[0] - 1) / levdiff,
-                                            offset=minlev,
-                                            dtype=lutdtype,
-                                            clip=(0, lut.shape[0] - 1))
-                    efflut = lut[efflut]
-
-                self._effectiveLut = efflut
-            lut = self._effectiveLut
-            levels = None
-
-        # Assume images are in column-major order for backward compatibility
-        # (most images are in row-major order)
-
-        if self.axisOrder == 'col-major':
-            image = image.transpose((1, 0, 2)[:image.ndim])
-
-        argb, alpha = fn.makeARGB(image, lut=lut, levels=levels)
-        self.qimage = fn.makeQImage(argb, alpha, transpose=False)
-
-    def _downsample_image(self, image, w, h):
         # Calculate scale on the nearest hundredths. Don't scale if the
         # item dimension is bigger than the image dimensions.
-        image_y, image_x = image.shape
+        image_y, image_x = image.shape[:2]
 
         # Swap dimensions if ImageItem is in row-major
         if self.axisOrder == 'row-major':
@@ -172,7 +184,6 @@ class KaraboImageItem(ImageItem):
         # - if dimension >= 1000, min scale is 2
         # - if dimension in [500, 1000), min scale is 2
         # - if dimension is smaller than 500, no scaling is done
-        xds, yds = (1, 1)
         x_scale = round(1.0 / w * 100) / 100
         y_scale = round(1.0 / h * 100) / 100
 
@@ -186,18 +197,13 @@ class KaraboImageItem(ImageItem):
 
         # Scale the image if autodownsampling is specified or (one of) the axis
         # has a bigger scale than the minimum
+        xds, yds = (1, 1)
         if x_scale >= x_min_ds or y_scale >= x_min_ds or self.autoDownsample:
             # Correct downsampling wrt if less than prescribed minimum
             xds = x_scale if x_scale > x_min_ds else x_min_ds
             yds = y_scale if y_scale > y_min_ds else y_min_ds
 
-            # Scale only if downsampling of (one of) the axis is greater than 1
-            if xds > 1 or yds > 1:
-                scale = [1 / yds, 1 / xds]
-                image = zoom(self.image, scale, order=1)
-        self._lastDownsample = (xds, yds)
-
-        return image
+        return xds, yds
 
     def setLevels(self, levels, update=True):
         """Reimplemented function for version conflict"""
@@ -208,3 +214,33 @@ class KaraboImageItem(ImageItem):
             self._effectiveLut = None
             if update:
                 self.updateImage()
+
+    def viewTransformChanged(self):
+        """Reimplemented because we do not want to recalculate downsample"""
+
+    def informViewBoundsChanged(self):
+        """Reimplemented because we want to catch image shape changes"""
+        super(KaraboImageItem, self).informViewBoundsChanged()
+        self.reset_downsampling(update=False)
+
+    def set_downsample_order(self, order):
+        self.downsample_order = order
+        self.reset_downsampling()
+
+    @pyqtSlot()
+    def reset_downsampling(self, update=True):
+        self._lastDownsample = None
+        if update:
+            self.updateImage()
+
+
+def rescale(image, low=0.0, high=100.0):
+    min_value, max_value = np.min(image), np.max(image)
+    value_range = np.subtract(max_value, min_value)
+
+    if value_range == 0:
+        return image
+
+    rescaled = high - ((high - low) * ((max_value - image) / value_range))
+
+    return rescaled.astype(np.uint8)
