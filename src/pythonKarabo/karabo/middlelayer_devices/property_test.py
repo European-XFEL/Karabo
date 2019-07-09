@@ -3,7 +3,7 @@ from asyncio import sleep
 from karabo.middlelayer import (
     AccessLevel, AccessMode, background, Bool, Configurable, DaqDataType,
     Device, Double, Float, Hash, InputChannel, Int32, Int64, Node,
-    OutputChannel, Overwrite, UInt32, UInt64, Unit, Slot, State, String,
+    OutputChannel, Overwrite, UInt32, UInt64, Unit, Slot, slot, State, String,
     VectorBool, VectorChar, VectorDouble, VectorFloat, VectorHash, VectorInt32,
     VectorInt64, VectorUInt32, VectorUInt64, VectorString)
 
@@ -303,3 +303,27 @@ class PropertyTestMDL(Device):
                 self.packetSend = self.packetSend.value + 1
 
             await sleep(1 / self.frequency.value)
+
+    availableMacros = VectorString(
+        displayedName="Available Macros",
+        description="Provides macros from the device",
+        accessMode=AccessMode.READONLY,
+        defaultValue=['default'])
+
+    def generate_macro(self, name):
+        code = "from karabo.middlelayer import Macro, Slot, String\n\n" \
+            "class helloWorld(Macro):\n" \
+            f"    name = String(defaultValue='{name}')\n" \
+            "    @Slot()\n" \
+            "    def sayHello(self):\n" \
+            "        print(f'Hello, {self.name} macro!')\n"
+        return code
+
+    @slot
+    def requestMacro(self, params):
+        payload = Hash('success', True)
+
+        name = params.get('name', default='')
+        payload.set('data', self.generate_macro(name))
+        return Hash('type', 'deviceMacro', 'origin', self.deviceId, 'payload',
+                    payload)
