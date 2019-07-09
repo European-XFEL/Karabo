@@ -19,6 +19,7 @@ class DisplayWebCamGraph(BaseBindingController):
     model = Instance(WebCamGraphModel, args=())
 
     _plot = Instance(KaraboImagePlot)
+    _image_node = Instance(KaraboImageNode, args=())
 
     def create_widget(self, parent):
         widget = KaraboImageView()
@@ -50,14 +51,14 @@ class DisplayWebCamGraph(BaseBindingController):
     # -----------------------------------------------------------------------
 
     def value_update(self, proxy):
-        image_node = KaraboImageNode(proxy.value)
+        self._image_node.set_value(proxy.value)
 
-        if not image_node.is_valid:
+        if not self._image_node.is_valid:
             return
 
-        if image_node.dim_z:
-            array = image_node.get_slice(DIMENSIONS['Z'], 0)
+        if self._image_node.dim_z:
+            array = self._image_node.get_slice(DIMENSIONS['Z'], 0)
         else:
-            array = image_node.get_data()
+            array = self._image_node.get_data()
 
         self._plot.setData(array)
