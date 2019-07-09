@@ -45,8 +45,8 @@ from .widgets.simple import (
     EditableListModel, EditableSpinBoxModel, FileInModel, FileOutModel,
     GlobalAlarmModel, HexadecimalModel, IntLineEditModel, KnobModel,
     LabelModel, LampModel, LineEditModel, MultiCurvePlotModel, PopUpModel,
-    RunConfiguratorModel, SceneLinkModel, SliderModel, WebLinkModel,
-    WorkflowItemModel, WidgetNodeModel, XYPlotModel)
+    RunConfiguratorModel, SceneLinkModel, SliderModel, TickSliderModel,
+    WebLinkModel, WorkflowItemModel, WidgetNodeModel, XYPlotModel)
 from .widgets.vacuum import VacuumWidgetModel
 from .widgets.statefulicon import StatefulIconWidgetModel
 

@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Enum, Int, String
+from traits.api import Bool, Enum, Int, String
 
 from karabo.common.scenemodel.bases import (
     BaseDisplayEditableWidget, BaseEditWidget, BaseWidgetObjectData)
@@ -197,6 +197,12 @@ class SliderModel(BaseEditWidget):
     """ A model for Slider"""
 
 
+class TickSliderModel(BaseEditWidget):
+    """ A model for TickSlider"""
+    ticks = Int(1)
+    show_value = Bool(True)
+
+
 class DisplayTimeModel(BaseWidgetObjectData):
     """ A model for the time widget"""
     time_format = String('%H:%M:%S')
@@ -283,6 +289,26 @@ def _doublewheel_box_writer(write_func, model, parent):
     write_base_widget_data(model, element, 'DoubleWheelBox')
     element.set(NS_KARABO + 'decimals', str(model.decimals))
     element.set(NS_KARABO + 'integers', str(model.integers))
+
+    return element
+
+
+@register_scene_reader('TickSlider')
+def _tick_slider_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    traits['ticks'] = int(element.get(NS_KARABO + 'ticks', 1))
+    show_value = element.get(NS_KARABO + 'show_value', 'true')
+    traits['show_value'] = show_value.lower() == 'true'
+
+    return TickSliderModel(**traits)
+
+
+@register_scene_writer(TickSliderModel)
+def _tick_slider_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'TickSlider')
+    element.set(NS_KARABO + 'ticks', str(model.ticks))
+    element.set(NS_KARABO + 'show_value', str(model.show_value).lower())
 
     return element
 
