@@ -23,7 +23,9 @@ class TestErrorBool(GuiTestCase):
         super(TestErrorBool, self).setUp()
 
         schema = Object.getClassSchema()
+        new_schema = Object.getClassSchema()
         self.proxy = get_class_property_proxy(schema, 'prop')
+        self.new_proxy = get_class_property_proxy(new_schema, 'prop')
         self.model = ErrorBoolModel()
 
     def test_basics(self):
@@ -44,8 +46,16 @@ class TestErrorBool(GuiTestCase):
 
             apply_configuration(Hash('prop', True),
                                 self.proxy.root_proxy.binding)
-            assert controller.widget.loaded_data == OK_BOOL
+            self.assertEqual(controller.widget.loaded_data, OK_BOOL)
 
             apply_configuration(Hash('prop', False),
                                 self.proxy.root_proxy.binding)
-            assert controller.widget.loaded_data == ERROR_BOOL
+            self.assertEqual(controller.widget.loaded_data, ERROR_BOOL)
+
+            controller.add_proxy(self.new_proxy)
+            self.assertEqual(controller.widget.loaded_data, ERROR_BOOL)
+
+            apply_configuration(Hash('prop', True),
+                                self.proxy.root_proxy.binding)
+
+            self.assertEqual(controller.widget.loaded_data, OK_BOOL)
