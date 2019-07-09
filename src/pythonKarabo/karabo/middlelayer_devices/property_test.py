@@ -304,19 +304,24 @@ class PropertyTestMDL(Device):
 
             await sleep(1 / self.frequency.value)
 
+    _available_macros = ['default', 'another', 'the_third']
+
     availableMacros = VectorString(
         displayedName="Available Macros",
         description="Provides macros from the device",
         accessMode=AccessMode.READONLY,
-        defaultValue=['default'])
+        defaultValue=_available_macros)
 
     def generate_macro(self, name):
-        code = "from karabo.middlelayer import Macro, Slot, String\n\n" \
-            "class helloWorld(Macro):\n" \
-            f"    name = String(defaultValue='{name}')\n" \
-            "    @Slot()\n" \
-            "    def sayHello(self):\n" \
-            "        print(f'Hello, {self.name} macro!')\n"
+        if name in self._available_macros[:2]:
+            code = "from karabo.middlelayer import Macro, Slot, String\n\n" \
+                "class helloWorld(Macro):\n" \
+                f"    name = String(defaultValue='{name}')\n" \
+                "    @Slot()\n" \
+                "    def sayHello(self):\n" \
+                "        print(f'Hello, {self.name} macro!')\n"
+        else:
+            code = "import this\n"
         return code
 
     @slot
