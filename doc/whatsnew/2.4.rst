@@ -1,4 +1,20 @@
 **************************
+What's New in Karabo 2.4.2
+**************************
+
+The hotfix release for devices interacting with our the doocs library. Previously,
+the filtered Schema would cause an exception due to table elements.
+
+Detailed Merge-Log
+==================
+
+Bound/cpp core
+++++++++++++++
+
+- C++/Bound: Fix bug in handling TableElement by HashFilter class !3503
+
+
+**************************
 What's New in Karabo 2.4.1
 **************************
 
