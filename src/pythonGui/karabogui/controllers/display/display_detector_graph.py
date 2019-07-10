@@ -31,8 +31,7 @@ class FrameSlider(QWidget):
         # Populate our axis combobox
         self.cb_axis.addItems([Axes.X.name, Axes.Y.name, Axes.Z.name])
 
-        self.cb_axis.currentIndexChanged['const QString &'].connect(
-            self.axisChanged.emit)
+        self.cb_axis.currentIndexChanged[str].connect(self.axisChanged.emit)
         self.sl_cell.valueChanged.connect(self.on_slider_moved)
         self.sb_cell.valueChanged.connect(self.on_value_changed)
 
@@ -89,7 +88,7 @@ class DisplayDetectorGraph(BaseBindingController):
     _cell = Int(0)
 
     _frame_slider = Instance(FrameSlider)
-    _image_node = Instance(KaraboImageNode)
+    _image_node = Instance(KaraboImageNode, args=())
     _plot = Instance(KaraboImagePlot)
 
     def create_widget(self, parent):
@@ -171,7 +170,7 @@ class DisplayDetectorGraph(BaseBindingController):
     # -----------------------------------------------------------------------
 
     def value_update(self, proxy):
-        self._image_node = KaraboImageNode(proxy.value)
+        self._image_node.set_value(proxy.value)
 
         if not self._image_node.is_valid:
             return
@@ -186,4 +185,5 @@ class DisplayDetectorGraph(BaseBindingController):
         self._update_image()
 
     def _set_slider_max(self, value):
-        self._frame_slider.set_slider_maximum(value - 1)
+        max_value = max(value - 1, 0)
+        self._frame_slider.set_slider_maximum(max_value)

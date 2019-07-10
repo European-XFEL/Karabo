@@ -19,13 +19,11 @@ class KaraboImageNode(HasStrictTraits):
     # Internal traits
     _data = ArrayOrNone
 
-    def __init__(self, image_node):
-        super(KaraboImageNode, self).__init__()
-
+    def set_value(self, image_node):
         dim_x, dim_y, dim_z, encoding = get_dimensions_and_encoding(image_node)
 
-        self.dim_x = dim_x
-        self.dim_y = dim_y
+        self.dim_x = dim_x if dim_x is not None else 0
+        self.dim_y = dim_y if dim_y is not None else 0
         self.dim_z = dim_z if dim_z is not None else 0
         self.encoding = encoding
         self._data = get_image_data(image_node,
@@ -60,9 +58,6 @@ class KaraboImageNode(HasStrictTraits):
 
     @property
     def is_valid(self):
-        if self.dim_x is None and self.dim_y is None:
-            return False
-
         if self.dim_x < 1 or self.dim_y < 1:
             return False
 
