@@ -1,5 +1,6 @@
 from asyncio import (
     CancelledError, coroutine, ensure_future, Future, TimeoutError)
+import logging
 from pint import DimensionalityError
 from unittest import main
 import time
@@ -17,11 +18,15 @@ class Tests(DeviceTest):
 
     @coroutine
     def coro(self, param):
+        if not param:
+            raise RuntimeError
         self.assertEqual(param, "whatever")
         self.called = True
         return "coro called"
 
     def func(self, param):
+        if not param:
+            raise RuntimeError
         self.assertEqual(param, "something")
         self.called = True
         return "func called"
@@ -42,6 +47,41 @@ class Tests(DeviceTest):
         except CancelledError:
             self.called = True
             raise
+
+    @async_tst
+    def test_coro_coro_raise(self):
+        with self.assertLogs(self.lead.deviceId, level=logging.ERROR) as log, \
+                self.assertRaises(RuntimeError):
+            yield from background(self.coro, False)
+        self.assertIs(log.records[0].exc_info[0], RuntimeError)
+
+    @async_tst
+    def test_coro_coro_direct_raise(self):
+        with self.assertLogs(self.lead.deviceId, level=logging.ERROR) as log, \
+                self.assertRaises(RuntimeError):
+            yield from background(self.coro(False))
+        self.assertIs(log.records[0].exc_info[0], RuntimeError)
+
+    @async_tst
+    def test_coro_func_raise(self):
+        with self.assertLogs(self.lead.deviceId, level=logging.ERROR) as log, \
+                self.assertRaises(RuntimeError):
+            yield from background(self.func, False)
+        self.assertIs(log.records[0].exc_info[0], RuntimeError)
+
+    @sync_tst
+    def test_func_coro_raise(self):
+        with self.assertLogs(self.lead.deviceId, level=logging.ERROR) as log, \
+                self.assertRaises(RuntimeError):
+            background(self.coro, False).wait()
+        self.assertIs(log.records[0].exc_info[0], RuntimeError)
+
+    @sync_tst
+    def test_func_func_raise(self):
+        with self.assertLogs(self.lead.deviceId, level=logging.ERROR) as log, \
+                self.assertRaises(RuntimeError):
+            background(self.func, False).wait()
+        self.assertIs(log.records[0].exc_info[0], RuntimeError)
 
     @async_tst
     def test_coro_coro(self):

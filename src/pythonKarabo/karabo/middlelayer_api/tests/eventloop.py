@@ -54,8 +54,7 @@ class DeviceTest(TestCase):
     def lifetimeManager(cls):
         """This context manager is run around the test class"""
         cls.lead = Mock()
-        my_uuid = uuid.uuid4()
-        cls.lead.deviceId = "test-mdl-{}".format(my_uuid)
+        cls.lead.deviceId = "test-mdl-{}".format(uuid.uuid4())
         cls.lead._ss = Mock()
         cls.lead._ss.loop = cls.loop
         cls.lead._ss.tasks = set()
