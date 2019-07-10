@@ -32,18 +32,21 @@ def background(task, *args, timeout=-1):
 
     @synchronize
     def inner(task, *args):
+        loop = get_event_loop()
         try:
             if iscoroutine(task):
                 assert not args
                 return (yield from task)
             else:
-                loop = get_event_loop()
                 return (yield from loop.run_coroutine_or_thread(task, *args))
         except CancelledError:
             raise
         except Exception:
-            instance = get_event_loop().instance()
-            logger = logging.getLogger(instance.deviceId)
+            try:
+                logger = logging.getLogger(loop.instance().deviceId)
+            except Exception:
+                # Make absolutely sure that this the log message is done!
+                logger = logging.getLogger()
             logger.exception("Error in background task ...")
             raise
 
