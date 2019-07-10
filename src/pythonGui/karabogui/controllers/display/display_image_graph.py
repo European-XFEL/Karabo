@@ -23,7 +23,7 @@ class DisplayImageGraph(BaseBindingController):
     model = Instance(ImageGraphModel, args=())
 
     _plot = Instance(KaraboImagePlot)
-    _image_node = Instance(KaraboImageNode)
+    _image_node = Instance(KaraboImageNode, args=())
 
     _axis = Int(2)
     _colormap_action = Instance(QAction)
@@ -62,9 +62,9 @@ class DisplayImageGraph(BaseBindingController):
 
     def value_update(self, proxy):
         image_data = proxy.value
-        image_node = KaraboImageNode(image_data)
+        self._image_node.set_value(image_data)
 
-        if not image_node.is_valid:
+        if not self._image_node.is_valid:
             return
 
         if "stackAxis" in image_data:
@@ -73,6 +73,6 @@ class DisplayImageGraph(BaseBindingController):
             # NOTE: this might happen for RGB image
             self._axis = DIMENSIONS['Z']
 
-        array = image_node.get_slice(self._axis, 0)
+        array = self._image_node.get_slice(self._axis, 0)
 
         self._plot.setData(array)
