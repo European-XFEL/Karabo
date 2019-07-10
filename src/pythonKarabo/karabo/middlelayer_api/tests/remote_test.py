@@ -172,6 +172,19 @@ class Local(Device):
     def error_in_error(self):
         raise RuntimeError
 
+    @coroutine
+    def error_log_message(self):
+        raise RuntimeError
+
+    @Slot()
+    @coroutine
+    def task_background_error_coro(self):
+        background(self.error_log_message())
+
+    @Slot()
+    def task_background_error_no_coro(self):
+        background(self.error_log_message())
+
     @Slot()
     @coroutine
     def task_error(self):
@@ -891,8 +904,54 @@ class Tests(DeviceTest):
                 yield from local.task_error()
                 self.assertFalse(remote.done)
                 yield from waitUntil(lambda: remote.done)
+                self.assertTrue(remote.done)
+
         self.assertIsNone(self.local.exc_slot)
         self.assertIsInstance(self.local.exception, RuntimeError)
+        del self.local.exc_slot
+        del self.local.exception
+        del self.local.traceback
+
+    @async_tst
+    def test_task_error_background_coro(self):
+        """test that errors of background tasks are properly reported"""
+        with (yield from getDevice("local")) as local, \
+                (yield from getDevice("remote")) as remote:
+            t = ensure_future(remote.read_log())
+            yield from sleep(0.1)
+            yield from local.task_background_error_coro()
+            yield from t
+
+            # Read out the log message
+            hash = decodeBinary(self.remote.logmessage)
+            hash = hash["messages"][0]
+            message = hash["message"]
+            self.assertIn("Error in background task ...", message)
+            self.assertEqual(hash["type"], "ERROR")
+            self.assertEqual(hash["category"], "local")
+
+        del self.local.exc_slot
+        del self.local.exception
+        del self.local.traceback
+
+    @async_tst
+    def test_task_error_background_no_coro(self):
+        """test that errors of background tasks are properly reported"""
+        with (yield from getDevice("local")) as local, \
+                (yield from getDevice("remote")) as remote:
+            t = ensure_future(remote.read_log())
+            yield from sleep(0.1)
+            yield from local.task_background_error_no_coro()
+            yield from t
+
+            # Read out the log message
+            hash = decodeBinary(self.remote.logmessage)
+            hash = hash["messages"][0]
+            message = hash["message"]
+            self.assertIn("Error in background task ...", message)
+            self.assertEqual(hash["type"], "ERROR")
+            self.assertEqual(hash["category"], "local")
+
         del self.local.exc_slot
         del self.local.exception
         del self.local.traceback
