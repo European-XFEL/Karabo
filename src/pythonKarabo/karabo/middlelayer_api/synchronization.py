@@ -4,6 +4,7 @@ import asyncio
 from asyncio import (CancelledError, coroutine, ensure_future, Future,
                      get_event_loop, iscoroutine, iscoroutinefunction)
 from functools import wraps
+import logging
 
 from karabo.native.data.basetypes import KaraboValue, unit_registry as unit
 
@@ -28,18 +29,31 @@ def background(task, *args, timeout=-1):
         task = background(do_something_in_background, "some value")
         task.cancel()
     """
+
     @synchronize
     def inner(task, *args):
         loop = get_event_loop()
-        if iscoroutine(task):
-            assert not args
-            return (yield from task)
-        else:
-            return (yield from loop.run_coroutine_or_thread(task, *args))
+        try:
+            if iscoroutine(task):
+                assert not args
+                return (yield from task)
+            else:
+                return (yield from loop.run_coroutine_or_thread(task, *args))
+        except CancelledError:
+            raise
+        except Exception:
+            try:
+                logger = logging.getLogger(loop.instance().deviceId)
+            except Exception:
+                # Make absolutely sure that this the log message is done!
+                logger = logging.getLogger()
+            logger.exception("Error in background task ...")
+            raise
 
     ret = inner(task, *args, wait=False, timeout=timeout)
     if iscoroutine(ret):
-        return ensure_future(ret)
+        task = ensure_future(ret)
+        return task
     else:
         return ret
 
