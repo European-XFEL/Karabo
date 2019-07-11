@@ -32,6 +32,12 @@ class TestVectorRollGraph(GuiTestCase):
         self.controller.destroy()
         self.assertIsNone(self.controller.widget)
 
+    def test_configuration(self):
+        """Assert that the vector roll auxiliar plots do not smooth the
+        images"""
+        for plot in self.controller.widget._aux_plots.current_plots:
+            self.assertFalse(plot._profiler.smooth)
+
     def test_set_value(self):
         """Test the value setting in VectorRollGraph"""
         plot = self.controller._plot
