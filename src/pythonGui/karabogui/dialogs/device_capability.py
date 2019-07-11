@@ -115,6 +115,8 @@ class DeviceCapabilityDialog(QDialog):
                 device_ids.append(node.node_id)
 
         get_topology().visit_system_tree(visitor)
+        device_ids.sort()
+
         return device_ids
 
     def _get_device_items(self, device_id):
@@ -122,14 +124,17 @@ class DeviceCapabilityDialog(QDialog):
         on offer.
         """
         device = get_topology().get_device(device_id)
-
         try:
             if self.capability is Capabilities.PROVIDES_SCENES:
                 items = device.binding.value.availableScenes.value
             elif self.capability is Capabilities.PROVIDES_MACROS:
                 items = device.binding.value.availableMacros.value
         except AttributeError:
-            # This device lied about its capabilities!
+            # This device lied about its capabilities or the information was
+            # not yet received!
+            binding = device.binding.value
+            if not len(binding):
+                self._request_device_capabilities(device)
             return []
         if items == [] or items is Undefined:
             # Not loaded yet. Request it.
