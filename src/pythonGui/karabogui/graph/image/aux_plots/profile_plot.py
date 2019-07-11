@@ -47,6 +47,9 @@ class BaseStepPlot(PlotItem):
         # Assuming that data is discrete, we add the difference to the last
         # value and feed it to the plot. This last is needed to plot all values
         # when stepMode=True, which is then not used.
+        if len(x_data) <= 1 or len(y_data) <= 1:
+            return
+
         offset = x_data[1] - x_data[0]
         self._line.setData(append(x_data, x_data[-1] + offset), y_data,
                            stepMode=True,
@@ -100,9 +103,9 @@ class ProfilePlot(BaseStepPlot):
     Insert more details here.
     """
 
-    def __init__(self, orientation="top"):
+    def __init__(self, orientation="top", **kwargs):
         super(ProfilePlot, self).__init__(orientation)
-        self._profiler = IntensityProfiler()
+        self._profiler = IntensityProfiler(**kwargs)
         self._fitted = False
 
         # Add context menu
