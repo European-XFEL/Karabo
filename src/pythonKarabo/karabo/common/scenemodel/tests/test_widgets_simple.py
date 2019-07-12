@@ -132,6 +132,17 @@ def test_scene_link_model():
     assert read_model.target_window == api.SceneTargetWindow.Dialog
 
 
+def test_tickslider():
+    traits = _geometry_traits()
+    traits['ticks'] = 500
+    traits['show_value'] = False
+    model = api.TickSliderModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+    assert read_model.ticks == 500
+    assert read_model.show_value is False
+
+
 def test_timelabel():
     traits = _geometry_traits()
     traits['time_format'] = '%H:%M:%S'
