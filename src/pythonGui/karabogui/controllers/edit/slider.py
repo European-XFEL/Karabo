@@ -81,7 +81,7 @@ class TickSlider(BaseBindingController):
                 max_inc is None and max_exc is None or
                 high - low > REASONABLE_RANGE):
             self._error_msg(proxy.path)
-            self.widget.setEnabled(False)
+            self.slider.setEnabled(False)
             return
 
         with SignalBlocker(self.slider):
