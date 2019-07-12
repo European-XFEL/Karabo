@@ -32,6 +32,12 @@ class TestSlider(GuiTestCase):
         set_proxy_value(self.proxy, 'prop', 1.0)
         self.assertEqual(self.controller.slider.value(), 1.0)
         self.assertEqual(self.controller.label.text(), "1.0")
+        set_proxy_value(self.proxy, 'prop', 1.3)
+        self.assertEqual(self.controller.slider.value(), 1.0)
+        self.assertEqual(self.controller.label.text(), "1.3")
+        set_proxy_value(self.proxy, 'prop', 1.9)
+        self.assertEqual(self.controller.slider.value(), 1.0)
+        self.assertEqual(self.controller.label.text(), "1.9")
 
     def test_edit_value(self):
         self.controller.slider.valueChanged.emit(3.0)
