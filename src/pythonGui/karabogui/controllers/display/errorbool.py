@@ -40,11 +40,16 @@ class DisplayErrorBool(BaseBindingController):
 
         return widget
 
-    def value_update(self, proxy):
-        value = get_binding_value(proxy)
-        if self.widget is None or value is None:
-            return
+    def add_proxy(self, proxy):
+        self._update_widget(proxy)
+        return True
 
+    def _update_widget(self, proxy=None):
+        values = [get_binding_value(p, False) for p in self.proxies]
+        if proxy is not None:
+            values.append(get_binding_value(proxy, False))
+
+        value = all(values)
         if not self.model.invert:
             svg = OK_BOOL if value else ERROR_BOOL
         else:
@@ -52,7 +57,10 @@ class DisplayErrorBool(BaseBindingController):
         self.widget.setToolTip("{}".format(value))
         self.widget.load(svg)
 
-    @on_trait_change('model.invert')
+    def value_update(self, proxy):
+        self._update_widget(proxy)
+
+    @on_trait_change('model.invert', post_init=True)
     def _invert_update(self):
         if self.proxy is not None:
             self.value_update(self.proxy)
