@@ -13,7 +13,7 @@ class PickerLegend(KaraboLegend):
         self.layout.setContentsMargins(2, 2, 2, 2)
         self.layout.setHorizontalSpacing(15)
 
-        self._color_box = ColorSample()
+        self._color_box = ColorSample(None)
         self.layout.addItem(self._color_box, 0, 0)
 
         self._label = LabelItem(color='w', size="8pt", justify="left")
@@ -42,8 +42,9 @@ class PickerLegend(KaraboLegend):
 class ColorSample(ItemSample):
     """The color item in the legend that shows the selected pixel color"""
 
-    def __init__(self):
-        super(ItemSample, self).__init__(None)
+    def __init__(self, item):
+        super(ColorSample, self).__init__(item)
+
         self._brush = Qt.NoBrush
         self._pen = QPen(QColor(196, 197, 193, 200), 1)
 
