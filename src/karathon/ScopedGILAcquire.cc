@@ -25,22 +25,24 @@ namespace karathon {
         std::string result = "";
         PyObject *pystr = NULL, *separator = NULL, *moduleTraceback = NULL, *list = NULL;
 
-        if (ptraceback) {
-            separator = PyUnicode_FromString("\n");
-            moduleTraceback = PyImport_ImportModule("traceback");
-            // Letter "O" in format string denotes conversion from Object ... 3 arguments
-            list = PyObject_CallMethod(moduleTraceback, "format_exception", "OOO", ptype, pvalue, ptraceback);
-            if (list) {
-                pystr = PyUnicode_Join(separator, list);
-            } else {
-                pystr = NULL;
+        if (ptype) {
+            if (pvalue && ptraceback) {
+                separator = PyUnicode_FromString("\n");
+                moduleTraceback = PyImport_ImportModule("traceback");
+                // Letter "O" in format string denotes conversion from Object ... 3 arguments
+                list = PyObject_CallMethod(moduleTraceback, "format_exception", "OOO", ptype, pvalue, ptraceback);
+                if (list) {
+                    pystr = PyUnicode_Join(separator, list);
+                } else {
+                    pystr = NULL;
+                }
+            } 
+            if (pvalue && !pystr) {
+                pystr = PyObject_Str(pvalue);
             }
-        } 
-        if (pvalue && !pystr) {
-            pystr = PyObject_Str(pvalue);
-        }
-        if (pystr) {
-            result = std::string(PyUnicode_AsUTF8(pystr));
+            if (pystr) {
+                result = std::string(PyUnicode_AsUTF8(pystr));
+            }
         }
 
         Py_XDECREF(moduleTraceback);
