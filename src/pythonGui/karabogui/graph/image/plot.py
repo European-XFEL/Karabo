@@ -218,8 +218,6 @@ class KaraboImagePlot(PlotItem):
              The image levels. Can be [float, float] or None
         """
         self.imageItem.auto_levels = levels is None
-        if levels is None:
-            levels = self.imageItem.levels
         self.imageItem.setLevels(levels)
         self.imageLevelsChanged.emit()
 
