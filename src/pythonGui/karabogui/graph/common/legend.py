@@ -1,5 +1,5 @@
 from PyQt4.QtGui import QBrush, QColor, QPen
-from pyqtgraph import GraphicsWidget, LabelItem, mkBrush, mkPen
+from pyqtgraph import LabelItem, mkBrush, mkPen
 from pyqtgraph.graphicsItems.LegendItem import ItemSample, LegendItem
 
 SYMBOL_COLUMN = 0
