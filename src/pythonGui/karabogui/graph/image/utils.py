@@ -48,9 +48,11 @@ def map_rect_to_transform(rect, scaling, translation):
     return QRectF(*(tuple(trans_pos) + tuple(trans_size)))
 
 
-def levels_almost_equal(image_level, image_range, rtol=0.01):
-    return all([np.abs(np.subtract(lvl, rng, dtype=np.float64)) <= rtol * lvl
-                for lvl, rng, in zip(image_level, image_range)])
+def levels_almost_equal(image_level, image_range, rtol=0.05):
+    tol = rtol * (image_level[1] - image_level[0])
+    return all([
+        np.abs(np.subtract(lvl, rng, dtype=np.float64)) <= tol
+        for lvl, rng, in zip(image_level, image_range)])
 
 
 def create_icon_from_colormap(colormap):
