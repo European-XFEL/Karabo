@@ -22,7 +22,7 @@ class KaraboLegend(LegendItem):
         """
         label = LabelItem(name, justify='left', color='w', size="8pt")
         sample = (item if isinstance(item, ItemSample)
-                  else ColorBox(item.opts.get('pen', None)))
+                  else ColorBox(item))
         row = self.layout.rowCount()
         self.items.append((sample, label))
         self.layout.addItem(sample, row, SYMBOL_COLUMN)
@@ -51,12 +51,13 @@ class CoordsLegend(KaraboLegend):
             self._label.setText("x: {:.2f}<br>y: {:.2f}".format(x, y))
 
 
-class ColorBox(GraphicsWidget):
+class ColorBox(ItemSample):
     """The color box in the legend that shows the curve pen color"""
 
-    def __init__(self, pen=None):
-        GraphicsWidget.__init__(self)
-        self._pen = mkPen(pen)
+    def __init__(self, item):
+        super(ColorBox, self).__init__(item)
+
+        self._pen = mkPen(item.opts.get('pen', None))
         self._brush = mkBrush(self._pen.color())
 
     def paint(self, painter, *args):
