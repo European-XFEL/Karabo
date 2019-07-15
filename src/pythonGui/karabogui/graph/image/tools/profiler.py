@@ -49,7 +49,7 @@ class IntensityProfiler:
         plot very time-consuming. Ideally this should be done only on noisy
         images, so once we figure out a way to assert it we can avoid doing
         this everytime"""
-        window = np.floor(0.005 * len(y_profile))  # Window size of 5%
+        window = np.floor(0.005 * len(y_profile))  # Window size of 0.5%
         y_profile = np.convolve(y_profile,
                                 np.ones((window,)) / window,
                                 mode='same')
