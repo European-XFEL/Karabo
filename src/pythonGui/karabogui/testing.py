@@ -38,9 +38,9 @@ class GuiTestCase(unittest.TestCase):
     def tearDown(self):
         self.app.deleteLater()
 
-    def process_qt_events(self):
+    def process_qt_events(self, ms=1000):
         # Give the event loop 10ms to process its events
-        self.app.processEvents(QEventLoop.AllEvents, 10)
+        self.app.processEvents(QEventLoop.AllEvents, ms)
 
     def click(self, button_widget, button=Qt.LeftButton):
         QTest.mouseClick(button_widget, button)
