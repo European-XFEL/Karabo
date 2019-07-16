@@ -162,7 +162,7 @@ class KaraboImageView(QWidget):
 
         return self._picker
 
-    def add_aux(self, plot_type=None, enable=True):
+    def add_aux(self, plot_type=None, config=None, enable=True):
         """Add a auxiliary plots to the ImageView"""
         if plot_type and enable:
             if self._aux_plots is None:
@@ -173,7 +173,10 @@ class KaraboImageView(QWidget):
                 if self.roi is not None:
                     self.roi.updated.connect(self._aux_plots.analyze)
 
-            plots = self._aux_plots.add_from_type(plot_type)
+            if config is None:
+                config = {}
+
+            plots = self._aux_plots.add_from_type(plot_type, **config)
             for ax, plot in enumerate(plots):
                 plot.vb.linkView(ax, self.plotItem.vb)
         else:
