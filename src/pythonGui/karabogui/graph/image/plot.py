@@ -87,22 +87,6 @@ class KaraboImagePlot(PlotItem):
     # ---------------------------------------------------------------------
     # PyQt slots
 
-    @pyqtSlot(int)
-    def reset_axis(self, axis):
-        """Resets the transformation on the axis by setting the original
-        transforms to the current and applying it. Also reverts the labels.
-
-        :param int axis:
-            The axis to be scaled. Either 0 (x-axis) or 1 (y-axis)
-        """
-        self._transform[SCALING][axis] \
-            = self._original_transform[SCALING][axis]
-        self._transform[TRANSLATION][axis] \
-            = self._original_transform[TRANSLATION][axis]
-        self._units[axis] = self._original_units[axis]
-
-        self._apply_transform()
-
     @pyqtSlot()
     def _restore_view(self):
         """Restores the image item to the original transform, which is
@@ -386,26 +370,3 @@ class KaraboImagePlot(PlotItem):
         for axis in AXIS_ITEMS:
             axis_item = self.getAxis(axis)
             axis_item.has_ticks = axis in major_axes
-
-    def scale_axis(self, axis, scale):
-        """Scales the axis by saving the current scaling and applying transform
-
-        :param int axis:
-            The axis to be scaled. Either 0 (x-axis) or 1 (y-axis)
-        :param float scale:
-            The scale factor.
-        """
-        self._transform[SCALING][axis] = scale
-        self._apply_transform()
-
-    def translate_axis(self, axis, offset):
-        """Translates the axis by saving the current translation and applying
-        transform.
-
-        :param int axis:
-            The axis to be scaled. Either 0 (x-axis) or 1 (y-axis)
-        :param float offset:
-            The translation offset
-        """
-        self._transform[TRANSLATION][axis] = offset
-        self._apply_transform()
