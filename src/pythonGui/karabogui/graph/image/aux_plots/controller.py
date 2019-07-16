@@ -36,7 +36,7 @@ class AuxPlotsController(QObject):
     # -----------------------------------------------------------------------
     # Public methods
 
-    def add_from_type(self, plot_type):
+    def add_from_type(self, plot_type, **kwargs):
         """Set the aux plots of specified plot type to the image layout"""
         # Remove set plots if any
         plot_klass = self.PLOT_MAP[plot_type]
@@ -46,7 +46,7 @@ class AuxPlotsController(QObject):
             self._image_layout.addItem(self.labelItem, 0, 0)
 
         for orientation in ['top', 'left']:
-            plot_item = plot_klass(orientation=orientation)
+            plot_item = plot_klass(orientation=orientation, **kwargs)
             plot_item.setVisible(self._visible)
             plot_item.enable_fit_action.triggered.connect(self._enable_fitting)
 
