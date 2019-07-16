@@ -72,7 +72,7 @@ class ColorBarWidget(GraphicsWidget):
 
             # If autolevel, use recorded level
             if levels is None:
-                levels = self.imageItem.levels
+                levels = image_range
 
             self._set_colorbar_range(levels)
 
