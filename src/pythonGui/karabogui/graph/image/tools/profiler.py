@@ -6,10 +6,16 @@ from karabogui.graph.common.api import ImageRegion
 
 class IntensityProfiler:
 
-    def __init__(self, profiler=np.sum):
+    def __init__(self, smooth=False, profiler=np.sum):
         self._profiler = profiler
         self._profile = None
         self._fit = None
+
+        self._smooth = smooth
+
+    @property
+    def smooth(self):
+        return self._smooth
 
     def profile(self, region, axis=0):
         """Calculate the profile of the region on each axes."""
@@ -22,24 +28,40 @@ class IntensityProfiler:
         # image region type
         if region.region_type is ImageRegion.Area:
             y_profile = self._profiler(region.region, axis=axis)
+            x_profile = region.axes[axis]
         elif region.region_type is ImageRegion.Line:
+            x_profile = region.axes[axis]
             y_profile = region.region[axis]
+
+            if self._smooth and len(y_profile) > 200:
+                y_profile = self._smooth_signal(y_profile)
         else:
             return
 
         # Calculate the profile with the profiling function (e.g., sum, mean)
-        x_profile = region.axes[axis]
         self._profile = (x_profile, y_profile)
 
         return self._profile
 
+    def _smooth_signal(self, y_profile):
+        """We smooth the received data using the Moving Average approach so
+        we can get rid of the up/down peaks on noisy images that make the
+        plot very time-consuming. Ideally this should be done only on noisy
+        images, so once we figure out a way to assert it we can avoid doing
+        this everytime"""
+        window = np.floor(0.005 * len(y_profile))  # Window size of 0.5%
+        y_profile = np.convolve(y_profile,
+                                np.ones((window,)) / window,
+                                mode='same')
+
+        return y_profile
+
     def fit(self):
         """Use Gaussian function to fit the profile"""
-
         # Calculate the offset of the x-axis with the half of the difference
         # of data points (it is assumed that the data is uniformly spaced)
-        offset = abs(np.diff(self._profile[0][:2])[0]) / 2
         x_data, y_data = self._profile
+        offset = abs(np.diff(x_data[:2])[0]) / 2
         self._fit = gaussian_fit(x_data, y_data, offset)
         return self._fit
 
