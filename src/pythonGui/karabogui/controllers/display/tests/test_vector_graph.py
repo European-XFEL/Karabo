@@ -33,6 +33,19 @@ class TestVectorGraph(GuiTestCase):
         self.controller.destroy()
         self.assertIsNone(self.controller.widget)
 
+    def test_crosshair(self):
+        cross_target = self.controller.widget._cross_target
+
+        def assert_crosshair_exists(horizontal, vertical):
+            self.assertEqual(cross_target.h_line is not None, horizontal)
+            self.assertEqual(cross_target.v_line is not None, vertical)
+
+        assert_crosshair_exists(False, False)
+        cross_target.action_button.clicked.emit(True)
+        assert_crosshair_exists(True, True)
+        cross_target.action_button.clicked.emit(False)
+        assert_crosshair_exists(False, False)
+
     def test_set_value(self):
         self.assertEqual(len(self.controller._curves), 1)
         curve = self.controller._curves.get(self.proxy)
