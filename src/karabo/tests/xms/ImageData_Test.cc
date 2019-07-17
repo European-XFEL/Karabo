@@ -198,8 +198,7 @@ void ImageData_Test::testSetAndGetMethods() {
 
 
         Dims offsets_valid(10, 50, 0);
-        Dims offsets_tobig(100, 500, 0); // Outside of image
-        Dims offsets_tosmall(10, 50); // Outside of image
+        Dims offsets_wrong_length(10, 50); // Wrong Length
 
         // If the encoding was manually set, setData() should not change it
         image2.setEncoding(EncodingType::BGRA);
@@ -208,8 +207,7 @@ void ImageData_Test::testSetAndGetMethods() {
 
         // Test valid and invalid values for offset
         CPPUNIT_ASSERT_NO_THROW(image2.setROIOffsets(offsets_valid));
-        CPPUNIT_ASSERT_THROW(image2.setROIOffsets(offsets_tobig), std::exception);
-        CPPUNIT_ASSERT_THROW(image2.setROIOffsets(offsets_tosmall), std::exception);
+        CPPUNIT_ASSERT_THROW(image2.setROIOffsets(offsets_wrong_length), std::exception);
 
         CPPUNIT_ASSERT_EQUAL(image2.getEncoding(), static_cast<int> (EncodingType::BGRA));
         CPPUNIT_ASSERT_EQUAL(image2.getDataType(), Types::INT16);
