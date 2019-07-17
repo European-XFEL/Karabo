@@ -200,13 +200,6 @@ namespace karabo {
                 throw KARABO_PARAMETER_EXCEPTION(msg);
             }
 
-            for (size_t i=0; i<newOffset.size(); ++i) {
-                if (newOffset[i] > imgSize[i]) {
-                    std::string msg = "ImageData ROI Offsets are outside of the image: " + std::to_string(newOffset[i]);
-                    throw KARABO_PARAMETER_EXCEPTION(msg);
-                }
-            }
-
             set<std::vector<unsigned long long> >("roiOffsets", offsets.toVector());
         }
 
