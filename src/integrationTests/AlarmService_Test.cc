@@ -110,7 +110,6 @@ void AlarmService_Test::appTestRunner() {
     CPPUNIT_ASSERT_NO_THROW(testAcknowledgement());
     CPPUNIT_ASSERT_NO_THROW(testTriggerGlobalAck());
     CPPUNIT_ASSERT_NO_THROW(testTriggerGlobal());
-    CPPUNIT_ASSERT_NO_THROW(testGetAlarmCondition());
     CPPUNIT_ASSERT_NO_THROW(testFlushing());
     CPPUNIT_ASSERT_NO_THROW(testRecovery());
     CPPUNIT_ASSERT_NO_THROW(testDeviceKilled());
@@ -446,17 +445,6 @@ void AlarmService_Test::testTriggerGlobal() {
     CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerGlobalNormal");
 
     std::clog << "Tested global triggering.. Ok" << std::endl;
-}
-
-
-void AlarmService_Test::testGetAlarmCondition() {
-    std::clog << "Tested posting alarm condition.. ";
-    m_deviceClient->execute("alarmTester", "alarmConditionToResult", KRB_TEST_MAX_TIMEOUT);
-    // get the alarmCondition as a string
-    const std::string alarmString = m_deviceClient->get<karabo::util::AlarmCondition>("alarmTester", "alarmCondition").asString();
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("alarmConditionToResult failed",
-                                 m_deviceClient->get<std::string>("alarmTester", "result"), alarmString);
-    std::clog << "Ok" << std::endl;
 }
 
 void AlarmService_Test::testFlushing() {
