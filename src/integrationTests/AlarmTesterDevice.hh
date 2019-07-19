@@ -105,6 +105,7 @@ namespace karabo {
         void triggerNormalNoAckNode();
 
         void triggerGlobalNormal();
+        void alarmConditionToResult();
 
     private:
 
