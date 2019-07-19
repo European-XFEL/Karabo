@@ -1198,7 +1198,7 @@ namespace karabo {
              * @return
              */
             const karabo::util::AlarmCondition & getAlarmCondition() const {
-                return this->get<karabo::util::AlarmCondition>("alarmCondition");
+                return karabo::util::AlarmCondition::fromString(this->get<std::string>("alarmCondition"));
             }
 
             /**

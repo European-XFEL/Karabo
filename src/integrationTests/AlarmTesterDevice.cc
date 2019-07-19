@@ -176,10 +176,6 @@ USING_KARABO_NAMESPACES
                 .displayedName("Back to global normal")
                 .commit();
 
-        SLOT_ELEMENT(expected).key("alarmConditionToResult")
-                .displayedName("Put the alarm condition in the result string")
-                .commit();
-
     }
 
     AlarmTester::AlarmTester(const karabo::util::Hash& config) : Device<>(config) {
@@ -218,7 +214,6 @@ USING_KARABO_NAMESPACES
         KARABO_SLOT(triggerNormalNoAckNode);
 
         KARABO_SLOT(triggerGlobalNormal);
-        KARABO_SLOT(alarmConditionToResult);
 
         KARABO_INITIAL_FUNCTION(initialize);
     }
@@ -364,6 +359,7 @@ USING_KARABO_NAMESPACES
 
     void AlarmTester::triggerGlobalAlarmAck() {
         setAlarmCondition(AlarmCondition::ALARM);
+
         KARABO_LOG_INFO << getAlarmInfo();
         set("result", "triggerGlobalAlarmAck");
     }
@@ -408,9 +404,5 @@ USING_KARABO_NAMESPACES
     void AlarmTester::triggerGlobalNormal() {
         setAlarmCondition(AlarmCondition::NONE);
         set("result", "triggerGlobalNormal");
-    }
-
-    void AlarmTester::alarmConditionToResult() {
-        set("result", getAlarmCondition().asString());
     }
 }
