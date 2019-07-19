@@ -43,7 +43,6 @@ private:
     void testRecovery();
     void testDeviceKilled();
     void testDeviceReappeared();
-    void testGetAlarmCondition();
     void testTriggerGlobalAck();
     void testTriggerGlobal();
 
