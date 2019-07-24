@@ -226,7 +226,6 @@ namespace karabo {
         DataLogger::DataLogger(const Hash& input)
             : karabo::core::Device<>(input)
             , m_flushDeadline(karabo::net::EventLoop::getIOService())
-            , m_doFlushFiles(true)
         {
 
             // start "flush" actor ...
@@ -247,15 +246,12 @@ namespace karabo {
             // When m_perDeviceData will be destructed, all the DeviceData destructors will run and tag
             // the remaining devices as discontinued.
             // Locking mutex maybe not needed since no parallelism anymore (?) - but cannot harm.
-            {
-                boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
-                for (auto it = m_perDeviceData.begin(), itEnd = m_perDeviceData.end(); it != itEnd; ++it) {
-                    disconnectP2P(it->first);
-                }
+            boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
+            for (auto it = m_perDeviceData.begin(), itEnd = m_perDeviceData.end(); it != itEnd; ++it) {
+                disconnectP2P(it->first);
             }
-            m_doFlushFiles = false;
-            if (m_flushDeadline.cancel())
-                doFlush();
+            // Previously, here was an attempt to flush data to file - but that is not needed:
+            // stream object destructors take care that their data arrives on disk.
         }
 
 
@@ -762,8 +758,9 @@ namespace karabo {
 
 
         void DataLogger::flushActor(const boost::system::error_code& e) {
-            if (e == boost::asio::error::operation_aborted || !m_doFlushFiles)
+            if (e == boost::asio::error::operation_aborted) {
                 return;
+            }
             doFlush();
             // arm timer again
             m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));

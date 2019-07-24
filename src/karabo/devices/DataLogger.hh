@@ -45,7 +45,6 @@ namespace karabo {
             boost::mutex m_changeVectorPropMutex;
 
             boost::asio::deadline_timer m_flushDeadline;
-            bool m_doFlushFiles;
             unsigned int m_flushInterval;
 
 
