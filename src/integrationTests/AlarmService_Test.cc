@@ -105,14 +105,14 @@ void AlarmService_Test::appTestRunner() {
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
 
     // the actual tests
-    CPPUNIT_ASSERT_NO_THROW(testDeviceRegistration());
-    CPPUNIT_ASSERT_NO_THROW(testAlarmPassing());
-    CPPUNIT_ASSERT_NO_THROW(testAcknowledgement());
-    CPPUNIT_ASSERT_NO_THROW(testTriggerGlobalAck());
-    CPPUNIT_ASSERT_NO_THROW(testTriggerGlobal());
-    CPPUNIT_ASSERT_NO_THROW(testFlushing());
-    CPPUNIT_ASSERT_NO_THROW(testRecovery());
-    CPPUNIT_ASSERT_NO_THROW(testDeviceKilled());
+    testDeviceRegistration();
+    testAlarmPassing();
+    testAcknowledgement();
+    testTriggerGlobalAck();
+    testTriggerGlobal();
+    testFlushing();
+    testRecovery();
+    testDeviceKilled();
     // TODO: Comment in once it is figured out why the arriving Hash has
     // 'update' or 'acknowledgeable' coming from signalAlarmUpdate
     //testDeviceReappeared();
@@ -139,8 +139,8 @@ void AlarmService_Test::testAlarmPassing() {
     Hash lastMessage;
     messageQ->pop(lastMessage);
 
-    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerAlarmHighAck");
-    CPPUNIT_ASSERT(m_deviceClient->get<int>("alarmTester", "intPropNeedsAck") == 5);
+    CPPUNIT_ASSERT_EQUAL(std::string("triggerAlarmHighAck"), m_deviceClient->get<std::string>("alarmTester", "result"));
+    CPPUNIT_ASSERT_EQUAL(5, m_deviceClient->get<int>("alarmTester", "intPropNeedsAck"));
     
     //get row for first device
     CPPUNIT_ASSERT(lastMessage.has("rows"));
@@ -149,14 +149,14 @@ void AlarmService_Test::testAlarmPassing() {
     CPPUNIT_ASSERT(lastMessage.has("rows." + rowId + ".add"));
     Hash h = lastMessage.get<Hash>("rows." + rowId + ".add");
     //these should be the same as it is the first time the alarm is raised
-    CPPUNIT_ASSERT(h.get<std::string>("timeOfOccurrence") == h.get<std::string>("timeOfFirstOccurrence"));
+    CPPUNIT_ASSERT_EQUAL(h.get<std::string>("timeOfOccurrence"), h.get<std::string>("timeOfFirstOccurrence"));
     CPPUNIT_ASSERT(karabo::util::Timestamp::fromHashAttributes(h.getAttributes("timeOfOccurrence")) == karabo::util::Timestamp::fromHashAttributes(h.getAttributes("timeOfFirstOccurrence")));
-    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
-    CPPUNIT_ASSERT(h.get<std::string>("property") == "intPropNeedsAck");
-    CPPUNIT_ASSERT(h.get<std::string>("type") == "alarmHigh");
-    CPPUNIT_ASSERT(h.get<std::string>("description") == "A intPropNeedsAck alarmHigh");
-    CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
-    CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == false);
+    CPPUNIT_ASSERT_EQUAL(std::string("alarmTester"), h.get<std::string>("deviceId"));
+    CPPUNIT_ASSERT_EQUAL(std::string("intPropNeedsAck"), h.get<std::string>("property"));
+    CPPUNIT_ASSERT_EQUAL(std::string("alarmHigh"), h.get<std::string>("type"));
+    CPPUNIT_ASSERT_EQUAL(std::string("A intPropNeedsAck alarmHigh"), h.get<std::string>("description"));
+    CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging"));
+    CPPUNIT_ASSERT(!h.get<bool>("acknowledgeable"));
 
     //go out of the alarm state
     messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
@@ -164,20 +164,20 @@ void AlarmService_Test::testAlarmPassing() {
     });
     messageQ->pop(lastMessage);
     rowId = lastMessage.get<Hash>("rows").begin()->getKey();
-    
-    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerNormalAck");
-    CPPUNIT_ASSERT(m_deviceClient->get<int>("alarmTester", "intPropNeedsAck") == 0);
+
+    CPPUNIT_ASSERT_EQUAL(std::string("triggerNormalAck"), m_deviceClient->get<std::string>("alarmTester", "result"));
+    CPPUNIT_ASSERT_EQUAL(0, m_deviceClient->get<int>("alarmTester", "intPropNeedsAck"));
 
     CPPUNIT_ASSERT(lastMessage.has("rows." + rowId + ".acknowledgeable"));
     h = lastMessage.get<Hash>("rows." + rowId + ".acknowledgeable");
 
     CPPUNIT_ASSERT(karabo::util::Timestamp::fromHashAttributes(h.getAttributes("timeOfOccurrence")) == karabo::util::Timestamp::fromHashAttributes(h.getAttributes("timeOfFirstOccurrence")));
-    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
-    CPPUNIT_ASSERT(h.get<std::string>("property") == "intPropNeedsAck");
-    CPPUNIT_ASSERT(h.get<std::string>("type") == "alarmHigh");
-    CPPUNIT_ASSERT(h.get<std::string>("description") == "A intPropNeedsAck alarmHigh");
-    CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
-    CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == true);
+    CPPUNIT_ASSERT_EQUAL(std::string("alarmTester"), h.get<std::string>("deviceId"));
+    CPPUNIT_ASSERT_EQUAL(std::string("intPropNeedsAck"), h.get<std::string>("property"));
+    CPPUNIT_ASSERT_EQUAL(std::string("alarmHigh"), h.get<std::string>("type"));
+    CPPUNIT_ASSERT_EQUAL(std::string("A intPropNeedsAck alarmHigh"), h.get<std::string>("description"));
+    CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging"));
+    CPPUNIT_ASSERT(h.get<bool>("acknowledgeable"));
 
     // Retrigger the alarm
     messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
@@ -216,7 +216,7 @@ void AlarmService_Test::testAcknowledgement() {
     Hash lastMessage;
     messageQ->pop(lastMessage);
 
-    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerWarnHighAckNode");
+    CPPUNIT_ASSERT_EQUAL(std::string("triggerWarnHighAckNode"), m_deviceClient->get<std::string>("alarmTester", "result"));
 
     //get row for second device
     CPPUNIT_ASSERT(lastMessage.has("rows"));
@@ -240,10 +240,10 @@ void AlarmService_Test::testAcknowledgement() {
 
     //and now updates
     CPPUNIT_ASSERT(h.get<std::string>("timeOfOccurrence") != h.get<std::string>("timeOfFirstOccurrence"));
-    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
-    CPPUNIT_ASSERT(h.get<std::string>("property") == "intPropNeedsAck");
-    CPPUNIT_ASSERT(h.get<std::string>("type") == "alarmHigh");
-    CPPUNIT_ASSERT(h.get<std::string>("description") == "A intPropNeedsAck alarmHigh");
+    CPPUNIT_ASSERT_EQUAL(std::string("alarmTester"), h.get<std::string>("deviceId"));
+    CPPUNIT_ASSERT_EQUAL(std::string("intPropNeedsAck"), h.get<std::string>("property"));
+    CPPUNIT_ASSERT_EQUAL(std::string("alarmHigh"), h.get<std::string>("type"));
+    CPPUNIT_ASSERT_EQUAL(std::string("A intPropNeedsAck alarmHigh"), h.get<std::string>("description"));
     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == false);
 
@@ -262,8 +262,8 @@ void AlarmService_Test::testAcknowledgement() {
     CPPUNIT_ASSERT(lastMessage.has("rows." + rowId + ".acknowledgeable"));
     h = lastMessage.get<Hash>("rows." + rowId + ".acknowledgeable");
     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == true);
-    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
-    CPPUNIT_ASSERT(h.get<std::string>("property") == "intPropNeedsAck");
+    CPPUNIT_ASSERT_EQUAL(std::string("alarmTester"), h.get<std::string>("deviceId"));
+    CPPUNIT_ASSERT_EQUAL(std::string("intPropNeedsAck"), h.get<std::string>("property"));
 
     // we can now acknowledge the alarm, by sending the appropriate message
     // this should trigger a message signaling that the acknowledged alarm is
@@ -277,8 +277,8 @@ void AlarmService_Test::testAcknowledgement() {
     CPPUNIT_ASSERT(lastMessage.has("rows." + rowId + ".remove"));
 
     h = lastMessage.get<Hash>("rows." + rowId + ".remove");
-    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
-    CPPUNIT_ASSERT(h.get<std::string>("property") == "intPropNeedsAck");
+    CPPUNIT_ASSERT_EQUAL(std::string("alarmTester"), h.get<std::string>("deviceId"));
+    CPPUNIT_ASSERT_EQUAL(std::string("intPropNeedsAck"), h.get<std::string>("property"));
 
     // requesting the alarm entries again, two entries remain, this is the
     // second alarm we raised.
@@ -298,8 +298,8 @@ void AlarmService_Test::testAcknowledgement() {
         rowId = lastMessage.get<Hash>("rows").begin()->getKey();
         if (lastMessage.has("rows." + rowId + ".init")) {
             h = lastMessage.get<Hash>("rows." + rowId + ".init");
-            CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
-            CPPUNIT_ASSERT(h.get<std::string>("property") == "nodeA.floatPropNeedsAck2");
+            CPPUNIT_ASSERT_EQUAL(std::string("alarmTester"), h.get<std::string>("deviceId"));
+            CPPUNIT_ASSERT_EQUAL(std::string("nodeA.floatPropNeedsAck2"), h.get<std::string>("property"));
             initMessageReceived = true;
         }
     }
@@ -316,7 +316,7 @@ void AlarmService_Test::testTriggerGlobalAck() {
     Hash lastMessage;
     messageQ->pop(lastMessage);
 
-    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerGlobalWarnAck");
+    CPPUNIT_ASSERT_EQUAL(std::string("triggerGlobalWarnAck"), m_deviceClient->get<std::string>("alarmTester", "result"));
 
     //get row for first device
     CPPUNIT_ASSERT(lastMessage.has("rows"));
@@ -325,9 +325,9 @@ void AlarmService_Test::testTriggerGlobalAck() {
     CPPUNIT_ASSERT(lastMessage.has("rows." + rowId + ".add"));
     Hash h = lastMessage.get<Hash>("rows." + rowId + ".add");
     //these should be the same as it is the first time the alarm is raised
-    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
-    CPPUNIT_ASSERT(h.get<std::string>("property") == "global");
-    CPPUNIT_ASSERT(h.get<std::string>("type") == "warn");
+    CPPUNIT_ASSERT_EQUAL(std::string("alarmTester"), h.get<std::string>("deviceId"));
+    CPPUNIT_ASSERT_EQUAL(std::string("global"), h.get<std::string>("property"));
+    CPPUNIT_ASSERT_EQUAL(std::string("warn"), h.get<std::string>("type"));
     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == false);
 
@@ -337,7 +337,7 @@ void AlarmService_Test::testTriggerGlobalAck() {
     });
     messageQ->pop(lastMessage);
 
-    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerGlobalAlarmAck");
+    CPPUNIT_ASSERT_EQUAL(std::string("triggerGlobalAlarmAck"), m_deviceClient->get<std::string>("alarmTester", "result"));
 
     //get row for first device
     CPPUNIT_ASSERT(lastMessage.has("rows"));
@@ -346,9 +346,9 @@ void AlarmService_Test::testTriggerGlobalAck() {
     CPPUNIT_ASSERT(lastMessage.has("rows." + rowId + ".add"));
     h = lastMessage.get<Hash>("rows." + rowId + ".add");
     //these should be the same as it is the first time the alarm is raised
-    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
-    CPPUNIT_ASSERT(h.get<std::string>("property") == "global");
-    CPPUNIT_ASSERT(h.get<std::string>("type") == "alarm");
+    CPPUNIT_ASSERT_EQUAL(std::string("alarmTester"), h.get<std::string>("deviceId"));
+    CPPUNIT_ASSERT_EQUAL(std::string("global"), h.get<std::string>("property"));
+    CPPUNIT_ASSERT_EQUAL(std::string("alarm"), h.get<std::string>("type"));
     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == false);
     
@@ -358,7 +358,7 @@ void AlarmService_Test::testTriggerGlobalAck() {
     });
     messageQ->pop(lastMessage);
 
-    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerGlobalWarnAck");
+    CPPUNIT_ASSERT_EQUAL(std::string("triggerGlobalWarnAck"), m_deviceClient->get<std::string>("alarmTester", "result"));
 
     //get row for first device
     CPPUNIT_ASSERT(lastMessage.has("rows"));
@@ -368,9 +368,9 @@ void AlarmService_Test::testTriggerGlobalAck() {
     CPPUNIT_ASSERT(lastMessage.has("rows." + rowId + ".update"));
     h = lastMessage.get<Hash>("rows." + rowId + ".update");
     //these should be the same as it is the first time the alarm is raised
-    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
-    CPPUNIT_ASSERT(h.get<std::string>("property") == "global");
-    CPPUNIT_ASSERT(h.get<std::string>("type") == "warn");
+    CPPUNIT_ASSERT_EQUAL(std::string("alarmTester"), h.get<std::string>("deviceId"));
+    CPPUNIT_ASSERT_EQUAL(std::string("global"), h.get<std::string>("property"));
+    CPPUNIT_ASSERT_EQUAL(std::string("warn"), h.get<std::string>("type"));
     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == false);
 
@@ -381,9 +381,9 @@ void AlarmService_Test::testTriggerGlobalAck() {
     CPPUNIT_ASSERT(lastMessage.has("rows." + rowId + ".acknowledgeable"));
     h = lastMessage.get<Hash>("rows." + rowId + ".acknowledgeable");
     //these should be the same as it is the first time the alarm is raised
-    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
-    CPPUNIT_ASSERT(h.get<std::string>("property") == "global");
-    CPPUNIT_ASSERT(h.get<std::string>("type") == "alarm");
+    CPPUNIT_ASSERT_EQUAL(std::string("alarmTester"), h.get<std::string>("deviceId"));
+    CPPUNIT_ASSERT_EQUAL(std::string("global"), h.get<std::string>("property"));
+    CPPUNIT_ASSERT_EQUAL(std::string("alarm"), h.get<std::string>("type"));
     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == true);
     
@@ -392,24 +392,24 @@ void AlarmService_Test::testTriggerGlobalAck() {
         m_deviceClient->execute("alarmTester", "triggerGlobalNormal", KRB_TEST_MAX_TIMEOUT);
     });
     messageQ->pop(lastMessage);
-    CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerGlobalNormal");
+    CPPUNIT_ASSERT_EQUAL(std::string("triggerGlobalNormal"), m_deviceClient->get<std::string>("alarmTester", "result"));
 
     rowIter = lastMessage.get<Hash>("rows").begin();
     rowId = rowIter->getKey();
     CPPUNIT_ASSERT(lastMessage.has("rows." + rowId + ".acknowledgeable"));
     h = lastMessage.get<Hash>("rows." + rowId + ".acknowledgeable");
-    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
-    CPPUNIT_ASSERT(h.get<std::string>("property") == "global");
-    CPPUNIT_ASSERT(h.get<std::string>("type") == "alarm");
+    CPPUNIT_ASSERT_EQUAL(std::string("alarmTester"), h.get<std::string>("deviceId"));
+    CPPUNIT_ASSERT_EQUAL(std::string("global"), h.get<std::string>("property"));
+    CPPUNIT_ASSERT_EQUAL(std::string("alarm"), h.get<std::string>("type"));
     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == true);
     
     rowId = (++rowIter)->getKey();
     CPPUNIT_ASSERT(lastMessage.has("rows." + rowId + ".acknowledgeable"));
     h = lastMessage.get<Hash>("rows." + rowId + ".acknowledgeable");
-    CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester");
-    CPPUNIT_ASSERT(h.get<std::string>("property") == "global");
-    CPPUNIT_ASSERT(h.get<std::string>("type") == "warn");
+    CPPUNIT_ASSERT_EQUAL(std::string("alarmTester"), h.get<std::string>("deviceId"));
+    CPPUNIT_ASSERT_EQUAL(std::string("global"), h.get<std::string>("property"));
+    CPPUNIT_ASSERT_EQUAL(std::string("warn"), h.get<std::string>("type"));
     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == true);
     
@@ -480,13 +480,13 @@ void AlarmService_Test::testFlushing() {
         Hash alarmHash("alarmTester", Hash("nodeA" + Validator::kAlarmParamPathSeparator + "floatPropNeedsAck2", Hash("warnHigh", propHash)));
         Hash hTest("devices", registeredDevices, "alarms", alarmHash);
 
-        //erase the occurance times, as the will not match!
+        // Erase the occurrence times, as they will not match!
         h.erase("alarms.alarmTester.nodeA" + Validator::kAlarmParamPathSeparator + "floatPropNeedsAck2.warnHigh.timeOfFirstOccurrence");
         h.erase("alarms.alarmTester.nodeA" + Validator::kAlarmParamPathSeparator + "floatPropNeedsAck2.warnHigh.timeOfOccurrence");
         // Erase the latest global alarm
         h.erase("alarms.alarmTester.global");
-        
-        CPPUNIT_ASSERT(karabo::util::similar(h, hTest));
+
+        CPPUNIT_ASSERT_MESSAGE("Mismatch: " + toString(h) += " vs " + toString(hTest), karabo::util::similar(h, hTest));
     }
 
     std::clog << "Tested flushing.. Ok" << std::endl;
@@ -543,16 +543,19 @@ void AlarmService_Test::testRecovery() {
     // second does not work either since getNextMessages(..) clears its result container...
     // So we just look into all messages that are received.
     int stillWaitInMs = KRB_TEST_MAX_TIMEOUT * 1000;
+    std::ostringstream allMessages; // collect info for debugging
     do {
         // Give time for message travel, but give up at some point...
         if (stillWaitInMs <= 0) {
             break;
         }
+        allMessages << "Still wait " << stillWaitInMs << " ms:";
         stillWaitInMs -= 50;
         boost::this_thread::sleep(boost::posix_time::milliseconds(50));
         // Check testAlarmService is started
         if (!topologyMessage) {
             for (const Hash& msg : m_tcpAdapter->getAllMessages("topologyUpdate")) {
+                allMessages << "\nTOPO:\n" << msg;
                 if (msg.has("changes.new.device.testAlarmService")) {
                     topologyMessage = true; // testAlarmService is started
                 }
@@ -561,6 +564,7 @@ void AlarmService_Test::testRecovery() {
         // Check that testAlarmService provides old state from file
         if (!alarmInit) {
             for (const Hash& msg : m_tcpAdapter->getAllMessages("alarmInit")) {
+                allMessages << "\nINIT:\n" << msg;
                 if (msg.has("rows")) {
                     const Hash& rows = msg.get<Hash>("rows");
                     for (auto itNode = rows.begin(); itNode != rows.end(); ++itNode) {
@@ -580,6 +584,7 @@ void AlarmService_Test::testRecovery() {
         // Check that alarmTester sends updates
         if (!rowAddedTester1 || !rowAddedTester2) {
             for (const Hash& msg : m_tcpAdapter->getAllMessages("alarmUpdate")) {
+                allMessages << "\nUPDATE:\n" << msg;
                 if (msg.has("rows")) {
                     const Hash& rows = msg.get<Hash>("rows");
                     for (auto itNode = rows.begin(); itNode != rows.end(); ++itNode) {
@@ -600,13 +605,16 @@ void AlarmService_Test::testRecovery() {
                 }
             }
         }
+        allMessages << "\n--------------------------------------------\n";
     } while (!topologyMessage || !rowAddedTester1 || !rowAddedTester2 || !alarmInit);
 
-    CPPUNIT_ASSERT(topologyMessage);
-    CPPUNIT_ASSERT(alarmInit);
+    const std::string msg(allMessages.str());
 
-    CPPUNIT_ASSERT(rowAddedTester2);
-    CPPUNIT_ASSERT(rowAddedTester1);
+    CPPUNIT_ASSERT_MESSAGE(msg, topologyMessage);
+    CPPUNIT_ASSERT_MESSAGE(msg, alarmInit);
+
+    CPPUNIT_ASSERT_MESSAGE(msg, rowAddedTester2);
+    CPPUNIT_ASSERT_MESSAGE(msg, rowAddedTester1);
 
     std::clog << "Tested service recovery.. Ok" << std::endl;
 }
