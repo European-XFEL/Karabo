@@ -181,7 +181,8 @@ namespace karabo {
 
                 // Here we collect all write errors, but only re-throw it once we have written what we could.
                 bool h5_err = false;
-                std::string err_log = "Aggregated HDF5 writer exceptions (probably missing values in the Hash):\n";
+                std::string err_log = "Aggregated HDF5 writer exceptions (probably missing values in the Hash).\n"
+                        "WARNING: This exception will break the calling loop if not caught!\n";
 
                 const vector<Element::Pointer >& elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
