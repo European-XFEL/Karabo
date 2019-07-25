@@ -272,7 +272,7 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
         timeout -= 200;
     }
     CPPUNIT_ASSERT_MESSAGE("Timeout while getting property history " + toString(numTimeouts), timeout >= 0);
-    CPPUNIT_ASSERT_MESSAGE("History size different than expected", max_set == history.size());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("History size different than expected", max_set, history.size());
     for (int i = 0; i < max_set; i++) {
         // checking values and timestamps
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong value in history", f(i), history[i].get<T>("v"));
