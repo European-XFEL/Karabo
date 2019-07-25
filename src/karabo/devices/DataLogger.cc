@@ -175,7 +175,7 @@ namespace karabo {
             , m_configMutex()
             , m_configStream()
             , m_lastIndex(0u)
-            , m_user()
+            , m_user(".") //TODO:  Define proper user running a device. The dot is unknown user?
             , m_lastTimestampMutex()
             , m_lastDataTimestamp(Epochstamp(0ull, 0ull), Trainstamp())
             , m_updatedLastTimestamp(false)
@@ -186,6 +186,55 @@ namespace karabo {
             , m_lasttime(0)
             , m_serializer(TextSerializer<Hash>::create(Hash("Xml.indentation", -1))) {
         }
+
+
+        DeviceData::~DeviceData() {
+            if (m_initLevel != InitLevel::COMPLETE) {
+                // We have not yet started logging this device, so nothing to mark about being done.
+                return;
+            }
+
+            const std::string& deviceId = m_deviceToBeLogged;
+            // Mark as logger stopped.
+            // Although this destructor is not running on the strand, accessing all members is safe:
+            // All other actions touching the members are posted on the strand and have a shared  pointer
+            // to the DeviceData - so this destructor can only run when all these actions are done.
+            try {
+                boost::mutex::scoped_lock lock(m_configMutex);
+                if (m_configStream.is_open()) {
+                    // Take care: order of locking m_configMutex and m_lastTimestampMutex!
+                    boost::mutex::scoped_lock lock(m_lastTimestampMutex);
+                    karabo::util::Timestamp& lastTs = m_lastDataTimestamp;
+                    m_configStream << lastTs.toIso8601Ext() << "|" << fixed << lastTs.toTimestamp()
+                            << "|" << lastTs.getTrainId() << "|.|||" << m_user << "|LOGOUT\n";
+                    m_configStream.flush();
+                    std::ostream::pos_type position = m_configStream.tellp();
+                    m_configStream.close();
+                    if (position >= 0) {
+                        string contentPath = m_directory + "/" + deviceId + "/raw/archive_index.txt";
+                        ofstream contentStream(contentPath.c_str(), ios::app);
+                        contentStream << "-LOG " << lastTs.toIso8601Ext() << " " << fixed << lastTs.toTimestamp()
+                                << " " << lastTs.getTrainId() << " " << position << " "
+                                << (m_user.empty() ? "." : m_user) << " " << m_lastIndex << "\n";
+                        contentStream.close();
+                        //KARABO_LOG_FRAMEWORK_DEBUG << "slotTagDeviceToBeDiscontinued index stream closed";
+                    } else {
+                        KARABO_LOG_FRAMEWORK_ERROR << "Error retrieving position of LOGOUT entry in archive with index '"
+                                << m_lastIndex << "': skipped writing index entry for " << deviceId;
+                    }
+
+                    for (map<string, MetaData::Pointer>::iterator it = m_idxMap.begin(); it != m_idxMap.end(); it++) {
+                        MetaData::Pointer mdp = it->second;
+                        if (mdp && mdp->idxStream.is_open()) mdp->idxStream.close();
+                    }
+                    m_idxMap.clear();
+                    //KARABO_LOG_FRAMEWORK_DEBUG << "slotTagDeviceToBeDiscontinued idxMap is cleaned";
+                }
+            } catch (...) {
+                KARABO_RETHROW_AS(KARABO_LOGIC_EXCEPTION("Problems tagging " + deviceId + " to be discontinued"));
+            }
+        }
+
 
         DataLogger::DataLogger(const Hash& input)
             : karabo::core::Device<>(input)
@@ -199,6 +248,7 @@ namespace karabo {
             // Register slots in constructor to ensure existence when sending instanceNew
             KARABO_SLOT(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
             KARABO_SLOT(slotSchemaUpdated, Schema /*changedSchema*/, string /*deviceId*/);
+            KARABO_SLOT(slotAddDeviceToBeLogged, string /*deviceId*/);
             KARABO_SLOT(slotTagDeviceToBeDiscontinued, string /*reason*/, string /*deviceId*/);
             KARABO_SLOT(flush);
 
@@ -224,84 +274,94 @@ namespace karabo {
 
         void DataLogger::initialize() {
 
+            // Validate that devicesToBeLogged does not contain duplicates
             const auto devsToLog(get<std::vector < std::string >> ("devicesToBeLogged"));
+            const std::set<std::string> tester(devsToLog.begin(), devsToLog.end());
+            if (tester.size() < devsToLog.size()) {
+                throw KARABO_INIT_EXCEPTION("Duplicated ids in configured devicesToBeLogged: " + toString(devsToLog));
+            }
             // In the beginning, all are not yet logged (no mutex needed since no parallel action triggered yet):
             set("devicesNotLogged", devsToLog);
 
-            std::string allFailures;
+            // Create data structures, including directories
             for (const std::string& deviceId : devsToLog) {
+                DeviceDataPointer data = boost::make_shared<DeviceData>(deviceId, get<string>("directory"));
+                setupDirectory(data);
                 // Locking mutex not yet needed - no parallelism on content of m_perDeviceData yet.
-                auto result = m_perDeviceData.insert(std::make_pair(deviceId, boost::make_shared<DeviceData>(deviceId, get<string>("directory"))));
-                DeviceDataPointer& data = result.first->second;
-                boost::system::error_code ec;
-
-                data->m_user = "."; //TODO:  Define proper user running a device. The dot is unknown user?
-
-                if (!boost::filesystem::exists(get<string>("directory") + "/" + deviceId)) {
-                    boost::filesystem::create_directories(get<string>("directory") + "/" + deviceId, ec);
-                    if (ec) {
-                        const std::string msg("Failed to create directories : " + deviceId + ". code = "
-                                              + toString(ec.value()) += " -- " + ec.message());
-                        KARABO_LOG_FRAMEWORK_ERROR << msg;
-                        allFailures += msg;
-                        allFailures += "\n";
-                    }
-                }
-                if (!boost::filesystem::exists(get<string>("directory") + "/" + deviceId + "/raw")) {
-                    boost::filesystem::create_directory(get<string>("directory") + "/" + deviceId + "/raw");
-                }
-                if (!boost::filesystem::exists(get<string>("directory") + "/" + deviceId + "/idx")) {
-                    boost::filesystem::create_directory(get<string>("directory") + "/" + deviceId + "/idx");
-                }
-
-                data->m_lastIndex = determineLastIndex(deviceId);
-            }
-            if (!allFailures.empty()) {
-                throw KARABO_INIT_EXCEPTION(allFailures);
+                m_perDeviceData.insert(std::make_pair(deviceId, data));
             }
 
-            // Then connect to schema updates and afterwards request Schema (in other order we might miss an update).
+            // Initiate connection to logged devices - will leave INIT state when all are connected (or failed)
             boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
             auto counter = boost::make_shared<std::atomic<unsigned int>>(m_perDeviceData.size());
             for (DeviceDataMap::value_type& pair : m_perDeviceData) {
-                const std::string& deviceId = pair.first; // or pair.second->m_deviceToBeLogged
-                DeviceDataPointer& data = pair.second;
-
-                // First try to establish p2p before connecting signals - i.e. don't to spam the broker with signalChanged.
-                if (std::getenv("KARABO_DISABLE_LOGGER_P2P") == NULL) {
-                    // copy to avoid capture of bare 'this'
-                    auto successHandler = [deviceId] () {
-                        KARABO_LOG_FRAMEWORK_INFO << "Going to establish p2p to '" << deviceId << "'";
-                    };
-                    auto failureHandler = [deviceId] () {
-                        try {
-                            throw;
-                        } catch (const std::exception& e) {
-                            // As of now (2019-06-24), this is expected for middlelayer...
-                            KARABO_LOG_FRAMEWORK_WARN << "Cannot establish p2p to '" << deviceId << "' since:\n"
-                                    << e.what();
-                        }
-                    };
-                    asyncConnectP2p(deviceId, successHandler, failureHandler);
-                } else {
-                    KARABO_LOG_FRAMEWORK_WARN << "Data logging via p2p has been disabled for loggers!";
-                }
-
-                // Now connect to device
-                data->m_initLevel = DeviceData::InitLevel::STARTED;
-                KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Connecting to " << deviceId << ".slotSchemaUpdated";
-                asyncConnect(deviceId, "signalSchemaUpdated", "", "slotSchemaUpdated",
-                             util::bind_weak(&DataLogger::handleSchemaConnected, this, data, counter),
-                             util::bind_weak(&DataLogger::handleFailure, this, "connecting to schema for", data, counter));
-                // Final steps until DataLogger is properly initialised for this device are treated in a chain of async handlers:
-                // - If signalSchemaUpdated connected, request current schema;
-                // - if that arrived, connect to both signal(State)Changed;
-                // - if these two are connected, request initial configuration, start flushing and update state.
+                const DeviceDataPointer& data = pair.second;
+                initConnection(data, counter);
             }
 
             // Start the flushing
             m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
             m_flushDeadline.async_wait(util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
+        }
+
+
+        void DataLogger::setupDirectory(const DeviceDataPointer& data) const {
+
+            boost::system::error_code ec;
+            if (!boost::filesystem::exists(get<string>("directory") + "/" + data->m_deviceToBeLogged)) {
+                boost::filesystem::create_directories(get<string>("directory") + "/" + data->m_deviceToBeLogged, ec);
+                if (ec) {
+                    const std::string msg("Failed to create directories : " + data->m_deviceToBeLogged + ". code = "
+                                          + toString(ec.value()) += " -- " + ec.message());
+                    KARABO_LOG_FRAMEWORK_ERROR << msg;
+                    throw KARABO_INIT_EXCEPTION(msg);
+                }
+            }
+            if (!boost::filesystem::exists(get<string>("directory") + "/" + data->m_deviceToBeLogged + "/raw")) {
+                boost::filesystem::create_directory(get<string>("directory") + "/" + data->m_deviceToBeLogged + "/raw");
+            }
+            if (!boost::filesystem::exists(get<string>("directory") + "/" + data->m_deviceToBeLogged + "/idx")) {
+                boost::filesystem::create_directory(get<string>("directory") + "/" + data->m_deviceToBeLogged + "/idx");
+            }
+
+            data->m_lastIndex = determineLastIndex(data->m_deviceToBeLogged);
+        }
+
+
+        void DataLogger::initConnection(const DeviceDataPointer& data,
+                                        const boost::shared_ptr<std::atomic<unsigned int> >& counter) {
+
+            const std::string& deviceId = data->m_deviceToBeLogged;
+            // First try to establish p2p before connecting signals - i.e. don't to spam the broker with signalChanged.
+            if (std::getenv("KARABO_DISABLE_LOGGER_P2P") == NULL) {
+                // copy to avoid capture of bare 'this'
+                auto successHandler = [deviceId] () {
+                    KARABO_LOG_FRAMEWORK_INFO << "Going to establish p2p to '" << deviceId << "'";
+                };
+                auto failureHandler = [deviceId] () {
+                    try {
+                        throw;
+                    } catch (const std::exception& e) {
+                        // As of now (2019-06-24), this is expected for middlelayer...
+                        KARABO_LOG_FRAMEWORK_WARN << "Cannot establish p2p to '" << deviceId << "' since:\n"
+                                << e.what();
+                    }
+                };
+                asyncConnectP2p(deviceId, successHandler, failureHandler);
+            } else {
+                KARABO_LOG_FRAMEWORK_WARN << "Data logging via p2p has been disabled for loggers!";
+            }
+
+            // Then connect to schema updates and afterwards request Schema (in other order we might miss an update).
+            data->m_initLevel = DeviceData::InitLevel::STARTED;
+            KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Connecting to " << deviceId << ".slotSchemaUpdated";
+            asyncConnect(deviceId, "signalSchemaUpdated", "", "slotSchemaUpdated",
+                         util::bind_weak(&DataLogger::handleSchemaConnected, this, data, counter),
+                         util::bind_weak(&DataLogger::handleFailure, this, "connecting to schema for", data, counter));
+            // Final steps until DataLogger is properly initialised for this device are treated in a chain of async handlers:
+            // - If signalSchemaUpdated connected, request current schema;
+            // - if that arrived, connect to both signal(State)Changed;
+            // - if these two are connected, request initial configuration, start flushing and update state.
         }
 
 
@@ -314,7 +374,7 @@ namespace karabo {
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_INFO << "Failed " << reason << " " << deviceId << ": " << e.what();
             }
-            checkReady(*counter);
+            if (counter) checkReady(*counter);
             stopLogging(deviceId, true);
         }
 
@@ -362,7 +422,7 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Requesting " << deviceId << ".slotGetConfiguration (no wait)";
             requestNoWait(deviceId, "slotGetConfiguration", "", "slotChanged");
 
-            checkReady(*counter);
+            if (counter) checkReady(*counter);
         }
 
 
@@ -411,53 +471,24 @@ namespace karabo {
         }
 
 
-        // FIXME: Move code upwards close to DeviceData constructor - keep here for easier review
-        DeviceData::~DeviceData() {
-            if (m_initLevel != InitLevel::COMPLETE) {
-                // We have not yet started logging this device, so nothing to mark about being done.
-                return;
+        void DataLogger::slotAddDeviceToBeLogged(const std::string& deviceId) {
+            // Update properties
+            if (!appendTo(deviceId, "devicesToBeLogged")) {
+                throw KARABO_LOGIC_EXCEPTION("Device '" + deviceId + "' already logged. If connecting to it failed, "
+                                             "first call 'slotTagDeviceToBeDiscontinued' and then try again.");
             }
+            // No need to check return value here - everything in 'devicesNotLogged' is also in 'devicesToBeLogged':
+            appendTo(deviceId, "devicesNotLogged");
 
-            const std::string& deviceId = m_deviceToBeLogged;
-            // Mark as logger stopped.
-            // Although this destructor is not running on the strand, accessing all members is safe:
-            // All other actions touching the members are posted on the strand and have a shared  pointer
-            // to the DeviceData - so this destructor can only run when all these actions are done.
-            try {
-                boost::mutex::scoped_lock lock(m_configMutex);
-                if (m_configStream.is_open()) {
-                    // Take care: order of locking m_configMutex and m_lastTimestampMutex!
-                    boost::mutex::scoped_lock lock(m_lastTimestampMutex);
-                    karabo::util::Timestamp& lastTs = m_lastDataTimestamp;
-                    m_configStream << lastTs.toIso8601Ext() << "|" << fixed << lastTs.toTimestamp()
-                            << "|" << lastTs.getTrainId() << "|.|||" << m_user << "|LOGOUT\n";
-                    m_configStream.flush();
-                    std::ostream::pos_type position = m_configStream.tellp();
-                    m_configStream.close();
-                    if (position >= 0) {
-                        string contentPath = m_directory + "/" + deviceId + "/raw/archive_index.txt";
-                        ofstream contentStream(contentPath.c_str(), ios::app);
-                        contentStream << "-LOG " << lastTs.toIso8601Ext() << " " << fixed << lastTs.toTimestamp()
-                                << " " << lastTs.getTrainId() << " " << position << " "
-                                << (m_user.empty() ? "." : m_user) << " " << m_lastIndex << "\n";
-                        contentStream.close();
-                        //KARABO_LOG_FRAMEWORK_DEBUG << "slotTagDeviceToBeDiscontinued index stream closed";
-                    }
-                    else {
-                        KARABO_LOG_FRAMEWORK_ERROR << "Error retrieving position of LOGOUT entry in archive with index '"
-                                << m_lastIndex << "': skipped writing index entry for " << deviceId;
-                    }
+            // Create data structure and setup directory
+            DeviceDataPointer data = boost::make_shared<DeviceData>(deviceId, get<string>("directory"));
+            setupDirectory(data);
+            boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
+            m_perDeviceData.insert(std::make_pair(deviceId, data));
 
-                    for (map<string, MetaData::Pointer>::iterator it = m_idxMap.begin(); it != m_idxMap.end(); it++) {
-                        MetaData::Pointer mdp = it->second;
-                        if (mdp && mdp->idxStream.is_open()) mdp->idxStream.close();
-                    }
-                    m_idxMap.clear();
-                    //KARABO_LOG_FRAMEWORK_DEBUG << "slotTagDeviceToBeDiscontinued idxMap is cleaned";
-                }
-            } catch (...) {
-                KARABO_RETHROW_AS(KARABO_LOGIC_EXCEPTION("Problems tagging " + deviceId + " to be discontinued"));
-            }
+            // Init connection to device,
+            // using an empty pointer to counter since addition of logged devices at runtime shall not influence State.
+            initConnection(data, boost::shared_ptr<std::atomic<unsigned int> >());
         }
 
 
@@ -494,11 +525,26 @@ namespace karabo {
 
         bool DataLogger::removeFrom(const std::string& str, const std::string& vectorProp) {
             // lock mutex to avoid that another thread interferes in between get and set
-            boost::mutex::scoped_lock lock(m_removeFromMutex);
+            boost::mutex::scoped_lock lock(m_changeVectorPropMutex);
             std::vector<std::string> vec = get<std::vector < std::string >> (vectorProp);
             const auto it = std::find(vec.begin(), vec.end(), str);
             if (it != vec.end()) {
                 vec.erase(it);
+                set(vectorProp, vec);
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+
+        bool DataLogger::appendTo(const std::string& str, const std::string& vectorProp) {
+            // lock mutex to avoid that another thread interferes in between get and set
+            boost::mutex::scoped_lock lock(m_changeVectorPropMutex);
+            std::vector<std::string> vec = get<std::vector < std::string >> (vectorProp);
+            const auto it = std::find(vec.begin(), vec.end(), str);
+            if (it == vec.end()) {
+                vec.push_back(str);
                 set(vectorProp, vec);
                 return true;
             } else {
@@ -832,7 +878,7 @@ namespace karabo {
         }
 
 
-        int DataLogger::determineLastIndex(const std::string& deviceId) {
+        int DataLogger::determineLastIndex(const std::string& deviceId) const {
             string lastIndexFilename = get<string>("directory") + "/" + deviceId + "/raw/archive.last";
             int idx;
             fstream fs;
