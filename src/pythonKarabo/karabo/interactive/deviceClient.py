@@ -14,6 +14,9 @@ import re
 import time
 import getpass
 import datetime
+from dateutil import parser
+import tzlocal
+import pytz
 import os.path
 from sys import platform
 
@@ -726,6 +729,16 @@ class DeviceClient(object):
 
     def sleep(self, secs):
         time.sleep(secs)
+
+    def _fromTimeStringToUtcString(self, timestamp):
+        date = parser.parse(timestamp)
+        if date.tzname() is None:
+            print("Assuming local time for given date ", date)
+            local_tz = tzlocal.get_localzone()
+            date = local_tz.localize(date)
+            date = date.astimezone(pytz.utc)
+        print(date.isoformat())
+        return date.isoformat()
 
     def loadProject(self, filename):
         """Load project from file
