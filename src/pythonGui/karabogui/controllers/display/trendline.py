@@ -14,8 +14,8 @@ from PyQt4.QtCore import Qt, QDateTime, QTimer, pyqtSignal, pyqtSlot
 from PyQt4.QtGui import (QButtonGroup, QDateTimeEdit, QDialog, QHBoxLayout,
                          QIntValidator, QLabel, QLineEdit, QPushButton,
                          QVBoxLayout, QWidget)
-from PyQt4.Qwt5.Qwt import (QwtPlot, QwtScaleDraw, QwtText,
-                            QwtLinearScaleEngine, QwtScaleDiv)
+from qwt import (QwtPlot, QwtScaleDraw, QwtText,
+                 QwtLinearScaleEngine, QwtScaleDiv)
 from traits.api import (
     HasStrictTraits, Array, Constant, Dict, Float, Instance, Int, List,
     on_trait_change
@@ -344,7 +344,7 @@ class ScaleEngine(QwtLinearScaleEngine):
             v = a[pos]
         start = int(x1 // v + 1) * v
         self.drawer.setFormat(start, v)
-        return QwtScaleDiv(x1, x2, [], [], list(range(start, int(x2), v)))
+        return QwtScaleDiv(x1, x2, ([], [], list(range(start, int(x2), v))))
 
 
 class Timespan(QDialog):
