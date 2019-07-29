@@ -11,7 +11,8 @@ class KaraboImageViewBox(KaraboViewBox):
     # mouse events
 
     def mouseDragEvent(self, event, axis=None):
-        if self.mouse_mode is MouseMode.Picker:
+        if (self.mouse_mode is MouseMode.Picker
+                and event.buttons() == Qt.LeftButton):
             event.ignore()
         else:
             super(KaraboImageViewBox, self).mouseDragEvent(event, axis)
