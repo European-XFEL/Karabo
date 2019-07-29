@@ -33,21 +33,29 @@ class KaraboViewBox(ViewBox):
             super(KaraboViewBox, self).mouseClickEvent(event)
 
     def mouseDragEvent(self, event, axis=None):
-        if event.buttons() == Qt.MiddleButton:
-            event.ignore()
+        button = event.buttons()
+
+        # Restore original MouseMode (and cursor) when dragEvent is finished
+        if event.isFinish():
+            super(KaraboViewBox, self).mouseDragEvent(event, axis)
+            self.set_mouse_mode(self.mouse_mode)
             return
 
-        if (self.mouse_mode is MouseMode.Pointer
-                and event.buttons() == Qt.LeftButton):
+        # Check on how the drag will commence
+        if self.mouse_mode is MouseMode.Pointer and button == Qt.LeftButton:
             event.ignore()
-        elif self.mouse_mode is MouseMode.Move:
-            super(KaraboViewBox, self).mouseDragEvent(event, axis)
+            return
+        elif self.mouse_mode is MouseMode.Move or button == Qt.MiddleButton:
             if event.isStart():
+                # Enable panning regardless of MouseMode
+                self.state['mouseMode'] = ViewBox.PanMode
                 self.setCursor(Qt.ClosedHandCursor)
-            elif event.isFinish():
-                self.setCursor(Qt.OpenHandCursor)
-        else:
-            super(KaraboViewBox, self).mouseDragEvent(event, axis)
+        elif button == Qt.RightButton:
+            if event.isStart():
+                # Change cursor on right button as well
+                self.setCursor(Qt.ClosedHandCursor)
+
+        super(KaraboViewBox, self).mouseDragEvent(event, axis)
 
     def wheelEvent(self, event, axis=None):
         """Ignore mouse scroll since it also catches scene scroll"""
@@ -69,7 +77,9 @@ class KaraboViewBox(ViewBox):
         else:
             raise LookupError("Invalid mouse mode.")
 
-        self.setMouseMode(vb_mode)
+        # Using self.state to assign vb mouse mode to avoid emitting
+        # sigStateChanged
+        self.state['mouseMode'] = vb_mode
         self.setCursor(cursor)
         self.mouse_mode = mode
 
