@@ -1,6 +1,6 @@
 from guiqwt.plot import CurveDialog
 from guiqwt.builder import make
-from PyQt4.Qwt5.Qwt import QwtPlot
+from qwt import QwtPlot
 from traits.api import Dict, Instance
 
 from karabo.common.scenemodel.api import LinePlotModel
