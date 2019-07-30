@@ -19,7 +19,7 @@ chardet idna urllib3 requests ply psutil pycodestyle pyflakes mccabe flake8
 msgpack msgpack-numpy flaky pyyaml docker_pycreds websocket_client docker
 coverage )
 
-DEPENDENCIES_DB=(eulxml eulexist existDB)
+DEPENDENCIES_DB=(eulxml eulexist)
 
 DEPENDENCIES_GUI=( qt4 pyqt4 matplotlib qtconsole pyqwt5 guidata guiqwt pyqtgraph)
 
@@ -40,6 +40,8 @@ DEPS_BASE_NAME_MAP['Ubuntu14']='Ubuntu-14'
 DEPS_BASE_NAME_MAP['Ubuntu15']='Ubuntu-14'
 DEPS_BASE_NAME_MAP['Ubuntu16']='Ubuntu-16'
 DEPS_BASE_NAME_MAP['Ubuntu17']='Ubuntu-16'
+DEPS_BASE_NAME_MAP['Ubuntu18']='Ubuntu-18'
+DEPS_BASE_NAME_MAP['Ubuntu19']='Ubuntu-18'
 DEPS_BASE_NAME_MAP['CentOS7']='CentOS-7'
 
 ##############################################################################
