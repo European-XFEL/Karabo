@@ -143,10 +143,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/Validator.o \
 	${OBJECTDIR}/_ext/163016059/Version.o \
 	${OBJECTDIR}/_ext/163016059/fmemopen.o \
-	${OBJECTDIR}/_ext/1760428615/Authenticator.o \
-	${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy.o \
-	${OBJECTDIR}/_ext/1760428615/soapC.o \
-	${OBJECTDIR}/_ext/1760428615/stdsoap2.o \
 	${OBJECTDIR}/_ext/1103122747/ImageData.o \
 	${OBJECTDIR}/_ext/1103122747/InputChannel.o \
 	${OBJECTDIR}/_ext/1103122747/Memory.o \
@@ -731,26 +727,6 @@ ${OBJECTDIR}/_ext/163016059/fmemopen.o: ../../../src/karabo/util/fmemopen.c
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} "$@.d"
 	$(COMPILE.c) -g `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/fmemopen.o ../../../src/karabo/util/fmemopen.c
-
-${OBJECTDIR}/_ext/1760428615/Authenticator.o: ../../../src/karabo/webAuth/Authenticator.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1760428615
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DWITH_OPENSSL -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1760428615/Authenticator.o ../../../src/karabo/webAuth/Authenticator.cc
-
-${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy.o: ../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1760428615
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DWITH_OPENSSL -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy.o ../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp
-
-${OBJECTDIR}/_ext/1760428615/soapC.o: ../../../src/karabo/webAuth/soapC.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1760428615
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DWITH_OPENSSL -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1760428615/soapC.o ../../../src/karabo/webAuth/soapC.cpp
-
-${OBJECTDIR}/_ext/1760428615/stdsoap2.o: ../../../src/karabo/webAuth/stdsoap2.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1760428615
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DWITH_OPENSSL -DWITH_NONAMESPACES -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1760428615/stdsoap2.o ../../../src/karabo/webAuth/stdsoap2.cpp
 
 ${OBJECTDIR}/_ext/1103122747/ImageData.o: ../../../src/karabo/xms/ImageData.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
@@ -2530,58 +2506,6 @@ ${OBJECTDIR}/_ext/163016059/fmemopen_nomain.o: ${OBJECTDIR}/_ext/163016059/fmemo
 	    $(COMPILE.c) -g `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/fmemopen_nomain.o ../../../src/karabo/util/fmemopen.c;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/fmemopen.o ${OBJECTDIR}/_ext/163016059/fmemopen_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1760428615/Authenticator_nomain.o: ${OBJECTDIR}/_ext/1760428615/Authenticator.o ../../../src/karabo/webAuth/Authenticator.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1760428615
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1760428615/Authenticator.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -Wall -D__SO__ -DWITH_OPENSSL -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1760428615/Authenticator_nomain.o ../../../src/karabo/webAuth/Authenticator.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1760428615/Authenticator.o ${OBJECTDIR}/_ext/1760428615/Authenticator_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy_nomain.o: ${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy.o ../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1760428615
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -Wall -D__SO__ -DWITH_OPENSSL -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy_nomain.o ../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy.o ${OBJECTDIR}/_ext/1760428615/soapAuthenticationPortBindingProxy_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1760428615/soapC_nomain.o: ${OBJECTDIR}/_ext/1760428615/soapC.o ../../../src/karabo/webAuth/soapC.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1760428615
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1760428615/soapC.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -Wall -D__SO__ -DWITH_OPENSSL -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1760428615/soapC_nomain.o ../../../src/karabo/webAuth/soapC.cpp;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1760428615/soapC.o ${OBJECTDIR}/_ext/1760428615/soapC_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1760428615/stdsoap2_nomain.o: ${OBJECTDIR}/_ext/1760428615/stdsoap2.o ../../../src/karabo/webAuth/stdsoap2.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1760428615
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1760428615/stdsoap2.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -Wall -D__SO__ -DWITH_OPENSSL -DWITH_NONAMESPACES -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1760428615/stdsoap2_nomain.o ../../../src/karabo/webAuth/stdsoap2.cpp;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1760428615/stdsoap2.o ${OBJECTDIR}/_ext/1760428615/stdsoap2_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103122747/ImageData_nomain.o: ${OBJECTDIR}/_ext/1103122747/ImageData.o ../../../src/karabo/xms/ImageData.cc 
