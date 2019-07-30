@@ -75,8 +75,8 @@ only want to know how to build a single extern. Here is the command:
     cd extern
     ./build.sh <platform-directory> externPackageName
 
-``<platform-directory>`` is usually something like ``GNU-Linux-x86`` or
-``Darwin-x86``. It's the directory where all built externs are staged before
+``<platform-directory>`` is usually something like ``GNU-Linux-x86``.
+It's the directory where all built externs are staged before
 being copied into a karabo build directory.
 
 Note that dependencies which include executable binaries (programs or shared

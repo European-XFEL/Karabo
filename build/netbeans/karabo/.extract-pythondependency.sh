@@ -33,13 +33,8 @@ echo
 echo -n "Running wheel installation..."
 
 OS=$(uname -s)
-if [ "$OS" == "Darwin" ]; then
-    PIP=/opt/local/bin/pip
-    WHEEL_INSTALL_FLAGS="--user"
-else
-    PIP=$KARABO/extern/bin/pip
-    WHEEL_INSTALL_FLAGS=
-fi
+PIP=$KARABO/extern/bin/pip
+WHEEL_INSTALL_FLAGS=
 
 $PIP --disable-pip-version-check install -U --no-index $WHEEL_INSTALL_FLAGS $WHEELNAME
 
