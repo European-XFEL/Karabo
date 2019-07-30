@@ -21,10 +21,11 @@ coverage )
 
 DEPENDENCIES_DB=(eulxml eulexist existDB)
 
-DEPENDENCIES_GUI=( qt4 pyqt4 matplotlib qtconsole pyqwt5 guidata guiqwt pyqtgraph)
+DEPENDENCIES_GUI=( qt4 pyqt4 matplotlib qtconsole PythonQwt guidata
+guiqwt pyqtgraph )
 
-DEPENDENCIES_DARWIN=( wheel pyqwt5 guidata guiqwt boost openmqc hdf5 pkgconfig h5py
-log4cpp cppunit parse snappy traits pint )
+DEPENDENCIES_DARWIN=( wheel PythonQwt guidata guiqwt boost openmqc hdf5
+pkgconfig h5py log4cpp cppunit parse snappy traits pint )
 
 ##############################################################################
 # Important constants
