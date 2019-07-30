@@ -93,11 +93,7 @@ echo  " unpacking finished successfully"
 echo
 echo -n "Running wheel installation..."
 if [ ! -z $KARABO ]; then
-    if [ $(uname -s) == "Darwin" ]; then
-        PIP=/opt/local/bin/pip
-    else
-        PIP=$KARABO/extern/bin/pip
-    fi
+    PIP=$KARABO/extern/bin/pip
     destPath=$installDir/$WHEELNAME
     $PIP --disable-pip-version-check install -U --no-index --target $installDir $destPath
 fi

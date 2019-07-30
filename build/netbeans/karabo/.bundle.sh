@@ -64,10 +64,6 @@ if [ "$OS" = "Linux" ]; then
     DISTRO_ID=( $(lsb_release -is) )
     DISTRO_RELEASE=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
     NUM_CORES=`grep "processor" /proc/cpuinfo | wc -l`
-elif [ "$OS" = "Darwin" ]; then
-    DISTRO_ID=MacOSX
-    DISTRO_RELEASE=$(uname -r)
-    NUM_CORES=`sysctl hw.ncpu | awk '{print $2}'`
 fi
 
 BASEDIR=$(get_abs_path $(pwd)/../../../)
@@ -101,37 +97,14 @@ cp karaboPackageDependencies-${PLATFORM}.pc $PACKAGEDIR/lib/karaboDependencies.p
 # karathon
 cd ../karathon
 
-if [ "$OS" = "Darwin" ]; then
+# Use karabo embedded python interpretor
+PATH=$PACKAGEDIR/extern/bin:$PATH
+SITE_PACKAGES=`python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"`
 
-    # On MacOSX we are currently not bundling the python environment, 
-    # but rather use the OS provided one
+cp -rf $DISTDIR/$CONF/$PLATFORM/lib/karathon.so $SITE_PACKAGES/ # <-- karathon.so
+ln -s $SITE_PACKAGES/karathon.so $PACKAGEDIR/lib/libkarathon.so
 
-    SITE_PACKAGES=`/opt/local/bin/python -c "from site import USER_SITE; print(USER_SITE)"`
-
-    # Location of python package: karabo (not within site-packages under MacOSX)
-    # PYKARABO=$PACKAGEDIR/lib/karabo
-    # mkdir -p $PYKARABO
-
-    cd $DISTDIR/$CONF/$PLATFORM/lib
-    # Python needs to see bindings as .so, even on MacOSX
-    ln -sf karathon.dylib karathon.so
-    #install_name_tool -add_rpath "$PACKAGEDIR/lib" karathon.so
-    #install_name_tool -add_rpath "$PACKAGEDIR/extern/lib" karathon.so
-    cp karathon* $SITE_PACKAGES/
-    ln -s $SITE_PACKAGES/karathon.dylib $PACKAGEDIR/lib/libkarathon.dylib
-    ln -sf $PACKAGEDIR/lib/libkarathon.dylib $PACKAGEDIR/lib/libkarathon.so 
-    cd -
-
-else
-    # Use karabo embedded python interpretor
-    PATH=$PACKAGEDIR/extern/bin:$PATH
-    SITE_PACKAGES=`python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"`
-
-    cp -rf $DISTDIR/$CONF/$PLATFORM/lib/karathon.so $SITE_PACKAGES/ # <-- karathon.so
-    ln -s $SITE_PACKAGES/karathon.so $PACKAGEDIR/lib/libkarathon.so
-
-    [ -d $PACKAGEDIR/extern/include/python3.6m ]  && (cd $PACKAGEDIR/extern/include; rm -f python3.6; ln -s python3.6m python3.6)
-fi
+[ -d $PACKAGEDIR/extern/include/python3.6m ]  && (cd $PACKAGEDIR/extern/include; rm -f python3.6; ln -s python3.6m python3.6)
 
 cp -rf $DISTDIR/$CONF/$PLATFORM/include $PACKAGEDIR/
 
