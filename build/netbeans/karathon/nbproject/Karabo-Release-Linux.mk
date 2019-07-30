@@ -58,7 +58,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/381567218/PyUtilTimeDuration.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilTimestamp.o \
 	${OBJECTDIR}/_ext/381567218/PyUtilTrainstamp.o \
-	${OBJECTDIR}/_ext/381567218/PyWebAuthenticator.o \
 	${OBJECTDIR}/_ext/381567218/PyXmsInputOutputChannel.o \
 	${OBJECTDIR}/_ext/381567218/PyXmsSignalSlotable.o \
 	${OBJECTDIR}/_ext/381567218/PyXmsSlotElement.o \
@@ -218,11 +217,6 @@ ${OBJECTDIR}/_ext/381567218/PyUtilTrainstamp.o: ../../../src/karathon/PyUtilTrai
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${PYTHON_HEADER_DIR} -I${NUMPY_HEADER_DIR} -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilTrainstamp.o ../../../src/karathon/PyUtilTrainstamp.cc
-
-${OBJECTDIR}/_ext/381567218/PyWebAuthenticator.o: ../../../src/karathon/PyWebAuthenticator.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${PYTHON_HEADER_DIR} -I${NUMPY_HEADER_DIR} -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyWebAuthenticator.o ../../../src/karathon/PyWebAuthenticator.cc
 
 ${OBJECTDIR}/_ext/381567218/PyXmsInputOutputChannel.o: ../../../src/karathon/PyXmsInputOutputChannel.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -598,19 +592,6 @@ ${OBJECTDIR}/_ext/381567218/PyUtilTrainstamp_nomain.o: ${OBJECTDIR}/_ext/3815672
 	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${PYTHON_HEADER_DIR} -I${NUMPY_HEADER_DIR} -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilTrainstamp_nomain.o ../../../src/karathon/PyUtilTrainstamp.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyUtilTrainstamp.o ${OBJECTDIR}/_ext/381567218/PyUtilTrainstamp_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/381567218/PyWebAuthenticator_nomain.o: ${OBJECTDIR}/_ext/381567218/PyWebAuthenticator.o ../../../src/karathon/PyWebAuthenticator.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/PyWebAuthenticator.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${PYTHON_HEADER_DIR} -I${NUMPY_HEADER_DIR} -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyWebAuthenticator_nomain.o ../../../src/karathon/PyWebAuthenticator.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/381567218/PyWebAuthenticator.o ${OBJECTDIR}/_ext/381567218/PyWebAuthenticator_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/381567218/PyXmsInputOutputChannel_nomain.o: ${OBJECTDIR}/_ext/381567218/PyXmsInputOutputChannel.o ../../../src/karathon/PyXmsInputOutputChannel.cc 
