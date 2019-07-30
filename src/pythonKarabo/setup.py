@@ -20,7 +20,7 @@ def _get_src_dist_version():
     except ImportError:
         raise ImportError("Unable to import vcs_revision. Try removing "
                           "{} and the build directory "
-                          "before building.").format(VERSION_FILE_PATH)
+                          "before building.".format(VERSION_FILE_PATH))
 
     return vcs_rev, dev_num, version
 
