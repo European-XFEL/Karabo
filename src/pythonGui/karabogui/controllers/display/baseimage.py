@@ -12,7 +12,7 @@ from PyQt4.QtCore import pyqtSlot, QRect, Qt
 from PyQt4.QtGui import (
     QAction, QActionGroup, QCursor, QHBoxLayout, QIcon, QMenu, QToolBar,
     QWidget)
-from PyQt4.Qwt5.Qwt import QwtPlot
+from qwt import QwtPlot
 from traits.api import (
     Bool, Callable, HasStrictTraits, Instance, on_trait_change, String)
 

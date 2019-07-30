@@ -6,7 +6,7 @@
 import numpy as np
 from guiqwt.plot import ImageDialog, ImageWidget
 from PyQt4.QtCore import Qt, pyqtSignal, QEvent
-from PyQt4.Qwt5.Qwt import QwtPlot
+from qwt import QwtPlot
 
 from karabo.native import EncodingType
 from karabogui.dialogs.dialogs import LutRangeDialog
