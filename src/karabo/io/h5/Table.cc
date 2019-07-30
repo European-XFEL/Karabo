@@ -181,15 +181,21 @@ namespace karabo {
 
                 // Here we collect all write errors, but only re-throw it once we have written what we could.
                 bool h5_err = false;
-                std::string err_log = "Aggregated HDF5 writer exceptions (probably missing values in the Hash).\n"
-                        "WARNING: This exception will break the calling loop if not caught!\n";
+                std::string err_log("Problems writing the following elements:\n");
 
                 const vector<Element::Pointer >& elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
                     try {
                         elements[i]->write(data, recordId, len);
-                    } catch (std::exception& e) {
+                    } catch (const std::exception& e) {
                         h5_err = true;
+                        std::ostringstream oss;
+                        oss << "Exception when writing element: " << elements[i]->getKey() <<
+                                "\n\tFull path: " << elements[i]->getFullName() <<
+                                "\n\tElement type: " << elements[i]->getElementType() <<
+                                "\n\tInto H5 path: " << elements[i]->getH5path() <<
+                                "\n\tDetailed error log:\n";
+                        err_log += oss.str();
                         err_log += e.what();
                     }
                 }
