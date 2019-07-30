@@ -359,12 +359,6 @@ if [ "$OS" = "Linux" ]; then
     if [ "$NUM_JOBS" = "0" ]; then
         NUM_JOBS=`grep "processor" /proc/cpuinfo | wc -l`
     fi
-elif [ "$OS" = "Darwin" ]; then
-    DISTRO_ID=MacOSX
-    DISTRO_RELEASE=$(uname -r)
-    if [ "$NUM_JOBS" = "0" ]; then
-        NUM_JOBS=`sysctl hw.ncpu | awk '{print $2}'`
-    fi
 fi
 
 echo
