@@ -8,7 +8,6 @@
 
 #include "karabo/log/Logger.hh"
 #include "karabo/io/FileTools.hh"
-#include "karabo/webAuth/Authenticator.hh"
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/util/Schema.hh"
 
@@ -20,7 +19,6 @@
 using namespace std;
 using namespace karabo::util;
 using namespace karabo::xms;
-using namespace karabo::webAuth;
 
 
 namespace karabo {
