@@ -142,7 +142,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/Trainstamp.o \
 	${OBJECTDIR}/_ext/163016059/Validator.o \
 	${OBJECTDIR}/_ext/163016059/Version.o \
-	${OBJECTDIR}/_ext/163016059/fmemopen.o \
 	${OBJECTDIR}/_ext/1103122747/ImageData.o \
 	${OBJECTDIR}/_ext/1103122747/InputChannel.o \
 	${OBJECTDIR}/_ext/1103122747/Memory.o \
@@ -722,11 +721,6 @@ ${OBJECTDIR}/_ext/163016059/Version.o: ../../../src/karabo/util/Version.cc
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/Version.o ../../../src/karabo/util/Version.cc
-
-${OBJECTDIR}/_ext/163016059/fmemopen.o: ../../../src/karabo/util/fmemopen.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
-	${RM} "$@.d"
-	$(COMPILE.c) -g `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/fmemopen.o ../../../src/karabo/util/fmemopen.c
 
 ${OBJECTDIR}/_ext/1103122747/ImageData.o: ../../../src/karabo/xms/ImageData.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
@@ -2493,19 +2487,6 @@ ${OBJECTDIR}/_ext/163016059/Version_nomain.o: ${OBJECTDIR}/_ext/163016059/Versio
 	    $(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/Version_nomain.o ../../../src/karabo/util/Version.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/Version.o ${OBJECTDIR}/_ext/163016059/Version_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/163016059/fmemopen_nomain.o: ${OBJECTDIR}/_ext/163016059/fmemopen.o ../../../src/karabo/util/fmemopen.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/fmemopen.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.c) -g `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/fmemopen_nomain.o ../../../src/karabo/util/fmemopen.c;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/163016059/fmemopen.o ${OBJECTDIR}/_ext/163016059/fmemopen_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103122747/ImageData_nomain.o: ${OBJECTDIR}/_ext/1103122747/ImageData.o ../../../src/karabo/xms/ImageData.cc 

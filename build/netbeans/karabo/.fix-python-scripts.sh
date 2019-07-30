@@ -7,10 +7,6 @@
 #
 
 OS=$(uname -s)
-if [ "$OS" = "Darwin" ]; then
-  # Shebang lines don't need to change on OS X.
-  exit 0
-fi
 
 PACKAGEDIR=$1
 

@@ -18,23 +18,13 @@ PACKAGENAME=$DEPNAME-$KARABOVERSION
 if [ "$OS" = "Linux" ]; then
     DISTRO_ID=( $(lsb_release -is) )
     DISTRO_RELEASE=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
-elif [ "$OS" = "Darwin" ]; then
-    DISTRO_ID=MacOSX
-    DISTRO_RELEASE=$(uname -r)
 fi
 
 EXTRACT_SCRIPT=$KARABO/bin/.extract-pythondependency.sh
 INSTALLSCRIPT=$DISTDIR/${PACKAGENAME}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
-
-if [ "$OS" == "Darwin" ]; then
-  PYTHON=python3.6
-  PIP=pip
-  WHEEL_INSTALL_FLAGS="--user"
-else
-  PYTHON=$KARABO/extern/bin/python
-  PIP=$KARABO/extern/bin/pip
-  WHEEL_INSTALL_FLAGS=
-fi
+PYTHON=$KARABO/extern/bin/python
+PIP=$KARABO/extern/bin/pip
+WHEEL_INSTALL_FLAGS=
 
 
 # Always clean the bundle
