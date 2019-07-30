@@ -16,7 +16,7 @@ DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 class ProjectDatabase(ContextDecorator):
 
     def __init__(self, user, password, server=None, port=None,
-                 test_mode=False):
+                 test_mode=False, init_db=False):
         """
         Create a project data base context for a given user
         :param user: the user, can be either admin for local db, or LDAP
@@ -28,10 +28,18 @@ class ProjectDatabase(ContextDecorator):
         :param test_mode: defaults to False. In this case
            db_settings.root_collection will be used as the root collection,
            otherwise, root_collection_test is used.
+           If test_mode is True, the server and port options will be evaluated
+           from the KARABO_TEST_PROJECT_DB and KARABO_TEST_PROJECT_DB_PORT
+           variables respectively.
+        :param init_db: defaults to False. If True, the default collections
+           will be added if missing on context entry.
         :return: a ProjectDatabase context
         """
-        # get our environment straightened out
+        if test_mode:
+            server = os.getenv('KARABO_TEST_PROJECT_DB', 'localhost')
+            port = os.getenv('KARABO_TEST_PROJECT_DB_PORT', 8080)
 
+        # get our environment straightened out
         if server is None:
             server = os.getenv('KARABO_PROJECT_DB', None)
 
@@ -42,14 +50,13 @@ class ProjectDatabase(ContextDecorator):
         if port is None:
             port = os.getenv('KARABO_PROJECT_DB_PORT', 8080)
 
-        self.settings = DbSettings(user, password, server, port)
+        self.settings = DbSettings(user, password, server, port, init_db)
         self.root = (self.settings.root_collection if not test_mode else
                      self.settings.root_collection_test)
 
     def __enter__(self):
         # assure there is a database running where we assume one would be
-        assure_running(self.settings.server, self.settings.port)
-        self.dbhandle = ExistDB(self.settings.server_url)
+        self.dbhandle = assure_running(self.settings)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

@@ -122,7 +122,7 @@ Supported Operating Systems
 ---------------------------
 
 The operating systems which are currently supported by Karabo are: Centos 7,
-Ubuntu 14.04, and Ubuntu 16.04 (and generally Ubuntu 14-17). To learn which
+Ubuntu 16.04, and Ubuntu 18.04 (and generally Ubuntu 16-19). To learn which
 packages must be installed before building Karabo, refer to the following
 project on the XFEL GitLab server:
 
@@ -133,9 +133,9 @@ on each platform.
 
 https://in.xfel.eu/gitlab/Karabo/ci-containers/blob/master/centos/7/Dockerfile
 
-https://in.xfel.eu/gitlab/Karabo/ci-containers/blob/master/ubuntu/14.04/Dockerfile
-
 https://in.xfel.eu/gitlab/Karabo/ci-containers/blob/master/ubuntu/16.04/Dockerfile
+
+https://in.xfel.eu/gitlab/Karabo/ci-containers/blob/master/ubuntu/18.04/Dockerfile
 
 These same files are used to generate the continuous integration infrastructure
 for Karabo, so they are more up to date than any documentation can hope to be.
@@ -143,160 +143,9 @@ for Karabo, so they are more up to date than any documentation can hope to be.
 Even though these are docker scripts, they are quite simple and consist mainly
 of ``apt-get install`` or ``yum install`` commands (depending on the platform).
 
-
-MacOS X (**currently unmaintained, proceed with care**)
--------------------------------------------------------
-
-1. Install Xcode
-
-2. Install the Command Line Tools of Xcode. For that open Xcode, and navigate to Xcode->Preferences->Downloads->Components and click "Install".
-
-3. Install MacPorts (install .dmg from http://www.macports.org)
-
-4. Go to a terminal and type:
-
-  .. code-block:: bash
-
-    sudo port install gcc49
-    sudo port select --set gcc mp-gcc49
-    sudo port install -f dbus
-    sudo port install sqlite3 qt4-mac-sqlite3-plugin python34
-    sudo port select --set python python34
-    sudo port install py34-pyqt4
-    sudo port install py34-Pillow
-    sudo port install py34-numpy py34-scipy
-    sudo port install py34-matplotlib +qt4
-    sudo port install py34-pyqwt  (not existing yet, see manual installation below)
-    sudo port install py34-cython
-    sudo port select --set cython cython34
-    sudo port install py34-ipython +notebook +pyqt4
-    sudo port select --set sphinx py34-sphinx
-    sudo port select --set ipython ipython34
-    sudo port select --set nosetests nosetests34
-    sudo port install py34-suds-jurko
-    sudo port install py34-setuptools py34-pip
-    sudo port select --set pip pip34
-    sudo port install doxygen
-
-  Comments:
-
-  Starting from Xcode 5 there is no gcc included (only clang), so gcc
-  4.8 from macports is installed. For some packages variants are
-  enabled/disabled (for matplotlib 'qt4' instead of 'tk' frontend, for
-  ipython 'scientific' is disabled not to pull hdf5 from
-  macports). For all 'package'_select the default binary is set.
-
-  There is no gdb in Xcode CLI DEvelopers Tools, you can install it
-  from Macports, notice that name if the executable is ggdb.
-
-  As we are using gcc 4.8 from macport for karabo framework
-  compilation, you need to add a new toolchain in Netbeans (with the
-  name GNU_MacPorts).
-
-  Installation of guidata, guiqwt, h5py and parse is done similarily
-  as in Linux. However they are installed in user space
-  (~/Library/Python/2.7) so that they don't interfere with other
-  python packages installed through Macports and this location is
-  automaticaly added to python search path. h5py is available in
-  macports but requires hdf5-18 from macports - then it may conflicts
-  with hdf5 shipped with karabo extern. pyqwt5 is installed in the
-  System Python site-packages folder, that't the reason it requires
-  the password to sudo command.
-
-5. Add a new toolchainin Netbeans: Open Preferences->C/C++->Build
-   Tools. Add new Tool Collection - press Add... Fill in Base Directory
-   to : /opt/local/bin. Give a ToolCollection Name "GNU_MacPorts". Make
-   it default.
-
-6. Patch NetBeans bug regarding Makefile paths (ignore it if you compile Karabo with --auto flag):
-
-  .. code-block:: bash
-
-    cd /usr/bin
-    sudo ln -sf /opt/local/bin/pkg-config pkg-config
-
-7. Create a symbolic link to python includes (boost needs this) (ignore it if you compile Karabo with --auto flag):
-
-  .. code-block:: bash
-
-    cd /opt/local/Library/Frameworks/Python.framework/Versions/Current/include
-    sudo ln -sf python3.4m python3.4
-
-8. Put in .profile proper locale (otherwise you will get error from
-   guidata, or karabo gui)
-
-  .. code-block:: bash
-
-    export LC_ALL=en_US.UTF-8
-    export LANG=en_US.UTF-8
-
-9. Download and install XQuartz (.dmg) from this location:
-   http://xquartz.macosforge.org/landing/
-
-
-  Customize xterm so that it respects .profile:
-
-  Open X11 and select Customize... from the Applications menu,
-  double-click the menu item Terminal and change: “xterm” to “xterm
-  -ls” (this means login shell)
-
-10. Put the following line to your .profile file:
-
-  .. code-block:: bash
-
-    export DYLD_LIBRARY_PATH=$(cat ~/.karabo/karaboFramework)/extern/lib:$(cat ~/.karabo/karaboFramework)/lib
-    export PYTHONPATH=$(cat ~/.karabo/karaboFramework)/extern/lib:$(cat ~/.karabo/karaboFramework)/lib
- 
-11. There may be mismatch between subversion command line client
-    version and svn client included in Netbeans (Netbeans 8 svnkit
-    client support 1.6 and 1.8). On Mavericks svn client included in
-    Xcode is 1.7. If the project was checked out using command line
-    client then Netbeans will upgrade (if you say yes) local working
-    directory of the project to its svn version - then you cannot work
-    with command line client any more. Also the other way around. You
-    may bring back command line functionality by installing subversion
-    from MacPorts, but this require changing default build option for
-    serf1 library responsible for connecting to svn repository using
-    http/https so that it also includes gssapi/kerberos authentication
-    features. If you don't want to play with recompilation, then Xcode
-    5 also ships subverions version 1.6 in the following directory:
-    /Applications/Xcode.app/Contents/Developer/usr/subversion-1.6/bin/svn. You
-    would need to use full path or create an alias or symbolic
-    link. In the end, you can also decide if you use only Netbeans svn
-    client or only command line client to avoid any problems. For
-    details see also :ref:`netbeans`.
-
-
-12. Hint for karabo Framework: If you checkout fresh copy, then run
-    ./auto_build_all.sh Debug/Release. If you had already local
-    working copy, go to build/netbeans/karabo and clean extern with:
-    make clean-extern. Then go back to karabo top folder and run
-    ./auto_build_all.sh Clean, followed by ./auto_build_all.sh
-    Debug/Release. You can also compile in Netbeans, then makefiles
-    are updated automatically.
-
-  Historical remark: how to install older version of package from Macports
-
-  .. code-block:: bash
-
-    # Create a folder for a local repository of ipython macport
-    mkdir /Users/Shared/dports
-
-    # add this repository so that port command will see it
-    # edit the following file
-    sudo vim /opt/local/etc/macports/sources.conf
-    # and put this before rsync line: file:///Users/Shared/dports
-
-    # now checkout a proper revision (you have to find in trunk the revision number relevant for you, or google for it)
-    # in this example this was the last revision for ipython 0.13.2
-    cd /Users/Shared/dports
-    svn co -r 108534 http://svn.macports.org/repository/macports/trunk/dports/python/py-ipython python/py-ipython
-
-    # run portindex
-    portindex /Users/Shared/dports
-
-    # you can check beforehand that you can see old port
-    port list py34-ipython
+In addition, in order to run the system in completely local mode or run unit tests,
+the host should have a working installation of ``Docker`` for the user that will run
+Karabo. Please refer to the install page of `Docker <https://docs.docker.com/install/>`_.
 
 
 Executing Unit Tests
