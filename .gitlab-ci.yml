@@ -1,3 +1,7 @@
+services:
+  - name: europeanxfel/existdb:2.2
+    alias: existdb_host
+
 before_script:
   - source ci/prepare "$CI_BUILD_NAME"
 
@@ -8,7 +12,6 @@ before_script:
 .test_template: &test
   script:
     - source ci/test "$CI_BUILD_NAME"
-
 
 .release_build: &release-build
   <<: *build
@@ -150,3 +153,4 @@ integration tests ubuntu16:
 integration tests ubuntu14:
   image: europeanxfel/karabo-ci:ubuntu-14
   <<: *integration-tests
+
