@@ -1,5 +1,4 @@
 # flake8: noqa
-from karabo.native.authenticator import Authenticator
 from karabo.native.time_mixin import TimeMixin, get_timestamp
 from karabo.native.timestamp import Timestamp
 from karabo.native.weak import Weak
