@@ -35,10 +35,6 @@ if [ "$OS" = "Linux" ]; then
     DISTRO_ID=( $(lsb_release -is) )
     DISTRO_RELEASE=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
     NUM_CORES=`grep "processor" /proc/cpuinfo | wc -l`
-elif [ "$OS" = "Darwin" ]; then
-    DISTRO_ID=MacOSX
-    DISTRO_RELEASE=$(uname -r)
-    NUM_CORES=`sysctl hw.ncpu | awk '{print $2}'`
 fi
 
 EXTRACT_SCRIPT=$KARABO/bin/.extract-cppplugin.sh
