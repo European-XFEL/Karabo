@@ -66,9 +66,6 @@
         <itemPath>../../../src/karathon/PyUtilTrainstamp.cc</itemPath>
       </logicalFolder>
     </logicalFolder>
-    <logicalFolder name="f8" displayName="webAuth" projectFiles="true">
-      <itemPath>../../../src/karathon/PyWebAuthenticator.cc</itemPath>
-    </logicalFolder>
     <logicalFolder name="f6" displayName="xms" projectFiles="true">
       <itemPath>../../../src/karathon/FromNumpy.cc</itemPath>
       <itemPath>../../../src/karathon/FromNumpy.hh</itemPath>
@@ -360,11 +357,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/PyUtilTrainstamp.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karathon/PyWebAuthenticator.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -813,11 +805,6 @@
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karathon/PyWebAuthenticator.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
       <item path="../../../src/karathon/PyXmsInputOutputChannel.cc"
             ex="false"
             tool="1"
@@ -1246,11 +1233,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/PyUtilTrainstamp.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karathon/PyWebAuthenticator.cc"
             ex="false"
             tool="1"
             flavor2="0">
