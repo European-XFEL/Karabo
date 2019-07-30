@@ -8,8 +8,7 @@ from karabo.middlelayer import (
     UInt32, VectorString)
 from karabo.native import read_project_model
 from karabo.project_db.project_database import ProjectDatabase
-from karabo.project_db.util import assure_running, ProjectDBError
-
+from karabo.project_db.util import get_admin_password, ProjectDBError
 
 def dictToHash(d):
     h = Hash()
@@ -69,10 +68,15 @@ class ProjectManager(Device):
         If the database is reachable updates the device state to ON,
         otherwise brings the device into ERROR
         """
-        # check if we can connect to the database
         try:
-            assure_running(self.host.value, int(self.port.value))
-            self.state = State.ON
+            # check if we can connect to the database
+            host, port = self._getCurrentConfig()
+            password = get_admin_password(host)
+            with ProjectDatabase('admin', password,
+                                 server=host, port=port,
+                                 test_mode=self.testMode.value,
+                                 init_db=True)
+                self.state = State.ON
         except ProjectDBError as e:
             self.logger.error("ProjectDBError : {}".format(str(e)))
             self.state = State.ERROR
@@ -146,10 +150,8 @@ class ProjectManager(Device):
         :param token: database user token
         """
         # XXX: Leave these hardcoded until session tokens are working
-        user, password = "admin", "karabo"
         host, port = self._getCurrentConfig()
-        if host != "localhost":
-            user = "karabo"
+        user, password = "admin", get_admin_password(host)
         db = ProjectDatabase(user, password,
                              server=host,
                              port=port,

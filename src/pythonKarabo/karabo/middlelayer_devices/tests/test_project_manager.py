@@ -7,18 +7,19 @@ from karabo.middlelayer import call, Hash
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 from karabo.project_db.project_database import ProjectDatabase
 from karabo.middlelayer_devices.project_manager import ProjectManager
-from karabo.project_db.tests.test_projectDatabase import create_hierarchy
+from karabo.project_db.const import TESTDB_ADMIN_PASSWORD
+from karabo.project_db.tests.util import create_hierarchy, stop_local_database
 
 UUIDS = [str(uuid4()) for i in range(5)]
 
 
 class TestProjectManager(DeviceTest):
     _user = "admin"
-    _password = "karabo"
+    _password = TESTDB_ADMIN_PASSWORD
 
     def _createTestData(self):
-        with ProjectDatabase(self._user, self._password, server='localhost',
-                             test_mode=True) as db:
+        with ProjectDatabase(self._user, self._password,
+                             test_mode=True, init_db=True) as db:
 
             path = "{}/{}".format(db.root, 'LOCAL')
             if db.dbhandle.hasCollection(path):
@@ -49,16 +50,12 @@ class TestProjectManager(DeviceTest):
             create_hierarchy(db)
 
     def _cleanDataBase(self):
-        with ProjectDatabase(self._user, self._password, server='localhost',
-                             test_mode=True) as db:
+        with ProjectDatabase(self._user, self._password, test_mode=True) as db:
             path = "{}/{}".format(db.root, 'LOCAL')
             if db.dbhandle.hasCollection(path):
                 db.dbhandle.removeCollection(path)
 
     def setUp(self):
-        # uncomment if ever needing to use local broker
-        # os.environ['KARABO_BROKER'] = 'tcp://localhost:7777'
-
         # create some test data in the database
         self._createTestData()
 
@@ -86,11 +83,17 @@ class TestProjectManager(DeviceTest):
                     os.remove(os.path.join(dir, file))
 
         self._cleanDataBase()
+        stop_local_database()
+
 
     @classmethod
     @contextmanager
     def lifetimeManager(cls):
+        host = os.getenv('KARABO_TEST_PROJECT_DB', 'localhost')
+        port = os.getenv('KARABO_TEST_PROJECT_DB_PORT', 8080)
         cls.local = ProjectManager({"_deviceId_": "projManTest",
+                                    "host": host,
+                                    "port": port,
                                     "testMode": True})
         with cls.deviceManager(cls.local, lead=cls.local):
             yield
