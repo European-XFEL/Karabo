@@ -10,7 +10,6 @@
 
 #include "karabo/util.hpp"
 #include "karabo/log.hpp"
-#include "karabo/webAuth.hpp"
 #include "karabo/io.hpp"
 #include "karabo/net.hpp"
 #include "karabo/xms.hpp"

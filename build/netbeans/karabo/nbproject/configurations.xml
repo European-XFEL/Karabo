@@ -317,19 +317,6 @@
       </logicalFolder>
       <itemPath>../../../src/karabo/util.hpp</itemPath>
     </logicalFolder>
-    <logicalFolder name="f8" displayName="webAuth" projectFiles="true">
-      <itemPath>../../../src/karabo/webAuth/Authenticator.cc</itemPath>
-      <itemPath>../../../src/karabo/webAuth/Authenticator.hh</itemPath>
-      <itemPath>../../../src/karabo/webAuth/ClientAuthentication.h</itemPath>
-      <itemPath>../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp</itemPath>
-      <itemPath>../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.h</itemPath>
-      <itemPath>../../../src/karabo/webAuth/soapC.cpp</itemPath>
-      <itemPath>../../../src/karabo/webAuth/soapH.h</itemPath>
-      <itemPath>../../../src/karabo/webAuth/soapStub.h</itemPath>
-      <itemPath>../../../src/karabo/webAuth/stdsoap2.cpp</itemPath>
-      <itemPath>../../../src/karabo/webAuth/stdsoap2.h</itemPath>
-      <itemPath>../../../src/karabo/webAuth.hpp</itemPath>
-    </logicalFolder>
     <logicalFolder name="f6" displayName="xms" projectFiles="true">
       <itemPath>../../../src/karabo/xms/ImageData.cc</itemPath>
       <itemPath>../../../src/karabo/xms/ImageData.hh</itemPath>
@@ -2211,63 +2198,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/webAuth.hpp" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/Authenticator.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/Authenticator.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/ClientAuthentication.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapC.cpp"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapH.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapStub.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/stdsoap2.cpp"
-            ex="false"
-            tool="1"
-            flavor2="0">
-        <ccTool>
-          <preprocessorList>
-            <Elem>WITH_NONAMESPACES</Elem>
-          </preprocessorList>
-        </ccTool>
-      </item>
-      <item path="../../../src/karabo/webAuth/stdsoap2.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/xms.hpp" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/ImageData.cc"
@@ -2435,13 +2365,6 @@
         <ccTool>
           <preprocessorList>
             <Elem>LINUX</Elem>
-          </preprocessorList>
-        </ccTool>
-      </folder>
-      <folder path="f8">
-        <ccTool>
-          <preprocessorList>
-            <Elem>WITH_OPENSSL</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
@@ -4172,64 +4095,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/webAuth.hpp" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/Authenticator.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/Authenticator.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/ClientAuthentication.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapC.cpp"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapH.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapStub.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/stdsoap2.cpp"
-            ex="false"
-            tool="1"
-            flavor2="0">
-        <ccTool>
-          <commandLine>-Wno-strict-aliasing</commandLine>
-          <preprocessorList>
-            <Elem>WITH_NONAMESPACES</Elem>
-          </preprocessorList>
-        </ccTool>
-      </item>
-      <item path="../../../src/karabo/webAuth/stdsoap2.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/xms.hpp" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/ImageData.cc"
@@ -4390,13 +4255,6 @@
         <ccTool>
           <preprocessorList>
             <Elem>LINUX</Elem>
-          </preprocessorList>
-        </ccTool>
-      </folder>
-      <folder path="f8">
-        <ccTool>
-          <preprocessorList>
-            <Elem>WITH_OPENSSL</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
@@ -6124,63 +5982,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/webAuth.hpp" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/Authenticator.cc"
-            ex="false"
-            tool="1"
-            flavor2="8">
-      </item>
-      <item path="../../../src/karabo/webAuth/Authenticator.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/ClientAuthentication.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.cpp"
-            ex="false"
-            tool="1"
-            flavor2="8">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapAuthenticationPortBindingProxy.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapC.cpp"
-            ex="false"
-            tool="1"
-            flavor2="8">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapH.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/soapStub.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/webAuth/stdsoap2.cpp"
-            ex="false"
-            tool="1"
-            flavor2="8">
-        <ccTool>
-          <preprocessorList>
-            <Elem>WITH_NONAMESPACES</Elem>
-          </preprocessorList>
-        </ccTool>
-      </item>
-      <item path="../../../src/karabo/webAuth/stdsoap2.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/xms.hpp" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/ImageData.cc"
@@ -6348,13 +6149,6 @@
         <ccTool>
           <preprocessorList>
             <Elem>LINUX</Elem>
-          </preprocessorList>
-        </ccTool>
-      </folder>
-      <folder path="f8">
-        <ccTool>
-          <preprocessorList>
-            <Elem>WITH_OPENSSL</Elem>
           </preprocessorList>
         </ccTool>
       </folder>
