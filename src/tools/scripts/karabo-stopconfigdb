@@ -1,24 +1,16 @@
 #!/bin/bash
 echo "Stopping eXist database"
-EXIST_HOME="$KARABO/extern/existdb"
 
-#check if java is installed
-if type -p java; then
-    JAVA=java
-elif [[ -n "$JAVA_HOME" ]] && [[ -x "$JAVA_HOME/bin/java" ]];  then
-    JAVA="$JAVA_HOME/bin/java"
-else
-    echo "JAVA not found! If it is installed, please set JAVA_HOME to the appropriate location!"
-    exit 
+#check the existDb docker image
+IMAGE=europeanxfel/existdb:2.2
+mkdir -p $KARABO/var/data/exist_data
+
+docker ps | grep $IMAGE > /dev/null
+if [[ $? -eq 0 ]]; then
+    for CONTAINER in $(docker ps --filter ancestor=$IMAGE | grep $IMAGE |  awk '{print $1}'); do
+        docker container kill $CONTAINER > /dev/null
+    done
 fi
-
-#finally, stop the db server
-pushd $EXIST_HOME
-$JAVA -jar $EXIST_HOME/start.jar shutdown -p karabo
-popd
-
-sleep 5
-pkill -9 -f jetty #force kill as server is pretty reluctant
 
 # Force a clean returncode
 exit 0
