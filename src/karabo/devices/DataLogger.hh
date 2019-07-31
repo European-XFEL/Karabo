@@ -9,7 +9,6 @@
 #include <fstream>
 
 #include "karabo/util/DataLogUtils.hh"
-#include "karabo/net/Strand.hh"
 #include "karabo/core/Device.hh"
 
 
@@ -117,7 +116,7 @@ namespace karabo {
              */
             void slotTagDeviceToBeDiscontinued(const std::string& reason, const std::string& deviceId);
 
-            void slotAddDeviceToBeLogged(const std::string& deviceId);
+            void slotAddDevicesToBeLogged(const std::vector<std::string>& deviceId);
 
             void handleFailure(const std::string& reason, const DeviceDataPointer& data,
                                const boost::shared_ptr<std::atomic<unsigned int> >& counter);
@@ -138,7 +137,7 @@ namespace karabo {
 
             void checkReady(std::atomic<unsigned int>& counter);
 
-            bool stopLogging(const std::string& deviceId, bool suicideIfEmpty);
+            bool stopLogging(const std::string& deviceId);
 
             int determineLastIndex(const std::string& deviceId) const;
 
