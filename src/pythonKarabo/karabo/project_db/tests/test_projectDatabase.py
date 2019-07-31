@@ -1,59 +1,15 @@
 from time import gmtime, strftime, strptime, time
 from unittest import TestCase
-from uuid import uuid4
 
 from lxml import etree
 
+from karabo.project_db.const import TESTDB_ADMIN_PASSWORD
 from karabo.project_db.project_database import ProjectDatabase
-from karabo.project_db.util import ProjectDBError, stop_database
+from karabo.project_db.util import ProjectDBError
+from karabo.project_db.tests.util import (
+    create_hierarchy, stop_local_database, _gen_uuid)
 
 DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
-
-
-def _gen_uuid():
-    return str(uuid4())
-
-
-def create_hierarchy(db):
-    uuid = _gen_uuid()
-    xml = ('<xml item_type="{atype}" uuid="{uuid}" '
-           'simple_name="{name}">').format(uuid=uuid, atype='project',
-                                           name='Project')
-
-    xml += "<children>"
-
-    # create some scenes
-    for i in range(4):
-        sub_uuid = _gen_uuid()
-        xml += ('<xml item_type="{atype}" uuid="{uuid}"'
-                ' simple_name="{name}" />').format(uuid=sub_uuid,
-                                                   atype='scene',
-                                                   name=sub_uuid)
-
-        scene_xml = ('<xml item_type="{atype}" uuid="{uuid}"'
-                     ' simple_name="{name}" >中文</xml>'
-                     .format(uuid=sub_uuid, atype='scene', name=sub_uuid))
-
-        db.save_item("LOCAL", sub_uuid, scene_xml)
-
-    # create some device_servers
-    for i in range(4):
-        sub_uuid = _gen_uuid()
-        xml += ('<xml item_type="{atype}" uuid="{uuid}"'
-                ' simple_name="{name}" />').format(uuid=sub_uuid,
-                                                   atype='device_server',
-                                                   name=sub_uuid)
-
-        ds_xml = ('<xml item_type="{atype}" uuid="{uuid}"'
-                  ' simple_name="{name}" >foo</xml>'
-                  .format(uuid=sub_uuid, atype='device_server', name=sub_uuid))
-
-        db.save_item("LOCAL", sub_uuid, ds_xml)
-
-    xml += "</children>"
-    xml += "</xml>"
-    db.save_item("LOCAL", uuid, xml)
-    return uuid
 
 
 def create_trashed_project(db, is_trashed=True):
@@ -72,15 +28,15 @@ def create_unattached_scenes(db):
     for i in range(4):
         sub_uuid = _gen_uuid()
         scene_xml = ('<xml item_type="scene" uuid="{uuid}"'
-                        ' simple_name="Scene!" >中文</xml>'
-                        .format(uuid=sub_uuid))
+                     ' simple_name="Scene!" >中文</xml>'
+                     .format(uuid=sub_uuid))
 
         db.save_item("LOCAL", sub_uuid, scene_xml)
 
 
 class TestProjectDatabase(TestCase):
     user = "admin"
-    password = "karabo"
+    password = TESTDB_ADMIN_PASSWORD
 
     def test__make_xml_if_needed(self):
         xml_rep = "<test>foo</test>"
@@ -103,10 +59,8 @@ class TestProjectDatabase(TestCase):
         # A bunch of document "names" for the following tests
         testproject = _gen_uuid()
         testproject2 = _gen_uuid()
-
-        with ProjectDatabase(self.user, self.password, server='localhost',
-                             test_mode=True) as db:
-
+        with ProjectDatabase(self.user, self.password,
+                             test_mode=True, init_db=True) as db:
             # remove previously existing test collection
             path = "{}/{}".format(db.root, 'LOCAL_TEST')
             if db.dbhandle.hasCollection(path):
@@ -233,13 +187,13 @@ class TestProjectDatabase(TestCase):
                     self.assertEqual(i["simple_name"], "Scene!")
                 self.assertGreaterEqual(scenecnt, 4)
 
-            stop_database()
+            stop_local_database()
 
     def test_save_check_modification(self):
         proj_uuid = _gen_uuid()
 
-        with ProjectDatabase(self.user, self.password, server='localhost',
-                             test_mode=True) as db:
+        with ProjectDatabase(self.user, self.password,
+                             test_mode=True, init_db=True) as db:
 
             path = "{}/{}".format(db.root, 'LOCAL')
             if db.dbhandle.hasCollection(path):
@@ -281,4 +235,4 @@ class TestProjectDatabase(TestCase):
                 self.assertFalse(success)
                 self.assertTrue(reason)
 
-            stop_database()
+            stop_local_database()
