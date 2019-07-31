@@ -1,22 +1,15 @@
 #!/bin/bash
 
-EXIST_HOME="$KARABO/extern/existdb"
-
-#check if java is installed
-if type -p java; then
-    JAVA=java
-elif [[ -n "$JAVA_HOME" ]] && [[ -x "$JAVA_HOME/bin/java" ]];  then
-    JAVA="$JAVA_HOME/bin/java"
-else
-    echo "JAVA not found! If it is installed, please set JAVA_HOME to the appropriate location!"
-    exit 
+#check the existDb docker image
+IMAGE=europeanxfel/existdb:2.2
+docker pull $IMAGE > /dev/null
+mkdir -p $KARABO/var/data/exist_data
+# unfortunately ps --filter ancestor=$IMAGE would always return 0
+docker ps | grep $IMAGE > /dev/null
+# if no contaneir from the image is running, start it.
+if [[ $? -ne 0 ]]; then
+    docker run -d -p 8080:8080 -v $KARABO/var/data/exist_data:/opt/exist_data/export/ europeanxfel/existdb:2.2 > /dev/null
+    echo "------------------------------------------"
+    echo "Configuration DB was started."
+    echo "You can access the backend at: http://localhost:8080/exist/"
 fi
-
-
-#finally, start the db server
-pushd $EXIST_HOME
-$JAVA -jar $EXIST_HOME/start.jar jetty> /dev/null&
-echo "------------------------------------------"
-echo "Configuration DB was started."
-echo "You can access the backend at: http://localhost:8080/exist/"
-popd
