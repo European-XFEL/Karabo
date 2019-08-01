@@ -5,6 +5,8 @@ from karabo.bound import (
     INT32_ELEMENT, PythonDevice,
 )
 
+from .device_with_table_parameter import DeviceWithTableElementParam
+
 
 class Schema_Injection_TestCase(unittest.TestCase):
 
@@ -159,3 +161,25 @@ class Schema_Injection_TestCase(unittest.TestCase):
             self.assertIn(key, device.parameters.getPaths())
             self.assertIn(key, device.fullSchema.getPaths())
             self.assertEqual(idx, device.parameters.get(key))
+
+    # TODO: Fix the test below; it is currently failing to instantiate the test device.
+    #       Rename the method for bla_* to test_*.
+    def bla_schemaWithTableElementUpdate(self):
+        """Tests that updateSchema preserves TABLE_ELEMENTs in the static schema."""
+        device = Configurator(DeviceWithTableElementParam).create(
+                        "DeviceWithTableElementParam", Hash())
+        device.startFsm()
+
+        self.assertIn("deviceTable", device.parameters.getPaths())
+
+        # Test that doing updateSchema with something new keeps
+        # the table element parameter.
+        schema = Schema()
+        (
+            INT32_ELEMENT(schema).key("somethingNew")
+            .assignmentOptional().defaultValue(4)
+            .reconfigurable()
+            .commit()
+        )
+
+        self.assertIn("deviceTable", device.parameters.getPaths())
