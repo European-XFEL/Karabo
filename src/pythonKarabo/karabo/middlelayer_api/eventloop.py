@@ -664,14 +664,20 @@ class EventLoop(SelectorEventLoop):
     def start_device(self, device):
         lock = threading.Lock()
         lock.acquire()
+        task = None
 
         @coroutine
         def run_device():
-            yield from device.startInstance()
-            lock.release()
+            nonlocal task
+            task = Task.current_task()
+            try:
+                yield from device.startInstance()
+            finally:
+                lock.release()
 
         self.call_soon_threadsafe(self.create_task, run_device())
         lock.acquire()
+        return task.result()
 
     def instance(self):
         try:
