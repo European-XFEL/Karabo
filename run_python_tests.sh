@@ -193,7 +193,7 @@ runPythonUnitTests() {
 
     # Pass the bound_api/launcher.py file. If the file is imported, a
     # part of its code is executed. That results in an error.
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS -I launcher.py karabo.bound_api"
+    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.bound_api"
     # Some middlelayer tests are flaky for the time being, so add proper flags:
     safeRunCommand "$NOSETESTS -v $FLAKY_FLAGS $COVER_FLAGS karabo.middlelayer_api"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.common"
