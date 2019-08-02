@@ -3,11 +3,10 @@ import os
 from struct import unpack
 import time
 import sys
-import uuid
 from argparse import ArgumentParser
 from datetime import datetime
 
-from tornado import gen, ioloop, web
+from tornado import ioloop, web
 from tornado.concurrent import Future
 from tornado.escape import json_decode
 from tornado.websocket import WebSocketHandler
