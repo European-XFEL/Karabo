@@ -43,10 +43,13 @@ namespace karabo {
          * - flushInterval: at which loggers flush their data to disk
          * - maximumFileSize: of log files after which a new log file chunk is created
          * - directory: the directory into which loggers should write their data
-         * - serverList: a list of device servers on which the loggers should run. 
-         *               Each device in the distributed system has its own logger, and 
-         *               loggers are added to servers in this list in a round robin fashion,
-         *               allowing for load balancing.
+         * - serverList: a list of device servers which each runs one logger.
+         *               Each device in the distributed system is assigned to one logger.
+         *               They are added to the loggers on these servers in a round robin fashion,
+         *               allowing for load balancing. Assignment is made permanent in a loggermap.xml
+         *               file that is regularly written to disk. This allows to distribute the servers
+         *               in the serverList to be distributed among several hosts and still have fixed
+         *               places for reading the data back.
          * 
          */
         class DataLoggerManager : public karabo::core::Device<> {
@@ -88,12 +91,6 @@ namespace karabo {
             void newLoggerServer(const std::string& serverId);
 
             void instantiateLogger(const std::string& serverId);
-
-            //            void instantiatedHandler(bool okHandler, const std::unordered_set<std::string>& devicesToLog,
-            //                                     const std::string& serverId, bool ok, const std::string& reply);
-            //
-            //            void instantiatedFailure(const std::unordered_set<std::string>& devicesToLog, const std::string& serverId,
-            //                                     const std::string& error);
 
             void instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
