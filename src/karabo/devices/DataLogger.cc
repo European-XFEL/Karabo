@@ -44,7 +44,8 @@ namespace karabo {
             VECTOR_STRING_ELEMENT(expected).key("devicesToBeLogged")
                     .displayedName("Devices to be logged")
                     .description("The devices that should be logged by this logger instance")
-                    .assignmentMandatory()
+                    .assignmentOptional()
+                    .defaultValue(std::vector<std::string>())
                     .commit();
 
             VECTOR_STRING_ELEMENT(expected).key("devicesNotLogged")
@@ -458,25 +459,16 @@ namespace karabo {
         void DataLogger::slotAddDevicesToBeLogged(const std::vector<std::string>& deviceIds) {
             // First check deviceIds
             std::vector<std::string> badIds;
-            for (const std::string& deviceId : deviceIds) {
-                if (!appendTo(deviceId, "devicesToBeLogged")) {
-                    badIds.push_back(deviceId);
-                }
-            }
-            if (!badIds.empty()) {
-                // Clean-up (i.e. remove added good ones) and bail out:
-                for (const std::string& deviceId : deviceIds) {
-                    if (std::find(badIds.begin(), badIds.end(), deviceId) == badIds.end()) {
-                        removeFrom(deviceId, "devicesToBeLogged");
-                    }
-                }
-                throw KARABO_LOGIC_EXCEPTION("Devices '" + toString(badIds) + "' already logged. If connecting to them "
-                                             "failed, first call 'slotTagDeviceToBeDiscontinued' and then try again "
-                                             "for all '" + toString(deviceIds) + "'");
-            }
+            std::vector<std::string> goodIds;
 
             // Initiate logging for all of them
             for (const std::string& deviceId : deviceIds) {
+                if (!appendTo(deviceId, "devicesToBeLogged")) {
+                    badIds.push_back(deviceId);
+                    continue;
+                } else {
+                    goodIds.push_back(deviceId);
+                }
                 // No need to check return value here - everything in 'devicesNotLogged' is also in 'devicesToBeLogged':
                 appendTo(deviceId, "devicesNotLogged");
 
@@ -490,6 +482,8 @@ namespace karabo {
                 // using an empty pointer to counter since addition of logged devices at runtime shall not influence State.
                 initConnection(data, boost::shared_ptr<std::atomic<unsigned int> >());
             }
+
+            reply(badIds);
         }
 
 
