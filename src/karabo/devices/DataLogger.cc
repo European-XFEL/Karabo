@@ -139,13 +139,8 @@ namespace karabo {
 
             karabo::net::Strand::Pointer m_strand;
 
-            boost::mutex m_currentSchemaMutex;
             karabo::util::Schema m_currentSchema;
-            bool m_currentSchemaChanged;
 
-            karabo::util::Schema m_schemaForSlotChanged; // only use within slotChanged
-
-            boost::mutex m_configMutex;
             std::fstream m_configStream;
 
             unsigned int m_lastIndex;
@@ -155,8 +150,8 @@ namespace karabo {
             bool m_updatedLastTimestamp;
             bool m_pendingLogin;
 
-            std::map<std::string, karabo::util::MetaData::Pointer> m_idxMap; // protect by m_configMutex!
-            std::vector<std::string> m_idxprops; // needs no mutex as long as used only in slotChanged
+            std::map<std::string, karabo::util::MetaData::Pointer> m_idxMap;
+            std::vector<std::string> m_idxprops;
             size_t m_propsize;
             time_t m_lasttime;
 
@@ -168,11 +163,7 @@ namespace karabo {
             , m_directory(directory)
             , m_initLevel(InitLevel::NONE)
             , m_strand(boost::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService()))
-            , m_currentSchemaMutex()
             , m_currentSchema()
-            , m_currentSchemaChanged(true)
-            , m_schemaForSlotChanged() // only use within handleChanged
-            , m_configMutex()
             , m_configStream()
             , m_lastIndex(0u)
             , m_user(".") //TODO:  Define proper user running a device. The dot is unknown user?
@@ -180,8 +171,8 @@ namespace karabo {
             , m_lastDataTimestamp(Epochstamp(0ull, 0ull), Trainstamp())
             , m_updatedLastTimestamp(false)
             , m_pendingLogin(true)
-            , m_idxMap() // protect by m_configMutex!
-            , m_idxprops() // needs no mutex as long as used only in handleChanged
+            , m_idxMap()
+            , m_idxprops()
             , m_propsize(0u)
             , m_lasttime(0)
             , m_serializer(TextSerializer<Hash>::create(Hash("Xml.indentation", -1))) {
@@ -200,9 +191,7 @@ namespace karabo {
             // All other actions touching the members are posted on the strand and have a shared  pointer
             // to the DeviceData - so this destructor can only run when all these actions are done.
             try {
-                boost::mutex::scoped_lock lock(m_configMutex);
                 if (m_configStream.is_open()) {
-                    // Take care: order of locking m_configMutex and m_lastTimestampMutex!
                     boost::mutex::scoped_lock lock(m_lastTimestampMutex);
                     karabo::util::Timestamp& lastTs = m_lastDataTimestamp;
                     m_configStream << lastTs.toIso8601Ext() << "|" << fixed << lastTs.toTimestamp()
@@ -217,7 +206,6 @@ namespace karabo {
                                 << " " << lastTs.getTrainId() << " " << position << " "
                                 << (m_user.empty() ? "." : m_user) << " " << m_lastIndex << "\n";
                         contentStream.close();
-                        //KARABO_LOG_FRAMEWORK_DEBUG << "slotTagDeviceToBeDiscontinued index stream closed";
                     } else {
                         KARABO_LOG_FRAMEWORK_ERROR << "Error retrieving position of LOGOUT entry in archive with index '"
                                 << m_lastIndex << "': skipped writing index entry for " << deviceId;
@@ -228,7 +216,6 @@ namespace karabo {
                         if (mdp && mdp->idxStream.is_open()) mdp->idxStream.close();
                     }
                     m_idxMap.clear();
-                    //KARABO_LOG_FRAMEWORK_DEBUG << "slotTagDeviceToBeDiscontinued idxMap is cleaned";
                 }
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_LOGIC_EXCEPTION("Problems tagging " + deviceId + " to be discontinued"));
@@ -239,7 +226,6 @@ namespace karabo {
         DataLogger::DataLogger(const Hash& input)
             : karabo::core::Device<>(input)
             , m_flushDeadline(karabo::net::EventLoop::getIOService())
-            , m_doFlushFiles(true)
         {
 
             // start "flush" actor ...
@@ -260,15 +246,12 @@ namespace karabo {
             // When m_perDeviceData will be destructed, all the DeviceData destructors will run and tag
             // the remaining devices as discontinued.
             // Locking mutex maybe not needed since no parallelism anymore (?) - but cannot harm.
-            {
-                boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
-                for (auto it = m_perDeviceData.begin(), itEnd = m_perDeviceData.end(); it != itEnd; ++it) {
-                    disconnectP2P(it->first);
-                }
+            boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
+            for (auto it = m_perDeviceData.begin(), itEnd = m_perDeviceData.end(); it != itEnd; ++it) {
+                disconnectP2P(it->first);
             }
-            m_doFlushFiles = false;
-            if (m_flushDeadline.cancel())
-                doFlush();
+            // Previously, here was an attempt to flush data to file - but that is not needed:
+            // stream object destructors take care that their data arrives on disk.
         }
 
 
@@ -514,9 +497,9 @@ namespace karabo {
                     return;
                 }
                 // UserId only available in real slot call, before posting to event loop:
-                data->m_user = getSenderInfo("slotChanged")->getUserIdOfSender();
+                const std::string& user = getSenderInfo("slotChanged")->getUserIdOfSender();
                 data->m_strand->post(karabo::util::bind_weak(&DataLogger::handleChanged, this,
-                                                             configuration, data));
+                                                             configuration, user, data));
             } else {
                 KARABO_LOG_FRAMEWORK_WARN << "slotChanged called from non-treated device " << deviceId << ".";
             }
@@ -553,26 +536,11 @@ namespace karabo {
         }
 
 
-        void DataLogger::handleChanged(const karabo::util::Hash& configuration, const DeviceDataPointer& data) {
+        void DataLogger::handleChanged(const karabo::util::Hash& configuration, const std::string& user,
+                                       const DeviceDataPointer& data) {
 
+            data->m_user = user; // set under m_strand protection
             const std::string& deviceId = data->m_deviceToBeLogged;
-            // To write log I need schema ...
-            // Copy once under mutex protection and then use copy without further need to think about races
-            {
-                boost::mutex::scoped_lock lock(data->m_currentSchemaMutex);
-                if (data->m_currentSchemaChanged) {
-                    data->m_schemaForSlotChanged = data->m_currentSchema;
-                    if (!data->m_schemaForSlotChanged.empty()) {
-                        data->m_currentSchemaChanged = false;
-                    }
-                }
-            }
-            if (data->m_schemaForSlotChanged.empty()) {
-                // DEBUG only since can happen when initialising, i.e. slot is connected, but Schema did not yet arrive.
-                KARABO_LOG_FRAMEWORK_DEBUG << ": handleChanged called with configuration for " << deviceId << " of size "
-                        << configuration.size() << ", but no schema yet - ignore!";
-                return;
-            }
 
             const bool newPropToIndex = this->updatePropsToIndex(*data);
 
@@ -580,26 +548,27 @@ namespace karabo {
             int expNum = 0x0F0A1A2A;
             int runNum = 0x0F0B1B2B;
 
+            // To write log I need schema - but that has arrived before connecting signal[State]Changed to slotChanged
+            // and thus before any data can arrive here in handleChanged.
             vector<string> paths;
-            getPathsForConfiguration(configuration, data->m_schemaForSlotChanged, paths);
+            getPathsForConfiguration(configuration, data->m_currentSchema, paths);
 
-            boost::mutex::scoped_lock lock(data->m_configMutex);
             if (newPropToIndex) {
                 // DataLogReader got request for history of a property not indexed
                 // so far, that means it triggered the creation of an index file
                 // for that property. Since we cannot be sure that the index creation
                 // has finished when we want to add a new index entry, we close the
                 // file and thus won't touch this new index file (but start a new one).
-                this->ensureFileClosed(*data); // must be protected by data->m_configMutex
+                this->ensureFileClosed(*data);
             }
 
             for (size_t i = 0; i < paths.size(); ++i) {
                 const string& path = paths[i];
                 
                 // Skip those elements which should not be archived
-                if (!data->m_schemaForSlotChanged.has(path)
-                    || (data->m_schemaForSlotChanged.hasArchivePolicy(path)
-                        && (data->m_schemaForSlotChanged.getArchivePolicy(path) == Schema::NO_ARCHIVING))) {
+                if (!data->m_currentSchema.has(path)
+                    || (data->m_currentSchema.hasArchivePolicy(path)
+                        && (data->m_currentSchema.getArchivePolicy(path) == Schema::NO_ARCHIVING))) {
                     continue;
                 }
 
@@ -614,10 +583,10 @@ namespace karabo {
 
                 Timestamp t = Timestamp::fromHashAttributes(leafNode.getAttributes());
                 {
-                    // Take care: order of locking m_configMutex and m_lastTimestampMutex!
+                    // Update time stamp for DeviceData destructor and property "lastUpdatesUtc".
+                    // Since the latter is accessing it when not posted on data->m_strand, need mutex protection:
                     boost::mutex::scoped_lock lock(data->m_lastTimestampMutex);
                     if (t.getEpochstamp() > data->m_lastDataTimestamp.getEpochstamp()) {
-                        // Update time stamp for slotTagDeviceToBeDiscontinued(..).
                         // If mixed timestamps in single message (or arrival in wrong order), always take most recent one.
                         data->m_updatedLastTimestamp = true;
                         data->m_lastDataTimestamp = t;
@@ -676,7 +645,6 @@ namespace karabo {
                 // check if we have property registered
                 if (find(data->m_idxprops.begin(), data->m_idxprops.end(), path) == data->m_idxprops.end()) continue;
 
-                // m_configMutex (for use of m_idxMap) already locked above
                 MetaData::Pointer& mdp = data->m_idxMap[path]; //Pointer by reference!
                 bool first = false;
                 if (!mdp) {
@@ -764,9 +732,6 @@ namespace karabo {
 
         void DataLogger::ensureFileClosed(DeviceData& data) {
             const std::string& deviceId = data.m_deviceToBeLogged;
-            // We touch m_configStream and m_idxMap. Thus we have to rely that the
-            // code calling this method is protected by the 'm_configMutex'
-            // (as requested by documentation).
             if (data.m_configStream.is_open()) {
                 // increment index number for configuration file
                 data.m_lastIndex = this->incrementLastIndex(deviceId);
@@ -793,8 +758,9 @@ namespace karabo {
 
 
         void DataLogger::flushActor(const boost::system::error_code& e) {
-            if (e == boost::asio::error::operation_aborted || !m_doFlushFiles)
+            if (e == boost::asio::error::operation_aborted) {
                 return;
+            }
             doFlush();
             // arm timer again
             m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
@@ -813,6 +779,8 @@ namespace karabo {
                 for (auto& idData : m_perDeviceData) {
                     DeviceDataPointer& data = idData.second;
                     {
+                        // To avoid this mutex lock, access to m_lastTimestampMutex would have to be posted on m_strand.
+                        // Keep as is since this file based DataLogger is supposed to phase out soon...
                         boost::mutex::scoped_lock lock(data->m_lastTimestampMutex);
                         updatedAnyStamp |= data->m_updatedLastTimestamp;
                         data->m_updatedLastTimestamp = false;
@@ -821,21 +789,24 @@ namespace karabo {
                                                   "lastUpdateUtc", ts.getSeconds() == 0ull ? "" : ts.toFormattedString()));
                     }
 
-                    // FIXME: May post flushing on m_data->_strand to avoid need of m_configMutex, but how to reply that
-                    //        flush slot did its job?
-                    boost::mutex::scoped_lock lock(data->m_configMutex);
-                    if (data->m_configStream.is_open()) {
-                        data->m_configStream.flush();
-                    }
-                    for (map<string, MetaData::Pointer>::iterator it = data->m_idxMap.begin(); it != data->m_idxMap.end(); it++) {
-                        MetaData::Pointer mdp = it->second;
-                        if (mdp && mdp->idxStream.is_open()) mdp->idxStream.flush();
-                    }
+                    // We post on strand to exclude parallel access to data->m_configStream and data->m_idxMap
+                    data->m_strand->post(karabo::util::bind_weak(&DataLogger::flushOne, this, data));
                 }
             }
 
             if (updatedAnyStamp) {
                 set("lastUpdatesUtc", lastStamps);
+            }
+        }
+
+
+        void DataLogger::flushOne(const DeviceDataPointer& data) {
+            if (data->m_configStream.is_open()) {
+                data->m_configStream.flush();
+            }
+            for (std::map<string, MetaData::Pointer>::iterator it = data->m_idxMap.begin(); it != data->m_idxMap.end(); ++it) {
+                MetaData::Pointer mdp = it->second;
+                if (mdp && mdp->idxStream.is_open()) mdp->idxStream.flush();
             }
         }
 
@@ -858,11 +829,8 @@ namespace karabo {
 
             const std::string& deviceId = data->m_deviceToBeLogged;
 
-            {
-                boost::mutex::scoped_lock lock(data->m_currentSchemaMutex);
-                data->m_currentSchema = schema;
-                data->m_currentSchemaChanged = true;
-            }
+            data->m_currentSchema = schema;
+
             string filename = get<string>("directory") + "/" + deviceId + "/raw/archive_schema.txt";
             fstream fileout(filename.c_str(), ios::out | ios::app);
             if (fileout.is_open()) {
