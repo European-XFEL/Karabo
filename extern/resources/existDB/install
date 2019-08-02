@@ -1,8 +1,0 @@
-#!/bin/bash
-JAVA=$1
-EXIST_DB_DIR=$2
-INSTALL_PREFIX=$3
-
-pushd $INSTALL_PREFIX
-$JAVA -jar "$EXIST_DB_DIR/eXistDB-2.2.jar" -console -options "$EXIST_DB_DIR/install.properties"
-popd
