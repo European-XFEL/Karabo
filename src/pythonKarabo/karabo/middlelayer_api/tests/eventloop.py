@@ -1,4 +1,6 @@
-from asyncio import coroutine, gather, iscoroutinefunction, set_event_loop, wait_for
+from asyncio import (
+    coroutine, gather, get_event_loop, iscoroutinefunction, set_event_loop,
+    wait_for)
 from contextlib import contextmanager, ExitStack
 from functools import partial, wraps
 from unittest import TestCase
@@ -34,20 +36,27 @@ def sync_tst(f=None, *, timeout=None):
 
 
 class DeviceTest(TestCase):
-
     @classmethod
     def setUpClass(cls):
         with ExitStack() as cls.exit_stack:
             cls.loop = EventLoop()
+            cls.old_event_loop = get_event_loop()
             set_event_loop(cls.loop)
             cls.exit_stack.enter_context(cls.lifetimeManager())
             cls.exit_stack = cls.exit_stack.pop_all()
 
     @classmethod
     def tearDownClass(cls):
-        with cls.exit_stack:
-            pass
-        cls.loop.close()
+        try:
+            with cls.exit_stack:
+                pass
+        finally:
+            # return the event loop at the conditions we found it.
+            # multiple tests might fail if we do not do this.
+            # also: closing the event loop in a `finally`
+            # as insurance against failures in exit_stack
+            cls.loop.close()
+            set_event_loop(cls.old_event_loop)
 
     @classmethod
     @contextmanager
