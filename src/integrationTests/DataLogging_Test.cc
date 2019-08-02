@@ -200,11 +200,11 @@ void DataLogging_Test::testAllInstantiated() {
     std::clog << "Testing deviceInstantiation... " << std::flush;
     int timeout = 1500; // milliseconds
     vector<string> devices;
-    devices.push_back(karabo::util::DATALOGGER_PREFIX + m_deviceId);
+    devices.push_back(karabo::util::DATALOGGER_PREFIX + m_server);
     devices.push_back(karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server));
     devices.push_back(karabo::util::DATALOGREADER_PREFIX + ("1-" + m_server));
     while (timeout > 0) {
-        const Hash& topo = m_deviceClient->getSystemTopology();
+        const Hash topo(m_deviceClient->getSystemTopology());
         CPPUNIT_ASSERT(topo.has("device"));
         const Hash& device = topo.get<Hash>("device");
         bool allUp = true;

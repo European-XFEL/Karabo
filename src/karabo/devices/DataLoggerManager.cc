@@ -109,7 +109,16 @@ namespace karabo {
 
         void DataLoggerManager::initialize() {
 
-            prepareForLoggerMap(); // throws if loggerMap and serverList are inconsistent
+            checkLoggerMap(); // throws if loggerMap and serverList are inconsistent
+
+            // Setup m_loggerData from server list
+            const Hash data("state", LoggerState::OFFLINE,
+                            "backlog", std::unordered_set<std::string>(),
+                            "beingAdded", std::unordered_set<std::string>(),
+                            "devices", std::unordered_set<std::string>());
+            for (const std::string& server : m_serverList) {
+                m_loggerData.set(server, data);
+            }
 
             // Register handlers here
             remote().registerInstanceNewMonitor(boost::bind(&DataLoggerManager::instanceNewHandler, this, _1));
@@ -130,30 +139,24 @@ namespace karabo {
         }
 
 
-        void DataLoggerManager::prepareForLoggerMap() {
+        void DataLoggerManager::checkLoggerMap() {
             // Check that all servers that are supposed to host DataLoggers are in server list.
 
             // First get server ids - the values of the logger map.
-            std::set<std::string> serversInMap;
+            std::unordered_set<std::string> serversInMap; // use set to filter out duplications
             {
                 boost::mutex::scoped_lock lock(m_loggerMapMutex); // m_loggerMap must not be changed while we process it
                 for (Hash::const_iterator it = m_loggerMap.begin(), itEnd = m_loggerMap.end(); it != itEnd; ++it) {
                     serversInMap.insert(it->getValue<std::string>());
                 }
             }
-            // Now loop and check - and setup m_loggerData
-            const Hash data("state", LoggerState::OFFLINE,
-                            "backlog", std::unordered_set<std::string>(),
-                            "beingAdded", std::unordered_set<std::string>(),
-                            "devices", std::unordered_set<std::string>());
+            // Now loop and check that all from logger map are also in configured server list
             for (const std::string& serverInMap : serversInMap) {
                 if (find(m_serverList.begin(), m_serverList.end(), serverInMap) == m_serverList.end()) {
                     throw KARABO_LOGIC_EXCEPTION("Inconsistent '" + m_loggerMapFile + "' and \"serverList\" configuration: '"
                             + serverInMap + "' is in map, but not in list.");
                 }
-                m_loggerData.set(serverInMap, data);
             }
-
         }
 
 
