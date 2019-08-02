@@ -75,7 +75,25 @@ namespace karabo {
 
             void newLogger(const std::string& loggerId);
 
+            void addDevicesToBeLogged(const std::string& loggerId, karabo::util::Hash& serverData);
+
+            void addDevicesDone(bool ok, const std::string& loggerId,
+                                const std::unordered_set<std::string>& calledDevices,
+                                const std::vector<std::string>& alreadyLoggedDevices);
+
+            void addDevicesDoneOnStrand(bool ok, const std::string& loggerId,
+                                        const std::unordered_set<std::string>& calledDevices,
+                                        const std::vector<std::string>& alreadyLoggedDevices);
+
+            void newLoggerServer(const std::string& serverId);
+
             void instantiateLogger(const std::string& serverId);
+
+            //            void instantiatedHandler(bool okHandler, const std::unordered_set<std::string>& devicesToLog,
+            //                                     const std::string& serverId, bool ok, const std::string& reply);
+            //
+            //            void instantiatedFailure(const std::unordered_set<std::string>& devicesToLog, const std::string& serverId,
+            //                                     const std::string& error);
 
             void instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
@@ -85,7 +103,7 @@ namespace karabo {
 
             void goneLogger(const std::string& loggerId);
 
-            void goneServer(const std::string& serverId);
+            void goneLoggerServer(const std::string& serverId);
 
             /**
              * Request the current mapping of loggers to servers. The reply
@@ -146,8 +164,9 @@ namespace karabo {
             };
             // "devices": all that the logger has been told to log,
             // "backlog: all that the logger still has to be told to log
-            karabo::util::Hash m_loggerData; /// 1st level keys: entries in m_serverList, 2nd level: "state", "backlog" and "devices"
+            karabo::util::Hash m_loggerData; /// 1st level keys: entries in m_serverList, 2nd level: "state", "backlog", "beingAdded" and "devices"
             karabo::net::Strand::Pointer m_strand;
+            const unsigned int m_timeout = 1000; /// ms timeout for any request
         };
     }
 }
