@@ -33,40 +33,22 @@ To stop the broker simply type::
 Step 2: Local Configuration Database
 ====================================
 
-Similar to the broker start a local database by typing::
+In order to start a local database, one needs to run
+by typing::
 
   karabo-startconfigdb
-
-To initialize the data-base (**which you need to do only once**) do the following:
-
-1. start a python prompt, we will be using ipython here::
-
-     ipython
-
-2. import the init script and run it::
-
-     from karabo.project_db.util import init_local_db
-     init_local_db()
-
 
 To stop the database type::
 
   karabo-stopconfigdb
 
 
-Step 3: Edit the configuration file
-===================================
+Step 3: Edit the environment files
+==================================
 
-In the karabo folder navigate to ``var/config`` and open the file ``config``
-with your favorite editor.
-
-In this file make sure you set the variable ``KARABO_BROKER`` like so::
-
-  export KARABO_BROKER="tcp://localhost:7777"
-
-and the variable ``KARABO_PROJECT_DB_HOST`` like::
-
-  KARABO_PROJECT_DB_HOST="localhost"
+In the karabo folder navigate to ``var/environment`` and set the content file
+named ``KARABO_BROKER`` to ``tcp://localhost:7777``
+and the content of the file named ``KARABO_PROJECT_DB`` to ``localhost``
 
 Step 4: Start the karabo backbone
 =================================

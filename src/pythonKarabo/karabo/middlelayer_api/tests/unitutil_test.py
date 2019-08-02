@@ -2,16 +2,18 @@ from unittest import TestCase, main
 
 from pint import DimensionalityError
 
-from karabo.middlelayer import unit
+from karabo.middlelayer import Int32, unit, QuantityValue
 from karabo.middlelayer import numeric
 
 
 class Tests(TestCase):
     def setUp(self):
         self.ts1 = 1 * unit.m
+        self.ts1.descriptor = Int32()
         self.ts1.timestamp = 100
         self.ts2 = self.ts1 / unit.m
         self.ts2.timestamp = 200
+        self.nounit = QuantityValue(3, timestamp=300)
 
     def test_linspace(self):
         self.assertTrue(all(numeric.linspace(3, 5, 3) == [3, 4, 5]))
@@ -30,7 +32,7 @@ class Tests(TestCase):
                             [3, 4, 5]))
 
         self.assertEqual(
-            numeric.linspace(self.ts1, 3 * self.ts1, self.ts2).timestamp, 200)
+            numeric.linspace(self.ts1, 3 * self.ts1, self.nounit).timestamp, 300)
 
         with self.assertRaises(DimensionalityError):
             numeric.linspace(2 * unit.kg, 3 * unit.m, 3)
