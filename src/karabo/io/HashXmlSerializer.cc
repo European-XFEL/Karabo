@@ -129,8 +129,6 @@ namespace karabo {
         }
 
 
-        static const std::string& kExtendedAttributesNodeName{"KRB_EXT_ATTRIBS"};
-
         void HashXmlSerializer::writeAttributes(const Hash::Attributes& attrs, pugi::xml_node& node) const {
             for (Hash::Attributes::const_iterator it = attrs.begin(); it != attrs.end(); ++it) {
                 Types::ReferenceType attrType = it->getType();
@@ -262,23 +260,23 @@ namespace karabo {
         void HashXmlSerializer::extractNonStrConvertibleAttrs(vector<Hash>& nonStrAttrs, const pugi::xml_node& node) const {
             nonStrAttrs.clear();
             for (pugi::xml_attribute_iterator it = node.attributes_begin(); it != node.attributes_end(); ++it) {
-                string attributeName(it->name());
+                const string & attributeName = it->name();
                 if (attributeName.substr(0, m_prefix.size()) != m_prefix) {
                     std::pair<std::string, Types::ReferenceType> attr = this->readXmlAttribute(std::string(it->value()));
                     if (attr.second == Types::VECTOR_HASH || attr.second == Types::SCHEMA) {
                         // Attributes of types VECTOR_HASH or SCHEMA are serialized as a child node of the node
                         // containing the attribute.
-                        string attrNodeName = attr.first;
+                        const string& attrNodeName = attr.first;
                         pugi::xml_node attrNode = node.child(attrNodeName.c_str());
                         pugi::xml_node attrValueNode = attrNode.child((attrNodeName + "_value").c_str());
                         Hash h;
                         createHash(h, attrValueNode);
                         if (attr.second == Types::VECTOR_HASH) {
-                            vector<Hash> vh = h.get<vector < Hash >> (attrValueNode.name());
+                            const vector<Hash>& vh = h.get<vector < Hash >> (attrValueNode.name());
                             // Adds attribute to the output vector of hashes with the non stringfied attributes.
                             nonStrAttrs.push_back(Hash(attributeName, vh));
                         } else if (attr.second == Types::SCHEMA) {
-                            Schema sch = h.get<Schema>(attrValueNode.name());
+                            const Schema& sch = h.get<Schema>(attrValueNode.name());
                             // Adds attribute to the output vector of hashes with the non stringfied attributes.
                             nonStrAttrs.push_back(Hash(attributeName, sch));
                         }
@@ -300,7 +298,7 @@ namespace karabo {
                     vector<string> attrHashKeys;
                     attrHash.getKeys(attrHashKeys);
                     if (attrHashKeys.size() == 1) {
-                        string attrName = attrHashKeys[0];
+                        const string& attrName = attrHashKeys[0];
                         Types::ReferenceType attrType = attrHash.getType(attrName);
                         switch (attrType) {
                             case Types::VECTOR_HASH:
@@ -313,6 +311,14 @@ namespace karabo {
                                 KARABO_LOG_FRAMEWORK_ERROR << "Unsupported type for attribute '" << attrName << "'.\n"
                                         << "Supported types are VECTOR_HASH and SCHEMA.";
                         }
+                    } else {
+                        // This will only be reached if any change in HashXmlSerializer::extractNonStrConvertibleAttrs
+                        // has changed the way it outputs the non string convertible attributes it finds.
+                        // To avoid silent failures, a message is being logged.
+                        KARABO_LOG_FRAMEWORK_ERROR <<
+                                "Logic error: HashXmlSerializer::extractNonStrConvertibleAttrs produced a hash with "
+                                "zero or more than one key for an attribute at path '" << hashPath << "' of the hash "
+                                "being deserialized.";
                     }
                 }
             } else {
