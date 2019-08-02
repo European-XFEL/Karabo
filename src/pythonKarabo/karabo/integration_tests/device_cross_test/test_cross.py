@@ -399,6 +399,8 @@ class Tests(DeviceTest):
 </DeviceServer>""")
         xml.close()
 
+        server = "karabo/dataLogger"  # Also twice in xml text above
+
         # Use above configuration to start DataLoggerManager ...
         karabo = os.environ["KARABO"]
         self.process = yield from create_subprocess_exec(
@@ -413,11 +415,23 @@ class Tests(DeviceTest):
 
         ensure_future(print_stdout())
 
-        with (yield from getDevice("DataLogger-middlelayerDevice")) as logger:
-            yield from logger
-            yield from waitUntil(lambda: logger.state == State.NORMAL)
-
-        os.remove(xml_path)
+        try:
+            # Wait until logger is ready for logging our middlelayer device,
+            # i.e. published non-empty timestamp of any logged parameter
+            with (yield from getDevice(
+                    "DataLogger-{}".format(server))) as logger:
+                yield from logger
+                while True:
+                    found = False
+                    for row in logger.lastUpdatesUtc:
+                        if (row["deviceId"] == "middlelayerDevice"
+                            and row["lastUpdateUtc"]):
+                            found = True
+                    if found:
+                        break
+                    yield from waitUntilNew(logger.lastUpdatesUtc)
+        finally:
+            os.remove(xml_path)
 
         # Initiate indexing for selected parameters: "value" and "child.number"
         after = datetime.now()
@@ -467,7 +481,7 @@ class Tests(DeviceTest):
             self.assertEqual([-v for _, _, _, v in hist[-5:]], list(range(5)))
 
         yield from get_event_loop().instance()._ss.request(
-            "karabo/dataLogger", "slotKillServer")
+            server, "slotKillServer")
         yield from self.process.wait()
 
     test_history.slow = True
