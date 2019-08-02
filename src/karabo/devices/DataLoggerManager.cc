@@ -144,6 +144,7 @@ namespace karabo {
             // Now loop and check - and setup m_loggerData
             const Hash data("state", LoggerState::OFFLINE,
                             "backlog", std::unordered_set<std::string>(),
+                            "beingAdded", std::unordered_set<std::string>(),
                             "devices", std::unordered_set<std::string>());
             for (const std::string& serverInMap : serversInMap) {
                 if (find(m_serverList.begin(), m_serverList.end(), serverInMap) == m_serverList.end()) {
@@ -227,8 +228,7 @@ namespace karabo {
             } else if (type == "server") {
                 if (m_loggerData.has(instanceId)) {
                     // One of our servers!
-                    instantiateLogger(instanceId);
-                    instantiateReaders(instanceId);
+                    newLoggerServer(instanceId);
                 }
             }
         }
@@ -239,16 +239,15 @@ namespace karabo {
             // Figure out which server and thus which logger this runs:
             const std::string serverId(loggerServerId(deviceId, true));
 
-            // See whether the logger is running or not: either put to backlog or tell to log
+            // Put deviceId to backlog - independent of state:
             Hash& data = m_loggerData.get<Hash>(serverId);
-            switch (data.get<LoggerState>("state")) {
-                case LoggerState::OFFLINE:
-                case LoggerState::INSTANTIATING:
-                    data.get<std::unordered_set<std::string> >("backlog").insert(deviceId);
-                    break;
-                case LoggerState::RUNNING:
-                    data.get<std::unordered_set<std::string> >("devices").insert(deviceId);
-                    call(serverIdToLoggerId(serverId), "slotAddDevicesToBeLogged", std::vector<std::string>(1, deviceId));
+            data.get<std::unordered_set<std::string> >("backlog").insert(deviceId);
+
+            // If logger is already running, transfer the (likely new and size-1-) backlog to it
+            if (data.get<LoggerState>("state") == LoggerState::RUNNING) {
+                addDevicesToBeLogged(serverIdToLoggerId(serverId), data);
+            } else {
+                KARABO_LOG_FRAMEWORK_INFO << "New device '" << deviceId << "' to be logged, but logger not yet running";
             }
         }
 
@@ -259,28 +258,105 @@ namespace karabo {
             Hash& data = m_loggerData.get<Hash>(serverId);
             data.set("state", LoggerState::RUNNING);
 
-            std::unordered_set<std::string>& backlog = data.get<std::unordered_set<std::string> >("backlog");
-            if (!backlog.empty()) {
-                // After we instantiated, some more devices to log did appear - so tell the logger
-                std::unordered_set<std::string>& devices = data.get<std::unordered_set<std::string> >("devices");
-                devices.insert(backlog.begin(), backlog.end());
+            addDevicesToBeLogged(loggerId, data);
+        }
 
-                call(loggerId, "slotAddDevicesToBeLogged", std::vector<std::string>(backlog.begin(), backlog.end()));
+
+        void DataLoggerManager::addDevicesToBeLogged(const std::string& loggerId, Hash& serverData) {
+
+            std::unordered_set<std::string>& backlog = serverData.get<std::unordered_set<std::string> >("backlog");
+            if (!backlog.empty()) {
+                // Keep track of what is being added
+                std::unordered_set<std::string>& beingAdded = serverData.get<std::unordered_set<std::string> >("beingAdded");
+                beingAdded.insert(backlog.begin(), backlog.end());
+
+                KARABO_LOG_FRAMEWORK_INFO << "Adding devices '" << toString(backlog) << "' for logging by " << loggerId;
+                auto successHandler = bind_weak(&DataLoggerManager::addDevicesDone, this, true, loggerId, backlog, _1);
+                auto failureHandler = bind_weak(&DataLoggerManager::addDevicesDone, this, false, loggerId, backlog,
+                                                std::vector<std::string>());
+                request(loggerId, "slotAddDevicesToBeLogged", std::vector<std::string>(backlog.begin(), backlog.end()))
+                        .timeout(m_timeout).receiveAsync<std::vector<std::string> >(successHandler, failureHandler);
+
                 backlog.clear();
             }
+        }
+
+
+        void DataLoggerManager::addDevicesDone(bool ok, const std::string& loggerId,
+                                               const std::unordered_set<std::string>& calledDevices,
+                                               const std::vector<std::string>& alreadyLoggedDevices) {
+            // Put on strand to be sequential
+            m_strand->post(bind_weak(&DataLoggerManager::addDevicesDoneOnStrand, this, ok, loggerId,
+                                     calledDevices, alreadyLoggedDevices));
+        }
+
+
+        void DataLoggerManager::addDevicesDoneOnStrand(bool ok, const std::string& loggerId,
+                                                       const std::unordered_set<std::string>& calledDevices,
+                                                       const std::vector<std::string>& alreadyLoggedDevices) {
+            const std::string serverId(loggerIdToServerId(loggerId));
+            Hash& data = m_loggerData.get<Hash>(serverId);
+
+            if (ok) {
+                if (alreadyLoggedDevices.empty()) {
+                    KARABO_LOG_FRAMEWORK_INFO << "Added '" << toString(calledDevices) << "' to be logged by '"
+                            << loggerId << "'";
+                } else {
+                    // Can happen when, during initialising, a logger is discovered that was running since before
+                    // DataLoggerManager was instantiated.
+                    KARABO_LOG_FRAMEWORK_WARN << "Added '" << toString(calledDevices) << "' to be logged by '"
+                            << loggerId << "', but '" << toString(alreadyLoggedDevices) << "' were already logged.";
+                }
+                // Remove from "beingAdded" and add to "devices" since done, even those that were already logged:
+                // We just did not yet know about it (see above).
+                std::unordered_set<std::string>& beingAdded = data.get<std::unordered_set<std::string> >("beingAdded");
+                for (const std::string& calledDevice : calledDevices) {
+                    beingAdded.erase(calledDevice);
+                }
+                data.get<std::unordered_set<std::string> >("devices").insert(calledDevices.begin(), calledDevices.end());
+            } else {
+                // It is a failure handler where 'throw' gives us back the exception
+                try {
+                    throw;
+                } catch (const std::exception& e) {
+                    // Can happen as timeout when logger just shutdown
+                    KARABO_LOG_FRAMEWORK_ERROR << "Failed to add '" << toString(calledDevices) << "' to be logged by '"
+                            << loggerId << "' since: " << e.what();
+                }
+                // Put devices to log back to backlog,
+                // but only those "beingAdded" (others could have shutdown meanwhile)
+                std::unordered_set<std::string>& beingAdded = data.get<std::unordered_set<std::string> >("beingAdded");
+                std::unordered_set<std::string>& backlog = data.get<std::unordered_set<std::string> >("backlog");
+                for (const std::string& calledDevice : calledDevices) {
+                    auto it = beingAdded.find(calledDevice);
+                    if (it != beingAdded.end()) {
+                        backlog.insert(calledDevice);
+                        beingAdded.erase(it);
+                    }
+                }
+                if (data.get<LoggerState>("state") == LoggerState::RUNNING) {
+                    // Try again, logger likely just came up:
+                    addDevicesToBeLogged(loggerId, data);
+                }
+            }
+        }
+
+        void DataLoggerManager::newLoggerServer(const std::string& serverId) {
+
+            instantiateLogger(serverId);
+            instantiateReaders(serverId);
         }
 
 
         void DataLoggerManager::instantiateLogger(const std::string& serverId) {
             // Get data for this server to access backlog and state
             Hash& data = m_loggerData.get<Hash>(serverId);
-            std::unordered_set<std::string>& backlog = data.get<std::unordered_set<std::string> >("backlog");
-            data.set("devices", backlog);
 
-            // Instantiate logger and clear its backlog
             data.set("state", LoggerState::INSTANTIATING);
-            const Hash config("devicesToBeLogged", std::vector<std::string>(backlog.begin(), backlog.end()),
-                              "directory", get<string>("directory"),
+
+            // Instantiate logger, but do not yet specify "devicesToBeLogged":
+            // Having one channel only to transport this info (slotAddDevicesToBeLogged) simplifies logic.
+            const Hash config("directory", get<string>("directory"),
                               "maximumFileSize", get<int>("maximumFileSize"),
                               "flushInterval", get<int>("flushInterval"),
                               "performanceStatistics.enable", get<bool>("enablePerformanceStats"));
@@ -290,8 +366,8 @@ namespace karabo {
                             "configuration", config);
             KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << loggerId << "' on server '" << serverId << "'";
             remote().instantiateNoWait(serverId, hash);
-            backlog.clear();
         }
+
 
         void DataLoggerManager::instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             m_strand->post(bind_weak(&DataLoggerManager::instanceGoneOnStrand, this, instanceId, instanceInfo));
@@ -318,7 +394,7 @@ namespace karabo {
             } else if (type == "server") {
                 if (m_loggerData.has(instanceId)) {
                     // It is one of our logger servers
-                    goneServer(instanceId);
+                    goneLoggerServer(instanceId);
                 }
             }
         }
@@ -327,29 +403,35 @@ namespace karabo {
         void DataLoggerManager::goneDeviceToLog(const std::string& deviceId) {
             const std::string serverId(loggerServerId(deviceId, false));
             if (!serverId.empty()) { // else device not in map and thus neither logged
+                // Remove from any tracking:
                 Hash& data = m_loggerData.get<Hash>(serverId);
-
                 std::unordered_set<std::string>& backlog = data.get<std::unordered_set<std::string> >("backlog");
+                std::unordered_set<std::string>& beingAdded = data.get<std::unordered_set<std::string> >("beingAdded");
                 std::unordered_set<std::string>& loggedIds = data.get<std::unordered_set<std::string> >("devices");
-                switch (data.get<LoggerState>("state")) {
-                    case LoggerState::OFFLINE:
-                        backlog.erase(deviceId);
-                        if (!loggedIds.empty()) {
-                            KARABO_LOG_FRAMEWORK_WARN << "Logged devices for offline server '" << serverId
-                                    << "' not empty, but contains " << toString(loggedIds);
-                        }
-                        break;
-                    case LoggerState::INSTANTIATING:
-                        loggedIds.erase(deviceId); // filled when switching to INSTANTIATING
-                        backlog.erase(deviceId); // could be added while INSTANTIATING
-                        break;
+                backlog.erase(deviceId);
+                beingAdded.erase(deviceId);
+                loggedIds.erase(deviceId);
+
+                const LoggerState state = data.get<LoggerState>("state");
+                switch (state) {
                     case LoggerState::RUNNING:
-                        loggedIds.erase(deviceId); // backlog should be empty
+                        // Likely a normal device shutdown - inform the logger:
+                        call(serverIdToLoggerId(serverId), "slotTagDeviceToBeDiscontinued", "D", deviceId);
+                        // Add a consistency check:
                         if (!backlog.empty()) {
                             KARABO_LOG_FRAMEWORK_WARN << "Backlog for running server '" << serverId
-                                    << "' not empty, but contains " << toString(backlog);
+                                    << "' not empty, but contains '" << toString(backlog) << "'";
                         }
-                        call(serverIdToLoggerId(serverId), "slotTagDeviceToBeDiscontinued", "D", deviceId);
+                        break;
+                    case LoggerState::OFFLINE:
+                    case LoggerState::INSTANTIATING:
+                        // Add a consistency check:
+                        if (!loggedIds.empty()) {
+                            KARABO_LOG_FRAMEWORK_WARN << "Logged devices for "
+                                    << (state == LoggerState::OFFLINE ? "offline" : "instantiating")
+                                    << "  server '" << serverId << "' not empty, but contains " << toString(loggedIds);
+                        }
+                        break;
                 }
             }
         }
@@ -361,54 +443,61 @@ namespace karabo {
 
             Hash& data = m_loggerData.get<Hash>(serverId);
             std::unordered_set<std::string>& backlog = data.get<std::unordered_set<std::string> >("backlog");
+            std::unordered_set<std::string>& beingAdded = data.get<std::unordered_set<std::string> >("beingAdded");
             std::unordered_set<std::string>& loggedIds = data.get<std::unordered_set<std::string> >("devices");
 
             switch (data.get<LoggerState>("state")) {
                 case LoggerState::OFFLINE:
                     KARABO_LOG_FRAMEWORK_WARN << "Logger '" << loggerId << "' gone, but its server gone before.";
-                    // But nothing more to do, backlog and loggedIds treated in goneServer(..)
+                    // But nothing more to do, backlog, beingAdded and loggedIds treated in goneLoggerServer(..)
                     break;
                 case LoggerState::INSTANTIATING:
-                    KARABO_LOG_FRAMEWORK_WARN << "Server of '" << loggerId << "' gone while instantiating DataLogger.";
+                    KARABO_LOG_FRAMEWORK_WARN << "Logger '" << loggerId << "' gone again while instantiating.";
                     // no 'break;'!
                 case LoggerState::RUNNING:
-                    // Append logged devices to backlog
+                    // Append logged devices as well as those being added to backlog.
+                    // Note: Relying on treatment of those "beingAdded" in failure handling of addDevicesDoneOnStrand
+                    //       could be too late if the below instantiateLogger succeeds
                     backlog.insert(loggedIds.begin(), loggedIds.end());
                     loggedIds.clear();
-                    // Instantiate again with backlog -- will set "state" appropriately
+                    backlog.insert(beingAdded.begin(), beingAdded.end());
+                    beingAdded.clear();
+                    // Instantiate again -- will set "state" appropriately
                     instantiateLogger(serverId);
             }
         }
 
 
-        void DataLoggerManager::goneServer(const std::string & serverId) {
+        void DataLoggerManager::goneLoggerServer(const std::string& serverId) {
             Hash& data = m_loggerData.get<Hash>(serverId);
 
             switch (data.get<LoggerState>("state")) {
                 case LoggerState::OFFLINE:
-                    KARABO_LOG_FRAMEWORK_ERROR << "Server '" << serverId << "' gone, but it was already gone before: "
-                            << data;
-                    // Weird situation - move "devices" to "backlog" as in other cases...
+                    KARABO_LOG_FRAMEWORK_ERROR << "Server '" << serverId << "' gone, but it was already gone before: " << data;
+                    // Weird situation - move "devices"/"beingAdded" to "backlog" as in other cases...
                     break;
                 case LoggerState::INSTANTIATING:
                     // Expected nice behaviour: Already took note that logger is gone and so tried to start again.
-                    // So we have to move "devices" to "backlog" again.
-                    KARABO_LOG_FRAMEWORK_INFO << "Server '" << serverId << "' gone while instantiating DataLogger.";
+                    // Nothing to do.
+                    KARABO_LOG_FRAMEWORK_INFO << "Server '" << serverId << "' gone while instantiating DataLogger."; 
                     break;
                 case LoggerState::RUNNING:
                     // Looks like a non-graceful shutdown of the server that is detected by lack of heartbeats where
-                    // the DeviceClient currently (Karabo 2.5.1) often sends the "gone" signal for the server before
+                    // the DeviceClient currently (Karabo 2.6.0) often sends the "gone" signal for the server before
                     // the one of the DataLogger.
                     KARABO_LOG_FRAMEWORK_WARN << "Server '" << serverId << "' gone while DataLogger still alive.";
-                    // Also then we have to move "devices" to "backlog".
+                    // Also then we have to move "devices"/"beingAdded" to "backlog".
                     break;
             }
 
-            // Append logged devices to backlog
+            // Append logged and "being added" devices to backlog - better do for all situations...
             std::unordered_set<std::string>& backlog = data.get<std::unordered_set<std::string> >("backlog");
+            std::unordered_set<std::string>& beingAdded = data.get<std::unordered_set<std::string> >("beingAdded");
             std::unordered_set<std::string>& loggedIds = data.get<std::unordered_set<std::string> >("devices");
             backlog.insert(loggedIds.begin(), loggedIds.end());
             loggedIds.clear();
+            backlog.insert(beingAdded.begin(), beingAdded.end());
+            beingAdded.clear();
 
             data.set("state", LoggerState::OFFLINE);
         }
