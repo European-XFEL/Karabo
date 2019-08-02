@@ -317,7 +317,8 @@ namespace karabo {
                         // To avoid silent failures, a message is being logged.
                         KARABO_LOG_FRAMEWORK_ERROR <<
                                 "Logic error: HashXmlSerializer::extractNonStrConvertibleAttrs produced a hash with "
-                                "zero or more than one key for an attribute at path '" << hashPath << "' of the hash "
+                                << attrHashKeys.size() <<
+                                "key(s) for an attribute at path '" << hashPath << "' of the hash "
                                 "being deserialized.";
                     }
                 }
