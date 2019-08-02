@@ -45,7 +45,6 @@ namespace karabo {
             boost::mutex m_changeVectorPropMutex;
 
             boost::asio::deadline_timer m_flushDeadline;
-            bool m_doFlushFiles;
             unsigned int m_flushInterval;
 
 
@@ -71,7 +70,7 @@ namespace karabo {
 
             void slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId);
 
-            void handleChanged(const karabo::util::Hash& config, const DeviceDataPointer& data);
+            void handleChanged(const karabo::util::Hash& config, const std::string& user, const DeviceDataPointer& data);
 
             /**
              * Helper to remove an element from a vector<string> element.
@@ -99,7 +98,7 @@ namespace karabo {
             bool updatePropsToIndex(DeviceData& data);
 
             /// Helper to ensure archive file is closed.
-            /// Must be called under protection of the 'data.m_configMutex' mutex.
+            /// Must only be called from functions posted on 'data.m_strand'.
             void ensureFileClosed(DeviceData& data);
 
             void slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
@@ -148,6 +147,8 @@ namespace karabo {
             void flushActor(const boost::system::error_code& e);
 
             void doFlush();
+
+            void flushOne(const DeviceDataPointer& data);
 
             // The flush slot
             void flush();
