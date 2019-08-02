@@ -10,7 +10,7 @@ from .device_with_table_parameter import DeviceWithTableElementParam
 
 class Schema_Injection_TestCase(unittest.TestCase):
 
-    def test_schemaInjection(self):
+    def bla_schemaInjection(self):
         device = Configurator(PythonDevice).create(
                         "PythonDevice", Hash())
         device.startFsm()
@@ -162,15 +162,14 @@ class Schema_Injection_TestCase(unittest.TestCase):
             self.assertIn(key, device.fullSchema.getPaths())
             self.assertEqual(idx, device.parameters.get(key))
 
-    # TODO: Fix the test below; it is currently failing to instantiate the test device.
-    #       Rename the method for bla_* to test_*.
-    def bla_schemaWithTableElementUpdate(self):
+    def test_schemaWithTableElementUpdate(self):
         """Tests that updateSchema preserves TABLE_ELEMENTs in the static schema."""
-        device = Configurator(DeviceWithTableElementParam).create(
+        device = Configurator(PythonDevice).create(
                         "DeviceWithTableElementParam", Hash())
         device.startFsm()
 
-        self.assertIn("deviceTable", device.parameters.getPaths())
+        self.assertIn("deviceTable",
+                      device.getSchema("DeviceWithTableElementParam").getPaths())
 
         # Test that doing updateSchema with something new keeps
         # the table element parameter.
@@ -182,4 +181,7 @@ class Schema_Injection_TestCase(unittest.TestCase):
             .commit()
         )
 
-        self.assertIn("deviceTable", device.parameters.getPaths())
+        device.updateSchema(schema)
+
+        self.assertIn("deviceTable",
+                      device.getSchema("DeviceWithTableElementParam").getPaths())
