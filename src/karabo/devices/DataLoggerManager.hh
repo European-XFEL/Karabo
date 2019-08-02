@@ -65,7 +65,7 @@ namespace karabo {
 
             void initialize();
 
-            void prepareForLoggerMap();
+            void checkLoggerMap();
 
             void instanceNewHandler(const karabo::util::Hash& topologyEntry);
 
