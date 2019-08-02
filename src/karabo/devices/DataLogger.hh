@@ -32,8 +32,9 @@ namespace karabo {
          * 
          * DataLoggers are managed by the karabo::devices::DataLoggerManager.
          *
-         * FIXME:
-         * When it is ready to log data its state changes from INIT to NORMAL.
+         * Each is able to log any number of devices. This list can be specified at instantiation,
+         * but can also dynamically changed by the slots slotTagDeviceToBeDiscontinued and slotAddDevicesToBeLogged.
+         * When the logger is ready to log data, its state changes from INIT to NORMAL.
          */
         class DataLogger : public karabo::core::Device<> {
 
