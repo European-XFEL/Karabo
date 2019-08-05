@@ -9,7 +9,6 @@
 #include <fstream>
 
 #include "karabo/util/DataLogUtils.hh"
-#include "karabo/net/Strand.hh"
 #include "karabo/core/Device.hh"
 
 
@@ -33,8 +32,9 @@ namespace karabo {
          * 
          * DataLoggers are managed by the karabo::devices::DataLoggerManager.
          *
-         * FIXME:
-         * When it is ready to log data its state changes from INIT to NORMAL.
+         * Each is able to log any number of devices. This list can be specified at instantiation,
+         * but can also dynamically changed by the slots slotTagDeviceToBeDiscontinued and slotAddDevicesToBeLogged.
+         * When the logger is ready to log data, its state changes from INIT to NORMAL.
          */
         class DataLogger : public karabo::core::Device<> {
 
@@ -117,7 +117,7 @@ namespace karabo {
              */
             void slotTagDeviceToBeDiscontinued(const std::string& reason, const std::string& deviceId);
 
-            void slotAddDeviceToBeLogged(const std::string& deviceId);
+            void slotAddDevicesToBeLogged(const std::vector<std::string>& deviceId);
 
             void handleFailure(const std::string& reason, const DeviceDataPointer& data,
                                const boost::shared_ptr<std::atomic<unsigned int> >& counter);
@@ -138,7 +138,7 @@ namespace karabo {
 
             void checkReady(std::atomic<unsigned int>& counter);
 
-            bool stopLogging(const std::string& deviceId, bool suicideIfEmpty);
+            bool stopLogging(const std::string& deviceId);
 
             int determineLastIndex(const std::string& deviceId) const;
 
