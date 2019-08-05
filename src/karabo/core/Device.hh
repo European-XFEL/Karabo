@@ -904,7 +904,7 @@ namespace karabo {
                     // Clear cache
                     m_stateDependentSchema.clear();
 
-                    karabo::util::Schema previousFullSchema = m_fullSchema;
+                    const std::vector<std::string>prevFullSchemaPaths = m_fullSchema.getPaths();
 
                     // Resets fullSchema
                     m_fullSchema = m_staticSchema;
@@ -921,7 +921,7 @@ namespace karabo {
 
                     // Keep new paths only. This hash is then set, to avoid re-sending updates with the same values.
                     // Removes all paths from validated that are in previous full schema.
-                    for (const std::string& p : previousFullSchema.getPaths()) {
+                    for (const std::string& p : prevFullSchemaPaths) {
                         validated.erasePath(p);
                     }
                 }
