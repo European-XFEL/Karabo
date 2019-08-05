@@ -880,8 +880,7 @@ class PythonDevice(NoFsm):
                     self.parameters.erase(path)
             self._stateDependentSchema.clear()
             self._injectedSchema.copy(schema)
-            previousFullSchema = Schema()
-            previousFullSchema.copy(self.fullSchema)
+            prevFullSchemaPaths = self.fullSchema.getPaths()
             self.fullSchema.copy(self.staticSchema)
             self.fullSchema += self._injectedSchema
             self.fullSchema.updateAliasMap()
@@ -892,7 +891,7 @@ class PythonDevice(NoFsm):
 
             # Keep new paths only. This hash is then set, to avoid re-sending
             # updates with the same value.
-            for path in previousFullSchema.getPaths():
+            for path in prevFullSchemaPaths:
                 validated.erasePath(path)
 
         self.set(validated)

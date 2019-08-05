@@ -10,7 +10,7 @@ from .device_with_table_parameter import DeviceWithTableElementParam
 
 class Schema_Injection_TestCase(unittest.TestCase):
 
-    def bla_schemaInjection(self):
+    def test_schemaInjection(self):
         device = Configurator(PythonDevice).create(
                         "PythonDevice", Hash())
         device.startFsm()
