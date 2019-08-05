@@ -875,11 +875,12 @@ class PythonDevice(NoFsm):
         validated = validator.validate(schema, Hash(),
                                        self.getActualTimestamp())
         with self._stateChangeLock:
-            for path in self.parameters.getPaths():
+            for path in self._injectedSchema.getPaths():
                 if not (self.staticSchema.has(path) or schema.has(path)):
                     self.parameters.erase(path)
             self._stateDependentSchema.clear()
             self._injectedSchema.copy(schema)
+            prevFullSchemaPaths = self.fullSchema.getPaths()
             self.fullSchema.copy(self.staticSchema)
             self.fullSchema += self._injectedSchema
             self.fullSchema.updateAliasMap()
@@ -887,14 +888,12 @@ class PythonDevice(NoFsm):
             # notify the distributed system...
             self._ss.emit("signalSchemaUpdated",
                           self.fullSchema, self.deviceid)
-            # For parameters in the static schema of which attributes changes,
-            # re-assign previous values and timestamps
-            validated.merge(self.parameters)
 
             # Keep new paths only. This hash is then set, to avoid re-sending
-            # updates with the same value. This is necessary to do after the
-            # merge above, to keep current values.
-            validated -= self.parameters
+            # updates with the same value.
+            for path in prevFullSchemaPaths:
+                validated.erasePath(path)
+
         self.set(validated)
 
         self.log.INFO("Schema updated")

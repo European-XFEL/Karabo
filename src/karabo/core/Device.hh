@@ -904,7 +904,9 @@ namespace karabo {
                     // Clear cache
                     m_stateDependentSchema.clear();
 
-                    // Reset fullSchema
+                    const std::vector<std::string>prevFullSchemaPaths = m_fullSchema.getPaths();
+
+                    // Resets fullSchema
                     m_fullSchema = m_staticSchema;
 
                     // Save injected
@@ -917,12 +919,11 @@ namespace karabo {
                     // Notify the distributed system
                     emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
 
-                    // For those parameters which are in m_staticSchema, but for which some attributes changed
-                    // (e.g. alarm levels, min/max value, size, etc.) re-assign the old values and timestamps.
-                    validated.merge(m_parameters);
-
                     // Keep new paths only. This hash is then set, to avoid re-sending updates with the same values.
-                    validated -= m_parameters;
+                    // Removes all paths from validated that are in previous full schema.
+                    for (const std::string& p : prevFullSchemaPaths) {
+                        validated.erasePath(p);
+                    }
                 }
 
                 set(validated);
