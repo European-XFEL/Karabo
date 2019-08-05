@@ -9,6 +9,9 @@
 #include <karabo/util/StringTools.hh>
 #include <boost/core/null_deleter.hpp>
 
+#include <unordered_set>
+#include <set>
+
 CPPUNIT_TEST_SUITE_REGISTRATION(StringTools_Test);
 
 using namespace karabo::util;
@@ -144,6 +147,19 @@ void StringTools_Test::testToString() {
         }
     }
     CPPUNIT_ASSERT_EQUAL(only18_12345, toString(int64Vector, 28));
+
+    // Sets - they are ordered
+    CPPUNIT_ASSERT_EQUAL(std::string("2,3,4,5"), toString(std::set<unsigned int>({5, 4, 2, 3})));
+
+    // Unordered_sets - they have any order, but all should be in
+    const std::unordered_set<int> int32_unordered_set({5, 4, 2, 3});
+    const std::string int32_unordered_set_asstring(toString(int32_unordered_set));
+    auto vec = fromString<int, std::vector>(int32_unordered_set_asstring);
+    // Check that all in created vector are all in original unordered_set
+    CPPUNIT_ASSERT_EQUAL(vec.size(), int32_unordered_set.size());
+    for (int i : int32_unordered_set) {
+        CPPUNIT_ASSERT(std::find(vec.begin(), vec.end(), i) != vec.end());
+    }
 
     // Wide strings
     const wchar_t wstr[] = L"abcd0123";
