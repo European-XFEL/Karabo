@@ -15,6 +15,7 @@
 #include "karabo/io/TextSerializer.hh"
 #include "karabo/net/Strand.hh"
 #include "karabo/net/EventLoop.hh"
+#include "karabo/net/Strand.hh"
 #include "karabo/util/Schema.hh"
 #include "karabo/util/MetaTools.hh"
 #include "karabo/xms/SlotElement.hh"
@@ -43,7 +44,8 @@ namespace karabo {
             VECTOR_STRING_ELEMENT(expected).key("devicesToBeLogged")
                     .displayedName("Devices to be logged")
                     .description("The devices that should be logged by this logger instance")
-                    .assignmentMandatory()
+                    .assignmentOptional()
+                    .defaultValue(std::vector<std::string>())
                     .commit();
 
             VECTOR_STRING_ELEMENT(expected).key("devicesNotLogged")
@@ -234,7 +236,7 @@ namespace karabo {
             // Register slots in constructor to ensure existence when sending instanceNew
             KARABO_SLOT(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
             KARABO_SLOT(slotSchemaUpdated, Schema /*changedSchema*/, string /*deviceId*/);
-            KARABO_SLOT(slotAddDeviceToBeLogged, string /*deviceId*/);
+            KARABO_SLOT(slotAddDevicesToBeLogged, vector<string> /*deviceIds*/);
             KARABO_SLOT(slotTagDeviceToBeDiscontinued, string /*reason*/, string /*deviceId*/);
             KARABO_SLOT(flush);
 
@@ -277,9 +279,14 @@ namespace karabo {
             // Initiate connection to logged devices - will leave INIT state when all are connected (or failed)
             boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
             auto counter = boost::make_shared<std::atomic<unsigned int>>(m_perDeviceData.size());
-            for (DeviceDataMap::value_type& pair : m_perDeviceData) {
-                const DeviceDataPointer& data = pair.second;
-                initConnection(data, counter);
+            if (0 == *counter) {
+                // No devices to log, so declare readiness immediately
+                updateState(State::NORMAL);
+            } else {
+                for (DeviceDataMap::value_type& pair : m_perDeviceData) {
+                    const DeviceDataPointer& data = pair.second;
+                    initConnection(data, counter);
+                }
             }
 
             // Start the flushing
@@ -358,7 +365,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_INFO << "Failed " << reason << " " << deviceId << ": " << e.what();
             }
             if (counter) checkReady(*counter);
-            stopLogging(deviceId, true);
+            stopLogging(deviceId);
         }
 
 
@@ -417,7 +424,7 @@ namespace karabo {
         }
 
 
-        bool DataLogger::stopLogging(const std::string& deviceId, bool suicideIfEmpty) {
+        bool DataLogger::stopLogging(const std::string& deviceId) {
 
             // Avoid automatic reconnects -
             // if not all signals connected or device is already dead, this triggers some (delayed) WARNings:
@@ -430,11 +437,6 @@ namespace karabo {
             if (result) {
                 disconnectP2P(deviceId);
             }
-            if (suicideIfEmpty && m_perDeviceData.empty()) {
-                // Nothing to do anymore, so commit suicide.
-                // FIXME: Maybe only as long as DataLoggerManager instantiates each DataLogger for a single device?
-                call("", "slotKillDevice");
-            }
             return result;
         }
 
@@ -446,32 +448,39 @@ namespace karabo {
             removeFrom(deviceId, "devicesToBeLogged");
             removeFrom(deviceId, "devicesNotLogged"); // just in case it was a problematic one
 
-            // (Try to) Remove device from m_perDeviceData, but do not commit suicide:
-            if (!stopLogging(deviceId, false)) {
+            // (Try to) Remove device from m_perDeviceData:
+            if (!stopLogging(deviceId)) {
                 // Inform caller about failure by exception
                 throw KARABO_LOGIC_EXCEPTION("Device '" + deviceId + "' not treated.");
             }
         }
 
 
-        void DataLogger::slotAddDeviceToBeLogged(const std::string& deviceId) {
-            // Update properties
-            if (!appendTo(deviceId, "devicesToBeLogged")) {
-                throw KARABO_LOGIC_EXCEPTION("Device '" + deviceId + "' already logged. If connecting to it failed, "
-                                             "first call 'slotTagDeviceToBeDiscontinued' and then try again.");
+        void DataLogger::slotAddDevicesToBeLogged(const std::vector<std::string>& deviceIds) {
+            // Collect devices that are requested, but which are already logged, to reply them
+            std::vector<std::string> badIds;
+
+            // Initiate logging for all of them
+            for (const std::string& deviceId : deviceIds) {
+                if (!appendTo(deviceId, "devicesToBeLogged")) {
+                    badIds.push_back(deviceId);
+                    continue;
+                }
+                // No need to check return value here - everything in 'devicesNotLogged' is also in 'devicesToBeLogged':
+                appendTo(deviceId, "devicesNotLogged");
+
+                // Create data structure and setup directory
+                DeviceDataPointer data = boost::make_shared<DeviceData>(deviceId, get<string>("directory"));
+                setupDirectory(data);
+                boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
+                m_perDeviceData.insert(std::make_pair(deviceId, data));
+
+                // Init connection to device,
+                // using an empty pointer to counter since addition of logged devices at runtime shall not influence State.
+                initConnection(data, boost::shared_ptr<std::atomic<unsigned int> >());
             }
-            // No need to check return value here - everything in 'devicesNotLogged' is also in 'devicesToBeLogged':
-            appendTo(deviceId, "devicesNotLogged");
 
-            // Create data structure and setup directory
-            DeviceDataPointer data = boost::make_shared<DeviceData>(deviceId, get<string>("directory"));
-            setupDirectory(data);
-            boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
-            m_perDeviceData.insert(std::make_pair(deviceId, data));
-
-            // Init connection to device,
-            // using an empty pointer to counter since addition of logged devices at runtime shall not influence State.
-            initConnection(data, boost::shared_ptr<std::atomic<unsigned int> >());
+            reply(badIds);
         }
 
 
@@ -794,7 +803,8 @@ namespace karabo {
                 }
             }
 
-            if (updatedAnyStamp) {
+            if (updatedAnyStamp
+                || (lastStamps.empty() && !get<std::vector < Hash >> ("lastUpdatesUtc").empty())) {
                 set("lastUpdatesUtc", lastStamps);
             }
         }

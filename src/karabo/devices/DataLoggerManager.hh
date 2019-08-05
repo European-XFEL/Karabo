@@ -16,6 +16,7 @@
 #include <boost/filesystem.hpp>
 
 #include "karabo/core/Device.hh"
+#include "karabo/util/DataLogUtils.hh"
 
 /**
  * The main karabo namespace
@@ -42,10 +43,13 @@ namespace karabo {
          * - flushInterval: at which loggers flush their data to disk
          * - maximumFileSize: of log files after which a new log file chunk is created
          * - directory: the directory into which loggers should write their data
-         * - serverList: a list of device servers on which the loggers should run. 
-         *               Each device in the distributed system has its own logger, and 
-         *               loggers are added to servers in this list in a round robin fashion,
-         *               allowing for load balancing.
+         * - serverList: a list of device servers which each runs one logger.
+         *               Each device in the distributed system is assigned to one logger.
+         *               They are added to the loggers on these servers in a round robin fashion,
+         *               allowing for load balancing. Assignment is made permanent in a loggermap.xml
+         *               file that is regularly written to disk. This allows to distribute the servers
+         *               in the serverList to be distributed among several hosts and still have fixed
+         *               places for reading the data back.
          * 
          */
         class DataLoggerManager : public karabo::core::Device<> {
@@ -60,17 +64,43 @@ namespace karabo {
 
             virtual ~DataLoggerManager();
             
-            void preDestruction() final;
-            
         private: // Functions
 
             void initialize();
 
             void checkLoggerMap();
 
-            void ensureLoggerRunning(const karabo::util::Hash& topologyEntry);
+            void instanceNewHandler(const karabo::util::Hash& topologyEntry);
+
+            void instanceNewOnStrand(const karabo::util::Hash& topologyEntry);
+
+            void newDeviceToLog(const std::string& deviceId);
+
+            void newLogger(const std::string& loggerId);
+
+            void addDevicesToBeLogged(const std::string& loggerId, karabo::util::Hash& serverData);
+
+            void addDevicesDone(bool ok, const std::string& loggerId,
+                                const std::unordered_set<std::string>& calledDevices,
+                                const std::vector<std::string>& alreadyLoggedDevices);
+
+            void addDevicesDoneOnStrand(bool ok, const std::string& loggerId,
+                                        const std::unordered_set<std::string>& calledDevices,
+                                        const std::vector<std::string>& alreadyLoggedDevices);
+
+            void newLoggerServer(const std::string& serverId);
+
+            void instantiateLogger(const std::string& serverId);
 
             void instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+
+            void instanceGoneOnStrand(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+
+            void goneDeviceToLog(const std::string& deviceId);
+
+            void goneLogger(const std::string& loggerId);
+
+            void goneLoggerServer(const std::string& serverId);
 
             /**
              * Request the current mapping of loggers to servers. The reply
@@ -79,20 +109,34 @@ namespace karabo {
              */
             void slotGetLoggerMap();
 
+            /**
+             * Get id of server that should run logger for given device that should be logged
+             *
+             * @param deviceId the device that should be logged
+             * @param addIfNotYetInMap whether to create a server/logger relation in the logger map
+             *                         in case it does not yet exist for deviceId
+             * @return the server id - can be empty if addIfNotYetInMap == false
+             */
+            std::string loggerServerId(const std::string& deviceId, bool addIfNotYetInMap);
+
+            /**
+             * Get id of DataLogger running on server with id 'serverId'
+             */
+            inline std::string serverIdToLoggerId(const std::string& serverId) const {
+                // Just prepend the prefix
+                return karabo::util::DATALOGGER_PREFIX + serverId;
+            }
+
+            /**
+             * Get id of DataLogger running on server with id 'serverId'
+             */
+            inline std::string loggerIdToServerId(const std::string& loggerId) const {
+                // Just remove the prefix
+                return loggerId.substr(strlen(karabo::util::DATALOGGER_PREFIX));
+            }
+
             void instantiateReaders(const std::string& serverId);
 
-            void restartReadersAndLoggers();
-
-            void delayedInstantiation(const std::string serverId, const karabo::util::Hash& hash);
-
-            void doInstantiateHandler(const boost::system::error_code& error, std::unordered_map<std::string, std::deque<karabo::util::Hash>>::iterator queueMapIter);
-
-            unsigned int calcInstantiationTimerDelay();
-            /**
-             * returns the delay between one instantiation and the next on the next server,
-             * in a round-robin pattern
-             **/
-           
             /**
              * This device may not be locked
              * @return false
@@ -102,18 +146,24 @@ namespace karabo {
             }
 
         private: // Data
-            std::vector<std::string> m_serverList;
+            const std::vector<std::string> m_serverList;
             size_t m_serverIndex;
+
             boost::mutex m_loggerMapMutex;
             karabo::util::Hash m_loggerMap;
             const std::string m_loggerMapFile;
 
-            // we make use of a std::deque object per dataloggerserver. These are not strictly FIFOs as queued elements must
-            // be erased when a device dies while its datalogger is not yet instantiated. Thus we cannote use std::queue
-            std::unordered_map<std::string, std::deque<karabo::util::Hash>> m_instantiationQueues;
+            enum class LoggerState {
+                OFFLINE = 0,
+                INSTANTIATING,
+                RUNNING
 
-            boost::asio::deadline_timer m_instantiateDelayTimer;
-            boost::mutex m_instantiateMutex;
+            };
+            // "devices": all that the logger has been told to log,
+            // "backlog: all that the logger still has to be told to log
+            karabo::util::Hash m_loggerData; /// 1st level keys: entries in m_serverList, 2nd level: "state", "backlog", "beingAdded" and "devices"
+            karabo::net::Strand::Pointer m_strand;
+            const unsigned int m_timeout = 1000; /// ms timeout for any request
         };
     }
 }
