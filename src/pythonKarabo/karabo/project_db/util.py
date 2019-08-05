@@ -14,7 +14,7 @@ class ProjectDBError(Exception):
     pass
 
 
-def assure_running(db_settings=None):
+def assure_running(db_settings):
     """
     Assures an instance of existDB is running on your **local** host if the
     KARABO_PROJECT_DB environment variable points to localhost or has not been
@@ -24,11 +24,6 @@ def assure_running(db_settings=None):
     :return: None
     """
     karabo_install = os.getenv('KARABO')
-    if db_settings is None:
-        server = os.getenv('KARABO_PROJECT_DB', 'localhost')
-        port = os.getenv('KARABO_PROJECT_DB_PORT', 8080)
-        password = get_admin_password(server)
-        db_settings = DbSettings('admin', password, server, port)
 
     if db_settings.server == 'localhost':
         # we execute the start script for the database.
@@ -68,12 +63,15 @@ def assure_running(db_settings=None):
                                  " at {}: {}".format(db_settings.server, e))
 
 
-def get_admin_password(host):
-    is_test = os.getenv('KARABO_PROJECT_DB', 'localhost') == host
-    if is_test:
-        return TESTDB_ADMIN_PASSWORD
-    # XXX: implement the password retrieval from the environment #44890
-    return 'karabo'
+def get_db_credentials(is_test):
+    # in production the KARABO_PROJECT_DB_USER and KARABO_PROJECT_DB_PASSWORD
+    # should be set to the username and password of the configDB.
+    # Alternatively, the username and password will be defaulted to 'karabo'
+    default_user = 'admin' if is_test else 'karabo'
+    default_pwd = TESTDB_ADMIN_PASSWORD if is_test else 'karabo'
+    user = os.getenv('KARABO_PROJECT_DB_USER', default_user)
+    password = os.getenv('KARABO_PROJECT_DB_PASSWORD', default_pwd)
+    return user, password
 
 
 def init_db(db_settings, dbhandle):
