@@ -19,6 +19,8 @@
 #include <string>
 #include <vector>
 #include <deque>
+#include <set>
+#include <unordered_set>
 #include <map>
 #include <iostream>
 #include <sstream>
@@ -260,11 +262,34 @@ namespace karabo {
          */
         std::string toString(const karabo::util::NDArray& value);
 
+        /**
+         * A std::set is output as a list of comma (,) separated values
+         * @param value
+         * @return
+         */
         template <typename T>
         inline std::string toString(const std::set<T>& value) {
             if (value.empty()) return "";
             std::ostringstream s;
             typename std::set<T>::const_iterator it = value.begin();
+            s << toString(*it);
+            it++;
+            for (; it != value.end(); ++it) {
+                s << "," << toString(*it);
+            }
+            return s.str();
+        }
+
+        /**
+         * A std::unordered_set is output as a list of comma (,) separated values
+         * @param value
+         * @return
+         */
+        template <typename T>
+        inline std::string toString(const std::unordered_set<T>& value) {
+            if (value.empty()) return "";
+            std::ostringstream s;
+            typename std::unordered_set<T>::const_iterator it = value.begin();
             s << toString(*it);
             it++;
             for (; it != value.end(); ++it) {
