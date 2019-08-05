@@ -38,6 +38,8 @@ namespace karabo {
          */
         class DataLogger : public karabo::core::Device<> {
 
+            bool m_useP2p;
+
             // https://www.quora.com/Is-it-thread-safe-to-write-to-distinct-keys-different-key-for-each-thread-in-a-std-map-in-C-for-keys-that-have-existing-entries-in-the-map
             typedef std::unordered_map<std::string, DeviceDataPointer> DeviceDataMap;
             DeviceDataMap m_perDeviceData;
