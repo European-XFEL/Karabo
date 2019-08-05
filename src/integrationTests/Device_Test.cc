@@ -22,6 +22,8 @@ using karabo::util::Epochstamp;
 using karabo::util::Schema;
 using karabo::util::Timestamp;
 using karabo::util::INT32_ELEMENT;
+using karabo::util::STRING_ELEMENT;
+using karabo::util::TABLE_ELEMENT;
 using karabo::core::DeviceServer;
 using karabo::core::DeviceClient;
 using karabo::xms::SignalSlotable;
@@ -33,6 +35,30 @@ public:
     KARABO_CLASSINFO(TestDevice, "TestDevice", "2.1")
 
     static void expectedParameters(karabo::util::Schema& expected) {
+        Schema rowSchema;
+
+        STRING_ELEMENT(rowSchema).key("type")
+                .displayedName("Type column")
+                .description("Type column")
+                .assignmentOptional().noDefaultValue()
+                .reconfigurable()
+                .commit();
+
+        STRING_ELEMENT(rowSchema).key("name")
+                .displayedName("Name column")
+                .description("Name column")
+                .assignmentOptional().noDefaultValue()
+                .reconfigurable()
+                .commit();
+
+        TABLE_ELEMENT(expected).key("table")
+                .displayedName("Table property")
+                .description("Table with two columns")
+                .setNodeSchema(rowSchema)
+                .assignmentOptional().noDefaultValue()
+                .reconfigurable()
+                .commit();
+
     }
 
 
@@ -281,7 +307,8 @@ void Device_Test::testSchemaInjection() {
     devFullSchema = m_deviceClient->getDeviceSchema("TestDevice");
     CPPUNIT_ASSERT(devFullSchema.getMinInc<int>("injectedInt32") == 1);
 
-    // Checks that doing updateSchema keeps previously set value.
+    // Checks that doing updateSchema keeps previously set value and preserves the property
+    // of type TABLE_ELEMENT in the device's static schema.
     // ----------
     INT32_ELEMENT(schema).key("injectedInt32")
             .assignmentOptional().defaultValue(3)
@@ -302,6 +329,8 @@ void Device_Test::testSchemaInjection() {
     devFullSchema = m_deviceClient->getDeviceSchema("TestDevice");
     CPPUNIT_ASSERT(devFullSchema.getMinInc<int>("injectedInt32") == 2);
     CPPUNIT_ASSERT(devFullSchema.getMaxInc<int>("injectedInt32") == 10);
+
+    CPPUNIT_ASSERT(m_deviceClient->getActiveSchema("TestDevice").has("table"));
 
     // Checks that doing updateSchema with something else loses injectedInt32.
     // ----------
