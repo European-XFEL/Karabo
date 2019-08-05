@@ -1,5 +1,34 @@
-/*
+/**
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ *
+ * The main logic of the managing of the data loggers and of the devices that they should log is as follows:
+ * * Register handlers for new and gone instances before topology gathering starts.
+ *   o By that we get rid of an initial treatment of the topology and of everything that comes afterwards. With
+ *      multithreading it is difficult to get a clear cut between these two states.
+ *   o Now we rely on the fact that the instanceNew handler is called for all instances discovered, be it in the
+ *     initial topology gathering or later.
+ * * We track a state for each logger server - it consist of
+ *   o a LoggerState, i.e. whether the server is still OFFLINE, or whether the server was discovered and therefore
+ *     we are INSTANTIATING the logger or whether the logger is RUNNING.
+ *   o a "backlog" of all devices that should be logged by this server,
+ *   o the devices "beingAdded", i.e. for which we told the logger to take care, but did not yet get confirmation,
+ *   o and those "devices" that the logger has acknowledged to take care of.
+ * * All actions that work on this state are sequentialised by using a strand to be sure about the state.
+ * * Once a server is discovered, the logger is instantiated.
+ * * Once a logger is discovered, it is told to log all devices that are found to be logged by it and have been
+ *   discovered before
+ * * Once a device to be logged is discovered (this could even be a logger), it is checked which logger server is
+ *   responsible
+ *   o either the logger is told to log this device
+ *   o or, if not yet ready, the device is added to the "backlog".
+ * * If a device to be logged is gone, its logger is informed to stop logging
+ * * If a logger goes down, it is restarted (well, we try - if also the server is down, restart will fail)
+ *   before all logged "devices" and those "beingAdded" are put into "backlog".
+ * * If a logger server goes down, "devices" and those "beingAdded" are put into "backlog" as well.
+ *   o There is currently (2.6.0) no defined order of device gone and server gone - it depends whether a server went
+ *     down cleanly or its death was discovered by lack of heartbeats (to be fixed in the DeviceClient).
+ * * One problem remains: if the loggers and the manager work fine, but then the manager is shutdwon and a logged
+ *   device stops afterwards, a restart of the manager will not notice that logging this device should be stopped .
  */
 
 #include <vector>
@@ -56,6 +85,13 @@ namespace karabo {
                     .description("Value of 'performanceStatistics.enable' used when instantiating loggers")
                     .reconfigurable()
                     .assignmentOptional().defaultValue(true) // true will cause alarms when loggers are too slow
+                    .commit();
+
+            BOOL_ELEMENT(expected).key("useP2p")
+                    .displayedName("Use p2p shortcut")
+                    .description("Whether to instruct loggers to use point-to-point instead of broker")
+                    .reconfigurable()
+                    .assignmentOptional().defaultValue(false)
                     .commit();
 
             PATH_ELEMENT(expected).key("directory")
@@ -362,7 +398,8 @@ namespace karabo {
             const Hash config("directory", get<string>("directory"),
                               "maximumFileSize", get<int>("maximumFileSize"),
                               "flushInterval", get<int>("flushInterval"),
-                              "performanceStatistics.enable", get<bool>("enablePerformanceStats"));
+                              "performanceStatistics.enable", get<bool>("enablePerformanceStats"),
+                              "useP2p", get<bool>("useP2p"));
             const std::string loggerId(serverIdToLoggerId(serverId));
             const Hash hash("classId", "DataLogger",
                             "deviceId", loggerId,
