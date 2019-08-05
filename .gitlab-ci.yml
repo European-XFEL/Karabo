@@ -77,7 +77,7 @@ release build ubuntu16:
   <<: *release-build
 
 release build windows GUI:
-  image: europeanxfel/karabo-ci:ubuntu-14
+  image: europeanxfel/karabo-ci:ubuntu-16
   <<: *release-build
 
 # nightly release build
@@ -95,7 +95,7 @@ nightly build ubuntu16:
   <<: *nightly-build
 
 nightly build windows GUI:
-  image: europeanxfel/karabo-ci:ubuntu-14
+  image: europeanxfel/karabo-ci:ubuntu-16
   <<: *nightly-build
 
 # Dependencies build
