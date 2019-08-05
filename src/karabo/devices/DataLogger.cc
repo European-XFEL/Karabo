@@ -236,7 +236,7 @@ namespace karabo {
             // Register slots in constructor to ensure existence when sending instanceNew
             KARABO_SLOT(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
             KARABO_SLOT(slotSchemaUpdated, Schema /*changedSchema*/, string /*deviceId*/);
-            KARABO_SLOT(slotAddDevicesToBeLogged, vector<string> /*deviceId*/);
+            KARABO_SLOT(slotAddDevicesToBeLogged, vector<string> /*deviceIds*/);
             KARABO_SLOT(slotTagDeviceToBeDiscontinued, string /*reason*/, string /*deviceId*/);
             KARABO_SLOT(flush);
 
@@ -457,17 +457,14 @@ namespace karabo {
 
 
         void DataLogger::slotAddDevicesToBeLogged(const std::vector<std::string>& deviceIds) {
-            // First check deviceIds
+            // Collect devices that are requested, but which are already logged, to reply them
             std::vector<std::string> badIds;
-            std::vector<std::string> goodIds;
 
             // Initiate logging for all of them
             for (const std::string& deviceId : deviceIds) {
                 if (!appendTo(deviceId, "devicesToBeLogged")) {
                     badIds.push_back(deviceId);
                     continue;
-                } else {
-                    goodIds.push_back(deviceId);
                 }
                 // No need to check return value here - everything in 'devicesNotLogged' is also in 'devicesToBeLogged':
                 appendTo(deviceId, "devicesNotLogged");
