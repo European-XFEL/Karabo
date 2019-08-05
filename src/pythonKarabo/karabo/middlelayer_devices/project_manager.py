@@ -8,7 +8,7 @@ from karabo.middlelayer import (
     UInt32, VectorString)
 from karabo.native import read_project_model
 from karabo.project_db.project_database import ProjectDatabase
-from karabo.project_db.util import get_admin_password, ProjectDBError
+from karabo.project_db.util import get_db_credentials, ProjectDBError
 
 def dictToHash(d):
     h = Hash()
@@ -71,11 +71,11 @@ class ProjectManager(Device):
         try:
             # check if we can connect to the database
             host, port = self._getCurrentConfig()
-            password = get_admin_password(host)
-            with ProjectDatabase('admin', password,
+            user, password = get_db_credentials(self.testMode.value)
+            with ProjectDatabase(user, password,
                                  server=host, port=port,
                                  test_mode=self.testMode.value,
-                                 init_db=True)
+                                 init_db=True):
                 self.state = State.ON
         except ProjectDBError as e:
             self.logger.error("ProjectDBError : {}".format(str(e)))
@@ -151,7 +151,7 @@ class ProjectManager(Device):
         """
         # XXX: Leave these hardcoded until session tokens are working
         host, port = self._getCurrentConfig()
-        user, password = "admin", get_admin_password(host)
+        user, password = get_db_credentials(self.testMode.value)
         db = ProjectDatabase(user, password,
                              server=host,
                              port=port,
