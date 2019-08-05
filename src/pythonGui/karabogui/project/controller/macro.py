@@ -12,7 +12,7 @@ from traits.api import Instance, String, on_trait_change
 
 from karabo.common.api import DeviceStatus
 from karabo.common.project.api import MacroModel, read_macro, write_macro
-from karabogui import icons
+from karabogui import icons, messagebox
 from karabogui.enums import ProjectItemTypes
 from karabogui.events import (
     broadcast_event, register_for_broadcasts, unregister_from_broadcasts,
@@ -87,7 +87,7 @@ class MacroController(BaseProjectGroupController):
         save_as_action = QAction('Save to file', menu)
         save_as_action.triggered.connect(self._save_macro_to_file)
         run_action = QAction('Run', menu)
-        run_action.triggered.connect(partial(run_macro, self.model))
+        run_action.triggered.connect(self._run_macro)
         menu.addAction(edit_action)
         menu.addAction(dupe_action)
         menu.addAction(delete_action)
@@ -233,6 +233,21 @@ class MacroController(BaseProjectGroupController):
 
         with open(fn, 'w') as fout:
             fout.write(write_macro(macro))
+
+    @pyqtSlot()
+    def _run_macro(self):
+        try:
+            compile(self.model.code, self.model.simple_name, "exec")
+        except SyntaxError as e:
+            # Show erroneous macro before showing the error dialog
+            broadcast_event(KaraboEvent.ShowMacroView,
+                            {'model': self.model})
+            formatted_msg = "{}\n{}{}^\nin {} line {}".format(
+                    e.msg, e.text, " " * e.offset, e.filename, e.lineno)
+            messagebox.show_warning(formatted_msg, title=type(e).__name__)
+            return
+
+        run_macro(self.model)
 
 
 # ----------------------------------------------------------------------
