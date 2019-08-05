@@ -535,6 +535,11 @@ class QuantityValue(KaraboValue, Quantity):
             return wrap_function(ret, self.timestamp)
         return ret
 
+    def __iter__(self):
+        if not hasattr(self.value, "__iter__"):
+            raise TypeError("{} is not iterable".format(self.value.__class__))
+        return self.value.__iter__()
+
     @property
     def __array_interface__(self):
         if isinstance(self.magnitude, numpy.ndarray):
@@ -668,11 +673,13 @@ unit_registry.Quantity = QuantityValue
 
 # define the Karabo units that Pint doen't know about
 unit_registry.define("number = count = #")
-unit_registry.define("electronvolt = eV")
+unit_registry.define("electronvolt = electron_volt")
 unit_registry.define("degree_celsius = degC")
-unit_registry.define("katal = mol / s = kat")
-unit_registry.define("pixel = count = px")
 unit_registry.define("meter_per_second = m / s")
 unit_registry.define("volt_per_second = V / s")
 unit_registry.define("ampere_per_second = A / s")
-unit_registry.define("percent = count / 100 = %")
+unit_registry.define("percent = number / 100 = %")
+# for backward compatibility with Pint version < 0.9
+if '0.9' > pint.__version__:
+    unit_registry.define("katal = mol / s = kat")
+    unit_registry.define("pixel = number = px")
