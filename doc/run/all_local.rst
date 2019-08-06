@@ -42,6 +42,13 @@ To stop the database type::
 
   karabo-stopconfigdb
 
+The `karabo-startconfigdb` will attempt to pull an docker image 
+`europeanxfel/existdb:2.2` from `hub.docker.com`. In case the test system
+is isolated one needs to provide the image either by connecting the host
+temporarily to the internet, or by using the
+`docker save <https://docs.docker.com/engine/reference/commandline/save/>`_
+and `docker load <https://docs.docker.com/engine/reference/commandline/load/>`_
+commands.
 
 Step 3: Edit the environment files
 ==================================
