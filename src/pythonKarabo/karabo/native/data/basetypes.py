@@ -672,7 +672,8 @@ class QuantityValue(KaraboValue, Quantity):
 unit_registry.Quantity = QuantityValue
 
 # define the Karabo units that Pint doen't know about
-unit_registry.define("number = count = #")
+unit_registry.define("number = []")
+unit_registry.define("count = [] = #")
 unit_registry.define("electronvolt = electron_volt")
 unit_registry.define("degree_celsius = degC")
 unit_registry.define("meter_per_second = m / s")
