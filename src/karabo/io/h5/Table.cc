@@ -179,9 +179,25 @@ namespace karabo {
 
             void Table::write(const karabo::util::Hash& data, size_t recordId, size_t len) {
 
+                // Here we collect all write errors, but only re-throw it once we have written what we could.
+                bool h5_err = false;
+                std::string err_log("Problems writing the following elements:\n");
+
                 const vector<Element::Pointer >& elements = m_dataFormat->getElements();
                 for (size_t i = 0; i < elements.size(); ++i) {
-                    elements[i]->write(data, recordId, len);
+                    try {
+                        elements[i]->write(data, recordId, len);
+                    } catch (const std::exception& e) {
+                        h5_err = true;
+                        std::ostringstream oss;
+                        oss << "Exception when writing element: " << elements[i]->getKey() <<
+                                "\n\tFull path: " << elements[i]->getFullName() <<
+                                "\n\tElement type: " << elements[i]->getElementType() <<
+                                "\n\tInto H5 path: " << elements[i]->getH5path() <<
+                                "\n\tDetailed error log:\n";
+                        err_log += oss.str();
+                        err_log += e.what();
+                    }
                 }
 
                 hsize_t possibleNewSize = recordId + len;
@@ -191,7 +207,11 @@ namespace karabo {
                 }
 
                 KARABO_CHECK_HDF5_STATUS(H5Fflush(m_h5file, H5F_SCOPE_LOCAL));
-
+                if (h5_err) {
+                    // We always log, even if it gets caught and discarded later
+                    KARABO_LOG_FRAMEWORK_ERROR << err_log;
+                    throw KARABO_HDF_IO_EXCEPTION(err_log);
+                }
             }
 
 
