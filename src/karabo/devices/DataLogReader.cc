@@ -11,6 +11,7 @@
 #include "karabo/io/Input.hh"
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/io/FileTools.hh"
+#include "karabo/util/TimeDuration.hh"
 #include "karabo/util/Version.hh"
 
 #include "DataLogReader.hh"
@@ -433,12 +434,23 @@ namespace karabo {
 
                 DataLoggerIndex index = findLoggerIndexTimepoint(deviceId, timepoint);
 
-                if (index.m_fileindex == -1 || index.m_event == "-LOG") {
+                if (index.m_fileindex == -1) {
                     reply(Hash(), Schema()); // Requested time is out of any logger data
                     KARABO_LOG_WARN << "Requested time point for device configuration is out of any valid logged data";
                     return;
+                } else if (index.m_event == "-LOG") {
+                    // The closest logged data index for the timepoint corresponds to the device becoming offline.
+                    // As the last known configuration should be returned for those cases, searches again for the logged
+                    // data index that is right before the device becoming offline.
+                    Epochstamp rightBeforeTarget(index.m_epoch.getSeconds(), index.m_epoch.getFractionalSeconds());
+                    rightBeforeTarget -= karabo::util::TimeDuration(0, 10000); // 10000 microseconds or 10 milliseconds.
+                    index = findLoggerIndexTimepoint(deviceId, rightBeforeTarget.toIso8601());
+                    if (index.m_fileindex == -1) {
+                        reply(Hash(), Schema());
+                        KARABO_LOG_WARN << "Requested time point for device configuration is out of any valid logged data";
+                        return;
+                    }
                 }
-
 
                 int lastFileIndex = getFileIndex(deviceId);
                 if (lastFileIndex < 0) {
@@ -450,7 +462,7 @@ namespace karabo {
                 {
                     Epochstamp current(0, 0);
                     long position = index.m_position;
-                    for (int i = index.m_fileindex; i <= lastFileIndex && current <= target; i++, position = 0) {
+                    for (int i = index.m_fileindex; i <= lastFileIndex && current <= target; i++) {
                         string filename = get<string>("directory") + "/" + deviceId + "/raw/archive_" + karabo::util::toString(i) + ".txt";
                         ifstream file(filename.c_str());
                         file.seekg(position);
@@ -489,6 +501,7 @@ namespace karabo {
                             }
                         }
                         file.close();
+                        position = 0; // Puts the cursor at the start of the next log file to be searched.
                     }
                 }
                 reply(hash, schema);
@@ -541,6 +554,9 @@ namespace karabo {
                             KARABO_LOG_FRAMEWORK_DEBUG << "findLoggerIndexTimepoint: done looping. Line tail:" << tail;
                             break;
                         } else {
+                            // TODO: attempt at semantics change for RM_42582 - only gather +LOG events; that should
+                            //       be enough to guarantee retrieval of last known good configuration.
+                            
                             // store selected event
                             if (event == "+LOG" || event == "-LOG") {
                                 entry.m_event = event;

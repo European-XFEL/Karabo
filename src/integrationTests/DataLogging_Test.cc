@@ -193,6 +193,9 @@ void DataLogging_Test::allTestRunner() {
     testString();
     testVectorString();
     testTable();
+    // This must be the last test case - it stops the device being logged to make sure that the
+    // last known configuration can be successfully retrieved after the device is gone.
+    testLastKnownConfiguration();
 }
 
 
@@ -218,6 +221,43 @@ void DataLogging_Test::testAllInstantiated() {
     CPPUNIT_ASSERT_MESSAGE("Timeout while waiting for datalogging to be instantiated", timeout>0);
     std::clog << "Ok" << std::endl;
 }
+
+
+void DataLogging_Test::testLastKnownConfiguration() {
+
+    std::clog << "Testing last known configuration at specific timepoints ..." << std::endl;
+
+    const string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+
+    Schema schema;
+    Hash conf;
+
+    std::clog << "... before any logging activity (at " << m_beforeAnything.toIso8601() << ") ...";
+    // At the m_beforeAnything timepoint no known configuration existed, so an
+    // empty configuration is expected.
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
+                                               m_deviceId, m_beforeAnything.toIso8601())
+                            .timeout(15000).receive(conf, schema));
+
+    CPPUNIT_ASSERT_MESSAGE("At timepoint BeforeAnything no last known configuration is expected.", conf.empty());
+    std::clog << " Ok" << std::endl;
+
+    m_deviceClient->killDevice(m_deviceId, KRB_TEST_MAX_TIMEOUT);
+
+    Epochstamp afterDeviceGone;
+    std::clog << "... after device being logged is gone (at " << afterDeviceGone.toIso8601() << ") ...";
+    // At the afterDevoceGone timepoint, a last known configuration should be obtained with the last value set in the previous
+    // test cases for the 'int32Property' - even after the device being logged is gone.
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
+                                               m_deviceId, afterDeviceGone.toIso8601())
+                            .timeout(15000).receive(conf, schema));
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong value for property 'int32Property' in last known configuration.",
+                                 99, conf.get<int>("int32Property"));
+    std::clog << " Ok" << std::endl;
+
+}
+
 
 template <class T>
 void DataLogging_Test::testHistory(const string& key, const std::function<T(int)> &f, const bool testConf) {
