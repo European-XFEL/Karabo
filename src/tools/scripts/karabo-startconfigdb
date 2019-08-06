@@ -2,7 +2,14 @@
 
 #check the existDb docker image
 IMAGE=europeanxfel/existdb:2.2
-docker pull $IMAGE > /dev/null
+
+#check if the image is already available
+docker images $IMAGE --format "{{.Repository}}:{{.Tag}}" | grep $IMAGE
+if [[ $? -ne 0 ]]; then
+    # pull in case we miss this image
+    docker pull $IMAGE
+fi
+
 mkdir -p $KARABO/var/data/exist_data
 # unfortunately ps --filter ancestor=$IMAGE would always return 0
 docker ps | grep $IMAGE > /dev/null
