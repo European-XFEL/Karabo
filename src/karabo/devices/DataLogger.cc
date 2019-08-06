@@ -55,6 +55,12 @@ namespace karabo {
                     .initialValue(std::vector<std::string>())
                     .commit();
 
+            BOOL_ELEMENT(expected).key("useP2p")
+                    .displayedName("Use p2p shortcut")
+                    .description("Whether to try to use point-to-point instead of broker")
+                    .assignmentOptional().defaultValue(false)
+                    .commit();
+
             PATH_ELEMENT(expected).key("directory")
                     .displayedName("Directory")
                     .description("The directory where the log files should be placed")
@@ -227,6 +233,7 @@ namespace karabo {
 
         DataLogger::DataLogger(const Hash& input)
             : karabo::core::Device<>(input)
+            , m_useP2p(false)
             , m_flushDeadline(karabo::net::EventLoop::getIOService())
         {
 
@@ -258,6 +265,7 @@ namespace karabo {
 
 
         void DataLogger::initialize() {
+            m_useP2p = get<bool>("useP2p");
 
             // Validate that devicesToBeLogged does not contain duplicates
             const auto devsToLog(get<std::vector < std::string >> ("devicesToBeLogged"));
@@ -323,7 +331,7 @@ namespace karabo {
 
             const std::string& deviceId = data->m_deviceToBeLogged;
             // First try to establish p2p before connecting signals - i.e. don't to spam the broker with signalChanged.
-            if (std::getenv("KARABO_DISABLE_LOGGER_P2P") == NULL) {
+            if (m_useP2p) {
                 // copy to avoid capture of bare 'this'
                 auto successHandler = [deviceId] () {
                     KARABO_LOG_FRAMEWORK_INFO << "Going to establish p2p to '" << deviceId << "'";
@@ -338,8 +346,6 @@ namespace karabo {
                     }
                 };
                 asyncConnectP2p(deviceId, successHandler, failureHandler);
-            } else {
-                KARABO_LOG_FRAMEWORK_WARN << "Data logging via p2p has been disabled for loggers!";
             }
 
             // Then connect to schema updates and afterwards request Schema (in other order we might miss an update).
