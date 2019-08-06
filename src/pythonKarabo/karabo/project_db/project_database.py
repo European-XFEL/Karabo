@@ -19,7 +19,8 @@ class ProjectDatabase(ContextDecorator):
                  test_mode=False, init_db=False):
         """
         Create a project data base context for a given user
-        :param user: the user, can be either admin for local db, or LDAP
+        :param user: the user, can be either admin for local db, or set on the
+                     remote projectDB
         :param password: user's password. Is 'karabo' in local context
         :param server: server to connect to. If left blank the
            'KARABO_PROJECT_DB' environment variable will be used
