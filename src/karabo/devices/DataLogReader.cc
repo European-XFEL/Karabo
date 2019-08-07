@@ -438,18 +438,11 @@ namespace karabo {
                     reply(Hash(), Schema()); // Requested time is out of any logger data
                     KARABO_LOG_WARN << "Requested time point for device configuration is out of any valid logged data";
                     return;
-                } else if (index.m_event == "-LOG") {
-                    // The closest logged data index for the timepoint corresponds to the device becoming offline.
-                    // As the last known configuration should be returned for those cases, searches again for the logged
-                    // data index that is right before the device becoming offline.
-                    Epochstamp rightBeforeTarget(index.m_epoch.getSeconds(), index.m_epoch.getFractionalSeconds());
-                    rightBeforeTarget -= karabo::util::TimeDuration(0, 10000); // 10000 microseconds or 10 milliseconds.
-                    index = findLoggerIndexTimepoint(deviceId, rightBeforeTarget.toIso8601());
-                    if (index.m_fileindex == -1) {
-                        reply(Hash(), Schema());
-                        KARABO_LOG_WARN << "Requested time point for device configuration is out of any valid logged data";
-                        return;
-                    }
+                } else if (index.m_event != "+LOG") {
+                    KARABO_LOG_WARN << "Unexpected event type '" << index.m_event
+                            << "' found as for the initial sweeping of last known good configuration.\n"
+                            "Event type should be '+LOG ";
+                    return;
                 }
 
                 int lastFileIndex = getFileIndex(deviceId);
@@ -554,11 +547,11 @@ namespace karabo {
                             KARABO_LOG_FRAMEWORK_DEBUG << "findLoggerIndexTimepoint: done looping. Line tail:" << tail;
                             break;
                         } else {
-                            // TODO: attempt at semantics change for RM_42582 - only gather +LOG events; that should
-                            //       be enough to guarantee retrieval of last known good configuration.
-                            
-                            // store selected event
-                            if (event == "+LOG" || event == "-LOG") {
+                            // Store selected event. Only selects events corresponding to the device becoming online as
+                            // this method is used to retrieve the last known good configuration for a device at a given
+                            // timepoint. The selected event is the initial point for a log sweep that will gather that
+                            // last known good configuration.
+                            if (event == "+LOG") {
                                 entry.m_event = event;
                                 entry.m_epoch = epochstamp;
                                 // store tail for later usage.
