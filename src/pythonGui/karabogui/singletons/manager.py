@@ -334,9 +334,16 @@ class Manager(QObject):
     def handle_deviceConfiguration(self, deviceId, configuration):
         self._topology.device_config_updated(deviceId, configuration)
 
-    def handle_propertyHistory(self, deviceId, property, data):
-        device_proxy = self._topology.get_device(deviceId)
-        device_proxy.publish_historic_data(property, data)
+    def handle_propertyHistory(self, deviceId, property, data, success=True,
+                               failureReason=""):
+        if success:
+            device_proxy = self._topology.get_device(deviceId)
+            device_proxy.publish_historic_data(property, data)
+        else:
+            # XXX: Forward compatibility!
+            # The GUI server of future Karabo versions (> 2.6.X) will report
+            # here about failed history request and their reason.
+            pass
 
     def handle_runConfigSourcesInGroup(self, **info):
         # This is DEPRECATED
