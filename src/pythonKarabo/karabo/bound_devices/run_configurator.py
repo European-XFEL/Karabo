@@ -8,14 +8,14 @@ from collections import OrderedDict
 from karabo.bound import (
     Hash, HashMergePolicy, PythonDevice, Schema, State, VectorHash,
     EXPERT, KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS, BOOL_ELEMENT,
-    LIST_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT, STRING_ELEMENT,
+    LIST_ELEMENT, OVERWRITE_ELEMENT, STRING_ELEMENT,  # SLOT_ELEMENT,
     TABLE_ELEMENT, VECTOR_STRING_ELEMENT
 )
 from karabo.common.api import (
     KARABO_SCHEMA_DISPLAY_TYPE_RUNCONFIGURATOR as DT_RUNCONF,
     KARABO_SCHEMA_DISPLAY_TYPE_SCENES as DT_SCENES)
 from karabo.common.scenemodel.api import (
-    BoxLayoutModel, DeviceSceneLinkModel, DisplayCommandModel,
+    BoxLayoutModel, DeviceSceneLinkModel,  # DisplayCommandModel,
     FixedLayoutModel, LabelModel, RunConfiguratorModel, SceneModel,
     SceneTargetWindow, write_scene
 )
@@ -172,8 +172,8 @@ class RunConfigurator(PythonDevice):
             # by name (tested, working).
             # SLOT_ELEMENT(expected).key('buildConfigurationInUse')
             # .displayedName('Push to DAQ')
-            # .description('Push current configuration structure to the DAQ Run '
-            #              'controller.')
+            # .description('Push current configuration structure to '
+            #              'the DAQ Run controller.')
             # .allowedStates(State.NORMAL)
             # .commit(),
 
@@ -529,7 +529,7 @@ def _createScene(instance_id):
         keys=[instance_id + '.configurations'],
         height=400, width=600, x=4, y=36,
         parent_component='EditableApplyLaterComponent')
-    # button = DisplayCommandModel(
+    # button =  # DisplayCommandModel(
     #     keys=[instance_id + '.buildConfigurationInUse'],
     #     height=29, width=101, x=495, y=440)
     link = DeviceSceneLinkModel(
