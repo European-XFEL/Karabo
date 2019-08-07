@@ -891,27 +891,43 @@ namespace karabo {
                 Hash args("from", t0, "to", t1, "maxNumData", maxNumData);
 
                 const std::string& readerId(getDataReaderId(deviceId));
+                auto okHandler = bind_weak(&karabo::devices::GuiServerDevice::propertyHistory, this, channel, true, _1, _2, _3);
+                auto failHandler = bind_weak(&karabo::devices::GuiServerDevice::propertyHistory, this, channel, false,
+                                             deviceId, property, vector<Hash>());
                 request(readerId, "slotGetPropertyHistory", deviceId, property, args)
-                        .receiveAsync<string, string, vector<Hash> >(bind_weak(&karabo::devices::GuiServerDevice::propertyHistory, this, channel, _1, _2, _3));
+                        .receiveAsync<string, string, vector<Hash> >(okHandler, failHandler);
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetPropertyHistory(): " << e.what();
             }
         }
 
 
-        void GuiServerDevice::propertyHistory(WeakChannelPointer channel, const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data) {
+        void GuiServerDevice::propertyHistory(WeakChannelPointer channel, bool success, const std::string& deviceId,
+                                              const std::string& property, const std::vector<karabo::util::Hash>& data) {
             try {
 
-                KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting property history: "
-                        << deviceId << "." << property << " " << data.size();
-
                 Hash h("type", "propertyHistory", "deviceId", deviceId,
-                       "property", property, "data", data);
+                       "property", property, "data", data, "success", success);
+                std::string& reason = h.bindReference<std::string>("failureReason");
+
+                if (success) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting property history: "
+                            << deviceId << "." << property << " " << data.size();
+                } else {
+                    // Failure handler - figure out what went wrong:
+                    try {
+                        throw;
+                    } catch (const std::exception& e) {
+                        reason = e.what();
+                        KARABO_LOG_FRAMEWORK_INFO << "Property history request to "
+                                << deviceId << "." << property << " failed: " << reason;
+                    }
+                }
 
                 safeClientWrite(channel, h, REMOVE_OLDEST);
 
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in propertyHistory " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in propertyHistory: " << e.what();
             }
         }
 
