@@ -21,7 +21,8 @@ from karabogui.project.dialog.server_handle import ServerHandleDialog
 from karabogui.request import call_device_slot
 from karabogui.singletons.api import get_config
 from karabogui.util import (
-    getOpenFileName, handle_macro_from_server, handle_scene_from_server)
+    getOpenFileName, handle_macro_from_server, handle_scene_from_server,
+    show_filename_error, VALID_PROJECT_OBJECT_NAME)
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 
 
@@ -151,6 +152,10 @@ def _load_macro(project_controller):
     if not fn:
         return
 
+    if not VALID_PROJECT_OBJECT_NAME.match(fn):
+        show_filename_error(fn)
+        return
+
     # Store old macro dialog path
     get_config()['macro_dir'] = op.dirname(fn)
 
@@ -205,6 +210,10 @@ def _load_scene(project_controller):
     fn = getOpenFileName(caption='Load scene', filter='SVG Files (*.svg)',
                          directory=directory)
     if not fn:
+        return
+
+    if not VALID_PROJECT_OBJECT_NAME.match(fn):
+        show_filename_error(fn)
         return
 
     # Store old scene dialog path
