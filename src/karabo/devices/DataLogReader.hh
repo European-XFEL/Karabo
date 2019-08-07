@@ -180,6 +180,15 @@ namespace karabo {
              */
             void slotGetConfigurationFromPast(const std::string& deviceId, const std::string& timepoint);
 
+            /**
+             * Retrieves, from the logger index, the event of type "device became online" that is closest, but not after
+             * a given timepoint. The retrieved logger index event can be used as a starting point for sweeping the
+             * device log for the last known given configuration at that timepoint.
+             *
+             * @param deviceId the device whose logger index event should be retrieved.
+             * @param timepoint the timepoint that will be used as the reference to find the logger index event.
+             * @return the logger index event for the given devices that is closest but not after the given timepoint.
+             */
             DataLoggerIndex findLoggerIndexTimepoint(const std::string& deviceId, const std::string& timepoint);
 
             /// Find logger closest index from archive_index.txt file that is before/after (according to 'before')

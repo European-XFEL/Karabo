@@ -240,21 +240,34 @@ void DataLogging_Test::testLastKnownConfiguration() {
                             .timeout(15000).receive(conf, schema));
 
     CPPUNIT_ASSERT_MESSAGE("At timepoint BeforeAnything no last known configuration is expected.", conf.empty());
-    std::clog << " Ok" << std::endl;
+    std::clog << "\n... Ok (no configuration retrieved, as expected)." << std::endl;
 
-    m_deviceClient->killDevice(m_deviceId, KRB_TEST_MAX_TIMEOUT);
+    Epochstamp rightBeforeDeviceGone;
+    std::clog << "... right before killing device being logged (at " << rightBeforeDeviceGone.toIso8601() << ") ...";
+    // At the rightBeforeDeviceGone timepoint, a last known configuration should be obtained with the last value set in
+    // the  previous test cases for the 'int32Property' - even after the device being logged is gone.
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
+                                               m_deviceId, rightBeforeDeviceGone.toIso8601())
+                            .timeout(15000).receive(conf, schema));
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong value for property 'int32Property' in last known configuration.",
+                                 99, conf.get<int>("int32Property"));
+    std::clog << "\n... Ok (retrieved configuration with last known value for 'int32Property', as expected)." << std::endl;
+
+    // killDevice waits for the device to be killed (or throws an exception in case of failure).
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->killDevice(m_deviceId, KRB_TEST_MAX_TIMEOUT));
 
     Epochstamp afterDeviceGone;
     std::clog << "... after device being logged is gone (at " << afterDeviceGone.toIso8601() << ") ...";
-    // At the afterDevoceGone timepoint, a last known configuration should be obtained with the last value set in the previous
-    // test cases for the 'int32Property' - even after the device being logged is gone.
+    // At the afterDeviceGone timepoint, a last known configuration should be obtained with the last value set in the
+    // previous test cases for the 'int32Property' - even after the device being logged is gone.
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
                                                m_deviceId, afterDeviceGone.toIso8601())
                             .timeout(15000).receive(conf, schema));
 
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong value for property 'int32Property' in last known configuration.",
                                  99, conf.get<int>("int32Property"));
-    std::clog << " Ok" << std::endl;
+    std::clog << "\n... Ok (retrieved configuration with last known value for 'int32Property', as expected)." << std::endl;
 
 }
 
