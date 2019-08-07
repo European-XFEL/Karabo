@@ -357,6 +357,9 @@ def utc_to_local(utc_str, format='%Y-%m-%d %H:%M:%S'):
     return datetime.strftime(local_ts, format)
 
 
+VALID_PROJECT_OBJECT_NAME = re.compile(r'^[\w-]+(/[\w-]+)*$')
+
+
 class InputValidator(QValidator):
     """ This class provides validation of user inputs within projects, whether
         it is about deviceIds, macro names, or scene names.
@@ -368,13 +371,34 @@ class InputValidator(QValidator):
     def __init__(self, parent=None):
         QValidator.__init__(self, parent)
 
-    pattern = re.compile(r'^[\w-]+(/[\w-]+)*$')
-
     def validate(self, input, pos):
         if not input or input.endswith('/'):
             return self.Intermediate, input, pos
 
-        if not self.pattern.match(input):
+        if not VALID_PROJECT_OBJECT_NAME.match(input):
             return self.Invalid, input, pos
 
         return self.Acceptable, input, pos
+
+
+def show_filename_error(filename):
+    invalid_chars = _get_invalid_chars(filename)
+
+    # Make the space verbose
+    if ' ' in invalid_chars:
+        invalid_chars.remove(' ')
+        invalid_chars.append("<space>")
+
+    message = (
+        "Filename contains the following invalid character(s):\n{}"
+        .format(' '.join(invalid_chars)))
+
+    messagebox.show_error(message, "Unable to Load File")
+
+
+def _get_invalid_chars(filename):
+    invalid_chars = []
+    if not VALID_PROJECT_OBJECT_NAME.match(filename):
+        invalid_regex = re.compile("[^a-zA-Z0-9\/\_\-]")
+        invalid_chars = list(set(invalid_regex.findall(filename)))
+    return invalid_chars
