@@ -112,7 +112,7 @@ class Tests(TestCase):
             hex_int: 0x0
             enum_int: <Words.a>
             ohm_float: 0.0 Ω
-            err_float: 0.0 number
+            err_float: 0.0 
             strings: []
             node: 
                 strings: []""")
@@ -139,7 +139,7 @@ class Tests(TestCase):
                     <td>0.0 Ω</td>
                 </tr><tr>
                     <td style="padding-left:1em">err_float</td>
-                    <td>0.0 number</td>
+                    <td>0.0 </td>
                 </tr><tr>
                     <td style="padding-left:1em">strings</td>
                     <td />
@@ -167,7 +167,7 @@ class Tests(TestCase):
             hex_int: 0x14
             enum_int: <Words.a>
             ohm_float: 2.000001 Ω
-            err_float: 3.1 number
+            err_float: 3.1 
             strings: [a]
             node: 
                 strings: [b]""")
@@ -194,7 +194,7 @@ class Tests(TestCase):
                     <td>2.000001 Ω</td>
                 </tr><tr>
                     <td style="padding-left:1em">err_float</td>
-                    <td>3.1 number</td>
+                    <td>3.1 </td>
                 </tr><tr>
                     <td style="padding-left:1em">strings</td>
                     <td>a</td>
@@ -210,7 +210,6 @@ class Tests(TestCase):
 
     def test_long(self):
         s = Sample()
-        self.maxDiff = None
         s._onChanged(Hash("bin_desc", 6, "bin_int", -1000000000,
                           "oct_int", -2000000000,
                           "hex_int", -1500000000,
@@ -234,7 +233,7 @@ class Tests(TestCase):
             hex_int: 0x-59682f00
             enum_int: <Words.a>
             ohm_float: 1.000001e-07 Ω
-            err_float: 1.2346e+07 number
+            err_float: 1.2346e+07 
             strings:
                 [this,
                  is a list of long strings which will
@@ -274,10 +273,10 @@ class Tests(TestCase):
                     <td><i>Words.a</i></td>
                 </tr><tr>
                     <td style="padding-left:1em">ohm_float</td>
-                    <td>1.000001×10<sup>-7</sup> Ω</td>
+                    <td>1.000001 × 10<sup>-7</sup> Ω</td>
                 </tr><tr>
                     <td style="padding-left:1em">err_float</td>
-                    <td>1.2346×10<sup>7</sup> number</td>
+                    <td>1.2346 × 10<sup>7</sup> </td>
                 </tr><tr>
                     <td style="padding-left:1em">strings</td>
                     <td>this<br />
