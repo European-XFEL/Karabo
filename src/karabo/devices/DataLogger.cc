@@ -106,11 +106,6 @@ namespace karabo {
                     .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
                     .commit();
 
-            // Slow beats
-            OVERWRITE_ELEMENT(expected).key("heartbeatInterval")
-                    .setNewDefaultValue(60)
-                    .commit();
-
             SLOT_ELEMENT(expected).key("flush")
                     .displayedName("Flush")
                     .description("Persist buffered data")
