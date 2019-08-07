@@ -535,11 +535,6 @@ class QuantityValue(KaraboValue, Quantity):
             return wrap_function(ret, self.timestamp)
         return ret
 
-    def __iter__(self):
-        if not hasattr(self.value, "__iter__"):
-            raise TypeError("{} is not iterable".format(self.value.__class__))
-        return self.value.__iter__()
-
     @property
     def __array_interface__(self):
         if isinstance(self.magnitude, numpy.ndarray):
