@@ -22,9 +22,11 @@ glance.
     "KNOWN"[shape = box style=filled, fillcolor="#C8C8C8"]
     "STATIC"[shape = box style=filled, fillcolor="#00AA00"]
     "NORMAL"[shape = box style=filled, fillcolor="#C8C8C8"]
+    "PAUSED"[shape = box style=filled, fillcolor="#FF00FF"]
     "KNOWN" -> "NORMAL"
     "KNOWN" -> "ERROR"
     "KNOWN" -> "DISABLED"
+    "DISABLED" -> "PAUSED"
     "NORMAL" -> "STATIC"
     "NORMAL" -> "RUNNING"
     "RUNNING"[shape = box style=filled, fillcolor="#99CCFF"]
@@ -103,6 +105,13 @@ equal to ``NORMAL``.
 
 ``STATIC`` is itself a base state to the ``ACTIVE`` and ``PASSIVE`` states.
 It is the counterpart to the changing states and rarely used.
+
+.. graphviz::
+
+    digraph paused {PAUSED [shape=box, style=filled, fillcolor="#FF00FF"]}
+
+``PAUSED`` Data Acquisition will be paused while the device is in this state.
+[TODO: add better (or more complete) description for ``PAUSED``]
 
 .. graphviz::
 
@@ -289,7 +298,7 @@ Especially for middle-layer devices a recurring scenario is the evaluation of
 the most significant state, or composite state of a group of states. This is
 where state trumping must be used. In Karabo, state trumping is centralized
 in the sense that a set of standard trumping rules are provided, giving the
-base states are particular order.
+base states a particular order.
 In the flat base-state hierarchy the following graph is being followed
 in *trump* evaluation, where ``DISABLED`` is trumped by all other states and
 ``UNKNOWN`` will trump all other states.
@@ -343,6 +352,14 @@ in *trump* evaluation, where ``DISABLED`` is trumped by all other states and
             style = filled
             fillcolor = "#99CCFF"
             label = "RUNNING"
+        ]
+
+        paused
+        [
+            shape = box
+            style = filled
+            fillcolor = "#FF00FF"
+            label = "PAUSED"
         ]
 
         subgraph cluster1 {
@@ -404,7 +421,8 @@ in *trump* evaluation, where ``DISABLED`` is trumped by all other states and
 
         disabled -> active [lhead=cluster0]
         active  -> running [ltail=cluster0]
-        running -> increasing [lhead=cluster1]
+        running -> paused
+        paused -> increasing [lhead=cluster1]
         decreasing -> interlocked [ltail=cluster1]
         interlocked -> error
         error -> init
@@ -418,6 +436,25 @@ in *trump* evaluation, where ``DISABLED`` is trumped by all other states and
     in a condition in which it does not have all the information necessary
     to determine the proper state. Thus the conservative assumption is
     that the device is in an error state.
+
+.. note::
+
+    When the input list of states contains two or more states that derive from 
+    a common state in the trump list and that common parent is the most 
+    significant among all the input states, the most significant state will 
+    be the one that comes last in the input list. 
+    
+    To exemplify: if ``COOLING`` and ``RAMPING_DOWN``, which are derived from 
+    ``DECREASING``,  are in the input list along with other states that are 
+    less significant than ``DECREASING``, the most significant state will be 
+    ``COOLING`` if it comes after ``RAMPING_DOWN`` in the input list. Otherwise, 
+    the most significant will be ``RAMPING_DOWN``. 
+    
+    It is important to add in here that a state is considered to derive from itself
+    (like classes are subclasses of themselves in most OOP languages). So, if in the 
+    example above the classes were ``COOLING`` and ``DECREASING``, the same rule of the
+    most significant being the one that comes closest to the end of the input
+    list would apply. 
 
 Device developers should however not implement trumping functionality themselves,
 but instead use the ``StateSignifier().returnMostSignificant`` function
@@ -437,9 +474,10 @@ provided by Karabo.
 
 Calling ``returnMostSignificant`` from the ``StateSignifier`` without
 additional keywords will result in returning evaluation substates
-of ``STATIC`` and ``CHANGING`` as these base states, i.e. no differentiation
-between ``ACTIVE`` and ``PASSIVE`` or ``INCREASING`` and ``DECREASING`` is
-made. If a differentiation is needed it can be controlled by the following
+of ``STATIC`` and ``CHANGING``. A priority can be established between
+the two direct descendants of ``STATIC`` (``ACTIVE`` and ``PASSIVE``) and
+between the two direct descendants of ``CHANGING`` (``INCREASING`` and
+``DECREASING``). Those priorities can be controlled by the following
 two keywords:
 
 staticSignificant = ``ACTIVE|PASSIVE``
@@ -448,10 +486,10 @@ staticSignificant = ``ACTIVE|PASSIVE``
 changingSignificant = ``INCREASING|DECREASING``
     defines whether ``INCREASING`` or  ``DECREASING`` should evaluate as more significant.
 
-In rare scenarios states might to be trumped differently. Developers can
+In rare scenarios states might need to be trumped differently. Developers can
 provide for a different trumping method in initialization of the ``StateSignifier``.
-It expects a complete list of base states as input, the order of which determines
-trumping and provides the same ``returnMostSignificant`` method as in the
+A list of base states should be provided as the trump list, the order of which
+determines trumping and provides the same ``returnMostSignificant`` method as in the
 default trumping implementation.
 
 .. code-block:: Python
