@@ -8,14 +8,14 @@ from collections import OrderedDict
 from karabo.bound import (
     Hash, HashMergePolicy, PythonDevice, Schema, State, VectorHash,
     EXPERT, KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS, BOOL_ELEMENT,
-    LIST_ELEMENT, OVERWRITE_ELEMENT, STRING_ELEMENT,  # SLOT_ELEMENT,
+    LIST_ELEMENT, OVERWRITE_ELEMENT, STRING_ELEMENT,
     TABLE_ELEMENT, VECTOR_STRING_ELEMENT
 )
 from karabo.common.api import (
     KARABO_SCHEMA_DISPLAY_TYPE_RUNCONFIGURATOR as DT_RUNCONF,
     KARABO_SCHEMA_DISPLAY_TYPE_SCENES as DT_SCENES)
 from karabo.common.scenemodel.api import (
-    BoxLayoutModel, DeviceSceneLinkModel,  # DisplayCommandModel,
+    BoxLayoutModel, DeviceSceneLinkModel,
     FixedLayoutModel, LabelModel, RunConfiguratorModel, SceneModel,
     SceneTargetWindow, write_scene
 )
@@ -166,16 +166,6 @@ class RunConfigurator(PythonDevice):
             OVERWRITE_ELEMENT(expected).key('visibility')
             .setNewDefaultValue(EXPERT)
             .commit(),
-
-            # Temporarily removed the button because the RunController can not
-            # handle an unprepared state transition. The slot is still callable
-            # by name (tested, working).
-            # SLOT_ELEMENT(expected).key('buildConfigurationInUse')
-            # .displayedName('Push to DAQ')
-            # .description('Push current configuration structure to '
-            #              'the DAQ Run controller.')
-            # .allowedStates(State.NORMAL)
-            # .commit(),
 
             LIST_ELEMENT(expected).key('configurations')
             .displayedName('Configurations')
@@ -529,9 +519,6 @@ def _createScene(instance_id):
         keys=[instance_id + '.configurations'],
         height=400, width=600, x=4, y=36,
         parent_component='EditableApplyLaterComponent')
-    # button =  # DisplayCommandModel(
-    #     keys=[instance_id + '.buildConfigurationInUse'],
-    #     height=29, width=101, x=495, y=440)
     link = DeviceSceneLinkModel(
         keys=[instance_id + '.availableScenes'], target='link',
         font=DEFAULT_FONT, foreground='#000000', frame_width=1,
