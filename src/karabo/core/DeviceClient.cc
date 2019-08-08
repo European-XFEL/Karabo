@@ -73,8 +73,14 @@ namespace karabo {
             , m_loggerMapCached(false)
             , m_instanceChangeThrottler(nullptr) {
 
-            this->setAgeing(true);
             this->setupSlots();
+
+            // Initialize the aging mechanism.
+            // Cannot use bind_weak in constructor but... usually it is safe to use here boost::bind.
+            // By using the "defered" intialization, we can ensure that setAging is properly bound with bind_weak.
+            // But see the HACK in initAging if even that is called too early.
+            karabo::net::EventLoop::getIOService().post(boost::bind(&DeviceClient::initAgeing, this, 1500));
+
         }
 
 
@@ -85,6 +91,27 @@ namespace karabo {
             setDeviceMonitorInterval(-1);
 
             m_internalSignalSlotable.reset();
+        }
+
+
+        void DeviceClient::initAgeing(int countdown) {
+            const Self::Pointer sharedSelf(weak_from_this().lock());
+            if (!sharedSelf) {
+                // Construction not yet completed.
+                if (countdown > 0) {
+                    // Post another attempt in the event loop.
+                    KARABO_LOG_FRAMEWORK_DEBUG << "initAgeing: no shared_ptr yet, try again up to "
+                            << countdown << " more times";
+                    boost::this_thread::yield();
+                    karabo::net::EventLoop::getIOService().post(boost::bind(&DeviceClient::initAgeing, this, --countdown));
+                    return;
+                } else {
+                    const std::string msg("Gave up on initializing ageing mechanism!");
+                    KARABO_LOG_FRAMEWORK_ERROR << msg;
+                    throw KARABO_INIT_EXCEPTION(msg);
+                }
+            }
+            this->setAgeing(true);
         }
 
 #define KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(...) if (m_signalSlotable.expired()) { \
@@ -327,10 +354,10 @@ namespace karabo {
                     m_ageingTimer.expires_from_now(boost::posix_time::milliseconds(m_ageingIntervallMilliSec));
                     m_ageingTimer.async_wait(bind_weak(&DeviceClient::age, this, boost::asio::placeholders::error));
                 } else {
-                    // Very likely called from constructor, so cannot use bind_weak :-(, but therefore wait only 200 ms:
-                    // constructor will likely be finished, but destruction still very unlikely to have started...
-                    m_ageingTimer.expires_from_now(boost::posix_time::milliseconds(m_ageingIntervallMilliSecCtr));
-                    m_ageingTimer.async_wait(boost::bind(&DeviceClient::age, this, boost::asio::placeholders::error));
+                    // This should never be reached as DeviceClient::initAgeing only calls setAgeing after bind_weak
+                    // is checked to work - nevertheless an error is logged to prevent silent failures.
+                    KARABO_LOG_FRAMEWORK_ERROR
+                            << "Ageing mechanism couldn't be started with bind_weak. Ageing not working.";
                 }
                 KARABO_LOG_FRAMEWORK_DEBUG << "Ageing is started";
             } else if (!on && m_getOlder) {
