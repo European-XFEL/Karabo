@@ -3,13 +3,12 @@ echo "Stopping eXist database"
 
 #check the existDb docker image
 IMAGE=europeanxfel/existdb:2.2
+CONTAINER=karabo_existdb
 mkdir -p $KARABO/var/data/exist_data
 
-docker ps | grep $IMAGE > /dev/null
+docker ps --filter name=$CONTAINER | grep $CONTAINER > /dev/null
 if [[ $? -eq 0 ]]; then
-    for CONTAINER in $(docker ps --filter ancestor=$IMAGE | grep $IMAGE |  awk '{print $1}'); do
-        docker container kill $CONTAINER > /dev/null
-    done
+    docker container kill $CONTAINER > /dev/null
 fi
 
 # Force a clean returncode
