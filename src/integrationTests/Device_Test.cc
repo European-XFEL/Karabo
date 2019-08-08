@@ -14,7 +14,10 @@
 #include <karabo/util/Schema.hh>
 #include <karabo/util/Timestamp.hh>
 
+#include <boost/chrono.hpp>
+
 #define KRB_TEST_MAX_TIMEOUT 5
+#define KRB_TEST_MIN_DURATION_MS 200
 
 using karabo::net::EventLoop;
 using karabo::util::Hash;
@@ -125,10 +128,39 @@ void Device_Test::setUp() {
     // Create client
     m_deviceClient = boost::make_shared<DeviceClient>();
 
+    m_testStartTime = boost::chrono::high_resolution_clock::now();
+
 }
 
 
 void Device_Test::tearDown() {
+
+    auto testStopTime = boost::chrono::high_resolution_clock::now();
+    auto elapsedTime = testStopTime - m_testStartTime;
+    auto elapsedTimeMs = boost::chrono::duration_cast<boost::chrono::milliseconds>(elapsedTime).count();
+
+    if (elapsedTimeMs < KRB_TEST_MIN_DURATION_MS) {
+        // Has to wait for the minimum test duration period. The minimum test duration has been introduced due to a
+        // potential race condition between destruction of the DeviceClient instance and the use of a mutex in method
+        // DeviceClient::age.
+        //
+        // DeviceClient::age is called from a timer pulse and is executed by the DeviceClient internal event loop.
+        // When the destructor is called while the event loop is executing DeviceClient::age in another thread with the
+        // mutex m_instanceUsageMutex locked, an attempt to destroy the mutex will happen while the mutex is in use.
+        //
+        // The boost::mutex destructor calls posix::pthread_mutex_destroy which will return an EBUSY error code whenever
+        // the mutex is in use (https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_mutex_destroy.html).
+        // Upon getting that error code, the boost::mutex destructor will raise an assert violation and fail test
+        // execution.
+        //
+        // Due to the way the DeviceClient's aging mechanism is intialized, the race condition described above can only
+        // happen in up to DeviceClient::m_ageingIntervalMilliSec milliseconds after the DeviceClient's construction -
+        // this is commented in the definition of method DeviceClient::setAgeing(bool). After that initial interval,
+        // the DeviceClient::age call will always be issued through a bind_weak call; bind_weak will do nothing if the
+        // DeviceClient is not available anymore.
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(KRB_TEST_MIN_DURATION_MS - elapsedTimeMs));
+    }
+            
     m_deviceServer.reset();
     m_deviceClient.reset();
 
