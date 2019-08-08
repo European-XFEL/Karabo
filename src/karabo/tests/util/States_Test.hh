@@ -12,7 +12,6 @@
 
 class States_Test : public CPPUNIT_NS::TestFixture {
 
-
     CPPUNIT_TEST_SUITE(States_Test);
     CPPUNIT_TEST(testStringRoundTrip);
     CPPUNIT_TEST(testSignifier);
@@ -22,7 +21,9 @@ class States_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testChainStatesPassive);
     CPPUNIT_TEST(testChainStatesActive);
     CPPUNIT_TEST(testComparisons);
-    
+
+    // Tests that were translated from their Python counterparts
+    // in '...pythonKarabo/karabo/common/tests/test_states.py'.
     CPPUNIT_TEST(testStatesSignifierDefault);
     CPPUNIT_TEST(testStatesSignifierActiveDecreasing);
     CPPUNIT_TEST(testStatesSignifierPassiveIncreasing);
@@ -39,8 +40,6 @@ public:
     virtual ~States_Test();
     void setUp();
     void tearDown();
-
-
 
 private:
     void testStringRoundTrip();
@@ -62,10 +61,7 @@ private:
     void testAcquiringChangingOnPassive();
     void testAcquiringChangingOnActive();
     void testStatesSignifierNonDefList();
-
 };
-
-
 
 #endif	/* SKARABO_TATES_TEST_HH */
 
