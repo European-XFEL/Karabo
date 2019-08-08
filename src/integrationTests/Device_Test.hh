@@ -12,6 +12,7 @@
 
 #include <boost/thread.hpp>
 #include <boost/function.hpp>
+#include <boost/chrono.hpp>
 
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -41,6 +42,8 @@ private:
     boost::thread m_eventLoopThread;
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
+
+    decltype(boost::chrono::high_resolution_clock::now()) m_testStartTime;
 };
 
 #endif	/* DEVICE_TEST_HH */
