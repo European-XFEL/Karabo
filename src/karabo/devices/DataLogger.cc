@@ -440,7 +440,7 @@ namespace karabo {
 
             boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
             const bool result = (m_perDeviceData.erase(deviceId) > 0);
-            if (result) {
+            if (m_useP2p && result) {
                 disconnectP2P(deviceId);
             }
             return result;
