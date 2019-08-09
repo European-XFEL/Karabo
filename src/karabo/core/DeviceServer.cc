@@ -100,12 +100,11 @@ namespace karabo {
                     .assignmentOptional().defaultValue(true)
                     .commit();
 
-            const std::string defaultPluginPath = Version::getPathToKaraboInstallation() + "/plugins";
             PATH_ELEMENT(expected)
                     .key("pluginDirectory")
                     .displayedName("Plugin Directory")
                     .description("Directory to search for plugins")
-                    .assignmentOptional().defaultValue(defaultPluginPath)
+                    .assignmentOptional().defaultValue(PluginLoader::defaultPluginPath())
                     .isDirectory()
                     .expertAccess()
                     .commit();
