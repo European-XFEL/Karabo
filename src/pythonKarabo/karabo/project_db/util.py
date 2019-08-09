@@ -6,8 +6,7 @@ from eulexistdb.db import ExistDB
 from eulexistdb.exceptions import ExistDBException
 from requests.packages.urllib3.exceptions import HTTPError
 
-from .const import TESTDB_ADMIN_PASSWORD
-from .dbsettings import DbSettings
+from .const import LIST_DOMAINS_QUERY, TESTDB_ADMIN_PASSWORD
 
 
 class ProjectDBError(Exception):
@@ -38,9 +37,7 @@ def assure_running(db_settings):
         while True:
             last_ex = None
             try:
-                dbhandle = ExistDB(db_settings.server_url)
-                if dbhandle.hasCollection('/system'):
-                    return dbhandle
+                return verify_db(db_settings)
             except (TimeoutError, HTTPError, ExistDBException) as last_ex:
                 if count > maxTimeout//waitBetween:
                     raise TimeoutError("Starting project database timed"
@@ -50,14 +47,7 @@ def assure_running(db_settings):
             count += 1
     else:
         try:
-            dbhandle = ExistDB(db_settings.server_url)
-            if db_settings.init_db:
-                init_db(db_settings, dbhandle)
-            if not dbhandle.hasCollection(db_settings.root_collection):
-                raise ProjectDBError("An eXistDB instance without karabo "
-                                     "collections was found running on {}."
-                                     .format(db_settings.server))
-            return dbhandle
+            return verify_db(db_settings)
         except ExistDBException as e:
             raise ProjectDBError("Could not contact the database server"
                                  " at {}: {}".format(db_settings.server, e))
@@ -81,9 +71,25 @@ def init_db(db_settings, dbhandle):
             dbhandle.createCollection(coll_name)
             print(f"Created collection {coll_name}")
 
-    # root
-    init_collection(db_settings.root_collection)
-    # LOCAL domain
-    init_collection(f"{db_settings.root_collection}/LOCAL")
     # test root
     init_collection(db_settings.root_collection_test)
+    # root
+    init_collection(db_settings.root_collection)
+    try:
+        query = LIST_DOMAINS_QUERY.format(db_settings.root_collection)
+        dbhandle.query(query)
+    except ExistDBException:
+        # LOCAL domain
+        init_collection("{}/LOCAL".format(db_settings.root_collection))
+
+
+def verify_db(db_settings):
+    dbhandle = ExistDB(db_settings.server_url)
+    if db_settings.init_db:
+        init_db(db_settings, dbhandle)
+    if not dbhandle.hasCollection(db_settings.root_collection):
+        raise ProjectDBError("An eXistDB instance without karabo "
+                                "collections was found running on {}."
+                                .format(db_settings.server))
+    if dbhandle.hasCollection('/system'):
+        return dbhandle
