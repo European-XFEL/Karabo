@@ -144,14 +144,13 @@ void Device_Test::tearDown() {
         // potential race condition between destruction of the DeviceClient instance and the use of a mutex in method
         // DeviceClient::age.
         //
-        // DeviceClient::age is called from a timer pulse and is executed by the DeviceClient internal event loop.
+        // DeviceClient::age is called from a timer pulse and is executed by the Karabo central event loop.
         // When the destructor is called while the event loop is executing DeviceClient::age in another thread with the
         // mutex m_instanceUsageMutex locked, an attempt to destroy the mutex will happen while the mutex is in use.
         //
         // The boost::mutex destructor calls posix::pthread_mutex_destroy which will return an EBUSY error code whenever
         // the mutex is in use (https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_mutex_destroy.html).
-        // Upon getting that error code, the boost::mutex destructor will raise an assert violation and fail test
-        // execution.
+        // Upon getting that error code, the boost::mutex destructor will raise an assert violation and fail the test.
         //
         // Due to the way the DeviceClient's aging mechanism is intialized, the race condition described above can only
         // happen in up to DeviceClient::m_ageingIntervalMilliSec milliseconds after the DeviceClient's construction -
