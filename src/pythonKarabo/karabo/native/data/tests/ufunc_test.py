@@ -1000,7 +1000,11 @@ class Tests(TestCase):
 
         XXX: Returns numpy.array
         """
-        ufunc = np.gcd
+        try:
+            ufunc = np.gcd
+        except AttributeError:
+            # some versions of numpy do not have this ufunc
+            return
 
         # GCD(1, 1) = 1
         self.assertBinaryUfunc(ufunc, self.v1, self.v1, self.v1)
@@ -1025,7 +1029,12 @@ class Tests(TestCase):
 
         XXX: Returns numpy.array
         """
-        ufunc = np.lcm
+        try:
+            ufunc = np.lcm
+        except AttributeError:
+            # some versions of numpy do not have this ufunc
+            return
+
         self.assertBinaryUfunc(ufunc, self.v1, self.v1, self.v1)
         self.assertBinaryUfunc(ufunc, self.v2, self.v1, self.v2)
         self.assertBinaryUfunc(ufunc, self.v2, self.v0, self.v0)
