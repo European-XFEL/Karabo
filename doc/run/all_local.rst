@@ -50,6 +50,12 @@ temporarily to the internet, or by using the
 and `docker load <https://docs.docker.com/engine/reference/commandline/load/>`_
 commands.
 
+In case one wishes to change the main username and password for the database,
+one should follow the instructions in the `README.md` of the
+`source <https://git.xfel.eu/gitlab/ITDM/docker_existdb>`_ of the image, and
+update the content of the `KARABO_PROJECT_DB_USER` and
+`KARABO_PROJECT_DB_PASSWORD` accordingly.
+
 Step 3: Edit the environment files
 ==================================
 
