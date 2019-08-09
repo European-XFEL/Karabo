@@ -46,7 +46,7 @@ namespace karabo {
         }
 
 
-        bool Runner::parseCommandLine(int argc, const char** argv, karabo::util::Hash & configuration) {
+        bool Runner::parseCommandLine(int argc, const char** argv, karabo::util::Hash & configuration, bool silent) {
             using namespace std;
             using namespace karabo::util;
             std::string firstArg;
@@ -55,12 +55,12 @@ namespace karabo {
             }
 
             if (firstArg.substr(0, 2) == "--") {
-                processOption(firstArg.substr(2), argc, argv);
+                if (!silent) processOption(firstArg.substr(2), argc, argv);
                 return false;
             }
 
             if (firstArg.substr(0, 1) == "-") {
-                processOption(firstArg.substr(1), argc, argv);
+                if (!silent) processOption(firstArg.substr(1), argc, argv);
                 return false;
             }
 
@@ -148,10 +148,11 @@ namespace karabo {
                     << " # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.\n"
                     << " ##################################################################\n\n";
             if (what.empty()) {
-                std::cout << "\nUsage: " << programName << " <configuration>\n" << std::endl;
-                std::cout << "\nPositional arguments:" << std::endl;
-                std::cout << "<configuration> A set of (hierarchical) <key>=<value> pairs" << std::endl;
-                std::cout << "                Use: --help [key] to list available keys or sub-keys, respectively" << std::endl;
+                std::cout << "Usage: " << programName << " [<option> | <configuration>]\n\n";
+                std::cout << "<configuration>      A set of (hierarchical) <key>=<value> pairs (see below for keys)\n";
+                std::cout << "<option>             Either of the following:\n";
+                std::cout << "    -h|--help [key]  This general help or one for 'key'\n";
+                std::cout << "    -v|--version     The version\n\n";
                 DeviceServer::getSchema("DeviceServer").help();
             } else {
                 DeviceServer::getSchema("DeviceServer").help(what);
