@@ -257,6 +257,21 @@ void DataLogging_Test::testLastKnownConfiguration() {
     // killDevice waits for the device to be killed (or throws an exception in case of failure).
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->killDevice(m_deviceId, KRB_TEST_MAX_TIMEOUT));
 
+    // Assures that the logger in charge of the device is not logging it anymore by testing that m_deviceId is not
+    // among the rows of the "lastUpdatesUtc" property of the logger. The "flush" slot guarantees that the property
+    // "lastUpdatesUtc" is in sync with devices being logged.
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush").timeout(15000).receive());
+    const auto lastUpdates =
+            m_deviceClient->get<std::vector < Hash >> (karabo::util::DATALOGGER_PREFIX + m_server, "lastUpdatesUtc");
+    bool deviceIdFound = false;
+    for (const Hash& entry : lastUpdates) {
+        if (entry.get<std::string>("deviceId") == m_deviceId) {
+            deviceIdFound = true;
+            break;
+        }
+    }
+    CPPUNIT_ASSERT_EQUAL(false, deviceIdFound);
+
     Epochstamp afterDeviceGone;
     std::clog << "... after device being logged is gone (at " << afterDeviceGone.toIso8601() << ") ...";
     // At the afterDeviceGone timepoint, a last known configuration should be obtained with the last value set in the

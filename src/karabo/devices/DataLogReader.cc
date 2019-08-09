@@ -435,10 +435,12 @@ namespace karabo {
                 DataLoggerIndex index = findLoggerIndexTimepoint(deviceId, timepoint);
 
                 if (index.m_fileindex == -1) {
-                    reply(Hash(), Schema()); // Requested time is out of any logger data
-                    KARABO_LOG_WARN << "Requested time point for device configuration is out of any valid logged data";
+                    reply(Hash(), Schema()); // Requested time precedes any logged data.
+                    KARABO_LOG_WARN << "Requested time point, "
+                            << timepoint << ", precedes any logged data for device '" << deviceId << "'.";
                     return;
                 } else if (index.m_event != "+LOG") {
+                    reply(Hash(), Schema());
                     KARABO_LOG_WARN << "Unexpected event type '" << index.m_event
                             << "' found as for the initial sweeping of last known good configuration.\n"
                             "Event type should be '+LOG ";
