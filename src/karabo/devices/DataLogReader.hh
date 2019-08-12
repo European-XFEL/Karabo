@@ -161,8 +161,17 @@ namespace karabo {
             void slotGetPropertyHistory(const std::string& deviceId, const std::string& property, const karabo::util::Hash& params);
 
             /**
-             * Request the configuration Hash and schema of a device at a given point at time. The configuration
-             * closes archived closest to timepoint is returned.
+             * Request the configuration Hash and schema of a device at a given point at time.
+             * Depending on the device status and on the availability of logged data, the configuration and schema
+             * returned will be:
+             *
+             *   1. If the device was online and logging data at the given timepoint, the configuration and the schema
+             *      will be the ones that were active at the timepoint;
+             *   2. If the device was offline at the given timepoint, but there is data logged for it before the
+             *      timepoint, the last active configuration and schema before that timepoint will be returned;
+             *   3. If the device was offline at the given timepoint and there's no data logged before the timepoint, an
+             *      empty configuration and an empty schema will be returned.
+             *
              * @param deviceId of the device to get the configuration from
              * @param timepoint in iso8601 format for which to get the information
              * 
@@ -171,6 +180,15 @@ namespace karabo {
              */
             void slotGetConfigurationFromPast(const std::string& deviceId, const std::string& timepoint);
 
+            /**
+             * Retrieves, from the logger index, the event of type "device became online" that is closest, but not after
+             * a given timepoint. The retrieved logger index event can be used as a starting point for sweeping the
+             * device log for the last known given configuration at that timepoint.
+             *
+             * @param deviceId the device whose logger index event should be retrieved.
+             * @param timepoint the timepoint that will be used as the reference to find the logger index event.
+             * @return the logger index event for the given devices that is closest but not after the given timepoint.
+             */
             DataLoggerIndex findLoggerIndexTimepoint(const std::string& deviceId, const std::string& timepoint);
 
             /// Find logger closest index from archive_index.txt file that is before/after (according to 'before')
