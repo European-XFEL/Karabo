@@ -256,10 +256,18 @@ class ProjectView(QTreeView):
     def update_is_trashed(self, project, project_controller):
         """ Mark the given `project` as (un-)trashed
         """
-        project.is_trashed = not project.is_trashed
-        db_conn = get_db_conn()
-        db_conn.update_attribute(db_conn.default_domain, 'project',
-                                 project.uuid, 'is_trashed',
-                                 str(project.is_trashed).lower())
-        # We directly save on attribute update!
-        save_object(project)
+        action = "untrash" if project.is_trashed else "trash"
+        ask = ('Are you sure you want to <b>{}</b> the project'
+               ' \"<b>{}</b>\"?'.format(action, project.simple_name))
+        msg_box = QMessageBox(QMessageBox.Question, 'Change of project state',
+                              ask, QMessageBox.Yes | QMessageBox.No)
+        msg_box.setModal(False)
+        msg_box.setDefaultButton(QMessageBox.No)
+        if msg_box.exec() == QMessageBox.Yes:
+            project.is_trashed = not project.is_trashed
+            db_conn = get_db_conn()
+            db_conn.update_attribute(db_conn.default_domain, 'project',
+                                     project.uuid, 'is_trashed',
+                                     str(project.is_trashed).lower())
+            # We directly save on attribute update!
+            save_object(project)
