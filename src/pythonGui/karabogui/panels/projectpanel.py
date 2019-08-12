@@ -345,7 +345,7 @@ def _project_trash_handler(project_view):
         ask = ('Are you sure you want to <b>{}</b> the project'
                ' \"<b>{}</b>\"?'.format(
                 action, root_model.simple_name))
-        msg_box = QMessageBox(QMessageBox.Question, 'Delete device',
+        msg_box = QMessageBox(QMessageBox.Question, 'Change of project state',
                               ask, QMessageBox.Yes | QMessageBox.No)
         msg_box.setModal(False)
         msg_box.setDefaultButton(QMessageBox.No)
