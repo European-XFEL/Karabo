@@ -193,9 +193,13 @@ namespace karabo {
              *
              * @param deviceId the device whose logger index event should be retrieved.
              * @param timepoint the timepoint that will be used as the reference to find the logger index event.
-             * @return the logger index event for the given devices that is closest but not after the given timepoint.
+             * @return a pair whose 'first' is a boolean that indicates whether configuration was active at the
+             * timepoint (true) or whether it is a configuration from the most recent activation of the device prior
+             * to the timepoint because the device was not active logging at the timepoint. The pair's 'second' value
+             * is the logger index of the given device that is the closest "device became online" event that is not
+             * after the given timepoint.
              */
-            DataLoggerIndex findLoggerIndexTimepoint(const std::string& deviceId, const std::string& timepoint);
+            std::pair<bool, DataLoggerIndex> findLoggerIndexTimepoint(const std::string& deviceId, const std::string& timepoint);
 
             /// Find logger closest index from archive_index.txt file that is before/after (according to 'before')
             /// 'timepoint'. If there is none before (after) but that is asked for, take the one just after (before).
