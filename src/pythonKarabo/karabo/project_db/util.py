@@ -69,7 +69,6 @@ def init_db(db_settings, dbhandle):
     def init_collection(coll_name):
         if not dbhandle.hasCollection(coll_name):
             dbhandle.createCollection(coll_name)
-            print(f"Created collection {coll_name}")
 
     # test root
     init_collection(db_settings.root_collection_test)
@@ -77,8 +76,9 @@ def init_db(db_settings, dbhandle):
     init_collection(db_settings.root_collection)
     try:
         query = LIST_DOMAINS_QUERY.format(db_settings.root_collection)
-        dbhandle.query(query)
-    except ExistDBException:
+        r = dbhandle.query(query)
+        assert len(r.results[0]) != 0
+    except (ExistDBException, AssertionError):
         # LOCAL domain
         init_collection("{}/LOCAL".format(db_settings.root_collection))
 
