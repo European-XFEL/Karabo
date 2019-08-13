@@ -26,6 +26,12 @@ namespace karabo {
         const unsigned int DeviceClient::m_ageingIntervallMilliSec = 1000u;
         const unsigned int DeviceClient::m_ageingIntervallMilliSecCtr = 200u;
 
+        // Maximum number of attempts to initialize the ageing mechanism by locking a weak pointer from '*this'.
+        // When the locking is successful, it means the DeviceClient has been fully constructed and from that point on
+        // the ageing pulse can be safelly bound by using 'bind_weak'. Not using 'bind_weak' to bind the ageing pulse
+        // can lead to a racing condition between the destruction of the mutex 'm_instanceUsageMutex' and its use in the
+        // ageing pulse method, 'DeviceClient::age'.
+        const int kMaxInitAgeingAttempts = 2500;
 
         DeviceClient::DeviceClient(const std::string& instanceId)
             : m_internalSignalSlotable()
@@ -55,8 +61,8 @@ namespace karabo {
 
             m_signalSlotable = m_internalSignalSlotable;
 
-            this->setAgeing(true);
-            this->setupSlots();
+            karabo::net::EventLoop::getIOService().post(boost::bind(&DeviceClient::completeInitialization,
+                                                                    this, kMaxInitAgeingAttempts));
         }
 
 
@@ -73,14 +79,15 @@ namespace karabo {
             , m_loggerMapCached(false)
             , m_instanceChangeThrottler(nullptr) {
 
-            this->setAgeing(true);
-            this->setupSlots();
+            karabo::net::EventLoop::getIOService().post(boost::bind(&DeviceClient::completeInitialization,
+                                                                    this, kMaxInitAgeingAttempts));
         }
 
 
         DeviceClient::~DeviceClient() {
-            // Stop aging thread
-            setAgeing(false); // Joins the thread
+            KARABO_LOG_FRAMEWORK_INFO << "In the DeviceClient destructor " << (m_internalSignalSlotable ? m_internalSignalSlotable->getInstanceId() : "bla");
+            // Stop ageing pulsing timerm_internalSignalSlotable
+            setAgeing(false);
             // Stop thread sending the collected signal(State)Changed
             setDeviceMonitorInterval(-1);
 
@@ -92,16 +99,40 @@ namespace karabo {
                     return __VA_ARGS__; }
 
 
+        void DeviceClient::completeInitialization(int countdown) {
+            const Self::Pointer sharedSelf(weak_from_this().lock());
+            if (!sharedSelf) {
+                // Construction not yet completed.
+                if (countdown > 0) {
+                    // Post another attempt in the event loop.
+                    KARABO_LOG_FRAMEWORK_INFO << "completing initialization: no shared_ptr yet, try again up to "
+                            << countdown << " more times";
+                    boost::this_thread::yield();
+                    karabo::net::EventLoop::getIOService().post(boost::bind(&DeviceClient::completeInitialization, this, --countdown));
+                    return;
+                } else {
+                    const std::string msg("Maximum number of attempts to initialize ageing mechanism and slots reached!");
+                    KARABO_LOG_FRAMEWORK_ERROR << msg;
+                    throw KARABO_INIT_EXCEPTION(msg);
+                }
+            }
+            this->setupSlots();
+            this->setAgeing(true);
+
+            KARABO_LOG_FRAMEWORK_INFO << "Initialization of DeviceClient instance completed at countdown = "
+                    << countdown;
+        }
+
+
         void DeviceClient::setupSlots() {
             karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
-            // Note: Since setupSlots() is called from constructor, bind_weak is not an option...
-            p->registerSlot<Hash, string > (boost::bind(&karabo::core::DeviceClient::_slotChanged, this, _1, _2), "_slotChanged");
-            p->registerSlot<Schema, string, string > (boost::bind(&karabo::core::DeviceClient::_slotClassSchema, this, _1, _2, _3), "_slotClassSchema");
-            p->registerSlot<Schema, string > (boost::bind(&karabo::core::DeviceClient::_slotSchemaUpdated, this, _1, _2), "_slotSchemaUpdated");
-            p->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::_slotInstanceNew, this, _1, _2), "_slotInstanceNew");
-            p->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::_slotInstanceGone, this, _1, _2), "_slotInstanceGone");
-            p->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::_slotInstanceUpdated, this, _1, _2), "_slotInstanceUpdated");
-            p->registerSlot<Hash > (boost::bind(&karabo::core::DeviceClient::_slotLoggerMap, this, _1), "_slotLoggerMap");
+            p->registerSlot<Hash, string > (bind_weak(&karabo::core::DeviceClient::_slotChanged, this, _1, _2), "_slotChanged");
+            p->registerSlot<Schema, string, string > (bind_weak(&karabo::core::DeviceClient::_slotClassSchema, this, _1, _2, _3), "_slotClassSchema");
+            p->registerSlot<Schema, string > (bind_weak(&karabo::core::DeviceClient::_slotSchemaUpdated, this, _1, _2), "_slotSchemaUpdated");
+            p->registerSlot<string, Hash > (bind_weak(&karabo::core::DeviceClient::_slotInstanceNew, this, _1, _2), "_slotInstanceNew");
+            p->registerSlot<string, Hash > (bind_weak(&karabo::core::DeviceClient::_slotInstanceGone, this, _1, _2), "_slotInstanceGone");
+            p->registerSlot<string, Hash > (bind_weak(&karabo::core::DeviceClient::_slotInstanceUpdated, this, _1, _2), "_slotInstanceUpdated");
+            p->registerSlot<Hash > (bind_weak(&karabo::core::DeviceClient::_slotLoggerMap, this, _1), "_slotLoggerMap");
 
             // No advantage from asyncConnect since connecting to one's own signal is just a call chain:
             p->connect("", "signalInstanceNew", "", "_slotInstanceNew");
@@ -323,19 +354,15 @@ namespace karabo {
         void DeviceClient::setAgeing(bool on) {
             if (on && !m_getOlder) {
                 m_getOlder = true;
-                if (weak_from_this().lock()) {
-                    m_ageingTimer.expires_from_now(boost::posix_time::milliseconds(m_ageingIntervallMilliSec));
-                    m_ageingTimer.async_wait(bind_weak(&DeviceClient::age, this, boost::asio::placeholders::error));
-                } else {
-                    // Very likely called from constructor, so cannot use bind_weak :-(, but therefore wait only 200 ms:
-                    // constructor will likely be finished, but destruction still very unlikely to have started...
-                    m_ageingTimer.expires_from_now(boost::posix_time::milliseconds(m_ageingIntervallMilliSecCtr));
-                    m_ageingTimer.async_wait(boost::bind(&DeviceClient::age, this, boost::asio::placeholders::error));
-                }
+                m_ageingTimer.expires_from_now(boost::posix_time::milliseconds(m_ageingIntervallMilliSec));
+                m_ageingTimer.async_wait(bind_weak(&DeviceClient::age, this, boost::asio::placeholders::error));
                 KARABO_LOG_FRAMEWORK_DEBUG << "Ageing is started";
             } else if (!on && m_getOlder) {
                 m_getOlder = false;
-                m_ageingTimer.cancel();
+                if (m_ageingTimer.cancel() == 0) {
+                    // The request for the 'age pulse' has already been dispatched; wait before stopping ageing.
+                    boost::this_thread::sleep_for(boost::chrono::milliseconds(m_ageingIntervallMilliSec));
+                };
                 KARABO_LOG_FRAMEWORK_DEBUG << "Ageing is stopped";
             }
         }
