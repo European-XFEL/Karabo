@@ -592,6 +592,8 @@ namespace karabo {
                 } catch (const karabo::util::Exception& e) {
 
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\""));
+                    // Please compiler by adding a (crashing...) return statement that is never reached:
+                    return *static_cast<T*> (nullptr);
                 }
             }
 
