@@ -120,7 +120,7 @@ void Device_Test::setUp() {
     m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
     // Create and start server
     {
-        Hash config("serverId", "testServerDevice", "scanPlugins", false, "Logger.priority", "INFO");
+        Hash config("serverId", "testServerDevice", "scanPlugins", false, "Logger.priority", "FATAL");
         m_deviceServer = DeviceServer::create("DeviceServer", config);
         m_deviceServer->finalizeInternalInitialization();
     }

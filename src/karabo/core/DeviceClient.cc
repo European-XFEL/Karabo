@@ -105,7 +105,7 @@ namespace karabo {
                 // Construction not yet completed.
                 if (countdown > 0) {
                     // Post another attempt in the event loop.
-                    KARABO_LOG_FRAMEWORK_INFO << "completing initialization: no shared_ptr yet, try again up to "
+                    KARABO_LOG_FRAMEWORK_DEBUG << "completing initialization: no shared_ptr yet, try again up to "
                             << countdown << " more times";
                     boost::this_thread::yield();
                     karabo::net::EventLoop::getIOService().post(boost::bind(&DeviceClient::completeInitialization, this, --countdown));
@@ -119,7 +119,7 @@ namespace karabo {
             this->setupSlots();
             this->setAgeing(true);
 
-            KARABO_LOG_FRAMEWORK_INFO << "Initialization of DeviceClient instance completed at countdown = "
+            KARABO_LOG_FRAMEWORK_DEBUG << "Initialization of DeviceClient instance completed at countdown = "
                     << countdown;
         }
 
