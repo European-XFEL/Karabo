@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from io import StringIO
 
-from PyQt4.QtCore import QByteArray, QMimeData, QPoint
+from PyQt4.QtCore import QMimeData, QPoint
 from PyQt4.QtGui import QApplication, QDialog, QMessageBox
 
 from karabo.common.scenemodel.api import (
@@ -20,7 +20,7 @@ def _add_models_to_clipboard(models, rect):
                        height=rect.height())
     xml = write_scene(scene)
     mime_data = QMimeData()
-    mime_data.setData(MIME_TYPE, QByteArray(xml))
+    mime_data.setData(MIME_TYPE, xml.encode('utf-8'))
     QApplication.clipboard().setMimeData(mime_data)
 
 
