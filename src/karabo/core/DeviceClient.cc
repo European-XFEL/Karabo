@@ -26,12 +26,10 @@ namespace karabo {
         const unsigned int DeviceClient::m_ageingIntervallMilliSec = 1000u;
         const unsigned int DeviceClient::m_ageingIntervallMilliSecCtr = 200u;
 
-        // Maximum number of attempts to initialize the ageing mechanism by locking a weak pointer from '*this'.
-        // When the locking is successful, it means the DeviceClient has been fully constructed and from that point on
-        // the ageing pulse can be safelly bound by using 'bind_weak'. Not using 'bind_weak' to bind the ageing pulse
-        // can lead to a racing condition between the destruction of the mutex 'm_instanceUsageMutex' and its use in the
-        // ageing pulse method, 'DeviceClient::age'.
-        const int kMaxInitAgeingAttempts = 2500;
+        // Maximum number of attempts to complete the initialization of the DeviceClient by locking a weak pointer from
+        //'*this'. Further details on the reasoning behind the two phase initialization of the DeviceClient instance
+        // can be found https://git.xfel.eu/gitlab/Karabo/Framework/merge_requests/3684.
+        const int kMaxCompleteInitializationAttempts = 2500;
 
         DeviceClient::DeviceClient(const std::string& instanceId)
             : m_internalSignalSlotable()
@@ -62,7 +60,7 @@ namespace karabo {
             m_signalSlotable = m_internalSignalSlotable;
 
             karabo::net::EventLoop::getIOService().post(boost::bind(&DeviceClient::completeInitialization,
-                                                                    this, kMaxInitAgeingAttempts));
+                                                                    this, kMaxCompleteInitializationAttempts));
         }
 
 
@@ -80,12 +78,11 @@ namespace karabo {
             , m_instanceChangeThrottler(nullptr) {
 
             karabo::net::EventLoop::getIOService().post(boost::bind(&DeviceClient::completeInitialization,
-                                                                    this, kMaxInitAgeingAttempts));
+                                                                    this, kMaxCompleteInitializationAttempts));
         }
 
 
         DeviceClient::~DeviceClient() {
-            KARABO_LOG_FRAMEWORK_INFO << "In the DeviceClient destructor " << (m_internalSignalSlotable ? m_internalSignalSlotable->getInstanceId() : "bla");
             // Stop ageing pulsing timerm_internalSignalSlotable
             setAgeing(false);
             // Stop thread sending the collected signal(State)Changed
@@ -359,10 +356,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Ageing is started";
             } else if (!on && m_getOlder) {
                 m_getOlder = false;
-                if (m_ageingTimer.cancel() == 0) {
-                    // The request for the 'age pulse' has already been dispatched; wait before stopping ageing.
-                    boost::this_thread::sleep_for(boost::chrono::milliseconds(m_ageingIntervallMilliSec));
-                };
+                m_ageingTimer.cancel();
                 KARABO_LOG_FRAMEWORK_DEBUG << "Ageing is stopped";
             }
         }
