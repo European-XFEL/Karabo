@@ -80,7 +80,7 @@ def temp_xml_file(contents):
     """ Just like temp_file(), but writes ``contents`` to the file first.
     """
     with temp_file() as filename:
-        with open(filename, 'w') as fp:
+        with open(filename, 'w', encoding="utf-8") as fp:
             fp.write(contents)
         yield filename
 
