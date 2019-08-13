@@ -24,11 +24,12 @@ using namespace karabo::xms;
 namespace karabo {
     namespace core {
         const unsigned int DeviceClient::m_ageingIntervallMilliSec = 1000u;
-        const unsigned int DeviceClient::m_ageingIntervallMilliSecCtr = 200u;
 
         // Maximum number of attempts to complete the initialization of the DeviceClient by locking a weak pointer from
         //'*this'. Further details on the reasoning behind the two phase initialization of the DeviceClient instance
         // can be found https://git.xfel.eu/gitlab/Karabo/Framework/merge_requests/3684.
+        //
+        // See also OutputChannel::initializeServerConnection(...)
         const int kMaxCompleteInitializationAttempts = 2500;
 
         DeviceClient::DeviceClient(const std::string& instanceId)
@@ -83,9 +84,9 @@ namespace karabo {
 
 
         DeviceClient::~DeviceClient() {
-            // Stop ageing pulsing timerm_internalSignalSlotable
+            // Stop ageing pulsing timer.
             setAgeing(false);
-            // Stop thread sending the collected signal(State)Changed
+            // Stop thread sending the collected signal(State)Changed.
             setDeviceMonitorInterval(-1);
 
             m_internalSignalSlotable.reset();
@@ -102,8 +103,6 @@ namespace karabo {
                 // Construction not yet completed.
                 if (countdown > 0) {
                     // Post another attempt in the event loop.
-                    KARABO_LOG_FRAMEWORK_DEBUG << "completing initialization: no shared_ptr yet, try again up to "
-                            << countdown << " more times";
                     boost::this_thread::yield();
                     karabo::net::EventLoop::getIOService().post(boost::bind(&DeviceClient::completeInitialization, this, --countdown));
                     return;
