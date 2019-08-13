@@ -56,6 +56,11 @@ class BaseStepPlot(PlotItem):
                            pen=self._pen, fillLevel=0,
                            brush=self._brush)
 
+        # Adjust the y range to the data range to not show the pedestal.
+        y_range = ("yRange" if self.orientation in ["top", "bottom"]
+                   else "xRange")
+        self.setRange(**{y_range: (y_data.min(), y_data.max())})
+
     def set_superimposed_data(self, x_data, y_data):
         self._superimposed.setData(x_data, y_data, pen=self._second_pen)
 
