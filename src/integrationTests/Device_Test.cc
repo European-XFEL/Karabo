@@ -124,6 +124,7 @@ void Device_Test::setUp() {
 
     // Create client
     m_deviceClient = boost::make_shared<DeviceClient>();
+
 }
 
 
