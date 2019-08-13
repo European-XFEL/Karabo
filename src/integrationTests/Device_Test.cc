@@ -14,10 +14,7 @@
 #include <karabo/util/Schema.hh>
 #include <karabo/util/Timestamp.hh>
 
-#include <boost/chrono.hpp>
-
 #define KRB_TEST_MAX_TIMEOUT 5
-#define KRB_TEST_MIN_DURATION_MS 200
 
 using karabo::net::EventLoop;
 using karabo::util::Hash;
@@ -131,7 +128,6 @@ void Device_Test::setUp() {
 
 
 void Device_Test::tearDown() {
-            
     m_deviceServer.reset();
     m_deviceClient.reset();
 
