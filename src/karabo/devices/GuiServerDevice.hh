@@ -436,7 +436,8 @@ namespace karabo {
              * Success callback for ``onGetDeviceConfiguration``
              */
             void configurationFromPast(WeakChannelPointer channel, const std::string& deviceId, const std::string& time,
-                                       const karabo::util::Hash& config, const karabo::util::Schema& /*schema*/);
+                                       const karabo::util::Hash& config, const karabo::util::Schema& /*schema*/,
+                                       const bool configAtTimepoint);
 
             /**
              * Failure callback for ``onGetDeviceConfiguration``
