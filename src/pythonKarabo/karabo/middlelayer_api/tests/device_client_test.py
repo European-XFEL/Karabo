@@ -35,7 +35,7 @@ def test_getConfigurationSchemaFromPast(_getLogReaderId, get_instance):
     @coroutine
     def call(*args):
         call_args.append(args)
-        return Hash('value', 42), Schema()
+        return Hash('value', 42), Schema(), True
 
     instance = Mock(SignalSlotable)
     instance.call = call
