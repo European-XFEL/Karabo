@@ -292,9 +292,9 @@ def getConfigurationFromPast(device, timepoint):
     instance = get_instance()
     reader = yield from _getLogReaderId(device)
     slot = "slotGetConfigurationFromPast"
-    conf, schema, configAtTimepoint = yield from instance.call(reader, slot, device, timepoint)
+    reply = yield from instance.call(reader, slot, device, timepoint)
 
-    return conf
+    return reply[0]
 
 
 @synchronize
@@ -314,9 +314,9 @@ def getSchemaFromPast(device, timepoint):
     instance = get_instance()
     reader = yield from _getLogReaderId(device)
     slot = "slotGetConfigurationFromPast"
-    conf, schema, configAtTimepoint = yield from instance.call(reader, slot, device, timepoint)
+    reply = yield from instance.call(reader, slot, device, timepoint)
 
-    return schema
+    return reply[1]
 
 
 class Queue(object):
