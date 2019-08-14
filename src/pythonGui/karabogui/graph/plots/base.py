@@ -39,7 +39,8 @@ class KaraboPlotView(QWidget):
         self.setLayout(layout)
 
         # Initialize axis items
-        axis_items = get_axis_items(axes_with_ticks=["bottom", "left"])
+        tick_axes = ["bottom", "left"]
+        axis_items = get_axis_items(axes_with_ticks=tick_axes)
 
         # Our viewbox with reset range addition!
         viewbox = KaraboViewBox()
@@ -56,10 +57,14 @@ class KaraboPlotView(QWidget):
         # PlotItem gets added automatically!
         self.graph_view.setCentralItem(self.plotItem)
 
-        # Configure the axis items without unit handling!
+        # Configure the axis items without unit handling and set up additional
+        # signals!
         for axis in AXIS_ITEMS:
             self.plotItem.showAxis(axis)
-            self.plotItem.getAxis(axis).enableAutoSIPrefix(False)
+            axis_item = self.plotItem.getAxis(axis)
+            axis_item.enableAutoSIPrefix(False)
+            if axis in tick_axes:
+                axis_item.axisDoubleClicked.connect(self.configure_axes)
 
         self.configuration = {}
         self.qactions = {}
