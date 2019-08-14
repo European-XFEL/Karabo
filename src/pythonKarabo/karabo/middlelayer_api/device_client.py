@@ -292,7 +292,10 @@ def getConfigurationFromPast(device, timepoint):
     instance = get_instance()
     reader = yield from _getLogReaderId(device)
     slot = "slotGetConfigurationFromPast"
-    conf, schema, confAtTimepoint = yield from instance.call(reader, slot, device, timepoint)
+    conf, schema, confAtTimepoint = yield from instance.call(reader,
+                                                             slot,
+                                                             device,
+                                                             timepoint)
 
     return conf
 
@@ -314,7 +317,10 @@ def getSchemaFromPast(device, timepoint):
     instance = get_instance()
     reader = yield from _getLogReaderId(device)
     slot = "slotGetConfigurationFromPast"
-    conf, schema, confAtTimepoint = yield from instance.call(reader, slot, device, timepoint)
+    conf, schema, confAtTimepoint = yield from instance.call(reader,
+                                                             slot,
+                                                             device,
+                                                             timepoint)
 
     return schema
 
