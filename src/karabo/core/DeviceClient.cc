@@ -1171,9 +1171,10 @@ namespace karabo {
             const std::string dataLogReader(this->getDataLogReader(deviceId));
             Hash hash;
             Schema schema;
+            bool configAtTimepoint;
             try {
                 p->request(dataLogReader, "slotGetConfigurationFromPast", deviceId, timepoint)
-                        .timeout(10 * m_internalTimeout).receive(hash, schema);
+                        .timeout(10 * m_internalTimeout).receive(hash, schema, configAtTimepoint);
             } catch (const TimeoutException&) {
                 Exception::clearTrace();
                 KARABO_LOG_FRAMEWORK_ERROR << "Request to DataLogReader '" << dataLogReader
