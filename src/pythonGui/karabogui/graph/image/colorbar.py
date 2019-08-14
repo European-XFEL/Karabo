@@ -1,6 +1,6 @@
 import numpy as np
 from pyqtgraph import AxisItem, ColorMap, GraphicsWidget, ImageItem, ViewBox
-from PyQt4.QtCore import pyqtSignal, pyqtSlot, QPoint
+from PyQt4.QtCore import pyqtSignal, pyqtSlot, QPoint, Qt
 from PyQt4.QtGui import QDialog, QFont, QGraphicsGridLayout, QMenu, QTransform
 
 from karabogui.graph.common.api import COLORMAPS
@@ -75,6 +75,16 @@ class ColorBarWidget(GraphicsWidget):
                 levels = image_range
 
             self._set_colorbar_range(levels)
+
+    # ---------------------------------------------------------------------
+    # Qt Events
+
+    def mouseDoubleClickEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self._show_levels_dialog()
+            event.accept()
+            return
+        super(ColorBarWidget, self).mouseDoubleClickEvent(event)
 
     # ---------------------------------------------------------------------
     # Public methods
