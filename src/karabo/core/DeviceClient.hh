@@ -114,7 +114,6 @@ namespace karabo {
             boost::asio::deadline_timer m_ageingTimer;
 
             static const unsigned int m_ageingIntervallMilliSec;
-            static const unsigned int m_ageingIntervallMilliSecCtr;
 
             bool m_getOlder; /// defines whether aging is running or not
 
@@ -1136,6 +1135,8 @@ namespace karabo {
             void convertSchemaHash(const karabo::util::Hash& schemaHash, int accessMode, karabo::util::Hash & hash) const;
 
             void recursivelyAddCompoundDataTypes(const karabo::util::Hash& schemaHash, karabo::util::Hash & hash) const;
+
+            void completeInitialization(int countdown);
         };
     }
 }
