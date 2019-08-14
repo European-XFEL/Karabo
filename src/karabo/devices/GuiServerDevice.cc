@@ -966,7 +966,8 @@ namespace karabo {
                 } else {
                     h.set("success", true);
                     h.set("config", config);
-                    h.set("configAtTimepoint", configAtTimepoint);
+                    // TODO: uncomment the line below when the GUI client becomes compatible with the extra key.
+                    //h.set("configAtTimepoint", configAtTimepoint);
                 }
 
                 safeClientWrite(channel, h, REMOVE_OLDEST);
