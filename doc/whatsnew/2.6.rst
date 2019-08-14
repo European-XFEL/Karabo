@@ -1,0 +1,106 @@
+**************************
+What's New in Karabo 2.6.0
+**************************
+
+The **most relevant improvements**, fixes and changes are:
+
+Detailed Merge-Log
+==================
+
+Bound/cpp core
+++++++++++++++
+
+- Bound: Fix for handling exceptions in (bound) Python callbacks
+- Bound: Fix bound DeviceClient history retrieval !3643
+- Bound: Added bound_devices tests !3673
+- C++/Bound: Make updateSchema keep parameters when set !3321
+- C++/Bound: Fixed the issue that caused the BeckhoffSim instatiation error. !3658
+- C++: Activate exception when assignmentOptional interferes with readOnlyThis gets Karabo/Framework!3556 back! !3561
+- C++: Add Hash::fullyEquals method. !3608
+- C++: Avoid compiler warning when compiling ImageData_Test...and make test more specific !3647
+- C++: Remove unsupported WebAuthentication !3652
+- C++: Support toString(std::unorderd_set) and also test toString(std::set) !3663
+- C++: Please compiler warning in C++ DeviceClient !3676
+- C++: Write out what we can after hdf5 io exception and only re-throw at the end. !3650
+- C++: Fixes for karabo::util::StateSignifier to make it compatible with its Python counterpart. !3534
+- C++: pluginDirectory option misbehaves !3231
+
+Core Devices
+++++++++++++
+
+- Prepare data logger device for many devices - step 1. This enables the DataLogger to be configured to log many devices. !3598
+- Data logger make use of asyncConnect for multiple connection !3615
+- Data logger for many devices - step 3. Now the DataLogger keeps track about connection status !3621
+- Data logger for many devices step 4. This adds slotAddDeviceToBeLogged to DataLogger, so now we can dynamically add (and remove) devices to be logged. !3622
+- Data logger: Clean mutex use in new DataLogger !3646
+- Data logger: Data logger manager creates one logger per server- Complete re-write of init behaviour in DataLoggerManager !3664
+- Data logger: Switch off p2p broker shortcut of data loggers by default !3668
+- Datalog Reader: Change `DataLogReader::slotGetConfigurationFromPast` to return the last known good configuration at a given timepoint. !3674
+- Project DB: ProjectManager takes credentials from env. !3667
+- Project DB: update the script for local use !3686
+- Project DB: ProjectDB is not initialized on a local DB !3689
+- Project DB: avoid log SPAM !3691
+- Project DB: Inject LOCAL domain on new DB !3692
+
+Dependencies and deployment
++++++++++++++++++++++++++++
+
+- DEPS: Switch qwt dependencies !3651
+- DEPS: Remove Darwin from build system !3654
+- DEPS: webserver missing templates !3642
+- CI: Project DB as a Docker image !3653
+- CI: karabo.interactive tests work in develop mode !3655
+- CI: adding ubuntu 18 as a platform !3027
+- CI: using ubuntu16 image to build windows !3661
+- CI: running unit tests in dependency MRs !3665
+- Test: remove the launcher.py exception !3656
+- Test: enable eventloop closure in tests !3657
+- Test: More info on failure of alarm and data logger integration tests !3648
+- Test: ufunc testing !3389
+- Test: adding tests to karabo.middlelayer_devices !3690
+- Test: Fix Device_Test, one of the C++ integration tests. !3684
+
+Middlelayer core
+++++++++++++++++
+
+- MDL PropertyTest: add default macro !3623
+- MDL: Force logger handler to be available !3617
+- MDL: Show traceback from background functions !3616
+- MDL: `start_device` not silent in case of failure !3660
+- MDL: PrettyPrinting follow up !3672
+- Native: Workaround missing ufuncs !3687
+
+Graphical user interface
+++++++++++++++++++++++++
+
+- GUI: Fix VectorFill autorange !3682
+- GUI: Don't use the same value multiple times when toggling vector roll !3613
+- GUI: Fix crosshair position on add !3607
+- GUI: Remove max height of transform dialog !3609
+- GUI: Dont plot the scatter lastvalue multiple times when toggling !3612
+- GUI: Validate empty names in project items !3611
+- GUI: Change dialog max sizes for plots !3614
+- GUI: Use tooltip information for last image received !3619
+- GUI: Fix log scale for plots !3604
+- GUI: Extend copyright to 2019 in about dialog !3626
+- GUI: Fix image node dimensions and detector graph slider !3627
+- GUI: Change title of capability dialog !3625
+- GUI: Sort alphabetically in capability dialog and always request !3630
+- GUI: Implement new tick slider with value box and tick steps !3624
+- GUI: Add multiple proxies to error bool widget !3629
+- GUI: Improve crosshair profiling !3632
+- GUI: Reimplement QImage rendering !3618
+- GUI: Fix levels dialog !3610
+- GUI: Fix legend bug !3634
+- GUI: Refactor image levels dialog to support setting levels outside of image range !3635
+- GUI: Update aux plots/ROI when image is transformed !3637
+- GUI: ImageData setROIOffset should not test size !3638
+- GUI: Forward compatibility for (future) failing history requests in GUI !3678
+- GUI: Change msg dialog header for trashing and untrashing !3694
+- GUI: Add message box check to trash/untrash via context menu !3695
+- GUI: Fix image smoothing on aux plots !3699
+- GUI: Provide easy to use filenames on pyqtgraph export !3698
+- GUI: Fix project duplicate dialog !3666
+- GUI: Adjust aux plots y-range to data range !3701
+- GUI: Ask before trashing or untrashing project !3631
+- GUI: Add middle button panning to new plots !3636
