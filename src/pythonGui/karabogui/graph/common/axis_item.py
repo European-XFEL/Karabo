@@ -1,3 +1,4 @@
+from PyQt4.QtCore import pyqtSignal, Qt
 from PyQt4.QtGui import QFont
 from pyqtgraph import AxisItem as PgAxisItem
 
@@ -5,6 +6,7 @@ from karabogui.graph.common.const import AXIS_ITEMS
 
 
 class AxisItem(PgAxisItem):
+    axisDoubleClicked = pyqtSignal()
 
     def __init__(self, orientation, has_ticks=True):
         """
@@ -28,6 +30,13 @@ class AxisItem(PgAxisItem):
         font = QFont()
         font.setPixelSize(11)
         self.tickFont = font
+
+    def mouseDoubleClickEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.axisDoubleClicked.emit()
+            event.accept()
+            return
+        super(AxisItem, self).mouseDoubleClickEvent(event)
 
     def setLabel(self, text=None, units=None, unitPrefix=None, **args):
         """Reimplemented because we don't want labels for minor axes"""
