@@ -363,7 +363,9 @@ class KaraboPlotView(QWidget):
     def add_curve_fill(self, pen=get_default_pen(),
                        brush=get_default_brush()):
         """Adds two curves which are filled inbetween"""
-        item = VectorFillGraphPlot(pen=pen, brush=brush)
+        item = VectorFillGraphPlot(viewbox=self.plotItem.vb,
+                                   pen=pen,
+                                   brush=brush)
 
         self.plotItem.addItem(item)
 
