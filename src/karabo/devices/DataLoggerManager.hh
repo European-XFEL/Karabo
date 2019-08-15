@@ -12,11 +12,14 @@
 
 #include <map>
 #include <vector>
+#include <sstream>
 
 #include <boost/filesystem.hpp>
+#include <boost/asio/deadline_timer.hpp>
 
 #include "karabo/core/Device.hh"
 #include "karabo/util/DataLogUtils.hh"
+#include "karabo/xms/SlotElement.hh"
 
 /**
  * The main karabo namespace
@@ -26,6 +29,10 @@ namespace karabo {
     /**
      * Namespace for package devices
      */
+    namespace util {
+        // Forward declare 
+        class Epochstamp;
+    }
     namespace devices {
 
         /**
@@ -69,6 +76,37 @@ namespace karabo {
             void initialize();
 
             void checkLoggerMap();
+
+            void topologyCheck_slotForceCheck();
+
+            void launchTopologyCheck();
+
+            void topologyCheck(const boost::system::error_code& e);
+
+            void topologyCheckOnStrand();
+
+            void printLoggerData() const;
+
+            void checkLoggerConfig(bool ok, const boost::shared_ptr<std::atomic<size_t> >& counter,
+                                   const karabo::util::Hash& config, const std::string& loggerId);
+
+            void checkLoggerConfigOnStrand(bool ok, const boost::shared_ptr<std::atomic<size_t> >& counter,
+                                           const karabo::util::Hash& config, const std::string& loggerId);
+
+            void checkDeviceConfig(bool ok, const boost::shared_ptr<std::atomic<size_t> >& loggerCounter,
+                                   const std::string& loggerId, unsigned int toleranceSec,
+                                   const boost::shared_ptr<std::atomic<size_t> >& loggedDevCounter,
+                                   karabo::util::Epochstamp lastUpdateLogger, const karabo::util::Hash& config,
+                                   const std::string& deviceId);
+
+            void checkDeviceConfigOnStrand(bool ok, const boost::shared_ptr<std::atomic<size_t> >& loggerCounter,
+                                           const std::string& loggerId, unsigned int toleranceSec,
+                                           const boost::shared_ptr<std::atomic<size_t> >& loggedDevCounter,
+                                           karabo::util::Epochstamp lastUpdateLogger, const karabo::util::Hash& config,
+                                           const std::string& deviceId);
+
+            karabo::util::Epochstamp mostRecentEpochstamp(const karabo::util::Hash& config,
+                                                          karabo::util::Epochstamp oldStamp = karabo::util::Epochstamp(0ull, 0ull)) const;
 
             void instanceNewHandler(const karabo::util::Hash& topologyEntry);
 
@@ -159,11 +197,16 @@ namespace karabo {
                 RUNNING
 
             };
-            // "devices": all that the logger has been told to log,
+            // Both m_loggerData and m_checkStatus are to be touched only in functions running on m_strand
+            //
+            // "devices": all devices that the logger has confirmed to log,
+            // "beingAdded": all devices that the logger has been told to log, but which it did not yet confirm,
             // "backlog: all that the logger still has to be told to log
             karabo::util::Hash m_loggerData; /// 1st level keys: entries in m_serverList, 2nd level: "state", "backlog", "beingAdded" and "devices"
+            std::ostringstream m_checkStatus;
             karabo::net::Strand::Pointer m_strand;
-            const unsigned int m_timeout = 1000; /// ms timeout for any request
+
+            boost::asio::deadline_timer m_topologyCheckTimer;
         };
     }
 }
