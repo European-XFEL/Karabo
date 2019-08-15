@@ -34,7 +34,7 @@ namespace karabo {
             VECTOR_STRING_ELEMENT(expected).key("connectedOutputChannels")
                     .displayedName("Connected Output Channels")
                     .description("Defines the inter-device connectivity for pipeline data transfer (use format: <instanceId>:<channelName>)")
-                    .assignmentOptional().noDefaultValue()
+                    .assignmentOptional().defaultValue(std::vector<std::string>())
                     .init()
                     .commit();
 
