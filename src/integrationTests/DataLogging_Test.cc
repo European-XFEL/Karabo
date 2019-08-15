@@ -301,25 +301,27 @@ void DataLogging_Test::testLastKnownConfiguration() {
     Schema schema;
     Hash conf;
     bool configAtTimepoint;
+    string configTimepoint;
 
     std::clog << "... before any logging activity (at " << m_beforeAnything.toIso8601() << ") ...";
     // At the m_beforeAnything timepoint no known configuration existed, so an
     // empty configuration is expected.
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
                                                m_deviceId, m_beforeAnything.toIso8601())
-                            .timeout(kRequestTimeoutMs).receive(conf, schema, configAtTimepoint));
+                            .timeout(kRequestTimeoutMs).receive(conf, schema, configAtTimepoint, configTimepoint));
 
     CPPUNIT_ASSERT_MESSAGE("At timepoint BeforeAnything no last known configuration is expected.", conf.empty());
     CPPUNIT_ASSERT_EQUAL(false, configAtTimepoint);
+    CPPUNIT_ASSERT_EQUAL(Epochstamp(0, 0).toIso8601(), configTimepoint);
     std::clog << "\n... Ok (no configuration retrieved)." << std::endl;
 
-    Epochstamp rightBeforeDeviceGone;
+    karabo::util::Epochstamp rightBeforeDeviceGone;
     std::clog << "... right before killing device being logged (at " << rightBeforeDeviceGone.toIso8601() << ") ...";
     // At the rightBeforeDeviceGone timepoint, a last known configuration should be obtained with the last value set in
     // the  previous test cases for the 'int32Property' - even after the device being logged is gone.
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
                                                m_deviceId, rightBeforeDeviceGone.toIso8601())
-                            .timeout(kRequestTimeoutMs).receive(conf, schema, configAtTimepoint));
+                            .timeout(kRequestTimeoutMs).receive(conf, schema, configAtTimepoint, configTimepoint));
 
     CPPUNIT_ASSERT_EQUAL(99, conf.get<int>("int32Property"));
 
@@ -335,6 +337,7 @@ void DataLogging_Test::testLastKnownConfiguration() {
     
     CPPUNIT_ASSERT_EQUAL(kLastValueSet, conf.get<int>("int32Property"));
     CPPUNIT_ASSERT_EQUAL(true, configAtTimepoint);
+    CPPUNIT_ASSERT_EQUAL(rightBeforeDeviceGone.toIso8601(), configTimepoint);
     std::clog << "\n... "
             << "Ok (retrieved configuration with last known value for 'int32Property' while the device was being logged)."
             << std::endl;
@@ -364,10 +367,13 @@ void DataLogging_Test::testLastKnownConfiguration() {
     // previous test cases for the 'int32Property' - even after the device being logged is gone.
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
                                                m_deviceId, afterDeviceGone.toIso8601())
-                            .timeout(kRequestTimeoutMs).receive(conf, schema, configAtTimepoint));
+                            .timeout(kRequestTimeoutMs).receive(conf, schema, configAtTimepoint, configTimepoint));
 
     CPPUNIT_ASSERT_EQUAL(kLastValueSet, conf.get<int>("int32Property"));
     CPPUNIT_ASSERT_EQUAL(false, configAtTimepoint);
+    karabo::util::Epochstamp configStamp(configTimepoint);
+    CPPUNIT_ASSERT(configStamp > m_beforeAnything);
+    CPPUNIT_ASSERT(configStamp < afterDeviceGone);
     std::clog << "\n... "
             << "Ok (retrieved configuration with last known value for 'int32Property' while the device was not being logged)."
             << std::endl;
