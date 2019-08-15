@@ -156,7 +156,8 @@ class NetworkInput(Configurable):
         defaultValue=[])
     @coroutine
     def connectedOutputChannels(self, value):
-        outputs = set(value)
+        # Basic name protection is implemented here, as it can cause hickups!
+        outputs = set(output.strip() for output in value)
         close = self.connected.keys() - outputs
         for k in close:
             self.connected[k].cancel()
