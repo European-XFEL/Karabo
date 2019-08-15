@@ -584,6 +584,7 @@ namespace karabo {
                 if (!data->m_currentSchema.has(path)
                     || (data->m_currentSchema.hasArchivePolicy(path)
                         && (data->m_currentSchema.getArchivePolicy(path) == Schema::NO_ARCHIVING))) {
+                    // FIXME: update data->m_lastDataTimestamp nevertheless??
                     continue;
                 }
 
@@ -800,8 +801,14 @@ namespace karabo {
                         updatedAnyStamp |= data->m_updatedLastTimestamp;
                         data->m_updatedLastTimestamp = false;
                         const karabo::util::Timestamp& ts = data->m_lastDataTimestamp;
-                        lastStamps.push_back(Hash("deviceId", idData.first,
-                                                  "lastUpdateUtc", ts.getSeconds() == 0ull ? "" : ts.toFormattedString()));
+                        Hash h("deviceId", idData.first);
+                        // Human readable Epochstamp (except if no updates yet), attributes for machines
+                        Hash::Node& node = h.set("lastUpdateUtc", "");
+                        if (ts.getSeconds() != 0ull) {
+                            node.setValue(ts.toFormattedString()); //"%Y%m%dT%H%M%S"));
+                        }
+                        ts.getEpochstamp().toHashAttributes(node.getAttributes());
+                        lastStamps.push_back(std::move(h));
                     }
 
                     // We post on strand to exclude parallel access to data->m_configStream and data->m_idxMap
