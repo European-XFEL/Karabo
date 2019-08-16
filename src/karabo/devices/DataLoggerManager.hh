@@ -12,7 +12,6 @@
 
 #include <map>
 #include <vector>
-#include <sstream>
 
 #include <boost/filesystem.hpp>
 #include <boost/asio/deadline_timer.hpp>
@@ -81,6 +80,11 @@ namespace karabo {
 
             void launchTopologyCheck();
 
+            /**
+             * Assemble summary from m_checkStatus and clear for next use.
+             */
+            std::string checkSummary();
+
             void topologyCheck(const boost::system::error_code& e);
 
             void topologyCheckOnStrand();
@@ -94,7 +98,7 @@ namespace karabo {
             void checkLoggerConfig(bool ok, const boost::shared_ptr<std::atomic<size_t> >& counter,
                                    const karabo::util::Hash& config, const std::string& loggerId);
 
-            void checkLoggerConfigOnStrand(bool ok, const boost::shared_ptr<std::atomic<size_t> >& counter,
+            void checkLoggerConfigOnStrand(const std::string& errorTxt, const boost::shared_ptr<std::atomic<size_t> >& counter,
                                            const karabo::util::Hash& config, const std::string& loggerId);
             /**
              * If deviceId's logging status is fishy, re-add to its logger.
@@ -110,7 +114,7 @@ namespace karabo {
                                    karabo::util::Epochstamp lastUpdateLogger, const karabo::util::Hash& config,
                                    const std::string& deviceId);
 
-            void checkDeviceConfigOnStrand(bool ok, const boost::shared_ptr<std::atomic<size_t> >& loggerCounter,
+            void checkDeviceConfigOnStrand(const std::string& errorTxt, const boost::shared_ptr<std::atomic<size_t> >& loggerCounter,
                                            const std::string& loggerId, unsigned int toleranceSec,
                                            const boost::shared_ptr<std::atomic<size_t> >& loggedDevCounter,
                                            karabo::util::Epochstamp lastUpdateLogger, const karabo::util::Hash& config,
@@ -133,7 +137,7 @@ namespace karabo {
                                 const std::unordered_set<std::string>& calledDevices,
                                 const std::vector<std::string>& alreadyLoggedDevices);
 
-            void addDevicesDoneOnStrand(bool ok, const std::string& loggerId,
+            void addDevicesDoneOnStrand(const std::string& errorTxt, const std::string& loggerId,
                                         const std::unordered_set<std::string>& calledDevices,
                                         const std::vector<std::string>& alreadyLoggedDevices);
 
@@ -213,10 +217,8 @@ namespace karabo {
             // "devices": all devices that the logger has confirmed to log,
             // "beingAdded": all devices that the logger has been told to log, but which it did not yet confirm,
             // "backlog: all that the logger still has to be told to log
-            // "lastCheckEmptyUpdate": optional key to hold devices for which the data logger did not yet have a
-            //                         timestamp when the last check was run
-            karabo::util::Hash m_loggerData; /// 1st level keys: entries in m_serverList, 2nd level: "state", "backlog", "beingAdded" and "devices" (and optionally "lastCheckEmptyUpdate")
-            std::ostringstream m_checkStatus;
+            karabo::util::Hash m_loggerData; /// 1st level keys: entries in m_serverList, 2nd level: "state", "backlog", "beingAdded" and "devices"
+            karabo::util::Hash m_checkStatus; /// Keep track of all important stuff during check
             karabo::net::Strand::Pointer m_strand;
 
             boost::asio::deadline_timer m_topologyCheckTimer;
