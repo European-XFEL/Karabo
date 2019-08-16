@@ -32,10 +32,18 @@
  *
  * Besides taking care to instruct loggers to log devices, a regular sanity check based on Epochstamps is done:
  * * Every "topologyCheck.interval" minutes, each DataLogger that is running is checked.
- * * This check compares the timestamps in their "lastUpdatesUtc" tables of all devices logged with 'now'.
+ * * This check accesses the "lastUpdatesUtc" tables of all devices:
+ *   o If there is an empty time stamp, that should mean that logging of the device in question has just started. The
+ *     Check procedure is continued with the other devices, but id of the device is noted and in case that during
+ *     the next check the finding is confirmed, stop and start of logging is enforced.
+ *   o Otherwise each timestamp is compared with 'now'.
  * * If the time difference is larger than "topologyCheck.toleranceLogged", the configuration of the device in question
  *   is queried and its most recent timestamp is compared with the one in "lastUpdatesUtc".
- * * If the difference is larger than "topologyCheck.toleranceDiff", this is considered to be a problem.
+ *   o Otherwise the logging of the device is considered to be OK.
+ * * If the difference is larger than "topologyCheck.toleranceDiff", this is considered to be a problem and
+ *   stop and start of logging is enforced.
+ * * When treatment of all loggers and their devices is finished, the procedure is triggered again
+ *   in "topologyCheck.interval" minutes.
  */
 
 #include <vector>
@@ -360,6 +368,9 @@ namespace karabo {
                     out << id << ", ";
                     nChars += 2; // for comma and space
                 }
+                if (serverHash.has("lastCheckEmptyUpdate")) {
+                    out << "\n    last check empty update:" << serverHash.getAs<std::string>("lastCheckEmptyUpdate");
+                }
             }
             }
 
@@ -382,15 +393,25 @@ namespace karabo {
                 auto loggedDevCounter = boost::make_shared<std::atomic<size_t> >(updates.size());
                 const unsigned int timeout = get<unsigned int>("timeout");
                 bool deviceOk = true;
+                std::vector<std::string> idsWithoutTimestamp;
                 for (const Hash& row : updates) {
                     const Hash::Node& lastUpdateNode = row.getNode("lastUpdateUtc");
                     const std::string& lastUpdateStr = lastUpdateNode.getValue<std::string>();
                     const std::string& deviceId = row.get<std::string>("deviceId");
 
                     if (lastUpdateStr.empty() || !Epochstamp::hashAttributesContainTimeInformation(lastUpdateNode.getAttributes())) {
-                        // No update yet, so DataLogging for that device being started - FIXME: check that?
-                        KARABO_LOG_FRAMEWORK_INFO << "No timestamp of last logger update of " << deviceId;
-                        --(*loggedDevCounter);
+                        // No update yet, so DataLogging for that device likely being started - book-keeping to check next time:
+                        idsWithoutTimestamp.push_back(deviceId);
+                        // Check the last try:
+                        const std::string keyEmpty(loggerIdToServerId(loggerId) += ".lastCheckEmptyUpdate");
+                        if (m_loggerData.has(keyEmpty)) {
+                            const std::vector<std::string>& emptyLast = m_loggerData.get<std::vector<std::string> >(keyEmpty);
+                            if (std::find(emptyLast.begin(), emptyLast.end(), deviceId) != emptyLast.end()) {
+                                KARABO_LOG_FRAMEWORK_WARN << "Device '" << deviceId << "' logged by '" << loggerId
+                                        << "' still has no last update stamp - force logging";
+                                forceDeviceToBeLogged(deviceId);
+                            }
+                        }
                         continue;
                     }
                     const Epochstamp lastUpdate(Epochstamp::fromHashAttributes(lastUpdateNode.getAttributes()));
@@ -419,6 +440,19 @@ namespace karabo {
                         --(*loggedDevCounter);
                     }
                 }
+                if (!idsWithoutTimestamp.empty()) {
+                    (*loggedDevCounter) -= idsWithoutTimestamp.size();
+                    const std::string idsWithoutTimestampStr(toString(idsWithoutTimestamp));
+                    KARABO_LOG_FRAMEWORK_INFO << "Logger lacks last update timestamp of " << idsWithoutTimestampStr;
+                    if (deviceOk) {
+                        m_checkStatus << "\nOn logger " << loggerId << ": ";
+                    } else {
+                        m_checkStatus << "\n";
+                    }
+                    m_checkStatus << "Devices without last logged data: " << idsWithoutTimestampStr;
+                }
+                m_loggerData.set(loggerIdToServerId(loggerId) += ".lastCheckEmptyUpdate", idsWithoutTimestamp);
+
                 if (0 == *loggedDevCounter) {
                     // No suspicious devices logged by this logger
                     KARABO_LOG_FRAMEWORK_INFO << "All devices logged by " << loggerId << " are not suspicious.";
@@ -442,6 +476,12 @@ namespace karabo {
         }
 
 
+        void DataLoggerManager::forceDeviceToBeLogged(const std::string& deviceId) {
+            goneDeviceToLog(deviceId);
+            newDeviceToLog(deviceId);
+        }
+
+
         void DataLoggerManager::checkDeviceConfig(bool ok, const boost::shared_ptr<std::atomic<size_t> >& loggerCounter,
                                                   const std::string& loggerId, unsigned int toleranceSec,
                                                   const boost::shared_ptr<std::atomic<size_t> >& loggedDevCounter,
@@ -461,10 +501,10 @@ namespace karabo {
                 if (lastDeviceUpdate > lastUpdateLogger && lastDeviceUpdate.elapsed(lastUpdateLogger) > tolerance) {
                     m_checkStatus << "\nDevice '" << deviceId << "' badly logged: last logged/last data: "
                             << lastUpdateLogger.toFormattedString() << " / " << lastDeviceUpdate.toFormattedString();
-
-                    // Tell loggerId to start again for deviceId? FIXME?
                     KARABO_LOG_FRAMEWORK_WARN << deviceId << " had last update at " << lastDeviceUpdate.toFormattedString()
                             << ", but most recent data logged by " << loggerId << " is from " << lastUpdateLogger.toFormattedString();
+                    // Let's start again for deviceId
+                    forceDeviceToBeLogged(deviceId);
                 } else {
                     KARABO_LOG_FRAMEWORK_INFO << "Last update of " << deviceId << " at " << lastDeviceUpdate.toFormattedString()
                             << ": logger not behind.";
