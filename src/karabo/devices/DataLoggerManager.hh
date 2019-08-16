@@ -85,6 +85,10 @@ namespace karabo {
 
             void topologyCheckOnStrand();
 
+            /**
+             * Print internal cash of logger status.
+             * Needs to be protected by m_strand.
+             */
             void printLoggerData() const;
 
             void checkLoggerConfig(bool ok, const boost::shared_ptr<std::atomic<size_t> >& counter,
@@ -92,6 +96,13 @@ namespace karabo {
 
             void checkLoggerConfigOnStrand(bool ok, const boost::shared_ptr<std::atomic<size_t> >& counter,
                                            const karabo::util::Hash& config, const std::string& loggerId);
+            /**
+             * If deviceId's logging status is fishy, re-add to its logger.
+             * Needs to be protected by m_strand.
+             *
+             * @param deviceId the fishy device
+             */
+            void forceDeviceToBeLogged(const std::string& deviceId);
 
             void checkDeviceConfig(bool ok, const boost::shared_ptr<std::atomic<size_t> >& loggerCounter,
                                    const std::string& loggerId, unsigned int toleranceSec,
@@ -166,7 +177,7 @@ namespace karabo {
             }
 
             /**
-             * Get id of DataLogger running on server with id 'serverId'
+             * Get id of server that should run logger with id 'loggerId'
              */
             inline std::string loggerIdToServerId(const std::string& loggerId) const {
                 // Just remove the prefix
@@ -202,7 +213,9 @@ namespace karabo {
             // "devices": all devices that the logger has confirmed to log,
             // "beingAdded": all devices that the logger has been told to log, but which it did not yet confirm,
             // "backlog: all that the logger still has to be told to log
-            karabo::util::Hash m_loggerData; /// 1st level keys: entries in m_serverList, 2nd level: "state", "backlog", "beingAdded" and "devices"
+            // "lastCheckEmptyUpdate": optional key to hold devices for which the data logger did not yet have a
+            //                         timestamp when the last check was run
+            karabo::util::Hash m_loggerData; /// 1st level keys: entries in m_serverList, 2nd level: "state", "backlog", "beingAdded" and "devices" (and optionally "lastCheckEmptyUpdate")
             std::ostringstream m_checkStatus;
             karabo::net::Strand::Pointer m_strand;
 
