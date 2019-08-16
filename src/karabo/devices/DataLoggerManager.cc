@@ -363,6 +363,10 @@ namespace karabo {
                     checkResult << "\n      Device query failed for " << toString(devs);
                     bad = true; // Could just being shutdown and logger was not yet aware...
                 }
+                if (serverHash.has("stopped")) {
+                    const auto& devs = serverHash.get<std::set<std::string> >("stopped");
+                    checkResult << "\n      Device found to be offline " << toString(devs);
+                }
                 if (serverHash.has("forced")) {
                     const auto& devs = serverHash.get<std::set<std::string> >("forced");
                     checkResult << "\n      Logging re-enforced for " << toString(devs);
@@ -587,7 +591,19 @@ namespace karabo {
             } else {
                 // Failure handler:
                 KARABO_LOG_FRAMEWORK_INFO << "Failed to query device configuration of " << deviceId << ": " << errorTxt;
-                addToSetOrCreate(m_checkStatus, loggerIdToServerId(loggerId) + ".deviceQueryFailed", deviceId);
+                const std::string serverId(loggerIdToServerId(loggerId));
+                addToSetOrCreate(m_checkStatus, serverId + ".deviceQueryFailed", deviceId);
+                // If request failed, it maybe that the device went offline and the manager did not notice since
+                // it was down at that time and restarted later. In that case the device should not be in the logger
+                // data - so better check that!
+                // But do not trust remote().getSystemInformation() - it is not synchronised with our m_strand.
+                const auto& knownDevs = m_loggerData.get<std::unordered_set<std::string> >(serverId + ".devices");
+                if (knownDevs.find(deviceId) == knownDevs.end()) {
+                    KARABO_LOG_FRAMEWORK_WARN << "Device " << deviceId << " not known for logger "
+                            << loggerId << " - stop logging it!";
+                    addToSetOrCreate(m_checkStatus, serverId + ".stopped", deviceId);
+                    call(loggerId, "slotTagDeviceToBeDiscontinued", "D", deviceId);
+                }
             }
 
             if (0 == --(*loggedDevCounter)) {
