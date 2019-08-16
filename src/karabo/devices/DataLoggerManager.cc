@@ -47,6 +47,7 @@
  */
 
 #include <vector>
+#include <set>
 #include <unordered_set>
 #include <string>
 #include <algorithm>    // std::find, std::max
@@ -70,6 +71,21 @@ namespace karabo {
         using namespace karabo::util;
         using namespace karabo::io;
         using karabo::xms::SLOT_ELEMENT;
+
+
+        /**
+         * Helper function used below:
+         * Add object to set<T> at key's position in h - if no such key exists, create one
+         */
+        template<class T>
+        void addToSetOrCreate(Hash& h, const std::string& key, const T& object) {
+            if (h.has(key)) {
+                h.get<std::set<T> >(key).insert(object);
+            } else {
+                h.set(key, std::set<T>({object}));
+            }
+        }
+
 
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, DataLoggerManager)
 
@@ -292,15 +308,77 @@ namespace karabo {
 
 
         void DataLoggerManager::launchTopologyCheck() {
-            set(Hash("topologyCheck", Hash("lastCheckDoneUtc", Epochstamp().toFormattedString(),
-                                           "lastCheckResult", m_checkStatus.str())));
-            m_checkStatus.str(std::string()); // reset
+            // Publish last results except if in INIT (because then there was no last run!):
+            if (getState() != State::INIT) {
+                const std::string result(checkSummary());
+                KARABO_LOG_FRAMEWORK_INFO << "Check finished - " << result;
+                set(Hash("topologyCheck", Hash("lastCheckDoneUtc", Epochstamp().toFormattedString(),
+                                               "lastCheckResult", result)));
+            }
 
             updateState(State::NORMAL);
             m_topologyCheckTimer.expires_from_now(boost::posix_time::minutes(get<unsigned int>("topologyCheck.interval")));
             m_topologyCheckTimer.async_wait(bind_weak(&Self::topologyCheck, this, boost::asio::placeholders::error));
         }
 
+
+        std::string DataLoggerManager::checkSummary() {
+            std::stringstream checkResult;
+            Hash newCheckStatus;
+
+            bool bad = false;
+            if (m_checkStatus.has("offline")) {
+                checkResult << "   Offline logger servers: " << toString(m_checkStatus.get<std::set<std::string> >("offline")) << "\n";
+                m_checkStatus.erase("offline"); // skip it from loop below!
+                bad = true;
+            }
+
+            // The remaining keys are serverIds:
+            for (const Hash::Node& node : m_checkStatus) {
+                const Hash& serverHash = node.getValue<Hash>();
+                const std::string& serverId = node.getKey();
+                checkResult << "\n   " << serverId << ": ";
+                if (serverHash.has("loggerQueryFailed")) {
+                    checkResult << "Query to logger failed.\n";
+                    bad = true;
+                    continue;
+                }
+                if (serverHash.has("emptyTimestamp")) {
+                    const auto& devs = serverHash.get<std::set<std::string> >("emptyTimestamp");
+                    checkResult << "\n      Empty time stamps for " << toString(devs);
+                    // Keep info for next round, but with new key to check next time whether still empty timestamp:
+                    newCheckStatus.set(serverId, Hash("emptyTimestampLast", devs));
+                }
+                // No need to summarize "emptyTimestampLast" here: It was in summary in last round and
+                // - either is fine now,
+                // - or is not online anymore,
+                // - or appears in "forced" below
+
+                if (serverHash.has("detailsRequested")) {
+                    const auto& devs = serverHash.get<std::set<std::string> >("detailsRequested");
+                    checkResult << "\n      Details requested for " << toString(devs);
+                }
+                if (serverHash.has("deviceQueryFailed")) {
+                    const auto& devs = serverHash.get<std::set<std::string> >("deviceQueryFailed");
+                    checkResult << "\n      Device query failed for " << toString(devs);
+                    bad = true; // Could just being shutdown and logger was not yet aware...
+                }
+                if (serverHash.has("forced")) {
+                    const auto& devs = serverHash.get<std::set<std::string> >("forced");
+                    checkResult << "\n      Logging re-enforced for " << toString(devs);
+                    bad = true;
+                }
+            }
+            // Clear check status, but keep what is needed for next check
+            m_checkStatus = std::move(newCheckStatus);
+
+            const std::string checkResultStr(checkResult.str());
+            std::string prefix(bad ? "Found problems:" : "Ok");
+            if (!bad) {
+                prefix += (checkResultStr.empty() ? "." : ", just note:");
+            }
+            return (prefix += checkResultStr);
+        }
 
         void DataLoggerManager::topologyCheck(const boost::system::error_code& e) {
             if (e == boost::asio::error::operation_aborted) {
@@ -316,7 +394,6 @@ namespace karabo {
         void DataLoggerManager::topologyCheckOnStrand() {
             printLoggerData();
 
-            bool allServersOk = true;
             auto loggerCounter = boost::make_shared<std::atomic<size_t> >(m_loggerData.size());
             const unsigned int timeout = get<unsigned int>("timeout");
             for (const Hash::Node& serverNode : m_loggerData) {
@@ -324,13 +401,7 @@ namespace karabo {
                 const Hash& serverData = serverNode.getValue<Hash>();
                 if (serverData.get<LoggerState>("state") != LoggerState::RUNNING) {
                     KARABO_LOG_FRAMEWORK_INFO << "Skip checking '" << serverId << "' since not running";
-                    if (allServersOk) {
-                        allServersOk = false;
-                        m_checkStatus << "Skipped servers: ";
-                    } else {
-                        m_checkStatus << ", ";
-                    }
-                    m_checkStatus << serverId;
+                    addToSetOrCreate(m_checkStatus, "offline", serverId);
                     --(*loggerCounter);
                     continue;
                 }
@@ -342,7 +413,6 @@ namespace karabo {
                 request(loggerId, "slotGetConfiguration").timeout(timeout)
                         .receiveAsync<Hash, std::string>(okHandler, failHandler);
             }
-            if (!allServersOk) m_checkStatus << '\n';
             if (0 == *loggerCounter) { // All loggers are not (yet) running
                 m_strand->post(bind_weak(&Self::launchTopologyCheck, this));
             }
@@ -368,9 +438,6 @@ namespace karabo {
                     out << id << ", ";
                     nChars += 2; // for comma and space
                 }
-                if (serverHash.has("lastCheckEmptyUpdate")) {
-                    out << "\n    last check empty update:" << serverHash.getAs<std::string>("lastCheckEmptyUpdate");
-                }
             }
             }
 
@@ -380,19 +447,29 @@ namespace karabo {
 
         void DataLoggerManager::checkLoggerConfig(bool ok, const boost::shared_ptr<std::atomic<size_t> >& loggerCounter,
                                                   const Hash& config, const std::string& loggerId) {
-            m_strand->post(bind_weak(&Self::checkLoggerConfigOnStrand, this, ok, loggerCounter, config, loggerId));
+            // Put on strand to be sequential, but take care that the re-throw trick for exception details
+            // will not work anymore.
+            std::string errorTxt;
+            if (!ok) {
+                try {
+                    throw;
+                } catch (const std::exception& e) {
+                    errorTxt = e.what();
+                }
+            }
+            m_strand->post(bind_weak(&Self::checkLoggerConfigOnStrand, this, errorTxt, loggerCounter, config, loggerId));
         }
 
 
-        void DataLoggerManager::checkLoggerConfigOnStrand(bool ok, const boost::shared_ptr<std::atomic<size_t> >& loggerCounter,
+        void DataLoggerManager::checkLoggerConfigOnStrand(const std::string& errorTxt, const boost::shared_ptr<std::atomic<size_t> >& loggerCounter,
                                                           const Hash& config, const std::string& loggerId) {
             Epochstamp now;
-            if (ok) {
+            const std::string serverId(loggerIdToServerId(loggerId));
+            if (errorTxt.empty()) {
                 const TimeDuration tolerance(0, 0, get<unsigned int>("topologyCheck.toleranceLogged"), 0ull, 0ull); // from minutes
                 const std::vector<Hash>& updates = config.get<std::vector < Hash >> ("lastUpdatesUtc");
                 auto loggedDevCounter = boost::make_shared<std::atomic<size_t> >(updates.size());
                 const unsigned int timeout = get<unsigned int>("timeout");
-                bool deviceOk = true;
                 std::vector<std::string> idsWithoutTimestamp;
                 for (const Hash& row : updates) {
                     const Hash::Node& lastUpdateNode = row.getNode("lastUpdateUtc");
@@ -403,13 +480,15 @@ namespace karabo {
                         // No update yet, so DataLogging for that device likely being started - book-keeping to check next time:
                         idsWithoutTimestamp.push_back(deviceId);
                         // Check the last try:
-                        const std::string keyEmpty(loggerIdToServerId(loggerId) += ".lastCheckEmptyUpdate");
-                        if (m_loggerData.has(keyEmpty)) {
-                            const std::vector<std::string>& emptyLast = m_loggerData.get<std::vector<std::string> >(keyEmpty);
-                            if (std::find(emptyLast.begin(), emptyLast.end(), deviceId) != emptyLast.end()) {
+                        const std::string keyEmpty(serverId + ".emptyTimestampLast");
+                        if (m_checkStatus.has(keyEmpty)) {
+                            std::set<std::string>& emptyLast = m_checkStatus.get<std::set<std::string> >(keyEmpty);
+                            auto it = std::find(emptyLast.begin(), emptyLast.end(), deviceId);
+                            if (it != emptyLast.end()) {
                                 KARABO_LOG_FRAMEWORK_WARN << "Device '" << deviceId << "' logged by '" << loggerId
                                         << "' still has no last update stamp - force logging";
                                 forceDeviceToBeLogged(deviceId);
+                                addToSetOrCreate(m_checkStatus, serverId + ".forced", deviceId);
                             }
                         }
                         continue;
@@ -418,13 +497,7 @@ namespace karabo {
                     if (now > lastUpdate && now.elapsed(lastUpdate) > tolerance) { // Caveat: TimeDuration is always positive!
                         KARABO_LOG_FRAMEWORK_DEBUG << loggerId << " logged last data from '" << deviceId
                                 << "' rather long ago: " << lastUpdateStr << " (UTC)";
-                        if (deviceOk) {
-                            deviceOk = false;
-                            m_checkStatus << "\nOn logger " << loggerId << ": Detailed check needed for ";
-                        } else {
-                            m_checkStatus << ", ";
-                        }
-                        m_checkStatus << deviceId;
+                        addToSetOrCreate(m_checkStatus, serverId + ".detailsRequested", deviceId);
 
                         const unsigned int toleranceSec = std::max(get<unsigned int>("topologyCheck.toleranceDiff"),
                                                                    config.get<unsigned int>("flushInterval"));
@@ -442,31 +515,21 @@ namespace karabo {
                 }
                 if (!idsWithoutTimestamp.empty()) {
                     (*loggedDevCounter) -= idsWithoutTimestamp.size();
-                    const std::string idsWithoutTimestampStr(toString(idsWithoutTimestamp));
-                    KARABO_LOG_FRAMEWORK_INFO << "Logger lacks last update timestamp of " << idsWithoutTimestampStr;
-                    if (deviceOk) {
-                        m_checkStatus << "\nOn logger " << loggerId << ": ";
-                    } else {
-                        m_checkStatus << "\n";
-                    }
-                    m_checkStatus << "Devices without last logged data: " << idsWithoutTimestampStr;
+                    KARABO_LOG_FRAMEWORK_INFO << "Logger lacks last update timestamp of " << toString(idsWithoutTimestamp);
+                    m_checkStatus.set(serverId + ".emptyTimestamp",
+                                      std::set<std::string>(idsWithoutTimestamp.begin(), idsWithoutTimestamp.end()));
                 }
-                m_loggerData.set(loggerIdToServerId(loggerId) += ".lastCheckEmptyUpdate", idsWithoutTimestamp);
 
                 if (0 == *loggedDevCounter) {
                     // No suspicious devices logged by this logger
-                    KARABO_LOG_FRAMEWORK_INFO << "All devices logged by " << loggerId << " are not suspicious.";
+                    KARABO_LOG_FRAMEWORK_INFO << "All devices logged by " << loggerId << " are recently logged.";
                     --(*loggerCounter);
                 }
             } else {
-                // Failure handler - get hands on exception
-                try {
-                    throw;
-                } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_INFO << "Failed to query configuration of " << loggerId << ": " << e.what()
+                // Failure handler
+                KARABO_LOG_FRAMEWORK_INFO << "Failed to query configuration of " << loggerId << ": " << errorTxt
                             << "\n logger left: " << *loggerCounter - 1;
-                }
-                m_checkStatus << "\nFailed to query logger " << loggerId;
+                m_checkStatus.set(serverId + ".loggerQueryFailed", true);
                 --(*loggerCounter);
             }
 
@@ -486,37 +549,45 @@ namespace karabo {
                                                   const std::string& loggerId, unsigned int toleranceSec,
                                                   const boost::shared_ptr<std::atomic<size_t> >& loggedDevCounter,
                                                   Epochstamp lastUpdateLogger, const Hash& config, const std::string& deviceId) {
-            m_strand->post(bind_weak(&Self::checkDeviceConfigOnStrand, this, ok, loggerCounter, loggerId, toleranceSec,
+            std::string errorTxt;
+            if (!ok) {
+                // Note that this can e.g. happen when 'deviceId' went down when the manager was offline and then
+                // the manager is restarted. The failure would be a timeout then.
+                // Trick:
+                // For a failure handler, re-throwing the exception does not work when posting further.
+                try {
+                    throw;
+                } catch (const std::exception& e) {
+                    errorTxt = e.what();
+                }
+            }
+            m_strand->post(bind_weak(&Self::checkDeviceConfigOnStrand, this, errorTxt, loggerCounter, loggerId, toleranceSec,
                                      loggedDevCounter, lastUpdateLogger, config, deviceId));
         }
 
 
-        void DataLoggerManager::checkDeviceConfigOnStrand(bool ok, const boost::shared_ptr<std::atomic<size_t> >& loggerCounter,
+        void DataLoggerManager::checkDeviceConfigOnStrand(const std::string& errorTxt, const boost::shared_ptr<std::atomic<size_t> >& loggerCounter,
                                                           const std::string& loggerId, unsigned int toleranceSec,
                                                           const boost::shared_ptr<std::atomic<size_t> >& loggedDevCounter,
                                                           Epochstamp lastUpdateLogger, const Hash& config, const std::string& deviceId) {
-            if (ok) {
+            if (errorTxt.empty()) {
                 const Epochstamp lastDeviceUpdate = mostRecentEpochstamp(config);
                 const TimeDuration tolerance(0, 0, 0, toleranceSec, 0ull);
                 if (lastDeviceUpdate > lastUpdateLogger && lastDeviceUpdate.elapsed(lastUpdateLogger) > tolerance) {
-                    m_checkStatus << "\nDevice '" << deviceId << "' badly logged: last logged/last data: "
-                            << lastUpdateLogger.toFormattedString() << " / " << lastDeviceUpdate.toFormattedString();
                     KARABO_LOG_FRAMEWORK_WARN << deviceId << " had last update at " << lastDeviceUpdate.toFormattedString()
                             << ", but most recent data logged by " << loggerId << " is from " << lastUpdateLogger.toFormattedString();
                     // Let's start again for deviceId
                     forceDeviceToBeLogged(deviceId);
+                    const std::string serverId(loggerIdToServerId(loggerId));
+                    addToSetOrCreate(m_checkStatus, serverId + ".forced", deviceId);
                 } else {
                     KARABO_LOG_FRAMEWORK_INFO << "Last update of " << deviceId << " at " << lastDeviceUpdate.toFormattedString()
                             << ": logger not behind.";
                 }
             } else {
-                // Failure handler - get hands on exception
-                try {
-                    throw;
-                } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_INFO << "Failed to query configuration of " << deviceId << ": " << e.what();
-                }
-                m_checkStatus << "\nFailed to query device " << deviceId;
+                // Failure handler:
+                KARABO_LOG_FRAMEWORK_INFO << "Failed to query device configuration of " << deviceId << ": " << errorTxt;
+                addToSetOrCreate(m_checkStatus, loggerIdToServerId(loggerId) + ".deviceQueryFailed", deviceId);
             }
 
             if (0 == --(*loggedDevCounter)) {
@@ -679,19 +750,28 @@ namespace karabo {
         void DataLoggerManager::addDevicesDone(bool ok, const std::string& loggerId,
                                                const std::unordered_set<std::string>& calledDevices,
                                                const std::vector<std::string>& alreadyLoggedDevices) {
-            // Put on strand to be sequential
-            m_strand->post(bind_weak(&DataLoggerManager::addDevicesDoneOnStrand, this, ok, loggerId,
+            // Put on strand to be sequential, but take care that the re-throw trick for exception details
+            // will not work anymore.
+            std::string errorTxt;
+            if (!ok) {
+                try {
+                    throw;
+                } catch (const std::exception& e) {
+                    errorTxt = e.what();
+                }
+            }
+            m_strand->post(bind_weak(&DataLoggerManager::addDevicesDoneOnStrand, this, errorTxt, loggerId,
                                      calledDevices, alreadyLoggedDevices));
         }
 
 
-        void DataLoggerManager::addDevicesDoneOnStrand(bool ok, const std::string& loggerId,
+        void DataLoggerManager::addDevicesDoneOnStrand(const std::string& errorTxt, const std::string& loggerId,
                                                        const std::unordered_set<std::string>& calledDevices,
                                                        const std::vector<std::string>& alreadyLoggedDevices) {
             const std::string serverId(loggerIdToServerId(loggerId));
             Hash& data = m_loggerData.get<Hash>(serverId);
 
-            if (ok) {
+            if (errorTxt.empty()) {
                 if (alreadyLoggedDevices.empty()) {
                     KARABO_LOG_FRAMEWORK_INFO << "Added '" << toString(calledDevices) << "' to be logged by '"
                             << loggerId << "'";
@@ -709,14 +789,10 @@ namespace karabo {
                 }
                 data.get<std::unordered_set<std::string> >("devices").insert(calledDevices.begin(), calledDevices.end());
             } else {
-                // It is a failure handler where 'throw' gives us back the exception
-                try {
-                    throw;
-                } catch (const std::exception& e) {
-                    // Can happen as timeout when logger just shutdown
-                    KARABO_LOG_FRAMEWORK_ERROR << "Failed to add '" << toString(calledDevices) << "' to be logged by '"
-                            << loggerId << "' since: " << e.what();
-                }
+                // Can happen as timeout when logger just shutdown
+                KARABO_LOG_FRAMEWORK_ERROR << "Failed to add '" << toString(calledDevices) << "' to be logged by '"
+                        << loggerId << "' since: " << errorTxt;
+
                 // Put devices to log back to backlog,
                 // but only those "beingAdded" (others could have shutdown meanwhile)
                 std::unordered_set<std::string>& beingAdded = data.get<std::unordered_set<std::string> >("beingAdded");
