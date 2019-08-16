@@ -831,6 +831,11 @@ void Schema_Test::testInvalidNodes() {
                          .description("Also an empty key at the end of a longer path is invalid"),
                          karabo::util::ParameterException);
 
+    // Spaces in keys are forbidden:
+    CPPUNIT_ASSERT_THROW(INT8_ELEMENT(schema)
+                         .key("constains space")
+                         .description("Space inside a key is forbidden"),
+                         karabo::util::ParameterException);
 }
 
 
