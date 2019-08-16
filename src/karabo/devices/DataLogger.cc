@@ -581,19 +581,18 @@ namespace karabo {
                 const string& path = paths[i];
                 
                 // Skip those elements which should not be archived
-                if (!data->m_currentSchema.has(path)
-                    || (data->m_currentSchema.hasArchivePolicy(path)
-                        && (data->m_currentSchema.getArchivePolicy(path) == Schema::NO_ARCHIVING))) {
-                    // FIXME: update data->m_lastDataTimestamp nevertheless??
-                    continue;
-                }
+                const bool noArchive = (!data->m_currentSchema.has(path)
+                                        || (data->m_currentSchema.hasArchivePolicy(path)
+                                            && (data->m_currentSchema.getArchivePolicy(path) == Schema::NO_ARCHIVING)));
 
                 const Hash::Node& leafNode = configuration.getNode(path);
 
                 // Check for timestamp ...
                 if (!Timestamp::hashAttributesContainTimeInformation(leafNode.getAttributes())) {
-                    KARABO_LOG_WARN << "Skip '" << path << "' of '" << deviceId
-                            << "' - it lacks time information attributes.";
+                    if (!noArchive) { // Lack of timestamp for non-archived properties does not harm logging
+                        KARABO_LOG_WARN << "Skip '" << path << "' of '" << deviceId
+                                << "' - it lacks time information attributes.";
+                    }
                     continue;
                 }
 
@@ -608,7 +607,10 @@ namespace karabo {
                         data->m_lastDataTimestamp = t;
                     }
                 }
-                string value = "";   // "value" should be a string, so convert depending on type ...
+
+                if (noArchive) continue; // Bail out after updating time stamp!
+
+                string value = ""; // "value" should be a string, so convert depending on type ...
                 if (leafNode.getType() == Types::VECTOR_HASH) {
                     // Represent any vector<Hash> as XML string ...
                     data->m_serializer->save(leafNode.getValue<vector < Hash >> (), value);
