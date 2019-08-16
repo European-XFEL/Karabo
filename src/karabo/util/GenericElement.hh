@@ -59,9 +59,9 @@ namespace karabo {
             virtual Derived& key(const std::string& name) {
                 // Check whether full path (that in fact has to be specified here!) or its last
                 // key is empty - empty non-last keys are caught elsewhere.
-                // Empty keys cannot work with instance proxies in Python.
-                if (name.empty() || name.back() == '.') {
-                    throw KARABO_PARAMETER_EXCEPTION("Empty key not allowed.");
+                // Empty keys or keys with spaces cannot work with instance proxies in Python.
+                if (name.empty() || name.back() == '.' || name.find(' ') != std::string::npos) {
+                    throw KARABO_PARAMETER_EXCEPTION("Bad (sub-)key '" + name + "': empty or with space.");
                 }
                 m_node->m_key = name;
                 return *(static_cast<Derived*> (this));
