@@ -819,7 +819,8 @@ namespace karabo {
             }
 
             if (updatedAnyStamp
-                || (lastStamps.empty() && !get<std::vector < Hash >> ("lastUpdatesUtc").empty())) {
+                || (lastStamps.size() != get<std::vector < Hash >> ("lastUpdatesUtc").size())) {
+                // If sizes are equal, but devices have changed, then at least one time stamp must have changed as well.
                 set("lastUpdatesUtc", lastStamps);
             }
         }
