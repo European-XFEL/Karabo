@@ -6,8 +6,24 @@
 from os import environ, path
 from sys import platform
 
+from karabo.common.packaging import utils
 from karabo.native import AccessLevel
-from ._version import version as GUI_VERSION, full_version as GUI_VERSION_LONG  # noqa
+
+try:
+    from karabogui import _version
+
+    version = _version.version
+    if hasattr(_version, 'full_version'):
+        full_version = getattr(_version, 'full_version')
+    else:
+        full_version = version
+
+    GUI_VERSION = utils.extract_base_version(version)
+    GUI_VERSION_LONG = utils.extract_full_version(version)
+except (ImportError, AttributeError):
+    print('Version file not found! Please generate the _version.py file.')
+    exit(1)
+
 
 # XXX: Karabo will support an global access level and an exception list which
 # is deviceId specific.
