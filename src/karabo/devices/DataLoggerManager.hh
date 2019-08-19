@@ -14,9 +14,11 @@
 #include <vector>
 
 #include <boost/filesystem.hpp>
+#include <boost/asio/deadline_timer.hpp>
 
 #include "karabo/core/Device.hh"
 #include "karabo/util/DataLogUtils.hh"
+#include "karabo/xms/SlotElement.hh"
 
 /**
  * The main karabo namespace
@@ -26,6 +28,10 @@ namespace karabo {
     /**
      * Namespace for package devices
      */
+    namespace util {
+        // Forward declare 
+        class Epochstamp;
+    }
     namespace devices {
 
         /**
@@ -70,6 +76,53 @@ namespace karabo {
 
             void checkLoggerMap();
 
+            void topologyCheck_slotForceCheck();
+
+            void launchTopologyCheck();
+
+            /**
+             * Assemble summary from m_checkStatus and clear for next use.
+             */
+            std::string checkSummary();
+
+            void topologyCheck(const boost::system::error_code& e);
+
+            void topologyCheckOnStrand();
+
+            /**
+             * Print internal cash of logger status.
+             * Needs to be protected by m_strand.
+             */
+            void printLoggerData() const;
+
+            void checkLoggerConfig(bool ok, const boost::shared_ptr<std::atomic<size_t> >& counter,
+                                   const karabo::util::Hash& config, const std::string& loggerId);
+
+            void checkLoggerConfigOnStrand(const std::string& errorTxt, const boost::shared_ptr<std::atomic<size_t> >& counter,
+                                           const karabo::util::Hash& config, const std::string& loggerId);
+            /**
+             * If deviceId's logging status is fishy, re-add to its logger.
+             * Needs to be protected by m_strand.
+             *
+             * @param deviceId the fishy device
+             */
+            void forceDeviceToBeLogged(const std::string& deviceId);
+
+            void checkDeviceConfig(bool ok, const boost::shared_ptr<std::atomic<size_t> >& loggerCounter,
+                                   const std::string& loggerId, unsigned int toleranceSec,
+                                   const boost::shared_ptr<std::atomic<size_t> >& loggedDevCounter,
+                                   karabo::util::Epochstamp lastUpdateLogger, const karabo::util::Hash& config,
+                                   const std::string& deviceId);
+
+            void checkDeviceConfigOnStrand(const std::string& errorTxt, const boost::shared_ptr<std::atomic<size_t> >& loggerCounter,
+                                           const std::string& loggerId, unsigned int toleranceSec,
+                                           const boost::shared_ptr<std::atomic<size_t> >& loggedDevCounter,
+                                           karabo::util::Epochstamp lastUpdateLogger, const karabo::util::Hash& config,
+                                           const std::string& deviceId);
+
+            karabo::util::Epochstamp mostRecentEpochstamp(const karabo::util::Hash& config,
+                                                          karabo::util::Epochstamp oldStamp = karabo::util::Epochstamp(0ull, 0ull)) const;
+
             void instanceNewHandler(const karabo::util::Hash& topologyEntry);
 
             void instanceNewOnStrand(const karabo::util::Hash& topologyEntry);
@@ -84,7 +137,7 @@ namespace karabo {
                                 const std::unordered_set<std::string>& calledDevices,
                                 const std::vector<std::string>& alreadyLoggedDevices);
 
-            void addDevicesDoneOnStrand(bool ok, const std::string& loggerId,
+            void addDevicesDoneOnStrand(const std::string& errorTxt, const std::string& loggerId,
                                         const std::unordered_set<std::string>& calledDevices,
                                         const std::vector<std::string>& alreadyLoggedDevices);
 
@@ -128,7 +181,7 @@ namespace karabo {
             }
 
             /**
-             * Get id of DataLogger running on server with id 'serverId'
+             * Get id of server that should run logger with id 'loggerId'
              */
             inline std::string loggerIdToServerId(const std::string& loggerId) const {
                 // Just remove the prefix
@@ -159,11 +212,16 @@ namespace karabo {
                 RUNNING
 
             };
-            // "devices": all that the logger has been told to log,
+            // Both m_loggerData and m_checkStatus are to be touched only in functions running on m_strand
+            //
+            // "devices": all devices that the logger has confirmed to log,
+            // "beingAdded": all devices that the logger has been told to log, but which it did not yet confirm,
             // "backlog: all that the logger still has to be told to log
             karabo::util::Hash m_loggerData; /// 1st level keys: entries in m_serverList, 2nd level: "state", "backlog", "beingAdded" and "devices"
+            karabo::util::Hash m_checkStatus; /// Keep track of all important stuff during check
             karabo::net::Strand::Pointer m_strand;
-            const unsigned int m_timeout = 1000; /// ms timeout for any request
+
+            boost::asio::deadline_timer m_topologyCheckTimer;
         };
     }
 }
