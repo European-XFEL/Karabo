@@ -402,7 +402,7 @@ namespace karabo {
                 Schema schema;
                 const Epochstamp target(timepoint);
                 bool configAtTimepoint = false;
-                std::string configTimepoint = Epochstamp(0, 0).toIso8601(); // configTimepoint initialized to the Epoch.
+                Epochstamp configTimepoint(0, 0); // configTimepoint initialized to the Epoch.
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "Requested time point: " << target.getSeconds();
                 // Retrieve proper Schema
@@ -424,14 +424,14 @@ namespace karabo {
                     }
                     schemastream.close();
                     if (archived.empty()) {
-                        reply(Hash(), Schema(), configAtTimepoint, configTimepoint); // Requested time is before any logger data
+                        reply(Hash(), Schema(), configAtTimepoint, configTimepoint.toIso8601()); // Requested time is before any logger data
                         KARABO_LOG_WARN << "Requested time point for device configuration is earlier than anything logged";
                         return;
                     }
                     m_schemaSerializer->load(schema, archived);
                 } else {
                     KARABO_LOG_WARN << "Schema archive file does not exist: " << schemaPath;
-                    reply(Hash(), Schema(), configAtTimepoint, configTimepoint);
+                    reply(Hash(), Schema(), configAtTimepoint, configTimepoint.toIso8601());
                     return;
                 }
                 vector<string> paths = schema.getPaths();
@@ -441,12 +441,12 @@ namespace karabo {
                 DataLoggerIndex index = result.second;
 
                 if (index.m_fileindex == -1) {
-                    reply(Hash(), Schema(), configAtTimepoint, configTimepoint); // Requested time precedes any logged data.
+                    reply(Hash(), Schema(), configAtTimepoint, configTimepoint.toIso8601()); // Requested time precedes any logged data.
                     KARABO_LOG_WARN << "Requested time point, "
                             << timepoint << ", precedes any logged data for device '" << deviceId << "'.";
                     return;
                 } else if (index.m_event != "+LOG") {
-                    reply(Hash(), Schema(), configAtTimepoint, configTimepoint);
+                    reply(Hash(), Schema(), configAtTimepoint, configTimepoint.toIso8601());
                     KARABO_LOG_WARN << "Unexpected event type '" << index.m_event
                             << "' found as for the initial sweeping of last known good configuration.\n"
                             "Event type should be '+LOG ";
@@ -458,7 +458,7 @@ namespace karabo {
                     // Regardless of the results of the index search, the data files are compromissed and the
                     // device should be reported as not logging at the timepoint.
                     configAtTimepoint = false;
-                    reply(Hash(), Schema(), configAtTimepoint, configTimepoint);
+                    reply(Hash(), Schema(), configAtTimepoint, configTimepoint.toIso8601());
                     KARABO_LOG_WARN << "File \"" << get<string>("directory") << "/" << deviceId << "/raw/archive.last\" not found. No data will be sent...";
                     return;
                 }
@@ -486,7 +486,7 @@ namespace karabo {
                                     break;
                                 // configTimepoint is the stamp for the latest retrieved property value that
                                 // precedes the input timepoint.
-                                configTimepoint = current.toIso8601();
+                                configTimepoint = current;
                                 // tokens[3] is trainId
                                 const Timestamp timestamp(current, fromString<unsigned long long>(tokens[3]));
                                 // tokens[5] and [6] are type and value, respectively
@@ -502,9 +502,9 @@ namespace karabo {
                 // Makes a final adjustment: if the config was active at the input timepoint, makes configTimepoint
                 // equal to the input timepoint.
                 if (configAtTimepoint) {
-                    configTimepoint = target.toIso8601();
+                    configTimepoint = target;
                 }
-                reply(hash, schema, configAtTimepoint, configTimepoint);
+                reply(hash, schema, configAtTimepoint, configTimepoint.toIso8601());
             } catch (...) {
                 KARABO_RETHROW
             }
