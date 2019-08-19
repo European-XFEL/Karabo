@@ -440,7 +440,7 @@ namespace karabo {
 
             boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
             const bool result = (m_perDeviceData.erase(deviceId) > 0);
-            if (result) {
+            if (m_useP2p && result) {
                 disconnectP2P(deviceId);
             }
             return result;
@@ -581,18 +581,18 @@ namespace karabo {
                 const string& path = paths[i];
                 
                 // Skip those elements which should not be archived
-                if (!data->m_currentSchema.has(path)
-                    || (data->m_currentSchema.hasArchivePolicy(path)
-                        && (data->m_currentSchema.getArchivePolicy(path) == Schema::NO_ARCHIVING))) {
-                    continue;
-                }
+                const bool noArchive = (!data->m_currentSchema.has(path)
+                                        || (data->m_currentSchema.hasArchivePolicy(path)
+                                            && (data->m_currentSchema.getArchivePolicy(path) == Schema::NO_ARCHIVING)));
 
                 const Hash::Node& leafNode = configuration.getNode(path);
 
                 // Check for timestamp ...
                 if (!Timestamp::hashAttributesContainTimeInformation(leafNode.getAttributes())) {
-                    KARABO_LOG_WARN << "Skip '" << path << "' of '" << deviceId
-                            << "' - it lacks time information attributes.";
+                    if (!noArchive) { // Lack of timestamp for non-archived properties does not harm logging
+                        KARABO_LOG_WARN << "Skip '" << path << "' of '" << deviceId
+                                << "' - it lacks time information attributes.";
+                    }
                     continue;
                 }
 
@@ -607,7 +607,10 @@ namespace karabo {
                         data->m_lastDataTimestamp = t;
                     }
                 }
-                string value = "";   // "value" should be a string, so convert depending on type ...
+
+                if (noArchive) continue; // Bail out after updating time stamp!
+
+                string value = ""; // "value" should be a string, so convert depending on type ...
                 if (leafNode.getType() == Types::VECTOR_HASH) {
                     // Represent any vector<Hash> as XML string ...
                     data->m_serializer->save(leafNode.getValue<vector < Hash >> (), value);
@@ -800,8 +803,14 @@ namespace karabo {
                         updatedAnyStamp |= data->m_updatedLastTimestamp;
                         data->m_updatedLastTimestamp = false;
                         const karabo::util::Timestamp& ts = data->m_lastDataTimestamp;
-                        lastStamps.push_back(Hash("deviceId", idData.first,
-                                                  "lastUpdateUtc", ts.getSeconds() == 0ull ? "" : ts.toFormattedString()));
+                        Hash h("deviceId", idData.first);
+                        // Human readable Epochstamp (except if no updates yet), attributes for machines
+                        Hash::Node& node = h.set("lastUpdateUtc", "");
+                        if (ts.getSeconds() != 0ull) {
+                            node.setValue(ts.toFormattedString()); //"%Y%m%dT%H%M%S"));
+                        }
+                        ts.getEpochstamp().toHashAttributes(node.getAttributes());
+                        lastStamps.push_back(std::move(h));
                     }
 
                     // We post on strand to exclude parallel access to data->m_configStream and data->m_idxMap
@@ -810,7 +819,8 @@ namespace karabo {
             }
 
             if (updatedAnyStamp
-                || (lastStamps.empty() && !get<std::vector < Hash >> ("lastUpdatesUtc").empty())) {
+                || (lastStamps.size() != get<std::vector < Hash >> ("lastUpdatesUtc").size())) {
+                // If sizes are equal, but devices have changed, then at least one time stamp must have changed as well.
                 set("lastUpdatesUtc", lastStamps);
             }
         }

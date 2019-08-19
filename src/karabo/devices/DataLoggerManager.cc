@@ -27,20 +27,46 @@
  * * If a logger server goes down, "devices" and those "beingAdded" are put into "backlog" as well.
  *   o There is currently (2.6.0) no defined order of device gone and server gone - it depends whether a server went
  *     down cleanly or its death was discovered by lack of heartbeats (to be fixed in the DeviceClient).
- * * One problem remains: if the loggers and the manager work fine, but then the manager is shutdwon and a logged
- *   device stops afterwards, a restart of the manager will not notice that logging this device should be stopped .
+ * * The case that
+ *   o the loggers and the manager work fine,
+ *   o but then the manager is shutdown
+ *   o and a logged device stops afterwards,
+ *   o and then the manager starts again
+ *  is handled within the regular checks described in the following.
+ *
+ * Besides taking care to instruct loggers to log devices, a regular sanity check based on Epochstamps is done:
+ * * Every "topologyCheck.interval" minutes, each DataLogger that is running is checked.
+ * * This check accesses the "lastUpdatesUtc" tables of all devices:
+ *   o If there is an empty time stamp, that should mean that logging of the device in question has just started. The
+ *     check procedure is continued with the other devices, but id of the device is noted and in case that during
+ *     the next check there is still no timestamp, stop and start of logging that device is enforced.
+ *   o Otherwise each timestamp is compared with 'now'.
+ * * If the time difference is smaller than "topologyCheck.toleranceLogged", the logging of the device is considered
+ *   to be OK.
+ * * Otherwise the configuration of the device in question is queried:
+ *   o If the time stamp in "lastUpdatesUtc" is not more than "topologyCheck.toleranceDiff" behind the most recent
+ *     timestamp of the requested device configuration, the logging is considered OK.
+ *   o If it is more behind, this is considered to be a problem and stop and start of logging is enforced.
+ *   o If the query for the device configuration fails, the internal book keeping is cross checked whether the device
+ *     is really supposed to be logged. If not, the logger is called to stop logging this device. (This situation
+ *     can appear if the manager was down when the device went down so the manager could not inform the logger.)
+ * * When treatment of all loggers and their devices is finished, a summary of the findings are logged and published
+ *   as "topologyCheck.lastCheckResult" and the procedure is triggered again in "topologyCheck.interval" minutes.
  */
 
 #include <vector>
+#include <set>
 #include <unordered_set>
 #include <string>
-#include <algorithm>    // std::find
+#include <algorithm>    // std::find, std::max
 #include <string.h>     // strlen
 
 #include <boost/asio/deadline_timer.hpp>
 
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/util/StringTools.hh"
+#include "karabo/util/Epochstamp.hh"
+#include "karabo/net/EventLoop.hh"
 
 #include "DataLoggerManager.hh"
 
@@ -52,6 +78,22 @@ namespace karabo {
         using namespace std;
         using namespace karabo::util;
         using namespace karabo::io;
+        using karabo::xms::SLOT_ELEMENT;
+
+
+        /**
+         * Helper function used below:
+         * Add object to set<T> at key's position in h - if no such key exists, create one
+         */
+        template<class T>
+        void addToSetOrCreate(Hash& h, const std::string& key, const T& object) {
+            if (h.has(key)) {
+                h.get<std::set<T> >(key).insert(object);
+            } else {
+                h.set(key, std::set<T>({object}));
+            }
+        }
+
 
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, DataLoggerManager)
 
@@ -59,7 +101,7 @@ namespace karabo {
         void DataLoggerManager::expectedParameters(Schema& expected) {
 
             OVERWRITE_ELEMENT(expected).key("state")
-                    .setNewOptions(State::INIT, State::NORMAL)
+                    .setNewOptions(State::INIT, State::NORMAL, State::MONITORING)
                     .setNewDefaultValue(State::INIT)
                     .commit();
 
@@ -109,6 +151,73 @@ namespace karabo {
                     .assignmentMandatory()
                     .commit();
 
+            UINT32_ELEMENT(expected).key("timeout")
+                    .displayedName("Timeout")
+                    .description("Timeout of requests to DataLogger's or during checks")
+                    .unit(Unit::SECOND)
+                    .metricPrefix(MetricPrefix::MILLI)
+                    .assignmentOptional().defaultValue(2000) // 2 seconds
+                    .reconfigurable()
+                    .minInc(100).maxInc(60000) // 100 ms to 1 minute
+                    .commit();
+
+            NODE_ELEMENT(expected).key("topologyCheck")
+                    .displayedName("Topology check")
+                    .description("Status and parameters of regular topology checks")
+                    .commit();
+
+            SLOT_ELEMENT(expected).key("topologyCheck.slotForceCheck")
+                    .displayedName("Force check")
+                    .description("Immediately launch a check")
+                    .allowedStates(State::NORMAL)
+                    .commit();
+
+            STRING_ELEMENT(expected).key("topologyCheck.lastCheckStartedUtc")
+                    .displayedName("Check started (UTC)")
+                    .description("Last time a check was initiated")
+                    .readOnly().initialValue("")
+                    .commit();
+
+            STRING_ELEMENT(expected).key("topologyCheck.lastCheckDoneUtc")
+                    .displayedName("Check finished (UTC)")
+                    .description("Last time a check was finished")
+                    .readOnly().initialValue("")
+                    .commit();
+
+            STRING_ELEMENT(expected).key("topologyCheck.lastCheckResult")
+                    .displayedName("Check result")
+                    .description("Result of last running check")
+                    .readOnly().initialValue("")
+                    .commit();
+
+            UINT32_ELEMENT(expected).key("topologyCheck.interval")
+                    .displayedName("Check interval")
+                    .description("Interval in between regular checks on the topology whether "
+                                 "everything is logged as it should")
+                    .unit(Unit::MINUTE)
+                    .assignmentOptional().defaultValue(30)
+                    .reconfigurable()
+                    .minInc(1).maxInc(1440) // min every minute, max every 24 h
+                    .commit();
+
+            UINT32_ELEMENT(expected).key("topologyCheck.toleranceLogged")
+                    .displayedName("Tolerance logged")
+                    .description("How old last logged update may be")
+                    .unit(Unit::MINUTE)
+                    .assignmentOptional().defaultValue(10)
+                    .reconfigurable()
+                    .minInc(1).maxInc(60)
+                    .commit();
+
+            UINT32_ELEMENT(expected).key("topologyCheck.toleranceDiff")
+                    .displayedName("Tolerance diff")
+                    .description("Tolerated difference between logged data and latest update when last logged data is old")
+                    .unit(Unit::SECOND)
+                    .assignmentOptional().defaultValue(30)
+                    .reconfigurable()
+                    .minInc(1).maxInc(600)
+                    .commit();
+
             OVERWRITE_ELEMENT(expected).key("visibility")
                     .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
                     .commit();
@@ -126,7 +235,8 @@ namespace karabo {
         : karabo::core::Device<>(input)
             , m_serverList(input.get<vector<string> >("serverList"))
             , m_serverIndex(0), m_loggerMapFile("loggermap.xml")
-            , m_strand(boost::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService())) {
+            , m_strand(boost::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService()))
+            , m_topologyCheckTimer(karabo::net::EventLoop::getIOService()) {
 
             m_loggerMap.clear();
             if (boost::filesystem::exists(m_loggerMapFile)) {
@@ -135,6 +245,7 @@ namespace karabo {
 
             KARABO_SYSTEM_SIGNAL("signalLoggerMap", Hash /*loggerMap*/);
             KARABO_SLOT(slotGetLoggerMap);
+            KARABO_SLOT(topologyCheck_slotForceCheck);
 
             KARABO_INITIAL_FUNCTION(initialize);
         }
@@ -171,7 +282,8 @@ namespace karabo {
                 emit<Hash>("signalLoggerMap", m_loggerMap);
             }
 
-            updateState(State::NORMAL);
+            // Start regular topology checks (and update State to NORMAL)
+            m_strand->post(bind_weak(&Self::launchTopologyCheck, this));
         }
 
 
@@ -193,6 +305,341 @@ namespace karabo {
                             + serverInMap + "' is in map, but not in list.");
                 }
             }
+        }
+
+
+        void DataLoggerManager::topologyCheck_slotForceCheck() {
+            if (m_topologyCheckTimer.cancel() > 0) {
+                topologyCheck(boost::system::error_code());
+            }
+        }
+
+
+        void DataLoggerManager::launchTopologyCheck() {
+            // Publish last results except if in INIT (because then there was no last run!):
+            if (getState() != State::INIT) {
+                const std::string result(checkSummary());
+                KARABO_LOG_FRAMEWORK_INFO << "Check finished - " << result;
+                set(Hash("topologyCheck", Hash("lastCheckDoneUtc", Epochstamp().toFormattedString(),
+                                               "lastCheckResult", result)));
+            }
+
+            updateState(State::NORMAL);
+            m_topologyCheckTimer.expires_from_now(boost::posix_time::minutes(get<unsigned int>("topologyCheck.interval")));
+            m_topologyCheckTimer.async_wait(bind_weak(&Self::topologyCheck, this, boost::asio::placeholders::error));
+        }
+
+
+        std::string DataLoggerManager::checkSummary() {
+            std::stringstream checkResult;
+            Hash newCheckStatus;
+
+            bool bad = false;
+            if (m_checkStatus.has("offline")) {
+                checkResult << "   Offline logger servers: " << toString(m_checkStatus.get<std::set<std::string> >("offline")) << "\n";
+                m_checkStatus.erase("offline"); // skip it from loop below!
+                bad = true;
+            }
+
+            // The remaining keys are serverIds:
+            for (const Hash::Node& node : m_checkStatus) {
+                const Hash& serverHash = node.getValue<Hash>();
+                const std::string& serverId = node.getKey();
+                checkResult << "\n   " << serverId << ": ";
+                if (serverHash.has("loggerQueryFailed")) {
+                    checkResult << "Query to logger failed.\n";
+                    bad = true;
+                    continue;
+                }
+                if (serverHash.has("emptyTimestamp")) {
+                    const auto& devs = serverHash.get<std::set<std::string> >("emptyTimestamp");
+                    checkResult << "\n      Empty time stamps for " << toString(devs);
+                    // Keep info for next round, but with new key to check next time whether still empty timestamp:
+                    newCheckStatus.set(serverId, Hash("emptyTimestampLast", devs));
+                }
+                // No need to summarize "emptyTimestampLast" here: It was in summary in last round and
+                // - either is fine now,
+                // - or is not online anymore,
+                // - or appears in "forced" below
+
+                if (serverHash.has("detailsRequested")) {
+                    const auto& devs = serverHash.get<std::set<std::string> >("detailsRequested");
+                    checkResult << "\n      Details requested for " << toString(devs);
+                }
+                if (serverHash.has("deviceQueryFailed")) {
+                    const auto& devs = serverHash.get<std::set<std::string> >("deviceQueryFailed");
+                    checkResult << "\n      Device query failed for " << toString(devs);
+                    bad = true; // Could just being shutdown and logger was not yet aware...
+                }
+                if (serverHash.has("stopped")) {
+                    const auto& devs = serverHash.get<std::set<std::string> >("stopped");
+                    checkResult << "\n      Device found to be offline " << toString(devs);
+                }
+                if (serverHash.has("forced")) {
+                    const auto& devs = serverHash.get<std::set<std::string> >("forced");
+                    checkResult << "\n      Logging re-enforced for " << toString(devs);
+                    bad = true;
+                }
+            }
+            // Clear check status, but keep what is needed for next check
+            m_checkStatus = std::move(newCheckStatus);
+
+            const std::string checkResultStr(checkResult.str());
+            std::string prefix(bad ? "Found problems:" : "Ok");
+            if (!bad) {
+                prefix += (checkResultStr.empty() ? "." : ", just note:");
+            }
+            return (prefix += checkResultStr);
+        }
+
+        void DataLoggerManager::topologyCheck(const boost::system::error_code& e) {
+            if (e == boost::asio::error::operation_aborted) {
+                return;
+            }
+            KARABO_LOG_FRAMEWORK_INFO << "Launching topology check from state " << getState().name();
+            updateState(State::MONITORING);
+            set("topologyCheck.lastCheckStartedUtc", Epochstamp().toFormattedString());
+            m_strand->post(bind_weak(&Self::topologyCheckOnStrand, this));
+        }
+
+
+        void DataLoggerManager::topologyCheckOnStrand() {
+            printLoggerData();
+
+            auto loggerCounter = boost::make_shared<std::atomic<size_t> >(m_loggerData.size());
+            const unsigned int timeout = get<unsigned int>("timeout");
+            for (const Hash::Node& serverNode : m_loggerData) {
+                const std::string& serverId = serverNode.getKey();
+                const Hash& serverData = serverNode.getValue<Hash>();
+                if (serverData.get<LoggerState>("state") != LoggerState::RUNNING) {
+                    KARABO_LOG_FRAMEWORK_INFO << "Skip checking '" << serverId << "' since not running";
+                    addToSetOrCreate(m_checkStatus, "offline", serverId);
+                    --(*loggerCounter);
+                    continue;
+                }
+                const std::string loggerId(serverIdToLoggerId(serverId));
+                KARABO_LOG_FRAMEWORK_DEBUG << "Request config of logger '" << loggerId << "'";
+                call(loggerId, "flush"); // Force flushing and thus update of "lastUpdatesUtc"
+                auto okHandler = bind_weak(&Self::checkLoggerConfig, this, true, loggerCounter, _1, _2);
+                auto failHandler = bind_weak(&Self::checkLoggerConfig, this, false, loggerCounter, Hash(), loggerId);
+                request(loggerId, "slotGetConfiguration").timeout(timeout)
+                        .receiveAsync<Hash, std::string>(okHandler, failHandler);
+            }
+            if (0 == *loggerCounter) { // All loggers are not (yet) running
+                m_strand->post(bind_weak(&Self::launchTopologyCheck, this));
+            }
+        }
+
+
+        void DataLoggerManager::printLoggerData() const {
+            std::stringstream out;
+            for (const Hash::Node& serverNode : m_loggerData) {
+                const Hash& serverHash = serverNode.getValue<Hash>();
+                const LoggerState state = serverHash.get<LoggerState>("state");
+                out << "\n  Server " << serverNode.getKey() << " is "
+                    << (state == LoggerState::OFFLINE ? "offline" : (state == LoggerState::RUNNING ? "running" : "instantiating"));
+                for (const std::string& key : std::vector<std::string>({"devices", "backlog", "beingAdded"})) {
+                out << "\n    " << key << ": ";
+                size_t nChars = 0;
+                for (const std::string& id : serverHash.get<std::unordered_set<std::string> >(key)) {
+                    // If line gets too long, start a new one - but at least print one id per line:
+                    if ((nChars += (id.size())) > 55 && nChars != id.size()) {
+                        out << "\n             ";
+                        nChars = 0;
+                    }
+                    out << id << ", ";
+                    nChars += 2; // for comma and space
+                }
+            }
+            }
+
+            KARABO_LOG_FRAMEWORK_INFO << "Internal logger info:" << out.str();
+        }
+
+
+        void DataLoggerManager::checkLoggerConfig(bool ok, const boost::shared_ptr<std::atomic<size_t> >& loggerCounter,
+                                                  const Hash& config, const std::string& loggerId) {
+            // Put on strand to be sequential, but take care that the re-throw trick for exception details
+            // will not work anymore.
+            std::string errorTxt;
+            if (!ok) {
+                try {
+                    throw;
+                } catch (const std::exception& e) {
+                    errorTxt = e.what();
+                }
+            }
+            m_strand->post(bind_weak(&Self::checkLoggerConfigOnStrand, this, errorTxt, loggerCounter, config, loggerId));
+        }
+
+
+        void DataLoggerManager::checkLoggerConfigOnStrand(const std::string& errorTxt, const boost::shared_ptr<std::atomic<size_t> >& loggerCounter,
+                                                          const Hash& config, const std::string& loggerId) {
+            Epochstamp now;
+            const std::string serverId(loggerIdToServerId(loggerId));
+            if (errorTxt.empty()) {
+                const TimeDuration tolerance(0, 0, get<unsigned int>("topologyCheck.toleranceLogged"), 0ull, 0ull); // from minutes
+                const std::vector<Hash>& updates = config.get<std::vector < Hash >> ("lastUpdatesUtc");
+                auto loggedDevCounter = boost::make_shared<std::atomic<size_t> >(updates.size());
+                const unsigned int timeout = get<unsigned int>("timeout");
+                std::vector<std::string> idsWithoutTimestamp;
+                for (const Hash& row : updates) {
+                    const Hash::Node& lastUpdateNode = row.getNode("lastUpdateUtc");
+                    const std::string& lastUpdateStr = lastUpdateNode.getValue<std::string>();
+                    const std::string& deviceId = row.get<std::string>("deviceId");
+
+                    if (lastUpdateStr.empty() || !Epochstamp::hashAttributesContainTimeInformation(lastUpdateNode.getAttributes())) {
+                        // No update yet, so DataLogging for that device likely being started - book-keeping to check next time:
+                        idsWithoutTimestamp.push_back(deviceId);
+                        // Check the last try:
+                        const std::string keyEmpty(serverId + ".emptyTimestampLast");
+                        if (m_checkStatus.has(keyEmpty)) {
+                            std::set<std::string>& emptyLast = m_checkStatus.get<std::set<std::string> >(keyEmpty);
+                            auto it = std::find(emptyLast.begin(), emptyLast.end(), deviceId);
+                            if (it != emptyLast.end()) {
+                                KARABO_LOG_FRAMEWORK_WARN << "Device '" << deviceId << "' logged by '" << loggerId
+                                        << "' still has no last update stamp - force logging";
+                                forceDeviceToBeLogged(deviceId);
+                                addToSetOrCreate(m_checkStatus, serverId + ".forced", deviceId);
+                            }
+                        }
+                        continue;
+                    }
+                    const Epochstamp lastUpdate(Epochstamp::fromHashAttributes(lastUpdateNode.getAttributes()));
+                    if (now > lastUpdate && now.elapsed(lastUpdate) > tolerance) { // Caveat: TimeDuration is always positive!
+                        KARABO_LOG_FRAMEWORK_DEBUG << loggerId << " logged last data from '" << deviceId
+                                << "' rather long ago: " << lastUpdateStr << " (UTC)";
+                        addToSetOrCreate(m_checkStatus, serverId + ".detailsRequested", deviceId);
+
+                        const unsigned int toleranceSec = std::max(get<unsigned int>("topologyCheck.toleranceDiff"),
+                                                                   config.get<unsigned int>("flushInterval"));
+                        auto okHandler = bind_weak(&Self::checkDeviceConfig, this, true, loggerCounter, loggerId,
+                                                   toleranceSec, loggedDevCounter, lastUpdate, _1, _2);
+                        auto failHandler = bind_weak(&Self::checkDeviceConfig, this, false, loggerCounter, loggerId,
+                                                     toleranceSec, loggedDevCounter, lastUpdate, Hash(), deviceId);
+                        request(deviceId, "slotGetConfiguration").timeout(timeout)
+                                .receiveAsync<Hash, std::string>(okHandler, failHandler);
+                    } else {
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Device '" << deviceId << "' OK according to logger '"
+                                << loggerId << "': " << *loggedDevCounter - 1 << " left ";
+                        --(*loggedDevCounter);
+                    }
+                }
+                if (!idsWithoutTimestamp.empty()) {
+                    (*loggedDevCounter) -= idsWithoutTimestamp.size();
+                    KARABO_LOG_FRAMEWORK_INFO << "Logger lacks last update timestamp of " << toString(idsWithoutTimestamp);
+                    m_checkStatus.set(serverId + ".emptyTimestamp",
+                                      std::set<std::string>(idsWithoutTimestamp.begin(), idsWithoutTimestamp.end()));
+                }
+
+                if (0 == *loggedDevCounter) {
+                    // No suspicious devices logged by this logger
+                    KARABO_LOG_FRAMEWORK_INFO << "All devices logged by " << loggerId << " are recently logged.";
+                    --(*loggerCounter);
+                }
+            } else {
+                // Failure handler
+                KARABO_LOG_FRAMEWORK_INFO << "Failed to query configuration of " << loggerId << ": " << errorTxt
+                            << "\n logger left: " << *loggerCounter - 1;
+                m_checkStatus.set(serverId + ".loggerQueryFailed", true);
+                --(*loggerCounter);
+            }
+
+            if (0 == *loggerCounter) {
+                m_strand->post(bind_weak(&Self::launchTopologyCheck, this));
+            }
+        }
+
+
+        void DataLoggerManager::forceDeviceToBeLogged(const std::string& deviceId) {
+            goneDeviceToLog(deviceId);
+            newDeviceToLog(deviceId);
+        }
+
+
+        void DataLoggerManager::checkDeviceConfig(bool ok, const boost::shared_ptr<std::atomic<size_t> >& loggerCounter,
+                                                  const std::string& loggerId, unsigned int toleranceSec,
+                                                  const boost::shared_ptr<std::atomic<size_t> >& loggedDevCounter,
+                                                  Epochstamp lastUpdateLogger, const Hash& config, const std::string& deviceId) {
+            std::string errorTxt;
+            if (!ok) {
+                // Note that this can e.g. happen when 'deviceId' went down when the manager was offline and then
+                // the manager is restarted. The failure would be a timeout then.
+                // Trick:
+                // For a failure handler, re-throwing the exception does not work when posting further.
+                try {
+                    throw;
+                } catch (const std::exception& e) {
+                    errorTxt = e.what();
+                }
+            }
+            m_strand->post(bind_weak(&Self::checkDeviceConfigOnStrand, this, errorTxt, loggerCounter, loggerId, toleranceSec,
+                                     loggedDevCounter, lastUpdateLogger, config, deviceId));
+        }
+
+
+        void DataLoggerManager::checkDeviceConfigOnStrand(const std::string& errorTxt, const boost::shared_ptr<std::atomic<size_t> >& loggerCounter,
+                                                          const std::string& loggerId, unsigned int toleranceSec,
+                                                          const boost::shared_ptr<std::atomic<size_t> >& loggedDevCounter,
+                                                          Epochstamp lastUpdateLogger, const Hash& config, const std::string& deviceId) {
+            if (errorTxt.empty()) {
+                const Epochstamp lastDeviceUpdate = mostRecentEpochstamp(config);
+                const TimeDuration tolerance(0, 0, 0, toleranceSec, 0ull);
+                if (lastDeviceUpdate > lastUpdateLogger && lastDeviceUpdate.elapsed(lastUpdateLogger) > tolerance) {
+                    KARABO_LOG_FRAMEWORK_WARN << deviceId << " had last update at " << lastDeviceUpdate.toFormattedString()
+                            << ", but most recent data logged by " << loggerId << " is from "
+                            << lastUpdateLogger.toFormattedString() << " - force logging to start again";
+                    forceDeviceToBeLogged(deviceId);
+                    const std::string serverId(loggerIdToServerId(loggerId));
+                    addToSetOrCreate(m_checkStatus, serverId + ".forced", deviceId);
+                } else {
+                    KARABO_LOG_FRAMEWORK_INFO << "Last update of " << deviceId << " at " << lastDeviceUpdate.toFormattedString()
+                            << ": logger not behind.";
+                }
+            } else {
+                // Failure handler:
+                KARABO_LOG_FRAMEWORK_INFO << "Failed to query device configuration of " << deviceId << ": " << errorTxt;
+                const std::string serverId(loggerIdToServerId(loggerId));
+                addToSetOrCreate(m_checkStatus, serverId + ".deviceQueryFailed", deviceId);
+                // If request failed, it maybe that the device went offline and the manager did not notice since
+                // it was down at that time and restarted later. In that case the device should not be in the logger
+                // data - so better check that!
+                // But do not trust remote().getSystemInformation() - it is not synchronised with our m_strand.
+                const auto& knownDevs = m_loggerData.get<std::unordered_set<std::string> >(serverId + ".devices");
+                if (knownDevs.find(deviceId) == knownDevs.end()) {
+                    KARABO_LOG_FRAMEWORK_WARN << "Device " << deviceId << " not known for logger "
+                            << loggerId << " - stop logging it!";
+                    addToSetOrCreate(m_checkStatus, serverId + ".stopped", deviceId);
+                    call(loggerId, "slotTagDeviceToBeDiscontinued", "D", deviceId);
+                }
+            }
+
+            if (0 == --(*loggedDevCounter)) {
+                // Last device of this logger, so decrease also the logger counter
+                if (0 == --(*loggerCounter)) {
+                    // This was the last logger
+                    m_strand->post(bind_weak(&Self::launchTopologyCheck, this));
+                }
+            }
+        }
+
+
+        karabo::util::Epochstamp DataLoggerManager::mostRecentEpochstamp(const Hash& config, Epochstamp oldStamp) const {
+
+            for (const Hash::Node& node : config) {
+                if (Epochstamp::hashAttributesContainTimeInformation(node.getAttributes())) {
+                    const Epochstamp stamp(Epochstamp::fromHashAttributes(node.getAttributes()));
+                    if (stamp > oldStamp) {
+                        oldStamp = stamp;
+                    }
+                }
+                // If it is a Hash, we recurse inside the NODE.
+                // A vector<Hash> would be a TABLE_ELEMENT that we treat atomically, so we do not recurse.
+                if (node.is<Hash>()) {
+                    oldStamp = mostRecentEpochstamp(node.getValue<Hash>(), oldStamp);
+                }
+            }
+            return oldStamp;
         }
 
 
@@ -296,7 +743,9 @@ namespace karabo {
             // Get data for this server to access backlog and state
             Hash& data = m_loggerData.get<Hash>(serverId);
             data.set("state", LoggerState::RUNNING);
-
+            // Any "devices" or "beingAdded" left do not need to be added to "backlog" here for cases where logger is
+            // killed and the loss of heart beats was not yet discovered:
+            // The instanceNew that triggers this newLogger here has triggered an instanceGone before anyway.
             addDevicesToBeLogged(loggerId, data);
         }
 
@@ -313,8 +762,9 @@ namespace karabo {
                 auto successHandler = bind_weak(&DataLoggerManager::addDevicesDone, this, true, loggerId, backlog, _1);
                 auto failureHandler = bind_weak(&DataLoggerManager::addDevicesDone, this, false, loggerId, backlog,
                                                 std::vector<std::string>());
+                const unsigned int timeout = get<unsigned int>("timeout");
                 request(loggerId, "slotAddDevicesToBeLogged", std::vector<std::string>(backlog.begin(), backlog.end()))
-                        .timeout(m_timeout).receiveAsync<std::vector<std::string> >(successHandler, failureHandler);
+                        .timeout(timeout).receiveAsync<std::vector<std::string> >(successHandler, failureHandler);
 
                 backlog.clear();
             }
@@ -324,19 +774,28 @@ namespace karabo {
         void DataLoggerManager::addDevicesDone(bool ok, const std::string& loggerId,
                                                const std::unordered_set<std::string>& calledDevices,
                                                const std::vector<std::string>& alreadyLoggedDevices) {
-            // Put on strand to be sequential
-            m_strand->post(bind_weak(&DataLoggerManager::addDevicesDoneOnStrand, this, ok, loggerId,
+            // Put on strand to be sequential, but take care that the re-throw trick for exception details
+            // will not work anymore.
+            std::string errorTxt;
+            if (!ok) {
+                try {
+                    throw;
+                } catch (const std::exception& e) {
+                    errorTxt = e.what();
+                }
+            }
+            m_strand->post(bind_weak(&DataLoggerManager::addDevicesDoneOnStrand, this, errorTxt, loggerId,
                                      calledDevices, alreadyLoggedDevices));
         }
 
 
-        void DataLoggerManager::addDevicesDoneOnStrand(bool ok, const std::string& loggerId,
+        void DataLoggerManager::addDevicesDoneOnStrand(const std::string& errorTxt, const std::string& loggerId,
                                                        const std::unordered_set<std::string>& calledDevices,
                                                        const std::vector<std::string>& alreadyLoggedDevices) {
             const std::string serverId(loggerIdToServerId(loggerId));
             Hash& data = m_loggerData.get<Hash>(serverId);
 
-            if (ok) {
+            if (errorTxt.empty()) {
                 if (alreadyLoggedDevices.empty()) {
                     KARABO_LOG_FRAMEWORK_INFO << "Added '" << toString(calledDevices) << "' to be logged by '"
                             << loggerId << "'";
@@ -354,14 +813,10 @@ namespace karabo {
                 }
                 data.get<std::unordered_set<std::string> >("devices").insert(calledDevices.begin(), calledDevices.end());
             } else {
-                // It is a failure handler where 'throw' gives us back the exception
-                try {
-                    throw;
-                } catch (const std::exception& e) {
-                    // Can happen as timeout when logger just shutdown
-                    KARABO_LOG_FRAMEWORK_ERROR << "Failed to add '" << toString(calledDevices) << "' to be logged by '"
-                            << loggerId << "' since: " << e.what();
-                }
+                // Can happen as timeout when logger just shutdown
+                KARABO_LOG_FRAMEWORK_ERROR << "Failed to add '" << toString(calledDevices) << "' to be logged by '"
+                        << loggerId << "' since: " << errorTxt;
+
                 // Put devices to log back to backlog,
                 // but only those "beingAdded" (others could have shutdown meanwhile)
                 std::unordered_set<std::string>& beingAdded = data.get<std::unordered_set<std::string> >("beingAdded");
@@ -391,7 +846,11 @@ namespace karabo {
             // Get data for this server to access backlog and state
             Hash& data = m_loggerData.get<Hash>(serverId);
 
-            data.set("state", LoggerState::INSTANTIATING);
+            if (data.get<LoggerState>("state") == LoggerState::OFFLINE) {
+                // If state is RUNNING, likely since logger discovered before server when manager starts into a running
+                // system. Our try to instantiate below will then fail - but no problem!
+                data.set("state", LoggerState::INSTANTIATING);
+            }
 
             // Instantiate logger, but do not yet specify "devicesToBeLogged":
             // Having one channel only to transport this info (slotAddDevicesToBeLogged) simplifies logic.
