@@ -692,40 +692,13 @@ class DeviceClient(object):
     def setNoWait(self, instanceId, propertyName, propertyValue):
         return self.__client.setNoWait(instanceId, propertyName, propertyValue)
 
-    def execute(self, instanceId, command, *args):
+    def execute(self, instanceId, command):
         """Executes a command"""
-        if len(args) == 0:
-            return self.__client.execute(instanceId, command)
-        elif len(args) == 1:
-            return self.__client.execute1(instanceId, command, args[0])
-        elif len(args) == 2:
-            return self.__client.execute2(instanceId, command, args[0],
-                                          args[1])
-        elif len(args) == 3:
-            return self.__client.execute3(instanceId, command, args[0],
-                                          args[1], args[2])
-        elif len(args) == 4:
-            return self.__client.execute4(instanceId, command, args[0],
-                                          args[1], args[2], args[3])
-        else:
-            raise NotImplementedError("Too many arguments.")
+        return self.__client.execute(instanceId, command)
 
-    def executeNoWait(self, deviceId, command, *args):
+    def executeNoWait(self, deviceId, command):
         """Executes a command without waiting"""
-        if len(args) == 0:
-            self.__client.executeNoWait(deviceId, command)
-        elif len(args) == 1:
-            self.__client.executeNoWait1(deviceId, command, args[0])
-        elif len(args) == 2:
-            self.__client.executeNoWait2(deviceId, command, args[0], args[1])
-        elif len(args) == 3:
-            self.__client.executeNoWait3(deviceId, command, args[0], args[1],
-                                         args[2])
-        elif len(args) == 4:
-            self.__client.executeNoWait4(deviceId, command, args[0], args[1],
-                                         args[2], args[3])
-        else:
-            raise NotImplementedError("Too many arguments.")
+        self.__client.executeNoWait(deviceId, command)
 
     def sleep(self, secs):
         time.sleep(secs)
@@ -754,16 +727,6 @@ class DeviceClient(object):
             raise
 
         return project
-
-    def setPrio(self, deviceId, priority):
-        """This function changes the Logger priority of the deviceId
-
-        Example:
-
-            setPrio('Karabo_DataLoggerServer', 'DEBUG')
-            setPrio('Karabo_DataLoggerServer", 'INFO')
-        """
-        self.executeNoWait(deviceId, "slotLoggerPriority", priority)
 
     def lock(self, deviceId, recursive=False):
         return self.__client.lock(deviceId, recursive)
