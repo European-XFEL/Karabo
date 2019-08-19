@@ -27,23 +27,31 @@
  * * If a logger server goes down, "devices" and those "beingAdded" are put into "backlog" as well.
  *   o There is currently (2.6.0) no defined order of device gone and server gone - it depends whether a server went
  *     down cleanly or its death was discovered by lack of heartbeats (to be fixed in the DeviceClient).
- * * One problem remains: if the loggers and the manager work fine, but then the manager is shutdwon and a logged
- *   device stops afterwards, a restart of the manager will not notice that logging this device should be stopped.
+ * * The case that
+ *   o the loggers and the manager work fine,
+ *   o but then the manager is shutdown
+ *   o and a logged device stops afterwards,
+ *   o and then the manager starts again
+ *  is handled within the regular checks described in the following.
  *
  * Besides taking care to instruct loggers to log devices, a regular sanity check based on Epochstamps is done:
  * * Every "topologyCheck.interval" minutes, each DataLogger that is running is checked.
  * * This check accesses the "lastUpdatesUtc" tables of all devices:
  *   o If there is an empty time stamp, that should mean that logging of the device in question has just started. The
- *     Check procedure is continued with the other devices, but id of the device is noted and in case that during
- *     the next check the finding is confirmed, stop and start of logging is enforced.
+ *     check procedure is continued with the other devices, but id of the device is noted and in case that during
+ *     the next check there is still no timestamp, stop and start of logging that device is enforced.
  *   o Otherwise each timestamp is compared with 'now'.
- * * If the time difference is larger than "topologyCheck.toleranceLogged", the configuration of the device in question
- *   is queried and its most recent timestamp is compared with the one in "lastUpdatesUtc".
- *   o Otherwise the logging of the device is considered to be OK.
- * * If the difference is larger than "topologyCheck.toleranceDiff", this is considered to be a problem and
- *   stop and start of logging is enforced.
- * * When treatment of all loggers and their devices is finished, the procedure is triggered again
- *   in "topologyCheck.interval" minutes.
+ * * If the time difference is smaller than "topologyCheck.toleranceLogged", the logging of the device is considered
+ *   to be OK.
+ * * Otherwise the configuration of the device in question is queried:
+ *   o If the time stamp in "lastUpdatesUtc" is not more than "topologyCheck.toleranceDiff" behind the most recent
+ *     timestamp of the requested device configuration, the logging is considered OK.
+ *   o If it is more behind, this is considered to be a problem and stop and start of logging is enforced.
+ *   o If the query for the device configuration fails, the internal book keeping is cross checked whether the device
+ *     is really supposed to be logged. If not, the logger is called to stop logging this device. (This situation
+ *     can appear if the manager was down when the device went down so the manager could not inform the logger.)
+ * * When treatment of all loggers and their devices is finished, a summary of the findings are logged and published
+ *   as "topologyCheck.lastCheckResult" and the procedure is triggered again in "topologyCheck.interval" minutes.
  */
 
 #include <vector>
@@ -579,8 +587,8 @@ namespace karabo {
                 const TimeDuration tolerance(0, 0, 0, toleranceSec, 0ull);
                 if (lastDeviceUpdate > lastUpdateLogger && lastDeviceUpdate.elapsed(lastUpdateLogger) > tolerance) {
                     KARABO_LOG_FRAMEWORK_WARN << deviceId << " had last update at " << lastDeviceUpdate.toFormattedString()
-                            << ", but most recent data logged by " << loggerId << " is from " << lastUpdateLogger.toFormattedString();
-                    // Let's start again for deviceId
+                            << ", but most recent data logged by " << loggerId << " is from "
+                            << lastUpdateLogger.toFormattedString() << " - force logging to start again";
                     forceDeviceToBeLogged(deviceId);
                     const std::string serverId(loggerIdToServerId(loggerId));
                     addToSetOrCreate(m_checkStatus, serverId + ".forced", deviceId);
