@@ -501,10 +501,8 @@ namespace karabo {
                 }
                 // Makes a final adjustment: if the config was active at the input timepoint, makes configTimepoint
                 // equal to the input timepoint.
-                if (configAtTimepoint) {
-                    configTimepoint = target;
-                }
-                reply(hash, schema, configAtTimepoint, configTimepoint.toIso8601());
+                string configTimepointStr(configAtTimepoint ? timepoint : configTimepoint.toIso8601());
+                reply(hash, schema, configAtTimepoint, configTimepointStr);
             } catch (...) {
                 KARABO_RETHROW
             }
