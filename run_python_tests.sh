@@ -36,7 +36,6 @@ Available flags:
   --rootDir <path> - Path to the root directory of the Karabo project.
   --runUnitTests - Run Python unit tests.
   --runIntegrationTests - Run Python integration tests.
-  --runCondaUnitTests - Run the conda python unit tests (gui only)
   --collectCoverage - Collect Python code coverage.
   --generateCoverageReport - Collect Python code coverage and generate coverage
         report.
@@ -187,29 +186,6 @@ safeRunCommand() {
     fi
 }
 
-runCondaUnitTests() {
-    # Avoid problems with _version. Use development version instead
-    export KARABO_GUI_DEVELOP=1
-
-    # Setup the environment
-    pushd ./src/pythonGui/
-    conda devenv
-    source activate karabogui
-
-    # Generate version file
-    python setup.py --version
-
-    # Allow gui tests to crash sometimes - for the time being:
-    ACCEPT_SIGSEGV=true
-    safeRunCommand "nosetests -v $COVER_FLAGS -e test_get_alarm_pixmap karabogui"
-    safeRunCommand "nosetests -v $COVER_FLAGS karabo.native"
-    safeRunCommand "nosetests -v $COVER_FLAGS karabo.common"
-    unset ACCEPT_SIGSEGV
-
-    source deactivate
-    popd
-}
-
 runPythonUnitTests() {
     echo
     echo Running Karabo Python unit tests ...
@@ -230,9 +206,8 @@ runPythonUnitTests() {
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.macro_api"
     # Allow gui tests to crash sometimes - for the time being:
     ACCEPT_SIGSEGV=true
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS -e test_extensions_dialog karabogui"
+    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabogui"
     unset ACCEPT_SIGSEGV
-
     echo
     echo Karabo Python unit tests complete
     echo
@@ -338,7 +313,6 @@ clean() {
 
 # Parse arguments.
 
-RUN_CONDA_UNIT_TEST=false
 RUN_UNIT_TEST=false
 RUN_INTEGRATION_TEST=false
 RUN_LONG_TEST=false
@@ -352,9 +326,6 @@ if (( $# == 0 )); then
 else
     while [ -n "$1" ]; do
         case "$1" in
-            --runCondaUnitTests)
-                RUN_CONDA_UNIT_TEST=true
-                ;;
             --runUnitTests)
                 RUN_UNIT_TEST=true
                 ;;
@@ -443,10 +414,6 @@ if $COLLECT_COVERAGE; then
 
     # Set-up coverage tool.
     setupCoverageTool
-fi
-
-if $RUN_CONDA_UNIT_TEST; then
-    runCondaUnitTests
 fi
 
 if $RUN_UNIT_TEST; then
