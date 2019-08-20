@@ -1,8 +1,3 @@
-#!/usr/bin/env bash
-
-set -e
-set -o pipefail
-
 SSH_USER_HOST=xdata@exflserv05
 SSH_KARABO_DIR=/var/www/html/karabo
 SSH_PREFIX=$SSH_USER_HOST:$SSH_KARABO_DIR
@@ -36,7 +31,7 @@ __release_build() {
     esac
 
     case "$1" in
-        windows)
+        windows) 
             export REL_ARTIFACT_DEST_PATH=$GUI_DEST_DIR/KaraboGUI-$REL_TAG.win32.exe
             export REL_ARTIFACT_LATEST_PATH=$GUI_DEST_DIR/KaraboGUI-$LATEST_TAG.win32.exe
             __check_existence $CURL_PREFIX/$REL_ARTIFACT_DEST_PATH
@@ -45,10 +40,6 @@ __release_build() {
             cd build/python
             bash ./build.sh
             sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null KaraboGUI-*.exe $SSH_PREFIX/$REL_ARTIFACT_DEST_PATH
-            ;;
-        miniconda)
-            source ./ci/miniconda/build.sh
-            source ./ci/miniconda/upload.sh
             ;;
         ubuntu*|centos*)
             export REL_OS_NAME=$(lsb_release -is)
