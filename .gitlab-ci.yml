@@ -80,6 +80,10 @@ release build windows GUI:
   image: europeanxfel/karabo-ci:ubuntu-16
   <<: *release-build
 
+release build miniconda:
+  image: europeanxfel/karabo-ci:miniconda-3
+  <<: *release-build
+
 # nightly release build
 
 nightly build centos7:
@@ -92,6 +96,10 @@ nightly build ubuntu18:
 
 nightly build ubuntu16:
   image: europeanxfel/karabo-ci:ubuntu-16
+  <<: *nightly-build
+
+nightly build ubuntu14:
+  image: europeanxfel/karabo-ci:ubuntu-14
   <<: *nightly-build
 
 nightly build windows GUI:
@@ -138,6 +146,10 @@ unit tests ubuntu18:
 
 unit tests ubuntu16:
   image: europeanxfel/karabo-ci:ubuntu-16
+  <<: *unit-tests
+
+unit tests miniconda:
+  image: europeanxfel/karabo-ci:miniconda-3
   <<: *unit-tests
 
 # Post-merge integration test builds

@@ -1,5 +1,3 @@
-import unittest
-
 import numpy as np
 from PyQt4.QtCore import Qt
 
@@ -86,7 +84,6 @@ class TestDisplayImage(GuiTestCase):
         assert np.all(img_arr == np.zeros((dimY, dimX)))
         controller.destroy()
 
-    @unittest.skip(reason="Segfaults?")
     def test_yuv444image(self):
         output_proxy = PropertyProxy(root_proxy=self.root_proxy,
                                      path='output.data')
