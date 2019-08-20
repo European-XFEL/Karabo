@@ -66,13 +66,9 @@ def get_karabo_framework_version():
 
 
 def get_karabo_version():
-    """Return the current Karabo Python package version."""
-    try:
-        from karabo._version import full_version
-    except ImportError:
-        from karabo._version import version
-        from karabo.common.packaging import utils
-        full_version = utils.extract_full_version(version)
+    """ Return the current Karabo Python package version.
+    """
+    from karabo._version import full_version
     return full_version
 
 
