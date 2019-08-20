@@ -11,22 +11,20 @@ from guiqwt.builder import make
 import numpy
 from PyQt4 import uic
 from PyQt4.QtCore import Qt, QDateTime, QTimer, pyqtSignal, pyqtSlot
-from PyQt4.QtGui import (QButtonGroup, QDateTimeEdit, QDialog, QHBoxLayout,
-                         QIntValidator, QLabel, QLineEdit, QPushButton,
-                         QVBoxLayout, QWidget)
-from qwt import (QwtPlot, QwtScaleDraw, QwtText,
-                 QwtLinearScaleEngine, QwtScaleDiv)
+from PyQt4.QtGui import (
+    QButtonGroup, QDateTimeEdit, QDialog, QHBoxLayout, QIntValidator, QLabel,
+    QLineEdit, QPushButton, QVBoxLayout, QWidget)
+from qwt import (
+    QwtPlot, QwtScaleDraw, QwtText, QwtLinearScaleEngine, QwtScaleDiv)
 from traits.api import (
     HasStrictTraits, Array, Constant, Dict, Float, Instance, Int, List,
-    on_trait_change
-)
+    on_trait_change)
 
 from karabo.common.scenemodel.api import LinePlotModel
 from karabo.native import Timestamp
 from karabogui import globals as krb_globals
 from karabogui.binding.api import (
-    BoolBinding, FloatBinding, IntBinding, PropertyProxy
-)
+    BoolBinding, FloatBinding, IntBinding, PropertyProxy)
 from karabogui.const import MAX_NUMBER_LIMIT
 from karabogui.controllers.api import (
     BaseBindingController, axis_label, register_binding_controller)
