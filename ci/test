@@ -1,7 +1,16 @@
+#!/usr/bin/env bash
 
 __deps_build_tests() {
     export FORCED_DEPS_TAG=$CI_COMMIT_REF_SLUG
     bash ./auto_build_all.sh Debug --runTests --runIntegrationTests
+}
+
+__conda_tests() {
+    . ci/utils/enable_internet.sh
+
+    bash ./run_python_tests.sh --runCondaUnitTests --rootDir .
+
+    . ci/utils/disable_internet.sh
 }
 
 __unit_tests() {
@@ -25,9 +34,13 @@ export KARABO_PROJECT_DB_PORT=8080
 export KARABO_TEST_PROJECT_DB=existdb_host
 export KARABO_TEST_PROJECT_DB_PORT=8080
 
-case "$JOB_SCOPE" in
-    deps) __deps_build_tests ;;
-    unit) __unit_tests ;;
-    integration) __integration_tests ;;
-    *) echo "unknown job scope: $JOB_SCOPE" ;;
-esac
+if [ "$TARGET_OS" = "miniconda" ]; then
+    __conda_tests
+else
+    case "$JOB_SCOPE" in
+        deps) __deps_build_tests ;;
+        unit) __unit_tests ;;
+        integration) __integration_tests ;;
+        *) echo "unknown job scope: $JOB_SCOPE" ;;
+    esac
+fi
