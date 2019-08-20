@@ -16,9 +16,7 @@ shutdown(deviceId)
 """
 
 try:
-    from karabo._version import version
-    from karabo.common.packaging import utils
-    __version__ = utils.extract_full_version(version)
+    from karabo._version import full_version as __version__
 except ImportError:
     # Don't cause a failure when running setup.py
     __version__ = ''

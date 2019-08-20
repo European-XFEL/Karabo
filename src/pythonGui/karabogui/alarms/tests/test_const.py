@@ -19,5 +19,5 @@ class TestConst(GuiTestCase):
         assert isinstance(alarmicon, QIcon)
 
     def test_get_alarm_pixmap(self):
-        bm = const.get_alarm_pixmap(const.ALARM_HIGH)
+        bm = const.get_alarm_pixmap(const.ALARM_GLOBAL)
         assert QSize(16, 16) == bm.size()

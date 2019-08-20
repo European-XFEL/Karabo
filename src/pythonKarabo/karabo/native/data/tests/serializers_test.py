@@ -31,8 +31,6 @@ FILENAME = "all/the/folders/hash.xml"
 class TestSerializers(TestCase):
     def setUp(self):
         self.curr_dir = os.curdir
-        if os.path.isdir(TST_WORKING_DIR):
-            os.rmdir(TST_WORKING_DIR)
         os.mkdir(TST_WORKING_DIR)
         os.chdir(TST_WORKING_DIR)  # Change the working dir, to not pollute
 

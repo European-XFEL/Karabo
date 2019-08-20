@@ -4,8 +4,8 @@ from qwt import QwtPlot
 from traits.api import Dict, Instance
 
 from karabo.common.scenemodel.api import LinePlotModel
-from karabogui.binding.api import (
-    get_binding_value, VectorBoolBinding, VectorNumberBinding)
+from karabogui.binding.api import (get_binding_value, VectorBoolBinding,
+                                   VectorNumberBinding)
 from karabogui.controllers.api import (
     BaseBindingController, axis_label, register_binding_controller)
 
