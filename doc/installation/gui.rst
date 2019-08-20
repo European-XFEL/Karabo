@@ -60,7 +60,6 @@ There are five additional packages needed:
 - `traits 4.6.0 <https://www.lfd.uci.edu/~gohlke/pythonlibs/#traits>`_
 - `pint 0.7.2 <https://pypi.python.org/pypi/Pint/>`_
 - `cycler 0.10.0 <https://pypi.python.org/pypi/cycler/>`_
-- `PythonQwt 0.5.5 <https://pypi.org/project/PythonQwt/>`_
 - `pyqtgraph 0.11.0-dev0 <http://exflserv05.desy.de/karabo/karaboGui/deps/pyqtgraph-0.11.0.dev0-py3-none-any.whl>`_
 
 Install these from the links above, or as follows::
@@ -69,9 +68,6 @@ Install these from the links above, or as follows::
     pip install traits==4.6.0
     pip install pint==0.7.2
     pip install cycler==0.10.0
-    pip install --upgrade guiqwt==3.0.3
-    pip uninstall PyQwt
-    pip install PythonQwt==0.5.5
     pip install http://exflserv05.desy.de/karabo/karaboGui/deps/pyqtgraph-0.11.0.dev0-py3-none-any.whl
 
 

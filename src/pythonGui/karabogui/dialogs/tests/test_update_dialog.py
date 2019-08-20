@@ -44,20 +44,21 @@ class TestCase(GuiTestCase):
         assert update_dialog.get_current_version() == UNDEFINED_VERSION
         assert self._get_loaded_modules() == []
 
+    @skip(reason='Cannot test dialogs in the current Qt version. Should be '
+                 'tested and reviewed after PyQt5')
     def test_extensions_dialog(self):
+        dialog = update_dialog.UpdateDialog()
+        updater = dialog.updater
+
+        self.assertTrue(dialog.bt_update.isDisabled())
+        self.assertEqual(dialog.lb_current.text(), updater.UNDEFINED_VERSION)
+        self.assertEqual(dialog.lb_latest.text(), updater.UNDEFINED_VERSION)
+
         mock_obj = mock.patch.object
-        m1 = mock_obj(update_dialog, 'get_current_version', return_value='1')
-        m2 = mock_obj(update_dialog, 'get_latest_version', return_value='1')
+        mock1 = mock_obj(updater, 'get_current_version', return_value='1')
+        mock2 = mock_obj(updater, 'get_latest_version', return_value='2')
 
-        with m1, m2:
-            dialog = update_dialog.UpdateDialog()
-
-            assert not dialog.bt_update.isEnabled()
-            assert dialog.lb_current.text() == '1'
-            assert dialog.lb_latest.text() == '1'
-
-            update_dialog.get_latest_version.return_value = '2'
-
+        with mock1, mock2:
             self.click(dialog.bt_refresh)
 
             # Should refresh current and latest versions

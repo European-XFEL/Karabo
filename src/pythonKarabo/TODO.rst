@@ -69,9 +69,9 @@ the imports
 
 **Milestone reached**: API separation
 
-[X] conda recipe and build system for ``karabo-native``.
+[] conda recipe and build system for ``karabo-native``. 
 
-[X] conda recipe and build system for ``karabogui``
+[] conda recipe and build system for ``karabogui``
 
 **Milestone reached**: GUI can be installed by conda!
 
