@@ -205,3 +205,44 @@ void HashXmlSerializer_Test::testSerialization() {
     }
 
 }
+
+
+void HashXmlSerializer_Test::testLegacyDeserialization() {
+    std::string legacyXml =
+            "<?xml version=\"1.0\"?>"
+            "<root KRB_Artificial=\"\" KRB_Type=\"HASH\">"
+            "<table displayedName=\"KRB_STRING:Table property\" description=\"KRB_STRING:Table containing one node.\" assignment=\"KRB_INT32:0\" "
+            "defaultValue=\"KRB_VECTOR_HASH:'e1' =&gt; abc STRING&#10;'e2' alarmCondition=&quot;none&quot; =&gt; 1 BOOL&#10;'e3' alarmCondition=&quot;none&quot; =&gt; 12 INT32&#10;'e4' alarmCondition=&quot;none&quot; =&gt; 0.9837 FLOAT&#10;'e5' alarmCondition=&quot;none&quot; =&gt; 1.2345 DOUBLE&#10;,'e1' =&gt; xyz STRING&#10;'e2' alarmCondition=&quot;none&quot; =&gt; 0 BOOL&#10;'e3' alarmCondition=&quot;none&quot; =&gt; 42 INT32&#10;'e4' alarmCondition=&quot;none&quot; =&gt; 2.33333 FLOAT&#10;'e5' alarmCondition=&quot;none&quot; =&gt; 7.77777 DOUBLE&#10;\" "
+            "accessMode=\"KRB_INT32:4\" nodeType=\"KRB_INT32:0\" leafType=\"KRB_INT32:0\" displayType=\"KRB_STRING:Table\" valueType=\"KRB_STRING:VECTOR_HASH\" "
+            "rowSchema=\"KRB_SCHEMA:Schema Object\" requiredAccessLevel=\"KRB_INT32:1\" "
+            "overwriteRestrictions=\"KRB_VECTOR_BOOL:0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0\" KRB_Type=\"INT32\">0"
+            "</table>"
+            "</root>";
+
+    TextSerializer<Hash>::Pointer p = TextSerializer<Hash>::create("Xml");
+    Hash deserialized;
+    CPPUNIT_ASSERT_NO_THROW(p->load(deserialized, legacyXml));
+    CPPUNIT_ASSERT_EQUAL(0, deserialized.get<int>("table"));
+    auto attrs = deserialized.getNode("table").getAttributes();
+    CPPUNIT_ASSERT_EQUAL(std::string("Table property"), attrs.get<std::string>("displayedName"));
+    CPPUNIT_ASSERT_EQUAL(std::string("Table containing one node."), attrs.get<std::string>("description"));
+    CPPUNIT_ASSERT_EQUAL(0, attrs.get<int>("assignment"));
+
+    // Reading this legacy XML with original release 2.5.0 led to 'attrs.has("defaultValue") == true',
+    // but accessing it with getAttribute<vector<hash> >>("table", "defaultValue") threw an exception.
+    CPPUNIT_ASSERT(!attrs.has("defaultValue"));
+
+    CPPUNIT_ASSERT_EQUAL(4, attrs.get<int>("accessMode"));
+    CPPUNIT_ASSERT_EQUAL(0, attrs.get<int>("nodeType"));
+    CPPUNIT_ASSERT_EQUAL(0, attrs.get<int>("leafType"));
+    CPPUNIT_ASSERT_EQUAL(std::string("Table"), attrs.get<std::string>("displayType"));
+    CPPUNIT_ASSERT_EQUAL(std::string("VECTOR_HASH"), attrs.get<std::string>("valueType"));
+
+    // Reading this legacy XML with original release 2.5.0 led to 'attrs.has("rowSchema") == true',
+    // but accessing it with getAttribute<Schema>("table", "rowSchema") threw an exception.
+    CPPUNIT_ASSERT(!attrs.has("rowSchema"));
+
+    CPPUNIT_ASSERT(attrs.has("overwriteRestrictions"));
+}
+
+

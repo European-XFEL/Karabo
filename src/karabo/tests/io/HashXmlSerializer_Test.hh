@@ -15,6 +15,7 @@ class HashXmlSerializer_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(HashXmlSerializer_Test);
     CPPUNIT_TEST(testSerialization);
+    CPPUNIT_TEST(testLegacyDeserialization);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -25,6 +26,13 @@ public:
 
 private:
     void testSerialization();
+
+    /**
+     * Tests that xml files written before the modifications in the text serialization of
+     * Schema and vector<Hash> attributes introduced in Merge Request 3592 (for Karabo 2.6.0)
+     * are still supported.
+     */
+    void testLegacyDeserialization();
 
 private:
 
