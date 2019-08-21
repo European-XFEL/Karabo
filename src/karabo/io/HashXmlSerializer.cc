@@ -12,7 +12,7 @@
 #include <karabo/log/Logger.hh>
 #include "HashXmlSerializer.hh"
 
-#include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string.hpp>
 
 using namespace karabo::util;
 using namespace std;
@@ -263,9 +263,13 @@ namespace karabo {
                 const string & attributeName = it->name();
                 if (attributeName.substr(0, m_prefix.size()) != m_prefix) {
                     std::pair<std::string, Types::ReferenceType> attr = this->readXmlAttribute(std::string(it->value()));
-                    if (attr.second == Types::VECTOR_HASH || attr.second == Types::SCHEMA) {
+
+                    if (boost::starts_with(attr.first, "_attr_") && boost::ends_with(attr.first, attributeName) &&
+                        (attr.second == Types::VECTOR_HASH || attr.second == Types::SCHEMA)) {
                         // Attributes of types VECTOR_HASH or SCHEMA are serialized as a child node of the node
-                        // containing the attribute.
+                        // containing the attribute - they are of the specially handled types and conform to the new
+                        // name convention. If they do not conform to the new name convention, the xml content is assu-
+                        // med to be in the old format and is processed in the legacy way.
                         const string& attrNodeName = attr.first;
                         pugi::xml_node attrNode = node.child(attrNodeName.c_str());
                         pugi::xml_node attrValueNode = attrNode.child((attrNodeName + "_value").c_str());
