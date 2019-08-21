@@ -609,16 +609,24 @@ namespace karabo {
                 }
 
                 if (noArchive) continue; // Bail out after updating time stamp!
-
-                string value = ""; // "value" should be a string, so convert depending on type ...
+                string value; // "value" should be a string, so convert depending on type ...
                 if (leafNode.getType() == Types::VECTOR_HASH) {
                     // Represent any vector<Hash> as XML string ...
                     data->m_serializer->save(leafNode.getValue<vector < Hash >> (), value);
+                    boost::algorithm::replace_all(value, "\n", karabo::util::DATALOG_NEWLINE_MANGLE);
                 } else if (Types::isVector(leafNode.getType())) {
                     // ... and any other vector as a comma separated text string of vector elements
-                    value = toString(leafNode.getValueAs<string,vector>());
+                    value = toString(leafNode.getValueAs<string, vector>());
+                    if (leafNode.getType() == Types::VECTOR_STRING) {
+                        // Line breaks in content confuse indexing and reading back - so better mangle strings... :-(.
+                        boost::algorithm::replace_all(value, "\n", karabo::util::DATALOG_NEWLINE_MANGLE);
+                    }
                 } else {
                     value = leafNode.getValueAs<string>();
+                    if (leafNode.getType() == Types::STRING) {
+                        // Line breaks in content confuse indexing and reading back - so better mangle strings... :-(.
+                        boost::algorithm::replace_all(value, "\n", karabo::util::DATALOG_NEWLINE_MANGLE);
+                    }
                 }
 
                 bool newFile = false;
