@@ -810,7 +810,7 @@ void Schema_Test::testTableReadOnly() {
     Validator validator;
     auto res = validator.validate(validReadOnlySchema, Hash(), configWithTable);
     CPPUNIT_ASSERT_EQUAL(true, res.first);
-    std::vector<Hash> tableRows = configWithTable.get<std::vector < Hash >> ("ValidTable");
+    const std::vector<Hash> &tableRows = configWithTable.get<std::vector < Hash >> ("ValidTable");
     CPPUNIT_ASSERT_EQUAL(1UL, tableRows.size());
     CPPUNIT_ASSERT_EQUAL(std::string("bar"), tableRows[0].get<std::string>("s"));
     CPPUNIT_ASSERT_EQUAL(true, tableRows[0].get<bool>("b"));
