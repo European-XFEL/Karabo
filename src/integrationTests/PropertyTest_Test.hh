@@ -32,6 +32,13 @@ private:
     void testSimpleProperties();
     void testVectorProperties();
     void testTableProperties();
+
+    /**
+     * Verifies that read-only table properties can
+     * only be read.
+     */
+    void testReadOnlyTableProperties();
+
     void testAttributeEditing();
     void testNodedSlots();
     
