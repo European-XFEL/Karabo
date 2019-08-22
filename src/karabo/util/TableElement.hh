@@ -25,8 +25,6 @@ namespace karabo {
         /// Validation rules to be used when table elements in Hash are merged.
         extern const Validator::ValidationRules tableValidationRules;
 
-        // template <typename T, typename U> class ReadOnlySpecific;
-
         /**
          * @class TableDefaultValue
          * @brief The TableDefaultValue class defines a default value for the TableElement.
