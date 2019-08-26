@@ -9,6 +9,8 @@
 
 #include "Schema_Test.hh"
 
+#include <karabo/util/Validator.hh>
+
 using namespace std;
 using namespace karabo::util;
 using namespace configurationTest;
@@ -764,6 +766,54 @@ void Schema_Test::testTable() {
     CPPUNIT_ASSERT_EQUAL(shouldBeDefault[1].get<std::string>("b"), theDefault[1].get<std::string>("b"));
 
     CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<Hash> >("testTableEmptyDefault").empty());
+}
+
+
+void Schema_Test::testTableReadOnly() {
+
+    karabo::util::Schema rowSchema;
+
+    STRING_ELEMENT(rowSchema).key("s")
+            .assignmentOptional().noDefaultValue()
+            .commit();
+
+    BOOL_ELEMENT(rowSchema).key("b")
+            .assignmentOptional().noDefaultValue()
+            .commit();
+
+    karabo::util::Schema invalidReadOnlySchema;
+
+    // The assignmentOptional().defaultValue(...).readOnly() sequence below,
+    // if accepted, would reset the element value to empty vector of hashes,
+    // overriding the defaultValue setting.
+    CPPUNIT_ASSERT_THROW(
+                         TABLE_ELEMENT(invalidReadOnlySchema).key("InvalidTable")
+                         .setColumns(rowSchema)
+                         .assignmentOptional().defaultValue(std::vector<Hash>(1, Hash("s", "foo", "b", false)))
+                         .readOnly()
+                         .commit(),
+                         karabo::util::LogicException
+                         );
+
+    karabo::util::Schema validReadOnlySchema;
+
+    CPPUNIT_ASSERT_NO_THROW(
+                            TABLE_ELEMENT(validReadOnlySchema).key("ValidTable")
+                            .setColumns(rowSchema)
+                            .readOnly().initialValue(std::vector<Hash>(1, Hash("s", "bar", "b", true)))
+                            .commit()
+                            );
+
+    // Verifies that a config built from a Schema with read-only TABLE_ELEMENT is valid
+    // and has the specified initial value.
+    Hash configWithTable;
+    Validator validator;
+    auto res = validator.validate(validReadOnlySchema, Hash(), configWithTable);
+    CPPUNIT_ASSERT_EQUAL(true, res.first);
+    const std::vector<Hash> &tableRows = configWithTable.get<std::vector < Hash >> ("ValidTable");
+    CPPUNIT_ASSERT_EQUAL(1UL, tableRows.size());
+    CPPUNIT_ASSERT_EQUAL(std::string("bar"), tableRows[0].get<std::string>("s"));
+    CPPUNIT_ASSERT_EQUAL(true, tableRows[0].get<bool>("b"));
 }
 
 

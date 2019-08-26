@@ -56,6 +56,7 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testOverwriteElement);
     CPPUNIT_TEST(testMerge);
     CPPUNIT_TEST(testTable);
+    CPPUNIT_TEST(testTableReadOnly);
     CPPUNIT_TEST(testList);
     CPPUNIT_TEST(testInvalidNodes);
     CPPUNIT_TEST(testOverwriteRestrictions);
@@ -123,6 +124,7 @@ private: //functions
     void testOverwriteElement();
     void testMerge();
     void testTable();
+    void testTableReadOnly();
     void testList();
     void testInvalidNodes();
     void testRuntimeAttributes();
