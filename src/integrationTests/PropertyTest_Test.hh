@@ -30,6 +30,11 @@ private:
 
     void testPropertyTest();
     void testSimpleProperties();
+
+    // Asserts that read-only properties cannot be
+    // written.
+    void testReadOnlyProperties();
+
     void testVectorProperties();
     void testTableProperties();
 
