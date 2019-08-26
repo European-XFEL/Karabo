@@ -5,7 +5,7 @@ from collections import deque
 
 class Worker(threading.Thread):
 
-    def __init__(self, callback=None, timeout=-1, repetition=-1):
+    def __init__(self, callback=None, timeout=-1, repetition=-1, daemon=True):
         threading.Thread.__init__(self)
         self.callback = callback
         self.onError = None
@@ -16,6 +16,7 @@ class Worker(threading.Thread):
         self.aborted = False
         self.suspended = False
         self.counter = -1
+        self.daemon = daemon
         self.cv = threading.Condition()  # cv = condition variable
         self.dq = deque()
 
