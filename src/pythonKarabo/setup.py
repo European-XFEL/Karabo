@@ -48,7 +48,11 @@ else:
             'device_provided_scenes_test/SceneProvidingDevice.egg-info/*.*',
             'pipeline_processing_test/PPReceiverDevice.egg-info/*.*',
             'pipeline_processing_test/PPSenderDevice.egg-info/*.*'],
-        'karabo.interactive': ['jupyter_spec/kernel.json'],
+        'karabo.interactive': [
+            'jupyter_spec/kernel.json',
+            'static/*.css',
+            'static/*.js',
+            'templates/*.html'],
         'karabo.testing': ['resources/*.*'],
     }
 
