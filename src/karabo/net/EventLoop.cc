@@ -45,7 +45,7 @@ namespace karabo {
                         if (ec) return;
 
                         {
-                            boost::mutex::scoped_lock(loop->m_signalHandlerMutex);
+                            boost::mutex::scoped_lock lock(loop->m_signalHandlerMutex);
                             if (loop->m_signalHandler) {
                                 loop->m_signalHandler(signo);
                             }
@@ -100,7 +100,7 @@ namespace karabo {
 
 
         void EventLoop::_setSignalHandler(const SignalHandler& handler) {
-            boost::mutex::scoped_lock(m_signalHandlerMutex);
+            boost::mutex::scoped_lock lock(m_signalHandlerMutex);
             m_signalHandler = handler;
         }
 
