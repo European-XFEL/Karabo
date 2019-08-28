@@ -109,6 +109,14 @@ if [ "x${interactive}x" = "xTRUEx" ]; then
 	    echo " Installation aborted."
 	    echo
 	    exit 0
+	else
+	    for DIRECTORY in bin extern include lib plugins
+	    do
+	        dirDelete=$installDir/karabo/$DIRECTORY
+	        if [ -d $dirDelete ]; then
+	            rm -rf $dirDelete
+	        fi
+	    done
 	fi
     fi
 fi
