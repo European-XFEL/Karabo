@@ -114,6 +114,7 @@ if [ "x${interactive}x" = "xTRUEx" ]; then
 	    do
 	        dirDelete=$installDir/karabo/$DIRECTORY
 	        if [ -d $dirDelete ]; then
+	        	echo " Removing karabo/$DIRECTORY.."
 	            rm -rf $dirDelete
 	        fi
 	    done
