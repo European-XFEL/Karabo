@@ -5,8 +5,13 @@ from collections import deque
 
 class Worker(threading.Thread):
 
-    def __init__(self, callback=None, timeout=-1, repetition=-1):
-        threading.Thread.__init__(self)
+    def __init__(self, callback=None, timeout=-1, repetition=-1, daemon=True):
+        """Constructs the Worker thread, that is by default a daemon thread.
+
+           Please note that daemon threads may not release resources
+           properly when stopped abruptly.
+        """
+        threading.Thread.__init__(self, daemon=daemon)
         self.callback = callback
         self.onError = None
         self.onExit = None
