@@ -8,8 +8,8 @@ class Worker(threading.Thread):
     def __init__(self, callback=None, timeout=-1, repetition=-1, daemon=True):
         """Constructs the Worker thread, that is by default a daemon thread.
 
-           Please note that daemon threads when abruptly stopped may not
-           release resources, like open files and database connections, properly.
+           Please note that daemon threads may not release resources
+           properly when stopped abruptly.
         """
         threading.Thread.__init__(self, daemon=daemon)
         self.callback = callback
