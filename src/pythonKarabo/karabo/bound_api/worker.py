@@ -6,7 +6,12 @@ from collections import deque
 class Worker(threading.Thread):
 
     def __init__(self, callback=None, timeout=-1, repetition=-1, daemon=True):
-        threading.Thread.__init__(self)
+        """Constructs the Worker thread, that is by default a daemon thread.
+
+           Please note that daemon threads when abruptly stopped may not
+           release resources, like open files and database connections, properly.
+        """
+        threading.Thread.__init__(self, daemon=daemon)
         self.callback = callback
         self.onError = None
         self.onExit = None
@@ -16,7 +21,6 @@ class Worker(threading.Thread):
         self.aborted = False
         self.suspended = False
         self.counter = -1
-        self.daemon = daemon
         self.cv = threading.Condition()  # cv = condition variable
         self.dq = deque()
 
