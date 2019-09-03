@@ -255,10 +255,9 @@ def _add_server(project_controller):
     project = project_controller.model
     dialog = ServerHandleDialog()
     if dialog.exec() == QDialog.Accepted:
-        # XXX: TODO check for existing
+        # XXX: TODO check for existing and eventual host handling
         traits = {
             'server_id': dialog.server_id,
-            'host': dialog.host,
             'description': dialog.description
         }
         server = DeviceServerModel(**traits)
