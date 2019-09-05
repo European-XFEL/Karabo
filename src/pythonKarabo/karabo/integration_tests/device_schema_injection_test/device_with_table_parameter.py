@@ -1,5 +1,5 @@
 from karabo.bound import (KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS,
-                          PythonDevice, Schema, State,
+                          PythonDevice, Schema, State, Hash,
                           STRING_ELEMENT, TABLE_ELEMENT)
 
 
@@ -27,7 +27,8 @@ class DeviceWithTableElementParam(PythonDevice):
             .displayedName("Device Table")
             .description("Table with devices types and names.")
             .setNodeSchema(row_schema)
-            .assignmentOptional().noDefaultValue()
+            .assignmentOptional().defaultValue([Hash("type", "INT", "name", "firstLine"),
+                                                Hash("type", "BOOL", "name", "secondLine")])
             .init()
             .commit(),
         )
