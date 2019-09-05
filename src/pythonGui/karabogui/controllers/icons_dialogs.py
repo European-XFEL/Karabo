@@ -136,6 +136,7 @@ class _BaseDialog(QDialog):
             return
 
         if len(self.items) == 0:
+            messagebox.show_error("No item is selected, aborting...")
             return
 
         item = self.items[self.valueList.currentRow()]
