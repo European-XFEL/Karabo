@@ -460,6 +460,10 @@ void Device_Test::testSchemaInjection() {
         CPPUNIT_ASSERT(m_deviceClient->get<int>("TestDevice", keyStr) == i);
     }
 
+    // Asserts that all the appendSchema calls from the latest changes preserved the
+    // TABLE_ELEMENT in the device's static schema.
+    CPPUNIT_ASSERT(m_deviceClient->getActiveSchema("TestDevice").has("table"));
+
 }
 
 
