@@ -55,7 +55,8 @@ public:
                 .displayedName("Table property")
                 .description("Table with two columns")
                 .setNodeSchema(rowSchema)
-                .assignmentOptional().noDefaultValue()
+                .assignmentOptional().defaultValue({Hash("type", "INT", "name", "firstLine"),
+                                                   Hash("type", "BOOL", "name", "secondLine")})
                 .reconfigurable()
                 .commit();
 
@@ -331,6 +332,10 @@ void Device_Test::testSchemaInjection() {
     CPPUNIT_ASSERT(devFullSchema.getMaxInc<int>("injectedInt32") == 10);
 
     CPPUNIT_ASSERT(m_deviceClient->getActiveSchema("TestDevice").has("table"));
+    const std::vector<Hash> &tableAfterUpdate = m_deviceClient->get<std::vector < Hash >> ("TestDevice", "table");
+    CPPUNIT_ASSERT(tableAfterUpdate.size() == 2);
+    const Hash &firstRowAfterUpdate = tableAfterUpdate[0];
+    CPPUNIT_ASSERT(firstRowAfterUpdate.get<std::string>("name") == "firstLine");
 
     // Checks that doing updateSchema with something else loses injectedInt32.
     // ----------
@@ -447,7 +452,7 @@ void Device_Test::testSchemaInjection() {
 
     // Waits for the updated schema to be available from the DeviceClient.
     CPPUNIT_ASSERT(waitForCondition([this, &propertyStr]() {
-        return m_deviceClient->getActiveSchema("TestDevice").has(propertyStr + "9");
+        return m_deviceClient->getDeviceSchema("TestDevice").has(propertyStr + "9");
     }, cacheUpdateWaitMs));
 
     propertiesPaths = m_deviceClient->getProperties("TestDevice");
@@ -460,6 +465,13 @@ void Device_Test::testSchemaInjection() {
         CPPUNIT_ASSERT(m_deviceClient->get<int>("TestDevice", keyStr) == i);
     }
 
+    // Asserts that all the appendSchema calls from the latest changes preserved the
+    // TABLE_ELEMENT in the device's static schema.
+    CPPUNIT_ASSERT(m_deviceClient->getDeviceSchema("TestDevice").has("table"));
+    const std::vector<Hash> &tableAfterInsert = m_deviceClient->get<std::vector < Hash >> ("TestDevice", "table");
+    CPPUNIT_ASSERT(tableAfterInsert.size() == 2);
+    const Hash &firstRowAfterInsert = tableAfterInsert[0];
+    CPPUNIT_ASSERT(firstRowAfterInsert.get<std::string>("name") == "firstLine");
 }
 
 
