@@ -185,6 +185,8 @@ class Schema_Injection_TestCase(unittest.TestCase):
 
         self.assertIn("deviceTable",
                       device.getSchema("DeviceWithTableElementParam").getPaths())
+        table = device.parameters.get("deviceTable")
+        self.assertTrue(len(table) == 2)
 
 
     def test_schemaWithTableElementAppend(self):
@@ -209,4 +211,6 @@ class Schema_Injection_TestCase(unittest.TestCase):
         device.appendSchema(schema)
 
         self.assertIn("deviceTable",
-                      device.getSchema("DeviceWithTableElementParam").getPaths())                      
+                      device.getSchema("DeviceWithTableElementParam").getPaths())
+        table = device.parameters.get("deviceTable")
+        self.assertTrue(len(table) == 2)
