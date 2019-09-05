@@ -1,7 +1,8 @@
 *******************
  Conda GUI client
 *******************
-From version 2.7 onwards, KaraboGUI will only offered through Conda. Conda is a package
+From version 2.6, the KaraboGui installation for windows and the karabo-gui
+executable shipped with the precompiled binaries, is deprecated. Conda is a package
 manager and dependency resolution tool which offers a very straightforward way
 to install packages and its dependencies.
 
@@ -58,7 +59,6 @@ Running KaraboGUI
 
 After successfully installing KaraboGUI, you will have access to the following entry-points:
     * karabo-gui;
-    * panel-runner;
     * karabo-cinema;
     * karabo-theatre;
     * karabo-update-extensions
