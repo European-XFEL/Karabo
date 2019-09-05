@@ -33,10 +33,10 @@ You can find your configuration file location typing ``conda info`` on your term
 
 From your terminal, add the needed channels executing the following commands::
 
-    ``conda config --add channels http://exflserv05.desy.de/karabo/channel/``
-    ``conda config --add channels conda-forge/label/cf201901``
-    ``conda config --add channels conda-forge``
-    ``conda config --add channels anaconda``
+    conda config --add channels http://exflserv05.desy.de/karabo/channel
+    conda config --add channels conda-forge/label/cf201901
+    conda config --add channels conda-forge
+    conda config --add channels anaconda
 
 Installing KaraboGUI
 ====================
