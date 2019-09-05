@@ -20,8 +20,8 @@ The following steps are needed in order to obtain Conda.
 * Open your terminal (Anaconda Prompt on Windows or a bash on linux)
 * If conda is in your path, you should be able to run **conda --version**
     * If it isn't, you need to activate conda first
-        * Linux: **source <miniconda_path>/etc/profile.d/conda.sh**
-        * Win: **CALL <miniconda_path>/condabin/activate.bat**
+        * **Linux**: ``source <miniconda_path>/etc/profile.d/conda.sh``
+        * **Win**: ``CALL <miniconda_path>/condabin/activate.bat``
 
 Channel Configuration
 =====================
@@ -29,13 +29,14 @@ Channel Configuration
 For KaraboGUI, some package channels are needed besides Conda's defaults. You
 only need to do this once and it can be done either from command line or
 editting Conda's configuration file (`.condarc`).
-You can find your configuration file location typing **conda info** on your terminal.
+You can find your configuration file location typing ``conda info`` on your terminal.
 
-From your terminal, add the needed channels executing the following commands:
-    * conda config --add channels http://exflserv05.desy.de/karabo/channel/
-    * conda config --add channels conda-forge/label/cf201901
-    * conda config --add channels conda-forge
-    * conda config --add channels anaconda
+From your terminal, add the needed channels executing the following commands::
+
+    ``conda config --add channels http://exflserv05.desy.de/karabo/channel/``
+    ``conda config --add channels conda-forge/label/cf201901``
+    ``conda config --add channels conda-forge``
+    ``conda config --add channels anaconda``
 
 Installing KaraboGUI
 ====================
@@ -46,13 +47,13 @@ Then, when we don't need it anymore one can safely remove it with no fear with
 corrupting the base environment.
 
 * Create a target environment for KaraboGUI with any name you want.
-    * **conda create -n karabogui<version> --yes**
+    * ``conda create -n karabogui<version> --yes``
 * Activate the environment you created
-    * **conda activate karabogui<version>**
+    * ``conda activate karabogui<version>``
 * Install your application
-    * **conda install karabogui=<version> --yes**
-        * Leave the version out to get the latest one: **conda install karabogui --yes**
-* **conda search karabogui** will show you all the available versions
+    * ``conda install karabogui=<version> --yes``
+        * Leave the version out to get the latest one: ``conda install karabogui --yes``
+* ``conda search karabogui`` will show you all the available versions
 
 Running KaraboGUI
 =================
@@ -66,12 +67,12 @@ After successfully installing KaraboGUI, you will have access to the following e
 .. note::
     From now on, all you need to do to run KaraboGUI is:
         * Open your terminal/prompt
-        * conda activate <your_karabo_environment>
-        * karabo-gui
+        * ``conda activate <your_karabo_environment>``
+        * ``karabo-gui``
 
 Uninstalling
 ============
 
 In order to uninstall KaraboGUI, always opt for removing the complete environment
-itself: **conda remove -n <environment_name> --all**
+itself: ``conda remove -n <environment_name> --all``
 
