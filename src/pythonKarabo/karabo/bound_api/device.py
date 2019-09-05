@@ -922,6 +922,7 @@ class PythonDevice(NoFsm):
         with self._stateChangeLock:
             self._stateDependentSchema = {}
             self._injectedSchema += schema
+            prevFullSchemaPaths = self.fullSchema.getPaths()
             self.fullSchema.copy(self.staticSchema)
             self.fullSchema += self._injectedSchema
             self.fullSchema.updateAliasMap()
@@ -929,13 +930,11 @@ class PythonDevice(NoFsm):
             # notify the distributed system...
             self._ss.emit("signalSchemaUpdated", self.fullSchema,
                           self.deviceid)
-            # For parameters in the static schema of which attributes changes,
-            # re-assign previous values and timestamps
-            validated.merge(self.parameters)
 
             # Keep new paths only. This hash is then set, to avoid re-sending
             # updates with the same value.
-            validated -= self.parameters
+            for path in prevFullSchemaPaths:
+                validated.erasePath(path)
         self.set(validated)
 
         self.log.INFO("Schema appended")
