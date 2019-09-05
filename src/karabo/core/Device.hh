@@ -851,6 +851,9 @@ namespace karabo {
                     // Save injected
                     m_injectedSchema.merge(schema);
 
+                    // Stores paths in current full_schema to avoid sending them again later.
+                    const std::vector<std::string> prevFullSchemaPaths = m_fullSchema.getPaths();
+
                     // Merge to full schema
                     m_fullSchema.merge(m_injectedSchema);
                     m_fullSchema.updateAliasMap();
@@ -858,12 +861,10 @@ namespace karabo {
                     // Notify the distributed system
                     emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
 
-                    // For those parameters which have been there before, but for which some attributes changed
-                    // (e.g. alarm levels, min/max value, size, etc.) re-assign the old values and timestamps.
-                    validated.merge(m_parameters);
-
                     // Keep new paths only. This hash is then set, to avoid re-sending updates with the same values.
-                    validated -= m_parameters;
+                    for (const std::string& p : prevFullSchemaPaths) {
+                        validated.erasePath(p);
+                    }
                 }
 
                 set(validated);
