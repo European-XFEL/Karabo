@@ -44,17 +44,17 @@ class Schema_Injection_TestCase(unittest.TestCase):
         self.assertEqual(device.fullSchema.getMinInc("injectedInt32"), 1)
 
         # Test setting attributes
-        newMax = 30
-        schema = Schema()
+        schema = device.fullSchema
+        newMin = schema.getMinInc("heartbeatInterval") + 1
         (
             OVERWRITE_ELEMENT(schema).key("heartbeatInterval")
-            .setNewMaxInc(newMax)
+            .setNewMinInc(newMin)
             .commit(),
         )
 
         device.updateSchema(schema)
-        self.assertEqual(device.fullSchema.getMaxInc("heartbeatInterval"),
-                         newMax)
+        self.assertEqual(device.fullSchema.getMinInc("heartbeatInterval"),
+                         newMin)
 
         # Test that attributes are preserved by appendSchema and updateSchema
         schema = Schema()
@@ -66,12 +66,12 @@ class Schema_Injection_TestCase(unittest.TestCase):
         )
 
         device.appendSchema(schema)
-        self.assertEqual(device.fullSchema.getMaxInc("heartbeatInterval"),
-                         newMax)
+        self.assertEqual(device.fullSchema.getMinInc("heartbeatInterval"),
+                         newMin)
 
-        device.updatedSchema(schema)
-        self.assertEqual(device.fullSchema.getMaxInc("heartbeatInterval"),
-                         newMax)
+        device.updateSchema(schema)
+        self.assertEqual(device.fullSchema.getMinInc("heartbeatInterval"),
+                        newMin)
 
         # Test that doing updateSchema keeps previously set value
         schema = Schema()
