@@ -2,7 +2,7 @@ import unittest
 
 from karabo.bound import (
     Configurator, Hash, Schema,
-    INT32_ELEMENT, PythonDevice,
+    INT32_ELEMENT, OVERWRITE_ELEMENT, PythonDevice,
 )
 
 from .device_with_table_parameter import DeviceWithTableElementParam
@@ -42,6 +42,36 @@ class Schema_Injection_TestCase(unittest.TestCase):
         self.assertIn("injectedInt32", device.parameters.getPaths())
         self.assertEqual(device.parameters.get("injectedInt32"), 5)
         self.assertEqual(device.fullSchema.getMinInc("injectedInt32"), 1)
+
+        # Test setting attributes
+        newMax = 30
+        schema = Schema()
+        (
+            OVERWRITE_ELEMENT(schema).key("heartbeatInterval")
+            .setNewMaxInc(newMax)
+            .commit(),
+        )
+
+        device.updateSchema(schema)
+        self.assertEqual(device.fullSchema.getMaxInc("heartbeatInterval"),
+                         newMax)
+
+        # Test that attributes are preserved by appendSchema and updateSchema
+        schema = Schema()
+        (
+            INT32_ELEMENT(schema).key("injectedInt32")
+            .assignmentOptional().defaultValue(1)
+            .reconfigurable()
+            .commit()
+        )
+
+        device.appendSchema(schema)
+        self.assertEqual(device.fullSchema.getMaxInc("heartbeatInterval"),
+                         newMax)
+
+        device.updatedSchema(schema)
+        self.assertEqual(device.fullSchema.getMaxInc("heartbeatInterval"),
+                         newMax)
 
         # Test that doing updateSchema keeps previously set value
         schema = Schema()
