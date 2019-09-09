@@ -2,7 +2,7 @@ from asyncio import sleep
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, background, Bool, Configurable, DaqDataType,
-    Device, Double, Float, Hash, InputChannel, Int32, Int64, Node,
+    Device, Double, Float, Hash, InputChannel, Int32, Int64, NDArray, Node,
     OutputChannel, Overwrite, UInt32, UInt64, Unit, Slot, slot, State, String,
     VectorBool, VectorChar, VectorDouble, VectorFloat, VectorHash, VectorInt32,
     VectorInt64, VectorUInt32, VectorUInt64, VectorString)
@@ -18,6 +18,17 @@ class DataNode(Configurable):
 
 class ChannelNode(Configurable):
     data = Node(DataNode)
+
+
+class CPPNode(Configurable):
+    int32 = Int32(accessMode=AccessMode.READONLY)
+    string = String(accessMode=AccessMode.READONLY)
+    vecInt64 = VectorInt64(accessMode=AccessMode.READONLY)
+    ndarray = NDArray(accessMode=AccessMode.READONLY)
+
+
+class CPPChannelNode(Configurable):
+    node = Node(CPPNode)
 
 
 class VectorNode(Configurable):
@@ -255,6 +266,10 @@ class PropertyTestMDL(Device):
         ChannelNode,
         displayedName="Output")
 
+    outputForCPP = OutputChannel(
+        CPPChannelNode,
+        displayedName="Output for C++ input")
+
     frequency = Int32(
         displayedName="Frequency",
         unitSymbol=Unit.HERTZ,
@@ -299,6 +314,11 @@ class PropertyTestMDL(Device):
                 output = self.output.schema.data
                 output.counter = self.packet_number + 1
                 await self.output.writeData()
+                output = self.outputForCPP.schema.node
+                output.int32 = self.packet_number + 1
+                output.string = f'BLA {output.int32}'
+                output.vecInt64 = [output.int32] * 4
+                await self.outputForCPP.writeData()
                 self.packet_number += 1
                 self.packetSend = self.packetSend.value + 1
 
