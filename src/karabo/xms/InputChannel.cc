@@ -347,7 +347,21 @@ namespace karabo {
                 if (handler) handler(boost::system::errc::make_error_code(boost::system::errc::invalid_argument));
                 return;
             }
-            m_openConnections.insert(std::make_pair(outputChannelString, std::make_pair(connection, channel)));
+            // FIXME - proper solution still to be found:
+            // In case of concurrent connect and re-connect of the InputChannel (e.g. if sender and receiver device
+            // start concurrently), we might find a channel already stored. Here we overwrite (and thus close) that
+            // first channel. Since the OutputChannel cuts a previous channel if a new one with the same id connects,
+            // we have to hope that the order of first and second channel is the same on both ends. Experience shows
+            // that this is not always the case, but has a higher likelihood than the other way round.
+            // (If it would be the other way round, m_openConnections.insert(..) would be better than using operator[].)
+            auto& newConChan = m_openConnections[outputChannelString];
+            const karabo::net::Channel::Pointer& previousChannel = newConChan.second; // normally pair of empty pointers
+            if (previousChannel) {
+                KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << " storing channel to '" << outputChannelString << "', "
+                        << "although there is already one that " << (previousChannel->isOpen() ? "IS" : "is NOT")
+                        << " open.";
+            }
+            newConChan = std::make_pair(connection, channel); // overwrite content inside m_openConnections
 
             if (handler) handler(ec);
         }
