@@ -5,6 +5,7 @@ from karabo.bound import (
     INT32_ELEMENT, OVERWRITE_ELEMENT, PythonDevice,
 )
 
+from .device_with_alarm import DeviceWithAlarm
 from .device_with_table_parameter import DeviceWithTableElementParam
 
 
@@ -44,8 +45,10 @@ class Schema_Injection_TestCase(unittest.TestCase):
         self.assertEqual(device.fullSchema.getMinInc("injectedInt32"), 1)
 
         # Test setting attributes
-        schema = device.fullSchema
-        newMin = schema.getMinInc("heartbeatInterval") + 1
+        schema = Schema()
+        schema.copy(device.fullSchema)
+        oldMin = schema.getMinInc("heartbeatInterval")
+        newMin = oldMin + 1
         (
             OVERWRITE_ELEMENT(schema).key("heartbeatInterval")
             .setNewMinInc(newMin)
@@ -56,7 +59,8 @@ class Schema_Injection_TestCase(unittest.TestCase):
         self.assertEqual(device.fullSchema.getMinInc("heartbeatInterval"),
                          newMin)
 
-        # Test that attributes are preserved by appendSchema and updateSchema
+        # Test that attributes of static parameters are preserved by
+        # appendSchema and updateSchema
         schema = Schema()
         (
             INT32_ELEMENT(schema).key("injectedInt32")
@@ -71,7 +75,7 @@ class Schema_Injection_TestCase(unittest.TestCase):
 
         device.updateSchema(schema)
         self.assertEqual(device.fullSchema.getMinInc("heartbeatInterval"),
-                        newMin)
+                         oldMin)
 
         # Test that doing updateSchema keeps previously set value
         schema = Schema()
@@ -218,7 +222,6 @@ class Schema_Injection_TestCase(unittest.TestCase):
         table = device.parameters.get("deviceTable")
         self.assertTrue(len(table) == 2)
 
-
     def test_schemaWithTableElementAppend(self):
         """Tests that appendSchema preserves TABLE_ELEMENTs in the static schema."""
         device = Configurator(PythonDevice).create(
@@ -244,3 +247,51 @@ class Schema_Injection_TestCase(unittest.TestCase):
                       device.getSchema("DeviceWithTableElementParam").getPaths())
         table = device.parameters.get("deviceTable")
         self.assertTrue(len(table) == 2)
+
+    def test_schemaWithAlarmElementUpdate(self):
+        """Tests that updateSchema resets alarms in the static schema."""
+        device = Configurator(PythonDevice).create(
+                        "DeviceWithAlarm", Hash())
+        device.startFsm()
+
+        device.fullSchema.setAlarmHigh("valueWithAlarm", 2000.)
+        self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
+                         2000.)
+
+        # Test that doing updateSchema with something new resets
+        # the parameter alarm
+        schema = Schema()
+        (
+            INT32_ELEMENT(schema).key("somethingNew")
+            .assignmentOptional().defaultValue(4)
+            .reconfigurable()
+            .commit()
+        )
+
+        device.updateSchema(schema)
+        self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
+                         1000.)
+
+    def test_schemaWithAlarmElementAppend(self):
+        """Tests that updateSchema preserves alarms in the static schema."""
+        device = Configurator(PythonDevice).create(
+                        "DeviceWithAlarm", Hash())
+        device.startFsm()
+
+        device.fullSchema.setAlarmHigh("valueWithAlarm", 2000.)
+        self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
+                         2000.)
+
+        # Test that doing updateSchema with something new keeps
+        # the parameter alarm
+        schema = Schema()
+        (
+            INT32_ELEMENT(schema).key("somethingNew")
+            .assignmentOptional().defaultValue(4)
+            .reconfigurable()
+            .commit()
+        )
+
+        device.appendSchema(schema)
+        self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
+                         2000.)
