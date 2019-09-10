@@ -13,7 +13,6 @@ bindings, the native Python package and the pyQt-based GUI.
    serviceDevices
    states
    testing
-   reference
    dataLogger
    guiServer
    gui_widget_development
