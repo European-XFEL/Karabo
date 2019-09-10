@@ -4,12 +4,13 @@ from karabo.bound import (
 
 @KARABO_CLASSINFO("DeviceWithAlarm", "1.0")
 class DeviceWithAlarm(PythonDevice):
+    ALARM_HIGH = 1000.
 
     def expectedParameters(expected):
         (
             DOUBLE_ELEMENT(expected).key("valueWithAlarm")
             .readOnly()
-            .alarmHigh(1000.).needsAcknowledging(False)
+            .alarmHigh(DeviceWithAlarm.ALARM_HIGH).needsAcknowledging(False)
             .commit(),
         )
 
