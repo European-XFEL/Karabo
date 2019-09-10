@@ -341,14 +341,5 @@ def _project_trash_handler(project_view):
     item_model = project_view.model()
     root_model = item_model.root_model
     if root_model is not None:
-        action = "untrash" if root_model.is_trashed else "trash"
-        ask = ('Are you sure you want to <b>{}</b> the project'
-               ' \"<b>{}</b>\"?'.format(
-                action, root_model.simple_name))
-        msg_box = QMessageBox(QMessageBox.Question, 'Change of project state',
-                              ask, QMessageBox.Yes | QMessageBox.No)
-        msg_box.setModal(False)
-        msg_box.setDefaultButton(QMessageBox.No)
-        if msg_box.exec() == QMessageBox.Yes:
-            project_view.update_is_trashed(project=root_model,
-                                           project_controller=None)
+        project_view.update_is_trashed(project=root_model,
+                                       project_controller=None)
