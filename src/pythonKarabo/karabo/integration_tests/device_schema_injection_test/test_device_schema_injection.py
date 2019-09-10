@@ -2,7 +2,7 @@ import unittest
 
 from karabo.bound import (
     Configurator, Hash, Schema,
-    INT32_ELEMENT, OVERWRITE_ELEMENT, PythonDevice,
+    DOUBLE_ELEMENT, INT32_ELEMENT, OVERWRITE_ELEMENT, PythonDevice,
 )
 
 from .device_with_alarm import DeviceWithAlarm
@@ -255,13 +255,21 @@ class Schema_Injection_TestCase(unittest.TestCase):
                         "DeviceWithAlarm", Hash())
         device.startFsm()
 
+        # Update the alarmHigh
+        schema = Schema()
         alarm_high = 2 * DeviceWithAlarm.ALARM_HIGH
-        device.fullSchema.setAlarmHigh("valueWithAlarm", alarm_high)
+        (
+            DOUBLE_ELEMENT(schema).key("valueWithAlarm")
+            .readOnly()
+            .alarmHigh(alarm_high).needsAcknowledging(False)
+            .commit(),
+        )
+        device.updateSchema(schema)
         self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
                          alarm_high)
 
         # Test that doing updateSchema with something new resets
-        # the parameter alarm
+        # the alarmHigh
         schema = Schema()
         (
             INT32_ELEMENT(schema).key("somethingNew")
@@ -280,13 +288,21 @@ class Schema_Injection_TestCase(unittest.TestCase):
                         "DeviceWithAlarm", Hash())
         device.startFsm()
 
+        # Update the alarmHigh
+        schema = Schema()
         alarm_high = 2 * DeviceWithAlarm.ALARM_HIGH
-        device.fullSchema.setAlarmHigh("valueWithAlarm", alarm_high)
+        (
+            DOUBLE_ELEMENT(schema).key("valueWithAlarm")
+            .readOnly()
+            .alarmHigh(alarm_high).needsAcknowledging(False)
+            .commit(),
+        )
+        device.updateSchema(schema)
         self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
                          alarm_high)
 
-        # Test that doing updateSchema with something new keeps
-        # the parameter alarm
+        # Test that doing appendSchema with something new keeps
+        # the alarmHigh
         schema = Schema()
         (
             INT32_ELEMENT(schema).key("somethingNew")
