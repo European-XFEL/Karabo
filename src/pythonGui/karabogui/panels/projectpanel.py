@@ -8,7 +8,7 @@ from functools import partial
 
 from PyQt4.QtCore import pyqtSlot, QSize, Qt
 from PyQt4.QtGui import (
-    QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QPushButton,
+    QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QWidget)
 from karabo.common.project.api import ProjectModel
 from karabogui import icons
