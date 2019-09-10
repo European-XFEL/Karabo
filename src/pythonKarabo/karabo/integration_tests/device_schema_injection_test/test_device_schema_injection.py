@@ -283,7 +283,7 @@ class Schema_Injection_TestCase(unittest.TestCase):
                          DeviceWithAlarm.ALARM_HIGH)
 
     def test_schemaWithAlarmHighAppend(self):
-        """Tests that updateSchema preserves alarms in the static schema."""
+        """Tests that appendSchema preserves alarms in the static schema."""
         device = Configurator(PythonDevice).create(
                         "DeviceWithAlarm", Hash())
         device.startFsm()
