@@ -47,20 +47,20 @@ class Schema_Injection_TestCase(unittest.TestCase):
         # Test setting attributes
         schema = Schema()
         schema.copy(device.fullSchema)
-        oldMin = schema.getMinInc("heartbeatInterval")
-        newMin = oldMin + 1
+        min_value = schema.getMinInc("heartbeatInterval")
+        min_value_new = min_value + 1
         (
             OVERWRITE_ELEMENT(schema).key("heartbeatInterval")
-            .setNewMinInc(newMin)
+            .setNewMinInc(min_value_new)
             .commit(),
         )
 
         device.updateSchema(schema)
         self.assertEqual(device.fullSchema.getMinInc("heartbeatInterval"),
-                         newMin)
+                         min_value_new)
 
         # Test that attributes of static parameters are preserved by
-        # appendSchema and updateSchema
+        # appendSchema
         schema = Schema()
         (
             INT32_ELEMENT(schema).key("injectedInt32")
@@ -71,11 +71,12 @@ class Schema_Injection_TestCase(unittest.TestCase):
 
         device.appendSchema(schema)
         self.assertEqual(device.fullSchema.getMinInc("heartbeatInterval"),
-                         newMin)
+                         min_value_new)
 
+        # Test that attributes are reset by updateSchema
         device.updateSchema(schema)
         self.assertEqual(device.fullSchema.getMinInc("heartbeatInterval"),
-                         oldMin)
+                         min_value)
 
         # Test that doing updateSchema keeps previously set value
         schema = Schema()
@@ -248,15 +249,16 @@ class Schema_Injection_TestCase(unittest.TestCase):
         table = device.parameters.get("deviceTable")
         self.assertTrue(len(table) == 2)
 
-    def test_schemaWithAlarmElementUpdate(self):
+    def test_schemaWithAlarmHighUpdate(self):
         """Tests that updateSchema resets alarms in the static schema."""
         device = Configurator(PythonDevice).create(
                         "DeviceWithAlarm", Hash())
         device.startFsm()
 
-        device.fullSchema.setAlarmHigh("valueWithAlarm", 2000.)
+        alarm_high = 2 * DeviceWithAlarm.ALARM_HIGH
+        device.fullSchema.setAlarmHigh("valueWithAlarm", alarm_high)
         self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
-                         2000.)
+                         alarm_high)
 
         # Test that doing updateSchema with something new resets
         # the parameter alarm
@@ -270,17 +272,18 @@ class Schema_Injection_TestCase(unittest.TestCase):
 
         device.updateSchema(schema)
         self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
-                         1000.)
+                         DeviceWithAlarm.ALARM_HIGH)
 
-    def test_schemaWithAlarmElementAppend(self):
+    def test_schemaWithAlarmHighAppend(self):
         """Tests that updateSchema preserves alarms in the static schema."""
         device = Configurator(PythonDevice).create(
                         "DeviceWithAlarm", Hash())
         device.startFsm()
 
-        device.fullSchema.setAlarmHigh("valueWithAlarm", 2000.)
+        alarm_high = 2 * DeviceWithAlarm.ALARM_HIGH
+        device.fullSchema.setAlarmHigh("valueWithAlarm", alarm_high)
         self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
-                         2000.)
+                         alarm_high)
 
         # Test that doing updateSchema with something new keeps
         # the parameter alarm
@@ -294,4 +297,4 @@ class Schema_Injection_TestCase(unittest.TestCase):
 
         device.appendSchema(schema)
         self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
-                         2000.)
+                         alarm_high)
