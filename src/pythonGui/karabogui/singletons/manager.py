@@ -197,8 +197,10 @@ class Manager(QObject):
             return
         deviceId = info.get('deviceId')
         config = info.get('config')
+        time = info.get('time')
         broadcast_event(KaraboEvent.ShowConfigurationFromPast,
-                        {'deviceId': deviceId, 'configuration': config})
+                        {'deviceId': deviceId, 'configuration': config,
+                         'time': time})
 
     def handle_brokerInformation(self, **info):
         get_network()._handleBrokerInformation(
