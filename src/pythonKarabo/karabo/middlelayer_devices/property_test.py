@@ -16,11 +16,18 @@ VECTOR_MAX_SIZE = 10
 class DataNode(Configurable):
     int32 = Int32(accessMode=AccessMode.READONLY)
     string = String(accessMode=AccessMode.READONLY)
-    vecInt64 = VectorInt64(accessMode=AccessMode.READONLY)
-    ndarray = NDArray(accessMode=AccessMode.READONLY)
+    vecInt64 = VectorInt64(
+        accessMode=AccessMode.READONLY,
+        minSize=1,
+        maxSize=VECTOR_MAX_SIZE)
+    ndarray = NDArray(
+        accessMode=AccessMode.READONLY,
+        dtype=Float,
+        shape=(100, 200))
 
 
 class ChannelNode(Configurable):
+    daqDataType = DaqDataType.TRAIN
     node = Node(DataNode)
 
 
