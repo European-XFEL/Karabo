@@ -1,5 +1,7 @@
 from asyncio import sleep
 
+import numpy as np
+
 from karabo.middlelayer import (
     AccessLevel, AccessMode, background, Bool, Configurable, DaqDataType,
     Device, Double, Float, Hash, InputChannel, Int32, Int64, NDArray, Node,
@@ -8,27 +10,18 @@ from karabo.middlelayer import (
     VectorInt64, VectorUInt32, VectorUInt64, VectorString)
 
 
+VECTOR_MAX_SIZE = 10
+
+
 class DataNode(Configurable):
-    daqDataType = DaqDataType.TRAIN
-
-    counter = UInt64(
-        defaultValue=0,
-        accessMode=AccessMode.READONLY)
-
-
-class ChannelNode(Configurable):
-    data = Node(DataNode)
-
-
-class CPPNode(Configurable):
     int32 = Int32(accessMode=AccessMode.READONLY)
     string = String(accessMode=AccessMode.READONLY)
     vecInt64 = VectorInt64(accessMode=AccessMode.READONLY)
     ndarray = NDArray(accessMode=AccessMode.READONLY)
 
 
-class CPPChannelNode(Configurable):
-    node = Node(CPPNode)
+class ChannelNode(Configurable):
+    node = Node(DataNode)
 
 
 class VectorNode(Configurable):
@@ -37,13 +30,13 @@ class VectorNode(Configurable):
         description="Vector boolean values",
         defaultValue=[True, False, True, False, True, False],
         minSize=1,
-        maxSize=10)
+        maxSize=VECTOR_MAX_SIZE)
 
     charProperty = VectorChar(
         displayedName="Char Vector",
         description="Vector char values",
         minSize=1,
-        maxSize=10,
+        maxSize=VECTOR_MAX_SIZE,
         defaultValue="ABCDEF")
 
     int32Property = VectorInt32(
@@ -56,21 +49,21 @@ class VectorNode(Configurable):
         description="Vector uint32 values",
         defaultValue=[1, 2, 3],
         minSize=1,
-        maxSize=10)
+        maxSize=VECTOR_MAX_SIZE)
 
     int64Property = VectorInt64(
         displayedName="Int64 Vector (No Limits)",
         description="Vector int64 values",
         defaultValue=[1, 2],
         minSize=1,
-        maxSize=10)
+        maxSize=VECTOR_MAX_SIZE)
 
     uint64Property = VectorUInt64(
         displayedName="UInt64 Vector",
         description="Vector uint64 values",
         defaultValue=[-10, -10],
         minSize=1,
-        maxSize=10)
+        maxSize=VECTOR_MAX_SIZE)
 
     floatProperty = VectorFloat(
         displayedName="Float Vector (No Limits)",
@@ -82,13 +75,13 @@ class VectorNode(Configurable):
         description="Vector double values",
         defaultValue=[1.23, 0.4, 1.0],
         minSize=1,
-        maxSize=10)
+        maxSize=VECTOR_MAX_SIZE)
 
     stringProperty = VectorString(
         displayedName="String Vector",
         description="Vector string values",
         minSize=1,
-        maxSize=10,
+        maxSize=VECTOR_MAX_SIZE,
         defaultValue=["A", "B", "C"])
 
 
@@ -266,10 +259,6 @@ class PropertyTestMDL(Device):
         ChannelNode,
         displayedName="Output")
 
-    outputForCPP = OutputChannel(
-        CPPChannelNode,
-        displayedName="Output for C++ input")
-
     frequency = Int32(
         displayedName="Frequency",
         unitSymbol=Unit.HERTZ,
@@ -311,15 +300,16 @@ class PropertyTestMDL(Device):
     async def _send_data_action(self):
         while True:
             if self.acquiring:
-                output = self.output.schema.data
-                output.counter = self.packet_number + 1
+                outputCounter = self.packet_number + 1
+                output = self.output.schema.node
+                output.int32 = outputCounter
+                output.string = f'{outputCounter}'
+                output.vecInt64 = [outputCounter] * VECTOR_MAX_SIZE
+                output.ndarray = np.full((100, 200),
+                    outputCounter, dtype=np.float32)
+                # XXX: implement image data
                 await self.output.writeData()
-                output = self.outputForCPP.schema.node
-                output.int32 = self.packet_number + 1
-                output.string = f'BLA {output.int32}'
-                output.vecInt64 = [output.int32] * 4
-                await self.outputForCPP.writeData()
-                self.packet_number += 1
+                self.packet_number = outputCounter
                 self.packetSend = self.packetSend.value + 1
 
             await sleep(1 / self.frequency.value)
