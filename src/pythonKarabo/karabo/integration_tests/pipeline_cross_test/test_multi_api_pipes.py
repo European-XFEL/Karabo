@@ -15,7 +15,9 @@ class TestCrossPipelining(BoundDeviceTestCase):
     def test_chain_wait_fastReceiver(self):
         """Checks for pipelines composed of more than 2 devices."""
         self.start_server_num("cpp", 1)
+        self.start_server_num("bound", 1)
         self._test_chain_fastReceiver("cpp", 16)
+        self._test_chain_fastReceiver("bound", 16)
 
     def test_1to1_wait_fastReceiver(self):
         # Start all servers you need in the end:
@@ -109,6 +111,9 @@ class TestCrossPipelining(BoundDeviceTestCase):
 
     def _test_chain_fastReceiver(self, api, num_of_forwarders):
         assert(num_of_forwarders > 0)
+
+        start_time = time()
+
         sender_cfg = Hash("outputFrequency", 10)
         receiver_cfg = Hash("input.connectedOutputChannels", "fwd{}:output".format(num_of_forwarders),
                             "input.onSlowness", "wait",
@@ -199,7 +204,17 @@ class TestCrossPipelining(BoundDeviceTestCase):
         # Cleanup the devices used in the test.
         for devid in devices_present:
             ok, msg = self.dc.killDevice(devid, self._max_timeout)
-            self.assertTrue(ok, "Problem killing device '{}': '{}'.".format(devid, msg))
+            self.assertTrue(ok, "Problem killing device '{}': '{}'."
+                                .format(devid, msg))
+
+        finish_time = time()
+
+        print()
+        print("----------------------")
+        print("Test for pipeline with '{}' devices for api '{}' succeded in {:.2f} secs."
+              .format(len(start_info), api, finish_time-start_time))
+        print("----------------------")
+        print()
 
     def _test_1to1_wait_fastReceiver(self, sender_api, receiver_api):
         """
