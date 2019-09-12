@@ -16,6 +16,10 @@
 #include "karabo/net/utils.hh"
 #include "karabo/net/EventLoop.hh"
 
+#include <atomic>
+
+#include <boost/thread/once.hpp>
+
 using namespace std;
 using namespace karabo::util;
 using namespace karabo::xms;
@@ -38,6 +42,7 @@ namespace karabo {
             , m_isShared(false)
             , m_internalTimeout(2000)
             , m_topologyInitialized(false)
+            , m_initTopologyOnce(BOOST_ONCE_INIT)
             , m_ageingTimer(karabo::net::EventLoop::getIOService())
             , m_getOlder(false) // Sic! To start aging in setAgeing below.
             , m_runSignalsChangedThread(false)
@@ -71,6 +76,7 @@ namespace karabo {
             , m_isShared(true)
             , m_internalTimeout(2000)
             , m_topologyInitialized(false)
+            , m_initTopologyOnce(BOOST_ONCE_INIT)
             , m_ageingTimer(karabo::net::EventLoop::getIOService())
             , m_getOlder(false) // Sic! To start aging in setAgeing below.
             , m_runSignalsChangedThread(false)
@@ -390,9 +396,17 @@ namespace karabo {
 
 
         void DeviceClient::initTopology() {
-            if (!m_topologyInitialized) {
-                this->cacheAvailableInstances();
-                m_topologyInitialized = true;
+            boost::call_once(m_initTopologyOnce,
+                             [this]() {
+                                 this->cacheAvailableInstances();
+                                 this->m_topologyInitialized = true; // Atomic, only written here, inside once executed lambda.
+                             });
+            // All but the thread that got the chance to execute the call_once lambda will
+            // be busy-waiting for the topology to initialize. The thread that executed
+            // the call_once will reach this point with m_topologyInitialized == true and
+            // will leave immediately.
+            while (!m_topologyInitialized) {
+                boost::this_thread::sleep_for(boost::chrono::milliseconds(50));
             }
         }
 
