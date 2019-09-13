@@ -130,6 +130,8 @@ class TestCrossPipelining(BoundDeviceTestCase):
             start_info.append((f"fwd{i}", cfg))
 
         # Instantiates all the devices that will be in the pipeline.
+        # The use of instantiateNoWait (from DeviceClient) is required
+        # to trigger potential race conditions.
         for devid, cfg in start_info:
             self.start_device_nowait(api, 1, devid, cfg)
 
@@ -142,11 +144,10 @@ class TestCrossPipelining(BoundDeviceTestCase):
         devices_not_present = set([st_inf[0] for st_inf in start_info])
         while num_of_waits > 0 and len(devices_present) < len(start_info):
             devices = self.dc.getDevices()
-            dev_not_found = False
             for devid in devices_not_present:
                 if devid in devices:
                     devices_present.add(devid)
-                    devices_not_present = devices_not_present - devices_present
+            devices_not_present = devices_not_present - devices_present
             num_of_waits = num_of_waits - 1
             sleep(sleep_wait_interv)
 
@@ -155,8 +156,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
         # corresponding to python devices in failed test runs weren't killed after the test finished.
         if len(devices_present) < len(start_info) and api == "bound":
             for devid in devices_present:
-                ok, msg = self.dc.killDevice(devid, self._max_timeout)
-                self.assertTrue(ok, "Problem killing device '{}': '{}'.".format(devid, msg))
+                self.dc.killDeviceNoWait(devid)
 
         self.assertTrue(len(devices_present) == len(start_info),
                         "Couldn't instantiate all devices: "
@@ -167,7 +167,9 @@ class TestCrossPipelining(BoundDeviceTestCase):
         # data through the pipe.
         num_of_waits = max_waits
         outputs_connected = set()
-        outputs_not_connected = set([st_inf[0] for st_inf in start_info]) - {'receiver'}
+        outputs_not_connected = set([st_inf[0] for st_inf in start_info])
+        # no connection to check for 'receiver:output'.
+        outputs_not_connected.discard('receiver')
         while num_of_waits > 0 and len(outputs_not_connected) > 0:
             for devid in outputs_not_connected:
                 try:
@@ -176,7 +178,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
                     print("Problem retrieving 'output.connections' from '{}': {}".format(devid, re))
                 if len(conns) > 0:
                     outputs_connected.add(devid)
-                outputs_not_connected = outputs_not_connected - outputs_connected
+            outputs_not_connected = outputs_not_connected - outputs_connected
             num_of_waits = num_of_waits - 1
             sleep(sleep_wait_interv)
 
