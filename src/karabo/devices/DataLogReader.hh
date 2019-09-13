@@ -181,6 +181,12 @@ namespace karabo {
             void slotGetConfigurationFromPast(const std::string& deviceId, const std::string& timepoint);
 
             /**
+             * Internal helper:
+             * Place 'value' interpreted as 'type' (and with given 'timestamp') into 'hashOut' at 'path'.
+             */
+            void readToHash(karabo::util::Hash& hashOut, const std::string& path, const karabo::util::Timestamp& timestamp,
+                            karabo::util::Types::ReferenceType type, const std::string& value) const;
+            /**
              * Retrieves, from the logger index, the event of type "device became online" that is closest, but not after
              * a given timepoint. The retrieved logger index event can be used as a starting point for sweeping the
              * device log for the last known given configuration at that timepoint.
