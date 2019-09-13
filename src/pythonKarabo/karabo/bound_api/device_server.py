@@ -389,6 +389,10 @@ class DeviceServer(object):
         # connecting to broker
         config['_connection_'] = self.connectionParameters
 
+        # If not explicitely specified, let device inherit logger priority
+        if not config.has("Logger.priority"):
+            config["Logger.priority"] = Logger.getPriority()
+
         # Add time server ID configured for device server
         config['timeServerId'] = self.timeServerId
 
