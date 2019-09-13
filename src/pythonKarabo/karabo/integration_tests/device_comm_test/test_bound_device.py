@@ -15,14 +15,42 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         class_ids = ['CommTestDevice']
         self.start_server("bound", SERVER_ID, class_ids, plugin_dir=own_dir)
 
+    def test_log_level(self):
+        serverId = "logLevelServer"
+        deviceId = "logLevelTestDevice"
+        self.start_server("bound", serverId, ["PropertyTest"], logLevel="ERROR")
+
+        # Do not specify device log level: inherit from server
+        cfg = Hash("classId", "PropertyTest",
+                   "deviceId", deviceId,
+                   "configuration", Hash())
+        ok, msg = self.dc.instantiate(serverId, cfg, 30)
+        self.assertTrue(ok, msg)
+        res = self.dc.get(deviceId, "Logger.priority")
+        self.assertEqual(res, "ERROR")
+        ok, msg = self.dc.killDevice(deviceId, 30)
+        self.assertTrue(ok, "Problem killing device '{}': {}.".format(deviceId,
+                                                                      msg))
+
+        # Specify device log level explicitely (non-default value)
+        cfg = Hash("classId", "PropertyTest",
+                   "deviceId", deviceId,
+                   "configuration", Hash("Logger.priority", "WARN"))
+        ok, msg = self.dc.instantiate(serverId, cfg, 30)
+        self.assertTrue(ok, msg)
+        res = self.dc.get(deviceId, "Logger.priority")
+        self.assertEqual(res, "WARN")
+        ok, msg = self.dc.killDevice(deviceId, 30)
+        self.assertTrue(ok, "Problem killing device '{}': {}.".format(deviceId,
+                                                                      msg))
+
     def test_in_sequence(self):
         # Complete setup - do not do it in setup to ensure that even in case of
         # exceptions 'tearDown' is called and stops Python processes.
 
         # we will use two devices communicating with each other.
         config = Hash("Logger.priority", "ERROR",
-                      "remote", "testComm2",
-                      "deviceId", "testComm1")
+                      "remote", "testComm2")
 
         classConfig = Hash("classId", "CommTestDevice",
                            "deviceId", "testComm1",
@@ -32,8 +60,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         self.assertTrue(ok, msg)
 
         config2 = Hash("Logger.priority", "ERROR",
-                       "remote", "testComm1",
-                       "deviceId", "testComm2")
+                       "remote", "testComm1")
 
         classConfig2 = Hash("classId", "CommTestDevice",
                             "deviceId", "testComm2",
