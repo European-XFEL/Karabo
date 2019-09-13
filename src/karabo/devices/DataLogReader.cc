@@ -344,8 +344,6 @@ namespace karabo {
                                         result[result.size() - 1].setAttribute("v", "isLast", 'L');
                                     }
                                     const string& path = tokens[4];
-                                    const string& type = tokens[5];
-                                    const string& value = tokens[6];
                                     if (path != property) {
                                         // if you don't like the index record (for example, it pointed to the wrong property) just skip it
                                         KARABO_LOG_FRAMEWORK_WARN << "The index for \"" << deviceId << "\", property : \"" << property
@@ -353,21 +351,12 @@ namespace karabo {
                                         // TODO: Here we can start index rebuilding for fnum != lastFileIndex
                                         continue;
                                     }
-                                    Hash hash;
-                                    if (type == "VECTOR_HASH") {
-                                        Hash::Node& node = hash.set<vector<Hash>>("v", vector<Hash>());
-                                        m_serializer->load(node.getValue<vector<Hash>>(), value);
-                                    } else {
-                                        Hash::Node& node = hash.set<string>("v", value);
-                                        node.setType(Types::from<FromLiteral>(type));
-                                    }
-
-                                    const unsigned long long trainId = fromString<unsigned long long>(tokens[3]);
                                     const Epochstamp epochstamp(stringDoubleToEpochstamp(tokens[2]));
-                                    const Timestamp tst(epochstamp, Trainstamp(trainId));
-                                    Hash::Attributes& attrs = hash.getAttributes("v");
-                                    tst.toHashAttributes(attrs);
-                                    result.push_back(hash);
+                                    // tokens[3] is trainId
+                                    const Timestamp tst(epochstamp, Trainstamp(fromString<unsigned long long>(tokens[3])));
+                                    result.push_back(Hash());
+                                    // tokens[5] and [6] are type and value, respectively
+                                    readToHash(result.back(), "v", tst, Types::from<FromLiteral>(tokens[5]), tokens[6]);
                                 } else {
                                     KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: skip corrupted record or old format '" << line << "'";
                                 }
@@ -473,24 +462,12 @@ namespace karabo {
                                 const string& path = tokens[4];
                                 if (!schema.has(path)) continue;
                                 current = stringDoubleToEpochstamp(tokens[2]);
-                                unsigned long long train = fromString<unsigned long long>(tokens[3]);
                                 if (current > target)
                                     break;
-                                const Timestamp timestamp(current, Trainstamp(train));
-                                const string& type = tokens[5];
-                                const string& value = tokens[6];
-                                if (type == "VECTOR_HASH") {
-                                    Hash::Node& node = hash.set<vector<Hash>>(path, vector<Hash>());
-                                    m_serializer->load(node.getValue<vector<Hash>>(), value);
-                                    Hash::Attributes& attrs = node.getAttributes();
-                                    timestamp.toHashAttributes(attrs);
-                                } else {
-                                    Hash::Node& node = hash.set<string>(path, value);
-                                    node.setType(Types::from<FromLiteral>(type));
-                                    Hash::Attributes& attrs = node.getAttributes();
-                                    timestamp.toHashAttributes(attrs);
-                                }
-
+                                // tokens[3] is trainId
+                                const Timestamp timestamp(current, fromString<unsigned long long>(tokens[3]));
+                                // tokens[5] and [6] are type and value, respectively
+                                readToHash(hash, path, timestamp, Types::from<FromLiteral>(tokens[5]), tokens[6]);
                             } else {
                                 KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: skip corrupted record or old format";
                             }
@@ -502,6 +479,38 @@ namespace karabo {
                 reply(hash, schema);
             } catch (...) {
                 KARABO_RETHROW
+            }
+        }
+
+
+        void DataLogReader::readToHash(Hash& hashOut, const std::string& path, const Timestamp& timestamp,
+                                       Types::ReferenceType type, const string& value) const {
+            using karabo::util::DATALOG_NEWLINE_MANGLE;
+            if (type == Types::VECTOR_HASH) {
+                Hash::Node& node = hashOut.set<vector < Hash >> (path, vector<Hash>());
+                // Re-mangle new line characters of any string value inside any of the Hashes,
+                // see DataLogger. But only when needed to avoid copies in "normal" cases.
+                const bool mangle = (value.find(DATALOG_NEWLINE_MANGLE) != std::string::npos);
+                m_serializer->load(node.getValue<vector < Hash >> (),
+                                   (mangle
+                                    ? boost::algorithm::replace_all_copy(value, DATALOG_NEWLINE_MANGLE, "\n")
+                                    : value));
+                Hash::Attributes& attrs = node.getAttributes();
+                timestamp.toHashAttributes(attrs);
+            } else {
+                Hash::Node& node = hashOut.set<string>(path, value);
+                if (type == Types::STRING) {
+                    // Re-mangle new line characters, see DataLogger :-|
+                    boost::algorithm::replace_all(node.getValue<string>(), DATALOG_NEWLINE_MANGLE, "\n");
+                } else if (type == Types::VECTOR_STRING) {
+                    // Re-mangle new line characters, see DataLogger :-|
+                    boost::algorithm::replace_all(node.getValue<string>(), DATALOG_NEWLINE_MANGLE, "\n");
+                    node.setType(type);
+                } else {
+                    node.setType(type);
+                }
+                Hash::Attributes& attrs = node.getAttributes();
+                timestamp.toHashAttributes(attrs);
             }
         }
 
