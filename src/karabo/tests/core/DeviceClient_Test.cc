@@ -106,16 +106,21 @@ void DeviceClient_Test::testConcurrentInitTopology() {
 
     // Dispatches two calls to getDeviceWorker, each in a different thread and then asserts on the results.
     auto getDev1 = std::async(std::launch::async, getDeviceWorker);
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
     auto getDev2 = std::async(std::launch::async, getDeviceWorker);
 
     const auto getDev1Result = getDev1.get();
     const auto getDev2Result = getDev2.get();
 
-    // Both getDevices executions should have taken about the same time ...
+    // Checks that the first getDevices execution has taken around 2 secs (the length of the sleep interval
+    // in SignalSlotable::getAvailableInstances for gathering slotPing replies) and ...
     const unsigned getDev1Time = std::get<0>(getDev1Result);
-    const unsigned getDev2Time = std::get<0>(getDev2Result);
     CPPUNIT_ASSERT(getDev1Time > 1600u && getDev1Time <= 2400u);
-    CPPUNIT_ASSERT(getDev2Time > 1600u && getDev2Time <= 2400u);
+
+    // ... the second getDevices execution has taken around 1 sec (time between the second getDevices call is made and
+    // the conclusion of the first call) and ...
+    const unsigned getDev2Time = std::get<0>(getDev2Result);
+    CPPUNIT_ASSERT(getDev2Time > 600u && getDev2Time <= 1400u);
 
     // ... should have been executed in different threads and ...
     const boost::thread::id getDev1ThreadId = std::get<2>(getDev1Result);
