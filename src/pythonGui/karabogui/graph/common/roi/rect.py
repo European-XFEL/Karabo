@@ -11,7 +11,7 @@ class RectROI(KaraboROI):
     def _add_handles(self):
         self.addScaleHandle([1, 1], [0, 0])
 
-    def get_region(self, imageItem, x_data, y_data):
+    def get_region(self, imageItem):
         # We only get the region if the ROI is inside the image
         if not imageItem.rect().intersects(self.rect()):
             return ImageRegion()
@@ -36,10 +36,9 @@ class RectROI(KaraboROI):
 
         region = imageItem.image[y_slice, x_slice]
 
-        details = ImageRegion(region, ImageRegion.Area,
-                              x_data[x_slice], y_data[y_slice])
+        image_region = ImageRegion(region, ImageRegion.Area, x_slice, y_slice)
 
-        return details
+        return image_region
 
     # ---------------------------------------------------------------------
     # PyQt methods

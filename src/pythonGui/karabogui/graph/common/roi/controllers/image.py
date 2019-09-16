@@ -51,11 +51,10 @@ class ImageROIController(BaseROIController):
         # Get data of the region. If ROI is none, get the whole image.
         if current_item is None:
             region = ImageRegion(image, ImageRegion.Area,
-                                 *self.plotItem.transformed_axes)
+                                 x_slice=slice(image.shape[1]),
+                                 y_slice=slice(image.shape[0]))
         else:
-            region = current_item.get_region(
-                self.plotItem.imageItem,
-                *self.plotItem.transformed_axes)
+            region = current_item.get_region(self.plotItem.imageItem)
 
         self.updated.emit(region)
 

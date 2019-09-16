@@ -27,6 +27,7 @@ def axis_tick_font():
 class KaraboImagePlot(PlotItem):
     imageTransformed = pyqtSignal()
     imageLevelsChanged = pyqtSignal()
+    imageAxesChanged = pyqtSignal()
 
     AXIS_ORDER = "row-major"  # aligning the image coords to view coords
     DEFAULT_ROTATION = 0  # rotated at 0 deg.. which is not rotated at all
@@ -98,9 +99,6 @@ class KaraboImagePlot(PlotItem):
         # Restore original transform
         self._revert_transform()
 
-        # Restore transformed axes information
-        self._update_axes_transforms()
-
         # Only update the image after all operation
         self._apply_transform(update=False)
 
@@ -157,7 +155,7 @@ class KaraboImagePlot(PlotItem):
             # Axes are different, need to remap them
             self._axes_data = [np.arange(image.shape[1]),
                                np.arange(image.shape[0])]
-            self._update_axes_transforms(image)
+            self._update_axes_transforms()
             should_update = True
 
         self.imageItem.setImage(image, autoLevels=self.imageItem.auto_levels)
@@ -305,7 +303,7 @@ class KaraboImagePlot(PlotItem):
 
         return x_current_size != x_new_size or y_current_size != y_new_size
 
-    def _update_axes_transforms(self, image=None):
+    def _update_axes_transforms(self):
         """Updates the transformed axes"""
         translation = self._transform[TRANSLATION]
         scaling = self._transform[SCALING]
@@ -313,6 +311,8 @@ class KaraboImagePlot(PlotItem):
         self.transformed_axes = []
         for i, axis in enumerate(self._axes_data):
             self.transformed_axes.append((axis * scaling[i]) + translation[i])
+
+        self.imageAxesChanged.emit()
 
     def _apply_transform(self, update=True):
         """Applies transformation on the image item such as scale, translate,
@@ -327,7 +327,7 @@ class KaraboImagePlot(PlotItem):
             translation=translation / scaling,
             rotation=rotation)
 
-        self._update_axes_transforms(self.image)
+        self._update_axes_transforms()
 
         # calculate new image aspect ratio
         if self.aspect_ratio == AspectRatio.NoAspectRatio:
