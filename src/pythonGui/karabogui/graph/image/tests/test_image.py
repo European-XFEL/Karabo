@@ -30,21 +30,22 @@ class TestKaraboImagePlotROIController(GuiTestCase):
 
         # 1. Check invalid ROI (out of bounds)
         self.plot_item.set_image(image)
+        x_axis, y_axis = self.plot_item.transformed_axes
         self.assertFalse(self._region.valid())
 
         # 2. Check full intersection ROI
         roi.setPos(QPointF(15, 15))
         self.assertTrue(self._region.valid())
-        x_axis, y_axis = self._region.axes
-        self.assertTrue(np.array_equal(x_axis, [15, 16, 17]))
-        self.assertTrue(np.array_equal(y_axis, [15, 16, 17]))
+        x_slice, y_slice = self._region.slices
+        self.assertTrue(np.array_equal(x_axis[x_slice], [15, 16, 17]))
+        self.assertTrue(np.array_equal(y_axis[y_slice], [15, 16, 17]))
 
         # 3. Check partial intersection
         roi.setPos(QPointF(-1, -1))
         self.assertTrue(self._region.valid())
-        x_axis, y_axis = self._region.axes
-        self.assertTrue(np.array_equal(x_axis, [0, 1]))
-        self.assertTrue(np.array_equal(y_axis, [0, 1]))
+        x_slice, y_slice = self._region.slices
+        self.assertTrue(np.array_equal(x_axis[x_slice], [0, 1]))
+        self.assertTrue(np.array_equal(y_axis[y_slice], [0, 1]))
 
     def test_image_crosshair_roi(self):
         roi = self.roi_controller.add(ROITool.Crosshair,
@@ -59,13 +60,19 @@ class TestKaraboImagePlotROIController(GuiTestCase):
         # Move the ROI to a valid x position (projects y-axis)
         roi.setPos(QPointF(-3, 3))
         self.plot_item.set_image(image)
+        x_axis = self.plot_item.transformed_axes[0]
+        x_slice = self._region.slices[0]
+
         self.assertFalse(self._region.valid(axis=1))
         self.assertTrue(self._region.valid(axis=0))
-        self.assertTrue(np.array_equal(self._region.axes[0], np.arange(125)))
+        self.assertTrue(np.array_equal(x_axis[x_slice], np.arange(125)))
 
         # Move the ROI to a valid y position (projects x-axis)
         roi.setPos(QPointF(3, -3))
         self.plot_item.set_image(image)
+        y_axis = self.plot_item.transformed_axes[1]
+        y_slice = self._region.slices[1]
+
         self.assertFalse(self._region.valid(axis=0))
         self.assertTrue(self._region.valid(axis=1))
-        self.assertTrue(np.array_equal(self._region.axes[1], np.arange(125)))
+        self.assertTrue(np.array_equal(y_axis[y_slice], np.arange(125)))

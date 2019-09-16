@@ -25,18 +25,18 @@ class ImageRegion:
     Area = 2
 
     def __init__(self, region=None, region_type=None,
-                 x_data=None, y_data=None):
+                 x_slice=None, y_slice=None):
 
         if region is None:
             region = np.empty((0, 0))
-        if x_data is None:
-            x_data = np.empty(0)
-        if y_data is None:
-            y_data = np.empty(0)
+        if x_slice is None:
+            x_slice = np.empty(0)
+        if y_slice is None:
+            y_slice = np.empty(0)
 
         self.region = region
         self.region_type = region_type
-        self.axes = [x_data, y_data]
+        self.slices = [x_slice, y_slice]
 
     def valid(self, axis=None):
         """Checks if region (all axis) is valid"""
