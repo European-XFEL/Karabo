@@ -29,6 +29,20 @@ public:
 private:
     void testAll();
 
+    /**
+     * Checks that concurrent calls to DeviceClient::initTopology()
+     * have the expected behavior - the broadcast of slotPing 
+     * followed by a sleep of almost 2 seconds done from
+     * SignalSlotable::getAvailableInstances only happens once.
+     * The way to assert the expected behavior is by confirming
+     * that the calls take about the same time and obtain the
+     * same results.
+     * 
+     * NOTE: This test uses the DeviceClient::getDevices() function
+     * to trigger the DeviceClient::initTopology() calls.
+     */
+    void testConcurrentInitTopology();
+
     void testGet();
     void testGetSchema();
     void testGetSchemaNoWait();
