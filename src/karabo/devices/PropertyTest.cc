@@ -754,6 +754,10 @@ namespace karabo {
 
             set(Hash("inputCounter", inputCounter + 1,
                      "currentInputId", currentInputId));
+
+            // Writes data received to output channel to allow PropertyTest to build
+            // pipelines of chained devices.
+            writeOutput();
         }
 
 
