@@ -15,10 +15,13 @@
 #include <karabo/core/Lock.hh>
 #include <karabo/core/InstanceChangeThrottler.hh>
 
+#include <atomic>
 #include <map>
+#include <mutex>
 #include <unordered_map>
 #include <set>
 #include <string>
+
 
 #define KARABO_GET_SHARED_FROM_WEAK(sp, wp) \
 auto sp = wp.lock(); \
@@ -109,7 +112,8 @@ namespace karabo {
 
             int m_internalTimeout;
 
-            bool m_topologyInitialized;
+            std::atomic<bool> m_topologyInitialized;
+            std::once_flag m_initTopologyOnce;
 
             boost::asio::deadline_timer m_ageingTimer;
 

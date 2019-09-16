@@ -16,6 +16,9 @@
 #include "karabo/net/utils.hh"
 #include "karabo/net/EventLoop.hh"
 
+#include <atomic>
+#include <mutex>
+
 using namespace std;
 using namespace karabo::util;
 using namespace karabo::xms;
@@ -390,9 +393,21 @@ namespace karabo {
 
 
         void DeviceClient::initTopology() {
+            call_once(m_initTopologyOnce,
+                      [this]() {
+                            this->cacheAvailableInstances();
+                            this->m_topologyInitialized = true; // Atomic, only written here, inside once executed lambda.
+                      });
+            // All but the thread that got the chance to execute the call_once lambda will
+            // be busy-waiting for the topology to initialize. The thread that executed
+            // the call_once will reach this point with m_topologyInitialized == true and
+            // will leave immediately.
             if (!m_topologyInitialized) {
-                this->cacheAvailableInstances();
-                m_topologyInitialized = true;
+                karabo::net::EventLoop::addThread(); // to avoid any thread starvation during the sleep(s).
+                while (!m_topologyInitialized) {
+                    boost::this_thread::sleep_for(boost::chrono::milliseconds(50));
+                }
+                karabo::net::EventLoop::removeThread();
             }
         }
 
