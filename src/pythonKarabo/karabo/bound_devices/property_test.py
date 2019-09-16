@@ -574,3 +574,7 @@ class PropertyTest(PythonDevice):
 
         self.set(Hash("currentInputId", currentInputId,
                       "inputCounter", inputCounter+1))
+
+        # Writes data received to output channel to allow Property_Test to
+        # build pipelines of chained devices.
+        self.writeOutput()
