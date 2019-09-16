@@ -17,11 +17,11 @@
 
 #include <atomic>
 #include <map>
+#include <mutex>
 #include <unordered_map>
 #include <set>
 #include <string>
 
-#include <boost/thread/once.hpp>
 
 #define KARABO_GET_SHARED_FROM_WEAK(sp, wp) \
 auto sp = wp.lock(); \
@@ -113,7 +113,7 @@ namespace karabo {
             int m_internalTimeout;
 
             std::atomic<bool> m_topologyInitialized;
-            boost::once_flag m_initTopologyOnce;
+            std::once_flag m_initTopologyOnce;
 
             boost::asio::deadline_timer m_ageingTimer;
 
