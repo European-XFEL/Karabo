@@ -131,13 +131,13 @@ void exportPyLogLogger() {
                      &Logger::logDebug,
                      (bp::arg("category") = "")).staticmethod("logDebug")
                 .def("logInfo",
-                     &Logger::logDebug,
+                     &Logger::logInfo,
                      (bp::arg("category") = "")).staticmethod("logInfo")
                 .def("logWarn",
-                     &Logger::logDebug,
+                     &Logger::logWarn,
                      (bp::arg("category") = "")).staticmethod("logWarn")
                 .def("logError",
-                     &Logger::logDebug,
+                     &Logger::logError,
                      (bp::arg("category") = "")).staticmethod("logError")
                 .def("setPriority",
                      &Logger::setPriority,
@@ -146,7 +146,7 @@ void exportPyLogLogger() {
                 .def("getPriority",
                      &Logger::getPriority,
                      (bp::arg("category") = ""),
-                      bp::return_internal_reference<> ()).staticmethod("getPriority")
+                     bp::return_value_policy<bp::copy_const_reference>()).staticmethod("getPriority")
                 .def("getCategory",
                      (krb_log4cpp::Category & (*)(const string&))(&Logger::getCategory),
                      (bp::arg("logCategorie") = ""),
