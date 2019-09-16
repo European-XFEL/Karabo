@@ -402,8 +402,12 @@ namespace karabo {
             // be busy-waiting for the topology to initialize. The thread that executed
             // the call_once will reach this point with m_topologyInitialized == true and
             // will leave immediately.
-            while (!m_topologyInitialized) {
-                boost::this_thread::sleep_for(boost::chrono::milliseconds(50));
+            if (!m_topologyInitialized) {
+                karabo::net::EventLoop::addThread(); // to avoid any thread starvation during the sleep(s).
+                while (!m_topologyInitialized) {
+                    boost::this_thread::sleep_for(boost::chrono::milliseconds(50));
+                }
+                karabo::net::EventLoop::removeThread();
             }
         }
 
