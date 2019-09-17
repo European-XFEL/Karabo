@@ -222,10 +222,6 @@ namespace karabo {
                     .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
                     .commit();
 
-            OVERWRITE_ELEMENT(expected).key("archive")
-                    .setNewDefaultValue(false)
-                    .commit();
-
             OVERWRITE_ELEMENT(expected).key("deviceId")
                     .setNewDefaultValue("Karabo_DataLoggerManager_0")
                     .commit();
@@ -284,6 +280,9 @@ namespace karabo {
 
             // Start regular topology checks (and update State to NORMAL)
             m_strand->post(bind_weak(&Self::launchTopologyCheck, this));
+
+            // DataLoggerManager triggers its own logging
+            newDeviceToLog(m_instanceId);
         }
 
 

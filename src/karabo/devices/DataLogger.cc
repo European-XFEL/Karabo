@@ -101,11 +101,6 @@ namespace karabo {
                     .assignmentOptional().defaultValue(60).minInc(1)
                     .commit();
 
-            // Do not archive the archivers (would lead to infinite recursion)
-            OVERWRITE_ELEMENT(expected).key("archive")
-                    .setNewDefaultValue(false)
-                    .commit();
-
             // Hide the loggers from the standard view in clients
             OVERWRITE_ELEMENT(expected).key("visibility")
                     .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
