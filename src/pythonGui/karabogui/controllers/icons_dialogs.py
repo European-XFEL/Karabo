@@ -112,6 +112,7 @@ class _BaseDialog(QDialog):
 
     def on_image_newMime(self, mime):
         if len(self.items) == 0:
+            messagebox.show_error("No item is selected, aborting...")
             return
 
         item = self.items[self.valueList.currentRow()]
@@ -156,6 +157,8 @@ class _BaseDialog(QDialog):
         if self.items[cr].value is not None:
             self.valueList.takeItem(cr)
             del self.items[cr]
+            if len(self.items) == 0:
+                self.image.setPixmap(icons.no.pixmap(100))
 
     @pyqtSlot()
     def on_up_clicked(self):
