@@ -502,7 +502,7 @@ namespace karabo {
                     removeFrom(deviceId, "devicesNotLogged");
                 } else {
                     // connected, but requested full configuration not yet arrived - ignore these updates
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Ignore slotChanged for " << deviceId
+                    KARABO_LOG_FRAMEWORK_INFO << "Ignore slotChanged for " << deviceId
                             << " - not connected or initial full config not yet arrived:\n" << configuration;
                     return;
                 }

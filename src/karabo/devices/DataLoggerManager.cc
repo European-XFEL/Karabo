@@ -359,9 +359,21 @@ namespace karabo {
                 // - or is not online anymore,
                 // - or appears in "forced" below
 
+                if (serverHash.has("forced")) {
+                    const auto& devs = serverHash.get<std::set<std::string> >("forced");
+                    checkResult << "\n      Logging re-enforced for " << toString(devs);
+                    bad = true;
+                }
                 if (serverHash.has("detailsRequested")) {
                     const auto& devs = serverHash.get<std::set<std::string> >("detailsRequested");
-                    checkResult << "\n      Details requested for " << toString(devs);
+                    if (devs.size() > 5) {
+                        // Prints the first three and the total number of devices.
+                        checkResult << "\n      Details requested for "
+                                << *std::next(devs.begin(), 0) << ", " << *std::next(devs.begin(), 1) << ",\n"
+                                << *std::next(devs.begin(), 2) << " (and " << devs.size() - 3 << " more devices...)";
+                    } else {
+                        checkResult << "\n      Details requested for " << toString(devs);
+                    }
                 }
                 if (serverHash.has("deviceQueryFailed")) {
                     const auto& devs = serverHash.get<std::set<std::string> >("deviceQueryFailed");
@@ -371,11 +383,6 @@ namespace karabo {
                 if (serverHash.has("stopped")) {
                     const auto& devs = serverHash.get<std::set<std::string> >("stopped");
                     checkResult << "\n      Device found to be offline " << toString(devs);
-                }
-                if (serverHash.has("forced")) {
-                    const auto& devs = serverHash.get<std::set<std::string> >("forced");
-                    checkResult << "\n      Logging re-enforced for " << toString(devs);
-                    bad = true;
                 }
             }
             // Clear check status, but keep what is needed for next check
