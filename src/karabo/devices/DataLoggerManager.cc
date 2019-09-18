@@ -281,8 +281,6 @@ namespace karabo {
             // Start regular topology checks (and update State to NORMAL)
             m_strand->post(bind_weak(&Self::launchTopologyCheck, this));
 
-            // DataLoggerManager triggers its own logging
-            newDeviceToLog(m_instanceId);
         }
 
 
