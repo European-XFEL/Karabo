@@ -1458,18 +1458,19 @@ class PythonDevice(NoFsm):
         os.kill(os.getpid(), signal.SIGTERM)
 
     def slotUpdateSchemaAttributes(self, updates):
-        success = self.fullSchema.applyRuntimeUpdates(updates)
+        successFull = self.fullSchema.applyRuntimeUpdates(updates)
 
         # Whenever updating self.fullSchema, we have to clear the cache
         self._stateDependentSchema.clear()
-        # FIXME: Also update m_injectedSchema?
 
-        if success:
+        successInjected = self._injectedSchema.applyRuntimeUpdates(updates)
+
+        if successFull and successInjected:
             # Notify everyone
             self._ss.emit("signalSchemaUpdated", self.fullSchema,
                           self.deviceid)
 
-        self._ss.reply(Hash("success", success,
+        self._ss.reply(Hash("success", (successFull and successInjected),
                             "instanceId", self.deviceid,
                             "updatedSchema", self.fullSchema,
                             "requestedUpdate", updates))
