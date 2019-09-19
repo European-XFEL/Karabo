@@ -101,11 +101,6 @@ namespace karabo {
                     .assignmentOptional().defaultValue(60).minInc(1)
                     .commit();
 
-            // Do not archive the archivers (would lead to infinite recursion)
-            OVERWRITE_ELEMENT(expected).key("archive")
-                    .setNewDefaultValue(false)
-                    .commit();
-
             // Hide the loggers from the standard view in clients
             OVERWRITE_ELEMENT(expected).key("visibility")
                     .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
@@ -507,7 +502,7 @@ namespace karabo {
                     removeFrom(deviceId, "devicesNotLogged");
                 } else {
                     // connected, but requested full configuration not yet arrived - ignore these updates
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Ignore slotChanged for " << deviceId
+                    KARABO_LOG_FRAMEWORK_INFO << "Ignore slotChanged for " << deviceId
                             << " - not connected or initial full config not yet arrived:\n" << configuration;
                     return;
                 }
