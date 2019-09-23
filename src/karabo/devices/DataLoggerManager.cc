@@ -122,6 +122,10 @@ namespace karabo {
                     .assignmentOptional().defaultValue(100)
                     .commit();
 
+            OVERWRITE_ELEMENT(expected).key("performanceStatistics.enable")
+                    .setNewDefaultValue(true)
+                    .commit();
+
             BOOL_ELEMENT(expected).key("enablePerformanceStats")
                     .displayedName("Performance stats on/off")
                     .description("Value of 'performanceStatistics.enable' used when instantiating loggers")
@@ -156,7 +160,7 @@ namespace karabo {
                     .description("Timeout of requests to DataLogger's or during checks")
                     .unit(Unit::SECOND)
                     .metricPrefix(MetricPrefix::MILLI)
-                    .assignmentOptional().defaultValue(2000) // 2 seconds
+                    .assignmentOptional().defaultValue(15000) // 15 seconds
                     .reconfigurable()
                     .minInc(100).maxInc(60000) // 100 ms to 1 minute
                     .commit();
@@ -369,7 +373,7 @@ namespace karabo {
                     if (devs.size() > 5) {
                         // Prints the first three and the total number of devices.
                         checkResult << "\n      Details requested for "
-                                << *std::next(devs.begin(), 0) << ", " << *std::next(devs.begin(), 1) << ",\n"
+                                << *std::next(devs.begin(), 0) << ", " << *std::next(devs.begin(), 1) << ", "
                                 << *std::next(devs.begin(), 2) << " (and " << devs.size() - 3 << " more devices...)";
                     } else {
                         checkResult << "\n      Details requested for " << toString(devs);
