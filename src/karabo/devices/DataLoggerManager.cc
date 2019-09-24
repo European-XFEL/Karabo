@@ -105,6 +105,18 @@ namespace karabo {
                     .setNewDefaultValue(State::INIT)
                     .commit();
 
+            OVERWRITE_ELEMENT(expected).key("performanceStatistics.enable")
+                    .setNewDefaultValue(true)
+                    .commit();
+
+            OVERWRITE_ELEMENT(expected).key("visibility")
+                    .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
+                    .commit();
+
+            OVERWRITE_ELEMENT(expected).key("deviceId")
+                    .setNewDefaultValue("Karabo_DataLoggerManager_0")
+                    .commit();
+
             INT32_ELEMENT(expected).key("flushInterval")
                     .displayedName("Flush interval")
                     .description("The interval after which the memory accumulated data is made persistent")
@@ -120,10 +132,6 @@ namespace karabo {
                     .metricPrefix(MetricPrefix::MEGA)
                     .reconfigurable()
                     .assignmentOptional().defaultValue(100)
-                    .commit();
-
-            OVERWRITE_ELEMENT(expected).key("performanceStatistics.enable")
-                    .setNewDefaultValue(true)
                     .commit();
 
             BOOL_ELEMENT(expected).key("enablePerformanceStats")
@@ -160,7 +168,10 @@ namespace karabo {
                     .description("Timeout of requests to DataLogger's or during checks")
                     .unit(Unit::SECOND)
                     .metricPrefix(MetricPrefix::MILLI)
-                    .assignmentOptional().defaultValue(15000) // 15 seconds
+                    // Defaults to 15 s.
+                    // 2 s. lead to many timeouts. During tests, 4 s. latencies have been observed.
+                    // 15 s. adds an extra safety margin.
+                    .assignmentOptional().defaultValue(15000)
                     .reconfigurable()
                     .minInc(100).maxInc(60000) // 100 ms to 1 minute
                     .commit();
@@ -220,14 +231,6 @@ namespace karabo {
                     .assignmentOptional().defaultValue(30)
                     .reconfigurable()
                     .minInc(1).maxInc(600)
-                    .commit();
-
-            OVERWRITE_ELEMENT(expected).key("visibility")
-                    .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
-                    .commit();
-
-            OVERWRITE_ELEMENT(expected).key("deviceId")
-                    .setNewDefaultValue("Karabo_DataLoggerManager_0")
                     .commit();
         }
 
