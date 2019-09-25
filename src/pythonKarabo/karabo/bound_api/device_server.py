@@ -9,7 +9,7 @@ import sys
 import signal
 import copy
 import socket
-from subprocess import Popen
+from subprocess import Popen, TimeoutExpired
 import threading
 
 from karathon import (
