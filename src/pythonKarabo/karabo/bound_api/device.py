@@ -1458,22 +1458,35 @@ class PythonDevice(NoFsm):
         os.kill(os.getpid(), signal.SIGTERM)
 
     def slotUpdateSchemaAttributes(self, updates):
-        successFull = self.fullSchema.applyRuntimeUpdates(updates)
+        success = False
+        fullSchBackup = Schema()
 
-        # Whenever updating self.fullSchema, we have to clear the cache
-        self._stateDependentSchema.clear()
+        with self._stateChangeLock:
+            fullSchBackup.copy(self.fullSchema)
 
-        successInjected = self._injectedSchema.applyRuntimeUpdates(updates)
+            success = self.fullSchema.applyRuntimeUpdates(updates)
+            # Whenever updating self.fullSchema, we have to clear the cache
+            self._stateDependentSchema.clear()
 
-        if successFull and successInjected:
-            # Notify everyone
-            self._ss.emit("signalSchemaUpdated", self.fullSchema,
-                          self.deviceid)
+            if success:
+                # Once the attributes in the fullSchema have been successfully
+                # updated, also perform any required attribute update on the
+                # injectedSchema. The update of attributes for the injected
+                # Schema is performed on a best effort basis - every path in
+                # updates that is found in the injectedSchema will have its
+                # attribute updated; those that are not found will be skipped.
+                self._injectedSchema.applyRuntimeUpdates(updates)
+                # Notify everyone
+                self._ss.emit("signalSchemaUpdated", self.fullSchema,
+                              self.deviceid)
+            else:
+                # Rollback the full schema changes.
+                self.fullSchema.copy(fullSchBackup)
 
-        self._ss.reply(Hash("success", (successFull and successInjected),
-                            "instanceId", self.deviceid,
-                            "updatedSchema", self.fullSchema,
-                            "requestedUpdate", updates))
+            self._ss.reply(Hash("success", success,
+                                "instanceId", self.deviceid,
+                                "updatedSchema", self.fullSchema,
+                                "requestedUpdate", updates))
 
     def slotTimeTick(self, id, sec, frac, period):
         epochNow = Epochstamp()
