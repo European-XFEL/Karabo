@@ -35,6 +35,12 @@ private:
     void testGetTimestamp();
     void testSchemaInjection();
 
+    /** Tests that updateSchema resets attributes in the static schema. */
+    void testSchemaWithAttrUpdate();
+
+    /** Tests that appendSchema preserves attributes in the static schema. */
+    void testSchemaWithAttrAppend();
+
     bool waitForCondition(boost::function<bool() > checker, unsigned int timeoutMs);
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
