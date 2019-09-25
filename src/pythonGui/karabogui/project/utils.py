@@ -10,8 +10,8 @@ from karabo.common.macro_sanity_check import macro_sleep_check
 from karabo.common.project.api import (
     BaseProjectObjectModel, DeviceConfigurationModel, DeviceInstanceModel,
     DeviceServerModel, MacroModel, ProjectModel, device_config_exists,
-    device_instance_exists, recursive_save_object, read_lazy_object
-)
+    device_instance_exists, device_server_exists, recursive_save_object,
+    read_lazy_object)
 from karabo.common.scenemodel.api import (
     BaseWidgetObjectData, SceneLinkModel, SceneModel
 )
@@ -127,6 +127,23 @@ def check_device_config_exists(instance_id, config_name):
                'added!').format(config_name)
         messagebox.show_warning(msg,
                                 title='Device configuration already exists')
+        return True
+    return False
+
+
+def check_device_server_exists(instance_id):
+    """Check whether the device server already exists
+
+    :param instance_id: serverId to be searched for
+
+    :return ``True`` if server name is found else ``False``.
+    """
+    root_project = get_project_model().root_model
+    if device_server_exists(root_project, instance_id):
+        msg = ('The server with the server ID \"<b>{}</b>\" '
+               '<br> already exists. Therefore it will not be '
+               'added!').format(instance_id)
+        messagebox.show_warning(msg, title='Server already exists')
         return True
     return False
 
