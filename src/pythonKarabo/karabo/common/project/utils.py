@@ -3,6 +3,7 @@ from traits.api import Instance, List
 from karabo.common.api import walk_traits_object
 from .bases import BaseProjectObjectModel
 from .device import DeviceInstanceModel
+from .macro import MacroModel
 from .server import DeviceServerModel
 
 
@@ -70,6 +71,27 @@ def device_server_exists(project, instance_ids):
         nonlocal found
         if isinstance(obj, DeviceServerModel):
             if obj.server_id in instance_ids:
+                found = True
+
+    walk_traits_object(project, visitor)
+    return found
+
+
+def macro_exists(project, instance_ids):
+    """Check whether the a ``project`` already has a macro[s] with the given
+    ``instance_ids`` and return ``True`` or ``False``
+    """
+    found = False
+
+    # Allow one or more instance ids, but macros have their simple_name checked
+    # as their instance id is composed of uuid and simple_name
+    if isinstance(instance_ids, str):
+        instance_ids = (instance_ids,)
+
+    def visitor(obj):
+        nonlocal found
+        if isinstance(obj, MacroModel):
+            if obj.simple_name in instance_ids:
                 found = True
 
     walk_traits_object(project, visitor)
