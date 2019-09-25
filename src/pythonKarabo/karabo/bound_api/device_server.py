@@ -527,7 +527,11 @@ class Launcher(object):
     # TODO This should be renamed, has nothing to do with threads
     def join(self):
         if self.child.poll() is None:
-            self.child.wait()
+            try:
+                self.child.wait(timeout=5)
+            except TimeoutExpired:
+                self.child.kill()
+                self.child.wait()
 
 
 def main(args=None):
