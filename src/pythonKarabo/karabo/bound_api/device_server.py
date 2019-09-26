@@ -440,7 +440,7 @@ class DeviceServer(object):
             self.log.INFO("Received kill signal")
         else:  # might get killed by signal handler before setting up logging
             print("Received kill signal")
-        for deviceid, launcher in self.deviceInstanceMap:
+        for deviceid, launcher in self.deviceInstanceMap.items():
             self.ss.call(deviceid, "slotKillDevice")
             if launcher:
                 try:
