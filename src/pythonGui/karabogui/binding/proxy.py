@@ -1,8 +1,8 @@
 from collections import Counter
 
 from traits.api import (
-    HasStrictTraits, Any, Bool, DelegatesTo, Enum, Event, Instance, Int,
-    Property, String, Tuple, WeakRef, on_trait_change)
+    HasStrictTraits, Any, Bool, cached_property, DelegatesTo, Enum, Event,
+    Instance, Int, Property, String, Tuple, WeakRef, on_trait_change)
 
 from karabo.common import const
 from karabo.common.api import DeviceStatus, ONLINE_STATUSES
@@ -252,6 +252,8 @@ class PropertyProxy(HasStrictTraits):
     pipeline_parent_path = String
     # Whether or not this property is currently visible in a scene
     visible = Bool(False)
+    # Check whether we are existing or not
+    existing = Property(Bool, depends_on='root_proxy.online')
 
     # Names of attributes in `binding.attributes` which are editable
     editable_attributes = Tuple
@@ -260,6 +262,14 @@ class PropertyProxy(HasStrictTraits):
 
     # -----------------------------------------------------------------------
     # Traits methods
+
+    @cached_property
+    def _get_existing(self):
+        # NOTE: We declare ourselves as existing until we are proven otherwise
+        # This is required to properly show offline bindings!
+        # This property is therefore bound to an online status change of the
+        # proxy!
+        return self.binding is not None if self.root_proxy.online else True
 
     def _get_key(self):
         if not isinstance(self.root_proxy, DeviceProxy):
