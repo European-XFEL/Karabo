@@ -446,8 +446,8 @@ class DeviceServer(object):
                 try:
                     launcher.join()
                 except TimeoutException:
-                    self.log.WARN("Timeout while stopping the device \"{}\""
-                        "... SIGKILL".format(deviceid))
+                    self.log.WARN("Timeout while stopping the device '{}'"
+                                  "... SIGKILL".format(deviceid))
                     launcher.kill()
         self.deviceInstanceMap = {}
         try:
@@ -471,8 +471,8 @@ class DeviceServer(object):
                 try:
                     launcher.join()
                 except TimeoutException:
-                    self.log.WARN("Timeout while stopping the device \"{}\""
-                        "... SIGKILL".format(instanceId))
+                    self.log.WARN("Timeout while stopping the device '{}'"
+                                  "... SIGKILL".format(instanceId))
                     launcher.kill()
             del self.deviceInstanceMap[instanceId]
             self.log.INFO("Device '{}' removed from server."
