@@ -42,7 +42,7 @@ class PanelAreaEnum(Enum):
     """
     Left = 0
     Middle = 1
-    Right = 3
+    Right = 2
 
 
 _CLOSABLE_PANELS = {
@@ -354,8 +354,8 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(mainSplitter)
 
         # Set up the left area
-        left_top = PanelContainer("Navigation", left_area)
-        self._panel_areas[PanelAreaEnum.Left] = left_top
+        left = PanelContainer("Navigation", left_area)
+        self._panel_areas[PanelAreaEnum.Left] = left
 
         # Set up the middle area
         middle = PanelContainer("Custom view", middle_area, handle_empty=True)
