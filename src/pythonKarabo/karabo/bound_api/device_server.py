@@ -446,7 +446,8 @@ class DeviceServer(object):
                 try:
                     launcher.join()
                 except TimeoutException:
-                    self.log.WARN("Timeout while stopping the device '{}'"
+                    self.log.WARN("Timeout on server shutdown while stopping"
+                                  " the process for '{}'"
                                   "... SIGKILL".format(deviceid))
                     launcher.kill()
         self.deviceInstanceMap = {}
@@ -471,7 +472,8 @@ class DeviceServer(object):
                 try:
                     launcher.join()
                 except TimeoutException:
-                    self.log.WARN("Timeout while stopping the device '{}'"
+                    self.log.WARN("Timeout on device shutdown while stopping"
+                                  " the process for '{}'"
                                   "... SIGKILL".format(instanceId))
                     launcher.kill()
             del self.deviceInstanceMap[instanceId]
