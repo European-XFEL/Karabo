@@ -114,7 +114,7 @@ class PanelWrangler(QObject):
         instance_ids = data.get('instanceIds')
         for inst_id in instance_ids:
             self._open_instance_panel(inst_id, AlarmPanel,
-                                      PanelAreaEnum.MiddleBottom)
+                                      PanelAreaEnum.Middle)
 
     def _event_remove_alarm(self, data):
         instance_ids = data.get('instanceIds')
@@ -174,7 +174,7 @@ class PanelWrangler(QObject):
         if self.main_window is None:
             panel.close()
         else:
-            self.main_window.removePanel(panel, PanelAreaEnum.MiddleTop)
+            self.main_window.removePanel(panel, PanelAreaEnum.Middle)
 
     def _close_project_item_panels(self, models):
         for model in models:
@@ -242,8 +242,8 @@ class PanelWrangler(QObject):
             panel.show()
             return
         if not has_panel:
-            self.main_window.addPanel(panel, PanelAreaEnum.MiddleTop)
-        self.main_window.selectPanel(panel, PanelAreaEnum.MiddleTop)
+            self.main_window.addPanel(panel, PanelAreaEnum.Middle)
+        self.main_window.selectPanel(panel, PanelAreaEnum.Middle)
 
 
 def _find_scene_model(name, uuid):
