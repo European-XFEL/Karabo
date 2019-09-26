@@ -36,7 +36,7 @@ class ControllerContainer(QWidget):
 
         # Trigger the status change once (might be offline)
         device_proxy = self.widget_controller.proxy.root_proxy
-        self._device_status_changed(device_proxy.status)
+        self._proxy_status_changed(device_proxy.status)
         # ... and the access level check
         self.update_global_access_level(krb_globals.GLOBAL_ACCESS_LEVEL)
 
@@ -78,7 +78,7 @@ class ControllerContainer(QWidget):
         """Tell the controller to clean up
         """
         proxy = self.widget_controller.proxy
-        proxy.root_proxy.on_trait_change(self._device_status_changed, 'status',
+        proxy.root_proxy.on_trait_change(self._proxy_status_changed, 'status',
                                          remove=True)
         if self.is_editable:
             proxy.on_trait_change(
@@ -141,13 +141,18 @@ class ControllerContainer(QWidget):
 
         # Attach a handler for the 'status' trait of our main device
         device_proxy = controller.proxy.root_proxy
-        device_proxy.on_trait_change(self._device_status_changed, 'status')
+        device_proxy.on_trait_change(self._proxy_status_changed, 'status')
 
         return controller
 
-    def _device_status_changed(self, status):
-        """Traits notification callback when the status of the device changes.
+    def _proxy_status_changed(self, status):
+        """Traits notification callback when the status of the proxy changes.
+
+        The existing property of the proxy is evaluated here as it is coupled
+        to the online status change!
         """
+        proxy = self.widget_controller.proxy
+        status = status if proxy.existing else DeviceStatus.MISSING
         error = (status is DeviceStatus.ERROR)
         pixmap = get_device_status_pixmap(status, error)
         if pixmap is not None:
