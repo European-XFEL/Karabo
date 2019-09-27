@@ -7,8 +7,10 @@ from functools import partial
 
 from PyQt4.QtCore import QObject
 
+from karabo.common.api import set_modified_flag
 from karabo.common.project.api import (
     MemCacheWrapper, get_user_cache, read_lazy_object)
+from karabo.common.scenemodel.api import SceneModel
 from karabo.native import (
     Hash, read_project_model, write_project_model)
 from karabogui import messagebox
@@ -345,8 +347,12 @@ class ProjectDatabaseConnection(QObject):
             # Write to the local cache
             data = write_project_model(obj)
             self.cache.store(domain, uuid, data)
-            # No longer dirty!
-            obj.modified = False
+            # NOTE: The modified scene model contains one or more widgets
+            # that have been modified which need to be reset!
+            if isinstance(obj, SceneModel):
+                set_modified_flag(obj, False)
+            else:
+                obj.modified = False
 
         self._broadcast_is_processing(is_processing)
 
