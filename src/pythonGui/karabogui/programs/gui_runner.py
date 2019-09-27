@@ -5,7 +5,8 @@ from traceback import print_exception, format_exception
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (
-    QApplication, QIcon, QMessageBox, QPixmap, QSplashScreen, QStyleFactory)
+    QApplication, QFont, QIcon, QMessageBox, QPixmap, QSplashScreen,
+    QStyleFactory)
 from pyqtgraph import setConfigOptions
 
 from karabogui.events import broadcast_event, KaraboEvent
@@ -68,6 +69,11 @@ def run_gui(args):
     # Set the style among all operating systems
     app.setStyle(QStyleFactory.create("Cleanlooks"))
     app.setPalette(QApplication.style().standardPalette())
+
+    font = QFont()
+    font.setFamily("Sans Serif")
+    font.setPointSize(10)
+    app.setFont(font)
 
     # set a nice app logo
     logo_path = op.join(op.dirname(__file__), '..', "icons", "app_logo.png")
