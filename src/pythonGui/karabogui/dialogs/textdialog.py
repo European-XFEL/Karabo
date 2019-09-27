@@ -2,8 +2,8 @@ import os.path as op
 
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot, Qt
-from PyQt4.QtGui import (QColor, QColorDialog, QDialog, QFont, QFontDialog,
-                         QIcon, QPixmap)
+from PyQt4.QtGui import (QApplication, QColor, QColorDialog, QDialog, QFont,
+                         QFontDialog, QIcon, QPixmap)
 
 from karabo.common.scenemodel.api import LabelModel
 
@@ -17,9 +17,9 @@ class TextDialog(QDialog):
         if label_model is None:
             # NOTE: Fonts similar on all OS are Arial, Helvetica, sans-serif!
             self.label_model = LabelModel()
-            self.text_font = QFont()
-            self.text_font.setFamily("Sans Serif")
+            self.text_font = QApplication.font()
             self.text_font.setStyleName("Normal")
+            self.text_font.setPointSize(10)
             self.label_model.font = self.text_font.toString()
         else:
             self.label_model = label_model.clone_traits()
