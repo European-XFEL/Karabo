@@ -445,7 +445,7 @@ class DeviceServer(object):
             if launcher:
                 try:
                     launcher.join()
-                except TimeoutException:
+                except TimeoutExpired:
                     self.log.WARN("Timeout on server shutdown while stopping"
                                   " the process for '{}'"
                                   "... SIGKILL".format(deviceid))
@@ -471,7 +471,7 @@ class DeviceServer(object):
             if launcher:
                 try:
                     launcher.join()
-                except TimeoutException:
+                except TimeoutExpired:
                     self.log.WARN("Timeout on device shutdown while stopping"
                                   " the process for '{}'"
                                   "... SIGKILL".format(instanceId))
