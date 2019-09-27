@@ -193,6 +193,7 @@ class PanelWrangler(QObject):
             self.splash.finish(self.main_window)
 
         self.main_window.show()
+        self.main_window.acServerConnect.trigger()
 
     def _open_macro(self, model):
         if model is None:
