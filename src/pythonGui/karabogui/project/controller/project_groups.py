@@ -18,6 +18,7 @@ from karabogui.enums import ProjectItemTypes
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.project.dialog.object_handle import ObjectEditDialog
 from karabogui.project.dialog.server_handle import ServerHandleDialog
+from karabogui.project.utils import check_device_server_exists
 from karabogui.request import call_device_slot
 from karabogui.singletons.api import get_config
 from karabogui.util import (
@@ -255,9 +256,11 @@ def _add_server(project_controller):
     project = project_controller.model
     dialog = ServerHandleDialog()
     if dialog.exec() == QDialog.Accepted:
-        # XXX: TODO check for existing and eventual host handling
+        serverId = dialog.server_id
+        if check_device_server_exists(serverId):
+            return
         traits = {
-            'server_id': dialog.server_id,
+            'server_id': serverId,
             'description': dialog.description
         }
         server = DeviceServerModel(**traits)
