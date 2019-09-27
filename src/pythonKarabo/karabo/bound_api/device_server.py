@@ -440,13 +440,16 @@ class DeviceServer(object):
             self.log.INFO("Received kill signal")
         else:  # might get killed by signal handler before setting up logging
             print("Received kill signal")
-        launchers = []
-        for deviceid in list(self.deviceInstanceMap.keys()):
+        for deviceid, launcher in self.deviceInstanceMap.items():
             self.ss.call(deviceid, "slotKillDevice")
-            launchers.append(self.deviceInstanceMap[deviceid])
-        for l in launchers:
-            if l:
-                l.join()
+            if launcher:
+                try:
+                    launcher.join()
+                except TimeoutExpired:
+                    self.log.WARN("Timeout on server shutdown while stopping"
+                                  " the process for '{}'"
+                                  "... SIGKILL".format(deviceid))
+                    launcher.kill()
         self.deviceInstanceMap = {}
         try:
             self.ss.reply(self.serverid)
@@ -464,9 +467,15 @@ class DeviceServer(object):
         self.log.DEBUG("Device '{0}' notifies '{1.serverid}' about its future "
                        "death.".format(instanceId, self))
         if instanceId in self.deviceInstanceMap:
-            t = self.deviceInstanceMap[instanceId]
-            if t:
-                t.join()
+            launcher = self.deviceInstanceMap[instanceId]
+            if launcher:
+                try:
+                    launcher.join()
+                except TimeoutExpired:
+                    self.log.WARN("Timeout on device shutdown while stopping"
+                                  " the process for '{}'"
+                                  "... SIGKILL".format(instanceId))
+                    launcher.kill()
             del self.deviceInstanceMap[instanceId]
             self.log.INFO("Device '{}' removed from server."
                           .format(instanceId))
@@ -527,11 +536,11 @@ class Launcher(object):
     # TODO This should be renamed, has nothing to do with threads
     def join(self):
         if self.child.poll() is None:
-            try:
-                self.child.wait(timeout=5)
-            except TimeoutExpired:
-                self.child.kill()
-                self.child.wait()
+            self.child.wait(timeout=5)
+
+    def kill(self):
+        self.child.kill()
+        self.child.wait()
 
 
 def main(args=None):
