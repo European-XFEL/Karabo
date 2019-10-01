@@ -5,7 +5,7 @@ import sys
 
 from PyQt4.QtCore import Qt, QTimer
 from PyQt4.QtGui import (
-    qApp, QApplication, QIcon, QPixmap, QSplashScreen, QStyleFactory)
+    qApp, QApplication, QFont, QIcon, QPixmap, QSplashScreen, QStyleFactory)
 from pyqtgraph import setConfigOptions
 
 from karabo.common.api import Capabilities
@@ -138,6 +138,11 @@ def run_theatre(ns):
     app.setStyle(QStyleFactory.create("Cleanlooks"))
     app.setPalette(QApplication.style().standardPalette())
     app.setAttribute(Qt.AA_DontShowIconsInMenus, False)
+
+    font = QFont()
+    font.setFamily("Sans Serif")
+    font.setPointSize(10)
+    app.setFont(font)
 
     # set a nice app logo
     logo_path = op.join(op.dirname(__file__), '..', "icons", "app_logo.png")
