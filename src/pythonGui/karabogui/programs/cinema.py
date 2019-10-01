@@ -4,7 +4,7 @@ import sys
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (
-    QApplication, QIcon, QPixmap, QSplashScreen, QStyleFactory)
+    QApplication, QFont, QIcon, QPixmap, QSplashScreen, QStyleFactory)
 from pyqtgraph import setConfigOptions
 
 from karabo.common.scenemodel.api import SceneTargetWindow
@@ -31,6 +31,11 @@ def run_cinema(ns):
     app.setStyleSheet("QPushButton { text-align: left; padding: 5px; }")
     app.setStyleSheet("QToolBar { border: 0px }")
     app.setAttribute(Qt.AA_DontShowIconsInMenus, False)
+
+    font = QFont()
+    font.setFamily("Sans Serif")
+    font.setPointSize(10)
+    app.setFont(font)
 
     # set a nice app logo
     logo_path = op.join(op.dirname(__file__), '..', "icons", "app_logo.png")
