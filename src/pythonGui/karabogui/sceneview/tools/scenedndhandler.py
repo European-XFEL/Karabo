@@ -7,7 +7,7 @@ from abc import abstractmethod
 import json
 
 from PyQt4.QtCore import QPoint
-from PyQt4.QtGui import QApplication, QBoxLayout
+from PyQt4.QtGui import QBoxLayout, QFont
 from traits.api import ABCHasStrictTraits
 
 from karabo.common.scenemodel.api import (
@@ -78,8 +78,7 @@ class ConfigurationDropHandler(SceneDnDHandler):
         layout_model = BoxLayoutModel(direction=QBoxLayout.LeftToRight,
                                       x=pos.x(), y=pos.y())
         # Add label to layout model
-        font = QApplication.font()
-        label_model = LabelModel(text=item['label'], font=font.toString(),
+        label_model = LabelModel(text=item['label'], font=QFont().toString(),
                                  foreground='#000000')
         layout_model.children.append(label_model)
 
