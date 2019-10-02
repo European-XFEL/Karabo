@@ -18,7 +18,8 @@ from karabogui.enums import ProjectItemTypes
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.project.dialog.object_handle import ObjectEditDialog
 from karabogui.project.dialog.server_handle import ServerHandleDialog
-from karabogui.project.utils import check_device_server_exists
+from karabogui.project.utils import (
+    check_device_server_exists, check_macro_exists)
 from karabogui.request import call_device_slot
 from karabogui.singletons.api import get_config
 from karabogui.util import (
@@ -136,8 +137,10 @@ def _add_macro(project_controller):
     if dialog.exec() == QDialog.Accepted:
         classname = dialog.simple_name.title()
         classname = "".join(c for c in classname if c.isalpha())
-        # XXX: TODO check for existing
-        macro = MacroModel(simple_name=dialog.simple_name,
+        macro_name = dialog.simple_name
+        if check_macro_exists(macro_name):
+            return
+        macro = MacroModel(simple_name=macro_name,
                            code=_macro_template.format(classname))
         # Set initialized and modified last
         macro.initialized = macro.modified = True
