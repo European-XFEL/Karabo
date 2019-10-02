@@ -5,7 +5,7 @@ from traits.api import (
     Instance, Int, Property, String, Tuple, WeakRef, on_trait_change)
 
 from karabo.common import const
-from karabo.common.api import DeviceStatus, ONLINE_STATUSES
+from karabo.common.api import DeviceStatus, ONLINE_STATUSES, SCHEMA_STATUSES
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.singletons.api import get_network, get_topology
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
@@ -253,7 +253,7 @@ class PropertyProxy(HasStrictTraits):
     # Whether or not this property is currently visible in a scene
     visible = Bool(False)
     # Check whether we are existing or not
-    existing = Property(Bool, depends_on='root_proxy.online')
+    existing = Property(Bool, depends_on='root_proxy.schema_update')
 
     # Names of attributes in `binding.attributes` which are editable
     editable_attributes = Tuple
@@ -267,9 +267,12 @@ class PropertyProxy(HasStrictTraits):
     def _get_existing(self):
         # NOTE: We declare ourselves as existing until we are proven otherwise
         # This is required to properly show offline bindings!
-        # This property is therefore bound to an online status change of the
-        # proxy!
-        return self.binding is not None if self.root_proxy.online else True
+        # This property is therefore bound to an schema update with a schema
+        # arrived status of the proxy!
+        if self.root_proxy.status not in SCHEMA_STATUSES:
+            return True
+
+        return self.binding is not None
 
     def _get_key(self):
         if not isinstance(self.root_proxy, DeviceProxy):
