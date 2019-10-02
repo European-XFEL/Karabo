@@ -1,7 +1,7 @@
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     MacroModel, ProjectModel, device_config_exists, device_instance_exists,
-    device_server_exists, find_parent_object
+    device_server_exists, macro_exists, find_parent_object
 )
 from nose.tools import assert_raises
 
@@ -159,3 +159,11 @@ def test_device_server_exists():
     assert not device_server_exists(proj, bar.server_id)
     proj.servers.append(serv1)
     assert device_server_exists(proj, bar.server_id)
+
+
+def test_macro_exists():
+    foo = MacroModel(simple_name='fooMacro')
+    bar = MacroModel(simple_name='barMacro')
+    proj = ProjectModel(macros=[foo])
+    assert macro_exists(proj, foo.simple_name)
+    assert not macro_exists(proj, bar.simple_name)
