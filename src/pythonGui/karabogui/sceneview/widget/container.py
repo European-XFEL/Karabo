@@ -149,7 +149,7 @@ class ControllerContainer(QWidget):
         """Traits notification callback when the status of the proxy changes.
 
         The existing property of the proxy is evaluated here as it is coupled
-        to the online status change!
+        to the schema status change!
         """
         proxy = self.widget_controller.proxy
         status = status if proxy.existing else DeviceStatus.MISSING
