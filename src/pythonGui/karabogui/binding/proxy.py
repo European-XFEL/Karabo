@@ -1,7 +1,7 @@
 from collections import Counter
 
 from traits.api import (
-    HasStrictTraits, Any, Bool, cached_property, DelegatesTo, Enum, Event,
+    HasStrictTraits, Any, Bool, DelegatesTo, Enum, Event,
     Instance, Int, Property, String, Tuple, WeakRef, on_trait_change)
 
 from karabo.common import const
@@ -253,7 +253,7 @@ class PropertyProxy(HasStrictTraits):
     # Whether or not this property is currently visible in a scene
     visible = Bool(False)
     # Check whether we are existing or not
-    existing = Property(Bool, depends_on='root_proxy.schema_update')
+    existing = Bool(True)
 
     # Names of attributes in `binding.attributes` which are editable
     editable_attributes = Tuple
@@ -262,17 +262,6 @@ class PropertyProxy(HasStrictTraits):
 
     # -----------------------------------------------------------------------
     # Traits methods
-
-    @cached_property
-    def _get_existing(self):
-        # NOTE: We declare ourselves as existing until we are proven otherwise
-        # This is required to properly show offline bindings!
-        # This property is therefore bound to an schema update with a schema
-        # arrived status of the proxy!
-        if self.root_proxy.status not in SCHEMA_STATUSES:
-            return True
-
-        return self.binding is not None
 
     def _get_key(self):
         if not isinstance(self.root_proxy, DeviceProxy):
@@ -325,6 +314,8 @@ class PropertyProxy(HasStrictTraits):
 
         self.binding = self.root_proxy.get_property_binding(self.path)
         self.pipeline_parent_path = self._pipeline_parent_path_default()
+        if self.root_proxy.status in SCHEMA_STATUSES:
+            self.existing = self.binding is not None
 
     def _edit_value_changed(self, value):
         """When `edit_value` changes, set it to a binding object to validate
