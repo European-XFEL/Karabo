@@ -70,10 +70,9 @@ def run_cinema(ns):
     get_manager()
 
     # Init the panel wrangler singleton, depending on the splash boolean!
+    panel_wrangler = get_panel_wrangler()
     if not ns.nosplash:
-        get_panel_wrangler().use_splash_screen(splash)
-    else:
-        get_panel_wrangler()
+        panel_wrangler.use_splash_screen(splash)
 
     def trigger_scenes():
         topology.system_tree.on_trait_change(
