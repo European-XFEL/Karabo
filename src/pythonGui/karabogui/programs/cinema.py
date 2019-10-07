@@ -3,17 +3,12 @@ import os.path as op
 import sys
 
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import (
-    QApplication, QFont, QIcon, QPixmap, QSplashScreen, QStyleFactory)
-from pyqtgraph import setConfigOptions
+from PyQt4.QtGui import QPixmap, QSplashScreen
 
 from karabo.common.scenemodel.api import SceneTargetWindow
-from karabogui import icons
-from karabogui.controllers.api import populate_controller_registry
 from karabogui.events import broadcast_event, KaraboEvent
-from karabogui.singletons.api import (
-    get_db_conn, get_manager, get_mediator, get_panel_wrangler, get_network,
-    get_topology)
+from karabogui.programs.base import create_gui_app, init_gui
+from karabogui.singletons.api import get_db_conn, get_network, get_topology
 
 
 def run_cinema(ns):
@@ -24,28 +19,8 @@ def run_cinema(ns):
 
     All scenes have the name ProjectDB|SceneName and are not editable!
     """
-    app = QApplication(sys.argv)
-    # Set the style among all operating systems
-    app.setStyle(QStyleFactory.create("Cleanlooks"))
-    app.setPalette(QApplication.style().standardPalette())
-    app.setStyleSheet("QPushButton { text-align: left; padding: 5px; }")
-    app.setStyleSheet("QToolBar { border: 0px }")
-    app.setAttribute(Qt.AA_DontShowIconsInMenus, False)
-
-    font = QFont()
-    font.setFamily("Sans Serif")
-    font.setPointSize(10)
-    app.setFont(font)
-
-    # set a nice app logo
-    logo_path = op.join(op.dirname(__file__), '..', "icons", "app_logo.png")
-    app.setWindowIcon(QIcon(logo_path))
-
-    # These should be set to simplify QSettings usage
-    app.setOrganizationName('XFEL')
-    app.setOrganizationDomain('xfel.eu')
-    app.setApplicationName('KaraboGUI')
-
+    app = create_gui_app(sys.argv)
+    splash = None
     if not ns.nosplash:
         splash_path = op.join(op.dirname(__file__), '..', "icons",
                               "splash.png")
@@ -59,20 +34,7 @@ def run_cinema(ns):
         splash.showMessage(" ")
         app.processEvents()
 
-    # Do some busy actions here!
-    setConfigOptions(background=None, foreground="k")
-    # Run the lazy initializers (icons, widget controllers)
-    icons.init()
-    populate_controller_registry()
-
-    # Init some singletons
-    get_mediator()
-    get_manager()
-
-    # Init the panel wrangler singleton, depending on the splash boolean!
-    panel_wrangler = get_panel_wrangler()
-    if not ns.nosplash:
-        panel_wrangler.use_splash_screen(splash)
+    init_gui(app, splash)
 
     def trigger_scenes():
         topology.system_tree.on_trait_change(
