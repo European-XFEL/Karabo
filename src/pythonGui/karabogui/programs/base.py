@@ -4,7 +4,8 @@ import warnings
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (
-    QApplication, QFont, QIcon, QMessageBox, QStyleFactory)
+    QApplication, QFont, QIcon, QMessageBox, QPixmap, QSplashScreen,
+    QStyleFactory)
 from pyqtgraph import setConfigOptions
 
 from karabogui.controllers.api import populate_controller_registry
@@ -58,13 +59,30 @@ def create_gui_app(args):
     return app
 
 
-def init_gui(app, splash=None):
+def init_gui(app, use_splash=True):
     """Initialize the GUI.
 
     Imports are being done inside this function to avoid delaying the display
     of the splash screen. We want the user to know that something is happening
     soon after they launch the GUI.
     """
+    # Do some event processing!
+    app.processEvents()
+
+    if use_splash:
+        splash_path = op.join(op.dirname(__file__), '..', "icons",
+                              "splash.png")
+        splash_img = QPixmap(splash_path)
+        splash = QSplashScreen(splash_img, Qt.WindowStaysOnTopHint)
+        splash.setMask(splash_img.mask())
+        splash.show()
+        # NOTE: This is needed to make the splash screen show up...
+        splash.showMessage(" ")
+
+    # Do some event processing!
+    app.processEvents()
+
+    # Start some heavy importing!
     from karabogui import icons
     import numpy
 
@@ -84,5 +102,7 @@ def init_gui(app, splash=None):
     get_manager()
     # Initialize the PanelWrangler and attach the splash screen
     panel_wranger = get_panel_wrangler()
-    if splash is not None:
+    app.processEvents()
+    if use_splash:
         panel_wranger.use_splash_screen(splash)
+        app.processEvents()

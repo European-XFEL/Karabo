@@ -1,9 +1,5 @@
 import argparse
-import os.path as op
 import sys
-
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QPixmap, QSplashScreen
 
 from karabo.common.scenemodel.api import SceneTargetWindow
 from karabogui.events import broadcast_event, KaraboEvent
@@ -20,21 +16,7 @@ def run_cinema(ns):
     All scenes have the name ProjectDB|SceneName and are not editable!
     """
     app = create_gui_app(sys.argv)
-    splash = None
-    if not ns.nosplash:
-        splash_path = op.join(op.dirname(__file__), '..', "icons",
-                              "splash.png")
-        splash_img = QPixmap(splash_path)
-        splash = QSplashScreen(splash_img, Qt.WindowStaysOnTopHint)
-        splash.setMask(splash_img.mask())
-        splash.show()
-        app.processEvents()
-
-        # This is needed to make the splash screen show up...
-        splash.showMessage(" ")
-        app.processEvents()
-
-    init_gui(app, splash)
+    init_gui(app, use_splash=not ns.nosplash)
 
     def trigger_scenes():
         topology.system_tree.on_trait_change(

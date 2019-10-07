@@ -1,10 +1,10 @@
 import argparse
-import os.path as op
 import re
 import sys
 
-from PyQt4.QtCore import Qt, QTimer
-from PyQt4.QtGui import qApp, QPixmap, QSplashScreen
+from PyQt4.QtCore import QTimer
+from PyQt4.QtGui import qApp
+
 from karabo.common.api import Capabilities
 from karabogui import messagebox
 from karabogui.programs.base import create_gui_app, init_gui
@@ -128,18 +128,7 @@ def run_theatre(ns):
     All scenes have the name deviceId|sceneName and are not editable!
     """
     app = create_gui_app(sys.argv)
-    splash_path = op.join(op.dirname(__file__), '..', "icons", "splash.png")
-    splash_img = QPixmap(splash_path)
-    splash = QSplashScreen(splash_img, Qt.WindowStaysOnTopHint)
-    splash.setMask(splash_img.mask())
-    splash.show()
-    app.processEvents()
-
-    # This is needed to make the splash screen show up...
-    splash.showMessage(" ")
-    app.processEvents()
-
-    init_gui(app, splash)
+    init_gui(app, use_splash=True)
 
     # We might want to connect directly to the gui server
     if ns.host and ns.port:
