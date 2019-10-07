@@ -1,7 +1,7 @@
 from functools import partial
 
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, Qt
-from PyQt4.QtGui import QGridLayout, QSizePolicy, QWidget
+from PyQt4.QtGui import QAction, QGridLayout, QSizePolicy, QWidget
 from pyqtgraph import GraphicsView, mkPen, PlotItem
 
 from karabogui.actions import build_qaction, KaraboAction
@@ -12,7 +12,8 @@ from karabogui.graph.common.api import (
     get_default_pen, make_pen, MouseMode, KaraboLegend, KaraboToolBar,
     KaraboViewBox, PointCanvas, ROITool, ROIToolset)
 from karabogui.graph.common.const import (
-    AXIS_ITEMS, DEFAULT_BAR_WIDTH, WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH)
+    AXIS_ITEMS, DEFAULT_BAR_WIDTH, EMPTY_SYMBOL_OPTIONS, DEFAULT_SYMBOL,
+    SYMBOL_SIZE, WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH)
 
 from karabogui.graph.plots.dialogs import RangeDialog
 from karabogui.graph.plots.items import (
@@ -78,6 +79,8 @@ class KaraboPlotView(QWidget):
         self._cross_target = None
         self._roi = None
         self._canvas = None
+
+        self._show_symbols = False
 
     def setup_qactions(self):
         """The setup of the basic actions is gathered here!"""
@@ -220,8 +223,34 @@ class KaraboPlotView(QWidget):
         else:
             self.set_autorange(autorange)
 
+    @pyqtSlot(bool)
+    def toggle_data_symbols(self, show):
+        """Toggle the data points on the plotItems"""
+        self._show_symbols = show
+        for item in self.plotItem.items[:]:
+            if show:
+                options = {'symbol': DEFAULT_SYMBOL,
+                           'symbolSize': SYMBOL_SIZE,
+                           'symbolPen': item.opts['pen'],
+                           'symbolBrush': None}
+            else:
+                options = EMPTY_SYMBOL_OPTIONS
+            # NOTE: We are directly setting the options dict to avoid
+            # multiple updates!
+            item.opts.update(options)
+            item.updateItems()
+
     # ----------------------------------------------------------------
     # Base Functions
+
+    def enable_data_toggle(self):
+        """Optionally enable the showing of data points"""
+        toggle_action = QAction("Show data points", self)
+        toggle_action.setCheckable(True)
+        toggle_action.setChecked(False)
+        toggle_action.toggled.connect(self.toggle_data_symbols)
+        viewbox = self.plotItem.vb
+        viewbox.add_action(toggle_action)
 
     def restore(self, config):
         """Restore the widget configuration with a config dictionary"""
@@ -362,19 +391,17 @@ class KaraboPlotView(QWidget):
         for item in plot_item.items[:]:
             plot_item.removeItem(item)
 
-    def add_curve_fill(self, pen=get_default_pen(),
-                       brush=get_default_brush()):
+    def add_curve_fill(self, pen=get_default_pen(), brush=get_default_brush()):
         """Adds two curves which are filled inbetween"""
-        item = VectorFillGraphPlot(viewbox=self.plotItem.vb,
-                                   pen=pen,
-                                   brush=brush)
+        item = VectorFillGraphPlot(
+            viewbox=self.plotItem.vb, pen=pen, brush=brush)
 
         self.plotItem.addItem(item)
 
         return item
 
     def add_curve_item(self, name=None, pen=get_default_pen(),
-                       brush=get_default_brush(), **kwargs):
+                       brush=get_default_brush(), **options):
         """Add a plot to the built-in plotItem from PyQtGraph
 
         :param name: Set a name to automatically provide a legend
@@ -383,9 +410,16 @@ class KaraboPlotView(QWidget):
                     Default is solid grey, 1px width. Use None to disable line
                     drawing.
         """
-        return self.plotItem.plot(name=name, pen=pen, brush=brush, **kwargs)
+        if self._show_symbols:
+            # If a curve is dynamically added, we still have to show points
+            # when desired!
+            options.update({'symbol': DEFAULT_SYMBOL,
+                            'symbolSize': SYMBOL_SIZE,
+                            'symbolPen': pen, 'symbolBrush': None})
 
-    def add_scatter_item(self, pen=mkPen(None), cycle=True, **kwargs):
+        return self.plotItem.plot(name=name, pen=pen, brush=brush, **options)
+
+    def add_scatter_item(self, pen=mkPen(None), cycle=True, **options):
         """Add a scatter item to the built-in plotItem
 
         :param pen: pen used for the scatter plot (default: None)
@@ -395,7 +429,7 @@ class KaraboPlotView(QWidget):
 
         :parem size: The size (or list of sizes) of spots.
         """
-        item = ScatterGraphPlot(pen=pen, cycle=cycle, **kwargs)
+        item = ScatterGraphPlot(pen=pen, cycle=cycle, **options)
         self.plotItem.addItem(item)
 
         return item
