@@ -5,7 +5,7 @@ from traits.api import (
     Instance, Int, Property, String, Tuple, WeakRef, on_trait_change)
 
 from karabo.common import const
-from karabo.common.api import DeviceStatus, ONLINE_STATUSES, SCHEMA_STATUSES
+from karabo.common.api import ProxyStatus, ONLINE_STATUSES, SCHEMA_STATUSES
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.singletons.api import get_network, get_topology
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
@@ -32,7 +32,7 @@ class BaseDeviceProxy(HasStrictTraits):
     # True when the device is online
     online = Property(Bool, depends_on='status')
     # The current status
-    status = Enum(*DeviceStatus)
+    status = Enum(*ProxyStatus)
     # An event which fires when the schema is updated or otherwise changes
     schema_update = DelegatesTo('binding')
 
@@ -48,7 +48,7 @@ class BaseDeviceProxy(HasStrictTraits):
         return self.status in ONLINE_STATUSES
 
     def _status_default(self):
-        return DeviceStatus.OFFLINE
+        return ProxyStatus.OFFLINE
 
     def get_property_binding(self, path):
         """Return the ``BaseBinding``-derived instance for the proxy property
@@ -86,25 +86,25 @@ class DeviceProxy(BaseDeviceProxy):
     # Traits methods
 
     def _config_update_fired(self):
-        if self.status is DeviceStatus.SCHEMA:
-            self.status = DeviceStatus.ALIVE
-        if self.status is DeviceStatus.ALIVE and self._monitor_count > 0:
-            self.status = DeviceStatus.MONITORING
+        if self.status is ProxyStatus.SCHEMA:
+            self.status = ProxyStatus.ALIVE
+        if self.status is ProxyStatus.ALIVE and self._monitor_count > 0:
+            self.status = ProxyStatus.MONITORING
 
     def _schema_update_fired(self):
-        if self.status is DeviceStatus.ONLINEREQUESTED:
+        if self.status is ProxyStatus.ONLINEREQUESTED:
             if self._monitor_count > 0:
                 self._start_monitoring()
                 # reestablish the pipelining
                 for path in self._pipeline_subscriptions:
                     get_network().onSubscribeToOutput(self.device_id, path,
                                                       True)
-            self.status = DeviceStatus.SCHEMA
-        elif self.status in (DeviceStatus.ALIVE, DeviceStatus.MONITORING):
+            self.status = ProxyStatus.SCHEMA
+        elif self.status in (ProxyStatus.ALIVE, ProxyStatus.MONITORING):
             get_network().onGetDeviceConfiguration(self.device_id)
 
     def _status_changed(self, new):
-        if new is DeviceStatus.ONLINE and self._monitor_count > 0:
+        if new is ProxyStatus.ONLINE and self._monitor_count > 0:
             self.refresh_schema()
 
     def __monitor_count_changed(self, old, new):
@@ -128,12 +128,12 @@ class DeviceProxy(BaseDeviceProxy):
     def add_monitor(self):
         """Ask the GUI server to begin monitoring this device
         """
-        ignored_statuses = (DeviceStatus.OFFLINE,
-                            DeviceStatus.ONLINEREQUESTED)
+        ignored_statuses = (ProxyStatus.OFFLINE,
+                            ProxyStatus.ONLINEREQUESTED)
 
         self._monitor_count += 1
         if self._monitor_count == 1:
-            if self.status is DeviceStatus.ONLINE:
+            if self.status is ProxyStatus.ONLINE:
                 self.refresh_schema()
             elif self.status not in ignored_statuses:
                 self._start_monitoring()
@@ -145,8 +145,8 @@ class DeviceProxy(BaseDeviceProxy):
         self._monitor_count -= 1
         if self._monitor_count == 0:
             get_network().onStopMonitoringDevice(self.device_id)
-            if self.status is DeviceStatus.MONITORING:
-                self.status = DeviceStatus.ALIVE
+            if self.status is ProxyStatus.MONITORING:
+                self.status = ProxyStatus.ALIVE
 
     def connect_pipeline(self, path):
         """Ask the GUI server to subscribe to a pipeline output
@@ -184,9 +184,9 @@ class DeviceProxy(BaseDeviceProxy):
     def refresh_schema(self):
         """Request a recent schema for this device instance
         """
-        if self.status is not DeviceStatus.ONLINEREQUESTED:
+        if self.status is not ProxyStatus.ONLINEREQUESTED:
             get_network().onGetDeviceSchema(self.device_id)
-            self.status = DeviceStatus.ONLINEREQUESTED
+            self.status = ProxyStatus.ONLINEREQUESTED
 
     # -----------------------------------------------------------------------
     # Private interface
@@ -204,22 +204,22 @@ class DeviceClassProxy(BaseDeviceProxy):
         server_key = 'server.{}'.format(self.server_id)
         attributes = topology.get_attributes(server_key)
         if attributes is None:
-            return DeviceStatus.NOSERVER
+            return ProxyStatus.NOSERVER
         elif self.binding.class_id not in attributes.get('deviceClasses', []):
-            return DeviceStatus.NOPLUGIN
-        return DeviceStatus.OFFLINE
+            return ProxyStatus.NOPLUGIN
+        return ProxyStatus.OFFLINE
 
     def _schema_update_fired(self):
-        if self.status is DeviceStatus.REQUESTED:
+        if self.status is ProxyStatus.REQUESTED:
             self.status = self._status_default()
 
     def refresh_schema(self):
         """Request a recent schema for this device class
         """
-        if self.status is not DeviceStatus.REQUESTED:
+        if self.status is not ProxyStatus.REQUESTED:
             get_network().onGetClassSchema(self.server_id,
                                            self.binding.class_id)
-            self.status = DeviceStatus.REQUESTED
+            self.status = ProxyStatus.REQUESTED
 
 
 class ProjectDeviceProxy(DeviceClassProxy):
