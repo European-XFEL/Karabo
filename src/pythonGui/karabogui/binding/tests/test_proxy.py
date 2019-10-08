@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 from traits.api import Undefined
 
-from karabo.common.api import DeviceStatus
+from karabo.common.api import ProxyStatus
 from karabo.native import Hash
 from karabogui.testing import (
     assert_trait_change, get_class_property_proxy, singletons)
@@ -38,20 +38,20 @@ def test_device_class_proxy_status():
         binding = build_binding(schema)
         proxy = DeviceClassProxy(server_id='swerver', binding=binding)
 
-        assert proxy.status == DeviceStatus.NOSERVER
+        assert proxy.status == ProxyStatus.NOSERVER
         topology.get_attributes.assert_called_with('server.swerver')
 
         topology.get_attributes.return_value = {}
         proxy = DeviceClassProxy(binding=binding)
-        assert proxy.status == DeviceStatus.NOPLUGIN
+        assert proxy.status == ProxyStatus.NOPLUGIN
 
         topology.get_attributes.return_value = {'deviceClasses': ['Simple']}
         proxy = DeviceClassProxy(binding=binding)
-        assert proxy.status == DeviceStatus.OFFLINE
+        assert proxy.status == ProxyStatus.OFFLINE
 
-        proxy.status = DeviceStatus.REQUESTED
+        proxy.status = ProxyStatus.REQUESTED
         proxy.schema_update = True
-        assert proxy.status == DeviceStatus.OFFLINE
+        assert proxy.status == ProxyStatus.OFFLINE
         assert not proxy.online
 
 
@@ -63,7 +63,7 @@ def test_device_class_proxy_refresh():
         proxy = DeviceClassProxy(server_id='swerver', binding=binding)
         proxy.refresh_schema()
 
-        assert proxy.status == DeviceStatus.REQUESTED
+        assert proxy.status == ProxyStatus.REQUESTED
         network.onGetClassSchema.assert_called_with('swerver', 'Simple')
 
 
@@ -89,33 +89,33 @@ def test_device_proxy_status():
         proxy = DeviceProxy(device_id='dev', server_id='swerver',
                             binding=binding)
 
-        assert proxy.status == DeviceStatus.OFFLINE
+        assert proxy.status == ProxyStatus.OFFLINE
         proxy.add_monitor()
-        proxy.status = DeviceStatus.ONLINE
+        proxy.status = ProxyStatus.ONLINE
         network.onGetDeviceSchema.assert_called_with('dev')
 
         proxy.schema_update = True
         network.onStartMonitoringDevice.assert_called_with('dev')
-        assert proxy.status == DeviceStatus.SCHEMA
+        assert proxy.status == ProxyStatus.SCHEMA
 
         proxy.config_update = True
-        assert proxy.status == DeviceStatus.MONITORING
+        assert proxy.status == ProxyStatus.MONITORING
 
         proxy.remove_monitor()
         network.onStopMonitoringDevice.assert_called_with('dev')
-        assert proxy.status == DeviceStatus.ALIVE
+        assert proxy.status == ProxyStatus.ALIVE
 
         proxy.schema_update = True
         network.onGetDeviceConfiguration.assert_called_with('dev')
 
         proxy.add_monitor()
         proxy.config_update = True
-        assert proxy.status == DeviceStatus.MONITORING
+        assert proxy.status == ProxyStatus.MONITORING
 
         proxy.remove_monitor()
-        proxy.status = DeviceStatus.ONLINE
+        proxy.status = ProxyStatus.ONLINE
         proxy.add_monitor()
-        assert proxy.status == DeviceStatus.ONLINEREQUESTED
+        assert proxy.status == ProxyStatus.ONLINEREQUESTED
 
 
 def test_device_proxy_data_feeds():
@@ -195,18 +195,18 @@ def test_property_proxy_existing():
         proxy = PropertyProxy(root_proxy=root_proxy, path='bar')
         other = PropertyProxy(root_proxy=root_proxy, path='fooo')
 
-        assert root_proxy.status == DeviceStatus.OFFLINE
+        assert root_proxy.status == ProxyStatus.OFFLINE
         assert proxy.existing
         assert other.existing
         root_proxy.add_monitor()
-        root_proxy.status = DeviceStatus.ONLINE
+        root_proxy.status = ProxyStatus.ONLINE
         assert proxy.existing
         assert other.existing
         network.onGetDeviceSchema.assert_called_with('dev')
 
         root_proxy.schema_update = True
         network.onStartMonitoringDevice.assert_called_with('dev')
-        assert root_proxy.status == DeviceStatus.SCHEMA
+        assert root_proxy.status == ProxyStatus.SCHEMA
         assert proxy.existing
         assert proxy.binding is not None
         assert not other.existing
