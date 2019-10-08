@@ -6,7 +6,7 @@ from karabo.common.api import DeviceStatus
 from karabo.native import Hash
 from karabogui.testing import (
     assert_trait_change, get_class_property_proxy, singletons)
-from ..api import (
+from karabogui.binding.api import (
     ImageBinding, DeviceProxy, DeviceClassProxy, PropertyProxy,
     apply_default_configuration, build_binding, extract_sparse_configurations,
     get_editor_value
@@ -182,6 +182,35 @@ def test_property_proxy_device_value():
     root_proxy = DeviceClassProxy(binding=binding)
     proxy = PropertyProxy(root_proxy=root_proxy, path='foo')
     assert proxy.get_device_value()  # defaultValue of 'foo' is True
+
+
+def test_property_proxy_existing():
+    """Test the existing property of a property proxy"""
+    network = Mock()
+    with singletons(network=network):
+        schema = get_simple_schema()
+        binding = build_binding(schema)
+        root_proxy = DeviceProxy(device_id='dev', server_id='swerver',
+                                 binding=binding)
+        proxy = PropertyProxy(root_proxy=root_proxy, path='bar')
+        other = PropertyProxy(root_proxy=root_proxy, path='fooo')
+
+        assert root_proxy.status == DeviceStatus.OFFLINE
+        assert proxy.existing
+        assert other.existing
+        root_proxy.add_monitor()
+        root_proxy.status = DeviceStatus.ONLINE
+        assert proxy.existing
+        assert other.existing
+        network.onGetDeviceSchema.assert_called_with('dev')
+
+        root_proxy.schema_update = True
+        network.onStartMonitoringDevice.assert_called_with('dev')
+        assert root_proxy.status == DeviceStatus.SCHEMA
+        assert proxy.existing
+        assert proxy.binding is not None
+        assert not other.existing
+        assert other.binding is None
 
 
 def test_property_proxy_history():
