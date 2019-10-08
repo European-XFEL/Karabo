@@ -6,7 +6,7 @@
 from traits.api import (HasStrictTraits, Bool, Dict, Instance, Property,
                         on_trait_change, Set)
 
-from karabo.common.api import DeviceStatus
+from karabo.common.api import ProxyStatus
 from karabo.native import Hash
 from karabogui.alarms.api import ADD_ALARM_TYPES, REMOVE_ALARM_TYPES
 from karabogui.binding.api import (
@@ -114,7 +114,7 @@ class SystemTopology(HasStrictTraits):
                     self._requested_class_schemas.add(key)
                     proxy.refresh_schema()
                 else:
-                    proxy.status = DeviceStatus.REQUESTED
+                    proxy.status = ProxyStatus.REQUESTED
 
         return proxy
 
@@ -194,15 +194,15 @@ class SystemTopology(HasStrictTraits):
             # Only fetch the schema if it's not already cached and server
             # exists and device plugin is installed
             if schema is None:
-                if proxy.status not in (DeviceStatus.NOSERVER,
-                                        DeviceStatus.NOPLUGIN):
+                if proxy.status not in (ProxyStatus.NOSERVER,
+                                        ProxyStatus.NOPLUGIN):
                     # We only request if it was not previously requested!
                     request = key not in self._requested_class_schemas
                     if request:
                         self._requested_class_schemas.add(key)
                         proxy.refresh_schema()
                     else:
-                        proxy.status = DeviceStatus.REQUESTED
+                        proxy.status = ProxyStatus.REQUESTED
                 else:
                     # The device class is not installed on the server, but
                     # requested from the project, we create an empty
@@ -376,7 +376,7 @@ class SystemTopology(HasStrictTraits):
             # Set the DeviceProxy to offline, but keep it.
             proxy = self._device_proxies.get(instance_id)
             if proxy is not None:
-                proxy.status = DeviceStatus.OFFLINE
+                proxy.status = ProxyStatus.OFFLINE
                 # XXX: We used to clear the configuration tree widget here
 
             # Update system tree
@@ -469,10 +469,10 @@ class SystemTopology(HasStrictTraits):
         for proxy in self._device_proxies.values():
             # extract this device's information from system hash
             attrs = self._get_device_attributes(proxy.device_id)
-            if proxy.status is DeviceStatus.OFFLINE and attrs:
-                proxy.status = DeviceStatus.ONLINE
-            elif proxy.status is not DeviceStatus.OFFLINE and attrs is None:
-                proxy.status = DeviceStatus.OFFLINE
+            if proxy.status is ProxyStatus.OFFLINE and attrs:
+                proxy.status = ProxyStatus.ONLINE
+            elif proxy.status is not ProxyStatus.OFFLINE and attrs is None:
+                proxy.status = ProxyStatus.OFFLINE
             # The information we pull out of the system hash may also contain
             # device error or alarm information, project device will not be
             # updated until user show them in the configurator, so here we set
@@ -596,7 +596,7 @@ class SystemTopology(HasStrictTraits):
             # Set the DeviceProxy to offline, but keep it.
             proxy = self._device_proxies.get(instance_id)
             if proxy is not None:
-                proxy.status = DeviceStatus.OFFLINE
+                proxy.status = ProxyStatus.OFFLINE
                 # XXX: We used to clear the configuration tree widget here
 
             # Update system tree
@@ -638,10 +638,10 @@ class SystemTopology(HasStrictTraits):
             did = dev.device_id
             # extract this device's information from system hash
             attrs = self._get_device_attributes(did)
-            if dev.status is DeviceStatus.OFFLINE and attrs:
-                dev.status = DeviceStatus.ONLINE
-            elif dev.status is not DeviceStatus.OFFLINE and attrs is None:
-                dev.status = DeviceStatus.OFFLINE
+            if dev.status is ProxyStatus.OFFLINE and attrs:
+                dev.status = ProxyStatus.ONLINE
+            elif dev.status is not ProxyStatus.OFFLINE and attrs is None:
+                dev.status = ProxyStatus.OFFLINE
             # The information we pull out of the system hash may also contain
             # device error or alarm information, project device will not be
             # updated until user show them in the configurator, so here we set

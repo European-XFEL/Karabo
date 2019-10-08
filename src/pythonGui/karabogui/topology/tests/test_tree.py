@@ -1,6 +1,6 @@
 from traits.api import push_exception_handler, pop_exception_handler
 
-from karabo.common.api import DeviceStatus
+from karabo.common.api import ProxyStatus
 from karabo.native import AccessLevel
 from karabogui.enums import NavigationItemTypes
 from karabogui.testing import system_hash, system_hash_server_and_plugins
@@ -19,7 +19,7 @@ def test_tree_node_basics():
     empty = SystemTreeNode(
         node_id='node_id', path='path',
         visibility=AccessLevel.OPERATOR,
-        status=DeviceStatus.OFFLINE,
+        status=ProxyStatus.OFFLINE,
         children=[]
     )
 

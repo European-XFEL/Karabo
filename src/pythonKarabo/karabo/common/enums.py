@@ -23,7 +23,7 @@ class Interfaces(IntEnum):
     # ...
 
 
-class DeviceStatus(Enum):
+class ProxyStatus(Enum):
     # device could, but is not started
     OFFLINE = 'offline'
     # the device is online, but no detailed information retrieved yet
@@ -54,18 +54,18 @@ class DeviceStatus(Enum):
 
 # The device is online in these status
 ONLINE_STATUSES = (
-    DeviceStatus.OK, DeviceStatus.ONLINE, DeviceStatus.ALIVE,
-    DeviceStatus.ONLINEREQUESTED, DeviceStatus.MONITORING,
-    DeviceStatus.SCHEMA, DeviceStatus.ERROR
+    ProxyStatus.OK, ProxyStatus.ONLINE, ProxyStatus.ALIVE,
+    ProxyStatus.ONLINEREQUESTED, ProxyStatus.MONITORING,
+    ProxyStatus.SCHEMA, ProxyStatus.ERROR
 )
 
 
 SCHEMA_STATUSES = (
-    DeviceStatus.ALIVE, DeviceStatus.MONITORING, DeviceStatus.SCHEMA,
+    ProxyStatus.ALIVE, ProxyStatus.MONITORING, ProxyStatus.SCHEMA,
 )
 
 
 # The device is not able to receive configuration
 NO_CONFIG_STATUSES = (
-    DeviceStatus.NOPLUGIN, DeviceStatus.NOSERVER, DeviceStatus.REQUESTED
+    ProxyStatus.NOPLUGIN, ProxyStatus.NOSERVER, ProxyStatus.REQUESTED
 )

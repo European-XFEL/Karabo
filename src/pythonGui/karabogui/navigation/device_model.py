@@ -9,7 +9,7 @@ from PyQt4.QtCore import (
     pyqtSignal, pyqtSlot, QAbstractItemModel, QModelIndex, Qt)
 from PyQt4.QtGui import QItemSelection, QItemSelectionModel
 
-from karabo.common.api import DeviceStatus
+from karabo.common.api import ProxyStatus
 from karabogui import globals as krb_globals, icons
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.singletons.api import get_topology
@@ -135,7 +135,7 @@ class DeviceTreeModel(QAbstractItemModel):
             elif hierarchyLevel == 1:
                 return icons.folderType
             elif hierarchyLevel == 2:
-                if node.status is DeviceStatus.ERROR:
+                if node.status is ProxyStatus.ERROR:
                     return icons.deviceInstanceError
                 else:
                     return icons.deviceInstance

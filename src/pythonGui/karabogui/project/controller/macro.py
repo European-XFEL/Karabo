@@ -10,7 +10,7 @@ from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance, String, on_trait_change
 
-from karabo.common.api import DeviceStatus
+from karabo.common.api import ProxyStatus
 from karabo.common.project.api import MacroModel, read_macro, write_macro
 from karabogui import icons, messagebox
 from karabogui.enums import ProjectItemTypes
@@ -42,7 +42,7 @@ class MacroInstanceController(BaseProjectController):
         return menu
 
     def create_ui_data(self):
-        icon = get_project_device_status_icon(DeviceStatus.ONLINE)
+        icon = get_project_device_status_icon(ProxyStatus.ONLINE)
         return ProjectControllerUiData(icon=icon)
 
     def single_click(self, project_controller, parent=None):
@@ -134,7 +134,7 @@ class MacroController(BaseProjectGroupController):
         running_instances = self.model.instances
         for dev_id, class_id, status in devices:
             if dev_id.startswith(self.model.instance_id):
-                if (DeviceStatus(status) is DeviceStatus.OFFLINE and
+                if (ProxyStatus(status) is ProxyStatus.OFFLINE and
                         dev_id in running_instances):
                     running_instances.remove(dev_id)
                 elif dev_id not in running_instances:
