@@ -154,8 +154,7 @@ class _BaseTableElement(BaseBindingController):
                 if c_hash.hasAttribute(key, 'options'):
                     delegate = ComboBoxDelegate(
                         c_hash.getAttribute(key, 'options'),
-                        row=self._item_model.rowCount(),
-                        column=column, parent=self.widget)
+                        parent=self.widget)
                     self.widget.setItemDelegateForColumn(column, delegate)
 
 # ---------------------------------------------------------------------
