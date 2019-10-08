@@ -1,6 +1,6 @@
 from unittest.mock import ANY, Mock, call, patch
 
-from karabo.common.api import DeviceStatus
+from karabo.common.api import ProxyStatus
 from karabo.native import (
     AccessMode, Configurable, Hash, Int32, Schema, Timestamp)
 from karabogui.binding.api import build_binding, DeviceClassProxy, DeviceProxy
@@ -127,8 +127,8 @@ class TestManager(GuiTestCase):
 
                 topo_update = {
                     'devices': [('orphan', 'Parentless',
-                                 DeviceStatus.NOSERVER)],
-                    'servers': [('swerver', 'BIG_IRON', DeviceStatus.OK)]
+                                 ProxyStatus.NOSERVER)],
+                    'servers': [('swerver', 'BIG_IRON', ProxyStatus.OK)]
                 }
                 broadcast_event.assert_called_with(
                     KaraboEvent.SystemTopologyUpdate, topo_update)
@@ -138,7 +138,7 @@ class TestManager(GuiTestCase):
         with singletons(network=network, topology=topology):
             manager = Manager()
 
-            devices = [('orphan', 'Parentless', DeviceStatus.OFFLINE)]
+            devices = [('orphan', 'Parentless', ProxyStatus.OFFLINE)]
             topology.instance_gone.return_value = (devices, [])
 
             calls = [
