@@ -456,8 +456,6 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def onExit(self):
-        if not self._quit():
-            return
         self.close()
 
     @pyqtSlot()
