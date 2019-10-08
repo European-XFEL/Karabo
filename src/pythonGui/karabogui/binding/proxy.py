@@ -1,11 +1,11 @@
 from collections import Counter
 
 from traits.api import (
-    HasStrictTraits, Any, Bool, DelegatesTo, Enum, Event, Instance, Int,
-    Property, String, Tuple, WeakRef, on_trait_change)
+    HasStrictTraits, Any, Bool, DelegatesTo, Enum, Event,
+    Instance, Int, Property, String, Tuple, WeakRef, on_trait_change)
 
 from karabo.common import const
-from karabo.common.api import DeviceStatus, ONLINE_STATUSES
+from karabo.common.api import DeviceStatus, ONLINE_STATUSES, SCHEMA_STATUSES
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.singletons.api import get_network, get_topology
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
@@ -252,6 +252,8 @@ class PropertyProxy(HasStrictTraits):
     pipeline_parent_path = String
     # Whether or not this property is currently visible in a scene
     visible = Bool(False)
+    # Check whether we are existing or not
+    existing = Bool(True)
 
     # Names of attributes in `binding.attributes` which are editable
     editable_attributes = Tuple
@@ -312,6 +314,8 @@ class PropertyProxy(HasStrictTraits):
 
         self.binding = self.root_proxy.get_property_binding(self.path)
         self.pipeline_parent_path = self._pipeline_parent_path_default()
+        if self.root_proxy.status in SCHEMA_STATUSES:
+            self.existing = self.binding is not None
 
     def _edit_value_changed(self, value):
         """When `edit_value` changes, set it to a binding object to validate
