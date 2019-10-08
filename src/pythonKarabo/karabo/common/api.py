@@ -35,7 +35,7 @@ from .display_types import(
     KARABO_SCHEMA_DISPLAY_TYPE_SCENES, KARABO_SCHEMA_DISPLAY_TYPE_RUNCONFIGURATOR,
 )
 from .enums import (Capabilities, DeviceStatus, Interfaces, ONLINE_STATUSES,
-                    NO_CONFIG_STATUSES)
+                    NO_CONFIG_STATUSES, SCHEMA_STATUSES)
 from .module import create_module
 from .savable import BaseSavableModel, set_modified_flag
 from .states import State, StateSignifier

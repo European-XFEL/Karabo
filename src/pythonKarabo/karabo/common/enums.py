@@ -60,6 +60,11 @@ ONLINE_STATUSES = (
 )
 
 
+SCHEMA_STATUSES = (
+    DeviceStatus.ALIVE, DeviceStatus.MONITORING, DeviceStatus.SCHEMA,
+)
+
+
 # The device is not able to receive configuration
 NO_CONFIG_STATUSES = (
     DeviceStatus.NOPLUGIN, DeviceStatus.NOSERVER, DeviceStatus.REQUESTED
