@@ -211,6 +211,21 @@ def load_project(is_subproject=False):
     return None
 
 
+def reload_project(model):
+    """Reload a project from the project database."""
+    uuid = model.uuid
+    model = ProjectModel(uuid=uuid)
+    # NOTE: We keep the default domain of the db_conn here!
+    db_conn = get_db_conn()
+    domain = db_conn.default_domain
+    read_lazy_object(domain, uuid, db_conn, read_project_model,
+                     existing=model)
+    # NOTE: Cache objects are loaded without modified flag!
+    db_conn.flush()
+
+    return model
+
+
 def maybe_save_modified_project(project):
     """Check modified flag of the ``project`` and offer saving via dialog
     """
@@ -338,6 +353,30 @@ def show_save_project_message(project):
         if reply == QMessageBox.Save:
             return True
     return False
+
+
+def show_modified_project_message(project):
+    """Check whether the given ``project`` is modified and show a messagebox to
+    allow the user to confirm saving or cancel
+
+    :return Whether the user wants to save
+    """
+    if project is None:
+        return False
+
+    if project.modified:
+        ask = ('The project \"<b>{}</b>\" has been modified.<br />Are you '
+               'sure you want to continue? <b>Your project changes will be '
+               'lost</b>!').format(project.simple_name)
+        options = (QMessageBox.Yes | QMessageBox.No)
+        reply = QMessageBox.question(None, 'Modified project', ask, options,
+                                     QMessageBox.No)
+        if reply == QMessageBox.No:
+            return False
+
+        if reply == QMessageBox.Yes:
+            return True
+    return True
 
 
 def show_trash_project_message(is_trashed, simple_name=''):
