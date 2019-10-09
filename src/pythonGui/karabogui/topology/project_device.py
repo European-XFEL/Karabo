@@ -9,7 +9,7 @@ from traits.api import (
     on_trait_change)
 
 from karabo.common.api import (
-    DeviceStatus, KARABO_SCHEMA_DEFAULT_VALUE, ONLINE_STATUSES)
+    ProxyStatus, KARABO_SCHEMA_DEFAULT_VALUE, ONLINE_STATUSES)
 from karabo.native import Hash
 from karabogui.binding.api import (
     BaseDeviceProxy, DeviceProxy, ProjectDeviceProxy,
@@ -164,7 +164,7 @@ class ProjectDeviceInstance(HasStrictTraits):
         if self._online_proxy.online:
             status = self._online_proxy.status
             if status in ONLINE_STATUSES and self.error:
-                return DeviceStatus.ERROR
+                return ProxyStatus.ERROR
             else:
                 return status
         return self._offline_proxy.status
@@ -189,7 +189,7 @@ class ProjectDeviceInstance(HasStrictTraits):
         """Clear the offline proxy binding values when device server goes
         offline
         """
-        if new == DeviceStatus.NOSERVER:
+        if new == ProxyStatus.NOSERVER:
             self._offline_proxy.binding.value.clear()
 
     # ---------------------------------------------------------------------

@@ -9,7 +9,7 @@ from functools import wraps
 from PyQt4.QtCore import pyqtSlot, QObject
 from PyQt4.QtGui import QMessageBox
 
-from karabo.common.api import DeviceStatus
+from karabo.common.api import ProxyStatus
 from karabo.native import AccessMode, Hash, Timestamp
 from karabogui.alarms.api import extract_alarms_data
 from karabogui.background import executeLater, Priority
@@ -499,17 +499,17 @@ def _extract_topology_devices(topo_hash):
         for device_id, _, attrs in topo_hash['device'].iterall():
             class_id = attrs.get('classId', 'unknown-class')
             status = attrs.get('status', 'ok')
-            devices.append((device_id, class_id, DeviceStatus(status)))
+            devices.append((device_id, class_id, ProxyStatus(status)))
 
     if 'macro' in topo_hash:
         for device_id, _, attrs in topo_hash['macro'].iterall():
             class_id = attrs.get('classId', 'unknown-class')
-            devices.append((device_id, class_id, DeviceStatus.OK))
+            devices.append((device_id, class_id, ProxyStatus.OK))
 
     if 'server' in topo_hash:
         for server_id, _, attrs in topo_hash['server'].iterall():
             host = attrs.get('host', 'UNKNOWN')
             status = attrs.get('status', 'ok')
-            servers.append((server_id, host, DeviceStatus(status)))
+            servers.append((server_id, host, ProxyStatus(status)))
 
     return devices, servers

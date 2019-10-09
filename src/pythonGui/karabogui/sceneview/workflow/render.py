@@ -3,7 +3,7 @@ from weakref import proxy
 from PyQt4.QtCore import QPoint, Qt
 from PyQt4.QtGui import QBrush, QPainter, QPainterPath, QPen, QWidget
 
-from karabo.common.api import DeviceStatus
+from karabo.common.api import ProxyStatus
 from karabogui.indicators import get_device_status_pixmap
 from karabogui.sceneview.utils import save_painter_state
 from .const import (CHANNEL_DIAMETER, CHANNEL_WIDTH, CHANNEL_INPUT,
@@ -69,8 +69,8 @@ def _draw_device_state(painter, device_model):
     device status is missing.
     """
     dev = device_model.device
-    status = dev.proxy.status if dev is not None else DeviceStatus.MISSING
-    error = (status is DeviceStatus.ERROR)
+    status = dev.proxy.status if dev is not None else ProxyStatus.MISSING
+    error = (status is ProxyStatus.ERROR)
     pixmap = get_device_status_pixmap(status, error)
     if pixmap is not None:
         painter.drawPixmap(device_model.position, pixmap)

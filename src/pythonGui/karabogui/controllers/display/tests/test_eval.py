@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from karabo.common.api import DeviceStatus
+from karabo.common.api import ProxyStatus
 from karabo.common.scenemodel.api import EvaluatorModel
 from karabo.native import Configurable, Float
 from karabogui.binding.api import (
@@ -26,7 +26,7 @@ class TestEvaluator(GuiTestCase):
         schema = Object.getClassSchema()
         binding = build_binding(schema)
         device = DeviceClassProxy(binding=binding, server_id='Fake',
-                                  status=DeviceStatus.OFFLINE)
+                                  status=ProxyStatus.OFFLINE)
         self.prop = PropertyProxy(root_proxy=device, path='prop')
         self.alarms = PropertyProxy(root_proxy=device, path='alarms')
 

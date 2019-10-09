@@ -1,7 +1,7 @@
 from PyQt4.QtGui import QLabel
 from traits.api import Dict, Instance, Int, Str
 
-from karabo.common.api import DeviceStatus, State, KARABO_SCHEMA_DISPLAYED_NAME
+from karabo.common.api import ProxyStatus, State, KARABO_SCHEMA_DISPLAYED_NAME
 from karabo.common.scenemodel.api import BaseWidgetObjectData
 from karabo.native import (
     Bool, Configurable, Hash, Node, String, AccessMode)
@@ -153,7 +153,7 @@ class TestBaseBindingController(GuiTestCase):
         schema = SampleObject.getClassSchema()
         binding = build_binding(schema)
         device = DeviceClassProxy(binding=binding, server_id='Fake',
-                                  status=DeviceStatus.OFFLINE)
+                                  status=ProxyStatus.OFFLINE)
         self.first = PropertyProxy(root_proxy=device, path='first')
         self.second = PropertyProxy(root_proxy=device, path='second')
         self.unsupported = PropertyProxy(root_proxy=device, path='unsupported')
@@ -202,7 +202,7 @@ class TestBaseBindingController(GuiTestCase):
     def test_node_value_update(self):
         binding = build_binding(NodedObject.getClassSchema())
         device = DeviceClassProxy(binding=binding, server_id='Test',
-                                  status=DeviceStatus.OFFLINE)
+                                  status=ProxyStatus.OFFLINE)
         proxy = PropertyProxy(root_proxy=device, path='node')
         controller = self.NodeBindingController(proxy=proxy)
         controller.create(None)
@@ -242,7 +242,7 @@ class TestBaseBindingController(GuiTestCase):
         # Build a widget with two proxies that have no `binding`
         binding = build_binding(Unconnected.getClassSchema())
         device = DeviceClassProxy(binding=binding, server_id='Test',
-                                  status=DeviceStatus.OFFLINE)
+                                  status=ProxyStatus.OFFLINE)
         one = PropertyProxy(root_proxy=device, path='one')
         two = PropertyProxy(root_proxy=device, path='two')
         controller = self.DeviceController(proxy=one)
@@ -259,7 +259,7 @@ class TestBaseBindingController(GuiTestCase):
     def test_device_state_tracking(self):
         binding = build_binding(StateObject.getClassSchema())
         device = DeviceClassProxy(binding=binding, server_id='Test',
-                                  status=DeviceStatus.OFFLINE)
+                                  status=ProxyStatus.OFFLINE)
         # Make a proxy for something other than the 'state' property
         proxy = PropertyProxy(root_proxy=device, path='other')
         controller = self.StateTrackingController(proxy=proxy)
@@ -271,7 +271,7 @@ class TestBaseBindingController(GuiTestCase):
     def test_device_state_bad_binding(self):
         binding = build_binding(StateObject.getClassSchema())
         device = DeviceClassProxy(binding=binding, server_id='Test',
-                                  status=DeviceStatus.OFFLINE)
+                                  status=ProxyStatus.OFFLINE)
         # Make a proxy for something which doesn't exist
         proxy = PropertyProxy(root_proxy=device, path='oaoijasdoijasd')
         controller = self.StateTrackingController(proxy=proxy)

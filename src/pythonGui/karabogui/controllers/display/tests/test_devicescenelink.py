@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from PyQt4.QtGui import QMessageBox
 
-from karabo.common.enums import DeviceStatus
+from karabo.common.enums import ProxyStatus
 from karabo.common.scenemodel.api import (
     DeviceSceneLinkModel, SceneTargetWindow)
 from karabo.native import Configurable, VectorString
@@ -47,7 +47,7 @@ class TestDisplayDeviceSceneLink(GuiTestCase):
 
     def test_clicked(self):
         device = get_topology().get_device('deviceUno')
-        device.status = DeviceStatus.ONLINE
+        device.status = ProxyStatus.ONLINE
 
         with patch(self.target) as caller:
             self.controller.widget._handle_click()
@@ -55,7 +55,7 @@ class TestDisplayDeviceSceneLink(GuiTestCase):
 
     def test_clicked_device_off(self):
         device = get_topology().get_device('deviceUno')
-        device.status = DeviceStatus.OFFLINE
+        device.status = ProxyStatus.OFFLINE
 
         with patch(self.target) as caller, patch(self.mbox, new=MockBox):
             self.controller.widget._handle_click()
