@@ -1,7 +1,7 @@
 from PyQt4.QtCore import QRect, Qt
 from PyQt4.QtGui import QHBoxLayout, QLabel, QStackedLayout, QWidget
 
-from karabo.common.api import DeviceStatus, State
+from karabo.common.api import ProxyStatus, State
 from karabogui import globals as krb_globals
 from karabogui.indicators import get_device_status_pixmap, STATE_COLORS
 from karabogui.request import send_property_changes
@@ -163,9 +163,9 @@ class ControllerContainer(QWidget):
             status = proxy.root_proxy.status
 
         if not existing:
-            status = DeviceStatus.MISSING
+            status = ProxyStatus.MISSING
 
-        error = status is DeviceStatus.ERROR
+        error = status is ProxyStatus.ERROR
         pixmap = get_device_status_pixmap(status, error)
         if pixmap is not None:
             self.status_symbol.setPixmap(pixmap)
