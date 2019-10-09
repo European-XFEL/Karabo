@@ -195,7 +195,7 @@ class ProjectView(QTreeView):
     def _rename_project(self, project):
         """ Change the ``simple_name`` of the given ``project``
         """
-        dialog = NewProjectDialog(model=project, is_rename=True)
+        dialog = NewProjectDialog(model=project, is_rename=True, parent=self)
         result = dialog.exec()
         if result == QDialog.Accepted:
             project.simple_name = dialog.simple_name
