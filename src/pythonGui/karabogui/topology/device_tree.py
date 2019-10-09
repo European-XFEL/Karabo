@@ -9,7 +9,7 @@ from traits.api import (HasStrictTraits, Bool, Dict, Enum, Instance,
                         Int, List, on_trait_change, String, WeakRef)
 
 import karabogui.globals as krb_globals
-from karabo.common.api import DeviceStatus
+from karabo.common.api import ProxyStatus
 from karabo.native import AccessLevel
 from karabogui.enums import NavigationItemTypes
 
@@ -27,7 +27,7 @@ class DeviceTreeNode(HasStrictTraits):
     node_id = String
     server_id = String
     visibility = Enum(*AccessLevel)
-    status = Enum(*DeviceStatus)
+    status = Enum(*ProxyStatus)
     capabilities = Int
     attributes = Dict
     level = Int(-1)
@@ -204,7 +204,7 @@ class DeviceSystemTree(HasStrictTraits):
                                                AccessLevel.OBSERVER))
             capabilities = attrs.get('capabilities', 0)
             server_id = attrs.get('serverId', 'unknown-server')
-            status = DeviceStatus(attrs.get('status', 'ok'))
+            status = ProxyStatus(attrs.get('status', 'ok'))
 
             domain_node = self.root.child(domain)
             if domain_node is None:

@@ -12,7 +12,7 @@ from traits.api import (
     Int, List, Property, String, WeakRef, on_trait_change
 )
 
-from karabo.common.api import DeviceStatus
+from karabo.common.api import ProxyStatus
 from karabo.common.project.api import BaseProjectObjectModel
 
 
@@ -26,7 +26,7 @@ class ProjectControllerUiData(HasStrictTraits):
     checkable = Bool(False)
     check_state = Int(Qt.Checked)
     alarm_type = String
-    status = Enum(*DeviceStatus)
+    status = Enum(*ProxyStatus)
 
 
 class BaseProjectController(ABCHasStrictTraits):
