@@ -274,7 +274,7 @@ class MainWindow(QMainWindow):
         self.acExit.setStatusTip(text)
         self.acExit.setToolTip(text)
         self.acExit.setShortcut('Ctrl+Q')
-        self.acExit.triggered.connect(self.onExit)
+        self.acExit.triggered.connect(self.close)
 
         self.acHelpAbout = QAction("About", self)
         self.acHelpAbout.triggered.connect(self.onHelpAbout)
@@ -453,12 +453,6 @@ class MainWindow(QMainWindow):
 
     # --------------------------------------
     # Qt slots
-
-    @pyqtSlot()
-    def onExit(self):
-        if not self._quit():
-            return
-        self.close()
 
     @pyqtSlot()
     def onConfiguration(self):
