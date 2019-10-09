@@ -55,13 +55,6 @@ PLOTTABLE_TYPES = (BoolBinding, FloatBinding, IntBinding)
 DEFAULT_MIN = -0.5
 DEFAULT_MAX = 0.5
 
-# XXX: We might deal with NaN values only, hence we disable all the warnings
-# as Qwt will handle nicely!
-IGNORE_NAN_WARN = [r'Mean of empty slice', r'All-NaN slice encountered',
-                   r'All-NaN axis encountered']
-for warn in IGNORE_NAN_WARN:
-    numpy.warnings.filterwarnings('ignore', warn)
-
 
 def get_start_end_date_time(selected_time_span):
     """ Return beginning and end date time for given ``selected_time_span``.
