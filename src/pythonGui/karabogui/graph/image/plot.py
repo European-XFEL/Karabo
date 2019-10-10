@@ -6,7 +6,7 @@ from PyQt4.QtGui import QAction, QFont, QInputDialog
 from pyqtgraph import ColorMap, PlotItem
 
 from karabogui.graph.common.api import (
-    AspectRatio, COLORMAPS, ExportTool, get_axis_items, ImageExporter,
+    AspectRatio, COLORMAPS, ExportTool, create_axis_items, ImageExporter,
     NumpyExporter)
 from karabogui.graph.common.const import (
     AXIS_ITEMS, AXIS_X, AXIS_Y, DEFAULT_LABEL_X, DEFAULT_LABEL_Y,
@@ -38,7 +38,7 @@ class KaraboImagePlot(PlotItem):
     def __init__(self, parent=None):
         super(KaraboImagePlot, self).__init__(
             viewBox=KaraboImageViewBox(),
-            axisItems=get_axis_items(self.MAJOR_AXES),
+            axisItems=create_axis_items(self.MAJOR_AXES),
             parent=parent)
 
         # Initialize widgets
