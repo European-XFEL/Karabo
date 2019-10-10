@@ -40,14 +40,14 @@ class SearchBar(QWidget):
     def setModel(self, model):
         handler_method = getattr(model, 'findNodes', None)
         if handler_method is None or not callable(handler_method):
-            msg = ('An model implement a "findNodes" method '
-                   'if it is attached for to the search widget!')
+            msg = ('A model must implement a "findNodes" method '
+                   'if it is attached for the search bar!')
             raise RuntimeError(msg)
 
         handler_method = getattr(model, 'selectNode', None)
         if handler_method is None or not callable(handler_method):
-            msg = ('An model implement a "findNodes" method '
-                   'if it is attached for to the search widget!')
+            msg = ('A model must implement a "selectNode" method '
+                   'if it is attached for the search bar!')
             raise RuntimeError(msg)
 
         self.model = weakref.ref(model)
@@ -71,6 +71,9 @@ class SearchBar(QWidget):
     def _select_node(self):
         """Pick the first number in index array, select the corresponding node
         """
+        if self.model is None:
+            raise RuntimeError("Model is not set!")
+
         idx = next(iter(self.index_array))
         node = self.found[idx]
         parent = node.parent
@@ -84,6 +87,9 @@ class SearchBar(QWidget):
     @pyqtSlot(str)
     def _filter_changed(self, text):
         """ Slot is called whenever the search filter text was changed"""
+        if self.model is None:
+            raise RuntimeError("Model is not set!")
+
         if text:
             model = self.model()
             kwargs = {'case_sensitive': self.case_sensitive.isChecked(),
