@@ -17,7 +17,8 @@ from karabogui.const import SEARCH_BUTTON_WIDTH, SEARCH_LABEL_WIDTH
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.utils import (
-    load_project, maybe_save_modified_project, save_object)
+    load_project, maybe_save_modified_project, reload_project, save_object,
+    show_modified_project_message)
 from karabogui.project.view import ProjectView
 from karabogui.singletons.api import get_db_conn
 from karabogui.util import get_spin_widget
@@ -146,6 +147,12 @@ class ProjectPanel(BasePanelWidget):
             triggered=_project_save_handler,
             name="save"
         )
+        reload = KaraboAction(
+            icon=icons.reset, text="&Reload Project",
+            tooltip="Reload the current project",
+            triggered=_project_reload_handler,
+            name="reload"
+        )
         trash = KaraboAction(
             icon=icons.delete, text="&Declare as trashed or untrashed",
             tooltip=("Mark a project as trashed or untrashed depending on "
@@ -154,7 +161,7 @@ class ProjectPanel(BasePanelWidget):
             name="declare"
         )
 
-        for k_action in (new, load, save, trash):
+        for k_action in (new, load, save, reload, trash):
             q_ac = build_qaction(k_action, self)
             q_ac.setEnabled(False)
             project_view = self.project_view
@@ -294,6 +301,24 @@ def _project_load_handler(project_view):
         return
 
     project = load_project()
+    if project is not None:
+        item_model.root_model = project
+
+
+def _project_reload_handler(project_view):
+    """ Reload a project model (`ProjectViewItemModel`)
+
+    :param project_view: The `ProjectView` of the panel
+    """
+    item_model = project_view.model()
+    root_model = item_model.root_model
+    if root_model is None:
+        return
+    if not show_modified_project_message(root_model):
+        return
+
+    project = reload_project(root_model)
+    # We created a new project object!
     if project is not None:
         item_model.root_model = project
 
