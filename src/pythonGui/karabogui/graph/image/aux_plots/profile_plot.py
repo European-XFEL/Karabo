@@ -5,7 +5,7 @@ from pyqtgraph import PlotItem
 from karabogui.graph.common.const import (
     AXIS_ITEMS, AXIS_X, AXIS_Y, ROTATION_FACTOR)
 from karabogui.graph.common.api import (
-    get_axis_items, make_brush, make_pen, get_default_pen)
+    create_axis_items, make_brush, make_pen, get_default_pen)
 
 from ..aux_plots.items import AuxPlotAxisItem, AuxPlotViewBox
 from ..tools.profiler import IntensityProfiler
@@ -25,7 +25,7 @@ class BaseStepPlot(PlotItem):
             # Plot orientation is on the left of the layout, thus the x-axis
             # must be shown on the top and the y-axis on the left of the plot.
             self._shown_axes = ["right", "top"]
-        axis_items = get_axis_items(self._shown_axes, klass=AuxPlotAxisItem)
+        axis_items = create_axis_items(self._shown_axes, klass=AuxPlotAxisItem)
 
         super(BaseStepPlot, self).__init__(axisItems=axis_items,
                                            viewBox=AuxPlotViewBox())
