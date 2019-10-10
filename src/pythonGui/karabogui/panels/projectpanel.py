@@ -3,12 +3,9 @@
 # Created on October 26, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from collections import deque
 from functools import partial
-import os.path as op
 
-from PyQt4 import uic
-from PyQt4.QtCore import pyqtSlot, QSize
+from PyQt4.QtCore import QSize
 from PyQt4.QtGui import QDialog, QVBoxLayout, QWidget
 
 from karabo.common.project.api import ProjectModel
@@ -25,6 +22,7 @@ from karabogui.util import get_spin_widget
 from karabogui.widgets.toolbar import ToolBar
 
 from .base import BasePanelWidget
+from .searchwidget import SearchBar
 
 
 class ProjectPanel(BasePanelWidget):
@@ -33,7 +31,6 @@ class ProjectPanel(BasePanelWidget):
 
     def __init__(self):
         super(ProjectPanel, self).__init__("Projects")
-        self._reset_filter()
 
         # Register for broadcast events.
         # This object lives as long as the app. No need to unregister.
@@ -52,15 +49,9 @@ class ProjectPanel(BasePanelWidget):
         main_layout.setContentsMargins(2, 2, 2, 2)
 
         self.tree_view = ProjectView()
-        self.sbar = self.create_search_bar()
-        self.sbar.label_filter.textChanged.connect(self._filter_changed)
-        self.sbar.label_filter.returnPressed.connect(self._arrow_right_clicked)
-        self.sbar.arrow_left.setIcon(icons.arrowLeft)
-        self.sbar.arrow_left.clicked.connect(self._arrow_left_clicked)
-        self.sbar.arrow_right.setIcon(icons.arrowRight)
-        self.sbar.arrow_right.clicked.connect(self._arrow_right_clicked)
-        self.sbar.case_sensitive.clicked.connect(self._update_filter)
-        self.sbar.regexp.clicked.connect(self._update_filter)
+        self.sbar = SearchBar(parent=self)
+        model = self.tree_view.model()
+        self.sbar.setModel(model)
 
         main_layout.addWidget(self.sbar)
         main_layout.addWidget(self.tree_view)
@@ -126,13 +117,6 @@ class ProjectPanel(BasePanelWidget):
 
         return [toolbar]
 
-    def create_search_bar(self):
-        """Returns a QHBoxLayout containing the search bar."""
-        search_widget = QWidget(parent=self)
-        uic.loadUi(op.join(op.dirname(__file__), "search_widget.ui"),
-                   search_widget)
-        return search_widget
-
     # -----------------------------------------------------------------------
     # Karabo Events
 
@@ -143,11 +127,11 @@ class ProjectPanel(BasePanelWidget):
             self._enable_partial_toolbar()
         else:
             self._enable_toolbar(not is_processing)
-            self._reset_filter(not is_processing)
+            self.sbar.reset(not is_processing)
         self.spin_action.setVisible(is_processing)
 
     def _event_filter_updated(self, data):
-        self._reset_filter(data['status'])
+        self.sbar.reset(data['status'])
 
     def _event_network(self, data):
         status = data['status']
@@ -157,7 +141,7 @@ class ProjectPanel(BasePanelWidget):
 
         self._enable_toolbar(status)
         if not status:
-            self._reset_filter(status)
+            self.sbar.reset(status)
 
     # -----------------------------------------------------------------------
 
@@ -171,80 +155,6 @@ class ProjectPanel(BasePanelWidget):
         for qaction in self._toolbar_actions:
             if qaction.objectName() in ("new", "load"):
                 qaction.setEnabled(True)
-
-    def _reset_filter(self, enable=False):
-        # A list of nodes found via the search filter
-        self.found = []
-        # A deque array indicates the current selection in `self.found`
-        self.index_array = deque([])
-        self.sbar.label_filter.setText("")
-        self.sbar.label_filter.setEnabled(enable)
-        self.sbar.case_sensitive.setEnabled(enable)
-        self.sbar.regexp.setEnabled(enable)
-        self.sbar.arrow_left.setEnabled(False)
-        self.sbar.arrow_right.setEnabled(False)
-
-    def _select_node(self):
-        """Pick the first number in index array, select the corresponding node
-        """
-        idx = next(iter(self.index_array))
-        node = self.found[idx]
-        parent = node.parent
-        # NOTE: The node might have left already!
-        if parent is not None and node in parent.children:
-            self.tree_view.model().selectNode(node)
-
-    # -----------------------------------------
-    # Qt Slots
-
-    @pyqtSlot(str)
-    def _filter_changed(self, text):
-        """ Slot is called whenever the search filter text was changed"""
-        if text:
-            model = self.tree_view.model()
-            kwargs = {'case_sensitive': self.sbar.case_sensitive.isChecked(),
-                      'use_reg_ex': self.sbar.regexp.isChecked()}
-            self.found = model.findNodes(text, **kwargs)
-        else:
-            self.found = []
-
-        n_found = len(self.found)
-        self.index_array = deque(range(n_found))
-        if self.index_array:
-            result = "{} Results".format(n_found)
-            self._select_node()
-        else:
-            result = "No results"
-        self.sbar.result.setText(result)
-
-        enable = n_found > 0
-        self.sbar.arrow_left.setEnabled(enable)
-        self.sbar.arrow_right.setEnabled(enable)
-
-    @pyqtSlot()
-    def _update_filter(self):
-        text = self.sbar.label_filter.text()
-        self._filter_changed(text)
-
-    @pyqtSlot()
-    def _arrow_left_clicked(self):
-        """rotate index array to the right, so the first index point to the
-        previous found node
-        """
-        self.index_array.rotate(1)
-        self._select_node()
-
-    @pyqtSlot()
-    def _arrow_right_clicked(self):
-        """rotate index array to the left, so the first index point to the
-        next found node
-        """
-        # Enter key press is linked to arrow right, we have to validate if
-        # there are results to show
-        if self.index_array:
-            self.index_array.rotate(-1)
-            self._select_node()
-
 
 # ------------------------------------------------------------------------
 # Helper functions
