@@ -8,7 +8,7 @@ from karabogui.actions import build_qaction, KaraboAction
 from karabogui import icons
 
 from karabogui.graph.common.api import (
-    AxesLabelsDialog, BaseROIController, get_axis_items, get_default_brush,
+    AxesLabelsDialog, BaseROIController, create_axis_items, get_default_brush,
     get_default_pen, make_pen, MouseMode, KaraboLegend, KaraboToolBar,
     KaraboViewBox, PointCanvas, ROITool, ROIToolset)
 from karabogui.graph.common.const import (
@@ -29,7 +29,7 @@ class KaraboPlotView(QWidget):
     """
     stateChanged = pyqtSignal(object)
 
-    def __init__(self, parent=None):
+    def __init__(self, use_time_axis=False, parent=None):
         super(KaraboPlotView, self).__init__(parent)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setMinimumSize(WIDGET_MIN_WIDTH, WIDGET_MIN_HEIGHT)
@@ -40,7 +40,9 @@ class KaraboPlotView(QWidget):
 
         # Initialize axis items
         tick_axes = ["bottom", "left"]
-        axis_items = get_axis_items(axes_with_ticks=tick_axes)
+        time_axis = ["top", "bottom"] if use_time_axis else []
+        axis_items = create_axis_items(axes_with_ticks=tick_axes,
+                                       time_axis=time_axis)
 
         # Our viewbox with reset range addition!
         viewbox = KaraboViewBox()
