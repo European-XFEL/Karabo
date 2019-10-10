@@ -631,7 +631,7 @@ class NetworkOutput(Configurable):
                 yield from loop.waitForChanges()
 
         host, port = self.server.sockets[0].getsockname()
-        return Hash("connectionType", "tcp", "hostname", self.hostname,
+        return Hash("connectionType", "tcp", "hostname", host,
                     "port", numpy.uint32(port))
 
     @coroutine
