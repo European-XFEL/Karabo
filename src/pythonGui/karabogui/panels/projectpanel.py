@@ -5,15 +5,15 @@
 #############################################################################
 from collections import deque
 from functools import partial
+import os.path as op
 
-from PyQt4.QtCore import pyqtSlot, QSize, Qt
-from PyQt4.QtGui import (
-    QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit, QPushButton,
-    QVBoxLayout, QWidget)
+from PyQt4 import uic
+from PyQt4.QtCore import pyqtSlot, QSize
+from PyQt4.QtGui import QDialog, QVBoxLayout, QWidget
+
 from karabo.common.project.api import ProjectModel
 from karabogui import icons
 from karabogui.actions import build_qaction, KaraboAction
-from karabogui.const import SEARCH_BUTTON_WIDTH, SEARCH_LABEL_WIDTH
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.utils import (
@@ -33,7 +33,7 @@ class ProjectPanel(BasePanelWidget):
 
     def __init__(self):
         super(ProjectPanel, self).__init__("Projects")
-        self._init_search_filter()
+        self._reset_filter()
 
         # Register for broadcast events.
         # This object lives as long as the app. No need to unregister.
@@ -49,80 +49,23 @@ class ProjectPanel(BasePanelWidget):
         """
         widget = QWidget(self)
         main_layout = QVBoxLayout(widget)
-        main_layout.setContentsMargins(5, 5, 5, 5)
+        main_layout.setContentsMargins(2, 2, 2, 2)
 
-        self.project_view = ProjectView()
-        h_layout = self.create_search_bar()
-        main_layout.addLayout(h_layout)
+        self.tree_view = ProjectView()
+        self.sbar = self.create_search_bar()
+        self.sbar.label_filter.textChanged.connect(self._filter_changed)
+        self.sbar.label_filter.returnPressed.connect(self._arrow_right_clicked)
+        self.sbar.arrow_left.setIcon(icons.arrowLeft)
+        self.sbar.arrow_left.clicked.connect(self._arrow_left_clicked)
+        self.sbar.arrow_right.setIcon(icons.arrowRight)
+        self.sbar.arrow_right.clicked.connect(self._arrow_right_clicked)
+        self.sbar.case_sensitive.clicked.connect(self._update_filter)
+        self.sbar.regexp.clicked.connect(self._update_filter)
 
-        main_layout.addWidget(self.project_view)
+        main_layout.addWidget(self.sbar)
+        main_layout.addWidget(self.tree_view)
+
         return widget
-
-    def create_search_bar(self):
-        """Returns a QHBoxLayout containing the search bar.
-        """
-        self.la_search_filter = QLabel("Search for:")
-        self.le_search_filter = QLineEdit()
-        self.le_search_filter.setToolTip("Find")
-        self.le_search_filter.textChanged.connect(self._search_filter_changed)
-        self.le_search_filter.returnPressed.connect(self._arrow_right_clicked)
-        self.pb_match = QPushButton("Aa")
-        self.pb_match.setFixedWidth(SEARCH_BUTTON_WIDTH)
-        self.pb_match.setToolTip("Match case")
-        self.pb_match.setCheckable(True)
-        self.pb_match.setChecked(False)
-        self.pb_match.clicked.connect(self._update_search_filter)
-        self.pb_reg_ex = QPushButton(".*")
-        self.pb_reg_ex.setFixedWidth(SEARCH_BUTTON_WIDTH)
-        self.pb_reg_ex.setToolTip("Use regular expression")
-        self.pb_reg_ex.setCheckable(True)
-        self.pb_reg_ex.setChecked(False)
-        self.pb_reg_ex.clicked.connect(self._update_search_filter)
-
-        frame_layout = QHBoxLayout()
-        self.filter_frame = QFrame()
-        self.filter_frame.setFrameShape(QFrame.Box)
-        self.filter_frame.setStyleSheet("background-color: white;")
-        frame_layout.addWidget(self.la_search_filter)
-        frame_layout.addWidget(self.le_search_filter)
-        frame_layout.addWidget(self.pb_match)
-        frame_layout.addWidget(self.pb_reg_ex)
-
-        self.la_result = QLabel("No results")
-        self.la_result.setFixedWidth(SEARCH_LABEL_WIDTH)
-        self.la_result.setAlignment(Qt.AlignCenter)
-        self.pb_arrow_left = QPushButton()
-        self.pb_arrow_left.setFixedWidth(SEARCH_BUTTON_WIDTH)
-        self.pb_arrow_left.setToolTip("Previous match")
-        self.pb_arrow_left.setIcon(icons.arrowLeft)
-        self.pb_arrow_left.setMaximumHeight(25)
-        self.pb_arrow_left.clicked.connect(self._arrow_left_clicked)
-        self.pb_arrow_right = QPushButton()
-        self.pb_arrow_right.setFixedWidth(SEARCH_BUTTON_WIDTH)
-        self.pb_arrow_right.setToolTip("Next match")
-        self.pb_arrow_right.setIcon(icons.arrowRight)
-        self.pb_arrow_right.setMaximumHeight(25)
-        self.pb_arrow_right.clicked.connect(self._arrow_right_clicked)
-
-        h_layout = QHBoxLayout()
-        h_layout.addLayout(frame_layout)
-        h_layout.addWidget(self.la_result)
-        h_layout.addWidget(self.pb_arrow_left)
-        h_layout.addWidget(self.pb_arrow_right)
-
-        return h_layout
-
-    def _init_search_filter(self, connected_to_server=False):
-        # A list of nodes found via the search filter
-        self.found = []
-        # A deque array indicates the current selection in `self.found`
-        self.index_array = deque([])
-        self.le_search_filter.setText("")
-        self.le_search_filter.setEnabled(connected_to_server)
-        self.pb_match.setEnabled(connected_to_server)
-        self.pb_reg_ex.setEnabled(connected_to_server)
-        self.pb_arrow_left.setEnabled(False)
-        self.pb_arrow_right.setEnabled(False)
 
     def toolbars(self):
         """This should create and return one or more `ToolBar` instances needed
@@ -164,9 +107,9 @@ class ProjectPanel(BasePanelWidget):
         for k_action in (new, load, save, reload, trash):
             q_ac = build_qaction(k_action, self)
             q_ac.setEnabled(False)
-            project_view = self.project_view
+            tree_view = self.tree_view
             q_ac.triggered.connect(partial(k_action.triggered,
-                                           project_view))
+                                           tree_view))
             self._toolbar_actions.append(q_ac)
 
         toolbar = ToolBar(parent=self)
@@ -183,6 +126,13 @@ class ProjectPanel(BasePanelWidget):
 
         return [toolbar]
 
+    def create_search_bar(self):
+        """Returns a QHBoxLayout containing the search bar."""
+        search_widget = QWidget(parent=self)
+        uic.loadUi(op.join(op.dirname(__file__), "search_widget.ui"),
+                   search_widget)
+        return search_widget
+
     # -----------------------------------------------------------------------
     # Karabo Events
 
@@ -193,21 +143,21 @@ class ProjectPanel(BasePanelWidget):
             self._enable_partial_toolbar()
         else:
             self._enable_toolbar(not is_processing)
-            self._init_search_filter(not is_processing)
+            self._reset_filter(not is_processing)
         self.spin_action.setVisible(is_processing)
 
     def _event_filter_updated(self, data):
-        self._init_search_filter(data['status'])
+        self._reset_filter(data['status'])
 
     def _event_network(self, data):
         status = data['status']
         if not status:
             # Don't show projects when there's no server connection
-            self.project_view.destroy()
+            self.tree_view.destroy()
 
         self._enable_toolbar(status)
         if not status:
-            self._init_search_filter(status)
+            self._reset_filter(status)
 
     # -----------------------------------------------------------------------
 
@@ -222,27 +172,38 @@ class ProjectPanel(BasePanelWidget):
             if qaction.objectName() in ("new", "load"):
                 qaction.setEnabled(True)
 
+    def _reset_filter(self, enable=False):
+        # A list of nodes found via the search filter
+        self.found = []
+        # A deque array indicates the current selection in `self.found`
+        self.index_array = deque([])
+        self.sbar.label_filter.setText("")
+        self.sbar.label_filter.setEnabled(enable)
+        self.sbar.case_sensitive.setEnabled(enable)
+        self.sbar.regexp.setEnabled(enable)
+        self.sbar.arrow_left.setEnabled(False)
+        self.sbar.arrow_right.setEnabled(False)
+
     def _select_node(self):
         """Pick the first number in index array, select the corresponding node
         """
         idx = next(iter(self.index_array))
         node = self.found[idx]
         parent = node.parent
-        # NOTE: The node might have left the project already!
+        # NOTE: The node might have left already!
         if parent is not None and node in parent.children:
-            self.project_view.model().selectNode(node)
+            self.tree_view.model().selectNode(node)
 
     # -----------------------------------------
     # Qt Slots
 
     @pyqtSlot(str)
-    def _search_filter_changed(self, text):
-        """ Slot is called whenever the search filter text was changed
-        """
+    def _filter_changed(self, text):
+        """ Slot is called whenever the search filter text was changed"""
         if text:
-            model = self.project_view.model()
-            kwargs = {'case_sensitive': self.pb_match.isChecked(),
-                      'use_reg_ex': self.pb_reg_ex.isChecked()}
+            model = self.tree_view.model()
+            kwargs = {'case_sensitive': self.sbar.case_sensitive.isChecked(),
+                      'use_reg_ex': self.sbar.regexp.isChecked()}
             self.found = model.findNodes(text, **kwargs)
         else:
             self.found = []
@@ -254,15 +215,16 @@ class ProjectPanel(BasePanelWidget):
             self._select_node()
         else:
             result = "No results"
-        self.la_result.setText(result)
+        self.sbar.result.setText(result)
 
         enable = n_found > 0
-        self.pb_arrow_left.setEnabled(enable)
-        self.pb_arrow_right.setEnabled(enable)
+        self.sbar.arrow_left.setEnabled(enable)
+        self.sbar.arrow_right.setEnabled(enable)
 
     @pyqtSlot()
-    def _update_search_filter(self):
-        self._search_filter_changed(self.le_search_filter.text())
+    def _update_filter(self):
+        text = self.sbar.label_filter.text()
+        self._filter_changed(text)
 
     @pyqtSlot()
     def _arrow_left_clicked(self):
