@@ -603,7 +603,7 @@ class NetworkOutput(Configurable):
         port = int(self.port) if isSet(self.port) else 0
         self.server = yield from start_server(serve, host=hostname,
                                               port=port)
-        self.hostname = hostname
+        self.hostname = value
 
     connections = VectorHash(
         rows=ConnectionTable,
