@@ -26,6 +26,8 @@ from .controller.project_groups import ProjectSubgroupController
 from .controller.server import get_project_servers
 from .controller.subproject import SubprojectController
 
+EXPAND_DEPTH = 2
+
 
 class ProjectView(QTreeView):
     """ An object representing the view for a Karabo project
@@ -47,6 +49,8 @@ class ProjectView(QTreeView):
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._show_context_menu)
+        self.expanded = False
+        self.header().sectionDoubleClicked.connect(self.onDoubleClickHeader)
 
     # ----------------------------
     # Public methods
@@ -271,3 +275,22 @@ class ProjectView(QTreeView):
                                      str(project.is_trashed).lower())
             # We directly save on attribute update!
             save_object(project)
+
+    @pyqtSlot()
+    def onDoubleClickHeader(self):
+        if self.expanded:
+            self.collapseAll()
+        else:
+            self.expandAll()
+
+    @pyqtSlot()
+    def resetExpand(self):
+        self.expandAll()
+
+    def collapseAll(self):
+        self.expanded = False
+        super(ProjectView, self).collapseAll()
+
+    def expandAll(self):
+        self.expanded = True
+        super(ProjectView, self).expandToDepth(EXPAND_DEPTH)
