@@ -1,3 +1,4 @@
+from datetime import datetime
 import unittest
 
 from karabo.native import Configurable, Bool
@@ -45,7 +46,7 @@ class TestDisplayTrendGraph(GuiTestCase):
         self.process_qt_events()
 
     @unittest.skip(reason='The real range is being disturbed in CI')
-    def test_range_update(self):
+    def test_datetime_update(self):
         view_box = self.controller._karabo_plot_view.plotItem.vb
         view_box.setXRange(1570536895, 1571536895, padding=0.05)
 
@@ -55,3 +56,18 @@ class TestDisplayTrendGraph(GuiTestCase):
 
         self.assertEqual(dt_start.toString(), 'Tue Oct 8 00:21:35 2019')
         self.assertEqual(dt_end.toString(), 'Sun Oct 20 17:54:55 2019')
+
+    def test_range_update(self):
+        """When the viewbox change, we must make sure the time axis is
+        not overflown"""
+        plot_view = self.controller._karabo_plot_view
+        plot_item = plot_view.plotItem
+
+        view_box = plot_item.vb
+        view_box.setXRange(datetime(1378, 12, 31).timestamp(),
+                           datetime(2070, 12, 31).timestamp(), update=False)
+
+        # Relax the assertion as the CI is non deterministic
+        x_min, x_max = plot_item.getAxis("bottom").range
+        self.assertEqual(datetime.utcfromtimestamp(x_min).year, 1970)
+        self.assertEqual(datetime.utcfromtimestamp(x_max).year, 2038)
