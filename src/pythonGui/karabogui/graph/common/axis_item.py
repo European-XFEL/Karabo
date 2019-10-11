@@ -91,14 +91,11 @@ class TimeAxisItem(AxisItem):
         """Set the range and decide which format string we should use"""
         super(TimeAxisItem, self).setRange(min_range, max_range)
 
-        first_datetime = datetime.fromtimestamp(min_range)
-        last_datetime = datetime.fromtimestamp(max_range)
+        first_datetime = datetime.utcfromtimestamp(min_range)
+        last_datetime = datetime.utcfromtimestamp(max_range)
 
         # Get the whole diff in seconds
-        diff_datetime = (last_datetime - first_datetime)
-        diff_in_seconds = diff_datetime.days * 24 * 60 * 60
-        diff_in_seconds += diff_datetime.seconds
-
+        diff_in_seconds = (last_datetime - first_datetime).total_seconds()
         for seconds_for_format, format_string in self.LABEL_FORMATS:
             if diff_in_seconds < seconds_for_format:
                 self.format_string = format_string
