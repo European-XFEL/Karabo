@@ -54,6 +54,7 @@ class DisplayTrendGraph(BaseBindingController):
         self._karabo_plot_view.stateChanged.connect(self._change_model)
         self._karabo_plot_view.add_legend(visible=False)
         self._karabo_plot_view.add_cross_target()
+        self._karabo_plot_view.add_toolbar()
 
         self._karabo_plot_view.plotItem.vb.sigRangeChangedManually.connect(
             self._on_range_manually_changed)
@@ -78,6 +79,8 @@ class DisplayTrendGraph(BaseBindingController):
 
         # Add the first curve
         self.add_proxy(self.proxy)
+
+        widget.addActions(self._karabo_plot_view.actions())
 
         return widget
 
