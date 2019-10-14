@@ -245,10 +245,11 @@ class DeviceTreeModel(QAbstractItemModel):
             self.selectNode(nodes[0])
 
     def selectNode(self, node):
-        """Select the given `node` of type `SystemTreeNode` if this is not None,
-        otherwise nothing is selected
+        """Select the given `node` of type `DeviceTreeNode`
 
-        :param node: The `SystemTreeNode` which should be selected
+        If the the node or index is None, nothing is selected
+
+        :param node: The `DeviceTreeNode` which should be selected
         """
         if node is not None:
             index = self.createIndex(node.row(), 0, node)
