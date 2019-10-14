@@ -67,6 +67,9 @@ class BaseStepPlot(PlotItem):
     def clear_data(self):
         self._line.setData([], [], fillLevel=None, stepMode=False)
 
+    def set_axis(self, axis):
+        """ Use if unsliced image axis is needed for further calculations """
+
     # ---------------------------------------------------------------------
     # Private methods
 
@@ -129,7 +132,11 @@ class ProfilePlot(BaseStepPlot):
             self.clear_data()
             return
 
-        self.set_data(*self._profiler.profile(region, axis=axis))
+        profiles = self._profiler.profile(region, axis=axis)
+        if profiles is None:
+            return
+
+        self.set_data(*profiles)
 
         if self._fitted:
             self.set_superimposed_data(*self._profiler.fit())
@@ -142,3 +149,6 @@ class ProfilePlot(BaseStepPlot):
         # Clear superimposed data
         if not enabled:
             self.set_superimposed_data([], [])
+
+    def set_axis(self, axis):
+        self._profiler.set_axis(axis)
