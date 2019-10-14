@@ -2004,18 +2004,11 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 // Whenever updating the m_fullSchema, we have to clear the cache
                 m_stateDependentSchema.clear();
-                try {
-                    const karabo::util::Schema fullSchemaBack = m_fullSchema;
-                    success = m_fullSchema.applyRuntimeUpdates(updates);
-                    if (success) {
-                        m_injectedSchema.applyRuntimeUpdates(updates);
-                        // Notify the distributed system
-                        emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
-                    } else {
-                        m_fullSchema = fullSchemaBack;
-                    }
-                } catch (...) {
-                    success = false;
+                success = m_fullSchema.applyRuntimeUpdates(updates);
+                if (success) {
+                    m_injectedSchema.applyRuntimeUpdates(updates);
+                    // Notify the distributed system
+                    emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
                 }
                 reply(karabo::util::Hash("success", success, "instanceId", getInstanceId(), "updatedSchema", m_fullSchema, "requestedUpdate", updates));
             }
