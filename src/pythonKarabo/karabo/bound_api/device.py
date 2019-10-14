@@ -1459,11 +1459,8 @@ class PythonDevice(NoFsm):
 
     def slotUpdateSchemaAttributes(self, updates):
         success = False
-        fullSchBackup = Schema()
 
         with self._stateChangeLock:
-            fullSchBackup.copy(self.fullSchema)
-
             success = self.fullSchema.applyRuntimeUpdates(updates)
             # Whenever updating self.fullSchema, we have to clear the cache
             self._stateDependentSchema.clear()
@@ -1479,9 +1476,6 @@ class PythonDevice(NoFsm):
                 # Notify everyone
                 self._ss.emit("signalSchemaUpdated", self.fullSchema,
                               self.deviceid)
-            else:
-                # Rollback the full schema changes.
-                self.fullSchema.copy(fullSchBackup)
 
             self._ss.reply(Hash("success", success,
                                 "instanceId", self.deviceid,
