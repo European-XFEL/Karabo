@@ -40,6 +40,7 @@ class DisplayVectorGraph(BaseBindingController):
         widget.add_roi()
         widget.add_toolbar()
         widget.restore(build_graph_config(self.model))
+        widget.enable_data_toggle()
 
         downsample_action = QAction("Downsample", widget)
         downsample_action.triggered.connect(self.configure_downsample)
