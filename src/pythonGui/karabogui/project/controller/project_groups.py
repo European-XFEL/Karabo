@@ -156,7 +156,9 @@ def _load_macro(project_controller):
     if not fn:
         return
 
-    if not VALID_PROJECT_OBJECT_NAME.match(fn):
+    simple_name = op.splitext(op.basename(fn))[0]
+
+    if not VALID_PROJECT_OBJECT_NAME.match(simple_name):
         show_filename_error(fn)
         return
 
@@ -167,7 +169,7 @@ def _load_macro(project_controller):
     # Read MacroModel
     macro = read_macro(fn)
     # Set the scene model title
-    macro.simple_name = op.splitext(op.basename(fn))[0]
+    macro.simple_name = simple_name
     macro.modified = True
     project.macros.append(macro)
 
@@ -216,7 +218,9 @@ def _load_scene(project_controller):
     if not fn:
         return
 
-    if not VALID_PROJECT_OBJECT_NAME.match(fn):
+    simple_name = op.splitext(op.basename(fn))[0]
+
+    if not VALID_PROJECT_OBJECT_NAME.match(simple_name):
         show_filename_error(fn)
         return
 
@@ -226,7 +230,7 @@ def _load_scene(project_controller):
     project = project_controller.model
     # Read SceneModel
     scene = read_scene(fn)
-    scene.simple_name = op.splitext(op.basename(fn))[0]
+    scene.simple_name = simple_name
     scene.reset_uuid()
     scene.modified = True
     project.scenes.append(scene)
