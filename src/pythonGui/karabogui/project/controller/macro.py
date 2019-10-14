@@ -10,7 +10,7 @@ from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance, String, on_trait_change
 
-from karabo.common.api import ProxyStatus
+from karabo.common.api import ProxyStatus, walk_traits_object
 from karabo.common.project.api import MacroModel, read_macro, write_macro
 from karabogui import icons, messagebox
 from karabogui.enums import ProjectItemTypes
@@ -87,7 +87,7 @@ class MacroController(BaseProjectGroupController):
         save_as_action = QAction('Save to file', menu)
         save_as_action.triggered.connect(self._save_macro_to_file)
         run_action = QAction('Run', menu)
-        run_action.triggered.connect(self._run_macro)
+        run_action.triggered.connect(self.run_macro)
         menu.addAction(edit_action)
         menu.addAction(dupe_action)
         menu.addAction(delete_action)
@@ -235,7 +235,11 @@ class MacroController(BaseProjectGroupController):
             fout.write(write_macro(macro))
 
     @pyqtSlot()
-    def _run_macro(self):
+    def run_macro(self):
+        """Action handler to instantiate the macro
+
+        NOTE: This method is also used to instantiate all macros in a project!
+        """
         try:
             compile(self.model.code, self.model.simple_name, "exec")
         except SyntaxError as e:
@@ -263,3 +267,21 @@ def _get_macro_instances(macro_id):
 
     get_topology().visit_system_tree(visitor)
     return list(instances)
+
+
+def get_project_macros(project_controller):
+    """Given a ``project_controller`` return all the online and offline macros
+    """
+    online = []
+    offline = []
+
+    def visitor(obj):
+        if isinstance(obj, MacroController):
+            if obj.children:
+                online.append(obj)
+            else:
+                offline.append(obj)
+
+    walk_traits_object(project_controller, visitor)
+
+    return online, offline
