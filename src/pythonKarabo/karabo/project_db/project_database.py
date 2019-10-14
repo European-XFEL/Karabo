@@ -236,7 +236,11 @@ class ProjectDatabase(ContextDecorator):
             modified, reason = self._check_for_modification(
                 domain, uuid, item_tree.attrib['date'])
             if modified:
-                raise ProjectDBError(reason)
+                message = "The <b>{}</b> item <b>{}</b> could not be saved: " \
+                          "{}".format(item_tree.attrib['item_type'],
+                                      item_tree.attrib['simple_name'],
+                                      reason)
+                raise ProjectDBError(message)
             # Update time stamp
             item_tree.attrib['date'] = strftime(DATE_FORMAT, gmtime())
 
