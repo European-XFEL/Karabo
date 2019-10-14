@@ -96,6 +96,10 @@ class AuxPlotsController(QObject):
             table = beam_profile_table_html(profile_x, profile_y)
             self.labelItem.item.setHtml(table)
 
+    def set_image_axes(self, axes):
+        for axis, plot in zip(axes, self.current_plots):
+            plot.set_axis(axis)
+
     # -----------------------------------------------------------------------
     # Private methods
 
