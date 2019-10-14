@@ -45,7 +45,7 @@ class MacroControllerTestCase(GuiTestCase):
         self.macro_model.code = code
         with patch(run_macro_path) as mocked_run_macro, \
                 patch(messagebox_path) as mocked_messagebox:
-            macro_controller._run_macro()
+            macro_controller.run_macro()
             if is_valid:
                 mocked_run_macro.assert_called_once()
                 mocked_messagebox.assert_not_called()

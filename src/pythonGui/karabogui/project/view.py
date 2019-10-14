@@ -21,6 +21,7 @@ from karabogui.singletons.api import (get_db_conn, get_project_model,
 from karabogui.util import is_database_processing, set_treeview_header
 from .controller.bases import BaseProjectGroupController
 from .controller.device import DeviceInstanceController
+from .controller.macro import get_project_macros
 from .controller.project import ProjectController
 from .controller.project_groups import ProjectSubgroupController
 from .controller.server import get_project_servers
@@ -151,10 +152,14 @@ class ProjectView(QTreeView):
                                                        selected_project,
                                                        project_controller,
                                                        show_dialog=True))
-                instantiate_all_action = QAction('Instantiate all devices',
-                                                 menu)
-                instantiate_all_action.triggered.connect(
+                instantiate_all_devices = QAction('Instantiate all devices',
+                                                  menu)
+                instantiate_all_devices.triggered.connect(
                     partial(self._instantiate_devices, selected_controller))
+                instantiate_all_macros = QAction('Instantiate all macros',
+                                                 menu)
+                instantiate_all_macros.triggered.connect(
+                    partial(self._instantiate_macros, selected_controller))
 
                 is_trashed = selected_project.is_trashed
                 if is_trashed:
@@ -166,7 +171,8 @@ class ProjectView(QTreeView):
                                                        selected_project,
                                                        project_controller))
                 menu.addAction(rename_action)
-                menu.addAction(instantiate_all_action)
+                menu.addAction(instantiate_all_macros)
+                menu.addAction(instantiate_all_devices)
                 menu.addSeparator()
                 menu.addAction(save_action)
                 menu.addAction(close_action)
@@ -226,6 +232,17 @@ class ProjectView(QTreeView):
                    '{}!'.format(offline_ids))
             messagebox.show_warning(msg, title='Servers offline',
                                     parent=self)
+
+    @pyqtSlot()
+    def _instantiate_macros(self, selected_controller):
+        """ Instantiate all macros in the given project
+
+        The project controller ``selected_controller`` is used to find the
+        offline macro controller to instantiate macros
+        """
+        _, offline = get_project_macros(selected_controller)
+        for macro in offline:
+            macro.run_macro()
 
     def _close_project(self, project, project_controller, show_dialog=False):
         """ Close the given `project`
