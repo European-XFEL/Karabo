@@ -34,8 +34,8 @@ CPPUNIT_TEST_SUITE_REGISTRATION(ReadAsyncStringUntil_Test);
 
 
 // We are going to test read-async-until function that Web protocols based on.
-// Create simple synchronous echo server that will return us what we send on
-// separate thread that we can start by 'start()' call
+// Create simple synchronous echo server that will return us what we send.
+// It runs on separate thread.
 
 struct EchoServer {
 
@@ -148,9 +148,8 @@ struct TestClient {
         }
 
         std::cerr << read_str;
-        if (read_str != " the tough get going\r\n") {
-            CPPUNIT_ASSERT_EQUAL(read_str, m_expected);
-        }
+
+        CPPUNIT_ASSERT(read_str == m_expected || read_str == " the tough get going\r\n");
         
         --m_repetition;
 
