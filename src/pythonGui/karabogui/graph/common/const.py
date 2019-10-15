@@ -25,7 +25,12 @@ MAX_DOWNSAMPLE = 30000
 DEFAULT_BAR_WIDTH = 0.1
 DEFAULT_PEN_WIDTH = 1.0
 
+SYMBOL_SIZE = 7
+DEFAULT_SYMBOL = 'o'
+EMPTY_SYMBOL_OPTIONS = {'symbol': None, 'symbolSize': None,
+                        'symbolPen': None, 'symbolBrush': None}
 EMPTY_BAR = np.zeros(shape=(10,), dtype=np.int64)
+
 
 # Image Constants
 # --------------------------------------------------------------------------

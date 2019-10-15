@@ -73,7 +73,38 @@ namespace karabo {
 
             void writeAttributes(const karabo::util::Hash::Attributes& attrs, pugi::xml_node& node) const;
 
-            void readAttributes(karabo::util::Hash::Attributes& attrs, const pugi::xml_node& node) const;
+            /**
+             * Reads all the hash attributes that are convertible from string from a given xml node.
+             * @param attrs the set of attrs that are convertible from string.
+             * @param node the xml node with the attributes to be read.
+             * @return true if all the attributes in the xml node have been read; false if there is at least
+             * one attribute that is not convertible from string that should still be processed.
+             */
+            bool readStrConvertibleAttrs(karabo::util::Hash::Attributes& attrs, const pugi::xml_node& node) const;
+
+            /**
+             * Extracts all the hash attributes that are non convertible from string from a given xml node.
+             * @param node the xml node with the attributes to be read.
+             * @param nonStrAttrs vector of hashes with each hash corresponding to a nonStringfiedAttr read from the
+             * xml node. Each hash in the vector has one node with the attribute name for its key and the attribute
+             * value for its value.
+             *
+             * @note: currently there are two types of attributes that are not convertible from string: VECTOR_HASH
+             * and SCHEMA.
+             */
+            void extractNonStrConvertibleAttrs(std::vector<karabo::util::Hash>& nonStrAttrs, const pugi::xml_node& node) const;
+
+            /**
+             * Adds hash attributes non convertible from string to a given hash on a given path. The hash attributes
+             * are stored in a vector of hashes argument.
+             * @param hash the hash that will have the attributes added to.
+             * @param hashPath the path in the hash where the attributes will be added.
+             * @param attrs the vector with the attributes to be added. Each attribute is an element of this vector and
+             * has a single key that corresponds to the attribute name and whose value is the attribute value.
+             */
+            void addNonStrConvertibleAttrs(karabo::util::Hash& hash,
+                                       const std::string& hashPath,
+                                       const std::vector<karabo::util::Hash>& attrs) const;
 
             std::pair<std::string, karabo::util::Types::ReferenceType> readXmlAttribute(const std::string& xmlAttribute) const;
 

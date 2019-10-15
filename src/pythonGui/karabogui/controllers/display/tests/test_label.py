@@ -1,4 +1,4 @@
-from karabo.common.api import DeviceStatus
+from karabo.common.api import ProxyStatus
 from karabo.native import Configurable, Float, String
 from karabogui.binding.api import (
     DeviceClassProxy, PropertyProxy, build_binding
@@ -24,7 +24,7 @@ class TestDisplayLabel(GuiTestCase):
         schema = Object.getClassSchema()
         binding = build_binding(schema)
         device = DeviceClassProxy(binding=binding, server_id='Fake',
-                                  status=DeviceStatus.OFFLINE)
+                                  status=ProxyStatus.OFFLINE)
         self.string = PropertyProxy(root_proxy=device, path='string')
         self.alarms = PropertyProxy(root_proxy=device, path='alarms')
         self.absolute = PropertyProxy(root_proxy=device, path='absolute')

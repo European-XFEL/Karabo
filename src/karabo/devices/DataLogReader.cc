@@ -11,6 +11,7 @@
 #include "karabo/io/Input.hh"
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/io/FileTools.hh"
+#include "karabo/util/TimeDuration.hh"
 #include "karabo/util/Version.hh"
 
 #include "DataLogReader.hh"
@@ -343,8 +344,6 @@ namespace karabo {
                                         result[result.size() - 1].setAttribute("v", "isLast", 'L');
                                     }
                                     const string& path = tokens[4];
-                                    const string& type = tokens[5];
-                                    const string& value = tokens[6];
                                     if (path != property) {
                                         // if you don't like the index record (for example, it pointed to the wrong property) just skip it
                                         KARABO_LOG_FRAMEWORK_WARN << "The index for \"" << deviceId << "\", property : \"" << property
@@ -352,21 +351,12 @@ namespace karabo {
                                         // TODO: Here we can start index rebuilding for fnum != lastFileIndex
                                         continue;
                                     }
-                                    Hash hash;
-                                    if (type == "VECTOR_HASH") {
-                                        Hash::Node& node = hash.set<vector<Hash>>("v", vector<Hash>());
-                                        m_serializer->load(node.getValue<vector<Hash>>(), value);
-                                    } else {
-                                        Hash::Node& node = hash.set<string>("v", value);
-                                        node.setType(Types::from<FromLiteral>(type));
-                                    }
-
-                                    const unsigned long long trainId = fromString<unsigned long long>(tokens[3]);
                                     const Epochstamp epochstamp(stringDoubleToEpochstamp(tokens[2]));
-                                    const Timestamp tst(epochstamp, Trainstamp(trainId));
-                                    Hash::Attributes& attrs = hash.getAttributes("v");
-                                    tst.toHashAttributes(attrs);
-                                    result.push_back(hash);
+                                    // tokens[3] is trainId
+                                    const Timestamp tst(epochstamp, Trainstamp(fromString<unsigned long long>(tokens[3])));
+                                    result.push_back(Hash());
+                                    // tokens[5] and [6] are type and value, respectively
+                                    readToHash(result.back(), "v", tst, Types::from<FromLiteral>(tokens[5]), tokens[6]);
                                 } else {
                                     KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: skip corrupted record or old format '" << line << "'";
                                 }
@@ -433,12 +423,18 @@ namespace karabo {
 
                 DataLoggerIndex index = findLoggerIndexTimepoint(deviceId, timepoint);
 
-                if (index.m_fileindex == -1 || index.m_event == "-LOG") {
-                    reply(Hash(), Schema()); // Requested time is out of any logger data
-                    KARABO_LOG_WARN << "Requested time point for device configuration is out of any valid logged data";
+                if (index.m_fileindex == -1) {
+                    reply(Hash(), Schema()); // Requested time precedes any logged data.
+                    KARABO_LOG_WARN << "Requested time point, "
+                            << timepoint << ", precedes any logged data for device '" << deviceId << "'.";
+                    return;
+                } else if (index.m_event != "+LOG") {
+                    reply(Hash(), Schema());
+                    KARABO_LOG_WARN << "Unexpected event type '" << index.m_event
+                            << "' found as for the initial sweeping of last known good configuration.\n"
+                            "Event type should be '+LOG ";
                     return;
                 }
-
 
                 int lastFileIndex = getFileIndex(deviceId);
                 if (lastFileIndex < 0) {
@@ -450,7 +446,7 @@ namespace karabo {
                 {
                     Epochstamp current(0, 0);
                     long position = index.m_position;
-                    for (int i = index.m_fileindex; i <= lastFileIndex && current <= target; i++, position = 0) {
+                    for (int i = index.m_fileindex; i <= lastFileIndex && current <= target; i++) {
                         string filename = get<string>("directory") + "/" + deviceId + "/raw/archive_" + karabo::util::toString(i) + ".txt";
                         ifstream file(filename.c_str());
                         file.seekg(position);
@@ -466,34 +462,55 @@ namespace karabo {
                                 const string& path = tokens[4];
                                 if (!schema.has(path)) continue;
                                 current = stringDoubleToEpochstamp(tokens[2]);
-                                unsigned long long train = fromString<unsigned long long>(tokens[3]);
                                 if (current > target)
                                     break;
-                                const Timestamp timestamp(current, Trainstamp(train));
-                                const string& type = tokens[5];
-                                const string& value = tokens[6];
-                                if (type == "VECTOR_HASH") {
-                                    Hash::Node& node = hash.set<vector<Hash>>(path, vector<Hash>());
-                                    m_serializer->load(node.getValue<vector<Hash>>(), value);
-                                    Hash::Attributes& attrs = node.getAttributes();
-                                    timestamp.toHashAttributes(attrs);
-                                } else {
-                                    Hash::Node& node = hash.set<string>(path, value);
-                                    node.setType(Types::from<FromLiteral>(type));
-                                    Hash::Attributes& attrs = node.getAttributes();
-                                    timestamp.toHashAttributes(attrs);
-                                }
-
+                                // tokens[3] is trainId
+                                const Timestamp timestamp(current, fromString<unsigned long long>(tokens[3]));
+                                // tokens[5] and [6] are type and value, respectively
+                                readToHash(hash, path, timestamp, Types::from<FromLiteral>(tokens[5]), tokens[6]);
                             } else {
                                 KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory: skip corrupted record or old format";
                             }
                         }
                         file.close();
+                        position = 0; // Puts the cursor at the start of the next log file to be searched.
                     }
                 }
                 reply(hash, schema);
             } catch (...) {
                 KARABO_RETHROW
+            }
+        }
+
+
+        void DataLogReader::readToHash(Hash& hashOut, const std::string& path, const Timestamp& timestamp,
+                                       Types::ReferenceType type, const string& value) const {
+            using karabo::util::DATALOG_NEWLINE_MANGLE;
+            if (type == Types::VECTOR_HASH) {
+                Hash::Node& node = hashOut.set<vector < Hash >> (path, vector<Hash>());
+                // Re-mangle new line characters of any string value inside any of the Hashes,
+                // see DataLogger. But only when needed to avoid copies in "normal" cases.
+                const bool mangle = (value.find(DATALOG_NEWLINE_MANGLE) != std::string::npos);
+                m_serializer->load(node.getValue<vector < Hash >> (),
+                                   (mangle
+                                    ? boost::algorithm::replace_all_copy(value, DATALOG_NEWLINE_MANGLE, "\n")
+                                    : value));
+                Hash::Attributes& attrs = node.getAttributes();
+                timestamp.toHashAttributes(attrs);
+            } else {
+                Hash::Node& node = hashOut.set<string>(path, value);
+                if (type == Types::STRING) {
+                    // Re-mangle new line characters, see DataLogger :-|
+                    boost::algorithm::replace_all(node.getValue<string>(), DATALOG_NEWLINE_MANGLE, "\n");
+                } else if (type == Types::VECTOR_STRING) {
+                    // Re-mangle new line characters, see DataLogger :-|
+                    boost::algorithm::replace_all(node.getValue<string>(), DATALOG_NEWLINE_MANGLE, "\n");
+                    node.setType(type);
+                } else {
+                    node.setType(type);
+                }
+                Hash::Attributes& attrs = node.getAttributes();
+                timestamp.toHashAttributes(attrs);
             }
         }
 
@@ -541,8 +558,11 @@ namespace karabo {
                             KARABO_LOG_FRAMEWORK_DEBUG << "findLoggerIndexTimepoint: done looping. Line tail:" << tail;
                             break;
                         } else {
-                            // store selected event
-                            if (event == "+LOG" || event == "-LOG") {
+                            // Store selected event. Only selects events corresponding to the device becoming online as
+                            // this method is used to retrieve the last known good configuration for a device at a given
+                            // timepoint. The selected event is the initial point for a log sweep that will gather that
+                            // last known good configuration.
+                            if (event == "+LOG") {
                                 entry.m_event = event;
                                 entry.m_epoch = epochstamp;
                                 // store tail for later usage.

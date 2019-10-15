@@ -208,7 +208,7 @@ class TableModel(QAbstractTableModel):
 
 
 class ComboBoxDelegate(QItemDelegate):
-    def __init__(self, options, row=-1, column=-1, parent=None):
+    def __init__(self, options, parent=None):
         super(ComboBoxDelegate, self).__init__(parent)
         # XXX: We might have options from number values, they serialize as
         # ndarray! Once the value casting is back, the string cast has
@@ -216,9 +216,6 @@ class ComboBoxDelegate(QItemDelegate):
         if isinstance(options, np.ndarray):
             options = options.astype(np.str).tolist()
         self._options = options
-        self._row_column = (row, column)
-        parent.clicked.connect(self._cell_clicked)
-        self._cur_cell_index = None  # QPersistentModelIndex
 
     def createEditor(self, parent, option, index):
         combo = QComboBox(parent)
@@ -238,23 +235,6 @@ class ComboBoxDelegate(QItemDelegate):
     @pyqtSlot()
     def _on_current_index_changed(self):
         self.commitData.emit(self.sender())
-
-    @pyqtSlot(object)
-    def _cell_clicked(self, index):
-        """Only enable editing for this delegate whenever user clicks on cell
-        """
-        # Only consider click events for this delegate in its column
-        if (index.row(), index.column()) == self._row_column:
-            if self._cur_cell_index is not None:
-                # Persistent model index and data namely QComboBox cleaned up
-                self.parent().closePersistentEditor(self._cur_cell_index)
-            self._cur_cell_index = index
-            self.parent().openPersistentEditor(self._cur_cell_index)
-        else:
-            if self._cur_cell_index is not None:
-                # Persistent model index and data namely QComboBox cleaned up
-                self.parent().closePersistentEditor(self._cur_cell_index)
-            self._cur_cell_index = None
 
 
 class KaraboTableView(QTableView):

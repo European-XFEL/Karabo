@@ -16,6 +16,7 @@
 #include "PathElement.hh"
 #include "VectorElement.hh"
 #include "PluginLoader.hh"
+#include "Version.hh"
 
 
 namespace karabo {
@@ -33,13 +34,19 @@ namespace karabo {
         std::set<std::string> PluginLoader::m_knownPlugins = std::set<std::string>();
 
 
+        std::string PluginLoader::defaultPluginPath() {
+            return Version::getPathToKaraboInstallation() + "/plugins";
+        }
+
+
         void PluginLoader::expectedParameters(Schema& expected) {
+
 
             PATH_ELEMENT(expected)
                     .key("pluginDirectory")
                     .displayedName("Plugin Directory")
                     .description("Directory to search for plugins")
-                    .assignmentOptional().defaultValue("plugins")
+                    .assignmentOptional().defaultValue(defaultPluginPath())
                     .isDirectory()
                     .expertAccess()
                     .commit();

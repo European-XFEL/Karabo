@@ -4,12 +4,13 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from contextlib import contextmanager
+import re
 
 from traits.api import (HasStrictTraits, Bool, Dict, Enum, Instance,
                         Int, List, on_trait_change, String, WeakRef)
 
 import karabogui.globals as krb_globals
-from karabo.common.api import DeviceStatus
+from karabo.common.api import ProxyStatus
 from karabo.native import AccessLevel
 from karabogui.enums import NavigationItemTypes
 
@@ -27,7 +28,7 @@ class DeviceTreeNode(HasStrictTraits):
     node_id = String
     server_id = String
     visibility = Enum(*AccessLevel)
-    status = Enum(*DeviceStatus)
+    status = Enum(*ProxyStatus)
     capabilities = Int
     attributes = Dict
     level = Int(-1)
@@ -204,7 +205,7 @@ class DeviceSystemTree(HasStrictTraits):
                                                AccessLevel.OBSERVER))
             capabilities = attrs.get('capabilities', 0)
             server_id = attrs.get('serverId', 'unknown-server')
-            status = DeviceStatus(attrs.get('status', 'ok'))
+            status = ProxyStatus(attrs.get('status', 'ok'))
 
             domain_node = self.root.child(domain)
             if domain_node is None:
@@ -235,3 +236,39 @@ class DeviceSystemTree(HasStrictTraits):
             member_node.capabilities = capabilities
 
             self._device_nodes[karabo_name] = member_node
+
+    def find(self, node_id, access_level=None, case_sensitive=True,
+             use_reg_ex=True, full_match=False):
+        """Find all nodes with the given `node_id` and return them in a list
+
+        :param node_id: The actual string we are looking for in the tree
+        :param access_level: The global access level
+        :param case_sensitive: States whether the given string should match
+                               case or not
+        :param full_match: States whether the given string matches fully
+        :param use_reg_ex: Defines the given string as a regular expression
+        :return list of found nodes (which could be empty)
+        """
+        access_level = (krb_globals.GLOBAL_ACCESS_LEVEL if access_level is None
+                        else access_level)
+
+        found_nodes = []
+        pattern = node_id if use_reg_ex else ".*{}".format(re.escape(node_id))
+        flags = 0 if case_sensitive else re.IGNORECASE
+        regex = re.compile(pattern, flags=flags)
+
+        def visitor(node):
+            parent_node = node.parent
+            parent_check = (parent_node is not None
+                            and parent_node.visibility > access_level)
+            if (node.visibility > access_level or parent_check):
+                # Do not look for nodes which are not visible or its parent
+                return
+
+            matcher = regex.fullmatch if full_match else regex.match
+            if matcher(node.node_id) is not None:
+                found_nodes.append(node)
+
+        self.visit(visitor)
+
+        return found_nodes

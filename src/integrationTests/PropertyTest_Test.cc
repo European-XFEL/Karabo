@@ -60,6 +60,7 @@ void PropertyTest_Test::allTestRunner() {
     testSimpleProperties();
     testVectorProperties();
     testTableProperties();
+    testReadOnlyTableProperties();
     testAttributeEditing();
     testNodedSlots();
 }
@@ -638,6 +639,38 @@ void PropertyTest_Test::testTableProperties() {
     CPPUNIT_ASSERT(value[2].get<double>("e5") == 9.99999999);
 
     std::clog << "Tested table element.. Ok" << std::endl;
+}
+
+
+void PropertyTest_Test::testReadOnlyTableProperties() {
+    vector<Hash> value;
+    m_deviceClient->get("testPropertyTest_0", "tableReadOnly", value);
+
+    CPPUNIT_ASSERT(value.size() == 2);
+
+    CPPUNIT_ASSERT(value[0].get<string>("e1") == "abc");
+    CPPUNIT_ASSERT(value[0].get<bool>("e2") == true);
+    CPPUNIT_ASSERT(value[0].get<int>("e3") == 12);
+    CPPUNIT_ASSERT(value[0].get<float>("e4") == 0.9837F);
+    CPPUNIT_ASSERT(value[0].get<double>("e5") == 1.2345);
+
+    CPPUNIT_ASSERT(value[1].get<string>("e1") == "xyz");
+    CPPUNIT_ASSERT(value[1].get<bool>("e2") == false);
+    CPPUNIT_ASSERT(value[1].get<int>("e3") == 42);
+    CPPUNIT_ASSERT(value[1].get<float>("e4") == 2.33333F);
+    CPPUNIT_ASSERT(value[1].get<double>("e5") == 7.77777);
+
+    value.clear();
+    value.push_back(Hash("e1", "abc", "e2", true, "e3", 12, "e4", 0.0011F, "e5", 9.87654321));
+    value.push_back(Hash("e1", "xyz", "e2", false, "e3", 42, "e4", 2.2222F, "e5", 3.33333333));
+    value.push_back(Hash("e1", "xyz", "e2", false, "e3", 42, "e4", 55.5555F, "e5", 9.99999999));
+
+    // An attempt to set a read-only property is expected to throw a ParameterException.
+    CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "tableReadOnly", value),
+                         karabo::util::ParameterException);
+    value.clear();
+
+    std::clog << "Tested read-only table element.. Ok" << std::endl;
 }
 
 void PropertyTest_Test::testAttributeEditing() {

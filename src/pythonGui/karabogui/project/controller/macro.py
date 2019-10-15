@@ -10,9 +10,9 @@ from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance, String, on_trait_change
 
-from karabo.common.api import DeviceStatus
+from karabo.common.api import ProxyStatus, walk_traits_object
 from karabo.common.project.api import MacroModel, read_macro, write_macro
-from karabogui import icons
+from karabogui import icons, messagebox
 from karabogui.enums import ProjectItemTypes
 from karabogui.events import (
     broadcast_event, register_for_broadcasts, unregister_from_broadcasts,
@@ -42,7 +42,7 @@ class MacroInstanceController(BaseProjectController):
         return menu
 
     def create_ui_data(self):
-        icon = get_project_device_status_icon(DeviceStatus.ONLINE)
+        icon = get_project_device_status_icon(ProxyStatus.ONLINE)
         return ProjectControllerUiData(icon=icon)
 
     def single_click(self, project_controller, parent=None):
@@ -87,7 +87,7 @@ class MacroController(BaseProjectGroupController):
         save_as_action = QAction('Save to file', menu)
         save_as_action.triggered.connect(self._save_macro_to_file)
         run_action = QAction('Run', menu)
-        run_action.triggered.connect(partial(run_macro, self.model))
+        run_action.triggered.connect(self.run_macro)
         menu.addAction(edit_action)
         menu.addAction(dupe_action)
         menu.addAction(delete_action)
@@ -134,7 +134,7 @@ class MacroController(BaseProjectGroupController):
         running_instances = self.model.instances
         for dev_id, class_id, status in devices:
             if dev_id.startswith(self.model.instance_id):
-                if (DeviceStatus(status) is DeviceStatus.OFFLINE and
+                if (ProxyStatus(status) is ProxyStatus.OFFLINE and
                         dev_id in running_instances):
                     running_instances.remove(dev_id)
                 elif dev_id not in running_instances:
@@ -234,6 +234,25 @@ class MacroController(BaseProjectGroupController):
         with open(fn, 'w') as fout:
             fout.write(write_macro(macro))
 
+    @pyqtSlot()
+    def run_macro(self):
+        """Action handler to instantiate the macro
+
+        NOTE: This method is also used to instantiate all macros in a project!
+        """
+        try:
+            compile(self.model.code, self.model.simple_name, "exec")
+        except SyntaxError as e:
+            # Show erroneous macro before showing the error dialog
+            broadcast_event(KaraboEvent.ShowMacroView,
+                            {'model': self.model})
+            formatted_msg = "{}\n{}{}^\nin {} line {}".format(
+                    e.msg, e.text, " " * e.offset, e.filename, e.lineno)
+            messagebox.show_warning(formatted_msg, title=type(e).__name__)
+            return
+
+        run_macro(self.model)
+
 
 # ----------------------------------------------------------------------
 
@@ -248,3 +267,21 @@ def _get_macro_instances(macro_id):
 
     get_topology().visit_system_tree(visitor)
     return list(instances)
+
+
+def get_project_macros(project_controller):
+    """Given a ``project_controller`` return all the online and offline macros
+    """
+    online = []
+    offline = []
+
+    def visitor(obj):
+        if isinstance(obj, MacroController):
+            if obj.children:
+                online.append(obj)
+            else:
+                offline.append(obj)
+
+    walk_traits_object(project_controller, visitor)
+
+    return online, offline

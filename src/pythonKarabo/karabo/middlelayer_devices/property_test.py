@@ -1,23 +1,35 @@
-from asyncio import sleep
+from asyncio import CancelledError
+
+import numpy as np
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, background, Bool, Configurable, DaqDataType,
-    Device, Double, Float, Hash, InputChannel, Int32, Int64, Node,
-    OutputChannel, Overwrite, UInt32, UInt64, Unit, Slot, slot, State, String,
-    VectorBool, VectorChar, VectorDouble, VectorFloat, VectorHash, VectorInt32,
-    VectorInt64, VectorUInt32, VectorUInt64, VectorString)
+    Device, Double, Float, Hash, InputChannel, Int32, Int64, NDArray, Node,
+    OutputChannel, Overwrite, UInt32, UInt64, Unit, sleep, Slot, slot, State,
+    String, VectorBool, VectorChar, VectorDouble, VectorFloat, VectorHash,
+    VectorInt32, VectorInt64, VectorUInt32, VectorUInt64, VectorString)
 
+
+VECTOR_MAX_SIZE = 10
+
+NDARRAY_SHAPE = (100, 200)
 
 class DataNode(Configurable):
-    daqDataType = DaqDataType.TRAIN
-
-    counter = UInt64(
-        defaultValue=0,
-        accessMode=AccessMode.READONLY)
+    int32 = Int32(accessMode=AccessMode.READONLY)
+    string = String(accessMode=AccessMode.READONLY)
+    vecInt64 = VectorInt64(
+        accessMode=AccessMode.READONLY,
+        minSize=1,
+        maxSize=VECTOR_MAX_SIZE)
+    ndarray = NDArray(
+        accessMode=AccessMode.READONLY,
+        dtype=Float,
+        shape=NDARRAY_SHAPE)
 
 
 class ChannelNode(Configurable):
-    data = Node(DataNode)
+    daqDataType = DaqDataType.TRAIN
+    node = Node(DataNode)
 
 
 class VectorNode(Configurable):
@@ -26,13 +38,13 @@ class VectorNode(Configurable):
         description="Vector boolean values",
         defaultValue=[True, False, True, False, True, False],
         minSize=1,
-        maxSize=10)
+        maxSize=VECTOR_MAX_SIZE)
 
     charProperty = VectorChar(
         displayedName="Char Vector",
         description="Vector char values",
         minSize=1,
-        maxSize=10,
+        maxSize=VECTOR_MAX_SIZE,
         defaultValue="ABCDEF")
 
     int32Property = VectorInt32(
@@ -45,21 +57,21 @@ class VectorNode(Configurable):
         description="Vector uint32 values",
         defaultValue=[1, 2, 3],
         minSize=1,
-        maxSize=10)
+        maxSize=VECTOR_MAX_SIZE)
 
     int64Property = VectorInt64(
         displayedName="Int64 Vector (No Limits)",
         description="Vector int64 values",
         defaultValue=[1, 2],
         minSize=1,
-        maxSize=10)
+        maxSize=VECTOR_MAX_SIZE)
 
     uint64Property = VectorUInt64(
         displayedName="UInt64 Vector",
         description="Vector uint64 values",
         defaultValue=[-10, -10],
         minSize=1,
-        maxSize=10)
+        maxSize=VECTOR_MAX_SIZE)
 
     floatProperty = VectorFloat(
         displayedName="Float Vector (No Limits)",
@@ -71,13 +83,13 @@ class VectorNode(Configurable):
         description="Vector double values",
         defaultValue=[1.23, 0.4, 1.0],
         minSize=1,
-        maxSize=10)
+        maxSize=VECTOR_MAX_SIZE)
 
     stringProperty = VectorString(
         displayedName="String Vector",
         description="Vector string values",
         minSize=1,
-        maxSize=10,
+        maxSize=VECTOR_MAX_SIZE,
         defaultValue=["A", "B", "C"])
 
 
@@ -123,7 +135,9 @@ class TableRow(Configurable):
 class PropertyTestMDL(Device):
     __version__ = "2.3.0"
 
-    allowedStates = [State.INIT, State.ON, State.ACQUIRING]
+    allowedStates = [
+        State.INIT, State.STARTED, State.NORMAL, State.STARTING,
+        State.STOPPING]
 
     state = Overwrite(
         defaultValue=State.INIT,
@@ -271,38 +285,73 @@ class PropertyTestMDL(Device):
         accessMode=AccessMode.READONLY)
 
     async def onInitialization(self):
-        self.state = State.ON
+        self.state = State.NORMAL
         self.packet_number = 0
-        self.acquiring = False
-        background(self._send_data_action())
+        self.acquiring_task = None
 
-    @Slot(displayedName="Start", allowedStates=[State.ON])
-    async def start(self):
-        self.state = State.ACQUIRING
-        self.acquiring = True
+    @Slot(displayedName="Start Writing",
+          description="Start writing continously to output channel "
+                      "'Output'",
+          allowedStates=[State.NORMAL])
+    async def startWritingOutput(self):
+        self.state = State.STARTING
+        self.acquiring_task = background(self._send_data_task)
 
-    @Slot(displayedName="Stop", allowedStates=[State.ACQUIRING])
-    async def stop(self):
-        self.state = State.ON
-        self.acquiring = False
-        self.counter = 0
+    @Slot(displayedName="Stop Writing",
+          description="Stop writing continously to output channel "
+                      "'Output'",
+          allowedStates=[State.STARTED])
+    async def stopWritingOutput(self):
+        self.state = State.STOPPING
+        if self.acquiring_task:
+            self.acquiring_task.cancel()
+        else:
+            self.state = State.NORMAL
 
-    @Slot(displayedName="Reset Counters", allowedStates=[State.ON])
-    async def resetCounter(self):
+    @Slot(displayedName="EOS to Output",
+          description="Write end-of-stream to output channel 'Output'")
+    async def eosOutput(self):
+        # XXX: here for interface matching. to be implemented
+        return
+        
+    @Slot(displayedName="Write to Output",
+          description="Write once to output channel 'Output'")
+    async def writeOutput(self):
+        await self._send_data_action()
+
+    @Slot(displayedName="Reset Channels",
+          description="Reset counters involved in input/output channel "
+                      "data flow",
+          allowedStates=[State.NORMAL])
+    async def resetChannelCounters(self):
         self.packet_number = 0
         self.packetSend = 0
         self.packetReceived = 0
 
     async def _send_data_action(self):
-        while True:
-            if self.acquiring:
-                output = self.output.schema.data
-                output.counter = self.packet_number + 1
-                await self.output.writeData()
-                self.packet_number += 1
-                self.packetSend = self.packetSend.value + 1
+        outputCounter = self.packet_number + 1
+        output = self.output.schema.node
+        output.int32 = outputCounter
+        output.string = f'{outputCounter}'
+        output.vecInt64 = [outputCounter] * VECTOR_MAX_SIZE
+        output.ndarray = np.full(NDARRAY_SHAPE,
+            outputCounter, dtype=np.float32)
+        # XXX: implement image data
+        await self.output.writeData()
+        self.packet_number = outputCounter
+        self.packetSend = self.packetSend.value + 1
 
-            await sleep(1 / self.frequency.value)
+    async def _send_data_task(self):
+        self.state = State.STARTED
+        while True:
+            try:
+                await self._send_data_action()
+                await sleep(1 / self.frequency.value)
+            except CancelledError:
+                self.state = State.NORMAL
+                self.acquiring_task = None
+                self.counter = 0
+                return
 
     _available_macros = ['default', 'another', 'the_third']
 

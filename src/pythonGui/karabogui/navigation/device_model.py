@@ -9,7 +9,7 @@ from PyQt4.QtCore import (
     pyqtSignal, pyqtSlot, QAbstractItemModel, QModelIndex, Qt)
 from PyQt4.QtGui import QItemSelection, QItemSelectionModel
 
-from karabo.common.api import DeviceStatus
+from karabo.common.api import ProxyStatus
 from karabogui import globals as krb_globals, icons
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.singletons.api import get_topology
@@ -135,7 +135,7 @@ class DeviceTreeModel(QAbstractItemModel):
             elif hierarchyLevel == 1:
                 return icons.folderType
             elif hierarchyLevel == 2:
-                if node.status is DeviceStatus.ERROR:
+                if node.status is ProxyStatus.ERROR:
                     return icons.deviceInstanceError
                 else:
                     return icons.deviceInstance
@@ -215,3 +215,50 @@ class DeviceTreeModel(QAbstractItemModel):
             item_type = 'device'
 
         self.signalItemChanged.emit(item_type, proxy)
+
+    # ------------------------------------------------------------------
+    # Search Model related methods
+
+    def selectIndex(self, index):
+        """Select the given `index` of type `QModelIndex` if this is not None
+        """
+        if index is None:
+            self.selectionModel.selectionChanged.emit(QItemSelection(),
+                                                      QItemSelection())
+            return
+
+        self.selectionModel.setCurrentIndex(index,
+                                            QItemSelectionModel.ClearAndSelect)
+
+        treeview = super(DeviceTreeModel, self).parent()
+        treeview.scrollTo(index)
+
+    def selectNodeById(self, node_id):
+        """Select the `DeviceTreeNode` with the given `node_id`.
+
+        :param node_id: A string which we are looking for in the tree
+        """
+        nodes = self.findNodes(node_id, full_match=True)
+        assert len(nodes) <= 1
+        if nodes:
+            # Select first entry
+            self.selectNode(nodes[0])
+
+    def selectNode(self, node):
+        """Select the given `node` of type `DeviceTreeNode`
+
+        If the the node or index is None, nothing is selected
+
+        :param node: The `DeviceTreeNode` which should be selected
+        """
+        if node is not None:
+            index = self.createIndex(node.row(), 0, node)
+        else:
+            # Select nothing
+            index = None
+        self.selectIndex(index)
+
+    def findNodes(self, node_id, **kwargs):
+        if kwargs.get('access_level') is None:
+            kwargs['access_level'] = krb_globals.GLOBAL_ACCESS_LEVEL
+        return self.tree.find(node_id, **kwargs)

@@ -16,6 +16,6 @@ from .server import (
     DeviceServerModel, read_device_server, write_device_server
 )
 from .utils import (
-    device_config_exists, device_instance_exists, find_parent_object,
-    recursive_save_object
+    device_config_exists, device_instance_exists, device_server_exists,
+    find_parent_object, macro_exists, recursive_save_object
 )

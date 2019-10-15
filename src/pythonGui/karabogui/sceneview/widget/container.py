@@ -1,7 +1,7 @@
 from PyQt4.QtCore import QRect, Qt
 from PyQt4.QtGui import QHBoxLayout, QLabel, QStackedLayout, QWidget
 
-from karabo.common.api import DeviceStatus, State
+from karabo.common.api import ProxyStatus, State
 from karabogui import globals as krb_globals
 from karabogui.indicators import get_device_status_pixmap, STATE_COLORS
 from karabogui.request import send_property_changes
@@ -35,8 +35,8 @@ class ControllerContainer(QWidget):
         self.setToolTip(', '.join(self.model.keys))
 
         # Trigger the status change once (might be offline)
-        device_proxy = self.widget_controller.proxy.root_proxy
-        self._device_status_changed(device_proxy.status)
+        proxy = self.widget_controller.proxy.root_proxy
+        self._proxy_status_changed("status", proxy.status)
         # ... and the access level check
         self.update_global_access_level(krb_globals.GLOBAL_ACCESS_LEVEL)
 
@@ -78,7 +78,9 @@ class ControllerContainer(QWidget):
         """Tell the controller to clean up
         """
         proxy = self.widget_controller.proxy
-        proxy.root_proxy.on_trait_change(self._device_status_changed, 'status',
+        proxy.on_trait_change(self._proxy_status_changed, 'existing',
+                              remove=True)
+        proxy.root_proxy.on_trait_change(self._proxy_status_changed, 'status',
                                          remove=True)
         if self.is_editable:
             proxy.on_trait_change(
@@ -140,15 +142,30 @@ class ControllerContainer(QWidget):
             controller.visualize_additional_property(proxy)
 
         # Attach a handler for the 'status' trait of our main device
-        device_proxy = controller.proxy.root_proxy
-        device_proxy.on_trait_change(self._device_status_changed, 'status')
+        proxy = controller.proxy
+        proxy.on_trait_change(self._proxy_status_changed, 'existing')
+        proxy.root_proxy.on_trait_change(self._proxy_status_changed, 'status')
 
         return controller
 
-    def _device_status_changed(self, status):
-        """Traits notification callback when the status of the device changes.
+    def _proxy_status_changed(self, name, value):
+        """Traits notification callback when the status of the proxy changes.
+
+        The existing property of the proxy is evaluated here as it is coupled
+        to the schema status change!
         """
-        error = (status is DeviceStatus.ERROR)
+        proxy = self.widget_controller.proxy
+        if name == 'status':
+            existing = proxy.existing
+            status = value
+        elif name == 'existing':
+            existing = value
+            status = proxy.root_proxy.status
+
+        if not existing:
+            status = ProxyStatus.MISSING
+
+        error = status is ProxyStatus.ERROR
         pixmap = get_device_status_pixmap(status, error)
         if pixmap is not None:
             self.status_symbol.setPixmap(pixmap)

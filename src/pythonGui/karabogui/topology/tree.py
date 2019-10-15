@@ -9,7 +9,7 @@ import re
 from traits.api import (HasStrictTraits, Bool, Dict, Enum, Event, Instance,
                         Int, List, on_trait_change, String, WeakRef)
 
-from karabo.common.api import DeviceStatus
+from karabo.common.api import ProxyStatus
 from karabo.native import AccessLevel
 from karabogui.alarms.api import AlarmInfo
 from karabogui.enums import NavigationItemTypes
@@ -27,7 +27,7 @@ class SystemTreeNode(HasStrictTraits):
     node_id = String
     path = String
     visibility = Enum(*AccessLevel)
-    status = Enum(*DeviceStatus)
+    status = Enum(*ProxyStatus)
     capabilities = Int
     attributes = Dict
     # Struct to keep track of all alarms related to this
@@ -397,7 +397,7 @@ class SystemTree(HasStrictTraits):
             capabilities = attrs.get('capabilities', 0)
             server_id = attrs.get('serverId', 'unknown-server')
             class_id = attrs.get('classId', 'unknown-class')
-            status = DeviceStatus(attrs.get('status', 'ok'))
+            status = ProxyStatus(attrs.get('status', 'ok'))
 
             # Host node
             host_node = self.root.child(host)
