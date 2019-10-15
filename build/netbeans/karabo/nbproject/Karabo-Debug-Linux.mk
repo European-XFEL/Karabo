@@ -903,7 +903,7 @@ ${TESTDIR}/_ext/936498188/MQTcpNetworking.o: ../../../src/karabo/tests/net/MQTcp
 ${TESTDIR}/_ext/936498188/ReadAsyncStringUntil_Test.o: ../../../src/karabo/tests/net/ReadAsyncStringUntil_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/936498188
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/ReadAsyncStringUntil_Test.o ../../../src/karabo/tests/net/ReadAsyncStringUntil_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/ReadAsyncStringUntil_Test.o ../../../src/karabo/tests/net/ReadAsyncStringUntil_Test.cc
 
 
 ${TESTDIR}/_ext/936498188/Strand_Test.o: ../../../src/karabo/tests/net/Strand_Test.cc 
