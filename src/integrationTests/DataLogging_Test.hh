@@ -33,11 +33,16 @@ private:
     void testString();
     void testVectorString();
     void testTable();
+    void testLastKnownConfiguration();
     template <class T> void testHistory(const std::string& key, const std::function<T(int)>& f, const bool testConf);
     std::string m_server;
     std::string m_deviceId;
     bool m_changedPath;
     std::string m_oldPath;
+
+    // This will contain the timestamp of the instantiation of "this" DataLoggingTest - guaranteed to precede any
+    // logging activity / performed during any test case execution.
+    karabo::util::Epochstamp m_beforeAnything;
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_eventLoopThread;

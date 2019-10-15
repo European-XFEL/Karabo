@@ -1,5 +1,5 @@
 # flake8: noqa
-from .axis_item import AxisItem, get_axis_items
+from .axis_item import AxisItem, create_axis_items
 
 from .roi.base import KaraboROI
 from .roi.controllers.base import BaseROIController

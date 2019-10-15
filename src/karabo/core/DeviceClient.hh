@@ -15,10 +15,13 @@
 #include <karabo/core/Lock.hh>
 #include <karabo/core/InstanceChangeThrottler.hh>
 
+#include <atomic>
 #include <map>
+#include <mutex>
 #include <unordered_map>
 #include <set>
 #include <string>
+
 
 #define KARABO_GET_SHARED_FROM_WEAK(sp, wp) \
 auto sp = wp.lock(); \
@@ -109,12 +112,12 @@ namespace karabo {
 
             int m_internalTimeout;
 
-            bool m_topologyInitialized;
+            std::atomic<bool> m_topologyInitialized;
+            std::once_flag m_initTopologyOnce;
 
             boost::asio::deadline_timer m_ageingTimer;
 
             static const unsigned int m_ageingIntervallMilliSec;
-            static const unsigned int m_ageingIntervallMilliSecCtr;
 
             bool m_getOlder; /// defines whether aging is running or not
 
@@ -592,6 +595,8 @@ namespace karabo {
                 } catch (const karabo::util::Exception& e) {
 
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\""));
+                    // Please compiler by adding a (crashing...) return statement that is never reached:
+                    return *static_cast<T*> (nullptr);
                 }
             }
 
@@ -1134,6 +1139,8 @@ namespace karabo {
             void convertSchemaHash(const karabo::util::Hash& schemaHash, int accessMode, karabo::util::Hash & hash) const;
 
             void recursivelyAddCompoundDataTypes(const karabo::util::Hash& schemaHash, karabo::util::Hash & hash) const;
+
+            void completeInitialization(int countdown);
         };
     }
 }

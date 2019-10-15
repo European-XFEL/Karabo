@@ -75,7 +75,8 @@ class ConfigurationPanel(BasePanelWidget):
     def _event_config_past(self, data):
         deviceId = data['deviceId']
         configuration = data['configuration']
-        self._apply_configuration_from_past(deviceId, configuration)
+        time = data['time']
+        self._apply_configuration_from_past(deviceId, configuration, time)
 
     def _event_network(self, data):
         connected = data['status']
@@ -215,7 +216,7 @@ class ConfigurationPanel(BasePanelWidget):
     # -----------------------------------------------------------------------
     # private methods
 
-    def _apply_configuration_from_past(self, deviceId, configuration):
+    def _apply_configuration_from_past(self, deviceId, configuration, time):
         """Apply the retrieved configuration from getConfigurationFromPast
         """
         proxy = self._showing_proxy
@@ -226,14 +227,20 @@ class ConfigurationPanel(BasePanelWidget):
         # The check we can provide is to check the deviceId and classId
         # NOTE: Schema evolution should not be a problem!
         classId = configuration['classId']
-        if proxy.device_id != deviceId or binding.class_id != classId:
-            messagebox.show_error('The classId or the deviceId are different '
-                                  'for the shown device.', parent=self)
+        if proxy.device_id != deviceId:
+            messagebox.show_error(f"A configuration for '{deviceId}' arrived, "
+                                  f"but is ignored since '{proxy.device_id}' "
+                                  f"shown in editor.", parent=self)
+            return
+        if binding.class_id != classId:
+            messagebox.show_error(f"A configuration for classId '{classId}' "
+                                  f"arrived, but device in editor is a "
+                                  f"'{binding.class_id}'", parent=self)
             return
 
         self._set_proxy_configuration(proxy, configuration)
-        messagebox.show_information('A configuration has arrived!',
-                                    parent=self)
+        messagebox.show_information(f"Configuration from '{time}' has arrived "
+                                    f"for '{deviceId}'!", parent=self)
 
     def _apply_loaded_configuration(self, proxy, configuration):
         """Apply a configuration loaded from a file to a proxy

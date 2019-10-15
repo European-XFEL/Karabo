@@ -21,10 +21,13 @@ from karabogui.singletons.api import (get_db_conn, get_project_model,
 from karabogui.util import is_database_processing, set_treeview_header
 from .controller.bases import BaseProjectGroupController
 from .controller.device import DeviceInstanceController
+from .controller.macro import get_project_macros
 from .controller.project import ProjectController
 from .controller.project_groups import ProjectSubgroupController
 from .controller.server import get_project_servers
 from .controller.subproject import SubprojectController
+
+EXPAND_DEPTH = 2
 
 
 class ProjectView(QTreeView):
@@ -47,6 +50,8 @@ class ProjectView(QTreeView):
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._show_context_menu)
+        self.expanded = False
+        self.header().sectionDoubleClicked.connect(self.onDoubleClickHeader)
 
     # ----------------------------
     # Public methods
@@ -147,10 +152,14 @@ class ProjectView(QTreeView):
                                                        selected_project,
                                                        project_controller,
                                                        show_dialog=True))
-                instantiate_all_action = QAction('Instantiate all devices',
-                                                 menu)
-                instantiate_all_action.triggered.connect(
+                instantiate_all_devices = QAction('Instantiate all devices',
+                                                  menu)
+                instantiate_all_devices.triggered.connect(
                     partial(self._instantiate_devices, selected_controller))
+                instantiate_all_macros = QAction('Instantiate all macros',
+                                                 menu)
+                instantiate_all_macros.triggered.connect(
+                    partial(self._instantiate_macros, selected_controller))
 
                 is_trashed = selected_project.is_trashed
                 if is_trashed:
@@ -162,7 +171,8 @@ class ProjectView(QTreeView):
                                                        selected_project,
                                                        project_controller))
                 menu.addAction(rename_action)
-                menu.addAction(instantiate_all_action)
+                menu.addAction(instantiate_all_macros)
+                menu.addAction(instantiate_all_devices)
                 menu.addSeparator()
                 menu.addAction(save_action)
                 menu.addAction(close_action)
@@ -195,7 +205,7 @@ class ProjectView(QTreeView):
     def _rename_project(self, project):
         """ Change the ``simple_name`` of the given ``project``
         """
-        dialog = NewProjectDialog(model=project, is_rename=True)
+        dialog = NewProjectDialog(model=project, is_rename=True, parent=self)
         result = dialog.exec()
         if result == QDialog.Accepted:
             project.simple_name = dialog.simple_name
@@ -222,6 +232,17 @@ class ProjectView(QTreeView):
                    '{}!'.format(offline_ids))
             messagebox.show_warning(msg, title='Servers offline',
                                     parent=self)
+
+    @pyqtSlot()
+    def _instantiate_macros(self, selected_controller):
+        """ Instantiate all macros in the given project
+
+        The project controller ``selected_controller`` is used to find the
+        offline macro controller to instantiate macros
+        """
+        _, offline = get_project_macros(selected_controller)
+        for macro in offline:
+            macro.run_macro()
 
     def _close_project(self, project, project_controller, show_dialog=False):
         """ Close the given `project`
@@ -256,10 +277,37 @@ class ProjectView(QTreeView):
     def update_is_trashed(self, project, project_controller):
         """ Mark the given `project` as (un-)trashed
         """
-        project.is_trashed = not project.is_trashed
-        db_conn = get_db_conn()
-        db_conn.update_attribute(db_conn.default_domain, 'project',
-                                 project.uuid, 'is_trashed',
-                                 str(project.is_trashed).lower())
-        # We directly save on attribute update!
-        save_object(project)
+        action = "untrash" if project.is_trashed else "trash"
+        ask = ('Are you sure you want to <b>{}</b> the project'
+               ' \"<b>{}</b>\"?'.format(action, project.simple_name))
+        msg_box = QMessageBox(QMessageBox.Question, 'Change of project state',
+                              ask, QMessageBox.Yes | QMessageBox.No)
+        msg_box.setModal(False)
+        msg_box.setDefaultButton(QMessageBox.No)
+        if msg_box.exec() == QMessageBox.Yes:
+            project.is_trashed = not project.is_trashed
+            db_conn = get_db_conn()
+            db_conn.update_attribute(db_conn.default_domain, 'project',
+                                     project.uuid, 'is_trashed',
+                                     str(project.is_trashed).lower())
+            # We directly save on attribute update!
+            save_object(project)
+
+    @pyqtSlot()
+    def onDoubleClickHeader(self):
+        if self.expanded:
+            self.collapseAll()
+        else:
+            self.expandAll()
+
+    @pyqtSlot()
+    def resetExpand(self):
+        self.expandAll()
+
+    def collapseAll(self):
+        self.expanded = False
+        super(ProjectView, self).collapseAll()
+
+    def expandAll(self):
+        self.expanded = True
+        super(ProjectView, self).expandToDepth(EXPAND_DEPTH)

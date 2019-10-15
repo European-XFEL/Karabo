@@ -40,25 +40,23 @@ ACCESS_LEVELS['Observer'] = AccessLevel.OBSERVER
 class PanelAreaEnum(Enum):
     """The different panel areas in the main window
     """
-    LeftBottom = 0
-    LeftTop = 1
-    MiddleBottom = 2
-    MiddleTop = 3
-    Right = 4
+    Left = 0
+    Middle = 1
+    Right = 2
 
 
 _CLOSABLE_PANELS = {
     # Title: (class, position, icon)
-    'Console': (ScriptingPanel, PanelAreaEnum.MiddleBottom, icons.consoleMenu),
-    'Log': (LoggingPanel, PanelAreaEnum.MiddleBottom, icons.logMenu),
+    'Console': (ScriptingPanel, PanelAreaEnum.Middle, icons.consoleMenu),
+    'Log': (LoggingPanel, PanelAreaEnum.Middle, icons.logMenu),
 }
 
 _PANELS = {
     # Title: (class, position)
     'Configuration Editor': (ConfigurationPanel, PanelAreaEnum.Right),
-    'System Topology': (TopologyPanel, PanelAreaEnum.LeftTop),
-    'Device Topology': (DevicePanel, PanelAreaEnum.LeftTop),
-    'Projects': (ProjectPanel, PanelAreaEnum.LeftBottom),
+    'System Topology': (TopologyPanel, PanelAreaEnum.Left),
+    'Device Topology': (DevicePanel, PanelAreaEnum.Left),
+    'Projects': (ProjectPanel, PanelAreaEnum.Left),
 }
 
 VIEW_MENU_TITLE = '&View'
@@ -144,7 +142,7 @@ class MainWindow(QMainWindow):
         self._enable_toolbar(enable)
 
         # Update all open scenes and macros
-        container = self._panel_areas[PanelAreaEnum.MiddleTop]
+        container = self._panel_areas[PanelAreaEnum.Middle]
         for panel in container.panel_set:
             panel.setEnabled(enable)
 
@@ -276,7 +274,7 @@ class MainWindow(QMainWindow):
         self.acExit.setStatusTip(text)
         self.acExit.setToolTip(text)
         self.acExit.setShortcut('Ctrl+Q')
-        self.acExit.triggered.connect(self.onExit)
+        self.acExit.triggered.connect(self.close)
 
         self.acHelpAbout = QAction("About", self)
         self.acHelpAbout.triggered.connect(self.onHelpAbout)
@@ -356,21 +354,12 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(mainSplitter)
 
         # Set up the left area
-        left_top = PanelContainer("Navigation", left_area)
-        left_bottom = PanelContainer("Projects", left_area)
-        self._panel_areas[PanelAreaEnum.LeftTop] = left_top
-        self._panel_areas[PanelAreaEnum.LeftBottom] = left_bottom
-        left_area.setStretchFactor(0, 2)
-        left_area.setStretchFactor(1, 1)
+        left = PanelContainer("Navigation", left_area)
+        self._panel_areas[PanelAreaEnum.Left] = left
 
         # Set up the middle area
-        middle_top = PanelContainer("Custom view", middle_area,
-                                    handle_empty=True)
-        middle_bottom = PanelContainer("Output", middle_area)
-        self._panel_areas[PanelAreaEnum.MiddleTop] = middle_top
-        self._panel_areas[PanelAreaEnum.MiddleBottom] = middle_bottom
-        middle_area.setStretchFactor(0, 6)
-        middle_area.setStretchFactor(1, 1)
+        middle = PanelContainer("Custom view", middle_area, handle_empty=True)
+        self._panel_areas[PanelAreaEnum.Middle] = middle
 
         # Set up the right area
         right = PanelContainer("Configuration", right_area)
@@ -464,12 +453,6 @@ class MainWindow(QMainWindow):
 
     # --------------------------------------
     # Qt slots
-
-    @pyqtSlot()
-    def onExit(self):
-        if not self._quit():
-            return
-        qApp.quit()
 
     @pyqtSlot()
     def onConfiguration(self):

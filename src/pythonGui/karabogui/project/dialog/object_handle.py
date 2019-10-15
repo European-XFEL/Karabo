@@ -7,7 +7,8 @@ import os.path as op
 
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QDialog, QDialogButtonBox
+from PyQt4.QtGui import (
+    QDialog, QDialogButtonBox, QFormLayout, QSpinBox, QValidator)
 
 from karabogui.util import InputValidator, SignalBlocker
 
@@ -26,13 +27,18 @@ class ObjectDuplicateDialog(QDialog):
         uic.loadUi(filepath, self)
         self.setWindowTitle('Duplicate object {}'.format(simple_name))
 
+        # Add spinboxes with validator
+        self.sbStart = UIntSpinbox(self)
+        self.sbStart.valueChanged.connect(self._indexChanged)
+        self.formLayout.setWidget(1, QFormLayout.FieldRole, self.sbStart)
+        self.sbEnd = UIntSpinbox(self)
+        self.formLayout.setWidget(2, QFormLayout.FieldRole, self.sbEnd)
+        self.sbEnd.valueChanged.connect(self._indexChanged)
+
         validator = InputValidator()
         self.leTitle.setValidator(validator)
-
         self.leTitle.setText(simple_name)
         self._update_text()
-        self.sbStart.valueChanged.connect(self._indexChanged)
-        self.sbEnd.valueChanged.connect(self._indexChanged)
 
     def _update_text(self):
         start_index = self.sbStart.value()
@@ -62,6 +68,20 @@ class ObjectDuplicateDialog(QDialog):
             dupe_name = '{}{}'.format(self.leTitle.text(), index)
             simple_names.append(dupe_name)
         return simple_names
+
+
+class UIntSpinbox(QSpinBox):
+
+    def __init__(self, parent):
+        super(UIntSpinbox, self).__init__(parent)
+        self.setMinimum(0)
+        self.setMaximum(1000)
+
+    def validate(self, value, pos):
+        if not value.isdigit() and value != '':
+            return QValidator.Invalid, value, pos
+
+        return super(UIntSpinbox, self).validate(value, pos)
 
 
 class ObjectEditDialog(QDialog):
