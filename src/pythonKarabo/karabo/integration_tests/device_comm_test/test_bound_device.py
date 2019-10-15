@@ -69,7 +69,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         ok, msg = self.dc.instantiate(SERVER_ID, classConfig2, 30)
         self.assertTrue(ok, msg)
 
-        config3 = Hash("Logger.priority", "ERROR")
+        config3 = Hash()
 
         classConfig3 = Hash("classId", "TinyBoundDevice",
                             "deviceId", "testComm3",
@@ -243,6 +243,11 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
                                  KARABO_SCHEMA_MAX_SIZE, 8)
             self.assertRaises(RuntimeError, self.dc.set,
                               "testComm1", "vectorInt32", [4]*9)  # not OK now!
+
+        with self.subTest(msg="Test killing TinyBoundDevice"):
+            self.dc.killDevice('TinyBoundDevice', 10)
+            ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, 30)
+            self.assertTrue(ok, msg)
 
 
     def waitUntilEqual(self, devId, propertyName, whatItShouldBe, maxTries):
