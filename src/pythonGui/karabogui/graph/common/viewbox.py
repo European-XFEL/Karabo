@@ -1,5 +1,5 @@
 import numpy as np
-from PyQt4.QtCore import QPoint, Qt
+from PyQt4.QtCore import QPoint, Qt, pyqtSignal
 from PyQt4.QtGui import QMenu
 from pyqtgraph import ViewBox
 
@@ -10,6 +10,9 @@ ZOOM_OUT = -1
 
 
 class KaraboViewBox(ViewBox):
+
+    autoRangeTriggered = pyqtSignal()
+
     def __init__(self, parent=None):
         super(KaraboViewBox, self).__init__(parent, enableMenu=False)
         self.mouse_mode = MouseMode.Pointer
@@ -23,6 +26,7 @@ class KaraboViewBox(ViewBox):
     def mouseClickEvent(self, event):
         if event.button() == Qt.MiddleButton:
             self.enableAutoRange()
+            self.autoRangeTriggered.emit()
 
         if self.mouse_mode is MouseMode.Zoom:
             if event.button() == Qt.LeftButton:

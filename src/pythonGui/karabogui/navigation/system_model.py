@@ -10,7 +10,7 @@ from PyQt4.QtCore import (
     pyqtSignal, pyqtSlot, QAbstractItemModel, QMimeData, QModelIndex, Qt)
 from PyQt4.QtGui import QItemSelection, QItemSelectionModel
 
-from karabo.common.api import DeviceStatus
+from karabo.common.api import ProxyStatus
 from karabogui import globals as krb_globals, icons
 from karabogui.alarms.api import get_alarm_icon
 from karabogui.events import KaraboEvent, register_for_broadcasts
@@ -171,7 +171,7 @@ class SystemTreeModel(QAbstractItemModel):
             elif hierarchyLevel == 2:
                 return icons.deviceClass
             elif hierarchyLevel == 3:
-                if node.status is DeviceStatus.ERROR:
+                if node.status is ProxyStatus.ERROR:
                     return icons.deviceInstanceError
                 if node.monitoring:
                     return icons.deviceMonitored

@@ -55,11 +55,14 @@ class BoundDeviceTestCase(TestCase):
     serverProcesses = {}
     dc = None
 
-    def start_server(self, api, server_id, class_ids, plugin_dir=''):
+    def start_server(self, api, server_id, class_ids, plugin_dir='',
+                     logLevel='FATAL'):
         """
         Start a server in its own process.
         api: "bound", "cpp" or "mdl"
         class_ids: list of required device classes for this server
+        plugin_dir: where extra plugins are looked for (default: empty)
+        logLevel: log level of server (default: 'FATAL', i.e. no logging)
         """
 
         if server_id in self.serverProcesses:
@@ -74,7 +77,6 @@ class BoundDeviceTestCase(TestCase):
             'deviceClasses=' + ','.join(class_ids),
             'visibility=1'
         ]
-        logLevel = 'ERROR'
         if api == "bound":
             server_args.append('Logger.priority={}'.format(logLevel))
             serverProcess = start_bound_server(server_id, server_args,

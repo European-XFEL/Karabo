@@ -281,6 +281,7 @@ class NewProjectDialog(QDialog):
         filepath = op.join(op.abspath(op.dirname(__file__)),
                            'project_new.ui')
         uic.loadUi(filepath, self)
+        self.setModal(False)
 
         validator = InputValidator()
 

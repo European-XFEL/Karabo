@@ -1,22 +1,15 @@
 import argparse
-import os.path as op
 import re
 import sys
 
-from PyQt4.QtCore import Qt, QTimer
-from PyQt4.QtGui import (
-    qApp, QApplication, QIcon, QPixmap, QSplashScreen, QStyleFactory)
-from pyqtgraph import setConfigOptions
+from PyQt4.QtCore import QTimer
+from PyQt4.QtGui import qApp
 
 from karabo.common.api import Capabilities
-from karabogui import icons
-from karabogui.controllers.api import populate_controller_registry
 from karabogui import messagebox
-from karabogui.singletons.api import (
-    get_manager, get_mediator, get_panel_wrangler, get_network,
-    get_topology)
+from karabogui.programs.base import create_gui_app, init_gui
+from karabogui.singletons.api import get_network, get_topology
 from karabogui.util import get_scene_from_server
-
 
 DEVSCENE_PROG = re.compile("([0-9a-zA-Z/_\-]+)\|(.+)")
 CAPA = Capabilities.PROVIDES_SCENES
@@ -28,6 +21,7 @@ class DeviceWaiter():
 
     The constructor will parse the list of sceneIds for the theather as well
     """
+
     def __init__(self, scene_ids, timeout):
         # a dictionary of list of scene names indexed by deviceId
         self.device_scenes = {}
@@ -94,13 +88,13 @@ class DeviceWaiter():
 
         missing = ',\n'.join([device_id for device_id in self.device_scenes])
         if missing:
-            msg += "The following deviceIds are not present "\
-             "in the system topology: {}. \n".format(missing)
+            msg += "The following deviceIds are not present " \
+                   "in the system topology: {}. \n".format(missing)
         incapables = ',\n'.join([device_id
                                  for device_id in self.not_capable_devices])
         if incapables:
-            msg += "The following deviceIds do not provide "\
-             "scenes: {}. \n".format(incapables)
+            msg += "The following deviceIds do not provide " \
+                   "scenes: {}. \n".format(incapables)
 
         # open a dialog for the missing scenes
         if msg:
@@ -133,43 +127,8 @@ def run_theatre(ns):
 
     All scenes have the name deviceId|sceneName and are not editable!
     """
-    app = QApplication(sys.argv)
-    # Set the style among all operating systems
-    app.setStyle(QStyleFactory.create("Cleanlooks"))
-    app.setPalette(QApplication.style().standardPalette())
-    app.setAttribute(Qt.AA_DontShowIconsInMenus, False)
-
-    # set a nice app logo
-    logo_path = op.join(op.dirname(__file__), '..', "icons", "app_logo.png")
-    app.setWindowIcon(QIcon(logo_path))
-
-    # These should be set to simplify QSettings usage
-    app.setOrganizationName('XFEL')
-    app.setOrganizationDomain('xfel.eu')
-    app.setApplicationName('KaraboGUI')
-
-    splash_path = op.join(op.dirname(__file__), '..', "icons", "splash.png")
-    splash_img = QPixmap(splash_path)
-    splash = QSplashScreen(splash_img, Qt.WindowStaysOnTopHint)
-    splash.setMask(splash_img.mask())
-    splash.show()
-    app.processEvents()
-
-    # This is needed to make the splash screen show up...
-    splash.showMessage(" ")
-    app.processEvents()
-
-    setConfigOptions(background=None, foreground="k")
-    # Run the lazy initializers (icons, widget controllers)
-    icons.init()
-    populate_controller_registry()
-
-    # Init some singletons
-    get_mediator()
-    get_manager()
-
-    # Init the panel wrangler singleton
-    get_panel_wrangler().use_splash_screen(splash)
+    app = create_gui_app(sys.argv)
+    init_gui(app, use_splash=True)
 
     # We might want to connect directly to the gui server
     if ns.host and ns.port:
@@ -205,7 +164,7 @@ def main():
                          'port. The default user name is `admin`')
     ap.add_argument('-timeout', '--timeout', type=int, default=10,
                     help='The timeout in seconds to be waited for the devices'
-                    'to be visible')
+                         'to be visible')
     run_theatre(ap.parse_args())
 
 

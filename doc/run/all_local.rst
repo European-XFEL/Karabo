@@ -50,6 +50,20 @@ temporarily to the internet, or by using the
 and `docker load <https://docs.docker.com/engine/reference/commandline/load/>`_
 commands.
 
+The DB's data resides in the container and will be archived at 00 and 12 hours
+by default. The data saved with such a procedure, is saved in the 
+``var/data/exist_data`` folder. While the runtime data is stored in the
+container storage. To wipe the memory, one needs to remove the container
+using the `docker rm <https://docs.docker.com/engine/reference/commandline/rm/>`_
+command, i.e. stopping the container with `karabo-stopconfigdb` and running
+`docker rm karabo_existdb`.
+
+In case one wishes to change the main username and password for the database,
+one should follow the instructions in the `README.md` of the
+`source <https://git.xfel.eu/gitlab/ITDM/docker_existdb>`_ of the image, and
+update the content of the `KARABO_PROJECT_DB_USER` and
+`KARABO_PROJECT_DB_PASSWORD` accordingly.
+
 Step 3: Edit the environment files
 ==================================
 

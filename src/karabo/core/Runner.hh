@@ -50,9 +50,10 @@ namespace karabo {
              */
             static DeviceServer::Pointer instantiate(int argc, const char** argv);
 
-        protected:
+            static bool parseCommandLine(int argc, const char** argv, karabo::util::Hash& configuration,
+                                         bool silent = false);
 
-            static bool parseCommandLine(int argc, const char** argv, karabo::util::Hash& configuration);
+        protected:
 
             static void parseToken(const std::string& prefix, const std::string& token, std::vector<std::string>& tokenList);
 

@@ -7,7 +7,7 @@ from xml.etree.ElementTree import Element, parse, SubElement, tostring
 
 from traits.api import Enum, Instance, List, String
 
-from karabo.common.api import DeviceStatus
+from karabo.common.api import ProxyStatus
 from .bases import BaseProjectObjectModel
 from .const import (
     PROJECT_DB_TYPE_DEVICE_INSTANCE, PROJECT_DB_TYPE_DEVICE_SERVER
@@ -25,7 +25,7 @@ class DeviceServerModel(BaseProjectObjectModel):
     # A list of possible devices for the server
     devices = List(Instance(DeviceInstanceModel))
     # The current status of the server
-    status = Enum(*DeviceStatus, transient=True)
+    status = Enum(*ProxyStatus, transient=True)
 
     def get_device_instance(self, instance_id):
         for dev in self.devices:

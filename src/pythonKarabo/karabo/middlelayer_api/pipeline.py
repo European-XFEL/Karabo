@@ -156,7 +156,8 @@ class NetworkInput(Configurable):
         defaultValue=[])
     @coroutine
     def connectedOutputChannels(self, value):
-        outputs = set(value)
+        # Basic name protection is implemented here, as it can cause hickups!
+        outputs = set(output.strip() for output in value)
         close = self.connected.keys() - outputs
         for k in close:
             self.connected[k].cancel()
@@ -602,7 +603,7 @@ class NetworkOutput(Configurable):
         port = int(self.port) if isSet(self.port) else 0
         self.server = yield from start_server(serve, host=hostname,
                                               port=port)
-        self.hostname = hostname
+        self.hostname = value
 
     connections = VectorHash(
         rows=ConnectionTable,
@@ -630,7 +631,7 @@ class NetworkOutput(Configurable):
                 yield from loop.waitForChanges()
 
         host, port = self.server.sockets[0].getsockname()
-        return Hash("connectionType", "tcp", "hostname", self.hostname,
+        return Hash("connectionType", "tcp", "hostname", host,
                     "port", numpy.uint32(port))
 
     @coroutine
