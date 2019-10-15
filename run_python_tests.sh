@@ -196,6 +196,9 @@ runCondaUnitTests() {
     conda devenv
     source activate karabogui
 
+    # Print the installed packages
+    conda list
+
     # Generate version file
     python setup.py --version
 
@@ -206,7 +209,7 @@ runCondaUnitTests() {
     safeRunCommand "nosetests -v $COVER_FLAGS karabo.common"
     unset ACCEPT_SIGSEGV
 
-    source deactivate
+    conda deactivate
     popd
 }
 
