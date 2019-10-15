@@ -255,6 +255,7 @@ void DataLogging_Test::testHistoryAfterChanges() {
     params.set<string>("to", wayAfter);
     params.set<int>("maxNumData", max_set * 2);
 
+    // FIXME: refactor this once indexing is properly handled.
     // the history retrieval might take more than one try, it could have to index the files.
     int timeout = 10000;
     unsigned int numTimeouts = 0;
@@ -269,10 +270,9 @@ void DataLogging_Test::testHistoryAfterChanges() {
         boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
         timeout -= 1000;
     }
-    CPPUNIT_ASSERT_MESSAGE("No property history entry retrieved.", history.size() == 1);
-    CPPUNIT_ASSERT_MESSAGE("Timeout while getting property history " + toString(numTimeouts), timeout >= 0);
     CPPUNIT_ASSERT_EQUAL_MESSAGE("History size should be 1, got " + karabo::util::toString(history.size()) + ".",
                                  1, history.size());
+    CPPUNIT_ASSERT_MESSAGE("Timeout while getting property history " + toString(numTimeouts), timeout >= 0);
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Device name on reply, '" + device + "', differs from expected, '" + m_deviceId + "'.",
                                  m_deviceId, device);
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Property name on reply, '" + property + "', differs from expected, '" + propertyName + "'.",
