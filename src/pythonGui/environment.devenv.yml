@@ -12,7 +12,7 @@ includes:
 
 dependencies:
   - python=3.6.7=he025d50_1005 # [win]
-  - python=3.6.* # [linux]
+  - python=3.6.7 # [linux]
   # GUI
   - qt=4.8.7=4 # [linux]
   - qt=4.8.7=vc14_7 # [win]
