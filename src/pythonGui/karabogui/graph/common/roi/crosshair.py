@@ -53,26 +53,28 @@ class CrosshairROI(KaraboROI):
     # ---------------------------------------------------------------------
     # Public methods
 
-    def get_region(self, imageItem, x_data, y_data):
+    def get_region(self, imageItem):
         image = imageItem.image
         x, y = np.floor(self._absolute_position).astype(int)
 
         if 0 <= x < image.shape[1]:
             y_region = image[:, x]
+            y_slice = slice(image.shape[0])
         else:
             y_region = np.array([])
-            y_data = np.array([])
+            y_slice = slice(0)
 
         if 0 <= y < image.shape[0]:
             x_region = image[y, :]
+            x_slice = slice(image.shape[1])
         else:
             x_region = np.array([])
-            x_data = np.array([])
+            x_slice = slice(0)
 
-        details = ImageRegion([x_region, y_region], ImageRegion.Line,
-                              x_data, y_data)
+        image_region = ImageRegion([x_region, y_region], ImageRegion.Line,
+                                   x_slice, y_slice)
 
-        return details
+        return image_region
 
     def select(self, update=False):
         """Reimplemented because we recalculate the shape and repaint then"""

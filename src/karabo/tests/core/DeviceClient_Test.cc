@@ -16,6 +16,10 @@
 #include "karabo/xms/InputChannel.hh"
 #include "karabo/xms/ImageData.hh"
 
+#include <future>
+#include <tuple>
+#include <boost/thread.hpp>
+
 #define KRB_TEST_MAX_TIMEOUT 5
 
 CPPUNIT_TEST_SUITE_REGISTRATION(DeviceClient_Test);
@@ -68,11 +72,77 @@ void DeviceClient_Test::tearDown() {
 
 void DeviceClient_Test::testAll() {
     // A single test to reduce setup/teardown time
+    testConcurrentInitTopology();
     testGet();
     testMonitorChannel();
     testGetSchema();
     testGetSchemaNoWait();
     testConnectionHandling();
+}
+
+
+void DeviceClient_Test::testConcurrentInitTopology() {
+    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest",
+                                                                       Hash("deviceId", "TestedDevice"),
+                                                                       KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    // Calls DeviceClient::getDevices and returns the elapsed time, in milliseconds, for
+    // the call to complete, a vector with the device names and the id of the thread
+    // that executed the call.
+    auto getDeviceWorker = [this]() -> std::tuple<unsigned, std::vector<std::string>, boost::thread::id>
+{
+        const auto startTimePoint = std::chrono::high_resolution_clock::now();
+
+        const std::vector<std::string> devices = this->m_deviceClient->getDevices();
+
+        const auto finishTimePoint = std::chrono::high_resolution_clock::now();
+        const auto duration = finishTimePoint - startTimePoint;
+
+        unsigned elapsedTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+
+        return make_tuple(elapsedTimeMs, devices, boost::this_thread::get_id());
+    };
+
+    // Dispatches two calls to getDeviceWorker, each in a different thread and then asserts on the results.
+    auto getDev1 = std::async(std::launch::async, getDeviceWorker);
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+    auto getDev2 = std::async(std::launch::async, getDeviceWorker);
+
+    const auto getDev1Result = getDev1.get();
+    const auto getDev2Result = getDev2.get();
+
+    // Checks that the first getDevices execution has taken around 2 secs (the length of the sleep interval
+    // in SignalSlotable::getAvailableInstances for gathering slotPing replies) and ...
+    const unsigned getDev1Time = std::get<0>(getDev1Result);
+    CPPUNIT_ASSERT(getDev1Time > 1600u && getDev1Time <= 2400u);
+
+    // ... the second getDevices execution has taken around 1 sec (time between the second getDevices call is made and
+    // the conclusion of the first call) and ...
+    const unsigned getDev2Time = std::get<0>(getDev2Result);
+    CPPUNIT_ASSERT(getDev2Time > 600u && getDev2Time <= 1400u);
+
+    // ... should have been executed in different threads and ...
+    const boost::thread::id getDev1ThreadId = std::get<2>(getDev1Result);
+    const boost::thread::id getDev2ThreadId = std::get<2>(getDev2Result);
+    CPPUNIT_ASSERT(getDev1ThreadId != getDev2ThreadId);
+
+    // ... should return the same list of devices.
+    const std::vector<std::string> getDev1Devices = std::get<1>(getDev1Result);
+    const std::vector<std::string> getDev2Devices = std::get<1>(getDev2Result);
+    bool resultsEqual = (getDev1Devices.size() == getDev2Devices.size());
+    if (resultsEqual) {
+        for (std::size_t i = 0; i < getDev1Devices.size(); i++) {
+            if (getDev1Devices[i] != getDev2Devices[i]) {
+                resultsEqual = false;
+                break;
+            }
+        }
+    }
+    CPPUNIT_ASSERT(resultsEqual);
+
+    success = m_deviceClient->killDevice("TestedDevice", KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 }
 
 

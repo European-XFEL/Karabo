@@ -12,8 +12,37 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
     def setUp(self):
         super(TestDeviceDeviceComm, self).setUp()
         own_dir = op.dirname(op.abspath(__file__))
-        class_ids = ['CommTestDevice']
+        class_ids = ['CommTestDevice','TinyBoundDevice']
         self.start_server("bound", SERVER_ID, class_ids, plugin_dir=own_dir)
+
+    def test_log_level(self):
+        serverId = "logLevelServer"
+        deviceId = "logLevelTestDevice"
+        self.start_server("bound", serverId, ["PropertyTest"], logLevel="ERROR")
+
+        # Do not specify device log level: inherit from server
+        cfg = Hash("classId", "PropertyTest",
+                   "deviceId", deviceId,
+                   "configuration", Hash())
+        ok, msg = self.dc.instantiate(serverId, cfg, 30)
+        self.assertTrue(ok, msg)
+        res = self.dc.get(deviceId, "Logger.priority")
+        self.assertEqual(res, "ERROR")
+        ok, msg = self.dc.killDevice(deviceId, 30)
+        self.assertTrue(ok, "Problem killing device '{}': {}.".format(deviceId,
+                                                                      msg))
+
+        # Specify device log level explicitely (non-default value)
+        cfg = Hash("classId", "PropertyTest",
+                   "deviceId", deviceId,
+                   "configuration", Hash("Logger.priority", "WARN"))
+        ok, msg = self.dc.instantiate(serverId, cfg, 30)
+        self.assertTrue(ok, msg)
+        res = self.dc.get(deviceId, "Logger.priority")
+        self.assertEqual(res, "WARN")
+        ok, msg = self.dc.killDevice(deviceId, 30)
+        self.assertTrue(ok, "Problem killing device '{}': {}.".format(deviceId,
+                                                                      msg))
 
     def test_in_sequence(self):
         # Complete setup - do not do it in setup to ensure that even in case of
@@ -21,8 +50,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
 
         # we will use two devices communicating with each other.
         config = Hash("Logger.priority", "ERROR",
-                      "remote", "testComm2",
-                      "deviceId", "testComm1")
+                      "remote", "testComm2")
 
         classConfig = Hash("classId", "CommTestDevice",
                            "deviceId", "testComm1",
@@ -32,8 +60,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         self.assertTrue(ok, msg)
 
         config2 = Hash("Logger.priority", "ERROR",
-                       "remote", "testComm1",
-                       "deviceId", "testComm2")
+                       "remote", "testComm1")
 
         classConfig2 = Hash("classId", "CommTestDevice",
                             "deviceId", "testComm2",
@@ -42,14 +69,27 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         ok, msg = self.dc.instantiate(SERVER_ID, classConfig2, 30)
         self.assertTrue(ok, msg)
 
+        config3 = Hash()
+
+        classConfig3 = Hash("classId", "TinyBoundDevice",
+                            "deviceId", "testComm3",
+                            "configuration", config3)
+
+        ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, 30)
+        self.assertTrue(ok, msg)
+
         # wait for device to init
         state1 = None
         state2 = None
+        state3 = None
         nTries = 0
-        while state1 != State.NORMAL or state2 != State.NORMAL:
+        while (state1 != State.NORMAL or
+               state2 != State.NORMAL or
+               state3 != State.MONITORING):
             try:
                 state1 = self.dc.get("testComm1", "state")
                 state2 = self.dc.get("testComm2", "state")
+                state3 = self.dc.get("testComm3", "state")
             # A RuntimeError will be raised up to device init
             except RuntimeError:
                 sleep(self._waitTime)
@@ -203,6 +243,11 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
                                  KARABO_SCHEMA_MAX_SIZE, 8)
             self.assertRaises(RuntimeError, self.dc.set,
                               "testComm1", "vectorInt32", [4]*9)  # not OK now!
+
+        with self.subTest(msg="Test killing TinyBoundDevice"):
+            self.dc.killDevice('TinyBoundDevice', 10)
+            ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, 30)
+            self.assertTrue(ok, msg)
 
 
     def waitUntilEqual(self, devId, propertyName, whatItShouldBe, maxTries):

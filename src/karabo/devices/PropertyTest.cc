@@ -466,6 +466,14 @@ namespace karabo {
                     .reconfigurable()
                     .commit();
 
+            TABLE_ELEMENT(expected).key("tableReadOnly")
+                    .displayedName("Read-only table property")
+                    .description("Read-only table containing one node.")
+                    .addColumnsFromClass<NestedClass>()
+                    .addColumns(columns)
+                    .readOnly().initialValue({Hash("e1", "abc", "e2", true, "e3", 12, "e4", 0.9837F, "e5", 1.2345),
+                                              Hash("e1", "xyz", "e2", false, "e3", 42, "e4", 2.33333F, "e5", 7.77777)})
+                    .commit();
 
             Schema pipeData;
             NODE_ELEMENT(pipeData).key("node")
@@ -746,6 +754,10 @@ namespace karabo {
 
             set(Hash("inputCounter", inputCounter + 1,
                      "currentInputId", currentInputId));
+
+            // Writes data received to output channel to allow PropertyTest to build
+            // pipelines of chained devices.
+            writeOutput();
         }
 
 

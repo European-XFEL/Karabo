@@ -172,6 +172,8 @@ class PanelContainer(QTabWidget):
         if self.count() == 0:
             self.hide()
 
+        panel.deleteLater()
+
     # ----------------------------------------------------------------------
     # private methods
 

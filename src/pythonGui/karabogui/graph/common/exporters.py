@@ -2,6 +2,7 @@ from numpy import ndarray, save
 from pyqtgraph import mkColor
 from pyqtgraph.exporters import ImageExporter as PgImageExporter
 
+from karabo.native import Timestamp
 from karabogui import util
 
 
@@ -12,10 +13,11 @@ class NumpyExporter(object):
         self._data = data
 
     def export(self):
+        name = "{}_image_data.npy".format(Timestamp().toLocal())
         filename = util.getSaveFileName(caption="Export Data",
                                         filter="Numpy File (*.npy)",
                                         suffix="npy",
-                                        selectFile="image")
+                                        selectFile=name)
 
         if not filename:
             return
@@ -37,11 +39,11 @@ class ImageExporter(object):
         """Exports the plot to an image"""
         # First we export the contents to a QImage
         qimage = self._exporter.export(toBytes=True)
-
+        name = "{}_image.png".format(Timestamp().toLocal())
         filename = util.getSaveFileName(caption="Save Snapshot",
                                         filter="PNG (*.png)",
                                         suffix="png",
-                                        selectFile="image")
+                                        selectFile=name)
 
         if not filename:
             return

@@ -1,6 +1,6 @@
 from PyQt4.QtCore import Qt
 
-from karabo.common.api import DeviceStatus, State
+from karabo.common.api import ProxyStatus, State
 from karabo.native import (
     Bool, Configurable, Float, Int32, Slot, String, VectorFloat, VectorHash
 )
@@ -31,7 +31,7 @@ class TestConfiguratorModel(GuiTestCase):
 
         binding = build_binding(Object.getClassSchema())
         root = ProjectDeviceProxy(binding=binding, server_id='Test',
-                                  status=DeviceStatus.OFFLINE)
+                                  status=ProxyStatus.OFFLINE)
         self.model = ConfigurationTreeModel()
         self.model.root = root
 

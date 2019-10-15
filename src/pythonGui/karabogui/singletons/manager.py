@@ -9,7 +9,7 @@ from functools import wraps
 from PyQt4.QtCore import pyqtSlot, QObject
 from PyQt4.QtGui import QMessageBox
 
-from karabo.common.api import DeviceStatus
+from karabo.common.api import ProxyStatus
 from karabo.native import AccessMode, Hash, Timestamp
 from karabogui.alarms.api import extract_alarms_data
 from karabogui.background import executeLater, Priority
@@ -197,8 +197,10 @@ class Manager(QObject):
             return
         deviceId = info.get('deviceId')
         config = info.get('config')
+        time = info.get('time')
         broadcast_event(KaraboEvent.ShowConfigurationFromPast,
-                        {'deviceId': deviceId, 'configuration': config})
+                        {'deviceId': deviceId, 'configuration': config,
+                         'time': time})
 
     def handle_brokerInformation(self, **info):
         get_network()._handleBrokerInformation(
@@ -334,9 +336,16 @@ class Manager(QObject):
     def handle_deviceConfiguration(self, deviceId, configuration):
         self._topology.device_config_updated(deviceId, configuration)
 
-    def handle_propertyHistory(self, deviceId, property, data):
-        device_proxy = self._topology.get_device(deviceId)
-        device_proxy.publish_historic_data(property, data)
+    def handle_propertyHistory(self, deviceId, property, data, success=True,
+                               failureReason=""):
+        if success:
+            device_proxy = self._topology.get_device(deviceId)
+            device_proxy.publish_historic_data(property, data)
+        else:
+            # XXX: Forward compatibility!
+            # The GUI server of future Karabo versions (> 2.6.X) will report
+            # here about failed history request and their reason.
+            pass
 
     def handle_runConfigSourcesInGroup(self, **info):
         # This is DEPRECATED
@@ -490,17 +499,17 @@ def _extract_topology_devices(topo_hash):
         for device_id, _, attrs in topo_hash['device'].iterall():
             class_id = attrs.get('classId', 'unknown-class')
             status = attrs.get('status', 'ok')
-            devices.append((device_id, class_id, DeviceStatus(status)))
+            devices.append((device_id, class_id, ProxyStatus(status)))
 
     if 'macro' in topo_hash:
         for device_id, _, attrs in topo_hash['macro'].iterall():
             class_id = attrs.get('classId', 'unknown-class')
-            devices.append((device_id, class_id, DeviceStatus.OK))
+            devices.append((device_id, class_id, ProxyStatus.OK))
 
     if 'server' in topo_hash:
         for server_id, _, attrs in topo_hash['server'].iterall():
             host = attrs.get('host', 'UNKNOWN')
             status = attrs.get('status', 'ok')
-            servers.append((server_id, host, DeviceStatus(status)))
+            servers.append((server_id, host, ProxyStatus(status)))
 
     return devices, servers

@@ -170,6 +170,8 @@ class KaraboImageView(QWidget):
                 # Create an instance of the aux plots controller with the klass
                 self._aux_plots = AuxPlotsController(self.image_layout)
 
+                self.plotItem.imageAxesChanged.connect(self._set_axes_to_aux)
+
                 # If ROI exists
                 if self.roi is not None:
                     self.roi.updated.connect(self._aux_plots.analyze)
@@ -189,6 +191,9 @@ class KaraboImageView(QWidget):
                 # If ROI exists
                 if self.roi is None:
                     self.roi.updated.disconnect(self._aux_plots.analyze)
+
+                self.plotItem.imageAxesChanged.disconnect(
+                    self._set_axes_to_aux)
 
         return self._aux_plots
 
@@ -414,6 +419,10 @@ class KaraboImageView(QWidget):
         config['roi_items'] = items
         self.configuration.update(**config)
         self.stateChanged.emit(config)
+
+    @pyqtSlot()
+    def _set_axes_to_aux(self):
+        self._aux_plots.set_image_axes(self.plotItem.transformed_axes)
 
     # -----------------------------------------------------------------------
     # ROI methods

@@ -185,3 +185,32 @@ class Schema_Injection_TestCase(unittest.TestCase):
 
         self.assertIn("deviceTable",
                       device.getSchema("DeviceWithTableElementParam").getPaths())
+        table = device.parameters.get("deviceTable")
+        self.assertTrue(len(table) == 2)
+
+
+    def test_schemaWithTableElementAppend(self):
+        """Tests that appendSchema preserves TABLE_ELEMENTs in the static schema."""
+        device = Configurator(PythonDevice).create(
+                        "DeviceWithTableElementParam", Hash())
+        device.startFsm()
+
+        self.assertIn("deviceTable",
+                      device.getSchema("DeviceWithTableElementParam").getPaths())
+
+        # Test that doing updateSchema with something new keeps
+        # the table element parameter.
+        schema = Schema()
+        (
+            INT32_ELEMENT(schema).key("somethingNew")
+            .assignmentOptional().defaultValue(4)
+            .reconfigurable()
+            .commit()
+        )
+
+        device.appendSchema(schema)
+
+        self.assertIn("deviceTable",
+                      device.getSchema("DeviceWithTableElementParam").getPaths())
+        table = device.parameters.get("deviceTable")
+        self.assertTrue(len(table) == 2)

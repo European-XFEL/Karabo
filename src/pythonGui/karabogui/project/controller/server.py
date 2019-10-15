@@ -9,7 +9,7 @@ from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Bool, Instance, Property, on_trait_change
 
-from karabo.common.api import DeviceStatus, walk_traits_object
+from karabo.common.api import ProxyStatus, walk_traits_object
 from karabo.common.project.api import DeviceServerModel
 from karabogui.enums import ProjectItemTypes
 from karabogui.events import (KaraboEvent, register_for_broadcasts,
@@ -78,7 +78,7 @@ class DeviceServerController(BaseProjectGroupController):
             # NOTE: the host is not checked here since it might ot have been
             # set yet and furthermore the server_id is unique in the system
             if self.model.server_id == server_id:
-                self.model.status = DeviceStatus(status)
+                self.model.status = ProxyStatus(status)
 
     def _get_display_name(self):
         """Traits property getter for ``display_name``
@@ -106,7 +106,7 @@ class DeviceServerController(BaseProjectGroupController):
             self.ui_data.icon = icon
 
     def _get_online(self):
-        return self.model.status is not DeviceStatus.OFFLINE
+        return self.model.status is not ProxyStatus.OFFLINE
 
     def _topo_listener_changed(self, name, old, new):
         """Handle broadcast event registration/unregistration here.
@@ -159,7 +159,6 @@ class DeviceServerController(BaseProjectGroupController):
         result = dialog.exec()
         if result == QDialog.Accepted:
             self.model.server_id = dialog.server_id
-            self.model.host = dialog.host
             self.model.description = dialog.description
 
     @pyqtSlot()
@@ -211,8 +210,8 @@ def _get_server_status(server_id):
     topology = get_topology()
     attributes = topology.get_attributes('server.{}'.format(server_id))
     if attributes is not None:
-        return DeviceStatus(attributes.get('status', 'ok'))
-    return DeviceStatus.OFFLINE
+        return ProxyStatus(attributes.get('status', 'ok'))
+    return ProxyStatus.OFFLINE
 
 
 def get_project_servers(project_controller):

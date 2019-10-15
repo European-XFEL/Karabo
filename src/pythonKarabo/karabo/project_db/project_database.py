@@ -7,6 +7,7 @@ from eulexistdb.db import ExistDB
 from eulexistdb.exceptions import ExistDBException
 from lxml import etree
 
+from .const import LIST_DOMAINS_QUERY
 from .util import assure_running, ProjectDBError
 from .dbsettings import DbSettings
 
@@ -435,15 +436,7 @@ class ProjectDatabase(ContextDecorator):
         List top level domains in database
         :return:
         """
-
-        query = """
-                xquery version "3.0";
-                <collections>{{
-                for $c in xmldb:get-child-collections("{}")
-                return <item>{{$c}}</item>}}
-                </collections>
-                """.format(self.root)
-
+        query = LIST_DOMAINS_QUERY.format(self.root)
         try:
             res = self.dbhandle.query(query)
             return [r.text for r in res.results[0]]

@@ -1,10 +1,14 @@
+from datetime import datetime
+
+from PyQt4.QtCore import Qt, pyqtSignal
 from PyQt4.QtGui import QFont
 from pyqtgraph import AxisItem as PgAxisItem
 
-from karabogui.graph.common.const import AXIS_ITEMS
+from karabogui.graph.common import const
 
 
 class AxisItem(PgAxisItem):
+    axisDoubleClicked = pyqtSignal()
 
     def __init__(self, orientation, has_ticks=True):
         """
@@ -28,6 +32,13 @@ class AxisItem(PgAxisItem):
         font = QFont()
         font.setPixelSize(11)
         self.tickFont = font
+
+    def mouseDoubleClickEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.axisDoubleClicked.emit()
+            event.accept()
+            return
+        super(AxisItem, self).mouseDoubleClickEvent(event)
 
     def setLabel(self, text=None, units=None, unitPrefix=None, **args):
         """Reimplemented because we don't want labels for minor axes"""
@@ -63,9 +74,52 @@ class AxisItem(PgAxisItem):
                 p.drawText(rect, flags, text)
 
 
-def get_axis_items(axes_with_ticks, klass=AxisItem):
+class TimeAxisItem(AxisItem):
+
+    LABEL_FORMATS = ((60 + 30, "%Ss"),  # Up to 1min 30s
+                     (60 * 60 * 4, "%H:%M"),  # Up to 4 hours
+                     (60 * 60 * 28, "%Hh"),  # Up to 1 day
+                     (60 * 60 * 24 * 25, "%d"),  # Up to 25 days
+                     (60 * 60 * 24 * 30 * 6, "%d/%m"))  # Up to 6 months
+
+    def __init__(self, *args, **kwargs):
+        super(TimeAxisItem, self).__init__(*args, **kwargs)
+
+        self.format_string = '%Ss'
+
+    def setRange(self, min_range, max_range):
+        """Set the range and decide which format string we should use"""
+        super(TimeAxisItem, self).setRange(min_range, max_range)
+
+        first_datetime = datetime.utcfromtimestamp(min_range)
+        last_datetime = datetime.utcfromtimestamp(max_range)
+
+        # Get the whole diff in seconds
+        diff_in_seconds = (last_datetime - first_datetime).total_seconds()
+        for seconds_for_format, format_string in self.LABEL_FORMATS:
+            if diff_in_seconds < seconds_for_format:
+                self.format_string = format_string
+                break
+        else:
+            self.format_string = '%d/%m/%Y'
+
+    def tickStrings(self, values, scale, spacing):
+        values = [datetime.fromtimestamp(value).strftime(self.format_string)
+                  for value in values]
+        return values
+
+
+def create_axis_items(axes_with_ticks, time_axis=None, klass=AxisItem):
     items = {}
-    for orientation in AXIS_ITEMS:
+
+    for orientation in const.AXIS_ITEMS:
         has_ticks = orientation in axes_with_ticks
-        items[orientation] = klass(orientation, has_ticks)
+
+        if time_axis is not None and orientation in time_axis:
+            axis_item = TimeAxisItem(orientation)
+        else:
+            axis_item = klass(orientation, has_ticks)
+
+        items[orientation] = axis_item
+
     return items

@@ -1,6 +1,6 @@
 from traits.api import push_exception_handler, pop_exception_handler
 
-from karabo.common.api import DeviceStatus
+from karabo.common.api import ProxyStatus
 from karabo.native import AccessLevel
 from karabogui.enums import NavigationItemTypes
 from ..device_tree import DeviceTreeNode
@@ -18,7 +18,7 @@ def test_tree_node_basics():
     empty = DeviceTreeNode(
         node_id='node_id',
         visibility=AccessLevel.OPERATOR,
-        status=DeviceStatus.OFFLINE,
+        status=ProxyStatus.OFFLINE,
         children=[]
     )
 

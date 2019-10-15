@@ -22,11 +22,16 @@ int main(int argc, const char** argv) {
         // We always change the directory to $KARABO/var/data
         boost::filesystem::current_path(boost::filesystem::path(Version::getPathToKaraboInstallation() + "/var/data"));
 
-        // Let the factory know about all available plugins.
         // It is important to load plugins even before having a device server
         // instance, as this allows the help function to correctly show available
         // devices and enabling the server to autoStart them if needed.
-        Hash pluginConfig("pluginDirectory", Version::getPathToKaraboInstallation() + "/plugins");
+        // Loading plugins means one needs to know the plugin directory, so we
+        // parse the command line already here (but silently).
+        Hash runnerConfig;
+        Runner::parseCommandLine(argc, argv, runnerConfig, true);
+        const Hash& pluginConfig = (runnerConfig.has("pluginDirectory")
+                                    ? Hash("pluginDirectory", runnerConfig.get<std::string>("pluginDirectory"))
+                                    : Hash());
         PluginLoader::create("PluginLoader", pluginConfig)->update();
 
         // Instantiate device server

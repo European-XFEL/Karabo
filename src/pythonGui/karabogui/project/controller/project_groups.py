@@ -18,10 +18,13 @@ from karabogui.enums import ProjectItemTypes
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.project.dialog.object_handle import ObjectEditDialog
 from karabogui.project.dialog.server_handle import ServerHandleDialog
+from karabogui.project.utils import (
+    check_device_server_exists, check_macro_exists)
 from karabogui.request import call_device_slot
 from karabogui.singletons.api import get_config
 from karabogui.util import (
-    getOpenFileName, handle_macro_from_server, handle_scene_from_server)
+    getOpenFileName, handle_macro_from_server, handle_scene_from_server,
+    show_filename_error, VALID_PROJECT_OBJECT_NAME)
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 
 
@@ -134,8 +137,10 @@ def _add_macro(project_controller):
     if dialog.exec() == QDialog.Accepted:
         classname = dialog.simple_name.title()
         classname = "".join(c for c in classname if c.isalpha())
-        # XXX: TODO check for existing
-        macro = MacroModel(simple_name=dialog.simple_name,
+        macro_name = dialog.simple_name
+        if check_macro_exists(macro_name):
+            return
+        macro = MacroModel(simple_name=macro_name,
                            code=_macro_template.format(classname))
         # Set initialized and modified last
         macro.initialized = macro.modified = True
@@ -149,6 +154,10 @@ def _load_macro(project_controller):
     fn = getOpenFileName(caption='Load macro', filter='Python Macros (*.py)',
                          directory=directory)
     if not fn:
+        return
+
+    if not VALID_PROJECT_OBJECT_NAME.match(fn):
+        show_filename_error(fn)
         return
 
     # Store old macro dialog path
@@ -207,6 +216,10 @@ def _load_scene(project_controller):
     if not fn:
         return
 
+    if not VALID_PROJECT_OBJECT_NAME.match(fn):
+        show_filename_error(fn)
+        return
+
     # Store old scene dialog path
     get_config()['scene_dir'] = op.dirname(fn)
 
@@ -246,10 +259,11 @@ def _add_server(project_controller):
     project = project_controller.model
     dialog = ServerHandleDialog()
     if dialog.exec() == QDialog.Accepted:
-        # XXX: TODO check for existing
+        serverId = dialog.server_id
+        if check_device_server_exists(serverId):
+            return
         traits = {
-            'server_id': dialog.server_id,
-            'host': dialog.host,
+            'server_id': serverId,
             'description': dialog.description
         }
         server = DeviceServerModel(**traits)

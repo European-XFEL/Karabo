@@ -26,12 +26,23 @@ def executeLater(task, priority):
     timer.start()
 
 
+MAX_ITEM_PROCESSING = 5
+
+
 def timeout():
-    """execute one task if existing"""
-    _, _, task = heappop(queue)
+    """execute up to ``MAX_ITEM_PROCESSING`` tasks if existing
+
+    If big data is in the stack, we cut there!
+    """
+    items = min(len(queue), MAX_ITEM_PROCESSING)
+    while items > 0:
+        prio, _, task = heappop(queue)
+        task()
+        if prio.value > 0:
+            break
+        items -= 1
     if not queue:
         timer.stop()
-    task()
 
 
 queue = []
