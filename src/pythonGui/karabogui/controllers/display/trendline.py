@@ -11,22 +11,21 @@ from guiqwt.builder import make
 import numpy
 from PyQt4 import uic
 from PyQt4.QtCore import Qt, QDateTime, QTimer, pyqtSignal, pyqtSlot
-from PyQt4.QtGui import (QButtonGroup, QDateTimeEdit, QDialog, QHBoxLayout,
-                         QIntValidator, QLabel, QLineEdit, QPushButton,
-                         QVBoxLayout, QWidget)
-from qwt import (QwtPlot, QwtScaleDraw, QwtText,
-                 QwtLinearScaleEngine, QwtScaleDiv)
+from PyQt4.QtGui import (
+    QButtonGroup, QDateTimeEdit, QDialog, QHBoxLayout, QIntValidator, QLabel,
+    QLineEdit, QPushButton, QVBoxLayout, QWidget)
+from pyqtgraph import PlotDataItem
+from qwt import (
+    QwtPlot, QwtScaleDraw, QwtText, QwtLinearScaleEngine, QwtScaleDiv)
 from traits.api import (
     HasStrictTraits, Array, Constant, Dict, Float, Instance, Int, List,
-    on_trait_change
-)
+    on_trait_change)
 
 from karabo.common.scenemodel.api import LinePlotModel
 from karabo.native import Timestamp
 from karabogui import globals as krb_globals
 from karabogui.binding.api import (
-    BoolBinding, FloatBinding, IntBinding, PropertyProxy
-)
+    BoolBinding, FloatBinding, IntBinding, PropertyProxy)
 from karabogui.const import MAX_NUMBER_LIMIT
 from karabogui.controllers.api import (
     BaseBindingController, axis_label, register_binding_controller)
@@ -39,7 +38,7 @@ ONE_WEEK = "One Week"
 ONE_DAY = "One Day"
 ONE_HOUR = "One Hour"
 TEN_MINUTES = "Ten Minutes"
-RESET = "Uptime"
+UPTIME = "Uptime"
 HIDDEN = "Hidden"
 
 FULL_RANGE = "Full Range"
@@ -56,13 +55,6 @@ PLOTTABLE_TYPES = (BoolBinding, FloatBinding, IntBinding)
 
 DEFAULT_MIN = -0.5
 DEFAULT_MAX = 0.5
-
-# XXX: We might deal with NaN values only, hence we disable all the warnings
-# as Qwt will handle nicely!
-IGNORE_NAN_WARN = [r'Mean of empty slice', r'All-NaN slice encountered',
-                   r'All-NaN axis encountered']
-for warn in IGNORE_NAN_WARN:
-    numpy.warnings.filterwarnings('ignore', warn)
 
 
 def get_start_end_date_time(selected_time_span):
@@ -115,6 +107,18 @@ class _Generation(object):
         self.ys[:-self.base] = self.ys[self.base:]
         self.fill -= self.base
         return x, y
+
+    def discard_if_overlap(self, end_value):
+        """If the generation overlap with the given value, discard the last
+        value"""
+        if self.fill == 0:
+            return
+
+        pos = self.xs[:self.fill].searchsorted(end_value)
+        if pos == 0:
+            return
+
+        self.fill -= pos
 
 
 class Curve(HasStrictTraits):
@@ -214,12 +218,20 @@ class Curve(HasStrictTraits):
                 (self.x[p0] > nearly_left_border) or
                 (p1 < self.histsize and self.x[p1 - 1] < nearly_right_border)):
             self.get_property_history(t0, t1)
+
         self.t0 = t0
         self.t1 = t1
 
     def update(self):
         """ Show the new data on screen """
-        self.curve.set_data(self.x[:self.fill], self.y[:self.fill])
+        if isinstance(self.curve, PlotDataItem):
+            # pyqtgraph instance
+            set_data = self.curve.setData
+        else:
+            # GuiQwt instance
+            set_data = self.curve.set_data
+
+        set_data(self.x[:self.fill], self.y[:self.fill])
 
     @on_trait_change('proxy:visible')
     def _visibility_update(self, visible):
@@ -229,6 +241,10 @@ class Curve(HasStrictTraits):
     @on_trait_change('proxy:binding:historic_data')
     def _historic_data_arrival(self, data):
         if not data:
+            return
+
+        if self.t1 == self.t0:
+            # Prevent division by 0, otherwise self.curve.plot() is None
             return
 
         datasize = len(data)
@@ -251,10 +267,6 @@ class Curve(HasStrictTraits):
         np0 = x[:datasize].searchsorted(self.t0)
         np1 = x[:datasize].searchsorted(self.t1)
 
-        if self.t1 == self.t0:
-            # Prevent division by 0, otherwise self.curve.plot() is None
-            return
-
         span = (self.x[p1 - 1] - self.x[p0]) / (self.t1 - self.t0)
         nspan = (x[np1 - 1] - x[np0]) / (self.t1 - self.t0)
 
@@ -264,35 +276,68 @@ class Curve(HasStrictTraits):
         # If the history overlaps generation data, favor the history data.
         end = x[datasize - 1]
         for gen in self.generations:
-            fill = gen.fill
-            if fill == 0:
-                continue
-            pos = gen.xs[:fill].searchsorted(end)
-            if pos == 0:
-                break
-            gen.xs[:fill - pos] = gen.xs[pos:fill]
-            gen.fill = fill - pos
+            gen.discard_if_overlap(end)
 
         self.histsize = datasize
         self.x = x
         self.y = y
         self.fill_current()
         self.update()
-        self.curve.plot().replot()
 
-    def get_mean_y_value(self, count=10):
-        """ Return mean value for last ``count`` of y values."""
+        if not isinstance(self.curve, PlotDataItem):
+            self.curve.plot().replot()
+
+    def get_last_values(self, count):
+        """Returns a list containing the last curve values based on the given
+        percentage"""
         if count > len(self.y):
             count = len(self.y)
-        return numpy.nanmean(self.y[max(self.fill-count, 0):self.fill])
 
-    def get_min_y_value(self):
+        tail_slice = numpy.s_[max(self.fill - count, 0):self.fill]
+        return self.x[tail_slice], self.y[tail_slice]
+
+    def get_mean_y_value(self, count=10):
+        """Return mean value for last ``count`` of y values"""
+        _, y_tail = self.get_last_values(count)
+
+        return numpy.nanmean(y_tail)
+
+    @property
+    def yrange(self):
+        return self.get_min_y_value(), self.get_max_y_value()
+
+    def get_min_x_value(self):
         """ Return min value of all y values."""
-        return numpy.nanmin(self.y[:self.fill]) if self.fill else DEFAULT_MIN
+        return numpy.nanmin(self.x[:self.fill]) if self.fill else DEFAULT_MIN
 
-    def get_max_y_value(self):
+    def get_max_x_value(self):
         """ Return max value for all y values"""
-        return numpy.nanmax(self.y[:self.fill]) if self.fill else DEFAULT_MAX
+        return numpy.nanmax(self.x[:self.fill]) if self.fill else DEFAULT_MAX
+
+    def get_min_y_value(self, full_range=True):
+        """ Return min value of all y values. If full range is True we take
+        into account both historical and current data"""
+        if not self.fill:
+            return DEFAULT_MIN
+
+        y_slice = self._get_slice(full_range)
+        return numpy.nanmin(self.y[y_slice])
+
+    def get_max_y_value(self, full_range=True):
+        """ Return max value for all y values"""
+        if not self.fill:
+            return DEFAULT_MAX
+
+        y_slice = self._get_slice(full_range)
+        return numpy.nanmax(self.y[y_slice])
+
+    def _get_slice(self, full_range=True):
+        """Returns the appropriate slice. If full range is True we take
+        into account both historical and current data"""
+        if full_range or self.fill == self.histsize:
+            return numpy.s_[:self.fill]
+        else:
+            return numpy.s_[self.histsize:self.fill]
 
 
 class DateTimeScaleDraw(QwtScaleDraw):
@@ -506,7 +551,7 @@ class DisplayTrendline(BaseBindingController):
         self._x_axis_str_btns[ONE_DAY] = None
         self._x_axis_str_btns[ONE_HOUR] = None
         self._x_axis_str_btns[TEN_MINUTES] = None
-        self._x_axis_str_btns[RESET] = None
+        self._x_axis_str_btns[UPTIME] = None
         self._x_button_group = self._create_button_group(
             X_AXIS, self._x_axis_str_btns, x_axis_btns_layout)
 
@@ -712,7 +757,7 @@ class DisplayTrendline(BaseBindingController):
             button = QPushButton(btn_text)
             button.setStyleSheet(BUTTON_STYLE_SHEET)
             string_btn_dict[btn_text] = button
-            if btn_text == RESET:
+            if btn_text == UPTIME:
                 button.clicked.connect(self._reset_button_clicked)
             else:
                 # Do not add reset button to button group

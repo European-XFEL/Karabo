@@ -195,7 +195,7 @@ namespace karabo {
                     msg.append("Error in element '")
                             .append(this->m_node->getKey())
                             .append("': readOnly() is not compatible with assignmentOptional().defaultValue(v). ")
-                            .append("Use readOnly().initialVale(v) instead.");
+                            .append("Use readOnly().initialValue(v) instead.");
                     throw KARABO_LOGIC_EXCEPTION(msg);
                 }
                 this->m_node->template setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ);
@@ -419,9 +419,10 @@ namespace karabo {
 
         public:
 
-            template< class U, class V> friend class LeafElement;
-            template< class U, class V> friend class RollingStatsSpecific;
-            template< class U, class V, class W> friend class AlarmSpecific;
+            template<class U, class V> friend class LeafElement;
+            template<class U, class V> friend class RollingStatsSpecific;
+            template<class U, class V, class W> friend class AlarmSpecific;
+            friend class TableElement;
 
             /**
              * The <b>initialValue</b> method serves for setting up the initial value reported for this parameter.

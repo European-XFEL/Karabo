@@ -1,105 +1,78 @@
 *******************
- Windows GUI client
+ Conda GUI client
 *******************
-In order to install and run the karabo GUI client on Windows, you need a python
-installation.
+From version 2.6, the KaraboGui installation for windows and the karabo-gui
+executable shipped with the precompiled binaries, is deprecated. Conda is a package
+manager and dependency resolution tool which offers a very straightforward way
+to install packages and its dependencies.
 
-The recommended python distribution is `WinPython
-<https://sourceforge.net/projects/winpython/files/WinPython_3.4/3.4.3.3/>`_.
-This choice was made due to the fact that this suite is dictated
-by availability of almost all packages required by karaboGUI (such as PyQwt,
-guiqwt, guidata).
+In order to use Conda, three basic steps are needed:
+    1. Install Conda (through an Anaconda or Miniconda distribution);
+    2. Configure its channels;
+    3. Install the desired package
 
+Installing Conda
+================
 
-.. warning::
-    When updating version, ensure to remove the previous installation before
-    continuing, as otherwise the GUI may have unpredictable behavior.
-    Navigate to::
+The following steps are needed in order to obtain Conda.
 
-        [WinPython_Installation_Dir]\python-3.4.3\Lib\site-packages
+* Download and install miniconda from `here <https://docs.conda.io/en/latest/miniconda.html>`_
+* Open your terminal (Anaconda Prompt on Windows or a bash on linux)
+* If conda is in your path, you should be able to run **conda --version**
+    * If it isn't, you need to activate conda first
+        * **Linux**: ``source <miniconda_path>/etc/profile.d/conda.sh``
+        * **Win**: ``CALL <miniconda_path>/condabin/activate.bat``
 
-    Then remove the *karabo* and *karabogui* folders, as well as the *KaraboGUI-\*.egg-info*
-    file.
+Channel Configuration
+=====================
 
+For KaraboGUI, some package channels are needed besides Conda's defaults. You
+only need to do this once and it can be done either from command line or
+editting Conda's configuration file (`.condarc`).
+You can find your configuration file location typing ``conda info`` on your terminal.
 
-Installation instructions
-=========================
-The installation consists of four steps:
-- installing WinPython
-- upgrading packages
-- installing additional dependencies
-- installing KaraboGui, creating a shortcut
+From your terminal, add the needed channels executing the following commands::
 
+    conda config --add channels http://exflserv05.desy.de/karabo/channel
+    conda config --add channels conda-forge/label/cf201901
+    conda config --add channels conda-forge
+    conda config --add channels anaconda
 
-Installing WinPython
---------------------
-Download the WinPython 3.4 **32Bits** installation package
-`here <https://sourceforge.net/projects/winpython/files/WinPython_3.4/3.4.3.3/WinPython-32bit-3.4.3.3.exe/download>`_
-and install it following
-`these instructions <https://github.com/winpython/winpython/wiki/Installation>`_.
+Installing KaraboGUI
+====================
 
+When using conda we don't want to mess the base environment that comes with it,
+therefore ideally we should install the GUI in a separate environment.
+Then, when we don't need it anymore one can safely remove it with no fear with
+corrupting the base environment.
 
-Upgrading and installing additional packages
---------------------------------------------
-Before installing Karabo, certain packages need to be installed, and a few more
-installed.
+* Create a target environment for KaraboGUI with any name you want.
+    * ``conda create -n karabogui<version> --yes``
+* Activate the environment you created
+    * ``conda activate karabogui<version>``
+* Install your application
+    * ``conda install karabogui=<version> --yes``
+        * Leave the version out to get the latest one: ``conda install karabogui --yes``
+* ``conda search karabogui`` will show you all the available versions
 
-To do so, open the `WinPython Command Prompt` and type in the following
-commands.
+Running KaraboGUI
+=================
 
-First, upgrade `pip`, `setuptools`, and `matplotlib`::
+After successfully installing KaraboGUI, you will have access to the following entry-points:
+    * karabo-gui;
+    * karabo-cinema;
+    * karabo-theatre;
+    * karabo-update-extensions
 
-  pip install --upgrade pip
-  pip install --upgrade setuptools
-  pip install --no-deps matplotlib==1.5.3
-
-
-There are five additional packages needed:
-
-- `suds-jurko <http://pypi.python.org/packages/source/s/suds-jurko/suds-jurko-0.6.zip>`_
-- `traits 4.6.0 <https://www.lfd.uci.edu/~gohlke/pythonlibs/#traits>`_
-- `pint 0.7.2 <https://pypi.python.org/pypi/Pint/>`_
-- `cycler 0.10.0 <https://pypi.python.org/pypi/cycler/>`_
-- `pyqtgraph 0.11.0-dev0 <http://exflserv05.desy.de/karabo/karaboGui/deps/pyqtgraph-0.11.0.dev0-py3-none-any.whl>`_
-
-Install these from the links above, or as follows::
-
-    pip install suds-jurko==0.6
-    pip install traits==4.6.0
-    pip install pint==0.7.2
-    pip install cycler==0.10.0
-    pip install http://exflserv05.desy.de/karabo/karaboGui/deps/pyqtgraph-0.11.0.dev0-py3-none-any.whl
-
-
-Get and install karaboGUI
--------------------------
-Download `karabo-gui for windows from here <http://exflserv05.desy.de/karabo/karaboGui/>`_ .
-Then, open the `WinPython Control Panel`, found in the WinPython installation
-folder and load in the downloaded executable.
-Finally, click `Install packages`.
-
-Desktop Shortcut
-----------------
-Currently there is no Start Menu entry or a shortcut on the Desktop. This needs
-to be created by going to the path where WinPython is installed::
-
- [WinPython_Installation_Dir]\python-3.4.3\Lib\site-packages\karabogui\programs
-
-Right-click on *gui_runner.py* then select *Send to Desktop*.
-You can now easily start karaboGui from the desktop.
-
-If Windows prompts you to ask what software to use to launch this file, select::
-
- [WinPython_Installation_Dir]\python-3.4.3\python.exe
-
+.. note::
+    From now on, all you need to do to run KaraboGUI is:
+        * Open your terminal/prompt
+        * ``conda activate <your_karabo_environment>``
+        * ``karabo-gui``
 
 Uninstalling
 ============
-Navigate to::
 
- [WinPython_Installation_Dir]\python-3.4.3\Lib\site-packages
+In order to uninstall KaraboGUI, always opt for removing the complete environment
+itself: ``conda remove -n <environment_name> --all``
 
-Then remove the *karabo* and *karabogui* folders, as well as the *KaraboGUI-\*.egg-info*
-file.
-
-WinPython is a portable application. To uninstall it, delete its folder.

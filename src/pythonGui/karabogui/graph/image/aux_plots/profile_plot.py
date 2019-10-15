@@ -5,7 +5,7 @@ from pyqtgraph import PlotItem
 from karabogui.graph.common.const import (
     AXIS_ITEMS, AXIS_X, AXIS_Y, ROTATION_FACTOR)
 from karabogui.graph.common.api import (
-    get_axis_items, make_brush, make_pen, get_default_pen)
+    create_axis_items, make_brush, make_pen, get_default_pen)
 
 from ..aux_plots.items import AuxPlotAxisItem, AuxPlotViewBox
 from ..tools.profiler import IntensityProfiler
@@ -25,7 +25,7 @@ class BaseStepPlot(PlotItem):
             # Plot orientation is on the left of the layout, thus the x-axis
             # must be shown on the top and the y-axis on the left of the plot.
             self._shown_axes = ["right", "top"]
-        axis_items = get_axis_items(self._shown_axes, klass=AuxPlotAxisItem)
+        axis_items = create_axis_items(self._shown_axes, klass=AuxPlotAxisItem)
 
         super(BaseStepPlot, self).__init__(axisItems=axis_items,
                                            viewBox=AuxPlotViewBox())
@@ -56,11 +56,19 @@ class BaseStepPlot(PlotItem):
                            pen=self._pen, fillLevel=0,
                            brush=self._brush)
 
+        # Adjust the y range to the data range to not show the pedestal.
+        y_range = ("yRange" if self.orientation in ["top", "bottom"]
+                   else "xRange")
+        self.setRange(**{y_range: (y_data.min(), y_data.max())})
+
     def set_superimposed_data(self, x_data, y_data):
         self._superimposed.setData(x_data, y_data, pen=self._second_pen)
 
     def clear_data(self):
         self._line.setData([], [], fillLevel=None, stepMode=False)
+
+    def set_axis(self, axis):
+        """ Use if unsliced image axis is needed for further calculations """
 
     # ---------------------------------------------------------------------
     # Private methods
@@ -124,7 +132,11 @@ class ProfilePlot(BaseStepPlot):
             self.clear_data()
             return
 
-        self.set_data(*self._profiler.profile(region, axis=axis))
+        profiles = self._profiler.profile(region, axis=axis)
+        if profiles is None:
+            return
+
+        self.set_data(*profiles)
 
         if self._fitted:
             self.set_superimposed_data(*self._profiler.fit())
@@ -137,3 +149,6 @@ class ProfilePlot(BaseStepPlot):
         # Clear superimposed data
         if not enabled:
             self.set_superimposed_data([], [])
+
+    def set_axis(self, axis):
+        self._profiler.set_axis(axis)

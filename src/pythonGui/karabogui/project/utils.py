@@ -10,8 +10,8 @@ from karabo.common.macro_sanity_check import macro_sleep_check
 from karabo.common.project.api import (
     BaseProjectObjectModel, DeviceConfigurationModel, DeviceInstanceModel,
     DeviceServerModel, MacroModel, ProjectModel, device_config_exists,
-    device_instance_exists, recursive_save_object, read_lazy_object
-)
+    device_instance_exists, device_server_exists, macro_exists,
+    recursive_save_object, read_lazy_object)
 from karabo.common.scenemodel.api import (
     BaseWidgetObjectData, SceneLinkModel, SceneModel
 )
@@ -131,6 +131,40 @@ def check_device_config_exists(instance_id, config_name):
     return False
 
 
+def check_device_server_exists(instance_id):
+    """Check whether the device server already exists
+
+    :param instance_id: serverId to be searched for
+
+    :return ``True`` if server name is found else ``False``.
+    """
+    root_project = get_project_model().root_model
+    if device_server_exists(root_project, instance_id):
+        msg = ('The server with the server ID \"<b>{}</b>\" '
+               '<br> already exists. Therefore it will not be '
+               'added!').format(instance_id)
+        messagebox.show_warning(msg, title='Server already exists')
+        return True
+    return False
+
+
+def check_macro_exists(instance_id):
+    """Check whether the macro name already exists
+
+    :param instance_id: serverId to be searched for
+
+    :return ``True`` if server name is found else ``False``.
+    """
+    root_project = get_project_model().root_model
+    if macro_exists(root_project, instance_id):
+        msg = ('The macro with the name \"<b>{}</b>\" '
+               '<br> already exists. Therefore it will not be '
+               'added!').format(instance_id)
+        messagebox.show_warning(msg, title='Macro already exists')
+        return True
+    return False
+
+
 def get_device_server_model(server_id):
     """Given a string containing a server id, return the corresponding
     ``DeviceServerModel`` object in the current project, or None if one does
@@ -175,6 +209,21 @@ def load_project(is_subproject=False):
                 set_modified_flag(model, value=True)
             return model
     return None
+
+
+def reload_project(model):
+    """Reload a project from the project database."""
+    uuid = model.uuid
+    model = ProjectModel(uuid=uuid)
+    # NOTE: We keep the default domain of the db_conn here!
+    db_conn = get_db_conn()
+    domain = db_conn.default_domain
+    read_lazy_object(domain, uuid, db_conn, read_project_model,
+                     existing=model)
+    # NOTE: Cache objects are loaded without modified flag!
+    db_conn.flush()
+
+    return model
 
 
 def maybe_save_modified_project(project):
@@ -304,6 +353,30 @@ def show_save_project_message(project):
         if reply == QMessageBox.Save:
             return True
     return False
+
+
+def show_modified_project_message(project):
+    """Check whether the given ``project`` is modified and show a messagebox to
+    allow the user to confirm saving or cancel
+
+    :return Whether the user wants to save
+    """
+    if project is None:
+        return False
+
+    if project.modified:
+        ask = ('The project \"<b>{}</b>\" has been modified.<br />Are you '
+               'sure you want to continue? <b>Your project changes will be '
+               'lost</b>!').format(project.simple_name)
+        options = (QMessageBox.Yes | QMessageBox.No)
+        reply = QMessageBox.question(None, 'Modified project', ask, options,
+                                     QMessageBox.No)
+        if reply == QMessageBox.No:
+            return False
+
+        if reply == QMessageBox.Yes:
+            return True
+    return True
 
 
 def show_trash_project_message(is_trashed, simple_name=''):

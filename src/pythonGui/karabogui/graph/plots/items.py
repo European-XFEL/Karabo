@@ -1,3 +1,5 @@
+import weakref
+
 import numpy as np
 from PyQt4.QtGui import QGraphicsPathItem, QPainterPath, QTransform
 from pyqtgraph import arrayToQPath, BarGraphItem, ScatterPlotItem
@@ -9,8 +11,9 @@ class VectorFillGraphPlot(QGraphicsPathItem):
     """QGraphicsPathItem filling the space between a zero baseline and data
     """
 
-    def __init__(self, brush=None, pen=None):
+    def __init__(self, viewbox=None, brush=None, pen=None):
         super(VectorFillGraphPlot, self).__init__()
+        self._viewBox = weakref.ref(viewbox)
         if brush is not None:
             self.setBrush(brush)
         if pen is not None:
@@ -24,6 +27,7 @@ class VectorFillGraphPlot(QGraphicsPathItem):
         baseline = np.arange(size)
         self.curves = [(baseline, zeros), (baseline, data)]
         self.updatePath()
+        self._viewBox().itemBoundsChanged(self)
 
     def updatePath(self):
         if self.curves is None:

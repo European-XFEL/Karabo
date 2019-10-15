@@ -48,6 +48,9 @@ namespace karabo {
 
         unsigned int const DATALOGREADERS_PER_SERVER = 2;
 
+        // replacement for '\n' in data logger files
+        char const * const DATALOG_NEWLINE_MANGLE = ".KRB_NEWLINE.";
+
         /**
          * A structure defining meta data as used by the data loggers
          */

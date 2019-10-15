@@ -60,7 +60,17 @@ class DisplayCommand(BaseBindingController):
         self._change_button_style(widget)
 
         widget.addAction(confirmation)
+
         return widget
+
+    def destroy_widget(self):
+        """Clear the action on destruction of the command widget
+
+        NOTE: This is required since Qt events are handled differently than
+        trait events and the actions might have been deleted already when for
+        example the binding update is called.
+        """
+        self._actions.clear()
 
     @pyqtSlot()
     def _requires_confirmation_slot(self):
