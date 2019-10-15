@@ -34,6 +34,11 @@ class TinyBoundDevice(PythonDevice):
         time.sleep(1)
         self.startPolling()
 
+    # A well behaving device would have to stop the polling thread
+    # in preDestruction to allow clean shutdown. Here we make it
+    # ill-behaving (by commenting) on purpose to test that the server
+    # will kill it anyway after some seconds.
+
     #def preDestruction(self):
     #    self.running = False;
 
