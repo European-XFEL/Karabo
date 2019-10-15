@@ -1,5 +1,6 @@
 import os.path as op
 from collections import OrderedDict
+from datetime import datetime
 from itertools import cycle
 
 from PyQt4 import uic
@@ -56,8 +57,16 @@ class DisplayTrendGraph(BaseBindingController):
         self._karabo_plot_view.add_cross_target()
         self._karabo_plot_view.add_toolbar()
 
+        # Limit the panning zoom
+        self._karabo_plot_view.plotItem.setLimits(
+            xMin=datetime(1970, 12, 31).timestamp(),
+            xMax=datetime(2038, 12, 31).timestamp())
+
         self._karabo_plot_view.plotItem.vb.sigRangeChangedManually.connect(
             self._on_range_manually_changed)
+
+        self._karabo_plot_view.plotItem.vb.autoRangeTriggered.connect(
+            self._uncheck_current_button)
 
         # Update datetime widgets everytime range changes
         self._karabo_plot_view.plotItem.sigXRangeChanged.connect(
@@ -137,9 +146,11 @@ class DisplayTrendGraph(BaseBindingController):
         """When the range changes manually, we stop automatically
         updating the ranges and start the timer"""
         self._timer.start()
-        self._auto_scale = True
+        self._auto_scale = False
+        self._uncheck_current_button()
 
-        # Uncheck any checked button
+    def _uncheck_current_button(self):
+        """Uncheck any checked button"""
         button_group = self.widget.bg_x_axis
         checked_button = button_group.checkedButton()
         if checked_button is not None:
@@ -171,7 +182,7 @@ class DisplayTrendGraph(BaseBindingController):
         self._x_detail = self._x_axis_str_btns[button]
 
         # We're updating the ranges via the buttons now
-        self._auto_scale = False
+        self._auto_scale = True
 
         if self._update_axis_scale():
             self.update_later()
@@ -195,7 +206,7 @@ class DisplayTrendGraph(BaseBindingController):
     def _update_ranges(self):
         """Updates both x and y axes ranges but only in case the ranges
         are not regulated via mouse"""
-        if self._auto_scale:
+        if not self._auto_scale:
             return
 
         ymin = MAX_INT32
