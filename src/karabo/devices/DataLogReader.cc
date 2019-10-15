@@ -261,13 +261,14 @@ namespace karabo {
                         << ", pos: " << idxFrom.m_position << ", fileindex: " << idxFrom.m_fileindex
                         << ", To - Event: \"" << idxTo.m_event << "\", epoch: " << idxTo.m_epoch.toIso8601Ext()
                         << ", pos: " << idxTo.m_position << ", fileindex: " << idxTo.m_fileindex;
+
                 if (idxFrom.m_fileindex == -1) {
                     KARABO_LOG_WARN << "Requested time point \"" << params.get<string>("from") << "\" for device configuration is earlier than anything logged";
                     reply(deviceId, property, result);
                     return;
                 }
 
-                karabo::util::MetaSearchResult msr = navigateMetaRange(deviceId, idxFrom.m_fileindex, idxTo.m_fileindex, property, from, to);
+                karabo::util::MetaSearchResult msr = navigateMetaRange(deviceId, idxFrom.m_fileindex, idxTo.m_fileindex, property, idxFrom.m_epoch, to);
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "MetaSearchResult: from : filenum=" << msr.fromFileNumber << " record=" << msr.fromRecord
                         << ", to : filenum=" << msr.toFileNumber << " record=" << msr.toRecord << ", list: " << toString(msr.nrecList);
@@ -354,6 +355,18 @@ namespace karabo {
                                     const Epochstamp epochstamp(stringDoubleToEpochstamp(tokens[2]));
                                     // tokens[3] is trainId
                                     const Timestamp tst(epochstamp, Trainstamp(fromString<unsigned long long>(tokens[3])));
+
+                                    if (result.size() == 1) {
+                                        // Special case: there's already one history record and it may have a timepoint
+                                        // before the requested timeframe. If that's the case, remove that record before
+                                        // adding the new one.
+                                        const auto &firstRecAttrs = result[0].getAttributes("v");
+                                        Epochstamp recEpoch = Epochstamp::fromHashAttributes(firstRecAttrs);
+                                        if (recEpoch < from) {
+                                            result.clear();
+                                        }
+                                    }
+
                                     result.push_back(Hash());
                                     // tokens[5] and [6] are type and value, respectively
                                     readToHash(result.back(), "v", tst, Types::from<FromLiteral>(tokens[5]), tokens[6]);
