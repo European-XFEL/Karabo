@@ -12,7 +12,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
     def setUp(self):
         super(TestDeviceDeviceComm, self).setUp()
         own_dir = op.dirname(op.abspath(__file__))
-        class_ids = ['CommTestDevice']
+        class_ids = ['CommTestDevice','TinyBoundDevice']
         self.start_server("bound", SERVER_ID, class_ids, plugin_dir=own_dir)
 
     def test_log_level(self):
@@ -69,14 +69,27 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         ok, msg = self.dc.instantiate(SERVER_ID, classConfig2, 30)
         self.assertTrue(ok, msg)
 
+        config3 = Hash()
+
+        classConfig3 = Hash("classId", "TinyBoundDevice",
+                            "deviceId", "testComm3",
+                            "configuration", config3)
+
+        ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, 30)
+        self.assertTrue(ok, msg)
+
         # wait for device to init
         state1 = None
         state2 = None
+        state3 = None
         nTries = 0
-        while state1 != State.NORMAL or state2 != State.NORMAL:
+        while (state1 != State.NORMAL or
+               state2 != State.NORMAL or
+               state3 != State.MONITORING):
             try:
                 state1 = self.dc.get("testComm1", "state")
                 state2 = self.dc.get("testComm2", "state")
+                state3 = self.dc.get("testComm3", "state")
             # A RuntimeError will be raised up to device init
             except RuntimeError:
                 sleep(self._waitTime)
@@ -230,6 +243,11 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
                                  KARABO_SCHEMA_MAX_SIZE, 8)
             self.assertRaises(RuntimeError, self.dc.set,
                               "testComm1", "vectorInt32", [4]*9)  # not OK now!
+
+        with self.subTest(msg="Test killing TinyBoundDevice"):
+            self.dc.killDevice('TinyBoundDevice', 10)
+            ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, 30)
+            self.assertTrue(ok, msg)
 
 
     def waitUntilEqual(self, devId, propertyName, whatItShouldBe, maxTries):
