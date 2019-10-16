@@ -147,7 +147,7 @@ struct TestClient {
             return;
         }
 
-        std::cerr << read_str;
+        //std::cerr << read_str;
 
         CPPUNIT_ASSERT(read_str == m_expected || read_str == " the tough get going\r\n");
         
