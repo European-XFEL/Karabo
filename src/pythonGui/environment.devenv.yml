@@ -24,7 +24,7 @@ dependencies:
   - ipython=5.2.0
   - ipykernel=5.1.0
   # Plotting and utils
-  - matplotlib>=2
+  - matplotlib=2
   - numpy=1.13.3
   # Other
   - cycler=0.10.0
