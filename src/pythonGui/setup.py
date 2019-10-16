@@ -1,8 +1,5 @@
-import json
 import os
-import sys
 
-from distutils.command.build import build
 from setuptools import find_packages, setup
 
 CURRENT_FOLDER = os.path.dirname(os.path.realpath(__file__))
@@ -36,18 +33,6 @@ if __name__ == '__main__':
         }
     }
 
-    WINDOWS_BUILDER = 'krb_windows_build'
-    if WINDOWS_BUILDER in sys.argv:
-        # Add a subset of the Karabo package for the Windows build
-        metadata['package_dir'] = {'karabo': "../../src/pythonKarabo/karabo"}
-        metadata['packages'].extend(
-            ["karabo", "karabo.common", "karabo.common.scenemodel",
-             "karabo.common.packaging", "karabo.common.scenemodel.widgets",
-             "karabo.common.project", "karabo.interactive", "karabo.native",
-             "karabo.native.data", "karabo.native.project", "karabo.packaging",
-             "karabo.testing"]
-        )
-
     setup(
         entry_points={
             'console_scripts': [
@@ -59,14 +44,5 @@ if __name__ == '__main__':
             ]
         },
         # Add an alias for 'build' so we can prepare data for Windows
-        cmdclass={WINDOWS_BUILDER: build},
         **metadata
     )
-
-    # Write out useful data
-    if WINDOWS_BUILDER in sys.argv:
-        with open('VERSION', 'w') as fp:
-            from karabogui.globals import GUI_VERSION
-            fp.write(GUI_VERSION)
-        with open('METADATA', 'w') as fp:
-            json.dump(metadata, fp)
