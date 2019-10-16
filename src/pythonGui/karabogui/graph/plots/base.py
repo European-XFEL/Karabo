@@ -12,8 +12,9 @@ from karabogui.graph.common.api import (
     get_default_pen, make_pen, MouseMode, KaraboLegend, KaraboToolBar,
     KaraboViewBox, PointCanvas, ROITool, ROIToolset)
 from karabogui.graph.common.const import (
-    AXIS_ITEMS, DEFAULT_BAR_WIDTH, EMPTY_SYMBOL_OPTIONS, DEFAULT_SYMBOL,
-    SYMBOL_SIZE, WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH)
+    AXIS_ITEMS, ACTION_ITEMS, CHECK_ACTIONS, DEFAULT_BAR_WIDTH,
+    EMPTY_SYMBOL_OPTIONS, DEFAULT_SYMBOL, SYMBOL_SIZE, WIDGET_MIN_HEIGHT,
+    WIDGET_MIN_WIDTH)
 
 from karabogui.graph.plots.dialogs import RangeDialog
 from karabogui.graph.plots.items import (
@@ -30,7 +31,7 @@ class KaraboPlotView(QWidget):
     """
     stateChanged = pyqtSignal(object)
 
-    def __init__(self, use_time_axis=False, parent=None):
+    def __init__(self, use_time_axis=False, actions=None, parent=None):
         super(KaraboPlotView, self).__init__(parent)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setMinimumSize(WIDGET_MIN_WIDTH, WIDGET_MIN_HEIGHT)
@@ -71,7 +72,8 @@ class KaraboPlotView(QWidget):
 
         self.configuration = {}
         self.qactions = {}
-        self.setup_qactions()
+        actions = actions or ACTION_ITEMS
+        self.setup_qactions(actions)
 
         # Our tooling instances
         self._toolbar = None
@@ -82,7 +84,7 @@ class KaraboPlotView(QWidget):
 
         self._show_symbols = False
 
-    def setup_qactions(self):
+    def setup_qactions(self, actions):
         """The setup of the basic actions is gathered here!"""
 
         x_grid = KaraboAction(
@@ -130,25 +132,29 @@ class KaraboPlotView(QWidget):
         axes = KaraboAction(
             text="Axes",
             tooltip="Configure the axes labels and units",
-            triggered=self.configure_axes)
+            triggered=self.configure_axes,
+            name='axes')
 
         ranges = KaraboAction(
             text="Ranges",
             tooltip="Configure the axes limits and autorange",
-            triggered=self.configure_ranges)
+            triggered=self.configure_ranges,
+            name='ranges')
 
         for check_action in (x_grid, y_grid, x_log, y_log, x_invert, y_invert):
-            q_ac = build_qaction(check_action, self)
-            q_ac.triggered.connect(partial(self.check_action_callback,
-                                           callback=check_action.triggered,
-                                           name=check_action.name))
-            self.qactions[check_action.name] = q_ac
-            self.addAction(q_ac)
+            if check_action.name in actions:
+                q_ac = build_qaction(check_action, self)
+                q_ac.triggered.connect(partial(self.check_action_callback,
+                                               callback=check_action.triggered,
+                                               name=check_action.name))
+                self.qactions[check_action.name] = q_ac
+                self.addAction(q_ac)
 
         for k_action in (axes, ranges):
-            q_ac = build_qaction(k_action, self)
-            q_ac.triggered.connect(k_action.triggered)
-            self.addAction(q_ac)
+            if k_action.name in actions:
+                q_ac = build_qaction(k_action, self)
+                q_ac.triggered.connect(k_action.triggered)
+                self.addAction(q_ac)
 
     # ----------------------------------------------------------------
     # Base Action Slots
@@ -255,8 +261,8 @@ class KaraboPlotView(QWidget):
     def restore(self, config):
         """Restore the widget configuration with a config dictionary"""
         self.configuration.update(**config)
-        for name in ['x_grid', 'y_grid', 'x_log', 'y_log',
-                     'x_invert', 'y_invert']:
+        actions = [name for name in CHECK_ACTIONS if name in self.qactions]
+        for name in actions:
             self.qactions[name].setChecked(self.configuration[name])
 
         self.set_grid_x(config['x_grid'])

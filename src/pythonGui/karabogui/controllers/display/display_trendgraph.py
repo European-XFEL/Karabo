@@ -22,6 +22,9 @@ from karabogui.graph.plots.base import KaraboPlotView
 
 import karabogui.controllers.display.trendline as trendline
 
+# NOTE: We limit ourselves to selected karabo actions!
+ALLOWED_ACTIONS = ['x_grid', 'y_grid', 'y_invert', 'y_log', 'axes']
+
 
 @register_binding_controller(
     ui_name='Trend Graph', klassname='DisplayTrendGraph',
@@ -51,6 +54,7 @@ class DisplayTrendGraph(BaseBindingController):
         self._initial_start_time = QDateTime.currentDateTime()
 
         self._karabo_plot_view = KaraboPlotView(use_time_axis=True,
+                                                actions=ALLOWED_ACTIONS,
                                                 parent=widget.fr_trendline)
         self._karabo_plot_view.stateChanged.connect(self._change_model)
         self._karabo_plot_view.add_legend(visible=False)
