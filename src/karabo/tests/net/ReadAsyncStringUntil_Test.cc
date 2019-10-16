@@ -123,8 +123,6 @@ void ReadAsyncStringUntil_Test::tearDown() {
 
 
 void ReadAsyncStringUntil_Test::runTest() {
-    using namespace std;
-
     // Start echo server thread ...
     int port = 54345;
     auto fut = std::async(std::launch::async, [port]() {
