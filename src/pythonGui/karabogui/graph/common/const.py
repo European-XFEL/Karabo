@@ -31,6 +31,10 @@ EMPTY_SYMBOL_OPTIONS = {'symbol': None, 'symbolSize': None,
                         'symbolPen': None, 'symbolBrush': None}
 EMPTY_BAR = np.zeros(shape=(10,), dtype=np.int64)
 
+CHECK_ACTIONS = ['x_grid', 'y_grid', 'x_log', 'y_log',
+                 'x_invert', 'y_invert']
+RANGE_ACTIONS = ['ranges', 'axes']
+ACTION_ITEMS = CHECK_ACTIONS + RANGE_ACTIONS
 
 # Image Constants
 # --------------------------------------------------------------------------
