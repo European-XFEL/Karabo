@@ -1,8 +1,7 @@
 from .model import SceneModel
 from .shapes import LineModel
 from .widgets.graph_image import WebCamGraphModel
-from .widgets.graph_plots import VectorGraphModel
-from .widgets.plot import LinePlotModel
+from .widgets.graph_plots import TrendGraphModel, VectorGraphModel
 from .widgets.simple import DisplayLabelModel, LabelModel
 
 
@@ -15,9 +14,11 @@ def get_trendline_scene(device_id, path):
     line = LineModel(
         stroke='#000000', x1=15.0, x2=615.0, y1=75.0, y2=75.0)
 
-    plot = LinePlotModel(
+    plot = TrendGraphModel(
         height=337.0,
         keys=['{}.{}'.format(device_id, path)],
+        x_label="Time Axis",
+        y_label=path,
         parent_component='DisplayComponent', width=600.0,
         x=10.0, y=80.0)
 
@@ -36,7 +37,7 @@ def get_trendline_scene(device_id, path):
     scene = SceneModel(height=440.0, width=630.0,
                        children=[line, plot, label, display_label])
 
-    scene.simple_name = 'Trendline_{}_{}'.format(device_id, path)
+    scene.simple_name = 'TrendGraph_{}_{}'.format(device_id, path)
 
     return scene
 
