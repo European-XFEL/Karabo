@@ -109,6 +109,7 @@ class SceneView(QWidget):
 
         self._visible_timer = QTimer(self)
         self._visible_timer.setInterval(_VISIBILITY_TIMEOUT)
+        self._visible_timer.setSingleShot(True)
         self._visible_timer.timeout.connect(self._clean_visible_widgets)
 
         # Redraw when the workflow model changes
@@ -371,7 +372,6 @@ class SceneView(QWidget):
     @pyqtSlot()
     def _clean_visible_widgets(self):
         """Remove the visibility state of this scene"""
-        self._visible_timer.stop()
         for obj in self._scene_obj_cache.values():
             # NOTE: We must set the visibility of all widgets to `False`!
             if is_widget(obj):
