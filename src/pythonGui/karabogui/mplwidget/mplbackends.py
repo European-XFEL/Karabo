@@ -131,15 +131,15 @@ class FigureCanvas(FigureCanvasQTAgg):
 
 class PlotToolbar(NavigationToolbar2QT):
     toolitems = (
-      # name, tooltip, icon, method_name, all None is a seperator
-      ('Home', 'Reset original view', 'home', 'home'),
-      ('Pan', 'Pan with left mouse, zoom with right', 'move', 'pan'),
-      ('Zoom', 'Zoom to rectangle', 'zoom_to_rect', 'zoom'),
-      (None, None, None, None),
-      ('Subplots', 'Config subplots', 'subplots', 'configure_subplots'),
-      ('Save', 'Save to file', 'filesave', 'save_figure'),
-      (None, None, None, None),
-      ('Help', 'Plot widget help', 'helpcall', 'help_info'),
+        # name, tooltip, icon, method_name, all None is a seperator
+        ('Home', 'Reset original view', 'home', 'home'),
+        ('Pan', 'Pan with left mouse, zoom with right', 'move', 'pan'),
+        ('Zoom', 'Zoom to rectangle', 'zoom_to_rect', 'zoom'),
+        (None, None, None, None),
+        ('Subplots', 'Config subplots', 'subplots', 'configure_subplots'),
+        ('Save', 'Save to file', 'filesave', 'save_figure'),
+        (None, None, None, None),
+        ('Help', 'Plot widget help', 'helpcall', 'help_info'),
     )
 
     def __init__(self, canvas, parent=None):
