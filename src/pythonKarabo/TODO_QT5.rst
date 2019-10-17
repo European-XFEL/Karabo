@@ -72,3 +72,6 @@ Tasks
     - [] Port MacroPanel
     - [] Port ScriptingPanel
     - [] Port IPythonWidget
+
+- [] Merge to master
+- [] Update global dependencies and check build scripts
