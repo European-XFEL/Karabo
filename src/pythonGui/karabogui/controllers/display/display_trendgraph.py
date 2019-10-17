@@ -7,7 +7,7 @@ from PyQt4 import uic
 from PyQt4.QtCore import QDateTime, pyqtSlot, QTimer
 from PyQt4.QtGui import (
     QVBoxLayout, QWidget)
-from traits.api import Bool, Dict, Instance, String
+from traits.api import Bool, Dict, Instance, Set, String
 
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config, TrendGraphModel)
@@ -41,7 +41,7 @@ class DisplayTrendGraph(BaseBindingController):
     _auto_scale = Bool(False)
 
     _curves = Dict
-    _curves_start = Dict
+    _curves_start = Set
 
     _pens = Instance(cycle, factory=get_pen_cycler, args=())
 
@@ -127,7 +127,7 @@ class DisplayTrendGraph(BaseBindingController):
         curve.sigPlotChanged.connect(self._update_ranges)
 
         self._curves[proxy] = trendline.Curve(proxy=proxy, curve=curve)
-        self._curves_start[proxy] = False
+        self._curves_start.add(proxy)
 
         if len(self._curves) > 1:
             self._karabo_plot_view.set_legend(True)
@@ -142,10 +142,10 @@ class DisplayTrendGraph(BaseBindingController):
         t = timestamp.toTimestamp()
 
         self._curves[proxy].add_point(proxy.value, t)
-        if not self._curves_start[proxy]:
+        if proxy in self._curves_start:
             self._curves[proxy].add_point(proxy.value,
                                           self._initial_start_time.toTime_t())
-            self._curves_start[proxy] = True
+            self._curves_start.remove(proxy)
 
     def set_interval(self, t0, t1):
         """Update lower and upper bound of curve intervals"""
