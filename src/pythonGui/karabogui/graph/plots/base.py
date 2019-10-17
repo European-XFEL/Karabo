@@ -233,7 +233,7 @@ class KaraboPlotView(QWidget):
     def toggle_data_symbols(self, show):
         """Toggle the data points on the plotItems"""
         self._show_symbols = show
-        for item in self.plotItem.items[:]:
+        for item in self.plotItem.dataItems[:]:
             if show:
                 options = {'symbol': DEFAULT_SYMBOL,
                            'symbolSize': SYMBOL_SIZE,
