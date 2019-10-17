@@ -108,7 +108,6 @@ struct TestClient {
 
 private:
     karabo::net::Connection::Pointer m_connection;
-    int m_timeout;
     int m_repetition;
     std::string m_expected;
 };
