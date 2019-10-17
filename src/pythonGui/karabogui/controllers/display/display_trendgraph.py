@@ -19,12 +19,10 @@ from karabogui.controllers.api import (
 from karabogui.globals import MAX_INT32
 from karabogui.graph.common.colors import get_pen_cycler
 from karabogui.graph.plots.base import KaraboPlotView
-
 import karabogui.controllers.display.trendline as trendline
 
 # NOTE: We limit ourselves to selected karabo actions!
 ALLOWED_ACTIONS = ['x_grid', 'y_grid', 'y_invert', 'y_log', 'axes']
-INIT_HIST = -10  # seconds
 
 
 @register_binding_controller(
@@ -43,6 +41,8 @@ class DisplayTrendGraph(BaseBindingController):
     _auto_scale = Bool(False)
 
     _curves = Dict
+    _curves_start = Dict
+
     _pens = Instance(cycle, factory=get_pen_cycler, args=())
 
     # Map time strs to QPushButtons
@@ -79,6 +79,7 @@ class DisplayTrendGraph(BaseBindingController):
 
         # Restore any past configurations
         self._karabo_plot_view.restore(build_graph_config(self.model))
+        self._karabo_plot_view.enable_data_toggle()
 
         layout = QVBoxLayout()
         layout.addWidget(self._karabo_plot_view)
@@ -126,16 +127,10 @@ class DisplayTrendGraph(BaseBindingController):
         curve.sigPlotChanged.connect(self._update_ranges)
 
         self._curves[proxy] = trendline.Curve(proxy=proxy, curve=curve)
+        self._curves_start[proxy] = False
 
         if len(self._curves) > 1:
             self._karabo_plot_view.set_legend(True)
-
-        # NOTE: If a proxy is succesfully added to the trendline, we request
-        # the latest ~10 seconds of data!
-        current_date_time = QDateTime.currentDateTime()
-        start = current_date_time.toMSecsSinceEpoch() / 1000
-        stop = current_date_time.addSecs(INIT_HIST).toMSecsSinceEpoch() / 1000
-        self._curves[proxy].get_property_history(start, stop)
 
         return True
 
@@ -147,6 +142,10 @@ class DisplayTrendGraph(BaseBindingController):
         t = timestamp.toTimestamp()
 
         self._curves[proxy].add_point(proxy.value, t)
+        if not self._curves_start[proxy]:
+            self._curves[proxy].add_point(proxy.value,
+                                          self._initial_start_time.toTime_t())
+            self._curves_start[proxy] = True
 
     def set_interval(self, t0, t1):
         """Update lower and upper bound of curve intervals"""
@@ -192,10 +191,8 @@ class DisplayTrendGraph(BaseBindingController):
     def _x_axis_btns_toggled(self, button):
         """Update the x axis scale when a time button is clicked"""
         self._x_detail = self._x_axis_str_btns[button]
-
         # We're updating the ranges via the buttons now
         self._auto_scale = True
-
         if self._update_axis_scale():
             self.update_later()
 
