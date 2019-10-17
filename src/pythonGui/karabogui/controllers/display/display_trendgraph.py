@@ -24,6 +24,7 @@ import karabogui.controllers.display.trendline as trendline
 
 # NOTE: We limit ourselves to selected karabo actions!
 ALLOWED_ACTIONS = ['x_grid', 'y_grid', 'y_invert', 'y_log', 'axes']
+INIT_HIST = -10  # seconds
 
 
 @register_binding_controller(
@@ -128,6 +129,13 @@ class DisplayTrendGraph(BaseBindingController):
 
         if len(self._curves) > 1:
             self._karabo_plot_view.set_legend(True)
+
+        # NOTE: If a proxy is succesfully added to the trendline, we request
+        # the latest ~10 seconds of data!
+        current_date_time = QDateTime.currentDateTime()
+        start = current_date_time.toMSecsSinceEpoch() / 1000
+        stop = current_date_time.addSecs(INIT_HIST).toMSecsSinceEpoch() / 1000
+        self._curves[proxy].get_property_history(start, stop)
 
         return True
 
