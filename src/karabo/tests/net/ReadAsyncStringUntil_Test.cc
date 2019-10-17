@@ -43,7 +43,7 @@ struct TestClient {
 
 
     TestClient(const karabo::util::Hash& input)
-            : m_repetition(5)
+            : m_repetition(5)   // we want to read 5 times
             , m_expected("") {
         m_connection = karabo::net::Connection::create("Tcp", input);
         m_connection->startAsync(boost::bind(&TestClient::connectHandler, this, _1, _2));
@@ -62,8 +62,10 @@ struct TestClient {
 
         m_expected = "When the going gets tough...";
 
+        // The first statement will be read in two steps by changing terminator...
         const std::string& tmp = "When the going gets tough... the tough get going\r\n";
         auto datap = boost::make_shared<std::vector<char>>(tmp.begin(), tmp.end());
+        //NOTE: First we use "..." as a terminator!
         channel->writeAsyncVectorPointer(datap, boost::bind(&TestClient::writeCompleteHandler, this, _1, channel, "..."));
     }
 
@@ -82,6 +84,10 @@ struct TestClient {
                 return;
             }
 
+            // The first data message will be "When the going gets tough..."
+            // The second one:                " the tough get going\r\n"
+            // The third one and others:      "Yet another test string\r\n"
+            // Uncomment print statement below to see how does it work
             //std::cerr << data;
             CPPUNIT_ASSERT(data == m_expected || data == " the tough get going\r\n");
             if (--m_repetition == 0) {
@@ -91,6 +97,8 @@ struct TestClient {
 
             m_expected = "Yet another test string\r\n";
             auto datap = boost::make_shared<std::vector<char>>(m_expected.begin(), m_expected.end());
+            //NOTE: After first reading we change terminator to "\r\n" (CRLF) to read
+            // a second part of first statement and all others ...
             channel->writeAsyncVectorPointer(datap,
                                              boost::bind(&TestClient::writeCompleteHandler,
                                                          this, _1, channel, "\r\n"));
