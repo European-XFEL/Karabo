@@ -40,14 +40,14 @@ class TestDisplayTrendGraph(GuiTestCase):
         t0 = data[0]['v', ...]['sec']
         t1 = data[-1]['v', ...]['sec']
 
-        self.controller.set_interval(t0, t1)
+        self.controller.set_time_interval(t0, t1)
 
         self.proxy.binding.historic_data = data
         self.process_qt_events()
 
     @unittest.skip(reason='The real range is being disturbed in CI')
     def test_datetime_update(self):
-        view_box = self.controller._karabo_plot_view.plotItem.vb
+        view_box = self.controller._plot.plotItem.vb
         view_box.setXRange(1570536895, 1571536895, padding=0.05)
 
         # We should've changed the datetimes
@@ -60,7 +60,7 @@ class TestDisplayTrendGraph(GuiTestCase):
     def test_range_update(self):
         """When the viewbox change, we must make sure the time axis is
         not overflown"""
-        plot_view = self.controller._karabo_plot_view
+        plot_view = self.controller._plot
         plot_item = plot_view.plotItem
 
         view_box = plot_item.vb
