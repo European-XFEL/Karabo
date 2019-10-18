@@ -5,21 +5,19 @@ from itertools import cycle
 
 from PyQt4 import uic
 from PyQt4.QtCore import QDateTime, pyqtSlot, QTimer
-from PyQt4.QtGui import (
-    QVBoxLayout, QWidget)
+from PyQt4.QtGui import QVBoxLayout, QWidget
 from traits.api import Bool, Dict, Instance, Set, String
 
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config, TrendGraphModel)
-from karabogui.binding.api import (
-    BoolBinding, FloatBinding, IntBinding)
+from karabogui.binding.api import BoolBinding, FloatBinding, IntBinding
 from karabogui.const import MAX_NUMBER_LIMIT
 from karabogui.controllers.api import (
-    BaseBindingController, register_binding_controller)
+    BaseBindingController, Curve, get_start_end_date_time, ONE_DAY, ONE_HOUR,
+    ONE_WEEK, register_binding_controller, TEN_MINUTES, UPTIME)
 from karabogui.globals import MAX_INT32
 from karabogui.graph.common.colors import get_pen_cycler
 from karabogui.graph.plots.base import KaraboPlotView
-import karabogui.controllers.display.trendline as trendline
 
 # NOTE: We limit ourselves to selected karabo actions!
 ALLOWED_ACTIONS = ['x_grid', 'y_grid', 'y_invert', 'y_log', 'axes']
@@ -47,7 +45,7 @@ class DisplayTrendGraph(BaseBindingController):
 
     # Map time strs to QPushButtons
     _x_axis_str_btns = Instance(OrderedDict, args=())
-    _x_detail = String(trendline.UPTIME)
+    _x_detail = String(UPTIME)
 
     def create_widget(self, parent):
         widget = self._init_ui(parent)
@@ -56,7 +54,7 @@ class DisplayTrendGraph(BaseBindingController):
 
         self._plot = KaraboPlotView(use_time_axis=True,
                                     actions=ALLOWED_ACTIONS,
-                                    parent=widget.fr_trendline)
+                                    parent=widget.time_frame)
         self._plot.stateChanged.connect(self._change_model)
         self._plot.add_legend(visible=False)
         self._plot.add_cross_target()
@@ -82,7 +80,7 @@ class DisplayTrendGraph(BaseBindingController):
 
         layout = QVBoxLayout()
         layout.addWidget(self._plot)
-        widget.fr_trendline.setLayout(layout)
+        widget.time_frame.setLayout(layout)
 
         # have a 1s timeout to request data, thus avoid frequent re-loading
         # while scaling
@@ -108,11 +106,11 @@ class DisplayTrendGraph(BaseBindingController):
         widget.dt_end.setDateTime(current_date_time)
 
         # Init x-axis buttons
-        self._x_axis_str_btns[widget.bt_one_week] = trendline.ONE_WEEK
-        self._x_axis_str_btns[widget.bt_one_day] = trendline.ONE_DAY
-        self._x_axis_str_btns[widget.bt_one_hour] = trendline.ONE_HOUR
-        self._x_axis_str_btns[widget.bt_ten_minutes] = trendline.TEN_MINUTES
-        self._x_axis_str_btns[widget.bt_uptime] = trendline.UPTIME
+        self._x_axis_str_btns[widget.bt_one_week] = ONE_WEEK
+        self._x_axis_str_btns[widget.bt_one_day] = ONE_DAY
+        self._x_axis_str_btns[widget.bt_one_hour] = ONE_HOUR
+        self._x_axis_str_btns[widget.bt_ten_minutes] = TEN_MINUTES
+        self._x_axis_str_btns[widget.bt_uptime] = UPTIME
         widget.bg_x_axis.buttonClicked.connect(self._x_axis_btns_toggled)
 
         return widget
@@ -124,7 +122,7 @@ class DisplayTrendGraph(BaseBindingController):
         curve = self._plot.add_curve_item(name=proxy.key, pen=next(self._pens))
         curve.sigPlotChanged.connect(self._update_ranges)
 
-        self._curves[proxy] = trendline.Curve(proxy=proxy, curve=curve)
+        self._curves[proxy] = Curve(proxy=proxy, curve=curve)
         self._curves_start.add(proxy)
 
         if len(self._curves) > 1:
@@ -210,7 +208,7 @@ class DisplayTrendGraph(BaseBindingController):
         if not self._x_detail:
             return False
 
-        if self._x_detail != trendline.UPTIME:
+        if self._x_detail != UPTIME:
             # Schedule an update for the intervals
             start_secs, end_secs = self._get_start_end_date_secs()
             self.set_time_interval(start_secs, end_secs)
@@ -241,11 +239,11 @@ class DisplayTrendGraph(BaseBindingController):
 
     def _get_start_end_date_secs(self):
         """Returns the start and end date based on the selected button"""
-        if self._x_detail == trendline.UPTIME:
+        if self._x_detail == UPTIME:
             start = self._initial_start_time
             end = self._get_last_timestamp()
         else:
-            start, end = trendline.get_start_end_date_time(self._x_detail)
+            start, end = get_start_end_date_time(self._x_detail)
 
         return start.toMSecsSinceEpoch() / 1000, end.toMSecsSinceEpoch() / 1000
 
