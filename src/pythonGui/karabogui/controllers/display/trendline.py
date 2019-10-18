@@ -108,18 +108,6 @@ class _Generation(object):
         self.fill -= self.base
         return x, y
 
-    def discard_if_overlap(self, end_value):
-        """If the generation overlap with the given value, discard the last
-        value"""
-        if self.fill == 0:
-            return
-
-        pos = self.xs[:self.fill].searchsorted(end_value)
-        if pos == 0:
-            return
-
-        self.fill -= pos
-
 
 class Curve(HasStrictTraits):
     """This holds the data for one curve
@@ -218,7 +206,6 @@ class Curve(HasStrictTraits):
                 (self.x[p0] > nearly_left_border) or
                 (p1 < self.histsize and self.x[p1 - 1] < nearly_right_border)):
             self.get_property_history(t0, t1)
-
         self.t0 = t0
         self.t1 = t1
 
@@ -243,10 +230,6 @@ class Curve(HasStrictTraits):
         if not data:
             return
 
-        if self.t1 == self.t0:
-            # Prevent division by 0, otherwise self.curve.plot() is None
-            return
-
         datasize = len(data)
         gensize = sum([g.size for g in self.generations], 0)
         arraysize = datasize + gensize + self.spare
@@ -267,6 +250,10 @@ class Curve(HasStrictTraits):
         np0 = x[:datasize].searchsorted(self.t0)
         np1 = x[:datasize].searchsorted(self.t1)
 
+        if self.t1 == self.t0:
+            # Prevent division by 0, otherwise self.curve.plot() is None
+            return
+
         span = (self.x[p1 - 1] - self.x[p0]) / (self.t1 - self.t0)
         nspan = (x[np1 - 1] - x[np0]) / (self.t1 - self.t0)
 
@@ -276,68 +263,40 @@ class Curve(HasStrictTraits):
         # If the history overlaps generation data, favor the history data.
         end = x[datasize - 1]
         for gen in self.generations:
-            gen.discard_if_overlap(end)
+            fill = gen.fill
+            if fill == 0:
+                continue
+            pos = gen.xs[:fill].searchsorted(end)
+            if pos == 0:
+                break
+            gen.xs[:fill - pos] = gen.xs[pos:fill]
+            gen.fill = fill - pos
 
         self.histsize = datasize
         self.x = x
         self.y = y
         self.fill_current()
         self.update()
-
         if not isinstance(self.curve, PlotDataItem):
             self.curve.plot().replot()
 
-    def get_last_values(self, count):
-        """Returns a list containing the last curve values based on the given
-        percentage"""
+    def get_mean_y_value(self, count=10):
+        """ Return mean value for last ``count`` of y values."""
         if count > len(self.y):
             count = len(self.y)
+        return numpy.nanmean(self.y[max(self.fill-count, 0):self.fill])
 
-        tail_slice = numpy.s_[max(self.fill - count, 0):self.fill]
-        return self.x[tail_slice], self.y[tail_slice]
-
-    def get_mean_y_value(self, count=10):
-        """Return mean value for last ``count`` of y values"""
-        _, y_tail = self.get_last_values(count)
-
-        return numpy.nanmean(y_tail)
-
-    @property
-    def yrange(self):
-        return self.get_min_y_value(), self.get_max_y_value()
-
-    def get_min_x_value(self):
+    def get_min_y_value(self):
         """ Return min value of all y values."""
-        return numpy.nanmin(self.x[:self.fill]) if self.fill else DEFAULT_MIN
+        return numpy.nanmin(self.y[:self.fill]) if self.fill else DEFAULT_MIN
+
+    def get_max_y_value(self):
+        """ Return max value for all y values"""
+        return numpy.nanmax(self.y[:self.fill]) if self.fill else DEFAULT_MAX
 
     def get_max_x_value(self):
-        """ Return max value for all y values"""
+        """ Return max value for all x values"""
         return numpy.nanmax(self.x[:self.fill]) if self.fill else DEFAULT_MAX
-
-    def get_min_y_value(self, full_range=True):
-        """ Return min value of all y values. If full range is True we take
-        into account both historical and current data"""
-        if not self.fill:
-            return DEFAULT_MIN
-
-        y_slice = self._get_slice(full_range)
-        return numpy.nanmin(self.y[y_slice])
-
-    def get_max_y_value(self, full_range=True):
-        """ Return max value for all y values"""
-        if not self.fill:
-            return DEFAULT_MAX
-
-        y_slice = self._get_slice(full_range)
-        return numpy.nanmax(self.y[y_slice])
-
-    def _get_slice(self, full_range=True):
-        """Returns the appropriate slice. If full range is True we take
-        into account both historical and current data"""
-        if full_range or self.fill == self.histsize:
-            return numpy.s_[:self.fill]
-        else:
-            return numpy.s_[self.histsize:self.fill]
 
 
 class DateTimeScaleDraw(QwtScaleDraw):

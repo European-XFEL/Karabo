@@ -221,10 +221,8 @@ class DisplayTrendGraph(BaseBindingController):
         ymin = MAX_INT32
         ymax = -ymin
         for curve in self._curves.values():
-            has_historic_data = self._x_detail != trendline.UPTIME
-
-            min_value = curve.get_min_y_value(full_range=has_historic_data)
-            max_value = curve.get_max_y_value(full_range=has_historic_data)
+            min_value = curve.get_min_y_value()
+            max_value = curve.get_max_y_value()
 
             if min_value < ymin:
                 ymin = min_value
