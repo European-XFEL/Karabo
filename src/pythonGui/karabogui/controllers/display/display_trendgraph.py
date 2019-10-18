@@ -33,7 +33,7 @@ class DisplayTrendGraph(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(TrendGraphModel, args=())
 
-    _karabo_plot_view = Instance(KaraboPlotView)
+    _plot = Instance(KaraboPlotView)
     _timer = Instance(QTimer)
     _initial_start_time = Instance(QDateTime)
 
@@ -54,35 +54,34 @@ class DisplayTrendGraph(BaseBindingController):
 
         self._initial_start_time = QDateTime.currentDateTime()
 
-        self._karabo_plot_view = KaraboPlotView(use_time_axis=True,
-                                                actions=ALLOWED_ACTIONS,
-                                                parent=widget.fr_trendline)
-        self._karabo_plot_view.stateChanged.connect(self._change_model)
-        self._karabo_plot_view.add_legend(visible=False)
-        self._karabo_plot_view.add_cross_target()
-        self._karabo_plot_view.add_toolbar()
+        self._plot = KaraboPlotView(use_time_axis=True,
+                                    actions=ALLOWED_ACTIONS,
+                                    parent=widget.fr_trendline)
+        self._plot.stateChanged.connect(self._change_model)
+        self._plot.add_legend(visible=False)
+        self._plot.add_cross_target()
+        self._plot.add_toolbar()
+        self._plot.enable_data_toggle()
 
         # Limit the panning zoom
-        self._karabo_plot_view.plotItem.setLimits(
+        self._plot.plotItem.setLimits(
             xMin=datetime(1970, 12, 31).timestamp(),
             xMax=datetime(2038, 12, 31).timestamp())
 
-        self._karabo_plot_view.plotItem.vb.sigRangeChangedManually.connect(
+        self._plot.plotItem.vb.sigRangeChangedManually.connect(
             self._on_range_manually_changed)
 
-        self._karabo_plot_view.plotItem.vb.autoRangeTriggered.connect(
+        self._plot.plotItem.vb.autoRangeTriggered.connect(
             self._uncheck_current_button)
 
         # Update datetime widgets everytime range changes
-        self._karabo_plot_view.plotItem.sigXRangeChanged.connect(
+        self._plot.plotItem.sigXRangeChanged.connect(
             self._update_datetime_widgets)
 
-        # Restore any past configurations
-        self._karabo_plot_view.restore(build_graph_config(self.model))
-        self._karabo_plot_view.enable_data_toggle()
+        self._plot.restore(build_graph_config(self.model))
 
         layout = QVBoxLayout()
-        layout.addWidget(self._karabo_plot_view)
+        layout.addWidget(self._plot)
         widget.fr_trendline.setLayout(layout)
 
         # have a 1s timeout to request data, thus avoid frequent re-loading
@@ -95,7 +94,7 @@ class DisplayTrendGraph(BaseBindingController):
         # Add the first curve
         self.add_proxy(self.proxy)
 
-        widget.addActions(self._karabo_plot_view.actions())
+        widget.addActions(self._plot.actions())
 
         return widget
 
@@ -122,15 +121,14 @@ class DisplayTrendGraph(BaseBindingController):
         if proxy in self._curves:
             return
 
-        curve = self._karabo_plot_view.add_curve_item(name=proxy.key,
-                                                      pen=next(self._pens))
+        curve = self._plot.add_curve_item(name=proxy.key, pen=next(self._pens))
         curve.sigPlotChanged.connect(self._update_ranges)
 
         self._curves[proxy] = trendline.Curve(proxy=proxy, curve=curve)
         self._curves_start.add(proxy)
 
         if len(self._curves) > 1:
-            self._karabo_plot_view.set_legend(True)
+            self._plot.set_legend(True)
 
         return True
 
@@ -147,8 +145,8 @@ class DisplayTrendGraph(BaseBindingController):
                                           self._initial_start_time.toTime_t())
             self._curves_start.remove(proxy)
 
-    def set_interval(self, t0, t1):
-        """Update lower and upper bound of curve intervals"""
+    def set_time_interval(self, t0, t1):
+        """Update the x axis scale interval of the curves"""
         for v in self._curves.values():
             v.changeInterval(t0, t1)
 
@@ -160,6 +158,7 @@ class DisplayTrendGraph(BaseBindingController):
         self._auto_scale = False
         self._uncheck_current_button()
 
+    @pyqtSlot()
     def _uncheck_current_button(self):
         """Uncheck any checked button"""
         button_group = self.widget.bg_x_axis
@@ -170,14 +169,20 @@ class DisplayTrendGraph(BaseBindingController):
             checked_button.setChecked(False)
             button_group.setExclusive(True)
 
+    @pyqtSlot(object)
+    def _change_model(self, content):
+        self.model.trait_set(**restore_graph_config(content))
+
     @pyqtSlot()
     def _update_intervals(self):
         """This slot is called whenever the timer timed out and previously the
         x axis scale was changed"""
-        x_axis = self._karabo_plot_view.plotItem.getAxis("bottom")
-        self.set_interval(*x_axis.range)
+        x_axis = self._plot.plotItem.getAxis("bottom")
+        self.set_time_interval(*x_axis.range)
 
+    @pyqtSlot()
     def _update_datetime_widgets(self, vb, x_range):
+        """This slot is called whenever the xRange changes"""
         # Note that the time comes in seconds
         x_min, x_max = x_range
         start = QDateTime.fromMSecsSinceEpoch(x_min * 1000)
@@ -196,19 +201,19 @@ class DisplayTrendGraph(BaseBindingController):
         if self._update_axis_scale():
             self.update_later()
 
+    def deferred_update(self):
+        self._update_ranges()
+
     def _update_axis_scale(self):
         """The start and end time date for the x axis is updated here
         depending on the selected time button"""
         if not self._x_detail:
             return False
 
-        if self._x_detail == trendline.UPTIME:
-            # We don't need to wait to update
-            self._update_ranges()
-        else:
+        if self._x_detail != trendline.UPTIME:
             # Schedule an update for the intervals
             start_secs, end_secs = self._get_start_end_date_secs()
-            self.set_interval(start_secs, end_secs)
+            self.set_time_interval(start_secs, end_secs)
 
         return True
 
@@ -234,8 +239,7 @@ class DisplayTrendGraph(BaseBindingController):
         y_range = (ymin, ymax)
         x_range = self._get_start_end_date_secs()
 
-        self._karabo_plot_view.plotItem.setRange(xRange=x_range,
-                                                 yRange=y_range)
+        self._plot.plotItem.setRange(xRange=x_range, yRange=y_range)
 
     def _get_start_end_date_secs(self):
         """Returns the start and end date based on the selected button"""
@@ -259,7 +263,3 @@ class DisplayTrendGraph(BaseBindingController):
             return QDateTime.currentDateTime()
         else:
             return QDateTime.fromTime_t(max(timestamps))
-
-    @pyqtSlot(object)
-    def _change_model(self, content):
-        self.model.trait_set(**restore_graph_config(content))
