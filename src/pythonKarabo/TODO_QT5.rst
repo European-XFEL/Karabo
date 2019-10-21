@@ -33,9 +33,6 @@ Tasks
 - [] Port the Dialogs:
     - [] Check tons of dialogs, text dialog, etc.
 
-- [] Port the Dialogs:
-    - [] Check tons of dialogs, text dialog, etc.
-
 - [] Move the Widget Controllers [LARGE]
     - [] Port DisplayWidgets
     - [] Port Editable Widgets
@@ -60,7 +57,7 @@ Tasks
     - [] Port the Workflow
     - [] Small fixups in SceneView
 
-- [X] Port the Configurator:
+- [] Port the Configurator:
     - [] Port ConfigurationTreeModel
     - [] Port TableEditDialog
     - [] Port EditWidgetWrapper
