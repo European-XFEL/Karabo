@@ -21,6 +21,7 @@ using karabo::util::Hash;
 using karabo::util::Epochstamp;
 using karabo::util::Schema;
 using karabo::util::Timestamp;
+using karabo::util::DOUBLE_ELEMENT;
 using karabo::util::INT32_ELEMENT;
 using karabo::util::STRING_ELEMENT;
 using karabo::util::TABLE_ELEMENT;
@@ -33,6 +34,8 @@ class TestDevice : public karabo::core::Device<> {
 public:
 
     KARABO_CLASSINFO(TestDevice, "TestDevice", "2.1")
+
+    static const int ALARM_HIGH = 1000.0;
 
     static void expectedParameters(karabo::util::Schema& expected) {
         Schema rowSchema;
@@ -60,6 +63,11 @@ public:
                 .reconfigurable()
                 .commit();
 
+        DOUBLE_ELEMENT(expected).key("valueWithAlarm")
+                .readOnly()
+                .alarmHigh(TestDevice::ALARM_HIGH).needsAcknowledging(false)
+                .observerAccess()
+                .commit();
     }
 
 
@@ -148,6 +156,8 @@ void Device_Test::appTestRunner() {
     // Now all possible individual tests.
     testGetTimestamp();
     testSchemaInjection();
+    testSchemaWithAttrUpdate();
+    testSchemaWithAttrAppend();
 }
 
 
@@ -472,6 +482,128 @@ void Device_Test::testSchemaInjection() {
     CPPUNIT_ASSERT(tableAfterInsert.size() == 2);
     const Hash &firstRowAfterInsert = tableAfterInsert[0];
     CPPUNIT_ASSERT(firstRowAfterInsert.get<std::string>("name") == "firstLine");
+}
+
+
+void Device_Test::testSchemaWithAttrUpdate() {
+
+    // Setup a communication helper
+    auto sigSlotA = boost::make_shared<SignalSlotable>("sigSlotA");
+    sigSlotA->start();
+
+    // Timeout, in milliseconds, for a request for one of the test device slots.
+    const int requestTimeoutMs = 2000;
+    // Time, in milliseconds, to wait for DeviceClient to update its internal cache after a schema change.
+    const int cacheUpdateWaitMs = 1000;
+
+    // Updates 'alarmHigh'
+    Schema schema;
+    double alarmHighValue = 2.0 * TestDevice::ALARM_HIGH;
+    DOUBLE_ELEMENT(schema).key("valueWithAlarm")
+            .readOnly()
+            .alarmHigh(alarmHighValue).needsAcknowledging(false)
+            .commit();
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotUpdateSchema", schema)
+                           .timeout(requestTimeoutMs)
+                            .receive());
+
+    // Checks that the updated attribute will be available within an interval.
+    CPPUNIT_ASSERT(waitForCondition([this, alarmHighValue] {
+        return m_deviceClient->getDeviceSchema("TestDevice").getAlarmHigh<double>("valueWithAlarm") == alarmHighValue;
+    }, cacheUpdateWaitMs));
+
+    // Tests that doing updateSchema with something new resets the AlarmHigh.
+    Schema someNewSchema;
+    INT32_ELEMENT(someNewSchema).key("somethingNew")
+            .assignmentOptional().defaultValue(4)
+            .reconfigurable()
+            .commit();
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotUpdateSchema", someNewSchema)
+                           .timeout(requestTimeoutMs)
+                           .receive());
+    // Checks that the reset attribute will be available within an interval.
+    CPPUNIT_ASSERT(waitForCondition([this] {
+        return m_deviceClient->getDeviceSchema("TestDevice").getAlarmHigh<double>("valueWithAlarm") == TestDevice::ALARM_HIGH;
+    }, cacheUpdateWaitMs));
+
+    // Updates 'alarmHigh' by using 'slotUpdateSchemaAttributes' - this
+    // is what the GUI Server would do when instantiating a device.
+    alarmHighValue *= 2.0; // 4 * TestDevice::ALARM_HIGH
+    std::vector<Hash> newAttrs { Hash("path", "valueWithAlarm",
+                                      "attribute", "alarmHigh",
+                                      "value", alarmHighValue)};
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotUpdateSchemaAttributes", newAttrs)
+                           .timeout(requestTimeoutMs)
+                           .receive());
+    // Checks that the new attribute value will be available within an interval.
+    CPPUNIT_ASSERT(waitForCondition([this, alarmHighValue] {
+        return m_deviceClient->getDeviceSchema("TestDevice").getAlarmHigh<double>("valueWithAlarm") == alarmHighValue;
+    }, cacheUpdateWaitMs));
+
+    // Tests that doing updateSchema with something new resets the AlarmHigh.
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotUpdateSchema", someNewSchema)
+                           .timeout(requestTimeoutMs)
+                           .receive());
+    // Checks that the reset attribute will be available within an interval.
+    CPPUNIT_ASSERT(waitForCondition([this] {
+        return m_deviceClient->getDeviceSchema("TestDevice").getAlarmHigh<double>("valueWithAlarm") == TestDevice::ALARM_HIGH;
+    }, cacheUpdateWaitMs));
+}
+
+
+void Device_Test::testSchemaWithAttrAppend() {
+    // Setup a communication helper
+    auto sigSlotA = boost::make_shared<SignalSlotable>("sigSlotA");
+    sigSlotA->start();
+
+    // Timeout, in milliseconds, for a request for one of the test device slots.
+    const int requestTimeoutMs = 2000;
+    // Time, in milliseconds, to wait for DeviceClient to update its internal cache after a schema change.
+    const int cacheUpdateWaitMs = 1000;
+
+    // Updates 'alarmHigh'
+    Schema schema;
+    double alarmHighValue = 2.0 * TestDevice::ALARM_HIGH;
+    DOUBLE_ELEMENT(schema).key("valueWithAlarm")
+            .readOnly()
+            .alarmHigh(alarmHighValue).needsAcknowledging(false)
+            .commit();
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotUpdateSchema", schema)
+                            .timeout(requestTimeoutMs)
+                            .receive());
+
+    // Checks that the updated attribute will be available within an interval.
+    CPPUNIT_ASSERT(waitForCondition([this, alarmHighValue] {
+        return m_deviceClient->getDeviceSchema("TestDevice").getAlarmHigh<double>("valueWithAlarm") == alarmHighValue;
+    }, cacheUpdateWaitMs));
+
+    // Tests that doing appendSchema with something new keeps the AlarmHigh.
+    Schema someNewSchema;
+    INT32_ELEMENT(someNewSchema).key("somethingNew")
+            .assignmentOptional().defaultValue(4)
+            .reconfigurable()
+            .commit();
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotAppendSchema", someNewSchema)
+                            .timeout(requestTimeoutMs)
+                            .receive());
+    // Checks that the reset attribute will be available within an interval.
+    CPPUNIT_ASSERT(waitForCondition([this, alarmHighValue] {
+        return m_deviceClient->getDeviceSchema("TestDevice").getAlarmHigh<double>("valueWithAlarm") == alarmHighValue;
+    }, cacheUpdateWaitMs));
+
+    // Updates 'alarmHigh' by using 'slotUpdateSchemaAttributes' - this
+    // is what the GUI Server would do when instantiating a device.
+    alarmHighValue *= 2.0; // 4 * TestDevice::ALARM_HIGH
+    std::vector<Hash> newAttrs{Hash("path", "valueWithAlarm",
+                                    "attribute", "alarmHigh",
+                                    "value", alarmHighValue)};
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotUpdateSchemaAttributes", newAttrs)
+                            .timeout(requestTimeoutMs)
+                            .receive());
+    // Checks that the new attribute value will be available within an interval.
+    CPPUNIT_ASSERT(waitForCondition([this, alarmHighValue] {
+        return m_deviceClient->getDeviceSchema("TestDevice").getAlarmHigh<double>("valueWithAlarm") == alarmHighValue;
+    }, cacheUpdateWaitMs));
 }
 
 
