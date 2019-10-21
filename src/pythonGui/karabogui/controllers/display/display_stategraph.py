@@ -16,7 +16,8 @@ from karabogui.graph.common.const import (
 from karabogui.graph.common.enums import AxisType
 from karabogui.controllers.api import (
     BaseBindingController, Curve, get_start_end_date_time, ONE_DAY, ONE_HOUR,
-    ONE_WEEK, register_binding_controller, TEN_MINUTES, UPTIME)
+    ONE_WEEK, register_binding_controller, with_display_type,
+    TEN_MINUTES, UPTIME)
 from karabogui.globals import MAX_INT32
 from karabogui.graph.common.colors import get_pen_cycler
 from karabogui.graph.plots.base import KaraboPlotView
@@ -28,6 +29,7 @@ ALLOWED_ACTIONS = ['x_grid', 'y_grid', 'y_invert', 'y_log', 'axes']
 @register_binding_controller(
     ui_name='State Graph', klassname='DisplayStateGraph',
     binding_type=StringBinding,
+    is_compatible=with_display_type('State'),
     can_show_nothing=False)
 class DisplayStateGraph(BaseBindingController):
     # The scene model class used by this controller
