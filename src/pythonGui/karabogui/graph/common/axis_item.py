@@ -2,9 +2,12 @@ from datetime import datetime
 
 from PyQt4.QtCore import Qt, pyqtSignal
 from PyQt4.QtGui import QFont
+from pyqtgraph.functions import siScale
 from pyqtgraph import AxisItem as PgAxisItem
 
-from karabogui.graph.common import const
+from karabogui.graph.common.const import (
+    AXIS_ITEMS, X_AXIS_HEIGHT, Y_AXIS_WIDTH, INTEGER_STATE_MAP)
+from karabogui.graph.common.enums import AxisType
 
 
 class AxisItem(PgAxisItem):
@@ -75,7 +78,6 @@ class AxisItem(PgAxisItem):
 
 
 class TimeAxisItem(AxisItem):
-
     LABEL_FORMATS = ((60 + 30, "%Ss"),  # Up to 1min 30s
                      (60 * 60 * 4, "%H:%M"),  # Up to 4 hours
                      (60 * 60 * 28, "%Hh"),  # Up to 1 day
@@ -109,16 +111,121 @@ class TimeAxisItem(AxisItem):
         return values
 
 
-def create_axis_items(axes_with_ticks, time_axis=None, klass=AxisItem):
-    items = {}
+class StateAxisItem(AxisItem):
+    """The State Axis Item for displaying Karabo States as major ticks"""
 
-    for orientation in const.AXIS_ITEMS:
+    def tickStrings(self, values, scale, spacing):
+        """Return the state names as a function of integers values
+
+        NOTE: Always cast the value as integer due to PyQtGraph protection!
+        """
+        return [INTEGER_STATE_MAP.get(int(value), 'UNKNOWN')
+                for value in values]
+
+
+class AuxPlotAxisItem(AxisItem):
+    """AxisItem for the aux plots."""
+
+    def __init__(self, orientation, has_ticks=True):
+        super(AuxPlotAxisItem, self).__init__(orientation, has_ticks)
+        self.setStyle(autoExpandTextSpace=False)
+        font = QFont()
+        font.setPixelSize(8)
+        self.tickFont = font
+
+    # ---------------------------------------------------------------------
+    # pyqtgraph methods
+
+    def _updateWidth(self):
+        """Patching to match known width of main plot"""
+        if self.label.isVisible():
+            self.setFixedWidth(Y_AXIS_WIDTH)
+            self.picture = None
+        else:
+            super(AuxPlotAxisItem, self)._updateWidth()
+
+    def _updateHeight(self):
+        """Patching to match known height of main plot"""
+        if self.label.isVisible():
+            self.setFixedHeight(X_AXIS_HEIGHT)
+            self.picture = None
+        else:
+            super(AuxPlotAxisItem, self)._updateHeight()
+
+    def updateAutoSIPrefix(self):
+        """Patching to scale tick values after 10^3"""
+        if self.label.isVisible():
+            (scale, prefix) = siScale(max(abs(self.range[0] * self.scale),
+                                          abs(self.range[1] * self.scale)))
+            if self.labelUnits == '' and prefix == 'k':
+                scale = 1.0
+                prefix = ''
+            self.setLabel(unitPrefix=prefix)
+        else:
+            scale = 1.0
+
+        self.autoSIPrefixScale = scale
+        self.picture = None
+        self.update()
+
+    def labelString(self):
+        """Patching to improve label display of scaled axes (e.g. x 10^6)"""
+        if self.labelUnits != '':
+            units = ('(%s%s)') % ((self.labelUnitPrefix),
+                                  (self.labelUnits))
+        else:
+            units = ''
+
+        s = ('%s %s') % ((self.labelText), (units))
+        style = ';'.join(['%s: %s' % (k, self.labelStyle[k])
+                          for k in self.labelStyle])
+        main = "<span align='center' style='%s'>%s</span>" % (style, s)
+
+        if not self.autoSIPrefix or self.autoSIPrefixScale == 1.0:
+            scaling = ''
+        else:
+            scaling = ('<center>(\u00D7 %g)</center>'
+                       % (1.0 / self.autoSIPrefixScale))
+
+        scale_style = []
+        for k in self.labelStyle:
+            if k == "font-size":
+                font_size = int(self.labelStyle[k][:-2].strip()) - 2
+                scale_style.append("%s: %s" % (k, str(font_size) + "px"))
+            else:
+                scale_style.append("%s: %s" % (k, self.labelStyle[k]))
+        style = ';'.join(scale_style)
+        scale = ("<span align='center' style='%s'>%s</span>"
+                 % (style, scaling))
+
+        return '%s %s' % (main, scale)
+
+
+def create_axis_items(axis=AxisType.Classic, axes_with_ticks=[]):
+    time_axis = []
+    state_axis = []
+    aux_axis = []
+
+    if axis is AxisType.Time:
+        time_axis = ["top", "bottom"]
+    elif axis is AxisType.State:
+        state_axis = ["left"]
+        time_axis = ["top", "bottom"]
+    elif axis is AxisType.AuxPlot:
+        aux_axis = axes_with_ticks
+    items = {}
+    for orientation in AXIS_ITEMS:
         has_ticks = orientation in axes_with_ticks
 
-        if time_axis is not None and orientation in time_axis:
+        if orientation in time_axis:
             axis_item = TimeAxisItem(orientation)
+        elif orientation in state_axis:
+            axis_item = StateAxisItem(orientation)
+            axis_item.setTickSpacing(major=1, minor=1)
+        elif orientation in aux_axis:
+            axis_item = AuxPlotAxisItem(orientation, has_ticks)
         else:
-            axis_item = klass(orientation, has_ticks)
+            axis_item = AxisItem(orientation, has_ticks)
 
         items[orientation] = axis_item
 

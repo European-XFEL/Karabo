@@ -12,6 +12,7 @@ from traits.api import (
 
 from karabogui.binding.api import PropertyProxy
 from karabogui.const import MAX_NUMBER_LIMIT
+from karabogui.graph.common.const import STATE_INTEGER_MAP
 from karabo.native import Timestamp
 
 ONE_WEEK = "One Week"
@@ -232,7 +233,9 @@ class Curve(HasStrictTraits):
             x[i] = Timestamp.fromHashAttributes(d['v', ...]).toTimestamp()
             # Do some gymnastics for crazy values!
             value = d["v"]
-            if abs(value) >= MAX_NUMBER_LIMIT:
+            if isinstance(value, str):
+                value = STATE_INTEGER_MAP[value]
+            elif abs(value) >= MAX_NUMBER_LIMIT:
                 value = numpy.NaN
             y[i] = value
 
