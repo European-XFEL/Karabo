@@ -1156,6 +1156,7 @@ namespace karabo {
 
         bool Schema::applyRuntimeUpdates(const std::vector<karabo::util::Hash>& updates) {
             bool success = true;
+            const Schema schCpy = *this;
             for (auto it = updates.begin(); it != updates.end(); ++it) {
                 try {
                     const std::string& path = it->get<std::string>("path");
@@ -1186,6 +1187,10 @@ namespace karabo {
                 } catch (...) {
                     success = false;
                 }
+            }
+            if (!success) {
+                // At least one of the updates failed; rolls-back the schema.
+                *this = schCpy;
             }
             return success;
         }
