@@ -1,5 +1,7 @@
 import numpy as np
 
+from karabo.common.states import State
+
 # Toolbar
 # --------------------------------------------------------------------------
 
@@ -35,6 +37,15 @@ CHECK_ACTIONS = ['x_grid', 'y_grid', 'x_log', 'y_log',
                  'x_invert', 'y_invert']
 RANGE_ACTIONS = ['ranges', 'axes']
 ACTION_ITEMS = CHECK_ACTIONS + RANGE_ACTIONS
+
+# Items required for the state trendline!
+ALL_STATES = list(State.__members__.values())
+STATE_INTEGER_MAP = {state.name: i for i, state in enumerate(ALL_STATES)}
+INTEGER_STATE_MAP = {i: state.name for i, state in enumerate(ALL_STATES)}
+
+# XXX: Allow UNKNOWN padding of a single item
+MIN_STATE_INT = min(STATE_INTEGER_MAP.values()) - 1
+MAX_STATE_INT = max(STATE_INTEGER_MAP.values()) + 1
 
 # Image Constants
 # --------------------------------------------------------------------------
