@@ -289,6 +289,7 @@ void PropertyTest_Test::testSimpleProperties() {
 
 
 void PropertyTest_Test::testReadOnlyProperties() {
+
     double initialDoubleReadOnly;
     m_deviceClient->get("testPropertyTest_0", "doublePropertyReadOnly", initialDoubleReadOnly);
     CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "doublePropertyReadOnly", initialDoubleReadOnly + 1.0),
@@ -301,11 +302,12 @@ void PropertyTest_Test::testReadOnlyProperties() {
     m_deviceClient->get("testPropertyTest_0", "int64PropertyReadOnly", initialInt64ReadOnly);
     CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "int64PropertyReadOnly", initialInt64ReadOnly + 2),
                          karabo::util::ParameterException);
-    double finalInt64ReadOnly; // Value after call to property set.
+    long long finalInt64ReadOnly; // Value after call to property set.
     m_deviceClient->get("testPropertyTest_0", "int64PropertyReadOnly", finalInt64ReadOnly);
     CPPUNIT_ASSERT_EQUAL(initialInt64ReadOnly, finalInt64ReadOnly);
 
-    // TODO: add a test case for TABLE_ELEMENT read-only after corresponding MR is merged.
+    std::clog << "Tested read-only properties.. Ok" << std::endl;
+
 }
 
 
