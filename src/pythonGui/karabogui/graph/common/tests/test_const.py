@@ -6,7 +6,7 @@ from karabogui.graph.common.const import ALL_STATES
 def test_const_state_def():
     """Make sure that our own state mapping has all the values of Karabo"""
     state_defs = State.__members__.values()
-    assert len(ALL_STATES) == len(state_defs)
+    assert len(set(ALL_STATES)) == len(state_defs)
 
-    for state in State.__members__:
+    for state in State:
         assert state in ALL_STATES
