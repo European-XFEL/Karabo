@@ -1652,9 +1652,10 @@ namespace karabo {
             
             /**
              * Update attribute for schema.
-             * @param updates: updated attributes, expected to be of form Hash("instanceId", str, "updates", vector<Hash>) where
-             * each entry in updates is of the form Hash("path", str, "attribute", str, "value", valueType)
-             * @return true if all updates succeeded, false otherwise
+             * @param updates: updated attributes, expected to be of form Hash("instanceId", str, "updates", vector<Hash>)
+             * where each entry in updates is of the form Hash("path", str, "attribute", str, "value", valueType).
+             * @return true if all updates succeeded, false otherwise. If any update fails, the schema is restored to
+             * the state it was in before the call to applyRuntimeUpdates.
              */
             bool applyRuntimeUpdates(const std::vector<karabo::util::Hash>& updates);
             
