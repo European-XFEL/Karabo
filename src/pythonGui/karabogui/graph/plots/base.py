@@ -8,9 +8,9 @@ from karabogui.actions import build_qaction, KaraboAction
 from karabogui import icons
 
 from karabogui.graph.common.api import (
-    AxesLabelsDialog, BaseROIController, create_axis_items, get_default_brush,
-    get_default_pen, make_pen, MouseMode, KaraboLegend, KaraboToolBar,
-    KaraboViewBox, PointCanvas, ROITool, ROIToolset)
+    AxesLabelsDialog, AxisType, BaseROIController, create_axis_items,
+    get_default_brush, get_default_pen, make_pen, MouseMode, KaraboLegend,
+    KaraboToolBar, KaraboViewBox, PointCanvas, ROITool, ROIToolset)
 from karabogui.graph.common.const import (
     AXIS_ITEMS, ACTION_ITEMS, CHECK_ACTIONS, DEFAULT_BAR_WIDTH,
     EMPTY_SYMBOL_OPTIONS, DEFAULT_SYMBOL, SYMBOL_SIZE, WIDGET_MIN_HEIGHT,
@@ -31,7 +31,7 @@ class KaraboPlotView(QWidget):
     """
     stateChanged = pyqtSignal(object)
 
-    def __init__(self, use_time_axis=False, actions=None, parent=None):
+    def __init__(self, axis=AxisType.Classic, actions=None, parent=None):
         super(KaraboPlotView, self).__init__(parent)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setMinimumSize(WIDGET_MIN_WIDTH, WIDGET_MIN_HEIGHT)
@@ -42,9 +42,7 @@ class KaraboPlotView(QWidget):
 
         # Initialize axis items
         tick_axes = ["bottom", "left"]
-        time_axis = ["top", "bottom"] if use_time_axis else []
-        axis_items = create_axis_items(axes_with_ticks=tick_axes,
-                                       time_axis=time_axis)
+        axis_items = create_axis_items(axis, axes_with_ticks=tick_axes)
 
         # Our viewbox with reset range addition!
         viewbox = KaraboViewBox()
