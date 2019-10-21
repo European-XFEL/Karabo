@@ -317,14 +317,14 @@ void PropertyTest_Test::testReadOnlyProperties() {
     m_deviceClient->get("testPropertyTest_0", "uint8PropertyReadOnly", finalUint8ReadOnly);
     CPPUNIT_ASSERT_EQUAL(initialUint8ReadOnly, finalUint8ReadOnly);
 
-    //    // Read-only int8
-    //    signed char initialInt8ReadOnly;
-    //    m_deviceClient->get("testPropertyTest_0", "int8PropertyReadOnly", initialInt8ReadOnly);
-    //    CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "int8PropertyReadOnly", initialInt8ReadOnly + 1),
-    //                         karabo::util::ParameterException);
-    //    signed char finalInt8ReadOnly; // Value after call to property set.
-    //    m_deviceClient->get("testPropertyTest_0", "int8PropertyReadOnly", finalInt8ReadOnly);
-    //    CPPUNIT_ASSERT_EQUAL(initialInt8ReadOnly, finalInt8ReadOnly);
+    // Read-only int8
+    signed char initialInt8ReadOnly;
+    m_deviceClient->get("testPropertyTest_0", "int8PropertyReadOnly", initialInt8ReadOnly);
+    CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "int8PropertyReadOnly", initialInt8ReadOnly + 1),
+                         karabo::util::ParameterException);
+    signed char finalInt8ReadOnly; // Value after call to property set.
+    m_deviceClient->get("testPropertyTest_0", "int8PropertyReadOnly", finalInt8ReadOnly);
+    CPPUNIT_ASSERT_EQUAL(initialInt8ReadOnly, finalInt8ReadOnly);
 
     // Read-only uint16
     unsigned short initialUint16ReadOnly;
