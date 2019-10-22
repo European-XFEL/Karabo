@@ -180,6 +180,7 @@ class DeviceServer(object):
         self.ss = self.log = None
         self.availableDevices = dict()
         self.deviceInstanceMap = dict()
+        self.deviceInstanceMapLock = threading.RLock()
         self.hostname, dotsep, self.domainname = \
             socket.gethostname().partition('.')
         self.autoStart = config.get("autoStart")
@@ -423,7 +424,8 @@ class DeviceServer(object):
 
             launcher = Launcher(params)
             launcher.start()
-            self.deviceInstanceMap[deviceid] = launcher
+            with self.deviceInstanceMapLock:
+                self.deviceInstanceMap[deviceid] = launcher
             self.ss.reply(True, deviceid)
         except Exception as e:
             self.log.WARN("Device '{}' could not be started because:"
@@ -440,17 +442,18 @@ class DeviceServer(object):
             self.log.INFO("Received kill signal")
         else:  # might get killed by signal handler before setting up logging
             print("Received kill signal")
-        for deviceid, launcher in self.deviceInstanceMap.items():
-            self.ss.call(deviceid, "slotKillDevice")
-            if launcher:
-                try:
-                    launcher.join()
-                except TimeoutExpired:
-                    self.log.WARN("Timeout on server shutdown while stopping"
-                                  " the process for '{}'"
-                                  "... SIGKILL".format(deviceid))
-                    launcher.kill()
-        self.deviceInstanceMap = {}
+        with self.deviceInstanceMapLock:
+            for deviceid, launcher in self.deviceInstanceMap.items():
+                self.ss.call(deviceid, "slotKillDevice")
+                if launcher:
+                    try:
+                        launcher.join()
+                    except TimeoutExpired:
+                        self.log.WARN("Timeout on server shutdown while stopping"
+                                      " the process for '{}'"
+                                      "... SIGKILL".format(deviceid))
+                        launcher.kill()
+            self.deviceInstanceMap = {}
         try:
             self.ss.reply(self.serverid)
         except Exception as e:
@@ -467,16 +470,17 @@ class DeviceServer(object):
         self.log.DEBUG("Device '{0}' notifies '{1.serverid}' about its future "
                        "death.".format(instanceId, self))
         if instanceId in self.deviceInstanceMap:
-            launcher = self.deviceInstanceMap[instanceId]
-            if launcher:
-                try:
-                    launcher.join()
-                except TimeoutExpired:
-                    self.log.WARN("Timeout on device shutdown while stopping"
-                                  " the process for '{}'"
-                                  "... SIGKILL".format(instanceId))
-                    launcher.kill()
-            del self.deviceInstanceMap[instanceId]
+            with self.deviceInstanceMapLock:
+                launcher = self.deviceInstanceMap[instanceId]
+                if launcher:
+                    try:
+                        launcher.join()
+                    except TimeoutExpired:
+                        self.log.WARN("Timeout on device shutdown while"
+                                      " stopping the process for '{}'"
+                                      "... SIGKILL".format(instanceId))
+                        launcher.kill()
+                del self.deviceInstanceMap[instanceId]
             self.log.INFO("Device '{}' removed from server."
                           .format(instanceId))
 
