@@ -39,7 +39,7 @@ class KaraboImagePlot(PlotItem):
     def __init__(self, parent=None):
         super(KaraboImagePlot, self).__init__(
             viewBox=KaraboImageViewBox(),
-            axisItems=create_axis_items(self.MAJOR_AXES),
+            axisItems=create_axis_items(axes_with_ticks=self.MAJOR_AXES),
             parent=parent)
 
         # Initialize widgets
