@@ -1019,6 +1019,10 @@ namespace karabo {
 
             // Provides information about pipeline connectivity
             KARABO_SLOT2(slotGetOutputChannelInformation, string /*ioChannelId*/, int /*pid*/)
+<<<<<<< HEAD
+=======
+            KARABO_SLOT(slotGetOutputChannelInformationFromHash, karabo::util::Hash /*hash*/)  // wrapper for generic calls, that encapsulate arguments in Hash
+>>>>>>> 2e3255f... Feedback from review
 
             // Establishes/Releases pipeline connections
             KARABO_SLOT3(slotConnectToOutputChannel, string /*inputChannelName*/, karabo::util::Hash /*outputChannelInfo */, bool /*connect/disconnect*/)
@@ -2662,9 +2666,13 @@ namespace karabo {
         }
 
 
+<<<<<<< HEAD
         void SignalSlotable::slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId) {
+=======
+        std::pair<bool, karabo::util::Hash> SignalSlotable::slotGetOutputChannelInformationImpl(const std::string& channelId, const int& processId) {
+>>>>>>> 2e3255f... Feedback from review
             boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
-            OutputChannels::const_iterator it = m_outputChannels.find(ioChannelId);
+            OutputChannels::const_iterator it = m_outputChannels.find(channelId);
             if (it != m_outputChannels.end()) {
                 karabo::util::Hash h(it->second->getInformation());
                 // Almost always the receiver is remote, i.e. in another process:
@@ -2687,6 +2695,16 @@ namespace karabo {
             } else {
                 reply(false, karabo::util::Hash());
             }
+        }
+        
+        void SignalSlotable::slotGetOutputChannelInformation(const std::string& channelId, const int& processId) {
+            const std::pair<bool, karabo::util::Hash>& result = slotGetOutputChannelInformationImpl(channelId, processId);
+            reply(std::get<0>(result), std::get<1>(result));
+        }
+        
+        void SignalSlotable::slotGetOutputChannelInformationFromHash(const karabo::util::Hash& hash) {
+            const std::pair<bool, karabo::util::Hash>& result = slotGetOutputChannelInformationImpl(hash.get<std::string>("channelId"), hash.get<int>("processId"));
+            reply(karabo::util::Hash("success", std::get<0>(result), "info", std::get<1>(result)));
         }
 
 
