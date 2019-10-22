@@ -1,18 +1,19 @@
 import os.path as op
+import os
 from time import sleep
 
 from karabo.bound import Hash, SignalSlotable
 from karabo.common.states import State
 from karabo.integration_tests.utils import BoundDeviceTestCase
 
-SERVER_ID = "testServer1"
+SERVER_ID = "testServer"
 
 
 class TestDeviceDeviceComm(BoundDeviceTestCase):
     def setUp(self):
         super(TestDeviceDeviceComm, self).setUp()
         own_dir = op.dirname(op.abspath(__file__))
-        class_ids = ['CommTestDevice','TinyBoundDevice']
+        class_ids = ['CommTestDevice','UnstoppedThreadDevice']
         self.start_server("bound", SERVER_ID, class_ids, plugin_dir=own_dir)
 
     def test_log_level(self):
@@ -71,7 +72,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
 
         config3 = Hash()
 
-        classConfig3 = Hash("classId", "TinyBoundDevice",
+        classConfig3 = Hash("classId", "UnstoppedThreadDevice",
                             "deviceId", "testComm3",
                             "configuration", config3)
 
@@ -244,8 +245,8 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             self.assertRaises(RuntimeError, self.dc.set,
                               "testComm1", "vectorInt32", [4]*9)  # not OK now!
 
-        with self.subTest(msg="Test killing TinyBoundDevice"):
-            self.dc.killDevice('TinyBoundDevice', 10)
+        with self.subTest(msg="Test killing UnstoppedThreadDevice"):
+            self.dc.killDevice('UnstoppedThreadDevice', 10)
             ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, 30)
             self.assertTrue(ok, msg)
 

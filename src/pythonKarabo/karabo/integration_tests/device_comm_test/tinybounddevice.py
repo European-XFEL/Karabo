@@ -10,8 +10,8 @@ from karabo.bound import (
         PythonDevice, KARABO_CLASSINFO, State, UINT64_ELEMENT,
 )
 
-@KARABO_CLASSINFO("TinyBoundDevice", "2.0")
-class TinyBoundDevice(PythonDevice):
+@KARABO_CLASSINFO("UnstoppedThreadDevice", "2.0")
+class UnstoppedThreadDevice(PythonDevice):
     @staticmethod
     def expectedParameters(expected):
         (
@@ -24,6 +24,7 @@ class TinyBoundDevice(PythonDevice):
         )
 
     def __init__(self, configuration):
+        super(UnstoppedThreadDevice,self).__init__(configuration)
         self.running = False
         self.pollingThread = None
         self.registerInitialFunction(self.initialization)
