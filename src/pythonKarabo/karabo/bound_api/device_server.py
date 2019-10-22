@@ -449,8 +449,8 @@ class DeviceServer(object):
                     try:
                         launcher.join()
                     except TimeoutExpired:
-                        self.log.WARN("Timeout on server shutdown while stopping"
-                                      " the process for '{}'"
+                        self.log.WARN("Timeout on server shutdown while"
+                                      " stopping the process for '{}'"
                                       "... SIGKILL".format(deviceid))
                         launcher.kill()
             self.deviceInstanceMap = {}
@@ -467,8 +467,8 @@ class DeviceServer(object):
     def slotDeviceGone(self, instanceId):
         # Would prefer a self.log.FRAMEWORK_INFO as in C++ instead of
         # self.log.DEBUG:
-        self.log.DEBUG("Device '{0}' notifies '{1.serverid}' about its future "
-                       "death.".format(instanceId, self))
+        self.log.DEBUG("Device '{0}' notifies '{1.serverid}' about its future"
+                       " death.".format(instanceId, self))
         if instanceId in self.deviceInstanceMap:
             with self.deviceInstanceMapLock:
                 launcher = self.deviceInstanceMap[instanceId]
