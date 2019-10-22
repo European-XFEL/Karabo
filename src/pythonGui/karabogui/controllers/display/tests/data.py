@@ -27,3 +27,23 @@ def build_historic_data_float():
             h.setAttribute('v', attk, attv)
         ret.append(h)
     return ret
+
+
+def build_historic_data_string():
+    """build an array of historic data state string with time stamps
+    """
+    vals = ['ON', 'OFF', 'ACQUIRING', 'STOPPED', 'DISABLED', 'RUNNING',
+            'CHANGING', 'ERROR', 'UNKNOWN', 'STARTED', 'MOVING']
+
+    now = datetime.datetime.now()
+    timefmt = r"%Y-%m-%d %H:%M:%S"
+
+    ret = []
+    for vv in vals:
+        dt = now + datetime.timedelta(minutes=-1)
+        tt = Timestamp(dt.strftime(timefmt)).toDict()
+        h = Hash('v', vv)
+        for attk, attv in tt.items():
+            h.setAttribute('v', attk, attv)
+        ret.append(h)
+    return ret

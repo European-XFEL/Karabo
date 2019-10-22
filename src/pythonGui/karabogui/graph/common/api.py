@@ -1,5 +1,6 @@
 # flake8: noqa
-from .axis_item import AxisItem, create_axis_items
+from .axis_item import (
+    AxisItem, AuxPlotAxisItem, create_axis_items, StateAxisItem)
 
 from .roi.base import KaraboROI
 from .roi.controllers.base import BaseROIController
@@ -14,7 +15,8 @@ from .colors import (
     Colors, COLORMAPS, get_default_pen, get_default_brush, get_brush_cycler,
     make_brush, make_pen, get_pen_cycler)
 
-from .enums import MouseMode, ExportTool, AuxPlots, ROITool, AspectRatio, Axes
+from .enums import (
+    AxisType, MouseMode, ExportTool, AuxPlots, ROITool, AspectRatio, Axes)
 
 from .exporters import NumpyExporter, ImageExporter
 
