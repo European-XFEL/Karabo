@@ -6,26 +6,27 @@ from karabo.bound import Hash, SignalSlotable
 from karabo.common.states import State
 from karabo.integration_tests.utils import BoundDeviceTestCase
 
-SERVER_ID = "testServer"
+SERVER_ID = None
 
 
 class TestDeviceDeviceComm(BoundDeviceTestCase):
     def setUp(self):
         super(TestDeviceDeviceComm, self).setUp()
-        own_dir = op.dirname(op.abspath(__file__))
-        class_ids = ['CommTestDevice','UnstoppedThreadDevice']
-        self.start_server("bound", SERVER_ID, class_ids, plugin_dir=own_dir)
+
+    def tearDown(self):
+        super(TestDeviceDeviceComm, self).tearDown()
+
 
     def test_log_level(self):
-        serverId = "logLevelServer"
+        SERVER_ID = "logLevelServer"
         deviceId = "logLevelTestDevice"
-        self.start_server("bound", serverId, ["PropertyTest"], logLevel="ERROR")
+        self.start_server("bound", SERVER_ID, ["PropertyTest"], logLevel="ERROR")
 
         # Do not specify device log level: inherit from server
         cfg = Hash("classId", "PropertyTest",
                    "deviceId", deviceId,
                    "configuration", Hash())
-        ok, msg = self.dc.instantiate(serverId, cfg, 30)
+        ok, msg = self.dc.instantiate(SERVER_ID, cfg, 30)
         self.assertTrue(ok, msg)
         res = self.dc.get(deviceId, "Logger.priority")
         self.assertEqual(res, "ERROR")
@@ -37,7 +38,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         cfg = Hash("classId", "PropertyTest",
                    "deviceId", deviceId,
                    "configuration", Hash("Logger.priority", "WARN"))
-        ok, msg = self.dc.instantiate(serverId, cfg, 30)
+        ok, msg = self.dc.instantiate(SERVER_ID, cfg, 30)
         self.assertTrue(ok, msg)
         res = self.dc.get(deviceId, "Logger.priority")
         self.assertEqual(res, "WARN")
@@ -46,6 +47,10 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
                                                                       msg))
 
     def test_in_sequence(self):
+        SERVER_ID = "testServer"
+        own_dir = op.dirname(op.abspath(__file__))
+        class_ids = ['CommTestDevice','UnstoppedThreadDevice']
+        self.start_server("bound", SERVER_ID, class_ids, plugin_dir=own_dir)
         # Complete setup - do not do it in setup to ensure that even in case of
         # exceptions 'tearDown' is called and stops Python processes.
 
@@ -245,8 +250,9 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             self.assertRaises(RuntimeError, self.dc.set,
                               "testComm1", "vectorInt32", [4]*9)  # not OK now!
 
-        with self.subTest(msg="Test killing UnstoppedThreadDevice"):
-            self.dc.killDevice('UnstoppedThreadDevice', 10)
+        with self.subTest(msg="Test killing testComm3"):
+            ok, msg = self.dc.killDevice('testComm3', 10)
+            self.assertTrue(ok, "Problem killing 'testComm3': {}.".format(msg))
             ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, 30)
             self.assertTrue(ok, msg)
 
