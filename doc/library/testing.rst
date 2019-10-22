@@ -3,6 +3,28 @@
 *********
 
 Karabo extensively uses two technologies, C++ and Python. Code for both technologies is tested using unit tests. Because of the distributed nature of Karabo also more complex functional tests need to be executed.
+For that reason we distinguish *unit*, *integration* and *long* tests.
+During development, the *unit* tests are run for each branch update pushed to
+the GitLab repository. The *integration* tests are run when a branch is merged
+to the master. Currently (October 2019), the *long* tests are only run on
+demand, but the idea is that they run for master every night or at least
+weekly.
+
+Whereas the unit tests are only within an API, the integration and long tests
+are intended to provide also cross API tests. All these cross API tests run the
+tests in Python.
+
+If an integration/long test or code that may have a high impact on this kind
+of tests is touched, at least the concerned integration tests should be run
+when pushing to the GitLab repository.
+This is achieved by temporarily committing changes to the *auto_build_all.sh*
+script. The *if [ "$RUNTESTS" = "y" ]; then* section at its end has to be
+extended by also calling *runIntegrationTests* (i.e. C++),
+*runPythonIntegrationTests*, *runCppLongTests*, and/or *runPythonLongTests*.
+Best practice is to do this in a single commit that is removed via
+*git rebase -i* before merging.
+
+
 
 Unit tests for the C++ core
 ===========================
@@ -17,6 +39,7 @@ corresponding test classes are finally placed there.
 Every sub-folder in *tests* implements an own ``main()`` function which runs all registered classes of the folder. By convention all test classes should end with <className>_Test.cpp or
 <className>_Test.hh, respectively. 
 
+
 Creating a whole new test 
 --------------------------
 
@@ -24,7 +47,7 @@ HINT: You have do this only in the unlikely case that Karabo gets an new sources
 
 1. Create a new folder under *src/karabo/tests*, corresponding to the new folder created in *src/karabo*
 
-2. Right-click the folder *TestFiles* in Netbeans and click *New CppUnit Test...*
+2. Right-click the folder *TestFiles* in NetBeans and click *New CppUnit Test...*
 
 3. In the dialog use::
 
@@ -38,7 +61,7 @@ HINT: You have do this only in the unlikely case that Karabo gets an new sources
 Creating a new test class
 -------------------------
 
-1. Navigate to the corresponding test in Netbeans (e.g. *util_test*) right-click and select *New->Other...*
+1. Navigate to the corresponding test in NetBeans (e.g. *util_test*) right-click and select *New->Other...*
 
 2. In the dialog choose *C++* as category and select *C++ CppUnit Test* as file type
 
@@ -51,8 +74,8 @@ Creating a new test class
 
 4. In case the new test class 
 
- * does not appear in Netbeans' project view
- * and/or the tests are not executed using the recepees does not run (see :ref:`running-tests-label`)
+ * does not appear in NetBeans' project view
+ * and/or the tests are not executed using the recipes does not run (see :ref:`running-tests-label`)
  * and/or compiling the file using F9 fails
 
  it may help to close the Karabo project, re-open it, right click on the test subfolder and add header and source files using *Add existing Item...*.
@@ -66,24 +89,90 @@ Simply add a new function into an existing test class and register it in the hea
 
 .. _running-tests-label:
 
-Running tests
--------------
+Running C++ unit tests
+-----------------------
 
-Method 1: Navigate to the *Test Files* or to any sub-folder of it, and select *Test* in the context menu.
-
-Method 2: From command line (in *build/netbeans/karabo*): ``make test``
-
-Method 3: Just compile test (in *build/netbeans/karabo*): ``make build-tests``
-
-
-
-Unit tests for Python bindings (API 1)
-======================================
-
-*To be done by S. Esenov*
+* Method 1: In NetBeans, navigate to the *Test Files* or to any sub-folder of it,
+and select *Test* in the context menu.
+* Method 2: Use the *auto build* script: *./auto_build_all.sh Debug --runTests* - but be aware that this will also run the Python tests.
+* Method 3: From command line (in *build/netbeans/karabo*): ``make -j test``
+* Method 4: Just compile test (in *build/netbeans/karabo*): ``make -j build-tests``
 
 
-Unit tests for native Python code (API 2)
-=========================================
+Integration and long tests for the C++ core
+============================================
 
-*To be done by S. Esenov*
+They use the same test framework as the unit tests, but are not organised in
+the NetBeans project *karabo*, but in their own projects *integrationTests*
+and *cppLongTests*, respectively.
+
+Otherwise, they are organised in a similar way as the unit tests.
+
+Running C++ integration tests
+-------------------------------
+
+* Method 1: In NetBeans' *integrationTests* project, navigate to the
+*Test Files* or to any sub-folder of it, and select *Test* in the context
+menu.
+* Method 2: Use the *auto build* script:
+*./auto_build_all.sh Debug --runIntegrationTests* - but be aware that this
+will also run the Python tests.
+* Method 3: From command line (in *build/netbeans/integrationTests*):
+``make -j test``
+* Method 4: Just compile test (in *build/netbeans/integrationTests*):
+``make -j build-tests``
+
+Running C++ long tests
+-----------------------------
+
+Similar as for the integration tests, but using project *cppLongTests*.
+The *auto_build_all.sh* script has the option *--runLongTests* for these tests.
+
+
+Unit tests for Python bindings (Bound API)
+===========================================
+
+*To be documented.*
+
+
+Unit tests for native Python code (Middlelayer API)
+====================================================
+
+*To be documented.*
+
+
+Integration/long tests for Python (both APIs)
+================================================
+
+The Python integration tests are the most complex ones since they need to
+spawn extra processes, e.g. for bound Python devices.
+
+They are organised as sub-directories of
+*src/pythonKarabo/karabo/integration_tests*. The actual tests in there are
+the *test_\*.py* files, using the test framework of either Bound or
+Middlelayer Python. An empty *__init__.py* is required.
+To integrate the new test with the continuous integration, it needs to be added
+to the *runPythonIntegrationTests()* or *runPythonLongTests()* functions
+in the *run_python_tests.sh* file.
+
+If a test shall launch processes for different APIs, it is recommended to use
+the *BoundDeviceTestCase* implemented in *karabo/integration_tests/utils.py*
+as the test base class as in the *pipeline_cross_test* sub-directory.
+This base provides *def start_server(self, api, server_id, ...)* to start
+server processes of the *cpp*, *bound* or *mdl* API - and takes care to
+properly terminate these processes after each tests.
+
+If the test case includes a new Bound Python device (like in the case of the
+*device_comm_test*), the code for that class can be put into a file in the
+test sub-directory.
+To make it available as a plugin for the bound Python server, one needs to do
+the following:
+* Create an *\*.egg-info* file into the test sub-directory.
+* Inside *\*.egg-info*, create the files *entry_points.txt*,
+  *PKG-INFO* and *SOURCES.txt* and fill properly - e.g. have a look at
+  *device_comm_test/CommTestDevice.egg-info*
+* Add the egg info to the *src/pythonKarabo/setup.py* file.
+
+Note that this egg info stuff might not be needed when karabo has been built
+using *./auto_build_all.sh* with the *--pyDevelop* flag. But it is needed
+without this flag and therefore for the continuous integration run on GitLab.
