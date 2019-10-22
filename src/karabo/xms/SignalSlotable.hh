@@ -1085,7 +1085,11 @@ namespace karabo {
             void stopTracking(const std::string& instanceId);
 
             // IO channel related
+            std::pair<bool, karabo::util::Hash> slotGetOutputChannelInformationImpl(const std::string& ioChannelId, const int& processId);
+            // we need two wrappers, one for legacy
             void slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId);
+            // and one for generic GUI requests
+            void slotGetOutputChannelInformationFromHash(const karabo::util::Hash& hash);
 
             void connectInputToOutputChannel(const InputChannel::Pointer& channel, const std::string& outputChannelString,
                                              const boost::function<void (bool)>& handler);
