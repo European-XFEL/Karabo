@@ -6,8 +6,8 @@ from karabogui.graph.common.const import (
     AXIS_ITEMS, AXIS_X, AXIS_Y, ROTATION_FACTOR)
 from karabogui.graph.common.api import (
     create_axis_items, make_brush, make_pen, get_default_pen)
-
-from ..aux_plots.items import AuxPlotAxisItem, AuxPlotViewBox
+from karabogui.graph.common.enums import AxisType
+from ..aux_plots.items import AuxPlotViewBox
 from ..tools.profiler import IntensityProfiler
 
 LABEL_STYLE = {'color': '#000000', 'font-size': '12px'}
@@ -25,7 +25,7 @@ class BaseStepPlot(PlotItem):
             # Plot orientation is on the left of the layout, thus the x-axis
             # must be shown on the top and the y-axis on the left of the plot.
             self._shown_axes = ["right", "top"]
-        axis_items = create_axis_items(self._shown_axes, klass=AuxPlotAxisItem)
+        axis_items = create_axis_items(AxisType.AuxPlot, self._shown_axes)
 
         super(BaseStepPlot, self).__init__(axisItems=axis_items,
                                            viewBox=AuxPlotViewBox())
