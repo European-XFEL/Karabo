@@ -3,3 +3,4 @@ CommTestDevice.egg-info/SOURCES.txt
 CommTestDevice.egg-info/entry_points.txt
 __init__.py
 commtestdevice.py
+unstoppedThreadDevice.py
