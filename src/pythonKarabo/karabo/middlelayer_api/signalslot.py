@@ -237,6 +237,12 @@ class SignalSlotable(Configurable):
     def slotStopTrackingExistenceOfConnection(self, *args):
         print('received stopTracking...', args)
 
+
+    @coslot
+    def slotGetOutputChannelInformationFromHash(self, channelId, processId):
+        scs, info = self.slotGetOutputChannelInformation(channelId, processId)
+        return Hash(success=scs, info=info)
+
     @coslot
     def slotGetOutputChannelInformation(self, ioChannelId, processId):
         ch = getattr(self, ioChannelId, None)
