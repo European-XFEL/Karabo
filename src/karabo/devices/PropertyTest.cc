@@ -247,8 +247,8 @@ namespace karabo {
                     .commit();
 
             UINT64_ELEMENT(expected).key("uint64PropertyReadOnly")
-                    .displayedName("UInt8 property read-only")
-                    .description("A uint8 property read-only")
+                    .displayedName("UInt64 property read-only")
+                    .description("A UInt64 property read-only")
                     .minInc(std::numeric_limits<unsigned long long>::lowest())
                     .maxInc(std::numeric_limits<unsigned long long>::max())
                     .readOnly()
@@ -488,7 +488,7 @@ namespace karabo {
                     .commit();
 
             STRING_ELEMENT(pipeData).key("node.string")
-                    .description("A string send via the pipeline")
+                    .description("A string sent via the pipeline")
                     .readOnly()
                     .commit();
 
