@@ -179,10 +179,9 @@ def parse_commandline():
 
     parser.add_argument('-r', '--repo',
                         type=str,
-                        default='',
-                        help='URL to the binary repository, example '
-                             'http://exflserv05.desy.de/karabo/'
-                             'karaboDevices/')
+                        default='http://exflserv05.desy.de/karabo/'
+                                'karaboDevices/',
+                        help='URL to the binary repository')
 
     parser.add_argument('-j', '--jobs',
                         type=int,

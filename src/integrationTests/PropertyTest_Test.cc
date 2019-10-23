@@ -58,6 +58,7 @@ void PropertyTest_Test::allTestRunner() {
     CPPUNIT_ASSERT(success.first);
 
     testSimpleProperties();
+    testReadOnlyProperties();
     testVectorProperties();
     testTableProperties();
     testReadOnlyTableProperties();
@@ -287,6 +288,103 @@ void PropertyTest_Test::testSimpleProperties() {
 }
 
 
+void PropertyTest_Test::testReadOnlyProperties() {
+
+    // Read-only float
+    float initialFloatReadOnly;
+    m_deviceClient->get("testPropertyTest_0", "floatPropertyReadOnly", initialFloatReadOnly);
+    CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "floatPropertyReadOnly", initialFloatReadOnly + 1.0F),
+                         karabo::util::ParameterException);
+    float finalFloatReadOnly; // Value after call to property set.
+    m_deviceClient->get("testPropertyTest_0", "floatPropertyReadOnly", finalFloatReadOnly);
+    CPPUNIT_ASSERT_EQUAL(initialFloatReadOnly, finalFloatReadOnly);
+
+    // Read-only double
+    double initialDoubleReadOnly;
+    m_deviceClient->get("testPropertyTest_0", "doublePropertyReadOnly", initialDoubleReadOnly);
+    CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "doublePropertyReadOnly", initialDoubleReadOnly + 1.0),
+                         karabo::util::ParameterException);
+    double finalDoubleReadOnly; // Value after call to property set.
+    m_deviceClient->get("testPropertyTest_0", "doublePropertyReadOnly", finalDoubleReadOnly);
+    CPPUNIT_ASSERT_EQUAL(initialDoubleReadOnly, finalDoubleReadOnly);
+
+    // Read-only uint8
+    unsigned char initialUint8ReadOnly;
+    m_deviceClient->get("testPropertyTest_0", "uint8PropertyReadOnly", initialUint8ReadOnly);
+    CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "uint8PropertyReadOnly", initialUint8ReadOnly + 1),
+                         karabo::util::ParameterException);
+    unsigned char finalUint8ReadOnly; // Value after call to property set.
+    m_deviceClient->get("testPropertyTest_0", "uint8PropertyReadOnly", finalUint8ReadOnly);
+    CPPUNIT_ASSERT_EQUAL(initialUint8ReadOnly, finalUint8ReadOnly);
+
+    // Read-only int8
+    signed char initialInt8ReadOnly;
+    m_deviceClient->get("testPropertyTest_0", "int8PropertyReadOnly", initialInt8ReadOnly);
+    CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "int8PropertyReadOnly", initialInt8ReadOnly + 1),
+                         karabo::util::ParameterException);
+    signed char finalInt8ReadOnly; // Value after call to property set.
+    m_deviceClient->get("testPropertyTest_0", "int8PropertyReadOnly", finalInt8ReadOnly);
+    CPPUNIT_ASSERT_EQUAL(initialInt8ReadOnly, finalInt8ReadOnly);
+
+    // Read-only uint16
+    unsigned short initialUint16ReadOnly;
+    m_deviceClient->get("testPropertyTest_0", "uint16PropertyReadOnly", initialUint16ReadOnly);
+    CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "uint16PropertyReadOnly", initialUint16ReadOnly + 1),
+                         karabo::util::ParameterException);
+    unsigned short finalUint16ReadOnly; // Value after call to property set.
+    m_deviceClient->get("testPropertyTest_0", "uint16PropertyReadOnly", finalUint16ReadOnly);
+    CPPUNIT_ASSERT_EQUAL(initialUint16ReadOnly, finalUint16ReadOnly);
+
+    // Read-only int16
+    short initialInt16ReadOnly;
+    m_deviceClient->get("testPropertyTest_0", "int16PropertyReadOnly", initialInt16ReadOnly);
+    CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "int16PropertyReadOnly", initialInt16ReadOnly + 1),
+                         karabo::util::ParameterException);
+    short finalInt16ReadOnly; // Value after call to property set.
+    m_deviceClient->get("testPropertyTest_0", "int16PropertyReadOnly", finalInt16ReadOnly);
+    CPPUNIT_ASSERT_EQUAL(initialInt16ReadOnly, finalInt16ReadOnly);
+
+    // Read-only uint32
+    unsigned int initialUint32ReadOnly;
+    m_deviceClient->get("testPropertyTest_0", "uint32PropertyReadOnly", initialUint32ReadOnly);
+    CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "uint32PropertyReadOnly", initialUint32ReadOnly + 2),
+                         karabo::util::ParameterException);
+    unsigned int finalUint32ReadOnly; // Value after call to property set.
+    m_deviceClient->get("testPropertyTest_0", "uint32PropertyReadOnly", finalUint32ReadOnly);
+    CPPUNIT_ASSERT_EQUAL(initialUint32ReadOnly, finalUint32ReadOnly);
+
+    // Read-only int32
+    int initialInt32ReadOnly;
+    m_deviceClient->get("testPropertyTest_0", "int32PropertyReadOnly", initialInt32ReadOnly);
+    CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "int32PropertyReadOnly", initialInt32ReadOnly + 2),
+                         karabo::util::ParameterException);
+    int finalInt32ReadOnly; // Value after call to property set.
+    m_deviceClient->get("testPropertyTest_0", "int32PropertyReadOnly", finalInt32ReadOnly);
+    CPPUNIT_ASSERT_EQUAL(initialInt32ReadOnly, finalInt32ReadOnly);
+
+    // Read-only uint64
+    unsigned long long initialUint64ReadOnly;
+    m_deviceClient->get("testPropertyTest_0", "uint64PropertyReadOnly", initialUint64ReadOnly);
+    CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "uint64PropertyReadOnly", initialUint64ReadOnly + 2),
+                         karabo::util::ParameterException);
+    unsigned long long finalUint64ReadOnly; // Value after call to property set.
+    m_deviceClient->get("testPropertyTest_0", "uint64PropertyReadOnly", finalUint64ReadOnly);
+    CPPUNIT_ASSERT_EQUAL(initialUint64ReadOnly, finalUint64ReadOnly);
+
+    // Read-only int64
+    long long initialInt64ReadOnly;
+    m_deviceClient->get("testPropertyTest_0", "int64PropertyReadOnly", initialInt64ReadOnly);
+    CPPUNIT_ASSERT_THROW(m_deviceClient->set("testPropertyTest_0", "int64PropertyReadOnly", initialInt64ReadOnly + 2),
+                         karabo::util::ParameterException);
+    long long finalInt64ReadOnly; // Value after call to property set.
+    m_deviceClient->get("testPropertyTest_0", "int64PropertyReadOnly", finalInt64ReadOnly);
+    CPPUNIT_ASSERT_EQUAL(initialInt64ReadOnly, finalInt64ReadOnly);
+
+    std::clog << "Tested read-only properties.. Ok" << std::endl;
+
+}
+
+
 void PropertyTest_Test::testVectorProperties() {
 
     { // bool
@@ -294,7 +392,7 @@ void PropertyTest_Test::testVectorProperties() {
         m_deviceClient->get("testPropertyTest_0", "vectors.boolProperty", value);
         CPPUNIT_ASSERT(value.size() == 6);
         for (size_t i = 0; i < value.size(); ++i) {
-            if (i%2 == 0)
+            if (i % 2 == 0)
                 CPPUNIT_ASSERT(value[i] == true);
             else
                 CPPUNIT_ASSERT(value[i] == false);
@@ -673,6 +771,7 @@ void PropertyTest_Test::testReadOnlyTableProperties() {
     std::clog << "Tested read-only table element.. Ok" << std::endl;
 }
 
+
 void PropertyTest_Test::testAttributeEditing() {
 
     // Here we test attribute editing affecting reconfiguration requests.
@@ -759,7 +858,7 @@ void PropertyTest_Test::testNodedSlots() {
     caller->start();
     unsigned int counter = 42u;
     std::string remoteState;
-    for (unsigned int i = 0; i < 10; i++){
+    for (unsigned int i = 0; i < 10; i++) {
         CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get("testPropertyTest_0", "node.counter", counter));
         CPPUNIT_ASSERT_EQUAL(i, counter);
         CPPUNIT_ASSERT_NO_THROW(caller->request("testPropertyTest_0", "node.increment")
