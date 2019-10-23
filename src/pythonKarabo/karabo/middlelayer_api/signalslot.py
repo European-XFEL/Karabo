@@ -240,7 +240,8 @@ class SignalSlotable(Configurable):
 
     @coslot
     def slotGetOutputChannelInformationFromHash(self, channelId, processId):
-        scs, info = self.slotGetOutputChannelInformation(channelId, processId)
+        scs, info = yield from self.slotGetOutputChannelInformation(channelId,
+                                                                    processId)
         return Hash(success=scs, info=info)
 
     @coslot
