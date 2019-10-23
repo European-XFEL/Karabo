@@ -1,6 +1,8 @@
 services:
   - name: europeanxfel/existdb:2.2
     alias: existdb_host
+  - name: influxdb:1.7.8
+    alias: influxdb_host
 
 before_script:
   - source ci/prepare "$CI_BUILD_NAME"
@@ -157,4 +159,3 @@ integration tests ubuntu18:
 integration tests ubuntu16:
   image: europeanxfel/karabo-ci:ubuntu-16
   <<: *integration-tests
-
