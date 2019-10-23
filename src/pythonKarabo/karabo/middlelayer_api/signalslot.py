@@ -237,7 +237,6 @@ class SignalSlotable(Configurable):
     def slotStopTrackingExistenceOfConnection(self, *args):
         print('received stopTracking...', args)
 
-
     @coslot
     def slotGetOutputChannelInformationFromHash(self, channelId, processId):
         scs, info = yield from self.slotGetOutputChannelInformation(channelId,
