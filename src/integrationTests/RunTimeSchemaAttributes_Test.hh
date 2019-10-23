@@ -36,18 +36,28 @@ private:
 
     void appTestRunner();
     void testRuntimeApplication();
+
+    /**
+     * Checks that after a valid sequence of updates of attributes in a
+     * schema, the attributes have been updated.
+     */
     void testGuiServerApplication();
+
+    /**
+     * Checks that after a sequence of updates of attributes that have
+     * an invalid update among them, all the updates are rolled-back.
+     */
     void testGuiServerApplicationFailure();
+
     void dummyMonitor(const std::string&, const karabo::util::Hash&);
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_eventLoopThread;
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
+
+    // m_tcpAdapter mocks a GUI Client for the test.
     boost::shared_ptr<karabo::TcpAdapter> m_tcpAdapter;
-
-
-
 
 };
 
