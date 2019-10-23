@@ -9,6 +9,7 @@
 #include "karabo/log/Logger.hh"
 #include "karabo/io/FileTools.hh"
 #include "karabo/util/DataLogUtils.hh"
+#include "karabo/util/MetaTools.hh"
 #include "karabo/util/Schema.hh"
 
 #include "DeviceClient.hh"
@@ -18,6 +19,8 @@
 
 #include <atomic>
 #include <mutex>
+
+#include <boost/asio/deadline_timer.hpp>
 
 using namespace std;
 using namespace karabo::util;
@@ -43,7 +46,8 @@ namespace karabo {
             , m_topologyInitialized(false)
             , m_ageingTimer(karabo::net::EventLoop::getIOService())
             , m_getOlder(false) // Sic! To start aging in setAgeing below.
-            , m_runSignalsChangedThread(false)
+            , m_signalsChangedTimer(karabo::net::EventLoop::getIOService())
+            , m_runSignalsChangedTimer(false)
             , m_signalsChangedInterval(-1)
             , m_loggerMapCached(false)
             , m_instanceChangeThrottler(nullptr) {
@@ -76,7 +80,8 @@ namespace karabo {
             , m_topologyInitialized(false)
             , m_ageingTimer(karabo::net::EventLoop::getIOService())
             , m_getOlder(false) // Sic! To start aging in setAgeing below.
-            , m_runSignalsChangedThread(false)
+            , m_signalsChangedTimer(karabo::net::EventLoop::getIOService())
+            , m_runSignalsChangedTimer(false)
             , m_signalsChangedInterval(-1)
             , m_loggerMapCached(false)
             , m_instanceChangeThrottler(nullptr) {
@@ -89,7 +94,7 @@ namespace karabo {
         DeviceClient::~DeviceClient() {
             // Stop ageing pulsing timer.
             setAgeing(false);
-            // Stop thread sending the collected signal(State)Changed.
+            // Stops timer sending the collected signal(State)Changed.
             setDeviceMonitorInterval(-1);
 
             m_internalSignalSlotable.reset();
@@ -117,6 +122,7 @@ namespace karabo {
             }
             this->setupSlots();
             this->setAgeing(true);
+            this->kickSignalsChangedTimerPulse();
 
             KARABO_LOG_FRAMEWORK_DEBUG << "Initialization of DeviceClient instance completed at countdown = "
                     << countdown;
@@ -367,21 +373,22 @@ namespace karabo {
         void DeviceClient::setDeviceMonitorInterval(long int milliseconds) {
             if (milliseconds >= 0) {
                 m_signalsChangedInterval = boost::posix_time::milliseconds(milliseconds);
-                if (!m_runSignalsChangedThread) {
-                    // Extra protection: If a previous thread is not yet finished,
-                    //                   wait until it is before restarting.
-                    if (m_signalsChangedThread.joinable()) {
-                        m_signalsChangedThread.join();
-                    }
-                    m_runSignalsChangedThread = true;
-                    m_signalsChangedThread = boost::thread(boost::bind(&karabo::core::DeviceClient::sendSignalsChanged, this));
+                if (!m_runSignalsChangedTimer) {
+                    m_runSignalsChangedTimer = true;
+                    this->kickSignalsChangedTimerPulse();
                 }
-            } else if (m_runSignalsChangedThread) {
-                m_runSignalsChangedThread = false;
-                if (m_signalsChangedThread.joinable()) {
-                    m_signalsChangedThread.join();
-                }
+            } else if (m_runSignalsChangedTimer) {
+                m_runSignalsChangedTimer = false;
+                m_signalsChangedTimer.cancel();
             }
+        }
+
+
+        void DeviceClient::kickSignalsChangedTimerPulse() {
+            m_signalsChangedTimer.expires_from_now(boost::posix_time::milliseconds(m_signalsChangedInterval));
+            m_signalsChangedTimer.async_wait(bind_weak(&DeviceClient::sendSignalsChanged,
+                                                       this,
+                                                       boost::asio::placeholders::error));
         }
 
 
@@ -1487,7 +1494,7 @@ namespace karabo {
             notifyPropertyChangedMonitors(hash, instanceId);
             // magic: if the hash contains a change for the expected parameter "doNotCompressElements", we are sending them to the GUI no matter what
             // Don't mix doNotCompressEvents with unrelated stuff, or causality will break down
-            if (m_runSignalsChangedThread && !hash.has("doNotCompressEvents")) {
+            if (m_runSignalsChangedTimer && !hash.has("doNotCompressEvents")) {
                 boost::mutex::scoped_lock lock(m_signalsChangedMutex);
                 // Just book keep paths here and call 'notifyDeviceChangedMonitors'
                 // later with content from m_runtimeSystemDescription.
@@ -1730,34 +1737,41 @@ if (nodeData) {\
         }
 
 
-        void DeviceClient::sendSignalsChanged() {
-            while (m_runSignalsChangedThread) { // Loop forever
-                try {
-                    // Get map of all properties that changed (and clear original)
-                    SignalChangedMap localChanged;
-                    {
-                        boost::mutex::scoped_lock lock(m_signalsChangedMutex);
-                        m_signalsChanged.swap(localChanged);
-                    }
-                    this->doSendSignalsChanged(localChanged);
-                } catch (const Exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Exception encountered in 'sendSignalsChanged': " << e;
-                } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Exception encountered in 'sendSignalsChanged': " << e.what();
-                } catch (...) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception encountered in 'sendSignalsChanged'";
-                }
-                boost::this_thread::sleep(m_signalsChangedInterval);
-            }
-            // Just in case anything was added before 'm_runSignalsChangedThread' was set to false
-            // and while we processed the previous content (keep lock until done completely):
+        void DeviceClient::sendSignalsChanged(const boost::system::error_code &e) {
+
+            if (e) return;
+
             try {
-                boost::mutex::scoped_lock lock(m_signalsChangedMutex);
-                this->doSendSignalsChanged(m_signalsChanged);
-                m_signalsChanged.clear();
-            } catch (...) { // lazy to catch all levels - we are anyway done with the thread...
-                KARABO_LOG_FRAMEWORK_ERROR << "Exception encountered when leaving 'sendSignalsChanged'";
+                // Get map of all properties that changed (and clear original)
+                SignalChangedMap localChanged;
+                {
+                    boost::mutex::scoped_lock lock(m_signalsChangedMutex);
+                    m_signalsChanged.swap(localChanged);
+                }
+                this->doSendSignalsChanged(localChanged);
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Exception encountered in 'sendSignalsChanged': " << e;
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Exception encountered in 'sendSignalsChanged': " << e.what();
+            } catch (...) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception encountered in 'sendSignalsChanged'";
             }
+
+            if (m_runSignalsChangedTimer) {
+                // As the timer is still active, kick the next pulse.
+                this->kickSignalsChangedTimerPulse();
+            } else {
+                // Just in case anything was added before 'm_runSignalsChangedTimer' was set to false
+                // and while we processed the previous content (keep lock until done completely):
+                try {
+                    boost::mutex::scoped_lock lock(m_signalsChangedMutex);
+                    this->doSendSignalsChanged(m_signalsChanged);
+                    m_signalsChanged.clear();
+                } catch (...) { // lazy to catch all levels - we are anyway done with the thread...
+                    KARABO_LOG_FRAMEWORK_ERROR << "Exception encountered when leaving 'sendSignalsChanged'";
+                }
+            }
+            
         }
 
 
