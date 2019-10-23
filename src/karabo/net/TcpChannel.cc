@@ -267,22 +267,20 @@ namespace karabo {
             }
         }
 
+
         void TcpChannel::readAsyncStringUntil(const std::string& terminator, const ReadStringHandler& handler) {
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
             m_activeHandler = TcpChannel::STRING_UNTIL;
             m_readHandler = handler;
-            readAsyncStringUntilImpl(terminator, handler);
-        }
-        
-        void TcpChannel::readAsyncStringUntilImpl(const std::string& terminator, const ReadStringHandler& handler) {
             m_asyncCounter++;
-            //no header is expected so I directly register payload handler, i.e. bytesAvailableHandler
+            //no header is expected so I directly register payload handler, i.e. stringAvailableHandler
             boost::asio::async_read_until(m_socket, m_streamBufferInbound,
                                           terminator,
                                           util::bind_weak(&karabo::net::TcpChannel::stringAvailableHandler, 
                                           this, _1, _2));
         }
-        
+
+
         void TcpChannel::readAsyncRaw(char* data, const size_t& size, const ReadRawHandler& handler) {
             // This public interface has to ensure that we go at least once via EventLoop, i.e. we are asynchronous.
             readAsyncRawImpl(data, size, handler, false);
@@ -495,6 +493,7 @@ namespace karabo {
         void TcpChannel::stringAvailableHandler(const boost::system::error_code& e, const size_t bytes_to_read) {
             HandlerType type = m_activeHandler;
             m_activeHandler = TcpChannel::NONE;
+            auto readHandler = std::move(m_readHandler);
             
             if (type != TcpChannel::STRING_UNTIL) {
                 throw KARABO_LOGIC_EXCEPTION("stringAvailableHandler called but handler type is " + str(boost::format("%1%") % type));
@@ -507,7 +506,7 @@ namespace karabo {
 
             m_streamBufferInbound.consume(bytes_to_read);
 
-            boost::any_cast<ReadStringHandler>(m_readHandler) (e, tmp);
+            boost::any_cast<ReadStringHandler>(readHandler) (e, tmp);
         }
 
 

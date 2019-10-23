@@ -404,8 +404,6 @@ namespace karabo {
 
             void readAsyncRawImpl(char* data, const size_t& size, const ReadRawHandler& handler, bool allowNonAsync);
             
-            void readAsyncStringUntilImpl(const std::string& terminator, const ReadStringHandler& handler);
-
             void managedWriteAsync(const WriteCompleteHandler& handler);
 
             void unmanagedWriteAsync(const char* data, const size_t& size, const WriteCompleteHandler& handler);
