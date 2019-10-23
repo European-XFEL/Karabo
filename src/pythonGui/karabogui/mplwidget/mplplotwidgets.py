@@ -59,13 +59,11 @@ class MplCurvePlot(MplWidgetBase):
             self.legend_LUT = {}
             self._canvas.mpl_connect('pick_event', self._on_pick_legend)
 
-    def new_curve(self, **kwargs):
+    def new_curve(self, label=None):
         """Register a new curve, return its label for later reference"""
-        label = kwargs.get('label', r'line{}')
-        if r'{}' in label:
-            label = label.format(len(self.curves))
-        exist = label in self.curves
-        if exist:
+        if label is None:
+            label = f'line{len(self.curves)}'
+        if label in self.curves:
             return label
         line = next(self.line_generator)
         line.set_label(label)

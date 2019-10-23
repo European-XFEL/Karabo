@@ -39,7 +39,7 @@ class KaraboImagePlot(PlotItem):
     def __init__(self, parent=None):
         super(KaraboImagePlot, self).__init__(
             viewBox=KaraboImageViewBox(),
-            axisItems=create_axis_items(self.MAJOR_AXES),
+            axisItems=create_axis_items(axes_with_ticks=self.MAJOR_AXES),
             parent=parent)
 
         # Initialize widgets
@@ -163,7 +163,7 @@ class KaraboImagePlot(PlotItem):
             self._restore_view()
 
     def set_transform(self, x_scale, y_scale, x_translate, y_translate,
-                      aspect_ratio, default=False):
+                      aspect_ratio=AspectRatio.PixelDependent, default=False):
         scaling = np.array([x_scale, y_scale])
         translation = np.array([x_translate, y_translate])
 
@@ -179,6 +179,17 @@ class KaraboImagePlot(PlotItem):
 
         if not default:
             self._apply_transform()
+
+    def set_translation(self, x_translate=None, y_translate=None, update=True):
+        if x_translate is None and y_translate is None:
+            return
+
+        if x_translate is not None:
+            self._transform[TRANSLATION][0] = x_translate
+        if y_translate is not None:
+            self._transform[TRANSLATION][1] = y_translate
+
+        self._apply_transform(update)
 
     def set_colormap(self, cmap):
         """Sets the colormap of the image by setting the image item LUT.

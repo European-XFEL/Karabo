@@ -9,15 +9,17 @@ from PyQt4.QtGui import QVBoxLayout, QWidget
 from traits.api import Bool, Dict, Instance, Set, String
 
 from karabo.common.scenemodel.api import (
-    build_graph_config, restore_graph_config, TrendGraphModel)
-from karabogui.binding.api import BoolBinding, FloatBinding, IntBinding
-from karabogui.const import MAX_NUMBER_LIMIT
+    build_graph_config, restore_graph_config, StateGraphModel)
+from karabogui.binding.api import StringBinding
+from karabogui.graph.common.const import (
+    STATE_INTEGER_MAP, MIN_STATE_INT, MAX_STATE_INT)
+from karabogui.graph.common.enums import AxisType
 from karabogui.controllers.api import (
     BaseBindingController, Curve, get_start_end_date_time, ONE_DAY, ONE_HOUR,
-    ONE_WEEK, register_binding_controller, TEN_MINUTES, UPTIME)
+    ONE_WEEK, register_binding_controller, with_display_type,
+    TEN_MINUTES, UPTIME)
 from karabogui.globals import MAX_INT32
 from karabogui.graph.common.colors import get_pen_cycler
-from karabogui.graph.common.enums import AxisType
 from karabogui.graph.plots.base import KaraboPlotView
 
 # NOTE: We limit ourselves to selected karabo actions!
@@ -25,12 +27,13 @@ ALLOWED_ACTIONS = ['x_grid', 'y_grid', 'y_invert', 'y_log', 'axes']
 
 
 @register_binding_controller(
-    ui_name='Trend Graph', klassname='DisplayTrendGraph',
-    binding_type=(BoolBinding, FloatBinding, IntBinding),
+    ui_name='State Graph', klassname='DisplayStateGraph',
+    binding_type=StringBinding,
+    is_compatible=with_display_type('State'),
     can_show_nothing=False)
-class DisplayTrendGraph(BaseBindingController):
+class DisplayStateGraph(BaseBindingController):
     # The scene model class used by this controller
-    model = Instance(TrendGraphModel, args=())
+    model = Instance(StateGraphModel, args=())
 
     _plot = Instance(KaraboPlotView)
     _timer = Instance(QTimer)
@@ -53,7 +56,7 @@ class DisplayTrendGraph(BaseBindingController):
 
         self._start_time = QDateTime.currentDateTime()
 
-        self._plot = KaraboPlotView(axis=AxisType.Time,
+        self._plot = KaraboPlotView(axis=AxisType.State,
                                     actions=ALLOWED_ACTIONS,
                                     parent=widget.time_frame)
         self._plot.stateChanged.connect(self._change_model)
@@ -66,6 +69,9 @@ class DisplayTrendGraph(BaseBindingController):
         self._plot.plotItem.setLimits(
             xMin=datetime(1970, 12, 31).timestamp(),
             xMax=datetime(2038, 12, 31).timestamp())
+
+        # Limit the panning zoom
+        self._plot.plotItem.setLimits(yMin=MIN_STATE_INT, yMax=MAX_STATE_INT)
 
         self._plot.plotItem.vb.sigRangeChangedManually.connect(
             self._on_range_manually_changed)
@@ -132,15 +138,16 @@ class DisplayTrendGraph(BaseBindingController):
         return True
 
     def value_update(self, proxy):
-        if self.widget is None or abs(proxy.value) >= MAX_NUMBER_LIMIT:
+        if self.widget is None:
             return
 
         timestamp = proxy.binding.timestamp
         t = timestamp.toTimestamp()
 
-        self._curves[proxy].add_point(proxy.value, t)
+        value = STATE_INTEGER_MAP[proxy.value]
+        self._curves[proxy].add_point(value, t)
         if proxy in self._curves_start:
-            self._curves[proxy].add_point(proxy.value,
+            self._curves[proxy].add_point(value,
                                           self._start_time.toTime_t())
             self._curves_start.remove(proxy)
 

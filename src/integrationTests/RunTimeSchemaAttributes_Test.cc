@@ -114,10 +114,15 @@ void RunTimeSchemaAttributes_Test::testGuiServerApplication() {
 
 void RunTimeSchemaAttributes_Test::testGuiServerApplicationFailure() {
 
+    // Retrieves the current values of the alarm attributes whose updates should fail.
+    Schema currentSchema = m_deviceClient->getDeviceSchema("alarmTesterSchema");
+    int currentWarnHigh = currentSchema.getWarnHigh<int>("intPropNeedsAck");
+    int currentMaxInc = currentSchema.getMaxInc<int>("intPropNeedsAck");
+    int currentAlarmHigh = currentSchema.getAlarmHigh<int>("intPropNeedsAck");
+
     std::vector<karabo::util::Hash> schemaUpdates;
     schemaUpdates.push_back(Hash("path", "intPropNeedsAck", "attribute", "warnHigh", "value", 50));
-    // NOTE: bug found - this will not do what it is supposed to do
-    //schemaUpdates.push_back(Hash("path", "intPropNeedsAck", "attribute", "maxInc", "value", "this will Fail"));
+    schemaUpdates.push_back(Hash("path", "intPropNeedsAck", "attribute", "maxInc", "value", "this will Fail"));
     schemaUpdates.push_back(Hash("path", "nodeA" + Validator::kAlarmParamPathSeparator + "floatPropNeedsAck2", "attribute", "maxInc", "value", "this will Fail"));
     schemaUpdates.push_back(Hash("path", "intPropNeedsAck", "attribute", "alarmHigh", "value", 500));
 
@@ -132,12 +137,11 @@ void RunTimeSchemaAttributes_Test::testGuiServerApplicationFailure() {
     CPPUNIT_ASSERT(lastMessage.get<std::string>("reply.instanceId") == "alarmTesterSchema");
     CPPUNIT_ASSERT(lastMessage.get<std::vector<Hash> > ("reply.requestedUpdate") == schemaUpdates);
     const Schema& s = lastMessage.get<Schema>("reply.updatedSchema");
-    //this update should have passed through
-    CPPUNIT_ASSERT(s.getWarnHigh<int>("intPropNeedsAck") == 50);
-    //we failed at updating this one, it is at its previous value
-    CPPUNIT_ASSERT(s.getMaxInc<int>("intPropNeedsAck") == 10);
-    //this update is okay again
-    CPPUNIT_ASSERT(s.getAlarmHigh<int>("intPropNeedsAck") == 500);
+
+    // All the updates should have been rolled-back due to the failing 'maxInc' updates.
+    CPPUNIT_ASSERT_EQUAL(currentWarnHigh, s.getWarnHigh<int>("intPropNeedsAck"));
+    CPPUNIT_ASSERT_EQUAL(currentMaxInc, s.getMaxInc<int>("intPropNeedsAck"));
+    CPPUNIT_ASSERT_EQUAL(currentAlarmHigh, s.getAlarmHigh<int>("intPropNeedsAck"));
 
     std::clog << "Tested GuiServer application failure.. Ok" << std::endl;
 }

@@ -2,9 +2,10 @@ import unittest
 
 from karabo.bound import (
     Configurator, Hash, Schema,
-    INT32_ELEMENT, PythonDevice,
+    DOUBLE_ELEMENT, INT32_ELEMENT, PythonDevice, VectorHash
 )
 
+from .device_with_alarm import DeviceWithAlarm
 from .device_with_table_parameter import DeviceWithTableElementParam
 
 
@@ -188,7 +189,6 @@ class Schema_Injection_TestCase(unittest.TestCase):
         table = device.parameters.get("deviceTable")
         self.assertTrue(len(table) == 2)
 
-
     def test_schemaWithTableElementAppend(self):
         """Tests that appendSchema preserves TABLE_ELEMENTs in the static schema."""
         device = Configurator(PythonDevice).create(
@@ -214,3 +214,104 @@ class Schema_Injection_TestCase(unittest.TestCase):
                       device.getSchema("DeviceWithTableElementParam").getPaths())
         table = device.parameters.get("deviceTable")
         self.assertTrue(len(table) == 2)
+
+    def test_schemaWithAttributeUpdate(self):
+        """Tests that updateSchema resets attributes in the static schema."""
+        device = Configurator(PythonDevice).create(
+                        "DeviceWithAlarm", Hash())
+        device.startFsm()
+
+        # Update the alarmHigh
+        schema = Schema()
+        alarm_high = 2 * DeviceWithAlarm.ALARM_HIGH
+        (
+            DOUBLE_ELEMENT(schema).key("valueWithAlarm")
+            .readOnly()
+            .alarmHigh(alarm_high).needsAcknowledging(False)
+            .commit(),
+        )
+        device.updateSchema(schema)
+        self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
+                         alarm_high)
+
+        # Test that doing updateSchema with something new resets
+        # the alarmHigh
+        schema = Schema()
+        (
+            INT32_ELEMENT(schema).key("somethingNew")
+            .assignmentOptional().defaultValue(4)
+            .reconfigurable()
+            .commit()
+        )
+
+        device.updateSchema(schema)
+        self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
+                         DeviceWithAlarm.ALARM_HIGH)
+
+        # Update the alarmHigh by using slotUpdateSchemaAttributes,
+        # as the guiServer would do when instantiating a device
+        alarm_high *= 2
+        vh = VectorHash()
+        g = Hash("path", "valueWithAlarm", "attribute", "alarmHigh",
+                 "value", alarm_high)
+        vh.append(g)
+        device.slotUpdateSchemaAttributes(vh)
+        self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
+                         alarm_high)
+
+        # Test that doing updateSchema with something new resets
+        # the alarmHigh
+        device.updateSchema(schema)
+        self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
+                         DeviceWithAlarm.ALARM_HIGH)
+
+    def test_schemaWithAttributeAppend(self):
+        """Tests that appendSchema preserves attributes in the static
+        schema."""
+        device = Configurator(PythonDevice).create(
+                        "DeviceWithAlarm", Hash())
+        device.startFsm()
+
+        # Update the alarmHigh
+        schema = Schema()
+        alarm_high = 2 * DeviceWithAlarm.ALARM_HIGH
+        (
+            DOUBLE_ELEMENT(schema).key("valueWithAlarm")
+            .readOnly()
+            .alarmHigh(alarm_high).needsAcknowledging(False)
+            .commit(),
+        )
+        device.updateSchema(schema)
+        self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
+                         alarm_high)
+
+        # Test that doing appendSchema with something new keeps
+        # the alarmHigh
+        schema = Schema()
+        (
+            INT32_ELEMENT(schema).key("somethingNew")
+            .assignmentOptional().defaultValue(4)
+            .reconfigurable()
+            .commit()
+        )
+
+        device.appendSchema(schema)
+        self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
+                         alarm_high)
+
+        # Update the alarmHigh by using slotUpdateSchemaAttributes,
+        # as the guiServer would do when instantiating a device
+        alarm_high *= 2
+        vh = VectorHash()
+        g = Hash("path", "valueWithAlarm", "attribute", "alarmHigh",
+                 "value", alarm_high)
+        vh.append(g)
+        device.slotUpdateSchemaAttributes(vh)
+        self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
+                         alarm_high)
+
+        # Test that doing appendSchema with something new keeps
+        # the alarmHigh
+        device.appendSchema(schema)
+        self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
+                         alarm_high)
