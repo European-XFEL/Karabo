@@ -7,6 +7,13 @@ class Axes(Enum):
     Z = 2
 
 
+class AxisType(Enum):
+    State = "State"
+    Time = "Time"
+    AuxPlot = "AuxPlots"
+    Classic = "Classic"
+
+
 class MouseMode(IntEnum):
     # Default
     Pointer = 0

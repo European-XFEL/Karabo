@@ -38,9 +38,6 @@ class ScenePanel(BasePanelWidget):
         self.connected_to_server_at_init = connected_to_server
         super(ScenePanel, self).__init__(model.simple_name, allow_closing=True)
 
-        # A flag which is set when docking/undocking/minimizing
-        self._temporary_hide_flag = False
-
         # Add a handler for the window title. Don't forget to remove it later!
         self.model.on_trait_change(self.set_title, 'simple_name')
 
@@ -66,15 +63,6 @@ class ScenePanel(BasePanelWidget):
         # The scroll widget will use scene_view's sizeHint
         self.scene_view.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
-        # Avoid scene_view.set_tab_visible()
-        if self.parent() is None:
-            # NOTE: PanelWrangler calls onDock() when opening a scene for the
-            # first time. However, it is called _after_ adding the panel
-            # to the main window. In that case, parent() will not be None and
-            # we can avoid setting this flag, because we are NOT about to be
-            # hidden.
-            self._temporary_hide_flag = True
-
     def undock(self, maximized=False):
         """Called before this panel is undocked from the main window.
         """
@@ -89,16 +77,6 @@ class ScenePanel(BasePanelWidget):
                 self.scroll_widget.setWidgetResizable(True)
         # We want to grow with the panel window
         scene_view.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        # Avoid scene_view.set_tab_visible()
-        if not maximized:
-            self._temporary_hide_flag = True
-
-    def minimize(self):
-        """Called before this panel is minimized after filling the main window.
-        """
-        # Avoid scene_view.set_tab_visible()
-        self._temporary_hide_flag = True
 
     def toolbars(self):
         """This should create and return one or more `ToolBar` instances needed
@@ -148,15 +126,10 @@ class ScenePanel(BasePanelWidget):
                             {'model': self.model})
 
     def hideEvent(self, event):
-        if not self._temporary_hide_flag:
-            self.scene_view.set_tab_visible(False)
+        self.scene_view.set_tab_visible(False)
 
     def showEvent(self, event):
-        if not self._temporary_hide_flag:
-            self.scene_view.set_tab_visible(True)
-
-        # The dock/undock hide/show has completed
-        self._temporary_hide_flag = False
+        self.scene_view.set_tab_visible(True)
 
         # When undocked, make sure our panel has an appropriate size
         if not self.is_docked:
