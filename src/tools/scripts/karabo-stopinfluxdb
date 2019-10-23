@@ -1,9 +1,9 @@
 #!/bin/bash
-echo "Stopping eXist database"
+echo "Stopping influxDB container"
 
-#check the existDb docker image
-IMAGE=europeanxfel/existdb:2.2
-CONTAINER=karabo_existdb
+#check the  docker image
+IMAGE=influxdb:1.7.8
+CONTAINER=karabo_influxdb
 
 docker ps --filter name=$CONTAINER | grep $CONTAINER > /dev/null
 if [[ $? -eq 0 ]]; then
