@@ -12,7 +12,7 @@ includes:
 
 dependencies:
   - python=3.6.7=he025d50_1005 # [win]
-  - python=3.6.* # [linux]
+  - python=3.6.7 # [linux]
   # GUI
   - qt=4.8.7=4 # [linux]
   - qt=4.8.7=vc14_7 # [win]
@@ -24,7 +24,7 @@ dependencies:
   - ipython=5.2.0
   - ipykernel=5.1.0
   # Plotting and utils
-  - matplotlib>=2
+  - matplotlib=2
   - numpy=1.13.3
   # Other
   - cycler=0.10.0

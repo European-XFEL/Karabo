@@ -41,6 +41,8 @@ from .workflow.api import SceneWorkflowModel, WorkflowOverlay
 SCENE_WIDGET_HANDLER = (SceneControllerHandler, SceneToolHandler)
 
 _WIDGET_REMOVAL_DELAY = 5000
+_VISIBILITY_TIMEOUT = 3000
+_REMOVAL_TIMEOUT = 1000
 
 
 def _get_time_milli():
@@ -102,8 +104,13 @@ class SceneView(QWidget):
         # Widget cleanup
         self._widget_removal_queue = []
         self._widget_removal_timer = QTimer(self)
-        self._widget_removal_timer.setInterval(1000)
+        self._widget_removal_timer.setInterval(_REMOVAL_TIMEOUT)
         self._widget_removal_timer.timeout.connect(self._clean_removed_widgets)
+
+        self._visible_timer = QTimer(self)
+        self._visible_timer.setInterval(_VISIBILITY_TIMEOUT)
+        self._visible_timer.setSingleShot(True)
+        self._visible_timer.timeout.connect(self._clean_visible_widgets)
 
         # Redraw when the workflow model changes
         self.workflow_model.on_trait_change(lambda *args: self.update(),
@@ -342,17 +349,35 @@ class SceneView(QWidget):
         This method manages the visibilities of the device properties in
         this scene.
         """
-        if self.tab_visible == visible:
+        if not visible:
+            self._visible_timer.start()
+            return
+
+        # In case of a previous visible trigger we must deactivate the timer!
+        if self._visible_timer.isActive():
+            self._visible_timer.stop()
+
+        # If we are already visible, we simply return!
+        if self.tab_visible:
             return
 
         for obj in self._scene_obj_cache.values():
             # NOTE: check also if widget is visible due to the fact that we
             # only hide widgets with got replaced by 'Change Widget...'
             if is_widget(obj) and obj.isVisible():
-                obj.set_visible(visible)
-        self.workflow_model.set_visible(visible)
+                obj.set_visible(True)
+        self.workflow_model.set_visible(True)
+        self.tab_visible = True
 
-        self.tab_visible = visible
+    @pyqtSlot()
+    def _clean_visible_widgets(self):
+        """Remove the visibility state of this scene"""
+        for obj in self._scene_obj_cache.values():
+            # NOTE: We must set the visibility of all widgets to `False`!
+            if is_widget(obj):
+                obj.set_visible(False)
+        self.workflow_model.set_visible(False)
+        self.tab_visible = False
 
     def update_model(self, scene_model):
         if scene_model is None:

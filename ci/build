@@ -36,16 +36,6 @@ __release_build() {
     esac
 
     case "$1" in
-        windows)
-            export REL_ARTIFACT_DEST_PATH=$GUI_DEST_DIR/KaraboGUI-$REL_TAG.win32.exe
-            export REL_ARTIFACT_LATEST_PATH=$GUI_DEST_DIR/KaraboGUI-$LATEST_TAG.win32.exe
-            __check_existence $CURL_PREFIX/$REL_ARTIFACT_DEST_PATH
-            bash ./auto_build_all.sh Release
-            source karabo/activate
-            cd build/python
-            bash ./build.sh
-            sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null KaraboGUI-*.exe $SSH_PREFIX/$REL_ARTIFACT_DEST_PATH
-            ;;
         miniconda)
             source ./ci/miniconda/build.sh
             source ./ci/miniconda/upload.sh
