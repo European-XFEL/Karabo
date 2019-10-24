@@ -214,6 +214,18 @@ namespace karabo {
             virtual void readAsyncRaw(char* data, const size_t& size, const ReadRawHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
             }
+            
+            /**
+             * Read a string until terminator string is found. (No header is expected).
+             * 
+             * @param terminator when this string found, read is done 
+             * @param handler handler with signature ReadStringHandler, 
+             *        i.e. void (const boost::system::error_code&, std::string&) is called.
+             *        second handler parameter is the read string with terminator stripped away
+             */
+            virtual void readAsyncStringUntil(const std::string& terminator, const ReadStringHandler& handler) {
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
+            }
 
             /**
              * Asynchronously reads data into a vector<char>. All memory management is done by the API.
