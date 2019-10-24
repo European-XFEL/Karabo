@@ -5,17 +5,17 @@ Here below id the TODO list for the influxDbLogger Project
 
 [ ] Add an influxDb service to the CI on gitlab
 [ ] Write the documentation on:
-  [ ]  How we organise the DB (one db per topic, one installation in production, no central installation in office network).
-  [ ]  Measurements (one per deviceId)
-  [ ]  How to save a device schema
+  [x]  How we organise the DB (one db per topic, one installation in production, no central installation in office network).
+  [x]  Measurements (one per deviceId)
+  [x]  How to save a device schema
   [ ]  Protocol to be used (TCP/http no https)
   [ ]  How to getConfigurationFromPast
   [ ]  how to get property history
-  [ ]  how to save the user field
-  [ ]  how to log events like instanceNew and instanceGone (one measurement table per events?)
+  [x]  how to save the user field
+  [x]  how to log events like instanceNew and instanceGone (one measurement table per events?)
   [ ]  What to do with vectors
   [ ]  What to do with tables
-  [ ]  check the possibility to save the schema of a device in a separate DB/table and index it by a checksum
+  [x]  check the possibility to save the schema of a device in a separate DB/table and index it by a checksum
   [ ]  Evaluate the possibility of using influx db as a backend for the configuration DB
   [ ]  Evaluate possible improvements to the current poll for logs.
 
