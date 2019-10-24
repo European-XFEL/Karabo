@@ -28,6 +28,7 @@ namespace karabo {
                 NONE,
                 VECTOR,
                 STRING,
+                STRING_UNTIL,
                 HASH,
                 HASH_VECTOR,
                 HASH_STRING,
@@ -70,6 +71,8 @@ namespace karabo {
             bool m_quit;
             unsigned long long m_syncCounter;
             unsigned long long m_asyncCounter;
+            
+            boost::asio::streambuf m_streamBufferInbound;
 
         public:
 
@@ -170,7 +173,7 @@ namespace karabo {
 
 
             //**************************************************************/
-            //*              Asynchronous Read - No Header                 */
+            //*              Asynchronous Read - No Header Hash            */
             //**************************************************************/
 
             /**
@@ -181,10 +184,22 @@ namespace karabo {
              * @param handler Function of signature: <void (Channel::Pointer)> which will be call-backed upon read completion
              */
             void readAsyncRaw(char* data, const size_t& size, const ReadRawHandler& handler);
-
-            void readAsyncVector(const ReadVectorHandler& handler);
+            
+            /**
+             * wrapper around boost::asio::async_read_until
+             * 
+             * Read a string until terminator string is found. (No header is expected).
+             * 
+             * @param terminator when this string found, read is done 
+             * @param handler handler with signature ReadStringHandler, 
+             *        i.e. void (const boost::system::error_code&, std::string&) is called.
+             *        second handler parameter is the read string including the terminator
+             */
+            void readAsyncStringUntil(const std::string& terminator, const ReadStringHandler& handler);
 
             void readAsyncString(const ReadStringHandler& handler);
+
+            void readAsyncVector(const ReadVectorHandler& handler);
 
             void readAsyncHash(const ReadHashHandler& handler);
 
@@ -193,7 +208,7 @@ namespace karabo {
             void readAsyncVectorPointer(const ReadVectorPointerHandler& handler);
                         
             //**************************************************************/
-            //*              Asynchronous Read - With Header               */
+            //*              Asynchronous Read - With Header Hash          */
             //**************************************************************/
 
             void readAsyncHashVector(const ReadHashVectorHandler& handler);
@@ -207,8 +222,6 @@ namespace karabo {
             void readAsyncHashVectorPointer(const ReadHashVectorPointerHandler& handler);                        
 
             void readAsyncHashVectorBufferSetPointer(const ReadHashVectorBufferSetPointerHandler& handler);
-
-            void readAsyncRaw(char* data, size_t& size, const ReadRawHandler& handler);
 
             void write(const char* data, const size_t& size);
 
@@ -342,6 +355,8 @@ namespace karabo {
             karabo::util::Hash _getChannelInfo();
 
             void onBytesAvailable(const ErrorCode& error, const size_t length, const ReadRawHandler& handler);
+            
+            void stringAvailableHandler(const boost::system::error_code& e, size_t bytes_to_read);
 
             /**
              * Internal default handler
@@ -384,11 +399,11 @@ namespace karabo {
              * @param byteSize
              */
             void byteSizeAvailableHandler(const size_t byteSize);
-
+            
             void readAsyncSizeInBytesImpl(const ReadSizeInBytesHandler& handler, bool allowNonAsync);
 
             void readAsyncRawImpl(char* data, const size_t& size, const ReadRawHandler& handler, bool allowNonAsync);
-
+            
             void managedWriteAsync(const WriteCompleteHandler& handler);
 
             void unmanagedWriteAsync(const char* data, const size_t& size, const WriteCompleteHandler& handler);

@@ -9,6 +9,7 @@
 #include <karabo/util/MetaTools.hh>
 #include <boost/pointer_cast.hpp>
 #include <snappy.h>
+#include <boost/asio/buffers_iterator.hpp>
 #include "Channel.hh"
 #include "TcpChannel.hh"
 #include "EventLoop.hh"
@@ -267,6 +268,19 @@ namespace karabo {
         }
 
 
+        void TcpChannel::readAsyncStringUntil(const std::string& terminator, const ReadStringHandler& handler) {
+            if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
+            m_activeHandler = TcpChannel::STRING_UNTIL;
+            m_readHandler = handler;
+            m_asyncCounter++;
+            //no header is expected so I directly register payload handler, i.e. stringAvailableHandler
+            boost::asio::async_read_until(m_socket, m_streamBufferInbound,
+                                          terminator,
+                                          util::bind_weak(&karabo::net::TcpChannel::stringAvailableHandler, 
+                                          this, _1, _2));
+        }
+
+
         void TcpChannel::readAsyncRaw(char* data, const size_t& size, const ReadRawHandler& handler) {
             // This public interface has to ensure that we go at least once via EventLoop, i.e. we are asynchronous.
             readAsyncRawImpl(data, size, handler, false);
@@ -291,7 +305,6 @@ namespace karabo {
                                                         handler));
             }
         }
-
 
         void TcpChannel::onBytesAvailable(const ErrorCode& error, const size_t length, const ReadRawHandler& handler) {
             // Update the total read bytes count
@@ -476,6 +489,26 @@ namespace karabo {
             // 'false' ensures that we leave the context and go via the event loop:
             this->readAsyncSizeInBytesImpl(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1), false);
         }
+        
+        void TcpChannel::stringAvailableHandler(const boost::system::error_code& e, const size_t bytes_to_read) {
+            HandlerType type = m_activeHandler;
+            m_activeHandler = TcpChannel::NONE;
+            auto readHandler = std::move(m_readHandler);
+            
+            if (type != TcpChannel::STRING_UNTIL) {
+                throw KARABO_LOGIC_EXCEPTION("stringAvailableHandler called but handler type is " + str(boost::format("%1%") % type));
+                return;
+            }
+
+            //allocate tmp string and copy m_streamBufferInbound content to it 
+            string tmp(boost::asio::buffers_begin(m_streamBufferInbound.data()),
+                       boost::asio::buffers_begin(m_streamBufferInbound.data()) + bytes_to_read);
+
+            m_streamBufferInbound.consume(bytes_to_read);
+
+            boost::any_cast<ReadStringHandler>(readHandler) (e, tmp);
+        }
+
 
 
         void TcpChannel::bytesAvailableHandler(const boost::system::error_code& e) {
@@ -564,6 +597,9 @@ namespace karabo {
                     boost::any_cast<ReadStringHandler>(readHandler) (e, tmp);
                     break;
                 }
+                case STRING_UNTIL:
+                    throw KARABO_LOGIC_EXCEPTION("bytesAvailableHandler called with STRING_UNTIL handler type registered");
+                    break;
                 case HASH:
                 {
                     Hash h;
@@ -667,7 +703,7 @@ namespace karabo {
                 }
 
                 default:
-                    throw KARABO_LOGIC_EXCEPTION("Bad internal error regarding asynchronous read handlers, contact BH or SE");
+                    throw KARABO_LOGIC_EXCEPTION("UNKNOWN HANDLER TYPE: "+  str(boost::format("%1%") % type) +" (this should never happen)");
             }
         }
 
