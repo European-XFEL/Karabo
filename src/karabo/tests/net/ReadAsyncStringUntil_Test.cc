@@ -44,7 +44,8 @@ struct TestClient {
 
     TestClient(const karabo::util::Hash& input)
             : m_repetition(5)   // we want to read 5 times
-            , m_expected("") {
+            , m_expected("")
+            , m_promise(std::promise<std::string>()) {
         m_connection = karabo::net::Connection::create("Tcp", input);
         m_connection->startAsync(boost::bind(&TestClient::connectHandler, this, _1, _2));
     }
@@ -54,9 +55,14 @@ struct TestClient {
     }
 
 
+    std::future<std::string> get_future() {
+        return m_promise.get_future();
+    }
+
+
     void connectHandler(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel) {
         if (ec) {
-            CPPUNIT_FAIL("Error connecting");
+            m_promise.set_value("Error connecting");
             return;
         }
 
@@ -74,13 +80,14 @@ struct TestClient {
                               const karabo::net::Channel::Pointer& channel,
                               const std::string& terminator) {
         if (ec) {
-            CPPUNIT_FAIL("error on write");
             channel->close();
+            m_promise.set_value("Error on write");
+            return;
         }
         auto readHandler = [this, channel](const karabo::net::ErrorCode& ec, const std::string& data) {
             if (ec) {
-                CPPUNIT_FAIL("Error reading");
                 channel->close();
+                m_promise.set_value("Error reading");
                 return;
             }
 
@@ -89,9 +96,14 @@ struct TestClient {
             // The third one and others:      "Yet another test string\r\n"
             // Uncomment print statement below to see how does it work
             //std::cerr << data;
-            CPPUNIT_ASSERT(data == m_expected || data == " the tough get going\r\n");
+            if (data != m_expected && data != " the tough get going\r\n") {
+                channel->close();
+                m_promise.set_value("Error on data comparison");
+                return;
+            }
             if (--m_repetition == 0) {
                 channel->close();
+                m_promise.set_value("OK");
                 return;
             }
 
@@ -110,6 +122,7 @@ private:
     karabo::net::Connection::Pointer m_connection;
     int m_repetition;
     std::string m_expected;
+    std::promise<std::string> m_promise;
 };
 
 
@@ -155,7 +168,11 @@ void ReadAsyncStringUntil_Test::runTest() {
     // Start client ...
     karabo::util::Hash input("hostname", "localhost", "port", port, "type", "client", "sizeofLength", 0);
     TestClient client(input);
+    std::future<std::string> clientFut = client.get_future();
     karabo::net::EventLoop::run();
     // Join server thread
     fut.wait();
+    std::string msg = clientFut.get();
+    // Check result of testing
+    CPPUNIT_ASSERT_MESSAGE(msg, "OK" == msg);
 }
