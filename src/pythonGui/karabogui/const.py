@@ -12,7 +12,7 @@ ElementTree.register_namespace("xlink", "http://www.w3.org/1999/xlink")
 # Commonly used colors
 OK_COLOR = (225, 242, 225, 128)
 PROPERTY_READONLY_COLOR = (160, 160, 160, 255)
-ALL_OK_COLOR = (214, 214, 255, 64)  # no alarm and fine
+ALL_OK_COLOR = (224, 224, 224, 128)  # no alarm and fine
 ERROR_COLOR_ALPHA = (255, 155, 155, 128)  # semitransparent
 PROPERTY_ALARM_COLOR = (255, 125, 125, 128)
 PROPERTY_WARN_COLOR = (255, 255, 125, 128)
