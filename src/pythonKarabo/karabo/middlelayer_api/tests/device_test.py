@@ -230,6 +230,26 @@ class Tests(DeviceTest):
             "doesNotExist", None)
         self.assertEqual(success, False)
         self.assertEqual(data, Hash())
+        
+    @sync_tst
+    def test_output_information_hash_version(self):
+        # tests the version that the GUI can generically call
+        device = self.myDevice
+        # Second argument processId is not used in MDL
+        h = yield from device.slotGetOutputChannelInformationFromHash(
+            Hash(channelId="output", processId=None))
+        success, data = h["success"], r["info"]
+        self.assertEqual(success, True)
+        self.assertEqual(data["hostname"], self.myDevice.hostName)
+        self.assertEqual(data["connectionType"], "tcp")
+        self.assertEqual(data["memoryLocation"], "remote")
+        self.assertIsInstance(data["port"], np.uint32)
+
+        h = yield from device.slotGetOutputChannelInformationFromHash(
+            Hash(channelId="doesNotExist", processId=None))
+        success, data = h["success"], r["info"]
+        self.assertEqual(success, False)
+        self.assertEqual(data, Hash())
 
     @async_tst
     async def test_applyRunTimeUpdates(self):
