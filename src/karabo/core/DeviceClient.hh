@@ -22,6 +22,8 @@
 #include <set>
 #include <string>
 
+#include <boost/asio/deadline_timer.hpp>
+
 
 #define KARABO_GET_SHARED_FROM_WEAK(sp, wp) \
 auto sp = wp.lock(); \
@@ -121,9 +123,9 @@ namespace karabo {
 
             bool m_getOlder; /// defines whether aging is running or not
 
-            boost::thread m_signalsChangedThread;
-            bool m_runSignalsChangedThread;
-            boost::posix_time::milliseconds m_signalsChangedInterval;
+            boost::asio::deadline_timer m_signalsChangedTimer;
+            bool m_runSignalsChangedTimer;
+            std::atomic<long int> m_signalsChangedInterval;
             boost::mutex m_signalsChangedMutex;
             SignalChangedMap m_signalsChanged; /// map of collected signalChanged
 
@@ -1091,7 +1093,9 @@ namespace karabo {
             void disconnectHandler(const std::string& signal, const std::string& instanceId,
                                    const std::vector<std::string>& toClear);
 
-            void sendSignalsChanged();
+            void sendSignalsChanged(const boost::system::error_code &e);
+
+            void kickSignalsChangedTimer();
 
             void immortalize(const std::string& deviceId);
 
