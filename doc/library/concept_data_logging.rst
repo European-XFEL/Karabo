@@ -166,8 +166,8 @@ specified by the *flushInterval* property of the data logger.
 There is a cluster composed of two(??) InflxDB server instances to support Karabo's 
 production environment in the Controls Network.
 
-For development and testing single instances of InfluxDB running in Docker 
-containers are used.
+Single instances of the InfluxDB server, running in Docker containers, are used for 
+development and testing activities.
 
 5.2. Logging Database Organization
 ----------------------------------
@@ -175,7 +175,7 @@ containers are used.
 Each Karabo topic will have its own InfluxDB database. In each database, the 
 data will be organized in the set of measurements described below:
 
-* **Device properties measurement**: Each device being logged in the topic will
+* **Device Properties Measurement**: Each device being logged in the topic will
   have its own measurement, with the name of the device. The device properties
   being logged will be mapped to fields with the same name as the property. The
   trainIds associated to the logging records will also be mapped to a field. The
@@ -186,29 +186,59 @@ data will be organized in the set of measurements described below:
 
   An example of a device measurement - in this case for device 'GUI_SERVER_0':
 
-  ==================== ===== ======= ================= ============= ================
+  ==================== ====== ======= ================= ============= ================
   Name: GUI_SERVER_0
-  -----------------------------------------------------------------------------------
-  time                 user  trainId serverId          useTimeServer connectedClients 
-  ==================== ===== ======= ================= ============= ================
-  2019-10-24T10:54:04Z Bob   0       karabo/gui_server True          10  
-  2019-10-24T10:56:28Z Alice 1272                      False         
-  2019-10-24T11:00:02Z .     0                                       9 
-  ==================== ===== ======= ================= ============= ================
+  ------------------------------------------------------------------------------------
+  time                 *user* trainId serverId          useTimeServer connectedClients 
+  ==================== ====== ======= ================= ============= ================
+  2019-10-24T10:54:04Z Bob    0       karabo/gui_server True          10  
+  2019-10-24T10:56:28Z Alice  1272                      False         
+  2019-10-24T11:00:02Z .      0                                       9 
+  ==================== ====== ======= ================= ============= ================
   
-  As shown in the example the number of non-null fields in each record are variable -
+  As shown in the example, the number of non-null fields varies among records -
   the data logger will group the properties by the time they changed before writing 
-  them to InfluxDB. *user* and *trainId* are tags. Properties with redundant values,
-  like *_device_id_* and *deviceId*, shouldn't be logged. 
+  them to InfluxDB. The timestamps for **time** are explicitly specified when data is 
+  sent to InfluxDB. **user** is a tag. All the other columns are fields. Properties with 
+  redundant values, like **_device_id_** and **deviceId**, shouldn't be logged. 
 
-* **Device life-cycle events measurement**:
+* **Device Events Measurement**: This measurement will store the device events - currently
+  device instantiations, shutdowns and schema updates. 
+  
+  The log reader relies on device instantiation events for being able to retrieve the last 
+  known configuration if the given time point is not in an interval during which the device 
+  was active. Similarly, get property history, relies on instatiantion events to know from 
+  when it must start its properties read sweep in case no change for the given property 
+  happened during the requested time interval. 
 
-* **Device schema measurement**:
+  An example of a device events measurement - for device 'GUI_SERVER_0':
+
+  ==================== ====== ============== =================
+  Name: GUI_SERVER_0__EVENTS
+  ------------------------------------------------------------
+  time                 *type* schema_digest  serverId
+  ==================== ====== ============== =================
+  2019-10-24T10:54:04Z +LOG                  karabo/gui_server
+  2019-10-24T10:56:28Z SCHEMA 3fd545689a12ce
+  2019-10-24T11:00:02Z -LOG                  karabo/gui_server
+  ==================== ====== ============== =================
+
+  The timestamps for time are explicitly specified when data is sent to InfluxDB. **type** 
+  is a tag whose value indicates the type of the event. The remaining columns are fields.
+  **schema_digest** is a digest for a serialized schema stored in the Device Schema 
+  Measurement described in the next item. 
+  
+* **Device Schema Measurement**:
+
+  ==================== =============== =====================================================
+  Name: GUI_SERVER_0__SCHEMAS
+  ------------------------------------------------------------------------------------------
+  time                 *schema_digest* schema
+  ==================== =============== =====================================================
+  2019-10-24T10:54:04Z 3fd545689a12ce  GuiServerDevice:<?xml version="1.0"?><root KRB_Ar....
+  ==================== =============== =====================================================
 
 For the production environment, the replication factors of the retention policies 
-described above match the number of InfluxDB servers in the cluster.
-
-5.3. 
-
-
-
+described above match the number of InfluxDB servers in the cluster. The durations of 
+the retention policies should be the same for all the measurements. The exact durations
+have yet to be defined.
