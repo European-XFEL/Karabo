@@ -23,8 +23,8 @@ data.
 The data logger originally used a text file based archiving backend. Since Oct/2019, a new
 backend, based on InFluxDB has been integrated into the data logging infrastructure.
 
-1. Distinction from Data Acquisition
-====================================
+Distinction from Data Acquisition
+=================================
 
 The data acquisition system provided by the IT and data management group (ITDM) is
 responsible for main scientific data acquisition, organized on a per-run basis. It has
@@ -37,8 +37,8 @@ only time-stamps or much less regular updates to their values are much more comm
 In terms of persisting data, the requirement is somewhat relaxed for each individual
 data point, but a high uptime and availability are necessary.
 
-2. Configuring Logging
-======================
+Configuring Logging
+===================
 
 Logging is enabled on a per-device level by setting the archiving flag. In this case
 all properties of the device will be logged, as will be the time of execution of
@@ -55,8 +55,8 @@ being logged by each data logger instance can be found in its *devicesToBeLogged
 property. 
 
 
-3. Retrieving Logged Information
-================================
+Retrieving Logged Information
+=============================
 
 Logged information can be retrieved in multiple ways: through the command
 line interface, iKarabo and the GUI. The first two ways are explicit calls
@@ -112,11 +112,11 @@ In iKarabo the *getHistory* proxy object may be used:
     data will be reduced appropriately to still span the full timespan."""
 
 
-4. Text-File based Backend
+Text-File based Backend
 =======================
 
-4.1. Logging Format
--------------------
+Logging Format
+--------------
 
 Log files are created and updated by the logging devices. Specifically,
 two files are created in a directory corresponding to the logged device's
@@ -157,20 +157,17 @@ The idx directory
 Both index and raw files are regularly flushed to disk in the time interval
 specified by the *flushInterval* property of the data logger.
 
-5. InfluxDB based Backend
--------------------------
+InfluxDB based Backend
+======================
 
-5.1. Server infrastructure
---------------------------
+Server infrastructure
+---------------------
 
-There is a cluster composed of two(??) InflxDB server instances to support Karabo's 
-production environment in the Controls Network.
+An instance of InfluxDB should be available when the karabo services are started.
+A local instance of InfluxDB can be started by using the command **karabo-startinfluxdb**.
 
-Single instances of the InfluxDB server, running in Docker containers, are used for 
-development and testing activities.
-
-5.2. Logging Database Organization
-----------------------------------
+Logging Database Organization
+-----------------------------
 
 Each Karabo topic will have its own InfluxDB database. In each database, the 
 data will be organized in the set of measurements described below:
