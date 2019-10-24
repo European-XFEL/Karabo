@@ -204,9 +204,9 @@ data will be organized in the set of measurements described below:
   
   The log reader relies on device instantiation events for being able to retrieve the last 
   known configuration if the given time point is not in an interval during which the device 
-  was active. Similarly, get property history, relies on instatiantion events to know from 
-  when it must start its properties read sweep in case no change for the given property 
-  happened during the requested time interval. 
+  was active. Similarly, **DeviceClient.getPropertyHistory** relies on instatiantion events 
+  to know from when it must start its properties read sweep in case no change for the given 
+  property happened during the requested time interval. 
 
   An example of a device events measurement - for device 'GUI_SERVER_0':
 
