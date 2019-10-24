@@ -125,7 +125,7 @@ namespace karabo {
 
             boost::asio::deadline_timer m_signalsChangedTimer;
             bool m_runSignalsChangedTimer;
-            boost::posix_time::milliseconds m_signalsChangedInterval;
+            std::atomic<int> m_signalsChangedInterval;
             boost::mutex m_signalsChangedMutex;
             SignalChangedMap m_signalsChanged; /// map of collected signalChanged
 
@@ -1095,7 +1095,7 @@ namespace karabo {
 
             void sendSignalsChanged(const boost::system::error_code &e);
 
-            void kickSignalsChangedTimerPulse();
+            void kickSignalsChangedTimer();
 
             void immortalize(const std::string& deviceId);
 
