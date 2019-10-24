@@ -191,9 +191,9 @@ data will be organized in the set of measurements described below:
   ------------------------------------------------------------------------------------
   time                 *user* trainId serverId          useTimeServer connectedClients 
   ==================== ====== ======= ================= ============= ================
-  2019-10-24T10:54:04Z Bob    0       karabo/gui_server True          10  
+  2019-10-24T10:54:04Z .      0       karabo/gui_server True          10  
   2019-10-24T10:56:28Z Alice  1272                      False         
-  2019-10-24T11:00:02Z .      0                                       9 
+  2019-10-24T11:00:02Z Bob    0                                       9 
   ==================== ====== ======= ================= ============= ================
   
   As shown in the example, the number of non-null fields varies among records -
