@@ -122,7 +122,7 @@ namespace karabo {
             }
             this->setupSlots();
             this->setAgeing(true);
-            this->kickSignalsChangedTimerPulse();
+            this->kickSignalsChangedTimer();
 
             KARABO_LOG_FRAMEWORK_DEBUG << "Initialization of DeviceClient instance completed at countdown = "
                     << countdown;
@@ -372,10 +372,10 @@ namespace karabo {
 
         void DeviceClient::setDeviceMonitorInterval(long int milliseconds) {
             if (milliseconds >= 0) {
-                m_signalsChangedInterval = boost::posix_time::milliseconds(milliseconds);
+                m_signalsChangedInterval = milliseconds;
                 if (!m_runSignalsChangedTimer) {
                     m_runSignalsChangedTimer = true;
-                    this->kickSignalsChangedTimerPulse();
+                    this->kickSignalsChangedTimer();
                 }
             } else if (m_runSignalsChangedTimer) {
                 m_runSignalsChangedTimer = false;
@@ -384,7 +384,7 @@ namespace karabo {
         }
 
 
-        void DeviceClient::kickSignalsChangedTimerPulse() {
+        void DeviceClient::kickSignalsChangedTimer() {
             m_signalsChangedTimer.expires_from_now(boost::posix_time::milliseconds(m_signalsChangedInterval));
             m_signalsChangedTimer.async_wait(bind_weak(&DeviceClient::sendSignalsChanged,
                                                        this,
@@ -1749,17 +1749,13 @@ if (nodeData) {\
                     m_signalsChanged.swap(localChanged);
                 }
                 this->doSendSignalsChanged(localChanged);
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Exception encountered in 'sendSignalsChanged': " << e;
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Exception encountered in 'sendSignalsChanged': " << e.what();
-            } catch (...) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception encountered in 'sendSignalsChanged'";
             }
 
             if (m_runSignalsChangedTimer) {
                 // As the timer is still active, kick the next pulse.
-                this->kickSignalsChangedTimerPulse();
+                this->kickSignalsChangedTimer();
             } else {
                 // Just in case anything was added before 'm_runSignalsChangedTimer' was set to false
                 // and while we processed the previous content (keep lock until done completely):
