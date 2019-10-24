@@ -33,6 +33,8 @@ export KARABO_PROJECT_DB=existdb_host
 export KARABO_PROJECT_DB_PORT=8080
 export KARABO_TEST_PROJECT_DB=existdb_host
 export KARABO_TEST_PROJECT_DB_PORT=8080
+export KARABO_TEST_INFLUXDB_HOST=influxdb_host
+export KARABO_TEST_INFLUXDB_PORT=8086
 
 if [ "$TARGET_OS" = "miniconda" ]; then
     __conda_tests
