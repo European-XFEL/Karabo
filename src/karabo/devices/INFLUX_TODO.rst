@@ -14,6 +14,7 @@ Here below id the TODO list for the influxDbLogger Project
   [ ]  how to save the user field
   [ ]  how to log events like instanceNew and instanceGone (one measurement table per events?)
   [ ]  What to do with vectors
+  [ ]  What to do with tables
   [ ]  check the possibility to save the schema of a device in a separate DB/table and index it by a checksum
   [ ]  Evaluate the possibility of using influx db as a backend for the configuration DB
   [ ]  Evaluate possible improvements to the current poll for logs.
