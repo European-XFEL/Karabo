@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Karabo server control documentation</title>
+    <link rel="stylesheet" href="{{ static_url('karabo.css') }}" type="text/css">
+  </head>
+  <body>
+    <h1 class="title">REST API Documentation for the server control</h1>
+    <h2>Servers API</h2>
+    <p><tt>/api/servers.json</tt></p>
+        <p>a <b>GET</b> to the address will return a JSON object like</p>
+        <pre>
+            {
+                &quot;version&quot;: &quot;1.0.0&quot;,
+                &quot;success&quot;: true,
+                &quot;status_ok&quot;: true,
+                &quot;servers&quot;: [
+                    {
+                        &quot;name&quot;: &quot;server_name&quot;,
+                        &quot;status&quot;: &quot;up, running&quot;,
+                        &quot;since&quot;: &quot;calendar date&quot;,
+                        &quot;duration&quot;: uptime_in_seconds
+                    },
+                    ... more servers
+                ]
+            }
+        </pre>
+
+    <h2>Single Server API</h2>
+    <p><tt>/api/servers/:server_name:.json</tt></p>
+    <p>a <b>GET</b> to the address will return a JSON object like</p>
+    <pre>
+        {
+            &quot;version&quot;: &quot;1.0.0&quot;,
+            &quot;success&quot;: true,
+            &quot;status_ok&quot;: true,
+            &quot;servers&quot;: [
+                {
+                    &quot;name&quot;: &quot;server_name&quot;,
+                    &quot;status&quot;: &quot;up, running&quot;,
+                    &quot;since&quot;: &quot;calendar date&quot;,
+                    &quot;duration&quot;: uptime_in_seconds
+                },
+            ]
+        }
+    </pre>
+    <p>a <b>PUT</b> to the address with a JSON object like</p>
+    <pre>
+        {
+            &quot;server&quot;: [
+                {
+                    &quot;name&quot;: &quot;server_name&quot;,
+                    &quot;commnand&quot;: &quot;command_name&quot;,
+                },
+            ]
+        }
+    </pre>
+    <p>will instruct the daemontools supervisor to execute the command <tt>command_name</tt>. The following commands are allowed:</p>
+    <p><tt>up</tt>: If the service is not running, start it. If the service stops, restart it.</p>
+    <p><tt>down</tt>: If the service is running, send it a TERM signal and then a CONT signal. After it stops, do not restart it.</p>
+    <p><tt>once</tt>: If the service is not running, start it. Do not restart it if it stops.</p>
+    <p><tt>kill</tt>: Send the service a KILL signal.</p>
+    <p><tt>group</tt>: Send a KILL signal to the service and to the service's whole process group.
+        This is particularly important for services spawning new processes, e.g. bound python servers.</p>
+    </pre>
+    
+</body>
+</html>
