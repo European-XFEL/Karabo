@@ -422,10 +422,45 @@ class DeviceServer(object):
             saveToFile(config, filename, Hash("format.Xml.indentation", 2))
             params = [modname, classid, filename]
 
-            launcher = Launcher(params)
-            launcher.start()
             with self.deviceInstanceMapLock:
+                if deviceid in self.deviceInstanceMap:
+                    # Already there! Check whether previous process is alive:
+                    prevLauncher = self.deviceInstanceMap[deviceid]
+                    if prevLauncher.child.poll() is not None:
+                        prevLauncher.join()  # ok, already dead, can overwrite
+                    else:
+                        # Process still up. Check Karabo communication by ping:
+                        request = self.ss.request(deviceid, "slotPing",
+                                                  deviceid, 1, False)
+                        try:
+                            # Badly blocking here: We lack AsyncReply in bound!
+                            request.waitForReply(2000)  # in milliseconds
+                        except Exception as innerE:
+                            if "Reply timed out" in str(innerE):
+                                # Indeed dead Karabo-wise:
+                                self.log.WARN("Kill previous incarnation of "
+                                              f"'{deviceid}' since reply to "
+                                              "ping timed out.")
+                                prevLauncher.kill()
+                            else:
+                                self.log.ERROR("Should never come here! "
+                                               "Unexpected exception when "
+                                               "trying to communicate with "
+                                               f"'{deviceid}': {innerE}")
+                                self.ss.reply(False, f"{deviceid} already "
+                                              "instantiated, ping failed: "
+                                              f"{innerE}")
+                                return
+                        else:
+                            # Technically, it could be alive on another server,
+                            # but who cares about that detail...
+                            self.ss.reply(False, f"{deviceid} already "
+                                          "instantiated and alive")
+                            return
+                launcher = Launcher(params)
+                launcher.start()
                 self.deviceInstanceMap[deviceid] = launcher
+
             self.ss.reply(True, deviceid)
         except Exception as e:
             self.log.WARN("Device '{}' could not be started because:"
