@@ -36,6 +36,7 @@ Available flags:
   --rootDir <path> - Path to the root directory of the Karabo project.
   --runUnitTests - Run Python unit tests.
   --runIntegrationTests - Run Python integration tests.
+  --runLongTests - Run Python long tests
   --runCondaUnitTests - Run the conda python unit tests (gui only)
   --collectCoverage - Collect Python code coverage.
   --generateCoverageReport - Collect Python code coverage and generate coverage
