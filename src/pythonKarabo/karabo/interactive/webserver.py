@@ -27,7 +27,7 @@ def control_service(server_id, command):
     svc_ctrl = {'up': 'u',
                 'down': 'd',
                 'once': 'o',
-                'kill': '=k',
+                'kill': '+k',
                 'group': '+k'}
     ctrl = absolute("var", "service", server_id, "supervise", "control")
     if command not in svc_ctrl:
