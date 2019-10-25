@@ -20,8 +20,8 @@ For new instances it assigns the instance to a logging device. For device
 instances which are shutdown it makes sure the logging device flushes all the logged
 data.
 
-The data logger originally used a text file based archiving backend. Since Oct/2019, a new
-backend, based on InFluxDB has been integrated into the data logging infrastructure.
+The data logger originally used a text file based archiving backend. Then a new
+backend, based on InFluxDB, has been integrated into the data logging infrastructure.
 
 Distinction from Data Acquisition
 =================================
