@@ -12,9 +12,10 @@
 #ifndef KARABO_UTIL_SLOTELEMENT_HH
 #define	KARABO_UTIL_SLOTELEMENT_HH
 
-#include <karabo/util/GenericElement.hh>
-#include <karabo/util/ToLiteral.hh>
-#include <karabo/util/State.hh>
+#include "karabo/util/GenericElement.hh"
+#include "karabo/util/ToLiteral.hh"
+#include "karabo/util/State.hh"
+#include "karabo/util/Exception.hh"
 
 namespace karabo {
     namespace xms {
@@ -95,6 +96,9 @@ namespace karabo {
             }
 
             void beforeAddition() {
+                if (this->m_node->getKey() == "clear_namespace") {
+                    throw KARABO_INIT_EXCEPTION("Slot 'clear_namespace' forbidden since it breaks GUI clients");
+                }
                 this->m_node->setValue(this->m_child);
             }
 
@@ -123,6 +127,9 @@ namespace karabo {
             }
 
             void beforeAddition() {
+                if (this->m_node->getKey() == "clear_namespace") {
+                    throw KARABO_INIT_EXCEPTION("Slot 'clear' forbidden since it breaks GUI clients");
+                }
                 this->m_node->setValue(this->m_child);
             }
 
