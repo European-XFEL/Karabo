@@ -496,7 +496,7 @@ namespace karabo {
                         } else { // Data complete on both pots now
                             // triggerIOEvent will be called by the update of the triggerIOEvent
                             // that is processing the active pot now
-                            KARABO_LOG_FRAMEWORK_WARN << "Do not trigger IOEvent with pot sizes " << nActiveData << "/"
+                            KARABO_LOG_FRAMEWORK_DEBUG << "Do not trigger IOEvent with pot sizes " << nActiveData << "/"
                                     << Memory::size(m_channelId, m_inactiveChunk);
                         }
                     }
