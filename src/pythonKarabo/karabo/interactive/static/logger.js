@@ -34,8 +34,8 @@ var updater = {
     },
 
     process: function(event) {
-        if (event.data == "PING") {
-            this.socket.send("PONG");
+        if (event.data == "RTS") {
+            this.socket.send("CTS");
             window.scrollTo(0,document.body.scrollHeight);
             return;
         }
