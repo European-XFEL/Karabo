@@ -426,16 +426,14 @@ class DeviceServer(object):
                 if deviceid in self.deviceInstanceMap:
                     # Already there! Check whether previous process is alive:
                     prevLauncher = self.deviceInstanceMap[deviceid]
-                    if prevLauncher.child.poll() is not None:
-                        prevLauncher.join()  # ok, already dead, can overwrite
-                    else:
+                    if prevLauncher.child.poll() is None:
                         # Process still up. Check Karabo communication by ping:
                         request = self.ss.request(deviceid, "slotPing",
                                                   deviceid, 1, False)
                         try:
                             # Badly blocking here: We lack AsyncReply in bound!
                             request.waitForReply(2000)  # in milliseconds
-                        except Exception as innerE:
+                        except RuntimeError as innerE:
                             if "Reply timed out" in str(innerE):
                                 # Indeed dead Karabo-wise:
                                 self.log.WARN("Kill previous incarnation of "
@@ -447,10 +445,8 @@ class DeviceServer(object):
                                                "Unexpected exception when "
                                                "trying to communicate with "
                                                f"'{deviceid}': {innerE}")
-                                self.ss.reply(False, f"{deviceid} already "
-                                              "instantiated, ping failed: "
-                                              f"{innerE}")
-                                return
+                                # Let outer 'try:' treat this:
+                                raise innerE
                         else:
                             # Technically, it could be alive on another server,
                             # but who cares about that detail...
