@@ -535,6 +535,10 @@ void Schema_Test::testSlotElement() {
     CPPUNIT_ASSERT(sch.getAllowedStates("slotTest")[2] == State::ERROR);
     CPPUNIT_ASSERT(sch.isCommand("slotTest") == true);
     CPPUNIT_ASSERT(sch.isProperty("slotTest") == false);
+
+    // Slots called "clear_namespace" are forbidden since they break the GUI client.
+    CPPUNIT_ASSERT_THROW(SLOT_ELEMENT(sch).key("clear_namespace").commit(),
+                         karabo::util::InitException);
 }
 
 
