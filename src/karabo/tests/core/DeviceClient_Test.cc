@@ -231,7 +231,7 @@ void DeviceClient_Test::testMonitorChannel() {
 
     int counter = 0;
     while (counter++ < 100) {
-        if (int32inChannel == 1) break;
+        if (imageEntry == 1) break; // Check the last variable assigned in dataHandler
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
     }
     // Now check all data arrived as it should:
