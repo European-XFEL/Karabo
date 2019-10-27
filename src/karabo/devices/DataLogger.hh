@@ -22,8 +22,30 @@ namespace karabo {
      */
     namespace devices {
 
-        struct DeviceData;
-        typedef boost::shared_ptr<DeviceData> DeviceDataPointer;
+        struct DeviceData {
+
+            KARABO_CLASSINFO(DeviceData, "DataLoggerDeviceData", "2.6")
+
+            enum class InitLevel {
+
+                NONE = 0, /// DeviceData is created
+                STARTED, /// connecting to device's signals has started
+                CONNECTED, /// all connections are established (and first Schema received in between)
+                COMPLETE /// the initial configuration has arrived
+            };
+
+            DeviceData(const karabo::util::Hash& input);
+
+            virtual ~DeviceData();
+
+            std::string m_deviceToBeLogged; // same as this DeviceData's key in DeviceDataMap
+
+            std::string m_directory;
+
+            InitLevel m_initLevel;
+
+            karabo::net::Strand::Pointer m_strand;
+        };
 
         /**
          * @class DataLogger
@@ -38,10 +60,11 @@ namespace karabo {
          */
         class DataLogger : public karabo::core::Device<> {
 
+        protected:
             bool m_useP2p;
 
             // https://www.quora.com/Is-it-thread-safe-to-write-to-distinct-keys-different-key-for-each-thread-in-a-std-map-in-C-for-keys-that-have-existing-entries-in-the-map
-            typedef std::unordered_map<std::string, DeviceDataPointer> DeviceDataMap;
+            typedef std::unordered_map<std::string, DeviceData::Pointer> DeviceDataMap;
             DeviceDataMap m_perDeviceData;
             boost::mutex m_perDeviceDataMutex;
             boost::mutex m_changeVectorPropMutex;
@@ -61,18 +84,30 @@ namespace karabo {
 
             virtual ~DataLogger();
 
-        private: // Functions
+            // Functions
+
+            virtual DeviceData::Pointer create(const karabo::util::Hash& config) = 0;
 
             void initialize();
 
-            void setupDirectory(const DeviceDataPointer& data) const;
+            /**
+             * Setup directory as a root of file hierarchy or as database location
+             * @param data
+             */
+            virtual void setupDirectory(const DeviceData::Pointer& data) = 0;
 
-            void initConnection(const DeviceDataPointer& data,
+            void initConnection(const DeviceData::Pointer& data,
                                 const boost::shared_ptr<std::atomic<unsigned int> >& counter);
 
             void slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId);
 
-            void handleChanged(const karabo::util::Hash& config, const std::string& user, const DeviceDataPointer& data);
+            /**
+             * Process configuration by writing to files or sending to DB server
+             * @param config
+             * @param user
+             * @param data
+             */
+            virtual void handleChanged(const karabo::util::Hash& config, const std::string& user, const DeviceData::Pointer& data) = 0;
 
             /**
              * Helper to remove an element from a vector<string> element.
@@ -96,16 +131,13 @@ namespace karabo {
              */
             bool appendTo(const std::string& str, const std::string& vectorProp);
 
-            /// Helper function to update data.m_idxprops, returns whether data.m_idxprops changed.
-            bool updatePropsToIndex(DeviceData& data);
-
-            /// Helper to ensure archive file is closed.
-            /// Must only be called from functions posted on 'data.m_strand'.
-            void ensureFileClosed(DeviceData& data);
-
             void slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
 
-            void handleSchemaUpdated(const karabo::util::Schema& schema, const DeviceDataPointer& data);
+            /**
+             * Store updated schema into file hierarchy or in database tables
+             */
+            virtual void handleSchemaUpdated(const karabo::util::Schema& schema, const DeviceData::Pointer& data) = 0;
+
             /**
              * FIXME: Update text
              * This tags a device to be discontinued, three cases have to be distinguished
@@ -121,36 +153,33 @@ namespace karabo {
 
             void slotAddDevicesToBeLogged(const std::vector<std::string>& deviceId);
 
-            void handleFailure(const std::string& reason, const DeviceDataPointer& data,
+            void handleFailure(const std::string& reason, const DeviceData::Pointer& data,
                                const boost::shared_ptr<std::atomic<unsigned int> >& counter);
 
-            void handleSchemaConnected(const DeviceDataPointer& data,
+            void handleSchemaConnected(const DeviceData::Pointer& data,
                                        const boost::shared_ptr<std::atomic<unsigned int> >& counter);
 
             void handleSchemaReceived(const karabo::util::Schema& schema, const std::string& deviceId,
-                                      const DeviceDataPointer& data,
+                                      const DeviceData::Pointer& data,
                                       const boost::shared_ptr<std::atomic<unsigned int> >& counter);
 
-            void handleSchemaReceived2(const karabo::util::Schema& schema, const DeviceDataPointer& data,
+            void handleSchemaReceived2(const karabo::util::Schema& schema, const DeviceData::Pointer& data,
                                        const boost::shared_ptr<std::atomic<unsigned int> >& counter);
 
             /// Helper for connecting to both signalChanged and signalStateChanged
-            void handleConfigConnected(const DeviceDataPointer& data,
+            void handleConfigConnected(const DeviceData::Pointer& data,
                                        const boost::shared_ptr<std::atomic<unsigned int> >& counter);
 
             void checkReady(std::atomic<unsigned int>& counter);
 
             bool stopLogging(const std::string& deviceId);
 
-            int determineLastIndex(const std::string& deviceId) const;
-
-            int incrementLastIndex(const std::string& deviceId);
-
             void flushActor(const boost::system::error_code& e);
 
-            void doFlush();
-
-            void flushOne(const DeviceDataPointer& data);
+            /**
+             * Flush data in file hierarchy or to the database tables
+             */
+            virtual void doFlush() = 0;
 
             // The flush slot
             void flush();
