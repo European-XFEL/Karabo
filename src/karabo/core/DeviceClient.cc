@@ -1172,9 +1172,10 @@ namespace karabo {
             Hash hash;
             Schema schema;
             bool configAtTimepoint;
+            std::string configTimepoint; // Timepoint for configuration as a string in ISO8601 format.
             try {
                 p->request(dataLogReader, "slotGetConfigurationFromPast", deviceId, timepoint)
-                        .timeout(10 * m_internalTimeout).receive(hash, schema, configAtTimepoint);
+                        .timeout(10 * m_internalTimeout).receive(hash, schema, configAtTimepoint, configTimepoint);
             } catch (const TimeoutException&) {
                 Exception::clearTrace();
                 KARABO_LOG_FRAMEWORK_ERROR << "Request to DataLogReader '" << dataLogReader
