@@ -184,6 +184,7 @@ void DataLogging_Test::allTestRunner() {
     manager_conf.set("flushInterval", m_flushIntervalSec);
     manager_conf.set("directory", "dataLoggingTest/karaboHistory");
     manager_conf.set<vector<string>>("serverList", {m_server});
+    manager_conf.set("loggerType", "FileDataLogger");
     success = m_deviceClient->instantiate(m_server,
                                           "DataLoggerManager", manager_conf, KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
