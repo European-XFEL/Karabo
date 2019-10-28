@@ -504,3 +504,8 @@ class BytesMessage(Message):
         data = bytes(data)
         self.dll.MQSetBytesMessageBytes(self.handle, c_char_p(data),
                                         c_int(len(data)))
+
+
+OPEN_MQ_TIMEOUT = 2103
+OPEN_MQ_CONCURRENT_ACCESS = 1116
+OPEN_MQ_MSG_DROPPED = 3120
