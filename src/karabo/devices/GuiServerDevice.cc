@@ -924,7 +924,7 @@ namespace karabo {
 
                 const std::string & readerId(getDataReaderId(deviceId));
                 auto handler = bind_weak(&karabo::devices::GuiServerDevice::configurationFromPast, this,
-                                         channel, deviceId, time, _1, _2, _3);
+                                         channel, deviceId, time, _1, _2, _3, _4);
                 auto failureHandler = bind_weak(&karabo::devices::GuiServerDevice::configurationFromPastError, this,
                                                 channel, deviceId, time);
                 // Two minutes timeout since current implementation of slotGetConfigurationFromPast:
@@ -933,7 +933,7 @@ namespace karabo {
                 // in between these two time points.
                 request(readerId, "slotGetConfigurationFromPast", deviceId, time)
                         .timeout(120000) // 2 minutes - if we do not specify it will be 2*KARABO_SYS_TTL, i.e. 4 minutes
-                        .receiveAsync<Hash, Schema, bool>(handler, failureHandler);
+                        .receiveAsync<Hash, Schema, bool, std::string>(handler, failureHandler);
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetConfigurationFromPast(): " << e.what();
                 // Be a bit cautious: exception might come from an ill-formed info
@@ -950,7 +950,8 @@ namespace karabo {
         void GuiServerDevice::configurationFromPast(WeakChannelPointer channel,
                                                     const std::string& deviceId, const std::string& time,
                                                     const karabo::util::Hash& config, const karabo::util::Schema& /*schema*/,
-                                                    const bool configAtTimepoint) {
+                                                    const bool configAtTimepoint,
+                                                    const std::string &configTimepoint) {
             try {
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting configuration from past: " << deviceId << " @ " << time;
@@ -966,8 +967,8 @@ namespace karabo {
                 } else {
                     h.set("success", true);
                     h.set("config", config);
-                    // TODO: uncomment the line below when the GUI client becomes compatible with the extra key.
-                    //h.set("configAtTimepoint", configAtTimepoint);
+                    h.set("configAtTimepoint", configAtTimepoint);
+                    h.set("configTimepoint", configTimepoint);
                 }
 
                 safeClientWrite(channel, h, REMOVE_OLDEST);
