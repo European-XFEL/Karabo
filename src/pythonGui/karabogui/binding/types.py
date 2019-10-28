@@ -128,7 +128,7 @@ class BindingNamespace(object):
         self.__dict__[priv_prefix + '__names'] = []
         self.__dict__[priv_prefix + '__priv_prefix'] = priv_prefix
 
-    def clear(self):
+    def clear_namespace(self):
         """Remove all items from the namespace.
         """
         for key in self.__names:
