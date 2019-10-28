@@ -27,7 +27,7 @@ def control_service(server_id, command):
     svc_ctrl = {'up': 'u',
                 'down': 'd',
                 'once': 'o',
-                'kill': '=k',
+                'kill': '+k',
                 'group': '+k'}
     ctrl = absolute("var", "service", server_id, "supervise", "control")
     if command not in svc_ctrl:
@@ -131,7 +131,9 @@ class LogWebSocket(WebSocketHandler):
         # this function is called by Tornado's event loop
         # to execute the notification in background
         # we need to spawn a callback
-        if message == "PONG":
+
+        # received a "Clear to Send" packet
+        if message == "CTS":
             if self.flush_fut:
                 self.flush_fut.set_result(None)
             return
@@ -146,7 +148,8 @@ class LogWebSocket(WebSocketHandler):
         with open(path) as f:
             while True:
                 self.flush_fut = Future()
-                self.write_message("PING")
+                # send a "Request To Send"
+                self.write_message("RTS")
                 await self.flush_fut
                 self.flush_fut = None
                 # send line by line until the file is read
@@ -247,7 +250,8 @@ def run_webserver():
                             FileHandler),
                            ('/api/servers/([a-zA-Z0-9_]+).json',
                             DaemonHandler, server_dict),
-                           ('/api/servers/logsocket', LogWebSocket)
+                           ('/api/servers/logsocket', LogWebSocket),
+                           (r'/(favicon\.ico)', web.StaticFileHandler),
                            ],
                           template_path=os.path.join(
                               os.path.dirname(__file__), "templates"),
