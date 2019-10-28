@@ -52,6 +52,8 @@ else:
             'jupyter_spec/kernel.json',
             'static/*.css',
             'static/*.js',
+            'static/*.html',
+            'static/favicon.ico',
             'templates/*.html'],
         'karabo.testing': ['resources/*.*'],
     }
