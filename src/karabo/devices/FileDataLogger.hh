@@ -1,12 +1,9 @@
 /* 
- * File:   FileDataLogger.hh
- * Author: Sergey Esenov <serguei.essenov at xfel.eu>
- *
- * Created on October 25, 2019, 4:05 PM
+ * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifndef FILEDATALOGGER_HH
-#define	FILEDATALOGGER_HH
+#ifndef KARABO_DEVICES_FILEDATALOGGER_HH
+#define	KARABO_DEVICES_FILEDATALOGGER_HH
 
 #include "DataLogger.hh"
 
@@ -79,5 +76,5 @@ namespace karabo {
     }
 }
 
-#endif	/* FILEDATALOGGER_HH */
+#endif	/* KARABO_DEVICES_FILEDATALOGGER_HH */
 
