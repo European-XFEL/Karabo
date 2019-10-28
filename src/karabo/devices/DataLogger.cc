@@ -182,8 +182,8 @@ namespace karabo {
 
             // Create data structures, including directories
             for (const std::string& deviceId : devsToLog) {
-                Hash config("deviceToBeLogged", deviceId, "directory", get<string>("directory"));
-                DeviceData::Pointer data = create(config);
+                DeviceData::Pointer data = createDeviceData(Hash("deviceToBeLogged", deviceId,
+                                                                 "directory", get<string>("directory")));
                 setupDirectory(data);
                 // Locking mutex not yet needed - no parallelism on content of m_perDeviceData yet.
                 m_perDeviceData.insert(std::make_pair(deviceId, data));
@@ -358,8 +358,8 @@ namespace karabo {
                 appendTo(deviceId, "devicesNotLogged");
 
                 // Create data structure and setup directory
-                Hash config("devicesToBeLogged", deviceId, "directory", get<string>("directory"));
-                DeviceData::Pointer data = create(config);
+                DeviceData::Pointer data = createDeviceData(Hash("deviceToBeLogged", deviceId,
+                                                                 "directory", get<string>("directory")));
                 setupDirectory(data);
                 boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
                 m_perDeviceData.insert(std::make_pair(deviceId, data));
