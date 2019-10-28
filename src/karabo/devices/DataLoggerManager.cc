@@ -141,6 +141,14 @@ namespace karabo {
                     .assignmentOptional().defaultValue(true) // true will cause alarms when loggers are too slow
                     .commit();
 
+            STRING_ELEMENT(expected).key("loggerType")
+                    .displayedName("Logger type")
+                    .description("Type of DataLogger: FileDataLogger, InfluxDataLogger")
+                    .options("FileDataLogger,InfluxDataLogger")
+                    .init()
+                    .assignmentOptional().defaultValue("FileDataLogger")
+                    .commit();
+
             BOOL_ELEMENT(expected).key("useP2p")
                     .displayedName("Use p2p shortcut")
                     .description("Whether to instruct loggers to use point-to-point instead of broker")
@@ -718,7 +726,7 @@ namespace karabo {
                     newDeviceToLog(instanceId);
                 }
                 if (entry.hasAttribute(instanceId, "classId")
-                    && entry.getAttribute<std::string>(instanceId, "classId") == "DataLogger") {
+                    && entry.getAttribute<std::string>(instanceId, "classId") == get<std::string>("loggerType")) {
                     // A new logger has started - check whether there is more work for it to do
                     newLogger(instanceId);
                 }
@@ -871,7 +879,7 @@ namespace karabo {
                               "performanceStatistics.enable", get<bool>("enablePerformanceStats"),
                               "useP2p", get<bool>("useP2p"));
             const std::string loggerId(serverIdToLoggerId(serverId));
-            const Hash hash("classId", "DataLogger",
+            const Hash hash("classId", get<std::string>("loggerType"),
                             "deviceId", loggerId,
                             "configuration", config);
             KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << loggerId << "' on server '" << serverId << "'";
@@ -898,7 +906,7 @@ namespace karabo {
             if (type == "device") {
                 // Figure out who logs and tell to stop
                 goneDeviceToLog(instanceId);
-                if (instanceInfo.has("classId") && instanceInfo.get<std::string>("classId") == "DataLogger") {
+                if (instanceInfo.has("classId") && instanceInfo.get<std::string>("classId") == get<std::string>("loggerType")) {
                     goneLogger(instanceId);
                 }
             } else if (type == "server") {
@@ -989,13 +997,15 @@ namespace karabo {
                 case LoggerState::INSTANTIATING:
                     // Expected nice behaviour: Already took note that logger is gone and so tried to start again.
                     // Nothing to do.
-                    KARABO_LOG_FRAMEWORK_INFO << "Server '" << serverId << "' gone while instantiating DataLogger."; 
+                    KARABO_LOG_FRAMEWORK_INFO << "Server '" << serverId << "' gone while instantiating "
+                            << get<std::string>("loggerType") << ".";
                     break;
                 case LoggerState::RUNNING:
                     // Looks like a non-graceful shutdown of the server that is detected by lack of heartbeats where
                     // the DeviceClient currently (Karabo 2.6.0) often sends the "gone" signal for the server before
                     // the one of the DataLogger.
-                    KARABO_LOG_FRAMEWORK_WARN << "Server '" << serverId << "' gone while DataLogger still alive.";
+                    KARABO_LOG_FRAMEWORK_WARN << "Server '" << serverId << "' gone while "
+                            << get<std::string>("loggerType") << " still alive.";
                     // Also then we have to move "devices"/"beingAdded" to "backlog".
                     break;
             }

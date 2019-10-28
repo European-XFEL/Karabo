@@ -14,7 +14,7 @@ namespace karabo {
     
     namespace devices {
         
-        struct FileDeviceData : public DeviceData {
+        struct FileDeviceData : public karabo::devices::DeviceData {
 
             KARABO_CLASSINFO(FileDeviceData, "FileDataLoggerDeviceData", "2.6")
 
@@ -42,7 +42,7 @@ namespace karabo {
         };
 
 
-        class FileDataLogger : public DataLogger {
+        class FileDataLogger : public karabo::devices::DataLogger {
 
         public:
 
@@ -52,7 +52,7 @@ namespace karabo {
 
             virtual ~FileDataLogger();
 
-            DeviceData::Pointer create(const karabo::util::Hash& config);
+            DeviceData::Pointer createDeviceData(const karabo::util::Hash& config);
 
             void setupDirectory(const DeviceData::Pointer& data);
 
