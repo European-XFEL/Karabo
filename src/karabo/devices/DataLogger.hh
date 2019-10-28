@@ -3,8 +3,8 @@
  */
 
 
-#ifndef KARABO_CORE_DATALOGGER_HH
-#define	KARABO_CORE_DATALOGGER_HH
+#ifndef KARABO_DEVICES_DATALOGGER_HH
+#define	KARABO_DEVICES_DATALOGGER_HH
 
 #include <fstream>
 
@@ -211,4 +211,4 @@ namespace karabo {
     }
 }
 
-#endif
+#endif /* KARABO_DEVICES_DATALOGGER_HH */
