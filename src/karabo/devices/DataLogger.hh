@@ -86,7 +86,7 @@ namespace karabo {
 
             // Functions
 
-            virtual DeviceData::Pointer create(const karabo::util::Hash& config) = 0;
+            virtual DeviceData::Pointer createDeviceData(const karabo::util::Hash& config) = 0;
 
             void initialize();
 

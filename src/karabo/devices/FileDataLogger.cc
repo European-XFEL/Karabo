@@ -1,3 +1,4 @@
+#include <iostream>
 #include "FileDataLogger.hh"
 
 
@@ -10,9 +11,7 @@ namespace karabo {
         using namespace karabo::io;
         using namespace karabo::xms;
 
-        KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, DataLogger, FileDataLogger)        
-        KARABO_REGISTER_FOR_CONFIGURATION(FileDeviceData)
-
+        KARABO_REGISTER_IN_FACTORY_1(karabo::devices::DeviceData, karabo::devices::FileDeviceData, karabo::util::Hash)
 
         FileDeviceData::FileDeviceData(const karabo::util::Hash& input)
             : DeviceData(input)
@@ -76,8 +75,11 @@ namespace karabo {
         }
 
 
-        DeviceData::Pointer FileDataLogger::create(const karabo::util::Hash& config) {
-            return Configurator<DeviceData>::create("FileDataLoggerDeviceData", config);
+        KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, DataLogger, FileDataLogger)
+
+
+        DeviceData::Pointer FileDataLogger::createDeviceData(const karabo::util::Hash& config) {
+            return Factory<karabo::devices::DeviceData>::create<karabo::util::Hash>("FileDataLoggerDeviceData", config);
         }
 
 
