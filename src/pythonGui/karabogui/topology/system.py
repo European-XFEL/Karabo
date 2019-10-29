@@ -563,7 +563,8 @@ class SystemTopology(HasStrictTraits):
                     if key[0] == instance_id:
                         # Clear the class proxy binding values when device
                         # server goes offline
-                        self._class_proxies[key].binding.value.clear()
+                        proxy = self._class_proxies[key]
+                        proxy.binding.value.clear_namespace()
                 # Update status of all offline project device proxies
                 self._project_device_proxies_server_update(instance_id)
 
