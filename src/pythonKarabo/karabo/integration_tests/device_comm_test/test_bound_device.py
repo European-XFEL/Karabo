@@ -18,7 +18,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
     def test_log_level(self):
         SERVER_ID = "logLevelServer"
         deviceId = "logLevelTestDevice"
-        serverLogLevel = "ERROR"
+        serverLogLevel = "FATAL"
         self.start_server("bound", SERVER_ID, ["PropertyTest"],
                           logLevel=serverLogLevel)
 
@@ -30,6 +30,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         self.assertTrue(ok, msg)
         res = self.dc.get(deviceId, "Logger.priority")
         self.assertEqual(res, serverLogLevel)
+
         ok, msg = self.dc.killDevice(deviceId, 30)
         self.assertTrue(ok, "Problem killing device '{}': {}.".format(deviceId,
                                                                       msg))
@@ -101,6 +102,10 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
                     raise RuntimeError("Waiting for device to init timed out")
                 nTries += 1
 
+        # Some sub-tests need a helper to call slots with arguments:
+        sigSlotA = SignalSlotable("sigSlotA")
+        sigSlotA.start()
+
         # tests are run in sequence as sub tests
         # device server thus is only instantiated once
         with self.subTest(msg="Test execute slots"):
@@ -137,9 +142,6 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         with self.subTest(msg="Test getTimestamp"):
             # This is basically a copy of  Device_Test::testGetTimestamp
             #
-            # Need a communication helper to call slots with arguments:
-            sigSlotA = SignalSlotable("sigSlotA")
-            sigSlotA.start()
 
             timeOutInMs = 500  # more than in C++ - here it goes via broker...
             periodInMicroSec = 100000  # some tests below assume 0.1 s
@@ -247,6 +249,12 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
                                  KARABO_SCHEMA_MAX_SIZE, 8)
             self.assertRaises(RuntimeError, self.dc.set,
                               "testComm1", "vectorInt32", [4]*9)  # not OK now!
+
+        with self.subTest(msg="Test non-reconfigurables cannot be modified"):
+            request = sigSlotA.request("testComm1", "slotReconfigure",
+                                       Hash("archive", False))
+            with self.assertRaises(RuntimeError):
+                request.waitForReply(30000)  # in ms
 
         with self.subTest(msg="Test killing 'deviceNotGoingDownCleanly'"):
             # Check that the device goes down although thread not stopped

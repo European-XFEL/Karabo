@@ -326,7 +326,7 @@ namespace karabo {
                 BOOL_ELEMENT(expected).key("archive")
                         .displayedName("Archive")
                         .description("Decides whether the properties of this device will be logged or not")
-                        .reconfigurable()
+                        .init()
                         .expertAccess()
                         .assignmentOptional().defaultValue(true)
                         .commit();
@@ -1778,11 +1778,7 @@ namespace karabo {
                 {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
 
-                    boost::optional<const karabo::util::Hash::Node&> node = reconfiguration.find("archive");
-                    if (node && node->getValue<bool>() != m_parameters.get<bool>("archive")) {
-                        instanceInfoUpdate.set("archive", node->getValue<bool>());
-                    }
-                    node = reconfiguration.find("visibility");
+                    boost::optional<const karabo::util::Hash::Node&> node = reconfiguration.find("visibility");
                     if (node && node->getValue<int>() != m_parameters.get<int>("visibility")) {
                         instanceInfoUpdate.set("visibility", node->getValue<int>());
                     }
