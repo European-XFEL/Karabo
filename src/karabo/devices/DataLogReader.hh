@@ -175,8 +175,15 @@ namespace karabo {
              * @param deviceId of the device to get the configuration from
              * @param timepoint in iso8601 format for which to get the information
              * 
-             * The slot replies a std::pair of Hash and Schema objects containing the configuration Hash and the 
-             * corresponding device schema for timepoint.
+             * The slot replies with a tuple of 4 values. The first two are the Hash and Schema objects containing the
+             * configuration Hash and the corresponding device schema for timepoint. The third is a boolean whose true
+             * value indicates the device was online and actively logging data at the timepoint. The fourth value is
+             * the string form of the timepoint for the configuration returned. If the device was online and actively
+             * logging at the given timepoint, the fourth parameter will be the given timepoint; otherwise, the fourth
+             * parameter will be the timepoint for the configuration returned.
+             *
+             * An important note: if no configuration is found for the device at the timepoint, the third value in the
+             * reply will be false and the fourth will be the string form of the Epoch (01/01/1970 at 00:00:00).
              */
             void slotGetConfigurationFromPast(const std::string& deviceId, const std::string& timepoint);
 
@@ -193,9 +200,13 @@ namespace karabo {
              *
              * @param deviceId the device whose logger index event should be retrieved.
              * @param timepoint the timepoint that will be used as the reference to find the logger index event.
-             * @return the logger index event for the given devices that is closest but not after the given timepoint.
+             * @return a pair whose 'first' is a boolean that indicates whether configuration was active at the
+             * timepoint (true) or whether it is a configuration from the most recent activation of the device prior
+             * to the timepoint because the device was not active logging at the timepoint. The pair's 'second' value
+             * is the logger index of the given device that is the closest "device became online" event that is not
+             * after the given timepoint.
              */
-            DataLoggerIndex findLoggerIndexTimepoint(const std::string& deviceId, const std::string& timepoint);
+            std::pair<bool, DataLoggerIndex> findLoggerIndexTimepoint(const std::string& deviceId, const std::string& timepoint);
 
             /// Find logger closest index from archive_index.txt file that is before/after (according to 'before')
             /// 'timepoint'. If there is none before (after) but that is asked for, take the one just after (before).
