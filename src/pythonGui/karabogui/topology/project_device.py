@@ -190,7 +190,7 @@ class ProjectDeviceInstance(HasStrictTraits):
         offline
         """
         if new == ProxyStatus.NOSERVER:
-            self._offline_proxy.binding.value.clear()
+            self._offline_proxy.binding.value.clear_namespace()
 
     # ---------------------------------------------------------------------
     # utils
