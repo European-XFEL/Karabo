@@ -73,7 +73,9 @@ void DeviceClient_Test::tearDown() {
 void DeviceClient_Test::testAll() {
     // A single test to reduce setup/teardown time
     testConcurrentInitTopology();
+    // testGet() and testSet() in that order - to avoid the need to instantiate again
     testGet();
+    testSet();
     testMonitorChannel();
     testGetSchema();
     testGetSchemaNoWait();
@@ -184,10 +186,22 @@ void DeviceClient_Test::testGet() {
     CPPUNIT_ASSERT_THROW(m_deviceClient->get<std::string>("TestedDevice", "alarmCondition", dummy), ParameterException);
     CPPUNIT_ASSERT_THROW(dummy = m_deviceClient->get<std::string>("TestedDevice", "alarmCondition"), ParameterException);
 
-    success = m_deviceClient->killDevice("TestedDevice", KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    // No shutdown - done in following testSet
+    //    success = m_deviceClient->killDevice("TestedDevice", KRB_TEST_MAX_TIMEOUT);
+    //    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 }
 
+
+void DeviceClient_Test::testSet() {
+
+    std::clog << "DeviceClient_Test::testSet" << std::endl;
+    // CPPUNIT_ASSERT_EQUAL(true, m_deviceClient->get<bool>("TestedDevice", "archive"));
+    // Cannot reconfigure non-reconfigurable parameters - here caught already by client
+    CPPUNIT_ASSERT_THROW(m_deviceClient->set("TestedDevice", "archive", false), karabo::util::ParameterException);
+
+    std::pair<bool, std::string> success = m_deviceClient->killDevice("TestedDevice", KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+}
 
 void DeviceClient_Test::testMonitorChannel() {
     std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest",
