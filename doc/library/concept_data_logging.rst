@@ -5,9 +5,8 @@ The Data Logger
 ***************
 
 Karabo offers continuous logging of all properties by usage of the *Data Logger* service.
-This service is realized as a set of Karabo devices, one for each device being
-logged, which archive any changes of a property to disk and allow for indexing
-them either by trainId (if provided) or timestamp.
+This service is realized as a set of Karabo devices, which archive any changes of a 
+property and allow for indexing by trainId (if provided) or timestamp.
 
 The logging devices are managed by a data logger manager device, which manages
 logging device creation on a list of servers it holds. Load-balancing of the
@@ -17,10 +16,12 @@ subsequently assigned to new logging devices.
 Upon initialization the logging manager requests the current system topology
 and on basis of this information initiates any logging devices needed. Afterwards,
 it monitors whether new device instances appear or existing instances are shutdown.
-For new instances it creates a new logging device if necessary. For device
-instances which are shutdown it makes sure the logging device closes the log
-file and then shuts the log device instance down.
+For new instances it assigns the instance to a logging device. For device
+instances which are shutdown it makes sure the logging device flushes all the logged
+data.
 
+The data logger originally used a text file based archiving backend. Then a new
+backend, based on InFluxDB, has been integrated into the data logging infrastructure.
 
 Distinction from Data Acquisition
 =================================
@@ -49,8 +50,9 @@ size of a single log file can be given, allowing for optimizing the indexing
 performance, as closed off log files contain information on the timestamps of
 the data they contain.
 
-Data logging devices are hidden at user access levels lower than admin. Their
-instance id is given by the device instance id they log, prefixed with "Datalogger-".
+Data logging devices are hidden at user access levels lower than admin. The devices
+being logged by each data logger instance can be found in its *devicesToBeLogged* 
+property. 
 
 
 Retrieving Logged Information
@@ -110,8 +112,11 @@ In iKarabo the *getHistory* proxy object may be used:
     data will be reduced appropriately to still span the full timespan."""
 
 
+Text-File based Backend
+=======================
+
 Logging Format
-==============
+--------------
 
 Log files are created and updated by the logging devices. Specifically,
 two files are created in a directory corresponding to the logged device's
@@ -151,3 +156,86 @@ The idx directory
 
 Both index and raw files are regularly flushed to disk in the time interval
 specified by the *flushInterval* property of the data logger.
+
+InfluxDB based Backend
+======================
+
+Server infrastructure
+---------------------
+
+An instance of InfluxDB should be available when the karabo services are started.
+A local instance of InfluxDB can be started by using the command **karabo-startinfluxdb**.
+
+Logging Database Organization
+-----------------------------
+
+Each Karabo topic will have its own InfluxDB database. In each database, the 
+data will be organized in the set of measurements described below:
+
+* **Device Properties Measurement**: Each device being logged in the topic will
+  have its own measurement, with the name of the device. The device properties
+  being logged will be mapped to fields with the same name as the property. The
+  trainIds associated to the logging records will also be mapped to a field. The
+  name of the user responsible for the property value change will be mapped to 
+  a tag in the device measurement. The value of the user tag will be either a
+  user name (for changes associated to a user) or "." for changes that have no
+  responsible user associated.
+
+  An example of a device measurement - in this case for device 'GUI_SERVER_0':
+
+  ==================== ====== ======= ================= ============= ================
+  Name: GUI_SERVER_0
+  ------------------------------------------------------------------------------------
+  time                 *user* trainId serverId          useTimeServer connectedClients 
+  ==================== ====== ======= ================= ============= ================
+  2019-10-24T10:54:04Z .      0       karabo/gui_server True          10  
+  2019-10-24T10:56:28Z Alice  1272                      False         
+  2019-10-24T11:00:02Z Bob    0                                       9 
+  ==================== ====== ======= ================= ============= ================
+  
+  As shown in the example, the number of non-null fields varies among records -
+  the data logger will group the properties by the time they changed before writing 
+  them to InfluxDB. The timestamps for **time** are explicitly specified when data is 
+  sent to InfluxDB. **user** is a tag. All the other columns are fields. Properties with 
+  redundant values, like **_device_id_** and **deviceId**, shouldn't be logged. 
+
+* **Device Events Measurement**: This measurement will store the device events - currently
+  device instantiations, shutdowns and schema updates. 
+  
+  The log reader relies on device instantiation events for being able to retrieve the last 
+  known configuration if the given time point is not in an interval during which the device 
+  was active. Similarly, **DeviceClient.getPropertyHistory** relies on instatiantion events 
+  to know from when it must start its properties read sweep in case no change for the given 
+  property happened during the requested time interval. 
+
+  An example of a device events measurement - for device 'GUI_SERVER_0':
+
+  ==================== ====== ============== =================
+  Name: GUI_SERVER_0__EVENTS
+  ------------------------------------------------------------
+  time                 *type* schema_digest  serverId
+  ==================== ====== ============== =================
+  2019-10-24T10:54:04Z +LOG                  karabo/gui_server
+  2019-10-24T10:56:28Z SCHEMA 3fd545689a12ce
+  2019-10-24T11:00:02Z -LOG                  karabo/gui_server
+  ==================== ====== ============== =================
+
+  The timestamps for time are explicitly specified when data is sent to InfluxDB. **type** 
+  is a tag whose value indicates the type of the event. The remaining columns are fields.
+  **schema_digest** is a digest for a serialized schema stored in the Device Schema 
+  Measurement described in the next item. 
+  
+* **Device Schema Measurement**:
+
+  ==================== =============== =====================================================
+  Name: GUI_SERVER_0__SCHEMAS
+  ------------------------------------------------------------------------------------------
+  time                 *schema_digest* schema
+  ==================== =============== =====================================================
+  2019-10-24T10:54:04Z 3fd545689a12ce  GuiServerDevice:<?xml version="1.0"?><root KRB_Ar....
+  ==================== =============== =====================================================
+
+For the production environment, the replication factors of the retention policies 
+described above match the number of InfluxDB servers in the cluster. The durations of 
+the retention policies should be the same for all the measurements. The exact durations
+have yet to be defined.
