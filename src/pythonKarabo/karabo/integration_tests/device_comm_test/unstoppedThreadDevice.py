@@ -5,9 +5,11 @@
 import sys
 import time
 import threading
- 
+import os
+import signal
+
 from karabo.bound import (
-        PythonDevice, KARABO_CLASSINFO, State, UINT64_ELEMENT,
+        PythonDevice, KARABO_CLASSINFO, State, SLOT_ELEMENT, UINT64_ELEMENT,
 )
 
 @KARABO_CLASSINFO("UnstoppedThreadDevice", "2.0")
@@ -21,12 +23,19 @@ class UnstoppedThreadDevice(PythonDevice):
                 .readOnly().initialValue(0)
                 .commit()
                 ,
+
+        SLOT_ELEMENT(expected).key("slotPutToComa")
+        .displayedName("Put to coma")
+        .description("Put device into coma, i.e. linux process alive, but "
+                     "dead Karabo-wise")
+        .commit()
         )
 
     def __init__(self, configuration):
         super(UnstoppedThreadDevice,self).__init__(configuration)
         self.running = False
         self.pollingThread = None
+        self.KARABO_SLOT(self.slotPutToComa)
         self.registerInitialFunction(self.initialization)
 
     def initialization(self):
@@ -55,6 +64,10 @@ class UnstoppedThreadDevice(PythonDevice):
             self.set("updateId", self.get("updateId") + 1)
             time.sleep(1)
 
-# This entry used by device server
-if __name__ == "__main__":
-    launchPythonDevice()
+    def slotPutToComa(self):
+        self.log.WARN("Committing silent suicide, keeping process alive.")
+
+        # This will trigger the central event-loop to finish
+        # (in about 1 s, see C++'s Eventlopp::work()).
+        # But the thread is still keeping the device process alive!
+        os.kill(os.getpid(), signal.SIGTERM)
