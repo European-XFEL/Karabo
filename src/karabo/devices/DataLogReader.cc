@@ -400,7 +400,9 @@ namespace karabo {
 
                 Hash hash;
                 Schema schema;
-                Epochstamp target(timepoint);
+                const Epochstamp target(timepoint);
+                bool configAtTimepoint = false;
+                Epochstamp configTimepoint(0, 0); // configTimepoint initialized to the Epoch.
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "Requested time point: " << target.getSeconds();
                 // Retrieve proper Schema
@@ -422,27 +424,29 @@ namespace karabo {
                     }
                     schemastream.close();
                     if (archived.empty()) {
-                        reply(Hash(), Schema()); // Requested time is before any logger data
+                        reply(Hash(), Schema(), configAtTimepoint, configTimepoint.toIso8601()); // Requested time is before any logger data
                         KARABO_LOG_WARN << "Requested time point for device configuration is earlier than anything logged";
                         return;
                     }
                     m_schemaSerializer->load(schema, archived);
                 } else {
                     KARABO_LOG_WARN << "Schema archive file does not exist: " << schemaPath;
-                    reply(Hash(), Schema());
+                    reply(Hash(), Schema(), configAtTimepoint, configTimepoint.toIso8601());
                     return;
                 }
                 vector<string> paths = schema.getPaths();
 
-                DataLoggerIndex index = findLoggerIndexTimepoint(deviceId, timepoint);
+                auto result = findLoggerIndexTimepoint(deviceId, timepoint);
+                configAtTimepoint = result.first;
+                DataLoggerIndex index = result.second;
 
                 if (index.m_fileindex == -1) {
-                    reply(Hash(), Schema()); // Requested time precedes any logged data.
+                    reply(Hash(), Schema(), configAtTimepoint, configTimepoint.toIso8601()); // Requested time precedes any logged data.
                     KARABO_LOG_WARN << "Requested time point, "
                             << timepoint << ", precedes any logged data for device '" << deviceId << "'.";
                     return;
                 } else if (index.m_event != "+LOG") {
-                    reply(Hash(), Schema());
+                    reply(Hash(), Schema(), configAtTimepoint, configTimepoint.toIso8601());
                     KARABO_LOG_WARN << "Unexpected event type '" << index.m_event
                             << "' found as for the initial sweeping of last known good configuration.\n"
                             "Event type should be '+LOG ";
@@ -451,7 +455,10 @@ namespace karabo {
 
                 int lastFileIndex = getFileIndex(deviceId);
                 if (lastFileIndex < 0) {
-                    reply(Hash(), Schema());
+                    // Regardless of the results of the index search, the data files are compromissed and the
+                    // device should be reported as not logging at the timepoint.
+                    configAtTimepoint = false;
+                    reply(Hash(), Schema(), configAtTimepoint, configTimepoint.toIso8601());
                     KARABO_LOG_WARN << "File \"" << get<string>("directory") << "/" << deviceId << "/raw/archive.last\" not found. No data will be sent...";
                     return;
                 }
@@ -477,6 +484,9 @@ namespace karabo {
                                 current = stringDoubleToEpochstamp(tokens[2]);
                                 if (current > target)
                                     break;
+                                // configTimepoint is the stamp for the latest retrieved property value that
+                                // precedes the input timepoint.
+                                configTimepoint = current;
                                 // tokens[3] is trainId
                                 const Timestamp timestamp(current, fromString<unsigned long long>(tokens[3]));
                                 // tokens[5] and [6] are type and value, respectively
@@ -489,7 +499,10 @@ namespace karabo {
                         position = 0; // Puts the cursor at the start of the next log file to be searched.
                     }
                 }
-                reply(hash, schema);
+                // Makes a final adjustment: if the config was active at the input timepoint, makes configTimepoint
+                // equal to the input timepoint.
+                string configTimepointStr(configAtTimepoint ? timepoint : configTimepoint.toIso8601());
+                reply(hash, schema, configAtTimepoint, configTimepointStr);
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -528,13 +541,14 @@ namespace karabo {
         }
 
 
-        DataLoggerIndex DataLogReader::findLoggerIndexTimepoint(const std::string& deviceId, const std::string& timepoint) {
-
+        std::pair<bool, DataLoggerIndex> DataLogReader::findLoggerIndexTimepoint(const std::string& deviceId,
+                                                                                 const std::string& timepoint) {
             string timestampAsIso8061;
             string timestampAsDouble;
             string event;
-            DataLoggerIndex entry;
+            DataLoggerIndex lastLogPlusEntry, lastLogMinusEntry;
             string tail;
+            bool configAtTimepoint = false;
 
             const Epochstamp target(timepoint);
 
@@ -543,7 +557,7 @@ namespace karabo {
             string contentpath = get<string>("directory") + "/" + deviceId + "/raw/archive_index.txt";
             if (!bf::exists(bf::path(contentpath))) {
                 KARABO_LOG_FRAMEWORK_WARN << "findLoggerIndexTimepoint: path does not exist: " << contentpath;
-                return entry;
+                return make_pair(configAtTimepoint, lastLogPlusEntry);
             }
 
             ifstream ifs(contentpath.c_str());
@@ -571,15 +585,15 @@ namespace karabo {
                             KARABO_LOG_FRAMEWORK_DEBUG << "findLoggerIndexTimepoint: done looping. Line tail:" << tail;
                             break;
                         } else {
-                            // Store selected event. Only selects events corresponding to the device becoming online as
-                            // this method is used to retrieve the last known good configuration for a device at a given
-                            // timepoint. The selected event is the initial point for a log sweep that will gather that
-                            // last known good configuration.
                             if (event == "+LOG") {
-                                entry.m_event = event;
-                                entry.m_epoch = epochstamp;
+                                lastLogPlusEntry.m_event = event;
+                                lastLogPlusEntry.m_epoch = epochstamp;
                                 // store tail for later usage.
                                 tail = indexFields[4];
+                            } else if (event == "-LOG") {
+                                lastLogMinusEntry.m_event = event;
+                                lastLogMinusEntry.m_epoch = epochstamp;
+                                // There's no need to store the tail for the -LOG event; only its epoch is needed.
                             }
                         }
                     }
@@ -592,17 +606,26 @@ namespace karabo {
 
             if (!tail.empty()) {
                 try {
-                    this->extractTailOfArchiveIndex(tail, entry);
+                    this->extractTailOfArchiveIndex(tail, lastLogPlusEntry);
                 } catch (const exception &e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "DataLogReader - error extracting tail of selected event: "
                             << e.what();
                 }
+
+                // If the tail is not empty, it means a device became online event (LOG+) has been found. If there's
+                // no device became offline event (LOG-) that comes after the became online event, it means the device
+                // was being logged at the timepoint.
+                if (lastLogMinusEntry.m_event.empty() ||
+                    (lastLogMinusEntry.m_event == "-LOG" && lastLogMinusEntry.m_epoch < lastLogPlusEntry.m_epoch)) {
+                    configAtTimepoint = true;
+                }
             }
 
-            KARABO_LOG_FRAMEWORK_DEBUG << "findLoggerIndexTimepoint - entry: " << entry.m_event << " "
-                    << entry.m_position << " " << entry.m_user << " " << entry.m_fileindex;
-            
-            return entry;
+            KARABO_LOG_FRAMEWORK_DEBUG << "findLoggerIndexTimepoint - entry: " << lastLogPlusEntry.m_event << " "
+                    << lastLogPlusEntry.m_position << " " << lastLogPlusEntry.m_user << " "
+                    << lastLogPlusEntry.m_fileindex;
+
+            return make_pair(configAtTimepoint, lastLogPlusEntry);
         }
 
 
