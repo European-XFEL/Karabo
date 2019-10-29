@@ -175,7 +175,7 @@ class PythonDevice(NoFsm):
             .displayedName("Archive")
             .description("Decides whether the properties of this"
                          " device will be logged or not")
-            .reconfigurable()
+            .init()
             .expertAccess()
             .assignmentOptional().defaultValue(True)
             .commit(),
@@ -1413,10 +1413,10 @@ class PythonDevice(NoFsm):
 
         instanceInfoUpdate = Hash()
         with self._stateChangeLock:
-            for prop in ["archive", "visibility"]:
-                node = reconfiguration.find(prop)
-                if node and node.getValue() != self.parameters.get(prop):
-                    instanceInfoUpdate.set(prop, node.getValue())
+            prop = "visibility"
+            node = reconfiguration.find(prop)
+            if node and node.getValue() != self.parameters.get(prop):
+                instanceInfoUpdate.set(prop, node.getValue())
             self.parameters += reconfiguration
 
         if not instanceInfoUpdate.empty():
