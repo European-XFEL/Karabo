@@ -556,14 +556,25 @@ class DeviceClient(object):
         :param callbackFunction: the call-back function to be registered.
                     It must have the following signature: f(str, Schema)
 
+        Note:
+        Currently, registering only a schema update monitor with an instance
+        of a DeviceClient is not enough to have the registered call-back activated.
+        A workaround for this is to also register a property monitor with the
+        same instance of DeviceClient that has been used to register the schema
+        update monitor.
+
         Example:
 
         def onSchemaUpdate(deviceId, schema):
             print("{}: {}".format(deviceId, schema))
 
+        def onPropertyChange(deviceId, key, value, timeStamp):
+            # In this example the property monitor is empty.
+            pass
+
         c = DeviceClient()
         c.registerSchemaUpdatedMonitor(onSchemaUpdate)
-
+        c.registerPropertyMonitor("Test_Device_0", "result", onPropertyChange)
         """
         return self.__client.registerSchemaUpdatedMonitor(callbackFunction)
 

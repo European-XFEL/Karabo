@@ -731,6 +731,18 @@ namespace karabo {
             /**
              * Register a callback handler to be triggered if an instance receives a schema update from the distributed system
              * @param callBackFunction receiving the instanceId and updated Schema
+             *
+             * @note Currently, registering only a schema update monitor with an instance
+             *       of a DeviceClient is not enough to have the registered call-back activated.
+             *       A workaround for this is to also register a property monitor with the
+             *       same instance of DeviceClient that has been used to register the schema
+             *       update monitor.
+             *
+             *       Example:
+             *
+             *       DeviceClient dc = boost::shared_ptr<DeviceClient>(new DeviceClient());
+             *       dc->registerSchemaUpdateMonitor(fnSchemaUpdateHandler);
+             *       dc->registerPropertyMonitor("deviceId", "property_to_monitor", fnCallback);
              */
             void registerSchemaUpdatedMonitor(const SchemaUpdatedHandler& callBackFunction);
 
