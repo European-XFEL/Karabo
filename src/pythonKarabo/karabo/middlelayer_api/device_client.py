@@ -100,6 +100,24 @@ class OneShotQueue(asyncio.Future):
 
 @synchronize
 def waitUntilNew(*props):
+    """Wait until new futures provide a result
+
+    The futures can be provided as in::
+
+        waitUntilNew(device.speed, device.targetPosition)
+
+    where device is a proxy. The first completed future will return the
+    function. This function can be used to wait for a global property event
+    on a device as well::
+
+        waitUntilNew(device)
+
+    Note that for this to work, it is necessary that all the devices used in
+    the future parameters are connected while we are waiting.
+
+    For the asynchronous case a :func:`asyncio.wait_for` should be combined
+    if a `timeout` is desired.
+    """
     futures = []
     for prop in props:
         if isinstance(prop, ProxyBase):
