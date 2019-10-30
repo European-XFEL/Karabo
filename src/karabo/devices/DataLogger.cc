@@ -32,8 +32,6 @@ namespace karabo {
         using namespace karabo::xms;
 
 
-        //KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, DataLogger)
-
         void DataLogger::expectedParameters(Schema& expected) {
 
             OVERWRITE_ELEMENT(expected).key("state")
@@ -59,20 +57,6 @@ namespace karabo {
                     .displayedName("Use p2p shortcut")
                     .description("Whether to try to use point-to-point instead of broker")
                     .assignmentOptional().defaultValue(false)
-                    .commit();
-
-            PATH_ELEMENT(expected).key("directory")
-                    .displayedName("Directory")
-                    .description("The directory where the log files should be placed")
-                    .assignmentMandatory()
-                    .commit();
-
-            INT32_ELEMENT(expected).key("maximumFileSize")
-                    .displayedName("Maximum file size")
-                    .description("After any archived file has reached this size it will be time-stamped and not appended anymore")
-                    .unit(Unit::BYTE)
-                    .metricPrefix(MetricPrefix::MEGA)
-                    .assignmentMandatory()
                     .commit();
 
             Schema lastUpdateSchema;
@@ -120,10 +104,15 @@ namespace karabo {
 
 
         DeviceData::DeviceData(const karabo::util::Hash& input)
-            : m_initLevel(InitLevel::NONE)
-            , m_strand(boost::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService())) {
-            input.get("deviceToBeLogged", m_deviceToBeLogged);
-            input.get("directory", m_directory);
+            : m_deviceToBeLogged(input.get<std::string>("deviceToBeLogged"))
+            , m_initLevel(InitLevel::NONE)
+            , m_strand(boost::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService()))
+            , m_currentSchema()
+            , m_user(".")
+            , m_lastTimestampMutex()
+            , m_lastDataTimestamp(Epochstamp(0ull, 0ull), Trainstamp())
+            , m_updatedLastTimestamp(false)
+            , m_pendingLogin(true) {
         }
 
 
@@ -182,9 +171,8 @@ namespace karabo {
 
             // Create data structures, including directories
             for (const std::string& deviceId : devsToLog) {
-                DeviceData::Pointer data = createDeviceData(Hash("deviceToBeLogged", deviceId,
-                                                                 "directory", get<string>("directory")));
-                setupDirectory(data);
+                DeviceData::Pointer data = createDeviceData(Hash("deviceToBeLogged", deviceId));
+                initializeBackend(data);
                 // Locking mutex not yet needed - no parallelism on content of m_perDeviceData yet.
                 m_perDeviceData.insert(std::make_pair(deviceId, data));
             }
@@ -357,10 +345,9 @@ namespace karabo {
                 // No need to check return value here - everything in 'devicesNotLogged' is also in 'devicesToBeLogged':
                 appendTo(deviceId, "devicesNotLogged");
 
-                // Create data structure and setup directory
-                DeviceData::Pointer data = createDeviceData(Hash("deviceToBeLogged", deviceId,
-                                                                 "directory", get<string>("directory")));
-                setupDirectory(data);
+                // Create data structure ... depending on implementation
+                DeviceData::Pointer data = createDeviceData(Hash("deviceToBeLogged", deviceId));
+                initializeBackend(data);
                 boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
                 m_perDeviceData.insert(std::make_pair(deviceId, data));
 
@@ -480,6 +467,46 @@ namespace karabo {
             // arm timer again
             m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
             m_flushDeadline.async_wait(util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
+        }
+
+
+        void DataLogger::doFlush() {
+
+            // Flush all files, but also hijack this actor to update lastUpdatesUtc
+            std::vector<Hash> lastStamps;
+            bool updatedAnyStamp = false;
+            {
+                boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
+                lastStamps.reserve(m_perDeviceData.size());
+                for (auto& idData : m_perDeviceData) {
+                    DeviceData::Pointer data = boost::static_pointer_cast<DeviceData>(idData.second);
+                    {
+                        // To avoid this mutex lock, access to m_lastTimestampMutex would have to be posted on m_strand.
+                        // Keep as is since this file based DataLogger is supposed to phase out soon...
+                        boost::mutex::scoped_lock lock(data->m_lastTimestampMutex);
+                        updatedAnyStamp |= data->m_updatedLastTimestamp;
+                        data->m_updatedLastTimestamp = false;
+                        const karabo::util::Timestamp& ts = data->m_lastDataTimestamp;
+                        Hash h("deviceId", idData.first);
+                        // Human readable Epochstamp (except if no updates yet), attributes for machines
+                        Hash::Node& node = h.set("lastUpdateUtc", "");
+                        if (ts.getSeconds() != 0ull) {
+                            node.setValue(ts.toFormattedString()); //"%Y%m%dT%H%M%S"));
+                        }
+                        ts.getEpochstamp().toHashAttributes(node.getAttributes());
+                        lastStamps.push_back(std::move(h));
+                    }
+
+                    // We post on strand to exclude parallel access to data->m_configStream and data->m_idxMap
+                    data->m_strand->post(karabo::util::bind_weak(&DataLogger::flushOne, this, data));
+                }
+            }
+
+            if (updatedAnyStamp
+                || (lastStamps.size() != get<std::vector < Hash >> ("lastUpdatesUtc").size())) {
+                // If sizes are equal, but devices have changed, then at least one time stamp must have changed as well.
+                set("lastUpdatesUtc", lastStamps);
+            }
         }
 
 
