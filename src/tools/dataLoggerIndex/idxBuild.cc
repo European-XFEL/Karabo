@@ -304,8 +304,8 @@ void processNextFile(const std::string& deviceId, size_t number, const std::stri
             }
             boost::smatch tokens;
             bool search_res = boost::regex_search(line, tokens, lineRegex);
-            if (!search_res){
-                cout << "*** idxBuild: skip corrupted record : token.size() = " << tokens.size() << endl;
+            if (!search_res) {
+                cout << "*** idxBuild: skip corrupted record : line = " << line << ", token.size() = " << tokens.size() << endl;
                 continue; // This record is corrupted -- skip it
             }
             recnum++;
