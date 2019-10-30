@@ -75,6 +75,18 @@ class Tests(TestCase):
         self.assertEqual(t.time_frac, 135584022528)
         self.assertEqual(t.time_sec, 1251814980)
 
+    def test_add_sub(self):
+        t1 = Timestamp("2009-04-20T10:32:22 UTC")
+        self.assertEqual(t1.toTimestamp(), 1240223542)
+
+        t2 = Timestamp("2009-04-20T10:32:23 UTC")
+        self.assertEqual(t2.toTimestamp(), 1240223543)
+        self.assertEqual(t2 - t1, 1)
+        self.assertEqual(t2 - 1, t1.toTimestamp())
+
+        self.assertEqual(t2 + t1, t1.toTimestamp() + t2.toTimestamp())
+        self.assertEqual(t1 + 1, t2.toTimestamp())
+
 
 if __name__ == "__main__":
     main()
