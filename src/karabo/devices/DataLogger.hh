@@ -40,11 +40,21 @@ namespace karabo {
 
             std::string m_deviceToBeLogged; // same as this DeviceData's key in DeviceDataMap
 
-            std::string m_directory;
-
             InitLevel m_initLevel;
 
             karabo::net::Strand::Pointer m_strand;
+
+            karabo::util::Schema m_currentSchema;
+
+            std::string m_user;
+
+            boost::mutex m_lastTimestampMutex;
+
+            karabo::util::Timestamp m_lastDataTimestamp;
+
+            bool m_updatedLastTimestamp;
+
+            bool m_pendingLogin;
         };
 
         /**
@@ -94,7 +104,7 @@ namespace karabo {
              * Setup directory as a root of file hierarchy or as database location
              * @param data
              */
-            virtual void setupDirectory(const DeviceData::Pointer& data) = 0;
+            virtual void initializeBackend(const DeviceData::Pointer& data) = 0;
 
             void initConnection(const DeviceData::Pointer& data,
                                 const boost::shared_ptr<std::atomic<unsigned int> >& counter);
@@ -179,7 +189,9 @@ namespace karabo {
             /**
              * Flush data in file hierarchy or to the database tables
              */
-            virtual void doFlush() = 0;
+            void doFlush();
+
+            virtual void flushOne(const DeviceData::Pointer& data) = 0;
 
             // The flush slot
             void flush();
