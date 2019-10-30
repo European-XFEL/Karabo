@@ -11,18 +11,14 @@ namespace karabo {
         using namespace karabo::io;
         using namespace karabo::xms;
 
-        KARABO_REGISTER_IN_FACTORY_1(karabo::devices::DeviceData, karabo::devices::FileDeviceData, karabo::util::Hash)
+        KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, DataLogger, FileDataLogger)
+        KARABO_REGISTER_IN_FACTORY_1(DeviceData, FileDeviceData, karabo::util::Hash)
 
         FileDeviceData::FileDeviceData(const karabo::util::Hash& input)
             : DeviceData(input)
-            , m_currentSchema()
+            , m_directory(input.get<std::string>("directory"))
             , m_configStream()
             , m_lastIndex(0u)
-            , m_user(".") //TODO:  Define proper user running a device. The dot is unknown user?
-            , m_lastTimestampMutex()
-            , m_lastDataTimestamp(Epochstamp(0ull, 0ull), Trainstamp())
-            , m_updatedLastTimestamp(false)
-            , m_pendingLogin(true)
             , m_idxMap()
             , m_idxprops()
             , m_propsize(0u)
@@ -75,10 +71,28 @@ namespace karabo {
         }
 
 
-        KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, DataLogger, FileDataLogger)
+        void FileDataLogger::expectedParameters(karabo::util::Schema& expected) {
+
+            PATH_ELEMENT(expected).key("directory")
+                    .displayedName("Directory")
+                    .description("The directory where the log files should be placed")
+                    .assignmentMandatory()
+                    .commit();
+
+            INT32_ELEMENT(expected).key("maximumFileSize")
+                    .displayedName("Maximum file size")
+                    .description("After any archived file has reached this size it will be time-stamped and not appended anymore")
+                    .unit(Unit::BYTE)
+                    .metricPrefix(MetricPrefix::MEGA)
+                    .assignmentMandatory()
+                    .commit();
+
+        }
 
 
-        DeviceData::Pointer FileDataLogger::createDeviceData(const karabo::util::Hash& config) {
+        DeviceData::Pointer FileDataLogger::createDeviceData(const karabo::util::Hash& cfg) {
+            Hash config = cfg;
+            config.set("directory", get<std::string>("directory"));
             return Factory<karabo::devices::DeviceData>::create<karabo::util::Hash>("FileDataLoggerDeviceData", config);
         }
 
@@ -89,11 +103,11 @@ namespace karabo {
 
         FileDataLogger::~FileDataLogger() {}
 
-        void FileDataLogger::setupDirectory(const DeviceData::Pointer& devicedata) {
+        void FileDataLogger::initializeBackend(const DeviceData::Pointer& devicedata) {
             FileDeviceData::Pointer data = boost::static_pointer_cast<FileDeviceData>(devicedata);
             boost::system::error_code ec;
-            if (!boost::filesystem::exists(get<string>("directory") + "/" + data->m_deviceToBeLogged)) {
-                boost::filesystem::create_directories(get<string>("directory") + "/" + data->m_deviceToBeLogged, ec);
+            if (!boost::filesystem::exists(data->m_directory + "/" + data->m_deviceToBeLogged)) {
+                boost::filesystem::create_directories(data->m_directory + "/" + data->m_deviceToBeLogged, ec);
                 if (ec) {
                     const std::string msg("Failed to create directories : " + data->m_deviceToBeLogged + ". code = "
                                           + toString(ec.value()) += " -- " + ec.message());
@@ -101,11 +115,11 @@ namespace karabo {
                     throw KARABO_INIT_EXCEPTION(msg);
                 }
             }
-            if (!boost::filesystem::exists(get<string>("directory") + "/" + data->m_deviceToBeLogged + "/raw")) {
-                boost::filesystem::create_directory(get<string>("directory") + "/" + data->m_deviceToBeLogged + "/raw");
+            if (!boost::filesystem::exists(data->m_directory + "/" + data->m_deviceToBeLogged + "/raw")) {
+                boost::filesystem::create_directory(data->m_directory + "/" + data->m_deviceToBeLogged + "/raw");
             }
-            if (!boost::filesystem::exists(get<string>("directory") + "/" + data->m_deviceToBeLogged + "/idx")) {
-                boost::filesystem::create_directory(get<string>("directory") + "/" + data->m_deviceToBeLogged + "/idx");
+            if (!boost::filesystem::exists(data->m_directory + "/" + data->m_deviceToBeLogged + "/idx")) {
+                boost::filesystem::create_directory(data->m_directory + "/" + data->m_deviceToBeLogged + "/idx");
             }
 
             data->m_lastIndex = determineLastIndex(data->m_deviceToBeLogged);
@@ -193,7 +207,7 @@ namespace karabo {
 
                 bool newFile = false;
                 if (!data->m_configStream.is_open()) {
-                    string configName = get<string>("directory") + "/" + deviceId + "/raw/archive_" + toString(data->m_lastIndex) + ".txt";
+                    string configName = data->m_directory + "/" + deviceId + "/raw/archive_" + toString(data->m_lastIndex) + ".txt";
                     data->m_configStream.open(configName.c_str(), ios::out | ios::app);
                     if (!data->m_configStream.is_open()) {
                         KARABO_LOG_ERROR << "Failed to open \"" << configName << "\". Check permissions.";
@@ -215,7 +229,7 @@ namespace karabo {
                 else data->m_configStream << "|VALID\n";
 
                 if (data->m_pendingLogin || newFile) {
-                    string contentPath = get<string>("directory") + "/" + deviceId + "/raw/archive_index.txt";
+                    string contentPath = data->m_directory + "/" + deviceId + "/raw/archive_index.txt";
                     ofstream contentStream(contentPath.c_str(), ios::app);
                     if (data->m_pendingLogin) {
                         contentStream << "+LOG ";
@@ -238,7 +252,7 @@ namespace karabo {
                 if (!mdp) {
                     // a property not yet indexed - create meta data and set file
                     mdp = MetaData::Pointer(new MetaData);
-                    mdp->idxFile = get<string>("directory") + "/" + deviceId + "/idx/archive_" + toString(data->m_lastIndex)
+                    mdp->idxFile = data->m_directory + "/" + deviceId + "/idx/archive_" + toString(data->m_lastIndex)
                             + "-" + path + "-index.bin";
                     first = true;
                 }
@@ -266,7 +280,7 @@ namespace karabo {
 
         bool FileDataLogger::updatePropsToIndex(FileDeviceData& data) {
             const std::string& deviceId = data.m_deviceToBeLogged;
-            boost::filesystem::path propPath(get<string>("directory") + "/" + deviceId + "/raw/properties_with_index.txt");
+            boost::filesystem::path propPath(data.m_directory + "/" + deviceId + "/raw/properties_with_index.txt");
             if (boost::filesystem::exists(propPath)) {
                 const size_t propsize = boost::filesystem::file_size(propPath);
                 const time_t lasttime = boost::filesystem::last_write_time(propPath);
@@ -307,47 +321,8 @@ namespace karabo {
         }
 
 
-        void FileDataLogger::doFlush() {
-
-            // Flush all files, but also hijack this actor to update lastUpdatesUtc
-            std::vector<Hash> lastStamps;
-            bool updatedAnyStamp = false;
-            {
-                boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
-                lastStamps.reserve(m_perDeviceData.size());
-                for (auto& idData : m_perDeviceData) {
-                    FileDeviceData::Pointer data = boost::static_pointer_cast<FileDeviceData>(idData.second);
-                    {
-                        // To avoid this mutex lock, access to m_lastTimestampMutex would have to be posted on m_strand.
-                        // Keep as is since this file based DataLogger is supposed to phase out soon...
-                        boost::mutex::scoped_lock lock(data->m_lastTimestampMutex);
-                        updatedAnyStamp |= data->m_updatedLastTimestamp;
-                        data->m_updatedLastTimestamp = false;
-                        const karabo::util::Timestamp& ts = data->m_lastDataTimestamp;
-                        Hash h("deviceId", idData.first);
-                        // Human readable Epochstamp (except if no updates yet), attributes for machines
-                        Hash::Node& node = h.set("lastUpdateUtc", "");
-                        if (ts.getSeconds() != 0ull) {
-                            node.setValue(ts.toFormattedString()); //"%Y%m%dT%H%M%S"));
-                        }
-                        ts.getEpochstamp().toHashAttributes(node.getAttributes());
-                        lastStamps.push_back(std::move(h));
-                    }
-
-                    // We post on strand to exclude parallel access to data->m_configStream and data->m_idxMap
-                    data->m_strand->post(karabo::util::bind_weak(&FileDataLogger::flushOne, this, data));
-                }
-            }
-
-            if (updatedAnyStamp
-                || (lastStamps.size() != get<std::vector < Hash >> ("lastUpdatesUtc").size())) {
-                // If sizes are equal, but devices have changed, then at least one time stamp must have changed as well.
-                set("lastUpdatesUtc", lastStamps);
-            }
-        }
-
-
-        void FileDataLogger::flushOne(const FileDeviceData::Pointer& data) {
+        void FileDataLogger::flushOne(const DeviceData::Pointer& devicedata) {
+            FileDeviceData::Pointer data = boost::static_pointer_cast<FileDeviceData>(devicedata);
             if (data->m_configStream.is_open()) {
                 data->m_configStream.flush();
             }
@@ -405,7 +380,7 @@ namespace karabo {
 
             data->m_currentSchema = schema;
 
-            string filename = get<string>("directory") + "/" + deviceId + "/raw/archive_schema.txt";
+            string filename = data->m_directory + "/" + deviceId + "/raw/archive_schema.txt";
             fstream fileout(filename.c_str(), ios::out | ios::app);
             if (fileout.is_open()) {
                 Timestamp t;
