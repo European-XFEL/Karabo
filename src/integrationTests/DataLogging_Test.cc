@@ -429,6 +429,9 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
         } catch (const karabo::util::TimeoutException& e) {
             karabo::util::Exception::clearTrace();
             ++numTimeouts;
+        } catch (const karabo::util::RemoteException& e) {
+            karabo::util::Exception::clearTrace();
+            ++numTimeouts;
         }
         boost::this_thread::sleep(boost::posix_time::milliseconds(200));
         timeout -= 200;
