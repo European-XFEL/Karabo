@@ -412,16 +412,20 @@ namespace karabo {
             void onGetPropertyHistory(WeakChannelPointer channel, const karabo::util::Hash& info);
 
             /**
-             * is the callback for ``onGetPropertyHistory``. It forwards the history reply
-             * in ``data`` for the ``property`` on ``deviceId`` to the client connected
+             * Callback for ``onGetPropertyHistory``.
+             * It forwards the history reply in ``data`` for the ``property`` on ``deviceId`` to the client connected
              * on ``channel``. The hash reply is of the format ``type=propertyHistory``,
-             * ``deviceId``, ``property`` and ``data``.
+             * ``deviceId``, ``property``, ``success``, ``data`` and ``failureReason``
+             * which states the failure reason if any.
              * @param channel
+             * @param success whether the request succeeded
              * @param deviceId
              * @param property
              * @param data
              */
-            void propertyHistory(WeakChannelPointer channel, const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data);
+            void propertyHistory(WeakChannelPointer channel, bool success,
+                                 const std::string& deviceId, const std::string& property,
+                                 const std::vector<karabo::util::Hash>& data);
 
             /**
              * Request configuration for a ``device`` at point in time ``time`` as specified in ``info``.
