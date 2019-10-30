@@ -97,10 +97,6 @@ namespace karabo {
                     .setNewDefaultValue(false)
                     .commit();
 
-            OVERWRITE_ELEMENT(expected).key("heartbeatInterval")
-                    .setNewDefaultValue(60)
-                    .commit();
-
             PATH_ELEMENT(expected).key("directory")
                     .displayedName("Directory")
                     .description("The directory where the log files should be placed")
@@ -137,14 +133,11 @@ namespace karabo {
                     if (!bf::exists(dirPath) || !bf::is_directory(dirPath)) {
                         KARABO_LOG_FRAMEWORK_WARN << "slotGetPropertyHistory: " << dirPath
                                 << " not existing or not a directory";
-                        // We know nothing about requested 'deviceId', just return empty reply
-                        reply(deviceId, property, vector<Hash>());
-                        return;
+                        throw KARABO_FILENOTFOUND_IO_EXCEPTION(getInstanceId() + " misses data directory: " + dirPath.string());
                     }
                 } catch (const std::exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "slotGetPropertyHistory Standard Exception while checking deviceId path : " << e.what();
-                    reply(deviceId, property, vector<Hash>());
-                    return;
+                    throw KARABO_SYSTEM_EXCEPTION(getInstanceId() + " fails accessing raw directory path");
                 }
 
                 TimeProfiler p("processingForTrendline");
@@ -158,11 +151,6 @@ namespace karabo {
                 vector<Hash> result;
 
                 int lastFileIndex = getFileIndex(deviceId);
-                if (lastFileIndex < 0) {
-                    KARABO_LOG_WARN << "File \"" << get<string>("directory") << "/" << deviceId << "/raw/archive.last\" not found. No data will be sent...";
-                    reply(deviceId, property, result);
-                    return;
-                }
                 
                 // Register a property in prop file for indexing if it is not there
                 // touching properties_with_index.txt file will cause the DataLogger to close current raw file
@@ -223,8 +211,7 @@ namespace karabo {
                     }
                 } catch (const std::exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "slotGetPropertyHistory Standard Exception while registering property file : " << e.what();
-                    reply(deviceId, property, vector<Hash>());
-                    return;
+                    throw KARABO_LOGIC_EXCEPTION(getInstanceId() + " fails registering property file");
                 }
 
                 Epochstamp from;
@@ -236,7 +223,6 @@ namespace karabo {
 
                 // start rebuilding index for deviceId, property and all files
                 if (rebuildIndex) {
-                    rebuildIndex = false;
                     // We use previously read value of lastFileIndex as we do not want to  trigger rebuilding of the 
                     // very last index file, i.e. the one that the DataLogger will start to write from now on!
                     // (See also comment about DataLogReader in DataLogger::slotChanged.)
@@ -246,7 +232,8 @@ namespace karabo {
                         m_ibs->buildIndexFor(get<string>("directory") + " " + deviceId + " " + property + " " + toString(idx));
                         idx--;
                     }
-                    
+                    throw KARABO_NOT_SUPPORTED_EXCEPTION(getInstanceId() + " cannot fulfill first history request to "
+                                                         + deviceId + "." + property + ". Try again once index building is done.");
                 }
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "From (UTC): " << from.toIso8601Ext();
@@ -263,9 +250,10 @@ namespace karabo {
                         << ", pos: " << idxTo.m_position << ", fileindex: " << idxTo.m_fileindex;
 
                 if (idxFrom.m_fileindex == -1) {
-                    KARABO_LOG_WARN << "Requested time point \"" << params.get<string>("from") << "\" for device configuration is earlier than anything logged";
-                    reply(deviceId, property, result);
-                    return;
+                    const std::string reason("Requested time point '" + params.get<string>("from")
+                                             + "' for device configuration is earlier than anything logged");
+                    KARABO_LOG_FRAMEWORK_WARN << reason;
+                    throw KARABO_LOGIC_EXCEPTION(getInstanceId() + ": " + reason);
                 }
 
                 karabo::util::MetaSearchResult msr = navigateMetaRange(deviceId, idxFrom.m_fileindex, idxTo.m_fileindex, property, idxFrom.m_epoch, to);
@@ -454,14 +442,6 @@ namespace karabo {
                 }
 
                 int lastFileIndex = getFileIndex(deviceId);
-                if (lastFileIndex < 0) {
-                    // Regardless of the results of the index search, the data files are compromissed and the
-                    // device should be reported as not logging at the timepoint.
-                    configAtTimepoint = false;
-                    reply(Hash(), Schema(), configAtTimepoint, configTimepoint.toIso8601());
-                    KARABO_LOG_WARN << "File \"" << get<string>("directory") << "/" << deviceId << "/raw/archive.last\" not found. No data will be sent...";
-                    return;
-                }
 
                 {
                     Epochstamp current(0, 0);
@@ -694,7 +674,10 @@ namespace karabo {
 
         int DataLogReader::getFileIndex(const std::string& deviceId) {
             string filename = get<string>("directory") + "/" + deviceId + "/raw/archive.last";
-            if (!bf::exists(bf::path(filename))) return -1;
+            if (!bf::exists(bf::path(filename))) {
+                KARABO_LOG_FRAMEWORK_WARN << "File \"" << get<string>("directory") << "/" << deviceId << "/raw/archive.last\" not found.";
+                throw KARABO_FILENOTFOUND_IO_EXCEPTION(getInstanceId() + " misses file " + filename);
+            }
             ifstream ifs(filename.c_str());
             int idx;
             ifs >> idx;
