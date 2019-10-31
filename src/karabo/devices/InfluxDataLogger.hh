@@ -11,7 +11,9 @@
 namespace karabo {
     
     namespace devices {
-        
+
+        class InfluxDataLogger;
+
         struct InfluxDeviceData : public karabo::devices::DeviceData {
 
             KARABO_CLASSINFO(InfluxDeviceData, "InfluxDataLoggerDeviceData", "2.6")
@@ -20,13 +22,24 @@ namespace karabo {
 
             virtual ~InfluxDeviceData();
 
+            InfluxDataLogger* m_this;
+
             std::stringstream m_query;
 
             karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_serializer;
+
+            void logValue(const std::string& deviceId, const std::string& path,
+                          const karabo::util::Timestamp& ts, const std::string& value,
+                          const karabo::util::Types::ReferenceType& type);
+
+            void terminateQuery();
+
         };
 
 
         class InfluxDataLogger : public karabo::devices::DataLogger {
+            
+            friend class InfluxDeviceData;
 
             std::string m_url;
             karabo::net::Connection::Pointer m_dbConnection;
@@ -54,12 +67,6 @@ namespace karabo {
             void initializeBackend(const DeviceData::Pointer& data) override;
 
             void handleChanged(const karabo::util::Hash& config, const std::string& user, const DeviceData::Pointer& data) override;
-
-            void logValue(const std::string& deviceId, const std::string& path,
-                          const karabo::util::Timestamp& ts, const std::string& value,
-                          const karabo::util::Types::ReferenceType& type, const InfluxDeviceData::Pointer& data);
-
-            void terminateQuery(const InfluxDeviceData::Pointer& data);
 
             void enqueueQuery(const std::stringstream& ss);
 

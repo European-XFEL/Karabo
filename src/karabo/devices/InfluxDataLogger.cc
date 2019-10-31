@@ -17,6 +17,7 @@ namespace karabo {
 
         InfluxDeviceData::InfluxDeviceData(const karabo::util::Hash& input)
             : DeviceData(input)
+            , m_this(input.get<InfluxDataLogger*>("this"))
             , m_query()
             , m_serializer(TextSerializer<Hash>::create(Hash("Xml.indentation", -1))) {
         }
@@ -33,10 +34,7 @@ namespace karabo {
             // Although this destructor is not running on the strand, accessing all members is safe:
             // All other actions touching the members are posted on the strand and have a shared  pointer
             // to the DeviceData - so this destructor can only run when all these actions are done.
-            try {
-            } catch (...) {
-                KARABO_RETHROW_AS(KARABO_LOGIC_EXCEPTION("Problems tagging " + deviceId + " to be discontinued"));
-            }
+            logValue(deviceId, "log", m_lastDataTimestamp, "LOGOUT", Types::STRING);
         }
 
 
@@ -59,7 +57,9 @@ namespace karabo {
         }
 
 
-        DeviceData::Pointer InfluxDataLogger::createDeviceData(const karabo::util::Hash& config) {
+        DeviceData::Pointer InfluxDataLogger::createDeviceData(const karabo::util::Hash& cfg) {
+            Hash config = cfg;
+            config.set("this", this);
             return Factory<karabo::devices::DeviceData>::create<karabo::util::Hash>("InfluxDataLoggerDeviceData", config);
         }
 
@@ -222,15 +222,19 @@ namespace karabo {
                     }
                 }
 
-                logValue(deviceId, path, t, value, leafNode.getType(), data);
+                if (data->m_pendingLogin) {
+                    data->logValue(deviceId, "log", t, "LOGIN", Types::STRING);
+                    data->m_pendingLogin = false;
+                }
+                data->logValue(deviceId, path, t, value, leafNode.getType());
             }
+            if (m_bufferLen >= get<std::uint32_t>("maxQuerySize")) flushOne(devicedata);
         }
 
 
-        void InfluxDataLogger::logValue(const std::string& deviceId, const std::string& path,
+        void InfluxDeviceData::logValue(const std::string& deviceId, const std::string& path,
                                         const karabo::util::Timestamp& ts, const std::string& value,
-                                        const karabo::util::Types::ReferenceType& type,
-                                        const InfluxDeviceData::Pointer& data) {
+                                        const karabo::util::Types::ReferenceType& type) {
             std::string field_value;
             switch (type) {
                 case Types::BOOL:
@@ -279,34 +283,32 @@ namespace karabo {
                     return;
             }
 
-            if (data->m_query.str().empty()) {
-                data->m_query << deviceId
-                        << "," << str(boost::format("%1%_s=%2%s") % "user" % data->m_user)
+            if (m_query.str().empty()) {
+                m_query << deviceId
+                        << "," << str(boost::format("%1%_s=%2%s") % "user" % m_user)
                         << " " << field_value;
             } else {
-                data->m_query << "," << field_value;
+                m_query << "," << field_value;
             }
 
-            if (ts != data->m_lastDataTimestamp) terminateQuery(data);
-            data->m_updatedLastTimestamp = true;
-            data->m_lastDataTimestamp = ts;
-            DeviceData::Pointer devicedata = boost::static_pointer_cast<DeviceData>(data);
-            if (m_bufferLen >= get<std::uint32_t>("maxQuerySize")) flushOne(devicedata);
+            if (ts != m_lastDataTimestamp) terminateQuery();
+            m_updatedLastTimestamp = true;
+            m_lastDataTimestamp = ts;
         }
 
 
-        void InfluxDataLogger::terminateQuery(const InfluxDeviceData::Pointer& data) {
-            const unsigned long long tid = data->m_lastDataTimestamp.getTrainId();
+        void InfluxDeviceData::terminateQuery() {
+            const unsigned long long tid = m_lastDataTimestamp.getTrainId();
             if (tid > 0) {
-                data->m_query << "," << str(boost::format("%1%_i=%2%i") % "tid" % tid);
+                m_query << "," << str(boost::format("%1%_i=%2%i") % "tid" % tid);
             }
-            const unsigned long long ts = data->m_lastDataTimestamp.toTimestamp() * 1000000000; // in ns
+            const unsigned long long ts = m_lastDataTimestamp.toTimestamp() * 1000000000; // in ns
             if (ts > 0) {
-                data->m_query << " " << ts;
+                m_query << " " << ts;
             }
-            data->m_query << "\n";
-            enqueueQuery(data->m_query);
-            data->m_query.str("");  // Clear content of stringstream
+            m_query << "\n";
+            m_this->enqueueQuery(m_query);
+            m_query.str("");  // Clear content of stringstream
         }
 
 
