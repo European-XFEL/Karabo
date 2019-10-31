@@ -285,11 +285,9 @@ namespace karabo {
 
             if (m_query.str().empty()) {
                 m_query << deviceId
-                        << "," << str(boost::format("%1%_s=%2%s") % "user" % m_user)
-                        << " " << field_value;
-            } else {
-                m_query << "," << field_value;
+                        << " " << str(boost::format("%1%_s=%2%s") % "user" % m_user);
             }
+            m_query << "," << field_value;
 
             if (ts != m_lastDataTimestamp) terminateQuery();
             m_updatedLastTimestamp = true;
