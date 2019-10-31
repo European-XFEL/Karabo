@@ -67,7 +67,7 @@
 #include "karabo/util/StringTools.hh"
 #include "karabo/util/Epochstamp.hh"
 #include "karabo/net/EventLoop.hh"
-
+#include "DataLogger.hh"
 #include "DataLoggerManager.hh"
 
 
@@ -141,11 +141,10 @@ namespace karabo {
                     .assignmentOptional().defaultValue(true) // true will cause alarms when loggers are too slow
                     .commit();
 
-            STRING_ELEMENT(expected).key("loggerType")
+            CHOICE_ELEMENT(expected).key("loggerType")
                     .displayedName("Logger type")
-                    .description("Type of DataLogger: FileDataLogger, InfluxDataLogger")
-                    .options("FileDataLogger,InfluxDataLogger")
-                    .init()
+                    .description("Type of DataLogger")
+                    .appendNodesOfConfigurationBase<DataLogger>()
                     .assignmentOptional().defaultValue("FileDataLogger")
                     .commit();
 
