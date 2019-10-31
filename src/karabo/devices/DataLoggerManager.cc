@@ -67,7 +67,9 @@
 #include "karabo/util/StringTools.hh"
 #include "karabo/util/Epochstamp.hh"
 #include "karabo/net/EventLoop.hh"
-#include "DataLogger.hh"
+
+#include "FileDataLogger.hh"
+#include "InfluxDataLogger.hh"
 #include "DataLoggerManager.hh"
 
 
@@ -141,12 +143,30 @@ namespace karabo {
                     .assignmentOptional().defaultValue(true) // true will cause alarms when loggers are too slow
                     .commit();
 
-            CHOICE_ELEMENT(expected).key("loggerType")
+            STRING_ELEMENT(expected).key("loggerType")
                     .displayedName("Logger type")
                     .description("Type of DataLogger")
-                    .appendNodesOfConfigurationBase<DataLogger>()
+                    .options("FileDataLogger")
                     .assignmentOptional().defaultValue("FileDataLogger")
                     .commit();
+
+//            CHOICE_ELEMENT(expected).key("loggerType")
+//                    .displayedName("Logger type")
+//                    .description("Type of DataLogger")
+//                    .assignmentOptional().defaultValue("FileDataLogger")
+//                    .commit();
+//
+//            NODE_ELEMENT(expected).key("loggerType.FileDataLogger")
+//                    .displayedName("FileDataLogger")
+//                    .description("File based data logging")
+//                    .appendParametersOf<FileDataLogger>()
+//                    .commit();
+//
+//            NODE_ELEMENT(expected).key("loggerType.InfluxDataLogger")
+//                    .displayedName("InfluxDataLogger")
+//                    .description("Influxdb based data logging")
+//                    .appendParametersOf<InfluxDataLogger>()
+//                    .commit();
 
             BOOL_ELEMENT(expected).key("useP2p")
                     .displayedName("Use p2p shortcut")
