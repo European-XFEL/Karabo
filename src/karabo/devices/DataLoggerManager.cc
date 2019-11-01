@@ -68,8 +68,6 @@
 #include "karabo/util/Epochstamp.hh"
 #include "karabo/net/EventLoop.hh"
 
-#include "FileDataLogger.hh"
-#include "InfluxDataLogger.hh"
 #include "DataLoggerManager.hh"
 
 
