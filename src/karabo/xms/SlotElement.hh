@@ -86,6 +86,12 @@ namespace karabo {
 
             virtual void beforeAddition() = 0;
 
+            Derived& key(const std::string& name) override {
+                if (name.find('_') != std::string::npos) {
+                    throw KARABO_PARAMETER_EXCEPTION("Slot must not contain '_' since internally reserved for slots under a node.");
+                }
+                return karabo::util::GenericElement<Derived>::key(name);
+            }
         };
 
         class SLOT_ELEMENT : public SlotElementBase<SLOT_ELEMENT> {
@@ -96,9 +102,6 @@ namespace karabo {
             }
 
             void beforeAddition() {
-                if (this->m_node->getKey() == "clear_namespace") {
-                    throw KARABO_INIT_EXCEPTION("Slot 'clear_namespace' forbidden since it breaks GUI clients");
-                }
                 this->m_node->setValue(this->m_child);
             }
 
@@ -127,9 +130,6 @@ namespace karabo {
             }
 
             void beforeAddition() {
-                if (this->m_node->getKey() == "clear_namespace") {
-                    throw KARABO_INIT_EXCEPTION("Slot 'clear' forbidden since it breaks GUI clients");
-                }
                 this->m_node->setValue(this->m_child);
             }
 
