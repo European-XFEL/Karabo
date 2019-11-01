@@ -743,7 +743,7 @@ namespace karabo {
                     newDeviceToLog(instanceId);
                 }
                 if (entry.hasAttribute(instanceId, "classId")
-                    && entry.getAttribute<std::string>(instanceId, "classId") == get<std::string>("loggerType")) {
+                    && entry.getAttribute<std::string>(instanceId, "classId") == "FileDataLogger") {
                     // A new logger has started - check whether there is more work for it to do
                     newLogger(instanceId);
                 }
@@ -896,7 +896,7 @@ namespace karabo {
                               "performanceStatistics.enable", get<bool>("enablePerformanceStats"),
                               "useP2p", get<bool>("useP2p"));
             const std::string loggerId(serverIdToLoggerId(serverId));
-            const Hash hash("classId", get<std::string>("loggerType"),
+            const Hash hash("classId", "FileDataLogger",
                             "deviceId", loggerId,
                             "configuration", config);
             KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << loggerId << "' on server '" << serverId << "'";
@@ -1015,14 +1015,14 @@ namespace karabo {
                     // Expected nice behaviour: Already took note that logger is gone and so tried to start again.
                     // Nothing to do.
                     KARABO_LOG_FRAMEWORK_INFO << "Server '" << serverId << "' gone while instantiating "
-                            << get<std::string>("loggerType") << ".";
+                            << "FileDataLogger" << ".";
                     break;
                 case LoggerState::RUNNING:
                     // Looks like a non-graceful shutdown of the server that is detected by lack of heartbeats where
                     // the DeviceClient currently (Karabo 2.6.0) often sends the "gone" signal for the server before
                     // the one of the DataLogger.
                     KARABO_LOG_FRAMEWORK_WARN << "Server '" << serverId << "' gone while "
-                            << get<std::string>("loggerType") << " still alive.";
+                            << "FileDataLogger" << " still alive.";
                     // Also then we have to move "devices"/"beingAdded" to "backlog".
                     break;
             }
