@@ -23,11 +23,13 @@ using karabo::util::Schema;
 using karabo::util::Timestamp;
 using karabo::util::DOUBLE_ELEMENT;
 using karabo::util::INT32_ELEMENT;
+using karabo::util::NODE_ELEMENT;
 using karabo::util::STRING_ELEMENT;
 using karabo::util::TABLE_ELEMENT;
 using karabo::core::DeviceServer;
 using karabo::core::DeviceClient;
 using karabo::xms::SignalSlotable;
+using karabo::xms::SLOT_ELEMENT;
 
 class TestDevice : public karabo::core::Device<> {
 
@@ -68,6 +70,15 @@ public:
                 .alarmHigh(TestDevice::ALARM_HIGH).needsAcknowledging(false)
                 .observerAccess()
                 .commit();
+
+        NODE_ELEMENT(expected).key("node")
+                .displayedName("Node")
+                .commit();
+
+        SLOT_ELEMENT(expected).key("node.slot")
+                .displayedName("Slot")
+                .description("Device slot under a node, doing nothing")
+                .commit();
     }
 
 
@@ -80,6 +91,8 @@ public:
         KARABO_SLOT(slotAppendSchema, const karabo::util::Schema);
 
         KARABO_SLOT(slotUpdateSchema, const karabo::util::Schema);
+
+        KARABO_SLOT(node_slot);
     }
 
 
@@ -102,6 +115,10 @@ public:
         updateSchema(sch);
     }
 
+
+    void node_slot() {
+        // Nothing to do!
+    }
 };
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, TestDevice)
@@ -158,6 +175,7 @@ void Device_Test::appTestRunner() {
     testSchemaInjection();
     testSchemaWithAttrUpdate();
     testSchemaWithAttrAppend();
+    testNodedSlot();
 }
 
 
@@ -606,6 +624,12 @@ void Device_Test::testSchemaWithAttrAppend() {
     }, cacheUpdateWaitMs));
 }
 
+
+void Device_Test::testNodedSlot() {
+
+    // Note that calling "node_slot" would work as well... :-|
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestDevice", "node.slot", KRB_TEST_MAX_TIMEOUT));
+}
 
 bool Device_Test::waitForCondition(boost::function<bool() > checker, unsigned int timeoutMillis) {
     constexpr unsigned int sleepIntervalMillis = 5;
