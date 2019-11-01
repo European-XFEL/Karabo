@@ -270,7 +270,7 @@ namespace karabo {
                                                const boost::shared_ptr<std::atomic<unsigned int> >& counter) {
 
             // Set initial Schema - needed for receiving properly in slotChanged
-            handleSchemaUpdated(schema, data);
+            data->handleSchemaUpdated(schema);
 
             // Now connect concurrently both, signalStateChanged and signalChanged, to the same slot.
             asyncConnect({SignalSlotConnection(data->m_deviceToBeLogged, "signalStateChanged", "", "slotChanged"),
@@ -383,8 +383,11 @@ namespace karabo {
                 }
                 // UserId only available in real slot call, before posting to event loop:
                 const std::string& user = getSenderInfo("slotChanged")->getUserIdOfSender();
-                data->m_strand->post(karabo::util::bind_weak(&DataLogger::handleChanged, this,
-                                                             configuration, user, data));
+                //data->m_strand->post(karabo::util::bind_weak(&DataLogger::handleChanged, this,
+                //                                             configuration, user, data));
+                data->m_strand->post([this, data, configuration, user]() {
+                    data->handleChanged(configuration, user);
+                });
             } else {
                 KARABO_LOG_FRAMEWORK_WARN << "slotChanged called from non-treated device " << deviceId << ".";
             }
@@ -421,7 +424,7 @@ namespace karabo {
         }
 
 
-        void DataLogger::getPathsForConfiguration(const karabo::util::Hash& configuration,
+        void DeviceData::getPathsForConfiguration(const karabo::util::Hash& configuration,
                                                   const karabo::util::Schema& schema,
                                                   std::vector<std::string>& paths) const {
             {
@@ -479,7 +482,7 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
                 lastStamps.reserve(m_perDeviceData.size());
                 for (auto& idData : m_perDeviceData) {
-                    DeviceData::Pointer data = boost::static_pointer_cast<DeviceData>(idData.second);
+                    DeviceData::Pointer data = idData.second;
                     {
                         // To avoid this mutex lock, access to m_lastTimestampMutex would have to be posted on m_strand.
                         // Keep as is since this file based DataLogger is supposed to phase out soon...
@@ -498,7 +501,7 @@ namespace karabo {
                     }
 
                     // We post on strand to exclude parallel access to data->m_configStream and data->m_idxMap
-                    data->m_strand->post(karabo::util::bind_weak(&DataLogger::flushOne, this, data));
+                    data->m_strand->post([this, data]() { data->flushOne(); });
                 }
             }
 
@@ -517,7 +520,9 @@ namespace karabo {
             DeviceDataMap::iterator it = m_perDeviceData.find(deviceId);
             if (it != m_perDeviceData.end()) {
                 DeviceData::Pointer& data = it->second;
-                data->m_strand->post(karabo::util::bind_weak(&DataLogger::handleSchemaUpdated, this, schema, data));
+                data->m_strand->post([data, schema]() {
+                    data->handleSchemaUpdated(schema);
+                });
             } else {
                 KARABO_LOG_FRAMEWORK_WARN << "slotSchemaUpdated called from non-treated device " << deviceId << ".";
             }
