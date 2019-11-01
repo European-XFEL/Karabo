@@ -38,6 +38,36 @@ namespace karabo {
 
             virtual ~DeviceData();
 
+            /**
+             * Process configuration by writing to files or sending to DB server
+             * @param config
+             * @param user
+             * @param data
+             */
+            virtual void handleChanged(const karabo::util::Hash& config, const std::string& user) = 0;
+
+            virtual void flushOne() = 0;
+
+            /**
+             * Store updated schema into file hierarchy or in database tables
+             */
+            virtual void handleSchemaUpdated(const karabo::util::Schema& schema) = 0;
+
+            /**
+             * Retrieves the paths of the leaf nodes in a given configuration. The paths are returned in
+             * ascending order of their corresponding nodes timestamps.
+             *
+             * @param configuration A configuration with the nodes corresponding to the paths.
+             * @param schema The schema for the configuration hash.
+             * @param paths The paths of the leaf nodes in the configuration, sorted by nodes timestamps.
+             *
+             * @note karabo::devices::DataLogReader depends on the configuration items being properly sorted
+             * in time to retrieve configuration changes.
+             */
+            void getPathsForConfiguration(const karabo::util::Hash& configuration,
+                                          const karabo::util::Schema& schema,
+                                          std::vector<std::string>& paths) const;
+
             std::string m_deviceToBeLogged; // same as this DeviceData's key in DeviceDataMap
 
             InitLevel m_initLevel;
@@ -112,14 +142,6 @@ namespace karabo {
             void slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId);
 
             /**
-             * Process configuration by writing to files or sending to DB server
-             * @param config
-             * @param user
-             * @param data
-             */
-            virtual void handleChanged(const karabo::util::Hash& config, const std::string& user, const DeviceData::Pointer& data) = 0;
-
-            /**
              * Helper to remove an element from a vector<string> element.
              * Note that if the same element is in the vector more than once, only the first one is removed.
              *
@@ -142,11 +164,6 @@ namespace karabo {
             bool appendTo(const std::string& str, const std::string& vectorProp);
 
             void slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
-
-            /**
-             * Store updated schema into file hierarchy or in database tables
-             */
-            virtual void handleSchemaUpdated(const karabo::util::Schema& schema, const DeviceData::Pointer& data) = 0;
 
             /**
              * FIXME: Update text
@@ -191,8 +208,6 @@ namespace karabo {
              */
             void doFlush();
 
-            virtual void flushOne(const DeviceData::Pointer& data) = 0;
-
             // The flush slot
             void flush();
             
@@ -203,21 +218,6 @@ namespace karabo {
             bool allowLock() const {
                 return false;
             }
-
-            /**
-             * Retrieves the paths of the leaf nodes in a given configuration. The paths are returned in
-             * ascending order of their corresponding nodes timestamps.
-             *
-             * @param configuration A configuration with the nodes corresponding to the paths.
-             * @param schema The schema for the configuration hash.
-             * @param paths The paths of the leaf nodes in the configuration, sorted by nodes timestamps.
-             *
-             * @note karabo::devices::DataLogReader depends on the configuration items being properly sorted
-             * in time to retrieve configuration changes.
-             */
-            void getPathsForConfiguration(const karabo::util::Hash& configuration,
-                                          const karabo::util::Schema& schema,
-                                          std::vector<std::string>& paths) const;
 
         };
     }
