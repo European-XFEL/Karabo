@@ -19,7 +19,31 @@ namespace karabo {
 
             virtual ~FileDeviceData();
 
+            void handleChanged(const karabo::util::Hash& config, const std::string& user) override;
+
+            void logValue(const std::string& deviceId, const std::string& path,
+                          const karabo::util::Timestamp& ts, const std::string& value,
+                          const karabo::util::Types::ReferenceType& type);
+
+            void flushOne() override;
+
+            /// Helper function to update data.m_idxprops, returns whether data.m_idxprops changed.
+            bool updatePropsToIndex();
+
+            /// Helper to ensure archive file is closed.
+            /// Must only be called from functions posted on 'data.m_strand'.
+            void ensureFileClosed();
+
+            int determineLastIndex(const std::string& deviceId) const;
+
+            int incrementLastIndex(const std::string& deviceId);
+
+            void handleSchemaUpdated(const karabo::util::Schema& schema) override;
+
+            void setupDirectory();
+
             std::string m_directory;
+            int m_maxFileSize;
             std::fstream m_configStream;
 
             unsigned int m_lastIndex;
@@ -50,23 +74,6 @@ namespace karabo {
             DeviceData::Pointer createDeviceData(const karabo::util::Hash& config) override;
 
             void initializeBackend(const DeviceData::Pointer& data) override;
-
-            void handleChanged(const karabo::util::Hash& config, const std::string& user, const DeviceData::Pointer& data) override;
-
-            /// Helper function to update data.m_idxprops, returns whether data.m_idxprops changed.
-            bool updatePropsToIndex(FileDeviceData& data);
-
-            /// Helper to ensure archive file is closed.
-            /// Must only be called from functions posted on 'data.m_strand'.
-            void ensureFileClosed(FileDeviceData& data);
-
-            void flushOne(const DeviceData::Pointer& data) override;
-
-            int determineLastIndex(const std::string& deviceId) const;
-
-            int incrementLastIndex(const std::string& deviceId);
-
-            void handleSchemaUpdated(const karabo::util::Schema& schema, const DeviceData::Pointer& data) override;
 
         };
     }
