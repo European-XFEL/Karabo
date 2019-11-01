@@ -46,8 +46,6 @@
       <itemPath>../../../src/karabo/devices/FileDataLogger.hh</itemPath>
       <itemPath>../../../src/karabo/devices/GuiServerDevice.cc</itemPath>
       <itemPath>../../../src/karabo/devices/GuiServerDevice.hh</itemPath>
-      <itemPath>../../../src/karabo/devices/InfluxDataLogger.cc</itemPath>
-      <itemPath>../../../src/karabo/devices/InfluxDataLogger.hh</itemPath>
       <itemPath>../../../src/karabo/devices/PropertyTest.cc</itemPath>
       <itemPath>../../../src/karabo/devices/PropertyTest.hh</itemPath>
     </logicalFolder>
