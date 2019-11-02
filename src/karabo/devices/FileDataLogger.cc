@@ -208,11 +208,14 @@ namespace karabo {
 
                 logValue(deviceId, path, t, value, leafNode.getType());
             }
+        }
 
+
+        void FileDeviceData::flushIfNeeded() {
             long maxFilesize = m_maxFileSize * 1000000; // times to 1000000 because maximumFilesSize in MBytes
             long position = m_configStream.tellp();
             if (maxFilesize <= position) {
-                this->ensureFileClosed();
+                ensureFileClosed();
             }
         }
 

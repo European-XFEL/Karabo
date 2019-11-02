@@ -387,6 +387,7 @@ namespace karabo {
                 //                                             configuration, user, data));
                 data->m_strand->post([this, data, configuration, user]() {
                     data->handleChanged(configuration, user);
+                    this->flushIfNeeded(data);
                 });
             } else {
                 KARABO_LOG_FRAMEWORK_WARN << "slotChanged called from non-treated device " << deviceId << ".";
@@ -501,7 +502,7 @@ namespace karabo {
                     }
 
                     // We post on strand to exclude parallel access to data->m_configStream and data->m_idxMap
-                    data->m_strand->post([this, data]() { data->flushOne(); });
+                    data->m_strand->post([this, data]() { this->flushOne(data); });
                 }
             }
 
