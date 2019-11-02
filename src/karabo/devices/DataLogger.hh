@@ -46,8 +46,6 @@ namespace karabo {
              */
             virtual void handleChanged(const karabo::util::Hash& config, const std::string& user) = 0;
 
-            virtual void flushOne() = 0;
-
             /**
              * Store updated schema into file hierarchy or in database tables
              */
@@ -211,6 +209,8 @@ namespace karabo {
             // The flush slot
             void flush();
             
+            virtual void flushOne(const DeviceData::Pointer& devicedata) = 0;
+            
             /**
              * This device may not be locked
              * @return false
@@ -219,6 +219,7 @@ namespace karabo {
                 return false;
             }
 
+            virtual void flushIfNeeded(const DeviceData::Pointer& devicedata) = 0;
         };
     }
 }
