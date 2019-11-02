@@ -25,7 +25,8 @@ namespace karabo {
                           const karabo::util::Timestamp& ts, const std::string& value,
                           const karabo::util::Types::ReferenceType& type);
 
-            void flushOne() override;
+            void flushIfNeeded();
+            void flushOne();
 
             /// Helper function to update data.m_idxprops, returns whether data.m_idxprops changed.
             bool updatePropsToIndex();
@@ -75,6 +76,15 @@ namespace karabo {
 
             void initializeBackend(const DeviceData::Pointer& data) override;
 
+            void flushOne(const DeviceData::Pointer& devicedata) override {
+                FileDeviceData::Pointer data = boost::static_pointer_cast<FileDeviceData>(devicedata);
+                data->flushOne();
+            }
+
+            void flushIfNeeded(const DeviceData::Pointer& devicedata) override {
+                FileDeviceData::Pointer data = boost::static_pointer_cast<FileDeviceData>(devicedata);
+                data->flushIfNeeded();
+            }
         };
     }
 }
