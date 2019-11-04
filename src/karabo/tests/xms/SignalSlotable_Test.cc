@@ -799,12 +799,12 @@ void SignalSlotable_Test::testDisconnectAsync() {
     signaler->asyncDisconnect("signalInstance", "signal", "slotInstance", "slot",
                               disconnectSuccessHandler, disconnectFailedHandler);
     // Give disconnection call some time to travel
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 200; ++i) {
         if (disconnectSuccess) break;
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
     };
-    CPPUNIT_ASSERT(disconnectSuccess);
     CPPUNIT_ASSERT(!disconnectFailed);
+    CPPUNIT_ASSERT(disconnectSuccess);
 
     signaler->emit("signal");
     // Give signal some time to travel - but it won't, since disconnected!
@@ -818,12 +818,12 @@ void SignalSlotable_Test::testDisconnectAsync() {
     signaler->asyncDisconnect("signalInstance", "signal", "slotInstance", "slot",
                               disconnectSuccessHandler, disconnectFailedHandler);
     // Give some time to find out that signal is not there
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 200; ++i) {
         if (disconnectFailed) break;
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
     };
-    CPPUNIT_ASSERT(disconnectFailed);
     CPPUNIT_ASSERT(!disconnectSuccess);
+    CPPUNIT_ASSERT(disconnectFailed);
     // connectFailedMsg is the full, formatted exception info ("Exception =====> {\n ... \n Message....")
     // check that the original message is part of it (in two steps)
     CPPUNIT_ASSERT(disconnectFailedMsg.find("failed to disconnect slot") != std::string::npos);
@@ -837,12 +837,12 @@ void SignalSlotable_Test::testDisconnectAsync() {
     signaler->asyncDisconnect("signalInstance", "NOT_A_signal", "slotInstance", "slot",
                               disconnectSuccessHandler, disconnectFailedHandler);
     // Give some time to find out that signal is not there
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 200; ++i) {
         if (disconnectFailed) break;
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
     };
-    CPPUNIT_ASSERT(disconnectFailed);
     CPPUNIT_ASSERT(!disconnectSuccess);
+    CPPUNIT_ASSERT(disconnectFailed);
     // connectFailedMsg is the full, formatted exception info ("Exception =====> {\n ... \n Message....")
     // check that the original message is part of it
     CPPUNIT_ASSERT(disconnectFailedMsg.find("failed to disconnect slot") != std::string::npos);
@@ -860,9 +860,9 @@ void SignalSlotable_Test::testDisconnectAsync() {
         if (disconnectFailed) break;
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
     };
+    CPPUNIT_ASSERT(!disconnectSuccess);
     CPPUNIT_ASSERT(disconnectFailed);
     CPPUNIT_ASSERT(disconnectTimeout);
-    CPPUNIT_ASSERT(!disconnectSuccess);
 
     ///////////////////////////////////////////////////////////////////////////
     // No need to test non-existing slot - it is exactly the same as a non-connected slot
