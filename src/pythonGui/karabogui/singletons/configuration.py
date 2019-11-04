@@ -5,7 +5,7 @@
 #############################################################################
 from collections import defaultdict
 
-from PyQt4.QtCore import QObject, QSettings
+from PyQt5.QtCore import QObject, QSettings
 
 
 class Item:

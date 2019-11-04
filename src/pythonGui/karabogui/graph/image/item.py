@@ -1,6 +1,6 @@
 import numpy as np
-from PyQt4.QtCore import pyqtSignal, pyqtSlot, QPointF, Qt
-from PyQt4.QtGui import QImage, qRgb, QTransform
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, QPointF, Qt
+from PyQt5.QtGui import QImage, qRgb, QTransform
 from pyqtgraph import functions as fn, ImageItem, Point
 from scipy.ndimage import zoom
 

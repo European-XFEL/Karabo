@@ -1,4 +1,4 @@
-from PyQt4.QtCore import Qt
+from PyQt5.QtCore import Qt
 from pyqtgraph import ViewBox
 
 from karabogui.graph.common.api import KaraboViewBox, MouseMode

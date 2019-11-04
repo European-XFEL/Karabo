@@ -3,9 +3,9 @@
 # Created on September 28, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import pyqtSlot, QModelIndex, Qt
-from PyQt4.QtGui import (QAbstractItemView, QStandardItemModel, QTreeView,
-                         QStandardItem)
+from PyQt5.QtCore import QModelIndex, Qt
+from PyQt5.QtGui import QStandardItemModel, QStandardItem
+from PyQt5.QtWidgets import QAbstractItemView, QTreeView
 from traits.api import Bool, Instance
 
 from karabo.common.scenemodel.api import RunConfiguratorModel
@@ -68,7 +68,7 @@ class RunConfiguratorEdit(BaseBindingController):
         for entry in get_editor_value(proxy, []):
             _build(entry, root_item)
 
-    @pyqtSlot(object)
+    # @pyqtSlot(object)
     def _item_edited(self, item):
         if self.proxy.binding is None:
             return

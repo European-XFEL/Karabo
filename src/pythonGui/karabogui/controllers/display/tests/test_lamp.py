@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from PyQt4.QtGui import QLabel
+from PyQt5.QtWidgets import QLabel
 
 from karabo.native import Configurable, String
 from karabogui.testing import (

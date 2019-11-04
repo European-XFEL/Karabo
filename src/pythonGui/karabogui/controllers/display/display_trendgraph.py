@@ -3,9 +3,9 @@ from collections import OrderedDict
 from datetime import datetime
 from itertools import cycle
 
-from PyQt4 import uic
-from PyQt4.QtCore import QDateTime, pyqtSlot, QTimer
-from PyQt4.QtGui import QVBoxLayout, QWidget
+from PyQt5 import uic
+from PyQt5.QtCore import QDateTime, QTimer
+from PyQt5.QtWidgets import QVBoxLayout, QWidget
 from traits.api import Bool, Dict, Instance, Set, String
 
 from karabo.common.scenemodel.api import (
@@ -149,7 +149,7 @@ class DisplayTrendGraph(BaseBindingController):
         for v in self._curves.values():
             v.changeInterval(t0, t1)
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _on_range_manually_changed(self):
         """When the range changes manually, we stop automatically
         updating the ranges and start the timer"""
@@ -157,7 +157,7 @@ class DisplayTrendGraph(BaseBindingController):
         self._auto_scale = False
         self._uncheck_current_button()
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _uncheck_current_button(self):
         """Uncheck any checked button"""
         button_group = self.widget.bg_x_axis
@@ -168,18 +168,17 @@ class DisplayTrendGraph(BaseBindingController):
             checked_button.setChecked(False)
             button_group.setExclusive(True)
 
-    @pyqtSlot(object)
     def _change_model(self, content):
         self.model.trait_set(**restore_graph_config(content))
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _update_intervals(self):
         """This slot is called whenever the timer timed out and previously the
         x axis scale was changed"""
         x_axis = self._plot.plotItem.getAxis("bottom")
         self.set_time_interval(*x_axis.range)
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _update_datetime_widgets(self, vb, x_range):
         """This slot is called whenever the xRange changes"""
         # Note that the time comes in seconds
@@ -191,7 +190,7 @@ class DisplayTrendGraph(BaseBindingController):
         self.widget.dt_start.setDateTime(start)
         self.widget.dt_end.setDateTime(end)
 
-    @pyqtSlot(object)
+    # @pyqtSlot(object)
     def _x_axis_btns_toggled(self, button):
         """Update the x axis scale when a time button is clicked"""
         self._x_detail = self._x_axis_str_btns[button]

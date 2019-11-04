@@ -3,8 +3,9 @@
 # Created on November 4, 2011
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QCursor, QTabBar, QTabWidget
+from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtGui import QCursor
+from PyQt5.QtWidgets import QTabBar, QTabWidget
 
 from .placeholderpanel import PlaceholderPanel
 

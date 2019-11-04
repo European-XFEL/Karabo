@@ -10,9 +10,9 @@ from subprocess import check_output, STDOUT, CalledProcessError
 
 from lxml import etree
 import pkg_resources
-from PyQt4 import uic
-from PyQt4.QtCore import QProcess, pyqtSlot
-from PyQt4.QtGui import QDialog
+from PyQt5 import uic
+from PyQt5.QtCore import QProcess, pyqtSlot
+from PyQt5.QtWidgets import QDialog
 
 from karabogui import icons
 from karabogui.controllers.util import load_extensions

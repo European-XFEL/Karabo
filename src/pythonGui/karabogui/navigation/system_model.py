@@ -6,9 +6,9 @@
 import json
 from weakref import WeakValueDictionary
 
-from PyQt4.QtCore import (
-    pyqtSignal, pyqtSlot, QAbstractItemModel, QMimeData, QModelIndex, Qt)
-from PyQt4.QtGui import QItemSelection, QItemSelectionModel
+from PyQt5.QtCore import (
+    pyqtSignal, pyqtSlot, QAbstractItemModel, QMimeData, QModelIndex, Qt,
+    QItemSelection, QItemSelectionModel)
 
 from karabo.common.api import ProxyStatus
 from karabogui import globals as krb_globals, icons
@@ -34,8 +34,6 @@ class SystemTreeModel(QAbstractItemModel):
         # Add listeners for ``alarm_update`` change event
         self.tree.on_trait_change(self._alarm_update, 'alarm_update')
 
-        self.setSupportedDragActions(Qt.CopyAction)
-
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
         # not necessary
         event_map = {
@@ -45,9 +43,11 @@ class SystemTreeModel(QAbstractItemModel):
             KaraboEvent.ShowDevice: self._event_show_device
         }
         register_for_broadcasts(event_map)
-        self.setSupportedDragActions(Qt.CopyAction)
         self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
+
+    def supportedDragActions(self):
+        return Qt.CopyAction
 
     def _event_access_level(self, data):
         self._clear_tree_cache()
@@ -234,7 +234,8 @@ class SystemTreeModel(QAbstractItemModel):
             data.append(n.info())
 
         mimeData = QMimeData()
-        mimeData.setData('treeItems', json.dumps(data))
+        mimeData.setData('treeItems', bytearray(json.dumps(data),
+                                                encoding='UTF-8'))
         return mimeData
 
     @pyqtSlot(QItemSelection, QItemSelection)

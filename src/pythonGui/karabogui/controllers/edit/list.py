@@ -1,10 +1,10 @@
 import re
 from ast import literal_eval
 
-from PyQt4.QtCore import pyqtSlot, Qt
-from PyQt4.QtGui import (
-    QDialog, QHBoxLayout, QLineEdit, QPalette, QToolButton,
-    QValidator, QWidget)
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPalette, QValidator
+from PyQt5.QtWidgets import (
+    QDialog, QHBoxLayout, QLineEdit, QToolButton, QWidget)
 from traits.api import Instance, Int
 
 from karabo.common.scenemodel.api import DisplayListModel, EditableListModel
@@ -74,7 +74,7 @@ class _BaseListController(BaseBindingController):
         value = get_editor_value(proxy, [])
         self._set_edit_field_text(value)
 
-    @pyqtSlot(str)
+    # @pyqtSlot(str)
     def _on_user_edit(self, text):
         if self.proxy.binding is None:
             return
@@ -112,7 +112,7 @@ class _BaseListController(BaseBindingController):
             self._internal_widget.setText(','.join(str(v) for v in value))
         self._internal_widget.setCursorPosition(self.last_cursor_position)
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _on_edit_clicked(self):
         if self.proxy.binding is None:
             return

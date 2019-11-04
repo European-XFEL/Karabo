@@ -1,7 +1,7 @@
 from collections import namedtuple
 
-from PyQt4.QtCore import pyqtSlot, Qt
-from PyQt4.QtGui import (
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (
     QComboBox, QDialog, QHBoxLayout, QToolButton, QWidget)
 from traits.api import Bool, Instance, Int, on_trait_change, String
 
@@ -179,7 +179,7 @@ class EditableOptionComboBox(BaseBindingController):
         self._edit_button.setToolTip(message)
         self._edit_button.setDisabled(self._is_injected_with_options)
 
-    @pyqtSlot(int)
+    # @pyqtSlot(int)
     def _on_user_edit(self, index):
         if self.proxy.binding is None:
             return
@@ -187,7 +187,7 @@ class EditableOptionComboBox(BaseBindingController):
         self.proxy.edit_value = self.model.options[index]
         self._set_combobox_tooltip(self.proxy.key, is_status=False)
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _on_edit_clicked(self):
         if self.proxy.binding is None:
             return

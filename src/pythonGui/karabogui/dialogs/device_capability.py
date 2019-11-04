@@ -5,8 +5,8 @@
 #############################################################################
 import os.path as op
 
-from PyQt4 import uic
-from PyQt4.QtGui import QDialog, QDialogButtonBox
+from PyQt5 import uic
+from PyQt5.QtWidgets import QDialog, QDialogButtonBox
 from traits.api import Undefined
 
 from karabo.common.api import Capabilities
