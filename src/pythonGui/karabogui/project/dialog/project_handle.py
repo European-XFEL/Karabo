@@ -7,10 +7,12 @@ from collections import OrderedDict, namedtuple
 from operator import attrgetter
 import os.path as op
 
-from PyQt4 import uic
-from PyQt4.QtCore import pyqtSlot, QAbstractTableModel, Qt
-from PyQt4.QtGui import (
-    QButtonGroup, QDialog, QDialogButtonBox, QItemSelectionModel)
+from PyQt5 import uic
+from PyQt5.QtCore import pyqtSlot, QAbstractTableModel, Qt, QItemSelection, \
+    QModelIndex
+from PyQt5.QtCore import QItemSelectionModel
+from PyQt5.QtWidgets import QButtonGroup, QDialog, QDialogButtonBox, \
+    QAbstractButton
 
 from karabogui import messagebox
 from karabogui.events import (
@@ -211,7 +213,7 @@ class LoadProjectDialog(QDialog):
         enable = selected or project
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
 
-    @pyqtSlot(object, object)
+    @pyqtSlot(QItemSelection, QItemSelection)
     def _selectionChanged(self, selected, deselected):
         """ Whenever an item is selected the current title and the button box
         need to be updated
@@ -219,7 +221,7 @@ class LoadProjectDialog(QDialog):
         # Make sure loading of trashed projects is not possible
         self._check_button_state()
 
-    @pyqtSlot(object)
+    @pyqtSlot(QModelIndex)
     def _load_item(self, index):
         """ Slot connectect to the ``QTableView`` signal ``doubleClicked``
         Only accept the dialog, if the selected project is loadable.
@@ -228,7 +230,7 @@ class LoadProjectDialog(QDialog):
         if self._selected_item_loadable():
             self.accept()
 
-    @pyqtSlot(object)
+    @pyqtSlot(str)
     def _titleChanged(self, text):
         index = self.twProjects.model().projectIndex(text)
         with SignalBlocker(self.twProjects):
@@ -268,7 +270,7 @@ class LoadProjectDialog(QDialog):
             # NOTE: The view update is happening asynchronously. Once we get
             # a reply from the GUI server, we request a new view
 
-    @pyqtSlot(object)
+    @pyqtSlot(QAbstractButton)
     def _openFromChanged(self, button):
         # Update view
         self.update_view()

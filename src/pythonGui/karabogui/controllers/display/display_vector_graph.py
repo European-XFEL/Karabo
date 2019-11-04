@@ -5,8 +5,7 @@
 from itertools import cycle
 
 import numpy as np
-from PyQt4.QtGui import QAction, QInputDialog
-from PyQt4.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QAction, QInputDialog
 from traits.api import Dict, Instance
 
 from karabogui.binding.api import VectorNumberBinding
@@ -89,12 +88,12 @@ class DisplayVectorGraph(BaseBindingController):
     # ----------------------------------------------------------------
     # Qt Slots
 
-    @pyqtSlot(object)
+    # @pyqtSlot(object)
     def _change_model(self, content):
         self.model.trait_set(**restore_graph_config(content))
 
-    @pyqtSlot()
-    def configure_downsample(self):
+    # @pyqtSlot()
+    def configure_downsample(self, checked):
         sample, ok = QInputDialog.getInt(
             self.widget, 'Downsample', 'Samples half:',
             self.model.half_samples,

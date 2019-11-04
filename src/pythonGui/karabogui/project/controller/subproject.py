@@ -5,8 +5,7 @@
 #############################################################################
 from collections import defaultdict
 
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QAction, QDialog, QMenu
+from PyQt5.QtWidgets import QAction, QDialog, QMenu
 from traits.api import Instance, List, on_trait_change
 
 from karabo.common.api import walk_traits_object
@@ -39,8 +38,8 @@ class SubprojectController(ProjectSubgroupController):
     # ----------------------------------------------------------------------
     # action handlers
 
-    @pyqtSlot()
-    def _add_project(self):
+    # @pyqtSlot()
+    def _add_project(self, checked):
         """ Add a new subproject to the associated project
         """
         dialog = NewProjectDialog(default=True)
@@ -51,8 +50,8 @@ class SubprojectController(ProjectSubgroupController):
             project.initialized = project.modified = True
             self.model.subprojects.append(project)
 
-    @pyqtSlot()
-    def _load_project(self):
+    # @pyqtSlot()
+    def _load_project(self, checked):
         """ Add an existing project as a subproject.
         """
         project = load_project(is_subproject=True)

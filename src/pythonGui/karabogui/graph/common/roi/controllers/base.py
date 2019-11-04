@@ -1,7 +1,7 @@
 from collections import defaultdict
 
-from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
-from pyqtgraph import Point, ROI
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
+from pyqtgraph import Point
 
 from karabogui.graph.common.toolbar import ROITool
 from karabogui.graph.common.roi.crosshair import CrosshairROI
@@ -172,7 +172,7 @@ class BaseROIController(QObject):
         for item in roi_items:
             item.set_visible(False)
 
-    @pyqtSlot(ROI)
+    @pyqtSlot(object)
     def _remove_roi_item(self, roi_item):
         """
         Deletes the given ROI and removes it from the list.

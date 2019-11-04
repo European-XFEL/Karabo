@@ -2,8 +2,9 @@ from abc import abstractmethod
 from collections import OrderedDict
 from functools import partial
 
-from PyQt4.QtCore import Qt, QObject, pyqtSignal, pyqtSlot, QSize
-from PyQt4.QtGui import QAction, QMenu, QToolBar, QToolButton, QWidgetAction
+from PyQt5.QtCore import Qt, QObject, pyqtSignal, pyqtSlot, QSize
+from PyQt5.QtWidgets import (
+    QAction, QMenu, QToolBar, QToolButton, QWidgetAction)
 
 from karabogui import icons
 

@@ -8,8 +8,9 @@ import json
 import re
 from weakref import WeakValueDictionary
 
-from PyQt4.QtCore import QAbstractItemModel, QMimeData, QModelIndex, Qt
-from PyQt4.QtGui import QItemSelection, QItemSelectionModel
+from PyQt5.QtCore import (
+    QAbstractItemModel, QItemSelection, QItemSelectionModel, QMimeData,
+    QModelIndex, Qt)
 
 from karabo.common.api import walk_traits_object
 from karabo.common.project.api import MacroModel
@@ -43,7 +44,9 @@ class ProjectViewItemModel(QAbstractItemModel):
         self._traits_model = None
         self._controller = None
         self._model_index_refs = WeakValueDictionary()
-        self.setSupportedDragActions(Qt.CopyAction)
+
+    def supportedDragActions(self):
+        return Qt.CopyAction
 
     def controller_ref(self, model_index):
         """Get the controller object for a ``QModelIndex``. This is essentially
@@ -147,7 +150,8 @@ class ProjectViewItemModel(QAbstractItemModel):
             data.append(controller.info())
 
         mimeData = QMimeData()
-        mimeData.setData('treeItems', json.dumps(data))
+        mimeData.setData('treeItems', bytearray(json.dumps(data),
+                                                encoding='UTF-8'))
         return mimeData
 
     def findNodes(self, text, case_sensitive=True,

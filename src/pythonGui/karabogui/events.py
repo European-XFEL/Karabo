@@ -1,7 +1,7 @@
 from enum import Enum
 
-from PyQt4.QtCore import QEvent
-from PyQt4.QtGui import QApplication
+from PyQt5.QtCore import QEvent
+from PyQt5.QtWidgets import QApplication
 
 from karabogui.singletons.api import get_mediator
 

@@ -6,8 +6,7 @@
 from functools import partial
 from io import StringIO
 
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox
+from PyQt5.QtWidgets import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance, String, on_trait_change
 
 from karabo.common.api import ProxyStatus, walk_traits_object
@@ -61,7 +60,7 @@ class MacroInstanceController(BaseProjectController):
     # ----------------------------------------------------------------------
     # action handlers
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def shutdown(self):
         get_manager().shutdownDevice(self.instance_id, showConfirm=True)
 
@@ -200,7 +199,7 @@ class MacroController(BaseProjectGroupController):
             broadcast_event(KaraboEvent.RemoveProjectModelViews,
                             {'models': [macro]})
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _edit_macro(self):
         dialog = ObjectEditDialog(object_type='macro', model=self.model)
         result = dialog.exec()
@@ -218,7 +217,7 @@ class MacroController(BaseProjectGroupController):
                 dupe_macro.simple_name = simple_name
                 project.macros.append(dupe_macro)
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _save_macro_to_file(self):
         macro = self.model
         fn = getSaveFileName(caption='Save macro to file',
@@ -234,7 +233,7 @@ class MacroController(BaseProjectGroupController):
         with open(fn, 'w') as fout:
             fout.write(write_macro(macro))
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def run_macro(self):
         """Action handler to instantiate the macro
 

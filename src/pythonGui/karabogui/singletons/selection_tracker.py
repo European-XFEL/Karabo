@@ -3,8 +3,7 @@
 # Created on January 12, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import QObject
-from PyQt4.QtGui import QItemSelectionModel
+from PyQt5.QtCore import QItemSelectionModel, QObject
 
 
 class SelectionTracker(QObject):

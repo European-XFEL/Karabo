@@ -7,8 +7,8 @@ import copy
 import json
 
 import numpy as np
-from PyQt4.QtCore import pyqtSlot, Qt, QAbstractTableModel, QModelIndex
-from PyQt4.QtGui import QTableView, QComboBox, QItemDelegate
+from PyQt5.QtCore import pyqtSlot, Qt, QAbstractTableModel, QModelIndex
+from PyQt5.QtWidgets import QTableView, QComboBox, QItemDelegate
 
 from karabo.common.api import KARABO_SCHEMA_VALUE_TYPE
 from karabo.native import AccessMode, Hash

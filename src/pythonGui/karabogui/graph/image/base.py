@@ -1,7 +1,7 @@
 from functools import partial
 
-from PyQt4.QtCore import pyqtSignal, pyqtSlot, QEvent, Qt
-from PyQt4.QtGui import QAction, QGridLayout, QWidget
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, QEvent, Qt
+from PyQt5.QtWidgets import QAction, QGridLayout, QWidget
 from pyqtgraph import GraphicsLayoutWidget
 
 from karabogui import icons

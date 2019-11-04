@@ -1,4 +1,4 @@
-from PyQt4.QtCore import pyqtSlot
+from PyQt5.QtCore import pyqtSlot
 
 from karabogui.graph.common.const import SCALING, TRANSLATION
 from karabogui.graph.common.enums import ROITool

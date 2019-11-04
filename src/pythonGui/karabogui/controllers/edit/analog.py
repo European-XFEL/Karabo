@@ -3,8 +3,8 @@
 # Created on September 21, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import pyqtSlot, Qt
-from PyQt4.QtGui import QDial, QSlider
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QDial, QSlider
 from traits.api import Instance, Bool
 
 from karabo.common.api import (
@@ -48,7 +48,7 @@ class _AnalogEditorWidget(BaseBindingController):
             with SignalBlocker(self.widget):
                 self.widget.setValue(value)
 
-    @pyqtSlot(object)
+    # @pyqtSlot(object)
     def _edit_value(self, value):
         if self.proxy.binding is None or self._error_shown:
             return

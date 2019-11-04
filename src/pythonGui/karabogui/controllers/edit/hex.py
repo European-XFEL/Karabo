@@ -4,8 +4,8 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from numpy import log2
-from PyQt4.QtCore import pyqtSlot, Qt
-from PyQt4.QtGui import QLineEdit
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QLineEdit
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import HexadecimalModel
@@ -53,7 +53,7 @@ class Hexadecimal(BaseBindingController):
             with SignalBlocker(self._internal_widget):
                 self._internal_widget.setText("{:x}".format(value))
 
-    @pyqtSlot(str)
+    # @pyqtSlot(str)
     def _on_user_edit(self, text):
         if self.proxy.binding is None:
             return

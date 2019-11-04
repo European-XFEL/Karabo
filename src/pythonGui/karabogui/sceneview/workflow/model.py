@@ -1,4 +1,4 @@
-from PyQt4.QtCore import QPoint
+from PyQt5.QtCore import QPoint
 from traits.api import (
     Bool, cached_property, Dict, Enum, Event, Instance, HasStrictTraits, Int,
     List, on_trait_change, Property, String, Undefined
