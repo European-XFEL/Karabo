@@ -1,14 +1,19 @@
+from argparse import ArgumentParser
+from asyncio import ensure_future, gather, get_event_loop, sleep
+from datetime import datetime
 import json
 import os
+import socket
 from struct import unpack
-import time
 import sys
-from argparse import ArgumentParser
-from datetime import datetime
+import time
+import urllib
 
-from tornado import ioloop, web
+from tornado import httpserver, ioloop, web
 from tornado.concurrent import Future
 from tornado.escape import json_decode
+from tornado.httpclient import AsyncHTTPClient
+from tornado.platform.asyncio import AsyncIOMainLoop, to_asyncio_future
 from tornado.websocket import WebSocketHandler
 
 from .startkarabo import absolute, defaultall, entrypoint
@@ -208,6 +213,35 @@ class StatusHandler(web.RequestHandler):
         self.write(response)
 
 
+class Subscriber():
+    def __init__(self, uris, server):
+        self.uris = uris
+        s = next(iter(server._sockets.values()))
+        self.port = s.getsockname()[1]
+        self.client = AsyncHTTPClient()
+        self.hostname = socket.gethostname()
+
+    async def __call__(self):
+        """post the port name of the server to the aggregators
+
+        the protocol is the following: a webserver will notify its port to
+        the aggregator every 10 seconds and the aggregator will poll the status
+        of the webservers subscribing to it.
+        """
+        if len(self.uris) == 0:
+            return
+        while True:
+            body = urllib.parse.urlencode(
+                {"port": self.port,
+                 "hostname": self.hostname
+                 })
+            futs = [to_asyncio_future(
+                        self.client.fetch(uri, method="POST", body=body))
+                    for uri in self.uris]
+            r = await gather(*futs, return_exceptions=True)
+            await sleep(10)
+
+
 @entrypoint
 def run_webserver():
     """karabo-webserver - start a web server to monitor karabo servers
@@ -220,6 +254,9 @@ def run_webserver():
 
     --port
       port number the server listens to
+
+    --webserver_aggregators
+      a list of urls that will be notified of this server's existance
     """
 
     parser = ArgumentParser()
@@ -231,6 +268,10 @@ def run_webserver():
     parser.add_argument('--port',
                         help='port number the server listens to',
                         default=8080)
+    parser.add_argument('--webserver_aggregators',
+                        default=[],
+                        help='list of webserver aggregators URIs',
+                        nargs='*')
     args = parser.parse_args()
     if args.serverId.startswith('serverId='):
         service_id = args.serverId.split('=')[1].replace("/", "_")
@@ -257,5 +298,13 @@ def run_webserver():
                               os.path.dirname(__file__), "templates"),
                           static_path=os.path.join(
                               os.path.dirname(__file__), "static"),)
-    app.listen(args.port)
-    ioloop.IOLoop.current().start()
+    if hasattr(AsyncIOMainLoop, "initialized"):
+        if not AsyncIOMainLoop.initialized():
+            AsyncIOMainLoop().install()
+    uris = args.webserver_aggregators
+    server = httpserver.HTTPServer(app)
+    server.listen(args.port)
+    subscribe = Subscriber(uris, server)
+    ensure_future(subscribe())
+    loop = get_event_loop()
+    loop.run_forever()
