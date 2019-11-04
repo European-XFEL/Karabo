@@ -1,5 +1,6 @@
-from PyQt4.QtCore import QSize, Qt, pyqtSignal, pyqtSlot
-from PyQt4.QtGui import QWidget, QPainter
+from PyQt5.QtCore import QSize, Qt, pyqtSignal
+from PyQt5.QtGui import QPainter
+from PyQt5.QtWidgets import QWidget
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import BitfieldModel
@@ -79,7 +80,7 @@ class Bitfield(BaseBindingController):
         self.widget.update_label(proxy)
         self.widget.update()
 
-    @pyqtSlot(int)
+    # @pyqtSlot(int)
     def _on_user_edit(self, value):
         if self.proxy.binding is None:
             return

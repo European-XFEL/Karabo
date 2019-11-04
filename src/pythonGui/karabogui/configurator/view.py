@@ -6,9 +6,10 @@
 from collections import OrderedDict
 from functools import partial
 
-from PyQt4.QtCore import pyqtSignal, pyqtSlot, QRect, Qt
-from PyQt4.QtGui import (QAbstractItemDelegate, QAbstractItemView, QAction,
-                         QCursor, QMenu, QTreeView)
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, QRect, Qt, QModelIndex, QPoint
+from PyQt5.QtGui import QCursor
+from PyQt5.QtWidgets import (QAbstractItemDelegate, QAbstractItemView, QAction,
+                             QMenu, QTreeView)
 
 from karabo.common.api import (
     KARABO_SCHEMA_ALIAS, KARABO_SCHEMA_DESCRIPTION,
@@ -43,12 +44,14 @@ class ConfigurationTreeView(QTreeView):
         super(ConfigurationTreeView, self).__init__(parent)
         self.setDragEnabled(True)
         self.setTabKeyNavigation(True)
-        self.header().setMovable(False)
+        self.header().setSectionsMovable(False)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         triggers = (QAbstractItemView.CurrentChanged |
                     QAbstractItemView.SelectedClicked)
         self.setEditTriggers(triggers)
+
+        self.edit_delegate = EditDelegate(parent=self)
 
         model = ConfigurationTreeModel(parent=self)
         self.setModel(model)
@@ -60,7 +63,6 @@ class ConfigurationTreeView(QTreeView):
         # ... and a delegate for the value column
         self.setItemDelegateForColumn(1, ValueDelegate(parent=self))
         # ... and a delegate for the editable value column
-        self.edit_delegate = EditDelegate(parent=self)
         self.setItemDelegateForColumn(2, self.edit_delegate)
 
         # Widget for more information of an index
@@ -219,7 +221,7 @@ class ConfigurationTreeView(QTreeView):
             if index.flags() & Qt.ItemIsEditable == Qt.ItemIsEditable:
                 return index
 
-    @pyqtSlot(object)
+    @pyqtSlot(QPoint)
     def _show_context_menu(self, event):
         """Show a custom context menu
         """
@@ -255,7 +257,7 @@ class ConfigurationTreeView(QTreeView):
                 proxy.value = default_value
             self.model().layoutChanged.emit()
 
-    @pyqtSlot(object, object)
+    @pyqtSlot(QModelIndex, QModelIndex)
     def _update_popup_contents(self, topLeft, bottomRight):
         """When the data in the model changes, blindly update the popup widget
         if it happens to be showing.

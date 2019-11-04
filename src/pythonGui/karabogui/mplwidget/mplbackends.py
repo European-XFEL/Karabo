@@ -4,8 +4,9 @@ from matplotlib.backends.backend_qt4agg import (
 from matplotlib.backend_tools import cursors
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
-from PyQt4.QtCore import Qt, QSize
-from PyQt4.QtGui import QCursor, QMenu, QSizePolicy
+from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtGui import QCursor
+from PyQt5.QtWidgets import QMenu, QSizePolicy
 
 from karabogui import icons
 from karabogui.messagebox import show_information

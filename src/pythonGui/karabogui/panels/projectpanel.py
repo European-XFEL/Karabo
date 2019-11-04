@@ -5,8 +5,8 @@
 #############################################################################
 from functools import partial
 
-from PyQt4.QtCore import QSize
-from PyQt4.QtGui import QDialog, QVBoxLayout, QWidget
+from PyQt5.QtCore import QSize
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QWidget
 
 from karabo.common.project.api import ProjectModel
 from karabogui import icons

@@ -3,7 +3,6 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt4.QtCore import pyqtSlot
 from traits.api import Instance
 
 from karabogui.binding.api import VectorNumberBinding
@@ -47,6 +46,6 @@ class DisplayVectorFillGraph(BaseBindingController):
     # ----------------------------------------------------------------
     # Qt Slots
 
-    @pyqtSlot(object)
+    # @pyqtSlot(object)
     def _change_model(self, content):
         self.model.trait_set(**content)

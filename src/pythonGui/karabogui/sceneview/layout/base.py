@@ -1,5 +1,5 @@
-from PyQt4.QtCore import QRect
-from PyQt4.QtGui import QWidgetItem
+from PyQt5.QtCore import QRect
+from PyQt5.QtWidgets import QWidgetItem
 
 from .shape import ShapeLayoutItem
 

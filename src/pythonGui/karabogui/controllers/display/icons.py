@@ -1,5 +1,4 @@
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QAction, QDialog, QLabel
+from PyQt5.QtWidgets import QAction, QDialog, QLabel
 from traits.api import Instance, on_trait_change, Type, Undefined
 
 from karabo.common.scenemodel.api import (
@@ -43,8 +42,8 @@ class _BaseIcons(BaseBindingController):
                 get_binding_value(self.proxy) is not None):
             self.value_update(self.proxy)
 
-    @pyqtSlot()
-    def _on_change_icons(self):
+    # @pyqtSlot()
+    def _on_change_icons(self, checked):
         binding = self.proxy.binding
         dialog = self.dialog_klass(self.model.values, binding)
         if dialog.exec_() == QDialog.Accepted:

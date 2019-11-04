@@ -1,4 +1,4 @@
-from PyQt4.QtGui import QSpinBox, QSlider
+from PyQt5.QtWidgets import QSpinBox, QSlider
 
 from karabogui.binding.api import (
     apply_configuration, build_binding, DeviceProxy, PropertyProxy)

@@ -1,8 +1,8 @@
 from functools import partial
 
-from PyQt4.QtCore import QPoint, QRect, QSize, Qt, pyqtSlot
-from PyQt4.QtGui import (
-    QAction, QColor, QDialog, QFont, QPainter, QPen, QPushButton, QSizePolicy)
+from PyQt5.QtCore import QPoint, QRect, QRectF, QSize, Qt, pyqtSlot
+from PyQt5.QtGui import QColor, QFont, QPainter, QPen
+from PyQt5.QtWidgets import QAction, QDialog, QPushButton, QSizePolicy
 from traits.api import Instance
 
 from karabogui import messagebox
@@ -48,8 +48,8 @@ class LinkWidget(QPushButton):
         with QPainter(self) as painter:
             boundary = self.rect().adjusted(2, 2, -2, -2)
             pt = boundary.topLeft()
-            rects = [QRect(pt, QSize(7, 7)),
-                     QRect(pt + QPoint(11, 0), QSize(7, 7))]
+            rects = [QRectF(QRect(pt, QSize(7, 7))),
+                     QRectF(QRect(pt + QPoint(11, 0), QSize(7, 7)))]
             painter.fillRect(boundary, QColor(self.model.background))
             # Draw the boundary
             pen = QPen()
@@ -126,8 +126,8 @@ class DisplayDeviceSceneLink(BaseBindingController):
         widget.addAction(text_action)
         return widget
 
-    @pyqtSlot()
-    def _select_scene(self):
+    # @pyqtSlot()
+    def _select_scene(self, checked):
         if get_binding_value(self.proxy) is None:
             return
         dialog = DeviceSceneLinkDialog(
@@ -136,8 +136,8 @@ class DisplayDeviceSceneLink(BaseBindingController):
             return
         self.widget.set_link_model(dialog.link_model)
 
-    @pyqtSlot()
-    def _edit_text(self):
+    # @pyqtSlot()
+    def _edit_text(self, checked):
         if get_binding_value(self.proxy) is None:
             return
         dialog = TextDialog(self.model)

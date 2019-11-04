@@ -5,9 +5,10 @@
 #############################################################################
 from functools import partial
 
-from PyQt4.QtCore import Qt, pyqtSlot
-from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog, QMenu,
-                         QTreeView)
+from PyQt5.QtCore import Qt, pyqtSlot, QPoint
+from PyQt5.QtGui import QCursor
+from PyQt5.QtWidgets import (
+    QAbstractItemView, QAction, QDialog, QMenu, QTreeView)
 
 from karabo.common.api import Capabilities
 from karabogui import icons
@@ -195,7 +196,7 @@ class SystemTreeView(QTreeView):
             call_device_slot(handler, device_id, 'requestScene',
                              name=scene_name)
 
-    @pyqtSlot(object)
+    @pyqtSlot(QPoint)
     def onCustomContextMenuRequested(self, pos):
         def _test_mask(mask, bit):
             return (mask & bit) == bit

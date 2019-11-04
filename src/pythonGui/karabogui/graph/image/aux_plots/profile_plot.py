@@ -1,5 +1,6 @@
 from numpy import append
-from PyQt4.QtGui import QAction, QMenu, QTransform
+from PyQt5.QtGui import QTransform
+from PyQt5.QtWidgets import QAction, QMenu
 from pyqtgraph import PlotItem
 
 from karabogui.graph.common.const import (
