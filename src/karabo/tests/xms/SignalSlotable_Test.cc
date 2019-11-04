@@ -913,6 +913,9 @@ void SignalSlotable_Test::testMethod() {
     }
     CPPUNIT_ASSERT_EQUAL(2, reply);
 
+    // The same, but test that one can ignore the reply value:
+    CPPUNIT_ASSERT_NO_THROW(demo->request("", "slotC", 1).timeout(500).receive());
+
     std::string someData("myPrivateStuff");
     demo->request(instanceId, "slotC", 1).receiveAsync<int>(boost::bind(&SignalSlotDemo::myCallBack, demo, someData, _1));
     // shortcut address:
@@ -935,8 +938,8 @@ void SignalSlotable_Test::testMethod() {
     CPPUNIT_ASSERT_NO_THROW(demo->request("", "noded.asyncSlot").timeout(1000).receive(reply));
     CPPUNIT_ASSERT_EQUAL(42, reply);
 
-    waitDemoOk(demo, 12);
-    CPPUNIT_ASSERT(demo->wasOk(12));
+    waitDemoOk(demo, 13);
+    CPPUNIT_ASSERT(demo->wasOk(13));
     
 }
 
