@@ -1588,7 +1588,6 @@ namespace karabo {
                     }
 
                     KARABO_LOG_FRAMEWORK_DEBUG << "Updating schema attributes of device: " << deviceId;
-                    // FIXME: needs failure handler - at least to clean m_pendingAttributeUpdates!
                     request(deviceId, "slotUpdateSchemaAttributes", it->second.updates).receiveAsync<Hash>(
                         bind_weak(&GuiServerDevice::onUpdateNewInstanceAttributesHandler, this, deviceId, _1));
                 }
@@ -1892,7 +1891,7 @@ namespace karabo {
         void GuiServerDevice::onRequestFromSlot(WeakChannelPointer channel, const karabo::util::Hash& hash) {
             Hash failureInfo;
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onRequest";
+                KARABO_LOG_FRAMEWORK_DEBUG << "onRequestFromSlot";
                 // verify that hash is sane on top level
                 failureInfo.set("deviceId", hash.has("deviceId"));
                 failureInfo.set("slot", hash.has("slot"));
