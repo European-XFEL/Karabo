@@ -1,4 +1,4 @@
-from PyQt4.QtGui import QLayout, QLayoutItem
+from PyQt5.QtWidgets import QLayout, QLayoutItem
 
 from karabogui.sceneview.utils import save_painter_state
 

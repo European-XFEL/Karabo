@@ -5,8 +5,8 @@
 #############################################################################
 from weakref import WeakValueDictionary
 
-from PyQt4.QtCore import pyqtSignal, QAbstractItemModel, QModelIndex, Qt
-from PyQt4.QtGui import QBrush, QColor, QFont
+from PyQt5.QtCore import pyqtSignal, QAbstractItemModel, QModelIndex, Qt
+from PyQt5.QtGui import QBrush, QColor, QFont
 
 from karabo.native import AccessMode
 from karabo.common.api import (

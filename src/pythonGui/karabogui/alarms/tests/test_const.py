@@ -1,6 +1,6 @@
 from nose.tools import assert_raises
-from PyQt4.QtGui import QIcon
-from PyQt4.QtCore import QSize
+from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import QSize
 
 from karabogui.testing import GuiTestCase
 from .. import const

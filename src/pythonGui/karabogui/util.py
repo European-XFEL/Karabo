@@ -11,10 +11,10 @@ from uuid import uuid4
 import weakref
 
 from dateutil.tz import tzlocal, tzutc
-from PyQt4.QtCore import QEvent, QObject, Qt, QSize
-from PyQt4.QtGui import (
-    QApplication, QCursor, QDialog, QFileDialog, QHeaderView, QLabel, QMovie,
-    QValidator)
+from PyQt5.QtCore import QEvent, QObject, Qt, QSize
+from PyQt5.QtWidgets import (
+    QApplication, QDialog, QFileDialog, QHeaderView, QLabel)
+from PyQt5.QtGui import QCursor, QMovie, QValidator
 
 from karabo.common.project.api import read_macro
 from karabo.common.scenemodel.api import SceneTargetWindow, read_scene
@@ -89,11 +89,14 @@ def getOpenFileName(parent=None, caption="", filter="", directory=""):
     """
     directory = directory or krb_globals.HIDDEN_KARABO_FOLDER
 
-    return QFileDialog.getOpenFileName(parent=parent,
-                                       caption=caption,
-                                       directory=directory,
-                                       filter=filter,
-                                       options=QFileDialog.DontUseNativeDialog)
+    filename, _ = QFileDialog.getOpenFileName(
+        parent=parent,
+        caption=caption,
+        directory=directory,
+        filter=filter,
+        options=QFileDialog.DontUseNativeDialog)
+
+    return filename
 
 
 def getSaveFileName(parent=None, caption="", filter="", directory="",
@@ -343,7 +346,7 @@ def set_treeview_header(tree_view):
     tree_view.setColumnWidth(2, 20)
 
     # Prevent drag reorder of the header
-    tree_view.header().setMovable(False)
+    tree_view.header().setSectionsMovable(False)
 
 
 def utc_to_local(utc_str, format='%Y-%m-%d %H:%M:%S'):

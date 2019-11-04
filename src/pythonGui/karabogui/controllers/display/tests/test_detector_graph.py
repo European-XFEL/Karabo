@@ -1,4 +1,4 @@
-from PyQt4 import QtGui
+from PyQt5.QtWidgets import QGraphicsTextItem
 from unittest import mock, skip
 
 from karabo.native import EncodingType
@@ -99,7 +99,7 @@ class TestDetectorGraph(GuiTestCase):
                                        path='output.data.image')
         self.controller = DisplayDetectorGraph(proxy=self.img_proxy)
 
-        with mock.patch.object(QtGui.QGraphicsTextItem, 'setHtml'):
+        with mock.patch.object(QGraphicsTextItem, 'setHtml'):
             self.controller.create(None)
 
     def tearDown(self):

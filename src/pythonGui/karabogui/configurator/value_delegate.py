@@ -3,8 +3,8 @@
 # Created on September 12, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import QSize
-from PyQt4.QtGui import QStyledItemDelegate
+from PyQt5.QtCore import QSize
+from PyQt5.QtWidgets import QStyledItemDelegate
 
 from .utils import FIXED_ROW_HEIGHT
 

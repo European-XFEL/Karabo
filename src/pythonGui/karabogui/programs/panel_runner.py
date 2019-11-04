@@ -1,7 +1,7 @@
 import argparse
 import sys
 
-from PyQt4.QtGui import QApplication
+from PyQt5.QtWidgets import QApplication
 
 from karabo.common.scenemodel.api import (
     read_scene, DeviceSceneLinkModel, SceneModel)

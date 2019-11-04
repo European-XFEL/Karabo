@@ -4,8 +4,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 import numpy as np
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QColor, QFrame, QImage, QLabel, QPixmap
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QColor, QImage, QPixmap
+from PyQt5.QtWidgets import QFrame, QLabel
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import DisplayImageElementModel

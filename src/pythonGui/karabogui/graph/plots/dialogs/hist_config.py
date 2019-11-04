@@ -1,8 +1,8 @@
 import os
 
-from PyQt4 import uic
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QDialog
+from PyQt5 import uic
+from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QDialog
 
 
 class HistogramDialog(QDialog):

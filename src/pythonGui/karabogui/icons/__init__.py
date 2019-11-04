@@ -1,6 +1,6 @@
 import os.path as op
 
-from PyQt4.QtGui import QIcon
+from PyQt5.QtGui import QIcon
 
 
 class Icon(object):

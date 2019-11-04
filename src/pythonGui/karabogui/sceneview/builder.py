@@ -1,4 +1,4 @@
-from PyQt4.QtCore import QRect
+from PyQt5.QtCore import QRect
 
 from karabo.common.scenemodel import api as models
 from karabogui.controllers.api import get_model_controller
