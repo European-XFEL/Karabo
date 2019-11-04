@@ -135,7 +135,8 @@ enum class ExceptionType {
 };
 
 
-void waitEqual(ExceptionType target, const ExceptionType& test, int trials = 10) {
+template <class Type>
+void waitEqual(Type target, const Type& test, int trials = 10) {
     // test is by reference since it is expected to be updated from the outside
 
     // trials = 10 => maximum wait for millisecondsSleep = 2 is about 2 seconds
@@ -228,6 +229,21 @@ void SignalSlotable_Test::testReceiveAsync() {
         boost::this_thread::sleep(boost::posix_time::milliseconds(20));
     }
     CPPUNIT_ASSERT(result == "Hello, world!");
+
+    // Trying to receive less reply values than come is OK as well!
+    bool receivedIgnoringReplyValue = false;
+    const auto badSuccessHandler = [&receivedIgnoringReplyValue]() {
+        receivedIgnoringReplyValue = true;
+    };
+    bool calledErrorHandler = false;
+    const auto errHandler = [&calledErrorHandler]() {
+        calledErrorHandler = true;
+    };
+    greeter->request("responder", "slotAnswer", "Hello").timeout(200)
+            .receiveAsync(badSuccessHandler, errHandler);
+    waitEqual(receivedIgnoringReplyValue, true);
+    CPPUNIT_ASSERT_EQUAL(calledErrorHandler, false);
+    CPPUNIT_ASSERT_EQUAL(receivedIgnoringReplyValue, true);
 }
 
 
@@ -310,6 +326,8 @@ void SignalSlotable_Test::testReceiveAsyncError() {
             .receiveAsync<std::string, int>(badSuccessHandler2, errHandler);
     waitEqual(ExceptionType::signalslot, caughtType);
     CPPUNIT_ASSERT_EQUAL(int(ExceptionType::signalslot), int(caughtType));
+
+    // Trying to receive less reply values than come is OK. See testReceiveAsync.
 
     //    // Too many arguments to slot seems not to harm - should we make it harm?
     //    caughtType = ExceptionType::none;
