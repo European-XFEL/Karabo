@@ -3,8 +3,8 @@
 # Created on February 10, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import pyqtSignal, pyqtSlot, QLocale, Qt
-from PyQt4.QtGui import QSpinBox
+from PyQt5.QtCore import pyqtSignal, QLocale, Qt
+from PyQt5.QtWidgets import QSpinBox
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import EditableSpinBoxModel
@@ -72,7 +72,7 @@ class EditableSpinBox(BaseBindingController):
             with SignalBlocker(self._internal_widget):
                 self._internal_widget.setValue(value)
 
-    @pyqtSlot(bool)
+    # @pyqtSlot(bool)
     def _focus_changed(self, has_focus):
         """Make sure edits get applied when focus is lost"""
         if not has_focus:
@@ -81,7 +81,7 @@ class EditableSpinBox(BaseBindingController):
             if value != proxy_value:
                 self.proxy.edit_value = value
 
-    @pyqtSlot(int)
+    # @pyqtSlot(int)
     def _on_user_edit(self, value):
         if self.proxy.binding is None:
             return

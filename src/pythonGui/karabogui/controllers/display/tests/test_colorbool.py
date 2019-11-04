@@ -1,7 +1,6 @@
 from unittest.mock import patch
 
-from PyQt4.QtCore import QByteArray
-from PyQt4.QtGui import QWidget
+from PyQt5.QtWidgets import QWidget
 
 from karabo.common.api import State
 from karabo.common.scenemodel.api import ColorBoolModel
@@ -48,9 +47,11 @@ class TestDisplayColorBool(GuiTestCase):
             apply_configuration(Hash('prop', True),
                                 self.proxy.root_proxy.binding)
             active = controller.icon.with_color(STATE_COLORS[State.ACTIVE])
-            assert controller.widget.loaded_data == QByteArray(active)
+            self.assertEqual(controller.widget.loaded_data,
+                             bytearray(active, encoding='UTF-8'))
 
             apply_configuration(Hash('prop', False),
                                 self.proxy.root_proxy.binding)
             passive = controller.icon.with_color(STATE_COLORS[State.PASSIVE])
-            assert controller.widget.loaded_data == QByteArray(passive)
+            self.assertEqual(controller.widget.loaded_data,
+                             bytearray(passive, encoding='UTF-8'))

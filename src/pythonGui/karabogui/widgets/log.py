@@ -5,12 +5,13 @@
 #############################################################################
 from collections import namedtuple
 
-from PyQt4.QtCore import (pyqtSlot, QAbstractTableModel, QDate, QDateTime,
+from PyQt5.QtCore import (pyqtSlot, QAbstractTableModel, QDate, QDateTime,
                           QModelIndex, Qt)
-from PyQt4.QtGui import (QAbstractItemView, QColor, QDateTimeEdit,
-                         QFormLayout, QFrame, QGroupBox, QHBoxLayout,
-                         QLabel, QLineEdit, QPushButton, QTableView,
-                         QToolButton, QVBoxLayout, QWidget)
+from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import (QAbstractItemView, QDateTimeEdit,
+                             QFormLayout, QFrame, QGroupBox, QHBoxLayout,
+                             QLabel, QLineEdit, QPushButton, QTableView,
+                             QToolButton, QVBoxLayout, QWidget)
 
 from karabogui import icons
 from karabogui.events import broadcast_event, KaraboEvent
@@ -292,8 +293,8 @@ class LogWidget(QWidget):
                 add = self.pbSearchAddDescr.isChecked()
                 g = (log for log in g
                      if (ins and text in log.instanceId) or
-                        (des and text in log.description) or
-                        (add and text in log.additionalDescription))
+                     (des and text in log.description) or
+                     (add and text in log.additionalDescription))
 
             return list(g)
 
@@ -312,9 +313,9 @@ class LogWidget(QWidget):
     def onSaveToFile(self):
         """Write current database content to a file """
         filename = getSaveFileName(
-                        caption="Save file as",
-                        filter="Log files (*.log)",
-                        suffix="log")
+            caption="Save file as",
+            filter="Log files (*.log)",
+            suffix="log")
         if not filename:
             return
 

@@ -3,8 +3,7 @@
 # Created on February 10, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QLineEdit
+from PyQt5.QtWidgets import QLineEdit
 from traits.api import Instance, Int
 
 from karabo.common.scenemodel.api import LineEditModel
@@ -40,7 +39,7 @@ class EditableLineEdit(BaseBindingController):
             self.widget.setText(value)
         self.widget.setCursorPosition(self._last_cursor_pos)
 
-    @pyqtSlot(str)
+    # @pyqtSlot(str)
     def _on_text_changed(self, value):
         if self.proxy.binding is None:
             return

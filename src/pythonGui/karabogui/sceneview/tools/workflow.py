@@ -1,6 +1,7 @@
 import numpy as np
-from PyQt4.QtCore import QPoint, Qt
-from PyQt4.QtGui import QMessageBox, QPainterPath, QPen
+from PyQt5.QtCore import QPoint, Qt
+from PyQt5.QtGui import QPainterPath, QPen
+from PyQt5.QtWidgets import QMessageBox
 from traits.api import Dict, Instance
 
 from karabogui.binding.api import ProjectDeviceProxy

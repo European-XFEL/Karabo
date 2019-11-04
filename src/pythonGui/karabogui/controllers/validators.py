@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt4.QtGui import QValidator
+from PyQt5.QtGui import QValidator
 
 
 class IntValidator(QValidator):

@@ -4,10 +4,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt4.QtCore import pyqtSlot, QRect, QSize, Qt
-from PyQt4.QtGui import (
-    QColor, QFontMetrics, QPainter, QPlainTextEdit, QTextEdit, QTextFormat,
-    QWidget)
+from PyQt5.QtCore import pyqtSlot, QRect, QSize, Qt
+from PyQt5.QtGui import QColor, QFontMetrics, QPainter, QTextFormat
+from PyQt5.QtWidgets import QPlainTextEdit, QTextEdit, QWidget
 
 LINE_WIDGET_BACKGROUND = QColor(224, 224, 224)
 LINE_WIDGET_COLOR = QColor(160, 160, 160)

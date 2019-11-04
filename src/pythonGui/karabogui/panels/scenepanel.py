@@ -5,9 +5,10 @@
 #############################################################################
 from functools import partial
 
-from PyQt4.QtCore import pyqtSlot, QEvent, QSize, Qt
-from PyQt4.QtGui import (QAction, QActionGroup, QApplication, QKeySequence,
-                         QMenu, QPalette, QScrollArea, QSizePolicy)
+from PyQt5.QtCore import pyqtSlot, QEvent, QSize, Qt
+from PyQt5.QtGui import QKeySequence, QPalette
+from PyQt5.QtWidgets import (QAction, QActionGroup, QApplication,
+                             QMenu, QScrollArea, QSizePolicy)
 
 from karabogui import icons
 from karabogui.events import broadcast_event, KaraboEvent

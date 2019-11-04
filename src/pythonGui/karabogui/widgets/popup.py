@@ -3,8 +3,8 @@
 # Created on July 21, 2013
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import pyqtSlot, Qt
-from PyQt4.QtGui import QPushButton, QTextEdit, QVBoxLayout, QWidget
+from PyQt5.QtCore import pyqtSlot, Qt
+from PyQt5.QtWidgets import QPushButton, QTextEdit, QVBoxLayout, QWidget
 
 
 class PopupWidget(QWidget):

@@ -1,4 +1,4 @@
-from PyQt4.QtCore import QModelIndex, Qt
+from PyQt5.QtCore import QModelIndex, Qt
 from karabogui.testing import GuiTestCase
 
 from ..const import (

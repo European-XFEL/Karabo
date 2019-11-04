@@ -3,8 +3,8 @@
 # Created on October 26, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import pyqtSlot, Qt
-from PyQt4.QtGui import QAction, QProgressBar
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QAction, QProgressBar
 from traits.api import Bool, Float, Instance, Tuple
 
 from karabo.common.api import (
@@ -99,8 +99,8 @@ class DisplayProgressBar(BaseBindingController):
         else:
             _set_limits(0, PROGRESS_MAX)
 
-    @pyqtSlot()
-    def _orientation_action(self):
+    # @pyqtSlot()
+    def _orientation_action(self, checked):
         self._set_orientation(not self.model.is_vertical)
 
     def _set_orientation(self, is_vertical):

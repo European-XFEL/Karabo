@@ -8,10 +8,11 @@ from guiqwt.builder import make
 from guiqwt.plot import CurveWidget, PlotManager
 from guiqwt.tools import SelectPointTool
 import numpy
-from PyQt4.QtCore import Qt, QDateTime, QTimer, pyqtSignal, pyqtSlot
-from PyQt4.QtGui import (
-    QButtonGroup, QDateTimeEdit, QHBoxLayout, QIntValidator, QLabel,
-    QLineEdit, QPushButton, QVBoxLayout, QWidget)
+from PyQt5.QtCore import Qt, QDateTime, QTimer, pyqtSignal
+from PyQt5.QtGui import QIntValidator
+from PyQt5.QtWidgets import (
+    QButtonGroup, QDateTimeEdit, QHBoxLayout, QLabel, QLineEdit, QPushButton,
+    QVBoxLayout, QWidget)
 from qwt import (
     QwtPlot, QwtScaleDraw, QwtText, QwtLinearScaleEngine, QwtScaleDiv)
 from traits.api import (Dict, Float, Instance, Int)
@@ -350,7 +351,7 @@ class DisplayTrendline(BaseBindingController):
         end = QDateTime.fromMSecsSinceEpoch(t1 * 1000)
         self._update_date_time_widgets(start, end)
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _x_axis_scale_changed(self):
         """ This slot is called whenever the timer timed out and previously the
             x axis scale was changed. """
@@ -359,25 +360,25 @@ class DisplayTrendline(BaseBindingController):
         self._update_x_axis_interval(t0, t1)
         self._update_y_axis_scale()
 
-    @pyqtSlot(str)
+    # @pyqtSlot(str)
     def _detail_range_changed(self, text):
         if self._update_y_axis_scale():
             self.update_later()
 
-    @pyqtSlot(object)
+    # @pyqtSlot(object)
     def _y_axis_btns_toggled(self, button):
         self._sel_y_axis_btn = button
         if self._update_y_axis_scale():
             self.update_later()
 
-    @pyqtSlot(object)
+    # @pyqtSlot(object)
     def _x_axis_btns_toggled(self, button):
         """ A time button was clicked which needs to update the axis scale. """
         self._sel_x_axis_btn = button
         if self._update_x_axis_scale():
             self.update_later()
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _reset_button_clicked(self):
         """ Reset the x axis scale to the initial start time."""
         self._uncheck_axis_buttons()
@@ -391,7 +392,7 @@ class DisplayTrendline(BaseBindingController):
         self._plot.setAxisScale(QwtPlot.xBottom, start_secs, end_secs)
         self.update_later()
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _uncheck_axis_buttons(self):
         """ No axis button should be selected.
             To realize that a ``HIDDEN`` button of the button groups is clicked

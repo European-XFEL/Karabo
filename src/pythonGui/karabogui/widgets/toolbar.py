@@ -3,8 +3,8 @@
 # Created on January 16, 2014
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import QSize
-from PyQt4.QtGui import QSizePolicy, QToolBar, QWidget
+from PyQt5.QtCore import QSize
+from PyQt5.QtWidgets import QSizePolicy, QToolBar, QWidget
 
 
 class ToolBar(QToolBar):

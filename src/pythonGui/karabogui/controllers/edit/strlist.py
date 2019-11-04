@@ -3,8 +3,7 @@
 # Created on February 10, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QDialog, QPushButton
+from PyQt5.QtWidgets import QDialog, QPushButton
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import EditableListElementModel
@@ -27,7 +26,7 @@ class EditableListElement(BaseBindingController):
         widget.clicked.connect(self._on_edit_clicked)
         return widget
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _on_edit_clicked(self):
         if self.proxy.binding is None:
             return

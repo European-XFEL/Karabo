@@ -1,4 +1,4 @@
-from PyQt4.QtGui import QBrush, QColor, QPen
+from PyQt5.QtGui import QBrush, QColor, QPen
 from pyqtgraph import LabelItem, mkBrush, mkPen
 from pyqtgraph.graphicsItems.LegendItem import ItemSample, LegendItem
 

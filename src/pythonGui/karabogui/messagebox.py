@@ -5,7 +5,7 @@
 #############################################################################
 from textwrap import dedent
 
-from PyQt4.QtGui import QMessageBox
+from PyQt5.QtWidgets import QMessageBox
 
 
 def show_alarm(text, title="Alarm", parent=None):

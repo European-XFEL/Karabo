@@ -6,9 +6,9 @@
 from contextlib import contextmanager
 import time
 
-from PyQt4.QtCore import pyqtSignal, pyqtSlot, QEvent, QSize, Qt, QTimer
-from PyQt4.QtGui import (
-    QPalette, QPainter, QPen, QSizePolicy, QStackedLayout, QWidget)
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, QEvent, QSize, Qt, QTimer
+from PyQt5.QtGui import QPalette, QPainter, QPen
+from PyQt5.QtWidgets import QSizePolicy, QStackedLayout, QWidget
 
 from karabo.common.scenemodel.api import (
     FixedLayoutModel, WorkflowItemModel, SCENE_MIN_WIDTH,

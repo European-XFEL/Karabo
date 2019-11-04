@@ -1,7 +1,7 @@
 from unittest import mock
 
 import numpy as np
-from PyQt4 import QtGui
+from PyQt5.QtWidgets import QGraphicsTextItem
 
 from ..display_vector_roll import DisplayVectorRollGraph
 from karabo.common.scenemodel.api import VectorRollGraphModel
@@ -23,7 +23,7 @@ class TestVectorRollGraph(GuiTestCase):
         self.proxy = get_class_property_proxy(schema, 'prop')
         self.controller = DisplayVectorRollGraph(proxy=self.proxy,
                                                  model=VectorRollGraphModel())
-        with mock.patch.object(QtGui.QGraphicsTextItem, 'setHtml'):
+        with mock.patch.object(QGraphicsTextItem, 'setHtml'):
             self.controller.create(None)
             self.assertIsNotNone(self.controller.widget)
 
@@ -64,7 +64,7 @@ class TestVectorRollGraph(GuiTestCase):
     def test_image_stack_configuration(self):
         controller = DisplayVectorRollGraph(proxy=self.proxy,
                                             model=VectorRollGraphModel())
-        with mock.patch.object(QtGui.QGraphicsTextItem, 'setHtml'):
+        with mock.patch.object(QGraphicsTextItem, 'setHtml'):
             controller.create(None)
 
         action = controller.widget.actions()[3]
