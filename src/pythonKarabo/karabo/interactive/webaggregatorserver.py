@@ -66,14 +66,14 @@ def run_webserver():
         parser.print_help()
         return
     servers = dict()
+    if hasattr(AsyncIOMainLoop, "initialized"):
+        if not AsyncIOMainLoop.initialized():
+            AsyncIOMainLoop().install()
     server_dict = {'servers': servers, 'client': AsyncHTTPClient()}
     app = web.Application([('/', MainHandler, server_dict)],
                           template_path=os.path.join(
                               os.path.dirname(__file__), "templates"),
                           static_path=os.path.join(
                               os.path.dirname(__file__), "static"),)
-    if hasattr(AsyncIOMainLoop, "initialized"):
-        if not AsyncIOMainLoop.initialized():
-            AsyncIOMainLoop().install()
     app.listen(args.port)
     get_event_loop().run_forever()
