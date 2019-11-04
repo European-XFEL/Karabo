@@ -5,7 +5,7 @@
 #############################################################################
 from xml.etree import ElementTree
 
-from PyQt4.QtCore import Qt
+from PyQt5.QtCore import Qt
 
 ElementTree.register_namespace("xlink", "http://www.w3.org/1999/xlink")
 

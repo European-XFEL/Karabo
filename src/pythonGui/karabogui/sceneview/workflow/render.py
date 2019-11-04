@@ -1,7 +1,8 @@
 from weakref import proxy
 
-from PyQt4.QtCore import QPoint, Qt
-from PyQt4.QtGui import QBrush, QPainter, QPainterPath, QPen, QWidget
+from PyQt5.QtCore import QPoint, Qt
+from PyQt5.QtGui import QBrush, QPainter, QPainterPath, QPen
+from PyQt5.QtWidgets import QWidget
 
 from karabo.common.api import ProxyStatus
 from karabogui.indicators import get_device_status_pixmap

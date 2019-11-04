@@ -1,7 +1,8 @@
 import weakref
 
 import numpy as np
-from PyQt4.QtGui import QGraphicsPathItem, QPainterPath, QTransform
+from PyQt5.QtGui import QPainterPath, QTransform
+from PyQt5.QtWidgets import QGraphicsPathItem
 from pyqtgraph import arrayToQPath, BarGraphItem, ScatterPlotItem
 
 from karabogui.graph.common.api import make_brush

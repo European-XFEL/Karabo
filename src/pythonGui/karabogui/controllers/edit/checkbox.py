@@ -3,8 +3,8 @@
 # Created on February 10, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import pyqtSlot, Qt
-from PyQt4.QtGui import QCheckBox
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QCheckBox
 from traits.api import Instance, Undefined
 
 from karabo.common.scenemodel.api import CheckBoxModel
@@ -46,7 +46,7 @@ class EditableCheckBox(BaseBindingController):
 
         self.widget.setEnabled(is_allowed and is_accessible)
 
-    @pyqtSlot(int)
+    # @pyqtSlot(int)
     def _on_user_edit(self, state):
         if self.proxy.binding is None:
             return

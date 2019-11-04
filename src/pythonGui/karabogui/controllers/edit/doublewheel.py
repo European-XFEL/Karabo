@@ -3,8 +3,8 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt4.QtGui import QAction, QInputDialog, QLabel
-from PyQt4.QtCore import pyqtSlot, Qt
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QAction, QInputDialog, QLabel
 from traits.api import Instance, on_trait_change, Undefined
 
 from karabo.common.scenemodel.api import DoubleWheelBoxModel
@@ -66,7 +66,7 @@ class EditableWheelBox(BaseBindingController):
             # do not match, the widget will adjust!
             self._internal_widget.set_value(value)
 
-    @pyqtSlot(float)
+    # @pyqtSlot(float)
     def _on_value_changed(self, value):
         """This widget uses for completion a plain QDoubleValidator
 
@@ -95,21 +95,21 @@ class EditableWheelBox(BaseBindingController):
     def _decimals_update(self):
         self._internal_widget.set_number_decimals(self.model.decimals)
 
-    @pyqtSlot(int)
+    # @pyqtSlot(int)
     def _config_changed(self, value):
         """The configuration of the wheel widget changed. Model update!"""
         self.model.integers = value
 
-    @pyqtSlot()
-    def _pick_decimals(self):
+    # @pyqtSlot()
+    def _pick_decimals(self, checked):
         num_decimals, ok = QInputDialog.getInt(
             self.widget, 'Decimal', 'Floating point precision:',
             self.model.decimals, 0, MAX_FLOATING_PRECISION)
         if ok:
             self.model.decimals = num_decimals
 
-    @pyqtSlot()
-    def _pick_integers(self):
+    # @pyqtSlot()
+    def _pick_integers(self, checked):
         num_integers, ok = QInputDialog.getInt(
             self.widget, 'Integers', 'Integers:',
             self.model.integers, 1, MAX_INTEGERS_PRECISION)

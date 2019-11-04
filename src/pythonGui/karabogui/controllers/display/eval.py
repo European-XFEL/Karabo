@@ -1,7 +1,7 @@
 import traceback
 
-from PyQt4.QtCore import pyqtSlot, Qt
-from PyQt4.QtGui import QAction, QFrame, QInputDialog, QLabel
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QAction, QFrame, QInputDialog, QLabel
 from traits.api import Callable, Dict, Instance, Str, Tuple
 
 from karabo.common.scenemodel.api import EvaluatorModel
@@ -83,8 +83,8 @@ class Evaluator(BaseBindingController):
             disp_value = traceback.format_exception_only(type(e), e)[0]
         self._internal_widget.setText(disp_value)
 
-    @pyqtSlot()
-    def _change_expression(self):
+    # @pyqtSlot()
+    def _change_expression(self, checked):
         text, ok = QInputDialog.getText(self.widget, 'Enter Expression',
                                         'f(x) = ', text=self.model.expression)
         if not ok:

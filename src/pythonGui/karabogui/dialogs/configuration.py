@@ -1,8 +1,8 @@
 import os.path as op
 
-from PyQt4 import uic
-from PyQt4.QtCore import QAbstractItemModel, QModelIndex, Qt
-from PyQt4.QtGui import QAbstractItemView, QDialog, QHeaderView
+from PyQt5 import uic
+from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt
+from PyQt5.QtWidgets import QAbstractItemView, QDialog, QHeaderView
 from traits.api import (
     Any, HasStrictTraits, Instance, List, Property, String)
 

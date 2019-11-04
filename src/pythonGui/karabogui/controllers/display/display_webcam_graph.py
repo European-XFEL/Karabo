@@ -1,4 +1,3 @@
-from PyQt4.QtCore import pyqtSlot
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import WebCamGraphModel
@@ -44,7 +43,7 @@ class DisplayWebCamGraph(BaseBindingController):
     # -----------------------------------------------------------------------
     # Qt Slots
 
-    @pyqtSlot(object)
+    # @pyqtSlot(object)
     def _change_model(self, content):
         self.model.trait_set(**content)
 

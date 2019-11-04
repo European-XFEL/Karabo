@@ -5,8 +5,9 @@
 #############################################################################
 from abc import abstractmethod
 
-from PyQt4.QtCore import QLine, QRect, QSize, Qt
-from PyQt4.QtGui import QBrush, QColor, QDialog, QPainterPath, QPen
+from PyQt5.QtCore import QLine, QRect, QSize, Qt
+from PyQt5.QtGui import QBrush, QColor, QPainterPath, QPen
+from PyQt5.QtWidgets import QDialog
 from traits.api import (ABCHasStrictTraits, Bool, Instance, Property,
                         cached_property)
 

@@ -5,11 +5,11 @@
 #############################################################################
 from enum import Enum
 
-from PyQt4.QtCore import QEvent, QRect, QSize, Qt, pyqtSlot
-from PyQt4.QtGui import (
-    QApplication, QAbstractItemDelegate, QComboBox, QDialog, QDoubleValidator,
-    QHBoxLayout, QLineEdit, QPalette, QStyle, QStyleOptionButton,
-    QStyledItemDelegate, QValidator, QWidget
+from PyQt5.QtCore import QEvent, QRect, QSize, Qt, pyqtSlot
+from PyQt5.QtGui import QDoubleValidator, QPalette, QValidator
+from PyQt5.QtWidgets import (
+    QApplication, QAbstractItemDelegate, QComboBox, QDialog, QHBoxLayout,
+    QLineEdit, QStyle, QStyleOptionButton, QStyledItemDelegate, QWidget
 )
 
 from karabo.common.api import KARABO_EDITABLE_ATTRIBUTES

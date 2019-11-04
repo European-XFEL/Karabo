@@ -2,7 +2,7 @@ from enum import Enum
 from functools import total_ordering
 from heapq import heappush, heappop
 
-from PyQt4.QtCore import QTimer
+from PyQt5.QtCore import QTimer
 
 
 @total_ordering

@@ -1,8 +1,9 @@
 from copy import deepcopy
 
 import numpy as np
-from PyQt4.QtCore import pyqtSignal, pyqtSlot, QRectF
-from PyQt4.QtGui import QAction, QFont, QInputDialog
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, QRectF
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import QAction, QInputDialog
 from pyqtgraph import ColorMap, PlotItem
 
 from karabogui.graph.common.api import (

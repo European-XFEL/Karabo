@@ -1,7 +1,7 @@
 from functools import partial
 
-from PyQt4.QtCore import pyqtSignal, pyqtSlot, Qt
-from PyQt4.QtGui import QAction, QGridLayout, QSizePolicy, QWidget
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt
+from PyQt5.QtWidgets import QAction, QGridLayout, QSizePolicy, QWidget
 from pyqtgraph import GraphicsView, mkPen, PlotItem
 
 from karabogui.actions import build_qaction, KaraboAction
@@ -157,7 +157,7 @@ class KaraboPlotView(QWidget):
     # ----------------------------------------------------------------
     # Base Action Slots
 
-    @pyqtSlot(bool)
+    @pyqtSlot(object, object, object)
     def check_action_callback(self, state, callback=None, name=None):
         if callback is not None:
             callback(state)

@@ -3,9 +3,10 @@
 # Created on September 21, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import pyqtSlot, Qt
-from PyQt4.QtGui import (
-    QFileDialog, QHBoxLayout, QIcon, QLineEdit, QToolButton, QWidget)
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import (
+    QFileDialog, QHBoxLayout, QLineEdit, QToolButton, QWidget)
 from traits.api import Constant, Instance, Int
 
 from karabo.common.scenemodel.api import (
@@ -48,14 +49,14 @@ class _FileSystemPicker(BaseBindingController):
             self._path.setText(get_editor_value(proxy, ''))
             self._path.setCursorPosition(self._last_cursor_pos)
 
-    @pyqtSlot(str)
+    # @pyqtSlot(str)
     def _on_user_edit(self, value):
         if self.proxy.binding is None:
             return
         self._last_cursor_pos = self._path.cursorPosition()
         self.proxy.edit_value = value
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _on_button_click(self):
         path = self.picker()
         if path:

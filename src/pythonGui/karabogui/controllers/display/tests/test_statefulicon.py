@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
-from PyQt4.QtCore import QByteArray, Qt
-from PyQt4.QtGui import QDialog, QWidget
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QDialog, QWidget
 
 from karabo.common.api import State
 from karabo.common.scenemodel.api import StatefulIconWidgetModel
@@ -60,7 +60,8 @@ class TestStatefulIconWidget(GuiTestCase):
                 set_proxy_value(self.proxy, 'state', state)
                 color = STATE_COLORS[getattr(State, state)]
                 svg = controller._icon.with_color(color)
-                assert controller.widget.loaded_data == QByteArray(svg)
+                self.assertEqual(controller.widget.loaded_data,
+                                 bytearray(svg, encoding='UTF-8'))
 
     def test_pick_icon(self):
         target = 'karabogui.controllers.display.statefulicon.QDialog'
