@@ -1,9 +1,10 @@
 import os.path as op
 import re
 
-from PyQt4 import uic
-from PyQt4.QtCore import pyqtSlot, QPoint, Qt
-from PyQt4.QtGui import QDialog, QDialogButtonBox, QValidator, QPalette
+from PyQt5 import uic
+from PyQt5.QtCore import pyqtSlot, QPoint, Qt
+from PyQt5.QtGui import QPalette, QValidator
+from PyQt5.QtWidgets import QDialog, QDialogButtonBox
 
 
 ul = '\u00a1-\uffff'  # unicode letters range (must not be a raw string)

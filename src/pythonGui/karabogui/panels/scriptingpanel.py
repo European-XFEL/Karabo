@@ -5,8 +5,8 @@
 #############################################################################
 from functools import partial
 
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
+from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QAction, QVBoxLayout, QWidget
 
 from karabogui.events import (
     register_for_broadcasts, unregister_from_broadcasts, KaraboEvent)

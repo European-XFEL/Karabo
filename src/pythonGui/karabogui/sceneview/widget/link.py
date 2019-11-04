@@ -5,9 +5,9 @@
 #############################################################################
 import webbrowser
 
-from PyQt4.QtCore import pyqtSlot, QPoint, QRect, QSize, Qt
-from PyQt4.QtGui import (
-    QAction, QColor, QDialog, QFont, QPainter, QPen, QPushButton)
+from PyQt5.QtCore import pyqtSlot, QPoint, QRect, QRectF, QSize, Qt
+from PyQt5.QtGui import QColor, QFont, QPainter, QPen
+from PyQt5.QtWidgets import QAction, QDialog, QPushButton
 
 from karabogui.dialogs.dialogs import SceneLinkDialog
 from karabogui.dialogs.textdialog import TextDialog
@@ -40,8 +40,8 @@ class SceneLinkWidget(QPushButton):
         with QPainter(self) as painter:
             boundary = self.rect().adjusted(2, 2, -2, -2)
             pt = boundary.topLeft()
-            rects = [QRect(pt, QSize(7, 7)),
-                     QRect(pt + QPoint(11, 0), QSize(7, 7))]
+            rects = [QRectF(QRect((pt), QSize(7, 7))),
+                     QRectF(QRect((pt) + QPoint(11, 0), QSize(7, 7)))]
             painter.fillRect(boundary, QColor(self.model.background))
             pen = QPen(Qt.black)
             pen.setWidth(self.model.frame_width)
@@ -156,8 +156,8 @@ class WebLinkWidget(QPushButton):
         with QPainter(self) as painter:
             boundary = self.rect().adjusted(2, 2, -2, -2)
             pt = boundary.topLeft()
-            rects = [QRect(pt, QSize(7, 7)),
-                     QRect(pt + QPoint(11, 0), QSize(7, 7))]
+            rects = [QRectF(QRect((pt), QSize(7, 7))),
+                     QRectF(QRect((pt) + QPoint(11, 0), QSize(7, 7)))]
             painter.fillRect(boundary, QColor(self.model.background))
             pen = QPen(Qt.black)
             pen.setWidth(self.model.frame_width)

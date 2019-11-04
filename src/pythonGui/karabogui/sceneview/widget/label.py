@@ -3,8 +3,8 @@
 # Created on November 23, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QAction, QDialog, QFrame, QLabel
+from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QAction, QDialog, QFrame, QLabel
 
 from karabogui.dialogs.textdialog import TextDialog
 

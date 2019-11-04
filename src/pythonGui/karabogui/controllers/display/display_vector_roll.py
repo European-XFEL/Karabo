@@ -3,8 +3,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QAction, QInputDialog
+from PyQt5.QtWidgets import QAction, QInputDialog
 
 from karabo.common.scenemodel.api import (
     restore_graph_config, build_graph_config, VectorRollGraphModel)
@@ -70,12 +69,12 @@ class DisplayVectorRollGraph(BaseBindingController):
     # -----------------------------------------------------------------------
     # Qt Slots
 
-    @pyqtSlot(object)
+    # @pyqtSlot(object)
     def _change_model(self, content):
         self.model.trait_set(**restore_graph_config(content))
 
-    @pyqtSlot()
-    def _configure_maxlen(self):
+    # @pyqtSlot()
+    def _configure_maxlen(self, checked):
         maxlen, ok = QInputDialog.getInt(self.widget, 'Vector Stack',
                                          'Maxlen:', self.model.maxlen, 5,
                                          MAX_NUM_VECTORS)

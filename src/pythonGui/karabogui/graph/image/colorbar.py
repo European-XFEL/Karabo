@@ -1,7 +1,8 @@
 import numpy as np
 from pyqtgraph import AxisItem, ColorMap, GraphicsWidget, ImageItem, ViewBox
-from PyQt4.QtCore import pyqtSignal, pyqtSlot, QPoint, Qt
-from PyQt4.QtGui import QDialog, QFont, QGraphicsGridLayout, QMenu, QTransform
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, QPoint, Qt
+from PyQt5.QtGui import QFont, QTransform
+from PyQt5.QtWidgets import QDialog, QGraphicsGridLayout, QMenu
 
 from karabogui.graph.common.api import COLORMAPS
 

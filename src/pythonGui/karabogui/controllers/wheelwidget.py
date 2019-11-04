@@ -1,7 +1,7 @@
 import math
 
-from PyQt4.QtCore import pyqtSignal, pyqtSlot, Qt, QRect, QSize
-from PyQt4.QtGui import (
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QRect, QSize
+from PyQt5.QtWidgets import (
     QButtonGroup, QGridLayout, QLabel, QLineEdit, QPushButton, QSizePolicy)
 
 from karabogui import icons
@@ -344,7 +344,7 @@ class DoubleWheelEdit(QLabel):
         value = float(self.editor_widget.text())
         self.valueChanged.emit(value)
 
-    @pyqtSlot(int)
+    # @pyqtSlot(int)
     def buttonPressed(self, button):
         """Executed when an arrow button is pressed from the button group"""
         value = self.value + button.increment

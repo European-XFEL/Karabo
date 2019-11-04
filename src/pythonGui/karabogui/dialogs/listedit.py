@@ -6,10 +6,11 @@
 from collections import OrderedDict
 
 import numpy as np
-from PyQt4.QtCore import pyqtSlot, QCoreApplication, Qt
-from PyQt4.QtGui import (QDialog, QPushButton, QListWidget, QListWidgetItem,
-                         QInputDialog, QHBoxLayout, QVBoxLayout,
-                         QFontMetrics)
+from PyQt5.QtCore import pyqtSlot, Qt
+from PyQt5.QtGui import QFontMetrics
+from PyQt5.QtWidgets import (
+    QDialog, QPushButton, QListWidget, QListWidgetItem, QInputDialog,
+    QHBoxLayout, QVBoxLayout, QApplication)
 
 from karabo.common.api import (KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_MIN_SIZE)
 from karabogui.binding.api import (
@@ -112,7 +113,7 @@ class ListEditDialog(QDialog):
         if self._list_widget.verticalScrollBar() is not None:
             width += self._list_widget.verticalScrollBar().width()
 
-        desktop = QCoreApplication.instance().desktop()
+        desktop = QApplication.desktop()
         min_width = min(width, desktop.screenGeometry().width() * 4 / 5)
         self._list_widget.setMinimumWidth(min_width)
         self._on_update_buttons()

@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
-from PyQt4.QtCore import QPoint, QRect
-from PyQt4.QtGui import QWidget
+from PyQt5.QtCore import QPoint, QRect
+from PyQt5.QtWidgets import QWidget
 
 from karabo.common.scenemodel.api import WebcamImageModel
 from karabogui.binding.api import (

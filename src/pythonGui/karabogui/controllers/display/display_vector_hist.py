@@ -4,8 +4,7 @@
 #############################################################################
 
 import numpy as np
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QAction
+from PyQt5.QtWidgets import QAction
 from traits.api import Instance, Undefined
 
 from karabo.common.scenemodel.api import (
@@ -72,12 +71,12 @@ class DisplayHistGraph(BaseBindingController):
     # ----------------------------------------------------------------
     # Qt Slots
 
-    @pyqtSlot(object)
+    # @pyqtSlot(object)
     def _change_model(self, content):
         self.model.trait_set(**content)
 
-    @pyqtSlot()
-    def configure_histogram(self):
+    # @pyqtSlot()
+    def configure_histogram(self, checked):
         content, ok = HistogramDialog.get(build_model_config(self.model),
                                           parent=self.widget)
         if ok:
