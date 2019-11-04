@@ -454,9 +454,9 @@ namespace karabo {
                     } else if (type == "login") {
                         onLogin(channel, info);
                     } else if (type == "reconfigure") {
-                        onReconfigure(info);
+                        onReconfigure(channel, info);
                     } else if (type == "execute") {
-                        onExecute(info);
+                        onExecute(channel, info);
                     } else if (type == "getDeviceConfiguration") {
                         onGetDeviceConfiguration(channel, info);
                     } else if (type == "getDeviceSchema") {
@@ -574,29 +574,71 @@ namespace karabo {
             disconnectChannel(channel);
         }
 
-        void GuiServerDevice::onReconfigure(const karabo::util::Hash& hash) {
+
+        void GuiServerDevice::onReconfigure(WeakChannelPointer channel, const karabo::util::Hash& hash) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onReconfigure";
-                string deviceId = hash.get<string > ("deviceId");
-                Hash config = hash.get<Hash > ("configuration");
+                const string& deviceId = hash.get<string > ("deviceId");
+                const Hash& config = hash.get<Hash > ("configuration");
                 // TODO Supply user specific context
-                call(deviceId, "slotReconfigure", config);
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onReconfigure(): " << e.userFriendlyMsg();
+                if (hash.has("reply") && hash.get<bool>("reply")) {
+                    auto requestor = request(deviceId, "slotReconfigure", config);
+                    if (hash.has("timeout")) {
+                        requestor.timeout(hash.get<int>("timeout") * 1000); // convert to ms
+                    }
+                    auto successHandler = bind_weak(&GuiServerDevice::forwardEmptyReply, this, true, "reconfigure",
+                                                    channel, hash);
+                    auto failureHandler = bind_weak(&GuiServerDevice::forwardEmptyReply, this, false, "reconfigure",
+                                                    channel, hash);
+                    requestor.receiveAsync(successHandler, failureHandler);
+                } else {
+                    call(deviceId, "slotReconfigure", config);
+                }
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onReconfigure(): " << e.what();
             }
         }
 
 
-        void GuiServerDevice::onExecute(const karabo::util::Hash& hash) {
+        void GuiServerDevice::onExecute(WeakChannelPointer channel, const karabo::util::Hash& hash) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onExecute";
-                string deviceId = hash.get<string > ("deviceId");
-                string command = hash.get<string > ("command");
+                KARABO_LOG_FRAMEWORK_DEBUG << "onExecute " << hash;
+                const string& deviceId = hash.get<string > ("deviceId");
+                const string& command = hash.get<string > ("command");
                 // TODO Supply user specific context
-                call(deviceId, command);
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onExecute(): " << e.userFriendlyMsg();
+                if (hash.has("reply") && hash.get<bool>("reply")) {
+                    auto requestor = request(deviceId, command);
+                    if (hash.has("timeout")) {
+                        requestor.timeout(hash.get<int>("timeout") * 1000); // convert to ms
+                    }
+                    // Any reply values are ignored (we do not know their types):
+                    auto successHandler = bind_weak(&GuiServerDevice::forwardEmptyReply, this, true, "execute",
+                                                    channel, hash);
+                    auto failureHandler = bind_weak(&GuiServerDevice::forwardEmptyReply, this, false, "execute",
+                                                    channel, hash);
+                    requestor.receiveAsync(successHandler, failureHandler);
+                } else {
+                    call(deviceId, command);
+                }
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onExecute(): " << e.what();
             }
+        }
+
+
+        void GuiServerDevice::forwardEmptyReply(bool success, const std::string& requestType, WeakChannelPointer channel, const Hash& input) {
+            Hash h("type", requestType + "Reply",
+                   "success", success,
+                   "input", input);
+            if (!success) {
+                // Failure, so can get access to exception causing it:
+                try {
+                    throw;
+                } catch (const std::exception& e) {
+                    h.set("failureReason", e.what());
+                }
+            }
+            safeClientWrite(channel, h);
         }
 
 
@@ -605,7 +647,7 @@ namespace karabo {
 
                 const string& serverId = hash.get<string>("serverId");
                 const string& deviceId = hash.get<string>("deviceId");
-                KARABO_LOG_FRAMEWORK_DEBUG << "onInitDevice: Queueing request to start device instance \""
+                KARABO_LOG_FRAMEWORK_DEBUG << "onInitDevice: Queuing request to start device instance \""
                                            << deviceId << "\" on server \"" << serverId << "\"";
 
                 if (!deviceId.empty() && hash.has("schemaUpdates")) {
@@ -1546,7 +1588,7 @@ namespace karabo {
                     }
 
                     KARABO_LOG_FRAMEWORK_DEBUG << "Updating schema attributes of device: " << deviceId;
-
+                    // FIXME: needs failure handler - at least to clean m_pendingAttributeUpdates!
                     request(deviceId, "slotUpdateSchemaAttributes", it->second.updates).receiveAsync<Hash>(
                         bind_weak(&GuiServerDevice::onUpdateNewInstanceAttributesHandler, this, deviceId, _1));
                 }
