@@ -3,8 +3,8 @@
 # Created on March 2, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QLineEdit
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QLineEdit
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import LineEditModel

@@ -1,4 +1,4 @@
-from PyQt4.QtCore import pyqtSlot
+from PyQt5.QtCore import pyqtSlot
 
 from karabogui.testing import GuiTestCase
 from karabogui.graph.common.api import (

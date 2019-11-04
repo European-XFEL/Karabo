@@ -1,6 +1,6 @@
 import numpy as np
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QPainterPathStroker, QPainterPath
+from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtGui import QPainterPathStroker, QPainterPath
 from pyqtgraph import Point
 
 from karabogui.graph.common.utils import float_to_string

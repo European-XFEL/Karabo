@@ -3,7 +3,7 @@
 # Created on February 16, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import QObject, pyqtSlot
+from PyQt5.QtCore import QObject, pyqtSlot
 
 from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow

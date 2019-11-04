@@ -1,4 +1,4 @@
-from PyQt4.QtGui import QLabel
+from PyQt5.QtWidgets import QLabel
 from traits.api import Dict, Instance, Int, Str
 
 from karabo.common.api import ProxyStatus, State, KARABO_SCHEMA_DISPLAYED_NAME

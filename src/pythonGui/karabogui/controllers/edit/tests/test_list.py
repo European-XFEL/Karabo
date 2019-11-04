@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from PyQt4.QtGui import QDialog
+from PyQt5.QtWidgets import QDialog
 
 from karabo.common.scenemodel.api import EditableListModel
 from karabo.native import Configurable, VectorInt32

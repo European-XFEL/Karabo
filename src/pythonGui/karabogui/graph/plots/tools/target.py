@@ -1,4 +1,4 @@
-from PyQt4.QtCore import pyqtSlot, QObject
+from PyQt5.QtCore import pyqtSlot, QObject
 from pyqtgraph import InfiniteLine, SignalProxy
 
 from karabogui.graph.common.api import CoordsLegend, create_tool_button

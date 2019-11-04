@@ -1,8 +1,8 @@
 from abc import abstractmethod
 from io import StringIO
 
-from PyQt4.QtCore import QMimeData, QPoint
-from PyQt4.QtGui import QApplication, QDialog, QMessageBox
+from PyQt5.QtCore import QMimeData, QPoint
+from PyQt5.QtWidgets import QApplication, QDialog, QMessageBox
 
 from karabo.common.scenemodel.api import (
     BaseLayoutModel, BaseWidgetObjectData, SceneModel, read_scene, write_scene)

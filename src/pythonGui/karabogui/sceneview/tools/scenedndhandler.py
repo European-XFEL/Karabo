@@ -6,8 +6,9 @@
 from abc import abstractmethod
 import json
 
-from PyQt4.QtCore import QPoint
-from PyQt4.QtGui import QBoxLayout, QFont
+from PyQt5.QtCore import QPoint
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import QBoxLayout
 from traits.api import ABCHasStrictTraits
 
 from karabo.common.scenemodel.api import (

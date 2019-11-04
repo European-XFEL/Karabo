@@ -6,8 +6,8 @@
 from numbers import Number
 
 from numpy import log10, number
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QFrame, QLabel
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QFrame, QLabel
 from traits.api import Instance, Str, Tuple
 
 from karabo.common.api import (

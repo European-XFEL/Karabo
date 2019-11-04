@@ -1,8 +1,8 @@
 from math import sqrt
 import re
 
-from PyQt4.QtCore import QPointF
-from PyQt4.QtGui import QPainterPath
+from PyQt5.QtCore import QPointF
+from PyQt5.QtGui import QPainterPath
 
 
 class Parser(object):
