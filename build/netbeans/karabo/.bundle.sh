@@ -150,10 +150,11 @@ safeRunCommand "./build.sh" $PACKAGEDIR $PYOPT
 cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
 
 # pythonGui
-cd ../pythonGui
-safeRunCommand "./build.sh" $PACKAGEDIR $PYOPT
-cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
-cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
+# MR-3871: disable while karabogui doesn't support Qt5 on the old deps
+#cd ../pythonGui
+#safeRunCommand "./build.sh" $PACKAGEDIR $PYOPT
+#cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
+#cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
 
 # Activation script
 cd $BASEDIR

@@ -7,8 +7,7 @@ from functools import partial
 from io import StringIO
 import os.path as op
 
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox
+from PyQt5.QtWidgets import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance
 
 from karabo.common.project.api import get_user_cache
@@ -127,8 +126,8 @@ class SceneController(BaseProjectController):
             broadcast_event(KaraboEvent.RemoveProjectModelViews,
                             {'models': [scene]})
 
-    @pyqtSlot()
-    def _edit_scene(self):
+    # @pyqtSlot()
+    def _edit_scene(self, checked):
         dialog = ObjectEditDialog(object_type='scene', model=self.model)
         result = dialog.exec()
         if result == QDialog.Accepted:
@@ -151,8 +150,8 @@ class SceneController(BaseProjectController):
         wrangler = get_panel_wrangler()
         return wrangler.is_showing_project_item(scene)
 
-    @pyqtSlot()
-    def _revert_changes(self):
+    # @pyqtSlot()
+    def _revert_changes(self, checked):
         scene = self.model
         # NOTE: The domain only changes when a project is saved or loaded
         domain = get_db_conn().default_domain
@@ -165,8 +164,8 @@ class SceneController(BaseProjectController):
         read_project_model(StringIO(data), existing=scene)
         scene.modified = False
 
-    @pyqtSlot()
-    def _save_scene_to_file(self):
+    # @pyqtSlot()
+    def _save_scene_to_file(self, checked):
         config = get_config()
         path = config['scene_dir']
         directory = path if path and op.isdir(path) else ""

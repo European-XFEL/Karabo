@@ -1,6 +1,6 @@
 from unittest import mock
 
-from PyQt4 import QtGui
+from PyQt5.QtWidgets import QGraphicsTextItem
 
 from karabogui.binding.builder import build_binding
 from karabogui.binding.config import apply_configuration
@@ -31,7 +31,7 @@ class TestImageGraph(GuiTestCase):
                                        path='output.data.image')
         self.controller = DisplayImageGraph(proxy=self.img_proxy)
 
-        with mock.patch.object(QtGui.QGraphicsTextItem, 'setHtml'):
+        with mock.patch.object(QGraphicsTextItem, 'setHtml'):
             self.controller.create(None)
 
     def tearDown(self):
@@ -98,7 +98,7 @@ class TestImageGraph(GuiTestCase):
         model.roi_items = roi_items
 
         controller = DisplayImageGraph(proxy=self.img_proxy, model=model)
-        with mock.patch.object(QtGui.QGraphicsTextItem, 'setHtml'):
+        with mock.patch.object(QGraphicsTextItem, 'setHtml'):
             controller.create(None)
 
         # Assert the information was loaded

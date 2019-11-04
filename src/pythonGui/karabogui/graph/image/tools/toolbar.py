@@ -1,6 +1,6 @@
 from functools import partial
 
-from PyQt4.QtCore import pyqtSlot
+from PyQt5.QtCore import pyqtSlot
 
 from karabogui import icons
 

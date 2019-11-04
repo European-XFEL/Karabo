@@ -1,5 +1,5 @@
-from PyQt4.QtCore import QRect, Qt
-from PyQt4.QtGui import QHBoxLayout, QLabel, QStackedLayout, QWidget
+from PyQt5.QtCore import QRect, Qt
+from PyQt5.QtWidgets import QHBoxLayout, QLabel, QStackedLayout, QWidget
 
 from karabo.common.api import ProxyStatus, State
 from karabogui import globals as krb_globals

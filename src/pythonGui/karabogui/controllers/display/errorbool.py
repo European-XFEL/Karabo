@@ -5,9 +5,8 @@
 #############################################################################
 import os.path as op
 
-from PyQt4.QtGui import QAction
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtSvg import QSvgWidget
+from PyQt5.QtSvg import QSvgWidget
+from PyQt5.QtWidgets import QAction
 from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import ErrorBoolModel
@@ -51,11 +50,11 @@ class DisplayErrorBool(BaseBindingController):
 
         value = all(values)
         if not self.model.invert:
-            svg = OK_BOOL if value else ERROR_BOOL
+            svg_file = OK_BOOL if value else ERROR_BOOL
         else:
-            svg = ERROR_BOOL if value else OK_BOOL
+            svg_file = ERROR_BOOL if value else OK_BOOL
         self.widget.setToolTip("{}".format(value))
-        self.widget.load(svg)
+        self.widget.load(svg_file)
 
     def value_update(self, proxy):
         self._update_widget(proxy)
@@ -65,6 +64,6 @@ class DisplayErrorBool(BaseBindingController):
         if self.proxy is not None:
             self.value_update(self.proxy)
 
-    @pyqtSlot()
-    def logic_action(self):
+    # @pyqtSlot()
+    def logic_action(self, checked):
         self.model.invert = not self.model.invert

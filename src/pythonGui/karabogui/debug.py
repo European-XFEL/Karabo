@@ -4,8 +4,8 @@ import os.path as op
 import pdb
 from time import perf_counter
 
-from PyQt4.QtGui import QApplication
-from PyQt4.QtCore import pyqtRemoveInputHook, QEventLoop
+from PyQt5.QtCore import pyqtRemoveInputHook, QEventLoop
+from PyQt5.QtWidgets import QApplication
 
 
 def set_trace():

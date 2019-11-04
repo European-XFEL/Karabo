@@ -3,8 +3,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt4.QtGui import QAction, QInputDialog
-from PyQt4.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QAction, QInputDialog
 from traits.api import Instance
 
 from karabogui.binding.api import VectorNumberBinding
@@ -54,12 +53,12 @@ class DisplayBarGraph(BaseBindingController):
     # ----------------------------------------------------------------
     # Qt Slots
 
-    @pyqtSlot(object)
+    # @pyqtSlot(object)
     def _change_model(self, content):
         self.model.trait_set(**content)
 
-    @pyqtSlot()
-    def configure_bar_width(self):
+    # @pyqtSlot()
+    def configure_bar_width(self, checked):
         bar_width, ok = QInputDialog.getDouble(
             self.widget, 'Bar Width', 'Bar Width:',
             self.model.bar_width, 0.1, MAX_WIDTH)

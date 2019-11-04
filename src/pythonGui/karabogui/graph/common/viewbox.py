@@ -1,6 +1,6 @@
 import numpy as np
-from PyQt4.QtCore import QPoint, Qt, pyqtSignal
-from PyQt4.QtGui import QMenu
+from PyQt5.QtCore import QPoint, Qt, pyqtSignal
+from PyQt5.QtWidgets import QMenu
 from pyqtgraph import ViewBox
 
 from .enums import MouseMode

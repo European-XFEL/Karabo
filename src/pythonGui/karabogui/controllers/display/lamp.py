@@ -1,6 +1,7 @@
 import os.path as op
 
-from PyQt4.QtGui import QLabel, QPixmap
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QLabel
 from traits.api import Instance
 
 from karabo.common.api import State

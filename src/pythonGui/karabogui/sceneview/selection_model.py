@@ -1,4 +1,4 @@
-from PyQt4.QtCore import QRect
+from PyQt5.QtCore import QRect
 from traits.api import HasStrictTraits, List
 
 from .utils import calc_bounding_rect

@@ -8,10 +8,10 @@ from functools import partial
 
 from guiqwt.builder import make
 from guiqwt.tools import RectZoomTool, SelectTool
-from PyQt4.QtCore import pyqtSlot, QRect, Qt
-from PyQt4.QtGui import (
-    QAction, QActionGroup, QCursor, QHBoxLayout, QIcon, QMenu, QToolBar,
-    QWidget)
+from PyQt5.QtCore import QRect, Qt
+from PyQt5.QtGui import QCursor, QIcon
+from PyQt5.QtWidgets import (
+    QAction, QActionGroup, QHBoxLayout, QMenu, QToolBar, QWidget)
 from qwt import QwtPlot
 from traits.api import (
     Bool, Callable, HasStrictTraits, Instance, on_trait_change, String)
@@ -65,7 +65,7 @@ class _BaseImage(BaseBindingController):
         self._show_axes(model.show_axes)
         return widget
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def show_timestamp_tooltip(self):
         image_node = self.proxy.value
         if image_node is None:
@@ -275,11 +275,11 @@ class _BaseImage(BaseBindingController):
     # -----------------------------------------------------------------------
     # Qt Slots
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def zoom_reset(self):
         self._zoom_rect = QRect()
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def axis_changed(self):
         x_axis = self._plot.axisScaleDiv(QwtPlot.xBottom)
         x1, x2 = x_axis.lowerBound(), x_axis.upperBound()
@@ -289,7 +289,7 @@ class _BaseImage(BaseBindingController):
         y1, y2 = y_axis.lowerBound(), y_axis.upperBound()
         self._zoom_rect = QRect(x1, y1, x2 - x1, y1 - y2)
 
-    @pyqtSlot(object)
+    # @pyqtSlot(object)
     def show_context_menu(self, pos):
         """ The context menu is requested """
         with keep_tool_activated(self._current_tool):

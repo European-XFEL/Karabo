@@ -5,10 +5,11 @@
 #############################################################################
 from enum import Enum
 
-from PyQt4.QtCore import pyqtSignal, pyqtSlot, Qt
-from PyQt4.QtGui import (
-    QAction, QFrame, QHBoxLayout, QPainter, QPixmap, QPrinter,
-    QPrintPreviewDialog, QSizePolicy, QVBoxLayout, QWidget)
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt
+from PyQt5.QtGui import QPainter
+from PyQt5.QtPrintSupport import QPrinter, QPrintPreviewDialog
+from PyQt5.QtWidgets import (
+    QAction, QFrame, QHBoxLayout, QSizePolicy, QVBoxLayout, QWidget)
 from karabogui import icons
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.util import generateObjectName
@@ -122,7 +123,7 @@ class BasePanelWidget(QFrame):
     @pyqtSlot(QPrinter)
     def handle_paint_request(self, printer):
         """Executed for each paint request in the print preview dialog"""
-        pixmap = QPixmap.grabWidget(self)
+        pixmap = self.grab()
         pixmap = pixmap.scaled(printer.pageRect().width(),
                                printer.pageRect().height(),
                                Qt.KeepAspectRatio,

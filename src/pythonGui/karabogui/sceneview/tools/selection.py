@@ -1,4 +1,4 @@
-from PyQt4.QtCore import Qt, QRect, QPoint
+from PyQt5.QtCore import Qt, QRect, QPoint
 from traits.api import HasStrictTraits, Any, Enum, Instance, String
 
 from karabogui.binding.api import DeviceProxy

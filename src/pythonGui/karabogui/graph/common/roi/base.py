@@ -1,6 +1,7 @@
 import numpy as np
-from PyQt4.QtCore import Qt, QRectF, pyqtSlot, QPoint
-from PyQt4.QtGui import QMenu, QAction, QTransform
+from PyQt5.QtCore import Qt, QRectF, pyqtSlot, QPoint
+from PyQt5.QtGui import QTransform
+from PyQt5.QtWidgets import QMenu, QAction
 from pyqtgraph import ROI, TextItem, functions as fn, Point
 
 from karabogui.graph.common.utils import float_to_string

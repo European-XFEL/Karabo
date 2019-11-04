@@ -4,10 +4,10 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt4.QtCore import pyqtSlot, Qt
-from PyQt4.QtGui import (
-    QAbstractItemView, QAction, QCursor, QDialog, QHeaderView, QMenu,
-    QTreeView)
+from PyQt5.QtCore import pyqtSlot, Qt
+from PyQt5.QtGui import QCursor
+from PyQt5.QtWidgets import (
+    QAbstractItemView, QAction, QDialog, QHeaderView, QMenu, QTreeView)
 
 from karabogui import icons
 from karabogui.enums import NavigationItemTypes
@@ -34,7 +34,7 @@ class DeviceTreeView(QTreeView):
         header = self.header()
         header.setResizeMode(QHeaderView.ResizeToContents)
         # Prevent drag reorder of the header
-        header.setMovable(False)
+        header.setSectionsMovable(False)
 
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -164,7 +164,7 @@ class DeviceTreeView(QTreeView):
             time = str(time_point.toString(Qt.ISODate))
             get_network().onGetConfigurationFromPast(device_id, time=time)
 
-    @pyqtSlot(object)
+    @pyqtSlot()
     def onCustomContextMenuRequested(self, pos):
         info = self.indexInfo()
         node_type = info.get('type', NavigationItemTypes.UNDEFINED)

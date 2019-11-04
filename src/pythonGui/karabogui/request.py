@@ -8,7 +8,7 @@ from inspect import signature
 import uuid
 from weakref import WeakKeyDictionary
 
-from PyQt4.QtCore import pyqtSlot, QTimer
+from PyQt5.QtCore import pyqtSlot, QTimer
 
 from karabo.native import Hash
 from karabogui import messagebox

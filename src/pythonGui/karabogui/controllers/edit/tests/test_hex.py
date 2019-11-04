@@ -38,9 +38,9 @@ class TestHexadecimal(GuiTestCase):
         controller = Hexadecimal(proxy=proxy)
         controller.create(None)
 
-        assert controller._internal_widget.inputMask() == '#h; '
+        assert controller._internal_widget.inputMask() == '#h'
 
         build_binding(Object.getClassSchema(),
                       existing=proxy.root_proxy.binding)
 
-        assert controller._internal_widget.inputMask() == 'hh; '
+        assert controller._internal_widget.inputMask() == 'hh'
