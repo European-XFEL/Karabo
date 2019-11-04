@@ -76,6 +76,7 @@ else:
             'karabo-add-deviceserver=karabo.interactive.startkarabo:adddeviceserver',
             'karabo-remove-deviceserver=karabo.interactive.startkarabo:removedeviceserver',
             'karabo-webserver=karabo.interactive.webserver:run_webserver',
+            'karabo-webaggregatorserver=karabo.interactive.webaggregatorserver:run_webserver',
         ],
         'karabo.bound_device': [
             'PropertyTest=karabo.bound_devices.property_test:PropertyTest',
