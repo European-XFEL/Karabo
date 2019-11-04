@@ -5,9 +5,9 @@ from xml.etree.ElementTree import (
     Element, ElementTree, TreeBuilder, XMLParser, register_namespace
 )
 
-from PyQt4.QtCore import pyqtSlot, QBuffer
-from PyQt4.QtGui import QAction, QInputDialog
-from PyQt4.QtSvg import QSvgWidget
+from PyQt5.QtCore import QBuffer
+from PyQt5.QtSvg import QSvgWidget
+from PyQt5.QtWidgets import QAction, QInputDialog
 from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import DisplayIconsetModel
@@ -106,16 +106,16 @@ class DisplayIconset(BaseBindingController):
         elif self.model.image == '':
             self.model.image = DEFAULT_ICON_URL
 
-    @pyqtSlot()
-    def _change_iconset_file(self):
+    # @pyqtSlot()
+    def _change_iconset_file(self, checked):
         fn = getOpenFileName(parent=self.widget,
                              caption='Open Iconset',
                              filter='*.svg')
         if fn:
             self.model.image = 'file://' + urllib.request.pathname2url(fn)
 
-    @pyqtSlot()
-    def _change_iconset_url(self):
+    # @pyqtSlot()
+    def _change_iconset_url(self, checked):
         url = self.model.image
         url, ok = QInputDialog.getText(self.widget, 'Set URL',
                                        'New iconset URL:', text=url)

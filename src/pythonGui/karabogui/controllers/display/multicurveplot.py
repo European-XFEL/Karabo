@@ -8,8 +8,8 @@ from functools import partial
 from itertools import product
 
 import numpy as np
-from PyQt4.QtCore import Qt, pyqtSlot
-from PyQt4.QtGui import QPushButton, QHBoxLayout, QVBoxLayout, QWidget
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QVBoxLayout, QWidget
 from traits.api import Bool, Callable, Dict, Instance, List
 
 from karabo.common.scenemodel.api import MultiCurvePlotModel
@@ -113,7 +113,7 @@ class MultiCurvePlot(BaseBindingController):
     # -------------------------------------------------------------------
     # private functions
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _reset_plot(self, reset=True):
         """clear the plot"""
         if not reset:

@@ -3,8 +3,9 @@
 # Created in June 2014
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import pyqtSlot, Qt, QEvent, QPoint
-from PyQt4.QtGui import QMenu, QPlainTextEdit, QSplitter, QTextCursor
+from PyQt5.QtCore import pyqtSlot, Qt, QEvent, QPoint
+from PyQt5.QtGui import QTextCursor
+from PyQt5.QtWidgets import QMenu, QPlainTextEdit, QSplitter
 
 try:
     from qtconsole.pygments_highlighter import PygmentsHighlighter

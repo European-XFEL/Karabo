@@ -3,7 +3,7 @@
 # Created on September 22, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import QAbstractTableModel, QModelIndex, Qt
+from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt
 
 from .const import (
     ALARM_DATA, ALARM_TYPE, REMOVE_ALARM_TYPES, UPDATE_ALARM_TYPES,

@@ -6,8 +6,8 @@
 from datetime import datetime
 import traceback
 
-from PyQt4.QtCore import pyqtSlot, Qt
-from PyQt4.QtGui import QAction, QFrame, QLabel, QInputDialog
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QAction, QFrame, QLabel, QInputDialog
 from traits.api import Instance, Undefined
 
 from karabo.common.scenemodel.api import DisplayTimeModel
@@ -66,8 +66,8 @@ class DisplayTimeLabel(BaseBindingController):
             stamp = "NaN"
         self.widget.setText(stamp)
 
-    @pyqtSlot()
-    def _change_time_format(self):
+    # @pyqtSlot()
+    def _change_time_format(self, checked):
         # NOTE: No extra protection required, as we do not allow altering
         # models for offline devices without binding
         text, ok = QInputDialog.getText(

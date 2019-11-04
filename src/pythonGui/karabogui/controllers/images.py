@@ -5,7 +5,7 @@
 #############################################################################
 import numpy as np
 from guiqwt.plot import ImageDialog, ImageWidget
-from PyQt4.QtCore import Qt, pyqtSignal, QEvent
+from PyQt5.QtCore import pyqtSignal, QEvent, Qt
 from qwt import QwtPlot
 
 from karabo.native import EncodingType

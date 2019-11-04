@@ -5,11 +5,12 @@
 #############################################################################
 import os.path as op
 
-from PyQt4 import uic
-from PyQt4.QtCore import QDateTime, pyqtSlot, QPoint, QSize, Qt
-from PyQt4.QtGui import (QColorDialog, QComboBox, QDialog, QDialogButtonBox,
-                         QDoubleValidator, QFormLayout, QIcon, QPainter, QPen,
-                         QPixmap, QTableWidgetItem)
+from PyQt5 import uic
+from PyQt5.QtCore import QDateTime, pyqtSlot, QPoint, QSize, Qt
+from PyQt5.QtGui import QPixmap, QPen, QPainter, QIcon, QDoubleValidator
+from PyQt5.QtWidgets import (
+    QColorDialog, QComboBox, QDialog, QDialogButtonBox, QFormLayout,
+    QTableWidgetItem)
 
 from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow

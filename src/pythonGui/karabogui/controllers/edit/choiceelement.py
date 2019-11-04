@@ -3,8 +3,7 @@
 # Created on February 28, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QComboBox
+from PyQt5.QtWidgets import QComboBox
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import ChoiceElementModel
@@ -48,7 +47,7 @@ class EditableChoiceElement(BaseBindingController):
             with SignalBlocker(self.widget):
                 self.widget.setCurrentIndex(index)
 
-    @pyqtSlot(int)
+    # @pyqtSlot(int)
     def _on_user_edit(self, index):
         if self.proxy.binding is None:
             return

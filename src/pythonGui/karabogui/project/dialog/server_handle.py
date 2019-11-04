@@ -5,9 +5,9 @@
 #############################################################################
 import os.path as op
 
-from PyQt4 import uic
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QDialog, QDialogButtonBox
+from PyQt5 import uic
+from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QDialog, QDialogButtonBox
 
 from karabo.native import AccessLevel
 from karabogui import globals as krb_globals
