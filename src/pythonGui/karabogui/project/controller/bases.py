@@ -5,8 +5,8 @@
 #############################################################################
 from abc import abstractmethod
 
-from PyQt4.QtCore import QAbstractItemModel, Qt
-from PyQt4.QtGui import QBrush, QFont, QIcon
+from PyQt5.QtCore import QAbstractItemModel, Qt
+from PyQt5.QtGui import QBrush, QFont, QIcon
 from traits.api import (
     ABCHasStrictTraits, HasStrictTraits, Bool, Callable, Dict, Enum, Instance,
     Int, List, Property, String, WeakRef, on_trait_change

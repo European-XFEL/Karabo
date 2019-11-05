@@ -3,9 +3,10 @@
 # Created on November 3, 2011
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import Qt, pyqtSlot
-from PyQt4.QtGui import (
-    QAction, QHBoxLayout, QPalette, QPushButton, QScrollArea, QStackedWidget,
+from PyQt5.QtCore import Qt, pyqtSlot
+from PyQt5.QtGui import QPalette
+from PyQt5.QtWidgets import (
+    QAction, QHBoxLayout, QPushButton, QScrollArea, QStackedWidget,
     QVBoxLayout, QWidget)
 
 from karabo.native import AccessMode

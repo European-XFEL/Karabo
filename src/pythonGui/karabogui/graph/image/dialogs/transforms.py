@@ -1,7 +1,7 @@
 import os
 
-from PyQt4 import uic
-from PyQt4.QtGui import QDialog
+from PyQt5 import uic
+from PyQt5.QtWidgets import QDialog
 
 from karabogui.graph.common.const import SCALING, TRANSLATION
 

@@ -1,9 +1,10 @@
 import os.path as op
 
-from PyQt4 import uic
-from PyQt4.QtCore import pyqtSlot, Qt
-from PyQt4.QtGui import (QApplication, QColor, QColorDialog, QDialog, QFont,
-                         QFontDialog, QIcon, QPixmap)
+from PyQt5 import uic
+from PyQt5.QtCore import pyqtSlot, Qt
+from PyQt5.QtGui import QColor, QPixmap, QIcon, QFont
+from PyQt5.QtWidgets import (
+    QApplication, QColorDialog, QDialog, QFontDialog)
 
 from karabo.common.scenemodel.api import LabelModel
 

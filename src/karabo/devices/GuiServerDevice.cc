@@ -454,9 +454,9 @@ namespace karabo {
                     } else if (type == "login") {
                         onLogin(channel, info);
                     } else if (type == "reconfigure") {
-                        onReconfigure(info);
+                        onReconfigure(channel, info);
                     } else if (type == "execute") {
-                        onExecute(info);
+                        onExecute(channel, info);
                     } else if (type == "getDeviceConfiguration") {
                         onGetDeviceConfiguration(channel, info);
                     } else if (type == "getDeviceSchema") {
@@ -574,29 +574,71 @@ namespace karabo {
             disconnectChannel(channel);
         }
 
-        void GuiServerDevice::onReconfigure(const karabo::util::Hash& hash) {
+
+        void GuiServerDevice::onReconfigure(WeakChannelPointer channel, const karabo::util::Hash& hash) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onReconfigure";
-                string deviceId = hash.get<string > ("deviceId");
-                Hash config = hash.get<Hash > ("configuration");
+                const string& deviceId = hash.get<string > ("deviceId");
+                const Hash& config = hash.get<Hash > ("configuration");
                 // TODO Supply user specific context
-                call(deviceId, "slotReconfigure", config);
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onReconfigure(): " << e.userFriendlyMsg();
+                if (hash.has("reply") && hash.get<bool>("reply")) {
+                    auto requestor = request(deviceId, "slotReconfigure", config);
+                    if (hash.has("timeout")) {
+                        requestor.timeout(hash.get<int>("timeout") * 1000); // convert to ms
+                    }
+                    auto successHandler = bind_weak(&GuiServerDevice::forwardEmptyReply, this, true, "reconfigure",
+                                                    channel, hash);
+                    auto failureHandler = bind_weak(&GuiServerDevice::forwardEmptyReply, this, false, "reconfigure",
+                                                    channel, hash);
+                    requestor.receiveAsync(successHandler, failureHandler);
+                } else {
+                    call(deviceId, "slotReconfigure", config);
+                }
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onReconfigure(): " << e.what();
             }
         }
 
 
-        void GuiServerDevice::onExecute(const karabo::util::Hash& hash) {
+        void GuiServerDevice::onExecute(WeakChannelPointer channel, const karabo::util::Hash& hash) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onExecute";
-                string deviceId = hash.get<string > ("deviceId");
-                string command = hash.get<string > ("command");
+                KARABO_LOG_FRAMEWORK_DEBUG << "onExecute " << hash;
+                const string& deviceId = hash.get<string > ("deviceId");
+                const string& command = hash.get<string > ("command");
                 // TODO Supply user specific context
-                call(deviceId, command);
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onExecute(): " << e.userFriendlyMsg();
+                if (hash.has("reply") && hash.get<bool>("reply")) {
+                    auto requestor = request(deviceId, command);
+                    if (hash.has("timeout")) {
+                        requestor.timeout(hash.get<int>("timeout") * 1000); // convert to ms
+                    }
+                    // Any reply values are ignored (we do not know their types):
+                    auto successHandler = bind_weak(&GuiServerDevice::forwardEmptyReply, this, true, "execute",
+                                                    channel, hash);
+                    auto failureHandler = bind_weak(&GuiServerDevice::forwardEmptyReply, this, false, "execute",
+                                                    channel, hash);
+                    requestor.receiveAsync(successHandler, failureHandler);
+                } else {
+                    call(deviceId, command);
+                }
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onExecute(): " << e.what();
             }
+        }
+
+
+        void GuiServerDevice::forwardEmptyReply(bool success, const std::string& requestType, WeakChannelPointer channel, const Hash& input) {
+            Hash h("type", requestType + "Reply",
+                   "success", success,
+                   "input", input);
+            if (!success) {
+                // Failure, so can get access to exception causing it:
+                try {
+                    throw;
+                } catch (const std::exception& e) {
+                    h.set("failureReason", e.what());
+                }
+            }
+            safeClientWrite(channel, h);
         }
 
 
@@ -605,7 +647,7 @@ namespace karabo {
 
                 const string& serverId = hash.get<string>("serverId");
                 const string& deviceId = hash.get<string>("deviceId");
-                KARABO_LOG_FRAMEWORK_DEBUG << "onInitDevice: Queueing request to start device instance \""
+                KARABO_LOG_FRAMEWORK_DEBUG << "onInitDevice: Queuing request to start device instance \""
                                            << deviceId << "\" on server \"" << serverId << "\"";
 
                 if (!deviceId.empty() && hash.has("schemaUpdates")) {
@@ -891,27 +933,43 @@ namespace karabo {
                 Hash args("from", t0, "to", t1, "maxNumData", maxNumData);
 
                 const std::string& readerId(getDataReaderId(deviceId));
+                auto okHandler = bind_weak(&karabo::devices::GuiServerDevice::propertyHistory, this, channel, true, _1, _2, _3);
+                auto failHandler = bind_weak(&karabo::devices::GuiServerDevice::propertyHistory, this, channel, false,
+                                             deviceId, property, vector<Hash>());
                 request(readerId, "slotGetPropertyHistory", deviceId, property, args)
-                        .receiveAsync<string, string, vector<Hash> >(bind_weak(&karabo::devices::GuiServerDevice::propertyHistory, this, channel, _1, _2, _3));
+                        .receiveAsync<string, string, vector<Hash> >(okHandler, failHandler);
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetPropertyHistory(): " << e.what();
             }
         }
 
 
-        void GuiServerDevice::propertyHistory(WeakChannelPointer channel, const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data) {
+        void GuiServerDevice::propertyHistory(WeakChannelPointer channel, bool success, const std::string& deviceId,
+                                              const std::string& property, const std::vector<karabo::util::Hash>& data) {
             try {
 
-                KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting property history: "
-                        << deviceId << "." << property << " " << data.size();
-
                 Hash h("type", "propertyHistory", "deviceId", deviceId,
-                       "property", property, "data", data);
+                       "property", property, "data", data, "success", success);
+                std::string& reason = h.bindReference<std::string>("failureReason");
+
+                if (success) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting property history: "
+                            << deviceId << "." << property << " " << data.size();
+                } else {
+                    // Failure handler - figure out what went wrong:
+                    try {
+                        throw;
+                    } catch (const std::exception& e) {
+                        reason = e.what();
+                        KARABO_LOG_FRAMEWORK_INFO << "Property history request to "
+                                << deviceId << "." << property << " failed: " << reason;
+                    }
+                }
 
                 safeClientWrite(channel, h, REMOVE_OLDEST);
 
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in propertyHistory " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in propertyHistory: " << e.what();
             }
         }
 
@@ -924,7 +982,7 @@ namespace karabo {
 
                 const std::string & readerId(getDataReaderId(deviceId));
                 auto handler = bind_weak(&karabo::devices::GuiServerDevice::configurationFromPast, this,
-                                         channel, deviceId, time, _1, _2);
+                                         channel, deviceId, time, _1, _2, _3, _4);
                 auto failureHandler = bind_weak(&karabo::devices::GuiServerDevice::configurationFromPastError, this,
                                                 channel, deviceId, time);
                 // Two minutes timeout since current implementation of slotGetConfigurationFromPast:
@@ -933,7 +991,7 @@ namespace karabo {
                 // in between these two time points.
                 request(readerId, "slotGetConfigurationFromPast", deviceId, time)
                         .timeout(120000) // 2 minutes - if we do not specify it will be 2*KARABO_SYS_TTL, i.e. 4 minutes
-                        .receiveAsync<Hash, Schema>(handler, failureHandler);
+                        .receiveAsync<Hash, Schema, bool, std::string>(handler, failureHandler);
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetConfigurationFromPast(): " << e.what();
                 // Be a bit cautious: exception might come from an ill-formed info
@@ -949,7 +1007,9 @@ namespace karabo {
 
         void GuiServerDevice::configurationFromPast(WeakChannelPointer channel,
                                                     const std::string& deviceId, const std::string& time,
-                                                    const karabo::util::Hash& config, const karabo::util::Schema& /*schema*/) {
+                                                    const karabo::util::Hash& config, const karabo::util::Schema& /*schema*/,
+                                                    const bool configAtTimepoint,
+                                                    const std::string &configTimepoint) {
             try {
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting configuration from past: " << deviceId << " @ " << time;
@@ -961,10 +1021,12 @@ namespace karabo {
                     // requested time.
                     h.set("success", false);
                     h.set("reason", "Received empty configuration:\nLikely '" + deviceId
-                          + "' was not online at the requested time '" + time + "' (or not logged).");
+                          + "' has not been online (or not logging) until the requested time '" + time + "'.");
                 } else {
                     h.set("success", true);
                     h.set("config", config);
+                    h.set("configAtTimepoint", configAtTimepoint);
+                    h.set("configTimepoint", configTimepoint);
                 }
 
                 safeClientWrite(channel, h, REMOVE_OLDEST);
@@ -1526,7 +1588,6 @@ namespace karabo {
                     }
 
                     KARABO_LOG_FRAMEWORK_DEBUG << "Updating schema attributes of device: " << deviceId;
-
                     request(deviceId, "slotUpdateSchemaAttributes", it->second.updates).receiveAsync<Hash>(
                         bind_weak(&GuiServerDevice::onUpdateNewInstanceAttributesHandler, this, deviceId, _1));
                 }
@@ -1830,7 +1891,7 @@ namespace karabo {
         void GuiServerDevice::onRequestFromSlot(WeakChannelPointer channel, const karabo::util::Hash& hash) {
             Hash failureInfo;
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onRequest";
+                KARABO_LOG_FRAMEWORK_DEBUG << "onRequestFromSlot";
                 // verify that hash is sane on top level
                 failureInfo.set("deviceId", hash.has("deviceId"));
                 failureInfo.set("slot", hash.has("slot"));

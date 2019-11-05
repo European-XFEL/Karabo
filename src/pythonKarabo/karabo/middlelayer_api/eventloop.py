@@ -210,9 +210,9 @@ class Broker:
                         message = consumer.receiveMessage(1000)
                     except openmq.Error as e:
                         # statuses from openmqc/mqerrors.h
-                        if e.status == 2103:  # timeout
+                        if e.status == openmq.OPEN_MQ_TIMEOUT:
                             continue
-                        elif e.status == 1116:  # concurrent access
+                        elif e.status == openmq.OPEN_MQ_CONCURRENT_ACCESS:
                             # Sometimes this error appears. It seems to be a
                             # race condition within openmqc, but retrying just
                             # helps.
@@ -222,7 +222,7 @@ class Broker:
                                 'access',
                                 self.deviceId)
                             continue
-                        elif e.status == 3120:  # message dropped
+                        elif e.status == openmq.OPEN_MQ_MSG_DROPPED:
                             loop.call_soon_threadsafe(
                                 self.logger.warning,
                                 'consumer of instance "%s" dropped messages',

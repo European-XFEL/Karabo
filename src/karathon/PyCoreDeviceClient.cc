@@ -85,7 +85,12 @@ void exportPyCoreDeviceClient() {
                  "registerSchemaUpdatedMonitor(handler): Register a callback handler \"handler\" to be triggered if an instance receives a schema update from the distributed system\n"
                  "The handler function should have the signature handler(instanceId, schema) where:\n"
                  "\"instanceId\" is a string containing name of the device which updated schema\n"
-                 "\"schema\" is the updated schema")
+                 "\"schema\" is the updated schema\n\n"
+                 "Note: Currently, registering only a schema update monitor with an instance\n"
+                 "of a DeviceClient is not enough to have the registered call-back activated.\n"
+                 "A workaround for this is to also register a property monitor with the\n"
+                 "same instance of DeviceClient that has been used to register the schema\n"
+                 "update monitor.\n\n")
             .def("registerPropertyMonitor", (bool (DeviceClientWrap::*)(const string&, const string&, const bp::object&, const bp::object&))(&DeviceClientWrap::registerPropertyMonitor), (bp::arg("instanceId"), bp::arg("key"), bp::arg("callbackFunction"), bp::arg("userData") = bp::object()))
             .def("registerDeviceMonitor", (void (DeviceClientWrap::*)(const string&, const bp::object&, const bp::object&))(&DeviceClientWrap::registerDeviceMonitor), (bp::arg("instanceId"), bp::arg("callbackFunction"), bp::arg("userData") = bp::object()))
             .def("setDeviceMonitorInterval", &DeviceClientWrap::setDeviceMonitorIntervalPy, bp::arg("milliseconds"))

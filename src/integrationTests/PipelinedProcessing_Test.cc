@@ -1136,9 +1136,7 @@ void PipelinedProcessing_Test::testQueueClearOnDisconnectCopyQueue() {
     // Makes sure the sender is not sending any data before starting the test run.
     CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
 
-    // Retrieves the amount of data that the sender will send.
-    unsigned int senderNData = m_deviceClient->get<unsigned int>(m_sender, "nData");
-    // then call its slot
+    // call sender's slot
     m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
 
     // Waits long enough for some data to arrive.

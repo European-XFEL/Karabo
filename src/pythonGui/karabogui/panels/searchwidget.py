@@ -8,9 +8,9 @@ from collections import deque
 import os.path as op
 import weakref
 
-from PyQt4 import uic
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QWidget
+from PyQt5 import uic
+from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QWidget
 
 from karabogui import icons
 

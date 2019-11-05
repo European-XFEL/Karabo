@@ -4,8 +4,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QFont, QFrame, QLabel
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import QFrame, QLabel
 
 from traits.api import Instance
 

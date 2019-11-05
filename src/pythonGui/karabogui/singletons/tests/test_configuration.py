@@ -33,20 +33,20 @@ class TestConfiguration(GuiTestCase):
         config = Configuration()
         groups = config.groups()
         self.assertEqual(len(groups), 4)
-        network_group = groups[NETWORK]
+        network_group = [item.name for item in groups[NETWORK]]
         self.assertEqual(len(network_group), 2)
         self.assertIn('username', network_group)
         self.assertIn('gui_servers', network_group)
-        project_group = groups[PROJECT]
+        project_group = [item.name for item in groups[PROJECT]]
         self.assertEqual(len(project_group), 2)
         self.assertIn('db_token', project_group)
         self.assertIn('domain', project_group)
-        dir_group = groups[DIRECTORIES]
+        dir_group = [item.name for item in groups[DIRECTORIES]]
         self.assertEqual(len(dir_group), 3)
         self.assertIn('macro_dir', dir_group)
         self.assertIn('scene_dir', dir_group)
         self.assertIn('config_dir', dir_group)
-        bone_group = groups[BACKBONE]
+        bone_group = [item.name for item in groups[BACKBONE]]
         self.assertEqual(len(bone_group), 3)
         self.assertIn('macro_server', bone_group)
         self.assertIn('project_manager', bone_group)

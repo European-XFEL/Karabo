@@ -5,8 +5,8 @@
 #############################################################################
 from datetime import datetime
 
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import (
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (
     QFrame, QHBoxLayout, QPushButton, QVBoxLayout, QTextEdit)
 from traits.api import Instance
 

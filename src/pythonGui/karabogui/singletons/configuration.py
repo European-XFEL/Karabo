@@ -5,19 +5,21 @@
 #############################################################################
 from collections import defaultdict
 
-from PyQt4.QtCore import QObject, QSettings
+from PyQt5.QtCore import QObject, QSettings
 
 
 class Item:
-    __slots__ = ["name", "default", "q_set", "group", "path"]
+    __slots__ = ["name", "default", "q_set", "group", "path", "editable"]
 
-    def __init__(self, name, default=None, q_set=False, group=None):
+    def __init__(self, name, default=None, q_set=False, group=None,
+                 editable=False):
         # XXX: Once we have the new descriptor protocol, name gets removed!
         self.name = name
 
         self.q_set = q_set
         self.group = group
         self.path = "{group}/{name}".format(group=group, name=name)
+        self.editable = editable
         if self.q_set:
             self.default = QSettings().value(self.path) or default
         else:
@@ -151,7 +153,7 @@ class Configuration(QObject):
         ret = defaultdict(set)
         for key in self._memory:
             group = getattr(self.__class__, key).group
-            ret[group].add(key)
+            ret[group].add(getattr(self.__class__, key))
         return ret
 
     def __len__(self):

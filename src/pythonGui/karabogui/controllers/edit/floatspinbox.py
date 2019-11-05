@@ -1,6 +1,6 @@
 from numpy import log10
-from PyQt4.QtCore import pyqtSlot, QLocale, Qt
-from PyQt4.QtGui import QAction, QDoubleSpinBox, QInputDialog
+from PyQt5.QtCore import QLocale, Qt
+from PyQt5.QtWidgets import QAction, QDoubleSpinBox, QInputDialog
 from traits.api import Instance, on_trait_change
 
 from karabo.common.api import KARABO_SCHEMA_ABSOLUTE_ERROR
@@ -72,16 +72,16 @@ class FloatSpinBox(BaseBindingController):
         if self._internal_widget is not None:
             self._internal_widget.setSingleStep(value)
 
-    @pyqtSlot()
-    def _change_step(self):
+    # @pyqtSlot()
+    def _change_step(self, checked):
         step = self._internal_widget.singleStep()
         step, ok = QInputDialog.getDouble(
             self.widget, 'Single Step', 'Enter size of a single step', step)
         if ok:
             self.model.step = step
 
-    @pyqtSlot()
-    def _change_decimals(self):
+    # @pyqtSlot()
+    def _change_decimals(self, checked):
         # Override the starting value with something from the binding
         decimals = self.model.decimals
         binding = self.proxy.binding
@@ -97,7 +97,7 @@ class FloatSpinBox(BaseBindingController):
         if ok:
             self.model.decimals = decimals
 
-    @pyqtSlot(float)
+    # @pyqtSlot(float)
     def _on_user_edit(self, value):
         if self.proxy.binding is None:
             return

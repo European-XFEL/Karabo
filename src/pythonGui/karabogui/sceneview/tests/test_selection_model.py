@@ -5,7 +5,7 @@
 #############################################################################
 import unittest
 
-from PyQt4.QtCore import QRect
+from PyQt5.QtCore import QRect
 
 from karabo.common.scenemodel.api import LineModel, RectangleModel
 from karabogui.sceneview.selection_model import SceneSelectionModel

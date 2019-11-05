@@ -3,9 +3,9 @@
 # Created on September 28, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import pyqtSlot, QModelIndex, Qt
-from PyQt4.QtGui import (QAbstractItemView, QStandardItemModel, QTreeView,
-                         QStandardItem)
+from PyQt5.QtCore import QModelIndex, Qt
+from PyQt5.QtGui import QStandardItemModel, QStandardItem
+from PyQt5.QtWidgets import QAbstractItemView, QTreeView, QHeaderView
 from traits.api import Bool, Instance
 
 from karabo.common.scenemodel.api import RunConfiguratorModel
@@ -29,20 +29,30 @@ class RunConfiguratorEdit(BaseBindingController):
     model = Instance(RunConfiguratorModel, args=())
     # Private traits
     _is_editing = Bool(False)
+    _expanded = Bool(False)
 
     def create_widget(self, parent):
         widget = QTreeView(parent=parent)
-        widget.setSelectionBehavior(QAbstractItemView.SelectRows)
         item_model = QStandardItemModel(parent=self.widget)
         item_model.setHorizontalHeaderLabels(HEADER_LABELS)
         item_model.itemChanged.connect(self._item_edited)
+
+        header = widget.header()
+        header.setResizeMode(QHeaderView.ResizeToContents)
+        header.sectionDoubleClicked.connect(self.onDoubleClickHeader)
+
+        widget.setSelectionBehavior(QAbstractItemView.SelectRows)
         widget.setModel(item_model)
+
         return widget
 
     def value_update(self, proxy):
         # Avoid messing with the item model when the user checks an item
         if self._is_editing:
             return
+
+        # We reset on every value update!
+        self._expanded = False
 
         def _build(group_node, parent_item):
             name = group_node.value.groupId.value or 'NONAME'
@@ -68,7 +78,6 @@ class RunConfiguratorEdit(BaseBindingController):
         for entry in get_editor_value(proxy, []):
             _build(entry, root_item)
 
-    @pyqtSlot(object)
     def _item_edited(self, item):
         if self.proxy.binding is None:
             return
@@ -79,6 +88,14 @@ class RunConfiguratorEdit(BaseBindingController):
                 self.proxy.edit_value = self._build_value()
             finally:
                 self._is_editing = False
+
+    def onDoubleClickHeader(self):
+        if self._expanded:
+            self.widget.collapseAll()
+        else:
+            self.widget.expandAll()
+
+        self._expanded = not self._expanded
 
     def _build_value(self):
         def _build_source_hash(item, row):

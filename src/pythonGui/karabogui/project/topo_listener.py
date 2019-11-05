@@ -3,7 +3,7 @@
 # Created on December 7, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import QObject
+from PyQt5.QtCore import QObject
 
 from karabogui.util import WeakMethodRef
 

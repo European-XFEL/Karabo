@@ -1,7 +1,9 @@
 /*
  * File:   Device_Test.hh
  * Author: gero.flucke@xfel.eu
- 
+ *
+ * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ *
  */
 
 #ifndef DEVICE_TEST_HH
@@ -34,6 +36,7 @@ private:
 
     void testGetTimestamp();
     void testSchemaInjection();
+    void testGetSet();
 
     /** Tests that updateSchema resets attributes in the static schema. */
     void testSchemaWithAttrUpdate();
@@ -52,6 +55,7 @@ private:
     boost::thread m_eventLoopThread;
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
+    karabo::xms::SignalSlotable::Pointer m_signalSlotable;
 };
 
 #endif	/* DEVICE_TEST_HH */
