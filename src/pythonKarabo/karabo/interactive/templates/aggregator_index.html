@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Karabo server control</title>
+    <link rel="stylesheet" href="{{ static_url('karabo.css') }}" type="text/css">
+  </head>
+  <body>
+    {% for hostname, server in servers.items() %}
+    <h1><a href="{{ server['link'] }}">{{ hostname }}</a></h1>
+      <table>
+        <tr><th>Name</th><th>Status</th><th>Since</th><tr>
+        {% for row in server['services'] %}
+        <tr>
+          <td>{{ row['name'] }}</td>
+          <td>{{ row['status'] }}</td>
+          <td>{{ row['since'] }}</td>
+        </tr>
+        {% end %}
+      </table>
+    {% end %}
+    </body>
+</html>

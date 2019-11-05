@@ -6,8 +6,6 @@ from karabo.bound import Hash, SignalSlotable
 from karabo.common.states import State
 from karabo.integration_tests.utils import BoundDeviceTestCase
 
-SERVER_ID = None
-
 
 class TestDeviceDeviceComm(BoundDeviceTestCase):
     def setUp(self):
@@ -20,7 +18,9 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
     def test_log_level(self):
         SERVER_ID = "logLevelServer"
         deviceId = "logLevelTestDevice"
-        self.start_server("bound", SERVER_ID, ["PropertyTest"], logLevel="ERROR")
+        serverLogLevel = "FATAL"
+        self.start_server("bound", SERVER_ID, ["PropertyTest"],
+                          logLevel=serverLogLevel)
 
         # Do not specify device log level: inherit from server
         cfg = Hash("classId", "PropertyTest",
@@ -29,7 +29,8 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         ok, msg = self.dc.instantiate(SERVER_ID, cfg, 30)
         self.assertTrue(ok, msg)
         res = self.dc.get(deviceId, "Logger.priority")
-        self.assertEqual(res, "ERROR")
+        self.assertEqual(res, serverLogLevel)
+
         ok, msg = self.dc.killDevice(deviceId, 30)
         self.assertTrue(ok, "Problem killing device '{}': {}.".format(deviceId,
                                                                       msg))
@@ -55,8 +56,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         # exceptions 'tearDown' is called and stops Python processes.
 
         # we will use two devices communicating with each other.
-        config = Hash("Logger.priority", "ERROR",
-                      "remote", "testComm2")
+        config = Hash("remote", "testComm2")
 
         classConfig = Hash("classId", "CommTestDevice",
                            "deviceId", "testComm1",
@@ -65,8 +65,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         ok, msg = self.dc.instantiate(SERVER_ID, classConfig, 30)
         self.assertTrue(ok, msg)
 
-        config2 = Hash("Logger.priority", "ERROR",
-                       "remote", "testComm1")
+        config2 = Hash("remote", "testComm1")
 
         classConfig2 = Hash("classId", "CommTestDevice",
                             "deviceId", "testComm2",
@@ -78,7 +77,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         config3 = Hash()
 
         classConfig3 = Hash("classId", "UnstoppedThreadDevice",
-                            "deviceId", "testComm3",
+                            "deviceId", "deviceNotGoingDownCleanly",
                             "configuration", config3)
 
         ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, 30)
@@ -95,13 +94,17 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             try:
                 state1 = self.dc.get("testComm1", "state")
                 state2 = self.dc.get("testComm2", "state")
-                state3 = self.dc.get("testComm3", "state")
+                state3 = self.dc.get("deviceNotGoingDownCleanly", "state")
             # A RuntimeError will be raised up to device init
             except RuntimeError:
                 sleep(self._waitTime)
                 if nTries > self._retries:
                     raise RuntimeError("Waiting for device to init timed out")
                 nTries += 1
+
+        # Some sub-tests need a helper to call slots with arguments:
+        sigSlotA = SignalSlotable("sigSlotA")
+        sigSlotA.start()
 
         # tests are run in sequence as sub tests
         # device server thus is only instantiated once
@@ -139,9 +142,6 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         with self.subTest(msg="Test getTimestamp"):
             # This is basically a copy of  Device_Test::testGetTimestamp
             #
-            # Need a communication helper to call slots with arguments:
-            sigSlotA = SignalSlotable("sigSlotA")
-            sigSlotA.start()
 
             timeOutInMs = 500  # more than in C++ - here it goes via broker...
             periodInMicroSec = 100000  # some tests below assume 0.1 s
@@ -250,9 +250,39 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             self.assertRaises(RuntimeError, self.dc.set,
                               "testComm1", "vectorInt32", [4]*9)  # not OK now!
 
-        with self.subTest(msg="Test killing testComm3"):
-            ok, msg = self.dc.killDevice('testComm3', 10)
-            self.assertTrue(ok, "Problem killing 'testComm3': {}.".format(msg))
+        with self.subTest(msg="Test non-reconfigurables cannot be modified"):
+            request = sigSlotA.request("testComm1", "slotReconfigure",
+                                       Hash("archive", False))
+            with self.assertRaises(RuntimeError):
+                request.waitForReply(30000)  # in ms
+
+        with self.subTest(msg="Test killing 'deviceNotGoingDownCleanly'"):
+            # Check that the device goes down although thread not stopped
+            ok, msg = self.dc.killDevice('deviceNotGoingDownCleanly', 10)
+            self.assertTrue(ok, msg)
+
+            # Start again
+            ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, 30)
+            self.assertTrue(ok, msg)
+
+            # Cannot instantiate another one:
+            ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, 30)
+            self.assertTrue(not ok, msg)
+
+            # Now let the device fall into coma, i.e. it does not react anymore
+            # karabo wise, put its process is still alive:
+            self.dc.execute('deviceNotGoingDownCleanly', 'slotPutToComa')
+            # Device needs time to enter the bad state, i.e. at least the 1 s
+            # that the signal handler in C++ Eventloop::work() sleeps:
+            sleep(1.5)
+
+            # We instantiate again for two reasons:
+            # 1) Test directly that the server will kill the coma process and
+            #    go on.
+            # 2) This instance will be killed by the server shutdown process
+            #    that is triggered by test class tearDown. If killing would not
+            #    work, the server shutdown would time out and that would
+            #    produce an error
             ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, 30)
             self.assertTrue(ok, msg)
 

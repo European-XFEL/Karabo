@@ -27,7 +27,7 @@ class _ProxyBase(object):
                          for k, v in self.__class__.__dict__.items()
                          if isinstance(v, Descriptor)
                          and not isinstance(v, Slot) and hasattr(self, k))
-        return "[{}]".format(subs)
+        return self.__class__.__name__ + "[{}]".format(subs)
 
     def _repr_html_generator_(self, nest=0):
         if nest == 0:
@@ -79,9 +79,6 @@ class ProxyBase(_ProxyBase):
     def __init__(self):
         super().__init__()
         self._parent = self
-
-    def __repr__(self):
-        return self.__class__.__name__ + super().__repr__()
 
     def _use(self):
         pass

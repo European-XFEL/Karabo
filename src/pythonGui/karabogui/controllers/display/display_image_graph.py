@@ -1,5 +1,4 @@
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QAction
+from PyQt5.QtWidgets import QAction
 from traits.api import Instance, Int
 
 from karabo.common.scenemodel.api import (
@@ -56,7 +55,7 @@ class DisplayImageGraph(BaseBindingController):
     # -----------------------------------------------------------------------
     # Qt Slots
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def show_timestamp_tooltip(self):
         image_node = self.proxy.value
         if image_node is None:
@@ -66,7 +65,7 @@ class DisplayImageGraph(BaseBindingController):
         self.widget.setToolTip("{} --- Last image received {:.3f} s "
                                "ago".format(self.proxy.key, diff))
 
-    @pyqtSlot(object)
+    # @pyqtSlot(object)
     def _change_model(self, content):
         self.model.trait_set(**restore_graph_config(content))
 

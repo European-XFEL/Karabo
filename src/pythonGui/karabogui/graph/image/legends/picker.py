@@ -1,5 +1,5 @@
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QBrush, QPen, QColor
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QBrush, QPen, QColor
 from pyqtgraph import LabelItem
 from pyqtgraph.graphicsItems.LegendItem import ItemSample
 

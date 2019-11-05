@@ -2,10 +2,10 @@ import os.path as op
 from traceback import print_exception, format_exception
 import warnings
 
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import (
-    QApplication, QFont, QIcon, QMessageBox, QPixmap, QSplashScreen,
-    QStyleFactory)
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont, QIcon, QPixmap
+from PyQt5.QtWidgets import (
+    QApplication, QMessageBox, QSplashScreen, QStyleFactory)
 from pyqtgraph import setConfigOptions
 
 from karabogui.controllers.api import populate_controller_registry

@@ -289,30 +289,39 @@ void DataLogging_Test::testHistoryAfterChanges() {
 
 void DataLogging_Test::testLastKnownConfiguration() {
 
+    const int kRequestTimeoutMs = 15000;
+
+    // Last value set in previous test cases for property 'int32Property'.
+    const int kLastValueSet = 99;
+
     std::clog << "Testing last known configuration at specific timepoints ..." << std::endl;
 
     const string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
 
     Schema schema;
     Hash conf;
+    bool configAtTimepoint;
+    string configTimepoint;
 
     std::clog << "... before any logging activity (at " << m_beforeAnything.toIso8601() << ") ...";
     // At the m_beforeAnything timepoint no known configuration existed, so an
     // empty configuration is expected.
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
                                                m_deviceId, m_beforeAnything.toIso8601())
-                            .timeout(15000).receive(conf, schema));
+                            .timeout(kRequestTimeoutMs).receive(conf, schema, configAtTimepoint, configTimepoint));
 
     CPPUNIT_ASSERT_MESSAGE("At timepoint BeforeAnything no last known configuration is expected.", conf.empty());
-    std::clog << "\n... Ok (no configuration retrieved, as expected)." << std::endl;
+    CPPUNIT_ASSERT_EQUAL(false, configAtTimepoint);
+    CPPUNIT_ASSERT_EQUAL(Epochstamp(0, 0).toIso8601(), configTimepoint);
+    std::clog << "\n... Ok (no configuration retrieved)." << std::endl;
 
-    Epochstamp rightBeforeDeviceGone;
+    karabo::util::Epochstamp rightBeforeDeviceGone;
     std::clog << "... right before killing device being logged (at " << rightBeforeDeviceGone.toIso8601() << ") ...";
     // At the rightBeforeDeviceGone timepoint, a last known configuration should be obtained with the last value set in
     // the  previous test cases for the 'int32Property' - even after the device being logged is gone.
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
                                                m_deviceId, rightBeforeDeviceGone.toIso8601())
-                            .timeout(15000).receive(conf, schema));
+                            .timeout(kRequestTimeoutMs).receive(conf, schema, configAtTimepoint, configTimepoint));
 
     CPPUNIT_ASSERT_EQUAL(99, conf.get<int>("int32Property"));
 
@@ -323,11 +332,15 @@ void DataLogging_Test::testLastKnownConfiguration() {
     CPPUNIT_ASSERT_EQUAL(std::vector<Hash>({Hash("e1", "ab\nc99", "e2", false, "e3", 12 * 99, "e4", 0.9837F * 99, "e5", 1.2345 * 99),
                                            Hash("e1", "xy|z99", "e2", true, "e3", 42 * 99, "e4", 2.33333F * 99, "e5", 7.77777 * 99)}),
                          conf.get<std::vector<Hash> >("table"));
-
-
-
     std::clog << "\n... Ok (retrieved configuration with last known value for 'int32Property', 'stringProperty', "
             << "'vectors.stringProperty', and 'table')." << std::endl;
+    
+    CPPUNIT_ASSERT_EQUAL(kLastValueSet, conf.get<int>("int32Property"));
+    CPPUNIT_ASSERT_EQUAL(true, configAtTimepoint);
+    CPPUNIT_ASSERT_EQUAL(rightBeforeDeviceGone.toIso8601(), configTimepoint);
+    std::clog << "\n... "
+            << "Ok (retrieved configuration with last known value for 'int32Property' while the device was being logged)."
+            << std::endl;
 
     // killDevice waits for the device to be killed (or throws an exception in case of failure).
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->killDevice(m_deviceId, KRB_TEST_MAX_TIMEOUT));
@@ -335,7 +348,8 @@ void DataLogging_Test::testLastKnownConfiguration() {
     // Assures that the logger in charge of the device is not logging it anymore by testing that m_deviceId is not
     // among the rows of the "lastUpdatesUtc" property of the logger. The "flush" slot guarantees that the property
     // "lastUpdatesUtc" is in sync with devices being logged.
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush").timeout(15000).receive());
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
+                            .timeout(kRequestTimeoutMs).receive());
     const auto lastUpdates =
             m_deviceClient->get<std::vector < Hash >> (karabo::util::DATALOGGER_PREFIX + m_server, "lastUpdatesUtc");
     bool deviceIdFound = false;
@@ -353,11 +367,16 @@ void DataLogging_Test::testLastKnownConfiguration() {
     // previous test cases for the 'int32Property' - even after the device being logged is gone.
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
                                                m_deviceId, afterDeviceGone.toIso8601())
-                            .timeout(15000).receive(conf, schema));
+                            .timeout(kRequestTimeoutMs).receive(conf, schema, configAtTimepoint, configTimepoint));
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong value for property 'int32Property' in last known configuration.",
-                                 99, conf.get<int>("int32Property"));
-    std::clog << "\n... Ok (retrieved configuration with last known value for 'int32Property', as expected)." << std::endl;
+    CPPUNIT_ASSERT_EQUAL(kLastValueSet, conf.get<int>("int32Property"));
+    CPPUNIT_ASSERT_EQUAL(false, configAtTimepoint);
+    karabo::util::Epochstamp configStamp(configTimepoint);
+    CPPUNIT_ASSERT(configStamp > m_beforeAnything);
+    CPPUNIT_ASSERT(configStamp < afterDeviceGone);
+    std::clog << "\n... "
+            << "Ok (retrieved configuration with last known value for 'int32Property' while the device was not being logged)."
+            << std::endl;
 
 }
 
@@ -408,6 +427,9 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
             m_sigSlot->request(dlreader0, "slotGetPropertyHistory", m_deviceId, key, params)
                     .timeout(500).receive(device, property, history);
         } catch (const karabo::util::TimeoutException& e) {
+            karabo::util::Exception::clearTrace();
+            ++numTimeouts;
+        } catch (const karabo::util::RemoteException& e) {
             karabo::util::Exception::clearTrace();
             ++numTimeouts;
         }

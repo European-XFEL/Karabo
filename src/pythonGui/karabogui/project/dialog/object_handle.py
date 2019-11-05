@@ -5,10 +5,10 @@
 #############################################################################
 import os.path as op
 
-from PyQt4 import uic
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import (
-    QDialog, QDialogButtonBox, QFormLayout, QSpinBox, QValidator)
+from PyQt5 import uic
+from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtGui import QValidator
+from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QSpinBox
 
 from karabogui.util import InputValidator, SignalBlocker
 

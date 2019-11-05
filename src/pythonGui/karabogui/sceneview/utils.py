@@ -5,7 +5,7 @@
 #############################################################################
 from contextlib import contextmanager
 
-from PyQt4.QtGui import QFont, QFontMetrics
+from PyQt5.QtGui import QFont, QFontMetrics
 
 from .const import SCREEN_MAX_VALUE
 

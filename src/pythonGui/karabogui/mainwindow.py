@@ -8,11 +8,10 @@ from enum import Enum
 from functools import partial
 import os.path
 
-from PyQt4.QtCore import Qt, pyqtSlot
-from PyQt4.QtGui import (
+from PyQt5.QtCore import Qt, pyqtSlot
+from PyQt5.QtWidgets import (
     QAction, QActionGroup, QFrame, QLabel, QMainWindow, QMenu, QMessageBox,
-    QSizePolicy, QSplitter, QToolButton, QWidget, qApp
-)
+    QSizePolicy, QSplitter, QToolButton, QWidget, qApp)
 
 from karabo.native import AccessLevel
 from karabogui import globals as krb_globals
@@ -467,7 +466,7 @@ class MainWindow(QMainWindow):
         dialog = UpdateDialog(parent=self)
         dialog.open()
 
-    @pyqtSlot(object)
+    @pyqtSlot(QAction)
     def onChangeAccessLevel(self, action):
         level = action.data()
         assert isinstance(level, AccessLevel), 'Garbage access level value!'

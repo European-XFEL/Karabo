@@ -1322,6 +1322,13 @@ class Tests(DeviceTest):
         yield from proxy.doit()
         self.assertTrue(proxy.done)
 
+    @async_tst
+    def test_set_archive_fails(self):
+        with (yield from getDevice("remote")) as d:
+            with self.assertRaises(KaraboError):
+                new_archive = not d.archive.value
+                yield from setWait(d, archive=new_archive)
+
 
 if __name__ == "__main__":
     main()

@@ -3,10 +3,10 @@
 # Created on December 7, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import pyqtSlot, QByteArray, Qt
-from PyQt4.QtGui import (QPixmap, QDialog, QListView, QStandardItemModel,
-                         QStandardItem, QIcon)
-from PyQt4.QtSvg import QSvgWidget
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap, QStandardItemModel, QStandardItem, QIcon
+from PyQt5.QtSvg import QSvgWidget
+from PyQt5.QtWidgets import QDialog, QListView
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import StatefulIconWidgetModel
@@ -47,7 +47,7 @@ class StatefulIconWidget(BaseBindingController):
         color = get_state_color(value)
 
         svg = self._icon.with_color(color)
-        self.widget.load(QByteArray(svg))
+        self.widget.load(bytearray(svg, encoding='UTF-8'))
 
     def __icon_changed(self, icon):
         """Update the scene model when the icon changes"""
@@ -70,7 +70,7 @@ class StatefulIconWidget(BaseBindingController):
         for key, icon in sorted(ICONS.items()):
             listItem = QStandardItem(icon.description)
             p = QPixmap()
-            p.loadFromData(QByteArray(icon.with_color(WHITE)))
+            p.loadFromData(bytearray(icon.with_color(WHITE), encoding='UTF-8'))
             listItem.setData(QIcon(p),
                              Qt.DecorationRole)
             listItem.setData(icon, Qt.UserRole + 1)
@@ -78,7 +78,7 @@ class StatefulIconWidget(BaseBindingController):
         iconlist.setModel(model)
 
         # double clicking an entry will select it and close the dialog
-        @pyqtSlot(int)
+        # @pyqtSlot(int)
         def handleDoubleClick(index):
             self._icon = index.data(Qt.UserRole + 1)
             dialog.close()

@@ -1,9 +1,9 @@
 from datetime import datetime
 
-from PyQt4.QtCore import Qt, pyqtSignal
-from PyQt4.QtGui import QFont
-from pyqtgraph.functions import siScale
+from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtGui import QFont
 from pyqtgraph import AxisItem as PgAxisItem
+from pyqtgraph.functions import siScale
 
 from karabogui.graph.common.const import (
     AXIS_ITEMS, X_AXIS_HEIGHT, Y_AXIS_WIDTH, INTEGER_STATE_MAP)

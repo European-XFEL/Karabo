@@ -2,9 +2,9 @@ import datetime
 import os.path as op
 
 import numpy
-from PyQt4 import uic
-from PyQt4.QtCore import QDateTime
-from PyQt4.QtGui import QDialog
+from PyQt5 import uic
+from PyQt5.QtCore import QDateTime
+from PyQt5.QtWidgets import QDialog
 from pyqtgraph import PlotDataItem
 from traits.api import (
     HasStrictTraits, Array, Constant, Float, Instance, Int, List,

@@ -1,8 +1,9 @@
 import os.path as op
 
-from PyQt4 import uic
-from PyQt4.QtCore import pyqtSlot, QCoreApplication, Qt
-from PyQt4.QtGui import QDialog, QFontMetrics, QInputDialog, QListWidgetItem
+from PyQt5 import uic
+from PyQt5.QtCore import pyqtSlot, QCoreApplication, Qt
+from PyQt5.QtGui import QFontMetrics
+from PyQt5.QtWidgets import QDialog, QInputDialog, QListWidgetItem
 
 
 class OptionsEditDialog(QDialog):

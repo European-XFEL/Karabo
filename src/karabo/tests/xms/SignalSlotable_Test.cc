@@ -135,7 +135,8 @@ enum class ExceptionType {
 };
 
 
-void waitEqual(ExceptionType target, const ExceptionType& test, int trials = 10) {
+template <class Type>
+void waitEqual(Type target, const Type& test, int trials = 10) {
     // test is by reference since it is expected to be updated from the outside
 
     // trials = 10 => maximum wait for millisecondsSleep = 2 is about 2 seconds
@@ -228,6 +229,21 @@ void SignalSlotable_Test::testReceiveAsync() {
         boost::this_thread::sleep(boost::posix_time::milliseconds(20));
     }
     CPPUNIT_ASSERT(result == "Hello, world!");
+
+    // Trying to receive less reply values than come is OK as well!
+    bool receivedIgnoringReplyValue = false;
+    const auto badSuccessHandler = [&receivedIgnoringReplyValue]() {
+        receivedIgnoringReplyValue = true;
+    };
+    bool calledErrorHandler = false;
+    const auto errHandler = [&calledErrorHandler]() {
+        calledErrorHandler = true;
+    };
+    greeter->request("responder", "slotAnswer", "Hello").timeout(200)
+            .receiveAsync(badSuccessHandler, errHandler);
+    waitEqual(receivedIgnoringReplyValue, true);
+    CPPUNIT_ASSERT_EQUAL(calledErrorHandler, false);
+    CPPUNIT_ASSERT_EQUAL(receivedIgnoringReplyValue, true);
 }
 
 
@@ -310,6 +326,8 @@ void SignalSlotable_Test::testReceiveAsyncError() {
             .receiveAsync<std::string, int>(badSuccessHandler2, errHandler);
     waitEqual(ExceptionType::signalslot, caughtType);
     CPPUNIT_ASSERT_EQUAL(int(ExceptionType::signalslot), int(caughtType));
+
+    // Trying to receive less reply values than come is OK. See testReceiveAsync.
 
     //    // Too many arguments to slot seems not to harm - should we make it harm?
     //    caughtType = ExceptionType::none;
@@ -799,12 +817,12 @@ void SignalSlotable_Test::testDisconnectAsync() {
     signaler->asyncDisconnect("signalInstance", "signal", "slotInstance", "slot",
                               disconnectSuccessHandler, disconnectFailedHandler);
     // Give disconnection call some time to travel
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 200; ++i) {
         if (disconnectSuccess) break;
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
     };
-    CPPUNIT_ASSERT(disconnectSuccess);
     CPPUNIT_ASSERT(!disconnectFailed);
+    CPPUNIT_ASSERT(disconnectSuccess);
 
     signaler->emit("signal");
     // Give signal some time to travel - but it won't, since disconnected!
@@ -818,12 +836,12 @@ void SignalSlotable_Test::testDisconnectAsync() {
     signaler->asyncDisconnect("signalInstance", "signal", "slotInstance", "slot",
                               disconnectSuccessHandler, disconnectFailedHandler);
     // Give some time to find out that signal is not there
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 200; ++i) {
         if (disconnectFailed) break;
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
     };
-    CPPUNIT_ASSERT(disconnectFailed);
     CPPUNIT_ASSERT(!disconnectSuccess);
+    CPPUNIT_ASSERT(disconnectFailed);
     // connectFailedMsg is the full, formatted exception info ("Exception =====> {\n ... \n Message....")
     // check that the original message is part of it (in two steps)
     CPPUNIT_ASSERT(disconnectFailedMsg.find("failed to disconnect slot") != std::string::npos);
@@ -837,12 +855,12 @@ void SignalSlotable_Test::testDisconnectAsync() {
     signaler->asyncDisconnect("signalInstance", "NOT_A_signal", "slotInstance", "slot",
                               disconnectSuccessHandler, disconnectFailedHandler);
     // Give some time to find out that signal is not there
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 200; ++i) {
         if (disconnectFailed) break;
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
     };
-    CPPUNIT_ASSERT(disconnectFailed);
     CPPUNIT_ASSERT(!disconnectSuccess);
+    CPPUNIT_ASSERT(disconnectFailed);
     // connectFailedMsg is the full, formatted exception info ("Exception =====> {\n ... \n Message....")
     // check that the original message is part of it
     CPPUNIT_ASSERT(disconnectFailedMsg.find("failed to disconnect slot") != std::string::npos);
@@ -860,9 +878,9 @@ void SignalSlotable_Test::testDisconnectAsync() {
         if (disconnectFailed) break;
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
     };
+    CPPUNIT_ASSERT(!disconnectSuccess);
     CPPUNIT_ASSERT(disconnectFailed);
     CPPUNIT_ASSERT(disconnectTimeout);
-    CPPUNIT_ASSERT(!disconnectSuccess);
 
     ///////////////////////////////////////////////////////////////////////////
     // No need to test non-existing slot - it is exactly the same as a non-connected slot
@@ -895,6 +913,9 @@ void SignalSlotable_Test::testMethod() {
     }
     CPPUNIT_ASSERT_EQUAL(2, reply);
 
+    // The same, but test that one can ignore the reply value:
+    CPPUNIT_ASSERT_NO_THROW(demo->request("", "slotC", 1).timeout(500).receive());
+
     std::string someData("myPrivateStuff");
     demo->request(instanceId, "slotC", 1).receiveAsync<int>(boost::bind(&SignalSlotDemo::myCallBack, demo, someData, _1));
     // shortcut address:
@@ -917,8 +938,8 @@ void SignalSlotable_Test::testMethod() {
     CPPUNIT_ASSERT_NO_THROW(demo->request("", "noded.asyncSlot").timeout(1000).receive(reply));
     CPPUNIT_ASSERT_EQUAL(42, reply);
 
-    waitDemoOk(demo, 12);
-    CPPUNIT_ASSERT(demo->wasOk(12));
+    waitDemoOk(demo, 13);
+    CPPUNIT_ASSERT(demo->wasOk(13));
     
 }
 

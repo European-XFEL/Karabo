@@ -436,15 +436,22 @@ class Tests(DeviceTest):
         # Initiate indexing for selected parameters: "value" and "child.number"
         after = datetime.now()
 
-        # This is the first history request ever, so it returns an empty
-        # list (see https://in.xfel.eu/redmine/issues/9414).
-        yield from getHistory(
-            "middlelayerDevice.value", before.isoformat(), after.isoformat())
-        yield from getHistory(
-            "middlelayerDevice.child.number", before.isoformat(),
-            after.isoformat())
+        # The first history request ever fails - but it triggers the
+        # creation of index files needed later for reading back.
+        # Sometimes this test runs in an environment where these requests
+        # are not the first ones, so cannot assertRaise.
+        try:
+            yield from getHistory("middlelayerDevice.value",
+                                  before.isoformat(), after.isoformat())
+        except KaraboError as e:
+            self.assertIn("first history request", str(e))
+        try:
+            yield from getHistory("middlelayerDevice.child.number",
+                                  before.isoformat(), after.isoformat())
+        except KaraboError as e:
+            self.assertIn("first history request", str(e))
 
-        # We have to write another value to close the first archive file :-(...
+        # Now write data that is logged (and indexed for reading back!)
         for i in range(5):
             self.device.value = i
             self.device.child.number = -i

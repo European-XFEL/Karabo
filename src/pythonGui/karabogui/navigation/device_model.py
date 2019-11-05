@@ -5,9 +5,9 @@
 #############################################################################
 from weakref import WeakValueDictionary
 
-from PyQt4.QtCore import (
-    pyqtSignal, pyqtSlot, QAbstractItemModel, QModelIndex, Qt)
-from PyQt4.QtGui import QItemSelection, QItemSelectionModel
+from PyQt5.QtCore import (
+    pyqtSignal, pyqtSlot, QAbstractItemModel, QModelIndex, Qt, QItemSelection,
+    QItemSelectionModel)
 
 from karabo.common.api import ProxyStatus
 from karabogui import globals as krb_globals, icons
@@ -27,7 +27,6 @@ class DeviceTreeModel(QAbstractItemModel):
         # Our hierarchy tree
         self.tree = get_topology().device_tree
         self.tree.update_context = _UpdateContext(item_model=self)
-        self.setSupportedDragActions(Qt.CopyAction)
         self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
@@ -35,6 +34,9 @@ class DeviceTreeModel(QAbstractItemModel):
             KaraboEvent.AccessLevelChanged: self._event_access_level,
         }
         register_for_broadcasts(event_map)
+
+    def supportedDragActions(self):
+        return Qt.CopyAction
 
     def _event_access_level(self, data):
         self._clear_tree_cache()

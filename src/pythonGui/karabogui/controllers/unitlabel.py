@@ -1,5 +1,5 @@
 
-from PyQt4.QtGui import QFrame, QHBoxLayout, QLabel, QSizePolicy
+from PyQt5.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy
 
 
 def add_unit_label(proxy, widget, parent=None):

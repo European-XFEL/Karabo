@@ -7,8 +7,8 @@ from functools import partial
 from io import StringIO
 
 from traits.api import Undefined
-from PyQt4.QtCore import pyqtSlot, Qt
-from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance, Property, on_trait_change
 
 from karabo.common.api import Capabilities, NO_CONFIG_STATUSES
@@ -402,8 +402,8 @@ class DeviceInstanceController(BaseProjectGroupController):
                 dev_conf.class_id = dialog.class_id
                 dev_conf.description = dialog.description
 
-    @pyqtSlot()
-    def _about_device(self):
+    # @pyqtSlot()
+    def _about_device(self, checked):
         device = self.model
         info = {}
         for name in device.editable_traits():

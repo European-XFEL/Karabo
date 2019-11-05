@@ -3,11 +3,11 @@
 # Created on October 27, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+import os.path as op
 from functools import partial
 from io import StringIO
 
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox
+from PyQt5.QtWidgets import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance, String, on_trait_change
 
 from karabo.common.api import ProxyStatus, walk_traits_object
@@ -22,7 +22,7 @@ from karabogui.project.dialog.object_handle import (
     ObjectDuplicateDialog, ObjectEditDialog)
 from karabogui.project.topo_listener import SystemTopologyListener
 from karabogui.project.utils import run_macro
-from karabogui.singletons.api import get_manager, get_topology
+from karabogui.singletons.api import get_config, get_manager, get_topology
 from karabogui.util import getSaveFileName
 from .bases import (BaseProjectGroupController, BaseProjectController,
                     ProjectControllerUiData)
@@ -61,7 +61,7 @@ class MacroInstanceController(BaseProjectController):
     # ----------------------------------------------------------------------
     # action handlers
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def shutdown(self):
         get_manager().shutdownDevice(self.instance_id, showConfirm=True)
 
@@ -200,7 +200,7 @@ class MacroController(BaseProjectGroupController):
             broadcast_event(KaraboEvent.RemoveProjectModelViews,
                             {'models': [macro]})
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _edit_macro(self):
         dialog = ObjectEditDialog(object_type='macro', model=self.model)
         result = dialog.exec()
@@ -218,15 +218,22 @@ class MacroController(BaseProjectGroupController):
                 dupe_macro.simple_name = simple_name
                 project.macros.append(dupe_macro)
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _save_macro_to_file(self):
+        config = get_config()
+        path = config['macro_dir']
+        directory = path if path and op.isdir(path) else ""
+
         macro = self.model
         fn = getSaveFileName(caption='Save macro to file',
                              filter='Python Macro (*.py)',
                              suffix='py',
-                             selectFile=macro.simple_name)
+                             selectFile=macro.simple_name,
+                             directory=directory)
         if not fn:
             return
+
+        config['macro_dir'] = op.dirname(fn)
 
         if not fn.endswith('.py'):
             fn = '{}.py'.format(fn)
@@ -234,7 +241,7 @@ class MacroController(BaseProjectGroupController):
         with open(fn, 'w') as fout:
             fout.write(write_macro(macro))
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def run_macro(self):
         """Action handler to instantiate the macro
 
