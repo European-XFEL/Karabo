@@ -50,11 +50,11 @@
         <itemPath>../../../src/integrationTests/integrationRunner_5.cc</itemPath>
       </logicalFolder>
       <logicalFolder name="f6"
-                     displayName="GuiVersion_Test"
+                     displayName="GuiServer_Test"
                      projectFiles="true"
                      kind="TEST">
-        <itemPath>../../../src/integrationTests/GuiVersion_Test.cc</itemPath>
-        <itemPath>../../../src/integrationTests/GuiVersion_Test.hh</itemPath>
+        <itemPath>../../../src/integrationTests/GuiServer_Test.cc</itemPath>
+        <itemPath>../../../src/integrationTests/GuiServer_Test.hh</itemPath>
         <itemPath>../../../src/integrationTests/TcpAdapter_5.cc</itemPath>
         <itemPath>../../../src/integrationTests/TcpAdapter_5.hh</itemPath>
         <itemPath>../../../src/integrationTests/integrationRunner_10.cc</itemPath>
@@ -209,12 +209,12 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/integrationTests/GuiVersion_Test.cc"
+      <item path="../../../src/integrationTests/GuiServer_Test.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/integrationTests/GuiVersion_Test.hh"
+      <item path="../../../src/integrationTests/GuiServer_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -704,12 +704,12 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/integrationTests/GuiVersion_Test.cc"
+      <item path="../../../src/integrationTests/GuiServer_Test.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/integrationTests/GuiVersion_Test.hh"
+      <item path="../../../src/integrationTests/GuiServer_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1192,12 +1192,12 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/integrationTests/GuiVersion_Test.cc"
+      <item path="../../../src/integrationTests/GuiServer_Test.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/integrationTests/GuiVersion_Test.hh"
+      <item path="../../../src/integrationTests/GuiServer_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
