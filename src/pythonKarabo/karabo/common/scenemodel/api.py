@@ -7,7 +7,8 @@ from .const import (
     SCENE_FILE_VERSION, SCENE_MIN_HEIGHT, SCENE_MIN_WIDTH, SceneTargetWindow)
 from .exceptions import SceneReaderException, SceneWriterException
 from .generic_scenes import (
-    get_trendline_scene, get_image_scene, get_vector_scene)
+    get_state_graph_scene, get_trendline_scene, get_image_scene,
+    get_vector_scene)
 from .io import read_scene, write_scene, write_single_model
 from .layouts import (
     BoxLayoutModel, FixedLayoutChildData, FixedLayoutModel,
