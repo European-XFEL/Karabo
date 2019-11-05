@@ -148,24 +148,6 @@ namespace karabo {
                     .assignmentOptional().defaultValue("FileDataLogger")
                     .commit();
 
-//            CHOICE_ELEMENT(expected).key("loggerType")
-//                    .displayedName("Logger type")
-//                    .description("Type of DataLogger")
-//                    .assignmentOptional().defaultValue("FileDataLogger")
-//                    .commit();
-//
-//            NODE_ELEMENT(expected).key("loggerType.FileDataLogger")
-//                    .displayedName("FileDataLogger")
-//                    .description("File based data logging")
-//                    .appendParametersOf<FileDataLogger>()
-//                    .commit();
-//
-//            NODE_ELEMENT(expected).key("loggerType.InfluxDataLogger")
-//                    .displayedName("InfluxDataLogger")
-//                    .description("Influxdb based data logging")
-//                    .appendParametersOf<InfluxDataLogger>()
-//                    .commit();
-
             BOOL_ELEMENT(expected).key("useP2p")
                     .displayedName("Use p2p shortcut")
                     .description("Whether to instruct loggers to use point-to-point instead of broker")
