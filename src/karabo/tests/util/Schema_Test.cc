@@ -535,6 +535,10 @@ void Schema_Test::testSlotElement() {
     CPPUNIT_ASSERT(sch.getAllowedStates("slotTest")[2] == State::ERROR);
     CPPUNIT_ASSERT(sch.isCommand("slotTest") == true);
     CPPUNIT_ASSERT(sch.isProperty("slotTest") == false);
+
+    // Underscores are not allowed in slots since that interferes with slots under a node
+    CPPUNIT_ASSERT_THROW(SLOT_ELEMENT(sch).key("slot_withunderscore"),
+                         karabo::util::ParameterException);
 }
 
 
