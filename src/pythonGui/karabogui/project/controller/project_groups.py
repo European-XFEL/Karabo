@@ -103,9 +103,13 @@ def _fill_scenes_menu(menu, project_controller):
     load_from_device = QAction('Load from device...', menu)
     load_from_device.triggered.connect(partial(_load_scene_from_device,
                                                project_controller))
+    about_action = QAction('About', menu)
+    about_action.triggered.connect(partial(_about_scene, project_controller))
     menu.addAction(add_action)
     menu.addAction(load_action)
     menu.addAction(load_from_device)
+    menu.addSeparator()
+    menu.addAction(about_action)
 
 
 def _fill_servers_menu(menu, project_controller):
@@ -205,6 +209,15 @@ def _add_scene(project_controller):
         # Set initialized and modified last
         scene.initialized = scene.modified = True
         project.scenes.append(scene)
+
+
+def _about_scene(project_controller):
+    """ Retrieve the uuid's of the scenes in the project controller for display
+    """
+    project = project_controller.model
+    html = "<ul>" + "".join(["<li>" + child.uuid + "</li>"
+                             for child in project.scenes]) + "</ul>"
+    messagebox.show_information(html, title="List of scene uuid's")
 
 
 def _load_scene(project_controller):
