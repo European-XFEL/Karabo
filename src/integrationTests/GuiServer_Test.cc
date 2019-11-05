@@ -1,10 +1,11 @@
-/*
- * File:   GuiVersion_Test.cc
+/**
  * Author: steffen.hauf@xfel.eu
-
+ *
+ * Copyright (c) 2010-2019 European XFEL GmbH Hamburg. All rights reserved.
+ *
  */
 
-#include "GuiVersion_Test.hh"
+#include "GuiServer_Test.hh"
 #include <karabo/net/EventLoop.hh>
 #include <cstdlib>
 
