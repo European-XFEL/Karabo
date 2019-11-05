@@ -59,7 +59,7 @@ public:
         TABLE_ELEMENT(expected).key("table")
                 .displayedName("Table property")
                 .description("Table with two columns")
-                .setNodeSchema(rowSchema)
+                .setColumns(rowSchema)
                 .assignmentOptional().defaultValue({Hash("type", "INT", "name", "firstLine"),
                                                    Hash("type", "BOOL", "name", "secondLine")})
                 .reconfigurable()
