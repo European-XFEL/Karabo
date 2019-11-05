@@ -36,7 +36,7 @@ class ChoiceOfNodesBinding(BaseBinding):
 
     def _set_choice(self, choice):
         assert isinstance(choice, str) and choice in self.choices
-        self._value.clear()
+        self._value.clear_namespace()
         setattr(self._value, choice, getattr(self.choices, choice))
         self.config_update = True
 

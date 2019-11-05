@@ -4,8 +4,8 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from numpy import log2
-from PyQt4.QtCore import pyqtSlot, Qt
-from PyQt4.QtGui import QAction, QInputDialog, QLabel, QSizePolicy
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QAction, QInputDialog, QLabel, QSizePolicy
 from traits.api import Instance, Str, on_trait_change
 
 from karabo.common.api import State
@@ -43,8 +43,8 @@ class SingleBit(BaseBindingController):
         widget = add_unit_label(self.proxy, self._internal_widget,
                                 parent=parent)
 
-        @pyqtSlot()
-        def _flip_invert():
+        # @pyqtSlot()
+        def _flip_invert(checked):
             self.model.invert = not self.model.invert
 
         logicAction = QAction('Invert color logic', widget)
@@ -73,8 +73,8 @@ class SingleBit(BaseBindingController):
     def _model_update(self):
         self.value_update(self.proxy)
 
-    @pyqtSlot()
-    def _on_change_bit(self):
+    # @pyqtSlot()
+    def _on_change_bit(self, checked):
         binding = self.proxy.binding
         if binding is None:
             return

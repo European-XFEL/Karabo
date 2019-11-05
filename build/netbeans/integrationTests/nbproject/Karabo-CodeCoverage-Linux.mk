@@ -97,7 +97,7 @@ ${TESTDIR}/TestFiles/devicelocking_test: ${TESTDIR}/_ext/567603001/LockTestDevic
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/devicelocking_test $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
 
-${TESTDIR}/TestFiles/f6: ${TESTDIR}/_ext/567603001/GuiVersion_Test.o ${TESTDIR}/_ext/567603001/TcpAdapter_5.o ${TESTDIR}/_ext/567603001/integrationRunner_10.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f6: ${TESTDIR}/_ext/567603001/GuiServer_Test.o ${TESTDIR}/_ext/567603001/TcpAdapter_5.o ${TESTDIR}/_ext/567603001/integrationRunner_10.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f6 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
 
@@ -188,10 +188,10 @@ ${TESTDIR}/_ext/567603001/integrationRunner_5.o: ../../../src/integrationTests/i
 	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/integrationTests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/567603001/integrationRunner_5.o ../../../src/integrationTests/integrationRunner_5.cc
 
 
-${TESTDIR}/_ext/567603001/GuiVersion_Test.o: ../../../src/integrationTests/GuiVersion_Test.cc 
+${TESTDIR}/_ext/567603001/GuiServer_Test.o: ../../../src/integrationTests/GuiServer_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/567603001
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/integrationTests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/567603001/GuiVersion_Test.o ../../../src/integrationTests/GuiVersion_Test.cc
+	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/integrationTests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/567603001/GuiServer_Test.o ../../../src/integrationTests/GuiServer_Test.cc
 
 
 ${TESTDIR}/_ext/567603001/TcpAdapter_5.o: ../../../src/integrationTests/TcpAdapter_5.cc 

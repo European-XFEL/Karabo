@@ -5,7 +5,7 @@
 #############################################################################
 import os.path as op
 
-from PyQt4.QtSvg import QSvgWidget
+from PyQt5.QtSvg import QSvgWidget
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import CheckBoxModel
@@ -32,5 +32,5 @@ class DisplayCheckBox(BaseBindingController):
         return widget
 
     def value_update(self, proxy):
-        svg = CHECKED if proxy.value else UNCHECKED
-        self.widget.load(svg)
+        svg_file = CHECKED if proxy.value else UNCHECKED
+        self.widget.load(svg_file)

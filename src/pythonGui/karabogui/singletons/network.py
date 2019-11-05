@@ -2,10 +2,10 @@ from functools import partial
 import socket
 from struct import calcsize, pack, unpack
 
-from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
-from PyQt4.QtCore import (
+from PyQt5.QtNetwork import QAbstractSocket, QTcpSocket
+from PyQt5.QtCore import (
     pyqtSignal, pyqtSlot, QByteArray, QCoreApplication, QObject)
-from PyQt4.QtGui import QDialog, QMessageBox, qApp
+from PyQt5.QtWidgets import QDialog, QMessageBox, qApp
 
 from karabo.native import (
     AccessLevel, decodeBinary, encodeBinary, Hash, Timestamp)
@@ -186,7 +186,7 @@ class Network(QObject):
         diff = Timestamp().toTimestamp() - recv_timestamp
         self.signalNetworkPerformance.emit(diff, self._show_proc_delay)
 
-    @pyqtSlot(QObject)
+    @pyqtSlot(QAbstractSocket.SocketError)
     def onSocketError(self, socketError):
         print("onSocketError", self.tcpSocket.errorString(), socketError)
 

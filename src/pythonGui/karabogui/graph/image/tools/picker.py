@@ -1,7 +1,7 @@
 import numpy as np
-from PyQt4.QtCore import pyqtSlot, QObject, QPointF, QRectF, Qt
-from PyQt4.QtGui import (
-    QColor, QGraphicsObject, QGraphicsRectItem, QPen)
+from PyQt5.QtCore import pyqtSlot, QObject, QPointF, QRectF, Qt
+from PyQt5.QtGui import QColor, QPen
+from PyQt5.QtWidgets import QGraphicsRectItem, QGraphicsObject
 
 from karabogui.graph.common.api import CoordsLegend
 from karabogui.graph.common.const import SCALING, TRANSLATION

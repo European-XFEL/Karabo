@@ -5,10 +5,10 @@
 #############################################################################
 from functools import partial
 
-from PyQt4.QtCore import pyqtSlot, Qt
-from PyQt4.QtGui import (
-    QApplication, QAction, QClipboard, QDialog, QCursor, QKeySequence,
-    QMessageBox, QTreeView)
+from PyQt5.QtCore import pyqtSlot, Qt, QModelIndex, QItemSelection
+from PyQt5.QtGui import QClipboard, QCursor, QKeySequence
+from PyQt5.QtWidgets import (
+    QApplication, QAction, QDialog, QMessageBox, QTreeView)
 
 from karabo.common.project.api import find_parent_object
 from karabogui import messagebox
@@ -96,7 +96,7 @@ class ProjectView(QTreeView):
     # ----------------------------
     # Slots
 
-    @pyqtSlot(object, int, int)
+    @pyqtSlot(QModelIndex, int, int)
     def _items_added(self, parent_index, start, end):
         """React to the addition of an item (or items).
         """
@@ -112,7 +112,7 @@ class ProjectView(QTreeView):
             # except for device instances
             self.expand(parent_index)
 
-    @pyqtSlot(object, object)
+    @pyqtSlot(QItemSelection, QItemSelection)
     def _selection_change(self, selected, deselected):
         """ Notify controller objects when their Qt list item object is
         selected.

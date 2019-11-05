@@ -282,18 +282,49 @@ namespace karabo {
             void onLogin(WeakChannelPointer channel, const karabo::util::Hash& info);
 
             /**
-             * Calls the Device::onReconfigure slot on the device specified by ``deviceId``
-             * in ``info`` with the new configuration from the sent by the GUI client.
+             * Calls the Device::onReconfigure slot on the device specified in ``info``.
+             *
+             * The info should have the following entries:
+             * - string at ``deviceId`` defines the target device
+             * - Hash at ``configuration`` is the configuration update to apply
+             * - bool at ``reply``: if given and true, success or failure will be reported back
+             *                      to channel by a message of type ``reconfigureReply`` that contains
+             *                      * ``input``: the Hash given here as ``info``
+             *                      * ``success``: bool whether reconfiguration succeeded
+             *                      * ``failureReason``: string with failure reason - only if success is false
+             * - optional int at ``timeout``: if a reply should be reported back, defines seconds of timeout
+             *
+             * @param channel to potentially send "reconfigureReply"
              * @param info
              */
-            void onReconfigure(const karabo::util::Hash& info);
+            void onReconfigure(WeakChannelPointer channel, const karabo::util::Hash& info);
 
             /**
-             * Calls the ``command`` slot on the device specified by ``deviceId``
-             * in ``info``.
+             * Callback helper for e.g. ``onExecute`` and ``onReconfigure``
+             *
+             * @param success whether call succeeded
+             * @param requestType: message callback to the client at channel will be of type 'requestType + "Reply"'
+             * @param channel who requested the call
+             * @param input will be copied to the key ``input`` of the reply message
+             */
+            void forwardEmptyReply(bool success, const std::string& requestType, WeakChannelPointer channel, const karabo::util::Hash& input);
+
+            /**
+             * Calls a ``command`` slot on a specified device.
+             *
+             * The info should have the following entries:
+             * - string at ``deviceId`` defines the target device
+             * - string at ``command`` is the slot to call
+             * - bool at ``reply``: if given and true, success or failure will be reported back
+             *                      to channel by a message of type ``executeReply`` that contains
+             *                      * ``input``: the Hash given here as ``info``
+             *                      * ``success``: bool whether execution succeeded
+             *                      * ``failureReason``: string with failure reason - only if success is false
+             * - optional int at ``timeout``: if a reply should be reported back, defines seconds of timeout
+             * @param channel
              * @param info
              */
-            void onExecute(const karabo::util::Hash& info);
+            void onExecute(WeakChannelPointer channel, const karabo::util::Hash& info);
 
             /**
              * Enqueues a future device instantiation. The relevant information will be
@@ -412,16 +443,20 @@ namespace karabo {
             void onGetPropertyHistory(WeakChannelPointer channel, const karabo::util::Hash& info);
 
             /**
-             * is the callback for ``onGetPropertyHistory``. It forwards the history reply
-             * in ``data`` for the ``property`` on ``deviceId`` to the client connected
+             * Callback for ``onGetPropertyHistory``.
+             * It forwards the history reply in ``data`` for the ``property`` on ``deviceId`` to the client connected
              * on ``channel``. The hash reply is of the format ``type=propertyHistory``,
-             * ``deviceId``, ``property`` and ``data``.
+             * ``deviceId``, ``property``, ``success``, ``data`` and ``failureReason``
+             * which states the failure reason if any.
              * @param channel
+             * @param success whether the request succeeded
              * @param deviceId
              * @param property
              * @param data
              */
-            void propertyHistory(WeakChannelPointer channel, const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data);
+            void propertyHistory(WeakChannelPointer channel, bool success,
+                                 const std::string& deviceId, const std::string& property,
+                                 const std::vector<karabo::util::Hash>& data);
 
             /**
              * Request configuration for a ``device`` at point in time ``time`` as specified in ``info``.
@@ -436,7 +471,8 @@ namespace karabo {
              * Success callback for ``onGetDeviceConfiguration``
              */
             void configurationFromPast(WeakChannelPointer channel, const std::string& deviceId, const std::string& time,
-                                       const karabo::util::Hash& config, const karabo::util::Schema& /*schema*/);
+                                       const karabo::util::Hash& config, const karabo::util::Schema& /*schema*/,
+                                       const bool configAtTimepoint, const std::string &configTimepoint);
 
             /**
              * Failure callback for ``onGetDeviceConfiguration``
@@ -781,7 +817,6 @@ namespace karabo {
              * @param channel to forward reply to
              * @param replyType type of reply
              * @param reply the reply to forward
-             * @param origin of the reply (optional)
              */
             void forwardReply(WeakChannelPointer channel, const std::string& replyType, const karabo::util::Hash& reply);
 

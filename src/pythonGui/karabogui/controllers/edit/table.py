@@ -33,8 +33,8 @@ first string-type column encountered is pre-filled with the deviceID.
 """
 from functools import partial
 
-from PyQt4.QtCore import pyqtSlot, Qt, QModelIndex, QPoint
-from PyQt4.QtGui import QAbstractItemView, QMenu, QStyledItemDelegate
+from PyQt5.QtCore import Qt, QModelIndex
+from PyQt5.QtWidgets import QAbstractItemView, QMenu, QStyledItemDelegate
 from traits.api import Instance, Int, on_trait_change
 
 from karabo.common.api import KARABO_SCHEMA_ROW_SCHEMA
@@ -160,29 +160,29 @@ class _BaseTableElement(BaseBindingController):
 # ---------------------------------------------------------------------
 # Actions
 
-    @pyqtSlot()
-    def _row_to_end_action(self):
+    # @pyqtSlot()
+    def _row_to_end_action(self, checked):
         start, count = self._item_model.rowCount(), 1
         self._item_model.insertRows(start, count, QModelIndex())
 
-    @pyqtSlot(QModelIndex, str)
+    # @pyqtSlot(QModelIndex, str)
     def _set_row_default(self, index, key):
         default_value = self._row_hash.getAttribute(key, 'defaultValue')
         self._item_model.setData(index, default_value, role=Qt.EditRole)
 
-    @pyqtSlot(QModelIndex)
+    # @pyqtSlot(QModelIndex)
     def _add_row(self, index):
         self._item_model.insertRows(index.row() + 1, 1, QModelIndex())
 
-    @pyqtSlot(QModelIndex)
+    # @pyqtSlot(QModelIndex)
     def _duplicate_row(self, index):
         self._item_model.duplicate_row(index.row())
 
-    @pyqtSlot(QModelIndex)
+    # @pyqtSlot(QModelIndex)
     def _remove_row(self, index):
         self._item_model.removeRows(index.row(), 1, QModelIndex())
 
-    @pyqtSlot(QPoint)
+    # @pyqtSlot(QPoint)
     def _context_menu(self, pos):
         selection_model = self.widget.selectionModel()
         selection = selection_model.selection()

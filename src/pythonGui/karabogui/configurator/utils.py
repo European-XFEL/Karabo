@@ -1,8 +1,9 @@
 from enum import Enum
 import json
 
-from PyQt4.QtCore import QMimeData, Qt
-from PyQt4.QtGui import QStyle
+from PyQt5.QtCore import QMimeData, Qt
+from PyQt5.QtGui import QPalette
+from PyQt5.QtWidgets import QStyle
 
 from karabo.common.api import (
     KARABO_SCHEMA_DAQ_POLICY, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
@@ -57,8 +58,10 @@ def dragged_configurator_items(proxies):
         return None
 
     mimeData = QMimeData()
-    mimeData.setData('source_type', 'ParameterTreeWidget')
-    mimeData.setData('tree_items', json.dumps(dragged))
+    mimeData.setData('source_type', bytearray('ParameterTreeWidget',
+                                              encoding='UTF-8'))
+    mimeData.setData('tree_items', bytearray(json.dumps(dragged),
+                                             encoding='UTF-8'))
     return mimeData
 
 
@@ -224,7 +227,10 @@ def set_fill_rect(painter, option, index):
         if option.state & QStyle.State_Active:
             painter.fillRect(option.rect, option.palette.highlight())
         elif not (option.state & QStyle.State_HasFocus):
-            painter.fillRect(option.rect, option.palette.background())
+            # XXX: Palette background is deprecated in Qt5. Take the brush
+            # with background role
+            painter.fillRect(option.rect,
+                             option.palette.brush(QPalette.Background))
     else:
         brush = index.data(Qt.BackgroundRole)
         if brush is not None:

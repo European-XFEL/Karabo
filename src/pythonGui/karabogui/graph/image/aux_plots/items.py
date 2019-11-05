@@ -1,4 +1,4 @@
-from PyQt4.QtCore import QPoint
+from PyQt5.QtCore import QPoint
 from pyqtgraph import ViewBox
 
 

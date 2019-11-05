@@ -1,4 +1,4 @@
-from PyQt4.QtGui import QValidator
+from PyQt5.QtGui import QValidator
 
 from karabogui.testing import GuiTestCase
 

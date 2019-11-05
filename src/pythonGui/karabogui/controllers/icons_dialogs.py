@@ -3,9 +3,10 @@ import urllib.request
 from contextlib import closing
 import os.path as op
 
-from PyQt4 import uic
-from PyQt4.QtCore import QBuffer, QByteArray, pyqtSignal, pyqtSlot
-from PyQt4.QtGui import QApplication, QDialog, QLabel, QPixmap
+from PyQt5 import uic
+from PyQt5.QtCore import QBuffer, QByteArray, pyqtSignal, pyqtSlot
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QApplication, QDialog, QLabel
 from traits.api import Property
 
 from karabo.common.scenemodel.api import IconData
@@ -129,10 +130,10 @@ class _BaseDialog(QDialog):
 
     @pyqtSlot()
     def on_open_clicked(self):
-        filename = getOpenFileName(parent=self, caption='Open Icon',
-                                   filter='Images (*.png *.xpm *.jpg *.jpeg '
-                                          '*.svg *.gif *.ico *.tif *.tiff '
-                                          '*.bmp)')
+        filename, _ = getOpenFileName(
+            parent=self, caption='Open Icon',
+            filter='Images (*.png *.xpm *.jpg *.jpeg *.svg *.gif *.ico '
+                   '*.tif *.tiff *.bmp)')
         if not filename:
             return
 

@@ -1,8 +1,8 @@
 from os import path as op
 
-from PyQt4 import uic
-from PyQt4.QtCore import pyqtSignal, pyqtSlot
-from PyQt4.QtGui import QWidget
+from PyQt5 import uic
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import QWidget
 from traits.api import Enum, Instance, Int
 
 from karabo.common.scenemodel.api import (
@@ -34,13 +34,13 @@ class FrameSlider(QWidget):
         self.sl_cell.valueChanged.connect(self.on_slider_moved)
         self.sb_cell.valueChanged.connect(self.on_value_changed)
 
-    @pyqtSlot(int)
+    # @pyqtSlot(int)
     def on_slider_moved(self, value):
         with SignalBlocker(self.sb_cell):
             self.sb_cell.setValue(value)
         self.cellChanged.emit(value)
 
-    @pyqtSlot(int)
+    # @pyqtSlot(int)
     def on_value_changed(self, value):
         with SignalBlocker(self.sl_cell):
             self.sl_cell.setSliderPosition(value)
@@ -135,7 +135,7 @@ class DisplayDetectorGraph(BaseBindingController):
     # -----------------------------------------------------------------------
     # Qt Slots
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def show_timestamp_tooltip(self):
         image_node = self.proxy.value
         if image_node is None:
@@ -145,7 +145,7 @@ class DisplayDetectorGraph(BaseBindingController):
         self.widget.setToolTip("{} --- Last image received {:.3f} s "
                                "ago".format(self.proxy.key, diff))
 
-    @pyqtSlot(str)
+    # @pyqtSlot(str)
     def _axis_changed(self, axis):
         """Called whenever an axis is selected in the FrameSlider
 
@@ -159,7 +159,7 @@ class DisplayDetectorGraph(BaseBindingController):
         self._set_slider_max(self._image_node.get_axis_dimension(self._axis))
         self._frame_slider.reset()
 
-    @pyqtSlot(int)
+    # @pyqtSlot(int)
     def _cell_changed(self, value):
         if self._image_node is None:
             return
@@ -172,7 +172,7 @@ class DisplayDetectorGraph(BaseBindingController):
         np_image = self._image_node.get_slice(self._axis, self._cell)
         self._plot.set_image(np_image)
 
-    @pyqtSlot(object)
+    # @pyqtSlot(object)
     def _change_model(self, content):
         self.model.trait_set(**restore_graph_config(content))
 

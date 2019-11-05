@@ -1,4 +1,4 @@
-from PyQt4.QtCore import QRectF
+from PyQt5.QtCore import QRectF
 
 from karabo.common.scenemodel.api import LabelModel
 from karabo.common.scenemodel.tests.utils import single_model_round_trip

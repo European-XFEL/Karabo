@@ -1,5 +1,6 @@
-from PyQt4.QtCore import QLine, QPoint, QRect
-from PyQt4.QtGui import QDialog, QPen
+from PyQt5.QtCore import QLine, QPoint, QRect
+from PyQt5.QtGui import QPen
+from PyQt5.QtWidgets import QDialog
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import (

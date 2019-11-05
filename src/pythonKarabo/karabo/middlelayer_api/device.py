@@ -124,20 +124,14 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
         requiredAccessLevel=AccessLevel.EXPERT,
         daqPolicy=DaqPolicy.OMIT)
 
-    @Bool(
+    archive = Bool(
         displayedName="Archive",
         description="Decides whether the properties of this device "
                     "will be logged or not",
         requiredAccessLevel=AccessLevel.EXPERT,
-        accessMode=AccessMode.RECONFIGURABLE, assignment=Assignment.OPTIONAL,
+        accessMode=AccessMode.INITONLY, assignment=Assignment.OPTIONAL,
         defaultValue=True,
         daqPolicy=DaqPolicy.OMIT)
-    def archive(self, newValue):
-        # This setter is already called during initialisation and then there is
-        # no need to publish yet:
-        if newValue != self.archive and self._ss is not None:
-            self.updateInstanceInfo(Hash("archive", newValue))
-        self.archive = newValue
 
     log = Node(Logger,
                description="Logging settings",
