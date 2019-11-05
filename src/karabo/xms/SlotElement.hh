@@ -12,9 +12,10 @@
 #ifndef KARABO_UTIL_SLOTELEMENT_HH
 #define	KARABO_UTIL_SLOTELEMENT_HH
 
-#include <karabo/util/GenericElement.hh>
-#include <karabo/util/ToLiteral.hh>
-#include <karabo/util/State.hh>
+#include "karabo/util/GenericElement.hh"
+#include "karabo/util/ToLiteral.hh"
+#include "karabo/util/State.hh"
+#include "karabo/util/Exception.hh"
 
 namespace karabo {
     namespace xms {
@@ -85,6 +86,12 @@ namespace karabo {
 
             virtual void beforeAddition() = 0;
 
+            Derived& key(const std::string& name) override {
+                if (name.find('_') != std::string::npos) {
+                    throw KARABO_PARAMETER_EXCEPTION("Slot must not contain '_' since internally reserved for slots under a node.");
+                }
+                return karabo::util::GenericElement<Derived>::key(name);
+            }
         };
 
         class SLOT_ELEMENT : public SlotElementBase<SLOT_ELEMENT> {
