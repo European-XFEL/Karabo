@@ -39,19 +39,6 @@ namespace karabo {
             virtual ~DeviceData();
 
             /**
-             * Process configuration by writing to files or sending to DB server
-             * @param config
-             * @param user
-             * @param data
-             */
-            virtual void handleChanged(const karabo::util::Hash& config, const std::string& user) = 0;
-
-            /**
-             * Store updated schema into file hierarchy or in database tables
-             */
-            virtual void handleSchemaUpdated(const karabo::util::Schema& schema) = 0;
-
-            /**
              * Retrieves the paths of the leaf nodes in a given configuration. The paths are returned in
              * ascending order of their corresponding nodes timestamps.
              *
@@ -98,7 +85,7 @@ namespace karabo {
          */
         class DataLogger : public karabo::core::Device<> {
 
-        protected:
+        private:
             bool m_useP2p;
 
             // https://www.quora.com/Is-it-thread-safe-to-write-to-distinct-keys-different-key-for-each-thread-in-a-std-map-in-C-for-keys-that-have-existing-entries-in-the-map
@@ -127,12 +114,6 @@ namespace karabo {
             virtual DeviceData::Pointer createDeviceData(const karabo::util::Hash& config) = 0;
 
             void initialize();
-
-            /**
-             * Setup directory as a root of file hierarchy or as database location
-             * @param data
-             */
-            virtual void initializeBackend(const DeviceData::Pointer& data) = 0;
 
             void initConnection(const DeviceData::Pointer& data,
                                 const boost::shared_ptr<std::atomic<unsigned int> >& counter);
@@ -217,9 +198,21 @@ namespace karabo {
              */
             bool allowLock() const {
                 return false;
-            }
+            }            
 
-            virtual void flushIfNeeded(const DeviceData::Pointer& devicedata) = 0;
+            /**
+             * Process configuration by writing to files or sending to DB server
+             * @param config
+             * @param user
+             * @param data
+             */
+            virtual void handleChanged(const karabo::util::Hash& config, const std::string& user,
+                                       const DeviceData::Pointer& devicedata) = 0;
+
+            /**
+             * Store updated schema into file hierarchy or in database tables
+             */
+            virtual void handleSchemaUpdated(const karabo::util::Schema& schema, const DeviceData::Pointer& data) = 0;
         };
     }
 }
