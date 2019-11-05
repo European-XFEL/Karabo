@@ -44,6 +44,13 @@ namespace karabo {
                 karabo::util::Hash hash;
             };
 
+            struct ChannelData {
+                std::set<std::string> visibleInstances; // deviceIds
+                std::set<std::string> requestedDeviceSchemas; // deviceIds
+                // key in map is the serverId, values in set are classIds
+                std::map<std::string, std::set<std::string>> requestedClassSchemas;
+            };
+
             enum NewInstanceAttributeUpdateEvents {
 
                 INSTANCE_NEW_EVENT = 0x01,
@@ -72,7 +79,7 @@ namespace karabo {
             karabo::net::Connection::Pointer m_dataConnection;
 
             karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_serializer;
-            std::map<karabo::net::Channel::Pointer, std::set<std::string> > m_channels;
+            std::map<karabo::net::Channel::Pointer, ChannelData> m_channels;
             std::map<std::string, AttributeUpdates> m_pendingAttributeUpdates;
             std::queue<DeviceInstantiation> m_pendingDeviceInstantiations;
             mutable boost::mutex m_channelMutex;
@@ -94,8 +101,8 @@ namespace karabo {
 
             karabo::net::JmsProducer::Pointer m_guiDebugProducer;
 
-            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator ConstChannelIterator;
-            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::iterator ChannelIterator;
+            typedef std::map< karabo::net::Channel::Pointer, ChannelData>::const_iterator ConstChannelIterator;
+            typedef std::map< karabo::net::Channel::Pointer, ChannelData>::iterator ChannelIterator;
 
             mutable boost::mutex m_loggerMapMutex;
             karabo::util::Hash m_loggerMap;

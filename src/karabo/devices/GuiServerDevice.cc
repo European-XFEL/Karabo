@@ -433,7 +433,7 @@ namespace karabo {
 
         void GuiServerDevice::registerConnect(const karabo::net::Channel::Pointer & channel) {
             boost::mutex::scoped_lock lock(m_channelMutex);
-            m_channels[channel] = std::set<std::string > (); // maps channel to visible instances
+            m_channels[channel] = ChannelData(); // keeps channel information
             // Update the number of clients connected
             set("connectedClientCount", static_cast<unsigned int>(m_channels.size()));
         }
@@ -814,9 +814,9 @@ namespace karabo {
                 {
                     boost::mutex::scoped_lock lock(m_channelMutex);
                     karabo::net::Channel::Pointer chan = channel.lock();
-                    std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(chan);
+                    ChannelIterator it = m_channels.find(chan);
                     if (it != m_channels.end()) {
-                        it->second.insert(deviceId);
+                        it->second.visibleInstances.insert(deviceId);
                     }
                 }
 
@@ -851,8 +851,8 @@ namespace karabo {
                 {
                     boost::mutex::scoped_lock lock(m_channelMutex);
                     karabo::net::Channel::Pointer chan = channel.lock();
-                    std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(chan);
-                    if (it != m_channels.end()) it->second.erase(deviceId);
+                    ChannelIterator it = m_channels.find(chan);
+                    if (it != m_channels.end()) it->second.visibleInstances.erase(deviceId);
                 }
 
                 {
@@ -887,9 +887,17 @@ namespace karabo {
                     Hash h("type", "classSchema", "serverId", serverId,
                            "classId", classId, "schema", schema);
                     safeClientWrite(channel, h);
-                    KARABO_LOG_FRAMEWORK_INFO << "onGetClassSchema : serverId=\"" << serverId << "\", classId=\"" << classId << "\" +";
+                    KARABO_LOG_FRAMEWORK_DEBUG << "onGetClassSchema : serverId=\"" << serverId << "\", classId=\"" << classId << "\": direct answer";
                 } else {
-                    KARABO_LOG_FRAMEWORK_INFO << "onGetClassSchema : serverId=\"" << serverId << "\", classId=\"" << classId << "\" ...";
+                    boost::mutex::scoped_lock lock(m_channelMutex);
+                    karabo::net::Channel::Pointer chan = channel.lock();
+                    if (chan) {
+                        ChannelIterator itChannelData = m_channels.find(chan);
+                        if (itChannelData != m_channels.end()){
+                            itChannelData->second.requestedClassSchemas[serverId].insert(classId);
+                        }
+                    }
+                    KARABO_LOG_FRAMEWORK_DEBUG << "onGetClassSchema : serverId=\"" << serverId << "\", classId=\"" << classId << "\": expect later answer";
                 }
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetClassSchema(): " << e.userFriendlyMsg();
@@ -908,6 +916,14 @@ namespace karabo {
                     Hash h("type", "deviceSchema", "deviceId", deviceId, "schema", schema);
                     safeClientWrite(channel, h);
                 } else {
+                    boost::mutex::scoped_lock lock(m_channelMutex);
+                    karabo::net::Channel::Pointer chan = channel.lock();
+                    if (chan) {
+                        ChannelIterator itChannelData = m_channels.find(chan);
+                        if (itChannelData != m_channels.end()){
+                            itChannelData->second.requestedDeviceSchemas.insert(deviceId);
+                        }
+                    }
                     KARABO_LOG_FRAMEWORK_DEBUG << "onGetDeviceSchema for '" << deviceId << "': expect later answer";
                 }
             } catch (const std::exception& e) {
@@ -1261,7 +1277,8 @@ namespace karabo {
                     // Removes the instance from channel
                     for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                         // it->first->writeAsync(h);
-                        it->second.erase(instanceId);
+                        it->second.visibleInstances.erase(instanceId);
+                        it->second.requestedDeviceSchemas.erase(instanceId);
                     }
                 }
 
@@ -1332,7 +1349,7 @@ namespace karabo {
                 // Loop on all clients
                 for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     // Optimization: broadcast only to clients interested in deviceId
-                    if (it->second.find(deviceId) != it->second.end()) {
+                    if (it->second.visibleInstances.find(deviceId) != it->second.visibleInstances.end()) {
                         if (it->first && it->first->isOpen()) it->first->writeAsync(h);
                     }
                 }
@@ -1344,39 +1361,59 @@ namespace karabo {
 
         void GuiServerDevice::classSchemaHandler(const std::string& serverId, const std::string& classId, const karabo::util::Schema& classSchema) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "classSchemaHandler";
-
-                // If e.g. a schema of an non-existing plugin was requested the schema could well be empty
-                // In this case we would not answer
-                if (classSchema.empty()) return;
+                KARABO_LOG_FRAMEWORK_DEBUG << "classSchemaHandler: serverId: \""<< serverId << "\" - classId :\"" << classId << "\"";
 
                 Hash h("type", "classSchema", "serverId", serverId,
                        "classId", classId, "schema", classSchema);
 
-                // Broadcast to all GUIs
-                safeAllClientsWrite(h);
-
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                    auto itReq = it->second.requestedClassSchemas.find(serverId);
+                    if (itReq != it->second.requestedClassSchemas.end()) {
+                        if (itReq->second.find(classId) != itReq->second.end()){
+                            // If e.g. a schema of an non-existing plugin was requested the schema could well be empty
+                            // In this case we would not answer, but we still must clean the requestedClassSchemas map
+                            if (!classSchema.empty()) {
+                                if (it->first && it->first->isOpen()){
+                                    it->first->writeAsync(h);
+                                }
+                            }
+                            itReq->second.erase(classId);
+                            // remove from the server key if all classSchema requests are fulfilled
+                            if (itReq->second.empty()) it->second.requestedClassSchemas.erase(itReq);
+                        }
+                    }
+                }
             } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetClassSchema(): " << e.userFriendlyMsg();
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in classSchemaHandler(): " << e.userFriendlyMsg();
             }
         }
 
 
         void GuiServerDevice::schemaUpdatedHandler(const std::string& deviceId, const karabo::util::Schema& schema) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting schema updated for '" << deviceId << "'";
+                KARABO_LOG_FRAMEWORK_DEBUG << "Sending schema updated for '" << deviceId << "'";
 
                 if (schema.empty()) {
-                    KARABO_LOG_FRAMEWORK_WARN << "Going to send an empty schema, should not happen...";
+                    KARABO_LOG_FRAMEWORK_WARN << "Going to send an empty schema for deviceId \""<< deviceId << "\".";
                 }
 
                 Hash h("type", "deviceSchema", "deviceId", deviceId,
                        "schema", schema);
 
-                // Broadcast to all GUIs
-                // why bother all and not only those that are interested in deviceId?
-                // As in deviceChangedHandle!
-                safeAllClientsWrite(h);
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                // Loop on all clients
+                for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                    // Optimization: write only to clients subscribed to deviceId
+                    if ((it->second.visibleInstances.find(deviceId) != it->second.visibleInstances.end())  // if instance is visible
+                        || (it->second.requestedDeviceSchemas.find(deviceId) != it->second.requestedDeviceSchemas.end())) {  // if instance is requested
+                        if (it->first && it->first->isOpen()){
+                            it->first->writeAsync(h);
+                        }
+                        it->second.requestedDeviceSchemas.erase(deviceId);
+                    }
+                }
+
 
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in schemaUpdatedHandler(): " << e.userFriendlyMsg();
@@ -1416,10 +1453,10 @@ namespace karabo {
                 std::set<std::string> deviceIds; // empty set
                 {
                     boost::mutex::scoped_lock lock(m_channelMutex);
-                    std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(chan);
+                    ChannelIterator it = m_channels.find(chan);
                     if (it != m_channels.end()) {
                         it->first->close(); // This closes socket and unregisters channel from connection
-                        deviceIds.swap(it->second); // copy to the empty set
+                        deviceIds.swap(it->second.visibleInstances); // copy to the empty set
                         // Remove channel as such
                         m_channels.erase(it);
                     }
@@ -1506,7 +1543,7 @@ namespace karabo {
 
                         for (auto it = m_channels.begin(); it != m_channels.end(); ++it) {
                             const std::string clientAddr = getChannelAddress(it->first);
-                            const std::vector<std::string> monitoredDevices(it->second.begin(), it->second.end());
+                            const std::vector<std::string> monitoredDevices(it->second.visibleInstances.begin(), it->second.visibleInstances.end());
                             TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(it->first);
 
                             data.set(clientAddr, Hash("queueInfo", tcpChannel->queueInfo(),
