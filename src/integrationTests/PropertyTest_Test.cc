@@ -450,7 +450,7 @@ void PropertyTest_Test::testVectorProperties() {
         m_deviceClient->get("testPropertyTest_0", "vectors.int8Property", value);
         CPPUNIT_ASSERT(value.size() == 6);
         for (size_t i = 0; i < value.size(); ++i) {
-            CPPUNIT_ASSERT(value[i] == (41 + i));
+            CPPUNIT_ASSERT_EQUAL(static_cast<signed char> (41 + i), value[i]);
         }
 
         value.assign(3, 42);
@@ -493,7 +493,7 @@ void PropertyTest_Test::testVectorProperties() {
         vector<short> value;
         m_deviceClient->get("testPropertyTest_0", "vectors.int16Property", value);
         CPPUNIT_ASSERT(value.size() == 6);
-        for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT(value[i] == (20041 + i));
+        for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT_EQUAL(static_cast<short> (20041 + i), value[i]);
 
         value.assign(4, -3200);
         m_deviceClient->set("testPropertyTest_0", "vectors.int16Property", value);
@@ -535,7 +535,7 @@ void PropertyTest_Test::testVectorProperties() {
         vector<int> value;
         m_deviceClient->get("testPropertyTest_0", "vectors.int32Property", value);
         CPPUNIT_ASSERT(value.size() == 6);
-        for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT(value[i] == (20000041 + i));
+        for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT_EQUAL(static_cast<int> (20000041 + i), value[i]);
 
         value.assign(6, 1234);
         m_deviceClient->set("testPropertyTest_0", "vectors.int32Property", value);
@@ -578,7 +578,7 @@ void PropertyTest_Test::testVectorProperties() {
         vector<long long> value;
         m_deviceClient->get("testPropertyTest_0", "vectors.int64Property", value);
         CPPUNIT_ASSERT(value.size() == 6);
-        for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT(value[i] == (i + 20000000041LL));
+        for (size_t i = 0; i < value.size(); ++i) CPPUNIT_ASSERT_EQUAL(static_cast<long long> (i) + 20000000041LL, value[i]);
 
         value.assign(10, 1234LL);
         m_deviceClient->set("testPropertyTest_0", "vectors.int64Property", value);
