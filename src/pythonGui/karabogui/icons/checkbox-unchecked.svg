@@ -14,7 +14,7 @@
    viewBox="0 0 24 24"
    id="svg6338"
    version="1.1"
-   inkscape:version="0.48.4 r9939"
+   inkscape:version="0.91 r13725"
    sodipodi:docname="checkbox-unchecked.svg">
   <defs
      id="defs6340">
@@ -82,9 +82,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="11.2"
-     inkscape:cx="-42.075837"
-     inkscape:cy="26.973574"
+     inkscape:zoom="3.959798"
+     inkscape:cx="-46.337622"
+     inkscape:cy="8.4348983"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -124,12 +124,12 @@
        inkscape:connector-curvature="0"
        id="path6654"
        d="m 340.8317,118.11719 21.41989,0 0,19.28579 -21.41989,0 z"
-       style="fill:#d6d6ff;fill-opacity:0.50196081;fill-rule:evenodd;stroke:#000000;stroke-width:1.60443711000000011;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+       style="fill:#e0e0e0;fill-opacity:0.50196081;fill-rule:evenodd;stroke:#000000;stroke-width:1.60443711;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
     <path
        sodipodi:nodetypes="ccccc"
        inkscape:connector-curvature="0"
        id="path6654-6"
        d="m 344.52017,121.21138 13.91832,0 0,13.19239 -13.91832,0 z"
-       style="fill:#d6d6ff;fill-opacity:0.50196081;fill-rule:evenodd;stroke:#000000;stroke-width:0.92000000000000004;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+       style="fill:#e0e0e0;fill-opacity:0.50196081;fill-rule:evenodd;stroke:#000000;stroke-width:0.92;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
   </g>
 </svg>
