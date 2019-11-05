@@ -94,7 +94,10 @@ namespace karabo {
             Hash config = cfg;
             config.set("directory", get<std::string>("directory"));
             config.set("maximumFileSize", get<int>("maximumFileSize"));
-            return Factory<karabo::devices::DeviceData>::create<karabo::util::Hash>("FileDataLoggerDeviceData", config);
+            DeviceData::Pointer devicedata = Factory<karabo::devices::DeviceData>::create<karabo::util::Hash>("FileDataLoggerDeviceData", config);
+            FileDeviceData::Pointer data = boost::static_pointer_cast<FileDeviceData>(devicedata);
+            data->setupDirectory();
+            return devicedata;
         }
 
 
@@ -103,12 +106,6 @@ namespace karabo {
 
 
         FileDataLogger::~FileDataLogger() {}
-
-
-        void FileDataLogger::initializeBackend(const DeviceData::Pointer& devicedata) {
-            FileDeviceData::Pointer data = boost::static_pointer_cast<FileDeviceData>(devicedata);
-            data->setupDirectory();
-        }
 
 
         void FileDeviceData::setupDirectory() {
@@ -208,10 +205,7 @@ namespace karabo {
 
                 logValue(deviceId, path, t, value, leafNode.getType());
             }
-        }
 
-
-        void FileDeviceData::flushIfNeeded() {
             long maxFilesize = m_maxFileSize * 1000000; // times to 1000000 because maximumFilesSize in MBytes
             long position = m_configStream.tellp();
             if (maxFilesize <= position) {
