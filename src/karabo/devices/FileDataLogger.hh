@@ -19,13 +19,12 @@ namespace karabo {
 
             virtual ~FileDeviceData();
 
-            void handleChanged(const karabo::util::Hash& config, const std::string& user) override;
+            void handleChanged(const karabo::util::Hash& config, const std::string& user);
 
             void logValue(const std::string& deviceId, const std::string& path,
                           const karabo::util::Timestamp& ts, const std::string& value,
                           const karabo::util::Types::ReferenceType& type);
 
-            void flushIfNeeded();
             void flushOne();
 
             /// Helper function to update data.m_idxprops, returns whether data.m_idxprops changed.
@@ -39,7 +38,7 @@ namespace karabo {
 
             int incrementLastIndex(const std::string& deviceId);
 
-            void handleSchemaUpdated(const karabo::util::Schema& schema) override;
+            void handleSchemaUpdated(const karabo::util::Schema& schema);
 
             void setupDirectory();
 
@@ -74,16 +73,20 @@ namespace karabo {
 
             DeviceData::Pointer createDeviceData(const karabo::util::Hash& config) override;
 
-            void initializeBackend(const DeviceData::Pointer& data) override;
-
             void flushOne(const DeviceData::Pointer& devicedata) override {
                 FileDeviceData::Pointer data = boost::static_pointer_cast<FileDeviceData>(devicedata);
                 data->flushOne();
             }
 
-            void flushIfNeeded(const DeviceData::Pointer& devicedata) override {
+            void handleChanged(const karabo::util::Hash& config, const std::string& user,
+                               const DeviceData::Pointer& devicedata) override {
                 FileDeviceData::Pointer data = boost::static_pointer_cast<FileDeviceData>(devicedata);
-                data->flushIfNeeded();
+                data->handleChanged(config, user);
+            }
+
+            void handleSchemaUpdated(const karabo::util::Schema& schema, const DeviceData::Pointer& devicedata) override {
+                FileDeviceData::Pointer data = boost::static_pointer_cast<FileDeviceData>(devicedata);
+                data->handleSchemaUpdated(schema);
             }
         };
     }
