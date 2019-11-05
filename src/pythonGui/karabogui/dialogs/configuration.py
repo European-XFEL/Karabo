@@ -4,7 +4,7 @@ from PyQt5 import uic
 from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt
 from PyQt5.QtWidgets import QAbstractItemView, QDialog, QHeaderView
 from traits.api import (
-    Any, HasStrictTraits, Instance, List, Property, String)
+    Any, Bool, HasStrictTraits, Instance, List, Property, String)
 
 from karabogui.singletons.api import get_config
 
@@ -16,21 +16,24 @@ SETTING_COLUMN = 1
 class ConfigNode(HasStrictTraits):
     # The name of our configuration item
     name = String
-    # The internally stored value. Can be derived from QSettings
+    # Our configuration item node
     internal = Any
-    # The presented value to the outside
+    # The internally stored value. Can be derived from QSettings
     value = Property
     # The parent node
     parent_node = Instance('ConfigNode', allow_none=True)
+    # The list of children
     children = List(Instance('ConfigNode'))
+    # Check whether this config node is configurable or not
+    editable = Bool
 
     def _get_value(self):
         if self.internal is None:
             return None
-        return "{}".format(self.internal)
+        return "{}".format(get_config()[self.name])
 
     def _set_value(self, value):
-        self.internal = value
+        get_config()[self.name] = value
 
     def appendChild(self, item):
         self.children.append(item)
@@ -117,6 +120,21 @@ class ConfigurationModel(QAbstractItemModel):
 
         return self.createIndex(parent_node.row(), 0, parent_node)
 
+    def flags(self, index):
+        """Reimplemented function of QAbstractItemModel.
+        """
+        if not index.isValid():
+            return Qt.NoItemFlags
+
+        node = index.internalPointer()
+        if node is None:
+            return Qt.NoItemFlags
+
+        ret = Qt.ItemIsEnabled | Qt.ItemIsSelectable
+        if node.editable:
+            ret |= Qt.ItemIsEditable
+        return ret
+
     def rowCount(self, parent=QModelIndex()):
         """Reimplemented function of QAbstractItemModel
         """
@@ -137,10 +155,26 @@ class ConfigurationModel(QAbstractItemModel):
             group_node = ConfigNode(name=group_name,
                                     parent_node=self.root)
             self.root.appendChild(group_node)
-            for attr in groups[group_name]:
-                attr_item = ConfigNode(name=attr, value=getattr(config, attr),
-                                       parent_node=group_node)
+            for item in groups[group_name]:
+                attr_item = ConfigNode(name=item.name, editable=item.editable,
+                                       internal=item, parent_node=group_node)
                 group_node.appendChild(attr_item)
+
+    def setData(self, index, value, role):
+        """Reimplemented function of QAbstractItemModel.
+        """
+        if role != Qt.EditRole or value is None:
+            return False
+
+        # Get the index's stored object
+        node = index.internalPointer()
+        if node is None:
+            return False
+
+        node.value = value
+
+        # A value was successfully set!
+        return True
 
 
 class ConfigurationDialog(QDialog):
