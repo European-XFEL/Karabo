@@ -4,8 +4,8 @@ import os.path as op
 import pdb
 from time import perf_counter
 
-from PyQt4.QtGui import QApplication
-from PyQt4.QtCore import pyqtRemoveInputHook, QEventLoop
+from PyQt5.QtCore import pyqtRemoveInputHook, QEventLoop
+from PyQt5.QtWidgets import QApplication
 
 
 def set_trace():
@@ -33,20 +33,40 @@ def print_stack_trace(num_frames=0):
         del frames_subset
 
 
-def timeit(func):
-    """A timing decorator for the GUI"""
+def timeit(process_events=True):
+    """We now call timeit with arguments because functions hooked to
+       paintEvents cannot be timed with invoked processEvents. This decorator
+       is now used as a called function:
 
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        # Empty the eventloop stack before!
-        QApplication.processEvents(QEventLoop.AllEvents, 10)
-        t_start = perf_counter()
-        ret = func(*args, **kwargs)
-        # But process the generated eventloop stack for the performance
-        # measurement!
-        QApplication.processEvents()
-        elapsed = perf_counter() - t_start
-        print("{} took {}".format(func.__name__, elapsed))
-        return ret
+       @timeit()
+       def foo():
+           ...
 
-    return wrapper
+       @timeit(process_events=False)
+       def paintEvent():
+           ..."""
+
+    def decorator(func):
+        """A timing decorator for the GUI"""
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            # Empty the eventloop stack before!
+            if process_events:
+                QApplication.processEvents(QEventLoop.AllEvents, 10)
+
+            t_start = perf_counter()
+            ret = func(*args, **kwargs)
+
+            # But process the generated eventloop stack for the performance
+            # measurement!
+            if process_events:
+                QApplication.processEvents()
+
+            elapsed = perf_counter() - t_start
+            print("{} took {}".format(func.__name__, elapsed))
+            return ret
+
+        return wrapper
+
+    return decorator

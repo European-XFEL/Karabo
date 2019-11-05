@@ -5,9 +5,8 @@
 #############################################################################
 import os.path as op
 
-from PyQt4.QtCore import QByteArray, pyqtSlot
-from PyQt4.QtGui import QAction
-from PyQt4.QtSvg import QSvgWidget
+from PyQt5.QtSvg import QSvgWidget
+from PyQt5.QtWidgets import QAction
 from traits.api import Instance, on_trait_change
 
 from karabo.common.api import State
@@ -62,13 +61,13 @@ class DisplayColorBool(BaseBindingController):
         # Set the tooltip according to the value
         self.widget.setToolTip("{}".format(value))
         svg = self.icon.with_color(STATE_COLORS[color_state])
-        self.widget.load(QByteArray(svg))
+        self.widget.load(bytearray(svg, encoding='UTF-8'))
 
     @on_trait_change('model.invert')
     def _invert_update(self):
         if self.proxy is not None:
             self.value_update(self.proxy)
 
-    @pyqtSlot()
-    def logic_action(self):
+    # @pyqtSlot()
+    def logic_action(self, checked):
         self.model.invert = not self.model.invert

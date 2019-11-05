@@ -4,9 +4,8 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from guiqwt.builder import make
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import (QCheckBox, QComboBox, QHBoxLayout, QLabel,
-                         QSlider, QSpinBox, QVBoxLayout, QWidget)
+from PyQt5.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QLabel,
+                             QSlider, QSpinBox, QVBoxLayout, QWidget)
 from traits.api import Array, Instance, Int
 
 from karabo.common.scenemodel.api import DisplayImageModel
@@ -93,7 +92,7 @@ class DisplayImage(BaseBindingController):
         toolLayout.addWidget(self._cellWidget)
         return widget
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def show_timestamp_tooltip(self):
         image_node = self.proxy.value
         if image_node is None:
@@ -158,18 +157,18 @@ class DisplayImage(BaseBindingController):
 
     # ---------------------------------------------------------------------
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _axis_changed(self, value):
         self._axis = int(value)
         self._set_slider(self._img_array.shape[2-((self._axis+1) % 3)])
         self._slider_moved(0)
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _cell_changed(self, value):
         self._selectedCell = int(value)
         self._slider.setSliderPosition(int(value))
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _slider_moved(self, value):
         self._selectedCell = value
         self._currentCell.setValue(value)

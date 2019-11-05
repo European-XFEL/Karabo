@@ -6,8 +6,8 @@
 from abc import abstractmethod
 from functools import partial
 
-from PyQt4.QtCore import QPoint, QRect
-from PyQt4.QtGui import QAction, QDialog, QMenu
+from PyQt5.QtCore import QPoint, QRect
+from PyQt5.QtWidgets import QAction, QDialog, QMenu
 from traits.api import Any, ABCHasStrictTraits
 
 from karabo.common.enums import ONLINE_STATUSES

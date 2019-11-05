@@ -1,4 +1,4 @@
-from PyQt4.QtCore import QObject, pyqtSlot
+from PyQt5.QtCore import QObject, pyqtSlot
 from pyqtgraph import LabelItem
 
 from karabogui.graph.common.api import AuxPlots

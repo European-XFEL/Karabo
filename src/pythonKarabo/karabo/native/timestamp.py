@@ -1,4 +1,3 @@
-
 from datetime import datetime
 from functools import total_ordering
 
@@ -7,7 +6,6 @@ import dateutil.tz
 import numpy
 
 import time
-
 
 RESOLUTION = 10 ** 18  # current Karabo resolution is attoseconds
 
@@ -108,3 +106,21 @@ class Timestamp(object):
         """Return the time as an ISO 8601 string in UTC"""
         ts = datetime.utcfromtimestamp(self.toTimestamp())
         return ts.isoformat() + " UTC"
+
+    def __add__(self, other):
+        """Add operator for the time in seconds since 1970-01-01 00:00 UTC"""
+        if isinstance(other, Timestamp):
+            return self.toTimestamp() + other.toTimestamp()
+        elif isinstance(other, (float, int)):
+            return self.toTimestamp() + other
+
+        return NotImplemented
+
+    def __sub__(self, other):
+        """Sub operator for the time in seconds since 1970-01-01 00:00 UTC"""
+        if isinstance(other, Timestamp):
+            return self.toTimestamp() - other.toTimestamp()
+        elif isinstance(other, (float, int)):
+            return self.toTimestamp() - other
+
+        return NotImplemented

@@ -1,6 +1,6 @@
 from matplotlib._pylab_helpers import Gcf
 from matplotlib.legend import Legend
-from PyQt4.QtGui import QStackedLayout, QWidget
+from PyQt5.QtWidgets import QStackedLayout, QWidget
 
 from .const import MOUSE_LEFT_BUTTON, PICK_RADIUS, UPPER_RIGHT
 from .mplbackends import FigureCanvas, PlotToolbar
@@ -114,7 +114,8 @@ class MplCurvePlot(MplWidgetBase):
         leg.draggable(True, update='loc')
 
         axes.add_artist(leg)
-        self._canvas.adjust_layout()
+        # MR-3848: avoid layout collapsing in matplotlib
+        # self._canvas.adjust_layout()
 
         self.legend_LUT.clear()
         for legline, origline in zip(leg.get_lines(), lines):

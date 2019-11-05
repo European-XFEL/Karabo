@@ -5,7 +5,7 @@
 #############################################################################
 from functools import partial
 
-from PyQt4.QtCore import QObject
+from PyQt5.QtCore import QObject
 
 from karabo.common.api import set_modified_flag
 from karabo.common.project.api import (

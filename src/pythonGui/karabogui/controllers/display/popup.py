@@ -1,8 +1,7 @@
 import os.path as op
 
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QMessageBox
-from PyQt4.QtSvg import QSvgWidget
+from PyQt5.QtSvg import QSvgWidget
+from PyQt5.QtWidgets import QMessageBox
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import PopUpModel
@@ -67,7 +66,7 @@ class PopUp(BaseBindingController):
             self._timestamp = timestamp
             self._dialog.setVisible(value != '')
 
-    @pyqtSlot(object)
+    # @pyqtSlot(object)
     def _on_finished(self, result):
         if result == QMessageBox.Ok and self._ok is not None:
             self._ok.execute()

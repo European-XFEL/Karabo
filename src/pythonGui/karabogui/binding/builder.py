@@ -17,7 +17,7 @@ def build_binding(schema, existing=None):
     binding.class_id = schema.name
     root_namespace = binding.value
     # Clear the namespace
-    root_namespace.clear()
+    root_namespace.clear_namespace()
     # Fill it back in recursively
     for key, value, attrs in schema.hash.iterall():
         node = _build_node(value, attrs)

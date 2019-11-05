@@ -3,8 +3,8 @@
 # Created on June 6, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import QRect, QSize
-from PyQt4.QtGui import QBoxLayout, QGridLayout, QLayout, QWidgetItem
+from PyQt5.QtCore import QRect, QSize
+from PyQt5.QtWidgets import QBoxLayout, QGridLayout, QLayout, QWidgetItem
 
 from karabogui.sceneview.utils import calc_bounding_rect
 from .base import BaseLayout

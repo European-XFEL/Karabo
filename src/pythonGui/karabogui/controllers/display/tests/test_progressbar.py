@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from PyQt4.QtCore import Qt
+from PyQt5.QtCore import Qt
 
 from karabo.common.scenemodel.api import DisplayProgressBarModel
 from karabo.native import Configurable, Float, Int8

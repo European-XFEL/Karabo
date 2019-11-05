@@ -3,8 +3,9 @@
 # Created on November 23, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import QRect, Qt
-from PyQt4.QtGui import QColor, QFont, QFontMetrics, QPainter, QPen, QWidget
+from PyQt5.QtCore import QRect, Qt
+from PyQt5.QtGui import QColor, QFont, QFontMetrics, QPainter, QPen
+from PyQt5.QtWidgets import QWidget
 
 LIGHT_BLUE = (224, 240, 255)
 PADDING = 10
@@ -38,7 +39,7 @@ class WorkflowItemWidget(QWidget):
             painter.setPen(self.pen)
 
             painter.setBrush(QColor(*LIGHT_BLUE))
-            painter.drawRoundRect(self.outline_rect, 5, 5)
+            painter.drawRoundedRect(self.outline_rect, 5, 5)
             painter.drawText(self.outline_rect, Qt.AlignCenter,
                              self.model.device_id)
 

@@ -44,6 +44,7 @@ private:
     void testConcurrentInitTopology();
 
     void testGet();
+    void testSet();
     void testGetSchema();
     void testGetSchemaNoWait();
     void testMonitorChannel();

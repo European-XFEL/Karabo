@@ -2,6 +2,8 @@
  * File:   Device_Test.cc
  * Author: gero.flucke@xfel.eu
  *
+ * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+ *
  */
 
 #include "Device_Test.hh"
@@ -59,7 +61,7 @@ public:
         TABLE_ELEMENT(expected).key("table")
                 .displayedName("Table property")
                 .description("Table with two columns")
-                .setNodeSchema(rowSchema)
+                .setColumns(rowSchema)
                 .assignmentOptional().defaultValue({Hash("type", "INT", "name", "firstLine"),
                                                    Hash("type", "BOOL", "name", "secondLine")})
                 .reconfigurable()
@@ -151,10 +153,14 @@ void Device_Test::setUp() {
     // Create client
     m_deviceClient = boost::make_shared<DeviceClient>();
 
+    // Setup a communication helper
+    m_signalSlotable = boost::make_shared<SignalSlotable>("sigSlotA");
+    m_signalSlotable->start();
 }
 
 
 void Device_Test::tearDown() {
+    m_signalSlotable.reset();
     m_deviceServer.reset();
     m_deviceClient.reset();
 
@@ -176,6 +182,7 @@ void Device_Test::appTestRunner() {
     testSchemaWithAttrUpdate();
     testSchemaWithAttrAppend();
     testNodedSlot();
+    testGetSet();
 }
 
 
@@ -184,8 +191,7 @@ void Device_Test::testGetTimestamp() {
     // and Device::slotGetTime().
 
     // Setup a communication helper
-    auto sigSlotA = boost::make_shared<SignalSlotable>("sigSlotA");
-    sigSlotA->start();
+    auto sigSlotA = m_signalSlotable;
 
     const int timeOutInMs = 250;
     const unsigned long long periodInMicroSec = 100000ull; // some tests below assume this to be 0.1 s
@@ -282,8 +288,7 @@ void Device_Test::testGetTimestamp() {
 void Device_Test::testSchemaInjection() {
 
     // Setup a communication helper
-    auto sigSlotA = boost::make_shared<SignalSlotable>("sigSlotA");
-    sigSlotA->start();
+    auto sigSlotA = m_signalSlotable;
 
     // Timeout, in milliseconds, for a request for one of the test device slots.
     const int requestTimeoutMs = 2000;
@@ -506,8 +511,7 @@ void Device_Test::testSchemaInjection() {
 void Device_Test::testSchemaWithAttrUpdate() {
 
     // Setup a communication helper
-    auto sigSlotA = boost::make_shared<SignalSlotable>("sigSlotA");
-    sigSlotA->start();
+    auto sigSlotA = m_signalSlotable;
 
     // Timeout, in milliseconds, for a request for one of the test device slots.
     const int requestTimeoutMs = 2000;
@@ -571,8 +575,7 @@ void Device_Test::testSchemaWithAttrUpdate() {
 
 void Device_Test::testSchemaWithAttrAppend() {
     // Setup a communication helper
-    auto sigSlotA = boost::make_shared<SignalSlotable>("sigSlotA");
-    sigSlotA->start();
+    auto sigSlotA = m_signalSlotable;
 
     // Timeout, in milliseconds, for a request for one of the test device slots.
     const int requestTimeoutMs = 2000;
@@ -630,6 +633,29 @@ void Device_Test::testNodedSlot() {
     // Note that calling "node_slot" would work as well... :-|
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestDevice", "node.slot", KRB_TEST_MAX_TIMEOUT));
 }
+
+void Device_Test::testGetSet() {
+    const int timeoutInMs = 10000;
+    const std::string deviceId("TestDevice");
+
+    // Check default visibility value
+    Hash hash;
+    CPPUNIT_ASSERT_NO_THROW(m_signalSlotable->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
+    CPPUNIT_ASSERT_EQUAL(deviceId, hash.get<std::string>("deviceId"));
+    CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::util::Schema::OBSERVER), hash.get<int>("visibility"));
+
+    // We can set visibility and check that we really did.
+    hash.clear();
+    CPPUNIT_ASSERT_NO_THROW(m_signalSlotable->request(deviceId, "slotReconfigure", Hash("visibility", static_cast<int> (karabo::util::Schema::ADMIN)))
+                            .timeout(timeoutInMs).receive());
+    CPPUNIT_ASSERT_NO_THROW(m_signalSlotable->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
+    CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::util::Schema::ADMIN), hash.get<int>("visibility"));
+
+    // But we cannot set archive since not reconfigurable.
+    CPPUNIT_ASSERT_THROW(m_signalSlotable->request(deviceId, "slotReconfigure", Hash("archive", false))
+                         .timeout(timeoutInMs).receive(), karabo::util::RemoteException);
+}
+
 
 bool Device_Test::waitForCondition(boost::function<bool() > checker, unsigned int timeoutMillis) {
     constexpr unsigned int sleepIntervalMillis = 5;
