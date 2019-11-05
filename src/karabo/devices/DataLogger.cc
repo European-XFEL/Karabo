@@ -172,7 +172,6 @@ namespace karabo {
             // Create data structures, including directories
             for (const std::string& deviceId : devsToLog) {
                 DeviceData::Pointer data = createDeviceData(Hash("deviceToBeLogged", deviceId));
-                initializeBackend(data);
                 // Locking mutex not yet needed - no parallelism on content of m_perDeviceData yet.
                 m_perDeviceData.insert(std::make_pair(deviceId, data));
             }
@@ -270,7 +269,7 @@ namespace karabo {
                                                const boost::shared_ptr<std::atomic<unsigned int> >& counter) {
 
             // Set initial Schema - needed for receiving properly in slotChanged
-            data->handleSchemaUpdated(schema);
+            handleSchemaUpdated(schema, data);
 
             // Now connect concurrently both, signalStateChanged and signalChanged, to the same slot.
             asyncConnect({SignalSlotConnection(data->m_deviceToBeLogged, "signalStateChanged", "", "slotChanged"),
@@ -347,7 +346,6 @@ namespace karabo {
 
                 // Create data structure ... depending on implementation
                 DeviceData::Pointer data = createDeviceData(Hash("deviceToBeLogged", deviceId));
-                initializeBackend(data);
                 boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
                 m_perDeviceData.insert(std::make_pair(deviceId, data));
 
@@ -385,10 +383,8 @@ namespace karabo {
                 const std::string& user = getSenderInfo("slotChanged")->getUserIdOfSender();
                 //data->m_strand->post(karabo::util::bind_weak(&DataLogger::handleChanged, this,
                 //                                             configuration, user, data));
-                data->m_strand->post([this, data, configuration, user]() {
-                    data->handleChanged(configuration, user);
-                    this->flushIfNeeded(data);
-                });
+                data->m_strand->post(karabo::util::bind_weak(&DataLogger::handleChanged, this,
+                                                             configuration, user, data));
             } else {
                 KARABO_LOG_FRAMEWORK_WARN << "slotChanged called from non-treated device " << deviceId << ".";
             }
@@ -502,7 +498,7 @@ namespace karabo {
                     }
 
                     // We post on strand to exclude parallel access to data->m_configStream and data->m_idxMap
-                    data->m_strand->post([this, data]() { this->flushOne(data); });
+                    data->m_strand->post(karabo::util::bind_weak(&DataLogger::flushOne, this, data));
                 }
             }
 
@@ -515,15 +511,13 @@ namespace karabo {
 
 
         void DataLogger::slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "slotSchemaUpdated: Schema for " << deviceId << " arrived...";
+            KARABO_LOG_FRAMEWORK_INFO << "slotSchemaUpdated: Schema for " << deviceId << " arrived...";
 
             boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
             DeviceDataMap::iterator it = m_perDeviceData.find(deviceId);
             if (it != m_perDeviceData.end()) {
-                DeviceData::Pointer& data = it->second;
-                data->m_strand->post([data, schema]() {
-                    data->handleSchemaUpdated(schema);
-                });
+                DeviceData::Pointer data = it->second;
+                data->m_strand->post(karabo::util::bind_weak(&DataLogger::handleSchemaUpdated, this, schema, data));
             } else {
                 KARABO_LOG_FRAMEWORK_WARN << "slotSchemaUpdated called from non-treated device " << deviceId << ".";
             }
