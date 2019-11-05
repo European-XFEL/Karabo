@@ -6,8 +6,7 @@
 from collections import deque
 from functools import partial
 
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QAction, QInputDialog
+from PyQt5.QtWidgets import QAction, QInputDialog
 from traits.api import Any, Callable, Instance
 
 
@@ -127,11 +126,11 @@ class DisplayScatterGraph(BaseBindingController):
     # ----------------------------------------------------------------
     # Qt Slots
 
-    @pyqtSlot(object)
+    # @pyqtSlot(object)
     def _change_model(self, content):
         self.model.trait_set(**content)
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _reset_plot(self, reset=True):
         if not reset:
             # when adding a boolean as resetbox, it may send a False value
@@ -141,8 +140,8 @@ class DisplayScatterGraph(BaseBindingController):
         self._y_values.clear()
         self._plot.clear()
 
-    @pyqtSlot()
-    def _configure_deque(self):
+    # @pyqtSlot()
+    def _configure_deque(self, checked):
         maxlen, ok = QInputDialog.getInt(self.widget, 'Number of Values',
                                          'Maxlen:', self.model.maxlen, 5,
                                          MAX_NUM_POINTS)
@@ -153,8 +152,8 @@ class DisplayScatterGraph(BaseBindingController):
             self._y_values = deque(maxlen=maxlen)
             self.model.maxlen = maxlen
 
-    @pyqtSlot()
-    def _configure_point_size(self):
+    # @pyqtSlot()
+    def _configure_point_size(self, checked):
         psize, ok = QInputDialog.getDouble(self.widget, 'Size of points',
                                            'Pointsize:', self.model.psize,
                                            MIN_POINT_SIZE, MAX_POINT_SIZE)

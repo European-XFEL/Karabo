@@ -7,9 +7,8 @@ import re
 
 from guiqwt.builder import make
 import numpy as np
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import (QComboBox, QHBoxLayout, QLabel, QSlider,
-                         QSpinBox, QVBoxLayout, QWidget)
+from PyQt5.QtWidgets import (QComboBox, QHBoxLayout, QLabel, QSlider,
+                             QSpinBox, QVBoxLayout, QWidget)
 from traits.api import Dict, Instance, Int
 
 from karabo.common.scenemodel.api import DisplayAlignedImageModel
@@ -190,19 +189,19 @@ class DisplayAlignedImage(BaseBindingController):
 
     # -------------------------------------------------------------------------
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _cellChanged(self, value):
         self._selectedCell = int(value)
         self._slider.setSliderPosition(int(value))
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _axisChanged(self, value):
         self._axis = int(value)
         array = next(iter(self._npys.values()))
         self._setSlider(array.shape[self._axis])
         self._sliderMoved(0)
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _sliderMoved(self, value):
         self._selectedCell = value
         self._currentCell.setValue(value)

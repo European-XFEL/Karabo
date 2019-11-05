@@ -5,7 +5,7 @@
 #############################################################################
 import importlib
 
-from PyQt4.QtGui import QApplication
+from PyQt5.QtWidgets import QApplication
 
 # module global for storing singleton instances
 __singletons = {}

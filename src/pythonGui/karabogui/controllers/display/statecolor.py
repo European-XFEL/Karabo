@@ -1,5 +1,5 @@
-from PyQt4.QtCore import Qt, pyqtSlot
-from PyQt4.QtGui import QAction, QFrame, QLabel
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QAction, QFrame, QLabel
 from traits.api import Instance, Str, on_trait_change
 
 from karabo.common.scenemodel.api import DisplayStateColorModel
@@ -62,6 +62,6 @@ class DisplayStateColor(BaseBindingController):
                 # Only clear the widget once if no action is set!
                 self.widget.clear()
 
-    @pyqtSlot()
-    def _show_state_string(self):
+    # @pyqtSlot()
+    def _show_state_string(self, checked):
         self.model.show_string = not self.model.show_string

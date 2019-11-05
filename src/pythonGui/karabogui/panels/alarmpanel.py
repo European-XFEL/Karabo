@@ -4,10 +4,10 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import (
-    QButtonGroup, QHBoxLayout, QPixmap, QPushButton, QRadioButton, QStyle,
-    QStyledItemDelegate, QTableView, QVBoxLayout, QWidget)
+from PyQt5.QtCore import pyqtSlot, QModelIndex
+from PyQt5.QtWidgets import (
+    QButtonGroup, QHBoxLayout, QPushButton, QRadioButton, QStyle,
+    QStyledItemDelegate, QTableView, QVBoxLayout, QWidget, QAbstractButton)
 from karabogui import icons
 from karabogui.alarms.api import (
     ACKNOWLEDGE, ALARM_DATA, ALARM_ID, ALARM_WARNING_TYPES,
@@ -104,7 +104,7 @@ class AlarmPanel(BasePanelWidget):
     def model(self, model):
         self.table_view.setModel(model)
 
-    @pyqtSlot(object)
+    @pyqtSlot(QAbstractButton)
     def filterToggled(self, button):
         """ The filter ``button`` was activated. Update filtering needed."""
         if button is self.ui_show_alarm_warn:
@@ -179,7 +179,7 @@ class ButtonDelegate(QStyledItemDelegate):
             self._updateButton(self.pbClick, text, clickable)
             if option.state == QStyle.State_Selected:
                 painter.fillRect(option.rect, option.palette.highlight())
-            pixmap = QPixmap.grabWidget(self.pbClick)
+            pixmap = self.pbClick.grab()
             painter.drawPixmap(option.rect.x(), option.rect.y(), pixmap)
         else:
             super(ButtonDelegate, self).paint(painter, option, index)
@@ -190,7 +190,7 @@ class ButtonDelegate(QStyledItemDelegate):
             button.setGeometry(option.rect)
             self._updateButton(button, text, clickable)
 
-    @pyqtSlot(object)
+    @pyqtSlot(QModelIndex)
     def cellClicked(self, index):
         if not index.isValid():
             return

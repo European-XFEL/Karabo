@@ -6,8 +6,8 @@
 from datetime import datetime
 from functools import wraps
 
-from PyQt4.QtCore import pyqtSlot, QObject
-from PyQt4.QtGui import QMessageBox
+from PyQt5.QtCore import pyqtSlot, QObject
+from PyQt5.QtWidgets import QMessageBox
 
 from karabo.common.api import ProxyStatus
 from karabo.native import AccessMode, Hash, Timestamp

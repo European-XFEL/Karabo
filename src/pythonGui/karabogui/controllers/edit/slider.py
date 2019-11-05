@@ -3,8 +3,8 @@
 # Created on July 9, 2019
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt4.QtCore import pyqtSlot, Qt
-from PyQt4.QtGui import (
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (
     QAction, QFrame, QHBoxLayout, QInputDialog, QLabel, QSlider, QWidget)
 from traits.api import Bool, Instance, on_trait_change
 
@@ -116,7 +116,7 @@ class TickSlider(BaseBindingController):
     # ----------------------------------------------------------------------
     # Qt Slots
 
-    @pyqtSlot(object)
+    # @pyqtSlot(object)
     def _edit_value(self, value):
         if self.proxy.binding is None or self._error_shown:
             return
@@ -128,12 +128,12 @@ class TickSlider(BaseBindingController):
                 fmt = "{:.1f}"
             self.label.setText(fmt.format(value))
 
-    @pyqtSlot(bool)
+    # @pyqtSlot(bool)
     def toggle_show_value(self, value):
         self.model.show_value = value
 
-    @pyqtSlot()
-    def configure_tick_interval(self):
+    # @pyqtSlot()
+    def configure_tick_interval(self, checked):
         """Configure the tick interval for this widget"""
         ticks, ok = QInputDialog.getInt(self.widget, 'Tick Interval',
                                         'Tick Interval:', self.model.ticks, 1,

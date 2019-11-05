@@ -5,8 +5,7 @@
 #############################################################################
 from functools import partial
 
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QAction, QDialog, QMenu, QMessageBox
+from PyQt5.QtWidgets import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Bool, Instance, Property, on_trait_change
 
 from karabo.common.api import ProxyStatus, walk_traits_object
@@ -130,7 +129,7 @@ class DeviceServerController(BaseProjectGroupController):
     # ----------------------------------------------------------------------
     # action handlers
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _add_device(self):
         """Add a device instance to the server
         """
@@ -153,7 +152,7 @@ class DeviceServerController(BaseProjectGroupController):
             if server in project.servers:
                 project.servers.remove(server)
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _edit_server(self):
         dialog = ServerHandleDialog(self.model)
         result = dialog.exec()
@@ -161,12 +160,12 @@ class DeviceServerController(BaseProjectGroupController):
             self.model.server_id = dialog.server_id
             self.model.description = dialog.description
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _shutdown_server(self):
         server = self.model
         get_manager().shutdownServer(server.server_id)
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _delete_all_devices(self):
         server = self.model
         ask = ('Do you really want to delete all devices of <br> server '
@@ -179,7 +178,7 @@ class DeviceServerController(BaseProjectGroupController):
 
         server.devices[:] = []
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def instantiate_devices(self):
         """Public action handler to instantiate all devices from this server
 
@@ -189,7 +188,7 @@ class DeviceServerController(BaseProjectGroupController):
         for dev_inst_item in self.children:
             dev_inst_item.instantiate(server)
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _shutdown_devices(self):
         server = self.model
         ask = ('Do you really want to shutdown all devices of <br> server '

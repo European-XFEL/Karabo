@@ -1,5 +1,6 @@
-from PyQt4.QtCore import pyqtSignal, QPointF, QRectF, QSizeF, Qt
-from PyQt4.QtGui import QColor, QGraphicsObject, QPen
+from PyQt5.QtCore import pyqtSignal, QPointF, QRectF, QSizeF, Qt
+from PyQt5.QtGui import QColor, QPen
+from PyQt5.QtWidgets import QGraphicsObject
 
 
 class BaseCanvas(QGraphicsObject):

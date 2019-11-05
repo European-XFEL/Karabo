@@ -1,7 +1,6 @@
 from collections import namedtuple
 
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import (
+from PyQt5.QtWidgets import (
     QAction, QMessageBox, QStackedLayout, QToolButton, QWidget
 )
 from traits.api import Instance, List
@@ -72,7 +71,7 @@ class DisplayCommand(BaseBindingController):
         """
         self._actions.clear()
 
-    @pyqtSlot()
+    # @pyqtSlot()
     def _requires_confirmation_slot(self):
         self.model.requires_confirmation = not self.model.requires_confirmation
         self._change_button_style(self.widget)
@@ -125,11 +124,10 @@ class DisplayCommand(BaseBindingController):
         # only initially we connect signals and slots
         if initial:
             item.action.triggered.connect(
-                lambda: self._dialog_confirmation(item))
+                lambda _: self._dialog_confirmation(item))
             if proxy.root_proxy.state_binding is not None:
                 self.state_update(proxy)
 
-    @pyqtSlot()
     def _dialog_confirmation(self, item_proxy):
         """This slot is necessary when the operator wants a dialog
         confirmation for the user when execute the button action
