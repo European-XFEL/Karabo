@@ -3,6 +3,7 @@
 # Created on October 27, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+import os.path as op
 from functools import partial
 from io import StringIO
 
@@ -21,7 +22,7 @@ from karabogui.project.dialog.object_handle import (
     ObjectDuplicateDialog, ObjectEditDialog)
 from karabogui.project.topo_listener import SystemTopologyListener
 from karabogui.project.utils import run_macro
-from karabogui.singletons.api import get_manager, get_topology
+from karabogui.singletons.api import get_config, get_manager, get_topology
 from karabogui.util import getSaveFileName
 from .bases import (BaseProjectGroupController, BaseProjectController,
                     ProjectControllerUiData)
@@ -219,13 +220,20 @@ class MacroController(BaseProjectGroupController):
 
     # @pyqtSlot()
     def _save_macro_to_file(self):
+        config = get_config()
+        path = config['macro_dir']
+        directory = path if path and op.isdir(path) else ""
+
         macro = self.model
         fn = getSaveFileName(caption='Save macro to file',
                              filter='Python Macro (*.py)',
                              suffix='py',
-                             selectFile=macro.simple_name)
+                             selectFile=macro.simple_name,
+                             directory=directory)
         if not fn:
             return
+
+        config['macro_dir'] = op.dirname(fn)
 
         if not fn.endswith('.py'):
             fn = '{}.py'.format(fn)
