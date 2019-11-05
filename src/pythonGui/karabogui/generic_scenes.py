@@ -1,5 +1,8 @@
+from karabo.common.api import KARABO_SCHEMA_DISPLAY_TYPE
+from karabo.common.display_types import KARABO_SCHEMA_DISPLAY_TYPE_STATE
 from karabo.common.scenemodel.api import (
-    get_image_scene, get_trendline_scene, get_vector_scene)
+    get_image_scene, get_state_graph_scene, get_trendline_scene,
+    get_vector_scene)
 from karabogui.binding.types import (
     BoolBinding, FloatBinding, ImageBinding, IntBinding, NodeBinding,
     PipelineOutputBinding, VectorNumberBinding)
@@ -15,6 +18,10 @@ def get_generic_scene(proxy):
         return
 
     instance_id = proxy.root_proxy.device_id
+    display_type = binding.attributes.get(KARABO_SCHEMA_DISPLAY_TYPE, '')
+    if display_type == KARABO_SCHEMA_DISPLAY_TYPE_STATE:
+        path = proxy.path
+        return get_state_graph_scene(instance_id, path)
 
     if isinstance(binding, (BoolBinding, FloatBinding, IntBinding)):
         path = proxy.path
