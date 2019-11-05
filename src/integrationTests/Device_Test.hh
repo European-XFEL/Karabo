@@ -44,6 +44,11 @@ private:
     /** Tests that appendSchema preserves attributes in the static schema. */
     void testSchemaWithAttrAppend();
 
+    /**
+     * Test calling a slot under a node
+     */
+    void testNodedSlot();
+
     bool waitForCondition(boost::function<bool() > checker, unsigned int timeoutMs);
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
