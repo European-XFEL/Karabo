@@ -8,6 +8,7 @@ from tornado.httpclient import AsyncHTTPClient
 from tornado.platform.asyncio import AsyncIOMainLoop, to_asyncio_future
 
 from .startkarabo import entrypoint
+from .webserver import EMPTY_RESPONSE
 
 
 class MainHandler(web.RequestHandler):
@@ -44,6 +45,17 @@ class MainHandler(web.RequestHandler):
         self.write("OK")
 
 
+class StatusHandler(web.RequestHandler):
+    def initialize(self, servers, client):
+        self.servers = servers
+
+    def get(self):
+        response = EMPTY_RESPONSE
+        response['servers'] = self.servers
+        response['success'] = True
+        self.write(response)
+
+
 @entrypoint
 def run_webserver():
     """karabo-webaggregatorserver - start a web server to aggregate
@@ -60,7 +72,7 @@ def run_webserver():
     parser.add_argument('serverId')
     parser.add_argument('--port',
                         help='port number the server listens to',
-                        default=8080)
+                        default=8585)
     args = parser.parse_args()
     if not args.serverId.startswith('serverId='):
         parser.print_help()
@@ -70,7 +82,8 @@ def run_webserver():
         if not AsyncIOMainLoop.initialized():
             AsyncIOMainLoop().install()
     server_dict = {'servers': servers, 'client': AsyncHTTPClient()}
-    app = web.Application([('/', MainHandler, server_dict)],
+    app = web.Application([('/', MainHandler, server_dict),
+                           ('/status.json', StatusHandler, server_dict)],
                           template_path=os.path.join(
                               os.path.dirname(__file__), "templates"),
                           static_path=os.path.join(
