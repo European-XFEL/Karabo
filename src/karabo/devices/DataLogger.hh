@@ -115,6 +115,14 @@ namespace karabo {
 
             void initialize();
 
+            /**
+             * Do some actions here that may require asynchronous logic ...
+             * and, finally, startConnection() should be called
+             */
+            virtual void initializeLoggerSpecific();
+
+            void startConnection();
+
             void initConnection(const DeviceData::Pointer& data,
                                 const boost::shared_ptr<std::atomic<unsigned int> >& counter);
 
