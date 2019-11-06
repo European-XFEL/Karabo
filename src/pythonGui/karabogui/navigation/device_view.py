@@ -96,7 +96,7 @@ class DeviceTreeView(QTreeView):
     def scrollTo(self, index, hint=QAbstractItemView.EnsureVisible):
         """Reimplementation of the Qt function
         """
-        self.setExpanded(index, True)
+        # XXX: We used to expand the index here!
         super(DeviceTreeView, self).scrollTo(index, hint)
 
     # ----------------------------
