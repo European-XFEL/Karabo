@@ -93,8 +93,9 @@ Running C++ unit tests
 -----------------------
 
 * Method 1: In NetBeans, navigate to the *Test Files* or to any sub-folder of it,
-and select *Test* in the context menu.
-* Method 2: Use the *auto build* script: *./auto_build_all.sh Debug --runTests* - but be aware that this will also run the Python tests.
+  and select *Test* in the context menu.
+* Method 2: Use the *auto build* script: *./auto_build_all.sh Debug --runTests* - but be aware
+  that this will also run the Python tests.
 * Method 3: From command line (in *build/netbeans/karabo*): ``make -j test``
 * Method 4: Just compile test (in *build/netbeans/karabo*): ``make -j build-tests``
 
@@ -112,15 +113,15 @@ Running C++ integration tests
 -------------------------------
 
 * Method 1: In NetBeans' *integrationTests* project, navigate to the
-*Test Files* or to any sub-folder of it, and select *Test* in the context
-menu.
+  *Test Files* or to any sub-folder of it, and select *Test* in the context
+  menu.
 * Method 2: Use the *auto build* script:
-*./auto_build_all.sh Debug --runIntegrationTests* - but be aware that this
-will also run the Python tests.
+  *./auto_build_all.sh Debug --runIntegrationTests* - but be aware that this
+  will also run the Python tests.
 * Method 3: From command line (in *build/netbeans/integrationTests*):
-``make -j test``
+  ``make -j test``
 * Method 4: Just compile test (in *build/netbeans/integrationTests*):
-``make -j build-tests``
+  ``make -j build-tests``
 
 Running C++ long tests
 -----------------------------
@@ -167,6 +168,7 @@ If the test case includes a new Bound Python device (like in the case of the
 test sub-directory.
 To make it available as a plugin for the bound Python server, one needs to do
 the following:
+
 * Create an *\*.egg-info* file into the test sub-directory.
 * Inside *\*.egg-info*, create the files *entry_points.txt*,
   *PKG-INFO* and *SOURCES.txt* and fill properly - e.g. have a look at
