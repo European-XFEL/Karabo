@@ -129,7 +129,7 @@ class SystemTreeView(QTreeView):
     def scrollTo(self, index, hint=QAbstractItemView.EnsureVisible):
         """Reimplementation of the Qt function
         """
-        self.setExpanded(index, True)
+        # XXX: We used to expand the index here!
         super(SystemTreeView, self).scrollTo(index, hint)
 
     # ----------------------------
