@@ -4,6 +4,7 @@ Karabo Version Changes
 
 .. toctree::
 
+   whatsnew/2.7
    whatsnew/2.6
    whatsnew/2.5
    whatsnew/2.4
