@@ -175,7 +175,21 @@ namespace karabo {
                 // Locking mutex not yet needed - no parallelism on content of m_perDeviceData yet.
                 m_perDeviceData.insert(std::make_pair(deviceId, data));
             }
+            // Schedule Logger specific initialization that may use asyc. logic ...
+            karabo::net::EventLoop::getIOService().post(bind_weak(&DataLogger::initializeLoggerSpecific, this));
+        }
 
+
+        void DataLogger::initializeLoggerSpecific() {
+            // This is default implementation.
+            // Put here Logger specific initialization.
+            // ...
+            // and finally, ...
+            startConnection();
+        }
+
+
+        void DataLogger::startConnection() {
             // Initiate connection to logged devices - will leave INIT state when all are connected (or failed)
             boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
             auto counter = boost::make_shared<std::atomic<unsigned int>>(m_perDeviceData.size());
