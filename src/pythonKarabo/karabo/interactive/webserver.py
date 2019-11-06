@@ -238,7 +238,7 @@ class Subscriber():
             futs = [to_asyncio_future(
                         self.client.fetch(uri, method="POST", body=body))
                     for uri in self.uris]
-            r = await gather(*futs, return_exceptions=True)
+            await gather(*futs, return_exceptions=True)
             await sleep(10)
 
 
