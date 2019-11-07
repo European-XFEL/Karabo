@@ -438,41 +438,6 @@ namespace karabo {
             void registerSlot(const boost::function<void (const A1&, const A2&, const A3&, const A4&) >& slot,
                               const std::string & funcName);
 
-            // TODO This function is not used anywhere -> decide what to do
-            /**
-             * DEPRECATED: Connect an InputChannel to an OutputChannel
-             *
-             * Deprecated since
-             * - mainly synchronous,
-             * - allows third party connections,
-             * - if the underlying Tcp connection cannot be setup, that is not considered for return value
-             *
-             * @param outputInstanceId
-             * @param outputName
-             * @param inputInstanceId
-             * @param inputName
-             * @return
-             */
-            bool connectChannels(const std::string& outputInstanceId, const std::string& outputName,
-                                 const std::string& inputInstanceId, const std::string& inputName);
-
-            // TODO This function is not used anywhere -> decide what to do
-            /**
-             * DEPRECATED: Disconnect an InputChannel from an OutputChannel
-             *
-             * Deprecated since
-             * - mainly synchronous,
-             * - allows third party disconnections
-             *
-             * @param outputInstanceId
-             * @param outputName
-             * @param inputInstanceId
-             * @param inputName
-             * @return
-             */
-            bool disconnectChannels(const std::string& outputInstanceId, const std::string& outputName,
-                                    const std::string& inputInstanceId, const std::string& inputName);
-
             /**
              * Create and register an InputChannel together with handlers
              *
@@ -558,7 +523,7 @@ namespace karabo {
              * @param handler to report success or failure. In the latter case the argument is false and more information
              *                about the failure can be retrieved via
              *                     try { throw; } catch (const std::exception&e) { const std::string reason(e.what());}
-             *                in the same as in SignalSlotable::AsyncErrorHandler
+             *                in the same way as in SignalSlotable::AsyncErrorHandler
              */
             void asyncConnectInputChannel(const InputChannel::Pointer& channel, const boost::function<void(bool)>& handler);
 
@@ -1054,10 +1019,6 @@ namespace karabo {
                 return f.substr(0, f.find_first_of('-')) + "|";
             }
 
-            // TODO: Consider removing - there seems to be no Python counterpart (neither bound nor middlelayer)
-            void slotConnectToOutputChannel(const std::string& inputName, const karabo::util::Hash& outputChannelInfo,
-                                            bool connect);
-
             void slotHeartbeat(const std::string& networkId, const int& heartbeatInterval,
                                const karabo::util::Hash& instanceInfo);
 
@@ -1111,7 +1072,7 @@ namespace karabo {
                                                 bool outChannelExists, const karabo::util::Hash& outChannelInfo);
 
             // Deprecated since only used in the logic of the deprecated connectInputChannel(..)
-            void connectInputChannelErrorHandler(const InputChannel::Pointer& inChannel, const std::string& outputChannelString,
+            void connectInputChannelErrorHandler_old(const InputChannel::Pointer& inChannel, const std::string& outputChannelString,
                                                  int trials, unsigned int nextTimeout);
 
             // Thread-safe, locks m_signalSlotInstancesMutex
