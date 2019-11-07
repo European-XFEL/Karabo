@@ -244,6 +244,8 @@ namespace karabo {
             size_t messageSize;
             _KARABO_VECTOR_TO_SIZE(m_inboundMessagePrefix, messageSize);
 
+            m_readBytes += messageSize;
+
             handler(messageSize);
         }
 
@@ -369,6 +371,8 @@ namespace karabo {
         void TcpChannel::onVectorBufferSetPointerAvailable(const ErrorCode& e, size_t length,
                                                            const std::vector<karabo::io::BufferSet::Pointer>& buffers,
                                                            const ReadVectorBufferSetPointerHandler& handler) {
+            m_readBytes += length;
+
             if (!e) {
                 handler(e, buffers);
             } else {
@@ -505,6 +509,8 @@ namespace karabo {
                        boost::asio::buffers_begin(m_streamBufferInbound.data()) + bytes_to_read);
 
             m_streamBufferInbound.consume(bytes_to_read);
+
+            m_readBytes += bytes_to_read;
 
             boost::any_cast<ReadStringHandler>(readHandler) (e, tmp);
         }
