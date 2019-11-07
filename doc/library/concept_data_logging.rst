@@ -183,20 +183,22 @@ data will be organized in the set of measurements described below:
 
   An example of a device measurement - in this case for device 'GUI_SERVER_0':
 
-  ==================== ====== ======= ================= ============= ================
+  ==================== ====== ============= ================= ================== ======================
   Name: GUI_SERVER_0
-  ------------------------------------------------------------------------------------
-  time                 *user* trainId serverId          useTimeServer connectedClients 
-  ==================== ====== ======= ================= ============= ================
-  2019-10-24T10:54:04Z .      0       karabo/gui_server True          10  
-  2019-10-24T10:56:28Z Alice  1272                      False         
-  2019-10-24T11:00:02Z Bob    0                                       9 
-  ==================== ====== ======= ================= ============= ================
+  -----------------------------------------------------------------------------------------------------
+  time                 *user* _tid          serverId-STRING   useTimeServer-BOOL connectedClients-INT32
+  ==================== ====== ============= ================= ================== ======================
+  2019-10-24T10:54:04Z .      0             karabo/gui_server True               10
+  2019-10-24T10:56:28Z Alice  1272                            False
+  2019-10-24T11:00:02Z Bob    0                                                  9
+  ==================== ====== ============= ================= ================== ======================
   
   As shown in the example, the number of non-null fields varies among records -
   the data logger will group the properties by the time they changed before writing 
   them to InfluxDB. The timestamps for **time** are explicitly specified when data is 
-  sent to InfluxDB. **user** is a tag. All the other columns are fields. Properties with 
+  sent to InfluxDB. **user** is a tag. All the other columns are fields. Field names
+  are mangled in order to support schema evolution. The mangling consists of adding
+  the suffix "-[KARABO_TYPE]" to the field name. Properties with
   redundant values, like **_device_id_** and **deviceId**, shouldn't be logged. 
 
 * **Device Events Measurement**: This measurement will store the device events - currently
@@ -213,27 +215,32 @@ data will be organized in the set of measurements described below:
   ==================== ====== ============== =================
   Name: GUI_SERVER_0__EVENTS
   ------------------------------------------------------------
-  time                 *type* schema_digest  serverId
+  time                 *type* schema_digest  user
   ==================== ====== ============== =================
-  2019-10-24T10:54:04Z +LOG                  karabo/gui_server
+  2019-10-24T10:54:04Z +LOG                  Bob
   2019-10-24T10:56:28Z SCHEMA 3fd545689a12ce
-  2019-10-24T11:00:02Z -LOG                  karabo/gui_server
+  2019-10-24T11:00:02Z -LOG                  Alice
   ==================== ====== ============== =================
 
   The timestamps for time are explicitly specified when data is sent to InfluxDB. **type** 
   is a tag whose value indicates the type of the event. The remaining columns are fields.
   **schema_digest** is a digest for a serialized schema stored in the Device Schema 
-  Measurement described in the next item. 
+  Measurement described in the next item. **user** is the athenticated user that either
+  instantiated or shutdown the device (not active yet - for now, it will always be "**.**").
   
 * **Device Schema Measurement**:
 
   ==================== =============== =====================================================
   Name: GUI_SERVER_0__SCHEMAS
   ------------------------------------------------------------------------------------------
-  time                 *schema_digest* schema
+  time                 *digest*        schema
   ==================== =============== =====================================================
-  2019-10-24T10:54:04Z 3fd545689a12ce  GuiServerDevice:<?xml version="1.0"?><root KRB_Ar....
+  2019-10-24T10:54:04Z 3fd545689a12ce  RGF0YUdlbmVyYXRvcjo8P3htbCB2ZXJRGF0YUdlyYXRvcj ...
   ==================== =============== =====================================================
+
+  The schema is saved in the database is the result of base64 enconding the schema serialized
+  in text form by the Karabo Framework. The digest is the SHA-1 hash of the text serialized
+  form of the schema.
 
 For the production environment, the replication factors of the retention policies 
 described above match the number of InfluxDB servers in the cluster. The durations of 
