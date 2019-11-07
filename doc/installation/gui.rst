@@ -35,6 +35,9 @@ From your terminal, add the needed channels executing the following commands::
 
     conda config --add channels http://exflserv05.desy.de/karabo/channel
     conda config --add channels conda-forge
+
+If you're installing or developing karabo with `Qt4` (before `2.7.*`), also add:
+
     conda config --add channels conda-forge/label/cf201901
     conda config --add channels anaconda
 
