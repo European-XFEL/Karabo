@@ -500,8 +500,8 @@ class DeviceServer(object):
         # self.log.DEBUG:
         self.log.DEBUG("Device '{0}' notifies '{1.serverid}' about its future"
                        " death.".format(instanceId, self))
-        if instanceId in self.deviceInstanceMap:
-            with self.deviceInstanceMapLock:
+        with self.deviceInstanceMapLock:
+            if instanceId in self.deviceInstanceMap:
                 launcher = self.deviceInstanceMap[instanceId]
                 if launcher:
                     try:
