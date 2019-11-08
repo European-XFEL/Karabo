@@ -468,11 +468,17 @@ class Tests(TestCase):
         self.assertEqual(self.timestamp,
                          Timestamp.fromHashAttributes(timestamp))
         self.assertEqual(len(data), 2)
+        self.assertEqual(d.displayType, "Table")
 
         # NOTE: Force error with missing key!
         with self.assertRaises(KeyError):
             v = d.toKaraboValue([Hash("int", 3),
                                  Hash("string", "hallo", "int", 20)])
+
+        # Set a different displayType
+        d = VectorHash(rowSchema=Schema("rs", hash=rowSchema),
+                       displayType="Another")
+        self.assertEqual(d.displayType, "Another")
 
     def test_vector_hash(self):
         rowSchema = Hash("int", None, "string", None, "vector", None,
