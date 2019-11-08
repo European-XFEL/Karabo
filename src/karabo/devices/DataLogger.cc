@@ -117,10 +117,6 @@ namespace karabo {
 
 
         DeviceData::~DeviceData() {
-            if (m_initLevel != InitLevel::COMPLETE) {
-                // We have not yet started logging this device, so nothing to mark about being done.
-                return;
-            }
         }
 
 
@@ -176,7 +172,7 @@ namespace karabo {
                 m_perDeviceData.insert(std::make_pair(deviceId, data));
             }
             // Schedule Logger specific initialization that may use asyc. logic ...
-            karabo::net::EventLoop::getIOService().post(bind_weak(&DataLogger::initializeLoggerSpecific, this));
+            initializeLoggerSpecific();
         }
 
 
@@ -395,8 +391,6 @@ namespace karabo {
                 }
                 // UserId only available in real slot call, before posting to event loop:
                 const std::string& user = getSenderInfo("slotChanged")->getUserIdOfSender();
-                //data->m_strand->post(karabo::util::bind_weak(&DataLogger::handleChanged, this,
-                //                                             configuration, user, data));
                 data->m_strand->post(karabo::util::bind_weak(&DataLogger::handleChanged, this,
                                                              configuration, user, data));
             } else {
