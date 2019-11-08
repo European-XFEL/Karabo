@@ -177,26 +177,26 @@ data will be organized in the set of measurements described below:
   being logged will be mapped to fields with the same name as the property. The
   trainIds associated to the logging records will also be mapped to a field. The
   name of the user responsible for the property value change will be mapped to 
-  a tag in the device measurement. The value of the user tag will be either a
-  user name (for changes associated to a user) or "." for changes that have no
-  responsible user associated.
+  a tag in the device measurement. The value of the **karabo_user** tag will be
+  either a user name (for changes associated to a user) or "." for changes that
+  have no responsible user associated.
 
   An example of a device measurement - in this case for device 'GUI_SERVER_0':
 
-  ==================== ====== ============= ================= ================== ======================
+  ==================== ============= ============= ================= ================== ======================
   Name: GUI_SERVER_0
-  -----------------------------------------------------------------------------------------------------
-  time                 *user* _tid          serverId-STRING   useTimeServer-BOOL connectedClients-INT32
-  ==================== ====== ============= ================= ================== ======================
-  2019-10-24T10:54:04Z .      0             karabo/gui_server True               10
-  2019-10-24T10:56:28Z Alice  1272                            False
-  2019-10-24T11:00:02Z Bob    0                                                  9
-  ==================== ====== ============= ================= ================== ======================
+  ------------------------------------------------------------------------------------------------------------
+  time                 *karabo_user* _tid          serverId-STRING   useTimeServer-BOOL connectedClients-INT32
+  ==================== ============= ============= ================= ================== ======================
+  2019-10-24T10:54:04Z .             0             karabo/gui_server True               10
+  2019-10-24T10:56:28Z Alice         1272                            False
+  2019-10-24T11:00:02Z Bob           0                                                  9
+  ==================== ============= ============= ================= ================== ======================
   
   As shown in the example, the number of non-null fields varies among records -
   the data logger will group the properties by the time they changed before writing 
   them to InfluxDB. The timestamps for **time** are explicitly specified when data is 
-  sent to InfluxDB. **user** is a tag. All the other columns are fields. Field names
+  sent to InfluxDB. **karabo_user** is a tag. All the other columns are fields. Field names
   are mangled in order to support schema evolution. The mangling consists of adding
   the suffix "-[KARABO_TYPE]" to the field name. Properties with
   redundant values, like **_device_id_** and **deviceId**, shouldn't be logged. 
@@ -207,25 +207,25 @@ data will be organized in the set of measurements described below:
   The log reader relies on device instantiation events for being able to retrieve the last 
   known configuration if the given time point is not in an interval during which the device 
   was active. Similarly, **DeviceClient.getPropertyHistory** relies on instatiantion events 
-  to know from when it must start its properties read sweep in case no change for the given 
-  property happened during the requested time interval. 
+  to know from when it must start its properties read sweep in case there is no change for
+  the given property during the requested time interval.
 
   An example of a device events measurement - for device 'GUI_SERVER_0':
 
   ==================== ====== ============== =================
   Name: GUI_SERVER_0__EVENTS
   ------------------------------------------------------------
-  time                 *type* schema_digest  user
+  time                 *type* schema_digest  karabo_user
   ==================== ====== ============== =================
   2019-10-24T10:54:04Z +LOG                  Bob
-  2019-10-24T10:56:28Z SCHEMA 3fd545689a12ce
+  2019-10-24T10:56:28Z SCHEMA 3fd545689a12ce .
   2019-10-24T11:00:02Z -LOG                  Alice
   ==================== ====== ============== =================
 
   The timestamps for time are explicitly specified when data is sent to InfluxDB. **type** 
   is a tag whose value indicates the type of the event. The remaining columns are fields.
   **schema_digest** is a digest for a serialized schema stored in the Device Schema 
-  Measurement described in the next item. **user** is the athenticated user that either
+  Measurement described in the next item. **karabo_user** is the athenticated user that either
   instantiated or shutdown the device (not active yet - for now, it will always be "**.**").
   
 * **Device Schema Measurement**:
@@ -238,7 +238,7 @@ data will be organized in the set of measurements described below:
   2019-10-24T10:54:04Z 3fd545689a12ce  RGF0YUdlbmVyYXRvcjo8P3htbCB2ZXJRGF0YUdlyYXRvcj ...
   ==================== =============== =====================================================
 
-  The schema is saved in the database is the result of base64 enconding the schema serialized
+  The schema saved in the database is the base64 enconding of the schema serialized
   in text form by the Karabo Framework. The digest is the SHA-1 hash of the text serialized
   form of the schema.
 
