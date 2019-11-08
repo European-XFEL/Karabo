@@ -42,6 +42,8 @@
       <itemPath>../../../src/karabo/devices/DataLogger.hh</itemPath>
       <itemPath>../../../src/karabo/devices/DataLoggerManager.cc</itemPath>
       <itemPath>../../../src/karabo/devices/DataLoggerManager.hh</itemPath>
+      <itemPath>../../../src/karabo/devices/FileDataLogger.cc</itemPath>
+      <itemPath>../../../src/karabo/devices/FileDataLogger.hh</itemPath>
       <itemPath>../../../src/karabo/devices/GuiServerDevice.cc</itemPath>
       <itemPath>../../../src/karabo/devices/GuiServerDevice.hh</itemPath>
       <itemPath>../../../src/karabo/devices/PropertyTest.cc</itemPath>
@@ -659,6 +661,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/devices/DataLoggerManager.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/FileDataLogger.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/FileDataLogger.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2563,6 +2575,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/devices/FileDataLogger.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/FileDataLogger.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/devices/GuiServerDevice.cc"
             ex="false"
             tool="1"
@@ -4443,6 +4465,16 @@
             flavor2="8">
       </item>
       <item path="../../../src/karabo/devices/DataLoggerManager.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/FileDataLogger.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/FileDataLogger.hh"
             ex="false"
             tool="3"
             flavor2="0">
