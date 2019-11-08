@@ -1288,15 +1288,13 @@ class VectorHash(Vector):
     """
     basetype = HashType
     number = 31
-
+    displayType = Attribute("Table")
     rowSchema = Attribute()
 
     def __init__(self, rows=None, strict=True, **kwargs):
         super(VectorHash, self).__init__(strict=strict, **kwargs)
-
         if rows is not None:
             self.rowSchema = rows.getClassSchema()
-            self.displayType = "Table"
 
         if self.rowSchema is None:
             return
