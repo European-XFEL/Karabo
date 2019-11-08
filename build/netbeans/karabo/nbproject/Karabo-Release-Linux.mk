@@ -46,6 +46,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1423485062/DataLogReader.o \
 	${OBJECTDIR}/_ext/1423485062/DataLogger.o \
 	${OBJECTDIR}/_ext/1423485062/DataLoggerManager.o \
+	${OBJECTDIR}/_ext/1423485062/FileDataLogger.o \
 	${OBJECTDIR}/_ext/1423485062/GuiServerDevice.o \
 	${OBJECTDIR}/_ext/1423485062/PropertyTest.o \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o \
@@ -241,6 +242,11 @@ ${OBJECTDIR}/_ext/1423485062/DataLoggerManager.o: ../../../src/karabo/devices/Da
 	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/DataLoggerManager.o ../../../src/karabo/devices/DataLoggerManager.cc
+
+${OBJECTDIR}/_ext/1423485062/FileDataLogger.o: ../../../src/karabo/devices/FileDataLogger.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/FileDataLogger.o ../../../src/karabo/devices/FileDataLogger.cc
 
 ${OBJECTDIR}/_ext/1423485062/GuiServerDevice.o: ../../../src/karabo/devices/GuiServerDevice.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
@@ -1245,6 +1251,19 @@ ${OBJECTDIR}/_ext/1423485062/DataLoggerManager_nomain.o: ${OBJECTDIR}/_ext/14234
 	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/DataLoggerManager_nomain.o ../../../src/karabo/devices/DataLoggerManager.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1423485062/DataLoggerManager.o ${OBJECTDIR}/_ext/1423485062/DataLoggerManager_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1423485062/FileDataLogger_nomain.o: ${OBJECTDIR}/_ext/1423485062/FileDataLogger.o ../../../src/karabo/devices/FileDataLogger.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1423485062/FileDataLogger.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/FileDataLogger_nomain.o ../../../src/karabo/devices/FileDataLogger.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1423485062/FileDataLogger.o ${OBJECTDIR}/_ext/1423485062/FileDataLogger_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1423485062/GuiServerDevice_nomain.o: ${OBJECTDIR}/_ext/1423485062/GuiServerDevice.o ../../../src/karabo/devices/GuiServerDevice.cc 
