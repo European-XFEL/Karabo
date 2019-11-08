@@ -110,14 +110,16 @@ namespace karabo {
             virtual ~DataLogger();
 
             // Functions
+        protected:
 
             virtual DeviceData::Pointer createDeviceData(const karabo::util::Hash& config) = 0;
-
-            void initialize();
 
             /**
              * Do some actions here that may require asynchronous logic ...
              * and, finally, startConnection() should be called
+             * This function may be overridden by derived classes but at
+             * the end the 'startConnection' function should be called as
+             * a last step of initialization
              */
             virtual void initializeLoggerSpecific();
 
@@ -125,8 +127,6 @@ namespace karabo {
 
             void initConnection(const DeviceData::Pointer& data,
                                 const boost::shared_ptr<std::atomic<unsigned int> >& counter);
-
-            void slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId);
 
             /**
              * Helper to remove an element from a vector<string> element.
@@ -149,6 +149,26 @@ namespace karabo {
              * @return whether it was added (i.e. false if 'str' was already in the vectorProperty
              */
             bool appendTo(const std::string& str, const std::string& vectorProp);
+
+            /**
+             * Process configuration by writing to files or sending to DB server
+             * @param config
+             * @param user
+             * @param data
+             */
+            virtual void handleChanged(const karabo::util::Hash& config, const std::string& user,
+                                       const DeviceData::Pointer& devicedata) = 0;
+
+            /**
+             * Store updated schema into file hierarchy or in database tables
+             */
+            virtual void handleSchemaUpdated(const karabo::util::Schema& schema, const DeviceData::Pointer& data) = 0;
+
+        private:
+
+            void initialize();
+
+            void slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId);
 
             void slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
 
@@ -198,6 +218,10 @@ namespace karabo {
             // The flush slot
             void flush();
             
+            /**
+             * "Flush" data accumulated in the internal cache to the external storage (file, database,...)
+             * @param devicedata
+             */
             virtual void flushOne(const DeviceData::Pointer& devicedata) = 0;
             
             /**
@@ -208,19 +232,6 @@ namespace karabo {
                 return false;
             }            
 
-            /**
-             * Process configuration by writing to files or sending to DB server
-             * @param config
-             * @param user
-             * @param data
-             */
-            virtual void handleChanged(const karabo::util::Hash& config, const std::string& user,
-                                       const DeviceData::Pointer& devicedata) = 0;
-
-            /**
-             * Store updated schema into file hierarchy or in database tables
-             */
-            virtual void handleSchemaUpdated(const karabo::util::Schema& schema, const DeviceData::Pointer& data) = 0;
         };
     }
 }
