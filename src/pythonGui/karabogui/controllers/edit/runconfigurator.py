@@ -6,7 +6,7 @@
 from PyQt5.QtCore import QModelIndex, Qt
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtWidgets import QAbstractItemView, QTreeView, QHeaderView
-from traits.api import Bool, Instance
+from traits.api import Bool, Instance, List
 
 from karabo.common.scenemodel.api import RunConfiguratorModel
 from karabo.native import Hash
@@ -30,6 +30,8 @@ class RunConfiguratorEdit(BaseBindingController):
     # Private traits
     _is_editing = Bool(False)
     _expanded = Bool(False)
+
+    _expanded_indexes = List(args=())
 
     def create_widget(self, parent):
         widget = QTreeView(parent=parent)
@@ -70,6 +72,10 @@ class RunConfiguratorEdit(BaseBindingController):
                     column += 1
                 row, column = row + 1, 0
 
+        self.widget.setUpdatesEnabled(False)
+        # Since we are about to reset our model, we store the expanded state
+        # of the widget for comfort
+        self.save_expanded()
         # Clear item_model before updating
         item_model = self.widget.model()
         item_model.clear()
@@ -77,6 +83,28 @@ class RunConfiguratorEdit(BaseBindingController):
         root_item = item_model.invisibleRootItem()
         for entry in get_editor_value(proxy, []):
             _build(entry, root_item)
+
+        # Finally, we safely restore the expanded index by displayed name
+        self.restore_expanded()
+        self.widget.setUpdatesEnabled(True)
+
+    def save_expanded(self):
+        self._expanded_indexes = []
+        model = self.widget.model()
+        for row in range(model.rowCount()):
+            index = model.index(row, 0)
+            index_data = index.data(role=Qt.DisplayRole)
+            if index_data is not None and self.widget.isExpanded(index):
+                self._expanded_indexes.append(index_data)
+
+    def restore_expanded(self):
+        model = self.widget.model()
+        for row in range(model.rowCount()):
+            index = model.index(row, 0)
+            index_data = index.data(role=Qt.DisplayRole)
+            if index_data is not None and index_data in self._expanded_indexes:
+                self.widget.setExpanded(index, True)
+        self._expanded_indexes = []
 
     def _item_edited(self, item):
         if self.proxy.binding is None:
