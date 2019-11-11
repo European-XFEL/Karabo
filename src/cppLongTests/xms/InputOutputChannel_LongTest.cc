@@ -123,10 +123,19 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
 
     ThreadAdder extraThreads(3); // 3 for sender, receiver's callback, dis-/reconnection
 
+    // Setup output channel - configure only for "shared" InputChannel
+    OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel",
+                                                                        Hash("distributionMode", receiver_distributionMode,
+                                                                             "noInputShared", receiver_noInputShared));
+    output->setInstanceIdAndName("outputChannel", "output");
+
     // Setup input channel
-    InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel",
-                                                                     Hash("dataDistribution", sender_dataDistribution,
-                                                                          "onSlowness", sender_onSlowness));
+    const std::string outputChannelId(output->getInstanceId() + ":output");
+    const Hash cfg("connectedOutputChannels", std::vector<std::string>(1, outputChannelId),
+                   "dataDistribution", sender_dataDistribution,
+                   "onSlowness", sender_onSlowness);
+
+    InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", cfg);
     input->setInstanceId("inputChannel");
     unsigned int calls = 0;
     input->registerDataHandler([&calls, processTime](const Hash& data, const InputChannel::MetaData & meta) {
@@ -134,11 +143,6 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
                                boost::this_thread::sleep(boost::posix_time::milliseconds(processTime));
     });
 
-    // Setup output channel - configure only for "shared" InputChannel
-    OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel",
-                                                                        Hash("distributionMode", receiver_distributionMode,
-                                                                             "noInputShared", receiver_noInputShared));
-    output->setInstanceIdAndName("outputChannel", "output");
     // Wait a little bit until OutputChannel has properly initialised, i.e. a proper port is attached
     // (see its constructor...) FIXME :-(
     Hash outputInfo;
@@ -155,7 +159,6 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
     //
     // Connect
     //
-    const std::string outputChannelId("outputChannelString");
     outputInfo.set("outputChannelString", outputChannelId);
     // Tests with "local" fail with chunk leaks, see OutputChannel::copyLocal and ::distributeLocal:
     outputInfo.set("memoryLocation", "remote");
