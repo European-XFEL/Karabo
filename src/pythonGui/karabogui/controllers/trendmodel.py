@@ -264,7 +264,8 @@ class Curve(HasStrictTraits):
             if pos == 0:
                 break
             gen.xs[:fill - pos] = gen.xs[pos:fill]
-            gen.fill = fill - pos
+            gen.ys[:fill - pos] = gen.ys[pos:fill]
+            gen.fill -= pos
 
         self.histsize = datasize
         self.x = x
