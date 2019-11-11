@@ -15,10 +15,8 @@ from karabo.common.api import (
     KARABO_SCHEMA_DISPLAY_TYPE_RUNCONFIGURATOR as DT_RUNCONF,
     KARABO_SCHEMA_DISPLAY_TYPE_SCENES as DT_SCENES)
 from karabo.common.scenemodel.api import (
-    BoxLayoutModel, DeviceSceneLinkModel,
-    FixedLayoutModel, LabelModel, RunConfiguratorModel, SceneModel,
-    SceneTargetWindow, write_scene
-)
+    BoxLayoutModel, DeviceSceneLinkModel, LabelModel, RunConfiguratorModel,
+    SceneModel, SceneTargetWindow, write_scene)
 from .run_configuration_group import RunControlDataSource
 
 OUTPUT_CHANNEL_SEPARATOR = ':'
@@ -510,46 +508,46 @@ class RunConfigurator(PythonDevice):
                         'payload', payload))
 
 
-def _createScene(instance_id):
-    DEFAULT_FONT = ',11,-1,5,50,0,0,0,0,0'
-    label = LabelModel(font=DEFAULT_FONT, foreground='#000000',
-                       text='Available group configurations',
-                       height=31, width=205, x=4, y=4)
-    table = RunConfiguratorModel(
-        keys=[instance_id + '.configurations'],
-        height=400, width=600, x=4, y=36,
-        parent_component='EditableApplyLaterComponent')
-    link = DeviceSceneLinkModel(
-        keys=[instance_id + '.availableScenes'], target='link',
-        font=DEFAULT_FONT, foreground='#000000', frame_width=1,
-        text='Run Groups', target_window=SceneTargetWindow.Dialog,
-        height=29, width=101, x=495, y=475)
+def _createScene(deviceId):
+    scene0 = RunConfiguratorModel(
+        height=400.0,
+        keys=['{}.configurations'.format(deviceId)],
+        parent_component='EditableApplyLaterComponent',
+        width=727.0, x=4.0, y=36.0)
 
-    layout = FixedLayoutModel(height=490, width=600, x=4, y=4,
-                              children=[table, label, link])
+    scene1 = LabelModel(
+        font='Sans Serif,11,-1,5,50,0,0,0,0,0', foreground='#000000',
+        height=31.0,
+        parent_component='DisplayComponent',
+        text='Available group configurations',
+        width=267.0, x=4.0, y=4.0)
 
-    exp_0 = LabelModel(font=DEFAULT_FONT,
-                       height=28, width=338, x=644, y=15,
-                       parent_component='DisplayComponent',
-                       text='NOTE: You must click the green check mark')
-    exp_1 = LabelModel(font=DEFAULT_FONT,
-                       height=28, width=321, x=650, y=74,
-                       parent_component='DisplayComponent',
-                       text='to apply your changes before clicking the')
-    exp_2 = LabelModel(font=DEFAULT_FONT,
-                       height=28, width=231, x=656, y=155,
-                       parent_component='DisplayComponent',
-                       text=' "Push to DAQ" button.')
-    exp_layout = BoxLayoutModel(direction=2,
-                                height=77, width=346, x=126, y=443,
-                                children=[exp_0, exp_1, exp_2])
+    scene2 = DeviceSceneLinkModel(
+        font='Sans Serif,10,-1,5,50,0,0,0,0,0', foreground='#000000',
+        height=29.0,
+        keys=['{}.availableScenes'.format(deviceId)],
+        parent_component='DisplayComponent',
+        target='link',
+        target_window=SceneTargetWindow.Dialog,
+        text='Run Groups',
+        width=141.0, x=588.0, y=473.0)
 
-    return write_scene(SceneModel(children=[layout, exp_layout],
-                                  height=530, width=610))
+    scene3 = LabelModel(
+        background='#a3aba7', font='Sans Serif,10,-1,5,50,0,0,0,0,0',
+        frame_width=1, height=21.0,
+        parent_component='DisplayComponent',
+        text='NOTE: You must click the green check mark to apply your changes '
+             'before clicking the "Push to DAQ" button.',
+        width=721.0, x=8.0, y=446.0)
+
+    scene = SceneModel(height=510.0, width=740.0,
+                       children=[scene0, scene1, scene2, scene3])
+
+    return write_scene(scene)
 
 
 def _createLink(instance_id, run_groups):
-    DEFAULT_FONT = ',11,-1,5,50,0,0,0,0,0'
+    DEFAULT_FONT = 'Sans Serif,10,-1,5,50,0,0,0,0,0',
     label = LabelModel(font=DEFAULT_FONT, foreground='#000000',
                        text='Links to Run Configuration Groups',
                        height=31, width=205, x=4, y=4)
