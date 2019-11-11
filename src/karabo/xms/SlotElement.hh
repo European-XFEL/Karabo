@@ -16,6 +16,8 @@
 #include "karabo/util/ToLiteral.hh"
 #include "karabo/util/State.hh"
 #include "karabo/util/Exception.hh"
+// OK to include from 'karabo/log' (for KARABO_LOG_FRAMEWORK_WARN) as long as this file does not move to 'karabo/util':
+#include "karabo/log/Logger.hh"
 
 namespace karabo {
     namespace xms {
@@ -88,7 +90,13 @@ namespace karabo {
 
             Derived& key(const std::string& name) override {
                 if (name.find('_') != std::string::npos) {
-                    throw KARABO_PARAMETER_EXCEPTION("Slot must not contain '_' since internally reserved for slots under a node.");
+                    // Would like to forbid any such slot - but some Beckhoff devices prohibit that
+                    // throw KARABO_PARAMETER_EXCEPTION("Slot must not contain '_' since internally reserved for slots under a node.");
+                    if (name == "clear_namespace") {
+                        throw KARABO_PARAMETER_EXCEPTION("Slot 'clear_namespace' prohibited since reserved got internal usage in GUI client.");
+                    }
+                    KARABO_LOG_FRAMEWORK_WARN_C("SlotElementBase") << "Slot '" << name
+                            << "' should not contain '_' since internally reserved for slots under a node";
                 }
                 return karabo::util::GenericElement<Derived>::key(name);
             }
