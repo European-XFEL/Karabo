@@ -80,6 +80,7 @@ void DeviceClient_Test::testAll() {
     testGetSchema();
     testGetSchemaNoWait();
     testConnectionHandling();
+    testCurrentlyExecutableCommands();
 }
 
 

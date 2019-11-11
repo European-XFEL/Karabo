@@ -131,7 +131,7 @@ namespace karabo {
 
             virtual ~InputChannel();
 
-            void reconfigure(const karabo::util::Hash& config);
+            void reconfigure(const karabo::util::Hash& config, bool allowMissing = true);
 
             void setInstanceId(const std::string& instanceId);
 
@@ -188,10 +188,14 @@ namespace karabo {
 
             /**
              * Asynchronously connect this input channel to the output channel described by the first argument
+             *
              * @param outputChannelInfo  Hash with three keys
+             *                   - "outputChannelString": a string matching one of the configured "connectedOutputChannels"
              *                   - "connectionType": a string - currently only "tcp" supported
-             *                   - "hostname": a string
-             *                   - "port": an unsigned int
+             *                   - "hostname": a string telling which host/ip address to connect to
+             *                   - "port": an unsigned int telling the port
+             *                   - "memoryLocation: string "remote" or "local" to tell whether other end is in another
+             *                                      process or can share memory
              * @param handler  indicates asynchronously (like via EventLoop::post) the success of the connection request
              */
             void connect(const karabo::util::Hash& outputChannelInfo,
@@ -200,6 +204,11 @@ namespace karabo {
 
             void disconnect(const karabo::util::Hash& outputChannelInfo);
 
+            /**
+             * Disconnect and clean internals
+             *
+             * @param connectionString One of the "connectedOutputChannels" given at construction
+             */
             void disconnect(const std::string& connectionString);
 
             karabo::util::Hash prepareConnectionConfiguration(const karabo::util::Hash& outputChannelInfo) const;
@@ -269,12 +278,16 @@ namespace karabo {
 
 
         private: // functions
+            /**
+             * Disconnect and clean internals - needs protection by m_outputChannelsMutex
+             *
+             * @param outputChannelString One of the "connectedOutputChannels" given at construction
+             */
+            void disconnectImpl(std::string outputChannelString);
 
             void deferredNotificationsOfOutputChannelsForPossibleRead();
 
             void deferredNotificationOfOutputChannelForPossibleRead(const karabo::net::Channel::WeakPointer& channel);
-
-            bool needsDeviceConnection() const;
 
             void closeChannelsAndStopConnections();
 
@@ -295,22 +308,22 @@ namespace karabo {
             InputChannelElement& key(const std::string& key) {
                 m_inputChannel.key(key);
                 m_dataSchema.key(key + ".schema");
-                return *(static_cast<InputChannelElement*> (this));
+                return *this;
             }
 
             InputChannelElement& displayedName(const std::string& name) {
                 m_inputChannel.displayedName(name);
-                return *(static_cast<InputChannelElement*> (this));
+                return *this;
             }
 
             InputChannelElement& description(const std::string& description) {
                 m_inputChannel.description(description);
-                return *(static_cast<InputChannelElement*> (this));
+                return *this;
             }
 
             InputChannelElement& dataSchema(const karabo::util::Schema& schema) {
                 m_dataSchema.appendSchema(schema);
-                return *(static_cast<InputChannelElement*> (this));
+                return *this;
             }
 
             void commit() {

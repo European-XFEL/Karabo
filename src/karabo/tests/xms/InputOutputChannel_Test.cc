@@ -39,14 +39,6 @@ void InputOutputChannel_Test::tearDown() {
 
 void InputOutputChannel_Test::testConnectDisconnect() {
 
-    // Setup input channel
-    InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", Hash());
-    input->setInstanceId("inputChannel");
-    unsigned int calls = 0;
-    input->registerDataHandler([&calls](const Hash& data, const InputChannel::MetaData & meta) {
-        ++calls;
-    });
-
     // Setup output channel
     OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel", Hash());
     output->setInstanceIdAndName("outputChannel", "output");
@@ -55,6 +47,16 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     output->registerShowConnectionsHandler([&table, &tableMutex](const std::vector<karabo::util::Hash>& connections) {
         boost::mutex::scoped_lock lock(tableMutex);
         table = connections;
+    });
+
+    // Setup input channel
+    const std::string outputChannelId(output->getInstanceId() + ":output");
+    const Hash cfg("connectedOutputChannels", std::vector<std::string>(1, outputChannelId));
+    InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", cfg);
+    input->setInstanceId("inputChannel");
+    unsigned int calls = 0;
+    input->registerDataHandler([&calls](const Hash& data, const InputChannel::MetaData & meta) {
+        ++calls;
     });
 
     // Write first data - nobody connected yet.
@@ -68,7 +70,6 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     }
 
     // Connect
-    const std::string outputChannelId("outputChannelString");
     Hash outputInfo(output->getInformation());
     outputInfo.set("outputChannelString", outputChannelId);
     outputInfo.set("memoryLocation", "local");
@@ -150,6 +151,12 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     // Non-existing host:
     badOutputInfos.push_back(outputInfo);
     badOutputInfos.back().set("hostname", "exflblablupp-not-there.desy.de");
+    // Non-configured output channel:
+    badOutputInfos.push_back(outputInfo);
+    badOutputInfos.back().set("outputChannelString", "not_configured");
+    // Missing info about memoryLocation:
+    badOutputInfos.push_back(outputInfo);
+    badOutputInfos.back().erase("memoryLocation");
 
     for (const Hash& badOutputInfo : badOutputInfos) {
         // Setup connection handler
