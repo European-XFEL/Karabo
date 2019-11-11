@@ -84,12 +84,7 @@ namespace karabo {
             , m_deadline(karabo::net::EventLoop::getIOService())
             , m_isEndOfStream(false)
             , m_respondToEndOfStream(true) {
-            parseOutputChannelConfiguration(config);
-            config.get("dataDistribution", m_dataDistribution);
-            config.get("minData", m_minData);
-            config.get("onSlowness", m_onSlowness);
-            config.get("respondToEndOfStream", m_respondToEndOfStream);
-            config.get("delayOnInput", m_delayOnInput);
+            reconfigure(config, false);
 
             m_channelId = Memory::registerChannel();
             m_inactiveChunk = Memory::registerChunk(m_channelId);
@@ -107,12 +102,13 @@ namespace karabo {
         }
 
 
-        void InputChannel::reconfigure(const karabo::util::Hash& config) {
+        void InputChannel::reconfigure(const karabo::util::Hash& config, bool allowMissing) {
             parseOutputChannelConfiguration(config);
-            if (config.has("dataDistribution")) config.get("dataDistribution", m_dataDistribution);
-            if (config.has("minData")) config.get("minData", m_minData);
-            if (config.has("onSlowness")) config.get("onSlowness", m_onSlowness);
-            if (config.has("respondToEndOfStream")) config.get("respondToEndOfStream", m_respondToEndOfStream);
+            if (!allowMissing || config.has("dataDistribution")) config.get("dataDistribution", m_dataDistribution);
+            if (!allowMissing || config.has("minData")) config.get("minData", m_minData);
+            if (!allowMissing || config.has("onSlowness")) config.get("onSlowness", m_onSlowness);
+            if (!allowMissing || config.has("respondToEndOfStream")) config.get("respondToEndOfStream", m_respondToEndOfStream);
+            if (!allowMissing || config.has("delayOnInput")) config.get("delayOnInput", m_delayOnInput);
         }
 
 
@@ -218,15 +214,41 @@ namespace karabo {
                 if (outputChannelInfo.has("outputChannelString")) {
                     const string& outputChannelString = outputChannelInfo.get<string>("outputChannelString");
                     boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+                    if (m_connectedOutputChannels.find(outputChannelString) == m_connectedOutputChannels.end()) {
+                        KARABO_LOG_FRAMEWORK_WARN << "InputChannel with id " << getInstanceId()
+                                << " not configured to connect to " << outputChannelString;
+                        if (handler) {
+                            EventLoop::getIOService().post(boost::bind(handler, bse::make_error_code(bse::argument_out_of_domain)));
+                        }
+                        return;
+                    }
+
+                    if (!outputChannelInfo.has("memoryLocation")) {
+                        // onConnect(..) will need it - bail out early
+                        KARABO_LOG_FRAMEWORK_WARN << "InputChannel with id " << getInstanceId()
+                                << " connect(..) misses 'memoryLocation'" << outputChannelString;
+                        if (handler) {
+                            EventLoop::getIOService().post(boost::bind(handler, bse::make_error_code(bse::argument_out_of_domain)));
+                        }
+                        return;
+                    }
                     OpenConnections::iterator it = m_openConnections.find(outputChannelString);
                     if (it != m_openConnections.end()) {
                         KARABO_LOG_FRAMEWORK_WARN << "InputChannel with id " << getInstanceId()
-                                << " already connected to " << outputChannelString;
+                                << " already connected to " << outputChannelString << " - disconnect first!";
                         if (handler) {
                             EventLoop::getIOService().post(boost::bind(handler, bse::make_error_code(bse::already_connected)));
                         }
                         return;
                     }
+                } else {
+                    // onConnect(..) will need it - bail out early
+                    KARABO_LOG_FRAMEWORK_WARN << "InputChannel with id " << getInstanceId()
+                            << ": outputChannelInfo for connect(..) lacks key 'outputChannelString'";
+                    if (handler) {
+                        EventLoop::getIOService().post(boost::bind(handler, bse::make_error_code(bse::invalid_argument)));
+                    }
+                    return;
                 }
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "connect  on \"" << m_instanceId << "\"   :   No old connection found.  Create one!";
@@ -250,41 +272,50 @@ namespace karabo {
 
         void InputChannel::disconnect(const karabo::util::Hash& outputChannelInfo) {
 
-            const std::string& hostname = outputChannelInfo.get<std::string > ("hostname");
-            unsigned int port = outputChannelInfo.get<unsigned int>("port");
-
-            string outputChannelString;
-            {
+            if (outputChannelInfo.has("outputChannelString")) {
+                disconnect(outputChannelInfo.get<std::string>("outputChannelString"));
+                return;
+            } else {
+                // Not directly configured, so try host/port
+                const std::string& hostname = outputChannelInfo.get<std::string > ("hostname");
+                unsigned int port = outputChannelInfo.get<unsigned int>("port");
                 boost::mutex::scoped_lock lock(m_outputChannelsMutex);
                 for (ConnectedOutputChannels::const_iterator it = m_connectedOutputChannels.begin(); it != m_connectedOutputChannels.end(); ++it) {
-                    if (it->second.empty()) continue;
                     if (it->second.get<string>("hostname") != hostname) continue;
                     if (it->second.get<unsigned int>("port") != port) continue;
-                    outputChannelString = it->first;
-                    break;
+                    disconnectImpl(it->first);
+                    return;
                 }
             }
-            if (!outputChannelString.empty()) disconnect(outputChannelString);
+
+            KARABO_LOG_FRAMEWORK_ERROR << "disconnect: input neither defines outputChannelString nor hostname/port "
+                    << "matching any active connection.";
         }
 
 
         void InputChannel::disconnect(const std::string& outputChannelString) {
-
-            if (outputChannelString.empty()) return;
-
             boost::mutex::scoped_lock lock(m_outputChannelsMutex);
-            OpenConnections::iterator it = m_openConnections.find(outputChannelString);
-            if (it == m_openConnections.end()) return;
+            disconnectImpl(outputChannelString);
+        }
 
-            KARABO_LOG_FRAMEWORK_DEBUG << "Disconnecting...";
+
+        void InputChannel::disconnectImpl(std::string outputChannelString) {
+            // For safety, take 'outputChannelString' as a value and not as a const reference:
+            // It might come from an iterator looping over m_openConnections - then it would be invalid
+            // after m_openConnections.erase(it) below
+
+            OpenConnections::iterator it = m_openConnections.find(outputChannelString);
+            if (it == m_openConnections.end()) return; // see below
+
+            KARABO_LOG_FRAMEWORK_DEBUG << "Disconnecting... " << outputChannelString;
             it->second.second->close(); // Closes channel
             it->second.first->stop();
             m_openConnections.erase(it);
-            ConnectedOutputChannels::iterator ii = m_connectedOutputChannels.find(outputChannelString);
-            if (ii == m_connectedOutputChannels.end()) return;
-            // Should we clean Hash or keep it?  More safe is to clean.
-            // GF sept. 2018: Why not erase? Could be completely different when it comes back...
-            ii->second.clear();
+
+            // Also clean stored info in m_connectedOutputChannels - but we keep the keys stable to the
+            // initially configured list of (to be [!]) connected output channels.
+            // (Note: Only things in m_connectedOutputChannels can get into m_openConnections, so operator[] is safe.)
+            m_connectedOutputChannels[outputChannelString].clear();
         }
 
 
@@ -319,34 +350,13 @@ namespace karabo {
             }
 
             const std::string& memoryLocation = outputChannelInfo.get<std::string > ("memoryLocation");
-            const std::string& hostname = outputChannelInfo.get<std::string > ("hostname");
-            unsigned int port = outputChannelInfo.get<unsigned int>("port");
 
             // synchronous write could throw if connection broken again - but that will be caught by outer event loop:
             channel->write(karabo::util::Hash("reason", "hello", "instanceId", this->getInstanceId(), "memoryLocation", memoryLocation, "dataDistribution", m_dataDistribution, "onSlowness", m_onSlowness)); // Say hello!
             channel->readAsyncHashVectorBufferSetPointer(util::bind_weak(&karabo::xms::InputChannel::onTcpChannelRead, this,
                                                                          _1, net::Channel::WeakPointer(channel), _2, _3));
 
-            boost::mutex::scoped_lock lock(m_outputChannelsMutex);
-            string outputChannelString;
-            if (outputChannelInfo.has("outputChannelString")) {
-                outputChannelString = outputChannelInfo.get<string>("outputChannelString");
-            } else {
-                // GF Sept. 2018: Does it make sense to look into old stored data? Things might have changed in such
-                //                a dynamic system as Karabo... But I do not dare to change now (due to lack of time).
-                for (ConnectedOutputChannels::const_iterator it = m_connectedOutputChannels.begin(); it != m_connectedOutputChannels.end(); ++it) {
-                    if (!it->second.empty() && it->second.get<string>("hostname") == hostname && it->second.get<unsigned>("port") == port) {
-                        outputChannelString = it->first;
-                        break;
-                    }
-                }
-            }
-            if (outputChannelString.empty()) {
-                KARABO_LOG_FRAMEWORK_ERROR << getInstanceId()
-                        << ": Output channel info input lacks 'outputChannelString' - " << outputChannelInfo;
-                if (handler) handler(boost::system::errc::make_error_code(boost::system::errc::invalid_argument));
-                return;
-            }
+            const string& outputChannelString = outputChannelInfo.get<string>("outputChannelString");
             // FIXME - proper solution still to be found:
             // In case of concurrent connect and re-connect of the InputChannel (e.g. if sender and receiver device
             // start concurrently), we might find a channel already stored. Here we overwrite (and thus close) that
@@ -354,15 +364,18 @@ namespace karabo {
             // we have to hope that the order of first and second channel is the same on both ends. Experience shows
             // that this is not always the case, but has a higher likelihood than the other way round.
             // (If it would be the other way round, m_openConnections.insert(..) would be better than using operator[].)
-            auto& newConChan = m_openConnections[outputChannelString];
-            const karabo::net::Channel::Pointer& previousChannel = newConChan.second; // normally pair of empty pointers
-            if (previousChannel) {
-                KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << " storing channel to '" << outputChannelString << "', "
-                        << "although there is already one that " << (previousChannel->isOpen() ? "IS" : "is NOT")
-                        << " open.";
+            {
+                boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+                auto& newConChan = m_openConnections[outputChannelString];
+                const karabo::net::Channel::Pointer& previousChannel = newConChan.second; // normally pair of empty pointers
+                if (previousChannel) {
+                    KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << " storing channel to '" << outputChannelString << "', "
+                            << "although there is already one that " << (previousChannel->isOpen() ? "IS" : "is NOT")
+                            << " open.";
+                }
+                newConChan = std::make_pair(connection, channel); // overwrite content inside m_openConnections
             }
-            newConChan = std::make_pair(connection, channel); // overwrite content inside m_openConnections
-
+            // Call handler if given - but without mutex lock
             if (handler) handler(ec);
         }
 
@@ -387,26 +400,21 @@ namespace karabo {
                 return;
             }
 
-
-            string outputChannelString;
             boost::mutex::scoped_lock lock(m_outputChannelsMutex);
             for (OpenConnections::iterator ii = m_openConnections.begin(); ii != m_openConnections.end(); ++ii) {
                 if (ii->second.second == channel) {
-                    channel->close();
-                    ii->second.first->stop();
-                    outputChannelString = ii->first;
-                    m_openConnections.erase(ii);
-                    break;
+                    const std::string& outputChannelString = ii->first;
+                    KARABO_LOG_FRAMEWORK_INFO << "onTcpChannelError on \"" << m_instanceId << "\"  connected to \""
+                            << outputChannelString << "\"  :  code #" << error.value() << " -- \"" << error.message() << "\".  Disconnect.";
+                    disconnectImpl(outputChannelString);
+                    return;
                 }
             }
 
-            KARABO_LOG_FRAMEWORK_INFO << "onTcpChannelError on \"" << m_instanceId << "\"  connected to \""
-                    << outputChannelString << "\"  :  code #" << error.value() << " -- \"" << error.message() << "\".  Close channel.";
-
-            if (outputChannelString.empty()) return;
-            ConnectedOutputChannels::iterator it = m_connectedOutputChannels.find(outputChannelString);
-            if (it == m_connectedOutputChannels.end()) return;
-            it->second.clear();
+            // Should never come here:
+            KARABO_LOG_FRAMEWORK_ERROR << "onTcpChannelError on \"" << m_instanceId << "\"  for untracked connection: "
+                    << "code #" << error.value() << " -- \"" << error.message() << "\".  Stop connection.";
+            channel->getConnection()->stop();
         }
 
 
@@ -770,7 +778,7 @@ namespace karabo {
                     boost::split(tmp, connectedOutputChannels[i], boost::is_any_of("@:"));
                     if (tmp.size() == 2) {
                         boost::mutex::scoped_lock lock(m_outputChannelsMutex);
-                        m_connectedOutputChannels.insert(std::make_pair(connectedOutputChannels[i], Hash()));
+                        m_connectedOutputChannels[connectedOutputChannels[i]] = Hash();
                     } else {
                         throw KARABO_PARAMETER_EXCEPTION("Illegal format for connected output channel, expecting <deviceId>:<channelName>");
                     }
@@ -781,12 +789,12 @@ namespace karabo {
 
         void InputChannel::updateOutputChannelConfiguration(const std::string& outputChannelString, const karabo::util::Hash& config) {
             boost::mutex::scoped_lock lock(m_outputChannelsMutex);
-            m_connectedOutputChannels[outputChannelString] = config;
-        }
-
-
-        bool InputChannel::needsDeviceConnection() const {
-            return true;
+            // Only update, do not allow for new 'outputChannelString'
+            // FIXME: Really? Would break DataAggregator::connectToDataSources(), I guess...
+            auto it = m_connectedOutputChannels.find(outputChannelString);
+            if (it != m_connectedOutputChannels.end()) {
+                it->second = config;
+            }
         }
 
     }
