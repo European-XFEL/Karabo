@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt5.QtCore import pyqtSlot, Qt
+from PyQt5.QtCore import pyqtSlot, Qt, QPoint
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import (
     QAbstractItemView, QAction, QDialog, QHeaderView, QMenu, QTreeView)
@@ -15,6 +15,7 @@ from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
 from karabogui.singletons.api import (
     get_manager, get_network, get_selection_tracker)
+from karabogui.util import open_documentation_link
 from karabogui.widgets.popup import PopupWidget
 
 from .device_model import DeviceTreeModel
@@ -72,9 +73,15 @@ class DeviceTreeView(QTreeView):
         self.ac_kill_device.setToolTip(text)
         self.ac_kill_device.triggered.connect(self.onKillInstance)
 
-        self.menu.addAction(self.ac_about)
+        text = "Documentation"
+        self.ac_docu = QAction(icons.weblink, text, self)
+        self.ac_docu.triggered.connect(self.onGetDocumenation)
+
         self.menu.addAction(self.ac_config_past)
         self.menu.addAction(self.ac_kill_device)
+        self.menu.addSeparator()
+        self.menu.addAction(self.ac_about)
+        self.menu.addAction(self.ac_docu)
 
     def indexInfo(self, index=None):
         """Return the info about the index.
@@ -164,7 +171,7 @@ class DeviceTreeView(QTreeView):
             time = str(time_point.toString(Qt.ISODate))
             get_network().onGetConfigurationFromPast(device_id, time=time)
 
-    @pyqtSlot()
+    @pyqtSlot(QPoint)
     def onCustomContextMenuRequested(self, pos):
         info = self.indexInfo()
         node_type = info.get('type', NavigationItemTypes.UNDEFINED)
@@ -180,6 +187,11 @@ class DeviceTreeView(QTreeView):
         if node_type is NavigationItemTypes.DEVICE:
             deviceId = info.get('deviceId')
             manager.shutdownDevice(deviceId)
+
+    @pyqtSlot()
+    def onGetDocumenation(self):
+        deviceId = self.indexInfo().get('deviceId')
+        open_documentation_link(deviceId)
 
     @pyqtSlot()
     def onDoubleClickHeader(self):
