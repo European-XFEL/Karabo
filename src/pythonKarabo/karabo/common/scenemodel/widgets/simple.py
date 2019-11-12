@@ -53,6 +53,10 @@ class DirectoryModel(BaseDisplayEditableWidget):
     klass = Enum('DisplayDirectory', 'EditableDirectory')
 
 
+class DaemonManagerModel(BaseWidgetObjectData):
+    """ A model for the DaemonManager Table element"""
+
+
 class DisplayLabelModel(BaseWidgetObjectData):
     """ A model for DisplayLabel"""
 
@@ -441,10 +445,11 @@ def _build_empty_widget_readers_and_writers():
 
         return writer
 
-    names = ('AnalogModel', 'BitfieldModel', 'DisplayLabelModel',
-             'DisplayListModel', 'DisplayPlotModel', 'DisplayTextLogModel',
-             'EditableListModel', 'EditableListElementModel',
-             'EditableSpinBoxModel', 'GlobalAlarmModel', 'HexadecimalModel',
+    names = ('AnalogModel', 'BitfieldModel', 'DaemonManagerModel',
+             'DisplayLabelModel', 'DisplayListModel', 'DisplayPlotModel',
+             'DisplayTextLogModel', 'EditableListModel',
+             'EditableListElementModel', 'EditableSpinBoxModel',
+             'GlobalAlarmModel', 'HexadecimalModel',
              'IntLineEditModel', 'KnobModel', 'LampModel',
              'MultiCurvePlotModel', 'PopUpModel', 'RunConfiguratorModel',
              'SliderModel', 'WidgetNodeModel', 'XYPlotModel')
