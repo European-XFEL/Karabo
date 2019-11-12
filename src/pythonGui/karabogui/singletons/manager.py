@@ -218,6 +218,9 @@ class Manager(QObject):
         for instance_id, class_id, _ in devices:
             if class_id == 'AlarmService':
                 self._announce_alarm_services([instance_id])
+            elif class_id == 'DaemonManager':
+                broadcast_event(KaraboEvent.ShowDaemonService,
+                                {'instanceId': instance_id})
 
     def handle_systemVersion(self, **info):
         """Handle the version number reply from the GUI server"""
@@ -232,6 +235,9 @@ class Manager(QObject):
             if class_id == 'AlarmService':
                 broadcast_event(KaraboEvent.RemoveAlarmServices,
                                 {'instanceIds': [instance_id]})
+            elif class_id == 'DaemonManager':
+                broadcast_event(KaraboEvent.RemoveDaemonService,
+                                {'instanceIds': instance_id})
             gone_instanceIds.append(instance_id)
 
         # Update topology interested listeners!
@@ -245,6 +251,9 @@ class Manager(QObject):
             elif class_id == 'ProjectManager':
                 broadcast_event(KaraboEvent.ProjectDBConnect,
                                 {'device': instance_id})
+            elif class_id == 'DaemonManager':
+                broadcast_event(KaraboEvent.ShowDaemonService,
+                                {'instanceId': instance_id})
 
         devices.extend(new_devices)
         servers.extend(new_servers)
