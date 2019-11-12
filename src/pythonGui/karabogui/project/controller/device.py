@@ -32,7 +32,8 @@ from karabogui.request import call_device_slot
 from karabogui.singletons.api import get_manager, get_network, get_topology
 from karabogui.topology.api import ProjectDeviceInstance
 from karabogui.util import (
-    get_scene_from_server, handle_scene_from_server, handle_macro_from_server)
+    get_scene_from_server, handle_scene_from_server, handle_macro_from_server,
+    open_documentation_link)
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 from .server import DeviceServerController
 
@@ -62,8 +63,6 @@ class DeviceInstanceController(BaseProjectGroupController):
 
         capabilities = proj_topo_node.capabilities if proj_topo_node else 0
 
-        about_action = QAction('About', menu)
-        about_action.triggered.connect(self._about_device)
         edit_action = QAction('Edit', menu)
         edit_action.triggered.connect(partial(self._edit_device,
                                               project_controller))
@@ -101,7 +100,13 @@ class DeviceInstanceController(BaseProjectGroupController):
         shutdown_action.setEnabled(proj_device_online)
         shutdown_action.triggered.connect(partial(self.shutdown_device,
                                                   show_confirm=True))
-        menu.addAction(about_action)
+        menu.addSeparator()
+        about_action = QAction('About', menu)
+        about_action.triggered.connect(self._about_device)
+
+        docu_action = QAction('Documentation', menu)
+        docu_action.triggered.connect(self._get_documentation_device)
+
         menu.addAction(edit_action)
         menu.addMenu(config_menu)
         menu.addSeparator()
@@ -114,6 +119,10 @@ class DeviceInstanceController(BaseProjectGroupController):
         menu.addSeparator()
         menu.addAction(instantiate_action)
         menu.addAction(shutdown_action)
+        menu.addSeparator()
+        menu.addAction(about_action)
+        menu.addAction(docu_action)
+
         return menu
 
     def info(self):
@@ -402,8 +411,7 @@ class DeviceInstanceController(BaseProjectGroupController):
                 dev_conf.class_id = dialog.class_id
                 dev_conf.description = dialog.description
 
-    # @pyqtSlot()
-    def _about_device(self, checked):
+    def _about_device(self):
         device = self.model
         info = {}
         for name in device.editable_traits():
@@ -414,6 +422,10 @@ class DeviceInstanceController(BaseProjectGroupController):
                       "".join("<tr><td><b>{}</b>:   </td><td>{}</td></tr>".
                               format(*p) for p in info.items()) + "</table>")
         messagebox.show_information(htmlString)
+
+    def _get_documentation_device(self):
+        deviceId = self.model.instance_id
+        open_documentation_link(deviceId)
 
     def _add_configuration(self, project_controller):
         device = self.model
