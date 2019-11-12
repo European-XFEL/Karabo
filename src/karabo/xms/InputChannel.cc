@@ -104,6 +104,7 @@ namespace karabo {
 
         void InputChannel::reconfigure(const karabo::util::Hash& config, bool allowMissing) {
             parseOutputChannelConfiguration(config);
+            // If allowMissing is false, the lack of a key will throw an exception - that is on purpose!
             if (!allowMissing || config.has("dataDistribution")) config.get("dataDistribution", m_dataDistribution);
             if (!allowMissing || config.has("minData")) config.get("minData", m_minData);
             if (!allowMissing || config.has("onSlowness")) config.get("onSlowness", m_onSlowness);
