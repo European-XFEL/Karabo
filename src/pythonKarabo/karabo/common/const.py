@@ -52,6 +52,9 @@ KARABO_WARN_VARIANCE_HIGH = "warnVarianceHigh"
 KARABO_ALARM_VARIANCE_LOW = "alarmVarianceLow"
 KARABO_ALARM_VARIANCE_HIGH = "alarmVarianceHigh"
 
+# The default scene name to be used
+KARABO_SCHEMA_DEFAULT_SCENE = 'scene'
+
 # A tuple which defines the ordering of the above attributes
 KARABO_SCHEMA_ATTRIBUTES = (
     KARABO_SCHEMA_DISPLAYED_NAME,

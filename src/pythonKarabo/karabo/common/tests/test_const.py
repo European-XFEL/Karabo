@@ -4,7 +4,8 @@ from karabo.common import const as constmod
 def test_const_def():
     tuple_symbol = 'KARABO_SCHEMA_ATTRIBUTES'
     ignored_symbols = ('KARABO_EDITABLE_ATTRIBUTES',
-                       'KARABO_RUNTIME_ATTRIBUTES_MDL')
+                       'KARABO_RUNTIME_ATTRIBUTES_MDL',
+                       'KARABO_SCHEMA_DEFAULT_SCENE')
 
     all_symbols = dir(constmod)
     all_symbols = [s for s in all_symbols if not s.startswith('__')]
