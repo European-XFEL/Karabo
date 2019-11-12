@@ -71,7 +71,7 @@ class BaseSeriesGraph(BaseBindingController):
         self._plot.add_legend(visible=False)
         self._plot.add_cross_target()
         self._plot.add_toolbar()
-        self._plot.enable_data_toggle()
+        self._plot.enable_data_toggle(activate=True)
 
         # Restore previous configuration!
         self._plot.restore(build_graph_config(self.model))
