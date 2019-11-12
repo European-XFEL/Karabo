@@ -87,6 +87,8 @@ class Configuration(QObject):
                            q_set=False, group=BACKBONE)
     documentation = Item('documentation', default=DOCU,
                          q_set=False, group=BACKBONE)
+    daemon_manager = Item('daemon_manager', default='KaraboDaemonManager',
+                          q_set=False, group=BACKBONE)
 
     # ----------------------------------------------
     # Last directories stored and used

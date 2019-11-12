@@ -4,10 +4,13 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt5.QtWidgets import QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QWidget
 
+from karabo.common.api import KARABO_SCHEMA_DEFAULT_SCENE
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.navigation.system_view import SystemTreeView
+from karabogui.util import get_scene_from_server
+from karabogui.singletons.api import get_config
 
 from .base import BasePanelWidget
 from .searchwidget import SearchBar
@@ -18,7 +21,9 @@ class TopologyPanel(BasePanelWidget):
         super(TopologyPanel, self).__init__("System Topology")
         event_map = {
             KaraboEvent.NetworkConnectStatus: self._event_network,
-            KaraboEvent.AccessLevelChanged: self._event_access_level
+            KaraboEvent.AccessLevelChanged: self._event_access_level,
+            KaraboEvent.RemoveDaemonService: self._event_remove_daemon,
+            KaraboEvent.ShowDaemonService: self._event_show_daemon
         }
         register_for_broadcasts(event_map)
 
@@ -30,13 +35,21 @@ class TopologyPanel(BasePanelWidget):
 
         self.tree_view = SystemTreeView(widget)
         self.sbar = SearchBar(parent=self)
+        self.daemon_button = QPushButton("Service Manager", parent=self)
+        self.daemon_button.clicked.connect(self._retrieve_service_scene)
+        self.daemon_button.setVisible(False)
+
         model = self.tree_view.model()
         self.sbar.setModel(model)
 
         main_layout.addWidget(self.sbar)
+        main_layout.addWidget(self.daemon_button)
         main_layout.addWidget(self.tree_view)
 
         return widget
+
+    # -----------------------------------------------------------------------
+    # Karabo Events
 
     def _event_access_level(self, data):
         self.sbar.reset(enable=True)
@@ -47,7 +60,19 @@ class TopologyPanel(BasePanelWidget):
         if not status:
             self.close_popup_widget()
 
+    def _event_show_daemon(self, data):
+        self.daemon_button.setVisible(True)
+
+    def _event_remove_daemon(self, data):
+        self.daemon_button.setVisible(False)
+
+    # -----------------------------------------------------------------------
+
     def close_popup_widget(self):
         widget = self.tree_view.popupWidget
         if widget is not None:
             widget.close()
+
+    def _retrieve_service_scene(self):
+        instance_id = get_config()['daemon_manager']
+        get_scene_from_server(instance_id, KARABO_SCHEMA_DEFAULT_SCENE)
