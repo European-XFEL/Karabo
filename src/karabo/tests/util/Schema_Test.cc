@@ -536,9 +536,14 @@ void Schema_Test::testSlotElement() {
     CPPUNIT_ASSERT(sch.isCommand("slotTest") == true);
     CPPUNIT_ASSERT(sch.isProperty("slotTest") == false);
 
-    // Underscores are not allowed in slots since that interferes with slots under a node
-    CPPUNIT_ASSERT_THROW(SLOT_ELEMENT(sch).key("slot_withunderscore"),
+    // An underscores should not be allowed in slot keys since they interfere with slots under a node.
+    // But currently we cannot exclude them for backward compatibility of some Beckhoff devices.
+    //    CPPUNIT_ASSERT_THROW(SLOT_ELEMENT(sch).key("slot_withunderscore"),
+    //                         karabo::util::ParameterException);
+    // But this one is forbidden due to interference with GUI client:
+    CPPUNIT_ASSERT_THROW(SLOT_ELEMENT(sch).key("clear_namespace"),
                          karabo::util::ParameterException);
+
 }
 
 
