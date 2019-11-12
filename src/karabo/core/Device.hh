@@ -1520,9 +1520,11 @@ namespace karabo {
                 // Register message consumption error handler - bind_weak not needed as above
                 this->registerBrokerErrorHandler(boost::bind(&karabo::core::Device<FSM>::onBrokerError, this, _1));
 
-                // Instantiate all channels
-                this->initChannels();
-
+                // Instantiate all channels - needs mutex
+                {
+                    boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                    this->initChannels();
+                }
                 //
                 // Then start SignalSlotable: communication (incl. system registration) starts and thus parallelism!
                 //
@@ -1589,18 +1591,18 @@ namespace karabo {
 
             /**
              *  Called in beginning of run() to setup pipeline channels, will
-             *  recursively go through the schema of the device
+             *  recursively go through the schema of the device.
+             *  Needs to be called with m_objectStateChangeMutex being locked.
              *  *
              *  * @param topLevel: std::string: empty or existing path of full
              *  *                  schema of the device
              *  */
             void initChannels(const std::string& topLevel = "") {
 
-                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 // Keys under topLevel, without leading "topLevel.":
                 const std::vector<std::string>& subKeys = m_fullSchema.getKeys(topLevel);
 
-                BOOST_FOREACH(const std::string &subKey, subKeys) {
+                for (const std::string &subKey : subKeys) {
                     // Assemble full path out of topLevel and subKey
                     const std::string key(topLevel.empty() ? subKey : (topLevel + '.') += subKey);
                     if (m_fullSchema.hasDisplayType(key)) {
@@ -1638,10 +1640,7 @@ namespace karabo {
                         // Recursive call going down the tree for channels within nodes
                         KARABO_LOG_FRAMEWORK_DEBUG << "'" << this->getInstanceId() << "' looks for input/output channels "
                                 << "under node \"" << key << "\"";
-
-                        lock.unlock(); // release lock before recursion
                         this->initChannels(key);
-                        lock.lock();
                     }
                 }
             }
