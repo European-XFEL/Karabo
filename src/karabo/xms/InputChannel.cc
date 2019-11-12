@@ -756,14 +756,26 @@ namespace karabo {
             if (config.has("connectedOutputChannels")) {
                 std::vector<std::string> connectedOutputChannels;
                 config.get("connectedOutputChannels", connectedOutputChannels);
+                boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+                m_connectedOutputChannels.clear();
                 for (size_t i = 0; i < connectedOutputChannels.size(); ++i) {
                     std::vector<std::string> tmp;
                     boost::split(tmp, connectedOutputChannels[i], boost::is_any_of("@:"));
                     if (tmp.size() == 2) {
-                        boost::mutex::scoped_lock lock(m_outputChannelsMutex);
                         m_connectedOutputChannels[connectedOutputChannels[i]] = Hash();
                     } else {
                         throw KARABO_PARAMETER_EXCEPTION("Illegal format for connected output channel, expecting <deviceId>:<channelName>");
+                    }
+                }
+                for (auto it = m_openConnections.begin(); it != m_openConnections.end();) {
+                    const std::string& outputChannelString = it->first;
+                    if (std::find(connectedOutputChannels.begin(), connectedOutputChannels.end(), outputChannelString)
+                        == connectedOutputChannels.end()) {
+                        // not anymore configured, so erase and thus stop
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Disconnecting '" << outputChannelString << "' in reconfigure";
+                        it = m_openConnections.erase(it);
+                    } else {
+                        ++it;
                     }
                 }
             }

@@ -131,9 +131,16 @@ namespace karabo {
 
             virtual ~InputChannel();
 
-        private:
+            /**
+             * Reconfigure InputChannel
+             * Disconnects any previous "connectedOutputChannels" if not in config["connectedOutputChannels"].
+             *
+             * @param config as needed by the constructor
+             * @param allowMissing if true, lack of keys "dataDistribution", "minData", "onSlowness", "delayOnInput"
+             *                     and "respondToEndOfStream" is OK and their respective previous configuration is kept
+             */
             void reconfigure(const karabo::util::Hash& config, bool allowMissing = true);
-        public:
+
             void setInstanceId(const std::string& instanceId);
 
             const std::string& getInstanceId() const;
