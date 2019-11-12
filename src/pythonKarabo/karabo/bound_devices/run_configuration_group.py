@@ -9,7 +9,6 @@ import os.path as op
 
 from karabo.bound import (
     PythonDevice, Hash, loadFromFile, saveToFile, Schema, State,
-    TextSerializerSchema,
     ADMIN, EXPERT, KARABO_CLASSINFO,
     BOOL_ELEMENT, OVERWRITE_ELEMENT, NODE_ELEMENT, SLOT_ELEMENT,
     STRING_ELEMENT, TABLE_ELEMENT, UINT32_ELEMENT, VECTOR_STRING_ELEMENT
@@ -17,8 +16,8 @@ from karabo.bound import (
 from karabo.common.api import (
     KARABO_SCHEMA_DISPLAY_TYPE_SCENES as DT_SCENES)
 from karabo.common.scenemodel.api import (
-    BoxLayoutModel, DisplayCommandModel, FixedLayoutModel, LabelModel,
-    LineEditModel, SceneModel, TableElementModel, write_scene,
+    BoxLayoutModel, DisplayCommandModel, DisplayLabelModel, LabelModel,
+    SceneModel, TableElementModel, write_scene,
 )
 
 OUTPUT_CHANNEL_SEPARATOR = ':'
@@ -35,6 +34,7 @@ class AccessMode(enum.Enum):
 class RunControlDataSource(object):
     """The description of a single run control data source.
     """
+
     @staticmethod
     def expectedParameters(expected):
         (
@@ -94,7 +94,6 @@ class RunControlDataSource(object):
 
 @KARABO_CLASSINFO('RunConfigurationGroup', '2.2')
 class RunConfigurationGroup(PythonDevice):
-
     def __init__(self, configuration):
         # always call PythonDevice constructor first!
         super(RunConfigurationGroup, self).__init__(configuration)
@@ -331,72 +330,67 @@ def _findDataSource(hashes, instance_id):
 
 
 def _generateDeviceScene(instance_id):
-    DEFAULT_FONT = ",10,-1,5,50,0,0,0,0,0"
-
-    button_key = instance_id + '.group.saveGroupConfiguration'
-    button = DisplayCommandModel(keys=[button_key],
-                                 x=475, y=525, height=30, width=135)
-    user_label = LabelModel(text="User Sources", font=DEFAULT_FONT,
-                            x=25, y=315, height=30, width=90)
-    expert_label = LabelModel(text="Expert Sources", font=DEFAULT_FONT,
-                              x=20, y=100, height=30, width=100)
-
-    descr_key = instance_id + '.group.description'
-    descr_label = LabelModel(text="Description", font=DEFAULT_FONT,
-                             x=40, y=50, height=30, width=80)
-    descr_disp = LineEditModel(klass='DisplayLineEdit', keys=[descr_key],
-                               x=120, y=50, height=30, width=170)
-    descr_edit = LineEditModel(klass='EditableLineEdit', keys=[descr_key],
-                               x=290, y=50, height=30, width=170)
-    descr_layout = BoxLayoutModel(direction=0,
-                                  x=35, y=50, height=45, width=430,
-                                  children=[descr_label, descr_disp,
-                                            descr_edit])
-
-    name_key = instance_id + '.group.id'
-    name_label = LabelModel(text="Name", font=DEFAULT_FONT,
-                            x=80, y=15, height=30, width=40)
-    name_disp = LineEditModel(klass='DisplayLineEdit', keys=[name_key],
-                              x=120, y=15, height=30, width=130)
-    name_layout = BoxLayoutModel(direction=0, x=75, y=10, height=40, width=180,
-                                 children=[name_label, name_disp])
-
-    # Generate the table schema
-    column_schema = Schema()
-    RunControlDataSource.expectedParameters(column_schema)
-    serializer = TextSerializerSchema.create('Xml')
-    column_schema = serializer.save(column_schema)
-
-    expert_key = instance_id + '.group.expert'
-    expert_table = TableElementModel(klass='EditableTableElement',
-                                     keys=[expert_key],
-                                     column_schema=column_schema,
-                                     x=120, y=90, height=210, width=500)
-
-    user_key = instance_id + '.group.user'
-    user_table = TableElementModel(klass='EditableTableElement',
-                                   keys=[user_key],
-                                   column_schema=column_schema,
-                                   x=120, y=310, height=210, width=500)
-
-    root_layout = FixedLayoutModel(x=10, y=10, height=550, width=600,
-                                   children=[button, user_label, expert_label,
-                                             descr_layout, name_layout,
-                                             expert_table, user_table])
-
-    exp_0 = LabelModel(font=',11,-1,5,50,0,0,0,0,0',
-                       height=72, width=111, x=644, y=15,
-                       parent_component='DisplayComponent',
-                       text='NOTE: You must click the green check mark')
-    exp_1 = LabelModel(font=',11,-1,5,50,0,0,0,0,0',
-                       height=72, width=110.0, x=650, y=74,
-                       parent_component='DisplayComponent',
-                       text='to apply your changes before clicking the')
-    exp_2 = LabelModel(font=',11,-1,5,50,0,0,0,0,0',
-                       height=72, width=111, x=656, y=155,
-                       parent_component='DisplayComponent',
-                       text=' "Save Configuration" button.')
-    exp_layout = BoxLayoutModel(direction=2,
-                                height=77, width=346, x=126, y=531,
-                                children=[exp_0, exp_1, exp_2])
-    return write_scene(SceneModel(children=[root_layout, exp_layout]))
+    scene0 = LabelModel(background='#a3aba7',
+                        font='Sans Serif,10,-1,5,50,0,0,0,0,0',
+                        frame_width=1, height=21.0,
+                        parent_component='DisplayComponent',
+                        text='NOTE: You must click the green check mark to '
+                             'apply your changes before clicking the '
+                             '"Save Configuration" button.',
+                        width=760.0, x=16.0, y=655.0)
+    scene1 = DisplayCommandModel(
+        height=30.0,
+        keys=['{}.group.saveGroupConfiguration'.format(instance_id)],
+        parent_component='DisplayComponent',
+        width=135.0, x=641.0, y=686.0)
+    scene2 = LabelModel(font='Sans Serif,10,-1,5,50,0,0,0,0,0',
+                        height=30.0, parent_component='DisplayComponent',
+                        text='User Sources', width=90.0, x=12.0, y=407.0)
+    scene3 = LabelModel(font='Sans Serif,10,-1,5,50,0,0,0,0,0',
+                        height=30.0, parent_component='DisplayComponent',
+                        text='Expert Sources', width=100.0, x=12.0,
+                        y=167.0)
+    scene4 = TableElementModel(
+        height=216.0, keys=['{}.group.expert'.format(instance_id)],
+        klass='EditableTableElement',
+        parent_component='EditableApplyLaterComponent', width=766.0,
+        x=12.0, y=193.0)
+    scene5 = TableElementModel(
+        height=216.0, keys=['{}.group.user'.format(instance_id)],
+        klass='EditableTableElement',
+        parent_component='EditableApplyLaterComponent', width=766.0,
+        x=12.0, y=435.0)
+    scene6 = LabelModel(background='#858a86',
+                        font='Sans Serif,10,-1,5,50,0,0,0,0,0',
+                        foreground='#000000', frame_width=1, height=5.0,
+                        parent_component='DisplayComponent', width=721.0,
+                        x=34.0, y=156.0)
+    scene7 = DisplayLabelModel(height=23.0,
+                               keys=['{}.group.id'.format(instance_id)],
+                               parent_component='DisplayComponent',
+                               width=724.0, x=29.0, y=26.0)
+    scene80 = LabelModel(font='Sans Serif,10,-1,5,50,0,0,0,0,0',
+                         foreground='#000000', height=29.0,
+                         parent_component='DisplayComponent',
+                         text='Description', width=74.0, x=18.0, y=66.0)
+    scene81 = LabelModel(font='Sans Serif,10,-1,5,50,0,0,0,0,0',
+                         foreground='#000000', height=23.0,
+                         parent_component='DisplayComponent', text='Owner',
+                         width=74.0, x=19.0, y=106.0)
+    scene8 = BoxLayoutModel(direction=2, height=62.0, width=86.0, x=30.0,
+                            y=69.0, children=[scene80, scene81])
+    scene90 = DisplayLabelModel(height=29.0,
+                                keys=['{}.group.description'.format(
+                                    instance_id)],
+                                parent_component='DisplayComponent',
+                                width=301.0, x=101.0, y=67.0)
+    scene91 = DisplayLabelModel(height=29.0,
+                                keys=['{}.owner.name'.format(instance_id)],
+                                parent_component='DisplayComponent',
+                                width=300.0, x=101.0, y=108.0)
+    scene9 = BoxLayoutModel(direction=2, height=67.0, width=623.0, x=134.0,
+                            y=67.0, children=[scene90, scene91])
+    scene = SceneModel(height=725.0, width=783.0,
+                       children=[scene0, scene1, scene2, scene3, scene4,
+                                 scene5, scene6, scene7, scene8, scene9])
+    return write_scene(scene)
