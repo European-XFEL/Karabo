@@ -44,6 +44,7 @@ NETWORK = "network"
 PROJECT = "project"
 BACKBONE = "backbone"
 DIRECTORIES = "dir"
+DOCU = "https://in.xfel.eu/readthedocs/docs/deployed-controls-{topic}/en/latest/{deviceId}.html" # noqa
 
 
 class Configuration(QObject):
@@ -84,6 +85,8 @@ class Configuration(QObject):
                         q_set=True, group=BACKBONE)
     project_manager = Item('project_manager', default='KaraboProjectDB',
                            q_set=False, group=BACKBONE)
+    documentation = Item('documentation', default=DOCU,
+                         q_set=False, group=BACKBONE)
 
     # ----------------------------------------------
     # Last directories stored and used
