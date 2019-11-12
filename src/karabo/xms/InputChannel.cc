@@ -680,23 +680,6 @@ namespace karabo {
         }
 
 
-        bool InputChannel::canCompute() const {
-            
-            if ((this->getMinimumNumberOfData() == 0xFFFFFFFF)) {
-                if (m_isEndOfStream && m_respondToEndOfStream) {
-                    return false;
-                }
-                return true;
-            }
-
-            if (m_isEndOfStream && (Memory::size(m_channelId, m_activeChunk) == 0)) return false;
-
-            if (!m_isEndOfStream && (this->getMinimumNumberOfData() <= 0)) return false;
-
-            return Memory::size(m_channelId, m_activeChunk) >= this->getMinimumNumberOfData();
-        }
-
-
         void InputChannel::deferredNotificationOfOutputChannelForPossibleRead(const karabo::net::Channel::WeakPointer& channelW) {
             const net::Channel::Pointer channel = channelW.lock();
             if (channel && channel->isOpen()) {
@@ -789,12 +772,7 @@ namespace karabo {
 
         void InputChannel::updateOutputChannelConfiguration(const std::string& outputChannelString, const karabo::util::Hash& config) {
             boost::mutex::scoped_lock lock(m_outputChannelsMutex);
-            // Only update, do not allow for new 'outputChannelString'
-            // FIXME: Really? Would break DataAggregator::connectToDataSources(), I guess...
-            auto it = m_connectedOutputChannels.find(outputChannelString);
-            if (it != m_connectedOutputChannels.end()) {
-                it->second = config;
-            }
+            m_connectedOutputChannels[outputChannelString] = config;
         }
 
     }
