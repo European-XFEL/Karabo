@@ -184,20 +184,28 @@ class Curve(HasStrictTraits):
         self.proxy.get_history(t0, t1, max_value_count=self.maxHistory)
 
     def changeInterval(self, t0, t1):
+        """Change the time interval of this Curve
+
+        :param t0: new start time of the curve
+        :param t1: new end time of the curve
+        """
         p0 = self.x[:self.fill].searchsorted(t0)
         p1 = self.x[:self.fill].searchsorted(t1)
 
         not_enough_data = (p1 - p0) < self.minHistory
         no_data = self.histsize == 0
         zoomed_out = self.histsize > self.sparsesize
-        nearly_left_border = 0.9 * self.t0 + 0.1 * self.t1
-        nearly_right_border = 0.1 * self.t0 + 0.9 * self.t1
+        # NOTE: We use here the new requested interval, otherwise we would not
+        # request!. It means that the historic data did not arrive yet.
+        nearly_left_border = 0.9 * t0 + 0.1 * t1
+        nearly_right_border = 0.1 * t0 + 0.9 * t1
 
         # Request history only needs to be done under certain circumstances
         if (no_data or (not_enough_data and zoomed_out) or
                 (self.x[p0] > nearly_left_border) or
                 (p1 < self.histsize and self.x[p1 - 1] < nearly_right_border)):
             self.get_property_history(t0, t1)
+
         self.t0 = t0
         self.t1 = t1
 
@@ -222,6 +230,10 @@ class Curve(HasStrictTraits):
         if not data:
             return
 
+        if self.t1 == self.t0:
+            # Prevent division by 0, otherwise self.curve.plot() is None
+            return
+
         datasize = len(data)
         gensize = sum([g.size for g in self.generations], 0)
         arraysize = datasize + gensize + self.spare
@@ -243,10 +255,6 @@ class Curve(HasStrictTraits):
         p1 = self.x[:self.fill].searchsorted(self.t1)
         np0 = x[:datasize].searchsorted(self.t0)
         np1 = x[:datasize].searchsorted(self.t1)
-
-        if self.t1 == self.t0:
-            # Prevent division by 0, otherwise self.curve.plot() is None
-            return
 
         span = (self.x[p1 - 1] - self.x[p0]) / (self.t1 - self.t0)
         nspan = (x[np1 - 1] - x[np0]) / (self.t1 - self.t0)
