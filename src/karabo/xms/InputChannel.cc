@@ -208,65 +208,51 @@ namespace karabo {
             namespace bse = boost::system::errc;
             KARABO_LOG_FRAMEWORK_DEBUG << "connect  on \"" << m_instanceId << "\"  :   outputChannelInfo is ...\n" << outputChannelInfo;
 
+            karabo::net::ErrorCode ec;
             const std::string& connectionType = outputChannelInfo.get<std::string > ("connectionType");
-
-            if (connectionType == "tcp") {
-
-                if (outputChannelInfo.has("outputChannelString")) {
-                    const string& outputChannelString = outputChannelInfo.get<string>("outputChannelString");
-                    boost::mutex::scoped_lock lock(m_outputChannelsMutex);
-                    if (m_connectedOutputChannels.find(outputChannelString) == m_connectedOutputChannels.end()) {
-                        KARABO_LOG_FRAMEWORK_WARN << "InputChannel with id " << getInstanceId()
-                                << " not configured to connect to " << outputChannelString;
-                        if (handler) {
-                            EventLoop::getIOService().post(boost::bind(handler, bse::make_error_code(bse::argument_out_of_domain)));
-                        }
-                        return;
-                    }
-
-                    if (!outputChannelInfo.has("memoryLocation")) {
-                        // onConnect(..) will need it - bail out early
-                        KARABO_LOG_FRAMEWORK_WARN << "InputChannel with id " << getInstanceId()
-                                << " connect(..) misses 'memoryLocation'" << outputChannelString;
-                        if (handler) {
-                            EventLoop::getIOService().post(boost::bind(handler, bse::make_error_code(bse::argument_out_of_domain)));
-                        }
-                        return;
-                    }
-                    OpenConnections::iterator it = m_openConnections.find(outputChannelString);
-                    if (it != m_openConnections.end()) {
-                        KARABO_LOG_FRAMEWORK_WARN << "InputChannel with id " << getInstanceId()
-                                << " already connected to " << outputChannelString << " - disconnect first!";
-                        if (handler) {
-                            EventLoop::getIOService().post(boost::bind(handler, bse::make_error_code(bse::already_connected)));
-                        }
-                        return;
-                    }
-                } else {
-                    // onConnect(..) will need it - bail out early
+            if (connectionType != "tcp") {
+                KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << " does not support connection type '" << connectionType << "'";
+                ec = bse::make_error_code(bse::protocol_not_supported);
+            } else if (!outputChannelInfo.has("outputChannelString")) {
+                // onConnect(..) will need it - bail out early
+                KARABO_LOG_FRAMEWORK_WARN << "InputChannel with id " << getInstanceId()
+                                          << ": outputChannelInfo for connect(..) lacks key 'outputChannelString'";
+                ec = bse::make_error_code(bse::invalid_argument);
+            } else if (!outputChannelInfo.has("memoryLocation")) {
+                // onConnect(..) will need it - bail out early
+                KARABO_LOG_FRAMEWORK_WARN << "InputChannel with id " << getInstanceId()
+                                          << ": outputChannelInfo for connect(..) lacks key 'memoryLocation'";
+                ec = bse::make_error_code(bse::argument_out_of_domain);
+            } else {
+                const string& outputChannelString = outputChannelInfo.get<string>("outputChannelString");
+                boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+                if (m_connectedOutputChannels.find(outputChannelString) == m_connectedOutputChannels.end()) {
                     KARABO_LOG_FRAMEWORK_WARN << "InputChannel with id " << getInstanceId()
-                            << ": outputChannelInfo for connect(..) lacks key 'outputChannelString'";
-                    if (handler) {
-                        EventLoop::getIOService().post(boost::bind(handler, bse::make_error_code(bse::invalid_argument)));
-                    }
+                                              << " not configured to connect to " << outputChannelString;
+                    ec = bse::make_error_code(bse::argument_out_of_domain);
+                } else if (m_openConnections.find(outputChannelString) != m_openConnections.end()) {
+                    KARABO_LOG_FRAMEWORK_WARN << "InputChannel with id " << getInstanceId()
+                                              << " already connected to " << outputChannelString << " - disconnect first!";
+                    ec = bse::make_error_code(bse::already_connected);
+                } else {
+
+                    KARABO_LOG_FRAMEWORK_DEBUG << "connect  on \"" << m_instanceId << "\" - create connection!";
+
+                    // Prepare connection configuration given output channel information
+                    karabo::util::Hash config = prepareConnectionConfiguration(outputChannelInfo);
+                    // Instantiate connection object
+                    karabo::net::Connection::Pointer connection = karabo::net::Connection::create(config);
+
+                    // Establish connection (and define sub-type of server)
+                    connection->startAsync(karabo::util::bind_weak(&InputChannel::onConnect, this, _1, connection,
+                                                                   outputChannelInfo, _2, handler));
                     return;
                 }
+            }
 
-                KARABO_LOG_FRAMEWORK_DEBUG << "connect  on \"" << m_instanceId << "\"   :   No old connection found.  Create one!";
-
-                // Prepare connection configuration given output channel information
-                karabo::util::Hash config = prepareConnectionConfiguration(outputChannelInfo);
-                // Instantiate connection object
-                karabo::net::Connection::Pointer connection = karabo::net::Connection::create(config);
-
-                // Establish connection (and define sub-type of server)
-                connection->startAsync(karabo::util::bind_weak(&InputChannel::onConnect, this, _1, connection,
-                                                               outputChannelInfo, _2, handler));
-            } else {
-                KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << " does not support connection type '" << connectionType << "'";
-                if (handler) {
-                    EventLoop::getIOService().post(boost::bind(handler, bse::make_error_code(bse::protocol_not_supported)));
-                }
+            // OK, end up here in error condition only - call handler (if given) with failure code
+            if (handler) {
+                EventLoop::getIOService().post(boost::bind(handler, ec));
             }
         }
 
