@@ -131,8 +131,9 @@ namespace karabo {
 
             virtual ~InputChannel();
 
+        private:
             void reconfigure(const karabo::util::Hash& config, bool allowMissing = true);
-
+        public:
             void setInstanceId(const std::string& instanceId);
 
             const std::string& getInstanceId() const;
@@ -142,11 +143,11 @@ namespace karabo {
             void registerDataHandler(const DataHandler& ioDataHandler);
 
             void registerEndOfStreamEventHandler(const InputHandler& endOfStreamEventHandler);
-
+        private:
             void triggerIOEvent();
 
             void triggerEndOfStreamEvent();
-
+        public:
             /**
              * Returns the number of bytes read since the last call of this method
              *
@@ -170,7 +171,8 @@ namespace karabo {
             std::map<std::string, karabo::util::Hash> getConnectedOutputChannels();
 
             /**
-             * Read data from the InputChannel
+             * Read data from the InputChannel - to be called inside an InputHandler callback
+             *
              * @param data reference that will hold the data
              * @param idx of the data token to read from the available data tokens. Use InputChannel::size to request number
              *        of available tokens
@@ -210,7 +212,7 @@ namespace karabo {
              * @param connectionString One of the "connectedOutputChannels" given at construction
              */
             void disconnect(const std::string& connectionString);
-
+        private:
             karabo::util::Hash prepareConnectionConfiguration(const karabo::util::Hash& outputChannelInfo) const;
 
             void onConnect(const karabo::net::ErrorCode& error,
@@ -224,8 +226,6 @@ namespace karabo {
             void onTcpChannelRead(const karabo::net::ErrorCode& ec, karabo::net::Channel::WeakPointer channel,
                                   const karabo::util::Hash& header, const std::vector<karabo::io::BufferSet::Pointer>& data);
                                   
-            bool canCompute() const;
-
             void notifyOutputChannelsForPossibleRead();
 
             void notifyOutputChannelForPossibleRead(const karabo::net::Channel::WeakPointer& channel);
@@ -234,7 +234,15 @@ namespace karabo {
 
             void parseOutputChannelConfiguration(const karabo::util::Hash& config);
 
-            void updateOutputChannelConfiguration(const std::string& outputChannelString, const karabo::util::Hash& config);
+        public:
+            /**
+             * Update list of output channels that can be connected
+             *
+             * @param outputChannelString string that can later be used as key "outputChannelString" of Hash argument to connect
+             * @param config kept for backward compatibility
+             */
+            void updateOutputChannelConfiguration(const std::string& outputChannelString,
+                                                  const karabo::util::Hash& config = karabo::util::Hash());
 
             /**
              * Get the current meta data for input data available on this input channel. Validity time of the object
