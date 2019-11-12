@@ -19,7 +19,7 @@ from karabogui.request import call_device_slot
 from karabogui.singletons.api import get_manager, get_selection_tracker
 from karabogui.util import (
     handle_scene_from_server, load_configuration_from_file,
-    save_configuration_to_file, set_treeview_header)
+    open_documentation_link, save_configuration_to_file, set_treeview_header)
 from karabogui.widgets.popup import PopupWidget
 from .system_model import SystemTreeModel
 from .tools import DeviceSceneHandler
@@ -106,8 +106,13 @@ class SystemTreeView(QTreeView):
         self.acOpenScene.triggered.connect(self.onOpenDeviceScene)
         self.mDeviceItem.addAction(self.acOpenScene)
 
+        text = "Documentation"
+        self.acDocu = QAction(icons.weblink, text, self)
+        self.acDocu.triggered.connect(self.onGetDocumenation)
+
         self.mDeviceItem.addSeparator()
         self.mDeviceItem.addAction(self.acAbout)
+        self.mDeviceItem.addAction(self.acDocu)
 
     def currentIndex(self):
         return self.model().currentIndex()
@@ -168,6 +173,11 @@ class SystemTreeView(QTreeView):
         pos.setY(pos.y() + 10)
         self.popupWidget.move(pos)
         self.popupWidget.show()
+
+    @pyqtSlot()
+    def onGetDocumenation(self):
+        deviceId = self.indexInfo().get('deviceId')
+        open_documentation_link(deviceId)
 
     @pyqtSlot()
     def onKillInstance(self):
