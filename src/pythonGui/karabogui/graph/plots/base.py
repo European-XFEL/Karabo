@@ -247,7 +247,7 @@ class KaraboPlotView(QWidget):
     # ----------------------------------------------------------------
     # Base Functions
 
-    def enable_data_toggle(self):
+    def enable_data_toggle(self, activate=False):
         """Optionally enable the showing of data points"""
         toggle_action = QAction("Show data points", self)
         toggle_action.setCheckable(True)
@@ -255,6 +255,8 @@ class KaraboPlotView(QWidget):
         toggle_action.toggled.connect(self.toggle_data_symbols)
         viewbox = self.plotItem.vb
         viewbox.add_action(toggle_action)
+        if activate:
+            toggle_action.setChecked(True)
 
     def restore(self, config):
         """Restore the widget configuration with a config dictionary"""
