@@ -609,10 +609,6 @@ void exportPyXmsInputOutputChannel() {
 
                 .def("registerEndOfStreamEventHandler", &karathon::InputChannelWrap().registerEndOfStreamEventHandlerPy)
 
-                .def("triggerIOEvent", &karabo::xms::InputChannel::triggerIOEvent)
-
-                .def("triggerEndOfStreamEvent", &karabo::xms::InputChannel::triggerEndOfStreamEvent)
-
                 .def("getConnectedOutputChannels", &karathon::InputChannelWrap().getConnectedOutputChannelsPy)
 
                 .def("read", &karathon::InputChannelWrap().readPy
@@ -627,8 +623,6 @@ void exportPyXmsInputOutputChannel() {
 
                 .def("disconnect", &karathon::InputChannelWrap().disconnectPy
                      , (bp::arg("outputChannelInfo")))
-
-                .def("canCompute", &karabo::xms::InputChannel::canCompute)
 
                 .def("getMetaData", &karathon::InputChannelWrap().getMetaData)
 

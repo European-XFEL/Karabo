@@ -137,7 +137,8 @@ namespace karabo {
              *
              * @param config as needed by the constructor
              * @param allowMissing if true, lack of keys "dataDistribution", "minData", "onSlowness", "delayOnInput"
-             *                     and "respondToEndOfStream" is OK and their respective previous configuration is kept
+             *                     and "respondToEndOfStream" is OK and their respective previous configuration is kept,
+             *                     if false, an exception is thrown when these keys are missing in config
              */
             void reconfigure(const karabo::util::Hash& config, bool allowMissing = true);
 
