@@ -56,6 +56,14 @@ def filter_services(service_id, service_list):
 
 def getdata(name):
     try:
+        path = absolute("var", "service", name, "name")
+        try:
+            with open(path, "r") as fin:
+                karabo_name = fin.read()
+        except FileNotFoundError:
+            # in case a `name` file is not generated, default to dir. name
+            karabo_name = name
+
         path = absolute("var", "service", name, "supervise", "status")
         with open(path, "rb") as fin:
             status = fin.read()
@@ -79,12 +87,12 @@ def getdata(name):
         if pid and want == b"\0":
             status += ", once"
 
-        return {'name': name, 'status': status,
+        return {'name': name, 'karabo_name': karabo_name,'status': status,
                 'since': since, 'duration': duration}
     except Exception as e:
         print('{}: Exception {} when fetching service status {}'
               ''.format(datetime.now(), str(e), name))
-        return {'name': name, 'status': 'error',
+        return {'name': name, 'karabo_name': name,  'status': 'error',
                 'since': '', 'duration': -1}
 
 
@@ -116,6 +124,7 @@ class DaemonHandler(web.RequestHandler):
         response = EMPTY_RESPONSE
         data = json_decode(self.request.body)
         conf = data['server']
+        server_id = server_id.replace('/', '_')
         allowed = filter_services(self.service_id, self.service_list)
         if server_id != conf['name'] or server_id not in allowed:
             self.write(response)
@@ -285,11 +294,11 @@ def run_webserver():
     server_dict = {'service_list': service_list, 'service_id': service_id}
     app = web.Application([('/', MainHandler, server_dict),
                            ('/api/servers.json', StatusHandler),
-                           ('/api/servers/([a-zA-Z0-9_]+)/log.html',
+                           ('/api/servers/([a-zA-Z0-9_/]+)/log.html',
                             LogHandler),
-                           ('/api/servers/logs/([a-zA-Z0-9_]+).txt',
+                           ('/api/servers/logs/([a-zA-Z0-9_/]+).txt',
                             FileHandler),
-                           ('/api/servers/([a-zA-Z0-9_]+).json',
+                           ('/api/servers/([a-zA-Z0-9_/]+).json',
                             DaemonHandler, server_dict),
                            ('/api/servers/logsocket', LogWebSocket),
                            (r'/(favicon\.ico)', web.StaticFileHandler),
