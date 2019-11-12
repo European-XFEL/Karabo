@@ -144,6 +144,9 @@
        <height>27</height>
       </size>
      </property>
+     <property name="toolTip">
+      <string>Previous match</string>
+     </property>
      <property name="text">
       <string/>
      </property>
@@ -158,7 +161,7 @@
       </size>
      </property>
      <property name="toolTip">
-      <string>Find</string>
+      <string>Next match</string>
      </property>
      <property name="text">
       <string/>
