@@ -40,7 +40,7 @@ from .widgets.image import (
 from .widgets.plot import LinePlotModel, PlotCurveModel, SparklineModel
 from .widgets.simple import (
     AnalogModel, BitfieldModel, CheckBoxModel, ChoiceElementModel,
-    ComboBoxModel, DirectoryModel, DisplayLabelModel,
+    ComboBoxModel, DaemonManagerModel, DirectoryModel, DisplayLabelModel,
     DisplayListModel, DisplayPlotModel, DisplayTextLogModel,
     DisplayTimeModel, DoubleWheelBoxModel, EditableListElementModel,
     EditableListModel, EditableSpinBoxModel, FileInModel, FileOutModel,
