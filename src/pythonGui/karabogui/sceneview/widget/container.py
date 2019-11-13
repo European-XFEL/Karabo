@@ -223,7 +223,10 @@ class ControllerContainer(QWidget):
 
         if proxy.edit_value is not None:
             color = STATE_COLORS[State.CHANGING] + (128,)
-            formatted_sheet = self._style_sheet.format(color)
-            self.setStyleSheet(formatted_sheet)
         else:
-            self.setStyleSheet('')
+            # XXX: We make sure not to lose our stylesheet and apply a
+            # transparent color!
+            color = (0, 0, 0, 0)
+
+        formatted_sheet = self._style_sheet.format(color)
+        self.setStyleSheet(formatted_sheet)
