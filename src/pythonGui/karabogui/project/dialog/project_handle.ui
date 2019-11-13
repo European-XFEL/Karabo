@@ -77,6 +77,20 @@
     </layout>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QLineEdit" name="leTitle"/>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pbClear">
+       <property name="text">
+        <string>Clear</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
     <widget class="QTableView" name="twProjects">
      <property name="alternatingRowColors">
       <bool>true</bool>
@@ -97,9 +111,6 @@
       <bool>false</bool>
      </attribute>
     </widget>
-   </item>
-   <item>
-    <widget class="QLineEdit" name="leTitle"/>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
