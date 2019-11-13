@@ -8,8 +8,7 @@ from traits.api import (
     Bool, DelegatesTo, HasStrictTraits, Instance, Int, Property, String,
     on_trait_change)
 
-from karabo.common.api import (
-    ProxyStatus, KARABO_SCHEMA_DEFAULT_VALUE, ONLINE_STATUSES)
+from karabo.common.api import ProxyStatus, KARABO_SCHEMA_DEFAULT_VALUE
 from karabo.native import Hash
 from karabogui.binding.api import (
     BaseDeviceProxy, DeviceProxy, ProjectDeviceProxy,
@@ -163,11 +162,14 @@ class ProjectDeviceInstance(HasStrictTraits):
     def _get_status(self):
         if self._online_proxy.online:
             status = self._online_proxy.status
-            if status in ONLINE_STATUSES and self.error:
-                return ProxyStatus.ERROR
-            else:
-                return status
-        return self._offline_proxy.status
+            if self.error:
+                status = ProxyStatus.ERROR
+            elif self.class_id != self._online_proxy.binding.class_id:
+                status = ProxyStatus.INCOMPATIBLE
+        else:
+            status = self._offline_proxy.status
+
+        return status
 
     @on_trait_change('_online_proxy:online,_offline_proxy:schema_update')
     def _apply_offline_config(self):
