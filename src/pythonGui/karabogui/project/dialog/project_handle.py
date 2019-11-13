@@ -8,11 +8,11 @@ from operator import attrgetter
 import os.path as op
 
 from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot, QAbstractTableModel, Qt, QItemSelection, \
-    QModelIndex
-from PyQt5.QtCore import QItemSelectionModel
-from PyQt5.QtWidgets import QButtonGroup, QDialog, QDialogButtonBox, \
-    QAbstractButton
+from PyQt5.QtCore import (
+    pyqtSlot, QAbstractTableModel, QItemSelection, QModelIndex,
+    QSortFilterProxyModel, Qt)
+from PyQt5.QtWidgets import (
+    QAbstractButton, QButtonGroup, QDialog, QDialogButtonBox)
 
 from karabogui import messagebox
 from karabogui.events import (
@@ -69,8 +69,16 @@ class LoadProjectDialog(QDialog):
         self.setWindowTitle(title)
         self.buttonBox.button(QDialogButtonBox.Ok).setText('Load')
 
+        self.model = QSortFilterProxyModel(parent=self)
+        # Set up the filter model!
+        self.model.setSourceModel(TableModel(parent=self))
+        self.model.setFilterRole(Qt.DisplayRole)
+        self.model.setFilterFixedString("")
+        self.model.setFilterCaseSensitivity(False)
+        self.model.setFilterKeyColumn(0)
+
         # QTableview in ui file
-        self.twProjects.setModel(TableModel(parent=self))
+        self.twProjects.setModel(self.model)
         self.twProjects.selectionModel().selectionChanged.connect(
             self._selectionChanged)
         self.twProjects.doubleClicked.connect(self._load_item)
@@ -95,6 +103,7 @@ class LoadProjectDialog(QDialog):
 
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         self.leTitle.textChanged.connect(self._titleChanged)
+        self.pbClear.clicked.connect(self.leTitle.clear)
 
         self.event_map = {
             KaraboEvent.ProjectItemsList: self._event_item_list,
@@ -108,7 +117,7 @@ class LoadProjectDialog(QDialog):
 
     def _event_item_list(self, data):
         items = data.get('items', [])
-        self.twProjects.model().add_project_manager_data(items)
+        self.model.sourceModel().add_project_manager_data(items)
         # NOTE: Resize all columns until PyQt5
         self.twProjects.resizeColumnsToContents()
         self._titleChanged(self.leTitle.text())
@@ -170,8 +179,8 @@ class LoadProjectDialog(QDialog):
     def update_view(self):
         if self.domain:
             self.twProjects.clearSelection()
-            self.twProjects.model().request_data(self.domain,
-                                                 self.ignore_cache)
+            self.model.sourceModel().request_data(self.domain,
+                                                  self.ignore_cache)
 
     @property
     def ignore_cache(self):
@@ -196,22 +205,15 @@ class LoadProjectDialog(QDialog):
 
         return False
 
-    def _text_item_loadable(self, simple_name):
-        """ Return whether the entered project name is in the project table.
-        """
-        entries = self.twProjects.model().entries
-        projects = [entry.simple_name for entry in entries]
-        return simple_name in projects
-
     def _check_button_state(self):
         # Check if we have a preceeding valid selection
-        selected = self._selected_item_loadable()
-        # Or if we are typing a project name
-        simple_name = self.leTitle.text()
-        project = len(simple_name) and self._text_item_loadable(simple_name)
-
-        enable = selected or project
+        enable = self._selected_item_loadable()
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
+
+    @pyqtSlot(str)
+    def _titleChanged(self, text):
+        self.model.setFilterFixedString(text)
+        self._check_button_state()
 
     @pyqtSlot(QItemSelection, QItemSelection)
     def _selectionChanged(self, selected, deselected):
@@ -231,26 +233,12 @@ class LoadProjectDialog(QDialog):
             self.accept()
 
     @pyqtSlot(str)
-    def _titleChanged(self, text):
-        index = self.twProjects.model().projectIndex(text)
-        with SignalBlocker(self.twProjects):
-            if index is not None:
-                selection_flag = (QItemSelectionModel.ClearAndSelect
-                                  | QItemSelectionModel.Rows)
-                self.twProjects.selectionModel().setCurrentIndex(
-                    index, selection_flag)
-            else:
-                self.twProjects.selectionModel().clearSelection()
-
-        self._check_button_state()
-
-    @pyqtSlot(str)
     def on_cbDomain_currentIndexChanged(self, domain):
         self.update_view()
 
     @pyqtSlot(bool)
     def on_cbShowTrash_toggled(self, is_checked):
-        model = self.twProjects.model()
+        model = self.model.sourceModel()
         model.show_trashed = is_checked
 
         self._check_button_state()
