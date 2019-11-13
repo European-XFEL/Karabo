@@ -1,5 +1,7 @@
+from unittest import mock
+
 from nose.tools import assert_raises
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import QSize
 
 from karabogui.testing import GuiTestCase
@@ -18,6 +20,8 @@ class TestConst(GuiTestCase):
         alarmicon = const.get_alarm_icon(const.ALARM_GLOBAL)
         assert isinstance(alarmicon, QIcon)
 
-    def test_get_alarm_pixmap(self):
+    @mock.patch('karabogui.alarms.const.get_alarm_pixmap')
+    def test_get_alarm_pixmap(self, pixmap):
+        pixmap.return_value = QPixmap(QSize(16, 16))
         bm = const.get_alarm_pixmap(const.ALARM_HIGH)
         assert QSize(16, 16) == bm.size()
