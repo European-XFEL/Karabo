@@ -263,16 +263,15 @@ def download(args):
                                                           arch=arch_name,
                                                           config=args.config)
         dest = os.path.join('installed', args.device, filename)
-        cmd = 'curl -f {repo}/{device}/tags/{tag}/{filename} ' \
+        cmd = 'curl {repo}/{device}/tags/{tag}/{filename} -f ' \
               '-o {dest}'.format(device=args.device, tag=args.tag,
                                  repo=args.repo, filename=filename, dest=dest)
         try:
-            subprocess.check_output(cmd, shell=True,
-                                    stderr=subprocess.STDOUT)
+            subprocess.check_output(cmd, shell=True, stderr=subprocess.DEVNULL)
             return dest
-        except subprocess.CalledProcessError as e:
-            print("Problem dowloading {}-{}:\n{}"
-                  .format(args.device, args.tag, e.output.decode("utf-8")))
+        except subprocess.CalledProcessError:
+            print("Dowloading binary for {}-{} failed."
+                  .format(args.device, args.tag))
         return None
 
 
