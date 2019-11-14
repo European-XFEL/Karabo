@@ -115,7 +115,6 @@ class IPythonKernel(Device):
         self.manager = KernelManager(client_factory=Client)
         self.manager.start_kernel(
             extra_arguments=["-c", SCRIPT,
-                             "--IPCompleter.limit_to__all__=True",
                              "--matplotlib=inline"])
         self.client = self.manager.client()
         self.client.shell_channel.device = self
