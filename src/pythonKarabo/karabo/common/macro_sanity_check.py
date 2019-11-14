@@ -1,65 +1,100 @@
-import re
+import ast
 
 
-def macro_sleep_check(code):
-    """Check for the usage of time.sleep in a string.
-
-    This is used to verify that macros don't use the blocking
-    :func:`time.sleep`
-
-    Importing the time module and using it otherwise is fine, e.g.
-    :func:`time.perf_counter`. However, the complication is that there
-    are a few ways to import time:
-
-        from time import sleep
-        import time; time.sleep
-        import numpy; from time import perf_counter, sleep
-        from time import perf_counter; from time import sleep
-        exec("FROM TIME IMPORT SLEEP".lower())
-        import time as t; t.sleep
-
-    Yet, it's okay to mention time.sleep in comments, which users may well
-    do:
-
-        from time import perf_counter #, sleep
-        from karabo.middlelayer import sleep  # CAS does not allow time.sleep
-
-    So we check that the mention of time.sleep is not in a comment either.
-
-    :param str code: the code
-    :return list line_numbers: the lines where the import or the usage is done,
-            or an empty list if not in the code.
+def validate_macro(code):
+    """Validate a macro source code several use cases
     """
-    # Match occurences of sleep preceeded, at some point, by a pound, ie,
-    # commented out
-    exp = re.compile(r"#(.*?)sleep")
+    # Get ast.AST object for code first
+    tree = compile(code, "MacroSanityCheck", "exec", ast.PyCF_ONLY_AST)
+    ret = []
+    # Check if we are using forbidden imports
+    lines = _has_imports(tree, "time", "sleep")
+    if lines:
+        ret.extend(lines)
+    lines = _has_methods(tree, "update", "clear_namespace")
+    if lines:
+        ret.extend(lines)
 
-    # Match the next word after `import time as`, from which we can extract the
-    # new name
-    timeas = re.compile(r"(?<=\bimport time as\s)(\w+)")
-    name = "time"
-
-    # Check if time was imported with another name
-    if "import time as" in code:
-        name = timeas.search(code).group()
-
-    lines = code.splitlines()
-    line_numbers = []
-    for line_num, line in enumerate(lines, start=1):
-        line = line.lower()
-        if (check_time_import_sleep(line, name) or
-                check_time_dot_sleep(line, name)):
-            if not exp.search(line):  # not a comment, but a real sleep() call
-                line_numbers.append(line_num)
-
-    return line_numbers
+    return ret
 
 
-def check_time_dot_sleep(line, package):
-    """Check if package.sleep is appearing in the line of code"""
-    return "{}.sleep".format(package) in line
+def _has_imports(tree, module, func):
+    """Check an ast tree for a forbidden import and its usage
+
+    :param tree: the code tree as ast object
+    :param module: the string of the module, e.g. ``time``
+    :param func: the function of the module, e.g. ``sleep``
+    """
+
+    def _retrieve_alias(tree, module):
+        """Checks if the module we are interested in is ``imported as``"""
+        as_names = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.alias):
+                if node.name == module:
+                    as_names.append(node.asname)
+        return as_names
+
+    def _is_alias_call(node, as_names, func):
+        """Check if an aliased module is used
+
+        This function requires a valid definition of alias names in
+        ``as_names``.
+        """
+        if (isinstance(node, ast.Expr) and isinstance(node.value, ast.Call)
+                and isinstance(node.value.func, ast.Attribute)):
+            for alias in as_names:
+                if (node.value.func.value.id == alias
+                        and node.value.func.attr == func):
+                    return "Found {}.{} in line {}".format(
+                        alias, func, node.lineno)
+
+    def _is_module_call(node, module, func):
+        """Check if the module function is called within the code"""
+        if (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+                and isinstance(node.func.value, ast.Name)):
+            if node.func.value.id == module and node.func.attr == func:
+                return "Found {}.{} in line {}".format(
+                    module, func, node.lineno)
+        return None
+
+    def _is_imported(node, module, func):
+        """Check if the module and function is already directly imported"""
+        if isinstance(node, ast.ImportFrom):
+            if node.module == module:
+                for alias in node.names:
+                    if alias.name == func:
+                        return "Found {}.{} in line {}".format(
+                            module, func, node.lineno)
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name == "{}.{}".format(module, func):
+                    return "Found {}.{} in line {}".format(
+                        module, func, node.lineno)
+        return None
+
+    as_names = _retrieve_alias(tree, module)
+    reports = []
+    for node in ast.walk(tree):
+        found = _is_alias_call(node, as_names, func)
+        if found is not None:
+            reports.append(found)
+        found = _is_module_call(node, module, func)
+        if found is not None:
+            reports.append(found)
+        found = _is_imported(node, module, func)
+        if found is not None:
+            reports.append(found)
+
+    return reports
 
 
-def check_time_import_sleep(line, package):
-    """Check if sleep is imported from a package"""
-    return "from {} import".format(package) in line and "sleep" in line
+def _has_methods(tree, *methods):
+    reports = []
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.AsyncFunctionDef, ast.FunctionDef)):
+            for method in methods:
+                if node.name == method:
+                    reports.append("Found forbidden method `{}` in "
+                                   "line {}".format(method, node.lineno))
+    return reports
