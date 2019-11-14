@@ -14,6 +14,9 @@
 #define	KARABO_XMS_INPUTCHANNEL_HH
 
 #include <map>
+#include <unordered_map>
+#include <queue>
+
 #include <boost/asio.hpp>
 #include <boost/function.hpp>
 
@@ -99,6 +102,10 @@ namespace karabo {
             boost::mutex m_outputChannelsMutex;
             ConnectedOutputChannels m_connectedOutputChannels;
             OpenConnections m_openConnections;
+            /// A queue for otherwise concurrent connection attempts
+            typedef std::queue<std::pair<karabo::util::Hash, boost::function<void (const karabo::net::ErrorCode&)>>> ConnectionQueue;
+            /// Map all currently attempted connections to their 'outputChannelString'
+            std::unordered_map<std::string, ConnectionQueue> m_connectionsBeingSetup;
 
             // Prevents simultaneous access to the m_isEndOfStream flag upon data package arrival on the TcpChannel.
             boost::mutex m_isEndOfStreamMutex;
@@ -220,10 +227,15 @@ namespace karabo {
              * @param connectionString One of the "connectedOutputChannels" given at construction
              */
             void disconnect(const std::string& connectionString);
+
         private:
+            void connectImpl(const karabo::util::Hash& outputChannelInfo,
+                             const boost::function<void (const karabo::net::ErrorCode&)>& handler,
+                             bool forceNew);
+
             karabo::util::Hash prepareConnectionConfiguration(const karabo::util::Hash& outputChannelInfo) const;
 
-            void onConnect(const karabo::net::ErrorCode& error,
+            void onConnect(karabo::net::ErrorCode error,
                            karabo::net::Connection::Pointer connection,
                            const karabo::util::Hash& outputChannelInfo,
                            karabo::net::Channel::Pointer channel,
