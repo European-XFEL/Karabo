@@ -98,6 +98,12 @@ class ProjectViewItemModel(QAbstractItemModel):
                 finally:
                     self.endRemoveRows()
 
+    def controller_data_update(self, controller, column=PROJECT_COLUMN):
+        index_row = self._controller_row(controller)
+        index = self.createIndex(index_row, column, controller)
+        if index.isValid():
+            self.dataChanged.emit(index, index)
+
     @property
     def root_controller(self):
         """ Return the project controller object at the root of the hierarchy
