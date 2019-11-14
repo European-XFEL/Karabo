@@ -5,7 +5,7 @@ from karabo.native.data.hash import String, Int32
 
 from .device import Device
 from .macro import Macro
-from ..common.macro_sanity_check import macro_sleep_check
+from ..common.macro_sanity_check import validate_macro
 
 
 class MetaMacro(Device):
@@ -31,12 +31,11 @@ class MetaMacro(Device):
         super().__init__(config)
         Macro.subclasses = []
 
-        sleeps = macro_sleep_check(self.code)
-        if sleeps:
-            lines = ",".join(str(idx) for idx in sleeps)
-            msg = ("The usage of time.sleep on line(s) {} is forbidden."
-                   " Use karabo.middlelayer.sleep instead".format(lines))
-            raise ImportError(msg)
+        not_valid = validate_macro(self.code)
+        if not_valid:
+            msg = ("The macro cannot be started.\n"
+                   "{}").format("\n".join([issue for issue in not_valid]))
+            raise TypeError(msg)
 
         try:
             code = compile(self.code, self.module, "exec")

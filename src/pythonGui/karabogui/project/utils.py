@@ -6,7 +6,7 @@
 from PyQt5.QtWidgets import QDialog, QMessageBox
 
 from karabo.common.api import set_modified_flag, walk_traits_object
-from karabo.common.macro_sanity_check import macro_sleep_check
+from karabo.common.macro_sanity_check import validate_macro
 from karabo.common.project.api import (
     BaseProjectObjectModel, DeviceConfigurationModel, DeviceInstanceModel,
     DeviceServerModel, MacroModel, ProjectModel, device_config_exists,
@@ -423,12 +423,11 @@ def run_macro(macro_model):
                               "Macro cannot be started.".format(serverId))
         return
 
-    sleeps = macro_sleep_check(macro_model.code)
-    if sleeps:
-        lines = ",".join(str(idx) for idx in sleeps)
-        msg = ("The usage of time.sleep at line(s) {} is forbidden. "
-               "Use karabo.middlelayer.sleep instead".format(lines))
-        messagebox.show_error(msg, title="Restricted Import")
+    report = validate_macro(macro_model.code)
+    if report:
+        html = "<ul>" + "".join(["<li>" + issue + "</li>"
+                                 for issue in report]) + "</ul>"
+        messagebox.show_error(html, title="The Macro cannot be started")
         return
 
     get_network().onInitDevice(serverId, "MetaMacro", instance_id, h)
