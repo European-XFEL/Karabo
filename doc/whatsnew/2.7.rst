@@ -7,7 +7,7 @@ The **most relevant improvements**, fixes and changes are:
 - C++ (breaking change): runtime updates of schemas are now rolled-back in case of failures. !3729
 - C++/bound Py (breaking change): The key of a Device slot listed in the Schema
   must not contain any underscore '_'. !3878
-
+- RunConfigurator and RunConfigurationGroup are now located in a separate package ``daqConfiguration``. !3923
 
 Detailed Merge-Log
 ==================
