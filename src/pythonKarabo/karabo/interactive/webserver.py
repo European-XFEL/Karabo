@@ -126,7 +126,7 @@ class DaemonHandler(web.RequestHandler):
         conf = data['server']
         server_id = server_id.replace('/', '_')
         allowed = filter_services(self.service_id, self.service_list)
-        if server_id != conf['name'] or server_id not in allowed:
+        if server_id not in allowed:
             self.write(response)
             return
         command = conf['command'].lower()
