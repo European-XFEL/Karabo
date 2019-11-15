@@ -41,8 +41,8 @@ rewrite_python_shebangs() {
     local sed_program='1 s%^.*$%'$new_shebang_line'%g'
 
     local entry_points=(2to3 2to3-3.6 cygdb cython
-	easy_install easy_install-3.6 f2py3 flake8 get_objgraph.py guidata-tests
-	guiqwt-tests idle3 idle3.6 ipcluster ipcluster3 ipcluster_watcher
+	easy_install easy_install-3.6 f2py3 flake8 get_objgraph.py 
+    idle3 idle3.6 ipcluster ipcluster3 ipcluster_watcher
 	ipcontroller ipcontroller3 ipengine ipengine3 iptest iptest3 ipython
 	ipython3 jupyter jupyter-kernelspec jupyter-migrate
 	jupyter-nbextension jupyter-notebook jupyter-qtconsole
@@ -67,8 +67,8 @@ rewrite_python_shebangs() {
 
 rewrite_rpaths() {
     # These are the specific Python packages which need to be relocated
-    local target_packages=(Crypto Cython guiqwt h5py lxml matplotlib numpy PIL
-        psutil PyQt4 scipy tornado traits zmq
+    local target_packages=(Crypto Cython h5py lxml numpy PIL
+        psutil scipy tornado traits zmq
     )
 
     # Relocate the Python packages

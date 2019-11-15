@@ -6,7 +6,6 @@ Installing Karabo
    :maxdepth: 1
 
    gui
-   mac
    binary
    sources
    dependency_management
