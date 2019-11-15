@@ -17,15 +17,9 @@ suds jsonschema ecdsa pycrypto paramiko tzlocal httplib2 pssh traits pint nbform
 notebook ipyparallel ipcluster_tools cycler pyelftools rpathology lxml certifi
 chardet idna urllib3 requests ply psutil pycodestyle pyflakes mccabe flake8
 msgpack msgpack-numpy flaky pyyaml docker_pycreds websocket_client docker
-coverage )
+coverage matplotlib)
 
 DEPENDENCIES_DB=(eulxml eulexist)
-
-DEPENDENCIES_GUI=( qt4 pyqt4 matplotlib qtconsole PythonQwt guidata
-guiqwt pyqtgraph )
-
-DEPENDENCIES_DARWIN=( wheel PythonQwt guidata guiqwt boost openmqc hdf5
-pkgconfig h5py log4cpp cppunit parse snappy traits pint )
 
 ##############################################################################
 # Important constants
@@ -132,16 +126,7 @@ determine_build_packages() {
         CI|ALL)
             # Build everything
             DEPENDENCIES=( ${DEPENDENCIES_BASE[@]} ${DEPENDENCIES_PYTHON[@]}
-                           ${DEPENDENCIES_DB[@]} ${DEPENDENCIES_GUI[@]} )
-            ;;
-        NOGUI)
-            # The classic NOGUI option
-            DEPENDENCIES=( ${DEPENDENCIES_BASE[@]} ${DEPENDENCIES_PYTHON[@]}
                            ${DEPENDENCIES_DB[@]} )
-            ;;
-        DARWIN)
-            # Mac OS X dependencies
-            DEPENDENCIES=( ${DEPENDENCIES_DARWIN[@]} )
             ;;
         PYTHON)
             # Python packages
@@ -150,10 +135,6 @@ determine_build_packages() {
         DB)
             # eXistDB packages
             DEPENDENCIES=( ${DEPENDENCIES_DB[@]} )
-            ;;
-        GUI)
-            # GUI-related packages
-            DEPENDENCIES=( ${DEPENDENCIES_GUI[@]} )
             ;;
         *)
             # FORCE building of whatever the user specified.
@@ -375,11 +356,6 @@ EXTERN_DIR=$(dirname $0)
 INSTALL_PREFIX=$(get_abs_path $1)
 WHAT=${@:2}
 FORCE="n"
-
-if [ "$(uname -s)" = "Darwin" ]; then
-    # No choice on OS X
-    WHAT="DARWIN"
-fi
 
 if [ "$WHAT" = "ALL" ]; then
     # Attempt to install dependencies from FTP
