@@ -58,13 +58,18 @@ class TopologyPanel(BasePanelWidget):
         status = data.get('status', False)
         self.sbar.reset(status)
         if not status:
+            self.daemon_button.setVisible(status)
             self.close_popup_widget()
 
     def _event_show_daemon(self, data):
-        self.daemon_button.setVisible(True)
+        instance_id = data.get('instanceId')
+        if instance_id == get_config()['daemon_manager']:
+            self.daemon_button.setVisible(True)
 
     def _event_remove_daemon(self, data):
-        self.daemon_button.setVisible(False)
+        instance_id = data.get('instanceId')
+        if instance_id == get_config()['daemon_manager']:
+            self.daemon_button.setVisible(False)
 
     # -----------------------------------------------------------------------
 
