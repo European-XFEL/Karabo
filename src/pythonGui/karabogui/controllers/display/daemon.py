@@ -5,10 +5,13 @@
 #############################################################################
 from collections import namedtuple
 
-from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt, pyqtSlot
+from PyQt5.QtCore import (
+    QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt, pyqtSlot)
 from PyQt5.QtGui import QBrush, QColor
 from PyQt5.QtWidgets import (
-    QHeaderView, QTableView, QStyledItemDelegate, QPushButton, QStyle)
+    QHBoxLayout, QHeaderView, QLineEdit, QTableView, QStyledItemDelegate,
+    QPushButton, QStyle, QVBoxLayout, QWidget)
+
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import DaemonManagerModel
@@ -134,17 +137,48 @@ class DisplayDaemonService(BaseBindingController):
     table_model = Instance(QAbstractTableModel)
 
     def create_widget(self, parent):
-        widget = QTableView(parent=parent)
-        self.table_model = DaemonTableModel(parent=widget)
-        widget.setModel(self.table_model)
-        btn_delegate = ButtonDelegate(parent=widget)
-        widget.setItemDelegateForColumn(START_COLUMN, btn_delegate)
-        widget.setItemDelegateForColumn(STOP_COLUMN, btn_delegate)
-        widget.setItemDelegateForColumn(KILL_COLUMN, btn_delegate)
+        widget = QWidget(parent)
+        layout = QVBoxLayout(widget)
+        widget.setLayout(layout)
 
-        header = widget.horizontalHeader()
+        # The main table view!
+        table_view = QTableView(widget)
+        self.table_model = DaemonTableModel(parent=table_view)
+
+        # Set up the filter model!
+        filter_model = QSortFilterProxyModel(parent=table_view)
+        filter_model.setSourceModel(self.table_model)
+        filter_model.setFilterRole(Qt.DisplayRole)
+        filter_model.setFilterCaseSensitivity(False)
+        filter_model.setFilterFixedString("")
+        filter_model.setFilterKeyColumn(0)
+
+        table_view.setModel(filter_model)
+        btn_delegate = ButtonDelegate(parent=table_view)
+        table_view.setItemDelegateForColumn(START_COLUMN, btn_delegate)
+        table_view.setItemDelegateForColumn(STOP_COLUMN, btn_delegate)
+        table_view.setItemDelegateForColumn(KILL_COLUMN, btn_delegate)
+
+        header = table_view.horizontalHeader()
+        header.setDefaultSectionSize(50)
         header.setResizeMode(QHeaderView.ResizeToContents)
-        header.setStretchLastSection(True)
+        header.setSectionResizeMode(0, QHeaderView.Stretch)
+        header.setSectionResizeMode(5, QHeaderView.Fixed)
+        header.setSectionResizeMode(6, QHeaderView.Fixed)
+        header.setSectionResizeMode(7, QHeaderView.Fixed)
+
+        search_layout = QHBoxLayout()
+        search_line = QLineEdit(parent=widget)
+        clear_button = QPushButton("Clear", parent=widget)
+        clear_button.clicked.connect(search_line.clear)
+        search_line.textChanged.connect(filter_model.setFilterFixedString)
+
+        search_layout.addWidget(search_line)
+        search_layout.addWidget(clear_button)
+
+        layout.addLayout(search_layout)
+        layout.addWidget(table_view)
+
         return widget
 
     def value_update(self, proxy):
