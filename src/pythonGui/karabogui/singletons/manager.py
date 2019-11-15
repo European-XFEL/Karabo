@@ -237,7 +237,7 @@ class Manager(QObject):
                                 {'instanceIds': [instance_id]})
             elif class_id == 'DaemonManager':
                 broadcast_event(KaraboEvent.RemoveDaemonService,
-                                {'instanceIds': instance_id})
+                                {'instanceId': instance_id})
             gone_instanceIds.append(instance_id)
 
         # Update topology interested listeners!
