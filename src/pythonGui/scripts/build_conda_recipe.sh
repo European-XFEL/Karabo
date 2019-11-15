@@ -29,7 +29,5 @@ cat ./meta.yaml
 # 6. Build the package
 conda build ./ -c http://exflserv05.desy.de/karabo/channel \
                -c conda-forge \
-               -c conda-forge/label/cf201901 \
                -c defaults \
-               -c anaconda \
                --no-anaconda-upload
