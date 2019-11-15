@@ -79,6 +79,10 @@ class DisplayVectorGraph(BaseBindingController):
             plot.clear()
             return
 
+        # NOTE: WE cast boolean as int, as PyQtGraph cannot handle in Qt5
+        if y.dtype == np.bool:
+            y = y.astype(np.int)
+
         rect = get_view_range(plot)
         x, y = generate_down_sample(y, rect=rect,
                                     half_samples=self.model.half_samples,
