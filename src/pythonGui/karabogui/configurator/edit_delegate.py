@@ -5,7 +5,7 @@
 #############################################################################
 from enum import Enum
 
-from PyQt5.QtCore import QEvent, QRect, QSize, Qt, pyqtSlot
+from PyQt5.QtCore import QEvent, QRect, QSize, Qt
 from PyQt5.QtGui import QDoubleValidator, QPalette, QValidator
 from PyQt5.QtWidgets import (
     QApplication, QAbstractItemDelegate, QComboBox, QDialog, QHBoxLayout,
@@ -339,7 +339,6 @@ class NumberAttributeEditor(object):
             value = 0
         self.widget.setText("{}".format(value))
 
-    @pyqtSlot(str)
     def _on_text_changed(self, text):
         self.widget.setPalette(self._normal_palette
                                if self.widget.hasAcceptableInput()
