@@ -1,5 +1,5 @@
 """
-Test the middle layer code against PEP8 and pyflakes
+Test the middle layer code against PEP8
 
 There are two exception lists which list the number of expected
 warnings per file. Update as needed.
@@ -8,7 +8,6 @@ import os
 from unittest import TestCase, main
 import sys
 
-from mccabe import get_code_complexity
 from pycodestyle import Checker
 
 from karabo import middlelayer
@@ -32,15 +31,6 @@ class Tests(TestCase):
                 checker = Checker(mod)
                 errs = checker.check_all()
                 self.assertEqual(errs, pep8_exceptions.get(base, 0))
-
-    def test_mmcabe(self):
-        for mod in self.modules:
-            base = os.path.basename(mod)
-            with self.subTest(module=base):
-                with open(mod, "r", encoding="utf-8") as fin:
-                    code = fin.read()
-                complexity = get_code_complexity(code, filename=base)
-                self.assertLess(complexity, 6)
 
 
 if __name__ == "__main__":
