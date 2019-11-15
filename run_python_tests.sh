@@ -190,19 +190,11 @@ safeRunCommand() {
 }
 
 runCondaUnitTests() {
-    # Avoid problems with _version. Use development version instead
-    export KARABO_GUI_DEVELOP=1
-
     # Setup the environment
-    pushd ./src/pythonGui/
-    conda devenv
-    source activate karabogui || exit 0
+    safeRunCommand source ./build_conda_env.sh clean install
 
     # Print the installed packages
-    conda list
-
-    # Generate version file
-    python setup.py --version
+    safeRunCommand conda list
 
     # Allow gui tests to crash sometimes - for the time being:
     ACCEPT_SIGSEGV=true
@@ -212,7 +204,6 @@ runCondaUnitTests() {
     unset ACCEPT_SIGSEGV
 
     conda deactivate
-    popd
 }
 
 runPythonUnitTests() {

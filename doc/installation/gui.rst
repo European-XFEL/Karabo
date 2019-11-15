@@ -23,6 +23,13 @@ The following steps are needed in order to obtain Conda.
         * **Linux**: ``source <miniconda_path>/etc/profile.d/conda.sh``
         * **Win**: ``CALL <miniconda_path>/condabin/activate.bat``
 
+If you find errors such as "Your shell has not been properly configured to use 'conda activate'", run the following
+command:
+
+    . <your miniconda3 path>/etc/profile.d/conda.sh
+
+Or add it to your `.bashrc` (or similar).
+
 Channel Configuration
 =====================
 
