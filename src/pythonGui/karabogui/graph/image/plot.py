@@ -3,7 +3,6 @@ from copy import deepcopy
 import numpy as np
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QRectF
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QAction, QInputDialog
 from pyqtgraph import ColorMap, PlotItem
 
 from karabogui.graph.common.api import (
@@ -272,31 +271,6 @@ class KaraboImagePlot(PlotItem):
     def _revert_transform(self):
         self._transform = deepcopy(self._original_transform)
         self._units = deepcopy(self._original_units)
-
-    def enable_downsampling(self, enabled):
-        if enabled:
-            downsample_action = QAction(self.vb)
-            downsample_action.setIconText('Downsample order')
-            downsample_action.triggered.connect(self._get_downsample_order)
-            self.vb.add_action(downsample_action, separator=True)
-
-        self.imageItem.enable_downsampling(enabled)
-
-    @pyqtSlot()
-    def _get_downsample_order(self):
-        selection = [
-            "0: Nearest neighbors",
-            "1: Linear spline",
-        ]
-        order, ok = QInputDialog.getItem(
-            self.parent(),
-            'Downsample order',
-            'Select interpolation kind:',
-            selection,
-            current=self.imageItem.downsample_order,
-            editable=False)
-        if ok:
-            self.imageItem.set_downsample_order(selection.index(order))
 
     # ---------------------------------------------------------------------
     # Transform methods
