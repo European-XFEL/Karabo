@@ -115,7 +115,6 @@ class DisplayDetectorGraph(BaseBindingController):
 
         # Get a reference for our plotting
         self._plot = widget.plot()
-        self._plot.enable_downsampling(True)
 
         # QActions
         widget.add_axes_labels_dialog()
