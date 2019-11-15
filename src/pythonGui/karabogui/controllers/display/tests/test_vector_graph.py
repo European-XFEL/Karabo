@@ -5,7 +5,7 @@ import numpy as np
 from karabo.common.scenemodel.api import VectorGraphModel
 from ..display_vector_graph import DisplayVectorGraph
 
-from karabo.native import Configurable, VectorFloat, VectorInt32
+from karabo.native import Configurable, VectorBool, VectorFloat, VectorInt32
 from karabogui.binding.proxy import PropertyProxy
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
@@ -14,6 +14,7 @@ from karabogui.testing import (
 class Object(Configurable):
     prop = VectorFloat()
     value = VectorInt32(defaultValue=[1, 2, 3])
+    bool_value = VectorBool()
 
 
 class TestVectorGraph(GuiTestCase):
@@ -24,6 +25,7 @@ class TestVectorGraph(GuiTestCase):
         self.proxy = get_class_property_proxy(schema, 'prop')
         device = self.proxy.root_proxy
         self.value = PropertyProxy(root_proxy=device, path='value')
+        self.bool_value = PropertyProxy(root_proxy=device, path='bool_value')
         self.controller = DisplayVectorGraph(proxy=self.proxy)
         self.controller.create(None)
         self.assertIsNotNone(self.controller.widget)
@@ -82,6 +84,15 @@ class TestVectorGraph(GuiTestCase):
         value = [6, 12, 6]
         set_proxy_value(self.value, 'value', value)
         self.assertEqual(list(curve.yData), value)
+
+    def test_set_bool_value(self):
+        self.controller.visualize_additional_property(self.bool_value)
+        self.assertEqual(len(self.controller._curves), 2)
+        curve = self.controller._curves.get(self.bool_value)
+        self.assertIsNotNone(curve)
+        value = [False, False, True]
+        set_proxy_value(self.bool_value, 'bool_value', value)
+        self.assertEqual(list(curve.yData), [0, 0, 1])
 
     def test_downsample(self):
         controller = DisplayVectorGraph(proxy=self.proxy,
