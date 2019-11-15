@@ -1,5 +1,6 @@
 import asyncio
 from collections import defaultdict
+from contextlib import suppress
 import time
 from weakref import WeakSet
 
@@ -478,8 +479,11 @@ class DeviceClientProxyFactory(ProxyFactory):
             outputs = list(self._remote_output_channel)
             for channel in outputs:
                 channel.disconnect()
-
-            self._disconnectSchemaUpdated()
+            # NOTE: In rare cases, e.g. command line, the broker connection
+            # is already gone when we are collected, hence we do not throw
+            # an exception!
+            with suppress(Exception):
+                self._disconnectSchemaUpdated()
             if self._used > 0:
                 # set the used variable to 1 for a clean disconnect in exit
                 self._used = 1
