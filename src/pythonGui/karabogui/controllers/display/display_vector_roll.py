@@ -48,7 +48,6 @@ class DisplayVectorRollGraph(BaseBindingController):
 
         # Get a reference for our plotting
         self._plot = widget.plot()
-        self._plot.enable_downsampling(False)
 
         # Set the rolling image with stack!
         self._image = RollImage()
