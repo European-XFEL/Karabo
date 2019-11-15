@@ -85,25 +85,11 @@ class PickerController(QObject):
         if not self._picker_legend.isVisible():
             self._picker_legend.show()
 
-        image = self.plotItem.image
-        image_y, image_x = image.shape
-
         x, y = np.floor(self._selection_rect.absolute_position).astype(int)
         self._selected_pixel = (x, y)
-        value = image[y, x]
 
-        # Get color of selected pixel
-        qimage = self.plotItem.imageItem.get_qimage()
-
-        # Check if qimage is downsampled
-        qimage_size = qimage.size()
-        qimage_x, qimage_y = qimage_size.width(), qimage_size.height()
-        if image_x != qimage_x:
-            x = np.ceil(x / image_x * qimage_x)
-        if image_y != qimage_y:
-            y = np.ceil(y / image_y * qimage_y)
-
-        color = QColor(qimage.pixel(x, y))
+        value = self.plotItem.image[y, x]
+        color = self.plotItem.imageItem.get_color(x, y)
         pos = self._selection_rect.pos()
 
         self._picker_legend.set_value(pos.x(), pos.y(), value, color)
