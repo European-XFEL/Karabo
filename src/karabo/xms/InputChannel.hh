@@ -131,7 +131,16 @@ namespace karabo {
 
             virtual ~InputChannel();
 
-            void reconfigure(const karabo::util::Hash& config);
+            /**
+             * Reconfigure InputChannel
+             * Disconnects any previous "connectedOutputChannels" if not in config["connectedOutputChannels"].
+             *
+             * @param config as needed by the constructor
+             * @param allowMissing if true, lack of keys "dataDistribution", "minData", "onSlowness", "delayOnInput"
+             *                     and "respondToEndOfStream" is OK and their respective previous configuration is kept,
+             *                     if false, an exception is thrown when these keys are missing in config
+             */
+            void reconfigure(const karabo::util::Hash& config, bool allowMissing = true);
 
             void setInstanceId(const std::string& instanceId);
 
@@ -142,11 +151,11 @@ namespace karabo {
             void registerDataHandler(const DataHandler& ioDataHandler);
 
             void registerEndOfStreamEventHandler(const InputHandler& endOfStreamEventHandler);
-
+        private:
             void triggerIOEvent();
 
             void triggerEndOfStreamEvent();
-
+        public:
             /**
              * Returns the number of bytes read since the last call of this method
              *
@@ -170,7 +179,8 @@ namespace karabo {
             std::map<std::string, karabo::util::Hash> getConnectedOutputChannels();
 
             /**
-             * Read data from the InputChannel
+             * Read data from the InputChannel - to be called inside an InputHandler callback
+             *
              * @param data reference that will hold the data
              * @param idx of the data token to read from the available data tokens. Use InputChannel::size to request number
              *        of available tokens
@@ -188,10 +198,14 @@ namespace karabo {
 
             /**
              * Asynchronously connect this input channel to the output channel described by the first argument
+             *
              * @param outputChannelInfo  Hash with three keys
+             *                   - "outputChannelString": a string matching one of the configured "connectedOutputChannels"
              *                   - "connectionType": a string - currently only "tcp" supported
-             *                   - "hostname": a string
-             *                   - "port": an unsigned int
+             *                   - "hostname": a string telling which host/ip address to connect to
+             *                   - "port": an unsigned int telling the port
+             *                   - "memoryLocation: string "remote" or "local" to tell whether other end is in another
+             *                                      process or can share memory
              * @param handler  indicates asynchronously (like via EventLoop::post) the success of the connection request
              */
             void connect(const karabo::util::Hash& outputChannelInfo,
@@ -200,8 +214,13 @@ namespace karabo {
 
             void disconnect(const karabo::util::Hash& outputChannelInfo);
 
+            /**
+             * Disconnect and clean internals
+             *
+             * @param connectionString One of the "connectedOutputChannels" given at construction
+             */
             void disconnect(const std::string& connectionString);
-
+        private:
             karabo::util::Hash prepareConnectionConfiguration(const karabo::util::Hash& outputChannelInfo) const;
 
             void onConnect(const karabo::net::ErrorCode& error,
@@ -215,8 +234,6 @@ namespace karabo {
             void onTcpChannelRead(const karabo::net::ErrorCode& ec, karabo::net::Channel::WeakPointer channel,
                                   const karabo::util::Hash& header, const std::vector<karabo::io::BufferSet::Pointer>& data);
                                   
-            bool canCompute() const;
-
             void notifyOutputChannelsForPossibleRead();
 
             void notifyOutputChannelForPossibleRead(const karabo::net::Channel::WeakPointer& channel);
@@ -225,7 +242,15 @@ namespace karabo {
 
             void parseOutputChannelConfiguration(const karabo::util::Hash& config);
 
-            void updateOutputChannelConfiguration(const std::string& outputChannelString, const karabo::util::Hash& config);
+        public:
+            /**
+             * Update list of output channels that can be connected
+             *
+             * @param outputChannelString string that can later be used as key "outputChannelString" of Hash argument to connect
+             * @param config kept for backward compatibility
+             */
+            void updateOutputChannelConfiguration(const std::string& outputChannelString,
+                                                  const karabo::util::Hash& config = karabo::util::Hash());
 
             /**
              * Get the current meta data for input data available on this input channel. Validity time of the object
@@ -269,12 +294,16 @@ namespace karabo {
 
 
         private: // functions
+            /**
+             * Disconnect and clean internals - needs protection by m_outputChannelsMutex
+             *
+             * @param outputChannelString One of the "connectedOutputChannels" given at construction
+             */
+            void disconnectImpl(std::string outputChannelString);
 
             void deferredNotificationsOfOutputChannelsForPossibleRead();
 
             void deferredNotificationOfOutputChannelForPossibleRead(const karabo::net::Channel::WeakPointer& channel);
-
-            bool needsDeviceConnection() const;
 
             void closeChannelsAndStopConnections();
 
@@ -295,22 +324,22 @@ namespace karabo {
             InputChannelElement& key(const std::string& key) {
                 m_inputChannel.key(key);
                 m_dataSchema.key(key + ".schema");
-                return *(static_cast<InputChannelElement*> (this));
+                return *this;
             }
 
             InputChannelElement& displayedName(const std::string& name) {
                 m_inputChannel.displayedName(name);
-                return *(static_cast<InputChannelElement*> (this));
+                return *this;
             }
 
             InputChannelElement& description(const std::string& description) {
                 m_inputChannel.description(description);
-                return *(static_cast<InputChannelElement*> (this));
+                return *this;
             }
 
             InputChannelElement& dataSchema(const karabo::util::Schema& schema) {
                 m_dataSchema.appendSchema(schema);
-                return *(static_cast<InputChannelElement*> (this));
+                return *this;
             }
 
             void commit() {
