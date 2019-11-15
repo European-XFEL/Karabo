@@ -17,6 +17,7 @@ namespace karabo {
         FileDeviceData::FileDeviceData(const karabo::util::Hash& input)
             : DeviceData(input)
             , m_directory(input.get<std::string>("directory"))
+            , m_maxFileSize(input.get<int>("maximumFileSize"))
             , m_configStream()
             , m_lastIndex(0u)
             , m_idxMap()
