@@ -35,7 +35,7 @@ EMPTY_BAR = np.zeros(shape=(10,), dtype=np.int64)
 
 CHECK_ACTIONS = ['x_grid', 'y_grid', 'x_log', 'y_log',
                  'x_invert', 'y_invert']
-RANGE_ACTIONS = ['ranges', 'axes']
+RANGE_ACTIONS = ['axes', 'x_range', 'y_range']
 ACTION_ITEMS = CHECK_ACTIONS + RANGE_ACTIONS
 
 # Items required for the state trendline!
