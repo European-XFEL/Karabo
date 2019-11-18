@@ -5,10 +5,6 @@
 
 # Available Operating Systems
 
-The ultimate reference for anything related to Karabo is the Alfresco site under:
-
-https://docs.xfel.eu/share/page/site/KaraboFramework/dashboard
-
 The supported OS are: 
 
 >  Ubuntu 16.04 LTS
