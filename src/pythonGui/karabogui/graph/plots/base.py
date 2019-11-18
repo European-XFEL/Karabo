@@ -16,7 +16,7 @@ from karabogui.graph.common.const import (
     EMPTY_SYMBOL_OPTIONS, DEFAULT_SYMBOL, SYMBOL_SIZE, WIDGET_MIN_HEIGHT,
     WIDGET_MIN_WIDTH)
 
-from karabogui.graph.plots.dialogs import RangeDialog
+from karabogui.graph.plots.dialogs import RangeXDialog, RangeYDialog
 from karabogui.graph.plots.items import (
     ScatterGraphPlot, VectorBarGraphPlot, VectorFillGraphPlot)
 from karabogui.graph.plots.tools import CrossTargetController
@@ -59,14 +59,7 @@ class KaraboPlotView(QWidget):
         # PlotItem gets added automatically!
         self.graph_view.setCentralItem(self.plotItem)
 
-        # Configure the axis items without unit handling and set up additional
-        # signals!
-        for axis in AXIS_ITEMS:
-            self.plotItem.showAxis(axis)
-            axis_item = self.plotItem.getAxis(axis)
-            axis_item.enableAutoSIPrefix(False)
-            if axis in TICK_AXES:
-                axis_item.axisDoubleClicked.connect(self.configure_axes)
+        self.show_all_axis()
 
         self.configuration = {}
         self.qactions = {}
@@ -127,17 +120,23 @@ class KaraboPlotView(QWidget):
             checkable=True,
             name='y_invert')
 
+        x_range = KaraboAction(
+            text="Range X",
+            tooltip="Configure the range of the X-Axis",
+            triggered=self.configure_range_x,
+            name='x_range')
+
+        y_range = KaraboAction(
+            text="Range Y",
+            tooltip="Configure the range of the Y-Axis",
+            triggered=self.configure_range_y,
+            name='y_range')
+
         axes = KaraboAction(
             text="Axes",
             tooltip="Configure the axes labels and units",
             triggered=self.configure_axes,
             name='axes')
-
-        ranges = KaraboAction(
-            text="Ranges",
-            tooltip="Configure the axes limits and autorange",
-            triggered=self.configure_ranges,
-            name='ranges')
 
         for check_action in (x_grid, y_grid, x_log, y_log, x_invert, y_invert):
             if check_action.name in actions:
@@ -148,11 +147,19 @@ class KaraboPlotView(QWidget):
                 self.qactions[check_action.name] = q_ac
                 self.addAction(q_ac)
 
-        for k_action in (axes, ranges):
+        for k_action in (axes, x_range, y_range):
             if k_action.name in actions:
                 q_ac = build_qaction(k_action, self)
                 q_ac.triggered.connect(k_action.triggered)
                 self.addAction(q_ac)
+
+        if x_range.name in actions:
+            axis_item = self.plotItem.getAxis('bottom')
+            axis_item.axisDoubleClicked.connect(self.configure_range_x)
+
+        if y_range.name in actions:
+            axis_item = self.plotItem.getAxis('left')
+            axis_item.axisDoubleClicked.connect(self.configure_range_y)
 
     # ----------------------------------------------------------------
     # Base Action Slots
@@ -197,35 +204,43 @@ class KaraboPlotView(QWidget):
             self.stateChanged.emit(config)
 
     @pyqtSlot()
-    def configure_ranges(self):
+    def configure_range_x(self):
         view_range = self.plotItem.vb.state['viewRange']
         actual = {
             'x_min': view_range[0][0],
-            'x_max': view_range[0][1],
+            'x_max': view_range[0][1]}
+
+        config, ok = RangeXDialog.get(self.configuration, actual, parent=self)
+        if ok:
+            self.configuration.update(**config)
+            x_autorange = config['x_autorange']
+            if not x_autorange:
+                self.set_range_x(config['x_min'], config['x_max'])
+            else:
+                self.set_autorange_x(x_autorange)
+            self.stateChanged.emit(config)
+
+    @pyqtSlot()
+    def configure_range_y(self):
+        view_range = self.plotItem.vb.state['viewRange']
+        actual = {
             'y_min': view_range[1][0],
             'y_max': view_range[1][1]}
 
-        config, ok = RangeDialog.get(self.configuration, actual, parent=self)
+        config, ok = RangeYDialog.get(self.configuration, actual, parent=self)
         if ok:
             self.configuration.update(**config)
-            # Update the autorange lazy if required!
-            autorange = config['autorange']
+            autorange = config['y_autorange']
             if not autorange:
-                self.set_range_x(config['x_min'], config['x_max'])
                 self.set_range_y(config['y_min'], config['y_max'])
             else:
-                self.set_autorange(autorange)
+                self.set_autorange_y(autorange)
             self.stateChanged.emit(config)
 
     @pyqtSlot()
     def reset_range(self):
-        config = self.configuration
-        autorange = config['autorange']
-        if not autorange:
-            self.set_range_x(config['x_min'], config['x_max'])
-            self.set_range_y(config['y_min'], config['y_max'])
-        else:
-            self.set_autorange(autorange)
+        self.reset_range_x(config=self.configuration)
+        self.reset_range_y(config=self.configuration)
 
     @pyqtSlot(bool)
     def toggle_data_symbols(self, show):
@@ -246,6 +261,20 @@ class KaraboPlotView(QWidget):
 
     # ----------------------------------------------------------------
     # Base Functions
+
+    def reset_range_x(self, config):
+        x_autorange = config['x_autorange']
+        if not x_autorange:
+            self.set_range_x(config['x_min'], config['x_max'])
+        else:
+            self.set_autorange_x(x_autorange)
+
+    def reset_range_y(self, config):
+        y_autorange = config['y_autorange']
+        if not y_autorange:
+            self.set_range_y(config['y_min'], config['y_max'])
+        else:
+            self.set_autorange_y(y_autorange)
 
     def enable_data_toggle(self, activate=False):
         """Optionally enable the showing of data points"""
@@ -297,12 +326,8 @@ class KaraboPlotView(QWidget):
                     toolset = self._toolbar.toolset[ROITool]
                     toolset.buttons[roi_tool].setChecked(True)
 
-        autorange = config['autorange']
-        if not autorange:
-            self.set_range_x(config['x_min'], config['x_max'])
-            self.set_range_y(config['y_min'], config['y_max'])
-        else:
-            self.set_autorange(autorange)
+        self.reset_range_x(config=config)
+        self.reset_range_y(config=config)
 
     # ----------------------------------------------------------------
     # Toolbar functions Events
@@ -523,6 +548,14 @@ class KaraboPlotView(QWidget):
             self.plotItem.vb.enableAutoRange()
         else:
             self.plotItem.vb.disableAutoRange()
+
+    def set_autorange_x(self, enable):
+        """Enable or disable the auto range for a specific axis"""
+        self.plotItem.vb.enableAutoRange(axis=0, enable=enable)
+
+    def set_autorange_y(self, enable):
+        """Enable or disable the auto range for a specific axis"""
+        self.plotItem.vb.enableAutoRange(axis=1, enable=enable)
 
     def set_range_x(self, min_value, max_value):
         """Set the X Range of the view box with min and max value"""
