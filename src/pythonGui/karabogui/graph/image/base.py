@@ -268,14 +268,14 @@ class KaraboImageView(QWidget):
 
         # Restore labels
         x_units = configuration.get('x_units', 'pixels')
-        self.plotItem.set_label(axis=0,
-                                text=configuration.get('x_label', 'X-axis'),
-                                units=x_units)
+        self.set_label(axis=0,
+                       text=configuration.get('x_label', 'X-axis'),
+                       units=x_units)
 
         y_units = configuration.get('y_units', 'pixels')
-        self.plotItem.set_label(axis=1,
-                                text=configuration.get('y_label', 'Y-axis'),
-                                units=y_units)
+        self.set_label(axis=1,
+                       text=configuration.get('y_label', 'Y-axis'),
+                       units=y_units)
 
         # Restore transforms
         transforms = {k: v for k, v in configuration.items()
@@ -357,17 +357,21 @@ class KaraboImageView(QWidget):
         if not result:
             return
 
-        self.plotItem.set_label(axis=0,
-                                text=config["x_label"],
-                                units=config["x_units"])
-        self.plotItem.set_label(axis=1,
-                                text=config["y_label"],
-                                units=config["y_units"])
+        self.set_label(axis=0,
+                       text=config["x_label"],
+                       units=config["x_units"])
+        self.set_label(axis=1,
+                       text=config["y_label"],
+                       units=config["y_units"])
 
         self._update_scale_legend()
 
         self.configuration.update(**config)
         self.stateChanged.emit(config)
+
+    def set_label(self, axis, text='', units=''):
+        """Public interface similar with to KaraboPlotView"""
+        self.plotItem.set_label(axis, text, units)
 
     @pyqtSlot()
     def _show_transforms_dialog(self):
