@@ -26,8 +26,7 @@ class TableModel(QAbstractTableModel):
 
         self._editing_finished = editing_finished
         self._row_schema = row_schema
-        self._row_hash = (row_schema.hash if row_schema is not None
-                          else Hash())
+        self._row_hash = row_schema.hash
         self._role = Qt.EditRole
         self._data = []
 
