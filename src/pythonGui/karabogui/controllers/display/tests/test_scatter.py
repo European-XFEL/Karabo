@@ -53,7 +53,7 @@ class TestScatterGraph(GuiTestCase):
         controller = DisplayScatterGraph(proxy=self.x,
                                          model=ScatterGraphModel())
         controller.create(None)
-        action = controller.widget.actions()[8]
+        action = controller.widget.actions()[9]
         self.assertEqual(action.text(), 'Queue Size')
 
         dsym = 'karabogui.controllers.display.display_scatter.QInputDialog'
@@ -69,7 +69,7 @@ class TestScatterGraph(GuiTestCase):
         controller = DisplayScatterGraph(proxy=self.x,
                                          model=ScatterGraphModel())
         controller.create(None)
-        action = controller.widget.actions()[9]
+        action = controller.widget.actions()[10]
         self.assertEqual(action.text(), 'Point Size')
 
         dsym = 'karabogui.controllers.display.display_scatter.QInputDialog'
