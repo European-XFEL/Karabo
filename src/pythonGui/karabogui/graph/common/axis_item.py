@@ -25,7 +25,7 @@ class AxisItem(PgAxisItem):
 
         self.has_ticks = has_ticks
         super(AxisItem, self).__init__(orientation)
-
+        self.enableAutoSIPrefix(False)
         # Modify tick aesthetics if major axis
         # (tick strings and labels are shown)
         if not has_ticks:

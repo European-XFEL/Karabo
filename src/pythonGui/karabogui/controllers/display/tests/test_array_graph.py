@@ -46,7 +46,7 @@ class TestArrayGraph(GuiTestCase):
         controller = DisplayNDArrayGraph(proxy=self.proxy,
                                          model=NDArrayGraphModel())
         controller.create(None)
-        action = controller.widget.actions()[9]
+        action = controller.widget.actions()[10]
         self.assertEqual(action.text(), 'Downsample')
 
         dsym = 'karabogui.controllers.display.display_array_graph.QInputDialog'
