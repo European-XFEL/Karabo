@@ -98,7 +98,7 @@ class TestVectorGraph(GuiTestCase):
         controller = DisplayVectorGraph(proxy=self.proxy,
                                         model=VectorGraphModel())
         controller.create(None)
-        action = controller.widget.actions()[9]
+        action = controller.widget.actions()[10]
         self.assertEqual(action.text(), 'Downsample')
 
         dsym = ('karabogui.controllers.display.'
