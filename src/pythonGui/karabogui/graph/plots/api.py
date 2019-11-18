@@ -1,6 +1,6 @@
 # flake8: noqa
 from .base import KaraboPlotView
-from .dialogs.range_config import RangeDialog
+from .dialogs.range_config import RangeXDialog, RangeYDialog
 from .dialogs.hist_config import HistogramDialog
 from .items import VectorFillGraphPlot, VectorBarGraphPlot, ScatterGraphPlot
 from .tools.target import CrossTargetController

@@ -155,15 +155,18 @@ def write_basic_label(model, element):
 def read_range_set(element):
     traits = {name: float(element.get(NS_KARABO + name, '0.0'))
               for name in RANGE_SET}
-    traits['autorange'] = element.get(
-        NS_KARABO + 'autorange', 'true').lower() == 'true'
+    traits['x_autorange'] = element.get(
+        NS_KARABO + 'x_autorange', 'true').lower() == 'true'
+    traits['y_autorange'] = element.get(
+        NS_KARABO + 'y_autorange', 'true').lower() == 'true'
     return traits
 
 
 def write_range_set(model, element):
     for name in RANGE_SET:
         element.set(NS_KARABO + name, str(getattr(model, name)))
-    element.set(NS_KARABO + 'autorange', str(model.autorange))
+    element.set(NS_KARABO + 'x_autorange', str(model.x_autorange))
+    element.set(NS_KARABO + 'y_autorange', str(model.y_autorange))
 
 
 def build_model_config(model):

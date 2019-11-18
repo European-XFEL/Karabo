@@ -21,7 +21,6 @@ def test_base_plot_model():
     traits['y_label'] = 'Y'
     traits['x_units'] = 'XUNIT'
     traits['y_units'] = 'YUNIT'
-    traits['autorange'] = False
     traits['x_grid'] = True
     traits['y_grid'] = False
     traits['x_log'] = True
@@ -32,6 +31,8 @@ def test_base_plot_model():
     traits['y_max'] = 14.0
     traits['x_invert'] = True
     traits['y_invert'] = True
+    traits['x_autorange'] = False
+    traits['y_autorange'] = False
     model = api.VectorGraphModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
@@ -39,7 +40,8 @@ def test_base_plot_model():
     assert read_model.y_label == 'Y'
     assert read_model.x_units == 'XUNIT'
     assert read_model.y_units == 'YUNIT'
-    assert read_model.autorange is False
+    assert read_model.x_autorange is False
+    assert read_model.y_autorange is False
     assert read_model.x_grid is True
     assert read_model.y_grid is False
     assert read_model.x_log is True
