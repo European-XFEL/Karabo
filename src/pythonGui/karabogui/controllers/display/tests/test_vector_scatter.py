@@ -46,7 +46,7 @@ class TestVectorScatterGraph(GuiTestCase):
         controller = DisplayVectorScatterGraph(proxy=self.x,
                                                model=VectorScatterGraphModel())
         controller.create(None)
-        action = controller.widget.actions()[8]
+        action = controller.widget.actions()[9]
         self.assertEqual(action.text(), 'Point Size')
 
         dsym = ('karabogui.controllers.display.'
