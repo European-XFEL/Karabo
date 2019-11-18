@@ -105,9 +105,6 @@ class SingleBitModel(BaseWidgetObjectData):
 class TableElementModel(BaseDisplayEditableWidget):
     """ A model for TableElement
     """
-    # The schema which defines the table
-    # XXX: This is stored as text for now...
-    column_schema = String
     # The actual type of the widget
     klass = Enum('DisplayTableElement', 'EditableTableElement')
 
@@ -345,7 +342,6 @@ def _single_bit_writer(write_func, model, parent):
 @register_scene_reader('EditableTableElement', version=1)
 def _table_element_reader(read_func, element):
     traits = read_empty_display_editable_widget(element)
-    traits['column_schema'] = element.get(NS_KARABO + 'columnSchema', '')
     return TableElementModel(**traits)
 
 
@@ -353,5 +349,4 @@ def _table_element_reader(read_func, element):
 def _table_element_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, model.klass)
-    element.set(NS_KARABO + 'columnSchema', model.column_schema)
     return element
