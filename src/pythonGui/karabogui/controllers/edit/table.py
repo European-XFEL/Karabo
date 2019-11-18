@@ -3,43 +3,15 @@
 # Created on August 10, 2015
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-"""
-This module contains a class which represents a widget for tables and
-is created as a composition of EditableWidget and DisplayWidget. Rendering in
-read-only mode is controlled via the set readOnly method.
-
-The element is applicable for VECTOR_HASH data types, which have a 'rowSchema'
-attribute. The rowSchema is a Hash (schema.parameterHash to be precise), which
-defines the column layout, i.e. column count, column data types and column
-headers.
-
-In case the rowSchema contains a 'displayedName' field this is used as the
-column header, otherwise the field's key is used.
-
-For string fields with options supplied the cell is rendered as a drop down
-menu.
-Boolean fields are rendered as check boxes.
-
-Additional manipulation functionality includes, adding, deleting and
-duplicating rows (the latter require a cell or row to be selected).
-
-A right-click will display the cells data type both in Display and Edit mode.
-
-The Table widget supports drag and drop of deviceId's from the navigation and
-project panel. Dropping on a string cell will replace the string with the
-deviceId.
-Dropping on a non-string cell or on an empty region will add a row in which the
-first string-type column encountered is pre-filled with the deviceID.
-"""
 from functools import partial
 
 from PyQt5.QtCore import Qt, QModelIndex
 from PyQt5.QtWidgets import QAbstractItemView, QMenu, QStyledItemDelegate
-from traits.api import Instance, Int, on_trait_change
+from traits.api import Instance, Int
 
 from karabo.common.api import KARABO_SCHEMA_ROW_SCHEMA
 from karabo.common.scenemodel.api import TableElementModel
-from karabo.native import Hash, SchemaHashType
+from karabo.native import Hash
 from karabogui.binding.api import (
     VectorHashBinding, get_editor_value)
 from karabogui.controllers.api import (
@@ -80,7 +52,6 @@ class _BaseTableElement(BaseBindingController):
             self.widget.setContextMenuPolicy(Qt.CustomContextMenu)
             self.widget.customContextMenuRequested.connect(self._context_menu)
             self.widget.setAcceptDrops(True)
-
         self.widget.setFocusPolicy(Qt.NoFocus if ro else Qt.ClickFocus)
         if self._item_model is not None:
             self._item_model.set_role(self._role)
@@ -88,15 +59,10 @@ class _BaseTableElement(BaseBindingController):
 
     def binding_update(self, proxy):
         binding = proxy.binding
-        if binding is None and self.model.column_schema != '':
-            # No binding yet, but the scene model has us covered
-            schema = SchemaHashType.fromstring(self.model.column_schema)
-            self._set_row_schema(schema)
-        elif binding is not None:
+        if binding is not None:
             schema = binding.attributes.get(KARABO_SCHEMA_ROW_SCHEMA)
             if schema is not None:
                 self._set_row_schema(schema)
-                self.model.column_schema = SchemaHashType.toString(schema)
 
     def value_update(self, proxy):
         value = get_editor_value(proxy, [])
@@ -118,18 +84,12 @@ class _BaseTableElement(BaseBindingController):
                 self._item_model.setData(index, row[key], self._role,
                                          from_device_update=True)
 
-    @on_trait_change('model.column_schema')
-    def _model_schema_update(self):
-        if self.widget is None:
-            return
-        schema = SchemaHashType.fromstring(self.model.column_schema)
-        self._set_row_schema(schema)
-
     def _on_user_edit(self, data):
         """Callback method used by `self._item_model` when data changes"""
         self.proxy.edit_value = data
 
     def _set_row_schema(self, schema):
+        # XXX: Who sets a goofy table without schema?
         self._row_hash = schema.hash if schema is not None else Hash()
         self._item_model = TableModel(schema, self._on_user_edit)
         self._item_model.set_role(self._role)
@@ -160,31 +120,30 @@ class _BaseTableElement(BaseBindingController):
 # ---------------------------------------------------------------------
 # Actions
 
-    # @pyqtSlot()
     def _row_to_end_action(self, checked):
         start, count = self._item_model.rowCount(), 1
         self._item_model.insertRows(start, count, QModelIndex())
 
-    # @pyqtSlot(QModelIndex, str)
     def _set_row_default(self, index, key):
         default_value = self._row_hash.getAttribute(key, 'defaultValue')
         self._item_model.setData(index, default_value, role=Qt.EditRole)
 
-    # @pyqtSlot(QModelIndex)
     def _add_row(self, index):
         self._item_model.insertRows(index.row() + 1, 1, QModelIndex())
 
-    # @pyqtSlot(QModelIndex)
     def _duplicate_row(self, index):
         self._item_model.duplicate_row(index.row())
 
-    # @pyqtSlot(QModelIndex)
     def _remove_row(self, index):
         self._item_model.removeRows(index.row(), 1, QModelIndex())
 
-    # @pyqtSlot(QPoint)
     def _context_menu(self, pos):
         selection_model = self.widget.selectionModel()
+        if selection_model is None:
+            # XXX: We did not yet receive a schema and thus have no table and
+            # selection model!
+            return
+
         selection = selection_model.selection()
         indexes = selection.indexes()
         index = indexes[-1] if len(indexes) else None
