@@ -22,6 +22,7 @@ from karabogui.graph.plots.items import (
 from karabogui.graph.plots.tools import CrossTargetController
 
 ALPHA_GRID = 80 / 255
+TICK_AXES = ["bottom", "left"]
 
 
 class KaraboPlotView(QWidget):
@@ -41,8 +42,7 @@ class KaraboPlotView(QWidget):
         self.setLayout(layout)
 
         # Initialize axis items
-        tick_axes = ["bottom", "left"]
-        axis_items = create_axis_items(axis, axes_with_ticks=tick_axes)
+        axis_items = create_axis_items(axis, axes_with_ticks=TICK_AXES)
 
         # Our viewbox with reset range addition!
         viewbox = KaraboViewBox()
@@ -65,7 +65,7 @@ class KaraboPlotView(QWidget):
             self.plotItem.showAxis(axis)
             axis_item = self.plotItem.getAxis(axis)
             axis_item.enableAutoSIPrefix(False)
-            if axis in tick_axes:
+            if axis in TICK_AXES:
                 axis_item.axisDoubleClicked.connect(self.configure_axes)
 
         self.configuration = {}
@@ -189,9 +189,9 @@ class KaraboPlotView(QWidget):
     def configure_axes(self):
         config, ok = AxesLabelsDialog.get(self.configuration, parent=self)
         if ok:
-            self.set_label('bottom', text=config['x_label'],
+            self.set_label(axis=0, text=config['x_label'],
                            units=config['x_units'])
-            self.set_label('left', text=config['y_label'],
+            self.set_label(axis=1, text=config['y_label'],
                            units=config['y_units'])
             self.configuration.update(**config)
             self.stateChanged.emit(config)
@@ -269,10 +269,8 @@ class KaraboPlotView(QWidget):
         self.set_grid_y(config['y_grid'])
         self.set_log_x(config['x_log'])
         self.set_log_y(config['y_log'])
-        self.set_label('bottom', text=config['x_label'],
-                       units=config['x_units'])
-        self.set_label('left', text=config['y_label'],
-                       units=config['y_units'])
+        self.set_label(axis=0, text=config['x_label'], units=config['x_units'])
+        self.set_label(axis=1, text=config['y_label'], units=config['y_units'])
         self.set_invert_x(config['x_invert'])
         self.set_invert_y(config['y_invert'])
 
@@ -495,11 +493,11 @@ class KaraboPlotView(QWidget):
     def set_label(self, axis, text=None, units=None):
         """Set the label of an axis of the built-in plotItem
 
-        :param axis: The axis, e.g. ``left``, ``top``, ...
+        :param axis: The axis, e.g. ``0`` for x-axis, ``1`` for y-axis
         :param text: The text used for the label (None)
         :param units: The declared unit string for the axis label (None)
         """
-        self.plotItem.setLabel(axis, text, units)
+        self.plotItem.setLabel(TICK_AXES[axis], text, units)
 
     def set_title(self, title=None, **kwargs):
         """Set the title of the built-in plotItem"""
