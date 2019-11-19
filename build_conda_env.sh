@@ -74,9 +74,13 @@ while [ -n "$1" ]; do
     esac
 done
 
+if [ "${SETUP_FLAG}" == false ]; then
+    displayHelp
+    return 1
+fi
+
 KARABO_ENV=karabogui
 
-CALLED_FROM=$(pwd)
 SCRIPT_PATH=$(dirname $(readlink -f "$0"))
 
 # Clean environment if asked
@@ -97,10 +101,10 @@ if [ "$SETUP_FLAG" != false ]; then
     # This flag is therefore used in the setup.py to filter which modules to select. Ideally native and common should
     # be in their own package
     export BUILD_KARABO_GUI=1
-    cd ${SCRIPT_PATH}/src/pythonKarabo
+    pushd ${SCRIPT_PATH}/src/pythonKarabo
     safeRunCommand python setup.py ${SETUP_FLAG} || return 1
-    cd ${SCRIPT_PATH}/src/pythonGui
+    popd
+    pushd ${SCRIPT_PATH}/src/pythonGui
     safeRunCommand python setup.py ${SETUP_FLAG} || return 1
+    popd
 fi
-
-cd ${CALLED_FROM}
