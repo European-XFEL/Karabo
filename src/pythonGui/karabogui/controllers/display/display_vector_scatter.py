@@ -38,6 +38,7 @@ class DisplayVectorScatterGraph(BaseBindingController):
         widget = KaraboPlotView(parent=parent)
         widget.add_cross_target()
         widget.add_toolbar()
+        widget.enable_export()
         widget.stateChanged.connect(self._change_model)
 
         self._plot = widget.add_scatter_item(cycle=False)

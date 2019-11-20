@@ -6,8 +6,8 @@ from PyQt5.QtGui import QFont
 from pyqtgraph import ColorMap, PlotItem
 
 from karabogui.graph.common.api import (
-    AspectRatio, COLORMAPS, ExportTool, create_axis_items, ImageExporter,
-    NumpyExporter)
+    ArrayExporter, AspectRatio, COLORMAPS, ExportTool, create_axis_items,
+    ImageExporter)
 from karabogui.graph.common.const import (
     AXIS_ITEMS, AXIS_X, AXIS_Y, DEFAULT_LABEL_X, DEFAULT_LABEL_Y,
     DEFAULT_OFFSET_X, DEFAULT_OFFSET_Y, DEFAULT_SCALE_X, DEFAULT_SCALE_Y,
@@ -252,7 +252,7 @@ class KaraboImagePlot(PlotItem):
         if export_type == ExportTool.Image:
             exporter = ImageExporter(self.scene())
         elif export_type == ExportTool.Data:
-            exporter = NumpyExporter(self.imageItem.image)
+            exporter = ArrayExporter(self.imageItem.image)
         else:
             raise LookupError("No exporter found for {}".format(export_type))
 
