@@ -8,16 +8,24 @@ import json
 
 import numpy as np
 from PyQt5.QtCore import pyqtSlot, Qt, QAbstractTableModel, QModelIndex
+from PyQt5.QtGui import QBrush, QColor
 from PyQt5.QtWidgets import QTableView, QComboBox, QItemDelegate
 
-from karabo.common.api import KARABO_SCHEMA_VALUE_TYPE
+from karabo.common.api import (
+    KARABO_SCHEMA_DISPLAY_TYPE, KARABO_SCHEMA_VALUE_TYPE)
+from karabo.common.display_types import KARABO_SCHEMA_DISPLAY_TYPE_STATE
 from karabo.native import AccessMode, Hash
 from karabogui.enums import NavigationItemTypes, ProjectItemTypes
+from karabogui.indicators import get_state_color
 
 
 def _get_value_type(schema, key):
     """Extract a single key's value type from a schema"""
     return schema.hash[key, KARABO_SCHEMA_VALUE_TYPE]
+
+
+def _get_display_type(schema, key):
+    return schema.hash[key, ...].get(KARABO_SCHEMA_DISPLAY_TYPE, '')
 
 
 class TableModel(QAbstractTableModel):
@@ -73,6 +81,15 @@ class TableModel(QAbstractTableModel):
                 value = [] if value is None else value
                 return ", ".join(str(v) for v in value)
             return str(value)
+
+        elif role == Qt.BackgroundRole:
+            key = self._row_hash.getKeys()[col]
+            display_type = _get_display_type(self._row_schema, key)
+            if display_type == KARABO_SCHEMA_DISPLAY_TYPE_STATE:
+                value = self._data[row][key]
+                color = get_state_color(value)
+                if color is not None:
+                    return QBrush(QColor(*color))
 
         return None
 
