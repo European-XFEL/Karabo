@@ -18,7 +18,7 @@ from .colors import (
 from .enums import (
     AxisType, MouseMode, ExportTool, AuxPlots, ROITool, AspectRatio, Axes)
 
-from .exporters import NumpyExporter, ImageExporter
+from .exporters import ArrayExporter, ImageExporter, PlotDataExporter
 
 from .legend import KaraboLegend, CoordsLegend
 
