@@ -34,6 +34,7 @@ class DisplayNDArrayGraph(BaseBindingController):
         widget.add_cross_target()
         widget.add_roi()
         widget.add_toolbar()
+        widget.enable_export()
         widget.restore(build_graph_config(self.model))
         widget.enable_data_toggle()
 
