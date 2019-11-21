@@ -1,5 +1,6 @@
 import numpy as np
 
+from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
 
 # Toolbar
@@ -109,11 +110,19 @@ ALL_STATES = [
     State.DECREASING,
     State.KNOWN,
 ]
-STATE_INTEGER_MAP = {state.name: i for i, state in enumerate(ALL_STATES)}
-INTEGER_STATE_MAP = {i: state.name for i, state in enumerate(ALL_STATES)}
+STATE_INTEGER_MAP = {state.value: i for i, state in enumerate(ALL_STATES)}
+INTEGER_STATE_MAP = {i: state.value for i, state in enumerate(ALL_STATES)}
 
 MIN_STATE_INT = min(STATE_INTEGER_MAP.values())
 MAX_STATE_INT = max(STATE_INTEGER_MAP.values())
+
+ALARM_INTEGER_MAP = {alarm.value: i for i, alarm in
+                     enumerate(AlarmCondition.__members__.values())}
+INTEGER_ALARM_MAP = {i: alarm.value for i, alarm in
+                     enumerate(AlarmCondition.__members__.values())}
+
+MIN_ALARM_INT = min(ALARM_INTEGER_MAP.values())
+MAX_ALARM_INT = max(ALARM_INTEGER_MAP.values())
 
 # Image Constants
 # --------------------------------------------------------------------------

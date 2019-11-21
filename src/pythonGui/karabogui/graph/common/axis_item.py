@@ -6,7 +6,8 @@ from pyqtgraph import AxisItem as PgAxisItem
 from pyqtgraph.functions import siScale
 
 from karabogui.graph.common.const import (
-    AXIS_ITEMS, X_AXIS_HEIGHT, Y_AXIS_WIDTH, INTEGER_STATE_MAP)
+    AXIS_ITEMS, X_AXIS_HEIGHT, Y_AXIS_WIDTH, INTEGER_ALARM_MAP,
+    INTEGER_STATE_MAP)
 from karabogui.graph.common.enums import AxisType
 
 
@@ -123,6 +124,18 @@ class StateAxisItem(AxisItem):
                 for value in values]
 
 
+class AlarmAxisItem(AxisItem):
+    """The Alarm Axis Item for displaying Karabo Alarms as major ticks"""
+
+    def tickStrings(self, values, scale, spacing):
+        """Return the alarm names as a function of integers values
+
+        NOTE: Always cast the value as integer due to PyQtGraph protection!
+        """
+        return [INTEGER_ALARM_MAP.get(int(value), 'none')
+                for value in values]
+
+
 class AuxPlotAxisItem(AxisItem):
     """AxisItem for the aux plots."""
 
@@ -202,14 +215,19 @@ class AuxPlotAxisItem(AxisItem):
 
 
 def create_axis_items(axis=AxisType.Classic, axes_with_ticks=[]):
-    time_axis = []
-    state_axis = []
-    aux_axis = []
+    """Create the basic axis items for graph plots
+
+    The ``axis`` type defines the possible axis.
+    """
+    time_axis, state_axis, aux_axis, alarm_axis = [], [], [], []
 
     if axis is AxisType.Time:
         time_axis = ["top", "bottom"]
     elif axis is AxisType.State:
         state_axis = ["left"]
+        time_axis = ["top", "bottom"]
+    elif axis is AxisType.Alarm:
+        alarm_axis = ["left"]
         time_axis = ["top", "bottom"]
     elif axis is AxisType.AuxPlot:
         aux_axis = axes_with_ticks
@@ -221,6 +239,9 @@ def create_axis_items(axis=AxisType.Classic, axes_with_ticks=[]):
             axis_item = TimeAxisItem(orientation)
         elif orientation in state_axis:
             axis_item = StateAxisItem(orientation)
+            axis_item.setTickSpacing(major=1, minor=1)
+        elif orientation in alarm_axis:
+            axis_item = AlarmAxisItem(orientation)
             axis_item.setTickSpacing(major=1, minor=1)
         elif orientation in aux_axis:
             axis_item = AuxPlotAxisItem(orientation, has_ticks)
