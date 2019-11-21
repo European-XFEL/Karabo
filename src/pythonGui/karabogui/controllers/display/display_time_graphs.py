@@ -6,10 +6,11 @@ from itertools import cycle
 from PyQt5 import uic
 from PyQt5.QtCore import QDateTime, QTimer
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
-from traits.api import Bool, Dict, Instance, Set, String
+from traits.api import Bool, Dict, Instance, Int, Set, String
 
 from karabo.common.scenemodel.api import (
-    build_graph_config, restore_graph_config, StateGraphModel, TrendGraphModel)
+    build_graph_config, restore_graph_config, AlarmGraphModel, StateGraphModel,
+    TrendGraphModel)
 from karabogui.binding.api import (
     BoolBinding, FloatBinding, IntBinding, StringBinding)
 from karabogui.const import MAX_NUMBER_LIMIT
@@ -19,13 +20,18 @@ from karabogui.controllers.api import (
     with_display_type)
 from karabogui.globals import MAX_INT32
 from karabogui.graph.common.api import AxisType, get_pen_cycler
-from karabogui.graph.common.const import STATE_INTEGER_MAP
+from karabogui.graph.common.const import ALARM_INTEGER_MAP, STATE_INTEGER_MAP
 from karabogui.graph.plots.base import KaraboPlotView
 
 # NOTE: We limit ourselves to selected karabo actions!
 ALLOWED_ACTIONS = ['x_grid', 'y_grid', 'y_invert', 'y_log', 'axes']
 MIN_TIMESTAMP = datetime.datetime(1970, 1, 31).timestamp()
 MAX_TIMESTAMP = datetime.datetime(2038, 12, 31).timestamp()
+
+
+def curve_to_axis(value):
+    """Return the axis type of the current curve configuration"""
+    return [AxisType.Time, AxisType.State, AxisType.Alarm][value]
 
 
 class BaseSeriesGraph(BaseBindingController):
@@ -45,7 +51,10 @@ class BaseSeriesGraph(BaseBindingController):
     _x_axis_buttons = Instance(OrderedDict, args=())
     _x_detail = String(UPTIME)
 
-    def _init_ui(self, parent, axis):
+    # Our type of curve
+    curve_type = Int(0)
+
+    def create_widget(self, parent):
         """Setup all widgets correctly"""
 
         self._start_time = QDateTime.currentDateTime()
@@ -64,7 +73,7 @@ class BaseSeriesGraph(BaseBindingController):
         self._x_axis_buttons[widget.bt_uptime] = UPTIME
         widget.bg_x_axis.buttonClicked.connect(self._x_axis_btns_toggled)
 
-        self._plot = KaraboPlotView(axis=axis,
+        self._plot = KaraboPlotView(axis=curve_to_axis(self.curve_type),
                                     actions=ALLOWED_ACTIONS,
                                     parent=widget.time_frame)
         self._plot.stateChanged.connect(self._change_model)
@@ -111,7 +120,8 @@ class BaseSeriesGraph(BaseBindingController):
         curve = self._plot.add_curve_item(name=proxy.key, pen=next(self._pens))
         curve.sigPlotChanged.connect(self._update_ranges)
 
-        self._curves[proxy] = Curve(proxy=proxy, curve=curve)
+        self._curves[proxy] = Curve(proxy=proxy, curve=curve,
+                                    curve_type=self.curve_type)
         self._curves_start.add(proxy)
 
         if len(self._curves) > 1:
@@ -245,10 +255,7 @@ class BaseSeriesGraph(BaseBindingController):
     can_show_nothing=False)
 class DisplayTrendGraph(BaseSeriesGraph):
     model = Instance(TrendGraphModel, args=())
-
-    def create_widget(self, parent):
-        widget = self._init_ui(parent, axis=AxisType.Time)
-        return widget
+    curve_type = Int(0)
 
     def value_update(self, proxy):
         if self.widget is None or abs(proxy.value) >= MAX_NUMBER_LIMIT:
@@ -271,10 +278,7 @@ class DisplayTrendGraph(BaseSeriesGraph):
     can_show_nothing=False)
 class DisplayStateGraph(BaseSeriesGraph):
     model = Instance(StateGraphModel, args=())
-
-    def create_widget(self, parent):
-        widget = self._init_ui(parent, axis=AxisType.State)
-        return widget
+    curve_type = Int(1)
 
     def value_update(self, proxy):
         if self.widget is None:
@@ -284,6 +288,30 @@ class DisplayStateGraph(BaseSeriesGraph):
         t = timestamp.toTimestamp()
 
         value = STATE_INTEGER_MAP[proxy.value]
+        self._curves[proxy].add_point(value, t)
+        if proxy in self._curves_start:
+            self._curves[proxy].add_point(value,
+                                          self._start_time.toTime_t())
+            self._curves_start.remove(proxy)
+
+
+@register_binding_controller(
+    ui_name='Alarm Graph', klassname='DisplayAlarmGraph',
+    binding_type=StringBinding,
+    is_compatible=with_display_type('AlarmCondition'),
+    can_show_nothing=False)
+class DisplayAlarmGraph(BaseSeriesGraph):
+    model = Instance(AlarmGraphModel, args=())
+    curve_type = Int(2)
+
+    def value_update(self, proxy):
+        if self.widget is None:
+            return
+
+        timestamp = proxy.binding.timestamp
+        t = timestamp.toTimestamp()
+
+        value = ALARM_INTEGER_MAP[proxy.value]
         self._curves[proxy].add_point(value, t)
         if proxy in self._curves_start:
             self._curves[proxy].add_point(value,
