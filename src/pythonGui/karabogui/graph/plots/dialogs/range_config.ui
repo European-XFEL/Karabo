@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>371</width>
-    <height>194</height>
+    <width>358</width>
+    <height>210</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -29,11 +29,11 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Axes View Range</string>
+   <string>Axis Configuration</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QLabel" name="label_axis">
+    <widget class="QLabel" name="ui_axis">
      <property name="font">
       <font>
        <pointsize>10</pointsize>
@@ -42,7 +42,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Actual View</string>
+      <string>Axis View: None-Axis</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
@@ -61,9 +61,9 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>9</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
+         <pointsize>8</pointsize>
+         <weight>50</weight>
+         <bold>false</bold>
         </font>
        </property>
        <property name="frameShape">
@@ -87,9 +87,9 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>9</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
+         <pointsize>8</pointsize>
+         <weight>50</weight>
+         <bold>false</bold>
         </font>
        </property>
        <property name="frameShape">
@@ -107,43 +107,45 @@
    </item>
    <item>
     <widget class="Line" name="line">
+     <property name="sizeIncrement">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QLabel" name="label_header_3">
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>Applied Configuration</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QCheckBox" name="ui_autorange">
-       <property name="text">
-        <string>Autorange</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
+    <widget class="QLabel" name="ui_configuration">
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Configuration</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="ui_autorange">
+     <property name="text">
+      <string>Autorange</string>
+     </property>
+    </widget>
    </item>
    <item>
     <layout class="QGridLayout" name="gridLayout_2">
      <item row="0" column="1">
-      <widget class="QLabel" name="label_header">
+      <widget class="QLabel" name="label_min">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
          <horstretch>0</horstretch>
@@ -153,12 +155,12 @@
        <property name="font">
         <font>
          <pointsize>10</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
+         <weight>50</weight>
+         <bold>false</bold>
         </font>
        </property>
        <property name="text">
-        <string>Min</string>
+        <string>Minimum</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
@@ -166,7 +168,7 @@
       </widget>
      </item>
      <item row="0" column="2">
-      <widget class="QLabel" name="label_header_2">
+      <widget class="QLabel" name="label_max">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
          <horstretch>0</horstretch>
@@ -176,12 +178,12 @@
        <property name="font">
         <font>
          <pointsize>10</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
+         <weight>50</weight>
+         <bold>false</bold>
         </font>
        </property>
        <property name="text">
-        <string>Max</string>
+        <string>Maximum</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
@@ -196,82 +198,22 @@
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QDoubleSpinBox" name="ui_min">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>25</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>23</height>
-        </size>
-       </property>
-       <property name="sizeIncrement">
-        <size>
-         <width>0</width>
-         <height>0</height>
-        </size>
+      <widget class="QLineEdit" name="ui_min">
+       <property name="text">
+        <string>0.0</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
-       </property>
-       <property name="decimals">
-        <number>1</number>
-       </property>
-       <property name="minimum">
-        <double>-999999999.000000000000000</double>
-       </property>
-       <property name="maximum">
-        <double>999999999.000000000000000</double>
        </property>
       </widget>
      </item>
      <item row="1" column="2">
-      <widget class="QDoubleSpinBox" name="ui_max">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>25</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>23</height>
-        </size>
-       </property>
-       <property name="sizeIncrement">
-        <size>
-         <width>0</width>
-         <height>0</height>
-        </size>
+      <widget class="QLineEdit" name="ui_max">
+       <property name="text">
+        <string>0.0</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
-       </property>
-       <property name="decimals">
-        <number>1</number>
-       </property>
-       <property name="minimum">
-        <double>-999999999.000000000000000</double>
-       </property>
-       <property name="maximum">
-        <double>999999999.000000000000000</double>
        </property>
       </widget>
      </item>
