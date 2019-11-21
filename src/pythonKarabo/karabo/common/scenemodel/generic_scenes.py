@@ -2,7 +2,7 @@ from .model import SceneModel
 from .shapes import LineModel
 from .widgets.graph_image import WebCamGraphModel
 from .widgets.graph_plots import (
-    StateGraphModel, TrendGraphModel, VectorGraphModel)
+    AlarmGraphModel, StateGraphModel, TrendGraphModel, VectorGraphModel)
 from .widgets.simple import DisplayLabelModel, LabelModel
 
 
@@ -55,6 +55,17 @@ def get_state_graph_scene(device_id, path):
     """
     scene = _get_plot_scene(StateGraphModel, device_id, path)
     scene.simple_name = 'StateGraph_{}_{}'.format(device_id, path)
+
+    return scene
+
+
+def get_alarm_graph_scene(device_id, path):
+    """Return a alarm graph scene for a device_id with path
+
+    :returns: SceneModel with a trendline and a deviceId label
+    """
+    scene = _get_plot_scene(AlarmGraphModel, device_id, path)
+    scene.simple_name = 'AlarmGraph_{}_{}'.format(device_id, path)
 
     return scene
 

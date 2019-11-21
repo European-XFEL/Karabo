@@ -6,8 +6,7 @@ from karabo.native import Hash, Timestamp
 
 
 def build_historic_data_float():
-    """build an array of historic data with time stamps
-    """
+    """build an array of historic data with time stamps"""
     # 10 random values in between [0, 100]
     vals = np.random.rand(10) * 100.
 
@@ -29,12 +28,7 @@ def build_historic_data_float():
     return ret
 
 
-def build_historic_data_string():
-    """build an array of historic data state string with time stamps
-    """
-    vals = ['ON', 'OFF', 'ACQUIRING', 'STOPPED', 'DISABLED', 'RUNNING',
-            'CHANGING', 'ERROR', 'UNKNOWN', 'STARTED', 'MOVING']
-
+def _build_value_string(vals):
     now = datetime.datetime.now()
     timefmt = r"%Y-%m-%d %H:%M:%S"
 
@@ -47,3 +41,18 @@ def build_historic_data_string():
             h.setAttribute('v', attk, attv)
         ret.append(h)
     return ret
+
+
+def build_historic_state_string():
+    """build an array of historic data state string with time stamps"""
+    vals = ['ON', 'OFF', 'ACQUIRING', 'STOPPED', 'DISABLED', 'RUNNING',
+            'CHANGING', 'ERROR', 'UNKNOWN', 'STARTED', 'MOVING']
+    return _build_value_string(vals)
+
+
+def build_historic_alarm_string():
+    """build an array of historic data alarm string with time stamps"""
+    vals = ['none', 'warn', 'warnLow', 'warnHigh', 'warnVarianceLow',
+            'warnVarianceHigh', 'alarm', 'alarmLow', 'alarmHigh',
+            'alarmVarianceLow', 'alarmVarianceHigh', 'interlock']
+    return _build_value_string(vals)
