@@ -12,7 +12,7 @@ from traits.api import (
 
 from karabogui.binding.api import PropertyProxy
 from karabogui.const import MAX_NUMBER_LIMIT
-from karabogui.graph.common.const import STATE_INTEGER_MAP
+from karabogui.graph.common.const import ALARM_INTEGER_MAP, STATE_INTEGER_MAP
 from karabo.native import Timestamp
 
 ONE_WEEK = "One Week"
@@ -136,6 +136,10 @@ class Curve(HasStrictTraits):
     # minimum number of points shown (if possible)
     minHistory = Constant(100)
 
+    # Defines which curve we are using. Curve type 0 is classic, 1 is state
+    # and 2 is alarms
+    curve_type = Int(0)
+
     def _generations_default(self):
         return [_Generation() for i in range(4)]
 
@@ -245,10 +249,12 @@ class Curve(HasStrictTraits):
             x[i] = Timestamp.fromHashAttributes(d['v', ...]).toTimestamp()
             # Do some gymnastics for crazy values!
             value = d["v"]
-            if isinstance(value, str):
-                value = STATE_INTEGER_MAP[value]
-            elif abs(value) >= MAX_NUMBER_LIMIT:
+            if self.curve_type == 0 and abs(value) >= MAX_NUMBER_LIMIT:
                 value = numpy.NaN
+            elif self.curve_type == 1:
+                value = STATE_INTEGER_MAP[value]
+            elif self.curve_type == 2:
+                value = ALARM_INTEGER_MAP[value]
             y[i] = value
 
         p0 = self.x[:self.fill].searchsorted(self.t0)
