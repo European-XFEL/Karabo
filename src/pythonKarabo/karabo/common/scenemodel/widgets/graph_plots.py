@@ -84,6 +84,10 @@ class StateGraphModel(BasePlotModel):
     """State graph model"""
 
 
+class AlarmGraphModel(BasePlotModel):
+    """Alarm graph model"""
+
+
 @register_scene_reader('ScatterGraph')
 def _scatter_graph_reader(read_func, element):
     traits = read_base_widget_data(element)
@@ -295,6 +299,27 @@ def _state_graph_reader(read_func, element):
 def _state_graph_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DisplayStateGraph')
+    write_basic_label(model, element)
+    write_axes_set(model, element)
+    write_range_set(model, element)
+
+    return element
+
+
+@register_scene_reader('DisplayAlarmGraph')
+def _alarm_graph_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    traits.update(read_basic_label(element))
+    traits.update(read_axes_set(element))
+    traits.update(read_range_set(element))
+
+    return AlarmGraphModel(**traits)
+
+
+@register_scene_writer(AlarmGraphModel)
+def _alarm_graph_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'DisplayAlarmGraph')
     write_basic_label(model, element)
     write_axes_set(model, element)
     write_range_set(model, element)
