@@ -7,7 +7,7 @@ from .const import (
     SCENE_FILE_VERSION, SCENE_MIN_HEIGHT, SCENE_MIN_WIDTH, SceneTargetWindow)
 from .exceptions import SceneReaderException, SceneWriterException
 from .generic_scenes import (
-    get_state_graph_scene, get_trendline_scene, get_image_scene,
+    get_alarm_graph_scene, get_state_graph_scene, get_trendline_scene, get_image_scene,
     get_vector_scene)
 from .io import read_scene, write_scene, write_single_model
 from .layouts import (
@@ -31,9 +31,10 @@ from .widgets.graph_utils import (
     read_basic_label, write_basic_label, read_range_set, write_range_set,
     build_graph_config, build_model_config, restore_graph_config)
 from .widgets.graph_plots import (
-    BasePlotModel, NDArrayGraphModel, ScatterGraphModel, VectorGraphModel,
-    VectorHistGraphModel, VectorBarGraphModel, VectorScatterGraphModel,
-    VectorFillGraphModel, StateGraphModel, TrendGraphModel)
+    AlarmGraphModel, BasePlotModel, NDArrayGraphModel, ScatterGraphModel,
+    VectorGraphModel, VectorHistGraphModel, VectorBarGraphModel,
+    VectorScatterGraphModel, VectorFillGraphModel, StateGraphModel,
+    TrendGraphModel)
 from .widgets.image import (
     DisplayAlignedImageModel, DisplayImageElementModel, DisplayImageModel,
     ScientificImageModel, WebcamImageModel)
