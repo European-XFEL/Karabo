@@ -17,7 +17,7 @@ from karabogui.graph.common.const import (
     EMPTY_SYMBOL_OPTIONS, DEFAULT_SYMBOL, SYMBOL_SIZE, WIDGET_MIN_HEIGHT,
     WIDGET_MIN_WIDTH)
 
-from karabogui.graph.plots.dialogs import RangeXDialog, RangeYDialog
+from karabogui.graph.plots.dialogs import RangeDialog
 from karabogui.graph.plots.items import (
     ScatterGraphPlot, VectorBarGraphPlot, VectorFillGraphPlot)
 from karabogui.graph.plots.tools import CrossTargetController
@@ -211,7 +211,8 @@ class KaraboPlotView(QWidget):
             'x_min': view_range[0][0],
             'x_max': view_range[0][1]}
 
-        config, ok = RangeXDialog.get(self.configuration, actual, parent=self)
+        config, ok = RangeDialog.get(self.configuration, actual, axis=0,
+                                     parent=self)
         if ok:
             self.configuration.update(**config)
             x_autorange = config['x_autorange']
@@ -228,7 +229,8 @@ class KaraboPlotView(QWidget):
             'y_min': view_range[1][0],
             'y_max': view_range[1][1]}
 
-        config, ok = RangeYDialog.get(self.configuration, actual, parent=self)
+        config, ok = RangeDialog.get(self.configuration, actual, axis=1,
+                                     parent=self)
         if ok:
             self.configuration.update(**config)
             autorange = config['y_autorange']
