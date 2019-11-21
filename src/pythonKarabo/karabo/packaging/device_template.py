@@ -54,7 +54,7 @@ def configure_template(path, package_name, class_name, email):
     __PACKAGE_NAME__. After that, it replaces various other __WORD__-style
     template names in the files that belong to the template.
     """
-    date = datetime.now().strftime("%B, %Y, %I:%M %p")
+    date = datetime.now().strftime("%B %d, %Y, %I:%M %p")
     substitutions = {
         re.compile('__CLASS_NAME__'): class_name,
         re.compile('__CLASS_NAME_ALL_CAPS__'): class_name.upper(),
