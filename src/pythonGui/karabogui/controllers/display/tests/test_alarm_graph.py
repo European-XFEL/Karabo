@@ -6,37 +6,38 @@ from karabogui.controllers.display import trendline
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
 
-from .data import build_historic_state_string
-from ..display_time_graphs import DisplayStateGraph
+from .data import build_historic_alarm_string
+from ..display_time_graphs import DisplayAlarmGraph
 
 
 class Object(Configurable):
-    state = String(defaultValue="ON")
+    alarm = String(displayType="AlarmCondition",
+                   defaultValue="none")
 
 
-class TestDisplayStateGraph(GuiTestCase):
+class TestDisplayAlarmGraph(GuiTestCase):
     def setUp(self):
-        super(TestDisplayStateGraph, self).setUp()
+        super(TestDisplayAlarmGraph, self).setUp()
 
         schema = Object.getClassSchema()
-        self.proxy = get_class_property_proxy(schema, 'state')
-        self.controller = DisplayStateGraph(proxy=self.proxy)
+        self.proxy = get_class_property_proxy(schema, 'alarm')
+        self.controller = DisplayAlarmGraph(proxy=self.proxy)
         self.controller.create(None)
 
     def tearDown(self):
-        super(TestDisplayStateGraph, self).tearDown()
+        super(TestDisplayAlarmGraph, self).tearDown()
         self.controller.destroy()
-        assert self.controller.widget is None
+        self.assertIsNone(self.controller.widget)
 
     def test_set_value(self):
-        set_proxy_value(self.proxy, 'state', 'ACQUIRING')
+        set_proxy_value(self.proxy, 'state', 'interlock')
         self.process_qt_events()
 
-    def test_initial_state(self):
+    def test_initial_alarm(self):
         self.assertEqual(self.controller._x_detail, trendline.UPTIME)
 
     def test_historic_data(self):
-        data = build_historic_state_string()
+        data = build_historic_alarm_string()
         t0 = data[0]['v', ...]['sec']
         t1 = data[-1]['v', ...]['sec']
 
