@@ -4,30 +4,45 @@ from PyQt5 import uic
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QDialog
 
+from karabogui.controllers.validators import NumberValidator
 
-class RangeXDialog(QDialog):
-    def __init__(self, config=None, actual=None, parent=None):
-        super(RangeXDialog, self).__init__(parent)
+DECIMALS = 6
+
+
+class RangeDialog(QDialog):
+    def __init__(self, config=None, actual=None, axis=0, parent=None):
+        super(RangeDialog, self).__init__(parent)
         self.setModal(False)
-        # load ui file
         ui_path = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                'range_config.ui')
         uic.loadUi(ui_path, self)
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
+
+        self.get_axis_notation(axis=axis)
+        self.ui_min.setValidator(NumberValidator(decimals=DECIMALS))
+        self.ui_max.setValidator(NumberValidator(decimals=DECIMALS))
 
         # Show the actual view!
-        self.ui_view_min.setText("{:.1f}".format(actual['x_min']))
-        self.ui_view_max.setText("{:.1f}".format(actual['x_max']))
+        self.ui_view_min.setText('{:.2e}'.format(actual[self.axis_min]))
+        self.ui_view_max.setText('{:.2e}'.format(actual[self.axis_max]))
 
         # Load the model settings!
-        self.ui_min.setValue(config['x_min'])
-        self.ui_max.setValue(config['x_max'])
-        state = config['x_autorange']
+        self.ui_min.setText('{}'.format(config[self.axis_min]))
+        self.ui_max.setText('{}'.format(config[self.axis_max]))
+
+        state = config[self.axis_auto]
         self.ui_autorange.setChecked(state)
         self.ui_autorange.toggled.connect(self._check_box_triggered)
         self.ui_min.setEnabled(not state)
         self.ui_max.setEnabled(not state)
-        self.button_box.accepted.connect(self.accept)
-        self.button_box.rejected.connect(self.reject)
+
+    def get_axis_notation(self, axis):
+        axis = 'x' if axis == 0 else 'y'
+        self.axis_min = '{}_min'.format(axis)
+        self.axis_max = '{}_max'.format(axis)
+        self.axis_auto = '{}_autorange'.format(axis)
+        self.ui_axis.setText('Axis View: {}-axis'.format(axis))
 
     @pyqtSlot(bool)
     def _check_box_triggered(self, state):
@@ -37,63 +52,15 @@ class RangeXDialog(QDialog):
     @property
     def limits(self):
         config = {
-            "x_min": self.ui_min.value(),
-            "x_max": self.ui_max.value(),
-            "x_autorange": self.ui_autorange.isChecked()}
+            self.axis_min: float(self.ui_min.text()),
+            self.axis_max: float(self.ui_max.text()),
+            self.axis_auto: self.ui_autorange.isChecked()}
 
         return config
 
     @staticmethod
-    def get(model, actual, parent=None):
-        dialog = RangeXDialog(model, actual, parent)
-        result = dialog.exec_() == QDialog.Accepted
-        content = {}
-        content.update(dialog.limits)
-
-        return content, result
-
-
-class RangeYDialog(QDialog):
-    def __init__(self, config=None, actual=None, parent=None):
-        super(RangeYDialog, self).__init__(parent)
-        self.setModal(False)
-        # load ui file
-        ui_path = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                               'range_config.ui')
-        uic.loadUi(ui_path, self)
-
-        # Show the actual view!
-        self.ui_view_min.setText("{:.1f}".format(actual['y_min']))
-        self.ui_view_max.setText("{:.1f}".format(actual['y_max']))
-
-        # Load the model settings!
-        self.ui_min.setValue(config['y_min'])
-        self.ui_max.setValue(config['y_max'])
-        state = config['y_autorange']
-        self.ui_autorange.setChecked(state)
-        self.ui_autorange.toggled.connect(self._check_box_triggered)
-        self.ui_min.setEnabled(not state)
-        self.ui_max.setEnabled(not state)
-        self.button_box.accepted.connect(self.accept)
-        self.button_box.rejected.connect(self.reject)
-
-    @pyqtSlot(bool)
-    def _check_box_triggered(self, state):
-        self.ui_min.setEnabled(not state)
-        self.ui_max.setEnabled(not state)
-
-    @property
-    def limits(self):
-        config = {
-            "y_min": self.ui_min.value(),
-            "y_max": self.ui_max.value(),
-            "y_autorange": self.ui_autorange.isChecked()}
-
-        return config
-
-    @staticmethod
-    def get(model, actual, parent=None):
-        dialog = RangeYDialog(model, actual, parent)
+    def get(model, actual, axis=0, parent=None):
+        dialog = RangeDialog(model, actual, axis, parent)
         result = dialog.exec_() == QDialog.Accepted
         content = {}
         content.update(dialog.limits)
