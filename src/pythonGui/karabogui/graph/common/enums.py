@@ -8,10 +8,11 @@ class Axes(Enum):
 
 
 class AxisType(Enum):
+    AuxPlot = "AuxPlots"
+    Alarm = "Alarm"
+    Classic = "Classic"
     State = "State"
     Time = "Time"
-    AuxPlot = "AuxPlots"
-    Classic = "Classic"
 
 
 class MouseMode(IntEnum):
