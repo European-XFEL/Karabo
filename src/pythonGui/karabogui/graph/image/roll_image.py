@@ -21,6 +21,9 @@ class RollImage(HasStrictTraits):
     def _stack_changed(self):
         self._data = None
 
+    def reset(self):
+        self._data = None
+
     def add(self, value):
         if value.size == 0:
             self._data = None

@@ -2,19 +2,19 @@
 # Author: <dennis.goeries@xfel.eu>
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
 from PyQt5.QtWidgets import QAction, QInputDialog
+from traits.api import Instance
 
 from karabo.common.scenemodel.api import (
     restore_graph_config, build_graph_config, VectorRollGraphModel)
 from karabo.native import Timestamp
-from karabogui.graph.common.api import AuxPlots
+from karabogui.graph.common.api import AuxPlots, create_tool_button
 from karabogui.graph.image.api import (
     KaraboImagePlot, KaraboImageView, RollImage)
 from karabogui.binding.api import get_binding_value, VectorNumberBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
-from traits.api import Instance
+from karabogui import icons
 
 
 MAX_NUM_VECTORS = 500
@@ -42,7 +42,15 @@ class DisplayVectorRollGraph(BaseBindingController):
         widget.add_aux(AuxPlots.ProfilePlot)
 
         # Finalize
-        widget.add_toolbar()
+        toolbar = widget.add_toolbar()
+
+        _btn_reset = create_tool_button(
+            checkable=False,
+            icon=icons.reset,
+            tooltip="Reset the image",
+            on_clicked=self._reset_image)
+        toolbar.add_button(name="reset", button=_btn_reset)
+
         widget.plotItem.set_aspect_ratio(0)
         widget.plotItem.vb.disableAutoRange()
 
@@ -68,11 +76,12 @@ class DisplayVectorRollGraph(BaseBindingController):
     # -----------------------------------------------------------------------
     # Qt Slots
 
-    # @pyqtSlot(object)
+    def _reset_image(self):
+        self._image.reset()
+
     def _change_model(self, content):
         self.model.trait_set(**restore_graph_config(content))
 
-    # @pyqtSlot()
     def _configure_maxlen(self, checked):
         maxlen, ok = QInputDialog.getInt(self.widget, 'Vector Stack',
                                          'Maxlen:', self.model.maxlen, 5,
