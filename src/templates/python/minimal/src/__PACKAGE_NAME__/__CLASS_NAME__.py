@@ -24,7 +24,7 @@ class __CLASS_NAME__(PythonDevice):
 
     def __init__(self, configuration):
         # always call PythonDevice constructor first!
-        super(__CLASS_NAME__, self).__init__(configuration)
+        super().__init__(configuration)
         # Define the first function to be called after the constructor has
         # finished
         self.registerInitialFunction(self.initialization)
