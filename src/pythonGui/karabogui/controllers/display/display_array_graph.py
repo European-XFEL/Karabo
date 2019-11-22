@@ -14,7 +14,8 @@ from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.graph.common.const import MIN_DOWNSAMPLE, MAX_DOWNSAMPLE
 from karabogui.graph.plots.api import (
-    KaraboPlotView, generate_down_sample, get_view_range)
+    KaraboPlotView, generate_down_sample, generate_baseline, get_view_range,
+    TransformDialog)
 from karabogui import icons
 
 
@@ -41,7 +42,12 @@ class DisplayNDArrayGraph(BaseBindingController):
         downsample_action = QAction("Downsample", widget)
         downsample_action.triggered.connect(self.configure_downsample)
         downsample_action.setIcon(icons.downsample)
+
+        trans_action = QAction("X-Transformation", widget)
+        trans_action.triggered.connect(self.configure_transformation)
+
         widget.addAction(downsample_action)
+        widget.addAction(trans_action)
 
         return widget
 
@@ -56,27 +62,36 @@ class DisplayNDArrayGraph(BaseBindingController):
         arr_type = REFERENCE_TYPENUM_TO_DTYPE[node.type.value]
         value = np.frombuffer(data, dtype=arr_type)
         if value.ndim == 1:
+            model = self.model
+            # Generate the baseline for the x-axis
+            base_line = generate_baseline(value, offset=model.offset,
+                                          step=model.step)
             rect = get_view_range(self._plot)
             x, y = generate_down_sample(value, rect=rect,
                                         half_samples=self.model.half_samples,
-                                        deviation=True)
+                                        deviation=True, base_line=base_line)
             self._plot.setData(x, y)
 
     # ----------------------------------------------------------------
     # Qt Slots
 
-    # @pyqtSlot(object)
     def _change_model(self, content):
         self.model.trait_set(**restore_graph_config(content))
 
-    # @pyqtSlot()
-    def configure_downsample(self, checked):
+    def configure_downsample(self):
         sample, ok = QInputDialog.getInt(
             self.widget, 'Downsample', 'Samples half:',
             self.model.half_samples,
             MIN_DOWNSAMPLE, MAX_DOWNSAMPLE)
         if ok:
             self.model.half_samples = sample
+
+    def configure_transformation(self):
+        content, ok = TransformDialog.get(build_graph_config(self.model),
+                                          parent=self.widget)
+        if ok:
+            self.model.trait_set(**content)
+            self.widget.clearData()
 
 
 REFERENCE_TYPENUM_TO_DTYPE = {

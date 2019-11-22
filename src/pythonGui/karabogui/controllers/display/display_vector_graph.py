@@ -16,7 +16,8 @@ from karabogui.controllers.api import (
 from karabogui.graph.common.api import get_pen_cycler
 from karabogui.graph.common.const import MIN_DOWNSAMPLE, MAX_DOWNSAMPLE
 from karabogui.graph.plots.api import (
-    KaraboPlotView, generate_down_sample, get_view_range)
+    KaraboPlotView, generate_down_sample, generate_baseline, get_view_range,
+    TransformDialog)
 from karabogui import icons
 
 
@@ -45,7 +46,12 @@ class DisplayVectorGraph(BaseBindingController):
         downsample_action = QAction("Downsample", widget)
         downsample_action.triggered.connect(self.configure_downsample)
         downsample_action.setIcon(icons.downsample)
+
+        trans_action = QAction("X-Transformation", widget)
+        trans_action.triggered.connect(self.configure_transformation)
+
         widget.addAction(downsample_action)
+        widget.addAction(trans_action)
 
         return widget
 
@@ -84,24 +90,33 @@ class DisplayVectorGraph(BaseBindingController):
         if y.dtype == np.bool:
             y = y.astype(np.int)
 
+        model = self.model
+        # Generate the baseline for the x-axis
+        base_line = generate_baseline(y, offset=model.offset, step=model.step)
+
         rect = get_view_range(plot)
         x, y = generate_down_sample(y, rect=rect,
                                     half_samples=self.model.half_samples,
-                                    deviation=True)
+                                    deviation=True, base_line=base_line)
         plot.setData(x, y)
 
     # ----------------------------------------------------------------
     # Qt Slots
 
-    # @pyqtSlot(object)
     def _change_model(self, content):
         self.model.trait_set(**restore_graph_config(content))
 
-    # @pyqtSlot()
-    def configure_downsample(self, checked):
+    def configure_downsample(self):
         sample, ok = QInputDialog.getInt(
             self.widget, 'Downsample', 'Samples half:',
             self.model.half_samples,
             MIN_DOWNSAMPLE, MAX_DOWNSAMPLE)
         if ok:
             self.model.half_samples = sample
+
+    def configure_transformation(self):
+        content, ok = TransformDialog.get(build_graph_config(self.model),
+                                          parent=self.widget)
+        if ok:
+            self.model.trait_set(**content)
+            self.widget.clearData()
