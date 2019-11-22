@@ -15,7 +15,7 @@ class __CLASS_NAME__(Device):
         self.greeting = "Hello world!"
 
     def __init__(self, configuration):
-        super(__CLASS_NAME__, self).__init__(configuration)
+        super().__init__(configuration)
 
     async def onInitialization(self):
         """ This method will be called when the device starts.
