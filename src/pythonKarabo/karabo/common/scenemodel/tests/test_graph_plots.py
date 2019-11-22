@@ -99,6 +99,9 @@ def test_vector_graph():
     traits['half_samples'] = 10000
     traits['roi_items'] = roi_data
     traits['roi_tool'] = 1
+    traits['offset'] = 15.0
+    traits['step'] = 17.0
+
     model = api.VectorGraphModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
@@ -109,6 +112,8 @@ def test_vector_graph():
 
     assert read_model.half_samples == 10000
     assert read_model.roi_tool == 1
+    assert read_model.offset == 15.0
+    assert read_model.step == 17.0
 
 
 def test_vector_scatter_graph():
@@ -130,6 +135,8 @@ def test_ndarray_graph():
     traits['half_samples'] = 10000
     traits['roi_items'] = roi_data
     traits['roi_tool'] = 1
+    traits['offset'] = 5.0
+    traits['step'] = 7.0
 
     model = api.NDArrayGraphModel(**traits)
     read_model = single_model_round_trip(model)
@@ -142,3 +149,5 @@ def test_ndarray_graph():
 
     assert read_model.half_samples == 10000
     assert read_model.roi_tool == 1
+    assert read_model.offset == 5.0
+    assert read_model.step == 7.0
