@@ -9,9 +9,9 @@ from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
 
 from .graph_utils import (
-    BaseROIData, read_axes_set, read_basic_label, read_range_set,
-    read_roi_info, write_axes_set, write_basic_label, write_range_set,
-    write_roi_info)
+    BaseROIData, read_axes_set, read_basic_label, read_baseline,
+    read_range_set, read_roi_info, write_axes_set, write_basic_label,
+    write_baseline, write_range_set, write_roi_info)
 
 
 class BasePlotModel(BaseWidgetObjectData):
@@ -55,6 +55,8 @@ class NDArrayGraphModel(BasePlotModel):
     half_samples = Int(6000)
     roi_items = List(BaseROIData)
     roi_tool = Int(0)
+    offset = Float(0.0)
+    step = Float(1.0)
 
 
 class VectorHistGraphModel(BasePlotModel):
@@ -74,6 +76,8 @@ class VectorGraphModel(BasePlotModel):
     half_samples = Int(6000)
     roi_items = List(BaseROIData)
     roi_tool = Int(0)
+    offset = Float(0.0)
+    step = Float(1.0)
 
 
 class TrendGraphModel(BasePlotModel):
@@ -195,6 +199,7 @@ def _ndarray_graph_reader(read_func, element):
     traits.update(read_basic_label(element))
     traits.update(read_axes_set(element))
     traits.update(read_range_set(element))
+    traits.update(read_baseline(element))
     traits['roi_items'] = read_roi_info(element)
     traits['roi_tool'] = int(element.get(NS_KARABO + 'roi_tool', 0))
     traits['half_samples'] = int(element.get(NS_KARABO + 'half_samples', 6000))
@@ -210,6 +215,7 @@ def _ndarray_graph_writer(write_func, model, parent):
     write_axes_set(model, element)
     write_range_set(model, element)
     write_roi_info(model, element)
+    write_baseline(model, element)
     element.set(NS_KARABO + 'roi_tool', str(model.roi_tool))
     element.set(NS_KARABO + 'half_samples', str(model.half_samples))
 
@@ -243,6 +249,7 @@ def _vector_graph_reader(read_func, element):
     traits.update(read_basic_label(element))
     traits.update(read_axes_set(element))
     traits.update(read_range_set(element))
+    traits.update(read_baseline(element))
     traits['roi_items'] = read_roi_info(element)
     traits['roi_tool'] = int(element.get(NS_KARABO + 'roi_tool', 0))
     traits['half_samples'] = int(element.get(NS_KARABO + 'half_samples', 6000))
@@ -258,6 +265,7 @@ def _vector_graph_writer(write_func, model, parent):
     write_axes_set(model, element)
     write_range_set(model, element)
     write_roi_info(model, element)
+    write_baseline(model, element)
     element.set(NS_KARABO + 'roi_tool', str(model.roi_tool))
     element.set(NS_KARABO + 'half_samples', str(model.half_samples))
 
