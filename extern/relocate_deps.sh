@@ -47,7 +47,7 @@ rewrite_python_shebangs() {
 	ipython3 jupyter jupyter-kernelspec jupyter-migrate
 	jupyter-nbextension jupyter-notebook jupyter-qtconsole
 	jupyter-serverextension jupyter-trust nosetests nosetests-3.6 pip pip3
-	pip3.6 pnuke prsync pscp pslurp pssh pssh-askpass pydoc3 pydoc3.6
+	pip3.6 pnuke prsync pscp pslurp pydoc3 pydoc3.6
 	pygmentize pyvenv pyvenv-3.6 pyflakes py.test py.test-3.6 pybabel
 	pycodestyle rpath-fixer rpath-missing rpath-show rst2html.py
 	rst2latex.py rst2man.py rst2odt_prepstyles.py rst2odt.py
@@ -67,7 +67,7 @@ rewrite_python_shebangs() {
 
 rewrite_rpaths() {
     # These are the specific Python packages which need to be relocated
-    local target_packages=(Crypto Cython h5py lxml numpy PIL
+    local target_packages=(Cython h5py lxml numpy PIL
         psutil scipy tornado traits zmq
     )
 
