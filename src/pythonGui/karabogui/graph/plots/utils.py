@@ -15,7 +15,24 @@ SUBSAMPLE_THRESHOLD = 20
 MEAN_THRESHOLD = 10
 
 
-def generate_down_sample(data, rect=None, half_samples=6000, deviation=False):
+def generate_baseline(data, offset=0.0, step=1.0):
+    """Generate a baseline for vector data
+
+    :param data: The actual data to generate a baseline
+    :param start: The offset to start the baseline
+    :param step: The bin size (step) of the baseline
+    """
+
+    # XXX: No matter what, prevent ourselves against zero
+    step = step if step else 1.0
+
+    stop = offset + data.size * step
+
+    return np.arange(start=offset, stop=stop, step=step, dtype=np.float)
+
+
+def generate_down_sample(data, rect=None, half_samples=6000, deviation=False,
+                         base_line=None):
     """This function creates sampled data to keep a plot_item ``live``
 
     :param data: The actual data to be sampled
@@ -23,8 +40,11 @@ def generate_down_sample(data, rect=None, half_samples=6000, deviation=False):
     :param rect: The rect of the interesting data (``None``)
     :param deviation: Mean sample if the standard deviation is not above 5
     """
-    size = len(data)
-    base_line = np.arange(size)
+    if base_line is None:
+        size = len(data)
+        base_line = np.arange(size)
+    else:
+        size = len(base_line)
 
     # NOTE: Only if we are exceed twice the half samples we down sample!
     if (size // half_samples) > 1:
