@@ -367,8 +367,6 @@ development directly from the distributed platform:
 +-------------------+-----------------+----------------------------------------------------------+--------------------+------------------------+
 |wheel              |0.24.0           |MIT                                                       |yes                 |yes                     |
 +-------------------+-----------------+----------------------------------------------------------+--------------------+------------------------+
-|wxPython           |2.9.5.0          |wxWindows Library License ( like LGPL but more permissive)|yes                 |yes                     |
-+-------------------+-----------------+----------------------------------------------------------+--------------------+------------------------+
 
 In order to disentangle the dependencies' structure, it is convenient to split the structure as follow:
 The graph below represents the karabo libraries (please note that the graph below represents the goal
@@ -447,17 +445,15 @@ the ``ipython``, ``numpy`` and ``jupyter_client`` modules are not expanded in th
 Here are the dependencies of the ``karabogui`` python sub-module, for the sake of clarity,
 the ``ipython``, ``numpy`` and ``jupyter_client`` modules are not expanded in their dependencies:
 
-.. digraph:: karabogui_dependencies
-
-	"karabogui" -> "pyqt4"
-	"pyqt4" -> "qt4"
-	"pyqt4" -> "sip"
-	"pyqt4" -> "wxPython"
-	"karabogui" -> "guidata"
+	"karabogui" -> "karabo.common"
+	"karabogui" -> "karabo.native"
+	"karabogui" -> "pyqt"
+	"pyqt" -> "qt5"
+	"karabogui" -> "pythonqwt"
 	"karabogui" -> "guiqwt"
-	"guidata" -> "fftw"
 	"karabogui" -> "qtconsole"
 	"karabogui" -> "matplotlib"
+	"karabogui" -> "ipython"
 	"matplotlib" -> "numpy"
 	"matplotlib" -> "six"
 	"matplotlib" -> "python-dateutil"
@@ -473,6 +469,7 @@ the ``ipython``, ``numpy`` and ``jupyter_client`` modules are not expanded in th
 	"karabogui" -> "pyqtgraph" 
 	"pyqtgraph" -> "numpy "
 	"cycler" -> "six"
+	"karabogui" -> "requests" 
 
 
 Here are the dependencies of the ``ipython``, ``numpy`` and ``jupyter_client``:
