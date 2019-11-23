@@ -1,5 +1,6 @@
 /extern/resources/*/*.txt
 /extern/resources/*/*/
+/extern/resources/*/*.whl
 /extern/*.tar.gz
 !/extern/resources/openmqc/openmqc-5.0.1/
 /extern/resources/openmqc/openmqc-5.0.1/include
