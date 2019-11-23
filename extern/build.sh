@@ -17,9 +17,7 @@ jsonschema ecdsa tzlocal httplib2 traits pint nbformat
 notebook ipyparallel ipcluster_tools cycler pyelftools rpathology lxml certifi
 chardet idna urllib3 requests ply psutil pycodestyle pyflakes mccabe flake8
 msgpack msgpack-numpy flaky pyyaml docker_pycreds websocket_client docker
-coverage matplotlib)
-
-DEPENDENCIES_DB=(eulxml eulexist)
+coverage matplotlib eulxml eulexist)
 
 ##############################################################################
 # Important constants
@@ -315,9 +313,9 @@ usage() {
     echo
     echo "Build the Karabo Dependencies"
     echo
-    echo "Usage: $0 [args] INSTALL_DIRECTORY CI|ALL|NOGUI|PYTHON|DB|GUI|<list>"
+    echo "Usage: $0 [args] INSTALL_DIRECTORY CI|ALL|PYTHON|DB|<list>"
     echo "  INSTALL_DIRECTORY : The directory where build artifacts are installed"
-    echo "  CI|ALL|NOGUI|PYTHON|DB|GUI|<list> : The type of build to perform, OR"
+    echo "  CI|ALL|PYTHON|DB|<list> : The type of build to perform, OR"
     echo "                                      <list> is a list of packages to build"
     echo "Arguments:"
     echo "  --package | -p : After building, make a tarball of the install directory"
