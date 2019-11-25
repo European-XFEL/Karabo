@@ -155,7 +155,7 @@ class DeviceServerController(BaseProjectGroupController):
     # @pyqtSlot()
     def _edit_server(self):
         dialog = ServerHandleDialog(self.model)
-        result = dialog.exec()
+        result = dialog.exec_()
         if result == QDialog.Accepted:
             self.model.server_id = dialog.server_id
             self.model.description = dialog.description
