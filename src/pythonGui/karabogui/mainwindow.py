@@ -486,7 +486,7 @@ class MainWindow(QMainWindow):
         else:
             self.update_broker_connection()
             # Either connecting or no need to save before disconnecting
-            get_network().onServerConnection(connect)
+            get_network().onServerConnection(connect, parent=self)
 
     @pyqtSlot(str)
     def onPanelClose(self, name):

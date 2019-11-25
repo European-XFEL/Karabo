@@ -3,7 +3,8 @@
 # Created on February 16, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import QObject, pyqtSlot
+from PyQt5.QtCore import pyqtSlot, QObject, QEventLoop
+from PyQt5.QtWidgets import QApplication
 
 from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
@@ -193,6 +194,9 @@ class PanelWrangler(QObject):
             self.splash.finish(self.main_window)
 
         self.main_window.show()
+        # Show the connection dialog after processing all pending events since
+        # the main window needs to render and update its geometry first.
+        QApplication.processEvents(QEventLoop.AllEvents, 10)
         self.main_window.acServerConnect.trigger()
 
     def _open_macro(self, model):
