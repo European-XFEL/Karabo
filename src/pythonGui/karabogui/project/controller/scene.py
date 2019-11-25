@@ -33,20 +33,25 @@ class SceneController(BaseProjectController):
     def context_menu(self, project_controller, parent=None):
         menu = QMenu(parent)
         edit_action = QAction('Edit', menu)
-        edit_action.triggered.connect(self._edit_scene)
+        edit_action.triggered.connect(partial(self._edit_scene, parent=parent))
         dupe_action = QAction('Duplicate', menu)
         dupe_action.triggered.connect(partial(self._duplicate_scene,
-                                              project_controller))
+                                              project_controller,
+                                              parent=parent))
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_scene,
-                                                project_controller))
+                                                project_controller,
+                                                parent=parent))
         save_as_action = QAction('Save to file', menu)
-        save_as_action.triggered.connect(self._save_scene_to_file)
+        save_as_action.triggered.connect(partial(self._save_scene_to_file,
+                                                 parent=parent))
         replace_action = QAction('Replace from file', menu)
         replace_action.triggered.connect(partial(self._replace_scene,
-                                                 project_controller))
+                                                 project_controller,
+                                                 parent=parent))
         revert_action = QAction('Revert changes', menu)
-        revert_action.triggered.connect(self._revert_changes)
+        revert_action.triggered.connect(partial(self._revert_changes,
+                                                parent=parent))
         can_revert = not self._is_showing() and self.model.modified
         revert_action.setEnabled(can_revert)
         menu.addAction(edit_action)
@@ -73,7 +78,7 @@ class SceneController(BaseProjectController):
     # ----------------------------------------------------------------------
     # action handlers
 
-    def _replace_scene(self, project_controller):
+    def _replace_scene(self, project_controller, parent=None):
         """ Replace a scene from local disk
         """
         # Make sure scene is closed before!
@@ -83,7 +88,8 @@ class SceneController(BaseProjectController):
 
         fn = getOpenFileName(caption='Replace scene',
                              filter='SVG Files (*.svg)',
-                             directory=directory)
+                             directory=directory,
+                             parent=parent)
         if not fn:
             return
 
@@ -97,7 +103,8 @@ class SceneController(BaseProjectController):
             try:
                 new_scene = read_scene(fn)
             except Exception:
-                messagebox.show_error("Scene file could not be read!")
+                messagebox.show_error("Scene file could not be read!",
+                                      parent=parent)
                 return
 
             # NOTE: We can successfully read the scene, now close the old one
@@ -108,14 +115,15 @@ class SceneController(BaseProjectController):
                                                  'children', 'description'])
             scene.modified = True
 
-    def _delete_scene(self, project_controller):
+    def _delete_scene(self, project_controller, parent=None):
         """ Remove the scene associated with this item from its project
         """
         scene = self.model
         ask = ('Are you sure you want to delete \"<b>{}</b>\".<br /> '
                'Continue action?'.format(scene.simple_name))
         msg_box = QMessageBox(QMessageBox.Question, 'Delete scene',
-                              ask, QMessageBox.Yes | QMessageBox.No)
+                              ask, QMessageBox.Yes | QMessageBox.No,
+                              parent=parent)
         msg_box.setModal(False)
         msg_box.setDefaultButton(QMessageBox.No)
         if msg_box.exec() == QMessageBox.Yes:
@@ -127,16 +135,17 @@ class SceneController(BaseProjectController):
                             {'models': [scene]})
 
     # @pyqtSlot()
-    def _edit_scene(self, checked):
-        dialog = ObjectEditDialog(object_type='scene', model=self.model)
+    def _edit_scene(self, parent=None):
+        dialog = ObjectEditDialog(object_type='scene', model=self.model,
+                                  parent=parent)
         result = dialog.exec()
         if result == QDialog.Accepted:
             self.model.simple_name = dialog.simple_name
 
-    def _duplicate_scene(self, project_controller):
+    def _duplicate_scene(self, project_controller, parent=None):
         scene = self.model
         project = project_controller.model
-        dialog = ObjectDuplicateDialog(scene.simple_name)
+        dialog = ObjectDuplicateDialog(scene.simple_name, parent=parent)
         if dialog.exec() == QDialog.Accepted:
             xml = write_scene(scene)
             for simple_name in dialog.duplicate_names:
@@ -151,21 +160,21 @@ class SceneController(BaseProjectController):
         return wrangler.is_showing_project_item(scene)
 
     # @pyqtSlot()
-    def _revert_changes(self, checked):
+    def _revert_changes(self, parent=None):
         scene = self.model
         # NOTE: The domain only changes when a project is saved or loaded
         domain = get_db_conn().default_domain
         data = get_user_cache().retrieve(domain, scene.uuid)
         if data is None:
             msg = 'That scene has been removed from the local cache!'
-            messagebox.show_error(msg, title='Revert failed')
+            messagebox.show_error(msg, title='Revert failed', parent=parent)
             return
 
         read_project_model(StringIO(data), existing=scene)
         scene.modified = False
 
     # @pyqtSlot()
-    def _save_scene_to_file(self, checked):
+    def _save_scene_to_file(self, parent=None):
         config = get_config()
         path = config['scene_dir']
         directory = path if path and op.isdir(path) else ""
@@ -176,7 +185,8 @@ class SceneController(BaseProjectController):
                              filter='SVG (*.svg)',
                              suffix='svg',
                              selectFile=filename,
-                             directory=directory)
+                             directory=directory,
+                             parent=parent)
         if not fn:
             return
 

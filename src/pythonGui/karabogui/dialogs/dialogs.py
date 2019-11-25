@@ -441,11 +441,6 @@ class ConfigurationFromPastDialog(QDialog):
         uic.loadUi(filepath, self)
         self.setModal(False)
         self.ui_timepoint.setDateTime(QDateTime.currentDateTime())
-        if parent is not None:
-            # place dialog accordingly!
-            point = parent.rect().bottomRight()
-            global_point = parent.mapToGlobal(point)
-            self.move(global_point - QPoint(self.width(), 0))
 
     def _get_time_information(self, selected_time_point):
         current_date_time = QDateTime.currentDateTime()
