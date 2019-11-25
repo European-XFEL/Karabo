@@ -45,7 +45,8 @@ class _BaseIcons(BaseBindingController):
     # @pyqtSlot()
     def _on_change_icons(self, checked):
         binding = self.proxy.binding
-        dialog = self.dialog_klass(self.model.values, binding)
+        dialog = self.dialog_klass(self.model.values, binding,
+                                   parent=self.widget)
         if dialog.exec_() == QDialog.Accepted:
             self.model.values = dialog.items
             # The trait handler won't fire as are using a list, hence, we force

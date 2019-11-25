@@ -115,7 +115,7 @@ class BasePanelWidget(QFrame):
         printer = QPrinter()
         printer.setPageSize(QPrinter.A4)
         printer.setOutputFormat(QPrinter.PdfFormat)
-        dialog = QPrintPreviewDialog(printer)
+        dialog = QPrintPreviewDialog(printer, parent=self)
         dialog.setModal(False)
         dialog.paintRequested.connect(self.handle_paint_request)
         dialog.exec_()

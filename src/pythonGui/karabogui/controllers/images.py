@@ -128,7 +128,7 @@ class _KaraboImageMixin(object):
                 dialog = LutRangeDialog(lut_range=lut_range,
                                         lut_range_full=lut_range_full,
                                         parent=self)
-                if dialog.exec() == dialog.Accepted:
+                if dialog.exec_() == dialog.Accepted:
                     last_img.set_lut_range(dialog.lut_range)
                     self.plot.update_colormap_axis(last_img)
                     self.plot.replot()

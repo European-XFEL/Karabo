@@ -197,8 +197,9 @@ class SystemTreeView(QTreeView):
         info = self.indexInfo()
         dialog = DeviceCapabilityDialog(
             device_id=info.get('deviceId', ''),
-            capability=Capabilities.PROVIDES_SCENES)
-        if dialog.exec() == QDialog.Accepted:
+            capability=Capabilities.PROVIDES_SCENES,
+            parent=self)
+        if dialog.exec_() == QDialog.Accepted:
             device_id = dialog.device_id
             scene_name = dialog.capa_name
             handler = partial(handle_scene_from_server, device_id, scene_name,

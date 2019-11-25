@@ -192,7 +192,8 @@ class EditableOptionComboBox(BaseBindingController):
         if self.proxy.binding is None:
             return
 
-        options_edit = OptionsEditDialog(self.model.options)
+        options_edit = OptionsEditDialog(self.model.options,
+                                         parent=self.widget)
         if options_edit.exec_() == QDialog.Accepted:
             self.model.options = options_edit.values
 
