@@ -42,3 +42,4 @@ environment:
     - {{ root }}
   KARABO_GUI_ROOT:
     - {{ root }}
+  OMP_NUM_THREADS: 1
