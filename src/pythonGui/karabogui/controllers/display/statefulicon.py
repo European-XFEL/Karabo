@@ -33,12 +33,13 @@ class StatefulIconWidget(BaseBindingController):
 
     def create_widget(self, parent):
         # show a list to pick the icon from if it is not set
+        widget = QSvgWidget(parent)
         icon = ICONS.get(self.model.icon_name, None)
         if icon is None:
-            self._show_icon_picker()
+            self._show_icon_picker(widget)
         else:
             self._icon = icon
-        return QSvgWidget(parent)
+        return widget
 
     def value_update(self, proxy):
         if self._icon is None:
@@ -53,8 +54,8 @@ class StatefulIconWidget(BaseBindingController):
         """Update the scene model when the icon changes"""
         self.model.icon_name = icon.name
 
-    def _show_icon_picker(self):
-        dialog = QDialog()
+    def _show_icon_picker(self, widget):
+        dialog = QDialog(widget)
         dialog.setWindowTitle("Select standard icon")
         # we do not allow to cancel this dialog. An icon must be selected
         dialog.setWindowFlags(Qt.Window |
