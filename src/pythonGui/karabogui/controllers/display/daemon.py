@@ -9,8 +9,8 @@ from PyQt5.QtCore import (
     QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt, pyqtSlot)
 from PyQt5.QtGui import QBrush, QColor
 from PyQt5.QtWidgets import (
-    QHBoxLayout, QHeaderView, QLineEdit, QTableView, QStyledItemDelegate,
-    QPushButton, QStyle, QVBoxLayout, QWidget)
+    QHBoxLayout, QHeaderView, QLineEdit, QMessageBox, QPushButton, QStyle,
+    QStyledItemDelegate, QTableView, QVBoxLayout, QWidget)
 
 from traits.api import Instance
 
@@ -244,7 +244,22 @@ class ButtonDelegate(QStyledItemDelegate):
         relevant, _ = self._is_relevant_column(index)
         if relevant:
             model = index.model()
+            cmd = COMMANDS[index.column()]
             serviceId = model.index(index.row(), SERVER_COLUMN).data()
             hostId = model.index(index.row(), HOST_COLUMN).data()
-            cmd = COMMANDS[index.column()]
+
+            if cmd in ['down', 'kill']:
+                text = ('Are you sure you want to <b>{}</b> the service '
+                        '<b>{}</b> on host <b>{}</b>?'.format(cmd,
+                                                              serviceId,
+                                                              hostId))
+                msg_box = QMessageBox(QMessageBox.Question, 'Daemon action',
+                                      text,
+                                      QMessageBox.Yes | QMessageBox.Cancel,
+                                      parent=self.parent())
+                msg_box.setDefaultButton(QMessageBox.Cancel)
+                msg_box.setModal(False)
+                if msg_box.exec_() != QMessageBox.Yes:
+                    return
+
             request_daemon_action(serviceId, hostId, cmd)
