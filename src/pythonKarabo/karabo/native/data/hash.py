@@ -30,6 +30,18 @@ from karabo.native.exceptions import KaraboError
 from karabo.native.registry import Registry
 
 
+def get_instance_parent(instance):
+    """Find the parent of the instance"""
+    parent = instance
+    while True:
+        try:
+            parent = next(iter(parent._parents))
+        except StopIteration:
+            break
+
+    return parent
+
+
 def yieldKey(key):
     key = key.encode('utf8')
     yield pack('B', len(key))
@@ -471,13 +483,14 @@ class Descriptor(object):
         if self.accessMode is not AccessMode.RECONFIGURABLE:
             msg = 'property "{}" is not reconfigurable'.format(self.key)
             raise KaraboError(msg)
-        elif (self.allowedStates is not None and
-              instance.state not in self.allowedStates):
-            msg = 'Setting "{}" is not allowed in state "{}"'.format(
-                self.key, instance.state)
-            raise KaraboError(msg, loglevel=logging.WARNING)
-        else:
-            return self._setter(instance, value)
+        elif self.allowedStates is not None:
+            parent = get_instance_parent(instance)
+            if parent.state not in self.allowedStates:
+                msg = 'Setting "{}" is not allowed in state "{}"'.format(
+                    self.key, parent.state)
+                raise KaraboError(msg, loglevel=logging.WARNING)
+
+        return self._setter(instance, value)
 
     def checkedInit(self, instance, value=None):
         """Check whether it is allowed and initialize

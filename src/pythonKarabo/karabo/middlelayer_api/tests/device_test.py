@@ -6,10 +6,11 @@ import numpy as np
 
 from karabo.common.states import State
 from karabo.middlelayer import (
-    AccessMode, background, getDevice, Int32, waitUntil, waitWhile)
+    AccessMode, background, getDevice, KaraboError, setWait, waitUntil,
+    waitWhile)
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import call, getSchema
-from karabo.native.data.hash import Float, Hash, Slot, VectorHash
+from karabo.native.data.hash import Float, Hash, Int32, Slot, VectorHash
 from karabo.native.timestamp import Timestamp
 from karabo.middlelayer_api.pipeline import InputChannel, OutputChannel
 from karabo.middlelayer_api.utils import get_property
@@ -23,12 +24,23 @@ class RowSchema(Configurable):
     y = Float(defaultValue=1.0)
 
 
-class Data(Configurable):
-    floatProperty = Float(defaultValue=10,
+class ChannelData(Configurable):
+    """The properties for the pipeline channels"""
+    floatProperty = Float(defaultValue=10.0,
                           displayedName="Float")
 
 
-class MyNode(Configurable):
+class PropertyData(Configurable):
+    floatProperty = Float(defaultValue=10.0,
+                          displayedName="Float",
+                          allowedStates=[State.ON])
+    intProperty = Int32(defaultValue=7,
+                        displayedName="Integer",
+                        allowedStates=[State.ERROR])
+
+
+class ChannelNode(Configurable):
+    """A node with an output channel"""
     output = OutputChannel()
 
 
@@ -47,10 +59,12 @@ class MyDevice(Device):
 
     # an output channel without schema
     output = OutputChannel()
-    dataOutput = OutputChannel(Data)
+    # output channel with schema
+    dataOutput = OutputChannel(ChannelData)
+    # output channel in a node
+    nodeOutput = Node(ChannelNode)
 
-    deep = Node(MyNode)
-    nested = Node(Data)
+    noded = Node(PropertyData)
 
     @InputChannel()
     async def input(self, data, meta):
@@ -98,7 +112,7 @@ class Tests(DeviceTest):
     @sync_tst
     def test_output_names(self):
         names = self.myDevice.slotGetOutputChannelNames()
-        expected = ['dataOutput', 'deep.output', 'output']
+        expected = ['dataOutput', 'nodeOutput.output', 'output']
         self.assertEqual(names, expected)
 
     @sync_tst
@@ -133,7 +147,7 @@ class Tests(DeviceTest):
     @async_tst
     async def test_classId_node(self):
         s = await getSchema("MyDevice")
-        self.assertFalse(s.hash.hasAttribute('deep', 'classId'),
+        self.assertFalse(s.hash.hasAttribute('nodeOutput', 'classId'),
                          "Node should not have a 'classId' attribute.")
 
     @async_tst
@@ -203,6 +217,18 @@ class Tests(DeviceTest):
             self.assertTrue(success)
 
     @async_tst
+    async def test_allowed_state_reconfigure_nodes(self):
+        with (await getDevice("MyDevice")) as d:
+            self.assertEqual(d.noded.floatProperty, 10.0)
+            await setWait(d, 'noded.floatProperty', 27.0)
+            self.assertEqual(d.noded.floatProperty, 27.0)
+            await setWait(d, 'noded.floatProperty', 10.0)
+            self.assertEqual(d.noded.floatProperty, 10.0)
+            with self.assertRaises(KaraboError):
+                await setWait(d, 'noded.intProperty', 22)
+            self.assertEqual(d.noded.intProperty, 7)
+
+    @async_tst
     async def test_output_close(self):
         self.assertIsNotNone(self.myDevice.output.server.sockets)
         await self.myDevice.output.close()
@@ -230,7 +256,7 @@ class Tests(DeviceTest):
             "doesNotExist", None)
         self.assertEqual(success, False)
         self.assertEqual(data, Hash())
-        
+
     @sync_tst
     def test_output_information_hash_version(self):
         # tests the version that the GUI can generically call
@@ -277,10 +303,10 @@ class Tests(DeviceTest):
     async def test_get_property(self):
         prop = get_property(self.myDevice, "integer")
         self.assertEqual(prop, 0)
-        prop = get_property(self.myDevice, "nested.floatProperty")
+        prop = get_property(self.myDevice, "noded.floatProperty")
         self.assertEqual(prop, 10)
         with self.assertRaises(AttributeError):
-            get_property(self.myDevice, "nested.notthere")
+            get_property(self.myDevice, "noded.notthere")
         with self.assertRaises(AttributeError):
             get_property(self.myDevice, "notthere")
 
