@@ -54,7 +54,7 @@ class Network(QObject):
         # Listen for the quit notification
         qApp.aboutToQuit.connect(self.onQuitApplication)
 
-    def connectToServer(self):
+    def connectToServer(self, parent=None):
         """Connection to server via LoginDialog
         """
         isConnected = False
@@ -64,7 +64,8 @@ class Network(QObject):
                              provider=self.provider,
                              hostname=self.hostname,
                              port=self.port,
-                             guiservers=self.guiservers)
+                             guiservers=self.guiservers,
+                             parent=parent)
 
         if dialog.exec_() == QDialog.Accepted:
             self.username = dialog.username
@@ -231,14 +232,14 @@ class Network(QObject):
 
         self.connectToServer()
 
-    def onServerConnection(self, connect):
+    def onServerConnection(self, connect, parent=None):
         """Connect or disconnect depending on the input parameter
 
         :param connect: Either True or False
         :type connect: bool
         """
         if connect:
-            self.connectToServer()
+            self.connectToServer(parent)
         else:
             self.disconnectFromServer()
 

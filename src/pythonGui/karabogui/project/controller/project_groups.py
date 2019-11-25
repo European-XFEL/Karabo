@@ -84,12 +84,15 @@ class ProjectSubgroupController(BaseProjectGroupController):
 
 def _fill_macros_menu(menu, project_controller):
     add_action = QAction('Add macro', menu)
-    add_action.triggered.connect(partial(_add_macro, project_controller))
+    add_action.triggered.connect(partial(_add_macro, project_controller,
+                                         parent=menu.parent()))
     load_action = QAction('Load macro...', menu)
-    load_action.triggered.connect(partial(_load_macro, project_controller))
+    load_action.triggered.connect(partial(_load_macro, project_controller,
+                                          parent=menu.parent()))
     load_from_device = QAction('Load from device...', menu)
     load_from_device.triggered.connect(partial(_load_macro_from_device,
-                                               project_controller))
+                                               project_controller,
+                                               parent=menu.parent()))
     menu.addAction(add_action)
     menu.addAction(load_action)
     menu.addAction(load_from_device)
@@ -97,14 +100,19 @@ def _fill_macros_menu(menu, project_controller):
 
 def _fill_scenes_menu(menu, project_controller):
     add_action = QAction('Add scene', menu)
-    add_action.triggered.connect(partial(_add_scene, project_controller))
+    add_action.triggered.connect(partial(_add_scene, project_controller,
+                                         parent=menu.parent()))
     load_action = QAction('Load scene...', menu)
-    load_action.triggered.connect(partial(_load_scene, project_controller))
+    load_action.triggered.connect(partial(_load_scene, project_controller,
+                                          parent=menu.parent()))
     load_from_device = QAction('Load from device...', menu)
     load_from_device.triggered.connect(partial(_load_scene_from_device,
-                                               project_controller))
+                                               project_controller,
+                                               parent=menu.parent()))
     about_action = QAction('About', menu)
-    about_action.triggered.connect(partial(_about_scene, project_controller))
+    about_action.triggered.connect(partial(_about_scene,
+                                           project_controller,
+                                           parent=menu.parent()))
     menu.addAction(add_action)
     menu.addAction(load_action)
     menu.addAction(load_from_device)
@@ -114,7 +122,9 @@ def _fill_scenes_menu(menu, project_controller):
 
 def _fill_servers_menu(menu, project_controller):
     add_action = QAction('Add server', menu)
-    add_action.triggered.connect(partial(_add_server, project_controller))
+    add_action.triggered.connect(partial(_add_server,
+                                         project_controller,
+                                         parent=menu.parent()))
     menu.addAction(add_action)
 
 
@@ -133,11 +143,11 @@ class {0}(Macro):
 """
 
 
-def _add_macro(project_controller):
+def _add_macro(project_controller, parent=None):
     """ Add a macro to the associated project
     """
     project = project_controller.model
-    dialog = ObjectEditDialog(object_type='macro')
+    dialog = ObjectEditDialog(object_type='macro', parent=parent)
     if dialog.exec() == QDialog.Accepted:
         classname = dialog.simple_name.title()
         classname = "".join(c for c in classname if c.isalpha())
@@ -151,19 +161,19 @@ def _add_macro(project_controller):
         project.macros.append(macro)
 
 
-def _load_macro(project_controller):
+def _load_macro(project_controller, parent=None):
     path = get_config()['macro_dir']
     directory = path if path and op.isdir(path) else ""
 
     fn = getOpenFileName(caption='Load macro', filter='Python Macros (*.py)',
-                         directory=directory)
+                         directory=directory, parent=parent)
     if not fn:
         return
 
     simple_name = op.splitext(op.basename(fn))[0]
 
     if not VALID_PROJECT_OBJECT_NAME.match(simple_name):
-        show_filename_error(fn)
+        show_filename_error(fn, parent=parent)
         return
 
     # Store old macro dialog path
@@ -178,10 +188,11 @@ def _load_macro(project_controller):
     project.macros.append(macro)
 
 
-def _load_macro_from_device(project_controller):
+def _load_macro_from_device(project_controller, parent=None):
     """Request a scene directly from a device
     """
-    dialog = DeviceCapabilityDialog(capability=Capabilities.PROVIDES_MACROS)
+    dialog = DeviceCapabilityDialog(capability=Capabilities.PROVIDES_MACROS,
+                                    parent=parent)
     if dialog.exec() == QDialog.Accepted:
         device_id = dialog.device_id
         macro_name = dialog.capa_name
@@ -190,7 +201,8 @@ def _load_macro_from_device(project_controller):
         if '{}-{}'.format(device_id, macro_name) in project_macros:
             msg = ('A macro with that name already exists in the selected '
                    'project.')
-            messagebox.show_warning(msg, title='Cannot Load Macro')
+            messagebox.show_warning(msg, title='Cannot Load Macro',
+                                    parent=parent)
             return
 
         handler = partial(handle_macro_from_server, device_id, macro_name,
@@ -198,11 +210,11 @@ def _load_macro_from_device(project_controller):
         call_device_slot(handler, device_id, 'requestMacro', name=macro_name)
 
 
-def _add_scene(project_controller):
+def _add_scene(project_controller, parent=None):
     """ Add a scene to the associated project
     """
     project = project_controller.model
-    dialog = ObjectEditDialog(object_type='scene')
+    dialog = ObjectEditDialog(object_type='scene', parent=parent)
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
         scene = SceneModel(simple_name=dialog.simple_name)
@@ -211,30 +223,32 @@ def _add_scene(project_controller):
         project.scenes.append(scene)
 
 
-def _about_scene(project_controller):
+def _about_scene(project_controller, parent=None):
     """ Retrieve the uuid's of the scenes in the project controller for display
     """
     project = project_controller.model
     html = "<ul>" + "".join(["<li>" + child.uuid + "</li>"
                              for child in project.scenes]) + "</ul>"
-    messagebox.show_information(html, title="List of scene uuid's")
+    messagebox.show_information(html,
+                                title="List of scene uuid's",
+                                parent=parent)
 
 
-def _load_scene(project_controller):
+def _load_scene(project_controller, parent=None):
     """ Load a scene from local disk
     """
     path = get_config()['scene_dir']
     directory = path if path and op.isdir(path) else ""
 
     fn = getOpenFileName(caption='Load scene', filter='SVG Files (*.svg)',
-                         directory=directory)
+                         directory=directory, parent=parent)
     if not fn:
         return
 
     simple_name = op.splitext(op.basename(fn))[0]
 
     if not VALID_PROJECT_OBJECT_NAME.match(simple_name):
-        show_filename_error(fn)
+        show_filename_error(fn, parent=parent)
         return
 
     # Store old scene dialog path
@@ -249,10 +263,11 @@ def _load_scene(project_controller):
     project.scenes.append(scene)
 
 
-def _load_scene_from_device(project_controller):
+def _load_scene_from_device(project_controller, parent=None):
     """Request a scene directly from a device
     """
-    dialog = DeviceCapabilityDialog(capability=Capabilities.PROVIDES_SCENES)
+    dialog = DeviceCapabilityDialog(capability=Capabilities.PROVIDES_SCENES,
+                                    parent=parent)
     if dialog.exec() == QDialog.Accepted:
         device_id = dialog.device_id
         scene_name = dialog.capa_name
@@ -262,7 +277,9 @@ def _load_scene_from_device(project_controller):
         if '{}|{}'.format(device_id, scene_name) in project_scenes:
             msg = ('A scene with that name already exists in the selected '
                    'project.')
-            messagebox.show_warning(msg, title='Cannot Load Scene')
+            messagebox.show_warning(msg,
+                                    title='Cannot Load Scene',
+                                    parent=parent)
             return
 
         handler = partial(handle_scene_from_server, device_id, scene_name,
@@ -270,11 +287,11 @@ def _load_scene_from_device(project_controller):
         call_device_slot(handler, device_id, 'requestScene', name=scene_name)
 
 
-def _add_server(project_controller):
+def _add_server(project_controller, parent=None):
     """ Add a server to the associated project
     """
     project = project_controller.model
-    dialog = ServerHandleDialog()
+    dialog = ServerHandleDialog(parent=parent)
     if dialog.exec() == QDialog.Accepted:
         serverId = dialog.server_id
         if check_device_server_exists(serverId):

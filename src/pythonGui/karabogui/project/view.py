@@ -250,7 +250,7 @@ class ProjectView(QTreeView):
         if show_dialog:
             ask = ('Do you really want to close the project \"<b>{}</b>\"'
                    '?').format(project.simple_name)
-            reply = QMessageBox.question(None, 'Close project', ask,
+            reply = QMessageBox.question(self, 'Close project', ask,
                                          QMessageBox.Yes | QMessageBox.No,
                                          QMessageBox.No)
             if reply == QMessageBox.No:
@@ -258,7 +258,8 @@ class ProjectView(QTreeView):
 
         if project_controller is not None:
             # Check for modififications before closing
-            if show_dialog and not maybe_save_modified_project(project):
+            if show_dialog and not maybe_save_modified_project(project,
+                                                               parent=self):
                 return
             # A subproject
             parent_project_model = project_controller.model
@@ -267,7 +268,8 @@ class ProjectView(QTreeView):
         else:
             # Check for modififications before closing
             model = self.model().root_model
-            if show_dialog and not maybe_save_modified_project(model):
+            if show_dialog and not maybe_save_modified_project(model,
+                                                               parent=self):
                 return
             # The master project
             self.model().root_model = None
@@ -281,7 +283,8 @@ class ProjectView(QTreeView):
         ask = ('Are you sure you want to <b>{}</b> the project'
                ' \"<b>{}</b>\"?'.format(action, project.simple_name))
         msg_box = QMessageBox(QMessageBox.Question, 'Change of project state',
-                              ask, QMessageBox.Yes | QMessageBox.No)
+                              ask, QMessageBox.Yes | QMessageBox.No,
+                              parent=self)
         msg_box.setModal(False)
         msg_box.setDefaultButton(QMessageBox.No)
         if msg_box.exec() == QMessageBox.Yes:

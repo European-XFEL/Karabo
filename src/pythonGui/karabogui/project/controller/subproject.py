@@ -3,6 +3,7 @@
 # Created on January 26, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from functools import partial
 from collections import defaultdict
 
 from PyQt5.QtWidgets import QAction, QDialog, QMenu
@@ -28,9 +29,10 @@ class SubprojectController(ProjectSubgroupController):
     def context_menu(self, project_controller, parent=None):
         menu = QMenu(parent)
         add_action = QAction('Add new project...', menu)
-        add_action.triggered.connect(self._add_project)
+        add_action.triggered.connect(partial(self._add_project, parent=parent))
         load_action = QAction('Load project...', menu)
-        load_action.triggered.connect(self._load_project)
+        load_action.triggered.connect(partial(self._load_project,
+                                              parent=parent))
         menu.addAction(add_action)
         menu.addAction(load_action)
         return menu
@@ -39,10 +41,10 @@ class SubprojectController(ProjectSubgroupController):
     # action handlers
 
     # @pyqtSlot()
-    def _add_project(self, checked):
+    def _add_project(self, parent=None):
         """ Add a new subproject to the associated project
         """
-        dialog = NewProjectDialog(default=True)
+        dialog = NewProjectDialog(default=True, parent=parent)
         if dialog.exec() == QDialog.Accepted:
             # XXX: TODO check for existing
             project = ProjectModel(simple_name=dialog.simple_name)
@@ -51,10 +53,10 @@ class SubprojectController(ProjectSubgroupController):
             self.model.subprojects.append(project)
 
     # @pyqtSlot()
-    def _load_project(self, checked):
+    def _load_project(self, parent=None):
         """ Add an existing project as a subproject.
         """
-        project = load_project(is_subproject=True)
+        project = load_project(is_subproject=True, parent=parent)
         if project is None:
             return
 
