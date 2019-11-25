@@ -22,8 +22,8 @@ class TextSceneTool(BaseSceneTool):
         """A callback which is fired whenever the user ends a mouse click
         in the SceneView.
         """
-        dialog = TextDialog()
-        if dialog.exec() == QDialog.Rejected:
+        dialog = TextDialog(parent=scene_view)
+        if dialog.exec_() == QDialog.Rejected:
             return
 
         model = dialog.label_model
@@ -148,8 +148,8 @@ class WebLinkTool(BaseSceneTool):
         mouse_pos = event.pos()
         model = WebLinkModel(x=mouse_pos.x(), y=mouse_pos.y(),
                              width=100, height=30)
-        dialog = WebDialog()
-        if dialog.exec() == QDialog.Accepted:
+        dialog = WebDialog(parent=scene_view)
+        if dialog.exec_() == QDialog.Accepted:
             model.target = dialog.target
             scene_view.add_models(model)
             scene_view.set_tool(None)
