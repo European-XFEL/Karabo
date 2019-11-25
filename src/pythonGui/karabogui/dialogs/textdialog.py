@@ -11,8 +11,8 @@ from karabo.common.scenemodel.api import LabelModel
 
 class TextDialog(QDialog):
 
-    def __init__(self, label_model=None):
-        super(TextDialog, self).__init__()
+    def __init__(self, label_model=None, parent=None):
+        super(TextDialog, self).__init__(parent)
         uic.loadUi(op.join(op.dirname(__file__), 'textdialog.ui'), self)
 
         if label_model is None:
