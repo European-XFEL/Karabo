@@ -108,8 +108,8 @@ class SceneLinkWidget(QPushButton):
 
     @pyqtSlot()
     def edit_label(self):
-        dialog = TextDialog(self.model)
-        if dialog.exec() == QDialog.Rejected:
+        dialog = TextDialog(self.model, parent=self)
+        if dialog.exec_() == QDialog.Rejected:
             return
 
         # Set all at once!
@@ -123,8 +123,8 @@ class SceneLinkWidget(QPushButton):
         self.edit()
 
     def edit(self, scene_view=None):
-        dialog = SceneLinkDialog(self.model, parent=scene_view)
-        if dialog.exec() == QDialog.Rejected:
+        dialog = SceneLinkDialog(self.model, parent=self)
+        if dialog.exec_() == QDialog.Rejected:
             return
 
         self.model.target = dialog.selectedScene
@@ -216,8 +216,8 @@ class WebLinkWidget(QPushButton):
 
     @pyqtSlot()
     def edit_label(self):
-        dialog = TextDialog(self.model)
-        if dialog.exec() == QDialog.Rejected:
+        dialog = TextDialog(self.model, parent=self)
+        if dialog.exec_() == QDialog.Rejected:
             return
 
         # Set all at once!
@@ -231,8 +231,8 @@ class WebLinkWidget(QPushButton):
         self.edit()
 
     def edit(self, scene_view=None):
-        dialog = WebDialog(self.model.target)
-        if dialog.exec() == QDialog.Rejected:
+        dialog = WebDialog(self.model.target, parent=self)
+        if dialog.exec_() == QDialog.Rejected:
             return
 
         self.model.target = dialog.target
