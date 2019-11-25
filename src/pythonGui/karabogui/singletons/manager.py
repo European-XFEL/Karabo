@@ -124,11 +124,11 @@ class Manager(QObject):
         # Call the GUI server
         get_network().onExecuteGeneric(token, device_id, slot_name, params)
 
-    def shutdownDevice(self, deviceId, showConfirm=True):
+    def shutdownDevice(self, deviceId, showConfirm=True, parent=None):
         if showConfirm:
             ask = ('Do you really want to shutdown the device '
                    '"<b>{}</b>"?').format(deviceId)
-            reply = QMessageBox.question(None, 'Shutdown device', ask,
+            reply = QMessageBox.question(parent, 'Shutdown device', ask,
                                          QMessageBox.Yes | QMessageBox.No,
                                          QMessageBox.No)
             if reply == QMessageBox.No:
@@ -136,10 +136,10 @@ class Manager(QObject):
 
         get_network().onKillDevice(deviceId)
 
-    def shutdownServer(self, serverId):
+    def shutdownServer(self, serverId, parent=None):
         ask = ('Do you really want to shutdown the server '
                '"<b>{}</b>"?').format(serverId)
-        reply = QMessageBox.question(None, 'Shutdown server', ask,
+        reply = QMessageBox.question(parent, 'Shutdown server', ask,
                                      QMessageBox.Yes | QMessageBox.No,
                                      QMessageBox.No)
         if reply == QMessageBox.No:

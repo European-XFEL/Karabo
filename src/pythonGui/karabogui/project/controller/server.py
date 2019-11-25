@@ -37,23 +37,28 @@ class DeviceServerController(BaseProjectGroupController):
 
         menu = QMenu(parent)
         edit_action = QAction('Edit', menu)
-        edit_action.triggered.connect(self._edit_server)
+        edit_action.triggered.connect(partial(self._edit_server,
+                                              parent=parent))
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_server,
-                                                project_controller))
+                                                project_controller,
+                                                parent=parent))
         shutdown_action = QAction('Shutdown', menu)
         shutdown_action.setEnabled(online)
-        shutdown_action.triggered.connect(self._shutdown_server)
+        shutdown_action.triggered.connect(partial(self._shutdown_server,
+                                                  parent=parent))
         add_action = QAction('Add device', menu)
         add_action.setEnabled(online)
-        add_action.triggered.connect(self._add_device)
+        add_action.triggered.connect(partial(self._add_device, parent=parent))
         instantiate_all_action = QAction('Instantiate all devices', menu)
         instantiate_all_action.setEnabled(online)
         instantiate_all_action.triggered.connect(self.instantiate_devices)
         shutdown_all_action = QAction('Shutdown all devices', menu)
-        shutdown_all_action.triggered.connect(self._shutdown_devices)
+        shutdown_all_action.triggered.connect(partial(self._shutdown_devices,
+                                                      parent=parent))
         remove_all_action = QAction('Delete all devices', menu)
-        remove_all_action.triggered.connect(self._delete_all_devices)
+        remove_all_action.triggered.connect(partial(self._delete_all_devices,
+                                                    parent=parent))
         menu.addAction(edit_action)
         menu.addAction(delete_action)
         menu.addAction(shutdown_action)
@@ -130,21 +135,22 @@ class DeviceServerController(BaseProjectGroupController):
     # action handlers
 
     # @pyqtSlot()
-    def _add_device(self):
+    def _add_device(self, parent=None):
         """Add a device instance to the server
         """
         # NOTE: This can't be connected to the QAction signal, because then
         # a boolean will be passed as the class_id argument
-        add_device_to_server(self.model)
+        add_device_to_server(self.model, parent=parent)
 
-    def _delete_server(self, project_controller):
+    def _delete_server(self, project_controller, parent=None):
         """ Remove the macro associated with this item from its project
         """
         server = self.model
         ask = ('Are you sure you want to delete \"<b>{}</b>\".<br /> '
                'Continue action?'.format(server.simple_name))
         msg_box = QMessageBox(QMessageBox.Question, 'Delete server',
-                              ask, QMessageBox.Yes | QMessageBox.No)
+                              ask, QMessageBox.Yes | QMessageBox.No,
+                              parent=parent)
         msg_box.setModal(False)
         msg_box.setDefaultButton(QMessageBox.No)
         if msg_box.exec() == QMessageBox.Yes:
@@ -153,24 +159,24 @@ class DeviceServerController(BaseProjectGroupController):
                 project.servers.remove(server)
 
     # @pyqtSlot()
-    def _edit_server(self):
-        dialog = ServerHandleDialog(self.model)
+    def _edit_server(self, parent=None):
+        dialog = ServerHandleDialog(self.model, parent=parent)
         result = dialog.exec_()
         if result == QDialog.Accepted:
             self.model.server_id = dialog.server_id
             self.model.description = dialog.description
 
     # @pyqtSlot()
-    def _shutdown_server(self):
+    def _shutdown_server(self, parent=None):
         server = self.model
-        get_manager().shutdownServer(server.server_id)
+        get_manager().shutdownServer(server.server_id, parent=parent)
 
     # @pyqtSlot()
-    def _delete_all_devices(self):
+    def _delete_all_devices(self, parent=None):
         server = self.model
         ask = ('Do you really want to delete all devices of <br> server '
                '<b>{}</b>?').format(server.simple_name)
-        reply = QMessageBox.question(None, 'Delete all devices', ask,
+        reply = QMessageBox.question(parent, 'Delete all devices', ask,
                                      QMessageBox.Yes | QMessageBox.No,
                                      QMessageBox.No)
         if reply == QMessageBox.No:
@@ -189,11 +195,11 @@ class DeviceServerController(BaseProjectGroupController):
             dev_inst_item.instantiate(server)
 
     # @pyqtSlot()
-    def _shutdown_devices(self):
+    def _shutdown_devices(self, parent=None):
         server = self.model
         ask = ('Do you really want to shutdown all devices of <br> server '
                '<b>{}</b>?').format(server.simple_name)
-        reply = QMessageBox.question(None, 'Shutdown all devices', ask,
+        reply = QMessageBox.question(parent, 'Shutdown all devices', ask,
                                      QMessageBox.Yes | QMessageBox.No,
                                      QMessageBox.No)
         if reply == QMessageBox.No:
