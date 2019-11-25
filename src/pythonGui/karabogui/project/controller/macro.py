@@ -37,7 +37,8 @@ class MacroInstanceController(BaseProjectController):
     def context_menu(self, project_controller, parent=None):
         menu = QMenu(parent)
         shutdown_action = QAction('Shutdown', menu)
-        shutdown_action.triggered.connect(self.shutdown)
+        shutdown_action.triggered.connect(partial(self.shutdown,
+                                                  parent=parent))
         menu.addAction(shutdown_action)
         return menu
 
@@ -62,8 +63,9 @@ class MacroInstanceController(BaseProjectController):
     # action handlers
 
     # @pyqtSlot()
-    def shutdown(self):
-        get_manager().shutdownDevice(self.instance_id, showConfirm=True)
+    def shutdown(self, parent=None):
+        get_manager().shutdownDevice(self.instance_id, showConfirm=True,
+                                     parent=parent)
 
 
 class MacroController(BaseProjectGroupController):
@@ -77,17 +79,20 @@ class MacroController(BaseProjectGroupController):
     def context_menu(self, project_controller, parent=None):
         menu = QMenu(parent)
         edit_action = QAction('Edit', menu)
-        edit_action.triggered.connect(self._edit_macro)
+        edit_action.triggered.connect(partial(self._edit_macro, parent=parent))
         dupe_action = QAction('Duplicate', menu)
         dupe_action.triggered.connect(partial(self._duplicate_macro,
-                                              project_controller))
+                                              project_controller,
+                                              parent=parent))
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_macro,
-                                                project_controller))
+                                                project_controller,
+                                                parent=parent))
         save_as_action = QAction('Save to file', menu)
-        save_as_action.triggered.connect(self._save_macro_to_file)
+        save_as_action.triggered.connect(partial(self._save_macro_to_file,
+                                                 parent=parent))
         run_action = QAction('Run', menu)
-        run_action.triggered.connect(self.run_macro)
+        run_action.triggered.connect(partial(self.run_macro, parent=parent))
         menu.addAction(edit_action)
         menu.addAction(dupe_action)
         menu.addAction(delete_action)
@@ -181,7 +186,7 @@ class MacroController(BaseProjectGroupController):
     # ----------------------------------------------------------------------
     # action handlers
 
-    def _delete_macro(self, project_controller):
+    def _delete_macro(self, project_controller, parent=None):
         """ Remove the macro associated with this item from its project
         """
         macro = self.model
@@ -189,7 +194,8 @@ class MacroController(BaseProjectGroupController):
         ask = ('Are you sure you want to delete \"<b>{}</b>\".<br /> '
                'Continue action?'.format(macro.simple_name))
         msg_box = QMessageBox(QMessageBox.Question, 'Delete macro',
-                              ask, QMessageBox.Yes | QMessageBox.No)
+                              ask, QMessageBox.Yes | QMessageBox.No,
+                              parent=parent)
         msg_box.setModal(False)
         msg_box.setDefaultButton(QMessageBox.No)
         if msg_box.exec() == QMessageBox.Yes:
@@ -201,16 +207,17 @@ class MacroController(BaseProjectGroupController):
                             {'models': [macro]})
 
     # @pyqtSlot()
-    def _edit_macro(self):
-        dialog = ObjectEditDialog(object_type='macro', model=self.model)
+    def _edit_macro(self, parent=None):
+        dialog = ObjectEditDialog(object_type='macro', model=self.model,
+                                  parent=parent)
         result = dialog.exec()
         if result == QDialog.Accepted:
             self.model.simple_name = dialog.simple_name
 
-    def _duplicate_macro(self, project_controller):
+    def _duplicate_macro(self, project_controller, parent=None):
         macro = self.model
         project = project_controller.model
-        dialog = ObjectDuplicateDialog(macro.simple_name)
+        dialog = ObjectDuplicateDialog(macro.simple_name, parent=parent)
         if dialog.exec() == QDialog.Accepted:
             code = write_macro(macro)
             for simple_name in dialog.duplicate_names:
@@ -219,7 +226,7 @@ class MacroController(BaseProjectGroupController):
                 project.macros.append(dupe_macro)
 
     # @pyqtSlot()
-    def _save_macro_to_file(self):
+    def _save_macro_to_file(self, parent=None):
         config = get_config()
         path = config['macro_dir']
         directory = path if path and op.isdir(path) else ""
@@ -229,7 +236,8 @@ class MacroController(BaseProjectGroupController):
                              filter='Python Macro (*.py)',
                              suffix='py',
                              selectFile=macro.simple_name,
-                             directory=directory)
+                             directory=directory,
+                             parent=parent)
         if not fn:
             return
 
@@ -242,7 +250,7 @@ class MacroController(BaseProjectGroupController):
             fout.write(write_macro(macro))
 
     # @pyqtSlot()
-    def run_macro(self):
+    def run_macro(self, parent=None):
         """Action handler to instantiate the macro
 
         NOTE: This method is also used to instantiate all macros in a project!
@@ -255,7 +263,8 @@ class MacroController(BaseProjectGroupController):
                             {'model': self.model})
             formatted_msg = "{}\n{}{}^\nin {} line {}".format(
                     e.msg, e.text, " " * e.offset, e.filename, e.lineno)
-            messagebox.show_warning(formatted_msg, title=type(e).__name__)
+            messagebox.show_warning(formatted_msg, title=type(e).__name__,
+                                    parent=parent)
             return
 
         run_macro(self.model)

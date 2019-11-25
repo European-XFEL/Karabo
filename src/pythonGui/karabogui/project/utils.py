@@ -23,7 +23,7 @@ from karabogui.singletons.api import (get_config, get_db_conn,
 from karabogui.topology.util import is_server_online
 
 
-def add_device_to_server(server, class_id=''):
+def add_device_to_server(server, class_id='', parent=None):
     """ Add a new device to a server
 
     :param server: A DeviceServerModel object, OR string containing a server id
@@ -44,11 +44,14 @@ def add_device_to_server(server, class_id=''):
         msg = ('A device server with the ID "<b>{}</b>"<br>'
                'needs to be added to the current project before<br>'
                'a device can be added').format(server)
-        messagebox.show_warning(msg, title='Server doesn\'t exist')
+        messagebox.show_warning(msg,
+                                title='Server doesn\'t exist',
+                                parent=parent)
         return ''
 
     dialog = DeviceHandleDialog(server_id=server_model.server_id,
-                                class_id=class_id)
+                                class_id=class_id,
+                                parent=parent)
     result = dialog.exec()
     if result == QDialog.Accepted:
         # Check for existing device
@@ -184,14 +187,14 @@ def get_device_server_model(server_id):
     return server_model
 
 
-def load_project(is_subproject=False):
+def load_project(is_subproject=False, parent=None):
     """Load a project from the project database.
 
     :param is_subproject States whether a master or a subproject is about to be
                          loaded
     """
     from karabogui.project.dialog.project_handle import LoadProjectDialog
-    dialog = LoadProjectDialog(is_subproject=is_subproject)
+    dialog = LoadProjectDialog(is_subproject=is_subproject, parent=parent)
     result = dialog.exec_()
     if result == QDialog.Accepted:
         domain, uuid = dialog.selected_item()
@@ -226,13 +229,13 @@ def reload_project(model):
     return model
 
 
-def maybe_save_modified_project(project):
+def maybe_save_modified_project(project, parent=None):
     """Check modified flag of the ``project`` and offer saving via dialog
     """
     if project is None:
         return True
 
-    if show_save_project_message(project):
+    if show_save_project_message(project, parent):
         save_object(project)
 
     return True
@@ -335,7 +338,7 @@ def save_object(obj, domain=None):
     db_conn.flush()
 
 
-def show_save_project_message(project):
+def show_save_project_message(project, parent=None):
     """Check whether the given ``project`` is modified and show a messagebox to
     allow the user to confirm saving or cancel
 
@@ -345,7 +348,7 @@ def show_save_project_message(project):
         ask = ('The project \"<b>{}</b>\" has been modified.<br />Do you want '
                'to save the project?').format(project.simple_name)
         options = (QMessageBox.Save | QMessageBox.No)
-        reply = QMessageBox.question(None, 'Save project', ask, options,
+        reply = QMessageBox.question(parent, 'Save project', ask, options,
                                      QMessageBox.No)
         if reply == QMessageBox.No:
             return False
@@ -355,7 +358,7 @@ def show_save_project_message(project):
     return False
 
 
-def show_modified_project_message(project):
+def show_modified_project_message(project, parent=None):
     """Check whether the given ``project`` is modified and show a messagebox to
     allow the user to confirm saving or cancel
 
@@ -369,7 +372,7 @@ def show_modified_project_message(project):
                'sure you want to continue? <b>Your project changes will be '
                'lost</b>!').format(project.simple_name)
         options = (QMessageBox.Yes | QMessageBox.No)
-        reply = QMessageBox.question(None, 'Modified project', ask, options,
+        reply = QMessageBox.question(parent, 'Modified project', ask, options,
                                      QMessageBox.No)
         if reply == QMessageBox.No:
             return False
@@ -379,7 +382,7 @@ def show_modified_project_message(project):
     return True
 
 
-def show_trash_project_message(is_trashed, simple_name=''):
+def show_trash_project_message(is_trashed, simple_name='', parent=None):
     """Check whether the given ``is_trashed`` should be toggled and show a
     messagebox to allow the user to confirm moving to trash or restoring from
     trash or cancel
@@ -395,7 +398,7 @@ def show_trash_project_message(is_trashed, simple_name=''):
         text = ('Do you really want to <b>move</b> this project <br><b>{}</b>'
                 ' to trash?').format(simple_name)
 
-    result = QMessageBox.question(None, title, text,
+    result = QMessageBox.question(parent, title, text,
                                   QMessageBox.Yes | QMessageBox.No)
     if result == QMessageBox.Yes:
         return True
