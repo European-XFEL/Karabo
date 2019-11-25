@@ -421,7 +421,7 @@ class InputValidator(QValidator):
         return self.Acceptable, input, pos
 
 
-def show_filename_error(filename):
+def show_filename_error(filename, parent=None):
     invalid_chars = _get_invalid_chars(filename)
 
     # Make the space verbose
@@ -433,7 +433,7 @@ def show_filename_error(filename):
         "Filename contains the following invalid character(s):\n{}"
         .format(' '.join(invalid_chars)))
 
-    messagebox.show_error(message, "Unable to Load File")
+    messagebox.show_error(message, "Unable to Load File", parent=parent)
 
 
 def _get_invalid_chars(filename):

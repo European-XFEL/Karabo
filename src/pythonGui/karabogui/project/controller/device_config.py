@@ -41,17 +41,20 @@ class DeviceConfigurationController(BaseProjectController):
 
         edit_action = QAction('Edit', menu)
         edit_action.triggered.connect(partial(self._edit_config,
-                                              project_controller))
+                                              project_controller,
+                                              parent=parent))
         edit_action.setEnabled(config.simple_name != DEFAULT)
 
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_config,
-                                                project_controller))
+                                                project_controller,
+                                                parent=parent))
         delete_action.setEnabled(config.simple_name != DEFAULT)
 
         conf_action = QAction('Load in Configurator', menu)
         conf_action.triggered.connect(partial(self._load_config,
-                                              project_controller))
+                                              project_controller,
+                                              parent=parent))
         conf_action.setEnabled(proxy.online)
 
         menu.addAction(edit_action)
@@ -72,7 +75,7 @@ class DeviceConfigurationController(BaseProjectController):
     # ----------------------------------------------------------------------
     # QAction handlers
 
-    def _load_config(self, project_controller):
+    def _load_config(self, project_controller, parent=None):
         """Send a configuration to the configurator
 
         The configuration is build from the class schema of the project device
@@ -84,8 +87,9 @@ class DeviceConfigurationController(BaseProjectController):
         project_device = device_controller.project_device
         config = project_device.get_schema_default_configuration()
         if config.empty():
-            messagebox.show_error("The schema configuration of this project "
-                                  "device cannot be retrieved!")
+            message = ("The schema configuration of this project "
+                       "device cannot be retrieved!")
+            messagebox.show_error(message, parent=parent)
             return
 
         config.merge(self.model.configuration)
@@ -99,7 +103,7 @@ class DeviceConfigurationController(BaseProjectController):
         data = {'proxy': proxy, 'configuration': configuration}
         broadcast_event(KaraboEvent.LoadConfiguration, data)
 
-    def _delete_config(self, project_controller):
+    def _delete_config(self, project_controller, parent=None):
         """ Remove the device associated with this item from its device server
         """
         config = self.model
@@ -117,20 +121,20 @@ class DeviceConfigurationController(BaseProjectController):
         if config.uuid == device_model.active_config_ref:
             msg = ('This is currently the active configuration.<br><br>Please '
                    'define another active configuration.')
-            messagebox.show_warning(msg)
+            messagebox.show_warning(msg, parent=parent)
             return
 
         if config in device_model.configs:
             device_model.configs.remove(config)
 
-    def _edit_config(self, project_controller):
+    def _edit_config(self, project_controller, parent=None):
         config = self.model
         device_model = find_parent_object(config, project_controller.model,
                                           DeviceInstanceModel)
         instance_id = device_model.instance_id
 
         dialog = ObjectEditDialog(object_type='device configuration',
-                                  model=config)
+                                  model=config, parent=parent)
         result = dialog.exec()
         if result == QDialog.Accepted:
             # Check for existing device configuration
