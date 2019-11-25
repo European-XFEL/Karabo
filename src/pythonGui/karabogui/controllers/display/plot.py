@@ -33,7 +33,8 @@ class DisplayPlot(BaseBindingController):
     _line_colors = Instance(cycle, allow_none=False)
 
     def create_widget(self, parent):
-        widget = CurveDialog(edit=False, toolbar=True, wintitle="Plot")
+        widget = CurveDialog(edit=False, toolbar=True, wintitle="Plot",
+                             parent=parent)
         self._plot = widget.get_plot()
         self.add_proxy(self.proxy)
         return widget

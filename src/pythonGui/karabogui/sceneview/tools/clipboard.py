@@ -139,7 +139,7 @@ class ScenePasteReplaceAction(BaseScenePasteAction):
             self._get_widget_model_keys(m, keys)
 
         device_ids = sorted(set(k.split('.', 1)[0] for k in keys))
-        dialog = ReplaceDialog(device_ids)
+        dialog = ReplaceDialog(device_ids, parent=scene_view)
         if dialog.exec_() != QDialog.Accepted:
             return
 

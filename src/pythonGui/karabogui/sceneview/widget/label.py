@@ -76,8 +76,8 @@ class LabelWidget(QLabel):
         self.update()
 
     def edit(self, scene_view):
-        dialog = TextDialog(self.model)
-        if dialog.exec() == QDialog.Rejected:
+        dialog = TextDialog(self.model, parent=scene_view)
+        if dialog.exec_() == QDialog.Rejected:
             return
 
         self.set_model(dialog.label_model)

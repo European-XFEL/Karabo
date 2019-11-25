@@ -2,7 +2,7 @@ import os.path as op
 import re
 
 from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot, QPoint, Qt
+from PyQt5.QtCore import pyqtSlot, Qt
 from PyQt5.QtGui import QPalette, QValidator
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox
 
@@ -90,11 +90,6 @@ class WebDialog(QDialog):
         self.ui_target.textChanged.connect(self._on_validate)
         # Fill the dialog with start values!
         self.setWindowTitle(title)
-        if parent is not None:
-            # place dialog accordingly!
-            point = parent.rect().bottomRight()
-            global_point = parent.mapToGlobal(point)
-            self.move(global_point - QPoint(self.width(), 0))
         self._on_validate()
 
     @pyqtSlot()
