@@ -65,30 +65,36 @@ class DeviceInstanceController(BaseProjectGroupController):
 
         edit_action = QAction('Edit', menu)
         edit_action.triggered.connect(partial(self._edit_device,
-                                              project_controller))
+                                              project_controller,
+                                              parent=parent))
         config_menu = self._create_sub_menu(menu, project_controller)
         dupe_action = QAction('Duplicate', menu)
         dupe_action.triggered.connect(partial(self._duplicate_device,
-                                              project_controller))
+                                              project_controller,
+                                              parent=parent))
         delete_action = QAction('Delete', menu)
         delete_action.triggered.connect(partial(self._delete_device,
-                                                project_controller))
+                                                project_controller,
+                                                parent=parent))
 
         macro_action = QAction('Open device macro', menu)
         has_macro = _test_mask(capabilities, Capabilities.PROVIDES_MACROS)
         macro_action.setEnabled(has_macro)
         macro_action.triggered.connect(partial(self._load_macro_from_device,
-                                               project_controller))
+                                               project_controller,
+                                               parent=parent))
         scene_action = QAction('Open device scene', menu)
         has_scene = _test_mask(capabilities, Capabilities.PROVIDES_SCENES)
         scene_action.setEnabled(has_scene)
         scene_action.triggered.connect(partial(self._load_scene_from_device,
-                                               project_controller))
+                                               project_controller,
+                                               parent=parent))
         conf_action = QAction('Get Configuration', menu)
         can_get_conf = (server_online and
                         proj_device_status not in NO_CONFIG_STATUSES)
         conf_action.setEnabled(can_get_conf)
-        conf_action.triggered.connect(self._get_configuration_from_past)
+        conf_action.triggered.connect(partial(
+            self._get_configuration_from_past, parent=parent))
 
         instantiate_action = QAction('Instantiate', menu)
         can_instantiate = (server_online and not proj_device_online and
@@ -99,10 +105,12 @@ class DeviceInstanceController(BaseProjectGroupController):
         shutdown_action = QAction('Shutdown', menu)
         shutdown_action.setEnabled(proj_device_online)
         shutdown_action.triggered.connect(partial(self.shutdown_device,
-                                                  show_confirm=True))
+                                                  show_confirm=True,
+                                                  parent=parent))
         menu.addSeparator()
         about_action = QAction('About', menu)
-        about_action.triggered.connect(self._about_device)
+        about_action.triggered.connect(partial(self._about_device,
+                                               parent=parent))
 
         docu_action = QAction('Documentation', menu)
         docu_action.triggered.connect(self._get_documentation_device)
@@ -348,7 +356,8 @@ class DeviceInstanceController(BaseProjectGroupController):
         config_menu = QMenu('Configuration', parent_menu)
         add_action = QAction('Add device configuration', config_menu)
         add_action.triggered.connect(partial(self._add_configuration,
-                                             project_controller))
+                                             project_controller,
+                                             parent=parent_menu.parent()))
         config_menu.addAction(add_action)
         for dev_conf in self.model.configs:
             conf_action = QAction(dev_conf.simple_name, config_menu)
@@ -368,14 +377,15 @@ class DeviceInstanceController(BaseProjectGroupController):
     # ----------------------------------------------------------------------
     # QAction handlers
 
-    def _delete_device(self, project_controller):
+    def _delete_device(self, project_controller, parent=None):
         """ Remove the device associated with this item from its device server
         """
         device = self.model
         ask = ('Are you sure you want to delete \"<b>{}</b>\".<br /> '
                'Continue action?'.format(device.instance_id))
         msg_box = QMessageBox(QMessageBox.Question, 'Delete device',
-                              ask, QMessageBox.Yes | QMessageBox.No)
+                              ask, QMessageBox.Yes | QMessageBox.No,
+                              parent=parent)
         msg_box.setModal(False)
         msg_box.setDefaultButton(QMessageBox.No)
         if msg_box.exec_() == QMessageBox.Yes:
@@ -384,7 +394,7 @@ class DeviceInstanceController(BaseProjectGroupController):
             if device in server_model.devices:
                 server_model.devices.remove(device)
 
-    def _edit_device(self, project_controller):
+    def _edit_device(self, project_controller, parent=None):
         # Watch for incomplete model initialization
         if not self.model.initialized:
             return
@@ -394,7 +404,8 @@ class DeviceInstanceController(BaseProjectGroupController):
                                           DeviceServerModel)
         dialog = DeviceHandleDialog(server_id=server_model.server_id,
                                     model=device,
-                                    is_online=self.project_device.online)
+                                    is_online=self.project_device.online,
+                                    parent=parent)
         result = dialog.exec_()
         if result == QDialog.Accepted:
             # Check for existing device
@@ -411,7 +422,7 @@ class DeviceInstanceController(BaseProjectGroupController):
                 dev_conf.class_id = dialog.class_id
                 dev_conf.description = dialog.description
 
-    def _about_device(self):
+    def _about_device(self, parent=None):
         device = self.model
         info = {}
         for name in device.editable_traits():
@@ -421,18 +432,19 @@ class DeviceInstanceController(BaseProjectGroupController):
         htmlString = ("<table>" +
                       "".join("<tr><td><b>{}</b>:   </td><td>{}</td></tr>".
                               format(*p) for p in info.items()) + "</table>")
-        messagebox.show_information(htmlString)
+        messagebox.show_information(htmlString, parent=parent)
 
     def _get_documentation_device(self):
         deviceId = self.model.instance_id
         open_documentation_link(deviceId)
 
-    def _add_configuration(self, project_controller):
+    def _add_configuration(self, project_controller, parent=None):
         device = self.model
         server_model = find_parent_object(device, project_controller.model,
                                           DeviceServerModel)
         dialog = DeviceHandleDialog(server_id=server_model.server_id,
-                                    model=device, add_config=True)
+                                    model=device, add_config=True,
+                                    parent=parent)
         result = dialog.exec()
         if result == QDialog.Accepted:
             # Check for existing device configuration
@@ -450,7 +462,7 @@ class DeviceInstanceController(BaseProjectGroupController):
             device.configs.append(config_model)
             device.active_config_ref = config_model.uuid
 
-    def _duplicate_device(self, project_controller):
+    def _duplicate_device(self, project_controller, parent=None):
         """ Duplicate the active device configuration of the model
 
         :param project: The parent project controller the model belongs to
@@ -462,7 +474,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         if active_config is None:
             return
 
-        dialog = ObjectDuplicateDialog(device.instance_id)
+        dialog = ObjectDuplicateDialog(device.instance_id, parent=parent)
         if dialog.exec() == QDialog.Accepted:
             xml = write_project_model(active_config)
             for simple_name in dialog.duplicate_names:
@@ -486,12 +498,13 @@ class DeviceInstanceController(BaseProjectGroupController):
                                     DeviceServerModel)
         self.instantiate(server)
 
-    def _load_macro_from_device(self, project_controller):
+    def _load_macro_from_device(self, project_controller, parent=None):
         """Request a scene directly from a device
         """
         dialog = DeviceCapabilityDialog(
             device_id=self.model.instance_id,
-            capability=Capabilities.PROVIDES_MACROS)
+            capability=Capabilities.PROVIDES_MACROS,
+            parent=parent)
         if dialog.exec() == QDialog.Accepted:
             device_id = dialog.device_id
             macro_name = dialog.capa_name
@@ -509,10 +522,11 @@ class DeviceInstanceController(BaseProjectGroupController):
             call_device_slot(handler, device_id, 'requestMacro',
                              name=macro_name)
 
-    def _load_scene_from_device(self, project_controller):
+    def _load_scene_from_device(self, project_controller, parent=None):
         """Request a scene directly from a device
         """
-        dialog = DeviceCapabilityDialog(device_id=self.model.instance_id)
+        dialog = DeviceCapabilityDialog(device_id=self.model.instance_id,
+                                        parent=parent)
         if dialog.exec() == QDialog.Accepted:
             device_id = dialog.device_id
             scene_name = dialog.capa_name
@@ -530,10 +544,10 @@ class DeviceInstanceController(BaseProjectGroupController):
             call_device_slot(handler, device_id, 'requestScene',
                              name=scene_name)
 
-    def _get_configuration_from_past(self):
+    def _get_configuration_from_past(self, parent=None):
         """Request a configuration from the datalog reader
         """
-        dialog = ConfigurationFromPastDialog()
+        dialog = ConfigurationFromPastDialog(parent=parent)
         if dialog.exec() == QDialog.Accepted:
             device_id = self.model.instance_id
             # Karabo time points are in UTC
@@ -556,6 +570,6 @@ class DeviceInstanceController(BaseProjectGroupController):
         get_manager().initDevice(prj_dev.server_id, prj_dev.class_id,
                                  prj_dev.device_id, config=config)
 
-    def shutdown_device(self, show_confirm=True):
+    def shutdown_device(self, show_confirm=True, parent=None):
         device = self.model
-        get_manager().shutdownDevice(device.instance_id, show_confirm)
+        get_manager().shutdownDevice(device.instance_id, show_confirm, parent)

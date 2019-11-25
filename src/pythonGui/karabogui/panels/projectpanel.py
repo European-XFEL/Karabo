@@ -169,10 +169,10 @@ def _project_load_handler(project_view):
     item_model = project_view.model()
     # Check for modififications before showing dialog
     root_model = item_model.root_model
-    if not maybe_save_modified_project(root_model):
+    if not maybe_save_modified_project(root_model, parent=project_view):
         return
 
-    project = load_project()
+    project = load_project(parent=project_view)
     if project is not None:
         item_model.root_model = project
 
@@ -186,7 +186,7 @@ def _project_reload_handler(project_view):
     root_model = item_model.root_model
     if root_model is None:
         return
-    if not show_modified_project_message(root_model):
+    if not show_modified_project_message(root_model, parent=project_view):
         return
 
     project = reload_project(root_model)
@@ -204,10 +204,10 @@ def _project_new_handler(project_view):
     item_model = project_view.model()
     # Check for modififications before showing dialog
     root_model = item_model.root_model
-    if not maybe_save_modified_project(root_model):
+    if not maybe_save_modified_project(root_model, parent=project_view):
         return
 
-    dialog = NewProjectDialog()
+    dialog = NewProjectDialog(parent=project_view)
     if dialog.exec() == QDialog.Accepted:
         # Set domain
         get_db_conn().default_domain = dialog.domain
