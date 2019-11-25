@@ -91,8 +91,8 @@ class IconItem(IconData):
 
 
 class _BaseDialog(QDialog):
-    def __init__(self, items):
-        super(_BaseDialog, self).__init__()
+    def __init__(self, items, parent=None):
+        super(_BaseDialog, self).__init__(parent)
         uic.loadUi(op.join(op.dirname(__file__), 'icons.ui'), self)
         # Get a copy!
         self.items = list(items)
@@ -181,8 +181,8 @@ class _BaseDialog(QDialog):
 
 
 class DigitDialog(_BaseDialog):
-    def __init__(self, items, binding):
-        super(DigitDialog, self).__init__(items)
+    def __init__(self, items, binding, parent=None):
+        super(DigitDialog, self).__init__(items, parent)
         if isinstance(binding, FloatBinding):
             self.value = self.floatValue  # a QSpinBox in icons.ui
             self.stack.setCurrentWidget(self.floatPage)
@@ -218,8 +218,8 @@ class DigitDialog(_BaseDialog):
 
 
 class SelectionDialog(_BaseDialog):
-    def __init__(self, items, binding):
-        super(SelectionDialog, self).__init__(items)
+    def __init__(self, items, binding, parent=None):
+        super(SelectionDialog, self).__init__(items, parent)
         self.editable.hide()
 
     def text_for_item(self, item):
@@ -227,8 +227,8 @@ class SelectionDialog(_BaseDialog):
 
 
 class TextDialog(_BaseDialog):
-    def __init__(self, items, binding):
-        super(TextDialog, self).__init__(items)
+    def __init__(self, items, binding, parent=None):
+        super(TextDialog, self).__init__(items, parent)
         self.stack.setCurrentWidget(self.textPage)
 
     @pyqtSlot()

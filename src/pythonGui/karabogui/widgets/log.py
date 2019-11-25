@@ -315,7 +315,8 @@ class LogWidget(QWidget):
         filename = getSaveFileName(
             caption="Save file as",
             filter="Log files (*.log)",
-            suffix="log")
+            suffix="log",
+            parent=self)
         if not filename:
             return
 
