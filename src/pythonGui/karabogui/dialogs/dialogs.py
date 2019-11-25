@@ -130,8 +130,8 @@ class PenDialog(QDialog):
     pen_styles = [Qt.SolidLine, Qt.DashLine, Qt.DotLine, Qt.DashDotLine,
                   Qt.DashDotDotLine]
 
-    def __init__(self, pen, brush=None):
-        QDialog.__init__(self)
+    def __init__(self, pen, brush=None, parent=None):
+        super(PenDialog, self).__init__(parent)
         uic.loadUi(op.join(op.dirname(__file__), 'pendialog.ui'), self)
         self.pen = pen
         self.brush = brush
@@ -289,8 +289,8 @@ class PenStyleComboBox(QComboBox):
 
 
 class ReplaceDialog(QDialog):
-    def __init__(self, devices):
-        QDialog.__init__(self)
+    def __init__(self, devices, parent=None):
+        super(ReplaceDialog, self).__init__(parent)
         uic.loadUi(op.join(op.dirname(__file__), 'replacedialog.ui'), self)
 
         self.twTable.setRowCount(len(devices))
@@ -315,7 +315,7 @@ class ReplaceDialog(QDialog):
             retval[self.twTable.item(i, 0).text()] = item_text
         return retval
 
-    @pyqtSlot(str)
+    @pyqtSlot(QTableWidgetItem)
     def onItemChanged(self, item):
         if item.column() != 1:
             return

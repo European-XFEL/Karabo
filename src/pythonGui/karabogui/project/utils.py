@@ -192,7 +192,7 @@ def load_project(is_subproject=False):
     """
     from karabogui.project.dialog.project_handle import LoadProjectDialog
     dialog = LoadProjectDialog(is_subproject=is_subproject)
-    result = dialog.exec()
+    result = dialog.exec_()
     if result == QDialog.Accepted:
         domain, uuid = dialog.selected_item()
         if domain is not None and uuid is not None:

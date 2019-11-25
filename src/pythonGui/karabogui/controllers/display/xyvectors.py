@@ -37,7 +37,8 @@ class XYVector(BaseBindingController):
         return True
 
     def create_widget(self, parent):
-        widget = CurveDialog(edit=False, toolbar=True, wintitle="XY-Plot")
+        widget = CurveDialog(edit=False, toolbar=True, wintitle="XY-Plot",
+                             parent=parent)
         self._plot = widget.get_plot()
         self._plot.set_antialiasing(True)
         self._plot.setAxisAutoScale(QwtPlot.yLeft)

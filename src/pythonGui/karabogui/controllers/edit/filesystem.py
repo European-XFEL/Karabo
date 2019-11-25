@@ -94,7 +94,7 @@ class EditableFileIn(_FileSystemPicker):
         return icons.filein
 
     def picker(self):
-        return getOpenFileName(caption=self.pickerText)
+        return getOpenFileName(caption=self.pickerText, parent=self.widget)
 
 
 @register_binding_controller(ui_name='File Out', can_edit=True,
@@ -111,4 +111,4 @@ class EditableFileOut(_FileSystemPicker):
         return icons.fileout
 
     def picker(self):
-        return getSaveFileName(caption=self.pickerText)
+        return getSaveFileName(caption=self.pickerText, parent=self.widget)

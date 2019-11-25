@@ -131,8 +131,8 @@ class DisplayDeviceSceneLink(BaseBindingController):
         if get_binding_value(self.proxy) is None:
             return
         dialog = DeviceSceneLinkDialog(
-            scene_list=self.proxy.value, model=self.model)
-        if dialog.exec() == QDialog.Rejected:
+            scene_list=self.proxy.value, model=self.model, parent=self.widget)
+        if dialog.exec_() == QDialog.Rejected:
             return
         self.widget.set_link_model(dialog.link_model)
 
@@ -140,8 +140,8 @@ class DisplayDeviceSceneLink(BaseBindingController):
     def _edit_text(self, checked):
         if get_binding_value(self.proxy) is None:
             return
-        dialog = TextDialog(self.model)
-        if dialog.exec() == QDialog.Rejected:
+        dialog = TextDialog(self.model, parent=self.widget)
+        if dialog.exec_() == QDialog.Rejected:
             return
         self.widget.set_label_model(dialog.label_model)
 
