@@ -112,6 +112,9 @@ class LoadProjectDialog(QDialog):
         }
         register_for_broadcasts(self.event_map)
 
+        # Set the focus on the search title!
+        self.leTitle.setFocus()
+
     # -----------------------------------------------------------------------
     # Karabo Events
 
