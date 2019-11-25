@@ -52,7 +52,7 @@ class LoadProjectDialog(QDialog):
                            'project_handle.ui')
         uic.loadUi(filepath, self)
         # set proper window flags
-        self.setWindowFlags(Qt.WindowCloseButtonHint)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowCloseButtonHint)
 
         db_conn = get_db_conn()
         self.rbFromRemote.setChecked(db_conn.ignore_local_cache)
@@ -253,8 +253,10 @@ class LoadProjectDialog(QDialog):
 
         NOTE: ``current_is_trashed`` is the current value of the selected
         project which should be toggled here
+
+        XXX: Is this still being used?
         """
-        if show_trash_project_message(current_is_trashed):
+        if show_trash_project_message(current_is_trashed, parent=self):
             db_conn = get_db_conn()
             db_conn.update_attribute(domain, 'project', uuid, 'is_trashed',
                                      str(not current_is_trashed).lower())
