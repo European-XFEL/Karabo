@@ -81,7 +81,7 @@ fi
 
 KARABO_ENV=karabogui
 
-SCRIPT_PATH=$(dirname $(readlink -f "$0"))
+SCRIPT_PATH=$(dirname $(readlink -f "${BASH_SOURCE[0]}"))
 
 # Clean environment if asked
 if [ "${CLEAN}" = true ]; then
