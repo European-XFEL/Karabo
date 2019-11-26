@@ -181,6 +181,11 @@ class PenDialog(QDialog):
 
     @pyqtSlot()
     def on_pbFillColor_clicked(self):
+        # The button is now only visible when `self.brush` is not None.
+        # Just in case, do nothing.
+        if self.brush is None:
+            return
+
         color = QColorDialog.getColor(self.brush.color())
         if color.isValid():
             self.brush.setColor(color)
