@@ -120,7 +120,7 @@ def getSaveFileName(parent=None, caption="", filter="", directory="",
         return dialog.selectedFiles()[0]
 
 
-def load_configuration_from_file(device_proxy):
+def load_configuration_from_file(device_proxy, parent=None):
     """Given a ``BaseDeviceProxy`` object instance. Read a configuration Hash
     from an XML file and assign it to the object.
     """
@@ -136,7 +136,8 @@ def load_configuration_from_file(device_proxy):
 
     filename = getOpenFileName(caption="Open configuration",
                                filter="XML (*.xml)",
-                               directory=directory)
+                               directory=directory,
+                               parent=parent)
     if not filename:
         return
 
@@ -151,7 +152,7 @@ def load_configuration_from_file(device_proxy):
                     {'proxy': device_proxy, 'configuration': config})
 
 
-def save_configuration_to_file(device_proxy):
+def save_configuration_to_file(device_proxy, parent=None):
     """This function saves the current configuration of a device to a file.
     """
     if device_proxy is None or device_proxy.binding is None:
@@ -173,14 +174,16 @@ def save_configuration_to_file(device_proxy):
                                filter="Configuration (*.xml)",
                                suffix="xml",
                                directory=directory,
-                               selectFile=default_name)
+                               selectFile=default_name,
+                               parent=parent)
     if not filename:
         return
 
     # If we are shutdown in between, either server or device, notify!
     if device_proxy.binding is None or not len(device_proxy.binding.value):
         messagebox.show_error("The configuration is empty and cannot "
-                              "be saved", title='No configuration')
+                              "be saved", title='No configuration',
+                              parent=parent)
         return
 
     config = Hash(class_id, extract_configuration(device_proxy.binding,
