@@ -775,6 +775,12 @@ class NetworkOutput(Configurable):
             yield from self.server.wait_closed()
 
 
+class SchemaNode(Node):
+    def toDataAndAttrs(self, instance):
+        """The Output Channel Schema is not allowed to provide data"""
+        return Hash(), {}
+
+
 class OutputChannel(Node):
     def __init__(self, cls=None, **kwargs):
         if cls is None:
@@ -784,6 +790,6 @@ class OutputChannel(Node):
             assert issubclass(cls, Configurable)
 
             class Output(NetworkOutput):
-                schema = Node(cls)
+                schema = SchemaNode(cls)
 
         super(OutputChannel, self).__init__(Output, **kwargs)
