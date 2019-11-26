@@ -425,7 +425,7 @@ class InputValidator(QValidator):
 
 
 def show_filename_error(filename, parent=None):
-    invalid_chars = _get_invalid_chars(filename)
+    invalid_chars = sorted(_get_invalid_chars(filename))
 
     # Make the space verbose
     if ' ' in invalid_chars:
@@ -442,7 +442,7 @@ def show_filename_error(filename, parent=None):
 def _get_invalid_chars(filename):
     invalid_chars = []
     if not VALID_PROJECT_OBJECT_NAME.match(filename):
-        invalid_regex = re.compile("[^a-zA-Z0-9\/\_\-]")
+        invalid_regex = re.compile(r"[^a-zA-Z0-9\/\_\-]")
         invalid_chars = list(set(invalid_regex.findall(filename)))
     return invalid_chars
 
