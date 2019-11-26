@@ -251,10 +251,18 @@ void BrokerStatistics::registerLogMessage(size_t bodySize) {
 
 void BrokerStatistics::printStatistics(const util::Epochstamp& timeStamp,
                                        float elapsedSeconds) const {
+    std::string when;
+    try {
+        when = timeStamp.toFormattedString() += " (UTC)";
+    } catch (const std::runtime_error& e) {
+        // With a mis-configured language system (e.g. 'export LANG=some_garbage'), we get std::runtime_error
+        // with message "locale::facet::_S_create_c_locale name not valid".
+        when = timeStamp.toIso8601Ext(); // This works - but human readability is reduced...
+    }
     // Print kind of header
     std::cout << "\n" << m_delimLine << m_delimLine
             << std::setprecision(2) << std::fixed // 2 digits, keep 0s
-            << timeStamp.toFormattedString() << " (UTC) - average over "
+            << when << " - average over "
             << elapsedSeconds << " s:\n";
 
 
