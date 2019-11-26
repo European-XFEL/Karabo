@@ -153,20 +153,32 @@ namespace karabo {
              * @param instanceId The id with which the client should participate in the system.
              *                   If not unique or invalid, constructor will throw an exception.
              *                   If empty (i.e. default), an id will be generated from host name and process id.
+             * @param implicitInit If true (default for backward compatibility - but NOT recommended!), the constructor
+             *                     will implicitly try to trigger a call to initialize() via the event loop. Since this
+             *                     can fail silently, it is strongly recommended to use implicitInit = false and
+             *                     call the initialize() method right after the constructor.
              */
-            DeviceClient(const std::string& instanceId = std::string());
+            explicit DeviceClient(const std::string& instanceId = std::string(), bool implicitInit = true);
 
             /**
              * Constructor using instantiated signalSlotable class (shared communication)
              * @param signalSlotable An instance of the SignalSlotable lass
+             * @param implicitInit If true (default for backward compatibility - but NOT recommended!), the constructor
+             *                     will implicitly try to trigger a call to initialize() via the event loop. Since this
+             *                     can fail silently, it is strongly recommended to use implicitInit = false and
+             *                     call the initialize() method right after the constructor.
              */
-            DeviceClient(const boost::shared_ptr<karabo::xms::SignalSlotable>& signalSlotable);
+            explicit DeviceClient(const boost::shared_ptr<karabo::xms::SignalSlotable>& signalSlotable,
+                                  bool implicitInit = true);
+
+            virtual ~DeviceClient();
 
             /**
-             * Destructor joins the underlying event thread,
-             * i.e. execution takes some time (1-2 seconds).
+             * Second constructor.
+             * It is strongly recommended to use the constructors with implicitInit = false
+             * and explicitely call initialize() after the construction.
              */
-            virtual ~DeviceClient();
+            void initialize();
 
             bool login(const std::string& username, const std::string& password, const std::string& provider = "LOCAL");
 

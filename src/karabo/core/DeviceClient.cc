@@ -32,7 +32,7 @@ namespace karabo {
         // See also OutputChannel::initializeServerConnection(...)
         const int kMaxCompleteInitializationAttempts = 2500;
 
-        DeviceClient::DeviceClient(const std::string& instanceId)
+        DeviceClient::DeviceClient(const std::string& instanceId, bool implicitInit)
             : m_internalSignalSlotable()
             , m_signalSlotable()
             , m_isShared(false)
@@ -60,12 +60,14 @@ namespace karabo {
 
             m_signalSlotable = m_internalSignalSlotable;
 
-            karabo::net::EventLoop::getIOService().post(boost::bind(&DeviceClient::completeInitialization,
-                                                                    this, kMaxCompleteInitializationAttempts));
+            if (implicitInit) {
+                karabo::net::EventLoop::getIOService().post(boost::bind(&DeviceClient::completeInitialization,
+                                                                        this, kMaxCompleteInitializationAttempts));
+            }
         }
 
 
-        DeviceClient::DeviceClient(const boost::shared_ptr<SignalSlotable>& signalSlotable)
+        DeviceClient::DeviceClient(const boost::shared_ptr<SignalSlotable>& signalSlotable, bool implicitInit)
             : m_internalSignalSlotable()
             , m_signalSlotable(signalSlotable)
             , m_isShared(true)
@@ -78,8 +80,10 @@ namespace karabo {
             , m_loggerMapCached(false)
             , m_instanceChangeThrottler(nullptr) {
 
-            karabo::net::EventLoop::getIOService().post(boost::bind(&DeviceClient::completeInitialization,
-                                                                    this, kMaxCompleteInitializationAttempts));
+            if (implicitInit) {
+                karabo::net::EventLoop::getIOService().post(boost::bind(&DeviceClient::completeInitialization,
+                                                                        this, kMaxCompleteInitializationAttempts));
+            }
         }
 
 
@@ -103,20 +107,29 @@ namespace karabo {
                 // Construction not yet completed.
                 if (countdown > 0) {
                     // Post another attempt in the event loop.
+                    // First rely on yield() to give constructor time to finish, but if that is not enough, sleep a bit.
+                    if (2 * countdown < kMaxCompleteInitializationAttempts) {
+                        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+                    }
                     boost::this_thread::yield();
                     karabo::net::EventLoop::getIOService().post(boost::bind(&DeviceClient::completeInitialization, this, --countdown));
                     return;
                 } else {
-                    const std::string msg("Maximum number of attempts to initialize ageing mechanism and slots reached!");
+                    const std::string msg("Maximum number of attempts reached to implicitly call DeviceClient::initialize()! ");
                     KARABO_LOG_FRAMEWORK_ERROR << msg;
                     throw KARABO_INIT_EXCEPTION(msg);
                 }
             }
+            initialize();
+
+            KARABO_LOG_FRAMEWORK_DEBUG << "Implicit initialization of DeviceClient instance completed at countdown = "
+                    << countdown;
+        }
+
+
+        void DeviceClient::initialize() {
             this->setupSlots();
             this->setAgeing(true);
-
-            KARABO_LOG_FRAMEWORK_DEBUG << "Initialization of DeviceClient instance completed at countdown = "
-                    << countdown;
         }
 
 
