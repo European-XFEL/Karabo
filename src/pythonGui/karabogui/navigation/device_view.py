@@ -186,7 +186,7 @@ class DeviceTreeView(QTreeView):
 
         if node_type is NavigationItemTypes.DEVICE:
             deviceId = info.get('deviceId')
-            manager.shutdownDevice(deviceId)
+            manager.shutdownDevice(deviceId, parent=self)
 
     @pyqtSlot()
     def onGetDocumenation(self):
