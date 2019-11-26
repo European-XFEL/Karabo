@@ -173,7 +173,7 @@ def _load_macro(project_controller, parent=None):
     simple_name = op.splitext(op.basename(fn))[0]
 
     if not VALID_PROJECT_OBJECT_NAME.match(simple_name):
-        show_filename_error(fn, parent=parent)
+        show_filename_error(simple_name, parent=parent)
         return
 
     # Store old macro dialog path
@@ -248,7 +248,7 @@ def _load_scene(project_controller, parent=None):
     simple_name = op.splitext(op.basename(fn))[0]
 
     if not VALID_PROJECT_OBJECT_NAME.match(simple_name):
-        show_filename_error(fn, parent=parent)
+        show_filename_error(simple_name, parent=parent)
         return
 
     # Store old scene dialog path
