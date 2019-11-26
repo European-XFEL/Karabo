@@ -187,10 +187,10 @@ class SystemTreeView(QTreeView):
 
         if node_type is NavigationItemTypes.DEVICE:
             deviceId = info.get('deviceId')
-            manager.shutdownDevice(deviceId)
+            manager.shutdownDevice(deviceId, parent=self)
         elif node_type is NavigationItemTypes.SERVER:
             serverId = info.get('serverId')
-            manager.shutdownServer(serverId)
+            manager.shutdownServer(serverId, parent=self)
 
     @pyqtSlot()
     def onOpenDeviceScene(self):
@@ -247,12 +247,12 @@ class SystemTreeView(QTreeView):
     @pyqtSlot()
     def onOpenFromFile(self):
         if self._selected_proxy is not None:
-            load_configuration_from_file(self._selected_proxy)
+            load_configuration_from_file(self._selected_proxy, parent=self)
 
     @pyqtSlot()
     def onSaveToFile(self):
         if self._selected_proxy is not None:
-            save_configuration_to_file(self._selected_proxy)
+            save_configuration_to_file(self._selected_proxy, parent=self)
 
     @pyqtSlot()
     def onDoubleClickHeader(self):
