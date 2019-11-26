@@ -230,6 +230,12 @@ class Tests(DeviceTest):
             yield
 
     @async_tst
+    def test_configurationAsHash(self):
+        """Test the empty Hash of the output schema"""
+        conf = self.remote.configurationAsHash()
+        self.assertEqual(conf['output.schema'], Hash())
+
+    @async_tst
     def test_execute(self):
         """test the execution of remote slots"""
         self.remote.done = False
