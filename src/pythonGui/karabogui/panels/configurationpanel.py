@@ -490,18 +490,19 @@ class ConfigurationPanel(BasePanelWidget):
     @pyqtSlot()
     def _on_open_from_file(self):
         if self._showing_proxy is not None:
-            load_configuration_from_file(self._showing_proxy)
+            load_configuration_from_file(self._showing_proxy, parent=self)
 
     @pyqtSlot()
     def _on_save_to_file(self):
         if self._showing_proxy is not None:
-            save_configuration_to_file(self._showing_proxy)
+            save_configuration_to_file(self._showing_proxy, parent=self)
 
     @pyqtSlot()
     def _on_kill_device(self):
         if not isinstance(self._showing_proxy, DeviceProxy):
             return
-        get_manager().shutdownDevice(self._showing_proxy.device_id)
+        get_manager().shutdownDevice(self._showing_proxy.device_id,
+                                     parent=self)
 
     @pyqtSlot()
     def _on_init_device(self):
