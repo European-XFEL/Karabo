@@ -307,10 +307,34 @@ namespace karabo {
         bool DataLogger::stopLogging(const std::string& deviceId) {
 
             // Avoid automatic reconnects -
-            // if not all signals connected or device is already dead, this triggers some (delayed) WARNings:
-            asyncDisconnect(deviceId, "signalSchemaUpdated", "", "slotSchemaUpdated");
-            asyncDisconnect(deviceId, "signalStateChanged", "", "slotChanged");
-            asyncDisconnect(deviceId, "signalChanged", "", "slotChanged");
+            // since stopLogging usually called when device is already dead, expect timeouts that would create
+            // WARNings if no failure handler given. Since that is the normal case, we silence timeouts here.
+            struct FailHandler {
+                FailHandler(const std::string & devId, const std::string& sig) : deviceId(devId), signal(sig) {
+                };
+
+                void operator()() const {
+                    try {
+                        throw;
+                    } catch (const karabo::util::TimeoutException&) {
+                        karabo::util::Exception::clearTrace();
+                    } catch (const std::exception& se) {
+                        KARABO_LOG_FRAMEWORK_WARN << "Failed to disconnect from " << deviceId << "." << signal
+                                << ": " << se.what();
+                    }
+                };
+
+                const std::string deviceId;
+                const std::string signal;
+            };
+            boost::function<void() > okHandler; // empty function pointer - nothing to do
+
+            asyncDisconnect(deviceId, "signalSchemaUpdated", "", "slotSchemaUpdated",
+                            okHandler, FailHandler(deviceId, "signalSchemaUpdated"));
+            asyncDisconnect(deviceId, "signalStateChanged", "", "slotChanged",
+                            okHandler, FailHandler(deviceId, "signalStateChanged"));
+            asyncDisconnect(deviceId, "signalChanged", "", "slotChanged",
+                            okHandler, FailHandler(deviceId, "signalChanged"));
 
             boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
             const bool result = (m_perDeviceData.erase(deviceId) > 0);
