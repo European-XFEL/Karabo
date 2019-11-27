@@ -48,6 +48,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1423485062/DataLoggerManager.o \
 	${OBJECTDIR}/_ext/1423485062/FileDataLogger.o \
 	${OBJECTDIR}/_ext/1423485062/GuiServerDevice.o \
+	${OBJECTDIR}/_ext/1423485062/InfluxDataLogger.o \
 	${OBJECTDIR}/_ext/1423485062/PropertyTest.o \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o \
@@ -102,6 +103,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103111265/RollingFileAppender.o \
 	${OBJECTDIR}/_ext/1103112890/Connection.o \
 	${OBJECTDIR}/_ext/1103112890/EventLoop.o \
+	${OBJECTDIR}/_ext/1103112890/HttpResponse.o \
+	${OBJECTDIR}/_ext/1103112890/InfluxDbClient.o \
 	${OBJECTDIR}/_ext/1103112890/JmsConnection.o \
 	${OBJECTDIR}/_ext/1103112890/JmsConsumer.o \
 	${OBJECTDIR}/_ext/1103112890/JmsProducer.o \
@@ -252,6 +255,11 @@ ${OBJECTDIR}/_ext/1423485062/GuiServerDevice.o: ../../../src/karabo/devices/GuiS
 	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/GuiServerDevice.o ../../../src/karabo/devices/GuiServerDevice.cc
+
+${OBJECTDIR}/_ext/1423485062/InfluxDataLogger.o: ../../../src/karabo/devices/InfluxDataLogger.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/InfluxDataLogger.o ../../../src/karabo/devices/InfluxDataLogger.cc
 
 ${OBJECTDIR}/_ext/1423485062/PropertyTest.o: ../../../src/karabo/devices/PropertyTest.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
@@ -522,6 +530,16 @@ ${OBJECTDIR}/_ext/1103112890/EventLoop.o: ../../../src/karabo/net/EventLoop.cc
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/EventLoop.o ../../../src/karabo/net/EventLoop.cc
+
+${OBJECTDIR}/_ext/1103112890/HttpResponse.o: ../../../src/karabo/net/HttpResponse.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/HttpResponse.o ../../../src/karabo/net/HttpResponse.cc
+
+${OBJECTDIR}/_ext/1103112890/InfluxDbClient.o: ../../../src/karabo/net/InfluxDbClient.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/InfluxDbClient.o ../../../src/karabo/net/InfluxDbClient.cc
 
 ${OBJECTDIR}/_ext/1103112890/JmsConnection.o: ../../../src/karabo/net/JmsConnection.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
@@ -1279,6 +1297,19 @@ ${OBJECTDIR}/_ext/1423485062/GuiServerDevice_nomain.o: ${OBJECTDIR}/_ext/1423485
 	    ${CP} ${OBJECTDIR}/_ext/1423485062/GuiServerDevice.o ${OBJECTDIR}/_ext/1423485062/GuiServerDevice_nomain.o;\
 	fi
 
+${OBJECTDIR}/_ext/1423485062/InfluxDataLogger_nomain.o: ${OBJECTDIR}/_ext/1423485062/InfluxDataLogger.o ../../../src/karabo/devices/InfluxDataLogger.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1423485062/InfluxDataLogger.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/InfluxDataLogger_nomain.o ../../../src/karabo/devices/InfluxDataLogger.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1423485062/InfluxDataLogger.o ${OBJECTDIR}/_ext/1423485062/InfluxDataLogger_nomain.o;\
+	fi
+
 ${OBJECTDIR}/_ext/1423485062/PropertyTest_nomain.o: ${OBJECTDIR}/_ext/1423485062/PropertyTest.o ../../../src/karabo/devices/PropertyTest.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1423485062/PropertyTest.o`; \
@@ -1979,6 +2010,32 @@ ${OBJECTDIR}/_ext/1103112890/EventLoop_nomain.o: ${OBJECTDIR}/_ext/1103112890/Ev
 	    $(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/EventLoop_nomain.o ../../../src/karabo/net/EventLoop.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/EventLoop.o ${OBJECTDIR}/_ext/1103112890/EventLoop_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103112890/HttpResponse_nomain.o: ${OBJECTDIR}/_ext/1103112890/HttpResponse.o ../../../src/karabo/net/HttpResponse.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/HttpResponse.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/HttpResponse_nomain.o ../../../src/karabo/net/HttpResponse.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103112890/HttpResponse.o ${OBJECTDIR}/_ext/1103112890/HttpResponse_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103112890/InfluxDbClient_nomain.o: ${OBJECTDIR}/_ext/1103112890/InfluxDbClient.o ../../../src/karabo/net/InfluxDbClient.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/InfluxDbClient.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/InfluxDbClient_nomain.o ../../../src/karabo/net/InfluxDbClient.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103112890/InfluxDbClient.o ${OBJECTDIR}/_ext/1103112890/InfluxDbClient_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103112890/JmsConnection_nomain.o: ${OBJECTDIR}/_ext/1103112890/JmsConnection.o ../../../src/karabo/net/JmsConnection.cc 
