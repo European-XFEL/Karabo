@@ -22,7 +22,7 @@ from karabogui.graph.plots.items import (
     ScatterGraphPlot, VectorBarGraphPlot, VectorFillGraphPlot)
 from karabogui.graph.plots.tools import CrossTargetController
 
-ALPHA_GRID = 80 / 255
+ALPHA_GRID = 30 / 255
 TICK_AXES = ["bottom", "left"]
 
 
