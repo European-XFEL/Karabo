@@ -394,11 +394,23 @@ namespace karabo {
                 // Since schema updates are rare, do not store this serialiser as the one for Hash (data->m_serializer):
                 TextSerializer<Schema>::Pointer serializer = TextSerializer<Schema>::create(Hash("Xml.indentation", -1));
                 string archive;
-                serializer->save(schema, archive);
+                try {
+                    serializer->save(schema, archive);
+                } catch (const std::exception& e) {
+                    // Currently (2.7.0rc2), a karabo::util::NotSupportedException is thrown when the first option
+                    // of a string element contains a comma. But whatever exception is thrown, we should go on,
+                    // otherwise DataLogger::handleSchemaReceived2 will not connect to signal[State]Changed
+                    // and thus configurations are not stored, either.
+                    // Note: Do not dare to print Schema as part of log message, either...
+                    KARABO_LOG_FRAMEWORK_ERROR << "Failed to serialise Schema of " << deviceId
+                            << ", store incomplete XML: " << e.what();
+                }
                 fileout << t.getSeconds() << " " << t.getFractionalSeconds() << " " << t.getTrainId() << " " << archive << "\n";
                 fileout.close();
-            } else
-                throw KARABO_IO_EXCEPTION("Failed to open \"" + filename + "\". Check permissions.");
+            } else {
+                // Should not throw, either (see above).
+                KARABO_LOG_FRAMEWORK_ERROR << "Failed to open '" << filename << "'. Check permissions.";
+            }
         }
     }
 }
