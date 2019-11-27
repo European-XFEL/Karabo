@@ -16,7 +16,7 @@ class KaraboViewBox(ViewBox):
     def __init__(self, parent=None):
         super(KaraboViewBox, self).__init__(parent, enableMenu=False)
         self.mouse_mode = MouseMode.Pointer
-        self.setBackgroundColor(None)
+        self.setBackgroundColor('w')
         self.menu = QMenu(parent)
         self.menu.addAction("View all", self.enableAutoRange)
 

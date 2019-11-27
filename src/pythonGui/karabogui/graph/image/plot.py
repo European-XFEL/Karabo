@@ -51,12 +51,7 @@ class KaraboImagePlot(PlotItem):
         for axis in AXIS_ITEMS:
             axis_item = self.getAxis(axis)
             axis_item.setZValue(0)
-            axis_item.enableAutoSIPrefix(False)
 
-            if axis in self.MAJOR_AXES:
-                axis_item.setStyle(autoExpandTextSpace=False,
-                                   tickTextWidth=36,
-                                   tickTextHeight=24)
         self.show_all_axis()
 
         # Initialize values
