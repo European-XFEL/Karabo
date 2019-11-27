@@ -164,6 +164,11 @@ namespace karabo {
              */
             virtual void handleSchemaUpdated(const karabo::util::Schema& schema, const DeviceData::Pointer& data) = 0;
 
+            /**
+             * Override preDestruction from Device class
+             */
+            void preDestruction() override;
+
         private:
 
             void initialize();
