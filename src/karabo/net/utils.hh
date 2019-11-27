@@ -45,6 +45,9 @@ namespace karabo {
          */
         boost::tuple<std::string, std::string, std::string, std::string, std::string> parseUrl(const std::string& url);
 
+
+        std::string urlencode(const std::string& value);
+
         enum class AsyncStatus {
 	    PENDING = 0,
 	    FAILED = -1,

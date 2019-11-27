@@ -136,15 +136,17 @@ namespace karabo {
 
 
         DataLogger::~DataLogger() {
+        }
+
+
+        void DataLogger::preDestruction() {
             // When m_perDeviceData will be destructed, all the DeviceData destructors will run and tag
             // the remaining devices as discontinued.
-            // Locking mutex maybe not needed since no parallelism anymore (?) - but cannot harm.
             boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
             for (auto it = m_perDeviceData.begin(), itEnd = m_perDeviceData.end(); it != itEnd; ++it) {
                 disconnectP2P(it->first);
             }
-            // Previously, here was an attempt to flush data to file - but that is not needed:
-            // stream object destructors take care that their data arrives on disk.
+            m_perDeviceData.clear();
         }
 
 
