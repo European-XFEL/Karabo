@@ -222,6 +222,7 @@ namespace karabo {
             karabo::net::Strand::Pointer m_strand;
 
             boost::asio::deadline_timer m_topologyCheckTimer;
+            std::string m_logger;
         };
     }
 }
