@@ -7,6 +7,8 @@ from karabogui.graph.common.api import KaraboViewBox, MouseMode
 class KaraboImageViewBox(KaraboViewBox):
     def __init__(self, parent=None):
         super(KaraboImageViewBox, self).__init__(parent)
+        self.setBackgroundColor(None)
+
     # ---------------------------------------------------------------------
     # mouse events
 
