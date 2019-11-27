@@ -125,15 +125,6 @@ namespace karabo {
                     .reconfigurable()
                     .commit();
 
-            INT32_ELEMENT(expected).key("maximumFileSize")
-                    .displayedName("Maximum file size")
-                    .description("After any archived file has reached this size it will be time-stamped and not appended anymore")
-                    .unit(Unit::BYTE)
-                    .metricPrefix(MetricPrefix::MEGA)
-                    .reconfigurable()
-                    .assignmentOptional().defaultValue(100)
-                    .commit();
-
             BOOL_ELEMENT(expected).key("enablePerformanceStats")
                     .displayedName("Performance stats on/off")
                     .description("Value of 'performanceStatistics.enable' used when instantiating loggers")
@@ -141,11 +132,47 @@ namespace karabo {
                     .assignmentOptional().defaultValue(true) // true will cause alarms when loggers are too slow
                     .commit();
 
-            STRING_ELEMENT(expected).key("loggerType")
+            CHOICE_ELEMENT(expected).key("logger")
                     .displayedName("Logger type")
-                    .description("Type of DataLogger")
-                    .options("FileDataLogger")
                     .assignmentOptional().defaultValue("FileDataLogger")
+                    .commit();
+
+            NODE_ELEMENT(expected).key("logger.FileDataLogger")
+                    .displayedName("FileDataLogger")
+                    .description("File based data logging")
+                    .commit();
+
+            PATH_ELEMENT(expected).key("logger.FileDataLogger.directory")
+                    .displayedName("Directory")
+                    .description("The directory where the log files should be placed")
+                    .assignmentOptional().defaultValue("karaboHistory")
+                    .commit();
+
+            INT32_ELEMENT(expected).key("logger.FileDataLogger.maximumFileSize")
+                    .displayedName("Maximum file size")
+                    .description("After any archived file has reached this size it will be time-stamped and not appended anymore")
+                    .unit(Unit::BYTE)
+                    .metricPrefix(MetricPrefix::MEGA)
+                    .assignmentOptional().defaultValue(100)
+                    .commit();
+
+            NODE_ELEMENT(expected).key("logger.InfluxDataLogger")
+                    .displayedName("InfluxDataLogger")
+                    .description("Influxdb based data logging")
+                    .commit();
+
+            STRING_ELEMENT(expected).key("logger.InfluxDataLogger.url")
+                    .displayedName("Influxdb URL")
+                    .description("URL should be given in form: tcp://host:port")
+                    .assignmentOptional().defaultValue("tcp://localhost:8086")
+                    .init()
+                    .commit();
+
+            UINT32_ELEMENT(expected).key("logger.InfluxDataLogger.maxBatchPoints")
+                    .displayedName("Max batch points")
+                    .description("Max number of InfluxDB points in the batch")
+                    .assignmentOptional().defaultValue(200)
+                    .init()
                     .commit();
 
             BOOL_ELEMENT(expected).key("useP2p")
@@ -153,12 +180,6 @@ namespace karabo {
                     .description("Whether to instruct loggers to use point-to-point instead of broker")
                     .reconfigurable()
                     .assignmentOptional().defaultValue(false)
-                    .commit();
-
-            PATH_ELEMENT(expected).key("directory")
-                    .displayedName("Directory")
-                    .description("The directory where the log files should be placed")
-                    .assignmentOptional().defaultValue("karaboHistory")
                     .commit();
 
             VECTOR_STRING_ELEMENT(expected).key("serverList")
@@ -242,11 +263,18 @@ namespace karabo {
         }
 
         DataLoggerManager::DataLoggerManager(const Hash& input)
-        : karabo::core::Device<>(input)
+            : karabo::core::Device<>(input)
             , m_serverList(input.get<vector<string> >("serverList"))
             , m_serverIndex(0), m_loggerMapFile("loggermap.xml")
             , m_strand(boost::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService()))
-            , m_topologyCheckTimer(karabo::net::EventLoop::getIOService()) {
+            , m_topologyCheckTimer(karabo::net::EventLoop::getIOService())
+            , m_logger("Unsupported") {
+
+            if (input.has("logger.FileDataLogger")) {
+                m_logger = "FileDataLogger";
+            } else if (input.has("logger.InfluxDataLogger")) {
+                m_logger = "InfluxDataLogger";
+            }
 
             m_loggerMap.clear();
             if (boost::filesystem::exists(m_loggerMapFile)) {
@@ -665,8 +693,12 @@ namespace karabo {
             for (unsigned int i = 0; i < DATALOGREADERS_PER_SERVER; ++i) {
                 const std::string readerId = DATALOGREADER_PREFIX + toString(i) + "-" + serverId;
                 if (!remote().exists(readerId).first) {
-                    const Hash hash("classId", "DataLogReader", "deviceId", readerId,
-                            "configuration.directory", get<string>("directory"));
+                    Hash hash("classId", "DataLogReader", "deviceId", readerId);
+                    if (m_logger == "FileDataLogger") {
+                        hash.set("configuration.logger.FileDataLogger.directory", get<string>("logger.FileDataLogger.directory"));
+                    } else if (m_logger == "InfluxDataLogger") {
+                        hash.set("configuration.logger.InfluxDataLogger.url", get<string>("logger.InfluxDataLogger.url"));
+                    }
                     KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << readerId << "' on server '" << serverId << "'";
 
                     remote().instantiateNoWait(serverId, hash);
@@ -724,8 +756,8 @@ namespace karabo {
                     // A device that should be archived
                     newDeviceToLog(instanceId);
                 }
-                if (entry.hasAttribute(instanceId, "classId")
-                    && entry.getAttribute<std::string>(instanceId, "classId") == "FileDataLogger") {
+                if (entry.hasAttribute(instanceId, "classId") &&
+                        entry.getAttribute<std::string>(instanceId, "classId") == m_logger) {
                     // A new logger has started - check whether there is more work for it to do
                     newLogger(instanceId);
                 }
@@ -872,15 +904,23 @@ namespace karabo {
 
             // Instantiate logger, but do not yet specify "devicesToBeLogged":
             // Having one channel only to transport this info (slotAddDevicesToBeLogged) simplifies logic.
-            const Hash config("directory", get<string>("directory"),
-                              "maximumFileSize", get<int>("maximumFileSize"),
-                              "flushInterval", get<int>("flushInterval"),
-                              "performanceStatistics.enable", get<bool>("enablePerformanceStats"),
-                              "useP2p", get<bool>("useP2p"));
+            Hash config;
+            if (m_logger == "FileDataLogger") {
+                config.set("directory", get<std::string>("logger.FileDataLogger.directory"));
+                config.set("maximumFileSize", get<int>("logger.FileDataLogger.maximumFileSize"));
+            } else if (m_logger == "InfluxDataLogger") {
+                config.set("url", get<std::string>("logger.InfluxDataLogger.url"));
+                config.set("maxBatchPoints", get<std::uint32_t>("logger.InfluxDataLogger.maxBatchPoints"));
+            }
+            config.set("flushInterval", get<int>("flushInterval"));
+            config.set("performanceStatistics.enable", get<bool>("enablePerformanceStats"));
+            config.set("useP2p", get<bool>("useP2p"));
+
             const std::string loggerId(serverIdToLoggerId(serverId));
-            const Hash hash("classId", "FileDataLogger",
+            const Hash hash("classId", m_logger,
                             "deviceId", loggerId,
                             "configuration", config);
+
             KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << loggerId << "' on server '" << serverId << "'";
             remote().instantiateNoWait(serverId, hash);
         }
@@ -905,7 +945,8 @@ namespace karabo {
             if (type == "device") {
                 // Figure out who logs and tell to stop
                 goneDeviceToLog(instanceId);
-                if (instanceInfo.has("classId") && instanceInfo.get<std::string>("classId") == get<std::string>("loggerType")) {
+                if (instanceInfo.has("classId") && 
+                        instanceInfo.get<std::string>("classId") == m_logger) {
                     goneLogger(instanceId);
                 }
             } else if (type == "server") {
@@ -996,15 +1037,15 @@ namespace karabo {
                 case LoggerState::INSTANTIATING:
                     // Expected nice behaviour: Already took note that logger is gone and so tried to start again.
                     // Nothing to do.
-                    KARABO_LOG_FRAMEWORK_INFO << "Server '" << serverId << "' gone while instantiating "
-                            << "FileDataLogger" << ".";
+                    KARABO_LOG_FRAMEWORK_INFO << "Server '" << serverId
+                            << "' gone while instantiating " << m_logger << ".";
                     break;
                 case LoggerState::RUNNING:
                     // Looks like a non-graceful shutdown of the server that is detected by lack of heartbeats where
                     // the DeviceClient currently (Karabo 2.6.0) often sends the "gone" signal for the server before
                     // the one of the DataLogger.
-                    KARABO_LOG_FRAMEWORK_WARN << "Server '" << serverId << "' gone while "
-                            << "FileDataLogger" << " still alive.";
+                    KARABO_LOG_FRAMEWORK_WARN << "Server '" << serverId
+                            << "' gone while " << m_logger << " still alive.";
                     // Also then we have to move "devices"/"beingAdded" to "backlog".
                     break;
             }

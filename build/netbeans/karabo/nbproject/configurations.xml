@@ -46,6 +46,8 @@
       <itemPath>../../../src/karabo/devices/FileDataLogger.hh</itemPath>
       <itemPath>../../../src/karabo/devices/GuiServerDevice.cc</itemPath>
       <itemPath>../../../src/karabo/devices/GuiServerDevice.hh</itemPath>
+      <itemPath>../../../src/karabo/devices/InfluxDataLogger.cc</itemPath>
+      <itemPath>../../../src/karabo/devices/InfluxDataLogger.hh</itemPath>
       <itemPath>../../../src/karabo/devices/PropertyTest.cc</itemPath>
       <itemPath>../../../src/karabo/devices/PropertyTest.hh</itemPath>
     </logicalFolder>
@@ -197,6 +199,10 @@
       </logicalFolder>
       <itemPath>../../../src/karabo/net/EventLoop.cc</itemPath>
       <itemPath>../../../src/karabo/net/EventLoop.hh</itemPath>
+      <itemPath>../../../src/karabo/net/HttpResponse.cc</itemPath>
+      <itemPath>../../../src/karabo/net/HttpResponse.hh</itemPath>
+      <itemPath>../../../src/karabo/net/InfluxDbClient.cc</itemPath>
+      <itemPath>../../../src/karabo/net/InfluxDbClient.hh</itemPath>
       <itemPath>../../../src/karabo/net/Queues.hh</itemPath>
       <itemPath>../../../src/karabo/net/Strand.cc</itemPath>
       <itemPath>../../../src/karabo/net/Strand.hh</itemPath>
@@ -681,6 +687,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/devices/GuiServerDevice.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/InfluxDataLogger.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/InfluxDataLogger.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1191,6 +1207,26 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/net/EventLoop.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/HttpResponse.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/HttpResponse.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/InfluxDbClient.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/InfluxDbClient.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2595,6 +2631,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/devices/InfluxDataLogger.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/InfluxDataLogger.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/devices/PropertyTest.cc"
             ex="false"
             tool="1"
@@ -3101,6 +3147,26 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/net/EventLoop.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/HttpResponse.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/HttpResponse.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/InfluxDbClient.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/InfluxDbClient.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -4489,6 +4555,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/devices/InfluxDataLogger.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/InfluxDataLogger.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/devices/PropertyTest.cc"
             ex="false"
             tool="1"
@@ -4995,6 +5071,26 @@
             flavor2="8">
       </item>
       <item path="../../../src/karabo/net/EventLoop.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/HttpResponse.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/HttpResponse.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/InfluxDbClient.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/InfluxDbClient.hh"
             ex="false"
             tool="3"
             flavor2="0">
