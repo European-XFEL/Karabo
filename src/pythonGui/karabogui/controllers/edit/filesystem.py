@@ -47,7 +47,7 @@ class _FileSystemPicker(BaseBindingController):
 
         return widget
 
-    def value_changed(self, proxy):
+    def value_update(self, proxy):
         with SignalBlocker(self._path):
             self._path.setText(get_editor_value(proxy, ''))
             self._path.setCursorPosition(self._last_cursor_pos)
