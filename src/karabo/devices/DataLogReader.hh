@@ -239,6 +239,7 @@ namespace karabo {
             static const boost::regex m_lineRegex;
             static const boost::regex m_indexLineRegex;
             static const boost::regex m_indexTailRegex;
+            std::string m_logger;
         };
     }
 }

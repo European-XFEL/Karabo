@@ -97,20 +97,52 @@ namespace karabo {
                     .setNewDefaultValue(false)
                     .commit();
 
-            PATH_ELEMENT(expected).key("directory")
+            OVERWRITE_ELEMENT(expected).key("heartbeatInterval")
+                    .setNewDefaultValue(60)
+                    .commit();
+
+            CHOICE_ELEMENT(expected).key("logger")
+                    .displayedName("Logger type")
+                    .assignmentOptional().defaultValue("FileDataLogger")
+                    .commit();
+
+            NODE_ELEMENT(expected).key("logger.FileDataLogger")
+                    .displayedName("FileDataLogger")
+                    .description("File based data logging")
+                    .commit();
+
+            PATH_ELEMENT(expected).key("logger.FileDataLogger.directory")
                     .displayedName("Directory")
                     .description("The directory where the log files should be placed")
-                    .assignmentMandatory()
+                    .assignmentOptional().defaultValue("karaboHistory")
+                    .commit();
+
+            NODE_ELEMENT(expected).key("logger.InfluxDataLogger")
+                    .displayedName("InfluxDataLogger")
+                    .description("Influxdb based data logging")
+                    .commit();
+
+            STRING_ELEMENT(expected).key("logger.InfluxDataLogger.url")
+                    .displayedName("Influxdb URL")
+                    .description("URL should be given in form: tcp://host:port")
+                    .assignmentOptional().defaultValue("tcp://localhost:8086")
                     .commit();
 
         }
 
-        DataLogReader::DataLogReader(const Hash& input) : karabo::core::Device<karabo::core::OkErrorFsm>(input) {
+        DataLogReader::DataLogReader(const Hash& input)
+                : karabo::core::Device<karabo::core::OkErrorFsm>(input)
+                , m_logger("Unsupported") {
             m_serializer = TextSerializer<Hash>::create("Xml");
             m_schemaSerializer = TextSerializer<Schema>::create("Xml");
             m_ibs = IndexBuilderService::getInstance();
             KARABO_SLOT(slotGetPropertyHistory, string /*deviceId*/, string /*key*/, Hash /*params*/);
-            KARABO_SLOT(slotGetConfigurationFromPast, string /*deviceId*/, string /*timepoint*/)
+            KARABO_SLOT(slotGetConfigurationFromPast, string /*deviceId*/, string /*timepoint*/);
+            if (input.has("logger.FileDataLogger")) {
+                m_logger = "FileDataLogger";
+            } else if (input.has("logger.InfluxDataLogger")) {
+                m_logger = "InfluxDataLogger";
+            }
         }
 
 
