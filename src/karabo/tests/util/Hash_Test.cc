@@ -2167,7 +2167,7 @@ void Hash_Test::testSimilarIsNotFullyEqual() {
     CPPUNIT_ASSERT_MESSAGE("h5 and h6 shouldn't be fullyEquals - they differ in element values.",
                            !h5.fullyEquals(h6));
 
-    vector<Hash>vhAttr{Hash("key_0", "val_0"), Hash("key_1", "val_1")};
+    vector<Hash> vhAttr{Hash("key_0", "val_0"), Hash("key_1", "val_1")};
     h5.setAttribute("a", "attr", vhAttr);
     h6.setAttribute("a", "attr", 2);
     h6.set<std::string>("c", "1, 1, 2, 3, 5, 8, 11, 19, 30");
@@ -2194,6 +2194,27 @@ void Hash_Test::testSimilarIsNotFullyEqual() {
                            h7 != h9);
     CPPUNIT_ASSERT_MESSAGE("h7 and h9 should not be fullyEquals, as their 'c' elements differ in type.",
                            !h7.fullyEquals(h9));
+
+    // Check VECTOR_STRING treatment
+    Hash h11("vecStr", std::vector<std::string>({"with,comma", "with space", "onlyChar"}));
+    Hash h12("vecStr", std::vector<std::string>({"with,comma", "with space"}));
+    CPPUNIT_ASSERT_MESSAGE("Differ in number of elements in vector",
+                           !h11.fullyEquals(h12));
+    h12.get<std::vector < std::string >> ("vecStr").push_back("onlychar");
+    CPPUNIT_ASSERT_MESSAGE("Differ in one character of last element in vector",
+                           !h11.fullyEquals(h12));
+    h12.get<std::vector < std::string >> ("vecStr").back() = "onlyChar"; // now make fully equal
+    CPPUNIT_ASSERT(h11.fullyEquals(h12));
+    // Now VECTOR_STRING as attribute
+    h11.setAttribute("vecStr", "vecStrOpt", std::vector<std::string>({"With,comma", "With space", "OnlyChar"}));
+    h12.setAttribute("vecStr", "vecStrOpt", std::vector<std::string>({"With,comma", "With space"}));
+    CPPUNIT_ASSERT_MESSAGE("Differ in number of elements in vector attribute",
+                           !h11.fullyEquals(h12));
+    h12.getAttribute<std::vector < std::string >> ("vecStr", "vecStrOpt").push_back("Onlychar");
+    CPPUNIT_ASSERT_MESSAGE("Differ in one character of last element in vector attribute",
+                           !h11.fullyEquals(h12));
+    h12.getAttribute<std::vector < std::string >> ("vecStr", "vecStrOpt").back() = "OnlyChar";
+    CPPUNIT_ASSERT(h11.fullyEquals(h12));
 
     Schema sch("hashSchema");
     INT32_ELEMENT(sch).key("a").tags("prop").assignmentOptional().defaultValue(10).commit();

@@ -722,8 +722,7 @@ namespace karabo {
             // attributes.
             for (Hash::const_iterator itl = this->begin(), itr = other.begin();
                  itl != this->end() && itr != other.end();
-                 ++itl, itr++) {
-
+                 ++itl, ++itr) {
                 if ((*itl).getKey() != (*itr).getKey() ||
                     (*itl).getType() != (*itr).getType()) {
                     return false;
@@ -741,13 +740,21 @@ namespace karabo {
                         lAttrIt->getType() != rAttrIt->getType()) {
                         return false;
                     }
-                    if (lAttrIt->getType() == Types::HASH &&
-                        !lAttrIt->getValue<Hash>().fullyEquals(rAttrIt->getValue<Hash>())) {
-                        return false;
-                    } else if (lAttrIt->getType() == Types::VECTOR_HASH &&
-                               !vectorsHashesEqual(lAttrIt->getValue<std::vector < Hash >> (),
-                                                   rAttrIt->getValue<std::vector < Hash >> ())) {
-                        return false;
+                    if (lAttrIt->getType() == Types::HASH) {
+                        if (!lAttrIt->getValue<Hash>().fullyEquals(rAttrIt->getValue<Hash>())) {
+                            return false;
+                        }
+                    } else if (lAttrIt->getType() == Types::VECTOR_HASH) {
+                        if (!vectorsHashesEqual(lAttrIt->getValue<std::vector < Hash >> (),
+                                                rAttrIt->getValue<std::vector < Hash >> ())) {
+                            return false;
+                        }
+                    } else if (lAttrIt->getType() == Types::VECTOR_STRING) {
+                        // For now treat VECTOR_STRING separately:
+                        // The generic getValueAs<std::string>() below has trouble with commas in an element.
+                        if (lAttrIt->getValue<std::vector < std::string >> () != rAttrIt->getValue<std::vector < std::string >> ()) {
+                            return false;
+                        }
                     } else if (lAttrIt->getValueAs<std::string>() != rAttrIt->getValueAs<std::string>()) {
                         return false;
                     }
@@ -758,10 +765,17 @@ namespace karabo {
                     if (!(*itl).getValue<Hash>().fullyEquals((*itr).getValue<Hash>())) {
                         return false;
                     }
-                } else if ((*itl).getType() == Types::VECTOR_HASH &&
-                           !vectorsHashesEqual((*itl).getValue<std::vector < Hash >> (),
-                                               (*itr).getValue<std::vector < Hash >> ())) {
-                    return false;
+                } else if ((*itl).getType() == Types::VECTOR_HASH) {
+                    if (!vectorsHashesEqual((*itl).getValue<std::vector < Hash >> (),
+                                            (*itr).getValue<std::vector < Hash >> ())) {
+                        return false;
+                    }
+                } else if ((*itl).getType() == Types::VECTOR_STRING) {
+                    // For now treat VECTOR_STRING separately:
+                    // The generic getValueAs<std::string>() below has trouble with commas in an element.
+                    if ((*itl).getValue<std::vector < std::string >> () != (*itr).getValue<std::vector < std::string >> ()) {
+                        return false;
+                    }
                 } else if ((*itl).getValueAs<std::string>() != (*itr).getValueAs<std::string>()) {
                     return false;
                 }
