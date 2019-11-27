@@ -29,7 +29,11 @@ class AxisItem(PgAxisItem):
         self.enableAutoSIPrefix(False)
         # Modify tick aesthetics if major axis
         # (tick strings and labels are shown)
-        if not has_ticks:
+        if has_ticks:
+            self.setStyle(autoExpandTextSpace=False,
+                          tickTextWidth=36,
+                          tickTextHeight=24)
+        else:
             self.fixedWidth = 0
             self.fixedHeight = 0
 
