@@ -78,7 +78,7 @@ class EditableDirectory(_FileSystemPicker):
         return icons.load
 
     def picker(self):
-        return QFileDialog.getExistingDirectory(None, self.pickerText)
+        return QFileDialog.getExistingDirectory(self.widget, self.pickerText)
 
 
 @register_binding_controller(ui_name='File In', can_edit=True,
