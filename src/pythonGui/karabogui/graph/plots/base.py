@@ -51,6 +51,12 @@ class KaraboPlotView(QWidget):
 
         # Add our basic plotItem to this widget
         self.plotItem = PlotItem(viewBox=viewbox, axisItems=axis_items)
+
+        # Improve axes rendering
+        for axis in AXIS_ITEMS:
+            axis_item = self.plotItem.getAxis(axis)
+            axis_item.setZValue(0)
+
         self.graph_view = GraphicsView()
         self.graph_view.setAntialiasing(False)
         self.graph_view.enableMouse(False)
