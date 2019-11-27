@@ -42,6 +42,9 @@ class _FileSystemPicker(BaseBindingController):
         hLayout.setContentsMargins(0, 0, 0, 0)
         hLayout.addWidget(self._path)
         hLayout.addWidget(button)
+
+        widget.setFocusProxy(self._path)
+
         return widget
 
     def value_changed(self, proxy):
@@ -49,14 +52,12 @@ class _FileSystemPicker(BaseBindingController):
             self._path.setText(get_editor_value(proxy, ''))
             self._path.setCursorPosition(self._last_cursor_pos)
 
-    # @pyqtSlot(str)
     def _on_user_edit(self, value):
         if self.proxy.binding is None:
             return
         self._last_cursor_pos = self._path.cursorPosition()
         self.proxy.edit_value = value
 
-    # @pyqtSlot()
     def _on_button_click(self):
         path = self.picker()
         if path:
