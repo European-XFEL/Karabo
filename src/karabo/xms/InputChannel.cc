@@ -238,8 +238,10 @@ namespace karabo {
                             << " not configured to connect to " << outputChannelString;
                     ec = bse::make_error_code(bse::argument_out_of_domain);
                 } else if (m_openConnections.find(outputChannelString) != m_openConnections.end()) {
-                    KARABO_LOG_FRAMEWORK_WARN << "InputChannel with id " << getInstanceId()
-                            << " already connected to " << outputChannelString << " - disconnect first!";
+                    // Can happen from interfering connect/reconnect of SignalSlotable if sender and receiver
+                    // are instantiated concurrently.
+                    KARABO_LOG_FRAMEWORK_INFO << "InputChannel with id " << getInstanceId()
+                            << " already connected to " << outputChannelString;
                     ec = bse::make_error_code(bse::already_connected);
                 } else {
                     auto it = m_connectionsBeingSetup.find(outputChannelString);
@@ -372,12 +374,20 @@ namespace karabo {
 
             const string& outputChannelString = outputChannelInfo.get<string>("outputChannelString");
             boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+            auto itNextTries = m_connectionsBeingSetup.find(outputChannelString);
+            if (itNextTries == m_connectionsBeingSetup.end()) {
+                // TODO: In case of success so far, we should not have tried to write hello above!
+                KARABO_LOG_FRAMEWORK_INFO << "onConnect for " << outputChannelString << ": No preparation found, "
+                        << "likely disconnected before, so cut connection.";
+                lock.unlock();
+                if (handler) {
+                    if (!ec) ec = boost::system::errc::make_error_code(boost::system::errc::operation_canceled);
+                    handler(ec);
+                }
+                return;
+            }
             if (ec) { // failed
-                // TODO: Do we have to check that m_connectionsBeingSetup does not contain outputChannelString?
-                //       Could happen when disconnect was called after connect, but before onConnect is started.
-                //       Then we should probably cut this connection...
-                //
-                auto& nextTries = m_connectionsBeingSetup[outputChannelString];
+                ConnectionQueue& nextTries = itNextTries->second;
                 if (!nextTries.empty()) {
                     KARABO_LOG_FRAMEWORK_WARN << "Connecting to " << outputChannelString << " failed - attempt to connect once more";
                     // Try again with more recent outputChannelInfo
