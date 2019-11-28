@@ -24,7 +24,7 @@ The following steps are needed in order to obtain Conda.
         * **Win**: ``CALL <miniconda_path>/condabin/activate.bat``
 
 If you find errors such as "Your shell has not been properly configured to use 'conda activate'", run the following
-command:
+command::
 
     . <your miniconda3 path>/etc/profile.d/conda.sh
 
@@ -43,18 +43,25 @@ From your terminal, add the needed channels executing the following commands::
     conda config --add channels http://exflserv05.desy.de/karabo/channel
     conda config --add channels conda-forge
 
-If you're installing or developing karabo with `Qt4` (before `2.7.*`), also add:
+N.B. The channel `http://exflserv05.desy.de/karabo/channel` is not open to
+the public until Karabo will be released. For this reason if one is installing
+from a network outside the DESY internal network, one should create an SSH
+tunnel to the internal channel and configure that channel as a source.
 
-    conda config --add channels conda-forge/label/cf201901
-    conda config --add channels anaconda
+Assuming, e.g. that one has created an ssh tunnel using an ssh command like
+`ssh user@bastion.desy.de -L 8081:exflserv05.desy.de:80 `, one should use 
+the following channel definitions::
+
+    conda config --add channels http://localhost:8081/karabo/channel
+    conda config --add channels conda-forge
 
 Installing KaraboGUI
 ====================
 
-When using conda we don't want to mess the base environment that comes with it,
-therefore ideally we should install the GUI in a separate environment.
-Then, when we don't need it anymore one can safely remove it with no fear with
-corrupting the base environment.
+When using conda one should preferrably not alter the base environment that
+comes with it, therefore we should install the GUI in a separate environment.
+If needed, one can safely remove this environment with no fear with corrupting
+the base environment.
 
 * Create a target environment for KaraboGUI with any name you want.
     * ``conda create -n karabogui<version> --yes``
