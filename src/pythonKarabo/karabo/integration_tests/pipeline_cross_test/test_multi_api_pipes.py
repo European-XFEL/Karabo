@@ -6,7 +6,7 @@ from karabo.bound import Hash, State
 
 
 class TestCrossPipelining(BoundDeviceTestCase):
-    _max_timeout = 60    # in seconds
+    _max_timeout = 150    # in seconds
     _sender_freq = 10.0  # in Hz
     _fast_proc_time = 0  # fast receiver processing time (ms.)
     _slow_proc_time = 500   # slow receiver processing time (ms.)
@@ -110,19 +110,19 @@ class TestCrossPipelining(BoundDeviceTestCase):
         # of PropertyTest devices in one C++ process due to the size of the
         # static buffer on the Memory class
         apis = ["cpp", "cpp", "bound", "bound"] * 32
+        logLevel='FATAL'
         if "bound" in apis:
-            self.start_server_num("bound", 1, logLevel='INFO')
+            self.start_server_num("bound", 1, logLevel=logLevel)
         if "cpp" in apis:
-            self.start_server_num("cpp", 1, logLevel='INFO')
+            self.start_server_num("cpp", 1, logLevel=logLevel)
 
         num_of_forwarders = len(apis) - 2  # first/last are sender/receiver
         self.assertTrue(num_of_forwarders > 0)
 
         start_time = time()
 
-        receiver_cfg = Hash("input.connectedOutputChannels",
-                            "fwd{}:output".format(num_of_forwarders))
-        start_info = [("sender", Hash()), ("receiver", receiver_cfg),
+        # Assemble ids and configurations for all elements in the chain
+        start_info = [("sender", Hash()),
                       ("fwd1", Hash("input.connectedOutputChannels",
                                     "sender:output"))]
 
@@ -130,13 +130,18 @@ class TestCrossPipelining(BoundDeviceTestCase):
             cfg = Hash("input.connectedOutputChannels", f"fwd{i-1}:output")
             start_info.append((f"fwd{i}", cfg))
 
+        receiver_cfg = Hash("input.connectedOutputChannels",
+                            f"fwd{num_of_forwarders}:output")
+        start_info.append(("receiver", receiver_cfg))
+
         # Instantiates all the devices that will be in the pipeline.
         # The use of instantiateNoWait (from DeviceClient) is required
         # to trigger potential race conditions.
         for index, (devid, cfg) in enumerate(start_info):
             self.start_device_nowait(apis[index], 1, devid, cfg)
 
-        max_waits = min(100 * num_of_forwarders, 600)  # max a minute
+        # Up to three minutes waiting for devices to come (CI failed with one)
+        max_waits = min(100 * num_of_forwarders, 1800)
         sleep_wait_interv = 0.1
 
         # Waits for all devices in the chain to show up in the topology.
@@ -156,15 +161,12 @@ class TestCrossPipelining(BoundDeviceTestCase):
         # This is needed for tests with Bound Python devices - during test development, several processes
         # corresponding to python devices in failed test runs weren't killed after the test finished.
         if len(devices_present) < len(start_info):
-            for index, (devid, _) in enumerate(start_info):
-                if apis[index] == "bound":
-                    print("Kill:", devid)
-                    self.dc.killDeviceNoWait(devid)
+            for devid, _ in start_info:
+                self.dc.killDeviceNoWait(devid)
 
         self.assertTrue(len(devices_present) == len(start_info),
-                        "Couldn't instantiate all devices: "
-                        "'{}' of '{}' not instantiated."
-                        .format(len(devices_not_present), len(start_info)))
+                        f"Couldn't instantiate all {len(start_info)} devices: "
+                        f"'{devices_not_present}' not instantiated.")
         print("========== all instantiated ===============")
 
         # Waits for all the chained output channels to be properly connected before sending
@@ -200,7 +202,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
         for i in range(num_of_forwarders):
             self.assertTrue(self.waitUntilEqual(f"fwd{i+1}", "outputCounter",
                                                 out_count, self._max_timeout),
-                            f"fwd{i+1} failed at fowarding data.")
+                            f"fwd{i+1} failed at forwarding data.")
 
         # Checks that the data reached the final receiver.
         self.assertTrue(self.waitUntilEqual("receiver", "inputCounter",
