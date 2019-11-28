@@ -389,7 +389,8 @@ namespace karabo {
             if (ec) { // failed
                 ConnectionQueue& nextTries = itNextTries->second;
                 if (!nextTries.empty()) {
-                    KARABO_LOG_FRAMEWORK_WARN << "Connecting to " << outputChannelString << " failed - attempt to connect once more";
+                    KARABO_LOG_FRAMEWORK_WARN << "Connecting to " << outputChannelString << " failed (" << ec.message()
+                            << "), attempt to connect once more";
                     // Try again with more recent outputChannelInfo
                     // (retrieve pair of Hash and handler from queue without copy since pop()-ed from queue anyway)
                     const ConnectionQueue::value_type outInfo_handler_pair(std::move(nextTries.front()));
@@ -398,7 +399,8 @@ namespace karabo {
                     // forceNew to 'true' avoids adding to m_connectionsBeingSetup again:
                     connectImpl(outInfo_handler_pair.first, outInfo_handler_pair.second, true);
                 } else {
-                    KARABO_LOG_FRAMEWORK_WARN << "Connecting to " << outputChannelString << " failed finally";
+                    KARABO_LOG_FRAMEWORK_WARN << "Connecting to " << outputChannelString << " failed finally ("
+                            << ec.message() << ")";
                     // Just unmark as being tried (invalidates 'nextTries'!)
                     m_connectionsBeingSetup.erase(outputChannelString);
                     lock.unlock();

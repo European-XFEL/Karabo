@@ -2233,14 +2233,18 @@ namespace karabo {
                     if (success) {
                         KARABO_LOG_FRAMEWORK_INFO << m_instanceId << " Connected InputChannel '" << m_channelName << "' to "
                                 << m_numOutputs << " output channel(s)";
-                    } else {
+                    } else if (m_numOutputs > 1u) {
                         try {
                             throw;
                         } catch (const std::exception& e) {
                             // Should we give it another try? But what if other end is not online.. Need to distinguish...
-                            KARABO_LOG_FRAMEWORK_WARN << m_instanceId << " Failed to connect InputChannel '"
+                            KARABO_LOG_FRAMEWORK_WARN << m_instanceId << " failed to connect InputChannel '"
                                     << m_channelName << "' to all " << "its outputs: " << e.what();
                         }
+                    } else {
+                        // No need to log anything if there is only one connection and that failed:
+                        // We have already the log from SignalSlotable::connectSingleInputHandler.
+                        // (But single success is not logged there.)
                     }
                 }
             };
@@ -2345,7 +2349,16 @@ namespace karabo {
          unsigned int counter, const std::string& outputChannelString, bool singleSuccess) {
 
             if (!singleSuccess) {
-                KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << " failed to connect InputChannel to '" << outputChannelString << "'";
+                try {
+                    throw;
+                } catch (const std::exception& e) {
+                    std::string why(e.what());
+                    if (why.find("Transport endpoint is already connected") != std::string::npos) {
+                        why = "Already connected"; // Do not spam log with exception printout
+                    }
+                    KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << " failed to connect InputChannel to '"
+                            << outputChannelString << "': " << why;
+                }
             }
 
             const boost::function<void(bool)>& allReadyHandler = std::get<2>(*status);
@@ -2505,20 +2518,22 @@ namespace karabo {
                     throw;
                 } catch (const std::exception& e) {
                     // Could directly call handler, but want to add info about path of problem
-                    const std::string msg("Cannot connect InputChannel to '" + outputChannelString
-                                          + "' since failed to receive output channel information: " + e.what());
-                    // Log even if handler exists:
-                    KARABO_LOG_FRAMEWORK_WARN << myInstanceId << " " << msg;
-                    try {
-                        KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION(msg));
-                    } catch (const std::exception&) {
-                        Exception::clearTrace();
-                        if (handler) handler(false);
+                    std::string msg("Cannot connect InputChannel to '" + outputChannelString
+                                    + "' since failed to receive output channel information");
+                    if (handler) {
+                        try {
+                            KARABO_RETHROW_AS(KARABO_PROPAGATED_EXCEPTION(msg += "."));
+                        } catch (const std::exception&) {
+                            if (handler) handler(false);
+                            Exception::clearTrace();
+                        }
+                    } else {
+                        KARABO_LOG_FRAMEWORK_WARN << myInstanceId << " " << msg << ": " << e.what();
                     }
                 }
             };
             this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int> (getpid()))
-                    .timeout(1000) // ms
+                    .timeout(10000) // 10 s
                     .receiveAsync<bool, karabo::util::Hash > (successHandler, failureHandler);
         }
 
