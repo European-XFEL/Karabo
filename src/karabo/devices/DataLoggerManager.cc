@@ -403,7 +403,7 @@ namespace karabo {
 
                 if (serverHash.has("forced")) {
                     const auto& devs = serverHash.get<std::set<std::string> >("forced");
-                    checkResult << "\n      Logging re-enforced for " << toString(devs);
+                    checkResult << "\n      Re-enforced logging for " << devs.size() << " devices: " << toString(devs);
                     bad = true;
                 }
                 if (serverHash.has("detailsRequested")) {
@@ -419,12 +419,12 @@ namespace karabo {
                 }
                 if (serverHash.has("deviceQueryFailed")) {
                     const auto& devs = serverHash.get<std::set<std::string> >("deviceQueryFailed");
-                    checkResult << "\n      Device query failed for " << toString(devs);
+                    checkResult << "\n      " << devs.size() << " device queries failed: " << toString(devs);
                     bad = true; // Could just being shutdown and logger was not yet aware...
                 }
                 if (serverHash.has("stopped")) {
                     const auto& devs = serverHash.get<std::set<std::string> >("stopped");
-                    checkResult << "\n      Device found to be offline " << toString(devs);
+                    checkResult << "\n      " << devs.size() << " devices now offline, logging stopped: " << toString(devs);
                 }
             }
             // Clear check status, but keep what is needed for next check
@@ -639,7 +639,7 @@ namespace karabo {
                     const std::string serverId(loggerIdToServerId(loggerId));
                     addToSetOrCreate(m_checkStatus, serverId + ".forced", deviceId);
                 } else {
-                    KARABO_LOG_FRAMEWORK_INFO << "Last update of " << deviceId << " at " << lastDeviceUpdate.toFormattedString()
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Last update of " << deviceId << " at " << lastDeviceUpdate.toFormattedString()
                             << ": logger not behind.";
                 }
             } else {
@@ -807,8 +807,7 @@ namespace karabo {
                 // Keep track of what is being added
                 std::unordered_set<std::string>& beingAdded = serverData.get<std::unordered_set<std::string> >("beingAdded");
                 beingAdded.insert(backlog.begin(), backlog.end());
-
-                KARABO_LOG_FRAMEWORK_INFO << "Adding devices '" << toString(backlog) << "' for logging by " << loggerId;
+                KARABO_LOG_FRAMEWORK_INFO << "For '" << loggerId << "', adding devices: '" << toString(backlog);
                 auto successHandler = bind_weak(&DataLoggerManager::addDevicesDone, this, true, loggerId, backlog, _1);
                 auto failureHandler = bind_weak(&DataLoggerManager::addDevicesDone, this, false, loggerId, backlog,
                                                 std::vector<std::string>());
@@ -847,8 +846,8 @@ namespace karabo {
 
             if (errorTxt.empty()) {
                 if (alreadyLoggedDevices.empty()) {
-                    KARABO_LOG_FRAMEWORK_INFO << "Added '" << toString(calledDevices) << "' to be logged by '"
-                            << loggerId << "'";
+                    KARABO_LOG_FRAMEWORK_INFO << "For '" << loggerId << "', added devices to be logged: '"
+                            << toString(calledDevices) << "'";
                 } else {
                     // Can happen when, during initialising, a logger is discovered that was running since before
                     // DataLoggerManager was instantiated.
@@ -864,8 +863,8 @@ namespace karabo {
                 data.get<std::unordered_set<std::string> >("devices").insert(calledDevices.begin(), calledDevices.end());
             } else {
                 // Can happen as timeout when logger just shutdown
-                KARABO_LOG_FRAMEWORK_ERROR << "Failed to add '" << toString(calledDevices) << "' to be logged by '"
-                        << loggerId << "' since: " << errorTxt;
+                KARABO_LOG_FRAMEWORK_ERROR << "For '" << loggerId << "', failed to add '" << toString(calledDevices)
+                        << "' to be logged since: " << errorTxt;
 
                 // Put devices to log back to backlog,
                 // but only those "beingAdded" (others could have shutdown meanwhile)
