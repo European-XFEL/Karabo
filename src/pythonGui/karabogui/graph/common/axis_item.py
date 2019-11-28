@@ -81,6 +81,14 @@ class AxisItem(PgAxisItem):
             for rect, flags, text in textSpecs:
                 p.drawText(rect, flags, text)
 
+    def mouseDragEvent(self, event):
+        """pyqtgraph axis items have drag events which can enables panning of
+           the viewbox. This is a problem for axis with grids because it is
+           resized to fill the viewbox, which in turn will catch the wanted
+           viewbox drag events. We ignore this event instead as it's not
+           really used."""
+        event.ignore()
+
 
 class TimeAxisItem(AxisItem):
     LABEL_FORMATS = ((60 + 30, "%Ss"),  # Up to 1min 30s
