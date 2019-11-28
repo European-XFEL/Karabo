@@ -15,7 +15,7 @@ from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 
 HEADER_LABELS = ['source', 'type', 'behavior', 'monitored', 'access']
-NODE_CLASS_NAME = 'RunConfiguratorGroup'
+NODE_CLASS_NAME = '_RunConfiguratorGroup'
 # XXX: This widget ONLY supports a LIST_ELEMENT from the RunConfigurator
 _is_compatible = with_display_type('RunConfigurator')
 
