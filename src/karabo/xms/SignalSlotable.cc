@@ -2268,7 +2268,6 @@ namespace karabo {
                     if (instanceId != outputChannelString.substr(0, instanceId.size())) continue; // instanceId ~ instanceId@output
                     KARABO_LOG_FRAMEWORK_DEBUG << "reconnectInputChannels for '" << m_instanceId
                             << "' to output channel '" << outputChannelString << "'";
-                    channel->disconnect(outputChannelString);
                     const std::string myInstanceId(getInstanceId());
                     auto handler = [outputChannelString, myInstanceId, channelName] (bool success) {
                         if (success) {
@@ -2278,8 +2277,15 @@ namespace karabo {
                             try {
                                 throw;
                             } catch (const std::exception& e) {
-                                KARABO_LOG_FRAMEWORK_WARN << myInstanceId << " Failed to reconnect InputChannel '" <<
-                                        channelName << "' to '" << outputChannelString << "': " << e.what();
+                                std::string why(e.what());
+                                bool bad = true;
+                                if (why.find("Transport endpoint is already connected") != std::string::npos) {
+                                    why = "Already connected"; // Do not spam log with exception printout
+                                    bad = false;
+                                }
+                                (bad ? KARABO_LOG_FRAMEWORK_WARN : KARABO_LOG_FRAMEWORK_INFO)
+                                        << myInstanceId << " Failed to reconnect InputChannel '" << channelName
+                                        << "' to '" << outputChannelString << "': " << why;
                             }
                         }
                     };
