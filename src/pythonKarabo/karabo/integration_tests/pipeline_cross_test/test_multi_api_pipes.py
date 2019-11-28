@@ -12,13 +12,6 @@ class TestCrossPipelining(BoundDeviceTestCase):
     _slow_proc_time = 500   # slow receiver processing time (ms.)
     _test_duration = 5  # in seconds
 
-    def test_chain_wait_fastReceiver(self):
-        """Checks for pipelines composed of more than 2 devices."""
-        self.start_server_num("cpp", 1)
-        self.start_server_num("bound", 1)
-        self._test_chain_fastReceiver("cpp", 16)
-        self._test_chain_fastReceiver("bound", 16)
-
     def test_1to1_wait_fastReceiver(self):
         # Start all servers you need in the end:
         self.start_server_num("cpp", 1)
@@ -109,33 +102,41 @@ class TestCrossPipelining(BoundDeviceTestCase):
         # self._test_1to1_drop_slowReceiver("mdl", "cpp")
         # self._test_1to1_drop_slowReceiver("mdl", "bound")
 
-    def _test_chain_fastReceiver(self, api, num_of_forwarders):
-        assert(num_of_forwarders > 0)
+    def test_chain_receivers(self):
+        """Checks for pipelines composed of more than 2 devices."""
+        # Prepare a list of apis such that we have cpp to cpp,
+        # cpp to bound, bound to cpp and bound to bound...
+        # NOTE: Total number of cpp must not exceed 64 which is maximum number
+        # of PropertyTest devices in one C++ process due to the size of the
+        # static buffer on the Memory class
+        apis = ["cpp", "cpp", "bound", "bound"] * 32
+        if "bound" in apis:
+            self.start_server_num("bound", 1, logLevel='INFO')
+        if "cpp" in apis:
+            self.start_server_num("cpp", 1, logLevel='INFO')
+
+        num_of_forwarders = len(apis) - 2  # first/last are sender/receiver
+        self.assertTrue(num_of_forwarders > 0)
 
         start_time = time()
 
-        sender_cfg = Hash("outputFrequency", 10)
-        receiver_cfg = Hash("input.connectedOutputChannels", "fwd{}:output".format(num_of_forwarders),
-                            "input.onSlowness", "wait",
-                            "processingTime", 20)
-        start_info = [("sender", sender_cfg), ("receiver", receiver_cfg),
-                      ("fwd1", Hash("input.connectedOutputChannels", "sender:output",
-                                    "input.onSlowness", "wait",
-                                    "processingTime", 20))]
+        receiver_cfg = Hash("input.connectedOutputChannels",
+                            "fwd{}:output".format(num_of_forwarders))
+        start_info = [("sender", Hash()), ("receiver", receiver_cfg),
+                      ("fwd1", Hash("input.connectedOutputChannels",
+                                    "sender:output"))]
 
         for i in range(2, num_of_forwarders+1):
-            cfg = Hash("input.connectedOutputChannels", f"fwd{i-1}:output",
-                       "input.onSlowness", "wait",
-                       "processingTime", 20)
+            cfg = Hash("input.connectedOutputChannels", f"fwd{i-1}:output")
             start_info.append((f"fwd{i}", cfg))
 
         # Instantiates all the devices that will be in the pipeline.
         # The use of instantiateNoWait (from DeviceClient) is required
         # to trigger potential race conditions.
-        for devid, cfg in start_info:
-            self.start_device_nowait(api, 1, devid, cfg)
+        for index, (devid, cfg) in enumerate(start_info):
+            self.start_device_nowait(apis[index], 1, devid, cfg)
 
-        max_waits = min(100 * num_of_forwarders, 450)
+        max_waits = min(100 * num_of_forwarders, 600)  # max a minute
         sleep_wait_interv = 0.1
 
         # Waits for all devices in the chain to show up in the topology.
@@ -154,14 +155,17 @@ class TestCrossPipelining(BoundDeviceTestCase):
         # If instantiation of any device failed, cleanup by killing the ones that have been instantiated.
         # This is needed for tests with Bound Python devices - during test development, several processes
         # corresponding to python devices in failed test runs weren't killed after the test finished.
-        if len(devices_present) < len(start_info) and api == "bound":
-            for devid in devices_present:
-                self.dc.killDeviceNoWait(devid)
+        if len(devices_present) < len(start_info):
+            for index, (devid, _) in enumerate(start_info):
+                if apis[index] == "bound":
+                    print("Kill:", devid)
+                    self.dc.killDeviceNoWait(devid)
 
         self.assertTrue(len(devices_present) == len(start_info),
                         "Couldn't instantiate all devices: "
                         "'{}' of '{}' not instantiated."
                         .format(len(devices_not_present), len(start_info)))
+        print("========== all instantiated ===============")
 
         # Waits for all the chained output channels to be properly connected before sending
         # data through the pipe.
@@ -185,7 +189,8 @@ class TestCrossPipelining(BoundDeviceTestCase):
         self.assertTrue(len(outputs_not_connected) == 0,
                         "Failed to connect '{}' of the '{}' "
                         "output channels in the chain."
-                        .format(len(outputs_not_connected), len(start_info)-1))
+                        .format(outputs_not_connected, len(start_info)-1))
+        print("========== all connected ===============")
 
         self.dc.execute("sender", "writeOutput")
 
@@ -205,18 +210,21 @@ class TestCrossPipelining(BoundDeviceTestCase):
 
         # Cleanup the devices used in the test.
         for devid in devices_present:
-            ok, msg = self.dc.killDevice(devid, self._max_timeout)
-            self.assertTrue(ok, "Problem killing device '{}': '{}'."
-                                .format(devid, msg))
+            # Synchronous kill would take ages in case of failure...
+            self.dc.killDeviceNoWait(devid)
 
         finish_time = time()
 
-        print()
-        print("----------------------")
-        print("Test for pipeline with '{}' devices for api '{}' succeded in {:.2f} secs."
-              .format(len(start_info), api, finish_time-start_time))
-        print("----------------------")
-        print()
+        print("\n----------------------")
+        print("Test for pipeline with '{}' devices mixed of apis '{}' succeded "
+              "in {:.2f} secs.".format(len(start_info), set(apis),
+                                       finish_time - start_time))
+        print("----------------------\n")
+
+        # A little sleep to get devices down before servers are shutdown
+        # by tear_down() - interference of device shutting down since told so
+        # and server telling devices to go down when servers stops?
+        sleep(2)
 
     def _test_1to1_wait_fastReceiver(self, sender_api, receiver_api):
         """
@@ -428,14 +436,14 @@ class TestCrossPipelining(BoundDeviceTestCase):
         ok, msg = self.dc.killDevice("receiver", self._max_timeout)
         self.assertTrue(ok, "Problem killing receiver device: '{}'.".format(msg))
 
-    def start_server_num(self, api, server_num):
+    def start_server_num(self, api, server_num, **kwargs):
         """Start server of given api and number"""
 
         klasses = ["PropertyTest"]
         if api == "mdl":
             klasses[0] += "MDL"
         server_id = self.serverId(api, server_num)
-        self.start_server(api, server_id, klasses)
+        self.start_server(api, server_id, klasses, **kwargs)
 
     def start_device(self, api, server_num, dev_id, cfg):
         """
