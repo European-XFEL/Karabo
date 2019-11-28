@@ -312,8 +312,9 @@ class KaraboPlotView(QWidget):
         for name in actions:
             self.qactions[name].setChecked(self.configuration[name])
 
-        self.set_grid_x(config['x_grid'])
-        self.set_grid_y(config['y_grid'])
+        # Set x and y grid at the same time to avoid overwritten settings
+        self.plotItem.showGrid(config['x_grid'], config['y_grid'])
+
         self.set_log_x(config['x_log'])
         self.set_log_y(config['y_log'])
         self.set_label(axis=0, text=config['x_label'], units=config['x_units'])
