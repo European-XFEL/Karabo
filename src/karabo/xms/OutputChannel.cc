@@ -386,7 +386,7 @@ namespace karabo {
                 }
                 onInputAvailable(instanceId); // Immediately register for reading
                 updateConnectionTable();
-                KARABO_LOG_FRAMEWORK_INFO << "OutputChannel handshake (hello)... from InputChannel : \"" << instanceId
+                KARABO_LOG_FRAMEWORK_INFO << "OutputChannel " << getInstanceId() << ": handshake (hello)... from InputChannel : \"" << instanceId
                         << "\", \"" << dataDistribution << "\", \"" << onSlowness << "\"";
             } else if (reason == "update") {
 
