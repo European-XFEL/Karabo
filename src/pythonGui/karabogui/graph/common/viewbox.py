@@ -11,7 +11,7 @@ ZOOM_OUT = -1
 
 class KaraboViewBox(ViewBox):
 
-    autoRangeTriggered = pyqtSignal()
+    middleButtonClicked = pyqtSignal()
 
     def __init__(self, parent=None):
         super(KaraboViewBox, self).__init__(parent, enableMenu=False)
@@ -19,14 +19,16 @@ class KaraboViewBox(ViewBox):
         self.setBackgroundColor('w')
         self.menu = QMenu(parent)
         self.menu.addAction("View all", self.enableAutoRange)
+        self.autorange_enabled = True
 
     # ---------------------------------------------------------------------
     # mouse events
 
     def mouseClickEvent(self, event):
         if event.button() == Qt.MiddleButton:
-            self.enableAutoRange()
-            self.autoRangeTriggered.emit()
+            if self.autorange_enabled:
+                self.enableAutoRange()
+            self.middleButtonClicked.emit()
 
         if self.mouse_mode is MouseMode.Zoom:
             if event.button() == Qt.LeftButton:
