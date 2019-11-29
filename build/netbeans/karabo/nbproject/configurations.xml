@@ -44,6 +44,8 @@
       <itemPath>../../../src/karabo/devices/DataLoggerManager.hh</itemPath>
       <itemPath>../../../src/karabo/devices/FileDataLogger.cc</itemPath>
       <itemPath>../../../src/karabo/devices/FileDataLogger.hh</itemPath>
+      <itemPath>../../../src/karabo/devices/FileLogReader.cc</itemPath>
+      <itemPath>../../../src/karabo/devices/FileLogReader.hh</itemPath>
       <itemPath>../../../src/karabo/devices/GuiServerDevice.cc</itemPath>
       <itemPath>../../../src/karabo/devices/GuiServerDevice.hh</itemPath>
       <itemPath>../../../src/karabo/devices/InfluxDataLogger.cc</itemPath>
@@ -677,6 +679,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/devices/FileDataLogger.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/FileLogReader.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/FileLogReader.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2621,6 +2633,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/devices/FileLogReader.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/FileLogReader.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/devices/GuiServerDevice.cc"
             ex="false"
             tool="1"
@@ -4541,6 +4563,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/devices/FileDataLogger.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/FileLogReader.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/FileLogReader.hh"
             ex="false"
             tool="3"
             flavor2="0">

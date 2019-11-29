@@ -162,7 +162,7 @@ void DataLogging_Test::tearDown() {
 
     // Clean up directory - you may want to comment out these lines for debugging
     boost::filesystem::remove("loggermap.xml");
-    boost::filesystem::remove_all("dataLoggingTest");
+    boost::filesystem::remove_all("karaboHistory");
 
     if (m_changedPath) {
         if (m_oldPath.empty()) {
@@ -182,9 +182,9 @@ void DataLogging_Test::allTestRunner() {
     Hash manager_conf;
     manager_conf.set("deviceId", "loggerManager");
     manager_conf.set("flushInterval", m_flushIntervalSec);
-    manager_conf.set("directory", "dataLoggingTest/karaboHistory");
+    manager_conf.set("logger.FileDataLogger.directory", "dataLoggingTest/karaboHistory");
     manager_conf.set<vector<string>>("serverList", {m_server});
-    manager_conf.set("loggerType", "FileDataLogger");
+    manager_conf.set("logger", "FileDataLogger");
     success = m_deviceClient->instantiate(m_server,
                                           "DataLoggerManager", manager_conf, KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
@@ -214,7 +214,7 @@ void DataLogging_Test::testAllInstantiated() {
         CPPUNIT_ASSERT(topo.has("device"));
         const Hash& device = topo.get<Hash>("device");
         bool allUp = true;
-        for (const string & deviceId : devices){
+        for (const string & deviceId : devices) {
             allUp = allUp && device.has(deviceId);
         }
         if (allUp) break;
