@@ -18,13 +18,12 @@ from karabogui.controllers.api import (
     BaseBindingController, Curve, get_start_end_date_time, ONE_DAY, ONE_HOUR,
     ONE_WEEK, register_binding_controller, TEN_MINUTES, UPTIME,
     with_display_type)
-from karabogui.globals import MAX_INT32
 from karabogui.graph.common.api import AxisType, get_pen_cycler
 from karabogui.graph.common.const import ALARM_INTEGER_MAP, STATE_INTEGER_MAP
 from karabogui.graph.plots.base import KaraboPlotView
 
 # NOTE: We limit ourselves to selected karabo actions!
-ALLOWED_ACTIONS = ['x_grid', 'y_grid', 'y_invert', 'y_log', 'axes']
+ALLOWED_ACTIONS = ['x_grid', 'y_grid', 'y_invert', 'y_log', 'axes', 'y_range']
 MIN_TIMESTAMP = datetime.datetime(1970, 1, 31).timestamp()
 MAX_TIMESTAMP = datetime.datetime(2038, 12, 31).timestamp()
 
@@ -42,7 +41,7 @@ class BaseSeriesGraph(BaseBindingController):
     _start_time = Instance(QDateTime)
 
     # Holds if the user is rescaling via mouse interaction
-    _auto_scale = Bool(False)
+    _button_scale = Bool(False)
     _curves = Dict
     _curves_start = Set
     _pens = Instance(cycle, factory=get_pen_cycler, args=())
@@ -87,8 +86,9 @@ class BaseSeriesGraph(BaseBindingController):
         self._plot.restore(build_graph_config(self.model))
 
         viewbox = self._plot.plotItem.vb
+        viewbox.autorange_enabled = False
         viewbox.sigRangeChangedManually.connect(self._range_change_manually)
-        viewbox.autoRangeTriggered.connect(self._uncheck_button)
+        viewbox.middleButtonClicked.connect(self._autorange_requested)
 
         # Update datetime widgets everytime range changes and limit zoom
         self._plot.plotItem.setLimits(xMin=MIN_TIMESTAMP, xMax=MAX_TIMESTAMP)
@@ -118,7 +118,7 @@ class BaseSeriesGraph(BaseBindingController):
             return
 
         curve = self._plot.add_curve_item(name=proxy.key, pen=next(self._pens))
-        curve.sigPlotChanged.connect(self._update_ranges)
+        curve.sigPlotChanged.connect(self._update_x_range)
 
         self._curves[proxy] = Curve(proxy=proxy, curve=curve,
                                     curve_type=self.curve_type)
@@ -139,18 +139,13 @@ class BaseSeriesGraph(BaseBindingController):
         """When the range changes manually, we stop automatically
         updating the ranges and start the timer"""
         self._timer.start()
-        self._auto_scale = False
+        self._button_scale = False
         self._uncheck_button()
 
-    def _uncheck_button(self):
-        """Uncheck any checked button"""
-        button_group = self.widget.bg_x_axis
-        checked_button = button_group.checkedButton()
-        if checked_button is not None:
-            # Little workaround as we can't uncheck exclusive button group
-            button_group.setExclusive(False)
-            checked_button.setChecked(False)
-            button_group.setExclusive(True)
+    def _autorange_requested(self):
+        self._button_scale = False
+        self._uncheck_button()
+        self._plot.reset_range()
 
     def _change_model(self, content):
         self.model.trait_set(**restore_graph_config(content))
@@ -176,14 +171,24 @@ class BaseSeriesGraph(BaseBindingController):
         """Update the x axis scale when a time button is clicked"""
         self._x_detail = self._x_axis_buttons[button]
         # We're updating the ranges via the buttons now
-        self._auto_scale = True
+        self._button_scale = True
         if self._update_axis_scale():
             self.update_later()
 
     # ----------------------------------------------------------------
 
     def deferred_update(self):
-        self._update_ranges()
+        self._update_x_range()
+
+    def _uncheck_button(self):
+        """Uncheck any checked button"""
+        button_group = self.widget.bg_x_axis
+        checked_button = button_group.checkedButton()
+        if checked_button is not None:
+            # Little workaround as we can't uncheck exclusive button group
+            button_group.setExclusive(False)
+            checked_button.setChecked(False)
+            button_group.setExclusive(True)
 
     def _update_axis_scale(self):
         """The start and end time date for the x axis is updated here
@@ -198,27 +203,15 @@ class BaseSeriesGraph(BaseBindingController):
 
         return True
 
-    def _update_ranges(self):
-        """Updates both x and y axes ranges but only in case the ranges
-        are not regulated via mouse"""
-        if not self._auto_scale:
+    def _update_x_range(self):
+        """Update x-range only in case the ranges are not regulated via mouse
+        """
+        if not self._button_scale:
             return
 
-        ymin = MAX_INT32
-        ymax = -ymin
-        for curve in self._curves.values():
-            min_value = curve.get_min_y_value()
-            max_value = curve.get_max_y_value()
-
-            if min_value < ymin:
-                ymin = min_value
-            if max_value > ymax:
-                ymax = max_value
-
-        y_range = (ymin, ymax)
         x_range = self._get_start_end_date_secs()
 
-        self._plot.plotItem.setRange(xRange=x_range, yRange=y_range)
+        self._plot.plotItem.setRange(xRange=x_range)
 
     def _get_start_end_date_secs(self):
         """Returns the start and end date based on the selected button"""

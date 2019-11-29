@@ -132,8 +132,7 @@ class StateAxisItem(AxisItem):
 
         NOTE: Always cast the value as integer due to PyQtGraph protection!
         """
-        return [INTEGER_STATE_MAP.get(int(value), 'UNKNOWN')
-                for value in values]
+        return [INTEGER_STATE_MAP.get(int(value), '') for value in values]
 
 
 class AlarmAxisItem(AxisItem):
@@ -144,8 +143,7 @@ class AlarmAxisItem(AxisItem):
 
         NOTE: Always cast the value as integer due to PyQtGraph protection!
         """
-        return [INTEGER_ALARM_MAP.get(int(value), 'none')
-                for value in values]
+        return [INTEGER_ALARM_MAP.get(int(value), '') for value in values]
 
 
 class AuxPlotAxisItem(AxisItem):
