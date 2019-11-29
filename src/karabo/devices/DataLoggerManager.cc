@@ -693,13 +693,21 @@ namespace karabo {
             for (unsigned int i = 0; i < DATALOGREADERS_PER_SERVER; ++i) {
                 const std::string readerId = DATALOGREADER_PREFIX + toString(i) + "-" + serverId;
                 if (!remote().exists(readerId).first) {
-                    Hash hash("classId", "DataLogReader", "deviceId", readerId);
+                    Hash hash;
+                    Hash config;
                     if (m_logger == "FileDataLogger") {
-                        hash.set("configuration.logger.FileDataLogger.directory", get<string>("logger.FileDataLogger.directory"));
+                        hash.set("classId", "FileLogReader");
+                        hash.set("deviceId", readerId);
+                        config.set("directory", get<string>("logger.FileDataLogger.directory"));
                     } else if (m_logger == "InfluxDataLogger") {
-                        hash.set("configuration.logger.InfluxDataLogger.url", get<string>("logger.InfluxDataLogger.url"));
+                        hash.set("classId", "InfluxLogReader");
+                        hash.set("deviceId", readerId);
+                        config.set("url", get<string>("logger.InfluxDataLogger.url"));
                     }
-                    KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << readerId << "' on server '" << serverId << "'";
+                    hash.set("configuration", config);
+                    KARABO_LOG_FRAMEWORK_INFO
+                            << "Trying to instantiate '" << readerId << "' "
+                            << "of type '" << m_logger << "' on server '" << serverId << "'";
 
                     remote().instantiateNoWait(serverId, hash);
                 }
