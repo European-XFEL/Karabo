@@ -78,6 +78,7 @@ class DisplayVectorRollGraph(BaseBindingController):
 
     def _reset_image(self):
         self._image.reset()
+        self._plot.vb.setRange(yRange=(0, self._image.stack))
 
     def _change_model(self, content):
         self.model.trait_set(**restore_graph_config(content))
@@ -89,6 +90,7 @@ class DisplayVectorRollGraph(BaseBindingController):
         if ok:
             self._image.stack = maxlen
             self.model.maxlen = maxlen
+            self._plot.vb.setRange(yRange=(0, maxlen))
 
     # -----------------------------------------------------------------------
 
