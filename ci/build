@@ -38,7 +38,7 @@ __release_build() {
     case "$1" in
         miniconda)
             source ./ci/miniconda/build.sh
-            source ./ci/miniconda/upload.sh
+            source ./ci/miniconda/deploy.sh
             ;;
         ubuntu*|centos*)
             export REL_OS_NAME=$(lsb_release -is)
