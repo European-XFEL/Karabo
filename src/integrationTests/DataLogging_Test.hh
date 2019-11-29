@@ -15,7 +15,7 @@ class DataLogging_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(DataLogging_Test);
 
-    CPPUNIT_TEST(allTestRunner);
+    // CPPUNIT_TEST(allTestRunner);
 
     CPPUNIT_TEST_SUITE_END();
 
