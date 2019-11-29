@@ -30,21 +30,18 @@ build:
 
 requirements:
   build:
-  - python=3.6.6
-  - jupyter_client
-  - setuptools
-  - setuptools_scm
+    - python=3.6.7
+    - jupyter_client=5.3.3
+    - setuptools=42.0.1
+    - setuptools_scm=3.3.3
   run:
     # [[[cog
     # import cog
     # import json
     # import subprocess
-    # output = subprocess.check_output(['conda', 'list', '-n', 'karabogui', '--json'])
-    # for dep in json.loads(output):
-    #     entry = '- {}={}'.format(dep['name'], dep['version'])
-    #     if 'build_string' in dep:
-    #         entry += '={}'.format(dep['build_string'])
-    #     cog.outl(entry)
+    # output = subprocess.check_output(['conda', 'env', 'export', '-n', 'karabogui', '--json'])
+    # for dep in json.loads(output)['dependencies']:
+    #     cog.outl(f'- {dep}')
     # ]]]
     # [[[end]]]
 
