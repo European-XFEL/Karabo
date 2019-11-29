@@ -26,6 +26,11 @@ namespace karabo {
 
         KARABO_REGISTER_FOR_CONFIGURATION(OutputChannel);
 
+        // Number of attempts for delayed 2nd construction phase, i.e. initializeServerConnection().
+        // Seen it fail 1500 times (in a very busy host and C++ server) before adding the sleep in
+        // initializeServerConnection(), so put 2000 here.
+        const int kMaxServerInitializationAttempts = 2000;
+
         void OutputChannel::expectedParameters(karabo::util::Schema& expected) {
             using namespace karabo::util;
 
@@ -163,7 +168,7 @@ namespace karabo {
                 , m_showStatisticsHandler([](const std::vector<unsigned long long>&, const std::vector<unsigned long long>&) {})
                 , m_connections()
                 , m_updateDeadline(karabo::net::EventLoop::getIOService()) {
-            //KARABO_LOG_FRAMEWORK_DEBUG << "*** OutputChannel::OutputChannel CTOR ***";
+
             config.get("distributionMode", m_distributionMode);
             config.get("noInputShared", m_onNoSharedInputChannelAvailable);
             config.get("hostname", m_hostname);
@@ -188,8 +193,8 @@ namespace karabo {
             // Cannot use bind_weak in constructor but... usually it is safe to use here boost::bind.
             // And in this way we ensure that onTcpConnect is properly bound with bind_weak.
             // But see the HACK in initializeServerConnection if even that is called too early.
-            // Once (only) seen it fail > 500 times (with 128 instantiateNoWait...), so put 1500 here.
-            karabo::net::EventLoop::getIOService().post(boost::bind(&OutputChannel::initializeServerConnection, this, 1500));
+            karabo::net::EventLoop::getIOService().post(boost::bind(&OutputChannel::initializeServerConnection, this,
+                                                                    kMaxServerInitializationAttempts));
         }
 
 
@@ -208,15 +213,21 @@ namespace karabo {
             const Self::Pointer sharedSelf(weak_from_this().lock()); // Promote to shared_ptr. and keep alive for bind_weak
             if (!sharedSelf) {
                 if (countdown > 0) {
+
                     KARABO_LOG_FRAMEWORK_DEBUG << "initializeServerConnection: no shared_ptr yet, try again up to "
                             << countdown << " more times"; // Unfortunately, m_instanceId cannot be filled yet.
                     // Let other threads potentially take over to increase the chance that shared_ptr is there next time:
+                    // First rely on yield() to give constructor time to finish, but if that is not enough, sleep a bit.
+                    if (2 * countdown < kMaxServerInitializationAttempts) {
+                        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+                    }
                     boost::this_thread::yield();
                     // Bare boost::bind with this as in constructor.
                     karabo::net::EventLoop::getIOService().post(boost::bind(&OutputChannel::initializeServerConnection,
                                                                             this, --countdown));
                     return;
                 } else {
+                    // m_instanceId not known yet...
                     const std::string msg("Give up to initialize server connection! Better recreate channel, e.g. by "
                                           "re-instantiating device.");
                     KARABO_LOG_FRAMEWORK_ERROR << msg;
