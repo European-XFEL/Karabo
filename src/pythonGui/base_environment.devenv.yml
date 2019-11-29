@@ -1,0 +1,22 @@
+name: karabo-base
+
+channels:
+  - http://exflserv05.desy.de/karabo/channel
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.6.7
+  - cogapp=3
+  - flake8=3.3.0
+  - conda-mirror=0.8.1
+  - nose=1.3.7
+  - setuptools=42.0.1
+  - setuptools_scm=3.3.3
+  - invoke=1.3.0
+
+environment:
+  PYTHONPATH:
+    - {{ root }}
+  KARABO_GUI_ROOT:
+    - {{ root }}

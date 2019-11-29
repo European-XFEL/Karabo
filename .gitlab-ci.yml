@@ -4,19 +4,34 @@ services:
   - name: influxdb:1.7.8
     alias: influxdb_host
 
-before_script:
-  - source ci/prepare "$CI_BUILD_NAME"
-
 .build_template: &build
   script:
+    - source ci/prepare "$CI_BUILD_NAME"
     - source ci/build "$CI_BUILD_NAME"
 
 .test_template: &test
   script:
+    - source ci/prepare "$CI_BUILD_NAME"
     - source ci/test "$CI_BUILD_NAME"
 
 .release_build: &release-build
   <<: *build
+  only:
+    - /^(\d+\.)(\d+\.)(\d+)((a|b|rc|\.)\d+)?$/
+  except:
+    - branches
+    - schedules
+
+.release_build_win64: &release-build-win64
+  script:
+    # Our gitlab runner is not properly logged as xkarabo so we need this little hack for now
+    - $env:Path += ";C:\Users\xkarabo\miniconda3\;C:\Users\xkarabo\miniconda3\Library\mingw-w64\bin;C:\Users\xkarabo\miniconda3\Library\usr\bin;C:\Users\xkarabo\miniconda3\Library\bin;C:\Users\xkarabo\miniconda3\Scripts"
+    - $env:Path += ";C:\Users\xkarabo\cwrsync"
+    - $env:Path += ";C:\Users\xkarabo\plink"
+    # Add xkarabo home
+    - $env:HOME = "C:\Users\xkarabo\"
+    - cmd /c .\ci\miniconda\build.cmd
+    - cmd /c .\ci\miniconda\deploy.cmd
   only:
     - /^(\d+\.)(\d+\.)(\d+)((a|b|rc|\.)\d+)?$/
   except:
@@ -81,6 +96,11 @@ release build ubuntu16:
 release build miniconda:
   image: europeanxfel/karabo-ci:miniconda-3
   <<: *release-build
+
+release build miniconda-win64:
+  tags:
+    - Win10
+  <<: *release-build-win64
 
 # nightly release build
 
