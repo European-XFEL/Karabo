@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-CONDA_CHANNEL_PATH=/var/www/html/karabo/channel
-
 # This script is responsible for building our karabogui conda package
 # and mirroring all the needed packages into a directory
 
@@ -10,27 +8,36 @@ set -o pipefail
 
 . ci/utils/enable_internet.sh
 
-pushd ./src/pythonGui/scripts/
+printAndRun() {
+    typeset cmnd="$*"
+    echo cmnd=$cmnd
+    eval $cmnd
+}
 
-# If everything goes well, our package will be inside conda-recipe/package/
-# Now we just need to upload it to our channel
-bash ./build_conda_recipe.sh
+. ci/utils/enable_internet.sh
 
-# Create a test environment for the created package
-conda remove -n karabogui_test --yes --all
-conda create -n karabogui_test --yes
-source activate karabogui_test
-conda install karabogui=${CI_COMMIT_REF_NAME} \
-    --override-channels \
-    -c local \
-    -c http://exflserv05.desy.de/karabo/channel \
-    -c conda-forge \
-    -c conda-forge/label/cf201901 \
-    -c defaults \
-    -c anaconda \
+printAndRun pushd ./src/pythonGui/
+printAndRun conda devenv
+printAndRun source activate karabogui
 
-# Create and populate the mirrors inside ./mirror/
-python ./create_mirror_channels.py --target_dir ~/mirror/ --env karabogui_test
+# Generate _version file
+printAndRun python setup.py --version
+
+# Generate meta.yaml recipe information
+printAndRun conda run -n karabogui python -m cogapp -d -o ./conda-recipe/meta.yaml ./conda-recipe/meta_base.yaml
+
+echo "**********Building KaraboGui with the following Recipe**********"
+cat ./conda-recipe/meta.yaml
+
+# 6. Build the package
+printAndRun conda build ./conda-recipe/ -c http://exflserv05.desy.de/karabo/channel \
+               -c conda-forge \
+               -c defaults \
+               --no-anaconda-upload
+
+# Create mirror channel locally
+rm -rf /tmp/mirror/
+printAndRun python ./scripts/create_mirror_channels.py --target_dir /tmp/mirror/ --env karabogui
 
 popd
 

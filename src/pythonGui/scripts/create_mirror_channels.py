@@ -5,6 +5,7 @@ import os.path as op
 import pathlib
 import shutil
 import subprocess
+import sys
 from collections import defaultdict
 from functools import partial
 
@@ -36,8 +37,7 @@ class _MirrorChannel:
         try:
             packages_on_mirror= subprocess.check_output(
                 ['conda', 'search', '--override-channels', '-c',
-                 self.mirror_channel, '*[subdir={}]'.format(platform),
-                 '--json'])
+                 self.mirror_channel, f'*[subdir={platform}]', '--json'])
 
             # All these packages are already on exflserv05, so we exclude them
             # from the mirroring
@@ -64,8 +64,8 @@ class Mirrors:
     def _generate_needed_packages(self, reference_environment):
         """Returns the packages we will need to download. This excludes packages
         already present in our mirror channels"""
-        output = subprocess.check_output(
-            ['conda', 'list', '-n', reference_environment, '--json'])
+        cmd = ['conda', 'list', '-n', reference_environment, '--json']
+        output = subprocess.check_output(cmd)
 
         for pkg in json.loads(output):
 
@@ -126,15 +126,20 @@ class Mirrors:
         if not os.path.isdir(target_mirror_directory):
             os.makedirs(target_mirror_directory)
 
-        print("Mirroring channel {}...".format(mirror.name))
-        subprocess.run(['conda', 'mirror',
-                        '--upstream-channel', mirror.original_repo,
-                        '--target-directory', target_mirror_directory,
-                        '--platform', platform,
-                        '--config', str(conf_file),
-                        '--num-threads', '0',  # All available
-                        ],
-                       check=True)
+        # Bug found on windows, can't mirror using threads due to weird
+        # logging error
+        num_threads = 1 if sys.platform.startswith('win') else 0
+
+        print(f'Mirroring channel {mirror.name}...')
+        cmd = ['conda', 'mirror',
+               '--upstream-channel', mirror.original_repo,
+               '--target-directory', target_mirror_directory,
+               '--platform', platform,
+               '--config', str(conf_file),
+               '--num-threads', str(num_threads)]
+
+        print(' '.join(cmd))
+        subprocess.run(cmd, check=True)
 
 
 def main(args):
