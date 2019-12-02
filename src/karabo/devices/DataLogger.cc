@@ -140,13 +140,16 @@ namespace karabo {
 
 
         void DataLogger::preDestruction() {
-            // When m_perDeviceData will be destructed, all the DeviceData destructors will run and tag
-            // the remaining devices as discontinued.
-            boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
-            for (auto it = m_perDeviceData.begin(), itEnd = m_perDeviceData.end(); it != itEnd; ++it) {
-                disconnectP2P(it->first);
+            std::vector<std::string> devices;
+            {
+                boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
+                for (auto it = m_perDeviceData.begin(), itEnd = m_perDeviceData.end(); it != itEnd; ++it) {
+                    devices.push_back(it->first);
+                }
             }
-            m_perDeviceData.clear();
+            for (auto it = devices.begin(); it != devices.end(); ++it) {
+                slotTagDeviceToBeDiscontinued("D", *it);
+            }
         }
 
 
