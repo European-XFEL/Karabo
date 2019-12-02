@@ -345,6 +345,15 @@ class Manager(QObject):
     def handle_deviceConfiguration(self, deviceId, configuration):
         self._topology.device_config_updated(deviceId, configuration)
 
+    def handle_deviceConfigurations(self, configurations):
+        """Update a bulk series of device configurations
+
+        The arriving hash provides the deviceId's as keys and configurations
+        as their values.
+        """
+        for deviceId, config in configurations.items():
+            self._topology.device_config_updated(deviceId, config)
+
     def handle_propertyHistory(self, deviceId, property, data, success=True,
                                failureReason=""):
         if success:
