@@ -160,11 +160,11 @@ class KaraboImageItem(ImageItem):
             level_min, level_max = self.levels
             image = np.clip(image, level_min, level_max)
 
-            low, high = (0, 0)  # default to 0 in case levels are zero
-            if level_min != 0:
-                low = abs((image.min() - level_min) / level_min) * 255
-            if level_max != 255:
-                high = abs(image.max() / level_max) * 255
+            # Calculate new color ranges with the ratio of the image extrema
+            # and the preset levels. The last two values correspond with the
+            # said ratio.
+            image_levels = [level_min, level_max, image.min(), image.max()]
+            low, high = rescale(image_levels, low, high)[2:]
 
         # 4. Rescale values to 0-255 relative to the image min/max
         # for the QImage
