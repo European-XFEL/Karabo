@@ -476,7 +476,7 @@ class DeviceServer(object):
         with self.deviceInstanceMapLock:
             # Loop twice: First to quickly tell all devices to go down and then
             #             to wait until they are indeed down (or need killing)
-            for deviceid in self.deviceInstanceMap.keys():
+            for deviceid in self.deviceInstanceMap:
                 self.ss.call(deviceid, "slotKillDevice")
             for deviceid, launcher in self.deviceInstanceMap.items():
                 if launcher:
