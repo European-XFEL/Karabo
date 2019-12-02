@@ -105,14 +105,6 @@ namespace karabo {
         }
 
 
-        void InfluxDbClient::writeDbComplete(const std::string& message, const boost::shared_ptr<void>& r) {
-            auto datap = boost::make_shared<std::vector<char> >(std::vector<char>(message.begin(), message.end()));
-            m_dbChannel->writeAsyncVectorPointer(datap, bind_weak(&InfluxDbClient::onDbComplete, this,
-                                                                  _1, datap, shared_from_this(), r));
-            KARABO_LOG_FRAMEWORK_DEBUG << "writeDbComplete: \n" << message;
-        }
-
-
         void InfluxDbClient::onDbConnect(const karabo::net::ErrorCode& ec,
                                          const karabo::net::Channel::Pointer& channel,
                                          const AsyncHandler& hook) {
@@ -210,12 +202,6 @@ namespace karabo {
                 m_connectionRequested = false;
                 return;
             }
-        }
-
-
-        void InfluxDbClient::onDbComplete(const karabo::net::ErrorCode& ec,
-                                          boost::shared_ptr<std::vector<char> > p,
-                                          InfluxDbClient::Pointer q, boost::shared_ptr<void> r) {
         }
 
 

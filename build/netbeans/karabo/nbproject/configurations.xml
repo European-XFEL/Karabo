@@ -50,6 +50,8 @@
       <itemPath>../../../src/karabo/devices/GuiServerDevice.hh</itemPath>
       <itemPath>../../../src/karabo/devices/InfluxDataLogger.cc</itemPath>
       <itemPath>../../../src/karabo/devices/InfluxDataLogger.hh</itemPath>
+      <itemPath>../../../src/karabo/devices/InfluxLogReader.cc</itemPath>
+      <itemPath>../../../src/karabo/devices/InfluxLogReader.hh</itemPath>
       <itemPath>../../../src/karabo/devices/PropertyTest.cc</itemPath>
       <itemPath>../../../src/karabo/devices/PropertyTest.hh</itemPath>
     </logicalFolder>
@@ -709,6 +711,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/devices/InfluxDataLogger.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/InfluxLogReader.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/InfluxLogReader.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2663,6 +2675,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/devices/InfluxLogReader.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/InfluxLogReader.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/devices/PropertyTest.cc"
             ex="false"
             tool="1"
@@ -4593,6 +4615,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/devices/InfluxDataLogger.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/InfluxLogReader.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/devices/InfluxLogReader.hh"
             ex="false"
             tool="3"
             flavor2="0">
