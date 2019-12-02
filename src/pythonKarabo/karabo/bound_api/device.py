@@ -1,6 +1,7 @@
 __author__ = "Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ = "$Jul 30, 2012 9:03:51 PM$"
 
+import copy
 import threading
 import os
 import time
@@ -323,7 +324,6 @@ class PythonDevice(NoFsm):
             self.deviceid = "__none__"  # TODO: generate uuid
 
         # Initialize threading locks...
-        self._lock = threading.Lock()
         self._stateChangeLock = threading.Lock()
         self._stateDependentSchema = {}
         self._injectedSchema = Schema()
@@ -661,7 +661,10 @@ class PythonDevice(NoFsm):
                                   needed only if silent=False
         :param silent: If True, suppress any log messages about changed alarms
         :return:
+
+        Calling this method must be protected by a state change lock!
         """
+
         if self.validatorIntern.hasParametersInWarnOrAlarm():
             warnings = self.validatorIntern.getParametersInWarnOrAlarm()
             conditions = [self.globalAlarmCondition]
@@ -740,8 +743,8 @@ class PythonDevice(NoFsm):
             condition = AlarmCondition(conditionString)
             pSep = cKey.replace(Validator.kAlarmParamPathSeparator, ".")
 
-            alarmDesc = self.getFullSchema().getInfoForAlarm(pSep, condition)
-            needAck = self.getFullSchema().doesAlarmNeedAcknowledging(
+            alarmDesc = self.fullSchema.getInfoForAlarm(pSep, condition)
+            needAck = self.fullSchema.doesAlarmNeedAcknowledging(
                 pSep, condition)
 
             entry = Hash("type", conditionString,
@@ -827,7 +830,6 @@ class PythonDevice(NoFsm):
                 else:
                     leafType = self.fullSchema.getParameterHash()\
                         .getAttribute(key, "leafType")
-
                 if leafType == LeafType.STATE:
                     return State(self.parameters[key])
                 elif leafType == LeafType.ALARM_CONDITION:
@@ -848,8 +850,11 @@ class PythonDevice(NoFsm):
 
         :return: a karabo Schema object
         """
-
-        return self.fullSchema
+        # Have to copy to protect using it while updating
+        s = Schema()
+        with self._stateChangeLock:
+            s.copy(self.fullSchema)
+        return s
 
     def updateSchema(self, schema):
         """Updates the existing device schema
@@ -1006,34 +1011,38 @@ class PythonDevice(NoFsm):
         :return: an object of aliasReferenceType
         """
         try:
-            return self.fullSchema.getAliasFromKey(key, aliasReferenceType)
+            with self._stateChangeLock:
+                return self.fullSchema.getAliasFromKey(key, aliasReferenceType)
         except RuntimeError as e:
             raise AttributeError("Error while retrieving alias from parameter"
                                  " ({}): {}".format(key, e))
 
     def getKeyFromAlias(self, alias):
         """Return the key mapping to a given alias"""
-
         try:
-            return self.fullSchema.getKeyFromAlias(alias)
+            with self._stateChangeLock:
+                return self.fullSchema.getKeyFromAlias(alias)
         except RuntimeError as e:
             raise AttributeError("Error while retrieving parameter from alias"
                                  " ({}): {}".format(alias, e))
 
     def aliasHasKey(self, alias):
         """Check if a key for a given alias exists"""
-        return self.fullSchema.aliasHasKey(alias)
+        with self._stateChangeLock:
+            return self.fullSchema.aliasHasKey(alias)
 
     def keyHasAlias(self, key):
         """Check if a given key has an alias defined"""
-        return self.fullSchema.keyHasAlias(key)
+        with self._stateChangeLock:
+            return self.fullSchema.keyHasAlias(key)
 
     def getValueType(self, key):
         """Get the ValueType of a given key
 
         :returns: The type in terms of `karabo::util::ReferenceTypes`
         """
-        return self.fullSchema.getValueType(key)
+        with self._stateChangeLock:
+            return self.fullSchema.getValueType(key)
 
     def getCurrentConfiguration(self, tags=""):
         """Return the current configuration, optionally filtered by tags
@@ -1043,11 +1052,13 @@ class PythonDevice(NoFsm):
                     filtering is to be applied.
         :return: a configuration Hash
         """
-        if tags == "":
-            return self.parameters
         with self._stateChangeLock:
-            return HashFilter.byTag(self.fullSchema, self.parameters, tags,
-                                    " ,;")
+            if tags == "":
+                # Outside the state change lock we need a copy:
+                return copy.copy(self.parameters)
+            else:
+                return HashFilter.byTag(self.fullSchema, self.parameters, tags,
+                                        " ,;")
 
     def filterByTags(self, configuration, tags):
         """Filter a given configuration Hash by tags
@@ -1057,7 +1068,9 @@ class PythonDevice(NoFsm):
                      spaces or semicolons
         :return: the filtered configuration Hash
         """
-        return HashFilter.byTag(self.fullSchema, configuration, tags, " ,;")
+        with self._stateChangeLock:
+            return HashFilter.byTag(self.fullSchema, configuration,
+                                    tags, " ,;")
 
     def getServerId(self):
         """Return the id of the server hosting this devices"""
@@ -1214,7 +1227,14 @@ class PythonDevice(NoFsm):
         self._ss.registerSlot(self.slotLoggerPriority)
         self._ss.registerSlot(self.slotClearLock)
 
-    def initChannels(self, topLevel=""):
+    def initChannels(self):
+        with self._stateChangeLock:
+            self._initChannels()
+
+    def _initChannels(self, topLevel=""):
+        """
+        Internal method to be called under self._stateChangeLock
+        """
         # Keys under topLevel, without leading "topLevel.":
         subKeys = self.fullSchema.getKeys(topLevel)
         # Now go recursively down the node:
@@ -1251,7 +1271,7 @@ class PythonDevice(NoFsm):
                 # Recursive call going down the tree for channels within nodes
                 self.log.DEBUG("Looking for input/output channels " +
                                "under node '" + key + "'")
-                self.initChannels(key)
+                self._initChannels(key)
 
     def KARABO_ON_DATA(self, channelName, handlerPerData):
         """Registers a data handler function
@@ -1326,25 +1346,28 @@ class PythonDevice(NoFsm):
     def slotCallGuard(self, slotName, callee):
         # Check whether the slot is mentioned in the expectedParameters
         # as the call guard only works on those and will ignore all others
-        isSchemaSlot = self.fullSchema.has(slotName)
+        with self._stateChangeLock:
+            isSchemaSlot = self.fullSchema.has(slotName)
 
         # Check whether the slot can be called given the current locking state
         lockableSlot = isSchemaSlot or slotName == "slotReconfigure"
         if self.allowLock() and lockableSlot and slotName != "slotClearLock":
             self._ensureSlotIsValidUnderCurrentLock(slotName, callee)
 
-        if isSchemaSlot and self.fullSchema.hasAllowedStates(slotName):
-            allowedStates = self.fullSchema.getAllowedStates(slotName)
-            if allowedStates:
-                currentState = self["state"]
-                if currentState not in allowedStates:
-                    msg = "Command \"{}\" is not allowed in current state" \
-                          " \"{}\" of device \"{}\""\
-                        .format(slotName, currentState, self.deviceid)
-                    raise RuntimeError(msg)
-
-        # Log the call of this slot by setting a parameter of the device
         if isSchemaSlot:
+            with self._stateChangeLock:
+                if self.fullSchema.hasAllowedStates(slotName):
+                    allowedStates = self.fullSchema.getAllowedStates(slotName)
+                    if allowedStates:
+                        currentState = State(self.parameters["state"])
+                        if currentState not in allowedStates:
+                            msg = "Command \"{}\" is not allowed in current " \
+                                  "state \"{}\" of device \"{}\""\
+                                .format(slotName, currentState.name,
+                                        self.deviceid)
+                            raise RuntimeError(msg)
+
+            # Log the call of this slot by setting a parameter of the device
             self.set("lastCommand", slotName)
 
     def allowLock(self):
@@ -1429,13 +1452,14 @@ class PythonDevice(NoFsm):
         self.postReconfigure()
 
     def slotGetSchema(self, onlyCurrentState):
-
+        # state lock!
         if onlyCurrentState:
             currentState = self["state"]
             schema = self._getStateDependentSchema(currentState)
             self._ss.reply(schema, self.deviceid)
         else:
-            self._ss.reply(self.fullSchema, self.deviceid)
+            with self._stateChangeLock:
+                self._ss.reply(self.fullSchema, self.deviceid)
 
     def slotKillDevice(self):
         senderid = self._ss.getSenderInfo(
@@ -1648,10 +1672,15 @@ class PythonDevice(NoFsm):
             return AlarmCondition.fromString(condition)
 
     def hasRollingStatistics(self, key):
-        return self.getFullSchema().hasRollingStatistics(key)
+        with self._stateChangeLock:
+            return self.fullSchema.hasRollingStatistics(key)
 
     def getRollingStatistics(self, key):
-        return self.validatorIntern.getRollingStatistics(key)
+        with self._stateChangeLock:
+            # TODO
+            # I fear we have to copy here, since 'getRollingStatistics is
+            # defined as 'bp::return_internal_reference<>()' in PyUtilSChema.cc
+            return self.validatorIntern.getRollingStatistics(key)
 
     def getAlarmInfo(self):
         """Output information on current alarms on this device
