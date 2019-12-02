@@ -57,6 +57,8 @@ class NDArrayGraphModel(BasePlotModel):
     roi_tool = Int(0)
     offset = Float(0.0)
     step = Float(1.0)
+    x_grid = Bool(True)
+    y_grid = Bool(True)
 
 
 class VectorHistGraphModel(BasePlotModel):
@@ -78,6 +80,8 @@ class VectorGraphModel(BasePlotModel):
     roi_tool = Int(0)
     offset = Float(0.0)
     step = Float(1.0)
+    x_grid = Bool(True)
+    y_grid = Bool(True)
 
 
 class TrendGraphModel(BasePlotModel):
