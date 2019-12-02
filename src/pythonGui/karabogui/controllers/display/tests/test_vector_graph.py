@@ -116,16 +116,16 @@ class TestVectorGraph(GuiTestCase):
         action = controller.widget.actions()[0]
         self.assertEqual(action.text(), 'Grid X')
         action.trigger()
-        self.assertEqual(controller.model.x_grid, True)
-        action.trigger()
         self.assertEqual(controller.model.x_grid, False)
+        action.trigger()
+        self.assertEqual(controller.model.x_grid, True)
 
         action = controller.widget.actions()[1]
         self.assertEqual(action.text(), 'Grid Y')
         action.trigger()
-        self.assertEqual(controller.model.y_grid, True)
-        action.trigger()
         self.assertEqual(controller.model.y_grid, False)
+        action.trigger()
+        self.assertEqual(controller.model.y_grid, True)
 
         action = controller.widget.actions()[2]
         self.assertEqual(action.text(), 'Log X')
