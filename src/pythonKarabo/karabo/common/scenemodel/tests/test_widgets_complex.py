@@ -21,6 +21,17 @@ TABLE_SCHEMA = (
 UBUNTU_FONT_SPEC = 'Ubuntu,48,-1,5,63,0,0,0,0,0'
 
 
+def _geometry_traits():
+    return {'x': 0, 'y': 0, 'height': 100, 'width': 100}
+
+
+def _assert_geometry_traits(model):
+    traits = _geometry_traits()
+    for name, value in traits.items():
+        msg = "{} has the wrong value!".format(name)
+        assert getattr(model, name) == value, msg
+
+
 def test_device_scene_link_model():
     traits = base_widget_traits()
     traits['target'] = 'scene1'
@@ -62,6 +73,24 @@ def test_color_bool_widget():
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
     assert read_model.invert
+
+
+def test_display_command():
+    traits = _geometry_traits()
+    traits['requires_confirmation'] = True
+    model = api.DisplayCommandModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+    assert read_model.requires_confirmation
+
+
+def test_display_icon_command():
+    traits = _geometry_traits()
+    traits['icon_name'] = 'stop'
+    model = api.DisplayIconCommandModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+    assert read_model.icon_name == 'stop'
 
 
 def test_error_bool_widget():
