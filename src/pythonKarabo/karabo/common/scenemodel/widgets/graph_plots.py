@@ -82,14 +82,20 @@ class VectorGraphModel(BasePlotModel):
 
 class TrendGraphModel(BasePlotModel):
     """Trendline graph model"""
+    x_grid = Bool(True)
+    y_grid = Bool(True)
 
 
 class StateGraphModel(BasePlotModel):
     """State graph model"""
+    x_grid = Bool(True)
+    y_grid = Bool(True)
 
 
 class AlarmGraphModel(BasePlotModel):
     """Alarm graph model"""
+    x_grid = Bool(True)
+    y_grid = Bool(True)
 
 
 @register_scene_reader('ScatterGraph')
