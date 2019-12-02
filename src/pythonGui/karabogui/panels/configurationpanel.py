@@ -114,7 +114,7 @@ class ConfigurationPanel(BasePanelWidget):
         hLayout.setContentsMargins(0, 5, 5, 5)
 
         text = "Instantiate device"
-        self.pbInitDevice = QPushButton(icons.start, text)
+        self.pbInitDevice = QPushButton(icons.run, text)
         self.pbInitDevice.setToolTip(text)
         self.pbInitDevice.setStatusTip(text)
         self.pbInitDevice.setVisible(False)
