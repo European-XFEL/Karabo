@@ -77,7 +77,7 @@ class MacroPanel(BasePanelWidget):
         by this panel.
         """
         toolbar = ToolBar(parent=self)
-        toolbar.addAction(icons.start, "Run", self.on_run)
+        toolbar.addAction(icons.run, "Run", self.on_run)
         toolbar.addAction(icons.save, "Save", self.on_save)
         return [toolbar]
 
