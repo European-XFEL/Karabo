@@ -23,6 +23,11 @@ class DisplayCommandModel(BaseWidgetObjectData):
     requires_confirmation = Bool(False)
 
 
+class DisplayIconCommandModel(BaseWidgetObjectData):
+    """ A model for DisplayIconCommand"""
+    icon_name = String
+
+
 class DeviceSceneLinkModel(BaseWidgetObjectData):
     """ A model for a DeviceSceneLink Widget """
 
@@ -149,6 +154,22 @@ def __display_command_writer(write_func, model, parent):
     write_base_widget_data(model, element, 'DisplayCommand')
     element.set(NS_KARABO + 'requires_confirmation',
                 str(model.requires_confirmation).lower())
+    return element
+
+
+@register_scene_reader('DisplayIconCommand')
+def __display_icon_command_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    traits['icon_name'] = element.get(NS_KARABO + 'icon_name', '')
+
+    return DisplayIconCommandModel(**traits)
+
+
+@register_scene_writer(DisplayIconCommandModel)
+def __display_icon_command_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'DisplayIconCommand')
+    element.set(NS_KARABO + 'icon_name', model.icon_name)
     return element
 
 
