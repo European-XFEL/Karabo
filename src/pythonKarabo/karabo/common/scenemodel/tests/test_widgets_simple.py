@@ -101,15 +101,6 @@ def test_label_model():
     assert read_model.frame_width == 0
 
 
-def test_display_command():
-    traits = _geometry_traits()
-    traits['requires_confirmation'] = True
-    model = api.DisplayCommandModel(**traits)
-    read_model = single_model_round_trip(model)
-    _assert_geometry_traits(read_model)
-    assert read_model.requires_confirmation
-
-
 def test_edit_doublewheel():
     traits = _geometry_traits()
     traits['integers'] = 2
