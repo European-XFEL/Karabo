@@ -47,6 +47,9 @@ namespace karabo {
             std::string m_digest;
 
             std::vector<char> m_archive;
+
+            static const unsigned int k_httpResponseTimeoutMs;
+
         };
 
 
@@ -63,6 +66,8 @@ namespace karabo {
             InfluxDataLogger(const karabo::util::Hash& input);
 
             virtual ~InfluxDataLogger();
+
+            void preDestruction();
 
         protected:
 
@@ -100,8 +105,6 @@ namespace karabo {
             void onPostWriteDb(const karabo::net::HttpResponse& o);
 
             void checkSchemaInDb(const DeviceData::Pointer& devicedata, const karabo::net::HttpResponse& o);
-
-            void writeDbComplete(const std::string& data);
 
         private:
 

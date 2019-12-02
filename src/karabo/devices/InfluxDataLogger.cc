@@ -24,6 +24,8 @@ namespace karabo {
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, DataLogger, InfluxDataLogger)
         KARABO_REGISTER_IN_FACTORY_1(DeviceData, InfluxDeviceData, karabo::util::Hash)
 
+	const unsigned int InfluxDeviceData::k_httpResponseTimeoutMs = 1500u;
+
 
         InfluxDeviceData::InfluxDeviceData(const karabo::util::Hash& input)
             : DeviceData(input)
@@ -42,16 +44,22 @@ namespace karabo {
             }
 
             const std::string& deviceId = m_deviceToBeLogged;
-            // Mark as logger stopped.
-            // Although this destructor is not running on the strand, accessing all members is safe:
-            // All other actions touching the members are posted on the strand and have a shared  pointer
-            // to the DeviceData - so this destructor can only run when all these actions are done.
             std::stringstream ss;
             ss << deviceId + "__EVENTS,type=\"-LOG\" karabo_user=\"" << m_user << "\"\n";
 
-            auto sthis = m_this->shared_from_this();
-            auto message = m_this->m_client->postWriteDbStr(ss.str(),[sthis](const HttpResponse& o) {});
-            m_this->writeDbComplete(*message);
+            std::promise<void> prom;
+            std::future<void> fut = prom.get_future();
+
+            auto message = m_this->m_client->postWriteDbStr(ss.str(),[&prom](const HttpResponse& o) {
+                prom.set_value();
+            });
+            m_this->m_client->writeDb(*message);
+            auto status = fut.wait_for(std::chrono::milliseconds(k_httpResponseTimeoutMs));
+            if (status != std::future_status::ready) {
+                KARABO_LOG_FRAMEWORK_WARN << "Timeout in ~InfluxDeviceData for message: \n" << message;
+                return;
+            }
+            fut.get();
             KARABO_LOG_FRAMEWORK_INFO << "Proxy for \"" << deviceId << "\" is destroyed ...";
         }
 
@@ -285,6 +293,11 @@ namespace karabo {
         }
 
 
+	void InfluxDataLogger::preDestruction() {
+		DataLogger::preDestruction();
+        }
+
+
         DeviceData::Pointer InfluxDataLogger::createDeviceData(const karabo::util::Hash& cfg) {
             Hash config = cfg;
             config.set("this", this);
@@ -486,11 +499,6 @@ namespace karabo {
             }
             InfluxDeviceData::Pointer data = boost::static_pointer_cast<InfluxDeviceData>(devicedata);
             data->handleSchemaUpdated(schema, devicedata);
-        }
-
-
-        void InfluxDataLogger::writeDbComplete(const std::string& message) {
-            m_client->writeDbComplete(message, boost::static_pointer_cast<void>(shared_from_this()));
         }
     }
 }
