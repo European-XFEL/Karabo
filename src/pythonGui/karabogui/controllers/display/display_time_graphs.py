@@ -236,6 +236,13 @@ class BaseSeriesGraph(BaseBindingController):
         else:
             return QDateTime.fromTime_t(max(timestamps))
 
+    def _draw_start_time(self, proxy, value, timestamp):
+        if proxy in self._curves_start:
+            self._curves_start.remove(proxy)
+            start = self._start_time.toTime_t()
+            if start > timestamp:
+                self._curves[proxy].add_point(value, start)
+
     def set_time_interval(self, t0, t1):
         """Update the x axis scale interval of the curves"""
         for v in self._curves.values():
@@ -255,13 +262,10 @@ class DisplayTrendGraph(BaseSeriesGraph):
             return
 
         timestamp = proxy.binding.timestamp
-        t = timestamp.toTimestamp()
-
-        self._curves[proxy].add_point(proxy.value, t)
-        if proxy in self._curves_start:
-            self._curves[proxy].add_point(proxy.value,
-                                          self._start_time.toTime_t())
-            self._curves_start.remove(proxy)
+        ts = timestamp.toTimestamp()
+        value = proxy.value
+        self._curves[proxy].add_point(proxy.value, ts)
+        self._draw_start_time(proxy, value, timestamp=ts)
 
 
 @register_binding_controller(
@@ -278,14 +282,11 @@ class DisplayStateGraph(BaseSeriesGraph):
             return
 
         timestamp = proxy.binding.timestamp
-        t = timestamp.toTimestamp()
+        ts = timestamp.toTimestamp()
 
         value = STATE_INTEGER_MAP[proxy.value]
-        self._curves[proxy].add_point(value, t)
-        if proxy in self._curves_start:
-            self._curves[proxy].add_point(value,
-                                          self._start_time.toTime_t())
-            self._curves_start.remove(proxy)
+        self._curves[proxy].add_point(value, ts)
+        self._draw_start_time(proxy, value, timestamp=ts)
 
 
 @register_binding_controller(
@@ -302,11 +303,8 @@ class DisplayAlarmGraph(BaseSeriesGraph):
             return
 
         timestamp = proxy.binding.timestamp
-        t = timestamp.toTimestamp()
+        ts = timestamp.toTimestamp()
 
         value = ALARM_INTEGER_MAP[proxy.value]
-        self._curves[proxy].add_point(value, t)
-        if proxy in self._curves_start:
-            self._curves[proxy].add_point(value,
-                                          self._start_time.toTime_t())
-            self._curves_start.remove(proxy)
+        self._curves[proxy].add_point(value, ts)
+        self._draw_start_time(proxy, value, timestamp=ts)
