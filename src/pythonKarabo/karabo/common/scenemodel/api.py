@@ -18,9 +18,10 @@ from .registry import register_scene_reader, register_scene_writer
 from .shapes import LineModel, PathModel, RectangleModel
 from .widgets.complex import (
     ColorBoolModel, DeviceSceneLinkModel, DisplayCommandModel,
-    DisplayProgressBarModel, DisplayStateColorModel, DoubleLineEditModel,
-    EditableOptionComboBoxModel, ErrorBoolModel, EvaluatorModel,
-    FloatSpinBoxModel, MonitorModel, SingleBitModel, TableElementModel)
+    DisplayIconCommandModel, DisplayProgressBarModel, DisplayStateColorModel,
+    DoubleLineEditModel, EditableOptionComboBoxModel, ErrorBoolModel,
+    EvaluatorModel, FloatSpinBoxModel, MonitorModel, SingleBitModel,
+    TableElementModel)
 from .widgets.icon import (
     BaseIconsModel, DigitIconsModel, DisplayIconsetModel, IconData,
     SelectionIconsModel, TextIconsModel)
