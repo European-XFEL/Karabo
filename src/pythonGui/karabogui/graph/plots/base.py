@@ -180,11 +180,11 @@ class KaraboPlotView(QWidget):
         self.stateChanged.emit({name: state})
 
     def set_grid_x(self, state):
-        alpha_value = ALPHA_GRID if state else False
+        alpha_value = ALPHA_GRID if state else None
         self.plotItem.showGrid(x=state, alpha=alpha_value)
 
     def set_grid_y(self, state):
-        alpha_value = ALPHA_GRID if state else False
+        alpha_value = ALPHA_GRID if state else None
         self.plotItem.showGrid(y=state, alpha=alpha_value)
 
     def set_log_x(self, state):
@@ -313,7 +313,8 @@ class KaraboPlotView(QWidget):
             self.qactions[name].setChecked(self.configuration[name])
 
         # Set x and y grid at the same time to avoid overwritten settings
-        self.plotItem.showGrid(config['x_grid'], config['y_grid'])
+        self.plotItem.showGrid(config['x_grid'], config['y_grid'],
+                               alpha=ALPHA_GRID)
 
         self.set_log_x(config['x_log'])
         self.set_log_y(config['y_log'])
