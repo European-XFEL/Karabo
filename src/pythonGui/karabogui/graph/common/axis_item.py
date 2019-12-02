@@ -6,13 +6,20 @@ from pyqtgraph import AxisItem as PgAxisItem
 from pyqtgraph.functions import siScale
 
 from karabogui.graph.common.const import (
-    AXIS_ITEMS, X_AXIS_HEIGHT, Y_AXIS_WIDTH, INTEGER_ALARM_MAP,
+    AXIS_ITEMS, AXIS_X, AXIS_Y, X_AXIS_HEIGHT, Y_AXIS_WIDTH, INTEGER_ALARM_MAP,
     INTEGER_STATE_MAP)
 from karabogui.graph.common.enums import AxisType
 
 
 class AxisItem(PgAxisItem):
     axisDoubleClicked = pyqtSignal()
+
+    STYLE = {
+        "autoExpandTextSpace": False,
+        "tickTextWidth": 50,
+        "tickTextHeight": 24}
+
+    FONT_SIZE = 10
 
     def __init__(self, orientation, has_ticks=True):
         """
@@ -30,15 +37,13 @@ class AxisItem(PgAxisItem):
         # Modify tick aesthetics if major axis
         # (tick strings and labels are shown)
         if has_ticks:
-            self.setStyle(autoExpandTextSpace=False,
-                          tickTextWidth=36,
-                          tickTextHeight=24)
+            self.setStyle(**self.STYLE)
         else:
             self.fixedWidth = 0
             self.fixedHeight = 0
 
         font = QFont()
-        font.setPixelSize(11)
+        font.setPixelSize(self.FONT_SIZE)
         self.tickFont = font
 
     def mouseDoubleClickEvent(self, event):
@@ -127,6 +132,9 @@ class TimeAxisItem(AxisItem):
 class StateAxisItem(AxisItem):
     """The State Axis Item for displaying Karabo States as major ticks"""
 
+    STYLE = {"autoExpandTextSpace": True}
+    FONT_SIZE = 9
+
     def tickStrings(self, values, scale, spacing):
         """Return the state names as a function of integers values
 
@@ -137,6 +145,9 @@ class StateAxisItem(AxisItem):
 
 class AlarmAxisItem(AxisItem):
     """The Alarm Axis Item for displaying Karabo Alarms as major ticks"""
+
+    STYLE = {"autoExpandTextSpace": True}
+    FONT_SIZE = 9
 
     def tickStrings(self, values, scale, spacing):
         """Return the alarm names as a function of integers values
@@ -232,13 +243,13 @@ def create_axis_items(axis=AxisType.Classic, axes_with_ticks=[]):
     time_axis, state_axis, aux_axis, alarm_axis = [], [], [], []
 
     if axis is AxisType.Time:
-        time_axis = ["top", "bottom"]
+        time_axis = _intersection(AXIS_X, axes_with_ticks)
     elif axis is AxisType.State:
-        state_axis = ["left"]
-        time_axis = ["top", "bottom"]
+        state_axis = _intersection(AXIS_Y, axes_with_ticks)
+        time_axis = _intersection(AXIS_X, axes_with_ticks)
     elif axis is AxisType.Alarm:
-        alarm_axis = ["left"]
-        time_axis = ["top", "bottom"]
+        alarm_axis = _intersection(AXIS_Y, axes_with_ticks)
+        time_axis = _intersection(AXIS_X, axes_with_ticks)
     elif axis is AxisType.AuxPlot:
         aux_axis = axes_with_ticks
     items = {}
@@ -261,3 +272,7 @@ def create_axis_items(axis=AxisType.Classic, axes_with_ticks=[]):
         items[orientation] = axis_item
 
     return items
+
+
+def _intersection(list_1, list_2):
+    return set(list_1).intersection(list_2)
