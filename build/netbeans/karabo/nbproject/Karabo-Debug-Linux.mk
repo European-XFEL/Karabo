@@ -50,6 +50,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1423485062/FileLogReader.o \
 	${OBJECTDIR}/_ext/1423485062/GuiServerDevice.o \
 	${OBJECTDIR}/_ext/1423485062/InfluxDataLogger.o \
+	${OBJECTDIR}/_ext/1423485062/InfluxLogReader.o \
 	${OBJECTDIR}/_ext/1423485062/PropertyTest.o \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o \
@@ -266,6 +267,11 @@ ${OBJECTDIR}/_ext/1423485062/InfluxDataLogger.o: ../../../src/karabo/devices/Inf
 	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/InfluxDataLogger.o ../../../src/karabo/devices/InfluxDataLogger.cc
+
+${OBJECTDIR}/_ext/1423485062/InfluxLogReader.o: ../../../src/karabo/devices/InfluxLogReader.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/InfluxLogReader.o ../../../src/karabo/devices/InfluxLogReader.cc
 
 ${OBJECTDIR}/_ext/1423485062/PropertyTest.o: ../../../src/karabo/devices/PropertyTest.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
@@ -1327,6 +1333,19 @@ ${OBJECTDIR}/_ext/1423485062/InfluxDataLogger_nomain.o: ${OBJECTDIR}/_ext/142348
 	    $(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/InfluxDataLogger_nomain.o ../../../src/karabo/devices/InfluxDataLogger.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1423485062/InfluxDataLogger.o ${OBJECTDIR}/_ext/1423485062/InfluxDataLogger_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1423485062/InfluxLogReader_nomain.o: ${OBJECTDIR}/_ext/1423485062/InfluxLogReader.o ../../../src/karabo/devices/InfluxLogReader.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1423485062/InfluxLogReader.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/InfluxLogReader_nomain.o ../../../src/karabo/devices/InfluxLogReader.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1423485062/InfluxLogReader.o ${OBJECTDIR}/_ext/1423485062/InfluxLogReader_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1423485062/PropertyTest_nomain.o: ${OBJECTDIR}/_ext/1423485062/PropertyTest.o ../../../src/karabo/devices/PropertyTest.cc 

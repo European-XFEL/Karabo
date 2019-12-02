@@ -58,8 +58,6 @@ namespace karabo {
 
             void writeDb(const std::string& message);
 
-            void writeDbComplete(const std::string& message, const boost::shared_ptr<void>& r);
-
             void getPingDb(const InfluxResponseHandler& action);
 
             boost::shared_ptr<std::string> postWriteDbStr(const std::string& batch,
@@ -78,10 +76,6 @@ namespace karabo {
             void onDbRead(const karabo::net::ErrorCode& ec, const std::string& data);
 
             void onDbWrite(const karabo::net::ErrorCode& ec, boost::shared_ptr<std::vector<char> > p);
-
-            void onDbComplete(const karabo::net::ErrorCode& ec,
-                              boost::shared_ptr<std::vector<char> > p,
-                              InfluxDbClient::Pointer q, boost::shared_ptr<void> r);
 
         private:
 
