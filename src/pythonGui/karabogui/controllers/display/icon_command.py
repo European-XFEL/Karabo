@@ -17,7 +17,13 @@ BUTTON_ICONS = {
     'Right': icons.arrowRight,
     'Up': icons.arrowUp,
     'Down': icons.arrowDown,
-    'Stop': icons.stop,
+    'Start': icons.mediaStart,
+    'Stop': icons.mediaStop,
+    'Pause': icons.mediaPause,
+    'Reset': icons.mediaBackward,
+    'Acquire': icons.mediaRecord,
+    'On': icons.on,
+    'Off': icons.off
 }
 NO_SELECTION = icons.imageMissing
 
@@ -77,7 +83,8 @@ class IconSelectionDialog(QDialog):
 
 @register_binding_controller(ui_name='IconCommand',
                              klassname='DisplayIconCommand',
-                             binding_type=SlotBinding)
+                             binding_type=SlotBinding,
+                             priority=-10)
 class DisplayIconCommand(BaseBindingController):
     # The scene model class for this controller
     model = Instance(DisplayIconCommandModel, args=())
