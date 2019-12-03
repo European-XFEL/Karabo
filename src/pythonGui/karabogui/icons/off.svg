@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="48" height="48">
+  <defs>
+    <linearGradient x1="21.987764" y1="35.076645" x2="20.907845" y2="16.881635" id="linearGradient4580" gradientUnits="userSpaceOnUse">
+      <stop style="stop-color:#fffeff;stop-opacity:0.33333334" offset="0"/>
+      <stop style="stop-color:#fffeff;stop-opacity:0.21568628" offset="1"/>
+    </linearGradient>
+    <linearGradient x1="36.917976" y1="67.288064" x2="19.071495" y2="6.5410110" id="linearGradient4586" gradientUnits="userSpaceOnUse">
+      <stop style="stop-color:#a40000;stop-opacity:1" offset="0"/>
+      <stop style="stop-color:#ff1717;stop-opacity:1" offset="1"/>
+    </linearGradient>
+    <linearGradient x1="43.93581" y1="54.835984" x2="20.064686" y2="-7.5626706" id="linearGradient4583" gradientUnits="userSpaceOnUse">
+      <stop style="stop-color:#ffe69b;stop-opacity:1" offset="0"/>
+      <stop style="stop-color:#ffffff;stop-opacity:1" offset="1"/>
+    </linearGradient>
+  </defs>
+  <g>
+    <rect width="43" height="43" rx="10" ry="10" x="2.5" y="2.5" style="fill:url(#linearGradient4586);fill-opacity:1;stroke:#b20000;stroke-width:1;stroke-opacity:1"/>
+    <rect width="41" height="41" rx="9" ry="9" x="3.5" y="3.5" style="opacity:0.35;fill-opacity:0;stroke:url(#linearGradient4583);stroke-width:1;stroke-opacity:1"/>
+    <path d="m 12.5,4 c -4.709,0 -8.5,3.791 -8.5,8.5 l 0,12.0625 c 7.681331,7.681331 12.536848,5.141965 20.6875,-1.375 C 33.03282,16.514886 36.318669,30.493831 44,22.8125 L 44,12.5 C 44,7.791 40.209,4 35.5,4 l -23,0 z" style="fill:url(#linearGradient4580);fill-opacity:1;fill-rule:nonzero;stroke:none"/>
+    <path d="m 24.015964,10.375044 0,15.644355 m -8.63626,-7.774287 c -1.851768,2.059308 -2.985177,4.789089 -2.985177,7.774287 0,6.401414 5.188141,11.605557 11.605473,11.605557 6.401368,0 11.605473,-5.188179 11.605473,-11.605557 0,-2.985198 -1.133409,-5.714979 -2.985177,-7.774287" style="fill:none;stroke:#efefef;stroke-width:4.78907108;stroke-linecap:round;stroke-opacity:1"/>
+  </g>
+</svg>
