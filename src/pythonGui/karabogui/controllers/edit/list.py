@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPalette, QValidator
 from PyQt5.QtWidgets import (
     QDialog, QHBoxLayout, QLineEdit, QToolButton, QWidget)
-from traits.api import Instance, Int
+from traits.api import Instance, Int, Undefined
 
 from karabo.common.scenemodel.api import DisplayListModel, EditableListModel
 from karabogui import icons
@@ -21,6 +21,7 @@ from karabogui.binding.api import (
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.dialogs.listedit import ListEditDialog
+import karabogui.globals as krb_globals
 from karabogui.util import SignalBlocker
 
 
@@ -74,7 +75,23 @@ class _BaseListController(BaseBindingController):
         value = get_editor_value(proxy, [])
         self._set_edit_field_text(value)
 
-    # @pyqtSlot(str)
+    def state_update(self, proxy):
+        # NOTE: Only the editable widget will be disabled depending on state!
+        if self._internal_widget.isReadOnly():
+            return
+
+        root_proxy = proxy.root_proxy
+        value = root_proxy.state_binding.value
+        if value is Undefined or not value:
+            return
+
+        binding = proxy.binding
+        is_allowed = binding.is_allowed(value)
+        is_accessible = (krb_globals.GLOBAL_ACCESS_LEVEL >=
+                         binding.required_access_level)
+
+        self.widget.setEnabled(is_allowed and is_accessible)
+
     def _on_user_edit(self, text):
         if self.proxy.binding is None:
             return
@@ -112,7 +129,6 @@ class _BaseListController(BaseBindingController):
             self._internal_widget.setText(','.join(str(v) for v in value))
         self._internal_widget.setCursorPosition(self.last_cursor_position)
 
-    # @pyqtSlot()
     def _on_edit_clicked(self):
         if self.proxy.binding is None:
             return
