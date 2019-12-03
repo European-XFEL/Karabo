@@ -11,9 +11,11 @@
 #include <karabo/core/Device.hh>
 #include <karabo/net/EventLoop.hh>
 #include <karabo/xms/SignalSlotable.hh>
-#include <karabo/util/SimpleElement.hh>
 #include <karabo/util/Epochstamp.hh>
+#include <karabo/util/OverwriteElement.hh>
 #include <karabo/util/Schema.hh>
+#include <karabo/util/State.hh>
+#include <karabo/util/SimpleElement.hh>
 #include <karabo/util/Timestamp.hh>
 
 #define KRB_TEST_MAX_TIMEOUT 5
@@ -22,12 +24,15 @@ using karabo::net::EventLoop;
 using karabo::util::Hash;
 using karabo::util::Epochstamp;
 using karabo::util::Schema;
+using karabo::util::State;
 using karabo::util::Timestamp;
 using karabo::util::DOUBLE_ELEMENT;
 using karabo::util::INT32_ELEMENT;
 using karabo::util::NODE_ELEMENT;
+using karabo::util::OVERWRITE_ELEMENT;
 using karabo::util::STRING_ELEMENT;
 using karabo::util::TABLE_ELEMENT;
+using karabo::util::UINT32_ELEMENT;
 using karabo::core::DeviceServer;
 using karabo::core::DeviceClient;
 using karabo::xms::SignalSlotable;
@@ -41,9 +46,14 @@ public:
 
     static const int ALARM_HIGH = 1000.0;
 
-    static void expectedParameters(karabo::util::Schema& expected) {
-        Schema rowSchema;
 
+    static void expectedParameters(karabo::util::Schema& expected) {
+
+        OVERWRITE_ELEMENT(expected).key("state")
+                .setNewOptions(State::UNKNOWN, State::NORMAL)
+                .commit();
+
+        Schema rowSchema;
         STRING_ELEMENT(rowSchema).key("type")
                 .displayedName("Type column")
                 .description("Type column")
@@ -73,6 +83,11 @@ public:
                 .observerAccess()
                 .commit();
 
+        UINT32_ELEMENT(expected).key("countStateToggles")
+                .description("How often slotToggleState was called")
+                .readOnly().initialValue(0u)
+                .commit();
+
         NODE_ELEMENT(expected).key("node")
                 .displayedName("Node")
                 .commit();
@@ -93,6 +108,8 @@ public:
         KARABO_SLOT(slotAppendSchema, const karabo::util::Schema);
 
         KARABO_SLOT(slotUpdateSchema, const karabo::util::Schema);
+
+        KARABO_SLOT(slotToggleState, const Hash);
 
         KARABO_SLOT(node_slot);
     }
@@ -115,6 +132,22 @@ public:
 
     void slotUpdateSchema(const Schema sch) {
         updateSchema(sch);
+    }
+
+
+    void slotToggleState(const Hash otherIn) {
+
+        const Epochstamp& stampCountToggles = Epochstamp::fromHashAttributes(otherIn.getAttributes("stampCountToggles"));
+        const Epochstamp& stampState = Epochstamp::fromHashAttributes(otherIn.getAttributes("stampState"));
+
+        const State& newState = (getState() == State::UNKNOWN ? State::NORMAL : State::UNKNOWN);
+
+        Hash otherOut("valueWithAlarm", -1.);
+        Hash::Attributes& attrs = otherOut.set("countStateToggles", get<unsigned int>("countStateToggles") + 1).getAttributes();
+        getTimestamp(stampCountToggles).toHashAttributes(attrs);
+
+        // So "state" and "valueWithAlarm" get timestamp from 'stampState', "countStateToggles" from 'stampCountToggles'
+        updateState(newState, otherOut, getTimestamp(stampState));
     }
 
 
@@ -183,6 +216,7 @@ void Device_Test::appTestRunner() {
     testSchemaWithAttrAppend();
     testNodedSlot();
     testGetSet();
+    testUpdateState();
 }
 
 
@@ -656,6 +690,57 @@ void Device_Test::testGetSet() {
                          .timeout(timeoutInMs).receive(), karabo::util::RemoteException);
 }
 
+
+void Device_Test::testUpdateState() {
+    const std::string deviceId("TestDevice");
+
+    // Check initial state of test device
+    const State state(m_deviceClient->get<State>(deviceId, "state"));
+    CPPUNIT_ASSERT_MESSAGE("State is " + state.name(), state == State::UNKNOWN);
+    CPPUNIT_ASSERT_EQUAL(0u, m_deviceClient->get<unsigned int>(deviceId, "countStateToggles"));
+    CPPUNIT_ASSERT(std::abs(-1. - m_deviceClient->get<double>(deviceId, "valueWithAlarm")) > 1.e-7);
+
+    // Prepare Hash argument to slotToggleState with two different time stamps
+    const Epochstamp stampToggle(1575296000ull, 1111ull);
+    const Epochstamp stampState(1575297000ull, 2222ull);
+    Hash msg;
+    stampToggle.toHashAttributes(msg.set("stampCountToggles", 0).getAttributes());
+    stampState.toHashAttributes(msg.set("stampState", 0).getAttributes());
+
+    // Send state update request and...
+    // ... test its (implicit) reply value,
+    std::string reply;
+    CPPUNIT_ASSERT_NO_THROW(m_signalSlotable->request(deviceId, "slotToggleState", msg).timeout(5000).receive(reply));
+    CPPUNIT_ASSERT_EQUAL(std::string("NORMAL"), reply);
+
+    // ... test that the state was switched,
+    const State stateNew(m_deviceClient->get<State>(deviceId, "state"));
+    CPPUNIT_ASSERT_MESSAGE("State is " + stateNew.name(), stateNew == State::NORMAL);
+
+    // ... test that other values updated as well,
+    CPPUNIT_ASSERT_EQUAL(1u, m_deviceClient->get<unsigned int>(deviceId, "countStateToggles"));
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(-1., m_deviceClient->get<double>(deviceId, "valueWithAlarm"), 1.e-7);
+
+    // ... and finally test the desired timestamps:
+    //     * state and valueWithAlarm get the same as given explicitly to updateState
+    //     * countStateToggles gets the one mingled into the 'other' Hash
+    const auto atto = karabo::util::ATTOSEC;
+    const Hash cfg(m_deviceClient->get(deviceId));
+    const Epochstamp stampStateNew(Epochstamp::fromHashAttributes(cfg.getAttributes("state")));
+    CPPUNIT_ASSERT_MESSAGE(stampStateNew.toIso8601(atto) += " != " + stampState.toIso8601(atto),
+                           stampStateNew == stampState);
+
+    const Epochstamp stampValue(Epochstamp::fromHashAttributes(cfg.getAttributes("valueWithAlarm")));
+    CPPUNIT_ASSERT_MESSAGE(stampValue.toIso8601(atto) += " != " + stampState.toIso8601(atto),
+                           stampValue == stampState);
+
+    const Epochstamp stampToggleNew(Epochstamp::fromHashAttributes(cfg.getAttributes("countStateToggles")));
+    CPPUNIT_ASSERT_MESSAGE(stampToggleNew.toIso8601(atto) += " != " + stampToggle.toIso8601(atto),
+                           stampToggleNew == stampToggle);
+
+
+
+}
 
 bool Device_Test::waitForCondition(boost::function<bool() > checker, unsigned int timeoutMillis) {
     constexpr unsigned int sleepIntervalMillis = 5;

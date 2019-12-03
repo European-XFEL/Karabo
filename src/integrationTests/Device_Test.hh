@@ -37,6 +37,7 @@ private:
     void testGetTimestamp();
     void testSchemaInjection();
     void testGetSet();
+    void testUpdateState();
 
     /** Tests that updateSchema resets attributes in the static schema. */
     void testSchemaWithAttrUpdate();
