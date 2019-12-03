@@ -1272,9 +1272,9 @@ void SignalSlotable_Test::testAsyncConnectInputChannel() {
     inputCfg.get<std::vector < std::string >> ("connectedOutputChannels").back() = "not_a_sender:output";
     inputChannel = receiver->createInputChannel("input", Hash("input", inputCfg));
     receiver->asyncConnectInputChannel(inputChannel, handler);
-    // Larger timeout here: In SignalSlotable::connectInputToOutputChannel it is 1000 ms to receive the reply from
+    // Larger timeout here: In SignalSlotable::connectInputToOutputChannel it is 10 s to receive the reply from
     // slotGetOutputChannelInformation of the (in this case not existing) instance of the output
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(std::chrono::milliseconds(1500)));
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, handlerFuture.wait_for(std::chrono::milliseconds(12500)));
     result = handlerFuture.get();
     CPPUNIT_ASSERT(!result.first);
     CPPUNIT_ASSERT(result.second.find("SignalSlot Exception") != std::string::npos);
