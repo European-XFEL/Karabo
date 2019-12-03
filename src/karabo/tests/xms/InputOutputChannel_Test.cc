@@ -355,6 +355,10 @@ void InputOutputChannel_Test::testConcurrentConnect() {
     // - success for those connect(..) that are actually executed after disconnect
     // - I also saw 'connection_refused'
     // We cannot test either whether now we are really disconnected
+    // ... and thus the following test is not predictive either and is thus removed, see e.g.
+    //     https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/82010
+    // FIXME for next round (2.8.X)!
+    return;
 
     // So after having checked that all handlers are called we skip their result test,
     // but take care that the connection is gone.
