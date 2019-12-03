@@ -1081,10 +1081,22 @@ namespace karabo {
              * Will also update the instanceInfo describing this device instance (if new or old State are ERROR).
              *
              * @param cs: the state to update to
-             * @param other: an optional Hash to set other properties in the same state update message,
+             */
+            // Note that for inheritance from BaseFsm (in contrast to NoFsm), this overrides a virtual function!
+            void updateState(const karabo::util::State& cs) {
+                updateState(cs, karabo::util::Hash(), getActualTimestamp());
+            }
+
+            /**
+             * Update the state of the device, using "actual timestamp".
+             *
+             * Will also update the instanceInfo describing this device instance (if new or old State are ERROR).
+             *
+             * @param cs: the state to update to
+             * @param other: a Hash to set other properties in the same state update message,
              *               time stamp attributes to its paths have precedence over the actual timestamp
              */
-            void updateState(const karabo::util::State& cs, const karabo::util::Hash& other = karabo::util::Hash()) {
+            void updateState(const karabo::util::State& cs, const karabo::util::Hash& other) {
                 updateState(cs, other, getActualTimestamp());
             }
 
@@ -1094,7 +1106,21 @@ namespace karabo {
              * Will also update the instanceInfo describing this device instance (if new or old State are ERROR).
              *
              * @param cs: the state to update to
-             * @param other: an optional Hash to set other properties in the same state update message,
+             * @param timestamp: time stamp to assign to the state property and the properties in 'other'
+             *                   (if the latter do not have specified timestamp attributes)
+             *
+             */
+            void updateState(const karabo::util::State& cs, const karabo::util::Timestamp& timestamp) {
+                updateState(cs, karabo::util::Hash(), timestamp);
+            }
+
+            /**
+             * Update the state of the device, using given timestamp.
+             *
+             * Will also update the instanceInfo describing this device instance (if new or old State are ERROR).
+             *
+             * @param cs: the state to update to
+             * @param other: a Hash to set other properties in the same state update message,
              *               time stamp attributes to its paths have precedence over the given 'timestamp'
              * @param timestamp: time stamp to assign to the state property and the properties in 'other'
              *                   (if the latter do not have specified timestamp attributes)
