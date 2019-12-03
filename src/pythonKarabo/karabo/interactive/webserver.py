@@ -87,7 +87,7 @@ def getdata(name):
         if pid and want == b"\0":
             status += ", once"
 
-        return {'name': name, 'karabo_name': karabo_name,'status': status,
+        return {'name': name, 'karabo_name': karabo_name, 'status': status,
                 'since': since, 'duration': duration}
     except Exception as e:
         print('{}: Exception {} when fetching service status {}'
@@ -107,9 +107,11 @@ def server_up(server):
 
 
 class DaemonHandler(web.RequestHandler):
-    def initialize(self, service_list=None, service_id=None):
+    """Rest interface to handle the control of the services via json"""
+    def initialize(self, service_list=None, service_id=None, subscriber=None):
         self.service_list = service_list
         self.service_id = service_id
+        self.subscriber = subscriber
 
     def get(self, server_id=None):
         response = EMPTY_RESPONSE
@@ -134,6 +136,8 @@ class DaemonHandler(web.RequestHandler):
             response['success'] = True
             conf['status'] = conf.pop('command')
             response['servers'] = [conf]
+        if self.subscriber is not None:
+            ensure_future(self.subscriber.push_once())
         self.write(response)
 
 
@@ -188,9 +192,11 @@ class FileHandler(web.RequestHandler):
 
 
 class MainHandler(web.RequestHandler):
-    def initialize(self, service_list=None, service_id=None):
+    def initialize(self, service_list=None, service_id=None, subscriber=None):
         self.service_list = service_list
         self.service_id = service_id
+        # The subscriber class to post on an eventual aggregator
+        self.subscriber = subscriber
 
     def get(self):
         data = [getdata(d) for d in filter_services(self.service_id,
@@ -210,6 +216,8 @@ class MainHandler(web.RequestHandler):
                       ''.format(datetime.now(), repr(self.request), cmd, s))
                 continue
             control_service(s, cmd)
+        if self.subscriber is not None:
+            ensure_future(self.subscriber.push_once())
 
 
 class StatusHandler(web.RequestHandler):
@@ -223,10 +231,10 @@ class StatusHandler(web.RequestHandler):
 
 
 class Subscriber():
-    def __init__(self, uris, server):
+    def __init__(self, uris, port):
         self.uris = uris
-        s = next(iter(server._sockets.values()))
-        self.port = s.getsockname()[1]
+        # Port we are sending to
+        self.port = port
         self.client = AsyncHTTPClient()
         self.hostname = socket.gethostname()
 
@@ -240,15 +248,20 @@ class Subscriber():
         if len(self.uris) == 0:
             return
         while True:
-            body = urllib.parse.urlencode(
-                {"port": self.port,
-                 "hostname": self.hostname
-                 })
-            futs = [to_asyncio_future(
-                        self.client.fetch(uri, method="POST", body=body))
-                    for uri in self.uris]
-            await gather(*futs, return_exceptions=True)
-            await sleep(10)
+            await self.push_once()
+            await sleep(5)
+
+    async def push_once(self):
+        if len(self.uris) == 0:
+            return
+        body = urllib.parse.urlencode(
+            {"port": self.port,
+             "hostname": self.hostname
+             })
+        futs = [to_asyncio_future(
+            self.client.fetch(uri, method="POST", body=body))
+                for uri in self.uris]
+        await gather(*futs, return_exceptions=True)
 
 
 @entrypoint
@@ -287,11 +300,24 @@ def run_webserver():
     else:
         parser.print_help()
         return
+
+    # Tornado asyncio workaround!
+    if hasattr(AsyncIOMainLoop, "initialized"):
+        if not AsyncIOMainLoop.initialized():
+            AsyncIOMainLoop().install()
+
     service_list = set(args.filter)
     # need to fool the startkarabo library since it uses sys.argv and
     # sys.argv and argparse don't mix well.
     sys.argv = sys.argv[:1]
-    server_dict = {'service_list': service_list, 'service_id': service_id}
+
+    uris = args.webserver_aggregators
+    subscribe = Subscriber(uris, args.port)
+
+    server_dict = {'service_list': service_list,
+                   'service_id': service_id,
+                   'subscriber': subscribe}
+
     app = web.Application([('/', MainHandler, server_dict),
                            ('/api/servers.json', StatusHandler),
                            ('/api/servers/([a-zA-Z0-9_/]+)/log.html',
@@ -306,14 +332,10 @@ def run_webserver():
                           template_path=os.path.join(
                               os.path.dirname(__file__), "templates"),
                           static_path=os.path.join(
-                              os.path.dirname(__file__), "static"),)
-    if hasattr(AsyncIOMainLoop, "initialized"):
-        if not AsyncIOMainLoop.initialized():
-            AsyncIOMainLoop().install()
-    uris = args.webserver_aggregators
+                              os.path.dirname(__file__), "static"),
+                          )
     server = httpserver.HTTPServer(app)
     server.listen(args.port)
-    subscribe = Subscriber(uris, server)
     ensure_future(subscribe())
     loop = get_event_loop()
     loop.run_forever()
