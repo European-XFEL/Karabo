@@ -500,7 +500,7 @@ namespace karabo {
             DeviceClient& remote() {
                 if (!m_deviceClient) {
                     // Initialize an embedded device client (for composition)
-                    m_deviceClient = boost::shared_ptr<DeviceClient > (new DeviceClient(shared_from_this()));
+                    m_deviceClient = boost::make_shared<DeviceClient>(shared_from_this());
                 }
                 return *(m_deviceClient);
             }
@@ -601,10 +601,14 @@ namespace karabo {
              * alarm bounds are evaluated and alarms on properties will be raised if alarm
              * conditions are met. Additionally, the distributed system is notified of these
              * alarms.
+             * For those paths in 'hash' which do not already have time stamp attributes assigned as tested by
+             * Timestamp::hashAttributesContainTimeInformation(hash.getAttributes(<path>))),
+             * the actual timestamp is chosen.
              *
              * NOTE: This function will automatically and efficiently (only one message) inform
              * any observers.
-             * @param config Hash of updated internal parameters (must be declared in the expectedParameters function)
+             * @param hash Hash of updated internal parameters
+             *             (must be in current full schema, e.g. since declared in the expectedParameters function)
              */
             void set(const karabo::util::Hash& hash) {
                 this->set(hash, getActualTimestamp());
@@ -621,8 +625,11 @@ namespace karabo {
              *
              * NOTE: This function will automatically and efficiently (only one message) inform
              * any observers.
-             * @param config Hash of updated internal parameters (must be declared in the expectedParameters function)
-             * @param timestamp optional timestamp to indicate when the set occurred
+             * @param hash Hash of updated internal parameters
+             *             (must be in current full schema, e.g. since declared in the expectedParameters function)
+             * @param timestamp to indicate when the set occurred - but is ignored for paths in 'hash'
+             *                  that already have time stamp attributes as tested by
+             *                  Timestamp::hashAttributesContainTimeInformation(hash.getAttributes(<path>)))
              */
             void set(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
                 using namespace karabo::util;
@@ -1069,16 +1076,38 @@ namespace karabo {
             }
 
             /**
-             * Update the state of the device. Will also update the instanceInfo
-             * describing this device instance
+             * Update the state of the device, using "actual timestamp".
+             *
+             * Will also update the instanceInfo describing this device instance (if new or old State are ERROR).
+             *
              * @param cs: the state to update to
+             * @param other: an optional Hash to set other properties in the same state update message,
+             *               time stamp attributes to its paths have precedence over the actual timestamp
              */
-            void updateState(const karabo::util::State& cs) {
+            void updateState(const karabo::util::State& cs, const karabo::util::Hash& other = karabo::util::Hash()) {
+                updateState(cs, other, getActualTimestamp());
+            }
+
+            /**
+             * Update the state of the device, using given timestamp.
+             *
+             * Will also update the instanceInfo describing this device instance (if new or old State are ERROR).
+             *
+             * @param cs: the state to update to
+             * @param other: an optional Hash to set other properties in the same state update message,
+             *               time stamp attributes to its paths have precedence over the given 'timestamp'
+             * @param timestamp: time stamp to assign to the state property and the properties in 'other'
+             *                   (if the latter do not have specified timestamp attributes)
+             *
+             */
+            void updateState(const karabo::util::State& cs, karabo::util::Hash other, const karabo::util::Timestamp& timestamp) {
                 try {
                     const std::string& currentState = cs.name();
                     KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ".updateState: \"" << currentState << "\".";
                     if (getState().name() != currentState) {
-                        set("state", cs);
+                        // Set state as string, but add state marker attribute KARABO_INDICATE_STATE_SET
+                        other.set("state", currentState)
+                                .setAttribute(KARABO_INDICATE_STATE_SET, true);
                         if (boost::regex_match(currentState, m_errorRegex)) {
                             updateInstanceInfo(karabo::util::Hash("status", "error"));
                         } else {
@@ -1089,7 +1118,12 @@ namespace karabo {
                             }
                         }
                     }
-                    // Reply new state to interested event initiators
+                    if (!other.empty()) set(other, timestamp);
+
+                    // Place the new state as reply for interested event initiators
+                    // This is intended for lazy device programmers: A slot call should reply any new state. If the
+                    // slot does not call reply(..) again after updateState, the slot will implicitly take this here.
+                    // Note that in case of asynchronous slot completion the AsyncReply has to be instructed explicitly.
                     reply(currentState);
 
                 } catch (const karabo::util::Exception& e) {
