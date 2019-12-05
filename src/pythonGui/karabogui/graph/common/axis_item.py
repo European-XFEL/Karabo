@@ -10,6 +10,11 @@ from karabogui.graph.common.const import (
     INTEGER_STATE_MAP)
 from karabogui.graph.common.enums import AxisType
 
+HOUR_IN_SECONDS = 60 * 60
+DAY_IN_SECONDS = HOUR_IN_SECONDS * 24
+MONTH_IN_SECONDS = DAY_IN_SECONDS * 30
+YEAR_IN_SECONDS = MONTH_IN_SECONDS * 12
+
 
 class AxisItem(PgAxisItem):
     axisDoubleClicked = pyqtSignal()
@@ -17,13 +22,13 @@ class AxisItem(PgAxisItem):
     STYLE = {
         "autoExpandTextSpace": False,
         "tickTextWidth": 50,
-        "tickTextHeight": 24}
+        "tickTextHeight": 24
+    }
 
     FONT_SIZE = 10
 
     def __init__(self, orientation, has_ticks=True):
-        """
-        Base class for pretty axis items.
+        """Base class for pretty axis items.
 
         :param orientation: Location of the axis item in the plot
             Choose from ["left", "right", "top", "bottom"]
@@ -57,10 +62,8 @@ class AxisItem(PgAxisItem):
         """Reimplemented because we don't want labels for minor axes"""
         if not self.has_ticks:
             return
-        super(AxisItem, self).setLabel(text=text,
-                                       units=units,
-                                       unitPrefix=unitPrefix,
-                                       **args)
+        super(AxisItem, self).setLabel(text=text, units=units,
+                                       unitPrefix=unitPrefix, **args)
 
     def drawPicture(self, p, axisSpec, tickSpecs, textSpecs):
         """Reimplemented because we don't want tick strings for minor axes"""
@@ -87,41 +90,46 @@ class AxisItem(PgAxisItem):
                 p.drawText(rect, flags, text)
 
     def mouseDragEvent(self, event):
-        """pyqtgraph axis items have drag events which can enables panning of
-           the viewbox. This is a problem for axis with grids because it is
-           resized to fill the viewbox, which in turn will catch the wanted
-           viewbox drag events. We ignore this event instead as it's not
-           really used."""
+        """Reimplemented function of PyQt
+
+        PyQtGraph axis items have drag events which can enables panning
+        of the viewbox.
+        This is a problem for axis with grids because it is resized to fill the
+        viewbox, which in turn will catch the wanted viewbox drag events.
+
+        We ignore this event instead as it's not really used.
+        """
         event.ignore()
 
 
 class TimeAxisItem(AxisItem):
-    LABEL_FORMATS = ((60 + 30, "%Ss"),  # Up to 1min 30s
-                     (60 * 60 * 4, "%H:%M"),  # Up to 4 hours
-                     (60 * 60 * 28, "%Hh"),  # Up to 1 day
-                     (60 * 60 * 24 * 25, "%d"),  # Up to 25 days
-                     (60 * 60 * 24 * 30 * 6, "%d/%m"))  # Up to 6 months
 
     def __init__(self, *args, **kwargs):
         super(TimeAxisItem, self).__init__(*args, **kwargs)
-
-        self.format_string = '%Ss'
+        self.format_string = "%Ss"
 
     def setRange(self, min_range, max_range):
         """Set the range and decide which format string we should use"""
         super(TimeAxisItem, self).setRange(min_range, max_range)
 
-        first_datetime = datetime.utcfromtimestamp(min_range)
-        last_datetime = datetime.utcfromtimestamp(max_range)
+        first = datetime.utcfromtimestamp(min_range)
+        last = datetime.utcfromtimestamp(max_range)
+        diff = (last - first).total_seconds()
 
-        # Get the whole diff in seconds
-        diff_in_seconds = (last_datetime - first_datetime).total_seconds()
-        for seconds_for_format, format_string in self.LABEL_FORMATS:
-            if diff_in_seconds < seconds_for_format:
-                self.format_string = format_string
-                break
-        else:
-            self.format_string = '%d/%m/%Y'
+        datetime_format = "%b %Y"
+
+        if last.year == first.year:
+            datetime_format = "%d %b"
+            if last.day == first.day:
+                datetime_format = "%H:%M"
+                if diff < 60 * 10:  # Difference is under 10 mins
+                    datetime_format = "%H:%M:%S"
+            elif diff < DAY_IN_SECONDS * 7:
+                datetime_format = "%d %b, %H:%M"
+        elif diff < YEAR_IN_SECONDS * 3:
+            datetime_format = "%d %b %Y"
+
+        self.format_string = datetime_format
 
     def tickStrings(self, values, scale, spacing):
         values = [datetime.fromtimestamp(value).strftime(self.format_string)
@@ -168,10 +176,10 @@ class AuxPlotAxisItem(AxisItem):
         self.tickFont = font
 
     # ---------------------------------------------------------------------
-    # pyqtgraph methods
+    # PyQtGraph methods
 
     def _updateWidth(self):
-        """Patching to match known width of main plot"""
+        """Reimplemented function to match known width of main plot"""
         if self.label.isVisible():
             self.setFixedWidth(Y_AXIS_WIDTH)
             self.picture = None
@@ -179,7 +187,7 @@ class AuxPlotAxisItem(AxisItem):
             super(AuxPlotAxisItem, self)._updateWidth()
 
     def _updateHeight(self):
-        """Patching to match known height of main plot"""
+        """Reimplemented function to match known height of main plot"""
         if self.label.isVisible():
             self.setFixedHeight(X_AXIS_HEIGHT)
             self.picture = None
@@ -187,7 +195,7 @@ class AuxPlotAxisItem(AxisItem):
             super(AuxPlotAxisItem, self)._updateHeight()
 
     def updateAutoSIPrefix(self):
-        """Patching to scale tick values after 10^3"""
+        """Reimplemented function to scale tick values after ~10^3"""
         if self.label.isVisible():
             (scale, prefix) = siScale(max(abs(self.range[0] * self.scale),
                                           abs(self.range[1] * self.scale)))
@@ -203,14 +211,16 @@ class AuxPlotAxisItem(AxisItem):
         self.update()
 
     def labelString(self):
-        """Patching to improve label display of scaled axes (e.g. x 10^6)"""
+        """Reimplemented function to improve label display of scaled axes
+
+        This is required for axis values ~ 10^6.
+        """
         if self.labelUnits != '':
-            units = ('(%s%s)') % ((self.labelUnitPrefix),
-                                  (self.labelUnits))
+            units = ('(%s%s)') % (self.labelUnitPrefix, self.labelUnits)
         else:
             units = ''
 
-        s = ('%s %s') % ((self.labelText), (units))
+        s = ('%s %s') % (self.labelText, units)
         style = ';'.join(['%s: %s' % (k, self.labelStyle[k])
                           for k in self.labelStyle])
         main = "<span align='center' style='%s'>%s</span>" % (style, s)
@@ -240,16 +250,20 @@ def create_axis_items(axis=AxisType.Classic, axes_with_ticks=[]):
 
     The ``axis`` type defines the possible axis.
     """
+
+    def _intersect(axis, tick_axis):
+        return set(axis).intersection(tick_axis)
+
     time_axis, state_axis, aux_axis, alarm_axis = [], [], [], []
 
     if axis is AxisType.Time:
-        time_axis = _intersection(AXIS_X, axes_with_ticks)
+        time_axis = _intersect(AXIS_X, axes_with_ticks)
     elif axis is AxisType.State:
-        state_axis = _intersection(AXIS_Y, axes_with_ticks)
-        time_axis = _intersection(AXIS_X, axes_with_ticks)
+        state_axis = _intersect(AXIS_Y, axes_with_ticks)
+        time_axis = _intersect(AXIS_X, axes_with_ticks)
     elif axis is AxisType.Alarm:
-        alarm_axis = _intersection(AXIS_Y, axes_with_ticks)
-        time_axis = _intersection(AXIS_X, axes_with_ticks)
+        alarm_axis = _intersect(AXIS_Y, axes_with_ticks)
+        time_axis = _intersect(AXIS_X, axes_with_ticks)
     elif axis is AxisType.AuxPlot:
         aux_axis = axes_with_ticks
     items = {}
@@ -272,7 +286,3 @@ def create_axis_items(axis=AxisType.Classic, axes_with_ticks=[]):
         items[orientation] = axis_item
 
     return items
-
-
-def _intersection(list_1, list_2):
-    return set(list_1).intersection(list_2)
