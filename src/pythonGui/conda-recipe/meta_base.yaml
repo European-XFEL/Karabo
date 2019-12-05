@@ -11,6 +11,9 @@
 # [[[end]]]
 {% set project_root = os.environ['CI_PROJECT_DIR'] %}
 
+# set the project root directory by setting the CI_PROJECT_DIR environment var
+# on conda build
+
 package:
   name: karabogui
   version: {{ version }}
@@ -50,4 +53,3 @@ test:
     - karabogui
     - karabo.native
     - karabo.common
-
