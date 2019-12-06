@@ -1,6 +1,5 @@
 /*
  * File:   FileLogReader.hh
- * Author: <raul.costa@xfel.eu>
  *
  * Created on November 8, 2019, 3:40 AM
  *
@@ -15,6 +14,7 @@
 #include <boost/regex.hpp>
 #include <boost/thread/mutex.hpp>
 
+#include "karabo/io/TextSerializer.hh"
 #include "karabo/util/ClassInfo.hh"
 #include "karabo/util/Hash.hh"
 #include "karabo/util/Schema.hh"
@@ -53,7 +53,6 @@ namespace karabo {
          * @brief A compound structure holding data on an logger archive file
          */
         struct PropFileInfo {
-
             typedef boost::shared_ptr<PropFileInfo> Pointer;
             boost::mutex filelock;
             size_t filesize;
@@ -72,6 +71,7 @@ namespace karabo {
         class IndexBuilderService : public boost::enable_shared_from_this<IndexBuilderService> {
 
         public:
+
             // Needed for 'Pointer' and KARABO_LOG_FRAMEWORK
             KARABO_CLASSINFO(IndexBuilderService, "IndexBuilderService", "1.4")
 
@@ -114,6 +114,7 @@ namespace karabo {
             boost::mutex m_mutex;
             karabo::net::Strand::Pointer m_idxBuildStrand;
         };
+
 
         /**
          * A reader for data logs stored in text files by the class
@@ -193,6 +194,8 @@ namespace karabo {
             static const boost::regex m_indexLineRegex;
             static const boost::regex m_indexTailRegex;
             std::string m_ltype;
+            karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_serializer;
+            karabo::io::TextSerializer<karabo::util::Schema>::Pointer m_schemaSerializer;
 
         };
 
@@ -201,3 +204,4 @@ namespace karabo {
 } // namespace karabo
 
 #endif	/* FILELOGREADER_HH */
+
