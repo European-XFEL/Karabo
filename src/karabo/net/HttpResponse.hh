@@ -19,6 +19,7 @@ namespace karabo {
     namespace net {
 
         struct HttpResponse {
+
             int code;
             std::string message;
             std::string contentType;
@@ -50,8 +51,8 @@ namespace karabo {
                 , connection("")
                 , transferEncoding("")
                 , payload("")
-                , payloadArrived(true)
-            {}
+                , payloadArrived(true) {
+            }
 
             void clear() {
                 *this = HttpResponse();
