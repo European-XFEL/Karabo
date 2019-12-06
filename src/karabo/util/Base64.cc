@@ -6,10 +6,12 @@
  * Copyright (c) 2010-2012 European XFEL GmbH Hamburg. All rights reserved.
  */
 
+#include <algorithm>
 #include <vector>
 
 #include "Base64.hh"
 #include "Exception.hh"
+#include "StringTools.hh"
 
 namespace karabo {
     namespace util {
@@ -114,9 +116,23 @@ namespace karabo {
                     i3 = t3 = 0;
 
                 // Check that all input bytes are base64
-                if (t0 == std::string::npos || t1 == std::string::npos ||
-                    t2 == std::string::npos || t3 == std::string::npos) {
-                    throw KARABO_CAST_EXCEPTION("base64_decode: Non-base64 found in the string to be decoded");
+                int invalidByteOffset = -1;
+                if (t0 == std::string::npos) {
+                    invalidByteOffset = 0;
+                } else if (t1 == std::string::npos) {
+                    invalidByteOffset = 1;
+                } else if (t2 == std::string::npos) {
+                    invalidByteOffset = 2;
+                } else if (t3 == std::string::npos) {
+                    invalidByteOffset = 3;
+                }
+                if (invalidByteOffset >= 0) {
+                    const std::string errorNeighborhood =
+                            in.substr(std::max((size_t) 0, i + invalidByteOffset - 10),
+                                      std::min((size_t) 21, in.size()-(i + invalidByteOffset)));
+                    throw KARABO_CAST_EXCEPTION(std::string("base64_decode: Non-base64 character, '") + in[i+invalidByteOffset] + "', found at position '"
+                                                + toString(i + invalidByteOffset) + "' in the string to be decoded:\n..."
+                                                + errorNeighborhood + "...");
                 }
 
                 // Decode input bytes
