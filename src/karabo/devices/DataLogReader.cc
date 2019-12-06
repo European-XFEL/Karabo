@@ -25,8 +25,6 @@ namespace karabo {
 
         DataLogReader::DataLogReader(const Hash& input)
             : karabo::core::Device<karabo::core::OkErrorFsm>(input) {
-            m_serializer = TextSerializer<Hash>::create("Xml");
-            m_schemaSerializer = TextSerializer<Schema>::create("Xml");
             KARABO_SLOT(slotGetPropertyHistory, string /*deviceId*/, string /*key*/, Hash /*params*/);
             KARABO_SLOT(slotGetConfigurationFromPast, string /*deviceId*/, string /*timepoint*/);
         }

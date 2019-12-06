@@ -12,7 +12,6 @@
 
 #include "karabo/core/Device.hh"
 #include "karabo/core/OkErrorFsm.hh"
-#include "karabo/io/TextSerializer.hh"
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/net/Strand.hh"
 
@@ -84,18 +83,15 @@ namespace karabo {
              * The slot replies with a tuple of 4 values. The first two are the Hash and Schema objects containing the
              * configuration Hash and the corresponding device schema for timepoint. The third is a boolean whose true
              * value indicates the device was online and actively logging data at the timepoint. The fourth value is
-             * the string form of the timepoint for the configuration returned. If the device was online and actively
-             * logging at the given timepoint, the fourth parameter will be the given timepoint; otherwise, the fourth
-             * parameter will be the timepoint for the configuration returned.
+             * the string form of the timepoint for the configuration returned and will be the latest timestamp among
+             * the timestamps of the properties in the configuration returned.
              *
-             * An important note: if no configuration is found for the device at the timepoint, the third value in the
-             * reply will be false and the fourth will be the string form of the Epoch (01/01/1970 at 00:00:00).
+             * An important note: if no configuration is found for the device at the timepoint (or before the timepoint),
+             * the third value in the reply will be false and the fourth will be the string form of the Epoch
+             * (01/01/1970 at 00:00:00).
              */
             virtual void slotGetConfigurationFromPast(const std::string& deviceId,
                                                       const std::string& timepoint) = 0;
-
-            karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_serializer;
-            karabo::io::TextSerializer<karabo::util::Schema>::Pointer m_schemaSerializer;
 
         private: // Functions
 
@@ -106,4 +102,3 @@ namespace karabo {
 }
 
 #endif	/* DATALOGREADER_HH */
-
