@@ -15,7 +15,8 @@ class DataLogging_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(DataLogging_Test);
 
-    CPPUNIT_TEST(allTestRunner);
+    CPPUNIT_TEST(fileAllTestRunner);
+    // CPPUNIT_TEST(influxAllTestRunner);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -26,9 +27,9 @@ public:
     void tearDown();
 
 private:
-    void allTestRunner();
+    void fileAllTestRunner();
+    void influxAllTestRunner();
     void testAllInstantiated();
-    void testInt();
 
     /**
      * Checks that a call to slotGetPropertyHistory within a time
@@ -38,20 +39,18 @@ private:
      */
     void testHistoryAfterChanges();
 
-    void testFloat();
-    void testString();
-    void testVectorString();
-    void testTable();
+    void testInt(bool testPastConf = true);
+    void testFloat(bool testPastConf = false);
+    void testString(bool testPastConf = false);
+    void testVectorString(bool testPastConf = false);
+    void testTable(bool testPastConf = false);
+
     void testLastKnownConfiguration();
     template <class T> void testHistory(const std::string& key, const std::function<T(int)>& f, const bool testConf);
     std::string m_server;
     std::string m_deviceId;
     bool m_changedPath;
     std::string m_oldPath;
-
-    // This will contain the timestamp of the instantiation of "this" DataLoggingTest - guaranteed to precede any
-    // logging activity / performed during any test case execution.
-    karabo::util::Epochstamp m_beforeAnything;
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_eventLoopThread;
