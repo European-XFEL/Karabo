@@ -1,6 +1,5 @@
 /*
  * File:   FileLogReader.cc
- * Author: <raul.costa@xfel.eu>
  *
  * Created on November 8, 2019, 3:40 AM
  *
@@ -126,6 +125,8 @@ namespace karabo {
 
         FileLogReader::FileLogReader(const Hash& input)
             : karabo::devices::DataLogReader(input) {
+            m_serializer = TextSerializer<Hash>::create("Xml");
+            m_schemaSerializer = TextSerializer<Schema>::create("Xml");
             m_ibs = IndexBuilderService::getInstance();
         }
 
@@ -501,9 +502,11 @@ namespace karabo {
                                 current = stringDoubleToEpochstamp(tokens[2]);
                                 if (current > target)
                                     break;
-                                // configTimepoint is the stamp for the latest retrieved property value that
+                                // configTimepoint is the stamp for the latest logged property value that
                                 // precedes the input timepoint.
-                                configTimepoint = current;
+                                if (current > configTimepoint) {
+                                    configTimepoint = current;
+                                }
                                 // tokens[3] is trainId
                                 const Timestamp timestamp(current, fromString<unsigned long long>(tokens[3]));
                                 // tokens[5] and [6] are type and value, respectively
@@ -518,10 +521,7 @@ namespace karabo {
                     }
                 }
 
-                // Makes a final adjustment: if the config was active at the input timepoint, makes configTimepoint
-                // equal to the input timepoint.
-                string configTimepointStr(configAtTimepoint ? timepoint : configTimepoint.toIso8601());
-
+                string configTimepointStr(configTimepoint.toIso8601());
                 reply(hash, schema, configAtTimepoint, configTimepointStr);
 
             } catch (...) {
@@ -927,7 +927,6 @@ namespace karabo {
             // Match tail fields;
             boost::smatch tailFields;
             bool matches = boost::regex_search(tail, tailFields, m_indexTailRegex);
-
             if (matches) {
                 // Assign tail fields.
                 entry.m_train = karabo::util::fromString<unsigned long long>(tailFields[1]);
@@ -948,4 +947,5 @@ namespace karabo {
 
 boost::mutex karabo::devices::FileLogReader::m_propFileInfoMutex;
 std::map<std::string, karabo::devices::PropFileInfo::Pointer > karabo::devices::FileLogReader::m_mapPropFileInfo;
+
 
