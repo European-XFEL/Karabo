@@ -86,7 +86,7 @@ class DisplayVectorGraph(BaseBindingController):
             plot.clear()
             return
 
-        # NOTE: WE cast boolean as int, as PyQtGraph cannot handle in Qt5
+        # NOTE: WE cast boolean as int, as numpy method is deprecated
         if y.dtype == np.bool:
             y = y.astype(np.int)
 
