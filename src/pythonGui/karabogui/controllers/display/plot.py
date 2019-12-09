@@ -58,6 +58,10 @@ class DisplayPlot(BaseBindingController):
             return
         value = proxy.value
 
+        # NOTE: WE cast boolean as int, as numpy method is deprecated
+        if value.dtype == np.bool:
+            value = value.astype(np.int)
+
         # XXX: We have to do some gymnastics for np.arrays and have to copy
         # due to ndarray read-only specifier. Investigate later if we can
         # set the write flag without harming our proxies
