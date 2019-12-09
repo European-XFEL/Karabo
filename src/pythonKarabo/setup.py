@@ -56,6 +56,7 @@ else:
             'static/favicon.ico',
             'templates/*.html'],
         'karabo.testing': ['resources/*.*'],
+        'karabo.influxdb.tests': ['sample_data/*.txt'],
     }
 
     entry_points = {
@@ -77,6 +78,7 @@ else:
             'karabo-remove-deviceserver=karabo.interactive.startkarabo:removedeviceserver',
             'karabo-webserver=karabo.interactive.webserver:run_webserver',
             'karabo-webaggregatorserver=karabo.interactive.webaggregatorserver:run_webserver',
+            'migrate-karabo-history=karabo.influxdb.dl_migrator:main',
         ],
         'karabo.bound_device': [
             'PropertyTest=karabo.bound_devices.property_test:PropertyTest',
@@ -89,7 +91,12 @@ else:
         ],
         'karabo.bound_device_test': [
             'TestDevice=karabo.middlelayer_api.tests.bounddevice:TestDevice'
-        ]
+        ],
+        'karabo.middlelayer_device_test': [
+            'DataLoggerManager=karabo.middlelayer_devices.influxdb_reader:DataLoggerManager',
+            'DataLogReader=karabo.middlelayer_devices.influxdb_reader:DataLogReader',
+            'InfluxDBLogger=karabo.middlelayer_devices.influxdb_logger:InfluxDBLogger',
+        ],
     }
 
 CURRENT_FOLDER = os.path.dirname(os.path.realpath(__file__))
