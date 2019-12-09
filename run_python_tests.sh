@@ -219,6 +219,7 @@ runPythonUnitTests() {
     safeRunCommand "$NOSETESTS -v $FLAKY_FLAGS $COVER_FLAGS karabo.middlelayer_api"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.common"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.middlelayer_devices"
+    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.influxdb"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.native"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.project_db"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.tests"
