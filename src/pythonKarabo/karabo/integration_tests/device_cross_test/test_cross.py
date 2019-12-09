@@ -387,7 +387,11 @@ class Tests(DeviceTest):
       <DataLoggerManager>
         <!-- Frequent flushing of raw and index files every 1 s: -->
         <flushInterval KRB_Type="INT32">1</flushInterval>
-        <directory KRB_Type="STRING">karaboHistory</directory>
+        <logger>
+            <FileDataLogger>
+                <directory KRB_Type="STRING">karaboHistory</directory>
+            </FileDataLogger>
+        </logger>
         <serverList KRB_Type="VECTOR_STRING">karabo/dataLogger</serverList>
       </DataLoggerManager>
     </KRB_Item>
