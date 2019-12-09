@@ -86,6 +86,8 @@ class Tests(TestCase):
         self.assertEqual(t.timestamp, 22)
         self.assertEqual(str(t), "True")
         self.assertEqual(repr(t), "True")
+        self.assertEqual(int(t), 1)
+        self.assertEqual(float(t), 1.0)
 
         f = BoolValue(False, descriptor=3, timestamp=33)
         self.assertFalse(f)
@@ -93,6 +95,8 @@ class Tests(TestCase):
         self.assertEqual(f.timestamp, 33)
         self.assertEqual(str(f), "False")
         self.assertEqual(repr(f), "False")
+        self.assertEqual(int(f), 0)
+        self.assertEqual(float(f), 0.0)
 
         # BoolValue isn't a bool, assure we can still serialize
         encodeBinary(Hash("t", t, "f", f))
