@@ -6,7 +6,7 @@
 from functools import partial
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QAction, QDialog, QMenu
+from PyQt5.QtWidgets import QAction, QDialog, QMenu, QTextEdit, QVBoxLayout
 from traits.api import Instance, Int
 
 from karabo.common.project.api import (
@@ -16,11 +16,45 @@ from karabogui.enums import ProjectItemTypes
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.project.dialog.object_handle import ObjectEditDialog
 from karabogui.project.utils import check_device_config_exists
+from karabogui.util import create_html_hash
 from karabo.native import Hash
 from .bases import BaseProjectController, ProjectControllerUiData
 from .device import DeviceInstanceController
 
 DEFAULT = 'default'
+
+
+class ConfigurationDialog(QDialog):
+    def __init__(self, model=None, parent=None):
+        super(ConfigurationDialog, self).__init__(parent)
+        self.setModal(False)
+
+        config_name = model.simple_name
+        self.setWindowTitle("Stored changes in configuration {} from "
+                            "device default".format(config_name))
+
+        flags = Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint
+        self.setWindowFlags(self.windowFlags() | flags)
+
+        self._text_info = QTextEdit(self)
+        self._text_info.setReadOnly(True)
+        self._text_info.setMinimumWidth(500)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(1, 1, 1, 1)
+        main_layout.addWidget(self._text_info)
+
+        config = model.configuration
+        # XXX: Protect as well against a `None` configuration!
+        if config is None or config.empty():
+            html_string = ("<center>No changes in configuration!</center>")
+        else:
+            html_string = create_html_hash(config)
+
+        scroll_bar = self._text_info.verticalScrollBar()
+        pos = scroll_bar.sliderPosition()
+        self._text_info.setHtml(html_string)
+        self._text_info.adjustSize()
+        scroll_bar.setValue(pos)
 
 
 class DeviceConfigurationController(BaseProjectController):
@@ -57,9 +91,15 @@ class DeviceConfigurationController(BaseProjectController):
                                               parent=parent))
         conf_action.setEnabled(proxy.online)
 
+        store_conf_action = QAction('Stored configuration', menu)
+        store_conf_action.triggered.connect(partial(self._show_config,
+                                                    project_controller,
+                                                    parent=parent))
+
         menu.addAction(edit_action)
         menu.addAction(delete_action)
         menu.addAction(conf_action)
+        menu.addAction(store_conf_action)
 
         return menu
 
@@ -74,6 +114,11 @@ class DeviceConfigurationController(BaseProjectController):
 
     # ----------------------------------------------------------------------
     # QAction handlers
+
+    def _show_config(self, project_controller, parent=None):
+        model = self.model
+        dialog = ConfigurationDialog(model=model, parent=parent)
+        dialog.exec_()
 
     def _load_config(self, project_controller, parent=None):
         """Send a configuration to the configurator
