@@ -623,13 +623,10 @@ class NetworkOutput(Configurable):
     @coroutine
     def getInformation(self, channelName):
         self.channelName = channelName
-        if self.server is None:
-            # We are called when we just started, hence we wait for our
-            # server to come online!
-            loop = get_event_loop()
-            while self.server is None:
-                yield from loop.waitForChanges()
-
+        # We are called when we just started, hence we wait for our
+        # server to come online!
+        while self.server is None:
+            yield from sleep(0.05)
         host, port = self.server.sockets[0].getsockname()
         return Hash("connectionType", "tcp", "hostname", host,
                     "port", numpy.uint32(port))
