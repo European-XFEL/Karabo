@@ -10,6 +10,7 @@ from types import MethodType
 from uuid import uuid4
 import webbrowser
 import weakref
+from xml.sax.saxutils import escape
 
 from dateutil.tz import tzlocal, tzutc
 from PyQt5.QtCore import QEvent, QObject, Qt, QSize
@@ -20,7 +21,7 @@ from PyQt5.QtGui import QCursor, QMovie, QValidator
 from karabo.common.enums import ONLINE_STATUSES
 from karabo.common.project.api import read_macro
 from karabo.common.scenemodel.api import SceneTargetWindow, read_scene
-from karabo.native import decodeXML, Hash, writeXML
+from karabo.native import decodeXML, Hash, HashList, writeXML
 from karabogui import globals as krb_globals, icons, messagebox
 from karabogui.binding.api import (
     DeviceClassProxy, DeviceProxy, extract_configuration)
@@ -32,6 +33,7 @@ from karabogui.singletons.api import get_config, get_db_conn, get_topology
 class MouseWheelEventBlocker(QObject):
     """A QObject which can be used for event filtering of mouse wheel events.
     """
+
     def __init__(self, widget):
         super(MouseWheelEventBlocker, self).__init__()
         self.widget = widget
@@ -57,6 +59,7 @@ class SignalBlocker(object):
 class WeakMethodRef(object):
     """A weakref.ref() for bound methods
     """
+
     def __init__(self, bound_method, num_args=-1):
         # Preconditions...
         # bound_method MUST be a bound method
@@ -103,7 +106,6 @@ def getOpenFileName(parent=None, caption="", filter="", directory=""):
 
 def getSaveFileName(parent=None, caption="", filter="", directory="",
                     suffix="", selectFile=""):
-
     directory = directory or krb_globals.HIDDEN_KARABO_FOLDER
 
     dialog = QFileDialog(parent, caption, directory, filter)
@@ -226,12 +228,14 @@ def wait_cursor():
 
 def show_wait_cursor(func):
     """Show the processing ``busy`` function in the karabo gui"""
+
     def wrapper(*args, **kwargs):
         try:
             QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
             return func(*args, **kwargs)
         finally:
             QApplication.restoreOverrideCursor()
+
     return wrapper
 
 
@@ -411,6 +415,7 @@ class InputValidator(QValidator):
         part_one[/optional_part_two[/optional_part_three[/and_so_on]]]
         '-' sign is also allowed
     """
+
     def __init__(self, parent=None):
         QValidator.__init__(self, parent)
 
@@ -433,8 +438,8 @@ def show_filename_error(filename, parent=None):
         invalid_chars.append("<space>")
 
     message = (
-        "Filename contains the following invalid character(s):\n{}"
-        .format(' '.join(invalid_chars)))
+        "Filename contains the following invalid character(s):\n{}".format(
+            ' '.join(invalid_chars)))
 
     messagebox.show_error(message, "Unable to Load File", parent=parent)
 
@@ -472,3 +477,38 @@ def open_documentation_link(deviceId):
         webbrowser.open_new(url)
     except webbrowser.Error:
         messagebox.show_error("No web browser available!")
+
+
+def create_html_hash(hsh):
+    """Create the HTML representation of a Hash
+    """
+    assert isinstance(hsh, Hash), "An input of type ``Hash`` is required!"
+
+    def _html_attributes(nest, attrs):
+        for key, value in attrs.items():
+            yield ('<tr><td style="padding-left:{}em">'
+                   '<font size="1" color="red">'
+                   '{}</td><td>'.format(nest + 1, key))
+            yield '<font size="1" color="red">{}'.format(escape(str(value)))
+
+    def _html_hash_generator(hsh, nest=0):
+        if nest == 0:
+            yield "<table>"
+        for key, value, attr in hsh.iterall():
+            if isinstance(value, Hash):
+                yield ('<tr><td style="padding-left:{}em"><b>{}</b></td>'
+                       '<td/></tr>'.format(nest + 1, key))
+                yield from _html_hash_generator(value, nest + 1)
+            elif isinstance(value, HashList):
+                # XXX: Table support!
+                continue
+            else:
+                yield ('<tr><td style="padding-left:{}em">{}</td><td>'
+                       .format(nest + 1, key))
+                yield escape(str(value))
+                yield from _html_attributes(nest + 1, attr)
+                yield '</td></tr>'
+        if nest == 0:
+            yield "</table>"
+
+    return "".join(_html_hash_generator(hsh))
