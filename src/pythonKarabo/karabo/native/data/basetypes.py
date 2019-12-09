@@ -195,6 +195,12 @@ class BoolValue(_Singleton):
         super().__init__(value, **kwargs)
         self.value = bool(value)
 
+    def __int__(self):
+        return int(self.value)
+
+    def __float__(self):
+        return float(self.value)
+
     def __eq__(self, other):
         return self.value == bool(other)
 
