@@ -228,26 +228,19 @@ class Tests(DeviceTest):
                 await setWait(d, 'noded.intProperty', 22)
             self.assertEqual(d.noded.intProperty, 7)
 
-    @async_tst
-    async def test_output_close(self):
-        self.assertIsNotNone(self.myDevice.output.server.sockets)
-        await self.myDevice.output.close()
-        self.assertIsNone(self.myDevice.output.server.sockets)
-
     @sync_tst
     def test_slot_verification(self):
         self.assertEqual(self.myDevice.slotHasSlot("increaseCounter"), True)
         self.assertEqual(self.myDevice.slotHasSlot("output"), False)
         self.assertEqual(self.myDevice.slotHasSlot("doesNotExist"), False)
 
-    @sync_tst
+    @async_tst
     def test_output_information(self):
         device = self.myDevice
         # Second argument processId is not used in MDL
         success, data = yield from device.slotGetOutputChannelInformation(
             "output", None)
         self.assertEqual(success, True)
-        self.assertEqual(data["hostname"], self.myDevice.hostName)
         self.assertEqual(data["connectionType"], "tcp")
         self.assertEqual(data["memoryLocation"], "remote")
         self.assertIsInstance(data["port"], np.uint32)
@@ -257,25 +250,37 @@ class Tests(DeviceTest):
         self.assertEqual(success, False)
         self.assertEqual(data, Hash())
 
-    @sync_tst
+    @async_tst
     def test_output_information_hash_version(self):
         # tests the version that the GUI can generically call
         device = self.myDevice
         # Second argument processId is not used in MDL
         h = yield from device.slotGetOutputChannelInformationFromHash(
-            Hash(channelId="output", processId=None))
-        success, data = h["success"], r["info"]
+            'output', None)
+        success, data = h["success"], h["info"]
         self.assertEqual(success, True)
-        self.assertEqual(data["hostname"], self.myDevice.hostName)
         self.assertEqual(data["connectionType"], "tcp")
         self.assertEqual(data["memoryLocation"], "remote")
         self.assertIsInstance(data["port"], np.uint32)
 
         h = yield from device.slotGetOutputChannelInformationFromHash(
-            Hash(channelId="doesNotExist", processId=None))
-        success, data = h["success"], r["info"]
+            'doesNotExist', None)
+
+        success, data = h["success"], h["info"]
         self.assertEqual(success, False)
         self.assertEqual(data, Hash())
+
+    @async_tst
+    async def test_output_server_close(self):
+        """Test the closing of the server
+
+        This has to be done after tests are done with the channel, as closing
+        will conflict with them. Hence, this test is one of the lasts in the
+        stack!
+        """
+        self.assertIsNotNone(self.myDevice.output.server.sockets)
+        await self.myDevice.output.close()
+        self.assertIsNone(self.myDevice.output.server.sockets)
 
     @async_tst
     async def test_applyRunTimeUpdates(self):
