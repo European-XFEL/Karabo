@@ -50,10 +50,11 @@ namespace karabo {
             std::promise<void> prom;
             std::future<void> fut = prom.get_future();
 
-            auto message = m_this->m_client->postWriteDbStr(ss.str(),[&prom](const HttpResponse& o) {
+            std::string message(ss.str());
+            m_this->m_client->postWriteDb(message,[&prom](const HttpResponse& o) {
                 prom.set_value();
             });
-            m_this->m_client->writeDb(*message);
+
             auto status = fut.wait_for(std::chrono::milliseconds(k_httpResponseTimeoutMs));
             if (status != std::future_status::ready) {
                 KARABO_LOG_FRAMEWORK_WARN << "Timeout in ~InfluxDeviceData for message: \n" << message;
@@ -280,10 +281,7 @@ namespace karabo {
             , m_bufferLen(0)
             , m_topic(getTopic())
             , m_nPoints(0)
-            , m_startTimePoint()
-            , m_queueMutex()
-            , m_running(false)
-            , m_queue() {
+            , m_startTimePoint() {
             Hash config("url", input.get<std::string>("url"), "dbname", m_topic, "durationUnit", DUR);
             m_client = boost::make_shared<InfluxDbClient>(config);
         }
@@ -388,46 +386,6 @@ namespace karabo {
         }
 
 
-        void InfluxDataLogger::postWriteDb(const std::string& batch, const InfluxResponseHandler& action) {
-            static const std::size_t MAX_QUEUE_SIZE = 1000;
-            boost::mutex::scoped_lock lock(m_queueMutex);
-            auto msg = m_client->postWriteDbStr(batch, action);
-            if (m_queue.empty()) m_running = false;
-            if (m_queue.size() < MAX_QUEUE_SIZE) {
-                m_queue.push_back(msg);
-            } else {
-                KARABO_LOG_FRAMEWORK_WARN << "The queue is full.... drop data";
-            }
-            if (m_running) return;
-            m_running = true;
-            const auto& p = m_queue.front();
-            m_client->writeDb(*p);
-            m_queue.pop_front();
-        }
-
-
-        void InfluxDataLogger::onPostWriteDb(const HttpResponse & response) {
-            if (response.code != 204) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Code " << response.code << " " << response.message;
-            }
-            boost::mutex::scoped_lock lock(m_queueMutex);
-            if (!m_client->isConnected()) {
-                m_client->connectDbIfDisconnected();
-                m_running = false;
-                return;
-            }
-
-            if (m_queue.empty()) {
-                m_running = false;
-                return;
-            }
-            m_running = true;
-            auto p = m_queue.front();
-            m_client->writeDb(*p);
-            m_queue.pop_front();
-        }
-
-
         void InfluxDataLogger::flushOne(const DeviceData::Pointer& devicedata) {
             boost::mutex::scoped_lock lock(m_bufferMutex);
             // Check when we need to flush ...
@@ -445,7 +403,11 @@ namespace karabo {
         void InfluxDataLogger::flushBatch(const DeviceData::Pointer& devicedata) {
             if (m_bufferLen > 0 && m_nPoints > 0) {
                 // Post accumulated batch ...
-                postWriteDb(m_buffer.str(), bind_weak(&InfluxDataLogger::onPostWriteDb, this, _1));
+                m_client->postWriteDb(m_buffer.str(), [](const HttpResponse& o) {
+                    if (o.code != 204) {
+                        KARABO_LOG_FRAMEWORK_ERROR << "Code " << o.code << " " << o.message;
+                    }
+                });
             }
             m_buffer.str(""); // clear buffer stream
             m_bufferLen = 0;

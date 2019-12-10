@@ -100,10 +100,6 @@ namespace karabo {
 
             void flushBatch(const DeviceData::Pointer& devicedata);
 
-            void postWriteDb(const std::string& batch, const InfluxResponseHandler& action);
-
-            void onPostWriteDb(const karabo::net::HttpResponse& o);
-
             void checkSchemaInDb(const DeviceData::Pointer& devicedata, const karabo::net::HttpResponse& o);
 
         private:
@@ -116,9 +112,6 @@ namespace karabo {
             std::string m_hostname;
             std::uint32_t m_nPoints;
             std::chrono::high_resolution_clock::time_point m_startTimePoint;
-            boost::mutex m_queueMutex;
-            bool m_running;
-            std::deque<boost::shared_ptr<std::string> > m_queue;
 
         };
     }
