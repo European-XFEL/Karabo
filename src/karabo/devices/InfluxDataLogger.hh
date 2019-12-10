@@ -38,6 +38,8 @@ namespace karabo {
 
             void handleSchemaUpdated(const karabo::util::Schema& schema, const DeviceData::Pointer& devicedata);
 
+            void stopLogging() override;
+
             InfluxDataLogger* m_this;
 
             std::stringstream m_query;
@@ -47,8 +49,6 @@ namespace karabo {
             std::string m_digest;
 
             std::vector<char> m_archive;
-
-            static const unsigned int k_httpResponseTimeoutMs;
 
         };
 
@@ -67,7 +67,7 @@ namespace karabo {
 
             virtual ~InfluxDataLogger();
 
-            void preDestruction();
+            void preDestruction() override;
 
         protected:
 
@@ -98,7 +98,7 @@ namespace karabo {
 
             void onCreateDatabase(const karabo::net::HttpResponse& o);
 
-            void flushBatch(const DeviceData::Pointer& devicedata);
+            void flushBatch();
 
             void checkSchemaInDb(const DeviceData::Pointer& devicedata, const karabo::net::HttpResponse& o);
 
@@ -112,6 +112,7 @@ namespace karabo {
             std::string m_hostname;
             std::uint32_t m_nPoints;
             std::chrono::high_resolution_clock::time_point m_startTimePoint;
+            static const unsigned int k_httpResponseTimeoutMs;
 
         };
     }
