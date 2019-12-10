@@ -268,6 +268,10 @@ class Tests(DeviceTest):
         self.assertEqual(success, False)
         self.assertEqual(data, Hash())
 
+        info = Hash('NoChannelId', 'NotImportant')
+        with self.assertRaises(KeyError):
+            yield from device.slotGetOutputChannelInformationFromHash(info)
+
     @async_tst
     async def test_output_server_close(self):
         """Test the closing of the server
