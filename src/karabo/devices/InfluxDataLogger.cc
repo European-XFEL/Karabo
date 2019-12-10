@@ -24,7 +24,7 @@ namespace karabo {
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, DataLogger, InfluxDataLogger)
         KARABO_REGISTER_IN_FACTORY_1(DeviceData, InfluxDeviceData, karabo::util::Hash)
 
-	const unsigned int InfluxDeviceData::k_httpResponseTimeoutMs = 1500u;
+	const unsigned int InfluxDataLogger::k_httpResponseTimeoutMs = 1500u;
 
 
         InfluxDeviceData::InfluxDeviceData(const karabo::util::Hash& input)
@@ -38,6 +38,10 @@ namespace karabo {
 
 
         InfluxDeviceData::~InfluxDeviceData() {
+        }
+
+
+        void InfluxDeviceData::stopLogging() {
             if (m_initLevel != InitLevel::COMPLETE) {
                 // We have not yet started logging this device, so nothing to mark about being done.
                 return;
@@ -45,22 +49,9 @@ namespace karabo {
 
             const std::string& deviceId = m_deviceToBeLogged;
             std::stringstream ss;
-            ss << deviceId + "__EVENTS,type=\"-LOG\" karabo_user=\"" << m_user << "\"\n";
+            ss << deviceId << "__EVENTS,type=\"-LOG\" karabo_user=\"" << m_user << "\"\n";
+            m_this->enqueueQuery(ss.str());
 
-            std::promise<void> prom;
-            std::future<void> fut = prom.get_future();
-
-            std::string message(ss.str());
-            m_this->m_client->postWriteDb(message,[&prom](const HttpResponse& o) {
-                prom.set_value();
-            });
-
-            auto status = fut.wait_for(std::chrono::milliseconds(k_httpResponseTimeoutMs));
-            if (status != std::future_status::ready) {
-                KARABO_LOG_FRAMEWORK_WARN << "Timeout in ~InfluxDeviceData for message: \n" << message;
-                return;
-            }
-            fut.get();
             KARABO_LOG_FRAMEWORK_INFO << "Proxy for \"" << deviceId << "\" is destroyed ...";
         }
 
@@ -292,7 +283,33 @@ namespace karabo {
 
 
 	void InfluxDataLogger::preDestruction() {
-		DataLogger::preDestruction();
+            DataLogger::preDestruction();
+            std::promise<void> prom;
+            std::future<void> fut = prom.get_future();
+            {
+                boost::mutex::scoped_lock lock(m_bufferMutex);
+
+                if (m_bufferLen > 0 && m_nPoints > 0) {
+                    // Post accumulated batch ...
+                    // This will be the last one in client's circular buffer ...
+                    // All others if they are coming will be destroyed
+                    m_client->postWriteDb(m_buffer.str(), [&prom](const HttpResponse& o) {
+                        prom.set_value();
+                    });
+                } else {
+                    prom.set_value();
+                }
+                m_buffer.str(""); // clear buffer stream
+                m_bufferLen = 0;
+                m_nPoints = 0;
+                m_startTimePoint = std::chrono::high_resolution_clock::now();
+            }
+            auto status = fut.wait_for(std::chrono::milliseconds(k_httpResponseTimeoutMs));
+            if (status != std::future_status::ready) {
+                KARABO_LOG_FRAMEWORK_WARN << "Timeout in preDestruction while waiting for response from InfluxDB";
+                return;
+            }
+            fut.get();
         }
 
 
@@ -390,22 +407,22 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_bufferMutex);
             // Check when we need to flush ...
             // ... by size ( number of points) ...
-            if (m_nPoints >= get<std::uint32_t>("maxBatchPoints")) flushBatch(devicedata);
+            if (m_nPoints >= get<std::uint32_t>("maxBatchPoints")) flushBatch();
             if (m_nPoints == 0) return;
             // ... by time ...
             auto endTimePoint = std::chrono::high_resolution_clock::now();
             auto dur = endTimePoint - m_startTimePoint;
             auto elapsedTimeInSeconds = std::chrono::duration_cast<std::chrono::seconds>(dur).count();
-            if (elapsedTimeInSeconds >= get<std::uint32_t>("flushInterval")) flushBatch(devicedata);
+            if (elapsedTimeInSeconds >= get<std::uint32_t>("flushInterval")) flushBatch();
         }
 
 
-        void InfluxDataLogger::flushBatch(const DeviceData::Pointer& devicedata) {
+        void InfluxDataLogger::flushBatch() {
             if (m_bufferLen > 0 && m_nPoints > 0) {
                 // Post accumulated batch ...
-                m_client->postWriteDb(m_buffer.str(), [](const HttpResponse& o) {
-                    if (o.code != 204) {
-                        KARABO_LOG_FRAMEWORK_ERROR << "Code " << o.code << " " << o.message;
+                m_client->postWriteDb(m_buffer.str(), [](const HttpResponse & response) {
+                    if (response.code != 204) {
+                        KARABO_LOG_FRAMEWORK_ERROR << "Code " << response.code << " " << response.message;
                     }
                 });
             }
@@ -443,13 +460,13 @@ namespace karabo {
                 ss << deviceId << "__SCHEMAS," << "digest=\"" << digest << "\" schema=\"" << base64Schema << "\"\n";
                 // Flush what was accumulated before ...
                 boost::mutex::scoped_lock lock(m_bufferMutex);
-                flushBatch(devicedata);
+                flushBatch();
             }
             // digest already exists!
             KARABO_LOG_FRAMEWORK_DEBUG << "checkSchemaInDb ...\n" << o.payload;
             enqueueQuery(ss.str());
             boost::mutex::scoped_lock lock(m_bufferMutex);
-            flushBatch(devicedata);
+            flushBatch();
         }
 
 
