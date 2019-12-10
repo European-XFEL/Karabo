@@ -490,7 +490,7 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
 
     // save this instant as a iso string
 
-    boost::this_thread::sleep(boost::posix_time::milliseconds(m_flushIntervalSec * 1500)); // wait more than the flush time
+    boost::this_thread::sleep(boost::posix_time::milliseconds(m_flushIntervalSec * 5500)); // wait more than the flush time
 
     // place holders, could be skipped but they are here for future expansions of the tests
     string device;
