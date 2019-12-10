@@ -240,10 +240,7 @@ class SignalSlotable(Configurable):
     @coslot
     def slotGetOutputChannelInformationFromHash(self, info):
         """This is the hash implementation of the output channel information"""
-        channelId = info.get('channelId', None)
-        if channelId is None:
-            return False, Hash()
-
+        channelId = info['channelId']
         success, info = yield from self.slotGetOutputChannelInformation(
             channelId, None)
 
