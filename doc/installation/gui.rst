@@ -28,14 +28,14 @@ command::
 
     . <your miniconda3 path>/etc/profile.d/conda.sh
 
-Or add it to your `.bashrc` (or similar).
+Or add it to your ``.bashrc`` (or similar).
 
 Channel Configuration
 =====================
 
 For KaraboGUI, some package channels are needed besides Conda's defaults. You
 only need to do this once and it can be done either from command line or
-editting Conda's configuration file (`.condarc`).
+editting Conda's configuration file (``.condarc``).
 You can find your configuration file location typing ``conda info`` on your terminal.
 
 From your terminal, add the needed channels executing the following commands::
@@ -43,13 +43,13 @@ From your terminal, add the needed channels executing the following commands::
     conda config --add channels http://exflserv05.desy.de/karabo/channel
     conda config --add channels conda-forge
 
-N.B. The channel `http://exflserv05.desy.de/karabo/channel` is not open to
+N.B. The channel ``http://exflserv05.desy.de/karabo/channel`` is not open to
 the public until Karabo will be released. For this reason if one is installing
 from a network outside the DESY internal network, one should create an SSH
 tunnel to the internal channel and configure that channel as a source.
 
 Assuming, e.g. that one has created an ssh tunnel using an ssh command like
-`ssh user@bastion.desy.de -L 8081:exflserv05.desy.de:80 `, one should use 
+``ssh user@bastion.desy.de -L 8081:exflserv05.desy.de:80``, one should use
 the following channel definitions::
 
     conda config --add channels http://localhost:8081/karabo/channel
@@ -99,31 +99,39 @@ Developing
 For developing in KaraboGUI using Qt5 we need to be inside a conda environment
 
 After installing your miniconda3 distribution, install the package
-`conda-devenv` from the conda-forge channel:
+``conda-devenv`` from the conda-forge channel:
 
-    conda install conda-devenv -c conda-forge
+```
+conda install conda-devenv -c conda-forge
+```
 
 conda-devenv is a tool for creating a development environment that always
 follows the dependencies specified in your environment.devenv.yml, purging
 any other dependencies left behind.
 
-Now, on your `pythonGui` directory, run:
+Now, on your ``pythonGui`` directory, run:
 
-    conda devenv
+```
+conda devenv
+```
 
 Or, if you're not in the directory:
 
-    conda devenv --file <pythonGUI dir>/environment.devenv.yml
+```
+conda devenv --file <pythonGUI dir>/environment.devenv.yml
+```
 
 This will solve your environment dependencies and create an environment
-called `karabogui`. Call `conda activate karabogui` to activate it.
+called ``karabogui``. Call ``conda activate karabogui`` to activate it.
 
-Now all the code from `karabogui`, `common` and `native` will be on
-your `PYTHONPATH`. No need to install using the setup.
+Now all the code from ``karabogui``, `common`` and ``native`` will be on
+your ``PYTHONPATH``. No need to install using the setup.
 
 Now, generate the version file using
 
-    python setup.py develop
+```
+python setup.py develop
+```
 
 Configuring the environment in PyCharm
 --------------------------------------
