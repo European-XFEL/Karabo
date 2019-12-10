@@ -32,17 +32,23 @@ namespace karabo {
         boost::mutex InfluxDbClient::m_uuidGeneratorMutex;
         boost::uuids::random_generator InfluxDbClient::m_uuidGenerator;
         const unsigned int InfluxDbClient::k_connTimeoutMs = 1500u;
+        const unsigned int InfluxDbClient::k_circularBufferCapacity = 5000u;
 
 
         InfluxDbClient::InfluxDbClient(const karabo::util::Hash& input)
             : m_url(input.get<std::string>("url"))
             , m_dbConnection()
             , m_dbChannel()
+            , m_circular(k_circularBufferCapacity)
+            , m_circularMutex()
+            , m_active(false)
             , m_connectionRequestedMutex()
             , m_connectionRequested(false)
+            , m_responseHandlersMutex()
             , m_registeredInfluxResponseHandlers()
             , m_dbname(input.get<std::string>("dbname"))
-            , m_durationUnit(input.get<std::string>("durationUnit")) {
+            , m_durationUnit(input.get<std::string>("durationUnit"))
+            , m_currentUuid("") {
             const boost::tuple<std::string, std::string,
                     std::string, std::string, std::string> parts = karabo::net::parseUrl(m_url);
             m_hostname = parts.get<1>();
@@ -71,30 +77,76 @@ namespace karabo {
         }
 
 
-        void InfluxDbClient::postQueryDb(const std::string& statement,
-                                           const InfluxResponseHandler& action) {
-            std::string uuid(generateUUID());
-            std::ostringstream oss;
+        void InfluxDbClient::tryNextRequest() {
+            if (!m_active) {         // activate processing
+                m_circular.front()();
+                m_circular.pop_front();
+                m_active = true;
+            }
+        }
 
-            oss << "POST /query?chunked=true&db=&epoch=" << m_durationUnit << "&q=" << urlencode(statement) << " HTTP/1.1\r\n"
-                << "Host: " << m_hostname << "\r\n"
-                << "Request-Id: " << uuid << "\r\n\r\n";
 
-            std::string message(oss.str());
-            m_registeredInfluxResponseHandlers.emplace(std::make_pair(uuid, std::make_pair(message, action)));
+        void InfluxDbClient::onResponse(const HttpResponse& o, const InfluxResponseHandler& action) {
+            {
+                boost::mutex::scoped_lock lock(m_circularMutex);
+                if (!m_circular.empty()) {
+                    m_circular.front()();
+                    m_circular.pop_front();
+                    m_active = true;
+                } else {
+                    m_active = false;   // Inform 'requestor' that it needs to "activate" processing
+                }
+            }
+            action(o);
+        }
+
+
+        void InfluxDbClient::sendToInfluxDb(const std::string& message, const InfluxResponseHandler& action) {
+            auto handler = bind_weak(&InfluxDbClient::onResponse, this, _1, action);
+            {
+                boost::mutex::scoped_lock(m_responseHandlersMutex);
+                m_registeredInfluxResponseHandlers.emplace(std::make_pair(m_currentUuid,
+                                                                          std::make_pair(message, handler)));
+            }
             writeDb(message);
         }
 
 
+        void InfluxDbClient::postQueryDb(const std::string& sel, const InfluxResponseHandler& action) {
+            boost::mutex::scoped_lock lock(m_circularMutex);
+            m_circular.push_back(bind_weak(&InfluxDbClient::postQueryDbTask, this, sel, action));
+            tryNextRequest();
+        }
+
+
+        void InfluxDbClient::postQueryDbTask(const std::string& statement,
+                                             const InfluxResponseHandler& action) {
+            m_currentUuid.assign(generateUUID());
+            std::ostringstream oss;
+
+            oss << "POST /query?chunked=true&db=&epoch=" << m_durationUnit << "&q=" << urlencode(statement) << " HTTP/1.1\r\n"
+                << "Host: " << m_hostname << "\r\n"
+                << "Request-Id: " << m_currentUuid << "\r\n\r\n";
+
+            sendToInfluxDb(oss.str(), action);
+        }
+
+
         void InfluxDbClient::getPingDb(const InfluxResponseHandler& action) {
-            std::string uuid(generateUUID());
+            boost::mutex::scoped_lock lock(m_circularMutex);
+            m_circular.push_back(bind_weak(&InfluxDbClient::getPingDbTask, this, action));
+            tryNextRequest();
+        }
+
+
+        void InfluxDbClient::getPingDbTask(const InfluxResponseHandler& action) {
+            m_currentUuid.assign(generateUUID());
             std::ostringstream oss;
             oss << "GET /ping HTTP/1.1\r\n"
                     << "Host: " << m_hostname << "\r\n"
-                    << "Request-Id: " << uuid << "\r\n\r\n";
-            const std::string message(oss.str());
-            m_registeredInfluxResponseHandlers.emplace(std::make_pair(uuid, std::make_pair(message,action)));
-            writeDb(message);
+                    << "Request-Id: " << m_currentUuid << "\r\n\r\n";
+
+            sendToInfluxDb(oss.str(), action);
         }
 
 
@@ -109,17 +161,25 @@ namespace karabo {
                                          const karabo::net::Channel::Pointer& channel,
                                          const AsyncHandler& hook) {
             if (ec) {
-                KARABO_LOG_FRAMEWORK_WARN << "InfluxDbClient: connection failed: code #" << ec.value() << " -- " << ec.message();
-                boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
-                m_dbChannel.reset();
-                m_connectionRequested = false;
+                std::ostringstream oss;
+                oss << "Connection to InfluxDB failed: code #" << ec.value() << " -- " << ec.message();
+                KARABO_LOG_FRAMEWORK_WARN << oss.str();
+                {
+                    boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
+                    m_dbChannel.reset();
+                    m_connectionRequested = false;
+                }
+                {
+                    boost::mutex::scoped_lock(m_responseHandlersMutex);
+                    m_currentUuid = "";
+                    m_registeredInfluxResponseHandlers.clear();
+                }
                 return;
             } else {
                 boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
                 m_connectionRequested = false;
+                m_dbChannel = channel;
             }
-
-            m_dbChannel = channel;
 
             KARABO_LOG_FRAMEWORK_INFO << "InfluxDbClient: connection established";
 
@@ -131,11 +191,28 @@ namespace karabo {
 
         void InfluxDbClient::onDbRead(const karabo::net::ErrorCode& ec, const std::string& line) {
             if (ec) {
-                m_dbChannel.reset();
-                KARABO_LOG_FRAMEWORK_WARN << "Influxdb read failed: code #" << ec.value() << " -- " << ec.message();
-                boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
-                m_dbChannel.reset();
-                m_connectionRequested = false;
+                std::ostringstream oss;
+                oss << "Reading from InfluxDB failed: code #" << ec.value() << " -- " << ec.message();
+                KARABO_LOG_FRAMEWORK_WARN << oss.str();
+                {
+                    boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
+                    m_dbChannel.reset();
+                    m_connectionRequested = false;
+                }
+                InfluxResponseHandler handler;
+                {
+                    boost::mutex::scoped_lock(m_responseHandlersMutex);
+                    auto it = m_registeredInfluxResponseHandlers.find(m_currentUuid);
+                    if (it == m_registeredInfluxResponseHandlers.end()) return;
+                    handler = it->second.second;
+                    m_registeredInfluxResponseHandlers.erase(it);
+                }
+                HttpResponse o;
+                o.code = 700;
+                o.message = oss.str();
+                o.requestId = m_currentUuid;
+                o.connection = "close";
+                handler(o);
                 return;
             }
 
@@ -164,6 +241,7 @@ namespace karabo {
                 if (m_response.code >= 300) {
                     KARABO_LOG_FRAMEWORK_ERROR << "InfluxDB ERROR RESPONSE:\n" << m_response;
                     if (!m_response.requestId.empty()) {
+                        boost::mutex::scoped_lock(m_responseHandlersMutex);
                         auto it = m_registeredInfluxResponseHandlers.find(m_response.requestId);
                         if (it != m_registeredInfluxResponseHandlers.end()) {
                             KARABO_LOG_FRAMEWORK_ERROR << "... on request: " << it->second.first.substr(0,1024) << "...";
@@ -171,14 +249,14 @@ namespace karabo {
                     }
                 }
                 if (m_response.connection == "close") {
-                    m_dbChannel.reset();
                     KARABO_LOG_FRAMEWORK_ERROR << "InfluxDB server closed connection...\n" << line;
                     boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
                     m_dbChannel.reset();
                     m_connectionRequested = false;
                 }
                 // Call callback
-                if (!m_response.requestId.empty() && m_response.payloadArrived) {
+                if (!m_response.requestId.empty()) {
+                    boost::mutex::scoped_lock(m_responseHandlersMutex);
                     auto it = m_registeredInfluxResponseHandlers.find(m_response.requestId);
                     if (it != m_registeredInfluxResponseHandlers.end()) {
                         it->second.second(m_response);
@@ -186,7 +264,7 @@ namespace karabo {
                     }
                 }
             }
-            if (m_dbChannel && m_dbChannel->isOpen()) {
+            if (isConnected()) {
                 m_dbChannel->readAsyncStringUntil("\r\n\r\n", bind_weak(&InfluxDbClient::onDbRead, this, _1, _2));
             }
         }
@@ -195,64 +273,98 @@ namespace karabo {
         void InfluxDbClient::onDbWrite(const karabo::net::ErrorCode& ec, boost::shared_ptr<std::vector<char> > p) {
             p.reset();
             if (ec) {
-                m_dbChannel.reset();
-                KARABO_LOG_FRAMEWORK_WARN << "Influxdb write failed: code #" << ec.value() << " -- " << ec.message();
-                boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
-                m_dbChannel.reset();
-                m_connectionRequested = false;
+                std::ostringstream oss;
+                oss << "Writing into InfluxDB failed: code #" << ec.value() << " -- " << ec.message();
+                KARABO_LOG_FRAMEWORK_WARN << oss.str();
+                {
+                    boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
+                    m_dbChannel.reset();
+                    m_connectionRequested = false;
+                }
+                InfluxResponseHandler handler;
+                {
+                    boost::mutex::scoped_lock(m_responseHandlersMutex);
+                    auto it = m_registeredInfluxResponseHandlers.find(m_currentUuid);
+                    if (it == m_registeredInfluxResponseHandlers.end()) return;
+                    handler = it->second.second;
+                    m_registeredInfluxResponseHandlers.erase(it);
+                }
+                HttpResponse o;
+                o.code = 700;
+                o.message = oss.str();
+                o.requestId = m_currentUuid;
+                o.connection = "close";
+                if (handler) handler(o);
                 return;
             }
         }
 
 
-        boost::shared_ptr<std::string> InfluxDbClient::postWriteDbStr(const std::string& batch,
-                                                                      const InfluxResponseHandler& action) {
-            const std::string uuid(generateUUID());
+        void InfluxDbClient::postWriteDb(const std::string& batch, const InfluxResponseHandler& action) {
+            boost::mutex::scoped_lock lock(m_circularMutex);
+            m_circular.push_back(bind_weak(&InfluxDbClient::postWriteDbTask, this, batch, action));
+            tryNextRequest();
+        }
+
+
+        void InfluxDbClient::postWriteDbTask(const std::string& batch, const InfluxResponseHandler& action) {
+            m_currentUuid.assign(generateUUID());
             std::ostringstream oss;
             oss << "POST /write?db=" << m_dbname << "&precision=" << m_durationUnit << " HTTP/1.1\r\n"
                     << "Host: " << m_hostname << "\r\n"
-                    << "Request-Id: " << uuid << "\r\n"
+                    << "Request-Id: " << m_currentUuid << "\r\n"
                     << "Content-Length: " << batch.size() << "\r\n\r\n" << batch;
-            auto msg = boost::make_shared<std::string>(oss.str());
-            m_registeredInfluxResponseHandlers.emplace(std::make_pair(uuid, std::make_pair(*msg,action)));
-            return msg;
+
+            sendToInfluxDb(oss.str(), action);
         }
 
 
         void InfluxDbClient::getQueryDb(const std::string& sel, const InfluxResponseHandler& action) {
-            std::string uuid(generateUUID());
+            boost::mutex::scoped_lock lock(m_circularMutex);
+            m_circular.push_back(bind_weak(&InfluxDbClient::getQueryDbTask, this, sel, action));
+            tryNextRequest();
+        }
+
+
+        void InfluxDbClient::getQueryDbTask(const std::string& sel, const InfluxResponseHandler& action) {
+            m_currentUuid.assign(generateUUID());
             std::ostringstream oss;
             oss << "GET /query?chunked=true&db=" << m_dbname << "&epoch=" << m_durationUnit
                     << "&q=" << urlencode(sel) << " HTTP/1.1\r\n"
                     << "Host: " << m_hostname << "\r\n"
-                    << "Request-Id: " << uuid << "\r\n\r\n";
-            const std::string message(oss.str());
-            m_registeredInfluxResponseHandlers.emplace(std::make_pair(uuid, std::make_pair(message,action)));
-            writeDb(message);
+                    << "Request-Id: " << m_currentUuid << "\r\n\r\n";
+
+            sendToInfluxDb(oss.str(), action);
         }
 
 
         void InfluxDbClient::queryDb(const std::string& sel, const InfluxResponseHandler& action) {
+            boost::mutex::scoped_lock lock(m_circularMutex);
+            m_circular.push_back(bind_weak(&InfluxDbClient::queryDbTask, this, sel, action));
+            tryNextRequest();
+        }
+
+
+        void InfluxDbClient::queryDbTask(const std::string& sel, const InfluxResponseHandler& action) {
             if (!this->connectWait(k_connTimeoutMs)) {
                 std::ostringstream oss;
                 oss << "No connection to InfluxDb server available. "
                     << "Timed out after waiting for " << k_connTimeoutMs << " ms.";
                 throw KARABO_TIMEOUT_EXCEPTION(oss.str());
             }
-            std::string uuid(generateUUID());
+            m_currentUuid.assign(generateUUID());
             std::ostringstream oss;
             oss << "GET /query?chunked=true&db=" << m_dbname << "&epoch=" << m_durationUnit
                     << "&q=" << urlencode(sel) << " HTTP/1.1\r\n"
                     << "Host: " << m_hostname << "\r\n"
-                    << "Request-Id: " << uuid << "\r\n\r\n";
-            const std::string message(oss.str());
-            m_registeredInfluxResponseHandlers.emplace(std::make_pair(uuid, std::make_pair(message,action)));
-            writeDb(message);
+                    << "Request-Id: " << m_currentUuid << "\r\n\r\n";
+
+            sendToInfluxDb(oss.str(), action);
         }
 
 
         bool InfluxDbClient::connectWait(std::size_t millis) {
-            if (m_dbChannel && m_dbChannel->isOpen()) return true;
+            if (isConnected()) return true;
             std::promise<void> prom;
             std::future<void> fut = prom.get_future();
             connectDbIfDisconnected([&prom]() {
