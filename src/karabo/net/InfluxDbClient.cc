@@ -32,15 +32,14 @@ namespace karabo {
         boost::mutex InfluxDbClient::m_uuidGeneratorMutex;
         boost::uuids::random_generator InfluxDbClient::m_uuidGenerator;
         const unsigned int InfluxDbClient::k_connTimeoutMs = 1500u;
-        const unsigned int InfluxDbClient::k_circularBufferCapacity = 5000u;
 
 
         InfluxDbClient::InfluxDbClient(const karabo::util::Hash& input)
             : m_url(input.get<std::string>("url"))
             , m_dbConnection()
             , m_dbChannel()
-            , m_circular(k_circularBufferCapacity)
-            , m_circularMutex()
+            , m_requestQueue()
+            , m_requestQueueMutex()
             , m_active(false)
             , m_connectionRequestedMutex()
             , m_connectionRequested(false)
@@ -79,8 +78,8 @@ namespace karabo {
 
         void InfluxDbClient::tryNextRequest() {
             if (!m_active) {         // activate processing
-                m_circular.front()();
-                m_circular.pop_front();
+                m_requestQueue.front()();
+                m_requestQueue.pop();
                 m_active = true;
             }
         }
@@ -88,10 +87,10 @@ namespace karabo {
 
         void InfluxDbClient::onResponse(const HttpResponse& o, const InfluxResponseHandler& action) {
             {
-                boost::mutex::scoped_lock lock(m_circularMutex);
-                if (!m_circular.empty()) {
-                    m_circular.front()();
-                    m_circular.pop_front();
+                boost::mutex::scoped_lock lock(m_requestQueueMutex);
+                if (!m_requestQueue.empty()) {
+                    m_requestQueue.front()();
+                    m_requestQueue.pop();
                     m_active = true;
                 } else {
                     m_active = false;   // Inform 'requestor' that it needs to "activate" processing
@@ -113,8 +112,8 @@ namespace karabo {
 
 
         void InfluxDbClient::postQueryDb(const std::string& sel, const InfluxResponseHandler& action) {
-            boost::mutex::scoped_lock lock(m_circularMutex);
-            m_circular.push_back(bind_weak(&InfluxDbClient::postQueryDbTask, this, sel, action));
+            boost::mutex::scoped_lock lock(m_requestQueueMutex);
+            m_requestQueue.push(bind_weak(&InfluxDbClient::postQueryDbTask, this, sel, action));
             tryNextRequest();
         }
 
@@ -133,8 +132,8 @@ namespace karabo {
 
 
         void InfluxDbClient::getPingDb(const InfluxResponseHandler& action) {
-            boost::mutex::scoped_lock lock(m_circularMutex);
-            m_circular.push_back(bind_weak(&InfluxDbClient::getPingDbTask, this, action));
+            boost::mutex::scoped_lock lock(m_requestQueueMutex);
+            m_requestQueue.push(bind_weak(&InfluxDbClient::getPingDbTask, this, action));
             tryNextRequest();
         }
 
@@ -301,8 +300,8 @@ namespace karabo {
 
 
         void InfluxDbClient::postWriteDb(const std::string& batch, const InfluxResponseHandler& action) {
-            boost::mutex::scoped_lock lock(m_circularMutex);
-            m_circular.push_back(bind_weak(&InfluxDbClient::postWriteDbTask, this, batch, action));
+            boost::mutex::scoped_lock lock(m_requestQueueMutex);
+            m_requestQueue.push(bind_weak(&InfluxDbClient::postWriteDbTask, this, batch, action));
             tryNextRequest();
         }
 
@@ -320,8 +319,8 @@ namespace karabo {
 
 
         void InfluxDbClient::getQueryDb(const std::string& sel, const InfluxResponseHandler& action) {
-            boost::mutex::scoped_lock lock(m_circularMutex);
-            m_circular.push_back(bind_weak(&InfluxDbClient::getQueryDbTask, this, sel, action));
+            boost::mutex::scoped_lock lock(m_requestQueueMutex);
+            m_requestQueue.push(bind_weak(&InfluxDbClient::getQueryDbTask, this, sel, action));
             tryNextRequest();
         }
 
@@ -339,8 +338,8 @@ namespace karabo {
 
 
         void InfluxDbClient::queryDb(const std::string& sel, const InfluxResponseHandler& action) {
-            boost::mutex::scoped_lock lock(m_circularMutex);
-            m_circular.push_back(bind_weak(&InfluxDbClient::queryDbTask, this, sel, action));
+            boost::mutex::scoped_lock lock(m_requestQueueMutex);
+            m_requestQueue.push(bind_weak(&InfluxDbClient::queryDbTask, this, sel, action));
             tryNextRequest();
         }
 
