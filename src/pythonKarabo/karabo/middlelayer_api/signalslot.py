@@ -238,10 +238,16 @@ class SignalSlotable(Configurable):
         print('received stopTracking...', args)
 
     @coslot
-    def slotGetOutputChannelInformationFromHash(self, channelId, processId):
-        scs, info = yield from self.slotGetOutputChannelInformation(channelId,
-                                                                    processId)
-        return Hash('success', scs, 'info', info)
+    def slotGetOutputChannelInformationFromHash(self, info):
+        """This is the hash implementation of the output channel information"""
+        channelId = info.get('channelId', None)
+        if channelId is None:
+            return False, Hash()
+
+        success, info = yield from self.slotGetOutputChannelInformation(
+            channelId, None)
+
+        return Hash('success', success, 'info', info)
 
     @coslot
     def slotGetOutputChannelInformation(self, ioChannelId, processId):
