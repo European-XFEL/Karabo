@@ -342,11 +342,14 @@ namespace karabo {
                             okHandler, FailHandler(deviceId, "signalChanged"));
 
             boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
-            const bool result = (m_perDeviceData.erase(deviceId) > 0);
-            if (m_useP2p && result) {
+            auto it = m_perDeviceData.find(deviceId);
+            if (it == m_perDeviceData.end()) return false;
+            it->second->stopLogging();
+            m_perDeviceData.erase(it);
+            if (m_useP2p) {
                 disconnectP2P(deviceId);
             }
-            return result;
+            return true;
         }
 
 
