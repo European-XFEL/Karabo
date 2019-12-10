@@ -24,7 +24,7 @@ REFERENCE_TYPENUM_TO_DTYPE = {
     14: 'uint32',
     16: 'int64',
     18: 'uint64',
-    20: 'float',
+    20: 'float32',
     22: 'float64'
 }
 
