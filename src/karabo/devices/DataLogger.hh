@@ -53,6 +53,8 @@ namespace karabo {
                                           const karabo::util::Schema& schema,
                                           std::vector<std::string>& paths) const;
 
+            virtual void stopLogging() {}
+
             std::string m_deviceToBeLogged; // same as this DeviceData's key in DeviceDataMap
 
             InitLevel m_initLevel;

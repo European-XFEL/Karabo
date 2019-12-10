@@ -15,6 +15,7 @@
 #include <unordered_map>
 #include <utility>
 #include <future>
+#include <queue>
 
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/function.hpp>
@@ -42,15 +43,17 @@ namespace karabo {
          * The protocol follows request/response pattern and before sending next
          * request the response from the current one should be received.  Only one
          * request/response session per connection is allowed.  To follow this
-         * rule the circular buffer is used.  Any request (functor) first is
-         * pushed back into circular buffer and then checked the internal state if
+         * rule the internal queue is used.  Any request (functor) first is
+         * pushed into internal queue and then checked the internal state if
          * some current request/response session is ongoing.  If not, the next
-         * request is popped from front side of circular buffer and executed.
+         * request is popped from front side of internal queue and executed.
          * The internal flag (state) is raised.  When response callback is called
-         * it checks if circular buffer has next entry and if so this entry is
-         * popped* and executed.  If not, the internal flag is lowered.
-         * The circular buffer has some fixed capacity and requests will be dropped
-         * if the client cannot cope with the input rate.
+         * it checks if the internal queue has next entry and if so this entry is
+         * popped and executed.  If not, the internal flag is lowered.
+         * For the time being the internal queue has no limits defined so it is
+         * possible that if the client cannot cope with input load rate some overflow
+         * condition can be encountered.  The practice should show how we can handle
+         * these problems.
          */    
         class InfluxDbClient : public boost::enable_shared_from_this<InfluxDbClient> {
         public:
@@ -76,7 +79,7 @@ namespace karabo {
             }
 
             /**
-             * HTTP request "GET /query ..." to InfluxDB server is registered in circular buffer.
+             * HTTP request "GET /query ..." to InfluxDB server is registered in internal queue.
              * Non-blocking.  Expect connection to InfluxDB.
              * @param digest is SELECT expression
              * @param action callback: void(const HttpResponse&) is called when response comes
@@ -85,7 +88,7 @@ namespace karabo {
             void getQueryDb(const std::string& digest, const InfluxResponseHandler& action);
 
             /**
-             * HTTP request "GET /query ..." to InfluxDB server is registered in circular buffer.
+             * HTTP request "GET /query ..." to InfluxDB server is registered in internal queue.
              * Can be called with connection to InfluxDB or without. Blocking if no connection exists.
              * Otherwise non-blocking.
              * @param statement is SELECT expression.
@@ -95,7 +98,7 @@ namespace karabo {
             void queryDb(const std::string& statement, const InfluxResponseHandler& action);
 
             /**
-             * HTTP request "POST /query ..." to InfluxDB server is registered in circular buffer.
+             * HTTP request "POST /query ..." to InfluxDB server is registered in internal queue.
              * @param statement SELECT, SHOW, DROP and others QL commands
              * @param action callback: void(const HttpResponse&) is called when response comes
              *               from InfluxDB server
@@ -103,14 +106,14 @@ namespace karabo {
             void postQueryDb(const std::string& statement, const InfluxResponseHandler& action);
 
             /**
-             * HTTP request "GET /ping ..." to InfluxDB server is registered in circular buffer.
+             * HTTP request "GET /ping ..." to InfluxDB server is registered in internal queue.
              * @param action callback: void(const HttpResponse&) is called when response comes
              *               from InfluxDB server
              */
             void getPingDb(const InfluxResponseHandler& action);
 
             /**
-             * HTTP request "POST /write ..." to InfluxDB server is registered in circular buffer.
+             * HTTP request "POST /write ..." to InfluxDB server is registered in internal queue.
              * @param batch is a bunch of lines following InfluxDB "line protocol" separated by newline
              * @param action callback is called when acknowledgment (response) comes from InfluxDB
              *               server.  The callback signature is void(const HttpResponse&).  The success
@@ -174,8 +177,8 @@ namespace karabo {
             void getPingDbTask(const InfluxResponseHandler& action);
 
             /**
-             * Actual "POST /write ..." is accomplished. If no connection to DB, this call is blocked
-             * until the connection is established.  Otherwise the call is non-blocking.
+             * Actual "POST /write ..." is accomplished. Non-blocking call,  Connection should be
+             * established before this call
              */
             void postWriteDbTask(const std::string& batch, const InfluxResponseHandler& action);
 
@@ -191,7 +194,7 @@ namespace karabo {
             void onResponse(const HttpResponse& o, const InfluxResponseHandler& action);
 
             /**
-             * Try to take the next request from circular buffer and execute it.
+             * Try to take the next request from internal queue and execute it.
              * Set internal state to be "active" if it was not.  Helper function.
              */
             void tryNextRequest();
@@ -206,8 +209,8 @@ namespace karabo {
             std::string m_url;
             karabo::net::Connection::Pointer m_dbConnection;
             karabo::net::Channel::Pointer m_dbChannel;
-            boost::circular_buffer<boost::function<void()> > m_circular;
-            boost::mutex m_circularMutex;
+            std::queue<boost::function<void()> > m_requestQueue;
+            boost::mutex m_requestQueueMutex;
             bool m_active;
             boost::mutex m_connectionRequestedMutex;
             bool m_connectionRequested;
@@ -221,7 +224,6 @@ namespace karabo {
             static boost::mutex m_uuidGeneratorMutex;
             static boost::uuids::random_generator m_uuidGenerator;
             static const unsigned int k_connTimeoutMs;
-            static const unsigned int k_circularBufferCapacity;
             std::string m_currentUuid;
         };
 
