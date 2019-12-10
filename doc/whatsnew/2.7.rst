@@ -4,10 +4,16 @@ What's New in Karabo 2.7.0
 
 The **most relevant improvements**, fixes and changes are:
 
-- C++ (breaking change): runtime updates of schemas are now rolled-back in case of failures. !3729
-- C++/bound Py (breaking change): The key of a Device slot listed in the Schema
+- C++ (interface change): runtime updates of schemas are now rolled-back in case of failures. !3729
+- C++/bound Py (interface change): The key of a Device slot listed in the Schema
   must not contain any underscore '_'. !3878
 - RunConfigurator and RunConfigurationGroup are now located in a separate package ``daqConfiguration``. !3923
+- Qt5 refactoring of the GUI
+- Pipeline data Connection consolidation
+- Service Control available in the Karabo Gui
+- InfluxDB available as DataLogger Backend
+- The karaboGui does not use the legacy dependencies system
+- Consolidate pipeline data connection when sender and receiver start at the same time !4006
 
 Detailed Merge-Log
 ==================
@@ -15,15 +21,271 @@ Detailed Merge-Log
 Bound/cpp core
 ++++++++++++++
 
+- BOUND: Removing parametrized Execute and ExecuteNoWait from deviceClient !3697
+- Fix for bug on deserialization of schema and vector<Hash> attributes written before changes in MR !3592.  !3713
+- Add readOnly() support for TABLE_ELEMENT.  !3715
+- Add a couple of scoped_lock instances that were missing in the EventLoop.  !3716
+- Fix for issue that device server cannot be shutdown when it parents an active instance of the calibrationDBRemote device.  !3718
+- Extends fixes done to updateSchema in MR 3658 to appendSchema.  !3725
+- Alleviate (not fix) concurrent connect/reconnect of pipelines !3730
+- Fix logging strings with newline character - mangle to ".KRB_NEWLINE."  !3714
+- Bound: Fix logging level inheritance from server  !3738
+- Fix device client init topology multithreading  !3737
+- Adjustments to DataLoggerManager: some default values and check summary formatting.  !3750
+- Fix python device shutdown with timeout reported in the log !3758
+- slotGetPropertyHistory retrieves last known value of a property when it hasn't been modified during the requested interval  !3790
+- C++: Allow generic GUI slot calls to slotGetOutputChannelInformation !3827
+- Fix for broken C++ integration test after MR !3729  !3807
+- C++: added method readAsyncUntil to TcpChannel class  !2721
+- C++: Fix for  ReadAsyncStringUntil_Test  !3851
+- C++: Silence log message appearing in normal operation  !3855
+- New boolean flag 'configAtTimepoint' added to reply of 'DataLogReader::slotGetConfigurationFromPast'.  !3696
+- C++: Fix interplay between slotUpdateSchemaAttributes and updateSchema  !3729
+- Replaced m_signalsChangedThread by m_signalsChangedTimer (a deadline_timer) in the DeviceClient.  !3838
+- BOUND:  Keep server in clean state and kill previous device processes  !3853
+- C++/BOUND: Devices "archive" changed to become non-reconfigurable !3859
+- C++: Reply an error if reading logged data fails !3677
+- C++: Make SignalSlotable_Test::testDisconnectAsync more robust !3888
+- C++: Gui Server potentially reply success for "execute" and "reconfigure" !3882
+- C++: Avoid naming clash between influxdb QL keyword 'user' and tag and field keys. !3907
+- Bound: Fix order of mutex and access in slotDeviceGone  !3898
+- C++: clean input channel handling in SignalSlotable !3913
+- C++/bound: No underscore in slot keys !3878
+- C++: Refactor DataLogger  !3860
+- C++: Allow slot_with_underscore again, but forbid "clear_namespace" !3914
+- C++: Further cleaning of the `InputChannel`. !3919
+- C++: Fix/concurrent pipeline connection !3940
+- Bound: Faster server shutdown !3984
+- BOUND: Run Configurator: New scene !3901
+- BOUND: New Runconfiguration Group scene !3912
+- BOUND: Remove RunConfigurator and RunConfigurationGroup  !3923
+- C++: safe option to construct DeviceClient !3981
+- C++: updateState with timestamp and/or with other properties' updates !4022
+- C++: fix concurrent pipeline device instantiation !4006
+
+
+Dependencies and deployment
++++++++++++++++++++++++++++
+
+- TESTS: Adds test for pipelines composed of more than 2 devices: a sender, a receiver and n intermediary devices.  !3736
+- CONDA: Karabo Gui conda environment -  via proper merge request  !3712
+- FIX: webserver missing templates  !3720
+- DOCS: Add docs for running karabo-gui on Conda environments !3722
+- DOCS: Remove unnecessary documentation link  !3735
+- INSTALL: Clean install Karabo on Linux  !3721
+- CONDA: Fix conda matplotlib issue !3780
+- CONDA: Improve conda output for debugging  !3789
+- CONDA: Remove windows release leftovers !3791
+- TEST: MDL property test  !3731
+- TEST: Add TinyBoundDevice demonstrating 'worker' behavior
+- INSTALL: karabo install uses default repo  !3803
+- CONDA: Add GUI theatre program  !3806
+- DOCS: Qt5 Strategy  !3799
+- TEST: Add tests for read-only properties.  !3804
+- DOCS: Add how to develop tests, especially integration tests. !3823
+- TEST: Fix bugs in egg.info, device server and integration test
+- CI: Prepare for testing InfluxDB in the CI  !3843
+- DOC: adding a TODO list to the InfluxDBLogger  !3840
+- TEST: More robust DeviceClient_Test::testMonitorChannel()  !3858
+- DOCS: Python tests: Add --runLongTests option to documentation !3854
+- WEB: Including live documentation in the webserver  !3852
+- DOCS: Added notes on workaround for using DeviceClient.registerSchemaUpdatedMonitor. !3831
+- DOCS: Documention on InfluxDB logging backend. !3845
+- DOCS: Add a waitUntilNew description !3828
+- FIX: Webserver docs CSS import  !3867
+- WEB: a webserver to aggregate webservers  !3866
+- FIX: Web aggregator start order  !3885
+- DEPS: Update tornado, 0mq and ipykernel !3872
+- C++ integration tests: Silence compiler warnings !3891
+- FEAT: WebAggregator has a REST interface  !3886
+- CONDA: Don't install kernel when building dependencies !3902
+- DOC: fixes, forgotten things- Fix format in testing.rst !3896
+- DOCS: Updates to influxdb structure proposal and Influxdb todo list.  !3903
+- DEPS: Update ipython dependency on GUI !3892
+- DEPS: Downgrade to tornado 4.5.3 !3897
+- DOCS: Move docs to correct place !3904
+- WEB: add karabo_name to json data !3918
+- INSTALL: remove curl output on karabo install !3916
+- DEPS: Add nlohmann_json dependency on its version 3.7.1.  !3928
+- WEB: Webserver documentation corrected  !3906
+- TEST: Remove the group config integration test  !3936
+- DEPS: remove GUI dependencies from the source !3933
+- TEST: Remove mmcabe code checker  !3876
+- CONDA: fix auxiliar conda activate script !3932
+- DOC: Clean up the readme !3944
+- DOCS: remove alfresco link  !3948
+- CONDA: build script improved  !3956
+- DEPS: remove unused dependencies !3952
+- DEPS: Matplotlib should use TK backend  !3962
+- CONDA: better script path recognition  !3972
+- CONDA: Set the number of threads per core in the CONDA env  !3976
+- DOCS: remove version and group rename  !3995
+- DOCS: defining conda installation  !3999
+- DOCS: describe webservers  !4000
+- CONDA: KaraboGUI Windows Release job !4004
+- WEB: Webservers push their information on action  !4023
+- TOOLS: Fix  karabo-brokerrates against misconfigured locale !3982
+- CONDA: set environment variable !4028
+
+Middlelayer Core
+++++++++++++++++
+
+- MDL: Align outputchannel hostname with cpp counterpart  !3781
+- MDL: Follow-up of generic GUI slot for slotGetOutputChannelInformation !3842
+- MDL: Use constants for open mq errors  !3864
+- MDL: Provide easy timestamp calculations !3868
+- MDL: Allow different displayTypes in Table Elements  !3908
+- MDL: Remove kernel exception/warning  !3930
+- MDL: Silence ikarabo exception exit  !3887
+- MDL: Add creation day in header for new MDL devices  !3964
+- MDL: Use Python 3 super() syntax in device templates  !3965
+- MDL: Fix allowed states for Nodes  !3969
+- MDL: Don't provide data on output channel schema for getConfigurationAsHash  !3951
+- MDL: Fix output channel information from Hash !4041
+- MDL: Fix slotGetOutputChannelInformationFromHash test !3968
+- MDL: Allow BoolValue conversion to float and int !4034
 
 
 Core Devices
 ++++++++++++
 
-
+- C++: Gui server schema sent to requesting channels  !3869
+- C++: Fix NetworkPerformanceCounters from GUI Server Device  !3905
+- C++: Add Influxdb data logger  !3910
+- C++: Tune log messages of DataLoggerManager !3991
+- C++ FileDataLogger: silence expected timeouts !3987
+- C++: Fixes to Hash::fullyEquals, mainly for vector<string>  !3989
+- C++ file logger: Store at least configurations if Schema cannot be serialised !3990
+- C++: FileDataLogger: Fix bugs in stopping of logging  !4014
+- C++: FileDataLogger: Enable loggers logging  !3740
+- C++: Add Influxdb log reader !3911
+- MDL: InfluxDb client !3889
 
 Graphical User Interface
 ++++++++++++++++++++++++
-
-
-
+ 
+- GUI: Fix clipboard scene data encoding  !3700
+- GUI: Double click on colorbar to change levels  !3702
+- GUI: Fix loading invalid filename in project  !3679
+- GUI: Add error dialog on macro when run on project  !3671
+- GUI: Deprecate host information in the karabo project  !3724
+- GUI: Add missing icons for icon widgets dialog  !3726
+- GUI: More info on arrival of configuration from past  !3732
+- GUI: Remove duplicated msg question when trashing from toolbar  !3734
+- GUI: Show message box when an icon cannot be set  !3727
+- GUI: Fix weblink validation  !3751
+- GUI: Remove bottom panels and rearrange project and alarms, log  !3757
+- GUI: Show connect dialog on startup  !3741
+- GUI: Fix project scene saving  !3756
+- GUI: Check whether device server already exists in project  !3753
+- GUI: Use Sans Serif and change global font with Pointsize 10  !3760
+- GUI: Check if macro simple name already exists  !3755
+- GUI: Fix race condition between Qt and traits in the command widget  !3761
+- GUI: drastically speed up GUI close  !3764
+- GUI: Configurable splash screen in cinema  !3765
+- GUI: Clean and refactor the start programs  !3766
+- GUI: Memory cleanup on scenes, delete later ... segfault treatment  !3769
+- GUI: Handle schema evolution on scene widgets  !3759
+- GUI: Refactor the initialization of GUI with splashscreen  !3768
+- GUI: Remove persistent index treatment in the table due to segfaulting  !3706
+- GUI: Move trendline warnings  !3774
+- GUI: Rename device status to proxy status !3773
+- GUI: Fix asking twice for modified project on GUI close  !3772
+- GUI: Fuel the karabo GUI processing  !3767
+- GUI: Reload project option in the project panel  !3771
+- GUI: Expand project on double click until device configuration depth  !3776
+- GUI: Generalize and cleanup of search panels  !3777
+- GUI: Create an own search bar class  !3778
+- GUI: Make the NewProjectDialog non modal  !3775
+- GUI: Instantiate all macros in a project  !3770
+- GUI: Implement and harmonize search in device topology  !3779
+- GUI: Enable toolbar and actions on trendline  !3783
+- GUI: Enable data point toggle in graph widgets  !3782
+- GUI: Fix image widget profiling with ROI  !3739
+- GUI: Fix trendline range limits  !3784
+- GUI: Provide a better project conflict message  !3787
+- GUI: Enable selected Karabo actions on graph widgets  !3786
+- GUI: Activate TrendGraph in double click retrieval  !3792
+- GUI: Implement a deferred visibility process in the scene view  !3793
+- GUI: Remove hide/show magic of scenes in panels  !3794
+- GUI: Add set_translation on image widget  !3788
+- GUI: Always show data in trendline and provide data toggle  !3796
+- GUI: Only allow symbols for PlotDataItems  !3798
+- GUI: Trendline update scale fix on deferred update  !3800
+- GUI: Prevent blob jumps in historic data  !3801
+- GUI: Separate trendline and models  !3802
+- GUI: Implement State Trendline  !3805
+- GUI: Fix load macro/scene filename validation  !3785
+- GUI: Namechange to clear the namespace of a binding !3861
+- GUI: Qt5 Refactor !3880
+- GUI: Enhance run configurator controller  !3879
+- GUI: Add processEvent toggle to timeit decorator !3884
+- GUI: Store last saved macro dir  !3881
+- GUI: Change read only widget background  !3849
+- GUI: Optionally make configuration items configurable !3877
+- GUI: Provide the list of scene uuids in a html output  !3875
+- GUI: Add State Graph to double click elements and refactor generic scenes  !3894
+- GUI: Create a base trendline !3808
+- GUI: Remove auto expand on single click in navigation views  !3895
+- GUI: Merge the graph series widgets to a base  !3900
+- GUI: Save expanded state of run configurator widget  !3883
+- GUI: Fix trendline data overlap !3915
+- GUI: Implement easy documenation access !3893
+- GUI: Arrange trendline historic data retrieval  !3856
+- GUI: Provide correct tooltips for searchbar  !3921
+- GUI: Implement daemon manager service !3909
+- GUI: Provide data points by default in trend graphs  !3920
+- GUI: Patch the alarm pixmap test  !3927
+- GUI: Fix table widget column size after cancel editing  !3924
+- GUI: Use a filter model in the project dialog !3922
+- GUI: Enable to show incompatible devices in the project !3925
+- GUI: Be harsh when checking macros for violations  !3899
+- GUI: Don't repaint full project tree on item update  !3926
+- GUI: Plot vector booleans properly in graph widget  !3931
+- GUI: Add search to daemon controller  !3917
+- GUI: Add daemon service singleton protection  !3939
+- GUI: Fix edit delegate in configurator  !3941
+- GUI: Enable data toggle on NDArray Graph  !3953
+- GUI: Align runconfigurator widget with new class name  !3958
+- GUI: Enable state coloring in the table element  !3961
+- GUI: Enable data export on plots !3957
+- GUI: Add Alarm Trendline to controllers  !3959
+- GUI: Provide option to reset vector roll image  !3954
+- GUI: Allow better plot axis configuration with scientific notations  !3960
+- GUI: New image widget smarter downsampling  !3752
+- GUI: Remove table element schema from the project  !3795
+- GUI: Provide same set_label interface for plot and image graphs  !3945
+- GUI: Enable separation of x and y axis range configuration  !3946
+- GUI: Enable transformation of the x-axis in the graph plots  !3963
+- GUI: Confirmation dialog in Daemon Controller  !3955
+- GUI: Fix parenting of dialogs  !3966
+- GUI: Set the focus on the search label of project dialog  !3974
+- GUI: Project controller dialog parent  !3971
+- GUI: Fix navigation panel dialog parenting  !3977
+- GUI: Fix macro and scene load filename  !3980
+- GUI: Fix brush for line item pen dialog  !3978
+- GUI: White viewbox on graphs  !3988
+- GUI: Fix focus on filesystem widgets  !3992
+- GUI: Fix not showing value of file system  !3993
+- GUI: Fix directory filesystem parent  !3994
+- GUI: Use old runconfigurator classId in configurator widget  !4003
+- GUI: Fix plot grids  !4005
+- GUI: More transparent plot grids  !3996
+- GUI: Add and fix the y-range in the trendline graphs  !3970
+- GUI: Add reset ranges to vector roll changes  !4011
+- GUI: Increase connect dialog delay  !3998
+- GUI: Set the grid to True for trend graph models  !4001
+- GUI: Prepare for bulk update of configurations  !4009
+- GUI: Fix start point of trend graph controllers  !3997
+- GUI: Improve trend axes layout  !4010
+- GUI: Modified icon command widget  !3985
+- GUI: Fix the grid alpha for graph plots  !4015
+- GUI: Lower min height of widgets  !3975
+- GUI: Fix image levels calculation with new clipping implementation  !4016
+- GUI: Invert grid values in vector graph test  !4019
+- GUI: Add more icons for the icon command widget  !4018
+- GUI: Make the list edits state aware  !4017
+- GUI: Fix VectorBool with Qwt and new numpy version !4040
+- GUI: Show stored Hash configuration in project !4029
+- GUI: Set the earliest start_time of the trend graphs !4030
+- GUI: Better datetime format for trend graph axis !4013
