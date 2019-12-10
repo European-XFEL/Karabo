@@ -254,18 +254,16 @@ class Tests(DeviceTest):
     def test_output_information_hash_version(self):
         # tests the version that the GUI can generically call
         device = self.myDevice
-        # Second argument processId is not used in MDL
-        h = yield from device.slotGetOutputChannelInformationFromHash(
-            'output', None)
+        info = Hash('channelId', 'output')
+        h = yield from device.slotGetOutputChannelInformationFromHash(info)
         success, data = h["success"], h["info"]
         self.assertEqual(success, True)
         self.assertEqual(data["connectionType"], "tcp")
         self.assertEqual(data["memoryLocation"], "remote")
         self.assertIsInstance(data["port"], np.uint32)
 
-        h = yield from device.slotGetOutputChannelInformationFromHash(
-            'doesNotExist', None)
-
+        info = Hash('channelId', 'doesNotExist')
+        h = yield from device.slotGetOutputChannelInformationFromHash(info)
         success, data = h["success"], h["info"]
         self.assertEqual(success, False)
         self.assertEqual(data, Hash())
