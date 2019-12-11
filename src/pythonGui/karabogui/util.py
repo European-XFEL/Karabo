@@ -374,23 +374,25 @@ def get_spin_widget(*, icon, scaled_size=QSize(), parent=None):
     return spin_widget
 
 
-def set_treeview_header(tree_view):
+def set_treeview_header(header):
     """This function is used by the ``QTreeView`` used for the navigation and
     the projects and sets its header correctly.
     """
     # NOTE: Since QTreeView always displays the expander in column 0 the
     # additional columns are moved to the front
-    tree_view.header().moveSection(1, 0)
-    tree_view.header().moveSection(2, 0)
+    header.moveSection(1, 0)
+    header.moveSection(2, 0)
 
-    tree_view.header().setResizeMode(0, QHeaderView.ResizeToContents)
-    tree_view.header().setResizeMode(1, QHeaderView.Fixed)
-    tree_view.header().setResizeMode(2, QHeaderView.Fixed)
-    tree_view.setColumnWidth(1, 20)
-    tree_view.setColumnWidth(2, 20)
+    header.setResizeMode(0, QHeaderView.Stretch)
+    header.setResizeMode(1, QHeaderView.Fixed)
+    header.setResizeMode(2, QHeaderView.Fixed)
+    header.setStretchLastSection(False)
+    header.setMaximumSectionSize(20)
+    header.resizeSection(1, 20)
+    header.resizeSection(2, 20)
 
     # Prevent drag reorder of the header
-    tree_view.header().setSectionsMovable(False)
+    header.setSectionsMovable(False)
 
 
 def utc_to_local(utc_str, format='%Y-%m-%d %H:%M:%S'):
