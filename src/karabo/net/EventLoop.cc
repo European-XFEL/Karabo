@@ -10,7 +10,6 @@
 
 #include "EventLoop.hh"
 #include "karabo/log/Logger.hh"
-#include "Connection.hh"
 
 namespace karabo {
     namespace net {
@@ -44,7 +43,7 @@ namespace karabo {
             boost::function<void(boost::system::error_code ec, int signo) > signalHandler
                     = [&loop](boost::system::error_code ec, int signo) {
                         if (ec == boost::asio::error::operation_aborted) {
-                            KARABO_LOG_FRAMEWORK_ERROR << "*** EventLoop::work() signalHandler:  WHO CANCELLED ME!!!";
+                            KARABO_LOG_FRAMEWORK_ERROR << "*** EventLoop::work() signalHandler: signal_set cancelled. signal: " << signo;
                         }
                         if (ec) return;
 
