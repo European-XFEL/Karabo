@@ -10,6 +10,7 @@
 
 #include "EventLoop.hh"
 #include "karabo/log/Logger.hh"
+#include "Connection.hh"
 
 namespace karabo {
     namespace net {
@@ -42,6 +43,9 @@ namespace karabo {
             // TODO: Consider to use ordinary function instead of this lengthy lambda.
             boost::function<void(boost::system::error_code ec, int signo) > signalHandler
                     = [&loop](boost::system::error_code ec, int signo) {
+                        if (ec == boost::asio::error::operation_aborted) {
+                            KARABO_LOG_FRAMEWORK_ERROR << "*** EventLoop::work() signalHandler:  WHO CANCELLED ME!!!";
+                        }
                         if (ec) return;
 
                         {
