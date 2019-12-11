@@ -13,10 +13,10 @@ from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 
 BUTTON_ICONS = {
-    'Left': icons.arrowLeft,
-    'Right': icons.arrowRight,
-    'Up': icons.arrowUp,
-    'Down': icons.arrowDown,
+    'Left': icons.arrowFancyLeft,
+    'Right': icons.arrowFancyRight,
+    'Up': icons.arrowFancyUp,
+    'Down': icons.arrowFancyDown,
     'Start': icons.mediaStart,
     'Stop': icons.mediaStop,
     'Pause': icons.mediaPause,
@@ -27,7 +27,7 @@ BUTTON_ICONS = {
 }
 NO_SELECTION = icons.imageMissing
 
-QPADDING = 4
+QPADDING = 2
 
 
 class DynamicToolButton(QToolButton):
