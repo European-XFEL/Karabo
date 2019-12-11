@@ -35,7 +35,7 @@ class SystemTreeView(QTreeView):
         self.setSelectionModel(model.selectionModel)
         model.signalItemChanged.connect(self.onSelectionChanged)
         model.modelReset.connect(self.resetExpand)
-        set_treeview_header(self)
+        set_treeview_header(self.header())
 
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
