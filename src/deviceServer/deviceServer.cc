@@ -1,8 +1,10 @@
-/*
+/**
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
 #include "karabo/util/Exception.hh"
+#include "karabo/util/MetaTools.hh"
+#include "karabo/net/EventLoop.hh"
 #include "karabo/core/DeviceServer.hh"
 #include "karabo/core/Runner.hh"
 #include "karabo/log/Logger.hh"
@@ -40,17 +42,19 @@ int main(int argc, const char** argv) {
         // Empty pointer will be returned in case of "-h" or "--help"
         if (deviceServer) {
 
-            boost::thread t(boost::bind(&EventLoop::work));
-
             // Handle signals using the event-loop
             EventLoop::setSignalHandler([&deviceServer](int signo) {
                 deviceServer.reset(); // triggers the destructor
             });
 
-            // Start the device server
-            deviceServer->finalizeInternalInitialization();
+            // Prepare start of the device server on the event loop
+            auto& service = EventLoop::getIOService();
+            // Use bind_weak since boost::bind with shared_ptr would keep the server alive when event loop stopped
+            // before finalizeInternalInitialization is started.
+            service.post(bind_weak(&DeviceServer::finalizeInternalInitialization, deviceServer.get()));
 
-            t.join(); // Blocking central event loop
+            // Start central event loop  and block until event loop stopped, usually by a signal
+            EventLoop::work();
         }
 
         Logger::logInfo() << argv[0] << " has exited!\n";
