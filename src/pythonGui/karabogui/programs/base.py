@@ -45,10 +45,13 @@ def create_gui_app(args):
 
     app.setStyleSheet("QPushButton { text-align: left; padding: 5px; }")
     app.setStyleSheet("QToolBar { border: 0px }")
-    # Also set the font of the QTreeView as it defaults to MS Shell Dlg in
-    # Windows for elided text when the QApplication stylesheet has been
-    # changed. Any unknown font will do to default to QApp font. [QTBUG-29232]
-    app.setStyleSheet("QTreeView { font: 10pt 'Unknown Font'; }")
+    # Also set the font of the QTreeView and QTableView as it defaults to
+    # MS Shell Dlg in Windows for elided text when the QApplication stylesheet
+    # has been changed. Any unknown font will do to default to QApp font.
+    # [QTBUG-29232]
+    app.setStyleSheet(
+        "QTreeView { font: 10pt 'Unknown Font'; } "
+        "QTableView { font: 10pt 'Unknown Font'; }")
     app.setAttribute(Qt.AA_DontShowIconsInMenus, False)
 
     # set a nice app logo
