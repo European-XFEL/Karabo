@@ -387,9 +387,9 @@ def set_treeview_header(header):
     header.setResizeMode(1, QHeaderView.Fixed)
     header.setResizeMode(2, QHeaderView.Fixed)
     header.setStretchLastSection(False)
-    header.setMaximumSectionSize(20)
-    header.resizeSection(1, 20)
-    header.resizeSection(2, 20)
+    header.setMaximumSectionSize(24)
+    header.resizeSection(1, 24)
+    header.resizeSection(2, 24)
 
     # Prevent drag reorder of the header
     header.setSectionsMovable(False)
