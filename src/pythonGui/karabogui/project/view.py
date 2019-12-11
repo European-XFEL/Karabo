@@ -46,7 +46,7 @@ class ProjectView(QTreeView):
         self.selectionModel().selectionChanged.connect(self._selection_change)
         self.setDragEnabled(True)
 
-        set_treeview_header(self)
+        set_treeview_header(self.header())
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._show_context_menu)
