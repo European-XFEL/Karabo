@@ -34,8 +34,8 @@ class TopologyPanel(BasePanelWidget):
         main_layout.setContentsMargins(2, 2, 2, 2)
 
         self.tree_view = SystemTreeView(widget)
-        self.sbar = SearchBar(parent=self)
-        self.daemon_button = QPushButton("Service Manager", parent=self)
+        self.sbar = SearchBar(parent=widget)
+        self.daemon_button = QPushButton("Service Manager", parent=widget)
         self.daemon_button.clicked.connect(self._retrieve_service_scene)
         self.daemon_button.setVisible(False)
 

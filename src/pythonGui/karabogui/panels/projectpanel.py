@@ -48,8 +48,8 @@ class ProjectPanel(BasePanelWidget):
         main_layout = QVBoxLayout(widget)
         main_layout.setContentsMargins(2, 2, 2, 2)
 
-        self.tree_view = ProjectView()
-        self.sbar = SearchBar(parent=self)
+        self.tree_view = ProjectView(parent=widget)
+        self.sbar = SearchBar(parent=widget)
         model = self.tree_view.model()
         self.sbar.setModel(model)
 
