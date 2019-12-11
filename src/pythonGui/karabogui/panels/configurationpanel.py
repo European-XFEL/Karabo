@@ -227,21 +227,28 @@ class ConfigurationPanel(BasePanelWidget):
         binding = proxy.binding
         # The check we can provide is to check the deviceId and classId
         # NOTE: Schema evolution should not be a problem!
-        classId = configuration['classId']
+        classId = configuration.get('classId', None)
+        if classId is None:
+            # XXX: We might still get an invalid configuration without classId
+            messagebox.show_error("A configuration without classId arrived "
+                                  "and is ignored! ", parent=self)
+            return
+
         if proxy.device_id != deviceId:
-            messagebox.show_error(f"A configuration for '{deviceId}' arrived, "
-                                  f"but is ignored since '{proxy.device_id}' "
-                                  f"shown in editor.", parent=self)
+            messagebox.show_error("A configuration for '{}' arrived, but is "
+                                  "ignored since '{}' shown in editor.".format(
+                                   deviceId, proxy.device_id), parent=self)
             return
         if binding.class_id != classId:
-            messagebox.show_error(f"A configuration for classId '{classId}' "
-                                  f"arrived, but device in editor is a "
-                                  f"'{binding.class_id}'", parent=self)
+            messagebox.show_error("A configuration for classId '{}' arrived, "
+                                  "but device in editor is a '{}'".format(
+                                   classId, binding.class_id), parent=self)
             return
 
         self._set_proxy_configuration(proxy, configuration)
-        messagebox.show_information(f"Configuration from '{time}' has arrived "
-                                    f"for '{deviceId}'!", parent=self)
+        messagebox.show_information("Configuration from '{}' has arrived "
+                                    "for '{}'!".format(time, deviceId),
+                                    parent=self)
 
     def _apply_loaded_configuration(self, proxy, configuration):
         """Apply a configuration loaded from a file to a proxy
