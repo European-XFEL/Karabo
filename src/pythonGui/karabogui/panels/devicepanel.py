@@ -28,7 +28,7 @@ class DevicePanel(BasePanelWidget):
         main_layout.setContentsMargins(2, 2, 2, 2)
         self.tree_view = DeviceTreeView(widget)
 
-        self.sbar = SearchBar(parent=self)
+        self.sbar = SearchBar(parent=widget)
         model = self.tree_view.model()
         self.sbar.setModel(model)
 
