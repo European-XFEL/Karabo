@@ -92,7 +92,9 @@ namespace karabo {
             static size_t getNumberOfThreads();
 
             typedef boost::function<void (int /*signal*/) > SignalHandler;
-            /** Set the handler to be called if a system signal (SIGINT, SIGTERM, SIGSEGV) is caught.
+            /** Set the handler to be called if a system signal is caught.
+             *
+             * See work() about which signals are caught.
              *
              * @param handler function with signature 'void (int signal)'
              */
