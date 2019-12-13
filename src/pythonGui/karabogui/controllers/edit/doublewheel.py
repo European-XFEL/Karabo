@@ -8,12 +8,11 @@ from PyQt5.QtWidgets import QAction, QInputDialog, QLabel
 from traits.api import Instance, on_trait_change, Undefined
 
 from karabo.common.scenemodel.api import DoubleWheelBoxModel
-from karabogui import globals as krb_globals
 from karabogui import messagebox
 from karabogui.binding.api import (
     FloatBinding, get_editor_value, get_min_max)
 from karabogui.controllers.api import (
-    add_unit_label, BaseBindingController, DoubleWheelEdit,
+    add_unit_label, BaseBindingController, DoubleWheelEdit, is_proxy_allowed,
     register_binding_controller)
 from karabogui.util import SignalBlocker
 
@@ -66,7 +65,6 @@ class EditableWheelBox(BaseBindingController):
             # do not match, the widget will adjust!
             self._internal_widget.set_value(value)
 
-    # @pyqtSlot(float)
     def _on_value_changed(self, value):
         """This widget uses for completion a plain QDoubleValidator
 
@@ -79,28 +77,17 @@ class EditableWheelBox(BaseBindingController):
             self._internal_widget.set_value_widget(value)
 
     def state_update(self, proxy):
-        root_proxy = proxy.root_proxy
-        value = root_proxy.state_binding.value
-        if value is Undefined or not value:
-            return
-
-        binding = proxy.binding
-        is_allowed = binding.is_allowed(value)
-        is_accessible = (krb_globals.GLOBAL_ACCESS_LEVEL >=
-                         binding.required_access_level)
-
-        self._internal_widget.setEnabled(is_allowed and is_accessible)
+        enable = is_proxy_allowed(proxy)
+        self._internal_widget.setEnabled(enable)
 
     @on_trait_change('model.decimals', post_init=True)
     def _decimals_update(self):
         self._internal_widget.set_number_decimals(self.model.decimals)
 
-    # @pyqtSlot(int)
     def _config_changed(self, value):
         """The configuration of the wheel widget changed. Model update!"""
         self.model.integers = value
 
-    # @pyqtSlot()
     def _pick_decimals(self, checked):
         num_decimals, ok = QInputDialog.getInt(
             self.widget, 'Decimal', 'Floating point precision:',
@@ -108,7 +95,6 @@ class EditableWheelBox(BaseBindingController):
         if ok:
             self.model.decimals = num_decimals
 
-    # @pyqtSlot()
     def _pick_integers(self, checked):
         num_integers, ok = QInputDialog.getInt(
             self.widget, 'Integers', 'Integers:',

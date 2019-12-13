@@ -6,15 +6,14 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPalette, QValidator
 from PyQt5.QtWidgets import QAction, QInputDialog, QLineEdit
-from traits.api import Instance, Int, on_trait_change, Str, Undefined
+from traits.api import Instance, Int, on_trait_change, Str
 
 from karabo.common.scenemodel.api import DoubleLineEditModel, IntLineEditModel
-from karabogui import globals as krb_globals
 from karabogui.binding.api import (
     get_editor_value, get_min_max, FloatBinding, IntBinding)
 from karabogui.controllers.api import (
-    BaseBindingController, add_unit_label, IntValidator, NumberValidator,
-    register_binding_controller)
+    BaseBindingController, add_unit_label, IntValidator, is_proxy_allowed,
+    NumberValidator, register_binding_controller)
 from karabogui.util import SignalBlocker
 
 MAX_FLOATING_PRECISION = 12
@@ -50,24 +49,14 @@ class NumberLineEdit(BaseBindingController):
         self._internal_widget.setFocusPolicy(focus_policy)
 
     def state_update(self, proxy):
-        root_proxy = proxy.root_proxy
-        value = root_proxy.state_binding.value
-        if value is Undefined or not value:
-            return
-
-        binding = proxy.binding
-        is_allowed = binding.is_allowed(value)
-        is_accessible = (krb_globals.GLOBAL_ACCESS_LEVEL >=
-                         binding.required_access_level)
-
-        self._internal_widget.setEnabled(is_allowed and is_accessible)
+        enable = is_proxy_allowed(proxy)
+        self._internal_widget.setEnabled(enable)
 
     def binding_update(self, proxy):
         low, high = get_min_max(proxy.binding)
         self._validator.setBottom(low)
         self._validator.setTop(high)
 
-    # @pyqtSlot(str)
     def _on_text_changed(self, text):
         acceptable_input = self._internal_widget.hasAcceptableInput()
         if self.proxy.binding is None:
@@ -141,7 +130,6 @@ class DoubleLineEdit(NumberLineEdit):
         self.value_update(self.proxy)
         self._validator.decimals = self.model.decimals
 
-    # @pyqtSlot()
     def _pick_decimals(self, checked):
         num_decimals, ok = QInputDialog.getInt(
             self.widget, 'Decimal', 'Floating point precision:',

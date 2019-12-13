@@ -4,13 +4,12 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from PyQt5.QtWidgets import QComboBox
-from traits.api import Instance, Undefined
+from traits.api import Instance
 
-from karabogui import globals as krb_globals
 from karabo.common.scenemodel.api import ComboBoxModel
 from karabogui.binding.api import BaseBinding, get_editor_value
 from karabogui.controllers.api import (
-    BaseBindingController, register_binding_controller)
+    BaseBindingController, is_proxy_allowed, register_binding_controller)
 from karabogui.util import MouseWheelEventBlocker, SignalBlocker
 
 
@@ -55,21 +54,11 @@ class EditableComboBox(BaseBindingController):
         except StopIteration:
             return
 
-    # @pyqtSlot(int)
     def _on_user_edit(self, index):
         if self.proxy.binding is None:
             return
         self.proxy.edit_value = self.proxy.binding.options[index]
 
     def state_update(self, proxy):
-        root_proxy = proxy.root_proxy
-        value = root_proxy.state_binding.value
-        if value is Undefined or not value:
-            return
-
-        binding = proxy.binding
-        is_allowed = binding.is_allowed(value)
-        is_accessible = (krb_globals.GLOBAL_ACCESS_LEVEL >=
-                         binding.required_access_level)
-
-        self.widget.setEnabled(is_allowed and is_accessible)
+        enable = is_proxy_allowed(proxy)
+        self.widget.setEnabled(enable)
