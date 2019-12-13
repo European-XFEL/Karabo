@@ -2,6 +2,10 @@ import importlib
 import os
 import pkg_resources
 
+from traits.api import Undefined
+
+import karabogui.globals as krb_globals
+
 
 def axis_label(proxy):
     """Return the axis label for a PropertyProxy instance
@@ -74,3 +78,18 @@ def with_display_type(display_type):
         return dt == display_type
 
     return is_compatible
+
+
+def is_proxy_allowed(proxy):
+    """Retrieve if the reconfiguration of the ``PropertyProxy`` is allowed
+    """
+    root_proxy = proxy.root_proxy
+    value = root_proxy.state_binding.value
+    if value is Undefined or not value:
+        return False
+
+    binding = proxy.binding
+    is_allowed = binding.is_allowed(value)
+    is_accessible = (krb_globals.GLOBAL_ACCESS_LEVEL >=
+                     binding.required_access_level)
+    return is_accessible and is_allowed
