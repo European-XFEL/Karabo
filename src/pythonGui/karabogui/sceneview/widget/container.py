@@ -114,7 +114,7 @@ class ControllerContainer(QWidget):
         binding = self.widget_controller.proxy.binding
         if binding is not None:
             enabled = (binding.required_access_level <= level)
-            self.widget_controller.widget.setEnabled(enabled)
+            self.widget_controller.setEnabled(enabled)
 
     # ---------------------------------------------------------------------
     # Qt methods

@@ -87,14 +87,6 @@ class BaseBindingController(HasStrictTraits):
         """
 
     # -------------------------------------------------------------------------
-    # Container hooks
-
-    def on_decline(self):
-        """Implemented by subclasses to receive notifications that the value
-        was declined.
-        """
-
-    # -------------------------------------------------------------------------
     # Public interface
 
     def create(self, parent):
@@ -201,6 +193,17 @@ class BaseBindingController(HasStrictTraits):
         except NotImplementedError:
             # Forget about it!
             return False
+
+    def on_decline(self):
+        """Implemented by subclasses to receive notifications that the value
+        was declined.
+        """
+
+    def setEnabled(self, enable):
+        """Implemented by subclasses to update controller as requested by
+        a change in the access level.
+        """
+        self.widget.setEnabled(enable)
 
     # -------------------------------------------------------------------------
     # Traits
