@@ -1409,7 +1409,8 @@ class PythonDevice(NoFsm):
                 raise RuntimeError(msg.format(slotName, lockHolder))
 
     def slotGetConfiguration(self):
-        self._ss.reply(self._parameters, self.deviceid)
+        with self._stateChangeLock:
+            self._ss.reply(self._parameters, self.deviceid)
 
     def slotReconfigure(self, newConfiguration):
         if newConfiguration.empty():
@@ -1669,9 +1670,10 @@ class PythonDevice(NoFsm):
         if key is None:
             return AlarmCondition.fromString(self.get("alarmCondition"))
         else:
-            condition = self._parameters.getAttribute(
-                key, "alarmCondition", separator)
-            return AlarmCondition.fromString(condition)
+            with self._stateChangeLock:
+                condition = self._parameters.getAttribute(
+                    key, "alarmCondition", separator)
+                return AlarmCondition.fromString(condition)
 
     def hasRollingStatistics(self, key):
         with self._stateChangeLock:
