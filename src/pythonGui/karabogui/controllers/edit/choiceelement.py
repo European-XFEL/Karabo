@@ -9,7 +9,7 @@ from traits.api import Instance
 from karabo.common.scenemodel.api import ChoiceElementModel
 from karabogui.binding.api import ChoiceOfNodesBinding
 from karabogui.controllers.api import (
-    BaseBindingController, register_binding_controller)
+    BaseBindingController, is_proxy_allowed, register_binding_controller)
 from karabogui.util import MouseWheelEventBlocker, SignalBlocker
 
 
@@ -47,8 +47,11 @@ class EditableChoiceElement(BaseBindingController):
             with SignalBlocker(self.widget):
                 self.widget.setCurrentIndex(index)
 
-    # @pyqtSlot(int)
     def _on_user_edit(self, index):
         if self.proxy.binding is None:
             return
         self.proxy.binding.choice = self.widget.itemText(index)
+
+    def state_update(self, proxy):
+        enable = is_proxy_allowed(proxy)
+        self.widget.setEnabled(enable)
