@@ -312,14 +312,14 @@ class PythonDevice(NoFsm):
         configuration.set("hostName", socket.gethostname().partition('.')[0])
         super(PythonDevice, self).__init__(configuration)
 
-        self.parameters = configuration
-        if "_serverId_" in self.parameters:
-            self.serverid = self.parameters["_serverId_"]
+        self._parameters = configuration
+        if "_serverId_" in self._parameters:
+            self.serverid = self._parameters["_serverId_"]
         else:
             self.serverid = "__none__"
 
-        if "_deviceId_" in self.parameters:
-            self.deviceid = self.parameters["_deviceId_"]
+        if "_deviceId_" in self._parameters:
+            self.deviceid = self._parameters["_deviceId_"]
         else:
             self.deviceid = "__none__"  # TODO: generate uuid
 
@@ -341,7 +341,7 @@ class PythonDevice(NoFsm):
         self._timeSec = 0
         self._timeFrac = 0
         self._timePeriod = 0
-        self.timeServerId = self.parameters["timeServerId"]
+        self.timeServerId = self._parameters["timeServerId"]
 
         # Setup the validation classes
         self.validatorIntern = Validator()
@@ -367,18 +367,19 @@ class PythonDevice(NoFsm):
         self.initSchema()
 
         with self._stateChangeLock:
-            self.parameters.set("classId", self.classid)
-            self.parameters.set("deviceId", self.deviceid)
-            self.parameters.set("serverId", self.serverid)
-            self.parameters.set("pid", os.getpid())
+            self._parameters.set("classId", self.classid)
+            self._parameters.set("deviceId", self.deviceid)
+            self._parameters.set("serverId", self.serverid)
+            self._parameters.set("pid", os.getpid())
 
             # Validate first time to assign timestamps
             # Note that invalid property keys are already caught via
             # Configurator(PythonDevice).create in launchPythonDevice below.
             validated = self.validatorIntern.validate(
-                self.fullSchema, self.parameters, self.getActualTimestamp())
-            self.parameters.merge(validated,
-                                  HashMergePolicy.REPLACE_ATTRIBUTES)
+                self._fullSchema, self._parameters,
+                self.getActualTimestamp())
+            self._parameters.merge(validated,
+                                   HashMergePolicy.REPLACE_ATTRIBUTES)
 
         # Create 'info' hash
         info = Hash("type", "device")
@@ -415,10 +416,10 @@ class PythonDevice(NoFsm):
 
         # Instantiate SignalSlotable object
         self._ss = SignalSlotable(self.deviceid, "JmsConnection",
-                                  self.parameters["_connection_"],
-                                  self.parameters["heartbeatInterval"], info)
+                                  self._parameters["_connection_"],
+                                  self._parameters["heartbeatInterval"], info)
 
-        # Setup device logger (needs self._ss and self.parameters)
+        # Setup device logger (needs self._ss and self._parameters)
         self.loadLogger()
         self.log = Logger.getCategory(self.deviceid)
 
@@ -473,9 +474,9 @@ class PythonDevice(NoFsm):
     def loadLogger(self):
         """Load the distributed logger
 
-        Uses config in self.parameters["Logger"]
+        Uses config in self._parameters["Logger"]
         """
-        config = self.parameters["Logger"]
+        config = self._parameters["Logger"]
         stamp = self.getActualTimestamp()
 
         # cure the network part of the logger config
@@ -483,7 +484,7 @@ class PythonDevice(NoFsm):
         if config.get(topicPath, default="") == "":
             # If not specified or empty, use the local topic for log messages
             config.set(topicPath, self._ss.getTopic())
-            # Since manipulating self.parameters, add timestamp:
+            # Since manipulating self._parameters, add timestamp:
             topicAttrs = config.getNode(topicPath).getAttributes()
             stamp.toHashAttributes(topicAttrs)
 
@@ -494,7 +495,7 @@ class PythonDevice(NoFsm):
             os.makedirs(path)
         path = os.path.join(path, 'device.log')
         config.set('file.filename', path)
-        # Since manipulating self.parameters, add timestamp:
+        # Since manipulating self._parameters, add timestamp:
         pathAttrs = config.getNode('file.filename').getAttributes()
         stamp.toHashAttributes(pathAttrs)
 
@@ -598,7 +599,7 @@ class PythonDevice(NoFsm):
                 if validate:
                     try:
                         validated = self.validatorIntern \
-                            .validate(self.fullSchema, hash, stamp)
+                            .validate(self._fullSchema, hash, stamp)
                     except RuntimeError as e:
                         # As in C++, just warn. But note that here (in contrast
                         # to C++) setting a non-existing parameter skips the
@@ -613,7 +614,7 @@ class PythonDevice(NoFsm):
                     # set the overal alarm condition if needed
                     if (resultingCondition is not None
                             and resultingCondition.asString()
-                            != self.parameters.get("alarmCondition")):
+                            != self._parameters.get("alarmCondition")):
                         validated.set("alarmCondition",
                                       resultingCondition.asString())
                         node = validated.getNode("alarmCondition")
@@ -636,8 +637,8 @@ class PythonDevice(NoFsm):
                         stamp.toHashAttributes(attributes)
 
                 if not validated.empty():
-                    self.parameters.merge(validated,
-                                          HashMergePolicy.REPLACE_ATTRIBUTES)
+                    self._parameters.merge(
+                        validated, HashMergePolicy.REPLACE_ATTRIBUTES)
 
                     # Hash containing 'state' or at least one reconfigurable
                     # key should be signalled by 'signalStateChanged'
@@ -743,8 +744,8 @@ class PythonDevice(NoFsm):
             condition = AlarmCondition(conditionString)
             pSep = cKey.replace(Validator.kAlarmParamPathSeparator, ".")
 
-            alarmDesc = self.fullSchema.getInfoForAlarm(pSep, condition)
-            needAck = self.fullSchema.doesAlarmNeedAcknowledging(
+            alarmDesc = self._fullSchema.getInfoForAlarm(pSep, condition)
+            needAck = self._fullSchema.doesAlarmNeedAcknowledging(
                 pSep, condition)
 
             entry = Hash("type", conditionString,
@@ -824,18 +825,18 @@ class PythonDevice(NoFsm):
         """
         with self._stateChangeLock:
             try:
-                if not self.fullSchema.getParameterHash()\
+                if not self._fullSchema.getParameterHash()\
                         .hasAttribute(key, "leafType"):
                     leafType = None
                 else:
-                    leafType = self.fullSchema.getParameterHash()\
+                    leafType = self._fullSchema.getParameterHash()\
                         .getAttribute(key, "leafType")
                 if leafType == LeafType.STATE:
-                    return State(self.parameters[key])
+                    return State(self._parameters[key])
                 elif leafType == LeafType.ALARM_CONDITION:
-                    return AlarmCondition(self.parameters[key])
+                    return AlarmCondition(self._parameters[key])
                 else:
-                    return self.parameters[key]
+                    return self._parameters[key]
             except RuntimeError as e:
                 print(e)
                 raise AttributeError(
@@ -853,7 +854,7 @@ class PythonDevice(NoFsm):
         # Have to copy to protect using it while updating
         s = Schema()
         with self._stateChangeLock:
-            s.copy(self.fullSchema)
+            s.copy(self._fullSchema)
         return s
 
     def updateSchema(self, schema):
@@ -881,18 +882,18 @@ class PythonDevice(NoFsm):
                                        self.getActualTimestamp())
         with self._stateChangeLock:
             for path in self._injectedSchema.getPaths():
-                if not (self.staticSchema.has(path) or schema.has(path)):
-                    self.parameters.erase(path)
+                if not (self._staticSchema.has(path) or schema.has(path)):
+                    self._parameters.erase(path)
             self._stateDependentSchema.clear()
             self._injectedSchema.copy(schema)
-            prevFullSchemaPaths = self.fullSchema.getPaths()
-            self.fullSchema.copy(self.staticSchema)
-            self.fullSchema += self._injectedSchema
-            self.fullSchema.updateAliasMap()
+            prevFullSchemaPaths = self._fullSchema.getPaths()
+            self._fullSchema.copy(self._staticSchema)
+            self._fullSchema += self._injectedSchema
+            self._fullSchema.updateAliasMap()
 
             # notify the distributed system...
             self._ss.emit("signalSchemaUpdated",
-                          self.fullSchema, self.deviceid)
+                          self._fullSchema, self.deviceid)
 
             # Keep new paths only. This hash is then set, to avoid re-sending
             # updates with the same value.
@@ -927,13 +928,13 @@ class PythonDevice(NoFsm):
         with self._stateChangeLock:
             self._stateDependentSchema = {}
             self._injectedSchema += schema
-            prevFullSchemaPaths = self.fullSchema.getPaths()
-            self.fullSchema.copy(self.staticSchema)
-            self.fullSchema += self._injectedSchema
-            self.fullSchema.updateAliasMap()
+            prevFullSchemaPaths = self._fullSchema.getPaths()
+            self._fullSchema.copy(self._staticSchema)
+            self._fullSchema += self._injectedSchema
+            self._fullSchema.updateAliasMap()
 
             # notify the distributed system...
-            self._ss.emit("signalSchemaUpdated", self.fullSchema,
+            self._ss.emit("signalSchemaUpdated", self._fullSchema,
                           self.deviceid)
 
             # Keep new paths only. This hash is then set, to avoid re-sending
@@ -961,7 +962,7 @@ class PythonDevice(NoFsm):
                         the last call.
         """
         with self._stateChangeLock:
-            if not self.fullSchema.has(path):
+            if not self._fullSchema.has(path):
                 raise KeyError("Path '{}' not found in the device schema."
                                .format(path))
 
@@ -970,7 +971,7 @@ class PythonDevice(NoFsm):
             # updateSchema(Schema())
             # OVERWRITE_ELEMENT checks whether max size attribute makes sense
             # for path
-            (OVERWRITE_ELEMENT(self.fullSchema).key(path)
+            (OVERWRITE_ELEMENT(self._fullSchema).key(path)
              .setNewMaxSize(value).commit(),)
             if self._injectedSchema.has(path):
                 (OVERWRITE_ELEMENT(self._injectedSchema).key(path)
@@ -978,7 +979,7 @@ class PythonDevice(NoFsm):
 
             if emitFlag:
                 self._ss.emit("signalSchemaUpdated",
-                              self.fullSchema, self.deviceid)
+                              self._fullSchema, self.deviceid)
 
     def setProgress(self, value, associatedText=""):
         """Set progress indicator on this device
@@ -1012,7 +1013,8 @@ class PythonDevice(NoFsm):
         """
         try:
             with self._stateChangeLock:
-                return self.fullSchema.getAliasFromKey(key, aliasReferenceType)
+                return self._fullSchema.getAliasFromKey(key,
+                                                        aliasReferenceType)
         except RuntimeError as e:
             raise AttributeError("Error while retrieving alias from parameter"
                                  " ({}): {}".format(key, e))
@@ -1021,7 +1023,7 @@ class PythonDevice(NoFsm):
         """Return the key mapping to a given alias"""
         try:
             with self._stateChangeLock:
-                return self.fullSchema.getKeyFromAlias(alias)
+                return self._fullSchema.getKeyFromAlias(alias)
         except RuntimeError as e:
             raise AttributeError("Error while retrieving parameter from alias"
                                  " ({}): {}".format(alias, e))
@@ -1029,12 +1031,12 @@ class PythonDevice(NoFsm):
     def aliasHasKey(self, alias):
         """Check if a key for a given alias exists"""
         with self._stateChangeLock:
-            return self.fullSchema.aliasHasKey(alias)
+            return self._fullSchema.aliasHasKey(alias)
 
     def keyHasAlias(self, key):
         """Check if a given key has an alias defined"""
         with self._stateChangeLock:
-            return self.fullSchema.keyHasAlias(key)
+            return self._fullSchema.keyHasAlias(key)
 
     def getValueType(self, key):
         """Get the ValueType of a given key
@@ -1042,7 +1044,7 @@ class PythonDevice(NoFsm):
         :returns: The type in terms of `karabo::util::ReferenceTypes`
         """
         with self._stateChangeLock:
-            return self.fullSchema.getValueType(key)
+            return self._fullSchema.getValueType(key)
 
     def getCurrentConfiguration(self, tags=""):
         """Return the current configuration, optionally filtered by tags
@@ -1055,10 +1057,10 @@ class PythonDevice(NoFsm):
         with self._stateChangeLock:
             if tags == "":
                 # Outside the state change lock we need a copy:
-                return copy.copy(self.parameters)
+                return copy.copy(self._parameters)
             else:
-                return HashFilter.byTag(self.fullSchema, self.parameters, tags,
-                                        " ,;")
+                return HashFilter.byTag(self._fullSchema, self._parameters,
+                                        tags, " ,;")
 
     def filterByTags(self, configuration, tags):
         """Filter a given configuration Hash by tags
@@ -1069,7 +1071,7 @@ class PythonDevice(NoFsm):
         :return: the filtered configuration Hash
         """
         with self._stateChangeLock:
-            return HashFilter.byTag(self.fullSchema, configuration,
+            return HashFilter.byTag(self._fullSchema, configuration,
                                     tags, " ,;")
 
     def getServerId(self):
@@ -1117,9 +1119,9 @@ class PythonDevice(NoFsm):
         self.classid = self.__class__.__classid__
 
     def initSchema(self):
-        self.staticSchema = PythonDevice.getSchema(self.classid)
-        self.fullSchema = Schema(self.classid)
-        self.fullSchema.copy(self.staticSchema)
+        self._staticSchema = PythonDevice.getSchema(self.classid)
+        self._fullSchema = Schema(self.classid)
+        self._fullSchema.copy(self._staticSchema)
 
     def updateState(self, currentState):
         """Update the state of the device to a new state.
@@ -1236,18 +1238,18 @@ class PythonDevice(NoFsm):
         Internal method to be called under self._stateChangeLock
         """
         # Keys under topLevel, without leading "topLevel.":
-        subKeys = self.fullSchema.getKeys(topLevel)
+        subKeys = self._fullSchema.getKeys(topLevel)
         # Now go recursively down the node:
         for subKey in subKeys:
             key = topLevel + '.' + subKey if topLevel else subKey
-            if self.fullSchema.hasDisplayType(key):
-                displayType = self.fullSchema.getDisplayType(key)
+            if self._fullSchema.hasDisplayType(key):
+                displayType = self._fullSchema.getDisplayType(key)
                 if displayType == "OutputChannel":
                     # Would best be INFO level, but without broadcasting:
                     self.log.DEBUG("Creating output channel \"{}\""
                                    .format(key))
                     outputChannel = self._ss.createOutputChannel(
-                                                 key, self.parameters)
+                                                 key, self._parameters)
                     if not outputChannel:
                         self.log.ERROR("Failed to create output channel \"{}\""
                                        .format(key))
@@ -1262,12 +1264,12 @@ class PythonDevice(NoFsm):
                     # Would best be INFO level, but without broadcasting:
                     self.log.DEBUG("Creating input channel \"{}\""
                                    .format(key))
-                    self._ss.createInputChannel(key, self.parameters)
+                    self._ss.createInputChannel(key, self._parameters)
                 else:
                     self.log.DEBUG("Not creating in-/output channel for '"
                                    + key + "' since it's a '"
                                    + displayType + "'")
-            elif self.fullSchema.isNode(key):
+            elif self._fullSchema.isNode(key):
                 # Recursive call going down the tree for channels within nodes
                 self.log.DEBUG("Looking for input/output channels " +
                                "under node '" + key + "'")
@@ -1347,7 +1349,7 @@ class PythonDevice(NoFsm):
         # Check whether the slot is mentioned in the expectedParameters
         # as the call guard only works on those and will ignore all others
         with self._stateChangeLock:
-            isSchemaSlot = self.fullSchema.has(slotName)
+            isSchemaSlot = self._fullSchema.has(slotName)
 
         # Check whether the slot can be called given the current locking state
         lockableSlot = isSchemaSlot or slotName == "slotReconfigure"
@@ -1356,10 +1358,10 @@ class PythonDevice(NoFsm):
 
         if isSchemaSlot:
             with self._stateChangeLock:
-                if self.fullSchema.hasAllowedStates(slotName):
-                    allowedStates = self.fullSchema.getAllowedStates(slotName)
+                if self._fullSchema.hasAllowedStates(slotName):
+                    allowedStates = self._fullSchema.getAllowedStates(slotName)
                     if allowedStates:
-                        currentState = State(self.parameters["state"])
+                        currentState = State(self._parameters["state"])
                         if currentState not in allowedStates:
                             msg = "Command \"{}\" is not allowed in current " \
                                   "state \"{}\" of device \"{}\""\
@@ -1407,7 +1409,7 @@ class PythonDevice(NoFsm):
                 raise RuntimeError(msg.format(slotName, lockHolder))
 
     def slotGetConfiguration(self):
-        self._ss.reply(self.parameters, self.deviceid)
+        self._ss.reply(self._parameters, self.deviceid)
 
     def slotReconfigure(self, newConfiguration):
         if newConfiguration.empty():
@@ -1438,9 +1440,9 @@ class PythonDevice(NoFsm):
         with self._stateChangeLock:
             prop = "visibility"
             node = reconfiguration.find(prop)
-            if node and node.getValue() != self.parameters.get(prop):
+            if node and node.getValue() != self._parameters.get(prop):
                 instanceInfoUpdate.set(prop, node.getValue())
-            self.parameters += reconfiguration
+            self._parameters += reconfiguration
 
         if not instanceInfoUpdate.empty():
             self._ss.updateInstanceInfo(instanceInfoUpdate)
@@ -1459,7 +1461,7 @@ class PythonDevice(NoFsm):
             self._ss.reply(schema, self.deviceid)
         else:
             with self._stateChangeLock:
-                self._ss.reply(self.fullSchema, self.deviceid)
+                self._ss.reply(self._fullSchema, self.deviceid)
 
     def slotKillDevice(self):
         senderid = self._ss.getSenderInfo(
@@ -1485,8 +1487,8 @@ class PythonDevice(NoFsm):
         success = False
 
         with self._stateChangeLock:
-            success = self.fullSchema.applyRuntimeUpdates(updates)
-            # Whenever updating self.fullSchema, we have to clear the cache
+            success = self._fullSchema.applyRuntimeUpdates(updates)
+            # Whenever updating self._fullSchema, we have to clear the cache
             self._stateDependentSchema.clear()
 
             if success:
@@ -1498,12 +1500,12 @@ class PythonDevice(NoFsm):
                 # attribute updated; those that are not found will be skipped.
                 self._injectedSchema.applyRuntimeUpdates(updates)
                 # Notify everyone
-                self._ss.emit("signalSchemaUpdated", self.fullSchema,
+                self._ss.emit("signalSchemaUpdated", self._fullSchema,
                               self.deviceid)
 
             self._ss.reply(Hash("success", success,
                                 "instanceId", self.deviceid,
-                                "updatedSchema", self.fullSchema,
+                                "updatedSchema", self._fullSchema,
                                 "requestedUpdate", updates))
 
     def slotTimeTick(self, id, sec, frac, period):
@@ -1581,7 +1583,7 @@ class PythonDevice(NoFsm):
         with self._stateChangeLock:
             if state not in self._stateDependentSchema:
                 rules = AssemblyRules(AccessType(WRITE), state.value)
-                schemaForState = self.fullSchema.subSchemaByRules(rules)
+                schemaForState = self._fullSchema.subSchemaByRules(rules)
                 self._stateDependentSchema[state] = schemaForState
             return self._stateDependentSchema[state]
 
@@ -1633,7 +1635,7 @@ class PythonDevice(NoFsm):
             resultingCondition = \
                 self._evaluateAndUpdateAlarmCondition(
                     forceUpdate=True, prevParamsInAlarm=Hash(), silent=True)
-            currentCondition = self.parameters.get("alarmCondition")
+            currentCondition = self._parameters.get("alarmCondition")
 
         if (resultingCondition is not None
                 and resultingCondition.asString() != currentCondition):
@@ -1667,13 +1669,13 @@ class PythonDevice(NoFsm):
         if key is None:
             return AlarmCondition.fromString(self.get("alarmCondition"))
         else:
-            condition = self.parameters.getAttribute(
+            condition = self._parameters.getAttribute(
                 key, "alarmCondition", separator)
             return AlarmCondition.fromString(condition)
 
     def hasRollingStatistics(self, key):
         with self._stateChangeLock:
-            return self.fullSchema.hasRollingStatistics(key)
+            return self._fullSchema.hasRollingStatistics(key)
 
     def getRollingStatistics(self, key):
         with self._stateChangeLock:
@@ -1694,7 +1696,7 @@ class PythonDevice(NoFsm):
             for key in warnings.getKeys():
                 desc = warnings.get(key)
                 condition = AlarmCondition.fromString(desc.get("type"))
-                thisinfo = self.fullSchema.getInfoForAlarm(key, condition)
+                thisinfo = self._fullSchema.getInfoForAlarm(key, condition)
                 info.set(key, thisinfo)
         return info
 
