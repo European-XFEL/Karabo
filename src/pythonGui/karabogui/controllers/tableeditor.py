@@ -178,8 +178,7 @@ class TableModel(QAbstractTableModel):
 
     def insertRows(self, pos, rows, index, *,
                    copy_row=None, from_device_update=False):
-        self.layoutAboutToBeChanged.emit()
-        self.beginInsertRows(QModelIndex(), pos, pos + rows)
+        self.beginInsertRows(QModelIndex(), pos, pos + rows - 1)
         try:
             for r in range(rows):
                 row_hash = copy.copy(copy_row)
@@ -199,24 +198,18 @@ class TableModel(QAbstractTableModel):
         finally:
             self.endInsertRows()
 
-        self.layoutChanged.emit()
         if not from_device_update:
             self._editing_finished(self._data)
         return True
 
     def removeRows(self, pos, rows, index, *, from_device_update=False):
-        # protect ourselves against invalid indices by declaring layout change
-        self.layoutAboutToBeChanged.emit()
-        end_pos = pos + rows
-
-        self.beginRemoveRows(QModelIndex(), pos, end_pos)
+        self.beginRemoveRows(QModelIndex(), pos, pos + rows - 1)
         try:
             for r in range(rows, 0, -1):
                 self._data.pop(pos + r - 1)
         finally:
             self.endRemoveRows()
 
-        self.layoutChanged.emit()
         if not from_device_update:
             self._editing_finished(self._data)
 
