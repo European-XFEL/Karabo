@@ -11,19 +11,11 @@ from PyQt5.QtCore import QObject, QSettings
 class Item:
     __slots__ = ["name", "default", "q_set", "group", "path", "editable"]
 
-    def __init__(self, name, default=None, q_set=False, group=None,
-                 editable=False):
-        # XXX: Once we have the new descriptor protocol, name gets removed!
-        self.name = name
-
+    def __init__(self, default=None, q_set=False, group=None, editable=False):
         self.q_set = q_set
         self.group = group
-        self.path = "{group}/{name}".format(group=group, name=name)
         self.editable = editable
-        if self.q_set:
-            self.default = QSettings().value(self.path) or default
-        else:
-            self.default = default
+        self.default = default
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -36,6 +28,12 @@ class Item:
         if self.q_set:
             QSettings().setValue(self.path, value)
 
+    def __set_name__(self, owner, name):
+        self.name = name
+        self.path = "{group}/{name}".format(group=self.group, name=self.name)
+        if self.q_set:
+            self.default = QSettings().value(self.path) or self.default
+
     def __str__(self):
         return self.name
 
@@ -44,7 +42,7 @@ NETWORK = "network"
 PROJECT = "project"
 BACKBONE = "backbone"
 DIRECTORIES = "dir"
-DOCU = "https://in.xfel.eu/readthedocs/docs/deployed-controls-{topic}/en/latest/{deviceId}.html" # noqa
+DOCU = "https://in.xfel.eu/readthedocs/docs/deployed-controls-{topic}/en/latest/{deviceId}.html"  # noqa
 
 
 class Configuration(QObject):
@@ -52,12 +50,9 @@ class Configuration(QObject):
 
     An Item is constructed via the descriptor protocol.
 
-    pool = Item('pool', defaultValue='fish', q_set=False, group="POOL")
+    pool = Item(default='fish', q_set=False, group="POOL")
 
-    - The first parameter is the ``name``, which must correspond to the
-      property name.
-
-    - The second parameter ``default`` provides - as the name says - the
+    - The first parameter ``default`` provides - as the name says - the
       default value. This value might be overwritten on initialization if
       there is a presetting in QSettings.
 
@@ -66,7 +61,7 @@ class Configuration(QObject):
       this on the next GUI startup and overwrite an eventual default value.
 
     - The ``group`` parameter defines an additional string for sorting and
-      grabbing the Items for a later model view.
+      grabbing the Items for a model view.
 
     NOTE: Every parameter has a cache principle, meaning that if an additional
           client is opened on the same machine, both clients do not interact
@@ -80,37 +75,33 @@ class Configuration(QObject):
             might be wrong.
     """
 
-    broker_topic = Item('broker_topic', q_set=False, group=BACKBONE)
-    macro_server = Item('macro_server', default='karabo/macroServer',
-                        q_set=True, group=BACKBONE)
-    project_manager = Item('project_manager', default='KaraboProjectDB',
-                           q_set=False, group=BACKBONE)
-    documentation = Item('documentation', default=DOCU,
-                         q_set=False, group=BACKBONE)
-    daemon_manager = Item('daemon_manager', default='KaraboDaemonManager',
-                          q_set=False, group=BACKBONE)
+    broker_topic = Item(q_set=False, group=BACKBONE)
+    macro_server = Item(default='karabo/macroServer', q_set=True,
+                        group=BACKBONE)
+    project_manager = Item(default='KaraboProjectDB', q_set=False,
+                           group=BACKBONE)
+    documentation = Item(default=DOCU, q_set=False, group=BACKBONE)
+    daemon_manager = Item(default='KaraboDaemonManager', q_set=False,
+                          group=BACKBONE)
 
     # ----------------------------------------------
     # Last directories stored and used
 
-    config_dir = Item('config_dir', q_set=True, group=DIRECTORIES)
-    macro_dir = Item('macro_dir', q_set=True, group=DIRECTORIES)
-    scene_dir = Item('scene_dir', q_set=True, group=DIRECTORIES)
+    config_dir = Item(q_set=True, group=DIRECTORIES)
+    macro_dir = Item(q_set=True, group=DIRECTORIES)
+    scene_dir = Item(q_set=True, group=DIRECTORIES)
 
     # ----------------------------------------------
     # Project db interface
 
-    db_token = Item('db_token', default='admin', group=PROJECT)
-    domain = Item('domain', default='CAS_INTERNAL', q_set=True,
-                  group=PROJECT)
+    db_token = Item(default='admin', group=PROJECT)
+    domain = Item(default='CAS_INTERNAL', q_set=True, group=PROJECT)
 
     # ----------------------------------------------
     # GUI Server network connection
 
-    username = Item('username', default='operator', q_set=True,
-                    group=NETWORK)
-    gui_servers = Item('gui_servers', default=(), q_set=True,
-                       group=NETWORK)
+    username = Item(default='operator', q_set=True, group=NETWORK)
+    gui_servers = Item(default=(), q_set=True, group=NETWORK)
 
     def __new__(cls, *args, **kwargs):
         instance = super(Configuration, cls).__new__(cls, *args, **kwargs)
