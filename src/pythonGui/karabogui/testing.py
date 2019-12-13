@@ -36,9 +36,10 @@ class GuiTestCase(unittest.TestCase):
         populate_controller_registry()
 
     def tearDown(self):
+        self.process_qt_events()
         self.app.deleteLater()
 
-    def process_qt_events(self, ms=1000):
+    def process_qt_events(self, ms=10):
         # Give the event loop 10ms to process its events
         self.app.processEvents(QEventLoop.AllEvents, ms)
 
