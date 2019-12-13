@@ -11,7 +11,7 @@ from .trendmodel import (
     UPTIME, TEN_MINUTES, Timespan)
 from .unitlabel import add_unit_label
 from .util import (
-    axis_label, get_class_const_trait, has_options,
+    axis_label, get_class_const_trait, has_options, is_proxy_allowed,
     populate_controller_registry, with_display_type)
 from .validators import IntValidator, NumberValidator
 from .wheelwidget import DoubleWheelEdit
