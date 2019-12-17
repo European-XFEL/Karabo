@@ -4,6 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from collections import namedtuple
+from contextlib import contextmanager
 
 from PyQt5.QtCore import (
     QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt, pyqtSlot)
@@ -57,6 +58,88 @@ def get_brush(service_status):
         return QBrush(QColor(120, 255, 0))
     elif status == "down":
         return QBrush(QColor(255, 0, 0))
+
+
+class ButtonDelegate(QStyledItemDelegate):
+    def __init__(self, parent=None):
+        super(ButtonDelegate, self).__init__(parent)
+        self.clickable = True
+
+        self._button = QPushButton("")
+        self._button.hide()
+        parent.clicked.connect(self.cellClicked)
+
+    def _is_relevant_column(self, index):
+        column = index.column()
+        if column in [START_COLUMN, STOP_COLUMN, KILL_COLUMN]:
+            return True, COLUMN_TEXT[column]
+
+        return False, ""
+
+    def createEditor(self, parent, option, index):
+        """This method is called whenever the delegate is in edit mode."""
+        relevant, text = self._is_relevant_column(index)
+        if relevant:
+            # This button is for the highlighting effect when clicking/editing
+            button = QPushButton(parent)
+            button.setText(text)
+            return button
+        else:
+            return super(ButtonDelegate, self).createEditor(parent, option,
+                                                            index)
+
+    def updateEditorGeometry(self, button, option, index):
+        relevant, text = self._is_relevant_column(index)
+        if relevant:
+            button.setGeometry(option.rect)
+            button.setText(text)
+
+    def setEditorData(self, button, index):
+        relevant, text = self._is_relevant_column(index)
+        if relevant:
+            button.setText(text)
+        else:
+            super(ButtonDelegate, self).setEditorData(button, index)
+
+    def paint(self, painter, option, index):
+        relevant, text = self._is_relevant_column(index)
+        if relevant:
+            self._button.setGeometry(option.rect)
+            self._button.setText(text)
+            if option.state == QStyle.State_Selected:
+                painter.fillRect(option.rect, option.palette.highlight())
+            pixmap = self._button.grab()
+            self._button.setEnabled(self.clickable)
+            painter.drawPixmap(option.rect.x(), option.rect.y(), pixmap)
+        else:
+            super(ButtonDelegate, self).paint(painter, option, index)
+
+    @pyqtSlot(QModelIndex)
+    def cellClicked(self, index):
+        if not index.isValid() or not self.clickable:
+            return
+        relevant, _ = self._is_relevant_column(index)
+        if relevant:
+            model = index.model()
+            cmd = COMMANDS[index.column()]
+            serviceId = model.index(index.row(), SERVER_COLUMN).data()
+            hostId = model.index(index.row(), HOST_COLUMN).data()
+
+            if cmd in ['down', 'kill']:
+                text = ('Are you sure you want to <b>{}</b> the service '
+                        '<b>{}</b> on host <b>{}</b>?'.format(cmd,
+                                                              serviceId,
+                                                              hostId))
+                msg_box = QMessageBox(QMessageBox.Question, 'Daemon action',
+                                      text,
+                                      QMessageBox.Yes | QMessageBox.Cancel,
+                                      parent=self.parent())
+                msg_box.setDefaultButton(QMessageBox.Cancel)
+                msg_box.setModal(False)
+                if msg_box.exec_() != QMessageBox.Yes:
+                    return
+
+            request_daemon_action(serviceId, hostId, cmd)
 
 
 class DaemonTableModel(QAbstractTableModel):
@@ -126,6 +209,14 @@ class DaemonTableModel(QAbstractTableModel):
 
         return None
 
+    @contextmanager
+    def reset_context(self):
+        try:
+            self.beginResetModel()
+            yield
+        finally:
+            self.endResetModel()
+
 
 _is_compatible = with_display_type('DaemonManager')
 
@@ -137,6 +228,7 @@ _is_compatible = with_display_type('DaemonManager')
 class DisplayDaemonService(BaseBindingController):
     model = Instance(DaemonManagerModel, args=())
     table_model = Instance(QAbstractTableModel)
+    delegate = Instance(ButtonDelegate)
 
     def create_widget(self, parent):
         widget = QWidget(parent)
@@ -160,6 +252,7 @@ class DisplayDaemonService(BaseBindingController):
         table_view.setItemDelegateForColumn(START_COLUMN, btn_delegate)
         table_view.setItemDelegateForColumn(STOP_COLUMN, btn_delegate)
         table_view.setItemDelegateForColumn(KILL_COLUMN, btn_delegate)
+        self.delegate = btn_delegate
 
         header = table_view.horizontalHeader()
         header.setDefaultSectionSize(50)
@@ -187,81 +280,11 @@ class DisplayDaemonService(BaseBindingController):
         value = get_editor_value(proxy, [])
         self.table_model.update_model(value)
 
+    def setEnabled(self, enable):
+        """Reimplemented function of the base binding controller
 
-class ButtonDelegate(QStyledItemDelegate):
-    def __init__(self, parent=None):
-        super(ButtonDelegate, self).__init__(parent)
-        self._button = QPushButton("")
-        self._button.hide()
-        parent.clicked.connect(self.cellClicked)
-
-    def _is_relevant_column(self, index):
-        column = index.column()
-        if column in [START_COLUMN, STOP_COLUMN, KILL_COLUMN]:
-            return True, COLUMN_TEXT[column]
-
-        return False, ""
-
-    def createEditor(self, parent, option, index):
-        """This method is called whenever the delegate is in edit mode."""
-        relevant, text = self._is_relevant_column(index)
-        if relevant:
-            # This button is for the highlighting effect when clicking/editing
-            button = QPushButton(parent)
-            button.setText(text)
-            return button
-        else:
-            return super(ButtonDelegate, self).createEditor(parent, option,
-                                                            index)
-
-    def updateEditorGeometry(self, button, option, index):
-        relevant, text = self._is_relevant_column(index)
-        if relevant:
-            button.setGeometry(option.rect)
-            button.setText(text)
-
-    def setEditorData(self, button, index):
-        relevant, text = self._is_relevant_column(index)
-        if relevant:
-            button.setText(text)
-        else:
-            super(ButtonDelegate, self).setEditorData(button, index)
-
-    def paint(self, painter, option, index):
-        relevant, text = self._is_relevant_column(index)
-        if relevant:
-            self._button.setGeometry(option.rect)
-            self._button.setText(text)
-            if option.state == QStyle.State_Selected:
-                painter.fillRect(option.rect, option.palette.highlight())
-            pixmap = self._button.grab()
-            painter.drawPixmap(option.rect.x(), option.rect.y(), pixmap)
-        else:
-            super(ButtonDelegate, self).paint(painter, option, index)
-
-    @pyqtSlot(QModelIndex)
-    def cellClicked(self, index):
-        if not index.isValid():
-            return
-        relevant, _ = self._is_relevant_column(index)
-        if relevant:
-            model = index.model()
-            cmd = COMMANDS[index.column()]
-            serviceId = model.index(index.row(), SERVER_COLUMN).data()
-            hostId = model.index(index.row(), HOST_COLUMN).data()
-
-            if cmd in ['down', 'kill']:
-                text = ('Are you sure you want to <b>{}</b> the service '
-                        '<b>{}</b> on host <b>{}</b>?'.format(cmd,
-                                                              serviceId,
-                                                              hostId))
-                msg_box = QMessageBox(QMessageBox.Question, 'Daemon action',
-                                      text,
-                                      QMessageBox.Yes | QMessageBox.Cancel,
-                                      parent=self.parent())
-                msg_box.setDefaultButton(QMessageBox.Cancel)
-                msg_box.setModal(False)
-                if msg_box.exec_() != QMessageBox.Yes:
-                    return
-
-            request_daemon_action(serviceId, hostId, cmd)
+        We enable and disable the action button on access level change!
+        """
+        if self.delegate.clickable != enable:
+            with self.table_model.reset_context():
+                self.delegate.clickable = enable
