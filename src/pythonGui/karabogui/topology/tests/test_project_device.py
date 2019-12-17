@@ -3,7 +3,7 @@ from unittest.mock import Mock
 from karabo.common.api import ProxyStatus, KARABO_SCHEMA_ABSOLUTE_ERROR
 from karabo.native import Configurable, Hash, String
 from karabogui.testing import singletons, system_hash
-from karabogui.topology.system import SystemTopology
+from karabogui.topology.system_topology import SystemTopology
 
 
 class FooClass(Configurable):

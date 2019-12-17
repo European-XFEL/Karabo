@@ -1,4 +1,4 @@
-from ..tree import SystemTree
+from ..system_tree import SystemTree
 
 
 def print_tree_r(tree, indent=0):
