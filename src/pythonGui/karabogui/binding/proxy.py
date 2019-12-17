@@ -74,7 +74,7 @@ class DeviceProxy(BaseDeviceProxy):
     # An event which fires when the configuration is updated from the network
     config_update = Event
     # The system tree node for this device
-    topology_node = WeakRef('karabogui.topology.tree.SystemTreeNode',
+    topology_node = WeakRef('karabogui.topology.system_tree.SystemTreeNode',
                             allow_none=True)
 
     # A reference counter for tracking the monitoring
