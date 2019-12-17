@@ -4,7 +4,7 @@ from karabo.common.api import ProxyStatus
 from karabo.native import AccessLevel
 from karabogui.enums import NavigationItemTypes
 from karabogui.testing import system_hash, system_hash_server_and_plugins
-from ..tree import SystemTree, SystemTreeNode
+from ..system_tree import SystemTree, SystemTreeNode
 
 
 def setUp():
