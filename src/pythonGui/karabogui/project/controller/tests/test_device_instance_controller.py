@@ -7,7 +7,7 @@ from karabo.common.project.server import DeviceServerModel
 from karabo.native import Hash
 from karabogui.project.controller.device import DeviceInstanceController
 from karabogui.testing import singletons, system_hash
-from karabogui.topology.system import SystemTopology
+from karabogui.topology.system_topology import SystemTopology
 
 
 class test_device_instance_controller(TestCase):
