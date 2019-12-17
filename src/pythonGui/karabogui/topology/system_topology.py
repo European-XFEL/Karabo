@@ -15,7 +15,7 @@ from karabogui.binding.api import (
 )
 from .device_tree import DeviceSystemTree
 from .project_device import ProjectDeviceInstance
-from .tree import SystemTree
+from .system_tree import SystemTree
 
 
 class SystemTopology(HasStrictTraits):
