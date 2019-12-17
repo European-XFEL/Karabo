@@ -4,7 +4,7 @@ from traits.api import push_exception_handler, pop_exception_handler
 
 from karabo.common.api import ProxyStatus
 from karabogui.testing import GuiTestCase, singletons, system_hash
-from karabogui.topology.system import SystemTopology
+from karabogui.topology.system_topology import SystemTopology
 
 
 def setUp():
