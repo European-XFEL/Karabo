@@ -252,7 +252,7 @@ class DisplayTrendline(BaseBindingController):
         self._le_detail_range.setMaximumWidth(80)
         self._le_detail_range.setEnabled(False)
         self._le_detail_range.setStyleSheet(LINEEDIT_STYLE_SHEET)
-        validator = QIntValidator(1, krb_globals.MAX_INT32)
+        validator = QIntValidator(1, 100)
         self._le_detail_range.setValidator(validator)
         self._le_detail_range.textChanged.connect(self._detail_range_changed)
         laDetailRange = QLabel("%")
