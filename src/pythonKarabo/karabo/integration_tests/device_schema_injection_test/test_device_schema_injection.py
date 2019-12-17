@@ -10,10 +10,11 @@ from .device_with_table_parameter import DeviceWithTableElementParam
 
 
 class Schema_Injection_TestCase(unittest.TestCase):
+    deviceCfg = Hash('Logger.priority', "FATAL")
 
     def test_schemaInjection(self):
         device = Configurator(PythonDevice).create(
-                        "PythonDevice", Hash())
+                        "PythonDevice", self.deviceCfg)
         device.startFsm()
 
         # Test appendSchema appends
@@ -26,9 +27,9 @@ class Schema_Injection_TestCase(unittest.TestCase):
         )
 
         device.appendSchema(schema)
-        device.parameters.set("injectedInt32", 5)
-        self.assertIn("injectedInt32", device.parameters.getPaths())
-        self.assertEqual(device.parameters.get("injectedInt32"), 5)
+        self.assertEqual(device.get("injectedInt32"), 1)  # the default
+        device.set("injectedInt32", 5)
+        self.assertEqual(device.get("injectedInt32"), 5)
 
         # Test that injecting a new attribute keeps the set value
         schema = Schema()
@@ -40,9 +41,8 @@ class Schema_Injection_TestCase(unittest.TestCase):
         )
 
         device.appendSchema(schema)
-        self.assertIn("injectedInt32", device.parameters.getPaths())
-        self.assertEqual(device.parameters.get("injectedInt32"), 5)
-        self.assertEqual(device.fullSchema.getMinInc("injectedInt32"), 1)
+        self.assertEqual(device.get("injectedInt32"), 5)  # not the new default
+        self.assertEqual(device.getFullSchema().getMinInc("injectedInt32"), 1)
 
         # Test that doing updateSchema keeps previously set value
         schema = Schema()
@@ -54,10 +54,9 @@ class Schema_Injection_TestCase(unittest.TestCase):
         )
 
         device.updateSchema(schema)
-        self.assertIn("injectedInt32", device.parameters.getPaths())
-        self.assertEqual(device.parameters.get("injectedInt32"), 5)
-        self.assertEqual(device.fullSchema.getMinInc("injectedInt32"), 2)
-        self.assertEqual(device.fullSchema.getMaxInc("injectedInt32"), 10)
+        self.assertEqual(device.get("injectedInt32"), 5)
+        self.assertEqual(device.getFullSchema().getMinInc("injectedInt32"), 2)
+        self.assertEqual(device.getFullSchema().getMaxInc("injectedInt32"), 10)
 
         # Test that doing updateSchema with something else loses
         # injectedInt32.
@@ -70,8 +69,9 @@ class Schema_Injection_TestCase(unittest.TestCase):
         )
 
         device.updateSchema(schema)
-        self.assertNotIn("injectedInt32", device.parameters.getPaths())
-        self.assertIn("somethingElse", device.parameters.getPaths())
+        currentParams = device.getCurrentConfiguration()
+        self.assertNotIn("injectedInt32", currentParams.getPaths())
+        self.assertIn("somethingElse", currentParams.getPaths())
 
         # Test that updateSchema a parameter three times keeps the original
         # value This is to ensure that the schema parsing check is correct
@@ -109,11 +109,13 @@ class Schema_Injection_TestCase(unittest.TestCase):
         schema = Schema()
         device.updateSchema(schema)
 
-        self.assertNotIn("somethingElse", device.parameters.getPaths())
-        self.assertEqual(device._injectedSchema.getPaths(),
-                         Schema().getPaths())
-        self.assertEqual(device.fullSchema.getPaths(),
-                         device.staticSchema.getPaths())
+        self.assertNotIn("somethingElse",
+                         device.getCurrentConfiguration().getPaths())
+        # We are back at static Schema without "somethingElse"
+        self.assertNotIn("somethingElse",
+                         device.getFullSchema().getPaths())
+        self.assertEqual(device.getFullSchema().getPaths(),
+                         PythonDevice.getSchema(device.classid).getPaths())
 
         # Test that appendSchema parameter three times keeps the original
         # value This is to ensure that the schema parsing check is correct
@@ -159,14 +161,14 @@ class Schema_Injection_TestCase(unittest.TestCase):
 
         for idx in range(10):
             key = f"property{idx}"
-            self.assertIn(key, device.parameters.getPaths())
-            self.assertIn(key, device.fullSchema.getPaths())
-            self.assertEqual(idx, device.parameters.get(key))
+            self.assertIn(key, device.getCurrentConfiguration().getPaths())
+            self.assertIn(key, device.getFullSchema().getPaths())
+            self.assertEqual(idx, device.get(key))
 
     def test_schemaWithTableElementUpdate(self):
         """Tests that updateSchema preserves TABLE_ELEMENTs in the static schema."""
         device = Configurator(PythonDevice).create(
-                        "DeviceWithTableElementParam", Hash())
+                        "DeviceWithTableElementParam", self.deviceCfg)
         device.startFsm()
 
         self.assertIn("deviceTable",
@@ -186,13 +188,13 @@ class Schema_Injection_TestCase(unittest.TestCase):
 
         self.assertIn("deviceTable",
                       device.getSchema("DeviceWithTableElementParam").getPaths())
-        table = device.parameters.get("deviceTable")
+        table = device.get("deviceTable")
         self.assertTrue(len(table) == 2)
 
     def test_schemaWithTableElementAppend(self):
         """Tests that appendSchema preserves TABLE_ELEMENTs in the static schema."""
         device = Configurator(PythonDevice).create(
-                        "DeviceWithTableElementParam", Hash())
+                        "DeviceWithTableElementParam", self.deviceCfg)
         device.startFsm()
 
         self.assertIn("deviceTable",
@@ -212,13 +214,13 @@ class Schema_Injection_TestCase(unittest.TestCase):
 
         self.assertIn("deviceTable",
                       device.getSchema("DeviceWithTableElementParam").getPaths())
-        table = device.parameters.get("deviceTable")
+        table = device.get("deviceTable")
         self.assertTrue(len(table) == 2)
 
     def test_schemaWithAttributeUpdate(self):
         """Tests that updateSchema resets attributes in the static schema."""
         device = Configurator(PythonDevice).create(
-                        "DeviceWithAlarm", Hash())
+                        "DeviceWithAlarm", self.deviceCfg)
         device.startFsm()
 
         # Update the alarmHigh
@@ -231,7 +233,7 @@ class Schema_Injection_TestCase(unittest.TestCase):
             .commit(),
         )
         device.updateSchema(schema)
-        self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
+        self.assertEqual(device.getFullSchema().getAlarmHigh("valueWithAlarm"),
                          alarm_high)
 
         # Test that doing updateSchema with something new resets
@@ -245,7 +247,7 @@ class Schema_Injection_TestCase(unittest.TestCase):
         )
 
         device.updateSchema(schema)
-        self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
+        self.assertEqual(device.getFullSchema().getAlarmHigh("valueWithAlarm"),
                          DeviceWithAlarm.ALARM_HIGH)
 
         # Update the alarmHigh by using slotUpdateSchemaAttributes,
@@ -256,20 +258,20 @@ class Schema_Injection_TestCase(unittest.TestCase):
                  "value", alarm_high)
         vh.append(g)
         device.slotUpdateSchemaAttributes(vh)
-        self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
+        self.assertEqual(device.getFullSchema().getAlarmHigh("valueWithAlarm"),
                          alarm_high)
 
         # Test that doing updateSchema with something new resets
         # the alarmHigh
         device.updateSchema(schema)
-        self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
+        self.assertEqual(device.getFullSchema().getAlarmHigh("valueWithAlarm"),
                          DeviceWithAlarm.ALARM_HIGH)
 
     def test_schemaWithAttributeAppend(self):
         """Tests that appendSchema preserves attributes in the static
         schema."""
         device = Configurator(PythonDevice).create(
-                        "DeviceWithAlarm", Hash())
+                        "DeviceWithAlarm", self.deviceCfg)
         device.startFsm()
 
         # Update the alarmHigh
@@ -282,7 +284,7 @@ class Schema_Injection_TestCase(unittest.TestCase):
             .commit(),
         )
         device.updateSchema(schema)
-        self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
+        self.assertEqual(device.getFullSchema().getAlarmHigh("valueWithAlarm"),
                          alarm_high)
 
         # Test that doing appendSchema with something new keeps
@@ -296,7 +298,7 @@ class Schema_Injection_TestCase(unittest.TestCase):
         )
 
         device.appendSchema(schema)
-        self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
+        self.assertEqual(device.getFullSchema().getAlarmHigh("valueWithAlarm"),
                          alarm_high)
 
         # Update the alarmHigh by using slotUpdateSchemaAttributes,
@@ -307,11 +309,11 @@ class Schema_Injection_TestCase(unittest.TestCase):
                  "value", alarm_high)
         vh.append(g)
         device.slotUpdateSchemaAttributes(vh)
-        self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
+        self.assertEqual(device.getFullSchema().getAlarmHigh("valueWithAlarm"),
                          alarm_high)
 
         # Test that doing appendSchema with something new keeps
         # the alarmHigh
         device.appendSchema(schema)
-        self.assertEqual(device.fullSchema.getAlarmHigh("valueWithAlarm"),
+        self.assertEqual(device.getFullSchema().getAlarmHigh("valueWithAlarm"),
                          alarm_high)
