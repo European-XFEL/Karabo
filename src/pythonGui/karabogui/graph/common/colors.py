@@ -46,7 +46,8 @@ def get_default_pen():
 def get_pen_cycler():
     return cycle([make_pen('b'), make_pen('r'), make_pen('g'),
                   make_pen('c'), make_pen('p'), make_pen('y'),
-                  make_pen('n'), make_pen('w'), make_pen('o')])
+                  make_pen('n'), make_pen('w'), make_pen('o'),
+                  make_pen('s'), make_pen('d'), make_pen('k')])
 
 
 JET = [
