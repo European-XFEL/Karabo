@@ -184,8 +184,8 @@ class DeviceServerBase(SignalSlotable):
         # Get configuration
         config = copy.copy(hash['configuration'])
 
-        # Inject serverId
-        config['_serverId_'] = self.serverId
+        # Inject serverId (drop the timestamp)
+        config['_serverId_'] = self.serverId.value
 
         # Inject deviceId
         if 'deviceId' in hash and hash['deviceId']:
