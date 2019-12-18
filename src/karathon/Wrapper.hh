@@ -306,25 +306,25 @@ namespace karathon {
         }
 
         template<class ValueType>
-        static bp::object fromStdVectorToPyList(const std::vector<ValueType>& v) {
+        static bp::list fromStdVectorToPyList(const std::vector<ValueType>& v) {
             bp::list pylist;
             for (size_t i = 0; i < v.size(); i++) pylist.append(bp::object(v[i]));
             return pylist;
         }
 
         template <class T, class U>
-        static bp::object fromStdVectorToPyList(const std::vector< std::pair<T, U> >& v) {
+        static bp::list fromStdVectorToPyList(const std::vector< std::pair<T, U> >& v) {
             bp::list pylist;
             for (size_t i = 0; i < v.size(); i++) pylist.append(bp::make_tuple(v[i].first, v[i].second));
             return pylist;
         }
 
         template<class ValueType>
-        static bp::object fromStdVectorToPyTuple(const std::vector<ValueType>& v) {
+        static bp::tuple fromStdVectorToPyTuple(const std::vector<ValueType>& v) {
             return bp::tuple(fromStdVectorToPyList(v));
         }
 
-        static bp::object fromStdVectorToPyHashList(const std::vector<karabo::util::Hash>& v) {
+        static bp::list fromStdVectorToPyHashList(const std::vector<karabo::util::Hash>& v) {
             bp::object it = bp::iterator<std::vector<karabo::util::Hash> >();
             bp::object iter = it(v);
             bp::list l(iter);
