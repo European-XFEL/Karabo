@@ -14,10 +14,13 @@ from PyQt5.QtWidgets import QTableView, QComboBox, QItemDelegate
 from karabo.common.api import (
     KARABO_SCHEMA_ACCESS_MODE, KARABO_SCHEMA_DEFAULT_VALUE,
     KARABO_SCHEMA_DISPLAY_TYPE, KARABO_SCHEMA_VALUE_TYPE,
-    KARABO_SCHEMA_DISPLAY_TYPE_STATE, KARABO_SCHEMA_DISPLAYED_NAME)
+    KARABO_SCHEMA_DISPLAY_TYPE_STATE, KARABO_SCHEMA_DISPLAYED_NAME,
+    KARABO_TYPE_BOOL, KARABO_TYPE_STRING)
 from karabo.native import AccessMode, Hash
 from karabogui.enums import NavigationItemTypes, ProjectItemTypes
 from karabogui.indicators import get_state_color
+
+VECTOR_TYPE = 'VECTOR'
 
 
 def _get_value_type(schema, key):
@@ -65,14 +68,14 @@ class TableModel(QAbstractTableModel):
             key = self._row_hash.getKeys()[column]
             value = self._data[row][key]
             vtype = _get_value_type(self._row_schema, key)
-            if vtype == 'BOOL':
+            if vtype == KARABO_TYPE_BOOL:
                 return Qt.Checked if value else Qt.Unchecked
 
         if role in (Qt.DisplayRole, Qt.EditRole):
             key = self._row_hash.getKeys()[column]
             value = self._data[row][key]
             vtype = _get_value_type(self._row_schema, key)
-            if vtype.startswith('VECTOR'):
+            if vtype.startswith(VECTOR_TYPE):
                 # Guard against None values
                 value = [] if value is None else value
                 return ", ".join(str(v) for v in value)
@@ -114,7 +117,7 @@ class TableModel(QAbstractTableModel):
         access = _get_access_mode(self._row_schema, key)
         vtype = _get_value_type(self._row_schema, key)
 
-        if vtype == 'BOOL' and self._role == Qt.EditRole:
+        if vtype == KARABO_TYPE_BOOL and self._role == Qt.EditRole:
             flags &= ~Qt.ItemIsEditable
             if access is AccessMode.READONLY:
                 # XXX: Remove the `enabled` flag due to INITONLY!
@@ -126,7 +129,7 @@ class TableModel(QAbstractTableModel):
 
         return flags
 
-    def setData(self, index, value, role, from_device_update=False):
+    def setData(self, index, value, role, is_device_update=False):
         """Reimplemented function of QAbstractTableModel"""
         if not index.isValid():
             return False
@@ -135,11 +138,11 @@ class TableModel(QAbstractTableModel):
         if role == Qt.CheckStateRole:
             key = self._row_hash.getKeys()[col]
             vtype = _get_value_type(self._row_schema, key)
-            if vtype == 'BOOL':
+            if vtype == KARABO_TYPE_BOOL:
                 value = True if value == Qt.Checked else False
                 self._data[row][key] = value
                 self.dataChanged.emit(index, index)
-                if not from_device_update:
+                if not is_device_update:
                     self._set_edit_value(self._data)
                 return True
 
@@ -149,7 +152,7 @@ class TableModel(QAbstractTableModel):
             key = self._row_hash.getKeys()[col]
             vtype = _get_value_type(self._row_schema, key)
             # now display value
-            if vtype.startswith('VECTOR') and not from_device_update:
+            if vtype.startswith(VECTOR_TYPE) and not is_device_update:
                 # this will be a list of individual chars we need to join
                 value = "".join(value)
                 value = [v.strip() for v in value.split(",")]
@@ -157,16 +160,16 @@ class TableModel(QAbstractTableModel):
                 # value = valueType.cast(value)
 
             self._data[row][key] = value
-
             self.dataChanged.emit(index, index)
-            if role == Qt.EditRole and not from_device_update:
+
+            if role == Qt.EditRole and not is_device_update:
                 self._set_edit_value(self._data)
             return True
 
         return False
 
     def insertRows(self, pos, rows, index, *,
-                   copy_row=None, from_device_update=False):
+                   copy_row=None, is_device_update=False):
         """Reimplemented function of QAbstractTableModel"""
         self.beginInsertRows(QModelIndex(), pos, pos + rows - 1)
         try:
@@ -188,11 +191,11 @@ class TableModel(QAbstractTableModel):
         finally:
             self.endInsertRows()
 
-        if not from_device_update:
+        if not is_device_update:
             self._set_edit_value(self._data)
         return True
 
-    def removeRows(self, pos, rows, index, *, from_device_update=False):
+    def removeRows(self, pos, rows, index, *, is_device_update=False):
         """Reimplemented function of QAbstractTableModel"""
         self.beginRemoveRows(QModelIndex(), pos, pos + rows - 1)
         try:
@@ -201,7 +204,7 @@ class TableModel(QAbstractTableModel):
         finally:
             self.endRemoveRows()
 
-        if not from_device_update:
+        if not is_device_update:
             self._set_edit_value(self._data)
 
         return True
@@ -272,7 +275,7 @@ class KaraboTableView(QTableView):
         # found in the row schema, the first appearance is taken!
         for column_index, key in enumerate(self._row_keys):
             vtype = _get_value_type(self._row_schema, key)
-            if vtype == 'STRING':
+            if vtype == KARABO_TYPE_STRING:
                 self._drag_column = column_index
                 break
 
@@ -323,7 +326,7 @@ class KaraboTableView(QTableView):
         vtype = _get_value_type(self._row_schema, key)
         if is_valid:
             event.accept()
-            not_string = (vtype != 'STRING')
+            not_string = (vtype != KARABO_TYPE_STRING)
             return True, index, not_string, deviceId
 
         event.ignore()
