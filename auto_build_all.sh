@@ -21,6 +21,16 @@ safeRunCommand() {
     fi
 }
 
+activateKarabo() {
+    if [ -z "$KARABO" ]; then
+        source $scriptDir/karabo/activate
+    fi
+    # set the broker variable if KARABO_TEST_BROKER is set
+    if [ -n "$KARABO_TEST_BROKER" ]; then
+        export KARABO_BROKER=$KARABO_TEST_BROKER
+    fi
+}
+
 checkCppUnitTestResults() {
     local testDir="$1"
     local testNames="$2"
@@ -60,9 +70,7 @@ checkCppUnitTestResults() {
 }
 
 runIntegrationTests() {
-    if [ -z "$KARABO" ]; then
-        source $scriptDir/karabo/activate
-    fi
+    activateKarabo
 
     local testNames="AlarmService_ DataLogging_ Device_ GuiVersion_ LockTest_ PipelinedProcessing_ PropertyTest_ RunTimeSchemaAttributes_ SceneProvider_ Timing_"
     local testDir=$scriptDir/build/netbeans/integrationTests
@@ -81,9 +89,7 @@ runIntegrationTests() {
 }
 
 runCppLongTests() {
-    if [ -z "$KARABO" ]; then
-        source $scriptDir/karabo/activate
-    fi
+    activateKarabo
 
     local testNames=$(ls $scriptDir/src/cppLongTests)
     local testDir=$scriptDir/build/netbeans/cppLongTests
@@ -102,10 +108,7 @@ runCppLongTests() {
 }
 
 runUnitTests() {
-    if [ -z "$KARABO" ]; then
-        source $scriptDir/karabo/activate
-    fi
-
+    activateKarabo
     local testNames=$(ls $scriptDir/src/karabo/tests)
     local testDir=$scriptDir/build/netbeans/karabo
 
@@ -140,9 +143,7 @@ runUnitTests() {
 }
 
 runPythonIntegrationTests() {
-    if [ -z "$KARABO" ]; then
-        source $scriptDir/karabo/activate
-    fi
+    activateKarabo
 
     #
     # Running Karabo Python integration tests ...
@@ -164,9 +165,7 @@ runPythonIntegrationTests() {
 }
 
 runPythonLongTests() {
-    if [ -z "$KARABO" ]; then
-        source $scriptDir/karabo/activate
-    fi
+    activateKarabo
 
     if [ $CODECOVERAGE = "y" ]; then
        # Collect code coverage.
@@ -186,9 +185,7 @@ produceCodeCoverageReport() {
     echo
 
     # Needed for 'run_python_tests.sh --clean ...':
-    if [ -z "$KARABO" ]; then
-        source $scriptDir/karabo/activate
-    fi
+    activateKarabo
 
     # remove any previous code coverage results
     safeRunCommand "find . -name \"*.gcda\" -delete"
@@ -251,7 +248,10 @@ Note: "Dependencies" builds only the external dependencies
                      but also implicitly runs the unit, integration and long tests
                      and produces code coverage reports. The CodeCoverage configuration
                      also disables --pyDevelop option.
-
+      The environment variable "KARABO_TEST_BROKER" can be set to force the unit
+      tests to run on the broker set in this variable.
+      Please note that tests will activate the Karabo installation currently
+      built.
 End-of-help
 
     exit 0
