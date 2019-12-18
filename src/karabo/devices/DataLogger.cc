@@ -118,8 +118,7 @@ namespace karabo {
         DataLogger::DataLogger(const Hash& input)
             : karabo::core::Device<>(input)
             , m_useP2p(false)
-            , m_flushDeadline(karabo::net::EventLoop::getIOService())
-        {
+            , m_flushDeadline(karabo::net::EventLoop::getIOService()) {
 
             // start "flush" actor ...
             input.get("flushInterval", m_flushInterval); // in seconds
@@ -314,6 +313,8 @@ namespace karabo {
             // Avoid automatic reconnects -
             // since stopLogging usually called when device is already dead, expect timeouts that would create
             // WARNings if no failure handler given. Since that is the normal case, we silence timeouts here.
+
+
             struct FailHandler {
                 FailHandler(const std::string & devId, const std::string& sig) : deviceId(devId), signal(sig) {
                 };
@@ -355,7 +356,7 @@ namespace karabo {
 
         void DataLogger::slotTagDeviceToBeDiscontinued(const std::string& reason, const std::string& deviceId) {
             KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Stop logging '" << deviceId
-                                      << "' requested since: " << reason;
+                    << "' requested since: " << reason;
 
             removeFrom(deviceId, "devicesToBeLogged");
             removeFrom(deviceId, "devicesNotLogged"); // just in case it was a problematic one
@@ -467,18 +468,18 @@ namespace karabo {
 
                 // Sort the paths by ascending order of their corresponding nodes Epochstamps.
                 std::sort(paths.begin(), paths.end(),
-                          [&configuration](const std::string& firstPath, const std::string & secondPath) {
-                              const Hash::Node& firstNode = configuration.getNode(firstPath);
-                          const Hash::Node& secondNode = configuration.getNode(secondPath);
-                          Epochstamp firstTime(0, 0);
-                          Epochstamp secondTime(0, 0);
-                          if (Epochstamp::hashAttributesContainTimeInformation(firstNode.getAttributes())) {
-                          firstTime = Epochstamp::fromHashAttributes(firstNode.getAttributes()).toTimestamp();
+                          [&configuration](const std::string &firstPath, const std::string &secondPath) {
+                              const Hash::Node &firstNode = configuration.getNode(firstPath);
+                              const Hash::Node &secondNode = configuration.getNode(secondPath);
+                              Epochstamp firstTime(0, 0);
+                              Epochstamp secondTime(0, 0);
+                              if (Epochstamp::hashAttributesContainTimeInformation(firstNode.getAttributes())) {
+                                  firstTime = Epochstamp::fromHashAttributes(firstNode.getAttributes());
                               }
-                          if (Epochstamp::hashAttributesContainTimeInformation(secondNode.getAttributes())) {
-                          secondTime = Epochstamp::fromHashAttributes(secondNode.getAttributes()).toTimestamp();
+                              if (Epochstamp::hashAttributesContainTimeInformation(secondNode.getAttributes())) {
+                                  secondTime = Epochstamp::fromHashAttributes(secondNode.getAttributes());
                               }
-                          return (firstTime < secondTime);
+                              return (firstTime < secondTime);
                           });
             }
         }
