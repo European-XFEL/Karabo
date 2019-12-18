@@ -10,6 +10,7 @@ import socket
 import re
 import signal
 import traceback
+import warnings as py_warn
 from functools import partial
 
 from karathon import (
@@ -1778,6 +1779,27 @@ class PythonDevice(NoFsm):
         """
         return self._ss.requestNoWait(instanceId, slotName, replyInstance,
                                       replySlotName, *args)
+
+    # Added for backward compatibility when fullSchema => _fullSchema
+    @property
+    def fullSchema(self):
+        """
+        DEPRECATED - use getFullSchema()
+        """
+        py_warn.warn("deprecated - use getFullSchema()", DeprecationWarning)
+        return self.getFullSchema()
+
+    # Added for backward compatibility when parameters => _parameters
+    @property
+    def parameters(self):
+        """
+        DEPRECATED
+        * for full config use getCurrentConfiguration()
+        * maybe what you want is just some key, then use get(some_key)
+        """
+        py_warn.warn("deprecated - use get(key) or getCurrentConfiguration()",
+                     DeprecationWarning)
+        return self.getCurrentConfiguration()
 
 
 def launchPythonDevice():
