@@ -21,7 +21,7 @@ from karathon import (
     EventLoop, Epochstamp, Hash, HashFilter, HashMergePolicy,
     LeafType, loadFromFile, Logger, MetricPrefix,
     Schema, SignalSlotable, Timestamp, Trainstamp, Unit, Validator,
-    ValidatorValidationRules
+    ValidatorValidationRules, VectorHash
 )
 from karabo.common.api import (AlarmCondition, Capabilities, Interfaces, State,
                                karabo_deprecated)
@@ -825,6 +825,7 @@ class PythonDevice(NoFsm):
         """
         with self._stateChangeLock:
             try:
+                result = self._parameters[key]
                 if not self._fullSchema.getParameterHash()\
                         .hasAttribute(key, "leafType"):
                     leafType = None
@@ -832,11 +833,18 @@ class PythonDevice(NoFsm):
                     leafType = self._fullSchema.getParameterHash()\
                         .getAttribute(key, "leafType")
                 if leafType == LeafType.STATE:
-                    return State(self._parameters[key])
+                    return State(result)
                 elif leafType == LeafType.ALARM_CONDITION:
-                    return AlarmCondition(self._parameters[key])
+                    return AlarmCondition(result)
+                elif isinstance(result, (Hash, VectorHash)):
+                    # Hash and VectorHash will be returned by reference,
+                    # i.e. if the returned object is changed, self._parameters
+                    # would be changed as well, providing a back door without
+                    # using self._stateChangeLock!
+                    return copy.copy(result)
                 else:
-                    return self._parameters[key]
+                    # Note that vectors of numbers are copies
+                    return result
             except RuntimeError as e:
                 print(e)
                 raise AttributeError(
