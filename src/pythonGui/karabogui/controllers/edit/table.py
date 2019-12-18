@@ -9,15 +9,25 @@ from PyQt5.QtCore import Qt, QModelIndex
 from PyQt5.QtWidgets import QAbstractItemView, QMenu, QStyledItemDelegate
 from traits.api import Instance, Int
 
-from karabo.common.api import KARABO_SCHEMA_ROW_SCHEMA
+from karabo.common.api import (
+    KARABO_SCHEMA_DEFAULT_VALUE, KARABO_SCHEMA_ROW_SCHEMA,
+    KARABO_SCHEMA_OPTIONS)
 from karabo.common.scenemodel.api import TableElementModel
 from karabo.native import Hash
 from karabogui.binding.api import (
     VectorHashBinding, get_editor_value)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
-from karabogui.controllers.tableeditor import (
+from karabogui.controllers.table_editor import (
     ComboBoxDelegate, KaraboTableView, TableModel)
+
+
+def _get_options(schema_hash, key):
+    """Extract a single key's options from a hash
+
+    If options are not specified, `None` is returned!
+    """
+    return schema_hash[key, ...].get(KARABO_SCHEMA_OPTIONS, None)
 
 
 class _BaseTableElement(BaseBindingController):
@@ -55,7 +65,7 @@ class _BaseTableElement(BaseBindingController):
         self.widget.setFocusPolicy(Qt.NoFocus if ro else Qt.ClickFocus)
         if self._item_model is not None:
             self._item_model.set_role(self._role)
-        self._set_combo_boxes(ro)
+        self._create_delegates(ro)
 
     def binding_update(self, proxy):
         binding = proxy.binding
@@ -66,23 +76,26 @@ class _BaseTableElement(BaseBindingController):
 
     def value_update(self, proxy):
         value = get_editor_value(proxy, [])
-        if self._item_model.rowCount() > len(value):
-            start = len(value) - 1
-            count = self._item_model.rowCount() - len(value)
-            self._item_model.removeRows(start, count, QModelIndex(),
-                                        from_device_update=True)
+        row_count = self._item_model.rowCount()
 
-        # add rows if necessary
-        if self._item_model.rowCount() < len(value):
-            start = self._item_model.rowCount()
-            count = len(value) - self._item_model.rowCount()
+        # Remove rows if necessesary
+        if row_count > len(value):
+            start = len(value) - 1
+            count = row_count - len(value)
+            self._item_model.removeRows(start, count, QModelIndex(),
+                                        is_device_update=True)
+
+        # Add rows if necessary
+        elif row_count < len(value):
+            start = row_count
+            count = len(value) - row_count
             self._item_model.insertRows(start, count, QModelIndex(),
-                                        from_device_update=True)
+                                        is_device_update=True)
         for r, row in enumerate(value):
             for c, key in enumerate(row.getKeys()):
                 index = self._item_model.index(r, c, QModelIndex())
                 self._item_model.setData(index, row[key], self._role,
-                                         from_device_update=True)
+                                         is_device_update=True)
 
     def _on_user_edit(self, data):
         """Callback method used by `self._item_model` when data changes"""
@@ -95,37 +108,37 @@ class _BaseTableElement(BaseBindingController):
         self._item_model.set_role(self._role)
         self.widget.setModel(self._item_model)
         self.widget.set_row_schema(schema)
-        self._set_combo_boxes(self._role == Qt.DisplayRole)
+        self._create_delegates(self._role == Qt.DisplayRole)
 
-    def _set_combo_boxes(self, ro):
+    def _create_delegates(self, ro):
         if self._row_hash is None:
             return
 
         c_hash = self._row_hash
         if ro:
-            # remove any combo delegate
+            # If we are readOnly, we have to remove any combo delegate
             for column, key in enumerate(c_hash.getKeys()):
-                if c_hash.hasAttribute(key, 'options'):
+                options = _get_options(c_hash, key)
+                if options is not None:
                     delegate = QStyledItemDelegate(parent=self.widget)
                     self.widget.setItemDelegateForColumn(column, delegate)
         else:
-            # Create an item delegate for columns which have options
+            # Create item delegates for columns which have options
             for column, key in enumerate(c_hash.getKeys()):
-                if c_hash.hasAttribute(key, 'options'):
-                    delegate = ComboBoxDelegate(
-                        c_hash.getAttribute(key, 'options'),
-                        parent=self.widget)
+                options = _get_options(c_hash, key)
+                if options is not None:
+                    delegate = ComboBoxDelegate(options, parent=self.widget)
                     self.widget.setItemDelegateForColumn(column, delegate)
 
 # ---------------------------------------------------------------------
 # Actions
 
-    def _row_to_end_action(self, checked):
+    def _row_to_end_action(self):
         start, count = self._item_model.rowCount(), 1
         self._item_model.insertRows(start, count, QModelIndex())
 
-    def _set_row_default(self, index, key):
-        default_value = self._row_hash.getAttribute(key, 'defaultValue')
+    def _set_index_default(self, index, key):
+        default_value = self._row_hash[key, KARABO_SCHEMA_DEFAULT_VALUE]
         self._item_model.setData(index, default_value, role=Qt.EditRole)
 
     def _add_row(self, index):
@@ -156,10 +169,11 @@ class _BaseTableElement(BaseBindingController):
             if 0 <= column < len(self._row_hash):
                 key = self._row_hash.getKeys()[column]
                 if (self._role == Qt.EditRole
-                        and self._row_hash.hasAttribute(key, 'defaultValue')):
+                        and self._row_hash.hasAttribute(
+                        key, KARABO_SCHEMA_DEFAULT_VALUE)):
                     set_default_action = menu.addAction('Set Cell Default')
                     set_default_action.triggered.connect(
-                        partial(self._set_row_default, index=index, key=key))
+                        partial(self._set_index_default, index=index, key=key))
                     menu.addSeparator()
 
             add_action = menu.addAction('Add Row below')
