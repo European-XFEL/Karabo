@@ -317,3 +317,47 @@ class Schema_Injection_TestCase(unittest.TestCase):
         device.appendSchema(schema)
         self.assertEqual(device.getFullSchema().getAlarmHigh("valueWithAlarm"),
                          alarm_high)
+
+    def test_ensureGetCopies(self):
+        """
+        Hijack schema test to verify that PythonDevice.get(..) does not return
+        anything that can be used to change PythonDevice._parameters
+        (since that would need lock protection).
+        Similar for getFullSchema()
+        """
+        device = Configurator(PythonDevice).create(
+                        "DeviceWithAlarm", self.deviceCfg)
+        device.startFsm()
+
+        # VECTOR_ELEMENT
+        vec = device.get("vector")
+        self.assertEqual(vec, [0])  # default just contains 0
+        vec[0] = 1
+        self.assertEqual(vec, [1])
+        self.assertEqual(device.get("vector")[0], 0)
+
+        # Get a full NODE_ELEMENT
+        node = device.get("node")
+        self.assertEqual(node["number"], 0)
+        # Set something in node - should not affect device value
+        node["number"] = 100
+        self.assertEqual(node["number"], 100)
+        self.assertEqual(device.get("node.number"), 0)
+
+        # TABLE_ELEMENT
+        table = device.get("table")
+        self.assertEqual(len(table), 2)  # default
+        self.assertEqual(table[0]["int32"], 1)  # default
+        self.assertEqual(table[1]["int32"], 2)  # default
+        # test setting value inside row
+        table[1]["int32"] = 3
+        self.assertEqual(table[1]["int32"], 3)
+        self.assertEqual(device.get("table")[1]["int32"], 2)
+        # test replacing a row
+        table[0] = Hash("int32", -1)
+        self.assertEqual(table[0]["int32"], -1)
+        self.assertEqual(device.get("table")[0]["int32"], 1)
+        # test appending a row
+        table.append(Hash("int32", 99))
+        self.assertEqual(len(table), 3)
+        self.assertEqual(len(device.get("table")), 2)
