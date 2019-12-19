@@ -742,6 +742,10 @@ class Tests(TestCase):
         c.table.clear()
         self.assertEqual(len(c.table.value), 0)
 
+        with self.assertRaises(KaraboError):
+            class B(Configurable):
+                table = VectorHash(defaultValue=[])
+
     def test_overwrite(self):
         class Mandy(Configurable):
             number = Int32(displayedName="whatever", minExc=7,
@@ -1086,7 +1090,6 @@ class Tests(TestCase):
 
         a = Default()
         b = NoArchive()
-        default_policy = ArchivePolicy.EVERY_EVENT.value
         schema_a = a.getClassSchema()
         schema_b = b.getClassSchema()
         for key in keys:
