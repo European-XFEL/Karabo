@@ -28,7 +28,7 @@ from karabo.native.data.schema import (
 from karabo.native.data.serializers import (
     decodeBinary, decodeXML, encodeBinary, encodeXML, loadFromFile, saveToFile,
     writeBinary, writeXML, XMLParser, XMLWriter)
-
+from karabo.native.exceptions import KaraboError
 # Import project namespace
 from karabo.native.project.convert import convert_old_project
 from karabo.native.project.io import (
