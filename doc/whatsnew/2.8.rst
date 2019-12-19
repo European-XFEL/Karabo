@@ -1,0 +1,10 @@
+**************************
+What's New in Karabo 2.8.0
+**************************
+
+The **most relevant improvements**, fixes and changes are:
+
+- GUI: The EditableOptionsBox has been deprecated and is no longer supported
+
+Detailed Merge-Log
+==================
