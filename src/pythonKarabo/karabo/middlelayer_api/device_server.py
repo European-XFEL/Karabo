@@ -15,7 +15,7 @@ from karabo.native.data.basetypes import isSet
 from karabo.native.data.enums import AccessLevel, AccessMode, Assignment
 from karabo.native.exceptions import KaraboError
 from karabo.native.data.hash import Bool, Hash, Int32, String, VectorString
-from karabo.native.data.schema import Node
+from karabo.native.data.schema import Descriptor, Node
 
 from .eventloop import EventLoop
 from .logger import Logger
@@ -28,19 +28,25 @@ from karabo.native.time_mixin import TimeMixin
 from .utils import get_karabo_version
 
 
+INIT_DESCRIPTION = """A JSON object representing the devices to be initialized.
+It should be formatted like a dictionary of dictionaries.
+
+For example: 
+        {"deviceId" :{
+            "classId": "TheClassName",
+            "stringProperty": "Value",
+            "floatProperty": 42.0
+            }
+        }.
+"""
+
+
 class DeviceServerBase(SignalSlotable):
-    '''
-    Device server serves as a launcher of python devices. It scans
-    the 'plugins' directory for new plugins (python scripts) available
-    and communicates its findings to master device server. It
-    communicates XSD form of schema of user devices and starts such
-    devices as separate process if user push "Initiate" button in GUI.
-    '''
     __version__ = "1.3"
 
     serverId = String(
         displayedName="Server ID",
-        description="The device-server instance id uniquely identifies a "
+        description="The device-server instance id uniquely identifies a \n"
                     "device-server instance in the distributed system",
         assignment=Assignment.OPTIONAL)
 
@@ -69,8 +75,8 @@ class DeviceServerBase(SignalSlotable):
 
     @Bool(
         displayedName="Scan plug-ins?",
-        description="Decides whether the server will scan the content of the "
-                    "plug-in folder and dynamically load found devices",
+        description="Decides whether the server will scan the content of \n"
+                    "the plug-in folder and dynamically load found devices",
         assignment=Assignment.OPTIONAL, defaultValue=True,
         requiredAccessLevel=AccessLevel.EXPERT)
     @coroutine
@@ -86,6 +92,11 @@ class DeviceServerBase(SignalSlotable):
                description="Logging settings",
                displayedName="Logger",
                requiredAccessLevel=AccessLevel.EXPERT)
+
+    init = String(
+        description=INIT_DESCRIPTION,
+        assignment=Assignment.INTERNAL,
+        accessMode=AccessMode.INITONLY)
 
     instanceCount = 1
 
@@ -245,6 +256,33 @@ class DeviceServerBase(SignalSlotable):
                                      self.instanceCount)
 
     @classmethod
+    def print_usage(cls, argv=None):
+        def print_properties(klass, prefix):
+            for attribute_name in dir(klass):
+                attribute = getattr(klass, attribute_name)
+                if isinstance(attribute, Descriptor):
+                    if attribute.accessMode == AccessMode.READONLY:
+                        continue
+                    name = ""
+                    if attribute.displayedName is not None:
+                        name = attribute.displayedName
+                    print(f"{prefix}{attribute_name}: {name}")
+                    print(f"    Type: {type(attribute).__name__}")
+                    if attribute.description is not None:
+                        print(f"    Description:")
+                        print(f"        {attribute.description}")
+                    print()
+
+                if isinstance(attribute, Node):
+                    print_properties(attribute.cls, f"{attribute_name}.")
+
+        print(f"usage: {argv[0]} [property=value] ...\n")
+        print(cls.__doc__)
+        print("available properties:")
+        print("-------------------------------")
+        print_properties(cls, "")
+
+    @classmethod
     def main(cls, argv=None):
         try:
             os.chdir(os.path.join(os.environ['KARABO'], 'var', 'data'))
@@ -252,10 +290,12 @@ class DeviceServerBase(SignalSlotable):
             print("ERROR: $KARABO is not defined. Make sure you have sourced "
                   "the 'activate' script.")
             return
-
         if argv is None:
             argv = sys.argv
 
+        if "--help" in argv or "-h" in argv:
+            cls.print_usage(argv)
+            return
         loop = EventLoop()
         set_event_loop(loop)
 
@@ -572,6 +612,12 @@ class BoundDeviceServer(DeviceServerBase):
 
 
 class DeviceServer(MiddleLayerDeviceServer, BoundDeviceServer):
+    """A Python native Karabo Server
+    
+    It will load plugins and starts instances of the plugins.
+    The plugins are loaded either from specific namespaces
+    or from a specific plugin directory.
+    """
     pass
 
 
