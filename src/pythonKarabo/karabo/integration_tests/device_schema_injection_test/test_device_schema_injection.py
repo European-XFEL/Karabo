@@ -361,3 +361,14 @@ class Schema_Injection_TestCase(unittest.TestCase):
         table.append(Hash("int32", 99))
         self.assertEqual(len(table), 3)
         self.assertEqual(len(device.get("table")), 2)
+
+        # Go on testing that getFullSchema() returns a copy
+        schema = device.getFullSchema()
+        (
+            INT32_ELEMENT(schema).key("aNewKeyNotExisting")
+            .assignmentOptional().defaultValue(1)
+            .commit(),
+        )
+        self.assertTrue(schema.has("aNewKeyNotExisting"))
+        # So schema was changed, but device's schema not:
+        self.assertFalse(device.getFullSchema().has("aNewKeyNotExisting"))
