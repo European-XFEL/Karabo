@@ -1310,7 +1310,8 @@ class VectorHash(Vector):
             self.rowSchema = rows.getClassSchema()
 
         if self.rowSchema is None:
-            return
+            raise KaraboError("The table element {} does not have row "
+                              "schema".format(self.key))
 
         self.dtype = np.dtype([(k, Type.fromname[a["valueType"]].numpy)
                                for k, v, a in self.rowSchema.hash.iterall()])
