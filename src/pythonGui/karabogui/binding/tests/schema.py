@@ -80,6 +80,11 @@ class SlottedDevice(Configurable):
         pass
 
 
+class RowSchema(Configurable):
+    start = Float()
+    stop = Float()
+
+
 class AllProperties(Configurable):
     """A `Configurable` with every type of property
     """
@@ -107,7 +112,7 @@ class AllProperties(Configurable):
     u = VectorComplexFloat()
     v = VectorDouble()
     w = VectorFloat()
-    x = VectorHash()
+    x = VectorHash(rows=RowSchema)
     y = VectorInt16()
     z = VectorInt32()
     a1 = VectorInt64()

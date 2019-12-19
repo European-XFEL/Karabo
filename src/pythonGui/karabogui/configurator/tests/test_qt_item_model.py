@@ -9,6 +9,11 @@ from karabogui.testing import GuiTestCase
 from ..qt_item_model import ConfigurationTreeModel
 
 
+class RowSchema(Configurable):
+    start = Float()
+    stop = Float()
+
+
 class Object(Configurable):
     state = String(enum=State)
 
@@ -18,7 +23,7 @@ class Object(Configurable):
     qux = String(options=['foo', 'bar', 'baz', 'qux'])
     vector = VectorFloat(defaultValue=["1"],
                          minSize=1, maxSize=2)
-    table = VectorHash()
+    table = VectorHash(rows=RowSchema)
 
     @Slot(allowedStates=[State.INTERLOCKED, State.ACTIVE])
     def slot(self):
