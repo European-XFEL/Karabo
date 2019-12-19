@@ -8,10 +8,10 @@ from karabo.common.states import State
 from karabo.native import (
     AccessLevel, AccessMode, Assignment, Attribute, Bool, Char, ComplexFloat,
     Configurable, Double, decodeBinary, encodeBinary, Float, Hash, Int16, Int8,
-    LeafType, MetricPrefix, NDArray, NumpyVector, QuantityValue, Schema,
-    String, Timestamp, Type, UInt8, UInt64, Unit, unit, VectorBool, VectorChar,
-    VectorComplexFloat, VectorFloat, VectorHash, VectorInt32, VectorInt8,
-    VectorString)
+    KaraboError, LeafType, MetricPrefix, NDArray, NumpyVector, QuantityValue,
+    Schema, String, Timestamp, Type, UInt8, UInt64, Unit, unit, VectorBool,
+    VectorChar, VectorComplexFloat, VectorFloat, VectorHash, VectorInt32,
+    VectorInt8, VectorString)
 
 
 class ArrayTestDevice(Configurable):
@@ -479,6 +479,9 @@ class Tests(TestCase):
         d = VectorHash(rowSchema=Schema("rs", hash=rowSchema),
                        displayType="Another")
         self.assertEqual(d.displayType, "Another")
+
+        with self.assertRaises(KaraboError):
+            d = VectorHash(displayType="Another")
 
     def test_vector_hash(self):
         rowSchema = Hash("int", None, "string", None, "vector", None,
