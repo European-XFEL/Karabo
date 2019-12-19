@@ -2,6 +2,7 @@ from asyncio import (coroutine, create_subprocess_exec, ensure_future, gather,
                      get_event_loop, set_event_loop, sleep, TimeoutError, wait,
                      wait_for)
 import copy
+from enum import Enum
 import os
 from json import loads
 import sys
@@ -268,6 +269,11 @@ class DeviceServerBase(SignalSlotable):
                         name = attribute.displayedName
                     print(f"{prefix}{attribute_name}: {name}")
                     print(f"    Type: {type(attribute).__name__}")
+                    if attribute.defaultValue is not None:
+                        print(f"    Default: {attribute.defaultValue}")
+                        if isinstance(attribute.defaultValue, Enum):
+                            enum_value = attribute.defaultValue.value
+                            print(f"           : {enum_value}")
                     if attribute.description is not None:
                         print(f"    Description:")
                         print(f"        {attribute.description}")
