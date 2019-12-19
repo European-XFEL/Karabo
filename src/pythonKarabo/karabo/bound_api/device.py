@@ -1230,51 +1230,51 @@ class PythonDevice(NoFsm):
         self._ss.registerSlot(self.slotLoggerPriority)
         self._ss.registerSlot(self.slotClearLock)
 
-    def initChannels(self):
-        with self._stateChangeLock:
-            self._initChannels()
+    def initChannels(self, topLevel=""):
+        """
+        Initialise Input-/OutputChannels, recursing through the _fullSchema,
+        starting at topLevel
+        """
+        def _initChannels(topLevel):
+            # Keys under topLevel, without leading "topLevel.":
+            subKeys = self._fullSchema.getKeys(topLevel)
+            # Now go recursively down the node:
+            for subKey in subKeys:
+                key = topLevel + '.' + subKey if topLevel else subKey
+                if self._fullSchema.hasDisplayType(key):
+                    displayType = self._fullSchema.getDisplayType(key)
+                    if displayType == "OutputChannel":
+                        # Would best be INFO level, but without broadcasting:
+                        self.log.DEBUG(f"Creating output channel '{key}'")
+                        outputChannel = self._ss.createOutputChannel(
+                                                     key, self._parameters)
+                        if not outputChannel:
+                            self.log.ERROR(f"Failed to create output channel "
+                                           f"'{key}'")
+                        else:
+                            outputChannel.registerShowConnectionsHandler(
+                                partial(
+                                    lambda x, y: self.set(x + ".connections",
+                                                          y),
+                                    key)
+                            )
 
-    def _initChannels(self, topLevel=""):
-        """
-        Internal method to be called under self._stateChangeLock
-        """
-        # Keys under topLevel, without leading "topLevel.":
-        subKeys = self._fullSchema.getKeys(topLevel)
-        # Now go recursively down the node:
-        for subKey in subKeys:
-            key = topLevel + '.' + subKey if topLevel else subKey
-            if self._fullSchema.hasDisplayType(key):
-                displayType = self._fullSchema.getDisplayType(key)
-                if displayType == "OutputChannel":
-                    # Would best be INFO level, but without broadcasting:
-                    self.log.DEBUG("Creating output channel \"{}\""
-                                   .format(key))
-                    outputChannel = self._ss.createOutputChannel(
-                                                 key, self._parameters)
-                    if not outputChannel:
-                        self.log.ERROR("Failed to create output channel \"{}\""
-                                       .format(key))
+                    elif displayType == "InputChannel":
+                        # Would best be INFO level, but without broadcasting:
+                        self.log.DEBUG(f"Creating input channel '{key}'")
+                        self._ss.createInputChannel(key, self._parameters)
                     else:
-                        outputChannel.registerShowConnectionsHandler(
-                            partial(
-                                lambda x, y: self.set(x + ".connections", y),
-                                key)
-                        )
+                        self.log.DEBUG("Not creating in-/output channel for '"
+                                       + key + "' since it's a '"
+                                       + displayType + "'")
+                elif self._fullSchema.isNode(key):
+                    # Recursively go down the tree for channels within nodes
+                    self.log.DEBUG("Looking for input/output channels " +
+                                   "under node '" + key + "'")
+                    _initChannels(key)
 
-                elif displayType == "InputChannel":
-                    # Would best be INFO level, but without broadcasting:
-                    self.log.DEBUG("Creating input channel \"{}\""
-                                   .format(key))
-                    self._ss.createInputChannel(key, self._parameters)
-                else:
-                    self.log.DEBUG("Not creating in-/output channel for '"
-                                   + key + "' since it's a '"
-                                   + displayType + "'")
-            elif self._fullSchema.isNode(key):
-                # Recursive call going down the tree for channels within nodes
-                self.log.DEBUG("Looking for input/output channels " +
-                               "under node '" + key + "'")
-                self._initChannels(key)
+        with self._stateChangeLock:
+            _initChannels(topLevel)
 
     def KARABO_ON_DATA(self, channelName, handlerPerData):
         """Registers a data handler function
