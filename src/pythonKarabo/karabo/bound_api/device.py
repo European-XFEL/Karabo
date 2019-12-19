@@ -837,10 +837,10 @@ class PythonDevice(NoFsm):
                 elif leafType == LeafType.ALARM_CONDITION:
                     return AlarmCondition(result)
                 elif isinstance(result, (Hash, VectorHash)):
-                    # Hash and VectorHash will be returned by reference,
-                    # i.e. if the returned object is changed, self._parameters
-                    # would be changed as well, providing a back door without
-                    # using self._stateChangeLock!
+                    # For Hash and VectorHash, 'result' is a reference, so if
+                    # it would be returned and the returned object would be
+                    # changed, self._parameters would be changed as well, pro-
+                    # viding a back door without using self._stateChangeLock!
                     return copy.copy(result)
                 else:
                     # Note that vectors of numbers are copies
