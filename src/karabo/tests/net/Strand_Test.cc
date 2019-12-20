@@ -100,15 +100,19 @@ void Strand_Test::testSequential() {
 
 void Strand_Test::testStrandDies() {
 
-    boost::mutex aMutex;
-    unsigned int counter = 0;
+    // We stop the test before all posts have been processed - in principle the Strand could have posted
+    // to the the event loop before it died and then the handler is called when the test function is done and
+    // its scope is cleaned.
+    // By using (copies of) shared pointers inside the handler we avoid any crash potential of that.
+    auto aMutexPtr = boost::make_shared<boost::mutex>();
+    auto counterPtr = boost::make_shared<unsigned int>(0);
     const unsigned int sleepTimeMs = 40; // must be above 10, see below
 
-    auto sleepAndCount = [&aMutex, &counter, &sleepTimeMs] () {
+    auto sleepAndCount = [aMutexPtr, counterPtr, sleepTimeMs] () {
         boost::this_thread::sleep(boost::posix_time::milliseconds(sleepTimeMs));
 
-        boost::mutex::scoped_lock lock(aMutex);
-        ++counter;
+        boost::mutex::scoped_lock lock(*aMutexPtr);
+        ++(*counterPtr);
 
     };
     const unsigned int numPosts = m_nThreadsInPool;
@@ -122,11 +126,11 @@ void Strand_Test::testStrandDies() {
     unsigned int numTest = 50;
     while (--numTest > 0) {
         {
-            boost::mutex::scoped_lock lock(aMutex);
-            if (counter >= numPosts / 2) {
+            boost::mutex::scoped_lock lock(*aMutexPtr);
+            if (*counterPtr >= numPosts / 2) {
                 // After half of the sequential posts, let the strand die - thus counter will not increase anymore!
                 strand.reset();
-            } else if (counter >= numPosts) {
+            } else if (*counterPtr >= numPosts) {
                 break;
             }
         }
@@ -134,7 +138,7 @@ void Strand_Test::testStrandDies() {
     }
 
     // The above loop came to an end since the last handlers where not called.
-    CPPUNIT_ASSERT(counter < numPosts);
+    CPPUNIT_ASSERT(*counterPtr < numPosts);
     CPPUNIT_ASSERT_EQUAL(numTest, 0u);
  }
 
