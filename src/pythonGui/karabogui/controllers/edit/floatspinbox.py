@@ -11,18 +11,19 @@ from karabogui.const import WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH
 from karabogui.controllers.api import (
     add_unit_label, BaseBindingController, is_proxy_allowed,
     register_binding_controller)
-from karabogui.util import SignalBlocker
+from karabogui.util import MouseWheelEventBlocker, SignalBlocker
 
 LOCALE = QLocale('en_US')
 
 
-@register_binding_controller(ui_name='SpinBox (real)', can_edit=True,
+@register_binding_controller(ui_name='Double SpinBox', can_edit=True,
                              klassname='FloatSpinBox',
                              binding_type=FloatBinding)
 class FloatSpinBox(BaseBindingController):
     model = Instance(FloatSpinBoxModel, args=())
 
     _internal_widget = Instance(QDoubleSpinBox)
+    _blocker = Instance(MouseWheelEventBlocker)
 
     def create_widget(self, parent):
         self._internal_widget = QDoubleSpinBox(parent)
@@ -31,6 +32,10 @@ class FloatSpinBox(BaseBindingController):
                                              WIDGET_MIN_HEIGHT)
         self._internal_widget.setDecimals(self.model.decimals)
         self._internal_widget.setSingleStep(self.model.step)
+        self._internal_widget.setFocusPolicy(Qt.StrongFocus)
+        self._internal_widget.valueChanged[float].connect(self._on_user_edit)
+        self._blocker = MouseWheelEventBlocker(self._internal_widget)
+        self._internal_widget.installEventFilter(self._blocker)
 
         widget = add_unit_label(self.proxy, self._internal_widget,
                                 parent=parent)
@@ -47,15 +52,6 @@ class FloatSpinBox(BaseBindingController):
         widget.setFocusProxy(self._internal_widget)
 
         return widget
-
-    def set_read_only(self, ro):
-        self._internal_widget.setReadOnly(ro)
-        if not ro:
-            widget = self._internal_widget
-            widget.valueChanged[float].connect(self._on_user_edit)
-
-        focus_policy = Qt.NoFocus if ro else Qt.StrongFocus
-        self._internal_widget.setFocusPolicy(focus_policy)
 
     def binding_update(self, proxy):
         low, high = get_min_max(proxy.binding)
