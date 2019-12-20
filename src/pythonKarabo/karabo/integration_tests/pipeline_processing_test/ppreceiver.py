@@ -6,8 +6,8 @@ import numpy as np
 
 from karabo.bound import (BOOL_ELEMENT, FLOAT_ELEMENT, INPUT_CHANNEL,
                           INT32_ELEMENT, KARABO_CLASSINFO, launchPythonDevice,
-                          MetricPrefix, PythonDevice, Schema, State,
-                          UINT32_ELEMENT, Unit, VECTOR_BOOL_ELEMENT,
+                          MetricPrefix, NODE_ELEMENT, PythonDevice, Schema,
+                          State, UINT32_ELEMENT, Unit, VECTOR_BOOL_ELEMENT,
                           VECTOR_STRING_ELEMENT, VECTOR_UINT32_ELEMENT)
 
 
@@ -34,7 +34,11 @@ class PPReceiverDevice(PythonDevice):
                 .description("Input channel: client")
                 .commit()
                 ,
-            INPUT_CHANNEL(expected).key("input3")
+            # One channel under a node
+            NODE_ELEMENT(expected).key("node")
+                .commit(),
+
+            INPUT_CHANNEL(expected).key("node.input3")
                 .displayedName("Input3")
                 .description("Input channel: client")
                 .commit()
@@ -120,10 +124,10 @@ class PPReceiverDevice(PythonDevice):
         else:
             self.KARABO_ON_INPUT("input", self.onInput)
         self.KARABO_ON_INPUT("input2", self.onInputProfile)
-        self.KARABO_ON_INPUT("input3", self.onInputMultiSource)
+        self.KARABO_ON_INPUT("node.input3", self.onInputMultiSource)
         self.KARABO_ON_EOS("input", self.onEndOfStream)
         self.KARABO_ON_EOS("input2", self.onEndOfStreamProfile)
-        self.KARABO_ON_EOS("input3", self.onEndOfStreamMultiSource)
+        self.KARABO_ON_EOS("node.input3", self.onEndOfStreamMultiSource)
         self.updateState(State.NORMAL)
 
     def onInput(self, input):
