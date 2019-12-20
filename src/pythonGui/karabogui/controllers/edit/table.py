@@ -34,7 +34,7 @@ class _BaseTableElement(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(TableElementModel, args=())
     # Internal traits
-    _row_hash = Instance(Hash)
+    _column_hash = Instance(Hash)
     _role = Int(Qt.DisplayRole)
     _item_model = Instance(TableModel)
 
@@ -65,14 +65,13 @@ class _BaseTableElement(BaseBindingController):
         self.widget.setFocusPolicy(Qt.NoFocus if ro else Qt.ClickFocus)
         if self._item_model is not None:
             self._item_model.set_role(self._role)
-        self._create_delegates(ro)
 
     def binding_update(self, proxy):
         binding = proxy.binding
         if binding is not None:
             schema = binding.attributes.get(KARABO_SCHEMA_ROW_SCHEMA)
             if schema is not None:
-                self._set_row_schema(schema)
+                self._set_column_hash(schema)
 
     def value_update(self, proxy):
         value = get_editor_value(proxy, [])
@@ -101,30 +100,33 @@ class _BaseTableElement(BaseBindingController):
         """Callback method used by `self._item_model` when data changes"""
         self.proxy.edit_value = data
 
-    def _set_row_schema(self, schema):
-        # XXX: Who sets a goofy table without schema?
-        self._row_hash = schema.hash if schema is not None else Hash()
-        self._item_model = TableModel(schema, self._on_user_edit)
+    def _set_column_hash(self, schema):
+        """Configure the column schema hashes and keys
+
+        The schema must not be `None` and is protected when calling this func.
+        """
+        self._column_hash = schema.hash
+        self._item_model = TableModel(self._column_hash, self._on_user_edit)
         self._item_model.set_role(self._role)
+
         self.widget.setModel(self._item_model)
-        self.widget.set_row_schema(schema)
+        self.widget.set_column_hash(self._column_hash)
         self._create_delegates(self._role == Qt.DisplayRole)
 
     def _create_delegates(self, ro):
-        if self._row_hash is None:
-            return
-
-        c_hash = self._row_hash
+        """Create all the combox delegates in the table element"""
+        c_hash = self._column_hash
+        c_keys = c_hash.getKeys()
         if ro:
             # If we are readOnly, we have to remove any combo delegate
-            for column, key in enumerate(c_hash.getKeys()):
+            for column, key in enumerate(c_keys):
                 options = _get_options(c_hash, key)
                 if options is not None:
                     delegate = QStyledItemDelegate(parent=self.widget)
                     self.widget.setItemDelegateForColumn(column, delegate)
         else:
             # Create item delegates for columns which have options
-            for column, key in enumerate(c_hash.getKeys()):
+            for column, key in enumerate(c_keys):
                 options = _get_options(c_hash, key)
                 if options is not None:
                     delegate = ComboBoxDelegate(options, parent=self.widget)
@@ -138,7 +140,7 @@ class _BaseTableElement(BaseBindingController):
         self._item_model.insertRows(start, count, QModelIndex())
 
     def _set_index_default(self, index, key):
-        default_value = self._row_hash[key, KARABO_SCHEMA_DEFAULT_VALUE]
+        default_value = self._column_hash[key, KARABO_SCHEMA_DEFAULT_VALUE]
         self._item_model.setData(index, default_value, role=Qt.EditRole)
 
     def _add_row(self, index):
@@ -166,10 +168,10 @@ class _BaseTableElement(BaseBindingController):
             # NOTE: We have a selection and check first if we can set this
             # cell to a default value
             column = index.column()
-            if 0 <= column < len(self._row_hash):
-                key = self._row_hash.getKeys()[column]
+            if 0 <= column < len(self._column_hash):
+                key = self._column_hash.getKeys()[column]
                 if (self._role == Qt.EditRole
-                        and self._row_hash.hasAttribute(
+                        and self._column_hash.hasAttribute(
                         key, KARABO_SCHEMA_DEFAULT_VALUE)):
                     set_default_action = menu.addAction('Set Cell Default')
                     set_default_action.triggered.connect(
