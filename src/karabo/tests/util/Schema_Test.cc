@@ -823,6 +823,14 @@ void Schema_Test::testTableReadOnly() {
     CPPUNIT_ASSERT_EQUAL(1UL, tableRows.size());
     CPPUNIT_ASSERT_EQUAL(std::string("bar"), tableRows[0].get<std::string>("s"));
     CPPUNIT_ASSERT_EQUAL(true, tableRows[0].get<bool>("b"));
+
+    // Tables need their row schema:
+    karabo::util::Schema noColumnsSchema;
+    CPPUNIT_ASSERT_THROW(
+                         TABLE_ELEMENT(noColumnsSchema).key("tableLackingColumnsSchema")
+                         .readOnly()
+                         .commit(),
+                         karabo::util::LogicException);
 }
 
 
