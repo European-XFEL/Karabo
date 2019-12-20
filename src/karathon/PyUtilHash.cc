@@ -410,8 +410,23 @@ void exportPyUtilHash() {
     h.def(bp::self == bp::self);
     h.def(bp::self != bp::self);
 
+
+    struct VectorHashPickleSuite : bp::pickle_suite {
+
+
+        static bp::tuple getstate(const std::vector<Hash>& vec) {
+            return Wrapper::fromStdVectorToPyTuple(vec);
+        }
+
+
+        static void setstate(std::vector<Hash>& vec, bp::tuple state) {
+            vec = Wrapper::fromPyTupleToStdVector<Hash>(state);
+        }
+    };
+
     bp::class_<std::vector<Hash>, boost::shared_ptr<std::vector<Hash> > >("VectorHash")
-            .def(bp::vector_indexing_suite<std::vector<Hash> >());
+            .def(bp::vector_indexing_suite<std::vector<Hash> >())
+            .def_pickle(VectorHashPickleSuite()); // enables copy.copy of VectorHash
 
     bp::class_<std::vector<boost::shared_ptr<Hash> >, boost::shared_ptr<std::vector<boost::shared_ptr<Hash> > > >("VectorHashPointer")
             .def(bp::vector_indexing_suite<std::vector<boost::shared_ptr<Hash> >, true >());
