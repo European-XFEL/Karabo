@@ -3,7 +3,7 @@
 # Created on February 10, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import pyqtSignal, QLocale, Qt
+from PyQt5.QtCore import QLocale, Qt
 from PyQt5.QtWidgets import QSpinBox
 from traits.api import Instance
 
@@ -18,21 +18,7 @@ from karabogui.util import MouseWheelEventBlocker, SignalBlocker
 LOCALE = QLocale('en_US')
 
 
-class FocusSpinBox(QSpinBox):
-    """QSpinBox apparently can't be monitored for focus changes with an
-    eventFilter. So, we do it the hard way."""
-    focusChanged = pyqtSignal(bool)
-
-    def focusInEvent(self, event):
-        self.focusChanged.emit(True)
-        super(FocusSpinBox, self).focusInEvent(event)
-
-    def focusOutEvent(self, event):
-        self.focusChanged.emit(False)
-        super(FocusSpinBox, self).focusOutEvent(event)
-
-
-@register_binding_controller(ui_name='Integer Spin Box', can_edit=True,
+@register_binding_controller(ui_name='Integer SpinBox', can_edit=True,
                              klassname='EditableSpinBox',
                              binding_type=IntBinding)
 class EditableSpinBox(BaseBindingController):
@@ -42,27 +28,19 @@ class EditableSpinBox(BaseBindingController):
     _blocker = Instance(MouseWheelEventBlocker)
 
     def create_widget(self, parent):
-        self._internal_widget = FocusSpinBox(parent)
+        self._internal_widget = QSpinBox(parent)
         self._internal_widget.setLocale(LOCALE)
         self._internal_widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
-        self._internal_widget.focusChanged.connect(self._focus_changed)
+        self._internal_widget.valueChanged[int].connect(self._on_user_edit)
+        self._internal_widget.setFocusPolicy(Qt.StrongFocus)
+        self._blocker = MouseWheelEventBlocker(self._internal_widget)
+        self._internal_widget.installEventFilter(self._blocker)
 
         widget = add_unit_label(self.proxy, self._internal_widget,
                                 parent=parent)
         widget.setFocusProxy(self._internal_widget)
 
         return widget
-
-    def set_read_only(self, ro):
-        self._internal_widget.setReadOnly(ro)
-        if not ro:
-            if self._blocker is None:
-                self._blocker = MouseWheelEventBlocker(self._internal_widget)
-            self._internal_widget.installEventFilter(self._blocker)
-            self._internal_widget.valueChanged[int].connect(self._on_user_edit)
-
-        focus_policy = Qt.NoFocus if ro else Qt.StrongFocus
-        self._internal_widget.setFocusPolicy(focus_policy)
 
     def binding_update(self, proxy):
         low, high = get_min_max(proxy.binding)
@@ -79,14 +57,6 @@ class EditableSpinBox(BaseBindingController):
     def state_update(self, proxy):
         enable = is_proxy_allowed(proxy)
         self.widget.setEnabled(enable)
-
-    def _focus_changed(self, has_focus):
-        """Make sure edits get applied when focus is lost"""
-        if not has_focus:
-            value = self._internal_widget.value()
-            proxy_value = get_editor_value(self.proxy)
-            if value != proxy_value:
-                self.proxy.edit_value = value
 
     def _on_user_edit(self, value):
         if self.proxy.binding is None:
