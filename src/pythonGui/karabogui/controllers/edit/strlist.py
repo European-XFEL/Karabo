@@ -17,16 +17,14 @@ from karabogui.dialogs.listedit import ListEditDialog
                              klassname='EditableListElement',
                              binding_type=VectorStringBinding)
 class EditableListElement(BaseBindingController):
-    # The scene model class used by this controller
     model = Instance(EditableListElementModel, args=())
 
     def create_widget(self, parent):
         widget = QPushButton('Edit list', parent)
-        widget.setStyleSheet('QPushButton { text-align: left; }')
+        widget.setStyleSheet('QPushButton { text-align: center; }')
         widget.clicked.connect(self._on_edit_clicked)
         return widget
 
-    # @pyqtSlot()
     def _on_edit_clicked(self):
         if self.proxy.binding is None:
             return
