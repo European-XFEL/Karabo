@@ -7,7 +7,8 @@ import numpy as np
 from karabo.bound import (BOOL_ELEMENT, ChannelMetaData,
                           Hash, INT32_ELEMENT, KARABO_CLASSINFO,
                           launchPythonDevice, MetricPrefix,
-                          NDARRAY_ELEMENT, OUTPUT_CHANNEL, OVERWRITE_ELEMENT,
+                          NDARRAY_ELEMENT, NODE_ELEMENT, OUTPUT_CHANNEL,
+                          OVERWRITE_ELEMENT,
                           PythonDevice, Schema, SLOT_ELEMENT, State,
                           STRING_ELEMENT, Timestamp, Types, UINT64_ELEMENT,
                           UINT32_ELEMENT, Unit, VECTOR_INT64_ELEMENT
@@ -133,7 +134,11 @@ class PPSenderDevice(PythonDevice):
                 .shape("100")
                 .commit()
             ,
-            OUTPUT_CHANNEL(expected).key("output3")
+            # Put one under a node
+            NODE_ELEMENT(expected).key("node")
+                .commit(),
+
+            OUTPUT_CHANNEL(expected).key("node.output3")
                 .displayedName("Output3")
                 .dataSchema(data3)
                 .commit()
@@ -225,7 +230,7 @@ class PPSenderDevice(PythonDevice):
         try:
             nData = self.get("nData")
             delayInMs = self.get("delay")
-            channel = self._ss.getOutputChannel("output3")
+            channel = self._ss.getOutputChannel("node.output3")
             data = Hash()
             for i in range(nData):
                 data.set("dataId", i)
@@ -248,7 +253,7 @@ class PPSenderDevice(PythonDevice):
         except Exception as e:
             self.log.ERROR("Stop writing because: {}".format(e))
 
-        self.signalEndOfStream("output3")
+        self.signalEndOfStream("node.output3")
         self.updateState(State.NORMAL)
 
 
