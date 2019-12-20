@@ -1,5 +1,5 @@
 #############################################################################
-# Author: <steffen.hauf@xfel.eu>
+# Author: <steffen.hauf@xfel.eu> & <dennis.goeries@xfel.eu>
 # Created on August 10, 2015
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
@@ -23,28 +23,19 @@ from karabogui.indicators import get_state_color
 VECTOR_TYPE = 'VECTOR'
 
 
-def _get_value_type(schema, key):
-    """Extract a single key's value type from a schema"""
-    return schema.hash[key, KARABO_SCHEMA_VALUE_TYPE]
+def is_state_display_type(schema_hash, key):
+    """Return if the display type belongs to a state element"""
+    dtype = schema_hash[key, ...].get(KARABO_SCHEMA_DISPLAY_TYPE, '')
 
-
-def _get_display_type(schema, key):
-    """Extract the display type of a key from a schema"""
-    return schema.hash[key, ...].get(KARABO_SCHEMA_DISPLAY_TYPE, '')
-
-
-def _get_access_mode(schema, key):
-    """Extract the access mode of a key from a schema"""
-    access = schema.hash[key, ...].get(KARABO_SCHEMA_ACCESS_MODE)
-    return AccessMode(access)
+    return dtype == KARABO_SCHEMA_DISPLAY_TYPE_STATE
 
 
 class TableModel(QAbstractTableModel):
-    def __init__(self, row_schema, editing_finished, parent=None):
+    def __init__(self, column_hash, set_edit_value, parent=None):
         super(QAbstractTableModel, self).__init__(parent)
-        self._set_edit_value = editing_finished
-        self._row_schema = row_schema
-        self._row_hash = row_schema.hash
+        self._set_edit_value = set_edit_value
+        self._column_hash = column_hash
+        self._header = column_hash.getKeys()
         self._role = Qt.EditRole
         self._data = []
 
@@ -54,7 +45,7 @@ class TableModel(QAbstractTableModel):
 
     def columnCount(self, parent=None):
         """Reimplemented function of QAbstractTableModel"""
-        return len(self._row_hash)
+        return len(self._column_hash)
 
     def data(self, index, role):
         """Reimplemented function of QAbstractTableModel"""
@@ -65,16 +56,16 @@ class TableModel(QAbstractTableModel):
         if role == Qt.CheckStateRole and self._role == Qt.EditRole:
             # XXX: Again the Qt.EditRole check is to distinguish INITONLY
             # and READONLY access!
-            key = self._row_hash.getKeys()[column]
+            key = self._header[column]
             value = self._data[row][key]
-            vtype = _get_value_type(self._row_schema, key)
+            vtype = self._column_hash[key, KARABO_SCHEMA_VALUE_TYPE]
             if vtype == KARABO_TYPE_BOOL:
                 return Qt.Checked if value else Qt.Unchecked
 
         if role in (Qt.DisplayRole, Qt.EditRole):
-            key = self._row_hash.getKeys()[column]
+            key = self._header[column]
             value = self._data[row][key]
-            vtype = _get_value_type(self._row_schema, key)
+            vtype = self._column_hash[key, KARABO_SCHEMA_VALUE_TYPE]
             if vtype.startswith(VECTOR_TYPE):
                 # Guard against None values
                 value = [] if value is None else value
@@ -82,9 +73,8 @@ class TableModel(QAbstractTableModel):
             return str(value)
 
         elif role == Qt.BackgroundRole:
-            key = self._row_hash.getKeys()[column]
-            display_type = _get_display_type(self._row_schema, key)
-            if display_type == KARABO_SCHEMA_DISPLAY_TYPE_STATE:
+            key = self._header[column]
+            if is_state_display_type(self._column_hash, key):
                 value = self._data[row][key]
                 color = get_state_color(value)
                 if color is not None:
@@ -101,8 +91,8 @@ class TableModel(QAbstractTableModel):
             return str(section)
 
         if orientation == Qt.Horizontal:
-            key = self._row_hash.getKeys()[section]
-            attrs = self._row_hash[key, ...]
+            key = self._header[section]
+            attrs = self._column_hash[key, ...]
             return attrs.get(KARABO_SCHEMA_DISPLAYED_NAME, key)
 
         return None
@@ -113,18 +103,19 @@ class TableModel(QAbstractTableModel):
             return Qt.NoItemFlags
 
         flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
-        key = self._row_hash.getKeys()[index.column()]
-        access = _get_access_mode(self._row_schema, key)
-        vtype = _get_value_type(self._row_schema, key)
-
+        key = self._header[index.column()]
+        # Get an enum for the AccessMode
+        access = self._column_hash[key, KARABO_SCHEMA_ACCESS_MODE]
+        access_mode = AccessMode(access)
+        vtype = self._column_hash[key, KARABO_SCHEMA_VALUE_TYPE]
         if vtype == KARABO_TYPE_BOOL and self._role == Qt.EditRole:
             flags &= ~Qt.ItemIsEditable
-            if access is AccessMode.READONLY:
+            if access_mode is AccessMode.READONLY:
                 # XXX: Remove the `enabled` flag due to INITONLY!
                 flags &= ~Qt.ItemIsEnabled
             else:
                 flags |= Qt.ItemIsUserCheckable
-        elif access is AccessMode.READONLY:
+        elif access_mode is AccessMode.READONLY:
             flags &= ~Qt.ItemIsEditable
 
         return flags
@@ -134,10 +125,10 @@ class TableModel(QAbstractTableModel):
         if not index.isValid():
             return False
 
-        row, col = index.row(), index.column()
+        row, column = index.row(), index.column()
         if role == Qt.CheckStateRole:
-            key = self._row_hash.getKeys()[col]
-            vtype = _get_value_type(self._row_schema, key)
+            key = self._header[column]
+            vtype = self._column_hash[key, KARABO_SCHEMA_VALUE_TYPE]
             if vtype == KARABO_TYPE_BOOL:
                 value = True if value == Qt.Checked else False
                 self._data[row][key] = value
@@ -149,8 +140,8 @@ class TableModel(QAbstractTableModel):
             return False
 
         if role in (Qt.DisplayRole, Qt.EditRole):
-            key = self._row_hash.getKeys()[col]
-            vtype = _get_value_type(self._row_schema, key)
+            key = self._header[column]
+            vtype = self._column_hash[key, KARABO_SCHEMA_VALUE_TYPE]
             # now display value
             if vtype.startswith(VECTOR_TYPE) and not is_device_update:
                 # this will be a list of individual chars we need to join
@@ -174,20 +165,20 @@ class TableModel(QAbstractTableModel):
         self.beginInsertRows(QModelIndex(), pos, pos + rows - 1)
         try:
             for row_nr in range(rows):
-                row_hash = copy.copy(copy_row)
-                if row_hash is None:
-                    row_hash = Hash()
-                    for key in self._row_hash.getKeys():
-                        attrs = self._row_hash[key, ...]
+                column_hash = copy.copy(copy_row)
+                if column_hash is None:
+                    column_hash = Hash()
+                    for key in self._header:
+                        attrs = self._column_hash[key, ...]
                         val = attrs.get(KARABO_SCHEMA_DEFAULT_VALUE, None)
 
                         # XXX: Formerly, the value was 'cast' here...
                         # val = valueType.cast(val)
-                        row_hash[key] = val
+                        column_hash[key] = val
                 if pos + row_nr < len(self._data):
-                    self._data.insert(pos + row_nr, row_hash)
+                    self._data.insert(pos + row_nr, column_hash)
                 else:
-                    self._data.append(row_hash)
+                    self._data.append(column_hash)
         finally:
             self.endInsertRows()
 
@@ -259,22 +250,17 @@ class ComboBoxDelegate(QItemDelegate):
 
 
 class KaraboTableView(QTableView):
-    def __init__(self, row_schema=None, parent=None):
+    def __init__(self, parent=None):
         super(KaraboTableView, self).__init__(parent)
-        self.set_row_schema(row_schema)
 
-    def set_row_schema(self, row_schema):
-        if row_schema is None:
-            return
-
-        self._row_schema = row_schema
-        self._row_hash = row_schema.hash
-        self._row_keys = self._row_hash.getKeys()
+    def set_column_hash(self, column_hash):
+        self._column_hash = column_hash
+        self._header = column_hash.getKeys()
         self._drag_column = None
         # XXX: Evaluate the eventual `drag-column`. If a string element is
         # found in the row schema, the first appearance is taken!
-        for column_index, key in enumerate(self._row_keys):
-            vtype = _get_value_type(self._row_schema, key)
+        for column_index, key in enumerate(self._header):
+            vtype = self._column_hash[key, KARABO_SCHEMA_VALUE_TYPE]
             if vtype == KARABO_TYPE_STRING:
                 self._drag_column = column_index
                 break
@@ -322,8 +308,8 @@ class KaraboTableView(QTableView):
             event.accept()
             return True, index, True, deviceId
 
-        key = self._row_keys[index.column()]
-        vtype = _get_value_type(self._row_schema, key)
+        key = self._header[index.column()]
+        vtype = self._column_hash[key, KARABO_SCHEMA_VALUE_TYPE]
         if is_valid:
             event.accept()
             not_string = (vtype != KARABO_TYPE_STRING)
