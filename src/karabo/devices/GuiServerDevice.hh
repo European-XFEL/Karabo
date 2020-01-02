@@ -391,12 +391,14 @@ namespace karabo {
             void onKillDevice(const karabo::util::Hash& info);
 
             /**
-             * registers a monitor on the device specified by ``deviceId`` in ``info``
-             * The monitor is registered as a call-back ``deviceChangedHandler`` on
-             * the device client. Upon changes of device properties they will be forwarded
-             * to ``channel`` from this handler. Only one channel per client is maintained
-             * for passing monitoring information and only on monitor is registered by
-             * the gui-server for any number of clients monitoring ``deviceId``.
+             * Registers a monitor on the device specified by ``deviceId`` in ``info``
+             * Upon changes of device properties they will be forwarded to ``channel``
+             * from a handler for changes in configurations of monitored devices that
+             * is kept internally by the gui-server.
+             *
+             * Only one channel per client is maintained for passing monitoring
+             * information and only one monitor is registered by the gui-server for any
+             * number of clients monitoring ``deviceId``.
              *
              * After successful registration the current device configuration is returned
              * by calling ``onGetDeviceConfiguration`` for ``channel``.
@@ -408,7 +410,7 @@ namespace karabo {
             /**
              * De-registers the client connected by ``channel`` from the device specified
              * by ``deviceId`` in ``info``. If this is the last channel monitoring
-             * ``deviceId`` the corresponding monitor is also de-registered from the
+             * ``deviceId`` the device is removed from the set of devices monitored by the
              * device-client.
              *
              * @param channel
@@ -566,17 +568,22 @@ namespace karabo {
             void instanceChangeHandler(const karabo::util::Hash& instChangeData);
 
             /**
-             * acts upon incoming configuration updates from ``deviceId``. It is called
+             * Acts upon incoming configuration updates from one or more devices. It is called
              * back by a monitor registered on the device client. The reconfiguration
              * contained in the ``what`` hash is forwarded to any channels connected to the
-             * monitor by ``onStartMonitoringDevice``. The message format of the hash
-             * sent out is ``type=deviceConfiguration``, ``deviceId`` and ``configuration``,
-             * the latter containing ``what``.
+             * monitor by ``onStartMonitoringDevice``.
              *
-             * @param channel
-             * @param info
+             * The message type of the hash sent out is type="deviceConfigurations". The hash
+             * has a second first level key, named "configurations", whose value is a hash with
+             * the deviceIds as keys and the configuration changes for the corresponding deviceId
+             * as values.
+             *
+             * @param what A hash containing all the configuration changes that happened to one
+             *        or more monitored devices since the last update. Each node under the key
+             *        "configurations" has the 'deviceId' as key and the changed configurations
+             *        as a value of type Hash.
              */
-            void deviceChangedHandler(const std::string& instanceId, const karabo::util::Hash& what);
+            void devicesChangedHandler(const karabo::util::Hash& what);
 
             void classSchemaHandler(const std::string& serverId, const std::string& classId, const karabo::util::Schema& classSchema);
 

@@ -64,6 +64,7 @@ namespace karabo {
             typedef boost::function<void (const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/) > InstanceGoneHandler;
             typedef boost::function<void (const std::string& /*deviceId*/, const karabo::util::Schema& /*schema*/) > SchemaUpdatedHandler;
             typedef boost::function<void (const std::string& /*serverId*/, const std::string& /*classId*/, const karabo::util::Schema& /*schema*/) > ClassSchemaHandler;
+            typedef boost::function<void (const karabo::util::Hash & /* devicesChanges */) > DevicesChangedHandler;
 
             static const int CONNECTION_KEEP_ALIVE = 15;
 
@@ -103,6 +104,12 @@ namespace karabo {
             InstanceUsage m_instanceUsage;
 
             karabo::util::Hash m_deviceChangedHandlers;
+
+            /**
+             * Handler for all monitored devices configuration updates during last interval.
+             */
+            DevicesChangedHandler m_devicesChangesHandler;
+            boost::mutex m_devicesChangesMutex;
 
             karabo::util::Hash m_propertyChangedHandlers;
 
@@ -825,10 +832,39 @@ namespace karabo {
 
             /**
              * Register a callback function to be triggered when a a device in the distributed system updates.
+             *
              * @param instanceId of the device to register to
              * @param callbackFunction handling the update. It will receive the device instance id and the updated device configuration Hash
              */
             void registerDeviceMonitor(const std::string& instanceId, const boost::function<void (const std::string&, const karabo::util::Hash&)>& callbackFunction);
+
+            /**
+             * Registers a device for configuration changes monitoring.
+             *
+             * In order to receive notifications about configuration changes for any of the monitored devices, one
+             * must connect a handler for those changes by calling DeviceClient::connectDevicesMonitor.
+s             *
+             * @param deviceId of the device to be added to the set of monitored devices.
+             */
+            void registerDeviceForMonitoring(const std::string& deviceId);
+
+            /**
+             * Registers a handler for configuration changes for any of the monitored devices.
+             *
+             * @note * To register a device to be monitored, a call to registerDeviceForMonitoring must be made.
+             *       * Throttling of device updates must be enabled via a call to setDeviceMonitorInterval with an
+             *         argument greater than 0.
+             *
+             * @param devicesChangesHandler callback function for configuration changes events for any monitored device.
+             */
+            void registerDevicesMonitor(const DevicesChangedHandler &devicesChangedHandler);
+
+            /**
+             * Unregisters a device from configuration changes monitoring.
+             *
+             * @param deviceId of the device to be removed from the set of monitored devices.
+             */
+            void unregisterDeviceFromMonitoring(const std::string& deviceId);
 
             /**
              * Register a callback function to be triggered when a a device in the distributed system updates.
@@ -857,10 +893,13 @@ namespace karabo {
             }
 
             /**
-             * Unregister a device monitor
+             * Unregister a device monitor.
              * @param instanceId to unregister the monitor from
              */
             void unregisterDeviceMonitor(const std::string& instanceId);
+
+
+
 
             /**
              * Register handlers to be called whenever the defined output channel receives data or end-of-stream (EOS).
