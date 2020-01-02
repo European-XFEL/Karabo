@@ -16,8 +16,8 @@ from karabogui.enums import ProjectItemTypes
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.project.dialog.object_handle import ObjectEditDialog
 from karabogui.project.utils import check_device_config_exists
-from karabogui.util import create_html_hash
-from karabo.native import Hash
+from karabo.native import create_html_hash, Hash
+
 from .bases import BaseProjectController, ProjectControllerUiData
 from .device import DeviceInstanceController
 
