@@ -167,12 +167,23 @@ namespace karabo {
                     .readOnly().initialValue(0)
                     .commit();
 
+            // Server <-> Client protocol changes that impose minimal client version requirements:
+            //
+            // Minimal client version 2.5.0 -> instanceNew|Update|Gone protocol changed; those three events began to be
+            //                                 sent to the clients in a single instancesChanged event.
+            //
+            // Minimal client version 2.7.0 -> 'deviceConfiguration' message type replaced by 'deviceConfigurations'.
+            //                                 While 'deviceConfiguration' (singular) carried the properties that have
+            //                                 changed for a single device in a given interval, 'deviceConfigurations'
+            //                                 (plural) carries the properties that have changed for all the devices of
+            //                                 interest for a specific client in a given interval.
             STRING_ELEMENT(expected).key("minClientVersion")
                     .displayedName("Minimum Client Version")
                     .description("If this variable does not respect the N.N.N(.N) convention,"
                                  " the Server will not enforce a version check")
-                    .assignmentOptional().defaultValue("2.5.0") // instanceNew|Update|Gone protocol changed in 2.5.0
+                    .assignmentOptional().defaultValue("2.7.0")
                     .reconfigurable()
+                    .adminAccess()
                     .commit();
         }
 
@@ -225,6 +236,8 @@ namespace karabo {
                 remote().registerClassSchemaMonitor(boost::bind(&karabo::devices::GuiServerDevice::classSchemaHandler, this, _1, _2, _3));
 
                 remote().registerInstanceChangeMonitor(boost::bind(&karabo::devices::GuiServerDevice::instanceChangeHandler, this, _1));
+
+                remote().registerDevicesMonitor(bind_weak(&karabo::devices::GuiServerDevice::devicesChangedHandler, this, _1));
 
                 // If someone manages to bind_weak(&karabo::devices::GuiServerDevice::requestNoWait<>, this, ...),
                 // we would not need loggerMapConnectedHandler...
@@ -771,7 +784,7 @@ namespace karabo {
                 if (!config.empty()) {
                     KARABO_LOG_FRAMEWORK_DEBUG << "onGetDeviceConfiguration for '" << deviceId << "': direct answer";
                     // Can't we just use 'config' instead of 'remote().get(deviceId)'?
-                    Hash h("type", "deviceConfiguration", "deviceId", deviceId, "configuration", remote().get(deviceId));
+                    Hash h("type", "deviceConfigurations", "configurations", Hash(deviceId, remote().get(deviceId)));
                     safeClientWrite(channel, h);
                 } else {
                     KARABO_LOG_FRAMEWORK_DEBUG << "onGetDeviceConfiguration for '" << deviceId << "': expect later answer";
@@ -829,7 +842,7 @@ namespace karabo {
                 }
 
                 if (registerFlag) { // Fresh device on the shelf
-                    remote().registerDeviceMonitor(deviceId, bind_weak(&karabo::devices::GuiServerDevice::deviceChangedHandler, this, _1, _2));
+                    remote().registerDeviceForMonitoring(deviceId);
                 }
 
                 // Send back fresh information about device
@@ -868,7 +881,7 @@ namespace karabo {
 
                 if (unregisterFlag) {
                     // Disconnect signal/slot from broker
-                    remote().unregisterDeviceMonitor(deviceId);
+                    remote().unregisterDeviceFromMonitoring(deviceId);
                 }
 
             } catch (const std::exception& e) {
@@ -1237,7 +1250,7 @@ namespace karabo {
                     }
                     if (registerMonitor) {
                         KARABO_LOG_FRAMEWORK_DEBUG << "Connecting to device " << instanceId << " which is going to be visible in a GUI client";
-                        remote().registerDeviceMonitor(instanceId, bind_weak(&karabo::devices::GuiServerDevice::deviceChangedHandler, this, _1, _2));
+                        remote().registerDeviceForMonitoring(instanceId);
                     }
                     if (instanceId == karabo::util::DATALOGMANAGER_ID) {
                         // The corresponding 'connect' is done by SignalSlotable's automatic reconnect feature.
@@ -1337,24 +1350,36 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::deviceChangedHandler(const std::string& deviceId, const karabo::util::Hash& what) {
+        void GuiServerDevice::devicesChangedHandler(const karabo::util::Hash& what) {
             try {
+                // Gathers all devices with configuration updates in 'what'.
+                std::vector<std::string> updatedDevices;
+                updatedDevices.reserve(what.size());
+                what.getKeys(updatedDevices);
 
-                if (what.has("deviceId")) { // only request for full configuration should contain that...
-                    KARABO_LOG_FRAMEWORK_DEBUG << "deviceChangedHandler" << ": deviceId = '" << deviceId << "'";
-                }
-
-                Hash h("type", "deviceConfiguration", "deviceId", deviceId, "configuration", what);
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Loop on all clients
                 for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                    // Optimization: broadcast only to clients interested in deviceId
-                    if (it->second.visibleInstances.find(deviceId) != it->second.visibleInstances.end()) {
-                        if (it->first && it->first->isOpen()) it->first->writeAsync(h);
+
+                    if (!it->first || !it->first->isOpen()) continue;
+
+                    Hash configs;
+                    for (const std::string &deviceId : updatedDevices) {
+                        // Optimization: send only updates for devices the client is interested in.
+                        if (it->second.visibleInstances.find(deviceId) != it->second.visibleInstances.end()) {
+                            configs.set(deviceId, what.get<Hash>(deviceId));
+                        }
+                    }
+                    if (!configs.empty()) {
+                        Hash h("type", "deviceConfigurations");
+                        h.bindReference<Hash>("configurations") = std::move(configs);
+                        KARABO_LOG_FRAMEWORK_INFO << "\nSending configuration updates to GUI client:\n" << h;
+                        it->first->writeAsync(h);
                     }
                 }
+
             } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in deviceChangedHandler(): " << e.what();
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in devicesChangesHandler(): " << e.what();
             }
         }
 
@@ -1661,7 +1686,7 @@ namespace karabo {
                 remote().flushThrottledInstanceChanges();
                 Hash h("type", type, "instanceId", alarmServiceId, "rows", updateRows);
                 // Broadcast to all GUIs
-                safeAllClientsWrite(h, LOSSLESS);                
+                safeAllClientsWrite(h, LOSSLESS);
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in broad casting alarms(): " << e.userFriendlyMsg();
             }
