@@ -154,6 +154,11 @@ class KaraboPlotView(QWidget):
                 self.qactions[check_action.name] = q_ac
                 self.addAction(q_ac)
 
+        viewbox = self.plotItem.vb
+        for action in (x_log, y_log):
+            if action.name in self.qactions:
+                viewbox.add_action(self.qactions[action.name])
+
         for k_action in (axes, x_range, y_range):
             if k_action.name in actions:
                 q_ac = build_qaction(k_action, self)
@@ -175,6 +180,7 @@ class KaraboPlotView(QWidget):
     def check_action_callback(self, state, callback=None, name=None):
         if callback is not None:
             callback(state)
+
         self.qactions[name].setChecked(state)
         self.configuration[name] = state
         self.stateChanged.emit({name: state})
