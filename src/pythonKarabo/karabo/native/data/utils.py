@@ -1,6 +1,7 @@
 import numpy as np
+from xml.sax.saxutils import escape
 
-from .hash import Hash, Type
+from .hash import Hash, HashList, Type
 
 
 def dtype_from_number(number):
@@ -39,3 +40,38 @@ def get_image_data(data):
 
     elif "image" in data:
         return extract_data(data["image"])
+
+
+def create_html_hash(hsh):
+    """Create the HTML representation of a Hash
+    """
+    assert isinstance(hsh, Hash), "An input of type ``Hash`` is required!"
+
+    def _html_attributes(nest, attrs):
+        for key, value in attrs.items():
+            yield ('<tr><td style="padding-left:{}em">'
+                   '<font size="1" color="red">'
+                   '{}</td><td>'.format(nest + 1, key))
+            yield '<font size="1" color="red">{}'.format(escape(str(value)))
+
+    def _html_hash_generator(hsh, nest=0):
+        if nest == 0:
+            yield "<table>"
+        for key, value, attr in hsh.iterall():
+            if isinstance(value, Hash):
+                yield ('<tr><td style="padding-left:{}em"><b>{}</b></td>'
+                       '<td/></tr>'.format(nest + 1, key))
+                yield from _html_hash_generator(value, nest + 1)
+            elif isinstance(value, HashList):
+                # XXX: Table support!
+                continue
+            else:
+                yield ('<tr><td style="padding-left:{}em">{}</td><td>'
+                       .format(nest + 1, key))
+                yield escape(str(value))
+                yield from _html_attributes(nest + 1, attr)
+                yield '</td></tr>'
+        if nest == 0:
+            yield "</table>"
+
+    return "".join(_html_hash_generator(hsh))
