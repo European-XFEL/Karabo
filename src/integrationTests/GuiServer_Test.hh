@@ -37,6 +37,13 @@ private:
     void testExecute();
     void testReconfigure();
 
+    /**
+     * Checks that messages of type 'deviceConfigurations' sent by
+     * the GUI Server contain all the expected config updates for
+     * all devices of interest of a connected client.
+     */
+    void testDeviceConfigUpdates();
+
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_eventLoopThread;
 
