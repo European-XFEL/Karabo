@@ -10,7 +10,6 @@ from types import MethodType
 from uuid import uuid4
 import webbrowser
 import weakref
-from xml.sax.saxutils import escape
 
 from dateutil.tz import tzlocal, tzutc
 from PyQt5.QtCore import QEvent, QObject, Qt, QSize
@@ -21,7 +20,7 @@ from PyQt5.QtGui import QCursor, QMovie, QValidator
 from karabo.common.enums import ONLINE_STATUSES
 from karabo.common.project.api import read_macro
 from karabo.common.scenemodel.api import SceneTargetWindow, read_scene
-from karabo.native import decodeXML, Hash, HashList, writeXML
+from karabo.native import decodeXML, Hash, writeXML
 from karabogui import globals as krb_globals, icons, messagebox
 from karabogui.binding.api import (
     DeviceClassProxy, DeviceProxy, extract_configuration)
@@ -479,38 +478,3 @@ def open_documentation_link(deviceId):
         webbrowser.open_new(url)
     except webbrowser.Error:
         messagebox.show_error("No web browser available!")
-
-
-def create_html_hash(hsh):
-    """Create the HTML representation of a Hash
-    """
-    assert isinstance(hsh, Hash), "An input of type ``Hash`` is required!"
-
-    def _html_attributes(nest, attrs):
-        for key, value in attrs.items():
-            yield ('<tr><td style="padding-left:{}em">'
-                   '<font size="1" color="red">'
-                   '{}</td><td>'.format(nest + 1, key))
-            yield '<font size="1" color="red">{}'.format(escape(str(value)))
-
-    def _html_hash_generator(hsh, nest=0):
-        if nest == 0:
-            yield "<table>"
-        for key, value, attr in hsh.iterall():
-            if isinstance(value, Hash):
-                yield ('<tr><td style="padding-left:{}em"><b>{}</b></td>'
-                       '<td/></tr>'.format(nest + 1, key))
-                yield from _html_hash_generator(value, nest + 1)
-            elif isinstance(value, HashList):
-                # XXX: Table support!
-                continue
-            else:
-                yield ('<tr><td style="padding-left:{}em">{}</td><td>'
-                       .format(nest + 1, key))
-                yield escape(str(value))
-                yield from _html_attributes(nest + 1, attr)
-                yield '</td></tr>'
-        if nest == 0:
-            yield "</table>"
-
-    return "".join(_html_hash_generator(hsh))
