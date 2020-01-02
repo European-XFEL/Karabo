@@ -33,9 +33,26 @@ topic (string)
 *systemTopology*
 systemTopology (Hash)
 
-*configurationChanged (deviceConfiguration)*
+[repl_2.8.0]_ *configurationChanged (deviceConfiguration)*
 deviceId (string)
 configuration (Hash)
+
+[2.8.0]_ *deviceConfigurations*
+deviceConfigurations (Hash)
+
+Hash contains all the configuration changes that happened to the monitored devices of interest to the Gui-client since the last
+occurrence of a ``deviceConfigurations`` message.
+
+An example hash of the ``deviceConfigurations`` message is shown below.
+
+::
+
+     'type' => deviceConfigurations STRING
+     'configurations' +
+       'cppServer/1_PropertyTest' +
+         'outputCounter' => 32 INT32
+       'cppServer/2_PropertyTest' +
+         'outputCounter' => 48 INT32
 
 *deviceSchema*
 deviceId (string)
@@ -84,7 +101,6 @@ An example Hash of the ``topologyUpdates`` is shown below.
        'gone' +
          'server' +
            'karabo/macroServer' +
-
 
 *notification*
 deviceId
@@ -151,4 +167,6 @@ traceback (string)
 .. rubric:: Footnotes
 .. [depr] Deprecated in Karabo 2.5.0: GUI client shall still understand them to connect to older GUI Server versions. GUI client legacy support will be dropped in 2.6.0.
 .. [2.5.0] Introduced in Karabo 2.5.0 to replace *instanceNew*, *instanceUpdated* and *instanceGone*.
+.. [repl_2.8.0] Last used in Karabo 2.7.X - replaced by *deviceConfigurations* (note below).
+.. [2.8.0] Introduced in Karabo 2.8.0 to enable bulk updates of device configurations in the client.
 

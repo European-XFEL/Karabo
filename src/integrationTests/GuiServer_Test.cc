@@ -64,6 +64,7 @@ void GuiVersion_Test::appTestRunner() {
     testNotification();
     testExecute();
     testReconfigure();
+    testDeviceConfigUpdates();
 
     if (m_tcpAdapter->connected()) {
         m_tcpAdapter->disconnect();
@@ -364,4 +365,205 @@ void GuiVersion_Test::testReconfigure() {
     }
 
     std::clog << "testReconfigure: OK" << std::endl;
+}
+
+
+void GuiVersion_Test::testDeviceConfigUpdates() {
+    resetClientConnection();
+    // checks that we are connected
+    CPPUNIT_ASSERT(m_tcpAdapter->connected());
+
+    const unsigned int propertyUpdateInterval = 1500u; // A propertyUpdateInterval that is large enough so that the distance
+    // between a reference timestamp gathered right after an update interval
+    // "pulse" and the real "pulse" timestamp is at least one order of magnitu-
+    // de smaller than the interval duration - (with 1500 we are allowing that
+    // distance to be up to 150 ms, which is quite reasonable even in situations
+    // where the running system is under a heavy load).
+    m_deviceClient->set<int>("testGuiServerDevice", "propertyUpdateInterval", propertyUpdateInterval);
+    const unsigned int nextMessageTimeout = propertyUpdateInterval + 500u;
+
+    // Instantiate two property test devices
+    std::pair<bool, std::string> success = m_deviceClient->instantiate("testGuiVersionServer", "PropertyTest",
+                                                                       Hash("deviceId", "PropTest_1"),
+                                                                       KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    success = m_deviceClient->instantiate("testGuiVersionServer", "PropertyTest",
+                                          Hash("deviceId", "PropTest_2"),
+                                          KRB_TEST_MAX_TIMEOUT);
+
+    CPPUNIT_ASSERT(success.first);
+
+    // Changes a property of one of the test devices and makes sure that no message 'deviceConfigurations' arrives
+    // within the propertyUpdateInterval.
+    {
+        const Hash h("type", "reconfigure",
+                     "deviceId",
+                     "PropTest_1",
+                     "configuration", Hash("int32Property", 10));
+        CPPUNIT_ASSERT_THROW(
+                             m_tcpAdapter->getNextMessages("deviceConfigurations", 1, [&] {
+                                 m_tcpAdapter->sendMessage(h);
+                             }, nextMessageTimeout), karabo::util::TimeoutException);
+        // Makes sure that the property has been set.
+        CPPUNIT_ASSERT_EQUAL(10, m_deviceClient->get<int>("PropTest_1", "int32Property"));
+    }
+
+    // "Subscribes" to one of the test property devices by sending the GUI Server a 'startMonitoringDevice' message.
+    {
+        const Hash h("type", "startMonitoringDevice",
+                     "deviceId",
+                     "PropTest_1");
+        // After receiving a startMonitoringDevice, the GUI Server sends a 'deviceConfigurations' message with
+        // the full configuration it has for the device.
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("deviceConfigurations", 1, [&] {
+            m_tcpAdapter->sendMessage(h);
+        }, nextMessageTimeout);
+        Hash nextMessage;
+        messageQ->pop(nextMessage);
+        CPPUNIT_ASSERT_EQUAL(std::string("deviceConfigurations"), nextMessage.get<std::string>("type"));
+        CPPUNIT_ASSERT(nextMessage.has("configurations.PropTest_1"));
+    }
+
+    // Changes properties on the two devices and assures that an update message arrives containing only the change
+    // to the subscribed one.
+    // NOTE: From this point on, the order of the operations matters - there's a synchronization code before an upcoming
+    //       property change test that is based on the timestamp that will be stored in propUpdateTime during the test
+    //       below.
+    Epochstamp propUpdateTime;
+    {
+        const Hash h_1("type", "reconfigure",
+                       "deviceId",
+                       "PropTest_1",
+                       "configuration", Hash("int32Property", 12));
+        const Hash h_2("type", "reconfigure",
+                       "deviceId",
+                       "PropTest_2",
+                       "configuration", Hash("int32Property", 22));
+
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("deviceConfigurations", 1, [&] {
+            m_tcpAdapter->sendMessage(h_2);
+            m_tcpAdapter->sendMessage(h_1);
+        }, nextMessageTimeout);
+
+        propUpdateTime.now(); // Captures a timestamp that is as close as possible to the update "pulse".
+
+        Hash nextMessage;
+        messageQ->pop(nextMessage);
+        CPPUNIT_ASSERT_EQUAL(std::string("deviceConfigurations"), nextMessage.get<std::string>("type"));
+        CPPUNIT_ASSERT(nextMessage.has("configurations"));
+        Hash configs = nextMessage.get<Hash>("configurations");
+        CPPUNIT_ASSERT(configs.has("PropTest_1"));
+        Hash propTest1Config = configs.get<Hash>("PropTest_1");
+        CPPUNIT_ASSERT(propTest1Config.get<int>("int32Property") == 12);
+        CPPUNIT_ASSERT(configs.size() == 1u);
+    }
+
+    // "Subscribes" to the yet unsubscribed test device.
+    {
+        const Hash h("type", "startMonitoringDevice",
+                     "deviceId",
+                     "PropTest_2",
+                     "reply", true,
+                     "timeout", 1);
+        // After receiving a startMonitoringDevice, the GUI Server sends a 'deviceConfigurations' message with
+        // the full configuration it has for the device.
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("deviceConfigurations", 1, [&] {
+            m_tcpAdapter->sendMessage(h);
+        }, nextMessageTimeout);
+        Hash nextMessage;
+        messageQ->pop(nextMessage);
+        CPPUNIT_ASSERT_EQUAL(std::string("deviceConfigurations"), nextMessage.get<std::string>("type"));
+        CPPUNIT_ASSERT(nextMessage.has("configurations.PropTest_2"));
+    }
+
+    // Changes properties on both test devices and assures that an update message arrives containing the changes
+    // to both devices.
+    {
+        const Hash h_1("type", "reconfigure",
+                       "deviceId",
+                       "PropTest_1",
+                       "configuration", Hash("int32Property", 14));
+        const Hash h_2("type", "reconfigure",
+                       "deviceId",
+                       "PropTest_2",
+                       "configuration", Hash("int32Property", 24));
+
+        // Syncs as close as possible to the next update "pulse" - we'll need that for the next check, which is supposed
+        // to get the two updates in the same cycle.
+        Epochstamp targetTime(propUpdateTime);
+        Epochstamp currentTime;
+        // Duration constructor takes care of overflow of fractions.
+        const TimeDuration duration(0ull,
+                                    propertyUpdateInterval * 1000000000000000ull); // 10^15 => factor from ms. to attosecs.
+        const int tolerance = propertyUpdateInterval / 15;
+        do {
+            targetTime += duration;
+        } while (targetTime < currentTime &&
+                 targetTime.elapsed(currentTime).getFractions(TIME_UNITS::MILLISEC) <= tolerance);
+        boost::this_thread::sleep(boost::posix_time::milliseconds(targetTime.elapsed().getFractions(TIME_UNITS::MILLISEC)));
+
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("deviceConfigurations", 1, [&] {
+            m_tcpAdapter->sendMessage(h_2);
+            m_tcpAdapter->sendMessage(h_1);
+        }, nextMessageTimeout);
+
+        Hash nextMessage;
+        messageQ->pop(nextMessage);
+        CPPUNIT_ASSERT_EQUAL(std::string("deviceConfigurations"), nextMessage.get<std::string>("type"));
+        CPPUNIT_ASSERT(nextMessage.has("configurations"));
+        Hash configs = nextMessage.get<Hash>("configurations");
+        CPPUNIT_ASSERT(configs.has("PropTest_1"));
+        Hash propTest1Config = configs.get<Hash>("PropTest_1");
+        CPPUNIT_ASSERT(propTest1Config.get<int>("int32Property") == 14);
+        CPPUNIT_ASSERT(configs.has("PropTest_2"));
+        Hash propTest2Config = configs.get<Hash>("PropTest_2");
+        CPPUNIT_ASSERT(propTest2Config.get<int>("int32Property") == 24);
+        CPPUNIT_ASSERT(configs.size() == 2u);
+    }
+
+    // "Unsubscribes" for both devices by sending the corresponding 'stopMonitoringDevice' for both devices to the
+    // GUI Server.
+    {
+        const Hash h_1("type", "stopMonitoringDevice",
+                       "deviceId", "PropTest_1");
+        m_tcpAdapter->sendMessage(h_1);
+
+        const Hash h_2("type", "stopMonitoringDevice",
+                       "deviceId", "PropTest_2");
+        m_tcpAdapter->sendMessage(h_2);
+    }
+
+
+    // Changes properties on both test devices and assures that no message 'deviceConfigurations' arrives within the
+    // propertyUpdateInterval.
+    {
+        const Hash h_1("type", "reconfigure",
+                       "deviceId",
+                       "PropTest_1",
+                       "configuration", Hash("int32Property", 16));
+
+        const Hash h_2("type", "reconfigure",
+                       "deviceId",
+                       "PropTest_2",
+                       "configuration", Hash("int32Property", 26));
+
+        CPPUNIT_ASSERT_THROW(
+                             m_tcpAdapter->getNextMessages("deviceConfigurations", 1, [&] {
+                                m_tcpAdapter->sendMessage(h_2);
+                                m_tcpAdapter->sendMessage(h_1);
+                             }, nextMessageTimeout), karabo::util::TimeoutException);
+
+        // Makes sure that the properties have been set.
+        CPPUNIT_ASSERT_EQUAL(16, m_deviceClient->get<int>("PropTest_1", "int32Property"));
+        CPPUNIT_ASSERT_EQUAL(26, m_deviceClient->get<int>("PropTest_2", "int32Property"));
+    }
+
+    // Shuts down both test devices.
+    success = m_deviceClient->killDevice("PropTest_1", KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT(success.first);
+    success = m_deviceClient->killDevice("PropTest_2", KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT(success.first);
+
+    std::clog << "testDeviceConfigUpdates: OK" << std::endl;
 }
