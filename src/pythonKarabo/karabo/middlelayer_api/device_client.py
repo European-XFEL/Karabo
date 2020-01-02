@@ -11,6 +11,7 @@ proxy. """
 import asyncio
 from asyncio import get_event_loop, sleep
 from contextlib import contextmanager
+from copy import copy
 from decimal import Decimal
 from weakref import ref
 
@@ -608,12 +609,12 @@ def getDevices(serverId=None, visibility=3, matchPattern=None):
     :param matchPattern: Optional string pattern, to find deviceId's containing
                          the matchPattern.
     """
-    instance = get_instance()
+    topology = getTopology()
     if serverId is None:
-        ret = [k for k, v, a in instance.systemTopology["device"].iterall()
+        ret = [k for k, v, a in topology["device"].iterall()
                if a["visibility"] <= visibility]
     else:
-        ret = [k for k, v, a in instance.systemTopology["device"].iterall()
+        ret = [k for k, v, a in topology["device"].iterall()
                if a["serverId"] == serverId and a["visibility"] <= visibility]
     if matchPattern is not None:
         ret = [dev for dev in ret if matchPattern.lower() in dev.lower()]
@@ -630,8 +631,11 @@ def getClients():
 
 def getTopology():
     """Return the full topology Hash of the DeviceClient
+
+    NOTE: We provide a copy here as the topology might change while working
+    with it.
     """
-    return get_instance().systemTopology
+    return copy(get_instance().systemTopology)
 
 
 def findServers(matchPattern, visibility=3):
@@ -657,7 +661,8 @@ def getServers(visibility=3, matchPattern=None):
     :param matchPattern: Optional string pattern, to find serverId's containing
                          the matchPattern.
     """
-    ret = [k for k, v, a in get_instance().systemTopology["server"].iterall()
+    topology = getTopology()
+    ret = [k for k, v, a in topology["server"].iterall()
            if a["visibility"] <= visibility]
     if matchPattern is not None:
         ret = [serv for serv in ret if matchPattern.lower() in serv.lower()]
@@ -667,7 +672,7 @@ def getServers(visibility=3, matchPattern=None):
 
 def getClasses(serverId):
     """Return a list of device classes (plugins) available on a server"""
-    servers = get_instance().systemTopology["server"]
+    servers = getTopology()["server"]
     return servers.getAttributes(serverId)["deviceClasses"]
 
 
