@@ -730,7 +730,7 @@ namespace karabo {
                 if (node && !node->getValue<Schema>().empty()) return node->getValue<Schema>();
             }
             // Not found, request and cache it
-            // Request schema                
+            // Request schema
             m_signalSlotable.lock()->requestNoWait(serverId, "slotGetClassSchema", "", "_slotClassSchema", classId);
             return Schema();
         }
@@ -847,12 +847,12 @@ namespace karabo {
                 return configuration;
             } else {
                 Hash cfgToSend("configuration", configuration, "classId", classId);
-                
+
                 if (configuration.has("deviceId")) {
                     const std::string& did = configuration.get<string>("deviceId");
                     cfgToSend.set("deviceId", did);
                     cfgToSend.erase("configuration.deviceId");
-                }    
+                }
                 return cfgToSend;
             }
         }
@@ -1245,18 +1245,30 @@ namespace karabo {
         }
 
 
-        void DeviceClient::registerDeviceMonitor(const std::string& deviceId, const boost::function<void (const std::string& /*deviceId*/, const karabo::util::Hash& /*config*/)> & callbackFunction) {
+        void DeviceClient::registerDeviceMonitor(const std::string& deviceId,
+                                                 const boost::function<void (const std::string& /*deviceId*/, const karabo::util::Hash& /*config*/)> & callbackFunction) {
             // Store handler
             {
                 boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
                 m_deviceChangedHandlers.set(deviceId + "._function", callbackFunction);
             }
 
+            registerDeviceForMonitoring(deviceId);
+        }
+
+
+        void DeviceClient::registerDeviceForMonitoring(const std::string& deviceId) {
             // Take care that we are connected - and asynchronously request to connect if not yet connected
             connectAndRequest(deviceId);
 
             // Take care that we will get updates "forever"
             immortalize(deviceId);
+        }
+
+
+        void DeviceClient::registerDevicesMonitor(const DevicesChangedHandler& devicesChangesHandler) {
+            boost::mutex::scoped_lock lock(m_devicesChangesMutex);
+            m_devicesChangesHandler = devicesChangesHandler;
         }
 
 
@@ -1305,8 +1317,13 @@ namespace karabo {
                 if (m_deviceChangedHandlers.has(instanceId)) m_deviceChangedHandlers.erase(instanceId);
                 // Cache will be cleaned once age() disconnected the device.
             }
+            unregisterDeviceFromMonitoring(instanceId);
+        }
+
+
+        void DeviceClient::unregisterDeviceFromMonitoring(const std::string& deviceId) {
             // TODO: Has to stay a live if a propertyMonitor is still there for this device, see above!
-            mortalize(instanceId);
+            mortalize(deviceId);
         }
 
 
@@ -1505,19 +1522,28 @@ namespace karabo {
                 }
             }
             // NOTE: This will block us here, i.e. we are deaf for other changes...
-            // NOTE: Monitors could be implemented as additional slots or in separate threads, too.
             notifyPropertyChangedMonitors(hash, instanceId);
-            // magic: if the hash contains a change for the expected parameter "doNotCompressElements", we are sending them to the GUI no matter what
-            // Don't mix doNotCompressEvents with unrelated stuff, or causality will break down
-            if (m_runSignalsChangedTimer && !hash.has("doNotCompressEvents")) {
-                boost::mutex::scoped_lock lock(m_signalsChangedMutex);
-                // Just book keep paths here and call 'notifyDeviceChangedMonitors'
-                // later with content from m_runtimeSystemDescription.
-                // Note:
-                // If there is path "a.b" coming, should we erase possible previous changes to daughters like
-                // "a.b.c.d"? No - that should better be handled in merging into m_runtimeSystemDescription above and
-                // then the invalid path "a.b.c.d" should be ignored 'downstream' when sending.
-                hash.getPaths(m_signalsChanged[instanceId]);
+            if (m_runSignalsChangedTimer) {
+                if (hash.has("doNotCompressEvents")) {
+                    // magic: if the hash contains a change for the expected parameter "doNotCompressElements
+                    // we are sending it directly, no throttling.
+                    // Note: Since we updated m_runtimeSystemDescription above, there is no problem if a previous
+                    // time: the next "flushing"  of m_runtimeSystemDescription will send the new value again.
+                    boost::mutex::scoped_lock lock(m_devicesChangesMutex);
+                    if (m_devicesChangesHandler) {
+                        Hash deviceChanges(instanceId, hash);
+                        m_devicesChangesHandler(deviceChanges);
+                    }
+                } else {
+                    boost::mutex::scoped_lock lock(m_signalsChangedMutex);
+                    // Just book keep paths here and call 'notifyDeviceChangedMonitors'
+                    // later with content from m_runtimeSystemDescription.
+                    // Note:
+                    // If there is path "a.b" coming, should we erase possible previous changes to daughters like
+                    // "a.b.c.d"? No - that should better be handled in merging into m_runtimeSystemDescription above and
+                    // then the invalid path "a.b.c.d" should be ignored 'downstream' when sending.
+                    hash.getPaths(m_signalsChanged[instanceId]);
+                }
             } else {
                 // There is a tiny (!) risk here: The last loop of the corresponding thread
                 // might still be running and _later_ call 'notifyDeviceChangedMonitors'
@@ -1782,11 +1808,12 @@ if (nodeData) {\
                     KARABO_LOG_FRAMEWORK_ERROR << "Exception encountered when leaving 'sendSignalsChanged'";
                 }
             }
-            
+
         }
 
 
         void DeviceClient::doSendSignalsChanged(const SignalChangedMap& localChanged) {
+            Hash allUpdates;
             // Iterate on devices (i.e. keys in map)
             for (SignalChangedMap::const_iterator mapIt = localChanged.begin(), mapEnd = localChanged.end();
                  mapIt != mapEnd; ++mapIt) {
@@ -1800,10 +1827,18 @@ if (nodeData) {\
                     continue;
                 }
                 // Now collect all changed properties (including their attributes).
-                util::Hash toSend;
-                toSend.merge(config, Hash::REPLACE_ATTRIBUTES, properties);
-                this->notifyDeviceChangedMonitors(toSend, instanceId);
+                util::Hash &instanceUpdates = allUpdates.bindReference<Hash>(instanceId);
+                instanceUpdates.merge(config, Hash::REPLACE_ATTRIBUTES, properties);
+                this->notifyDeviceChangedMonitors(instanceUpdates, instanceId);
             } // end loop on instances
+
+            // Sends all updates if there's a handler defined.
+            {
+                boost::mutex::scoped_lock(m_devicesChangesMutex);
+                if (m_devicesChangesHandler && !allUpdates.empty()) {
+                    m_devicesChangesHandler(allUpdates);
+                }
+            }
         }
 
 
@@ -1925,7 +1960,7 @@ if (nodeData) {\
          *     SASE1/SPB/SAMP/DATAGEN_07            is a device
          *     SASE1/SPB/SAMP/DATAGEN_07:output     is an output channel
          * @param dataSourceId
-         * @return 
+         * @return
          */
         void DeviceClient::getDataSourceSchemaAsHash(const std::string& dataSourceId, karabo::util::Hash& properties, int accessMode) {
             properties.set(dataSourceId, Hash());
@@ -1997,7 +2032,7 @@ if (nodeData) {\
 
             for (vector<string>::const_iterator it = params.begin(); it != params.end(); ++it) {
                 const string& path = *it;
-                
+
                 // skip all parameters with DAQ policy OMIT
                 if (schemaHash.hasAttribute(path, KARABO_SCHEMA_DAQ_POLICY)) {
                     const DAQPolicy& daqPolicy = static_cast<DAQPolicy>(schemaHash.getAttribute<int>(path, KARABO_SCHEMA_DAQ_POLICY));
@@ -2218,18 +2253,18 @@ if (nodeData) {\
                         hash.setAttribute(path, ii->getKey(), ii->getValueAsAny());
                 }
             }
-            
+
             recursivelyAddCompoundDataTypes(schemaHash, hash);
-            
+
         }
-        
+
         void DeviceClient::recursivelyAddCompoundDataTypes(const karabo::util::Hash& schemaHash, karabo::util::Hash & hash) const {
             for(auto it = hash.begin(); it != hash.end(); ++it) {
                 const std::string& key = it->getKey();
                 if (schemaHash.hasAttribute(key, KARABO_SCHEMA_CLASS_ID)) {
                     const std::string& classId = schemaHash.getAttribute<std::string>(key, KARABO_SCHEMA_CLASS_ID);
                     it->setAttribute(KARABO_SCHEMA_CLASS_ID, classId);
-                    
+
                     // special treatments for compounds below
                     if (classId == karabo::util::NDArray::classInfo().getClassId()){
                         Hash& h= it->getValue<Hash>();
