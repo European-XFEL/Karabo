@@ -1,17 +1,17 @@
 # flake8: noqa
-from karabo.native.time_mixin import TimeMixin, get_timestamp
-from karabo.native.timestamp import Timestamp
-from karabo.native.weak import Weak
+from .time_mixin import TimeMixin, get_timestamp
+from .timestamp import Timestamp
+from .weak import Weak
 
 # Import data namespace
-from karabo.native.data.basetypes import (
+from .data.basetypes import (
     BoolValue, EnumValue, isSet, KaraboValue, NoneValue, QuantityValue,
     StringValue, TableValue, unit_registry as unit, VectorStringValue,
     VectorCharValue, wrap, newest_timestamp, wrap_function)
-from karabo.native.data.enums import (
+from .data.enums import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, DaqDataType,
     DaqPolicy, EncodingType, LeafType, MetricPrefix, NodeType, Unit)
-from karabo.native.data.hash import (
+from .data.hash import (
     Attribute, Bool, ByteArray, Char, ComplexDouble, ComplexFloat, Descriptor,
     Double, Enumable, Float, Hash, HashList,
     HashMergePolicy, HashType, Int16, Int32, Int64, Int8, Integer,
@@ -21,14 +21,15 @@ from karabo.native.data.hash import (
     VectorDouble, VectorFloat, VectorHash, VectorInt16, VectorInt32,
     VectorInt64, VectorInt8, VectorString, VectorUInt16, VectorUInt32,
     VectorUInt64, VectorUInt8)
-from karabo.native.data.ndarray import NDArray
-from karabo.native.data.schema import (
+from .data.ndarray import NDArray
+from .data.schema import (
     Configurable, Node, ChoiceOfNodes, ListOfNodes, Overwrite,
     MetaConfigurable)
-from karabo.native.data.serializers import (
+from .data.serializers import (
     decodeBinary, decodeXML, encodeBinary, encodeXML, loadFromFile, saveToFile,
     writeBinary, writeXML, XMLParser, XMLWriter)
-from karabo.native.exceptions import KaraboError
+from .data.utils import create_html_hash
+from .exceptions import KaraboError
 # Import project namespace
 from karabo.native.project.convert import convert_old_project
 from karabo.native.project.io import (
