@@ -189,30 +189,25 @@ class EditDelegate(QStyledItemDelegate):
         key = proxy.key
         state = self._button_states.get(key, ButtonState.DISABLED)
         allowed = index.flags() & Qt.ItemIsEditable == Qt.ItemIsEditable
-        is_table = isinstance(getattr(proxy, 'binding', None),
-                              VectorHashBinding)
-
-        # NOTE: Tables are very special, they are always clickable!
-        if allowed or is_table:
-            rect = _get_table_button_rect(option)
-            if rect.contains(event.pos()):
-                if event.type() == QEvent.MouseButtonPress:
-                    state = ButtonState.PRESSED
-                elif state == ButtonState.PRESSED:
-                    dialog = TableDialog(proxy, allowed, parent=self.parent())
-                    result = dialog.exec_()
-                    # Only for editable table elements we do actions!
-                    if allowed:
-                        if result == QDialog.Accepted:
-                            # XXX: Note that the dialog is passed as an editor
-                            # Ensure that the dialog has a member called
-                            # `controller` to enable fetching the data of it
-                            self.setModelData(dialog, model, index)
-                        else:
-                            proxy.revert_edit()
-            if (state == ButtonState.PRESSED and
-                    event.type() == QEvent.MouseButtonRelease):
-                state = ButtonState.ENABLED
+        rect = _get_table_button_rect(option)
+        if rect.contains(event.pos()):
+            if event.type() == QEvent.MouseButtonPress:
+                state = ButtonState.PRESSED
+            elif state == ButtonState.PRESSED:
+                dialog = TableDialog(proxy, allowed, parent=self.parent())
+                result = dialog.exec_()
+                # Only for editable table elements we do actions!
+                if allowed:
+                    if result == QDialog.Accepted:
+                        # XXX: Note that the dialog is passed as an editor
+                        # Ensure that the dialog has a member called
+                        # `controller` to enable fetching the data of it
+                        self.setModelData(dialog, model, index)
+                    else:
+                        proxy.revert_edit()
+        if (state == ButtonState.PRESSED and
+                event.type() == QEvent.MouseButtonRelease):
+            state = ButtonState.ENABLED
         self._button_states[key] = state
         return state
 
