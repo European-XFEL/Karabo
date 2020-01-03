@@ -6,17 +6,18 @@
 from enum import Enum
 
 from PyQt5.QtCore import QEvent, QRect, QSize, Qt
-from PyQt5.QtGui import QDoubleValidator, QPalette, QValidator
+from PyQt5.QtGui import QBrush, QColor, QDoubleValidator, QPalette, QValidator
 from PyQt5.QtWidgets import (
     QApplication, QAbstractItemDelegate, QComboBox, QDialog, QHBoxLayout,
     QLineEdit, QStyle, QStyleOptionButton, QStyledItemDelegate, QWidget
 )
 
-from karabo.common.api import KARABO_EDITABLE_ATTRIBUTES
+from karabo.common.api import KARABO_EDITABLE_ATTRIBUTES, State
 from karabo.native import DaqPolicy, MetricPrefix, Unit
 from karabogui.binding.api import (
     IntBinding, PropertyProxy, VectorHashBinding)
 from karabogui.controllers.api import get_compatible_controllers
+from karabogui.indicators import STATE_COLORS
 from .dialog.table_view import TableDialog
 from .utils import (
     ButtonState, handle_default_state, set_fill_rect, FIXED_ROW_HEIGHT)
@@ -162,14 +163,20 @@ class EditDelegate(QStyledItemDelegate):
     # Private interface
 
     def _draw_button(self, painter, option, index, proxy):
-        """Draw a table button
-        """
+        """Draw a table button"""
         key = proxy.key
         state = self._button_states.get(key, ButtonState.DISABLED)
         # always allow table button click!
         button_state = handle_default_state(True, state)
         self._button_states[key] = state
         button = QStyleOptionButton()
+        if proxy.edit_value is not None:
+            palette = QPalette(button.palette)
+            color = QColor(*STATE_COLORS[State.CHANGING])
+            color.setAlpha(128)
+            palette.setBrush(QPalette.Button, QBrush(color))
+            button.palette = palette
+
         button.state = button_state.value
         button.rect = _get_table_button_rect(option)
         button.text = TABLE_BUTTON_TEXT
@@ -184,6 +191,7 @@ class EditDelegate(QStyledItemDelegate):
         allowed = index.flags() & Qt.ItemIsEditable == Qt.ItemIsEditable
         is_table = isinstance(getattr(proxy, 'binding', None),
                               VectorHashBinding)
+
         # NOTE: Tables are very special, they are always clickable!
         if allowed or is_table:
             rect = _get_table_button_rect(option)
@@ -194,7 +202,6 @@ class EditDelegate(QStyledItemDelegate):
                     dialog = TableDialog(proxy, allowed, parent=self.parent())
                     result = dialog.exec_()
                     # Only for editable table elements we do actions!
-                    # TODO: Find a better solution!
                     if allowed:
                         if result == QDialog.Accepted:
                             # XXX: Note that the dialog is passed as an editor
