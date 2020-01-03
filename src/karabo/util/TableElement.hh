@@ -303,40 +303,7 @@ namespace karabo {
 
         protected:
 
-            void beforeAddition() {
-
-                this->m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LEAF);
-                this->m_node->setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, karabo::util::Schema::PROPERTY);
-                this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Table");
-                this->m_node->setAttribute(KARABO_SCHEMA_VALUE_TYPE, "VECTOR_HASH");
-                this->m_node->setAttribute(KARABO_SCHEMA_ROW_SCHEMA, m_nodeSchema);
-
-
-                if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->init(); // This is the default
-
-                if (!this->m_node->hasAttribute(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL)) {
-
-                    //for init, reconfigurable elements - set default value of requiredAccessLevel to USER
-                    if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE) || //init element
-                        this->m_node->getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == INIT || //init element
-                        this->m_node->getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE) { //reconfigurable element
-
-                        this->userAccess();
-
-                    } else { //else set default value of requiredAccessLevel to OBSERVER
-                        this->observerAccess();
-                    }
-                }
-
-                //finally protect setting options etc to table element via overwrite
-                OverwriteElement::Restrictions restrictions;
-                restrictions.options = true;
-                restrictions.minInc = true;
-                restrictions.minExc = true;
-                restrictions.maxInc = true;
-                restrictions.maxExc = true;
-                m_node->setAttribute(KARABO_OVERWRITE_RESTRICTIONS, restrictions.toVectorAttribute());
-            }
+            void beforeAddition();
         };
 
         typedef util::TableElement TABLE_ELEMENT;
