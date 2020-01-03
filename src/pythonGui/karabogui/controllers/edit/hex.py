@@ -12,30 +12,29 @@ from karabo.common.scenemodel.api import HexadecimalModel
 from karabogui.binding.api import IntBinding, get_editor_value, get_min_max
 from karabogui.const import WIDGET_MIN_HEIGHT
 from karabogui.controllers.api import (
-    BaseBindingController, add_unit_label, register_binding_controller)
+    add_unit_label, BaseBindingController, is_proxy_allowed,
+    register_binding_controller)
 from karabogui.util import SignalBlocker
 
 
 @register_binding_controller(ui_name='Hexadecimal', can_edit=True,
                              klassname='Hexadecimal', binding_type=IntBinding)
 class Hexadecimal(BaseBindingController):
-    # The scene model class used by this controller
     model = Instance(HexadecimalModel, args=())
-    # Internal traits
+
     _internal_widget = Instance(QLineEdit)
 
     def create_widget(self, parent):
         self._internal_widget = QLineEdit(parent)
         self._internal_widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
-        return add_unit_label(self.proxy, self._internal_widget, parent=parent)
+        self._internal_widget.setFocusPolicy(Qt.StrongFocus)
+        self._internal_widget.textChanged.connect(self._on_user_edit)
 
-    def set_read_only(self, ro):
-        self._internal_widget.setReadOnly(ro)
-        if not ro:
-            self._internal_widget.textChanged.connect(self._on_user_edit)
+        widget = add_unit_label(self.proxy, self._internal_widget,
+                                parent=parent)
+        widget.setFocusProxy(self._internal_widget)
 
-        focus_policy = Qt.NoFocus if ro else Qt.StrongFocus
-        self._internal_widget.setFocusPolicy(focus_policy)
+        return widget
 
     def binding_update(self, proxy):
         low, high = get_min_max(proxy.binding)
@@ -53,7 +52,10 @@ class Hexadecimal(BaseBindingController):
             with SignalBlocker(self._internal_widget):
                 self._internal_widget.setText("{:x}".format(value))
 
-    # @pyqtSlot(str)
+    def state_update(self, proxy):
+        enable = is_proxy_allowed(proxy)
+        self._internal_widget.setEnabled(enable)
+
     def _on_user_edit(self, text):
         if self.proxy.binding is None:
             return
