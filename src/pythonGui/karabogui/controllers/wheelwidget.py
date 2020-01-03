@@ -1,8 +1,20 @@
+#############################################################################
+##
+# This file is part of Karabo (http://karabo.eu)
+##
+# Copyright European XFEL, Schenefeld, Germany
+##
+## This file was largely inspired by ``Taurus`` (http://taurus-scada.org)
+#
+#############################################################################
+
 import math
 
+import numpy as np
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QRect, QSize
 from PyQt5.QtWidgets import (
-    QButtonGroup, QGridLayout, QLabel, QLineEdit, QPushButton, QSizePolicy)
+    QAbstractButton, QButtonGroup, QGridLayout, QLabel, QLineEdit, QPushButton,
+    QSizePolicy)
 
 from karabogui import icons
 from karabogui.controllers.validators import NumberValidator
@@ -29,10 +41,10 @@ class WheelButton(QPushButton):
         super(WheelButton, self).__init__(parent)
         if orientation == Orientation.UP:
             self.increment = math.pow(10, identifier)
-            self.setIcon(icons.arrowWheelUp)
+            self.setIcon(icons.arrowFancyUp)
         elif orientation == Orientation.DOWN:
             self.increment = -math.pow(10, identifier)
-            self.setIcon(icons.arrowWheelDown)
+            self.setIcon(icons.arrowFancyDown)
         self.setIconSize(QSize(ICON_SIZE, ICON_SIZE))
         self.setFocusPolicy(Qt.ClickFocus)
         self.setStyleSheet(
@@ -262,7 +274,7 @@ class DoubleWheelEdit(QLabel):
         self.decimals = decimals if decimals is not None else self.decimals
 
         # make sure that the current value can be displayed
-        self.integers = max(self.integers, len("%d" % self.value))
+        self.integers = max(self.integers, len('%d' % self.value))
 
         self.number_count = self.integers + self.decimals
 
@@ -306,18 +318,21 @@ class DoubleWheelEdit(QLabel):
             ret = ret.replace('0', ' ')
         self.string_value = ret
 
-        return ret
-
     def _set_frame_value(self):
-        """Update internally the displayed value of the widget"""
+        """Update internally the displayed value of the widget
+
+        This method will set the string value in the digit frames and can
+        evaluate if the value can be represented. If this is not the case,
+        the widget gets adjusted.
+        """
         value, string_value = self.value, self.string_value
 
+        # NOTE: We evaluate if we can represent the integers
+        # If we cannot, we have to update the widget!
         if len(string_value) > len(self.digit_frames):
-            # NOTE: We evaluate if we can represent the integers
-            # If we cannot, we have to update the widget!
             integers = len(string_value.split('.')[0])
             self._set_digit_format(integers=integers)
-            string_value = self._create_string_from_format(value)
+            self._create_string_from_format(value)
             self.configurationChanged.emit(integers)
             self._rebuild_wheelwidget()
 
@@ -344,16 +359,16 @@ class DoubleWheelEdit(QLabel):
         value = float(self.editor_widget.text())
         self.valueChanged.emit(value)
 
-    # @pyqtSlot(int)
+    @pyqtSlot(QAbstractButton)
     def buttonPressed(self, button):
         """Executed when an arrow button is pressed from the button group"""
-        value = self.value + button.increment
+        num_value = np.nan_to_num(self.value)
+        # XXX: Make sure we remove NaN value here
+        value = num_value + button.increment
         # Recast to the format we have and validate against the minimum and
         # maximum of the widget before sending!
         value = float(self.value_format % value)
-        if self.total_minimum is not None and self.total_minimum > value:
-            return
-        elif self.total_maximum is not None and self.total_maximum < value:
+        if self.total_minimum > value or self.total_maximum < value:
             return
 
         self.valueChanged.emit(value)
@@ -376,36 +391,26 @@ class DoubleWheelEdit(QLabel):
         self._rebuild_wheelwidget()
         self._set_frame_value()
 
-    def set_value(self, value):
+    def set_value(self, value, external=False):
         """Sets value of this widget and calculate the string value!
 
         If the value exceeds the value limit, the value is NOT set.
         """
         if value is None:
             return
+
+        # Depending on where we receive the value, we have to validate
+        # differently. An external applied value is validated against our
+        # total boundaries, as the widget can adjust. An internal value
+        # is only validated against the current value extrema, as it should
+        # not exceed the limits.
+        value_min = self.total_minimum if external else self._value_minimum
+        value_max = self.total_maximum if external else self._value_maximum
+
         # NOTE: We again check here the value maximum and minimum
-        elif self._value_minimum is not None and self._value_minimum > value:
+        if value_min is not None and value_min > value:
             return
-        elif self._value_maximum is not None and self._value_maximum < value:
-            return
-
-        self.value = value
-        self._create_string_from_format(value)
-        self._set_frame_value()
-
-    def set_value_widget(self, value):
-        """Sets the value of this widget and calculate the string value!
-
-        This is an external value and hence we have to validate if this widget
-        is capable with the total maximum and minimum.
-        """
-        if value is None:
-            # This widget cannot show None!
-            return
-
-        elif self.total_minimum is not None and self.total_minimum > value:
-            return
-        elif self.total_maximum is not None and self.total_maximum < value:
+        elif value_max is not None and value_max < value:
             return
 
         self.value = value
