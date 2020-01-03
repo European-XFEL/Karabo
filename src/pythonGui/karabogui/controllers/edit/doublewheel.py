@@ -74,7 +74,7 @@ class EditableWheelBox(BaseBindingController):
             return
         self.proxy.edit_value = value
         with SignalBlocker(self._internal_widget):
-            self._internal_widget.set_value_widget(value)
+            self._internal_widget.set_value(value, external=True)
 
     def state_update(self, proxy):
         enable = is_proxy_allowed(proxy)
@@ -88,14 +88,14 @@ class EditableWheelBox(BaseBindingController):
         """The configuration of the wheel widget changed. Model update!"""
         self.model.integers = value
 
-    def _pick_decimals(self, checked):
+    def _pick_decimals(self):
         num_decimals, ok = QInputDialog.getInt(
             self.widget, 'Decimal', 'Floating point precision:',
             self.model.decimals, 0, MAX_FLOATING_PRECISION)
         if ok:
             self.model.decimals = num_decimals
 
-    def _pick_integers(self, checked):
+    def _pick_integers(self):
         num_integers, ok = QInputDialog.getInt(
             self.widget, 'Integers', 'Integers:',
             self.model.integers, 1, MAX_INTEGERS_PRECISION)
