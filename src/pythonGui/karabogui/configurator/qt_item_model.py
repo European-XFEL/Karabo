@@ -123,8 +123,9 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
         if proxy.binding is not None:
             proxy.revert_edit()
-            # XXX: layoutChanged to be investigated
-            # self.layoutChanged.emit()
+            # XXX: Announce the data update for the edit value, as there is no
+            # external triggered update!
+            self.dataChanged.emit(index, index)
             self._notify_of_modifications()
 
     def flush_index_modification(self, index):
