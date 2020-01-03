@@ -103,15 +103,10 @@ class AxisItem(PgAxisItem):
 
 
 class TimeAxisItem(AxisItem):
-
-    def __init__(self, *args, **kwargs):
-        super(TimeAxisItem, self).__init__(*args, **kwargs)
-        self.format_string = "%Ss"
+    format_string = "%Ss"
 
     def setRange(self, min_range, max_range):
         """Set the range and decide which format string we should use"""
-        super(TimeAxisItem, self).setRange(min_range, max_range)
-
         first = datetime.utcfromtimestamp(min_range)
         last = datetime.utcfromtimestamp(max_range)
         diff = (last - first).total_seconds()
@@ -130,6 +125,7 @@ class TimeAxisItem(AxisItem):
             datetime_format = "%d %b %Y"
 
         self.format_string = datetime_format
+        super(TimeAxisItem, self).setRange(min_range, max_range)
 
     def tickStrings(self, values, scale, spacing):
         values = [datetime.fromtimestamp(value).strftime(self.format_string)
