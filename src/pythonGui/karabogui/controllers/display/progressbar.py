@@ -99,8 +99,7 @@ class DisplayProgressBar(BaseBindingController):
         else:
             _set_limits(0, PROGRESS_MAX)
 
-    # @pyqtSlot()
-    def _orientation_action(self, checked):
+    def _orientation_action(self):
         self._set_orientation(not self.model.is_vertical)
 
     def _set_orientation(self, is_vertical):
