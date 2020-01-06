@@ -272,9 +272,10 @@ namespace karabo {
 
                 STRING_ELEMENT(expected).key("hostName")
                         .displayedName("Host")
-                        .description("The name of the host where this device runs")
+                        .description("Do not set this property, it will be set by the device-server.")
                         .expertAccess()
-                        .readOnly()
+                        .assignmentOptional().noDefaultValue()
+                        .init()
                         .commit();
 
                 INT32_ELEMENT(expected).key("pid")
@@ -451,7 +452,6 @@ namespace karabo {
                 // This is a hack until a better solution is found
                 // Will remove a potential JmsConnection::Pointer instance from the m_parameters
                 m_parameters.set("_connection_", karabo::util::Hash());
-                m_parameters.set("hostName", net::bareHostName());
 
                 m_timeId = 0;
                 m_timeSec = 0;
@@ -1507,7 +1507,10 @@ namespace karabo {
                     m_parameters.set("serverId", m_serverId);
                     // ProcessId
                     m_parameters.set("pid", ::getpid());
-
+                    // Set hostname if missing
+                    if (!m_parameters.has("hostName")) {
+                        m_parameters.set("hostName", net::bareHostName());
+                    }
                     // The following lines of code are needed to initially inject timestamps to the parameters
                     karabo::util::Hash validated;
                     std::pair<bool, std::string> result = m_validatorIntern.validate(m_fullSchema, m_parameters, validated, getActualTimestamp());
@@ -1529,7 +1532,7 @@ namespace karabo {
                 instanceInfo.set("serverId", m_serverId);
                 instanceInfo.set("visibility", this->get<int >("visibility"));
                 instanceInfo.set("compatibility", classInfo().getVersion());
-                instanceInfo.set("host", net::bareHostName());
+                instanceInfo.set("host", this->get<std::string>("hostName"));
                 instanceInfo.set("status", "ok");
                 instanceInfo.set("archive", this->get<bool>("archive"));
 
