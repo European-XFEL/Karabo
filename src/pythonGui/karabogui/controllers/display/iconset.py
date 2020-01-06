@@ -106,16 +106,14 @@ class DisplayIconset(BaseBindingController):
         elif self.model.image == '':
             self.model.image = DEFAULT_ICON_URL
 
-    # @pyqtSlot()
-    def _change_iconset_file(self, checked):
+    def _change_iconset_file(self):
         fn = getOpenFileName(parent=self.widget,
                              caption='Open Iconset',
                              filter='*.svg')
         if fn:
             self.model.image = 'file://' + urllib.request.pathname2url(fn)
 
-    # @pyqtSlot()
-    def _change_iconset_url(self, checked):
+    def _change_iconset_url(self):
         url = self.model.image
         url, ok = QInputDialog.getText(self.widget, 'Set URL',
                                        'New iconset URL:', text=url)

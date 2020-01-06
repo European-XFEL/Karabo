@@ -126,8 +126,7 @@ class DisplayDeviceSceneLink(BaseBindingController):
         widget.addAction(text_action)
         return widget
 
-    # @pyqtSlot()
-    def _select_scene(self, checked):
+    def _select_scene(self):
         if get_binding_value(self.proxy) is None:
             return
         dialog = DeviceSceneLinkDialog(
@@ -136,8 +135,7 @@ class DisplayDeviceSceneLink(BaseBindingController):
             return
         self.widget.set_link_model(dialog.link_model)
 
-    # @pyqtSlot()
-    def _edit_text(self, checked):
+    def _edit_text(self):
         if get_binding_value(self.proxy) is None:
             return
         dialog = TextDialog(self.model, parent=self.widget)

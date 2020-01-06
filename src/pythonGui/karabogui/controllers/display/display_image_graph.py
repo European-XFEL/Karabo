@@ -54,7 +54,6 @@ class DisplayImageGraph(BaseBindingController):
     # -----------------------------------------------------------------------
     # Qt Slots
 
-    # @pyqtSlot()
     def show_timestamp_tooltip(self):
         image_node = self.proxy.value
         if image_node is None:
@@ -64,7 +63,6 @@ class DisplayImageGraph(BaseBindingController):
         self.widget.setToolTip("{} --- Last image received {:.3f} s "
                                "ago".format(self.proxy.key, diff))
 
-    # @pyqtSlot(object)
     def _change_model(self, content):
         self.model.trait_set(**restore_graph_config(content))
 

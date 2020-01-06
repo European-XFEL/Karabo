@@ -42,8 +42,7 @@ class _BaseIcons(BaseBindingController):
                 get_binding_value(self.proxy) is not None):
             self.value_update(self.proxy)
 
-    # @pyqtSlot()
-    def _on_change_icons(self, checked):
+    def _on_change_icons(self):
         binding = self.proxy.binding
         dialog = self.dialog_klass(self.model.values, binding,
                                    parent=self.widget)
