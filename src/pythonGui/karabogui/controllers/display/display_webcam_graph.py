@@ -42,7 +42,6 @@ class DisplayWebCamGraph(BaseBindingController):
     # -----------------------------------------------------------------------
     # Qt Slots
 
-    # @pyqtSlot(object)
     def _change_model(self, content):
         self.model.trait_set(**content)
 

@@ -79,7 +79,6 @@ class StatefulIconWidget(BaseBindingController):
         iconlist.setModel(model)
 
         # double clicking an entry will select it and close the dialog
-        # @pyqtSlot(int)
         def handleDoubleClick(index):
             self._icon = index.data(Qt.UserRole + 1)
             dialog.close()

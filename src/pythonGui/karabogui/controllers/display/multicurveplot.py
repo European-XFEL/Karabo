@@ -113,7 +113,6 @@ class MultiCurvePlot(BaseBindingController):
     # -------------------------------------------------------------------
     # private functions
 
-    # @pyqtSlot()
     def _reset_plot(self, reset=True):
         """clear the plot"""
         if not reset:

@@ -72,12 +72,10 @@ class DisplayHistGraph(BaseBindingController):
     # ----------------------------------------------------------------
     # Qt Slots
 
-    # @pyqtSlot(object)
     def _change_model(self, content):
         self.model.trait_set(**content)
 
-    # @pyqtSlot()
-    def configure_histogram(self, checked):
+    def configure_histogram(self):
         content, ok = HistogramDialog.get(build_model_config(self.model),
                                           parent=self.widget)
         if ok:

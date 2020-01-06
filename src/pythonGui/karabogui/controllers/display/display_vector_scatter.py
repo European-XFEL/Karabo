@@ -77,12 +77,10 @@ class DisplayVectorScatterGraph(BaseBindingController):
     # ----------------------------------------------------------------
     # Qt Slots
 
-    # @pyqtSlot(object)
     def _change_model(self, content):
         self.model.trait_set(**content)
 
-    # @pyqtSlot()
-    def _configure_point_size(self, checked):
+    def _configure_point_size(self):
         psize, ok = QInputDialog.getDouble(self.widget, 'Size of points',
                                            'Pointsize:', self.model.psize,
                                            MIN_POINT_SIZE, MAX_POINT_SIZE)
