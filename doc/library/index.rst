@@ -15,6 +15,7 @@ bindings, the native Python package and the pyQt-based GUI.
    testing
    dataLogger
    guiServer
+   alarmService
    gui_widget_development
    gui_scene_development
    policies
