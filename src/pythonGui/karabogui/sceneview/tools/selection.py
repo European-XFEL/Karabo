@@ -187,7 +187,8 @@ class SceneSelectionTool(BaseSceneTool):
         """Handles mouse moves when a scene object is being moved.
         """
         mouse_pos = event.pos()
-        if mouse_pos.x() < 0 or mouse_pos.y() < 0:
+        og = scene_view.geometry()
+        if not og.contains(mouse_pos):
             return
         trans = mouse_pos - self._moving_pos
         self._moving_pos = mouse_pos
