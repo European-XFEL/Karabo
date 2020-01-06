@@ -71,7 +71,6 @@ class DisplayCommand(BaseBindingController):
         """
         self._actions.clear()
 
-    # @pyqtSlot()
     def _requires_confirmation_slot(self):
         self.model.requires_confirmation = not self.model.requires_confirmation
         self._change_button_style(self.widget)
