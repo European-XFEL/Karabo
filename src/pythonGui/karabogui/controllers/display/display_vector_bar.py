@@ -53,12 +53,10 @@ class DisplayBarGraph(BaseBindingController):
     # ----------------------------------------------------------------
     # Qt Slots
 
-    # @pyqtSlot(object)
     def _change_model(self, content):
         self.model.trait_set(**content)
 
-    # @pyqtSlot()
-    def configure_bar_width(self, checked):
+    def configure_bar_width(self):
         bar_width, ok = QInputDialog.getDouble(
             self.widget, 'Bar Width', 'Bar Width:',
             self.model.bar_width, 0.1, MAX_WIDTH)

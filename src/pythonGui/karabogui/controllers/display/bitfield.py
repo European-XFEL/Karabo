@@ -9,7 +9,7 @@ from karabogui.binding.api import (
     UnsignedIntBinding, get_editor_value
 )
 from karabogui.controllers.api import (
-    BaseBindingController, add_unit_label, register_binding_controller)
+    add_unit_label, BaseBindingController, register_binding_controller)
 
 
 class BitfieldWidget(QWidget):
@@ -52,7 +52,6 @@ class BitfieldWidget(QWidget):
 @register_binding_controller(ui_name='Bit Field', klassname='Bitfield',
                              binding_type=UnsignedIntBinding, can_edit=True)
 class Bitfield(BaseBindingController):
-    # The scene data model class for this controller
     model = Instance(BitfieldModel, args=())
     # Internal traits
     _internal_widget = Instance(BitfieldWidget)
@@ -80,7 +79,6 @@ class Bitfield(BaseBindingController):
         self.widget.update_label(proxy)
         self.widget.update()
 
-    # @pyqtSlot(int)
     def _on_user_edit(self, value):
         if self.proxy.binding is None:
             return

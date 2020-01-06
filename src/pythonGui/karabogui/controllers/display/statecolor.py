@@ -62,6 +62,5 @@ class DisplayStateColor(BaseBindingController):
                 # Only clear the widget once if no action is set!
                 self.widget.clear()
 
-    # @pyqtSlot()
-    def _show_state_string(self, checked):
+    def _show_state_string(self):
         self.model.show_string = not self.model.show_string
