@@ -55,6 +55,15 @@ namespace karabo {
                     .assignmentOptional().noDefaultValue()
                     .commit();
 
+            STRING_ELEMENT(expected).key("hostName")
+                    .displayedName("Forced Hostname")
+                    .description("The hostname can be optionally forced to a specific "\
+                                 "string. The host's definition will be used if not specified.")
+                    .assignmentOptional().noDefaultValue()
+                    .expertAccess()
+                    .init()
+                    .commit();
+   
             INT32_ELEMENT(expected).key("visibility")
                     .displayedName("Visibility")
                     .description("Configures who is allowed to see this server at all")
@@ -158,6 +167,13 @@ namespace karabo {
             // What is the TimeServer ID
             config.get("timeServerId", m_timeServerId);
 
+            // if a hostname ought to be forced
+            if (config.has("hostName")) {
+                config.get("hostName", m_hostname);
+            } else {
+                m_hostname = net::bareHostName();
+            }
+
             m_connection = Configurator<JmsConnection>::createNode("connection", config);
             m_connection->connect();
 
@@ -169,7 +185,7 @@ namespace karabo {
             instanceInfo.set("type", "server");
             instanceInfo.set("serverId", m_serverId);
             instanceInfo.set("version", karabo::util::Version::getVersion());
-            instanceInfo.set("host", net::bareHostName());
+            instanceInfo.set("host", m_hostname);
             instanceInfo.set("visibility", m_visibility);
 
             // Initialize SignalSlotable instance
@@ -180,7 +196,7 @@ namespace karabo {
 
 
         std::string DeviceServer::generateDefaultServerId() const {
-            return net::bareHostName() += "/" + util::toString(getpid());
+            return m_hostname + "/" + util::toString(getpid());
         }
 
 
@@ -241,7 +257,7 @@ namespace karabo {
             startFsm();
 
             KARABO_LOG_INFO << "Starting Karabo DeviceServer (pid: " << ::getpid()
-                    << ") on host: " << net::bareHostName()
+                    << ") on host: " << m_hostname
                     << ", serverId: " << m_serverId
                     << ", Broker: " << m_connection->getBrokerUrl();
 
@@ -520,7 +536,6 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_INFO << "Trying to start a '" << classId
                     << "' with deviceId '" << deviceId << "'...";
             KARABO_LOG_FRAMEWORK_DEBUG << "...with the following configuration:\n" << configuration;
-
             instantiate(deviceId, classId, idClassIdConfig.get<2>(), reply);
         }
 
@@ -550,6 +565,9 @@ namespace karabo {
                 // Inject connection
                 config.set("_connection_", m_connection);
 
+                // Inject Hostname
+                config.set("hostName", m_hostname);
+
                 return boost::make_tuple(config.get<std::string>("_deviceId_"), classId, config);
             } else {
                 // Old style, e.g. used for auto started devices
@@ -571,6 +589,9 @@ namespace karabo {
 
                 // Inject connection
                 tmp.set("_connection_", m_connection);
+
+                // Inject Hostname
+                tmp.set("hostName", m_hostname);
 
                 const std::pair<std::string, util::Hash>& idCfg
                         = util::confTools::splitIntoClassIdAndConfiguration(modifiedConfig);
