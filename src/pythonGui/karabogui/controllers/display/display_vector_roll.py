@@ -83,7 +83,7 @@ class DisplayVectorRollGraph(BaseBindingController):
     def _change_model(self, content):
         self.model.trait_set(**restore_graph_config(content))
 
-    def _configure_maxlen(self, checked):
+    def _configure_maxlen(self):
         maxlen, ok = QInputDialog.getInt(self.widget, 'Vector Stack',
                                          'Maxlen:', self.model.maxlen, 5,
                                          MAX_NUM_VECTORS)

@@ -43,8 +43,7 @@ class SingleBit(BaseBindingController):
         widget = add_unit_label(self.proxy, self._internal_widget,
                                 parent=parent)
 
-        # @pyqtSlot()
-        def _flip_invert(checked):
+        def _flip_invert():
             self.model.invert = not self.model.invert
 
         logicAction = QAction('Invert color logic', widget)
@@ -73,8 +72,7 @@ class SingleBit(BaseBindingController):
     def _model_update(self):
         self.value_update(self.proxy)
 
-    # @pyqtSlot()
-    def _on_change_bit(self, checked):
+    def _on_change_bit(self):
         binding = self.proxy.binding
         if binding is None:
             return
