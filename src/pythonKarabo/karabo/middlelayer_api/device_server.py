@@ -51,6 +51,13 @@ class DeviceServerBase(SignalSlotable):
                     "device-server instance in the distributed system",
         assignment=Assignment.OPTIONAL)
 
+    hostName = String(
+        displayedName="Forced Hostname",
+        description="The hostname can be optionally forced to a specific "
+        "string. The host's definition will be used if not specified.",
+        assignment=Assignment.OPTIONAL,
+        requiredAccessLevel=AccessLevel.EXPERT)
+
     visibility = Int32(
         enum=AccessLevel, displayedName="Visibility",
         description="Configures who is allowed to see this server at all",
@@ -103,10 +110,11 @@ class DeviceServerBase(SignalSlotable):
 
     def __init__(self, configuration):
         super().__init__(configuration)
-        self.hostname, _, self.domainname = socket.gethostname().partition('.')
         self.needScanPlugins = True
         if not isSet(self.serverId):
             self.serverId = self._generateDefaultServerId()
+        if not isSet(self.hostName):
+            self.hostName = socket.gethostname().partition('.')[0]
 
         self.pluginLoader = PluginLoader(
             Hash("pluginDirectory", self.pluginDirectory))
@@ -126,7 +134,7 @@ class DeviceServerBase(SignalSlotable):
         info["serverId"] = self.serverId
         info["version"] = self.__class__.__version__
         info["karaboVersion"] = get_karabo_version()
-        info["host"] = self.hostname
+        info["host"] = self.hostName
         info["visibility"] = self.visibility.value
         info.merge(self.deviceClassesHash())
         return info
@@ -142,12 +150,12 @@ class DeviceServerBase(SignalSlotable):
         self.updateInstanceInfo(self.deviceClassesHash())
 
         self.logger.info("Starting Karabo DeviceServer on host: %s",
-                         self.hostname)
+                         self.hostName)
         sys.stdout = KaraboStream(sys.stdout)
         sys.stderr = KaraboStream(sys.stderr)
 
     def _generateDefaultServerId(self):
-        return self.hostname + "_Server_" + str(os.getpid())
+        return self.hostName + "_Server_" + str(os.getpid())
 
     @coroutine
     def scanPluginsLoop(self):
@@ -198,6 +206,9 @@ class DeviceServerBase(SignalSlotable):
 
         # Inject serverId (drop the timestamp)
         config['_serverId_'] = self.serverId.value
+
+        # Inject hostname (drop the timestamp)
+        config['hostName'] = self.hostName.value
 
         # Inject deviceId
         if 'deviceId' in hash and hash['deviceId']:
