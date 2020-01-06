@@ -82,6 +82,7 @@ namespace karabo {
             mutable boost::mutex m_timeChangeMutex;
             unsigned long long m_timeIdLastTick; // only for onTimeTick, no need for mutex protection
             boost::asio::deadline_timer m_timeTickerTimer;
+            std::string m_hostname;
 
         public:
 
