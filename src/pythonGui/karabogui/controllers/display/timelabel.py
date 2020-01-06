@@ -66,8 +66,7 @@ class DisplayTimeLabel(BaseBindingController):
             stamp = "NaN"
         self.widget.setText(stamp)
 
-    # @pyqtSlot()
-    def _change_time_format(self, checked):
+    def _change_time_format(self):
         # NOTE: No extra protection required, as we do not allow altering
         # models for offline devices without binding
         text, ok = QInputDialog.getText(
