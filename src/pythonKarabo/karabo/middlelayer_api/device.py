@@ -74,9 +74,10 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
 
     hostName = String(
         displayedName="Host",
-        description="The name of the host where this device runs",
+        description="Do not set this property, it will be set by the "
+                    "device-server",
         requiredAccessLevel=AccessLevel.EXPERT,
-        accessMode=AccessMode.READONLY,
+        assignment=Assignment.INTERNAL, accessMode=AccessMode.INITONLY,
         daqPolicy=DaqPolicy.OMIT)
 
     pid = Int32(
@@ -146,8 +147,9 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
         super(Device, self).__init__(configuration)
         if not isSet(self.serverId):
             self.serverId = self._serverId_
+        if not isSet(self.hostName):
+            self.hostName = socket.gethostname().partition('.')[0]
 
-        self.hostName, _, self.domainname = socket.gethostname().partition('.')
         self.classId = type(self).__name__
         self.classVersion = type(self).__version__
         self.pid = os.getpid()
