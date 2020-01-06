@@ -63,7 +63,8 @@ updated alarms data to all the connected GUI clients. After this initial alarm s
 any changes in alarming conditions of devices instantiated in the topic will be updated
 by ``GuiServer::slotAlarmSignalsUpdate``.
 
-
+    Further information about the Alarm Service can be found at **Karabo** > **Outdated Concepts** > **Alarm System**.
+    The pieces of information in that page that are not outdated will be merged soon into this page.
 
 
 
