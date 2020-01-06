@@ -83,8 +83,7 @@ class Evaluator(BaseBindingController):
             disp_value = traceback.format_exception_only(type(e), e)[0]
         self._internal_widget.setText(disp_value)
 
-    # @pyqtSlot()
-    def _change_expression(self, checked):
+    def _change_expression(self):
         text, ok = QInputDialog.getText(self.widget, 'Enter Expression',
                                         'f(x) = ', text=self.model.expression)
         if not ok:

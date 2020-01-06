@@ -66,7 +66,6 @@ class PopUp(BaseBindingController):
             self._timestamp = timestamp
             self._dialog.setVisible(value != '')
 
-    # @pyqtSlot(object)
     def _on_finished(self, result):
         if result == QMessageBox.Ok and self._ok is not None:
             self._ok.execute()
