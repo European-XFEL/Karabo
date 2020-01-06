@@ -66,12 +66,17 @@ USING_KARABO_NAMESPACES
     void LockTestDevice::lockAndWait_impl(const karabo::xms::SignalSlotable::AsyncReply& aReply) {
         const std::string deviceId = get<std::string>("controlledDevice");
 
-        Lock lk = remote().lock(deviceId, false, 0);
-        for (int i = 0; i < 5; ++i) {
-            if (lk.valid()) {
-                remote().set(deviceId, "intProperty", i);
-                boost::this_thread::sleep(boost::posix_time::milliseconds(200));
+        try {
+            Lock lk = remote().lock(deviceId, false, 0);
+            for (int i = 0; i < 5; ++i) {
+                if (lk.valid()) {
+                    remote().set(deviceId, "intProperty", i);
+                    boost::this_thread::sleep(boost::posix_time::milliseconds(200));
+                }
             }
+        } catch (const std::exception& e) {
+            aReply.error(e.what());
+            return;
         }
         aReply();
     }
@@ -88,12 +93,17 @@ USING_KARABO_NAMESPACES
     void LockTestDevice::lockAndWaitLong_impl(const karabo::xms::SignalSlotable::AsyncReply& aReply) {
         const std::string deviceId = get<std::string>("controlledDevice");
 
-        Lock lk = remote().lock(deviceId, false, 0);
-        for (int i = 0; i < 5; ++i) {
-            if (lk.valid()) {
-                remote().set(deviceId, "intProperty", i);
-                boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
+        try {
+            Lock lk = remote().lock(deviceId, false, 0);
+            for (int i = 0; i < 5; ++i) {
+                if (lk.valid()) {
+                    remote().set(deviceId, "intProperty", i);
+                    boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
+                }
             }
+        } catch (const std::exception& e) {
+            aReply.error(e.what());
+            return;
         }
         aReply();
     }
@@ -109,7 +119,14 @@ USING_KARABO_NAMESPACES
 
 
     void LockTestDevice::lockAndWaitTimeout_impl(const karabo::xms::SignalSlotable::AsyncReply& aReply) {
-        Lock lk = remote().lock(get<std::string>("controlledDevice"), false, 1);
+
+        try {
+            Lock lk = remote().lock(get<std::string>("controlledDevice"), false, 1);
+        } catch (const std::exception& e) {
+            // karabo::util::LockException is likely...
+            aReply.error(e.what());
+            return;
+        }
         aReply();
     }
 
@@ -126,15 +143,20 @@ USING_KARABO_NAMESPACES
     void LockTestDevice::lockAndWaitRecursive_impl(const karabo::xms::SignalSlotable::AsyncReply& aReply) {
         const std::string deviceId = get<std::string>("controlledDevice");
 
-        Lock lk = remote().lock(deviceId, true, 5);
-        for (int i = 0; i < 5; ++i) {
-            Lock lk = remote().lock(deviceId, true, 0);
-            remote().set(deviceId, "intProperty", i);
-            boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+        try {
+            Lock lk = remote().lock(deviceId, true, 5);
+            for (int i = 0; i < 5; ++i) {
+                Lock lk = remote().lock(deviceId, true, 0);
+                remote().set(deviceId, "intProperty", i);
+                boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+            }
+        } catch (const std::exception& e) {
+            // karabo::util::LockException is likely...
+            aReply.error(e.what());
+            return;
         }
         aReply();
     }
-
 
     void LockTestDevice::lockAndWaitRecursiveFail() {
         const AsyncReply reply(this);
@@ -148,11 +170,17 @@ USING_KARABO_NAMESPACES
     void LockTestDevice::lockAndWaitRecursiveFail_impl(const karabo::xms::SignalSlotable::AsyncReply& aReply) {
     const std::string deviceId = get<std::string>("controlledDevice");
 
-        Lock lk = remote().lock(deviceId, false, 1);
-        for (int i = 0; i < 5; ++i) {
-            Lock lk = remote().lock(deviceId, false, 0);
-            remote().set(deviceId, "intProperty", i);
-            boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+        try {
+            Lock lk = remote().lock(deviceId, false, 1);
+            for (int i = 0; i < 5; ++i) {
+                Lock lk = remote().lock(deviceId, false, 0);
+                remote().set(deviceId, "intProperty", i);
+                boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+            }
+        } catch (const std::exception& e) {
+            // karabo::util::LockException is likely...
+            aReply.error(e.what());
+            return;
         }
         aReply();
     }
