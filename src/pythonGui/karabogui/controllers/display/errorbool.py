@@ -64,6 +64,5 @@ class DisplayErrorBool(BaseBindingController):
         if self.proxy is not None:
             self.value_update(self.proxy)
 
-    # @pyqtSlot()
-    def logic_action(self, checked):
+    def logic_action(self):
         self.model.invert = not self.model.invert

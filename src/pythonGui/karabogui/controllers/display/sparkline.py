@@ -408,11 +408,9 @@ class DisplaySparkline(BaseBindingController):
     def value_update(self, proxy):
         self._draw(proxy.value, proxy.binding.timestamp)
 
-    # @pyqtSlot(bool)
     def toggle_show_value(self, value):
         self.model.show_value = value
 
-    # @pyqtSlot(bool)
     def toggle_alarm_range(self, value):
         self.model.alarm_range = value
 
@@ -459,8 +457,7 @@ class DisplaySparkline(BaseBindingController):
     def _show_format_update(self):
         self._set_text()
 
-    # @pyqtSlot()
-    def _change_show_format(self, checked):
+    def _change_show_format(self):
         form, ok = QInputDialog.getText(self.widget, "Enter Format",
                                         "", text=self.model.show_format)
         if ok:
