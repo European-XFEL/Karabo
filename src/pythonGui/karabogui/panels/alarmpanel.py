@@ -11,51 +11,17 @@ from PyQt5.QtWidgets import (
 from karabogui import icons
 from karabogui.alarms.api import (
     ACKNOWLEDGE, ALARM_DATA, ALARM_ID, ALARM_WARNING_TYPES,
-    SHOW_DEVICE, AlarmModel, AlarmFilterModel, INTERLOCK_TYPES,
+    SHOW_DEVICE, AlarmFilterModel, INTERLOCK_TYPES,
     get_alarm_key_index)
-from karabogui.events import (
-    KaraboEvent, broadcast_event, register_for_broadcasts,
-    unregister_from_broadcasts)
-from karabogui.singletons.api import get_network
+from karabogui.events import broadcast_event, KaraboEvent
+from karabogui.singletons.api import get_alarm_model, get_network
 
 from .base import BasePanelWidget
 
 
 class AlarmPanel(BasePanelWidget):
-    def __init__(self, instanceId):
-        self.instanceId = instanceId
-        # Important: call the BasePanelWidget initializer
-        super(AlarmPanel, self).__init__(instanceId)
-        # Register to broadcast events
-
-        self.event_map = {
-            KaraboEvent.AlarmServiceInit: self._event_alarm_init_update,
-            KaraboEvent.AlarmServiceUpdate: self._event_alarm_init_update,
-            KaraboEvent.NetworkConnectStatus: self._event_network,
-        }
-        register_for_broadcasts(self.event_map)
-
-    # ----------------------------------------------------------------
-    # Karabo Events
-
-    def _event_alarm_init_update(self, data):
-        self.alarm_model.updateAlarms(data.get('instance_id'),
-                                      data.get('update_types'),
-                                      data.get('alarm_entries'))
-
-    def _event_network(self, data):
-        """If disconnected to server, unregister the alarm panel
-
-         We have to unregister, otherwise we will get two times of the same
-         info next time
-         """
-        if not data['status']:
-            unregister_from_broadcasts(self.event_map)
-
-    def closeEvent(self, event):
-        super(AlarmPanel, self).closeEvent(event)
-        if event.isAccepted():
-            unregister_from_broadcasts(self.event_map)
+    def __init__(self):
+        super(AlarmPanel, self).__init__("Alarms", allow_closing=True)
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
@@ -84,8 +50,8 @@ class AlarmPanel(BasePanelWidget):
         self.table_view.setAlternatingRowColors(True)
         self.table_view.resizeColumnsToContents()
         self.table_view.horizontalHeader().setStretchLastSection(True)
-        self.alarm_model = AlarmModel(self.instanceId, self.table_view)
-        self.model = AlarmFilterModel(self.alarm_model, self.table_view)
+        self.model = AlarmFilterModel(get_alarm_model(), self.table_view)
+        self.table_view.setModel(self.model)
         btn_delegate = ButtonDelegate(parent=self.table_view)
         self.table_view.setItemDelegate(btn_delegate)
 
@@ -96,14 +62,6 @@ class AlarmPanel(BasePanelWidget):
 
         return widget
 
-    @property
-    def model(self):
-        return self.table_view.model()
-
-    @model.setter
-    def model(self, model):
-        self.table_view.setModel(model)
-
     @pyqtSlot(QAbstractButton)
     def filterToggled(self, button):
         """ The filter ``button`` was activated. Update filtering needed."""
@@ -111,6 +69,12 @@ class AlarmPanel(BasePanelWidget):
             self.model.updateFilter(filter_type=ALARM_WARNING_TYPES)
         elif button is self.ui_show_interlock:
             self.model.updateFilter(filter_type=INTERLOCK_TYPES)
+
+    def closeEvent(self, event):
+        """Tell main window to enable the button to add me back."""
+        super(AlarmPanel, self).closeEvent(event)
+        if event.isAccepted():
+            self.signalPanelClosed.emit(self.windowTitle())
 
 
 class ButtonDelegate(QStyledItemDelegate):
