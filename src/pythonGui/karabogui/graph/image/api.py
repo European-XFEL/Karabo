@@ -1,8 +1,10 @@
 # flake8: noqa
 
-from .aux_plots.controller import AuxPlotsController, ProfilePlot
-from .aux_plots.items import AuxPlotViewBox
-from .aux_plots.profile_plot import BaseStepPlot
+from .aux_plots.profiling.controller import ProfilePlotController
+from .aux_plots.profiling.plot import StepPlot
+from .aux_plots.profiling.profiler import IntensityProfiler
+from .aux_plots.controller import AuxPlotsController
+from .aux_plots.viewbox import AuxPlotViewBox
 
 from .dialogs.levels import LevelsDialog
 
@@ -14,7 +16,6 @@ from .legends.scale import ScaleLegend
 from .roll_image import RollImage
 
 from .tools.picker import PickerController
-from .tools.profiler import IntensityProfiler
 from .tools.toolbar import AuxPlotsToolset
 
 from .base import KaraboImageView

@@ -3,14 +3,15 @@ from pyqtgraph import LabelItem
 
 from karabogui.graph.common.api import AuxPlots
 
-from ..aux_plots.profile_plot import ProfilePlot
-from ..utils import beam_profile_table_html
+from .profiling.controller import ProfilePlotController
+from .histogram.controller import HistogramController
 
 
 class AuxPlotsController(QObject):
 
     PLOT_MAP = {
-        AuxPlots.ProfilePlot: ProfilePlot
+        AuxPlots.ProfilePlot: ProfilePlotController,
+        AuxPlots.Histogram: HistogramController
     }
 
     def __init__(self, image_layout):
@@ -24,49 +25,62 @@ class AuxPlotsController(QObject):
 
         self._image_layout = image_layout
         self._region = None
-        self._fitted = False
-        self._visible = False
 
         # Bookkeeping of plots
-        self._current_plot_type = None
-        self.current_plots = []
+        self.current_plot = None
+        self._controllers = {}
 
         self.labelItem = LabelItem()
+        self._image_layout.addItem(self.labelItem, 0, 0)
 
     # -----------------------------------------------------------------------
     # Public methods
 
-    def add_from_type(self, plot_type, **kwargs):
+    def add_from_type(self, plot_type, **config):
         """Set the aux plots of specified plot type to the image layout"""
         # Remove set plots if any
         plot_klass = self.PLOT_MAP[plot_type]
 
         # Add label item for aux plots stats. This will be shown in the topleft
-        if not self.current_plots:
-            self._image_layout.addItem(self.labelItem, 0, 0)
+        if plot_type in self._controllers:
+            return
 
-        for orientation in ['top', 'left']:
-            plot_item = plot_klass(orientation=orientation, **kwargs)
-            plot_item.setVisible(self._visible)
-            plot_item.enable_fit_action.triggered.connect(self._enable_fitting)
+        controller = plot_klass(**config)
+        controller.showStatsRequested.connect(self._show_stats)
 
-            self.current_plots.append(plot_item)
-            self._add_to_layout(plot_item)
+        self._controllers[plot_type] = controller
 
-        self._current_plot_type = plot_type
-        return self.current_plots
+        return controller
 
-    def show(self, show=True):
+    def show(self, plot_type):
         """Show aux plots of specified type"""
-        for plot in self.current_plots:
-            plot.setVisible(show)
 
-        self.labelItem.setVisible(show)
-        self._visible = show
+        # Check if requested plot is in instantiated controllers
+        if plot_type not in self._controllers:
+            plot_type = AuxPlots.NoPlot
+
+        # Set visibility of label item and previous plots, if any
+        self.labelItem.setVisible(plot_type != AuxPlots.NoPlot)
+        if self.current_plot is not None:
+            for plot in self.current_plot.plots:
+                self._remove_from_layout(plot)
+
+        # Return intermittently if plot type is None
+        if plot_type is AuxPlots.NoPlot:
+            self.current_plot = None
+            return
+
+        # Add plots to layout
+        controller = self._controllers[plot_type]
+        for plot in controller.plots:
+            self._add_to_layout(plot)
 
         # Process the changes
-        if show and self._region is not None:
+        if self._region is not None:
             self.analyze(self._region)
+
+        self.current_plot = controller
+        self.labelItem.setText('')  # clear contents
 
     def destroy(self):
         """Delete all the items and the controller gracefully"""
@@ -75,11 +89,17 @@ class AuxPlotsController(QObject):
         self.deleteLater()
 
     def clear(self):
-        for plot in self.current_plots:
-            self._remove_from_layout(plot)
-            plot.deleteLater()
+        # Check if already cleared
+        if not len(self._image_layout.ci.items):
+            return
+
+        if self.current_plot is not None:
+            for plot in self.current_plot.plots:
+                self._remove_from_layout(plot)
+                plot.deleteLater()
 
         self._remove_from_layout(self.labelItem)
+        self.current_plot = None
 
     @pyqtSlot(object)
     def analyze(self, region):
@@ -87,18 +107,27 @@ class AuxPlotsController(QObject):
         # Store region for reanalyzing
         self._region = region
 
-        if not self._visible:
+        if self.current_plot is None:
             return
 
-        profile_x, profile_y = [plot.analyze(region) for plot
-                                in self.current_plots]
-        if self._fitted and region is not None:
-            table = beam_profile_table_html(profile_x, profile_y)
-            self.labelItem.item.setHtml(table)
+        self.current_plot.analyze(region)
+        stats = self.current_plot.get_html()
+        self._show_stats(stats, update=False)
 
     def set_image_axes(self, axes):
-        for axis, plot in zip(axes, self.current_plots):
-            plot.set_axis(axis)
+        for controller in self._controllers.values():
+            controller.set_axes(x_data=axes[0], y_data=axes[1])
+
+    def set_config(self, plot=None, **config):
+        controller = self._controllers.get(plot)
+        if controller is None:
+            return
+
+        if plot is AuxPlots.Histogram:
+            if 'colormap' in config:
+                controller.set_colormap(config['colormap'])
+            if 'levels' in config:
+                controller.set_levels(config['levels'])
 
     # -----------------------------------------------------------------------
     # Private methods
@@ -116,17 +145,10 @@ class AuxPlotsController(QObject):
     def _remove_from_layout(self, plot_item):
         self._image_layout.removeItem(plot_item)
 
-    @pyqtSlot(bool)
-    def _enable_fitting(self, enabled):
-        self._fitted = enabled
-        for plot in self.current_plots:
-            plot.enable_fit(enabled)
-
-        # Process the changes
-        if enabled:
-            self.analyze(self._region)
-        else:
-            self.labelItem.setText('')
+    @pyqtSlot(str)
+    def _show_stats(self, stats, update=True):
+        self.labelItem.item.setHtml(stats)
 
         # Update label item size to avoid painting bugs
-        self.labelItem.resizeEvent(None)
+        if update:
+            self.labelItem.resizeEvent(None)

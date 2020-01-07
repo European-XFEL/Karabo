@@ -9,6 +9,8 @@ from karabo.native import Configurable, Hash, Timestamp, VectorInt32
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_hash, set_proxy_value)
 
+from karabogui.graph.common.api import AuxPlots
+
 
 class Object(Configurable):
     prop = VectorInt32(defaultValue=[1, 2, 3])
@@ -35,8 +37,9 @@ class TestVectorRollGraph(GuiTestCase):
     def test_configuration(self):
         """Assert that the vector roll auxiliar plots do not smooth the
         images"""
-        for plot in self.controller.widget._aux_plots.current_plots:
-            self.assertFalse(plot._profiler.smooth)
+        aux_plots = self.controller.widget._aux_plots
+        controller = aux_plots._controllers[AuxPlots.ProfilePlot]
+        self.assertFalse(controller.config["smooth"])
 
     def test_set_value(self):
         """Test the value setting in VectorRollGraph"""
