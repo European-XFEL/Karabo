@@ -1,16 +1,16 @@
 from PyQt5.QtCore import QModelIndex, Qt
 from karabogui.testing import GuiTestCase
 
-from ..const import (
+from karabogui.alarms.const import (
     ADD_UPDATE_TYPE, AlarmEntry, ALARM_DATA, ALARM_HIGH,
     ALARM_WARNING_TYPES, INIT_UPDATE_TYPE, INTERLOCK, INTERLOCK_TYPES,
     REMOVE_UPDATE_TYPE)
-from ..filter_model import AlarmFilterModel
-from ..model import AlarmModel
+from karabogui.alarms.filter_model import AlarmFilterModel
+from karabogui.alarms.alarm_model import AlarmModel
 
 
-def _data():
-    ret = []
+def _data(update_type=INIT_UPDATE_TYPE):
+    entries = []
     for i in range(10):
         data = AlarmEntry(
             id=i,
@@ -22,7 +22,7 @@ def _data():
             description='rent is too damn high',
             acknowledge=(True, True),
             showDevice=None)
-        ret.append(data)
+        entries.append(data)
 
     # we add an interlock
     data = AlarmEntry(
@@ -35,20 +35,27 @@ def _data():
         description='rent is too damn high',
         acknowledge=(True, True),
         showDevice=None)
-    ret.append(data)
+    entries.append(data)
+
+    ret = {
+        'instance_id': 'Karabo_AlarmService',
+        'update_types': _type(update_type),
+        'alarm_entries': entries
+    }
 
     return ret
 
 
 def _type(typ):
-    return [typ for i in range(10)]
+    return [typ for _ in range(10)]
 
 
 class TestModel(GuiTestCase):
     def setUp(self):
         super(TestModel, self).setUp()
-        self.alarm_model = AlarmModel(instanceId='Bob')
-        self.alarm_model.initAlarms('Bob', [], _data())
+        self.alarm_model = AlarmModel()
+        data = _data(INIT_UPDATE_TYPE)
+        self.alarm_model.init_alarms_info(data)
         self.model = AlarmFilterModel(self.alarm_model)
 
     def tearDown(self):
@@ -59,9 +66,11 @@ class TestModel(GuiTestCase):
         assert self.alarm_model.headers == hdrs
 
     def test_initAlarms(self):
-        mdl = AlarmModel(instanceId='Vinny')
-        mdl.initAlarms('jenny', [], _data())
-        self.assertEqual(mdl.all_entries, [])
+        mdl = AlarmModel()
+        data = _data([])
+        mdl.init_alarms_info(data)
+        # INIT Does not matter, we plainly initialize with all the info we have
+        self.assertNotEqual(mdl.all_entries, [])
 
     def test_columnCount_filter_model(self):
         self.assertEqual(self.model.columnCount(), 9)
@@ -83,27 +92,26 @@ class TestModel(GuiTestCase):
         self.assertEqual(header, 'ID')
 
     def test_update_alarms(self):
-        mdl = AlarmModel(instanceId='Vinny')
-        mdl.initAlarms('Vinny', _type(INIT_UPDATE_TYPE), _data())
+        mdl = AlarmModel()
+        data = _data(INIT_UPDATE_TYPE)
+        mdl.init_alarms_info(data)
         self.assertEqual(mdl.rowCount(), 11)
-
-    def test_update_alarms_wrongdev(self):
-        mdl = AlarmModel(instanceId='Vinny')
-        ret = mdl.initAlarms('jenny', _type(INIT_UPDATE_TYPE), _data())
-        self.assertIsNone(ret)
 
     def test_update_alarms_remove(self):
         self.assertEqual(self.alarm_model.rowCount(), 11)
-        self.alarm_model.updateAlarms('Bob', _type(REMOVE_UPDATE_TYPE),
-                                      _data())
+        data = _data(REMOVE_UPDATE_TYPE)
+        self.alarm_model.update_alarms_info(data)
         self.assertEqual(self.alarm_model.rowCount(), 1)
 
     def test_update_alarms_realarm(self):
         self.assertEqual(self.alarm_model.rowCount(), 11)
-        self.alarm_model.updateAlarms('Bob', _type(REMOVE_UPDATE_TYPE),
-                                      _data())
+
+        data = _data(REMOVE_UPDATE_TYPE)
+        self.alarm_model.update_alarms_info(data)
         self.assertEqual(self.alarm_model.rowCount(), 1)
-        self.alarm_model.updateAlarms('Bob', _type(ADD_UPDATE_TYPE), _data())
+
+        data = _data(ADD_UPDATE_TYPE)
+        self.alarm_model.update_alarms_info(data)
         self.assertEqual(self.alarm_model.rowCount(), 11)
 
     # ------------------------------------------------------------
