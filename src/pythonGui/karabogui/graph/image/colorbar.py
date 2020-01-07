@@ -18,7 +18,7 @@ class ColorBarWidget(GraphicsWidget):
     def __init__(self, imageItem, label=None, parent=None):
         super(ColorBarWidget, self).__init__(parent)
 
-        self._colorbar_levels = min_level, max_level = [0, NUM_SAMPLES - 1]
+        self.levels = min_level, max_level = [0, NUM_SAMPLES - 1]
         data = np.linspace(min_level, max_level, NUM_SAMPLES)[None, :]
 
         self.grid_layout = QGraphicsGridLayout()
@@ -33,7 +33,7 @@ class ColorBarWidget(GraphicsWidget):
         self.barItem.setImage(data)
         self.vb.addItem(self.barItem)
         self.grid_layout.addItem(self.vb, 0, 0)
-        self.vb.setYRange(*self._colorbar_levels, padding=0)
+        self.vb.setYRange(*self.levels, padding=0)
 
         font = QFont()
         font.setPixelSize(8)
@@ -46,16 +46,11 @@ class ColorBarWidget(GraphicsWidget):
         self.setLayout(self.grid_layout)
 
         self.imageItem = imageItem
-        self.imageItem.sigImageChanged.connect(self._image_changed)
         if label is not None:
             self.set_label(label)
 
     # ---------------------------------------------------------------------
     # PyQt slots
-
-    @pyqtSlot()
-    def _image_changed(self):
-        self._set_colorbar_range(self.imageItem.levels)
 
     @pyqtSlot()
     def _show_levels_dialog(self):
@@ -68,14 +63,10 @@ class ColorBarWidget(GraphicsWidget):
         if dialog.exec_() == QDialog.Accepted:
             levels = dialog.levels
 
+            self.set_levels(levels or image_range)
+
             # Request changing of levels
             self.levelsChanged.emit(levels)
-
-            # If autolevel, use recorded level
-            if levels is None:
-                levels = image_range
-
-            self._set_colorbar_range(levels)
 
     # ---------------------------------------------------------------------
     # Qt Events
@@ -111,10 +102,10 @@ class ColorBarWidget(GraphicsWidget):
         menu.addAction("Set levels...", self._show_levels_dialog)
         return menu
 
-    def _set_colorbar_range(self, image_range):
+    def set_levels(self, image_range):
         # Check if levels and range are almost equal.
         # Only change y-range values if not.
-        if levels_almost_equal(self._colorbar_levels, image_range):
+        if levels_almost_equal(self.levels, image_range):
             return
 
         # Transform the bar item according to the range
@@ -126,7 +117,7 @@ class ColorBarWidget(GraphicsWidget):
         transform.translate(0, translate)
         self.barItem.setTransform(transform)
         self.vb.setYRange(image_min, image_max, padding=0)
-        self._colorbar_levels = image_range
+        self.levels = image_range
 
 
 class ColorViewBox(ViewBox):

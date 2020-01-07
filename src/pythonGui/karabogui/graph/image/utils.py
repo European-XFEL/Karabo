@@ -98,22 +98,24 @@ def create_colormap_menu(colormaps, current_cmap, on_selection):
     return menu
 
 
-def beam_profile_table_html(x_peak, y_peak):
-    if x_peak is None or y_peak is None:
-        return
-    x_string = [_to_string(value) for value in x_peak]
-    y_string = [_to_string(value) for value in y_peak]
+def beam_profile_table_html(x_stats, y_stats):
+    if not x_stats or not y_stats:
+        return ''
 
-    return HTML_TABLE.format(
-        x_ampl=x_string[0], x_maxpos=x_string[1], x_fwhm=x_string[2],
-        y_ampl=y_string[0], y_maxpos=y_string[1], y_fwhm=y_string[2])
+    return PROFILE_STATS_HTML.format(
+        x_ampl=_to_string(x_stats.get("amplitude")),
+        x_maxpos=_to_string(x_stats.get("max_pos")),
+        x_fwhm=_to_string(x_stats.get("fwhm")),
+        y_ampl=_to_string(y_stats.get("amplitude")),
+        y_maxpos=_to_string(y_stats.get("max_pos")),
+        y_fwhm=_to_string(y_stats.get("fwhm")))
 
 
 def _to_string(value):
     return "{:.3g}".format(value) if value is not None else "-"
 
 
-HTML_TABLE = """
+PROFILE_STATS_HTML = """
 <table style='font-size:8px'>
 <tbody>
 <tr>
@@ -131,3 +133,17 @@ HTML_TABLE = """
 </tbody>
 </table>
 """
+
+
+def rescale(array, min_value, max_value, low=0.0, high=100.0):
+    """Scale the image with a new range. This is particularly used when
+       rescaling to (0, 255)."""
+
+    array = np.array(array)
+    value_range = max_value - min_value
+    if value_range == 0:
+        return array
+
+    rescaled = high - ((high - low) * ((max_value - array) / value_range))
+
+    return rescaled
