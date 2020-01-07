@@ -221,6 +221,7 @@ class ProjectManager(Device):
                 item.set("reason", exceptionReason)
                 item.set("entry", meta)
                 savedItems.append(item)
+
         return Hash('items', savedItems)
 
     @slot
