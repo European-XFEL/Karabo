@@ -9,8 +9,6 @@ from karabogui.singletons.api import get_mediator
 # Enum for karabo broadcast event senders
 class KaraboEvent(Enum):
     AccessLevelChanged = "Global Access Level changed"
-    AlarmServiceInit = "Alarm service init"
-    AlarmServiceUpdate = "Alarm service update"
     BigDataProcessing = "Big data delay"
     BrokerInformationUpdate = "Broker information update"
     ClearConfigurator = "Clear configurator"
@@ -38,7 +36,6 @@ class KaraboEvent(Enum):
     ProjectItemsLoaded = "Project items loaded"
     ProjectItemsSaved = "Project items saved"
     ProjectManagersList = "Project managers list"
-    ShowAlarmServices = "Show alarm services"
     ShowDaemonService = "Show daemon service"
     ShowConfiguration = "Show configuration"
     ShowConfigurationFromPast = "Show Configuration From Past"
