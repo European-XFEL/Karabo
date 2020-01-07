@@ -11,16 +11,16 @@ class TestConfiguration(GuiTestCase):
         config['db_token'] = 'admin'
         config['macro_server'] = 'karabo/macroServer'
 
-        self.assertEqual(len(config), 12)
+        self.assertEqual(len(config), 13)
         self.assertEqual(config['db_token'], 'admin')
         self.assertEqual(config['domain'], 'CAS_INTERNAL')
         self.assertEqual(config['macro_server'], 'karabo/macroServer')
 
         self.assertEqual(list(config.keys()),
-                         ['broker_topic', 'config_dir', 'daemon_manager',
-                          'db_token', 'documentation', 'domain', 'gui_servers',
-                          'macro_dir', 'macro_server', 'project_manager',
-                          'scene_dir', 'username'])
+                         ['alarm_service', 'broker_topic', 'config_dir',
+                          'daemon_manager', 'db_token', 'documentation',
+                          'domain', 'gui_servers', 'macro_dir', 'macro_server',
+                          'project_manager', 'scene_dir', 'username'])
 
     def test_set_wrong_key(self):
         config = Configuration()
@@ -48,8 +48,9 @@ class TestConfiguration(GuiTestCase):
         self.assertIn('scene_dir', dir_group)
         self.assertIn('config_dir', dir_group)
         bone_group = [item.name for item in groups[BACKBONE]]
-        self.assertEqual(len(bone_group), 5)
+        self.assertEqual(len(bone_group), 6)
         self.assertIn('macro_server', bone_group)
+        self.assertIn('alarm_service', bone_group)
         self.assertIn('project_manager', bone_group)
         self.assertIn('broker_topic', bone_group)
         self.assertIn('documentation', bone_group)
