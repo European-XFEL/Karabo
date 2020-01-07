@@ -75,7 +75,7 @@ class TestDoubleWheelBox(GuiTestCase):
 
     def test_set_values_exceed_internal(self):
         widget = self.controller._internal_widget
-        widget.set_value_widget(3000000000.0)
+        widget.set_value(3000000000.0, external=True)
         # We are exceeding and catched by the widget, it is not set. This is
         # for validated values, e.g. by buttons, as they should not modify
         # the number of digits
