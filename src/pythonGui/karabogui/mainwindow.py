@@ -23,7 +23,7 @@ from karabogui.indicators import get_processing_color
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.panels.api import (
-    ConfigurationPanel, DevicePanel, PanelContainer, LoggingPanel,
+    AlarmPanel, ConfigurationPanel, DevicePanel, PanelContainer, LoggingPanel,
     ProjectPanel, ScriptingPanel, TopologyPanel)
 from karabogui.singletons.api import (
     get_config, get_db_conn, get_network, get_project_model)
@@ -48,6 +48,7 @@ _CLOSABLE_PANELS = {
     # Title: (class, position, icon)
     'Console': (ScriptingPanel, PanelAreaEnum.Middle, icons.consoleMenu),
     'Log': (LoggingPanel, PanelAreaEnum.Middle, icons.logMenu),
+    'Alarms': (AlarmPanel, PanelAreaEnum.Middle, icons.alarmWarning)
 }
 
 _PANELS = {
@@ -83,6 +84,9 @@ class MainWindow(QMainWindow):
         for name in _PANELS:
             self._open_panel(name)
 
+        # Keep track of the closable panels!
+        self._active_closable_panels = {}
+
         # Create the menu bar for panels which are by default closed!
         for name, data in _CLOSABLE_PANELS.items():
             callback = partial(self._open_closable_panel, name)
@@ -114,6 +118,7 @@ class MainWindow(QMainWindow):
             KaraboEvent.MaximizePanel: self._event_container_maximized,
             KaraboEvent.MinimizePanel: self._event_container_minimized,
             KaraboEvent.LoginUserChanged: self._event_access_level,
+            KaraboEvent.NetworkConnectStatus: self._event_network
         }
         register_for_broadcasts(event_map)
 
@@ -122,6 +127,14 @@ class MainWindow(QMainWindow):
 
     def _event_broker_connection(self, data):
         self.update_broker_connection(data)
+
+    def _event_network(self, data):
+        status = data.get('status', False)
+        if not status:
+            active_panels = list(self._active_closable_panels.values())
+            for info in active_panels:
+                panel, area_enum = info
+                self.removePanel(panel, area_enum)
 
     def _event_big_data(self, data):
         """Show the big data latency including value set in the gui"""
@@ -418,6 +431,8 @@ class MainWindow(QMainWindow):
         if action is not None:
             action.setEnabled(False)
 
+        self._active_closable_panels[name] = (panel, area_enum)
+
     def _unminimize_remaining_panels(self):
         """Reset the maximization of any child panels
         """
@@ -493,6 +508,7 @@ class MainWindow(QMainWindow):
         action = self.panelActions.get(name)
         if action is not None:
             action.setEnabled(True)
+        self._active_closable_panels.pop(name)
 
     @pyqtSlot(float, bool)
     def onNetworkPerformance(self, proc_delay, active):

@@ -426,21 +426,17 @@ class TestManager(GuiTestCase):
 
     def test_handle_alarm_update(self):
         topology = Mock()
-        target = 'karabogui.singletons.manager.broadcast_event'
-        with patch(target) as broadcast, singletons(topology=topology):
+        with singletons(topology=topology):
             manager = Manager()
             manager.handle_alarmUpdate('AlarmService', Hash(alarm_data()))
             assert topology.update_alarms_info.call_count == 1
-            assert broadcast.call_count == 1
 
     def test_handle_alarm_init(self):
         topology = Mock()
-        target = 'karabogui.singletons.manager.broadcast_event'
-        with patch(target) as broadcast, singletons(topology=topology):
+        with singletons(topology=topology):
             manager = Manager()
             manager.handle_alarmInit('AlarmService', Hash(alarm_data()))
             assert topology.update_alarms_info.call_count == 1
-            assert broadcast.call_count == 1
 
     def test_handle_broker_information(self):
         network = Mock()

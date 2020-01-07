@@ -74,13 +74,15 @@ class Configuration(QObject):
             as they will take a default value from QSettings next time, which
             might be wrong.
     """
-
     broker_topic = Item(q_set=False, group=BACKBONE)
     macro_server = Item(default='karabo/macroServer', q_set=True,
                         group=BACKBONE)
     project_manager = Item(default='KaraboProjectDB', q_set=False,
                            group=BACKBONE)
-    documentation = Item(default=DOCU, q_set=False, group=BACKBONE)
+    alarm_service = Item(default='Karabo_AlarmService', q_set=False,
+                         group=BACKBONE)
+    documentation = Item(default=DOCU, q_set=False,
+                         group=BACKBONE)
     daemon_manager = Item(default='KaraboDaemonManager', q_set=False,
                           group=BACKBONE)
 

@@ -8,32 +8,46 @@ from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt
 from .const import (
     ALARM_DATA, ALARM_TYPE, REMOVE_ALARM_TYPES, UPDATE_ALARM_TYPES,
     get_alarm_icon, get_alarm_key_index)
+from karabogui.singletons.api import get_config
 
 
 class AlarmModel(QAbstractTableModel):
     """ A class which describes the relevant data (model) of a alarm service
     device to show in a table view.
+
+    The AlarmModel represents a singleton in the karaboGUI as can be accessed
+    via `get_alarm_model`.
     """
     headers = list(ALARM_DATA.values())
 
-    def __init__(self, instanceId, parent=None):
+    def __init__(self, parent=None):
         super(AlarmModel, self).__init__(parent)
-        self.instanceId = instanceId  # InstanceId of associated AlarmService
+        self.instanceId = get_config()['alarm_service']
         self.all_entries = []  # All alarm entries
 
-    def initAlarms(self, instanceId, updateTypes, alarmEntries):
+    def init_alarms_info(self, data):
+        instanceId = data.get('instance_id')
         if self.instanceId != instanceId:
             return
         self.beginResetModel()
-        self.all_entries = alarmEntries
+        self.all_entries = data.get('alarm_entries')
         self.endResetModel()
 
-    def updateAlarms(self, instanceId, updateTypes, alarmEntries):
+    def reset_alarms(self, instanceId):
+        if self.instanceId != instanceId:
+            return
+        self.beginResetModel()
+        self.all_entries = []
+        self.endResetModel()
+
+    def update_alarms_info(self, data):
+        instanceId = data['instance_id']
         if self.instanceId != instanceId:
             return
         # Insert updated entries in all entries list
-
-        for upType, alarmEntry in zip(updateTypes, alarmEntries):
+        update_types = data['update_types']
+        alarm_entries = data['alarm_entries']
+        for upType, alarmEntry in zip(update_types, alarm_entries):
             entryIndex = self._getEntryIndex(alarmEntry.id)
             if upType in UPDATE_ALARM_TYPES:
                 if 0 <= entryIndex < len(self.all_entries):
