@@ -1,10 +1,10 @@
 #############################################################################
-##
+#
 # This file is part of Karabo (http://karabo.eu)
-##
+#
 # Copyright European XFEL, Schenefeld, Germany
-##
-## This file was largely inspired by ``Taurus`` (http://taurus-scada.org)
+#
+# This file was largely inspired by ``Taurus`` (http://taurus-scada.org)
 #
 #############################################################################
 
