@@ -17,7 +17,7 @@ from karabogui.binding.api import (
     apply_fast_data, extract_attribute_modifications, extract_configuration)
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui import messagebox
-from karabogui.singletons.api import get_network, get_topology
+from karabogui.singletons.api import get_alarm_model, get_network, get_topology
 from karabogui.util import show_wait_cursor
 
 
@@ -44,6 +44,7 @@ class Manager(QObject):
 
         # The system topology singleton
         self._topology = get_topology()
+        self._alarm_model = get_alarm_model()
         # A dict which includes big networkData
         self._big_data = {}
         # Handler callbacks for `handle_requestFromSlot`
@@ -217,7 +218,7 @@ class Manager(QObject):
 
         for instance_id, class_id, _ in devices:
             if class_id == 'AlarmService':
-                self._announce_alarm_services([instance_id])
+                self._request_alarm_info(instance_id)
             elif class_id == 'DaemonManager':
                 broadcast_event(KaraboEvent.ShowDaemonService,
                                 {'instanceId': instance_id})
@@ -233,8 +234,9 @@ class Manager(QObject):
         # Did an alarm system leave our topology?
         for instance_id, class_id, _ in devices:
             if class_id == 'AlarmService':
+                self._alarm_model.reset_alarms(instance_id)
                 broadcast_event(KaraboEvent.RemoveAlarmServices,
-                                {'instanceIds': [instance_id]})
+                                {'instanceId': instance_id})
             elif class_id == 'DaemonManager':
                 broadcast_event(KaraboEvent.RemoveDaemonService,
                                 {'instanceId': instance_id})
@@ -247,7 +249,7 @@ class Manager(QObject):
         # Tell the GUI about various devices or servers that are alive
         for instance_id, class_id, _ in new_devices:
             if class_id == 'AlarmService':
-                self._announce_alarm_services([instance_id])
+                self._request_alarm_info(instance_id)
             elif class_id == 'ProjectManager':
                 broadcast_event(KaraboEvent.ProjectDBConnect,
                                 {'device': instance_id})
@@ -291,7 +293,7 @@ class Manager(QObject):
         # Tell the GUI about various devices or servers that are alive
         for instance_id, class_id, _ in devices:
             if class_id == 'AlarmService':
-                self._announce_alarm_services([instance_id])
+                self._request_alarm_info(instance_id)
             elif class_id == 'ProjectManager':
                 broadcast_event(KaraboEvent.ProjectDBConnect,
                                 {'device': instance_id})
@@ -469,8 +471,7 @@ class Manager(QObject):
         if not rows.empty():
             data = extract_alarms_data(instanceId, rows)
             self._topology.update_alarms_info(data)
-
-            broadcast_event(KaraboEvent.AlarmServiceInit, data)
+            self._alarm_model.init_alarms_info(data)
 
     def handle_alarmUpdate(self, instanceId, rows):
         """Show update for ``AlarmService`` with given ``instanceId`` and all
@@ -479,21 +480,14 @@ class Manager(QObject):
         if not rows.empty():
             data = extract_alarms_data(instanceId, rows)
             self._topology.update_alarms_info(data)
-
-            broadcast_event(KaraboEvent.AlarmServiceUpdate, data)
+            self._alarm_model.update_alarms_info(data)
 
     # ------------------------------------------------------------------
     # Private methods
 
-    def _announce_alarm_services(self, instance_ids):
-        """Handle the arrival of one or more `AlarmService` devices.
-        """
-        if instance_ids:
-            broadcast_event(KaraboEvent.ShowAlarmServices,
-                            {'instanceIds': instance_ids})
-        for inst_id in instance_ids:
-            # Request all current alarms for the given alarm service device
-            get_network().onRequestAlarms(inst_id)
+    def _request_alarm_info(self, instance_id):
+        """Handle the arrival of the `AlarmService` device"""
+        get_network().onRequestAlarms(instance_id)
 
     def _broadcast_if_of_type(self, class_id, instance_id, event_type):
         """If a device is of a particular type `class_id`, broadcast an event.
@@ -501,7 +495,7 @@ class Manager(QObject):
         attrs = self._topology.get_attributes('device.' + instance_id)
         if attrs is not None:
             if class_id == attrs.get('classId', ''):
-                broadcast_event(event_type, {'instanceIds': [instance_id]})
+                broadcast_event(event_type, {'instanceId': instance_id})
                 return True
         return False
 
