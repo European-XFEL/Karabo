@@ -3,35 +3,58 @@ from pyqtgraph import GraphicsLayoutWidget
 from karabogui.testing import GuiTestCase
 from karabogui.graph.common.api import AuxPlots
 
-from ..controller import AuxPlotsController
+from ..controller import (
+    AuxPlotsController, HistogramController, ProfilePlotController)
 
 
 class TestCase(GuiTestCase):
 
     def setUp(self):
         super().setUp()
-        self.image_layout = GraphicsLayoutWidget()
+        self._image_layout = GraphicsLayoutWidget()
+        self._controller = AuxPlotsController(self._image_layout)
 
-    def test_basic(self):
-        assert not self.image_layout.ci.items
-        controller = AuxPlotsController(self.image_layout)
-        controller.add_from_type(AuxPlots.ProfilePlot)
+    def tearDown(self):
+        self._controller.destroy()
+        super(TestCase, self).tearDown()
 
-        current_plots = set(controller.current_plots)
-        layout_plots = set(self.image_layout.ci.items.keys())
+    def test_basics(self):
+        self._controller.add_from_type(AuxPlots.ProfilePlot)
+        self._controller.add_from_type(AuxPlots.Histogram)
 
-        assert len(self.image_layout.ci.items) == 3
-        assert current_plots.issubset(layout_plots)
+        self.assertIsNone(self._controller.current_plot)
 
-        for plot in current_plots:
-            assert not plot.isVisible()
+        layout_plots = set(self._image_layout.ci.items.keys())
+        self.assertEquals(len(layout_plots), 1)
+        self.assertIn(self._controller.labelItem, layout_plots)
 
-        controller.show(True)
+        # Show profile plot first
+        self._controller.show(AuxPlots.ProfilePlot)
+        self.assertIsInstance(self._controller.current_plot,
+                              ProfilePlotController)
+        self._assert_plots(shown=AuxPlots.ProfilePlot)
 
-        for plot in current_plots:
-            assert plot.isVisible()
+        # Show histogram next
+        self._controller.show(AuxPlots.Histogram)
+        self.assertIsInstance(self._controller.current_plot,
+                              HistogramController)
+        self._assert_plots(shown=AuxPlots.Histogram)
 
-        controller.clear()
+        # Don't show anything
+        self._controller.show(AuxPlots.NoPlot)
+        self.assertIsNone(self._controller.current_plot)
+        self._assert_plots(shown=AuxPlots.NoPlot)
 
-        assert len(self.image_layout.ci.items) == 0
-        assert controller.current_plots
+        # Clear controller
+        self._controller.clear()
+        self.assertTrue(len(self._image_layout.ci.items) == 0)
+        self.assertIsNone(self._controller.current_plot)
+
+    def _assert_plots(self, *, shown):
+        layout_plots = self._image_layout.ci.items.keys()
+
+        for plot_type, controller in self._controller._controllers.items():
+            assertion = (self.assertIn if plot_type == shown
+                         else self.assertNotIn)
+            for plot in controller.plots:
+                assertion(plot, layout_plots)

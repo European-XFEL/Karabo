@@ -52,7 +52,6 @@ class PickerController(QObject):
         imageItem.clicked.connect(self.select_pixel)
         imageItem.hovered.connect(self.hover_pixel)
         plotItem.imageTransformed.connect(self._update_geometry)
-        plotItem.imageLevelsChanged.connect(self.update)
 
     def activate(self, active):
         """Called upon clicking Picker toolbutton"""
@@ -123,7 +122,6 @@ class PickerController(QObject):
         imageItem.clicked.disconnect(self.select_pixel)
         imageItem.hovered.disconnect(self.hover_pixel)
         self.plotItem.imageTransformed.disconnect(self._update_geometry)
-        self.plotItem.imageLevelsChanged.disconnect(self.update)
 
         for item in [self._indicator_rect, self._selection_rect,
                      self._coords_legend, self._picker_legend]:
