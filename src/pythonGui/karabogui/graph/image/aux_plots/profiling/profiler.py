@@ -3,23 +3,22 @@ from scipy.optimize import curve_fit
 
 from karabogui.graph.common.api import ImageRegion
 
+from ..base import BaseAuxPlotAnalyzer
+
 
 FWHM_COEFF = 2 * np.sqrt(2 * np.log(2))
 
 
-class IntensityProfiler:
+class IntensityProfiler(BaseAuxPlotAnalyzer):
 
     def __init__(self, smooth=False, profiler=np.average):
-        self._profiler = profiler
-        self._profile = None
-        self._fit = None  # fit data
+        self._profile_function = profiler
+        self._data = None
+        self._fit = None  # fit values wrt to data
+        self._fit_params = None  # fit parameters from gaussian fit
         self._axis = None  # transformed axis data
 
         self._smooth = smooth
-
-    @property
-    def smooth(self):
-        return self._smooth
 
     def profile(self, region, axis=0):
         """Calculate the profile of the region on each axes."""
@@ -29,15 +28,14 @@ class IntensityProfiler:
             return
 
         # Clear previous data
-        self._profile = None
-        self._fit = None
+        self.clear_data()
 
         axis_slice = region.slices[axis]
 
         # Obtain the y-axis profile, which is dependent on the
         # image region type
         if region.region_type is ImageRegion.Area:
-            y_profile = self._profiler(region.region, axis=axis)
+            y_profile = self._profile_function(region.region, axis=axis)
             x_profile = self._axis[axis_slice]
         elif region.region_type is ImageRegion.Line:
             x_profile = self._axis
@@ -49,7 +47,7 @@ class IntensityProfiler:
             return
 
         # Calculate the profile with the profiling function (e.g., sum, mean)
-        self._profile = (x_profile, y_profile)
+        self._data = (x_profile, y_profile)
 
         return x_profile, y_profile
 
@@ -71,7 +69,10 @@ class IntensityProfiler:
         """Use Gaussian function to fit the profile"""
         # Calculate the offset of the x-axis with the half of the difference
         # of data points (it is assumed that the data is uniformly spaced)
-        x_data, y_data = self._profile
+        if self._data is None:
+            return np.array([]), np.array([])
+
+        x_data, y_data = self._data
         offset = abs(np.diff(x_data[:2])[0]) / 2
         self._fit_params = gaussian_fit(x_data, y_data, offset)
 
@@ -83,22 +84,33 @@ class IntensityProfiler:
 
         return self._fit
 
-    def analyze(self):
+    def get_stats(self):
+        if self._data is None:
+            return
+
+        stats = {}
+
         fitted = self._fit_params is not None
-        x_data, y_data = self._fit if fitted else self._profile
+        x_data, y_data = self._fit if fitted else self._data
         index_max = np.argmax(y_data)
-        max_pos, amplitude = x_data[index_max], y_data[index_max]
 
-        fwhm = None
+        stats["max_pos"] = x_data[index_max]
+        stats["amplitude"] = y_data[index_max]
+
         if fitted:
-            fwhm = FWHM_COEFF * self._fit_params[2]
+            stats["fwhm"] = FWHM_COEFF * self._fit_params[2]
 
-        return [amplitude, max_pos, fwhm]
+        return stats
 
     def set_axis(self, axis):
         """Transformed axis data, used to obtain the profile from the image
            region slices. Set when the image changes transform and/or size."""
         self._axis = axis
+
+    def clear_data(self):
+        self._data = None
+        self._fit = None
+        self._fit_params = None
 
 
 def gaussian_fit(x_data, y_data, offset):

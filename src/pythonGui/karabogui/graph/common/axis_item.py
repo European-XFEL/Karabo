@@ -176,7 +176,7 @@ class AuxPlotAxisItem(AxisItem):
 
     def _updateWidth(self):
         """Reimplemented function to match known width of main plot"""
-        if self.label.isVisible():
+        if self.has_ticks:
             self.setFixedWidth(Y_AXIS_WIDTH)
             self.picture = None
         else:
@@ -184,8 +184,12 @@ class AuxPlotAxisItem(AxisItem):
 
     def _updateHeight(self):
         """Reimplemented function to match known height of main plot"""
-        if self.label.isVisible():
-            self.setFixedHeight(X_AXIS_HEIGHT)
+        if self.has_ticks:
+            height = X_AXIS_HEIGHT
+            # Reduce space between label and axis for x-axis
+            if self.orientation == "bottom":
+                height -= 10
+            self.setFixedHeight(height)
             self.picture = None
         else:
             super(AuxPlotAxisItem, self)._updateHeight()

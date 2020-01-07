@@ -48,3 +48,15 @@ class ImageRegion:
             # Region is a list of two lists
             samples = (0, 1) if axis is None else (axis,)
             return all(self.region[ax].size > 1 for ax in samples)
+
+        return False
+
+    def flatten(self):
+        if self.region_type is ImageRegion.Area:
+            # region is a numpy array
+            return self.region.flatten()
+
+        if self.region_type is ImageRegion.Line:
+            # region is a list of 2 lists (x and y most probably have different
+            # shapes)
+            return np.hstack(self.region)
