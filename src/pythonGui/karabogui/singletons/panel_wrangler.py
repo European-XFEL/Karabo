@@ -11,7 +11,7 @@ from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
 from karabogui import messagebox
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.mainwindow import MainWindow, PanelAreaEnum
-from karabogui.panels.api import AlarmPanel, MacroPanel, ScenePanel
+from karabogui.panels.api import MacroPanel, ScenePanel
 from karabogui.singletons.api import get_config, get_project_model, get_db_conn
 
 
@@ -51,8 +51,6 @@ class PanelWrangler(QObject):
             KaraboEvent.RemoveProjectModelViews: self._event_remove_model_view,
             KaraboEvent.MiddlePanelClosed: self._event_middle_panel,
             KaraboEvent.ShowMacroView: self._event_show_macro,
-            KaraboEvent.ShowAlarmServices: self._event_show_alarm,
-            KaraboEvent.RemoveAlarmServices: self._event_remove_alarm,
             KaraboEvent.NetworkConnectStatus: self._event_network,
             KaraboEvent.CreateMainWindow: self._event_mainwindow
         }
@@ -113,17 +111,6 @@ class PanelWrangler(QObject):
 
     def _event_show_macro(self, data):
         self._open_macro(data['model'])
-
-    def _event_show_alarm(self, data):
-        instance_ids = data.get('instanceIds')
-        for inst_id in instance_ids:
-            self._open_instance_panel(inst_id, AlarmPanel,
-                                      PanelAreaEnum.Middle)
-
-    def _event_remove_alarm(self, data):
-        instance_ids = data.get('instanceIds')
-        for inst_id in instance_ids:
-            self._close_instance_panel(inst_id)
 
     def _event_network(self, data):
         self.connected_to_server = data.get('status', False)
