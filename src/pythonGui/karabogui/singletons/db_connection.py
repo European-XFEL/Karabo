@@ -12,7 +12,7 @@ from karabo.common.project.api import (
     MemCacheWrapper, get_user_cache, read_lazy_object)
 from karabo.common.scenemodel.api import SceneModel
 from karabo.native import (
-    Hash, read_project_model, write_project_model)
+    get_item_type, Hash, read_project_model, write_project_model)
 from karabogui import messagebox
 from karabogui.events import (
     broadcast_event, KaraboEvent, register_for_broadcasts
@@ -166,7 +166,6 @@ class ProjectDatabaseConnection(QObject):
         """
         # XXX: Please don't keep this here!
         self._ensure_login()
-
         self._push_writing(domain, uuid, obj)
 
     def update_attribute(self, domain, item_type, uuid, attr_name, attr_value):
@@ -324,10 +323,13 @@ class ProjectDatabaseConnection(QObject):
         # Don't ask the GUI server if you're already waiting for this object
         if uuid not in self._waiting_for_write:
             self._waiting_for_write[uuid] = obj
+            # item_type to nofity the clients later
+            item_type = get_item_type(obj)
             # Project DB expects xml as string
             xml = write_project_model(obj)
             # XXX overwrite everytime until handled
-            item = Hash('domain', domain, 'uuid', uuid, 'xml', xml,
+            item = Hash('domain', domain, 'uuid', uuid,
+                        'item_type', item_type, 'xml', xml,
                         'overwrite', True)
             self._write_items_buffer.append(item)
             if len(self._write_items_buffer) >= MAX_BUFFER_ITEMS:
