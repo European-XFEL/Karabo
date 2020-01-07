@@ -26,7 +26,7 @@ def axis_tick_font():
 
 class KaraboImagePlot(PlotItem):
     imageTransformed = pyqtSignal()
-    imageLevelsChanged = pyqtSignal()
+    imageLevelsChanged = pyqtSignal(object)
     imageAxesChanged = pyqtSignal()
 
     AXIS_ORDER = "row-major"  # aligning the image coords to view coords
@@ -74,9 +74,11 @@ class KaraboImagePlot(PlotItem):
         y_label = {UNITS: DEFAULT_UNITS_Y, LABEL: DEFAULT_LABEL_Y}
         self._labels = [x_label, y_label]
 
-        # Setup plot item
-        self.setMinimumWidth(200)
-        self.setMinimumHeight(200)
+        # Setup plot item. The minimum size of the plot without rescaling
+        # problems  (e.g., zooming out of infinity when it is collapsed)
+        # is 300 x 300.
+        self.setMinimumWidth(300)
+        self.setMinimumHeight(300)
         self._set_default_transform()
         self._flip()
 
@@ -207,7 +209,7 @@ class KaraboImagePlot(PlotItem):
         """
         self.imageItem.auto_levels = levels is None
         self.imageItem.setLevels(levels)
-        self.imageLevelsChanged.emit()
+        self.imageLevelsChanged.emit(levels)
 
     def hide_all_axis(self):
         for v in AXIS_ITEMS:

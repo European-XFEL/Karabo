@@ -33,6 +33,7 @@ class ExportTool(Enum):
 class AuxPlots(IntEnum):
     NoPlot = 0
     ProfilePlot = 1
+    Histogram = 2
 
 
 class ROITool(IntEnum):
