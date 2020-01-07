@@ -5,7 +5,7 @@ from pyqtgraph import functions as fn, ImageItem, Point
 from scipy.ndimage import zoom
 
 from karabogui.graph.common.api import MouseMode
-from .utils import map_rect_to_transform
+from .utils import map_rect_to_transform, rescale
 
 
 DIMENSION_DOWNSAMPLE = [(500, 1.5), (1000, 2)]  # [(dimension, min downsample)]
@@ -156,19 +156,23 @@ class KaraboImageItem(ImageItem):
 
         # 3. Clip values according to levels
         low, high = (0, 255)  # default color range
-        if self.levels is not None and self.levels.ndim == 1:
+        if self.levels is None:
+            image_min, image_max = image.min(), image.max()
+        else:
             level_min, level_max = self.levels
             image = np.clip(image, level_min, level_max)
+            image_min, image_max = image.min(), image.max()
 
             # Calculate new color ranges with the ratio of the image extrema
-            # and the preset levels. The last two values correspond with the
-            # said ratio.
-            image_levels = [level_min, level_max, image.min(), image.max()]
-            low, high = rescale(image_levels, low, high)[2:]
+            # and the preset levels.
+            low, high = rescale([image_min, image_max],
+                                min_value=level_min, max_value=level_max,
+                                low=low, high=high).astype(np.uint8)
 
         # 4. Rescale values to 0-255 relative to the image min/max
         # for the QImage
-        image = rescale(image, low, high)
+        image = rescale(image, min_value=image_min, max_value=image_max,
+                        low=low, high=high).astype(np.uint8)
 
         # 5. Transpose image array to match axis orientation. There is a need
         # to copy since QImage need the array copy (pointers), not the view.
@@ -363,18 +367,6 @@ class KaraboImageItem(ImageItem):
         super(KaraboImageItem, self).informViewBoundsChanged()
         self.reset_downsampling(update=False)
         self._slice_rect = None
-
-
-def rescale(image, low=0.0, high=100.0):
-    min_value, max_value = np.min(image), np.max(image)
-    value_range = np.subtract(max_value, min_value)
-
-    if value_range == 0:
-        return image
-
-    rescaled = high - ((high - low) * ((max_value - image) / value_range))
-
-    return rescaled.astype(np.uint8)
 
 
 def is_image_invalid(image):

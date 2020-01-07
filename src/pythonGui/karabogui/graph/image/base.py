@@ -1,6 +1,6 @@
 from functools import partial
 
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, QEvent, Qt
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, QEvent, QSize, Qt
 from PyQt5.QtWidgets import QAction, QGridLayout, QWidget
 from pyqtgraph import GraphicsLayoutWidget
 
@@ -18,7 +18,8 @@ from .legends.scale import ScaleLegend
 from .plot import KaraboImagePlot
 from .tools.picker import PickerController
 from .tools.toolbar import AuxPlotsToolset
-from .utils import create_colormap_menu, create_icon_from_colormap
+from .utils import (
+    create_colormap_menu, create_icon_from_colormap, levels_almost_equal)
 
 
 class KaraboImageView(QWidget):
@@ -38,12 +39,12 @@ class KaraboImageView(QWidget):
         self.setLayout(layout)
 
         self.image_layout = GraphicsLayoutWidget()
-        self.image_layout.setMinimumHeight(100)
-        self.image_layout.setMinimumWidth(100)
         self.layout().addWidget(self.image_layout, 0, 0, 1, 1)
 
         # Add our basic plotItem to this widget
         self.plotItem = KaraboImagePlot()
+        self.plotItem.imageLevelsChanged.connect(self._image_levels_changed)
+        self.plotItem.imageItem.sigImageChanged.connect(self._image_changed)
 
         # row, col, row_span, col_span
         self.image_layout.addItem(self.plotItem, 1, 1, 1, 1)
@@ -163,9 +164,9 @@ class KaraboImageView(QWidget):
 
         return self._picker
 
-    def add_aux(self, plot_type=None, config=None, enable=True):
+    def add_aux(self, plot=None, **config):
         """Add a auxiliary plots to the ImageView"""
-        if plot_type and enable:
+        if plot is not None:
             if self._aux_plots is None:
                 # Create an instance of the aux plots controller with the klass
                 self._aux_plots = AuxPlotsController(self.image_layout)
@@ -176,16 +177,12 @@ class KaraboImageView(QWidget):
                 if self.roi is not None:
                     self.roi.updated.connect(self._aux_plots.analyze)
 
-            if config is None:
-                config = {}
+            controller = self._aux_plots.add_from_type(plot, **config)
+            controller.link_viewbox(self.plotItem.vb)
 
-            plots = self._aux_plots.add_from_type(plot_type, **config)
-            for ax, plot in enumerate(plots):
-                plot.vb.linkView(ax, self.plotItem.vb)
         else:
-            if plot_type is AuxPlots.NoPlot:
-                for ax, plot in enumerate(self._aux_plots.current_plots):
-                    plot.vb.linkView(ax, None)
+            if plot is AuxPlots.NoPlot:
+                self._aux_plots.current_plot.link_viewbox(None)
                 self._aux_plots.clear()
 
                 # If ROI exists
@@ -227,20 +224,22 @@ class KaraboImageView(QWidget):
     def plot(self):
         return self.plotItem
 
-    def set_colormap(self, color_map, update=True):
-        self.plotItem.set_colormap(color_map)
+    def set_colormap(self, colormap, update=True):
+        self.plotItem.set_colormap(colormap)
         if self._colorbar is not None:
-            self._colorbar.set_colormap(color_map)
+            self._colorbar.set_colormap(colormap)
+        if self._aux_plots is not None:
+            self._aux_plots.set_config(AuxPlots.Histogram, colormap=colormap)
 
         # NOTE: We might have a colormap action without colorbar!
         if self._colormap_action is not None:
-            self._colormap_action.setIcon(create_icon_from_colormap(color_map))
+            self._colormap_action.setIcon(create_icon_from_colormap(colormap))
 
         if self._picker is not None:
             self._picker.update()
 
         if update:
-            config = {'colormap': color_map}
+            config = {'colormap': colormap}
             self.configuration.update(**config)
             self.stateChanged.emit(config)
 
@@ -262,9 +261,10 @@ class KaraboImageView(QWidget):
         if colormap is not None:
             self.set_colormap(colormap, update=False)
             # We check the action as well.
-            for cmap_action in self._colormap_action.menu().actions():
-                if cmap_action.text() == colormap:
-                    cmap_action.setChecked(True)
+            if self._colormap_action is not None:
+                for cmap_action in self._colormap_action.menu().actions():
+                    if cmap_action.text() == colormap:
+                        cmap_action.setChecked(True)
 
         # Restore labels
         x_units = configuration.get('x_units', 'pixels')
@@ -318,12 +318,12 @@ class KaraboImageView(QWidget):
         # Restore toolbar state
         aux_plots_class = configuration.get('aux_plots', AuxPlots.NoPlot)
         if self.toolbar is not None:
-            if not aux_plots_class == AuxPlots.NoPlot:
-                toolset = self.toolbar.toolset[AuxPlots]
+            toolset = self.toolbar.toolset.get(AuxPlots)
+            if toolset is not None and aux_plots_class != AuxPlots.NoPlot:
                 toolset.buttons[aux_plots_class].setChecked(True)
 
-            if current_roi_tool != ROITool.NoROI:
-                toolset = self.toolbar.toolset[ROITool]
+            toolset = self.toolbar.toolset.get(ROITool)
+            if toolset is not None and current_roi_tool != ROITool.NoROI:
                 toolset.buttons[current_roi_tool].setChecked(True)
 
         # Restore auxiliar plots
@@ -333,6 +333,35 @@ class KaraboImageView(QWidget):
 
     # -----------------------------------------------------------------------
     # Qt Slots
+
+    @pyqtSlot()
+    def _image_changed(self):
+        """Unified handle of image changes. This is to avoid race conditions.
+           Will move the picker and ROI slots here as well"""
+
+        # Check effective colorbar levels. In the ideal world, the effective
+        # levels should not be bounded to the colorbar.
+        if self._colorbar is not None:
+            image_levels = self.plotItem.imageItem.levels
+            if not levels_almost_equal(self._colorbar.levels, image_levels):
+                self._colorbar.set_levels(image_levels)
+                if self._aux_plots is not None:
+                    self._aux_plots.set_config(plot=AuxPlots.Histogram,
+                                               levels=image_levels)
+
+        if self.roi is not None:
+            self.roi.update()
+
+    @pyqtSlot(object)
+    def _image_levels_changed(self, levels):
+        """Unified handle of image level changes."""
+
+        if self._picker is not None:
+            self._picker.update()
+
+        if self._aux_plots is not None:
+            self._aux_plots.set_config(plot=AuxPlots.Histogram,
+                                       levels=levels or self._colorbar.levels)
 
     @pyqtSlot(MouseMode)
     def set_mouse_mode(self, mode):
@@ -344,7 +373,7 @@ class KaraboImageView(QWidget):
     def show_aux_plots(self, plot_class):
         """Hides/shows the auxiliar plots set for this controller"""
         if self._aux_plots is not None:
-            self._aux_plots.show(plot_class != AuxPlots.NoPlot)
+            self._aux_plots.show(plot_class)
 
         if self.roi is not None:
             self.roi.enable_updates(plot_class != AuxPlots.NoPlot)
@@ -505,3 +534,7 @@ class KaraboImageView(QWidget):
         if event.type() == QEvent.ToolTip:
             self.toolTipChanged.emit()
         return super(KaraboImageView, self).event(event)
+
+    def sizeHint(self):
+        """ The optimal size when all aux plots and labels are activated."""
+        return QSize(610, 460)

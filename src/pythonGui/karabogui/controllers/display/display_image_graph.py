@@ -34,7 +34,8 @@ class DisplayImageGraph(BaseBindingController):
         widget.add_colorbar()
         widget.add_picker()
         widget.add_roi()
-        widget.add_aux(AuxPlots.ProfilePlot, config={'smooth': True})
+        widget.add_aux(plot=AuxPlots.ProfilePlot, smooth=True)
+        widget.add_aux(plot=AuxPlots.Histogram)
 
         # Finalize
         widget.add_toolbar()
