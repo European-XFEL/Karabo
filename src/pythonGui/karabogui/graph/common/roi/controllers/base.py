@@ -88,7 +88,7 @@ class BaseROIController(QObject):
 
         # Connect some signals
         roi_item.sigRegionChangeStarted.connect(self._set_current_item)
-        roi_item.sigRegionChanged.connect(self._update)
+        roi_item.sigRegionChanged.connect(self.update)
         roi_item.sigRemoveRequested.connect(self._remove_roi_item)
         roi_item.sigClicked.connect(self._set_current_item)
 
@@ -156,7 +156,11 @@ class BaseROIController(QObject):
 
     def enable_updates(self, enable=True):
         self._updates_enabled = enable
-        self._update()
+        self.update()
+
+    @pyqtSlot()
+    def update(self):
+        """Subclass for ROI region change interactions"""
 
     # ---------------------------------------------------------------------
     # Private methods
@@ -215,10 +219,6 @@ class BaseROIController(QObject):
     def _show_roi_item(self, roi_item):
         """ Shows an ROI item """
         roi_item.set_visible(True)
-
-    @pyqtSlot()
-    def _update(self):
-        """Subclass for ROI region change interactions"""
 
     @pyqtSlot(object)
     def _set_current_item(self, roi_item, update=True):

@@ -99,8 +99,11 @@ def init_gui(app, use_splash=True):
     # Suppress some warnings
     # 1. From scipy.ndimage.zoom
     warnings.filterwarnings('ignore', '.*output shape of zoom.*')
+    # 2. From scipy.optimize
+    warnings.filterwarnings('ignore', '.*Covariance of the parameters '
+                                      'could not be estimated.*')
 
-    # 2. Trendline
+    # 3. Trendline
     # We might deal with NaN values only, hence we disable all the warnings
     # as Qwt will handle nicely!
     IGNORE_NAN_WARN = [r'Mean of empty slice', r'All-NaN slice encountered',

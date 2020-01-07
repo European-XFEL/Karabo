@@ -27,7 +27,7 @@ class TestKaraboImageView(GuiTestCase):
 
         # Check no data on init
         self.assertFalse(self.widget.plotItem.image_set)
-        self._assert_aux_plots_data(has_data=False)
+        self.assertIsNone(self.aux_plots.current_plot)
 
         # Setup widget
         self.widget.show_aux_plots(AuxPlots.ProfilePlot)
@@ -57,7 +57,7 @@ class TestKaraboImageView(GuiTestCase):
         self.assertTrue(self.widget.plotItem.image_set)
         np.testing.assert_array_equal(self.widget.plotItem.image, image)
 
-        self._assert_aux_plots_data(has_data=False)
+        self.assertIsNone(self.aux_plots.current_plot)
 
     def test_empty_list_image(self):
         """This test checks empty image with [] as input"""
@@ -78,9 +78,11 @@ class TestKaraboImageView(GuiTestCase):
         self.assertFalse(self.widget.plotItem.image_set)
 
     def _assert_aux_plots_data(self, has_data=True):
-        assert_method = self.assertIsNotNone if has_data else self.assertIsNone
+        current_plot = self.aux_plots.current_plot
+        self.assertIsNotNone(current_plot)
 
-        for ax in range(2):
-            data_item = self.aux_plots.current_plots[ax]._line
-            assert_method(data_item.xData)
-            assert_method(data_item.yData)
+        assert_method = self.assertTrue if has_data else self.assertFalse
+        for plot in current_plot.plots:
+            data_item = plot._data_items[0]
+            assert_method(len(data_item.xData) != 0)
+            assert_method(len(data_item.yData) != 0)

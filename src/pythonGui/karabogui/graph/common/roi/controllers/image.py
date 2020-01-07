@@ -11,7 +11,6 @@ class ImageROIController(BaseROIController):
 
     def __init__(self, plotItem):
         super(ImageROIController, self).__init__(plotItem)
-        plotItem.imageItem.sigImageChanged.connect(self._update)
         plotItem.imageTransformed.connect(self._update_transform)
 
         # Enable movement wrt image pixels
@@ -22,19 +21,18 @@ class ImageROIController(BaseROIController):
         super(ImageROIController, self).show(roi)
         if self.plotItem.image_set:
             # Create a first ROI read
-            self._update()
+            self.update()
 
     def _show_roi_item(self, roi_item):
         super(ImageROIController, self)._show_roi_item(roi_item)
         self._update_geometry(roi_item)
 
     def destroy(self):
-        self.plotItem.imageItem.sigImageChanged.disconnect(self._update)
         self.plotItem.imageTransformed.disconnect(self._update_transform)
         super(ImageROIController, self).destroy()
 
     @pyqtSlot()
-    def _update(self):
+    def update(self):
         """Emits the ROI information, which can be either from the whole plot
            or the ROI rectangle."""
         if not self.plotItem.image_set or not self._updates_enabled:
@@ -79,9 +77,9 @@ class ImageROIController(BaseROIController):
     def _set_current_item(self, roi_item, update=True):
         super(ImageROIController, self)._set_current_item(roi_item, update)
         if update and self.plotItem.image_set:
-            self._update()
+            self.update()
 
     @pyqtSlot()
     def _update_transform(self):
         self._update_geometry()
-        self._update()
+        self.update()
