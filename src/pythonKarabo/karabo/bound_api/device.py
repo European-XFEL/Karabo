@@ -121,9 +121,11 @@ class PythonDevice(NoFsm):
 
             STRING_ELEMENT(expected).key("hostName")
             .displayedName("Host")
-            .description("The name of the host where this device runs")
+            .description("Do not set this property, it will be set by the"
+                         " device-server.")
             .expertAccess()
-            .readOnly()
+            .assignmentOptional().noDefaultValue()
+            .init()
             .commit(),
 
             INT32_ELEMENT(expected).key("pid")
@@ -309,7 +311,6 @@ class PythonDevice(NoFsm):
         if configuration is None:
             raise ValueError("Configuration must be Hash object, not None")
 
-        configuration.set("hostName", socket.gethostname().partition('.')[0])
         super(PythonDevice, self).__init__(configuration)
 
         self._parameters = configuration
@@ -331,9 +332,11 @@ class PythonDevice(NoFsm):
         # Initialize _client to None (important!)
         self._client = None
 
-        # host & domain names
-        self.hostname, dotsep, self.domainname = \
-            socket.gethostname().partition('.')
+        # Initialize hostName
+        if "hostName" not in self._parameters:
+            self._parameters["hostName"] = (
+                socket.gethostname().partition('.')[0])
+        self.hostname = self._parameters["hostName"]
 
         # timeserver related
         self._timeLock = threading.Lock()
