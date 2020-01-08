@@ -263,7 +263,7 @@ def _find_scene_model(name, uuid):
     if visitor.found is None:
         msg = ("The UUID of the linked scene <b>{}</b> was not found in the "
                "project! Trying to retrieve the scene in <b>control mode</b> "
-               "from the project <b>database<b/> instead.".format(name))
+               "from the project <b>database</b> instead.".format(name))
         messagebox.show_error(msg)
         return None
 
