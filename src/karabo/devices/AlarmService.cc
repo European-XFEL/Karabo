@@ -37,6 +37,11 @@ namespace karabo {
 
 
         void AlarmService::expectedParameters(Schema& expected) {
+            OVERWRITE_ELEMENT(expected).key("state")
+                    .setNewOptions(State::INIT, State::ON)
+                    .setNewDefaultValue(State::INIT)
+                    .commit();
+
             OVERWRITE_ELEMENT(expected).key("deviceId")
                     .setNewDefaultValue("Karabo_AlarmService")
                     .commit();
@@ -81,7 +86,9 @@ namespace karabo {
 
         AlarmService::AlarmService(const karabo::util::Hash& input) :
             karabo::core::Device<>(input),
-            m_updateTimer(karabo::net::EventLoop::getIOService()) {
+            m_updateTimer(karabo::net::EventLoop::getIOService()),
+            m_alarmIdCounter(0ull) {
+
             setupSignalsAndSlots();
             KARABO_INITIAL_FUNCTION(initialize);
         }
@@ -95,27 +102,25 @@ namespace karabo {
 
         void AlarmService::initialize() {
 
-            updateState(State::INIT);
+            // Recover previous alarms in case we recovered from a failure or were restarted
+            m_flushFilePath = get<std::string>("storagePath") + "/" + getInstanceId() + ".xml";
+            reinitFromFile();
 
-            // listen on instance new events to connect to the instances' "signalAlarmUpdate" signal
-            trackAllInstances();
             // NOTE: boost::bind() is OK for these handlers because SignalSlotable calls them directly instead
             // of dispatching them via the event loop.
             remote().registerInstanceNewMonitor(boost::bind(&AlarmService::registerNewDevice, this, _1));
             remote().registerInstanceGoneMonitor(boost::bind(&AlarmService::instanceGoneHandler, this, _1, _2));
 
-            //try to recover previous alarms in case we recovered from a failure or were restarted
-            m_flushFilePath = get<std::string>("storagePath") + "/" + getInstanceId() + ".xml";
-            reinitFromFile();
+            // Switch on instance tracking - which is blocking a while.
+            // Note that instanceNew(..) will be called for all instances already in the game.
+            remote().enableInstanceTracking();
 
             //we add a worker thread, which persists alarm state at regular intervals. This data is used when recovering
             //from a alarm service shutdown
-
             m_flushRunning = true;
             m_flushWorker = boost::thread(&AlarmService::flushRunner, this);
-            m_alarmIdCounter = 0;
-            m_updateHash = Hash();
-            updateState(State::NORMAL);
+
+            updateState(State::ON);
 
             m_updateTimer.expires_from_now(boost::posix_time::milliseconds(get<int>("updateTime")));
             m_updateTimer.async_wait(bind_weak(&karabo::devices::AlarmService::sendAlarmUpdates, this, boost::asio::placeholders::error));
@@ -168,19 +173,9 @@ namespace karabo {
 
                     if (deviceId == getInstanceId()) return; //prevent registering ourselves.
 
-                    std::vector<std::string> devices = get<std::vector<std::string> >("registeredDevices");
-                    if (std::find(devices.begin(), devices.end(), deviceId) == devices.end()) {
-                        asyncConnect(deviceId, "signalAlarmUpdate", "", "slotUpdateAlarms",
-                                     util::bind_weak(&AlarmService::connectedHandler, this, deviceId));
-                    } else {
-                        //we've known this instance before and might have alarms pending from it. We should ask
-                        //for an update on these alarms.
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Device '" << deviceId << "' reappeared. Asking it to re-submit its alarms!";
-                        boost::shared_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
-                        const boost::optional<Hash::Node&> alarmNode = m_alarms.find(deviceId);
-                        request(deviceId, "slotReSubmitAlarms", alarmNode ? alarmNode->getValue<Hash>() : Hash())
-                                .receiveAsync<std::string, Hash>(boost::bind(&AlarmService::slotUpdateAlarms, this, _1, _2));
-                    }
+                    // Connect signal and request current set of alarms afterwards
+                    asyncConnect(deviceId, "signalAlarmUpdate", "", "slotUpdateAlarms",
+                                 util::bind_weak(&AlarmService::connectedHandler, this, deviceId));
                 }
             } catch (const std::exception& e) {
                 KARABO_LOG_ERROR << "In registerAlarmWithNewDevice: " << e.what() << ".";
@@ -189,59 +184,69 @@ namespace karabo {
 
 
         void AlarmService::connectedHandler(const std::string& deviceId) {
-            // Since there is no Device::appendVector(key, vectorItem), need an extra mutex lock to avid that
-            // "registeredDevices" changes in between 'get' and 'set':
-            boost::unique_lock<boost::shared_mutex> lock(m_deviceRegisterMutex);
-            std::vector<std::string> devices = get<std::vector<std::string> >("registeredDevices");
-            devices.push_back(deviceId);
-            set("registeredDevices", devices);
+            {
+                // Since there is no Device::appendVector(key, vectorItem), need an extra mutex lock to avoid that
+                // "registeredDevices" changes in between 'get' and 'set':
+                boost::unique_lock<boost::shared_mutex> lock(m_deviceRegisterMutex);
+                std::vector<std::string> devices = get<std::vector<std::string> >("registeredDevices");
+                // Avoid duplicates that could arise if a device shuts down and comes back
+                if (std::find(devices.begin(), devices.end(), deviceId) == devices.end()) {
+                    devices.push_back(deviceId);
+                    set("registeredDevices", devices);
+                }
+            }
+            // We might have alarms pending from it. We should ask for an update on these alarms.
+            boost::shared_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
+            const boost::optional<Hash::Node&> alarmNode = m_alarms.find(deviceId);
+            request(deviceId, "slotReSubmitAlarms", alarmNode ? alarmNode->getValue<Hash>() : Hash())
+                    .receiveAsync<std::string, Hash>(boost::bind(&AlarmService::slotUpdateAlarms, this, _1, _2));
         }
 
 
         void AlarmService::instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
 
-            {
-                //updates by row
-                Hash rowUpdates;
+            // Disconnect to switch off the automatic reconnect.
+            // This allows a controlled connect/request procedure (in registerNewDevice) in case the device comes back
+            asyncDisconnect(instanceId, "signalAlarmUpdate", "", "slotUpdateAlarms",
+                            boost::function<void ()>(), // no success handler needed
+                            []() { // dummy error handler to completely silence the expected time out handling
+                            });
 
-                boost::upgrade_lock<boost::shared_mutex> readLock(m_alarmChangeMutex);
-                boost::optional<Hash::Node&> alarmN = m_alarms.find(instanceId);
-                if (alarmN) {
-                    {
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Device instance '" << instanceId << "' disappeared. Setting all pending alarms to acknowledgeable";
-                        boost::upgrade_to_unique_lock<boost::shared_mutex> writeLock(readLock);
-                        Hash& alarm = alarmN->getValue<Hash>();
-                        for (Hash::iterator propIt = alarm.begin(); propIt != alarm.end(); ++propIt) {
-                            Hash& property = propIt->getValue<Hash>();
-                            for (Hash::iterator aTypeIt = property.begin(); aTypeIt != property.end(); ++aTypeIt) {
-                                Hash& typeEntry = aTypeIt->getValue<Hash>();
-                                //if a device died all alarms need to be and can be acknowledged
-                                typeEntry.set("needsAcknowledging", true);
-                                typeEntry.set("acknowledgeable", true);
+            //updates by row
+            Hash rowUpdates;
 
-                                //add as update to row updates;
-                                const unsigned long long id = m_alarmsMap_r.find(&(*aTypeIt))->second;
-                                rowUpdates.set(boost::lexical_cast<std::string>(id), addRowUpdate("deviceKilled", typeEntry));
+            boost::upgrade_lock<boost::shared_mutex> readLock(m_alarmChangeMutex);
+            boost::optional<Hash::Node&> alarmN = m_alarms.find(instanceId);
+            if (alarmN) {
+                {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Device instance '" << instanceId << "' disappeared. Setting all pending alarms to acknowledgeable";
+                    boost::upgrade_to_unique_lock<boost::shared_mutex> writeLock(readLock);
+                    Hash& alarm = alarmN->getValue<Hash>();
+                    for (Hash::iterator propIt = alarm.begin(); propIt != alarm.end(); ++propIt) {
+                        Hash& property = propIt->getValue<Hash>();
+                        for (Hash::iterator aTypeIt = property.begin(); aTypeIt != property.end(); ++aTypeIt) {
+                            Hash& typeEntry = aTypeIt->getValue<Hash>();
+                            //if a device died all alarms need to be and can be acknowledged
+                            typeEntry.set("needsAcknowledging", true);
+                            typeEntry.set("acknowledgeable", true);
 
-                            }
-                        }
-                    }
-                    {
-                        boost::mutex::scoped_lock lock(m_updateMutex);
-                        if (!rowUpdates.empty()) {
-                            m_updateHash.merge(rowUpdates);
+                            //add as update to row updates;
+                            const unsigned long long id = m_alarmsMap_r.find(&(*aTypeIt))->second;
+                            rowUpdates.set(boost::lexical_cast<std::string>(id), addRowUpdate("deviceKilled", typeEntry));
+
                         }
                     }
                 }
-
+                if (!rowUpdates.empty()) {
+                    boost::mutex::scoped_lock lock(m_updateMutex);
+                    m_updateHash.merge(rowUpdates);
+                }
             }
-
         }
 
 
         void AlarmService::slotUpdateAlarms(const std::string& deviceId, const karabo::util::Hash& alarmInfo) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "slotUpdateAlarms alarmInfo for: " << deviceId;
-            KARABO_LOG_FRAMEWORK_DEBUG << alarmInfo;
+            KARABO_LOG_FRAMEWORK_DEBUG << "slotUpdateAlarms alarmInfo for: " << deviceId << " " << alarmInfo;
 
             // alarmInfo MUST HAVE "toClear" and "toAdd" keys
             if (!(alarmInfo.has("toClear") && alarmInfo.has("toAdd"))) return;
@@ -250,11 +255,9 @@ namespace karabo {
 
             removeDeviceAlarms(deviceId, alarmInfo.get<Hash>("toClear"), rowUpdates);
             addDeviceAlarms(deviceId, alarmInfo.get<Hash>("toAdd"), rowUpdates);
-            {
-                boost::mutex::scoped_lock lock(m_updateMutex);
             if (!rowUpdates.empty()) {
+                boost::mutex::scoped_lock lock(m_updateMutex);
                 m_updateHash.merge(rowUpdates);
-                }
             }
         }
 
@@ -428,7 +431,7 @@ namespace karabo {
 
                         boost::shared_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
 
-                        Hash h("devices", get<std::vector<std::string> >("registeredDevices"), "alarms", m_alarms);
+                        Hash h("alarms", m_alarms);
                         serializer->save(h, archive);
                     }
                     fout << archive;
@@ -484,20 +487,6 @@ namespace karabo {
                 }
             }
             emit("signalAlarmServiceUpdate", getInstanceId(), std::string("alarmInit"), rowInits);
-
-            // trigger instance new handlers for existing devices
-            // this will also trigger these devices to resubmit their alarms
-            const Hash runtimeInfo = remote().getSystemInformation();
-            const Hash& onlineDevices = runtimeInfo.get<Hash>("device");
-            for (Hash::const_iterator it = onlineDevices.begin(); it != onlineDevices.end(); ++it) {
-                const Hash::Node& deviceNode = *it;
-                // Topology entry as understood by registerNewDevice: Hash with path "device.<deviceId>"
-                Hash topologyEntry("device", Hash());
-                // Copy node with key "<deviceId>" and attributes into the single Hash in topologyEntry:
-                topologyEntry.begin()->getValue<Hash>().setNode(deviceNode);
-                registerNewDevice(topologyEntry);
-            }
-
         }
 
 
