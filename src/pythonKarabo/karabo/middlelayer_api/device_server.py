@@ -358,6 +358,7 @@ class DeviceServerBase(SignalSlotable):
             configuration = Hash(initializer)
             configuration["_deviceId_"] = deviceId
             configuration["_serverId_"] = self.serverId
+            configuration["hostName"] = self.hostName
             classId = configuration.pop("classId")
             background(self.startDevice(classId, deviceId, configuration))
         # Not required information anymore!
