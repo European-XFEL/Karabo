@@ -114,6 +114,7 @@ def is_mandatory(binding):
                     recurse(node)
                 elif node.assignment is Assignment.MANDATORY:
                     ret = True
+                    break
 
         recurse(binding)
         return ret
