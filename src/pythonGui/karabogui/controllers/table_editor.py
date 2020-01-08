@@ -200,6 +200,20 @@ class TableModel(QAbstractTableModel):
 
         return True
 
+    def move_row_up(self, row):
+        """In a simple two step process move a row element up"""
+        if row > 0:
+            copy_row = self._data[row]
+            self.removeRows(row, 1, QModelIndex())
+            self.insertRows(row - 1, 1, QModelIndex(), copy_row=copy_row)
+
+    def move_row_down(self, row):
+        """In a simple two step process move a row element down"""
+        if row < self.rowCount() - 1:
+            copy_row = self._data[row]
+            self.removeRows(row, 1, QModelIndex())
+            self.insertRows(row + 1, 1, QModelIndex(), copy_row=copy_row)
+
     # ------------------------------------------------------------------------
     # Additional methods
 
