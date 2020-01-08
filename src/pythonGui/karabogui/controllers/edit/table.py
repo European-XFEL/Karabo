@@ -40,9 +40,8 @@ class _BaseTableElement(BaseBindingController):
 
     def create_widget(self, parent):
         widget = KaraboTableView(parent=parent)
-        widget.setSelectionBehavior(QAbstractItemView.SelectItems |
-                                    QAbstractItemView.SelectRows |
-                                    QAbstractItemView.SelectColumns)
+        widget.setSelectionBehavior(QAbstractItemView.SelectItems
+                                    | QAbstractItemView.SelectRows)
         widget.horizontalHeader().setStretchLastSection(True)
         return widget
 
@@ -149,6 +148,16 @@ class _BaseTableElement(BaseBindingController):
     def _duplicate_row(self, index):
         self._item_model.duplicate_row(index.row())
 
+    def _move_row_up(self, index):
+        row = index.row()
+        self._item_model.move_row_up(row)
+        self.widget.selectRow(row - 1)
+
+    def _move_row_down(self, index):
+        row = index.row()
+        self._item_model.move_row_down(row)
+        self.widget.selectRow(row + 1)
+
     def _remove_row(self, index):
         self._item_model.removeRows(index.row(), 1, QModelIndex())
 
@@ -158,36 +167,32 @@ class _BaseTableElement(BaseBindingController):
             # XXX: We did not yet receive a schema and thus have no table and
             # selection model!
             return
-
-        selection = selection_model.selection()
-        indexes = selection.indexes()
-        index = indexes[-1] if len(indexes) else None
+        index = selection_model.currentIndex()
 
         menu = QMenu()
         if index is not None:
-            # NOTE: We have a selection and check first if we can set this
-            # cell to a default value
             column = index.column()
-            if 0 <= column < len(self._column_hash):
-                key = self._column_hash.getKeys()[column]
-                if (self._role == Qt.EditRole
-                        and self._column_hash.hasAttribute(
-                        key, KARABO_SCHEMA_DEFAULT_VALUE)):
-                    set_default_action = menu.addAction('Set Cell Default')
-                    set_default_action.triggered.connect(
-                        partial(self._set_index_default, index=index, key=key))
-                    menu.addSeparator()
+            key = self._column_hash.getKeys()[column]
+            if (self._role == Qt.EditRole
+                    and self._column_hash.hasAttribute(
+                    key, KARABO_SCHEMA_DEFAULT_VALUE)):
+                set_default_action = menu.addAction('Set Cell Default')
+                set_default_action.triggered.connect(
+                    partial(self._set_index_default, index=index, key=key))
+                menu.addSeparator()
 
+            up_action = menu.addAction('Move Row Up')
+            up_action.triggered.connect(partial(self._move_row_up, index))
+            down_action = menu.addAction('Move Row Down')
+            down_action.triggered.connect(partial(self._move_row_down, index))
+            menu.addSeparator()
             add_action = menu.addAction('Add Row below')
             add_action.triggered.connect(partial(self._add_row, index))
             dupe_action = menu.addAction('Duplicate Row below')
             dupe_action.triggered.connect(partial(self._duplicate_row, index))
             remove_action = menu.addAction('Delete Row')
             remove_action.triggered.connect(partial(self._remove_row, index))
-        else:
-            # We have no selection and are most probably out of bounds!
-            end_action = menu.addAction('Add Row to End')
-            end_action.triggered.connect(self._row_to_end_action)
+
         menu.exec_(self.widget.viewport().mapToGlobal(pos))
 
 
