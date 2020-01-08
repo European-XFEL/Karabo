@@ -64,6 +64,7 @@ private:
 
 
     //alarm service device
+    const std::string m_alarmServiceId;
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_eventLoopThread;
 
