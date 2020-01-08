@@ -56,6 +56,16 @@ class DeviceServer(object):
             .assignmentOptional().noDefaultValue()
             .commit(),
 
+            STRING_ELEMENT(expected).key("hostName")
+            .displayedName("Forced Hostname")
+            .description(
+                "The hostname can be optionally forced to a specific string. "
+                "The host's definition will be used if not specified.")
+            .assignmentOptional().noDefaultValue()
+            .expertAccess()
+            .init()
+            .commit(),
+
             INT32_ELEMENT(expected).key("visibility")
             .displayedName("Visibility")
             .description("Configures who is allowed to see this server at all")
@@ -181,8 +191,10 @@ class DeviceServer(object):
         self.availableDevices = dict()
         self.deviceInstanceMap = dict()
         self.deviceInstanceMapLock = threading.RLock()
-        self.hostname, dotsep, self.domainname = \
-            socket.gethostname().partition('.')
+        if config.get('hostName') is not None:
+            self.hostname = config['hostName']
+        else:
+            self.hostname = socket.gethostname().partition('.')[0]
         self.autoStart = config.get("autoStart")
         self.deviceClasses = config.get("deviceClasses")
         self.timeServerId = config.get("timeServerId")
@@ -389,6 +401,9 @@ class DeviceServer(object):
         # Add connection type and parameters used by device server for
         # connecting to broker
         config['_connection_'] = self.connectionParameters
+
+        # Inject HostName
+        config['hostName'] = self.hostname
 
         # If not explicitely specified, let device inherit logger priority
         if not config.has("Logger.priority"):
