@@ -417,6 +417,12 @@ class Manager(QObject):
         broadcast_event(KaraboEvent.ProjectAttributeUpdated,
                         {'items': reply['items']})
 
+    def handle_projectUpdate(self, **info):
+        """Handle the project update signal from the project manager
+
+        The information is forwarded by the gui server to notify clients about
+        updated project items.
+        """
     # ---------------------------------------------------------------------
 
     def handle_notification(self, **info):
