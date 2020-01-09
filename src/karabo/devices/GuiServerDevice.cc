@@ -197,7 +197,8 @@ namespace karabo {
             KARABO_INITIAL_FUNCTION(initialize)
 
             KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)
-            KARABO_SLOT(slotAlarmSignalsUpdate, std::string, std::string, karabo::util::Hash );
+            KARABO_SLOT(slotAlarmSignalsUpdate, std::string, std::string, karabo::util::Hash);
+            KARABO_SLOT(slotProjectUpdate, karabo::util::Hash, std::string);
             KARABO_SLOT(slotDumpDebugInfo, karabo::util::Hash);
 
             Hash h;
@@ -1782,7 +1783,19 @@ namespace karabo {
             if (topologyEntry.get<Hash>(type).begin()->hasAttribute("classId") &&
                 topologyEntry.get<Hash>(type).begin()->getAttribute<std::string>("classId") == "ProjectManager") {
                 boost::unique_lock<boost::shared_mutex> lk(m_projectManagerMutex);
+                asyncConnect(instanceId, "signalProjectUpdate", "", "slotProjectUpdate");
                 m_projectManagers.insert(instanceId);
+            }
+        }
+
+
+        void GuiServerDevice::slotProjectUpdate(const Hash& info, const std::string & instanceId) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "slotProjectUpdate : info ...\n" << info;
+                Hash h("type", "projectUpdate", "info", info);
+                safeAllClientsWrite(h);
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in slotProjectUpdate: " << e.what();
             }
         }
 
