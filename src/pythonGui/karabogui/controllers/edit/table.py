@@ -20,6 +20,7 @@ from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.controllers.table_editor import (
     ComboBoxDelegate, KaraboTableView, TableModel)
+import karabogui.icons as icons
 
 
 def _get_options(schema_hash, key):
@@ -181,16 +182,16 @@ class _BaseTableElement(BaseBindingController):
                     partial(self._set_index_default, index=index, key=key))
                 menu.addSeparator()
 
-            up_action = menu.addAction('Move Row Up')
+            up_action = menu.addAction(icons.arrowFancyUp, 'Move Row Up')
             up_action.triggered.connect(partial(self._move_row_up, index))
-            down_action = menu.addAction('Move Row Down')
+            down_action = menu.addAction(icons.arrowFancyDown, 'Move Row Down')
             down_action.triggered.connect(partial(self._move_row_down, index))
             menu.addSeparator()
-            add_action = menu.addAction('Add Row below')
+            add_action = menu.addAction(icons.add, 'Add Row below')
             add_action.triggered.connect(partial(self._add_row, index))
-            dupe_action = menu.addAction('Duplicate Row below')
-            dupe_action.triggered.connect(partial(self._duplicate_row, index))
-            remove_action = menu.addAction('Delete Row')
+            du_action = menu.addAction(icons.editCopy, 'Duplicate Row below')
+            du_action.triggered.connect(partial(self._duplicate_row, index))
+            remove_action = menu.addAction(icons.delete, 'Delete Row')
             remove_action.triggered.connect(partial(self._remove_row, index))
 
         menu.exec_(self.widget.viewport().mapToGlobal(pos))
