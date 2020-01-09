@@ -593,6 +593,13 @@ namespace karabo {
 
             void slotLoggerMap(const karabo::util::Hash& loggerMap);
 
+            /**
+             * Called from projectManagers to notify about updated Projects
+             * @param info: the info hash containing the information about the updated projects
+             * @param instanceId: the instance id of the project manager device
+             */
+            void slotProjectUpdate(const karabo::util::Hash& info, const std::string& instanceId);
+
             void slotDumpDebugInfo(const karabo::util::Hash& info);
 
             /**
