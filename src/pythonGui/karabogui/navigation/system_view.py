@@ -109,6 +109,7 @@ class SystemTreeView(QTreeView):
         text = "Documentation"
         self.acDocu = QAction(icons.weblink, text, self)
         self.acDocu.triggered.connect(self.onGetDocumenation)
+        self.acDocu.setVisible(False)  # Classes don't have documentation
 
         self.mDeviceItem.addSeparator()
         self.mDeviceItem.addAction(self.acAbout)
@@ -224,6 +225,7 @@ class SystemTreeView(QTreeView):
         elif node_type is NavigationItemTypes.DEVICE:
             self.acKillDevice.setVisible(True)
             self.acAbout.setVisible(True)
+            self.acDocu.setVisible(True)
             has_scenes = _test_mask(info.get('capabilities', 0),
                                     Capabilities.PROVIDES_SCENES)
             self.acOpenScene.setVisible(has_scenes)
