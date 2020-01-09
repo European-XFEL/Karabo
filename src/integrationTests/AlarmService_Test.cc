@@ -25,7 +25,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(AlarmService_Test);
 using namespace karabo;
 
 
-AlarmService_Test::AlarmService_Test() {
+AlarmService_Test::AlarmService_Test() : m_alarmServiceId("testAlarmService") {
 
 }
 
@@ -47,8 +47,8 @@ void AlarmService_Test::setUp() {
     m_deviceClient = boost::shared_ptr<DeviceClient>(new DeviceClient());
 
     //unlink persisted alarms if they exist
-    if (boost::filesystem::exists(std::string(KARABO_TESTPATH) + "/testAlarmService.xml")) {
-        boost::filesystem::remove(std::string(KARABO_TESTPATH) + "/testAlarmService.xml");
+    if (boost::filesystem::exists(std::string(KARABO_TESTPATH) + "/" + m_alarmServiceId + ".xml")) {
+        boost::filesystem::remove(std::string(KARABO_TESTPATH) + "/" + m_alarmServiceId + ".xml");
     }
 }
 
@@ -64,8 +64,8 @@ void AlarmService_Test::tearDown() {
     m_eventLoopThread.join();
 
     //unlink persisted alarms if they exist
-    if (boost::filesystem::exists(std::string(KARABO_TESTPATH) + "/testAlarmService.xml")) {
-        boost::filesystem::remove(std::string(KARABO_TESTPATH) + "/testAlarmService.xml");
+    if (boost::filesystem::exists(std::string(KARABO_TESTPATH) + "/" + m_alarmServiceId + ".xml")) {
+        boost::filesystem::remove(std::string(KARABO_TESTPATH) + "/" + m_alarmServiceId + ".xml");
     }
 
 }
@@ -79,14 +79,14 @@ void AlarmService_Test::appTestRunner() {
     // here we start the server and service devices, as well as an alarm test device
     std::pair<bool, std::string> success =
             m_deviceClient->instantiate("testServer", "AlarmService",
-                                        Hash("deviceId", "testAlarmService", "flushInterval", 1, "storagePath", std::string(KARABO_TESTPATH)),
+                                        Hash("deviceId", m_alarmServiceId, "flushInterval", 1, "storagePath", std::string(KARABO_TESTPATH)),
                                         KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
     waitForCondition([this]() {
-        return m_deviceClient->get<karabo::util::State>("testAlarmService", "state") == karabo::util::State::NORMAL;
-    }, 2000u);
-    CPPUNIT_ASSERT_EQUAL(karabo::util::State::NORMAL.name(),
-                         m_deviceClient->get<karabo::util::State>("testAlarmService", "state").name());
+        return m_deviceClient->get<karabo::util::State>(m_alarmServiceId, "state") == karabo::util::State::ON;
+    }, 4000u);
+    CPPUNIT_ASSERT_EQUAL(karabo::util::State::ON.name(),
+                         m_deviceClient->get<karabo::util::State>(m_alarmServiceId, "state").name());
 
     success = m_deviceClient->instantiate("testServer", "AlarmTester", Hash("deviceId", "alarmTester"), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT(success.first);
@@ -114,19 +114,24 @@ void AlarmService_Test::appTestRunner() {
     testFlushing();
     testRecovery();
     testDeviceKilled();
-    // TODO: Comment in once it is figured out why the arriving Hash has
-    // 'update' or 'acknowledgeable' coming from signalAlarmUpdate
-    //testDeviceReappeared();
+    // Note: following test is not complete, see comment inside.
+    testDeviceReappeared();
 }
 
 
 void AlarmService_Test::testDeviceRegistration() {
-    //we give a bit of time for updates to propagate.
-    boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
 
     // test whether the device actually registers with the alarm service upon instanceNew
-    std::vector<std::string> registeredDevices = m_deviceClient->get<std::vector<std::string> >("testAlarmService", "registeredDevices");
-    CPPUNIT_ASSERT(std::find(registeredDevices.begin(), registeredDevices.end(), std::string("alarmTester")) != registeredDevices.end());
+    if (!waitForCondition([this]() {
+            std::vector<std::string> registeredDevices = m_deviceClient->get<std::vector<std::string> >(m_alarmServiceId, "registeredDevices");
+
+            return (std::find(registeredDevices.begin(), registeredDevices.end(), std::string("alarmTester")) != registeredDevices.end());
+        },
+        5000u)) {
+        // Force failure
+        std::vector<std::string> registeredDevices = m_deviceClient->get<std::vector<std::string> >(m_alarmServiceId, "registeredDevices");
+        CPPUNIT_ASSERT_MESSAGE("alarmTester missing: " + toString(registeredDevices), false);
+    }
 
     std::clog << std::endl << "Tested device registration.. Ok" << std::endl;
 }
@@ -228,7 +233,7 @@ void AlarmService_Test::testAcknowledgement() {
 
     //first test if we cannot acknowledge a not acknowledgeable alarm.
     //the alarm service should be in this state after the previous test.
-    Hash message("type", "acknowledgeAlarm", "alarmInstanceId", "testAlarmService", "acknowledgedRows", Hash("0", true));
+    Hash message("type", "acknowledgeAlarm", "alarmInstanceId", m_alarmServiceId, "acknowledgedRows", Hash("0", true));
     CPPUNIT_ASSERT_NO_THROW(messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
         m_tcpAdapter->sendMessage(message);
     }));
@@ -289,12 +294,12 @@ void AlarmService_Test::testAcknowledgement() {
     while (!initMessageReceived) {
         if (rep++ == maxRepeats) CPPUNIT_ASSERT(false);
         boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
-        message = Hash("type", "requestAlarms", "alarmInstanceId", "testAlarmService");
+        message = Hash("type", "requestAlarms", "alarmInstanceId", m_alarmServiceId);
         CPPUNIT_ASSERT_NO_THROW_MESSAGE(toString(rep) + " failures to receive message for " + toString(message),
                                         messageQ = m_tcpAdapter->getNextMessages("alarmInit", 1, [&] {
                                             m_tcpAdapter->sendMessage(message);
                                         }));
-        //m_deviceClient->execute("testAlarmService", "slotReconfigure", Hash("currentAlarms", alarmTable), KRB_TEST_MAX_TIMEOUT);
+        //m_deviceClient->execute(m_alarmServiceId, "slotReconfigure", Hash("currentAlarms", alarmTable), KRB_TEST_MAX_TIMEOUT);
         messageQ->pop(lastMessage);
         rowId = lastMessage.get<Hash>("rows").begin()->getKey();
         if (lastMessage.has("rows." + rowId + ".init")) {
@@ -465,11 +470,11 @@ void AlarmService_Test::testFlushing() {
     //assure the flushed file resembles the current state
     
     boost::this_thread::sleep(boost::posix_time::milliseconds(3000));
-    boost::interprocess::file_lock flock((std::string(KARABO_TESTPATH) + "/testAlarmService.xml").c_str());
+    boost::interprocess::file_lock flock((std::string(KARABO_TESTPATH) + "/" + m_alarmServiceId + ".xml").c_str());
     {
         boost::interprocess::sharable_lock<boost::interprocess::file_lock> shlock(flock);
         std::ifstream fin;
-        fin.open(std::string(KARABO_TESTPATH) + "./testAlarmService.xml");
+        fin.open(std::string(KARABO_TESTPATH) + "/" + m_alarmServiceId + ".xml");
         std::ostringstream archive;
         std::string input;
 
@@ -479,9 +484,6 @@ void AlarmService_Test::testFlushing() {
         Hash h;
         serializer->load(h, archive.str());
         
-        //should be the same as what we currently hold in the table and devices sections
-        std::vector<std::string> registeredDevices = m_deviceClient->get<std::vector<std::string> >("testAlarmService", "registeredDevices");
-
         Hash propHash;
         propHash.set("type", "warnHigh");
         propHash.set("description", "A floatPropNeedsAck2 warnHigh");
@@ -491,7 +493,7 @@ void AlarmService_Test::testFlushing() {
         propHash.set("property", "nodeA" + Validator::kAlarmParamPathSeparator + "floatPropNeedsAck2");
         propHash.set<unsigned long long>("id", boost::lexical_cast<unsigned long long>(m_rowForDevice1));
         Hash alarmHash("alarmTester", Hash("nodeA" + Validator::kAlarmParamPathSeparator + "floatPropNeedsAck2", Hash("warnHigh", propHash)));
-        Hash hTest("devices", registeredDevices, "alarms", alarmHash);
+        Hash hTest("alarms", alarmHash);
 
         // Erase the occurrence times, as they will not match!
         h.erase("alarms.alarmTester.nodeA" + Validator::kAlarmParamPathSeparator + "floatPropNeedsAck2.warnHigh.timeOfFirstOccurrence");
@@ -511,29 +513,24 @@ void AlarmService_Test::testRecovery() {
     //at this state it should hold a warnHigh for floatPropNeedsAck2 which cannot be acknowledged
     std::pair<bool, std::string> success;
     TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("topologyUpdate", 1, [&] {
-        m_deviceClient->killDevice("testAlarmService", KRB_TEST_MAX_TIMEOUT);
+        m_deviceClient->killDevice(m_alarmServiceId, KRB_TEST_MAX_TIMEOUT);
     });
     Hash lastMessage;
     messageQ->pop(lastMessage);
     CPPUNIT_ASSERT(lastMessage.has("changes.gone.device.testAlarmService"));
 
-    // now we raise an alarm on intPropNeedsAck again and ma nodeA.floatPropNoAck2 acknowledgeable
+    // now - while alarm service is down - we raise an alarm on intPropNeedsAck again
+    // and make nodeA.floatPropNoAck2 acknowledgeable...
     m_deviceClient->execute("alarmTester", "triggerNormalAckNode", KRB_TEST_MAX_TIMEOUT);
-    // Wait a bit until our internal cache will be updated
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
     CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerNormalAckNode");
 
     m_deviceClient->execute("alarmTester", "triggerAlarmHighAck", KRB_TEST_MAX_TIMEOUT);
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
     CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester", "result") == "triggerAlarmHighAck");
 
+    // ...and instantiate another device and set it to alarm
     CPPUNIT_ASSERT_NO_THROW(success = m_deviceClient->instantiate("testServer", "AlarmTester", Hash("deviceId", "alarmTester2"), KRB_TEST_MAX_TIMEOUT));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
     CPPUNIT_ASSERT(success.first);
-
-    //trigger an alarm
     m_deviceClient->execute("alarmTester2", "triggerAlarmLowAck", KRB_TEST_MAX_TIMEOUT);
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
     CPPUNIT_ASSERT(m_deviceClient->get<std::string>("alarmTester2", "result") == "triggerAlarmLowAck");
     CPPUNIT_ASSERT(m_deviceClient->get<int>("alarmTester2", "intPropNeedsAck") == -5);
 
@@ -541,9 +538,16 @@ void AlarmService_Test::testRecovery() {
     m_tcpAdapter->clearAllMessages();
     // now we bring the alarm service back up
     CPPUNIT_ASSERT(m_deviceClient->instantiate("testServer", "AlarmService",
-                                               Hash("deviceId", "testAlarmService", "flushInterval", 1,
+                                               Hash("deviceId", m_alarmServiceId, "flushInterval", 1,
                                                     "storagePath", std::string(KARABO_TESTPATH)),
                                                KRB_TEST_MAX_TIMEOUT).first);
+    if (!waitForCondition([this]() {
+            return m_deviceClient->get<karabo::util::State>(m_alarmServiceId, "state") == karabo::util::State::ON;
+        },
+                          4000u)) {
+    // Force failure
+    CPPUNIT_ASSERT_MESSAGE("State is " + m_deviceClient->get<karabo::util::State>(m_alarmServiceId, "state").name(), false);
+    }
 
     // We expect to receive several messages on the adapter:
     bool topologyMessage = false; // testAlarmService device has started
@@ -569,7 +573,7 @@ void AlarmService_Test::testRecovery() {
         if (!topologyMessage) {
             for (const Hash& msg : m_tcpAdapter->getAllMessages("topologyUpdate")) {
                 allMessages << "\nTOPO:\n" << msg;
-                if (msg.has("changes.new.device.testAlarmService")) {
+                if (msg.has("changes.new.device." + m_alarmServiceId)) {
                     topologyMessage = true; // testAlarmService is started
                 }
             }
@@ -666,11 +670,18 @@ void AlarmService_Test::testDeviceReappeared() {
         success = m_deviceClient->instantiate("testServer", "AlarmTester", Hash("deviceId", "alarmTester2", "intPropNeedsAck", -5), KRB_TEST_MAX_TIMEOUT);
     });
     CPPUNIT_ASSERT(success.first);
+    CPPUNIT_ASSERT_EQUAL(-5, m_deviceClient->get<int>("alarmTester2", "intPropNeedsAck"));
+
+    auto registeredDevices = m_deviceClient->get<std::vector < std::string >> (m_alarmServiceId, "registeredDevices");
+    CPPUNIT_ASSERT_EQUAL(1, static_cast<int> (std::count(registeredDevices.begin(), registeredDevices.end(), "alarmTester2")));
+
+    // TODO: Remove 'return;' once it is figured out what goes wrong below!
+    return;
 
     Hash lastMessage;
     messageQ->pop(lastMessage);
     
-    CPPUNIT_ASSERT(lastMessage.has("rows." + m_killedDeviceRow + ".update"));
+    CPPUNIT_ASSERT_MESSAGE(toString(lastMessage), lastMessage.has("rows." + m_killedDeviceRow + ".update"));
     Hash h = lastMessage.get<Hash>("rows." + m_killedDeviceRow + ".update");
 
     CPPUNIT_ASSERT(h.get<std::string>("deviceId") == "alarmTester2");
