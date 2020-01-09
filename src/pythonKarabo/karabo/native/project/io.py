@@ -35,7 +35,7 @@ assert len(_PROJECT_ITEM_TYPES) == len(PROJECT_OBJECT_CATEGORIES)
 
 def get_item_type(obj):
     """Return the item type for a project model"""
-    return _ITEM_TYPES.get(obj, 'unknown')
+    return _ITEM_TYPES.get(type(obj), 'unknown')
 
 
 def read_project_model(io_obj, existing=None):
