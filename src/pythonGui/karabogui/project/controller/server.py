@@ -10,6 +10,7 @@ from traits.api import Bool, Instance, Property, on_trait_change
 
 from karabo.common.api import ProxyStatus, walk_traits_object
 from karabo.common.project.api import DeviceServerModel
+import karabogui.icons as icons
 from karabogui.enums import ProjectItemTypes
 from karabogui.events import (KaraboEvent, register_for_broadcasts,
                               unregister_from_broadcasts)
@@ -36,27 +37,29 @@ class DeviceServerController(BaseProjectGroupController):
         online = self.online
 
         menu = QMenu(parent)
-        edit_action = QAction('Edit', menu)
+        edit_action = QAction(icons.edit, 'Edit', menu)
         edit_action.triggered.connect(partial(self._edit_server,
                                               parent=parent))
-        delete_action = QAction('Delete', menu)
+        delete_action = QAction(icons.delete, 'Delete', menu)
         delete_action.triggered.connect(partial(self._delete_server,
                                                 project_controller,
                                                 parent=parent))
-        shutdown_action = QAction('Shutdown', menu)
+        shutdown_action = QAction(icons.kill, 'Shutdown', menu)
         shutdown_action.setEnabled(online)
         shutdown_action.triggered.connect(partial(self._shutdown_server,
                                                   parent=parent))
-        add_action = QAction('Add device', menu)
+        add_action = QAction(icons.add, 'Add device', menu)
         add_action.setEnabled(online)
         add_action.triggered.connect(partial(self._add_device, parent=parent))
-        instantiate_all_action = QAction('Instantiate all devices', menu)
+        instantiate_all_action = QAction(
+            icons.run, 'Instantiate all devices', menu)
         instantiate_all_action.setEnabled(online)
         instantiate_all_action.triggered.connect(self.instantiate_devices)
-        shutdown_all_action = QAction('Shutdown all devices', menu)
+        shutdown_all_action = QAction(
+            icons.kill, 'Shutdown all devices', menu)
         shutdown_all_action.triggered.connect(partial(self._shutdown_devices,
                                                       parent=parent))
-        remove_all_action = QAction('Delete all devices', menu)
+        remove_all_action = QAction(icons.delete, 'Delete all devices', menu)
         remove_all_action.triggered.connect(partial(self._delete_all_devices,
                                                     parent=parent))
         menu.addAction(edit_action)
