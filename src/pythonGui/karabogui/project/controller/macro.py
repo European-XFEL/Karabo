@@ -36,7 +36,7 @@ class MacroInstanceController(BaseProjectController):
 
     def context_menu(self, project_controller, parent=None):
         menu = QMenu(parent)
-        shutdown_action = QAction('Shutdown', menu)
+        shutdown_action = QAction(icons.kill, 'Shutdown', menu)
         shutdown_action.triggered.connect(partial(self.shutdown,
                                                   parent=parent))
         menu.addAction(shutdown_action)
@@ -78,20 +78,20 @@ class MacroController(BaseProjectGroupController):
 
     def context_menu(self, project_controller, parent=None):
         menu = QMenu(parent)
-        edit_action = QAction('Edit', menu)
+        edit_action = QAction(icons.edit, 'Edit', menu)
         edit_action.triggered.connect(partial(self._edit_macro, parent=parent))
-        dupe_action = QAction('Duplicate', menu)
+        dupe_action = QAction(icons.editCopy, 'Duplicate', menu)
         dupe_action.triggered.connect(partial(self._duplicate_macro,
                                               project_controller,
                                               parent=parent))
-        delete_action = QAction('Delete', menu)
+        delete_action = QAction(icons.kill, 'Delete', menu)
         delete_action.triggered.connect(partial(self._delete_macro,
                                                 project_controller,
                                                 parent=parent))
-        save_as_action = QAction('Save to file', menu)
+        save_as_action = QAction(icons.saveAs, 'Save to file', menu)
         save_as_action.triggered.connect(partial(self._save_macro_to_file,
                                                  parent=parent))
-        run_action = QAction('Run', menu)
+        run_action = QAction(icons.run, 'Run', menu)
         run_action.triggered.connect(partial(self.run_macro, parent=parent))
         menu.addAction(edit_action)
         menu.addAction(dupe_action)

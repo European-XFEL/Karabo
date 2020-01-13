@@ -19,6 +19,7 @@ from karabogui.project.utils import (
 from karabogui.singletons.api import (get_db_conn, get_project_model,
                                       get_selection_tracker)
 from karabogui.util import is_database_processing, set_treeview_header
+import karabogui.icons as icons
 from .controller.bases import BaseProjectGroupController
 from .controller.device import DeviceInstanceController
 from .controller.macro import get_project_macros
@@ -140,24 +141,24 @@ class ProjectView(QTreeView):
                                                     parent=self)
             if isinstance(selected_controller, ProjectController):
                 selected_project = selected_controller.model
-                rename_action = QAction('Rename', menu)
+                rename_action = QAction(icons.edit, 'Rename', menu)
                 rename_action.triggered.connect(partial(self._rename_project,
                                                         selected_project))
-                save_action = QAction('Save', menu)
+                save_action = QAction(icons.save, 'Save', menu)
                 save_action.triggered.connect(partial(save_object,
                                                       selected_project,
                                                       domain=None))
-                close_action = QAction('Close project', menu)
+                close_action = QAction(icons.kill, 'Close project', menu)
                 close_action.triggered.connect(partial(self._close_project,
                                                        selected_project,
                                                        project_controller,
                                                        show_dialog=True))
-                instantiate_all_devices = QAction('Instantiate all devices',
-                                                  menu)
+                instantiate_all_devices = QAction(
+                    icons.run, 'Instantiate all devices', menu)
                 instantiate_all_devices.triggered.connect(
                     partial(self._instantiate_devices, selected_controller))
-                instantiate_all_macros = QAction('Instantiate all macros',
-                                                 menu)
+                instantiate_all_macros = QAction(
+                    icons.run, 'Instantiate all macros', menu)
                 instantiate_all_macros.triggered.connect(
                     partial(self._instantiate_macros, selected_controller))
 
@@ -166,7 +167,7 @@ class ProjectView(QTreeView):
                     text = 'Restore from trash'
                 else:
                     text = 'Move to trash'
-                trash_action = QAction(text, menu)
+                trash_action = QAction(icons.delete, text, menu)
                 trash_action.triggered.connect(partial(self.update_is_trashed,
                                                        selected_project,
                                                        project_controller))
