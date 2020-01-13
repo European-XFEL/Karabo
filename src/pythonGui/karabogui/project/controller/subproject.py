@@ -12,6 +12,7 @@ from traits.api import Instance, List, on_trait_change
 from karabo.common.api import walk_traits_object
 from karabo.common.project.api import (
     DeviceInstanceModel, ProjectModel, device_instance_exists)
+import karabogui.icons as icons
 from karabogui import messagebox
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.loading_watcher import ProjectLoadingWatcher
@@ -28,9 +29,9 @@ class SubprojectController(ProjectSubgroupController):
 
     def context_menu(self, project_controller, parent=None):
         menu = QMenu(parent)
-        add_action = QAction('Add new project...', menu)
+        add_action = QAction(icons.add, 'Add new project...', menu)
         add_action.triggered.connect(partial(self._add_project, parent=parent))
-        load_action = QAction('Load project...', menu)
+        load_action = QAction(icons.load, 'Load project...', menu)
         load_action.triggered.connect(partial(self._load_project,
                                               parent=parent))
         menu.addAction(add_action)
