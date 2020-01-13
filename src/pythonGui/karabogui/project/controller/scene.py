@@ -32,24 +32,25 @@ class SceneController(BaseProjectController):
 
     def context_menu(self, project_controller, parent=None):
         menu = QMenu(parent)
-        edit_action = QAction('Edit', menu)
+        edit_action = QAction(icons.edit, 'Edit', menu)
         edit_action.triggered.connect(partial(self._edit_scene, parent=parent))
-        dupe_action = QAction('Duplicate', menu)
+        dupe_action = QAction(icons.editCopy, 'Duplicate', menu)
         dupe_action.triggered.connect(partial(self._duplicate_scene,
                                               project_controller,
                                               parent=parent))
-        delete_action = QAction('Delete', menu)
+        delete_action = QAction(icons.delete, 'Delete', menu)
         delete_action.triggered.connect(partial(self._delete_scene,
                                                 project_controller,
                                                 parent=parent))
-        save_as_action = QAction('Save to file', menu)
+        save_as_action = QAction(icons.saveAs, 'Save to file', menu)
         save_as_action.triggered.connect(partial(self._save_scene_to_file,
                                                  parent=parent))
-        replace_action = QAction('Replace from file', menu)
+        replace_action = QAction(icons.editPasteReplace,
+                                 'Replace from file', menu)
         replace_action.triggered.connect(partial(self._replace_scene,
                                                  project_controller,
                                                  parent=parent))
-        revert_action = QAction('Revert changes', menu)
+        revert_action = QAction(icons.revert, 'Revert changes', menu)
         revert_action.triggered.connect(partial(self._revert_changes,
                                                 parent=parent))
         can_revert = not self._is_showing() and self.model.modified
