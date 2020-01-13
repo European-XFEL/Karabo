@@ -229,6 +229,24 @@ class Network(QObject):
 
             if reply == QMessageBox.Cancel:
                 return
+        elif socketError == QAbstractSocket.SocketAccessError:
+            msg = ('The socket operation failed because the application '
+                   'lacked the required privileges.')
+            reply = QMessageBox.question(
+                None, 'Network error', msg,
+                QMessageBox.Retry | QMessageBox.Cancel, QMessageBox.Retry)
+
+            if reply == QMessageBox.Cancel:
+                return
+        else:
+            msg = ('An unknown socket operation error occured. '
+                   'Type: {} - Description: {}').format(
+                socketError, self.tcpSocket.errorString())
+            reply = QMessageBox.question(
+                None, 'Network error', msg,
+                QMessageBox.Retry | QMessageBox.Cancel, QMessageBox.Retry)
+            if reply == QMessageBox.Cancel:
+                return
 
         self.connectToServer()
 
