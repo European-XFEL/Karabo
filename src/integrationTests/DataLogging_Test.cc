@@ -18,8 +18,80 @@ USING_KARABO_NAMESPACES;
 using std::vector;
 using std::string;
 using karabo::util::toString;
+using karabo::util::Epochstamp;
+using karabo::util::Timestamp;
+using karabo::util::INT32_ELEMENT;
+using karabo::util::OVERWRITE_ELEMENT;
+using karabo::util::State;
+using karabo::xms::SLOT_ELEMENT;
 
 #define KRB_TEST_MAX_TIMEOUT 10
+
+
+class DataLogTestDevice : public karabo::core::Device<> {
+
+
+public:
+    KARABO_CLASSINFO(DataLogTestDevice, "DataLogTestDevice", "2.8")
+
+    static void expectedParameters(karabo::util::Schema& expected) {
+
+        OVERWRITE_ELEMENT(expected).key("state")
+                .setNewOptions(State::INIT, State::ON)
+                .setNewDefaultValue(State::INIT)
+                .commit();
+
+        INT32_ELEMENT(expected).key("oldValue")
+                .readOnly()
+                .initialValue(-1)
+                .commit();
+
+        INT32_ELEMENT(expected).key("value")
+                .readOnly()
+                .initialValue(0)
+                .commit();
+
+        SLOT_ELEMENT(expected).key("slotIncreaseValue")
+                .commit();
+    }
+
+    DataLogTestDevice(const karabo::util::Hash& input) : karabo::core::Device<>(input) {
+        KARABO_SLOT(slotIncreaseValue);
+        KARABO_INITIAL_FUNCTION(initialize);
+    }
+
+
+    virtual ~DataLogTestDevice() {
+    }
+
+private:
+
+    void initialize() {
+        // Set oldValue with time stamp from past - noon January 1st, 1999
+        const Epochstamp stamp("19990101T120000.000000Z");
+        set("oldValue", 99, Timestamp(stamp, 0ull));
+
+        updateState(State::ON);
+    }
+
+
+    void slotIncreaseValue() {
+        set("value", get<int>("value") + 1);
+    }
+};
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, DataLogTestDevice)
+
+
+bool waitForCondition(boost::function<bool() > checker, unsigned int timeoutMillis) {
+    const unsigned int sleepIntervalMillis = 5;
+    unsigned int numOfWaits = 0;
+    const unsigned int maxNumOfWaits = static_cast<unsigned int> (std::ceil(timeoutMillis / sleepIntervalMillis));
+    while (numOfWaits < maxNumOfWaits && !checker()) {
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(sleepIntervalMillis));
+        numOfWaits++;
+    }
+    return (numOfWaits < maxNumOfWaits);
+}
 
 // adding vector<Hash>, Hash, and vector<string> helpers for CppUnit
 namespace CppUnit{
@@ -148,11 +220,46 @@ void DataLogging_Test::setUp() {
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
     // Create client
-    m_deviceClient = boost::make_shared<DeviceClient>(); //new DeviceClient());
+    m_deviceClient = boost::make_shared<DeviceClient>();
     m_sigSlot = boost::make_shared<SignalSlotable>("sigSlot");
     m_sigSlot->start();
 }
 
+
+std::pair<bool, std::string> DataLogging_Test::startLoggers(const std::string& loggerType) {
+
+    Hash manager_conf;
+    manager_conf.set("deviceId", "loggerManager");
+    manager_conf.set("flushInterval", m_flushIntervalSec);
+    manager_conf.set<vector < string >> ("serverList",{m_server});
+
+    if (loggerType == "FileDataLogger") {
+        manager_conf.set("logger.FileDataLogger.directory", "dataLoggingTest/karaboHistory");
+    } else if (loggerType == "InfluxDataLogger") {
+        std::ostringstream influxUrl;
+        influxUrl << "tcp://";
+
+        if (getenv("KARABO_TEST_INFLUXDB_HOST")) {
+            influxUrl << getenv("KARABO_TEST_INFLUXDB_HOST");
+        } else {
+            influxUrl << "localhost";
+        }
+        influxUrl << ":";
+        if (getenv("KARABO_TEST_INFLUXDB_PORT")) {
+            influxUrl << getenv("KARABO_TEST_INFLUXDB_PORT");
+        } else {
+            influxUrl << "8086";
+        }
+
+        manager_conf.set("logger.InfluxDataLogger.url", influxUrl.str());
+    } else {
+        CPPUNIT_FAIL("Unknown logger type '" + loggerType + "'");
+    }
+
+    manager_conf.set("logger", loggerType);
+    return m_deviceClient->instantiate(m_server,
+                                       "DataLoggerManager", manager_conf, KRB_TEST_MAX_TIMEOUT);
+}
 
 void DataLogging_Test::tearDown() {
     m_deviceClient.reset();
@@ -176,24 +283,13 @@ void DataLogging_Test::tearDown() {
 
 
 void DataLogging_Test::fileAllTestRunner() {
-
     std::pair<bool, std::string> success = m_deviceClient->instantiate(m_server, "PropertyTest",
                                                                        Hash("deviceId", m_deviceId),
                                                                        KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     std::clog << "==== Starting sequence of File Logging tests ====" << std::endl;
-
-    Hash manager_conf;
-    manager_conf.set("deviceId", "loggerManager");
-    manager_conf.set("flushInterval", m_flushIntervalSec);
-
-    manager_conf.set("logger.FileDataLogger.directory", "dataLoggingTest/karaboHistory");
-    manager_conf.set<vector<string>>("serverList", {m_server});
-    manager_conf.set("logger", "FileDataLogger");
-
-    success = m_deviceClient->instantiate(m_server,
-                                          "DataLoggerManager", manager_conf, KRB_TEST_MAX_TIMEOUT);
+    success = startLoggers("FileDataLogger");
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
@@ -207,6 +303,9 @@ void DataLogging_Test::fileAllTestRunner() {
     // device being logged to make sure that the last known configuration can be successfully
     // retrieved after the device is gone.
     testLastKnownConfiguration();
+
+    // This deals with its own device, so comment above about being last is not applicable
+    testCfgFromPastRestart();
 }
 
 
@@ -216,33 +315,9 @@ void DataLogging_Test::influxAllTestRunner() {
                                                                        KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
-    std::ostringstream influxUrlStream;
-    influxUrlStream << "tcp://";
-
-    if (getenv("KARABO_TEST_INFLUXDB_HOST")) {
-        influxUrlStream << getenv("KARABO_TEST_INFLUXDB_HOST");
-    } else {
-        influxUrlStream << "localhost";
-    }
-    influxUrlStream << ":";
-    if (getenv("KARABO_TEST_INFLUXDB_PORT")) {
-        influxUrlStream << getenv("KARABO_TEST_INFLUXDB_PORT");
-    } else {
-        influxUrlStream << "8086";
-    }
-
-    const std::string influxUrl = influxUrlStream.str();
-
     // Starts the same set of tests with InfluxDb logging instead of text-file based logging
     std::clog << "\n==== Starting sequence of Influx Logging tests ====" << std::endl;
-
-    Hash manager_conf;
-    manager_conf.set("deviceId", "loggerManager");
-    manager_conf.set("flushInterval", m_flushIntervalSec);
-    manager_conf.set("logger.InfluxDataLogger.url", influxUrl);
-    manager_conf.set<vector < string >> ("serverList",{m_server});
-    success = m_deviceClient->instantiate(m_server,
-                                          "DataLoggerManager", manager_conf, KRB_TEST_MAX_TIMEOUT);
+    success = startLoggers("InfluxDataLogger");
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
@@ -260,6 +335,9 @@ void DataLogging_Test::influxAllTestRunner() {
     // migrated to InfluxDb based logging.
 
     testLastKnownConfiguration();
+
+    testCfgFromPastRestart();
+
 }
 
 
@@ -282,7 +360,7 @@ void DataLogging_Test::testAllInstantiated() {
         boost::this_thread::sleep(boost::posix_time::milliseconds(50));
         timeout -= 50;
     }
-    CPPUNIT_ASSERT_MESSAGE("Timeout while waiting for datalogging to be instantiated", timeout>0);
+    CPPUNIT_ASSERT_MESSAGE("Timeout while waiting for datalogging to be instantiated", timeout > 0);
     std::clog << "Ok" << std::endl;
 }
 
@@ -468,6 +546,112 @@ void DataLogging_Test::testLastKnownConfiguration() {
 }
 
 
+void DataLogging_Test::testCfgFromPastRestart() {
+    std::clog << "Testing past configuration retrieval with stamp older than device..." << std::flush;
+
+    // Start device and take care that the logger is ready for it
+    const std::string deviceId("deviceWithOldStamp");
+    const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
+    auto success = m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId),
+                                               KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    CPPUNIT_ASSERT_MESSAGE(toString(m_deviceClient->get<std::vector < std::string >> (loggerId, "devicesToBeLogged")),
+                           waitForCondition([this, &loggerId, &deviceId]() {
+                               auto loggedIds = m_deviceClient->get<std::vector < std::string >> (loggerId, "devicesToBeLogged");
+                                            return (std::find(loggedIds.begin(), loggedIds.end(), deviceId) != loggedIds.end());
+                           },
+                                            KRB_TEST_MAX_TIMEOUT * 1000)
+                           );
+
+    // few cycles: increase value, stop and increase logging
+    const unsigned int numCycles = 5;
+    std::vector<Epochstamp> stampsAfter; // stamps after increasing value
+    std::vector<Epochstamp> valueStamps; // stamps of the updated values
+    const Epochstamp oldStamp("19990101T120000.000000Z");
+    for (unsigned int i = 0; i < numCycles; ++i) {
+
+        // Increase "variable" value and store after increasing it
+        CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(deviceId, "slotIncreaseValue", KRB_TEST_MAX_TIMEOUT));
+        stampsAfter.push_back(Epochstamp());
+
+        // Get configuration, check expected values, check (static) time stamp of "oldValue" and store stamp of "value"
+        Hash cfg;
+        CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(deviceId, cfg));
+        CPPUNIT_ASSERT_EQUAL(i + 1, cfg.get<int>("value"));
+        CPPUNIT_ASSERT_EQUAL(99, cfg.get<int>("oldValue"));
+        const Epochstamp stamp = Epochstamp::fromHashAttributes(cfg.getAttributes("oldValue"));
+        CPPUNIT_ASSERT_MESSAGE(stamp.toIso8601(), stamp == oldStamp);
+        valueStamps.push_back(Epochstamp::fromHashAttributes(cfg.getAttributes("value")));
+
+        // Stop logging our device and check that it is not logged anymore.
+        // Sleep needed before flush to ensure that - for file logger - the output stream has actually seen the data
+        boost::this_thread::sleep(boost::posix_time::milliseconds(250)); // locally 100 was always enough
+        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
+                                .timeout(KRB_TEST_MAX_TIMEOUT * 1000).receive());
+        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "slotTagDeviceToBeDiscontinued", "D", deviceId)
+                                .timeout(KRB_TEST_MAX_TIMEOUT * 1000).receive());
+        CPPUNIT_ASSERT_MESSAGE(toString(m_deviceClient->get<std::vector < std::string >> (loggerId, "devicesToBeLogged")),
+                               waitForCondition([this, &loggerId, &deviceId]() {
+                                   auto loggedIds = m_deviceClient->get<std::vector < std::string >> (loggerId, "devicesToBeLogged");
+                                                // NOT in there anymore
+                                                return (std::find(loggedIds.begin(), loggedIds.end(), deviceId) == loggedIds.end());
+                               },
+                                                KRB_TEST_MAX_TIMEOUT * 1000)
+                               );
+
+        // Restart again (and validate it is logging) - file based logger will gather the complete config again on disk
+        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "slotAddDevicesToBeLogged", vector<string>(1, deviceId))
+                                .timeout(KRB_TEST_MAX_TIMEOUT * 1000).receive());
+        CPPUNIT_ASSERT_MESSAGE(toString(m_deviceClient->get<std::vector < std::string >> (loggerId, "devicesToBeLogged")),
+                               waitForCondition([this, &loggerId, &deviceId]() {
+                                   auto loggedIds = m_deviceClient->get<std::vector < std::string >> (loggerId, "devicesToBeLogged");
+                                                return (std::find(loggedIds.begin(), loggedIds.end(), deviceId) != loggedIds.end());
+                               },
+                                                KRB_TEST_MAX_TIMEOUT * 1000)
+                               );
+    }
+
+    // Again flush - at the end of the last cycle we started logging again and archive_index.txt and archive_<N>.txt
+    // might be out of sync otherwise - nevertheless for file based logging we need the repeated retries below for the
+    // same reason as the sleeps above. :-(
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
+                            .timeout(KRB_TEST_MAX_TIMEOUT * 1000).receive());
+
+    // Now check that for all stored stamps, the stamps gathered for the reader are correct
+    const string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    for (int i = 0; i < numCycles; ++i) {
+        // Time stamp after increasing value
+        const Epochstamp& stampAfter = stampsAfter[i];
+
+        // Gather full configuration (repeat until success, see above)
+        Hash conf;
+        Schema schema;
+        int timeout = KRB_TEST_MAX_TIMEOUT * 1000;
+        while (timeout >= 0 && conf.empty()) {
+            // FIXME: Treat remote exceptions once slot creates them if data not yet on disk
+            CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", deviceId, stampAfter.toIso8601())
+                                    .timeout(1000).receive(conf, schema));
+            timeout -= 100;
+            boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+        }
+        CPPUNIT_ASSERT_MESSAGE("Timeout while getting configuration from past", timeout >= 0);
+
+        CPPUNIT_ASSERT_EQUAL(99, conf.get<int>("oldValue"));
+        CPPUNIT_ASSERT_EQUAL(i + 1, conf.get<int>("value")); // +1: stamp is after update
+
+        // Check received stamps: The one of "oldValue is always the same, for "value" be aware that we store with
+        // microsec precision only and rounding might lead being to 1 off (since we cut off digits instead of rounding)
+        const Epochstamp stampOldFromPast = Epochstamp::fromHashAttributes(conf.getAttributes("oldValue"));
+        CPPUNIT_ASSERT_MESSAGE(stampOldFromPast.toIso8601(), stampOldFromPast == oldStamp);
+        const Epochstamp stampValueFromPast = Epochstamp::fromHashAttributes(conf.getAttributes("value"));
+        CPPUNIT_ASSERT_MESSAGE(stampValueFromPast.toIso8601() + " vs " + valueStamps[i].toIso8601(),
+                               (stampValueFromPast - valueStamps[i]).getFractions(TIME_UNITS::MICROSEC) <= 1ull);
+
+    }
+
+    std::clog << "OK" << std::endl;
+}
+
 template <class T>
 void DataLogging_Test::testHistory(const string& key, const std::function<T(int)> &f,
                                    const bool testConf) {
@@ -535,7 +719,6 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
         timeout -= 200;
     }
 
-
     CPPUNIT_ASSERT_MESSAGE("Timeout while getting property history after " + toString(numChecks) +
                            " checks:\n\tdeviceId: " + m_deviceId + "\n\tparam.from: " + before +
                            "\n\tparam.to: " + after + "\n\tparam.maxNumData: " + toString(max_set * 2) +
@@ -543,7 +726,7 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
                            "\n\tRemote Errors:\n" + boost::algorithm::join(remoteErrors, "\n"),
                            timeout >= 0);
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("History size different than expected", max_set, history.size());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("History size different than expected", static_cast<size_t> (max_set), history.size());
 
     for (int i = 0; i < max_set; i++) {
         // checking values and timestamps
