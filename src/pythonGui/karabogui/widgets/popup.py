@@ -3,6 +3,8 @@
 # Created on July 21, 2013
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from xml.sax.saxutils import escape
+
 from PyQt5.QtCore import pyqtSlot, Qt
 from PyQt5.QtWidgets import QPushButton, QTextEdit, QVBoxLayout, QWidget
 
@@ -61,7 +63,9 @@ class PopupWidget(QWidget):
         pos = scrollBar.sliderPosition()
         htmlString = ("<table>" +
                       "".join("<tr><td><b>{}</b>:   </td><td>{}</td></tr>".
-                              format(*p) for p in info.items()) + "</table>")
+                              format(key, escape(str(value)))
+                              for key, value in info.items())
+                      + "</table>")
         self._ui_info.setHtml(htmlString)
 
         self._ui_info.fitHeightToContent(len(info))
