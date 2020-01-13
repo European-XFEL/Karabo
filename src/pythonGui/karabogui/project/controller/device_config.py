@@ -11,6 +11,7 @@ from traits.api import Instance, Int
 
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, find_parent_object)
+import karabogui.icons as icons
 from karabogui import messagebox
 from karabogui.enums import ProjectItemTypes
 from karabogui.events import broadcast_event, KaraboEvent
@@ -73,19 +74,19 @@ class DeviceConfigurationController(BaseProjectController):
 
         menu = QMenu(parent)
 
-        edit_action = QAction('Edit', menu)
+        edit_action = QAction(icons.edit, 'Edit', menu)
         edit_action.triggered.connect(partial(self._edit_config,
                                               project_controller,
                                               parent=parent))
         edit_action.setEnabled(config.simple_name != DEFAULT)
 
-        delete_action = QAction('Delete', menu)
+        delete_action = QAction(icons.delete, 'Delete', menu)
         delete_action.triggered.connect(partial(self._delete_config,
                                                 project_controller,
                                                 parent=parent))
         delete_action.setEnabled(config.simple_name != DEFAULT)
 
-        conf_action = QAction('Load in Configurator', menu)
+        conf_action = QAction(icons.load, 'Load in Configurator', menu)
         conf_action.triggered.connect(partial(self._load_config,
                                               project_controller,
                                               parent=parent))
