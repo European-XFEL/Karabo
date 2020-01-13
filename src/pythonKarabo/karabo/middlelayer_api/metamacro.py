@@ -47,14 +47,22 @@ class MetaMacro(Device):
     def startInstance(self, server=None, broadcast=True):
         # this does not call super, as we don't want to run MetaMacro itself,
         # but only the macros in the supplied code
-        p = {
-            '_serverId_': self.serverId,
-            'uuid': self.uuid,
-            'module': self.module,
+
+        # 
+        parameters = {
+            '_serverId_': self.serverId.value,
+            'hostName': self.hostName.value,
+            'uuid': self.uuid.value,
+            'module': self.module.value,
         }
         objs = []
-        for c in self.classes:
-            p["_deviceId_"] = "{}-{}".format(self.deviceId, c.__name__)
-            objs.append(c(p))
+        for klass in self.classes:
+            # The extraction of the value attribute is not strictly needed
+            # since we format `self.deviceId` in a string.
+            # By using the value attribute we isolate this code from the
+            # representation of a `String`
+            deviceId = self.deviceId.value
+            parameters["_deviceId_"] = f"{deviceId}-{klass.__name__}"
+            objs.append(klass(parameters))
         return gather(*(o.startInstance(server,
                                         broadcast=broadcast) for o in objs))
