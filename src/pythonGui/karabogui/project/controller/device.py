@@ -17,6 +17,7 @@ from karabo.common.project.api import (
     find_parent_object)
 from karabo.native import (
     Hash, read_project_model, write_project_model)
+import karabogui.icons as icons
 from karabogui import messagebox
 from karabogui.binding.api import extract_configuration
 from karabogui.enums import ProjectItemTypes
@@ -63,16 +64,16 @@ class DeviceInstanceController(BaseProjectGroupController):
 
         capabilities = proj_topo_node.capabilities if proj_topo_node else 0
 
-        edit_action = QAction('Edit', menu)
+        edit_action = QAction(icons.edit, 'Edit', menu)
         edit_action.triggered.connect(partial(self._edit_device,
                                               project_controller,
                                               parent=parent))
         config_menu = self._create_sub_menu(menu, project_controller)
-        dupe_action = QAction('Duplicate', menu)
+        dupe_action = QAction(icons.editCopy, 'Duplicate', menu)
         dupe_action.triggered.connect(partial(self._duplicate_device,
                                               project_controller,
                                               parent=parent))
-        delete_action = QAction('Delete', menu)
+        delete_action = QAction(icons.delete, 'Delete', menu)
         delete_action.triggered.connect(partial(self._delete_device,
                                                 project_controller,
                                                 parent=parent))
@@ -96,13 +97,13 @@ class DeviceInstanceController(BaseProjectGroupController):
         conf_action.triggered.connect(partial(
             self._get_configuration_from_past, parent=parent))
 
-        instantiate_action = QAction('Instantiate', menu)
+        instantiate_action = QAction(icons.run, 'Instantiate', menu)
         can_instantiate = (server_online and not proj_device_online and
                            proj_device_status not in NO_CONFIG_STATUSES)
         instantiate_action.setEnabled(can_instantiate)
         instantiate_action.triggered.connect(partial(self._instantiate_device,
                                                      project_controller))
-        shutdown_action = QAction('Shutdown', menu)
+        shutdown_action = QAction(icons.kill, 'Shutdown', menu)
         shutdown_action.setEnabled(proj_device_online)
         shutdown_action.triggered.connect(partial(self.shutdown_device,
                                                   show_confirm=True,
@@ -112,7 +113,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         about_action.triggered.connect(partial(self._about_device,
                                                parent=parent))
 
-        docu_action = QAction('Documentation', menu)
+        docu_action = QAction(icons.weblink, 'Documentation', menu)
         docu_action.triggered.connect(self._get_documentation_device)
 
         menu.addAction(edit_action)
