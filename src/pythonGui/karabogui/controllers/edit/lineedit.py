@@ -30,6 +30,12 @@ class EditableLineEdit(BaseBindingController):
         widget.textChanged.connect(self._on_text_changed)
         return widget
 
+    def binding_update(self, proxy):
+        if isinstance(proxy.binding, CharBinding):
+            mask = 'X'
+            with SignalBlocker(self.widget):
+                self.widget.setInputMask(mask)
+
     def value_update(self, proxy):
         value = get_editor_value(proxy, '')
         if not isinstance(value, str):
