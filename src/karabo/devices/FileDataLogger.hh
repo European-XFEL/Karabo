@@ -23,7 +23,7 @@ namespace karabo {
 
             void logValue(const std::string& deviceId, const std::string& path,
                           const karabo::util::Timestamp& ts, const std::string& value,
-                          const karabo::util::Types::ReferenceType& type);
+                          const karabo::util::Types::ReferenceType& type, size_t filePosition);
 
             void flushOne();
 
@@ -33,6 +33,14 @@ namespace karabo {
             /// Helper to ensure archive file is closed.
             /// Must only be called from functions posted on 'data.m_strand'.
             void ensureFileClosed();
+
+            /** Helper to ensure archive file (m_configStream) is open.
+             *  Must only be called from functions posted on 'data.m_strand'.
+             *
+             *  @return pair of * whether it is a new file (in contrast to a re-opened existing one)
+             *                  * current file position, size_t(-1) tells that file could not be opened (permissions?)
+             */
+            std::pair<bool, size_t> ensureFileOpen();
 
             int determineLastIndex(const std::string& deviceId) const;
 
