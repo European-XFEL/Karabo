@@ -204,7 +204,34 @@ namespace karabo {
                     }
                 }
 
-                logValue(deviceId, path, t, value, leafNode.getType());
+                const std::pair<bool, size_t> newFilePlusPosition = ensureFileOpen();
+                if (newFilePlusPosition.second == -1ul) continue; // problem with file permissions, skip and go on
+                logValue(deviceId, path, t, value, leafNode.getType(), newFilePlusPosition.second);
+
+                // Possibly add new line to index file:
+                if (m_pendingLogin || newFilePlusPosition.first) {
+                    string contentPath = m_directory + "/" + deviceId + "/raw/archive_index.txt";
+                    ofstream contentStream(contentPath.c_str(), ios::app);
+                    if (m_pendingLogin) {
+                        contentStream << "+LOG ";
+                        // TRICK: 'configuration' is the one requested at the beginning. For devices which have
+                        // properties with older timestamps than the time of their instantiation (as e.g. read from
+                        // hardware), we keep stamps in the archive_index.txt file sequential by overwriting here this
+                        // old stamps with the most recent one ('paths' are sorted above!) which should be one of the
+                        // 'Karabo only' properties like _deviceId_ etc.
+                        const auto& attrsOfPathWithMostRecentStamp = configuration.getAttributes(paths.back());
+                        t = Timestamp::fromHashAttributes(attrsOfPathWithMostRecentStamp);
+
+                        m_pendingLogin = false;
+                    } else {
+                        contentStream << "=NEW ";
+                    }
+                    contentStream << t.toIso8601Ext() << " " << fixed << t.toTimestamp() << " "
+                            << t.getTrainId() << " " << newFilePlusPosition.second << " "
+                            << (m_user.empty() ? "." : m_user) << " " << m_lastIndex << "\n";
+                    contentStream.close();
+                }
+
             }
 
             long maxFilesize = m_maxFileSize * 1000000; // times to 1000000 because maximumFilesSize in MBytes
@@ -215,47 +242,37 @@ namespace karabo {
         }
 
 
-        void FileDeviceData::logValue(const std::string& deviceId, const std::string& path,
-                                      const karabo::util::Timestamp& ts, const std::string& value,
-                                      const karabo::util::Types::ReferenceType& reftype) {
+        std::pair<bool, size_t> FileDeviceData::ensureFileOpen() {
+
             bool newFile = false;
             if (!m_configStream.is_open()) {
-                string configName = m_directory + "/" + deviceId + "/raw/archive_" + toString(m_lastIndex) + ".txt";
+                string configName = m_directory + "/" + m_deviceToBeLogged + "/raw/archive_" + toString(m_lastIndex) + ".txt";
                 m_configStream.open(configName.c_str(), ios::out | ios::app);
                 if (!m_configStream.is_open()) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Failed to open \"" << configName << "\". Check permissions.";
-                    return;
+                    return std::make_pair(newFile, -1ul); // maximum unsigned long value to indicate trouble
                 }
                 if (m_configStream.tellp() > 0) {
                     // Make sure that the file contains '\n' (newline) at the end of previous round
                     m_configStream << '\n';
-                } else
+                } else {
                     newFile = true;
+                }
             }
+            return std::make_pair(newFile, m_configStream.tellp());
+        }
 
-            size_t position = m_configStream.tellp(); // get current file size
+
+        void FileDeviceData::logValue(const std::string& deviceId, const std::string& path,
+                                      const karabo::util::Timestamp& ts, const std::string& value,
+                                      const karabo::util::Types::ReferenceType& reftype, size_t filePosition) {
+
             const string type = Types::to<ToLiteral>(reftype);
             m_configStream << ts.toIso8601Ext() << "|" << fixed << ts.toTimestamp() << "|"
                     << ts.getTrainId() << "|" << path << "|" << type << "|" << scientific
                     << value << "|" << m_user;
             if (m_pendingLogin) m_configStream << "|LOGIN\n";
             else m_configStream << "|VALID\n";
-
-            if (m_pendingLogin || newFile) {
-                string contentPath = m_directory + "/" + deviceId + "/raw/archive_index.txt";
-                ofstream contentStream(contentPath.c_str(), ios::app);
-                if (m_pendingLogin) {
-                    contentStream << "+LOG ";
-                } else {
-                    contentStream << "=NEW ";
-                }
-
-                contentStream << ts.toIso8601Ext() << " " << fixed << ts.toTimestamp() << " "
-                        << ts.getTrainId() << " " << position << " " << (m_user.empty() ? "." : m_user) << " " << m_lastIndex << "\n";
-                contentStream.close();
-
-                m_pendingLogin = false;
-            }
 
             // check if we have property registered
             if (find(m_idxprops.begin(), m_idxprops.end(), path) == m_idxprops.end()) return;
@@ -278,7 +295,7 @@ namespace karabo {
 
             mdp->record.epochstamp = ts.toTimestamp();
             mdp->record.trainId = ts.getTrainId();
-            mdp->record.positionInRaw = position;
+            mdp->record.positionInRaw = filePosition;
             mdp->record.extent1 = (expNum & 0xFFFFFF);
             mdp->record.extent2 = (runNum & 0xFFFFFF);
             if (first) {
