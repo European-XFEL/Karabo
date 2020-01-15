@@ -1,6 +1,6 @@
 from karabogui.testing import GuiTestCase
 from ..configuration import (
-    BACKBONE, Configuration, DIRECTORIES, NETWORK, PROJECT)
+    BACKBONE, Configuration, DIRECTORIES, NETWORK, PANEL, PROJECT)
 
 
 class TestConfiguration(GuiTestCase):
@@ -11,15 +11,16 @@ class TestConfiguration(GuiTestCase):
         config['db_token'] = 'admin'
         config['macro_server'] = 'karabo/macroServer'
 
-        self.assertEqual(len(config), 13)
+        self.assertEqual(len(config), 16)
         self.assertEqual(config['db_token'], 'admin')
         self.assertEqual(config['domain'], 'CAS_INTERNAL')
         self.assertEqual(config['macro_server'], 'karabo/macroServer')
 
         self.assertEqual(list(config.keys()),
-                         ['alarm_service', 'broker_topic', 'config_dir',
-                          'daemon_manager', 'db_token', 'documentation',
-                          'domain', 'gui_servers', 'macro_dir', 'macro_server',
+                         ['alarm_panel', 'alarm_service', 'broker_topic',
+                          'config_dir', 'console_panel', 'daemon_manager',
+                          'db_token', 'documentation', 'domain', 'gui_servers',
+                          'log_panel', 'macro_dir', 'macro_server',
                           'project_manager', 'scene_dir', 'username'])
 
     def test_set_wrong_key(self):
@@ -33,7 +34,7 @@ class TestConfiguration(GuiTestCase):
     def test_configuration_groups(self):
         config = Configuration()
         groups = config.groups()
-        self.assertEqual(len(groups), 4)
+        self.assertEqual(len(groups), 5)
         network_group = [item.name for item in groups[NETWORK]]
         self.assertEqual(len(network_group), 2)
         self.assertIn('username', network_group)
@@ -55,3 +56,8 @@ class TestConfiguration(GuiTestCase):
         self.assertIn('broker_topic', bone_group)
         self.assertIn('documentation', bone_group)
         self.assertIn('daemon_manager', bone_group)
+        panel_group = [item.name for item in groups[PANEL]]
+        self.assertEqual(len(panel_group), 3)
+        self.assertIn('alarm_panel', panel_group)
+        self.assertIn('log_panel', panel_group)
+        self.assertIn('console_panel', panel_group)
