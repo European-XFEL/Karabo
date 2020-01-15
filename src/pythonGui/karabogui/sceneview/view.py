@@ -6,7 +6,8 @@
 from contextlib import contextmanager
 import time
 
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, QEvent, QSize, Qt, QTimer
+from PyQt5.QtCore import (
+    pyqtSignal, pyqtSlot, QEvent, QRect, QSize, Qt, QTimer)
 from PyQt5.QtGui import QPalette, QPainter, QPen
 from PyQt5.QtWidgets import QSizePolicy, QStackedLayout, QWidget
 
@@ -100,6 +101,7 @@ class SceneView(QWidget):
         self.design_mode = design_mode
         self.tab_visible = False
         self._scene_obj_cache = {}
+        self._hover_rect = QRect(0, 0, 10, 10)
 
         # Widget cleanup
         self._widget_removal_queue = []
@@ -391,6 +393,14 @@ class SceneView(QWidget):
         self._scene_obj_cache = {}
         fill_root_layout(self.layout, self.scene_model, self.inner,
                          self._scene_obj_cache, self.tab_visible)
+
+    def item_at_hover(self, pos):
+        """Returns the topmost object whose bounds contain `pos`."""
+        self._hover_rect.moveCenter(pos)
+        for child in self.scene_model.children[::-1]:
+            obj = self._scene_obj_cache.get(child)
+            if obj is not None and obj.geometry().intersects(self._hover_rect):
+                return obj
 
     def item_at_position(self, pos):
         """Returns the topmost object whose bounds contain `pos`."""
