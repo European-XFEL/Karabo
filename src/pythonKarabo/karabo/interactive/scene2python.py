@@ -76,6 +76,9 @@ def main():
     output_scene += ' ' * 4 + indent.join(code[1:])
     output_scene += indent + 'return write_scene(scene)\n'
 
+    # change Ubuntu font (can be removed after some transitional period)
+    output_scene = output_scene.replace("font='Ubuntu,", "font='Sans Serif,")
+
     # Substitute deviceId and print
     if ns.deviceId:
         if not output_scene.count(f"keys=['{ns.deviceId}"):
