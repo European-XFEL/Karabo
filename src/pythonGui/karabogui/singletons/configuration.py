@@ -38,10 +38,17 @@ class Item:
         return self.name
 
 
+def panel_default():
+    ret = {
+        'visible': False}
+    return ret
+
+
 NETWORK = "network"
 PROJECT = "project"
 BACKBONE = "backbone"
 DIRECTORIES = "dir"
+PANEL = "panel"
 DOCU = "https://in.xfel.eu/readthedocs/docs/deployed-controls-{topic}/en/latest/{deviceId}.html"  # noqa
 
 
@@ -92,6 +99,13 @@ class Configuration(QObject):
     config_dir = Item(q_set=True, group=DIRECTORIES)
     macro_dir = Item(q_set=True, group=DIRECTORIES)
     scene_dir = Item(q_set=True, group=DIRECTORIES)
+
+    # ----------------------------------------------
+    # Panels
+
+    console_panel = Item(default=panel_default(), q_set=True, group=PANEL)
+    alarm_panel = Item(default=panel_default(), q_set=True, group=PANEL)
+    log_panel = Item(default=panel_default(), q_set=True, group=PANEL)
 
     # ----------------------------------------------
     # Project db interface
