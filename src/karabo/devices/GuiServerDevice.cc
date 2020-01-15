@@ -1485,6 +1485,8 @@ namespace karabo {
                         deviceIds.swap(it->second.visibleInstances); // copy to the empty set
                         // Remove channel as such
                         m_channels.erase(it);
+                    } else {
+                        KARABO_LOG_FRAMEWORK_WARN << "Trying to disconnect non-existing client channel at " << chan.get();
                     }
                     KARABO_LOG_FRAMEWORK_INFO << m_channels.size() << " client(s) left.";
 
@@ -1493,27 +1495,19 @@ namespace karabo {
                 }
 
                 // Now check all devices that this channel had interest in and decrement counter.
-                // Keep those devices in deviceIds where no one else is interested.
+                // Unregister monitor if no-one interested anymore.
                 {
                     boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
-                    for (std::set<std::string>::const_iterator jt = deviceIds.begin(); jt != deviceIds.end();) {
+                    for (std::set<std::string>::const_iterator jt = deviceIds.begin(); jt != deviceIds.end(); ++jt) {
                         const std::string& deviceId = *jt;
                         const int numLeft = --m_monitoredDevices[deviceId]; // prefix---: decrement and then assign
                         KARABO_LOG_FRAMEWORK_DEBUG << "stopMonitoringDevice (GUI gone) " << deviceId << " " << numLeft;
-                        if (numLeft > 0) {
-                            // others still interested - remove from set of devices to be unregistered
-                            deviceIds.erase(jt++); // postfix-++: erase from map on the fly & keep valid iterator
-                        } else {
+                        if (numLeft <= 0) {
                             //  erase the monitor entry to avoid unnecessary monitoring
                             m_monitoredDevices.erase(deviceId);
-                            ++jt;
+                            remote().unregisterDeviceMonitor(deviceId);
                         }
                     }
-                }
-                // All devices left in deviceIds have to be unregistered from monitoring.
-                // TODO: Better move (back) under mutex - it is a fast action...
-                for (const std::string& deviceId : deviceIds) {
-                    remote().unregisterDeviceMonitor(deviceId);
                 }
 
                 {
@@ -1769,7 +1763,7 @@ namespace karabo {
             if (topologyEntry.get<Hash>(type).begin()->hasAttribute("classId") &&
                 topologyEntry.get<Hash>(type).begin()->getAttribute<std::string>("classId") == "AlarmService") {
                 // Connect to signal and then
-                // actively ask this previously unknown device to submit its alarms as init messages on all channesl
+                // actively ask this previously unknown device to submit its alarms as init messages on all channels
                 asyncConnect(instanceId, "signalAlarmServiceUpdate", "", "slotAlarmSignalsUpdate",
                              bind_weak(&GuiServerDevice::onRequestAlarms, this,
                                        WeakChannelPointer(), Hash("alarmInstanceId", instanceId), true));
