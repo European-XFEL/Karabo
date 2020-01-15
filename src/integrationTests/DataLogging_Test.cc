@@ -185,7 +185,8 @@ CPPUNIT_TEST_SUITE_REGISTRATION(DataLogging_Test);
 const unsigned int DataLogging_Test::m_flushIntervalSec = 1u;
 
 
-DataLogging_Test::DataLogging_Test() : m_server("DataLoggingTestServer"), m_deviceId("PropertyTestDevice"),
+DataLogging_Test::DataLogging_Test()
+    : m_server("DataLoggingTestServer"), m_deviceId("PropertyTestDevice"), m_fileLoggerDirectory("dataLoggingTest"),
     m_changedPath(false), m_oldPath() {
 
 }
@@ -232,9 +233,11 @@ std::pair<bool, std::string> DataLogging_Test::startLoggers(const std::string& l
     manager_conf.set("deviceId", "loggerManager");
     manager_conf.set("flushInterval", m_flushIntervalSec);
     manager_conf.set<vector < string >> ("serverList",{m_server});
+    manager_conf.set("logger", loggerType);
 
     if (loggerType == "FileDataLogger") {
-        manager_conf.set("logger.FileDataLogger.directory", "dataLoggingTest/karaboHistory");
+        manager_conf.set("logger.FileDataLogger.directory",
+                         (m_fileLoggerDirectory.empty() ? "" : m_fileLoggerDirectory + "/") + "karaboHistory");
     } else if (loggerType == "InfluxDataLogger") {
         std::ostringstream influxUrl;
         influxUrl << "tcp://";
@@ -256,7 +259,6 @@ std::pair<bool, std::string> DataLogging_Test::startLoggers(const std::string& l
         CPPUNIT_FAIL("Unknown logger type '" + loggerType + "'");
     }
 
-    manager_conf.set("logger", loggerType);
     return m_deviceClient->instantiate(m_server,
                                        "DataLoggerManager", manager_conf, KRB_TEST_MAX_TIMEOUT);
 }
@@ -270,7 +272,7 @@ void DataLogging_Test::tearDown() {
 
     // Clean up directory - you may want to comment out these lines for debugging
     boost::filesystem::remove("loggermap.xml");
-    boost::filesystem::remove_all("karaboHistory");
+    boost::filesystem::remove_all(m_fileLoggerDirectory);
 
     if (m_changedPath) {
         if (m_oldPath.empty()) {
@@ -580,7 +582,7 @@ void DataLogging_Test::testCfgFromPastRestart() {
         CPPUNIT_ASSERT_EQUAL(i + 1, cfg.get<int>("value"));
         CPPUNIT_ASSERT_EQUAL(99, cfg.get<int>("oldValue"));
         const Epochstamp stamp = Epochstamp::fromHashAttributes(cfg.getAttributes("oldValue"));
-        CPPUNIT_ASSERT_MESSAGE(stamp.toIso8601(), stamp == oldStamp);
+        CPPUNIT_ASSERT_MESSAGE("'oldValue' has wrong time stamp: " + stamp.toIso8601(), stamp == oldStamp);
         valueStamps.push_back(Epochstamp::fromHashAttributes(cfg.getAttributes("value")));
 
         // Stop logging our device and check that it is not logged anymore.
@@ -619,7 +621,7 @@ void DataLogging_Test::testCfgFromPastRestart() {
 
     // Now check that for all stored stamps, the stamps gathered for the reader are correct
     const string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
-    for (int i = 0; i < numCycles; ++i) {
+    for (unsigned int i = 0; i < numCycles; ++i) {
         // Time stamp after increasing value
         const Epochstamp& stampAfter = stampsAfter[i];
 
@@ -640,9 +642,9 @@ void DataLogging_Test::testCfgFromPastRestart() {
         CPPUNIT_ASSERT_EQUAL(i + 1, conf.get<int>("value")); // +1: stamp is after update
 
         // Check received stamps: The one of "oldValue is always the same, for "value" be aware that we store with
-        // microsec precision only and rounding might lead being to 1 off (since we cut off digits instead of rounding)
+        // microsec precision only: we might be 1 off since we cut off digits instead of rounding
         const Epochstamp stampOldFromPast = Epochstamp::fromHashAttributes(conf.getAttributes("oldValue"));
-        CPPUNIT_ASSERT_MESSAGE(stampOldFromPast.toIso8601(), stampOldFromPast == oldStamp);
+        CPPUNIT_ASSERT_MESSAGE("'oldValue' from past has wrong time stamp: " + stampOldFromPast.toIso8601(), stampOldFromPast == oldStamp);
         const Epochstamp stampValueFromPast = Epochstamp::fromHashAttributes(conf.getAttributes("value"));
         CPPUNIT_ASSERT_MESSAGE(stampValueFromPast.toIso8601() + " vs " + valueStamps[i].toIso8601(),
                                (stampValueFromPast - valueStamps[i]).getFractions(TIME_UNITS::MICROSEC) <= 1ull);
@@ -697,7 +699,7 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
 
     std::vector<std::string> remoteErrors;
 
-    unsigned int timeout = 20000;
+    int timeout = 20000;
     unsigned int numExceptions = 0;
     unsigned int numChecks = 0;
     while (timeout >= 0 && history.size() != max_set) {
