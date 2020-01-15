@@ -52,8 +52,9 @@ private:
 
     std::pair<bool, std::string> startLoggers(const std::string& loggerType);
 
-    std::string m_server;
-    std::string m_deviceId;
+    const std::string m_server;
+    const std::string m_deviceId;
+    const std::string m_fileLoggerDirectory;
     bool m_changedPath;
     std::string m_oldPath;
 
