@@ -7,6 +7,42 @@
 from PyQt5.QtGui import QValidator
 
 
+class HexValidator(QValidator):
+    def __init__(self, min=None, max=None, parent=None):
+        QValidator.__init__(self, parent)
+        self.min = min
+        self.max = max
+
+    def is_hex(self, input):
+        return all(i in "0123456789abcdefABCDEF" for i in input)
+
+    def validate(self, input, pos):
+        if input in ('+', '-', ''):
+            return self.Intermediate, input, pos
+
+        if not (self.is_hex(input) or
+                input[0] in '+-' and self.is_hex(input[1:])):
+            return self.Invalid, input, pos
+
+        if self.min is not None and self.min >= 0 and input.startswith('-'):
+            return self.Invalid, input, pos
+
+        if self.max is not None and self.max < 0 and input.startswith('+'):
+            return self.Invalid, input, pos
+
+        if ((self.min is None or self.min <= int(input, base=16)) and
+                (self.max is None or int(input, base=16) <= self.max)):
+            return self.Acceptable, input, pos
+        else:
+            return self.Intermediate, input, pos
+
+    def setBottom(self, min):
+        self.min = min
+
+    def setTop(self, max):
+        self.max = max
+
+
 class IntValidator(QValidator):
     def __init__(self, min=None, max=None, parent=None):
         QValidator.__init__(self, parent)

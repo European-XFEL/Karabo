@@ -8,12 +8,13 @@ from PyQt5.QtGui import QPalette, QValidator
 from PyQt5.QtWidgets import QAction, QInputDialog, QLineEdit
 from traits.api import Instance, Int, on_trait_change, Str
 
-from karabo.common.scenemodel.api import DoubleLineEditModel, IntLineEditModel
+from karabo.common.scenemodel.api import (
+    DoubleLineEditModel, HexadecimalModel, IntLineEditModel)
 from karabogui.binding.api import (
     get_editor_value, get_min_max, FloatBinding, IntBinding)
 from karabogui.controllers.api import (
-    BaseBindingController, add_unit_label, IntValidator, is_proxy_allowed,
-    NumberValidator, register_binding_controller)
+    BaseBindingController, add_unit_label, HexValidator, IntValidator,
+    is_proxy_allowed, NumberValidator, register_binding_controller)
 from karabogui.util import SignalBlocker
 
 MAX_FLOATING_PRECISION = 12
@@ -165,3 +166,28 @@ class IntLineEdit(NumberLineEdit):
     def _validate_value(self):
         ret = super(IntLineEdit, self)._validate_value()
         return int(ret) if ret is not None else None
+
+
+@register_binding_controller(ui_name='Hexadecimal', can_edit=True,
+                             klassname='Hexadecimal', binding_type=IntBinding)
+class Hexadecimal(NumberLineEdit):
+    model = Instance(HexadecimalModel, args=())
+
+    def create_widget(self, parent):
+        self._validator = HexValidator()
+        return super(Hexadecimal, self).create_widget(parent)
+
+    def value_update(self, proxy):
+        value = get_editor_value(proxy, '')
+        if value == '':
+            return
+        self.widget.update_label(proxy)
+        self._internal_value = str(value)
+        with SignalBlocker(self._internal_widget):
+            self._display_value = "{:x}".format(value)
+            self._internal_widget.setText(self._display_value)
+        self._internal_widget.setCursorPosition(self._last_cursor_pos)
+
+    def _validate_value(self):
+        ret = super(Hexadecimal, self)._validate_value()
+        return int(ret, base=16) if ret is not None else None
