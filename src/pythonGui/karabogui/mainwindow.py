@@ -35,6 +35,17 @@ ACCESS_LEVELS['Operator'] = AccessLevel.OPERATOR
 ACCESS_LEVELS['User'] = AccessLevel.USER
 ACCESS_LEVELS['Observer'] = AccessLevel.OBSERVER
 
+CONSOLE_TITLE = 'Console'
+LOG_TITLE = 'Log'
+AlARM_TITLE = 'Alarms'
+
+
+_PANEL_TITLE_CONFIG = {
+    CONSOLE_TITLE: 'console_panel',
+    LOG_TITLE: 'log_panel',
+    AlARM_TITLE: 'alarm_panel'
+}
+
 
 class PanelAreaEnum(Enum):
     """The different panel areas in the main window
@@ -44,11 +55,32 @@ class PanelAreaEnum(Enum):
     Right = 2
 
 
+def get_panel_configuration(name):
+    """Get the associated panel configuration of a closable panel
+
+    This function uses a mapping between `panel title` and `configuration
+    name` to retrieve the configuration singleton configuration
+    """
+
+    config_name = _PANEL_TITLE_CONFIG[name]
+    return get_config()[config_name]
+
+
+def set_panel_configuration(name, **params):
+    """Write the associated panel configuration of a closable panel
+    """
+    config_name = _PANEL_TITLE_CONFIG[name]
+    panel_config = get_config()[config_name]
+    panel_config.update(params)
+
+    get_config()[config_name] = panel_config
+
+
 _CLOSABLE_PANELS = {
     # Title: (class, position, icon)
-    'Console': (ScriptingPanel, PanelAreaEnum.Middle, icons.consoleMenu),
-    'Log': (LoggingPanel, PanelAreaEnum.Middle, icons.logMenu),
-    'Alarms': (AlarmPanel, PanelAreaEnum.Middle, icons.alarmWarning)
+    CONSOLE_TITLE: (ScriptingPanel, PanelAreaEnum.Middle, icons.consoleMenu),
+    LOG_TITLE: (LoggingPanel, PanelAreaEnum.Middle, icons.logMenu),
+    AlARM_TITLE: (AlarmPanel, PanelAreaEnum.Middle, icons.alarmWarning)
 }
 
 _PANELS = {
@@ -95,8 +127,12 @@ class MainWindow(QMainWindow):
             action.setIcon(icon)
             action.triggered.connect(callback)
             self._addViewMenuAction(action)
+            # Set the visibility with the panel configuration!
+            visible = get_panel_configuration(name)['visible']
             self.panelActions[name] = action
-            self.panelActions[name].setEnabled(True)
+            self.panelActions[name].setEnabled(not visible)
+            if visible:
+                self._open_closable_panel(name)
 
         title = "European XFEL - Karabo GUI " + krb_globals.GUI_VERSION_LONG
         self.setWindowTitle(title)
@@ -311,6 +347,12 @@ class MainWindow(QMainWindow):
         # reference to view menu and its submenus {menuName: QMenu}
         self.viewMenus = {VIEW_MENU_TITLE: mViewMenu}
 
+        # As basic action, no extra sub menu is required and we directly insert
+        panelAction = QAction(icons.save, 'Save panel configuration', self)
+        panelAction.triggered.connect(self._store_panel_configuration)
+        mViewMenu.addAction(panelAction)
+        mViewMenu.addSeparator()
+
         mHelpMenu = menuBar.addMenu("&Help")
         mHelpMenu.addAction(self.acHelpAbout)
         mHelpMenu.addAction(self.acHelpAboutQt)
@@ -467,6 +509,12 @@ class MainWindow(QMainWindow):
 
     # --------------------------------------
     # Qt slots
+
+    @pyqtSlot()
+    def _store_panel_configuration(self):
+        for name in _CLOSABLE_PANELS:
+            visible = name in self._active_closable_panels
+            set_panel_configuration(name, visible=visible)
 
     @pyqtSlot()
     def onConfiguration(self):
