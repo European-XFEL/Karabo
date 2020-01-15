@@ -58,6 +58,9 @@ class _SelectionRect(HasStrictTraits):
             painter.drawRect(self.rect())
 
 
+HOVER_TOLERANCE = 7
+
+
 class SceneSelectionTool(BaseSceneTool):
     """A tool for selecting things in the SceneView
     """
@@ -153,14 +156,14 @@ class SceneSelectionTool(BaseSceneTool):
         """
         mouse_pos = event.pos()
         selection_model = scene_view.selection_model
-        self._hover_item = scene_view.item_at_position(mouse_pos)
+        self._hover_item = scene_view.item_at_hover(mouse_pos)
         cursor = 'none'
         if self._hover_item is not None:
             rect = self._hover_item.geometry()
-            top = abs(rect.top() - mouse_pos.y()) < 5
-            bottom = abs(rect.bottom() - mouse_pos.y()) < 5
-            left = abs(rect.left() - mouse_pos.x()) < 5
-            right = abs(rect.right() - mouse_pos.x()) < 5
+            top = abs(rect.top() - mouse_pos.y()) < HOVER_TOLERANCE
+            bottom = abs(rect.bottom() - mouse_pos.y()) < HOVER_TOLERANCE
+            left = abs(rect.left() - mouse_pos.x()) < HOVER_TOLERANCE
+            right = abs(rect.right() - mouse_pos.x()) < HOVER_TOLERANCE
             on_sides = left or right
             on_ends = top or bottom
             if on_ends and not on_sides:
