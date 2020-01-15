@@ -111,20 +111,21 @@ namespace karabo {
 
         void FileDeviceData::setupDirectory() {
             boost::system::error_code ec;
-            if (!boost::filesystem::exists(m_directory + "/" + m_deviceToBeLogged)) {
-                boost::filesystem::create_directories(m_directory + "/" + m_deviceToBeLogged, ec);
+            const std::string fullDir(m_directory + "/" + m_deviceToBeLogged);
+            if (!boost::filesystem::exists(fullDir)) {
+                boost::filesystem::create_directories(fullDir, ec);
                 if (ec) {
-                    const std::string msg("Failed to create directories : " + m_deviceToBeLogged + ". code = "
+                    const std::string msg("Failed to create directories : " + fullDir + ". code = "
                                           + toString(ec.value()) += " -- " + ec.message());
                     KARABO_LOG_FRAMEWORK_ERROR << msg;
                     throw KARABO_INIT_EXCEPTION(msg);
                 }
             }
-            if (!boost::filesystem::exists(m_directory + "/" + m_deviceToBeLogged + "/raw")) {
-                boost::filesystem::create_directory(m_directory + "/" + m_deviceToBeLogged + "/raw");
+            if (!boost::filesystem::exists(fullDir + "/raw")) {
+                boost::filesystem::create_directory(fullDir + "/raw");
             }
-            if (!boost::filesystem::exists(m_directory + "/" + m_deviceToBeLogged + "/idx")) {
-                boost::filesystem::create_directory(m_directory + "/" + m_deviceToBeLogged + "/idx");
+            if (!boost::filesystem::exists(fullDir + "/idx")) {
+                boost::filesystem::create_directory(fullDir + "/idx");
             }
 
             m_lastIndex = determineLastIndex(m_deviceToBeLogged);
@@ -216,7 +217,7 @@ namespace karabo {
                         contentStream << "+LOG ";
                         // TRICK: 'configuration' is the one requested at the beginning. For devices which have
                         // properties with older timestamps than the time of their instantiation (as e.g. read from
-                        // hardware), we keep stamps in the archive_index.txt file sequential by overwriting here this
+                        // hardware), we keep stamps in the archive_index.txt file sequential by overwriting here these
                         // old stamps with the most recent one ('paths' are sorted above!) which should be one of the
                         // 'Karabo only' properties like _deviceId_ etc.
                         const auto& attrsOfPathWithMostRecentStamp = configuration.getAttributes(paths.back());
