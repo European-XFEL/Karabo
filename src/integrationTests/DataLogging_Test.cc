@@ -10,6 +10,7 @@
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Schema.hh>
 #include "karabo/util/DataLogUtils.hh"
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <sstream>
 
@@ -305,7 +306,8 @@ void DataLogging_Test::testHistoryAfterChanges() {
     Epochstamp es_wayAfter(es_after.getSeconds() + 60, es_after.getFractionalSeconds());
     string wayAfter = es_wayAfter.toIso8601();
 
-    boost::this_thread::sleep(boost::posix_time::milliseconds(m_flushIntervalSec * 1500)); // wait more than the flush time
+    // wait more than the flush time
+    boost::this_thread::sleep(boost::posix_time::milliseconds(m_flushIntervalSec * 1000 + 250));
 
     // placeholders, could be skipped but they are here for future expansions of the tests
     string device;
@@ -397,7 +399,7 @@ void DataLogging_Test::testLastKnownConfiguration() {
                          conf.get<std::vector<Hash> >("table"));
     std::clog << "\n... Ok (retrieved configuration with last known value for 'int32Property', 'stringProperty', "
             << "'vectors.stringProperty', and 'table')." << std::endl;
-    
+
     CPPUNIT_ASSERT_EQUAL(kLastValueSet, conf.get<int>("int32Property"));
     CPPUNIT_ASSERT_EQUAL(true, configAtTimepoint);
 
@@ -439,8 +441,14 @@ void DataLogging_Test::testLastKnownConfiguration() {
     }
     CPPUNIT_ASSERT_EQUAL(false, deviceIdFound);
 
+    // Waits a while before retrieving the configuration for a timepoint where the device is guaranteed to be offline.
+    // There is an interval between the device being killed and the event that it is gone reaching the logger - the
+    // delay decreases the chances of the timepoint used in the request for configuration from past to precede the
+    // timestamp associated to the device shutdown event.
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1250));
+
     Epochstamp afterDeviceGone;
-    std::clog << "... after device being logged is gone (at " << afterDeviceGone.toIso8601() << ") ...";
+    std::clog << "... after device being logged is gone (requested config at " << afterDeviceGone.toIso8601() << ") ...";
     // At the afterDeviceGone timepoint, a last known configuration should be obtained with the last value set in the
     // previous test cases for the 'int32Property' - even after the device being logged is gone.
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
@@ -453,6 +461,7 @@ void DataLogging_Test::testLastKnownConfiguration() {
     CPPUNIT_ASSERT(configStamp > beforeAnything);
     CPPUNIT_ASSERT(configStamp < afterDeviceGone);
     std::clog << "\n... "
+            << "Timestamp of retrieved configuration: " << configTimepoint << "\n "
             << "Ok (retrieved configuration with last known value for 'int32Property' while the device was not being logged)."
             << std::endl;
 
@@ -466,7 +475,7 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
     const string dlreader1 = karabo::util::DATALOGREADER_PREFIX + ("1-" + m_server);
     const int max_set = 100;
     std::clog << "Testing Property History retrieval for '" << key << "'... " << std::flush;
-   
+
     // get configuration for later checks
     Hash beforeConf;
     CPPUNIT_ASSERT_NO_THROW((m_deviceClient->get(m_deviceId, beforeConf)));
@@ -485,12 +494,12 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
 
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(m_deviceId, afterConf));
 
+    // save this instant as a iso string
     Epochstamp es_after;
     string after = es_after.toIso8601();
 
-    // save this instant as a iso string
-
-    boost::this_thread::sleep(boost::posix_time::milliseconds(m_flushIntervalSec * 5500)); // wait more than the flush time
+    // wait more than the flush time
+    boost::this_thread::sleep(boost::posix_time::milliseconds(m_flushIntervalSec * 1000 + 250));
 
     // place holders, could be skipped but they are here for future expansions of the tests
     string device;
@@ -502,26 +511,37 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
     params.set<int>("maxNumData", max_set * 2);
     // the history retrieval might take more than one try, it could have to index the files.
 
-    int timeout = 20000;
-    unsigned int numTimeouts = 0;
-    while (timeout >= 0 && history.size() == 0) {
+    std::vector<std::string> remoteErrors;
+
+    unsigned int timeout = 20000;
+    unsigned int numExceptions = 0;
+    unsigned int numChecks = 0;
+    while (timeout >= 0 && history.size() != max_set) {
         try {
+            numChecks++;
             // TODO: use the deviceClient to retrieve the property history
             //history = m_deviceClient->getPropertyHistory(m_deviceId, key, before, after, max_set * 2);
             m_sigSlot->request(dlreader0, "slotGetPropertyHistory", m_deviceId, key, params)
                     .timeout(1000).receive(device, property, history);
         } catch (const karabo::util::TimeoutException& e) {
             karabo::util::Exception::clearTrace();
-            ++numTimeouts;
+            ++numExceptions;
         } catch (const karabo::util::RemoteException& e) {
             karabo::util::Exception::clearTrace();
-            ++numTimeouts;
+            remoteErrors.push_back("At check #" + toString(numChecks) + ": " + e.what());
+            ++numExceptions;
         }
         boost::this_thread::sleep(boost::posix_time::milliseconds(200));
         timeout -= 200;
     }
 
-    CPPUNIT_ASSERT_MESSAGE("Timeout while getting property history after" + toString(numTimeouts) + " checks.", timeout >= 0);
+
+    CPPUNIT_ASSERT_MESSAGE("Timeout while getting property history after " + toString(numChecks) +
+                           " checks:\n\tdeviceId: " + m_deviceId + "\n\tparam.from: " + before +
+                           "\n\tparam.to: " + after + "\n\tparam.maxNumData: " + toString(max_set * 2) +
+                           "\n\tNumber of Exceptions: " + toString(numExceptions) +
+                           "\n\tRemote Errors:\n" + boost::algorithm::join(remoteErrors, "\n"),
+                           timeout >= 0);
 
     CPPUNIT_ASSERT_EQUAL_MESSAGE("History size different than expected", max_set, history.size());
 
@@ -540,10 +560,14 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
 
     // skip the configuration retrieval
     if (!testConf) return;
+
     std::clog << "Testing past configuration retrieval for '" << key << "'... " << std::flush;
 
+    remoteErrors.clear();
+
     timeout = 20000;
-    numTimeouts = 0;
+    numExceptions = 0;
+    numChecks = 0;
     // place holder schema, could be checked in future tests
     Schema schema;
     Hash conf;
@@ -553,16 +577,26 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
         // conf = pair.first;
         conf.clear();
         try {
+            numChecks++;
             m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", m_deviceId, before)
                     .timeout(1000).receive(conf, schema);
-        } catch (const karabo::util::TimeoutException& e) {
+        } catch (const karabo::util::TimeoutException &e) {
             karabo::util::Exception::clearTrace();
-            ++numTimeouts;
+            ++numExceptions;
+        } catch (const karabo::util::RemoteException &e) {
+            karabo::util::Exception::clearTrace();
+            remoteErrors.push_back("At check #" + toString(numChecks) + ": " + e.what());
+            ++numExceptions;
         }
         boost::this_thread::sleep(boost::posix_time::milliseconds(200));
         timeout -= 200;
     }
-    CPPUNIT_ASSERT_MESSAGE("Timeout while getting configuration from past " + toString(numTimeouts), timeout >= 0);
+
+    CPPUNIT_ASSERT_MESSAGE("Timeout while getting configuration from past after " + toString(numChecks) +
+                           " checks.\n\tdeviceId: " + m_deviceId + "\n\tparam.before: " + before +
+                           "\n\tNumber of Exceptions: " + toString(numExceptions) +
+                           "\n\tRemote Errors:\n" + boost::algorithm::join(remoteErrors, "\n"),
+                           timeout >= 0);
     // One needs to check only the content here, therefore only the leaves are examined
     std::vector<std::string> leaves;
     getLeaves(conf, schema, leaves, '.');
@@ -573,7 +607,7 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
     }
 
     timeout = 20000;
-    numTimeouts = 0;
+    numExceptions = 0;
     conf.clear();
     while (timeout >= 0 && conf.size() == 0) {
         try {
@@ -584,12 +618,12 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
                     .timeout(1000).receive(conf, schema);
         } catch (const karabo::util::TimeoutException& e) {
             karabo::util::Exception::clearTrace();
-            ++numTimeouts;
+            ++numExceptions;
         }
         boost::this_thread::sleep(boost::posix_time::milliseconds(200));
         timeout -= 200;
     }
-    CPPUNIT_ASSERT_MESSAGE("Timeout while getting configuration from past after settings " + toString(numTimeouts), timeout >= 0);
+    CPPUNIT_ASSERT_MESSAGE("Timeout while getting configuration from past after settings " + toString(numExceptions), timeout >= 0);
     // One needs to check only the content here, therefore only the leaves are examined
     leaves.clear();
     getLeaves(conf, schema, leaves, '.');
