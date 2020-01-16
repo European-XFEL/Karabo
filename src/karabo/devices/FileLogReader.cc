@@ -427,7 +427,7 @@ namespace karabo {
                 bool configAtTimepoint = false;
                 Epochstamp configTimepoint(0, 0); // configTimepoint initialized to the Epoch.
 
-                KARABO_LOG_FRAMEWORK_DEBUG << "Requested time point: " << target.getSeconds();
+                KARABO_LOG_FRAMEWORK_DEBUG << "Requested time point: " << target;
                 // Retrieve proper Schema
                 bf::path schemaPath(get<string>("directory") + "/" + deviceId + "/raw/archive_schema.txt");
                 if (bf::exists(schemaPath)) {
@@ -458,7 +458,6 @@ namespace karabo {
                     reply(Hash(), Schema(), configAtTimepoint, configTimepoint.toIso8601());
                     return;
                 }
-                vector<string> paths = schema.getPaths();
 
                 auto result = findLoggerIndexTimepoint(deviceId, timepoint);
                 configAtTimepoint = result.first;
@@ -513,7 +512,7 @@ namespace karabo {
                                 readToHash(hash, path, timestamp, Types::from<FromLiteral>(tokens[5]), tokens[6]);
                             } else {
                                 KARABO_LOG_FRAMEWORK_DEBUG
-                                        << "slotGetPropertyHistory: skip corrupted record or old format";
+                                        << "slotGetPropertyHistory: skip corrupted record or old format: " << line;
                             }
                         }
                         file.close();
@@ -615,7 +614,10 @@ namespace karabo {
                                 lastLogMinusEntry.m_event = event;
                                 lastLogMinusEntry.m_epoch = epochstamp;
                                 // There's no need to store the tail for the -LOG event; only its epoch is needed.
-                            }
+                            } // else {
+                            // We ignore "=NEW" entries here since we have to read all update lines from the last +LOG
+                            // anyway: Otherwise we may miss updates of rarely changing parameters.
+                            // }
                         }
                     }
                 } catch (const exception &e) {
@@ -636,6 +638,9 @@ namespace karabo {
                 // If the tail is not empty, it means a device became online event (LOG+) has been found. If there's
                 // no device became offline event (LOG-) that comes after the became online event, it means the device
                 // was being logged at the timepoint.
+                // FIXME: If -LOG is missing since logger crashed/was killed with -9, we might be fooled here...
+                //        But I see no way to fix this since any exact information lost. Two consecutive +LOG events
+                //        (separated by =NEW lines only) are a hint that we _might_ be fooled.
                 if (lastLogMinusEntry.m_event.empty() ||
                     (lastLogMinusEntry.m_event == "-LOG" && lastLogMinusEntry.m_epoch < lastLogPlusEntry.m_epoch)) {
                     configAtTimepoint = true;
