@@ -20,7 +20,7 @@ def _get_plot_scene(model, device_id, path):
         x=10.0, y=80.0)
 
     label = LabelModel(
-        font='Ubuntu,11,-1,5,50,0,0,0,0,0',
+        font='Sans Serif,10,-1,5,50,0,0,0,0,0',
         foreground='#000000', height=31.0,
         parent_component='DisplayComponent', text='DeviceID',
         width=60.0, x=20.0, y=20.0)
@@ -98,7 +98,7 @@ def get_image_scene(device_id, path):
         width=603.0, x=15.0, y=83.0)
 
     label = LabelModel(
-        font='Ubuntu,11,-1,5,50,0,0,0,0,0',
+        font='Sans Serif,10,-1,5,50,0,0,0,0,0',
         foreground='#000000', height=31.0,
         parent_component='DisplayComponent', text='DeviceID',
         width=60.0, x=20.0, y=20.0)
