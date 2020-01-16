@@ -1279,6 +1279,7 @@ namespace karabo {
                         // it->first->writeAsync(h);
                         it->second.visibleInstances.erase(instanceId);
                         it->second.requestedDeviceSchemas.erase(instanceId);
+                        it->second.requestedClassSchemas.erase(instanceId);
                     }
                 }
 
