@@ -1,3 +1,4 @@
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QBrush, QColor, QPen
 from pyqtgraph import LabelItem, mkBrush, mkPen
 from pyqtgraph.graphicsItems.LegendItem import ItemSample, LegendItem
@@ -30,6 +31,7 @@ class KaraboLegend(LegendItem):
         self.updateSize()
 
     def paint(self, painter, *args):
+        """Reimplemented function of LegendItem"""
         painter.setPen(self._pen)
         painter.setBrush(self._brush)
         rect = self.boundingRect()
@@ -56,7 +58,6 @@ class ColorBox(ItemSample):
 
     def __init__(self, item):
         super(ColorBox, self).__init__(item)
-
         self._pen = mkPen(item.opts.get('pen', None))
         self._brush = mkBrush(self._pen.color())
 
@@ -68,3 +69,18 @@ class ColorBox(ItemSample):
     def setBrush(self, brush):
         self._brush = brush
         self.update()
+
+    def mouseClickEvent(self, event):
+        """Reimplemented function of PyQt
+
+        Use the mouse click with the left button to toggle the visibility
+        of the plot curve item as well as to change the appearance of the box
+        """
+        if event.button() == Qt.LeftButton:
+            visible = self.item.isVisible()
+            self.item.setVisible(not visible)
+            color = QColor(211, 211, 211) if visible else self._pen.color()
+            brush = mkBrush(color)
+            self.setBrush(brush)
+
+        event.accept()
