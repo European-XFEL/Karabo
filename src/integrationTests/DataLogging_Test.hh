@@ -46,9 +46,15 @@ private:
     void testTable(bool testPastConf = false);
 
     void testLastKnownConfiguration();
+    void testCfgFromPastRestart();
+
     template <class T> void testHistory(const std::string& key, const std::function<T(int)>& f, const bool testConf);
-    std::string m_server;
-    std::string m_deviceId;
+
+    std::pair<bool, std::string> startLoggers(const std::string& loggerType);
+
+    const std::string m_server;
+    const std::string m_deviceId;
+    const std::string m_fileLoggerDirectory;
     bool m_changedPath;
     std::string m_oldPath;
 
