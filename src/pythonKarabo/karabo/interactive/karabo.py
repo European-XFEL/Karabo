@@ -527,11 +527,12 @@ def install_dependencies(args, is_develop=False):
     for item in devices:
         args_copy = copy.deepcopy(args)
         args_copy.device = item[0]
-        args_copy.tag = item[1]
         args_copy.copy = item[2]
         if is_develop:
+            args_copy.branch = item[1]
             develop(args_copy)
         else:
+            args_copy.tag = item[1]
             install(args_copy)
 
 
