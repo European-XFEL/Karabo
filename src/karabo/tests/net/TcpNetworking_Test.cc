@@ -12,6 +12,8 @@
 #include "karabo/net/Channel.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/Queues.hh"
+#include "karabo/io/BinarySerializer.hh"
+#include "karabo/io/BufferSet.hh"
 
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
@@ -811,6 +813,10 @@ private:
 
 
 TcpNetworking_Test::TcpNetworking_Test() {
+    // To switch on logging:
+    // #include "karabo/log/Logger.hh"
+    // karabo::log::Logger::configure(karabo::util::Hash("priority", "DEBUG"));
+    // karabo::log::Logger::useOstream();
 }
 
 
@@ -841,6 +847,112 @@ void TcpNetworking_Test::testClientServer() {
 
     nThreads = karabo::net::EventLoop::getNumberOfThreads();
     CPPUNIT_ASSERT(nThreads == 0);
+}
+
+
+void TcpNetworking_Test::testBufferSet() {
+    using namespace karabo::util;
+    using namespace karabo::net;
+
+    auto thr = boost::thread(&EventLoop::work);
+
+        // Create server with handler for connections
+        auto serverCon = Connection::create("Tcp", Hash("type", "server"));
+
+        Channel::Pointer serverChannel;
+        std::string failureReasonServ;
+            auto serverConnectHandler = [&serverChannel, &failureReasonServ] (const ErrorCode& ec, const Channel::Pointer& channel) {
+                if (ec) {
+                    failureReasonServ = "Server connection failed: " + toString(ec.value()) += " -- " + ec.message();
+                    std::clog << failureReasonServ << std::endl;
+                } else {
+                    serverChannel = channel;
+                }
+            };
+        const unsigned int serverPort = serverCon->startAsync(serverConnectHandler);
+        CPPUNIT_ASSERT(serverPort != 0);
+
+        // Create client, connect to server and validate connection
+        Connection::Pointer clientConn = Connection::create("Tcp", Hash("type", "client",
+                                                                        "port", serverPort));
+        Channel::Pointer clientChannel;
+        std::string failureReasonCli;
+        auto clientConnectHandler = [&clientChannel, &failureReasonCli](const ErrorCode& ec, const Channel::Pointer & channel) {
+            if (ec) {
+                std::stringstream os;
+                os << "\nClient connection failed: " << ec.value() << " -- " << ec.message();
+                failureReasonCli = os.str();
+                std::clog << failureReasonCli << std::endl;
+            } else {
+                clientChannel = channel;
+            }
+                };
+        clientConn->startAsync(clientConnectHandler);
+
+        int timeout = 10000;
+        while (timeout >= 0) {
+            if (clientChannel && serverChannel) break;
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+            timeout -= 10;
+        }
+        CPPUNIT_ASSERT_MESSAGE(failureReasonServ + ", timeout: " + toString(timeout), serverChannel);
+        CPPUNIT_ASSERT_MESSAGE(failureReasonCli + ", timeout: " + toString(timeout), clientChannel);
+
+        // Create Hash with many small NDArray: When it is sent that will create a lot of buffers, but due to an overall
+        // rather small message it will likely go through the synchronous code path - and that was buggy
+        // (using socket::read_some instead of asio::read) up to Karabo 2.7.0:
+        Hash data;
+        const int numNDarray = 500;
+        for (int i = 0; i < numNDarray; ++i) {
+            data.set(toString(i), NDArray(Dims(1ull), i));
+        }
+        auto serializer = karabo::io::BinarySerializer<Hash>::create("Bin");
+        auto buffers = std::vector<karabo::io::BufferSet::Pointer>(1, boost::make_shared<karabo::io::BufferSet>());
+        serializer->save(data, *(buffers[0])); // save into first BufferSet
+
+        bool received = false;
+        std::string failureReason;
+        std::vector<karabo::io::BufferSet::Pointer> receivedBuffers;
+        auto onRead = [&received, &failureReason, &receivedBuffers]
+                (const boost::system::error_code& ec, const karabo::util::Hash& h,
+                 const std::vector<karabo::io::BufferSet::Pointer>& bufs) {
+            if (ec) {
+                failureReason = toString(ec.value()) += " -- " + ec.message();
+            } else {
+                receivedBuffers = bufs;
+            }
+            received = true;
+        };
+
+        // Register handler, send data and wait until it arrived
+        clientChannel->readAsyncHashVectorBufferSetPointer(onRead);
+        serverChannel->write(Hash(), buffers); // synchronously with (empty) header
+
+        timeout = 10000;
+        while (timeout >= 0) {
+            if (received) break;
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+            timeout -= 10;
+        }
+
+        CPPUNIT_ASSERT_MESSAGE("Failed to receive data, timeout " + toString(timeout), received);
+
+        // Check that no failure and that content is as expected
+        CPPUNIT_ASSERT_MESSAGE(failureReason, failureReason.empty());
+        CPPUNIT_ASSERT_EQUAL(1ul, receivedBuffers.size());
+        data.clear();
+        serializer->load(data, *(receivedBuffers[0]));
+        CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(numNDarray), data.size());
+        for (int i = 0; i < numNDarray; ++i) {
+            const std::string key(toString(i));
+            CPPUNIT_ASSERT_MESSAGE("Miss key " + toString(key), data.has(key));
+            const NDArray& arr = data.get<NDArray>(key);
+            CPPUNIT_ASSERT_EQUAL(1ul, arr.size());
+            CPPUNIT_ASSERT_EQUAL(i, arr.getData<int>()[0]);
+        }
+
+        EventLoop::stop();
+        thr.join();
 }
 
 
