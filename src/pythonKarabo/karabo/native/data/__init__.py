@@ -3,9 +3,9 @@ from karabo.native.data.enums import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, DaqDataType,
     DaqPolicy, EncodingType, LeafType, MetricPrefix, NodeType, Unit)
 from karabo.native.data.basetypes import (
-    BoolValue, EnumValue, isSet, KaraboValue, NoneValue, QuantityValue,
-    StringValue, TableValue, unit_registry as unit, VectorStringValue,
-    VectorCharValue, wrap, newest_timestamp, wrap_function)
+    BoolValue, EnumValue, isSet, KaraboValue, NoneValue, ImageData,
+    QuantityValue, StringValue, TableValue, unit_registry as unit,
+    VectorStringValue, VectorCharValue, wrap, newest_timestamp, wrap_function)
 from karabo.native.data.hash import (
     Attribute, Bool, ByteArray, Char, ComplexDouble, ComplexFloat, Descriptor,
     Double, Enumable, Float, Hash, HashList,
@@ -17,6 +17,7 @@ from karabo.native.data.hash import (
     VectorInt64, VectorInt8, VectorString, VectorUInt16, VectorUInt32,
     VectorUInt64, VectorUInt8)
 from karabo.native.data.ndarray import NDArray
+from karabo.native.data.image_data import Image
 from karabo.native.data.schema import (
     Configurable, Node, ChoiceOfNodes, ListOfNodes, Overwrite,
     MetaConfigurable)
