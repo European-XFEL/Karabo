@@ -45,6 +45,10 @@ class VectorScatterGraphModel(BasePlotModel):
     psize = Float(7.0)
 
 
+class VectorXYGraphModel(BasePlotModel):
+    """ A model for the VectorXYGraph"""
+
+
 class VectorBarGraphModel(BasePlotModel):
     """ A model for the Vector Bar Graph"""
     bar_width = Float(0.1)
@@ -146,6 +150,27 @@ def _vector_scatter_graph_writer(write_func, model, parent):
     write_axes_set(model, element)
     write_range_set(model, element)
     element.set(NS_KARABO + 'psize', str(model.psize))
+
+    return element
+
+
+@register_scene_reader('VectorXYGraph')
+def _vector_xy_graph_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    traits.update(read_basic_label(element))
+    traits.update(read_axes_set(element))
+    traits.update(read_range_set(element))
+
+    return VectorXYGraphModel(**traits)
+
+
+@register_scene_writer(VectorXYGraphModel)
+def _vector_xy_graph_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'VectorXYGraph')
+    write_basic_label(model, element)
+    write_axes_set(model, element)
+    write_range_set(model, element)
 
     return element
 
