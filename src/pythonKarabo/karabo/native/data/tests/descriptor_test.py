@@ -7,11 +7,11 @@ from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
 from karabo.native import (
     AccessLevel, AccessMode, Assignment, Attribute, Bool, Char, ComplexFloat,
-    Configurable, Double, decodeBinary, encodeBinary, Float, Hash, Int16, Int8,
-    KaraboError, LeafType, MetricPrefix, NDArray, NumpyVector, QuantityValue,
-    Schema, String, Timestamp, Type, UInt8, UInt64, Unit, unit, VectorBool,
-    VectorChar, VectorComplexFloat, VectorFloat, VectorHash, VectorInt32,
-    VectorInt8, VectorString)
+    Configurable, Double, decodeBinary, encodeBinary, Float, Hash, Image,
+    ImageData, Int16, Int8, KaraboError, LeafType, MetricPrefix, NDArray,
+    NumpyVector, QuantityValue, Schema, String, Timestamp, Type, UInt8, UInt64,
+    Unit, unit, VectorBool, VectorChar, VectorComplexFloat, VectorFloat,
+    VectorHash, VectorInt32, VectorInt8, VectorString)
 
 
 class ArrayTestDevice(Configurable):
@@ -385,6 +385,76 @@ class Tests(TestCase):
         h["data"][0] = 1
         conv = d.toKaraboValue(h)
         self.assertEqual(conv[0, 0], 257)
+
+    def test_image(self):
+        d = Image(dtype=UInt8, shape=(2, 2))
+        v = d.toKaraboValue([[1, 2], [3, 4]])
+        self.assertEqual(v.value[0, 1], 2)
+        self.assertEqual(v.dtype, numpy.uint8)
+        h, attrs = d.toDataAndAttrs(v)
+        h = decodeBinary(encodeBinary(h))
+        self.assertEqual(h["pixels.type"], 6)
+        self.assertFalse(h["pixels.isBigEndian"])
+        self.assertEqual(h["pixels.shape"][1], 2)
+        self.assertEqual(len(h["pixels.data"]), 4)
+
+        schema, attrs = d.toSchemaAndAttrs(None, None)
+        arrayEqual = numpy.testing.assert_array_equal
+        arrayEqual(schema["pixels.shape", "defaultValue"],
+                   numpy.array([2, 2], dtype=numpy.uint64))
+        arrayEqual(schema["dims", "defaultValue"],
+                   numpy.array([2, 2], dtype=numpy.uint64))
+        arrayEqual(schema["dimTypes", "defaultValue"],
+                   numpy.array([], dtype=numpy.int32))
+        self.assertEqual(schema["dimScales", "defaultValue"], "")
+        self.assertEqual(schema["encoding", "defaultValue"], 0)
+        self.assertEqual(schema["bitsPerPixel", "defaultValue"], 8)
+        arrayEqual(schema["roiOffsets", "defaultValue"],
+                   numpy.array([0, 0], dtype=numpy.uint64))
+        arrayEqual(schema["binning", "defaultValue"],
+                   numpy.array([1, 1], dtype=numpy.uint64))
+        self.assertEqual(schema["rotation", "defaultValue"], 0)
+        self.assertEqual(schema["flipX", "defaultValue"], False)
+        self.assertEqual(schema["flipY", "defaultValue"], False)
+
+        maxSize = 2
+        self.assertEqual(schema["pixels.shape", "maxSize"], maxSize)
+        self.assertEqual(schema["dims", "maxSize"], maxSize)
+        self.assertEqual(schema["dimTypes", "maxSize"], maxSize)
+        self.assertEqual(schema["roiOffsets", "maxSize"], maxSize)
+        self.assertEqual(schema["binning", "maxSize"], maxSize)
+
+        # Test with image data initialization to check the different
+        # Schema defaults!
+        d = Image(data=ImageData(numpy.zeros(shape=(2, 3, 4)), flipX=True,
+                                 bitsPerPixel=32))
+
+        schema, attrs = d.toSchemaAndAttrs(None, None)
+        arrayEqual = numpy.testing.assert_array_equal
+        arrayEqual(schema["pixels.shape", "defaultValue"],
+                   numpy.array([2, 3, 4], dtype=numpy.uint64))
+        arrayEqual(schema["dims", "defaultValue"],
+                   numpy.array([2, 3, 4], dtype=numpy.uint64))
+
+        arrayEqual(schema["dimTypes", "defaultValue"],
+                   numpy.array([], dtype=numpy.int32))
+        self.assertEqual(schema["dimScales", "defaultValue"], "")
+        self.assertEqual(schema["encoding", "defaultValue"], 2)
+        self.assertEqual(schema["bitsPerPixel", "defaultValue"], 32)
+        arrayEqual(schema["roiOffsets", "defaultValue"],
+                   numpy.array([0, 0, 0], dtype=numpy.uint64))
+        arrayEqual(schema["binning", "defaultValue"],
+                   numpy.array([1, 1, 1], dtype=numpy.uint64))
+        self.assertEqual(schema["rotation", "defaultValue"], 0)
+        self.assertEqual(schema["flipX", "defaultValue"], True)
+        self.assertEqual(schema["flipY", "defaultValue"], False)
+
+        maxSize = 3
+        self.assertEqual(schema["pixels.shape", "maxSize"], maxSize)
+        self.assertEqual(schema["dims", "maxSize"], maxSize)
+        self.assertEqual(schema["dimTypes", "maxSize"], maxSize)
+        self.assertEqual(schema["roiOffsets", "maxSize"], maxSize)
+        self.assertEqual(schema["binning", "maxSize"], maxSize)
 
     def test_string(self):
         d = String()
