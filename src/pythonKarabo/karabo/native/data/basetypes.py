@@ -13,7 +13,7 @@ from xml.sax.saxutils import escape
 import numpy
 import pint
 
-from karabo.native.data.enums import MetricPrefix, Unit
+from karabo.native.data.enums import EncodingType, MetricPrefix, Unit
 from karabo.native.weak import Weak
 
 
@@ -54,6 +54,7 @@ def newest_timestamp(objs, newest=None):
 def wrap_function(func, timestamp=None):
     """wrap the function func to return a KaraboValue with the newest
     timestamp of its parameters"""
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         ret = func(*args, **kwargs)
@@ -70,6 +71,7 @@ def wrap_function(func, timestamp=None):
             except TypeError:
                 pass  # the wrapper didn't manage to wrap, just skip it
         return ret
+
     return wrapper
 
 
@@ -171,6 +173,7 @@ class KaraboValue(object):
 
 class _Singleton(KaraboValue):
     """Base class for True, False, None"""
+
     def __bool__(self):
         return bool(self.value)
 
@@ -232,6 +235,7 @@ class EnumValue(KaraboValue):
     We can define enums in the expected parameters. This contains a value of
     them. Unfortunately, it is impossible to use the ``is`` operator as with
     bare enums, one has to use ``==`` instead. """
+
     def __init__(self, value, *, descriptor=None, **kwargs):
         super().__init__(value, descriptor=descriptor, **kwargs)
         if isinstance(value, EnumValue):
@@ -295,6 +299,7 @@ del StringlikeValue.__hash__
 @wrap_methods
 class VectorCharValue(StringlikeValue, bytes):
     """A VectorChar is a Python :class:`bytes` object"""
+
     @property
     def value(self):
         return bytes(self)
@@ -303,6 +308,7 @@ class VectorCharValue(StringlikeValue, bytes):
 @wrap_methods
 class StringValue(StringlikeValue, str):
     """A StringValue is a Python :class:`str`."""
+
     @property
     def value(self):
         return str(self)
@@ -344,8 +350,112 @@ class VectorStringValue(KaraboValue, list):
         return self
 
 
+class ImageData(KaraboValue):
+    """The Karabo ImageData is supposed to provide an encapsulated NDArray
+
+    This KaraboValue can estimate from the input array the associated
+    attributes of the `ImageData`, such as binning, encoding, etc.
+
+    Every attribute can be provided as well on initialization of the object.
+
+    :param binning: The binning of the image, e.g. [0, 0]
+    :param encoding: The encoding of the image, e.g. EncodingType.GRAY (enum)
+    :param rotation: The rotation of the image, either 0, 90, 180 or 270
+    :param roiOffsets: The roiOffset, e.g. [0, 0]
+    :param dimScales: Description of the dim scales
+    :param dimTypes: The dimension types
+    :param bitsPerPixel: The bits per pixel
+    :param flipX: Image horizontal flip, either `True` or `False`
+    :param flipY: Image vertical flip, either `True` or `False`
+
+    :type binning: array with dtype uint64
+    :type encoding: integer with dtype int32
+    :type rotation: integer with dtype int32
+    :type roiOffsets: array with dtype uint64
+    :type dimScales: str
+    :type dimTypes: array with dtype int32
+    :type flipX: bool
+    :type flipY: bool
+    """
+    def __init__(self, value, *args, binning=None, encoding=None,
+                 rotation=None, roiOffsets=None, dimScales=None, dimTypes=None,
+                 bitsPerPixel=None, flipX=False, flipY=False, **kwargs):
+        super().__init__(value, *args, **kwargs)
+        self.value = value
+        self.dtype = value.dtype
+
+        dims = numpy.array(value.shape, dtype=numpy.uint64)
+        self.shape = dims
+        self.dims = dims
+
+        # NOTE: If the encoding is not provided, try to guess it!
+        if encoding is None:
+            if len(dims) == 2:
+                encoding = EncodingType.GRAY
+            elif len(dims) == 3:
+                if dims[2] == 1:
+                    encoding = EncodingType.GRAY
+                elif dims[2] == 3:
+                    encoding = EncodingType.RGB
+                elif dims[2] == 4:
+                    encoding = EncodingType.RGBA
+                else:
+                    encoding = EncodingType.UNDEFINED
+            else:
+                encoding = EncodingType.UNDEFINED
+
+        if isinstance(encoding, Enum):
+            encoding = encoding.value
+
+        self.encoding = numpy.int32(encoding)
+
+        self.dimScales = dimScales if dimScales else ""
+        dimTypes = [] if dimTypes is None else dimTypes
+        self.dimTypes = numpy.array(dimTypes, dtype=numpy.int32)
+        binning = [1] * len(dims) if binning is None else binning
+        self.binning = numpy.array(binning, dtype=numpy.uint64)
+        roiOffsets = [0] * len(dims) if roiOffsets is None else roiOffsets
+        self.roiOffsets = numpy.array(roiOffsets, dtype=numpy.uint64)
+        rotation = 0 if rotation is None else rotation
+        self.rotation = numpy.int32(rotation)
+
+        # NOTE: Set the bits per pixel depending on the shape if `None`
+        if bitsPerPixel is None:
+            itemsize = value.itemsize
+            if len(dims) == 2:
+                bitsPerPixel = 8 * itemsize
+            elif len(dims) == 3:
+                bitsPerPixel = 8 * itemsize * self.shape[2]
+            else:
+                bitsPerPixel = 8
+
+        self.bitsPerPixel = numpy.int32(bitsPerPixel)
+        self.flipX = flipX
+        self.flipY = flipY
+
+    def toDict(self):
+        """Provide the `attributes` of the `ImageData` in a dictionary form"""
+        data = {
+            'dtype': self.dtype,
+            'shape': self.shape,
+            'encoding': self.encoding,
+            'dimScales': self.dimScales,
+            'dimTypes': self.dimTypes,
+            'dims': self.dims,
+            'binning': self.binning,
+            'roiOffsets': self.roiOffsets,
+            'rotation': self.rotation,
+            'bitsPerPixel': self.bitsPerPixel,
+            'flipX': self.flipX,
+            'flipY': self.flipY
+        }
+
+        return data
+
+
 class TableValue(KaraboValue):
     """This wraps numpy structured arrays. Pint cannot deal with them."""
+
     def __init__(self, value, units, **kwargs):
         super(TableValue, self).__init__(value, **kwargs)
         self.value = value
@@ -360,8 +470,9 @@ class TableValue(KaraboValue):
             return TableValue(val, units, timestamp=self.timestamp)
 
         if isinstance(val, numpy.ndarray) and (
-                val.base is self.value or val.base is self.value.base) and (
-                val.dtype.char == "O"):
+                        val.base is self.value
+                or val.base is self.value.base) and (
+                    val.dtype.char == "O"):
             return TableValue(val, units, timestamp=self.timestamp)
 
         ret = wrap(val)
@@ -440,6 +551,7 @@ class TableValue(KaraboValue):
                     # NOTE: str casting is for numpy vectors and lists
                     yield "{:10} ".format(str(val))
                 yield "\n"
+
         return "".join(inner())
 
     def _repr_html_generator_(self):
@@ -496,9 +608,8 @@ class QuantityValue(KaraboValue, Quantity):
                     not isinstance(value, QuantityValue)):
                 # if pint didn't find a dimension in value,
                 # get it from the descriptor
-                self = cls(
-                    value, unit=descriptor.unitSymbol,
-                    metricPrefix=descriptor.metricPrefixSymbol)
+                self = cls(value, unit=descriptor.unitSymbol,
+                           metricPrefix=descriptor.metricPrefixSymbol)
         return self
 
     def __init__(self, value, unit=None, metricPrefix=None, **kwargs):
@@ -586,8 +697,8 @@ class QuantityValue(KaraboValue, Quantity):
         if err > 0:
             if isinstance(value.value, numpy.ndarray):
                 # XXX: [1., 2.] will be printed as '[1.0 2.0]'
-                _formatter = {'float_kind':
-                              '{{:.{}{}}}'.format(err, fmt).format}
+                _formatter = {'float_kind': '{{:.{}{}}}'.format(
+                    err, fmt).format}
                 formatted_value = numpy.array2string(value.value,
                                                      formatter=_formatter)
                 ret = "{} {:~}".format(formatted_value, value.units)

@@ -5,9 +5,9 @@ from .weak import Weak
 
 # Import data namespace
 from .data.basetypes import (
-    BoolValue, EnumValue, isSet, KaraboValue, NoneValue, QuantityValue,
-    StringValue, TableValue, unit_registry as unit, VectorStringValue,
-    VectorCharValue, wrap, newest_timestamp, wrap_function)
+    BoolValue, EnumValue, ImageData, isSet, KaraboValue, NoneValue,
+    QuantityValue, StringValue, TableValue, unit_registry as unit,
+    VectorStringValue, VectorCharValue, wrap, newest_timestamp, wrap_function)
 from .data.enums import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, DaqDataType,
     DaqPolicy, EncodingType, LeafType, MetricPrefix, NodeType, Unit)
@@ -22,6 +22,7 @@ from .data.hash import (
     VectorInt64, VectorInt8, VectorString, VectorUInt16, VectorUInt32,
     VectorUInt64, VectorUInt8)
 from .data.ndarray import NDArray
+from .data.image_data import Image
 from .data.schema import (
     Configurable, Node, ChoiceOfNodes, ListOfNodes, Overwrite,
     MetaConfigurable)
