@@ -3,12 +3,14 @@ from unittest import TestCase, main
 import string
 from zlib import adler32
 
+import numpy
+
 from karabo.middlelayer import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, Bool, Configurable,
     ComplexDouble, ComplexFloat, DaqDataType, DaqPolicy, decodeBinary,
-    DeviceNode, Double, encodeBinary, Float, Hash, Int8, Int16, Int32,
-    Int64, isSet, KaraboError, MetricPrefix, Node, Overwrite, Slot, State,
-    String, UInt8, UInt16, UInt32, UInt64, Unit, unit, VectorBool,
+    DeviceNode, Double, encodeBinary, Float, Hash, Image, ImageData, Int8,
+    Int16, Int32, Int64, isSet, KaraboError, MetricPrefix, Node, Overwrite,
+    Slot, State, String, UInt8, UInt16, UInt32, UInt64, Unit, unit, VectorBool,
     VectorChar, VectorComplexDouble, VectorComplexFloat, VectorDouble,
     VectorHash, VectorFloat, VectorInt8, VectorInt16, VectorInt32,
     VectorInt64, VectorString, VectorUInt8, VectorUInt16, VectorUInt32,
@@ -1021,6 +1023,54 @@ class Tests(TestCase):
                          "remote")
         # Becomes a node!
         self.assertEqual(a.node, None)
+
+    def test_image_with_image_data(self):
+        arrayEqual = numpy.testing.assert_array_equal
+
+        class A(Configurable):
+            image = Image(
+                displayedName="Image",
+                data=ImageData(numpy.zeros(shape=(256, 256),
+                                           dtype=numpy.uint8)))
+
+        a = A()
+        schema = a.getClassSchema()
+        self.assertEqual(schema.hash['image', 'accessMode'],
+                         AccessMode.READONLY.value)
+        self.assertEqual(schema.hash['image', 'daqDataType'],
+                         DaqDataType.TRAIN.value)
+        arrayEqual(schema.hash['image.pixels.shape', 'defaultValue'],
+                   numpy.array([256, 256], dtype=numpy.uint64))
+        self.assertEqual(
+            schema.hash['image.pixels.type', 'defaultValue'], numpy.int32(6))
+        self.assertEqual(
+            schema.hash['image.pixels.isBigEndian', 'defaultValue'], False)
+
+        # An image type has a descriptor
+        self.assertIsNotNone(a.image.descriptor)
+        self.assertEqual(a.image.descriptor.displayedName, "Image")
+        self.assertEqual(a.image.descriptor.accessMode, AccessMode.READONLY)
+        self.assertEqual(a.image.descriptor.daqDataType, DaqDataType.TRAIN)
+
+        #  Now check that we can initialize with `dtype` and `shape`
+        class b(Configurable):
+            image = Image(
+                displayedName="Image",
+                dtype=UInt8,
+                shape=(256, 256))
+
+        B = b()
+        schema = B.getClassSchema()
+        self.assertEqual(schema.hash['image', 'accessMode'],
+                         AccessMode.READONLY.value)
+        self.assertEqual(schema.hash['image', 'daqDataType'],
+                         DaqDataType.TRAIN.value)
+        arrayEqual(schema.hash['image.pixels.shape', 'defaultValue'],
+                   numpy.array([256, 256], dtype=numpy.uint64))
+        self.assertEqual(
+            schema.hash['image.pixels.type', 'defaultValue'], numpy.int32(6))
+        self.assertEqual(
+            schema.hash['image.pixels.isBigEndian', 'defaultValue'], False)
 
     def test_archivePolicy(self):
 

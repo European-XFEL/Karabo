@@ -45,9 +45,9 @@ from .middlelayer_api.unitutil import (
 from .middlelayer_api.utils import get_property
 # Native api
 from karabo.native.data.basetypes import (
-    BoolValue, EnumValue, isSet, KaraboValue, NoneValue, QuantityValue,
-    StringValue, TableValue, unit_registry as unit, VectorStringValue,
-    VectorCharValue
+    BoolValue, EnumValue, ImageData, isSet, KaraboValue, NoneValue,
+    QuantityValue, StringValue, TableValue, unit_registry as unit,
+    VectorStringValue, VectorCharValue
 )
 from karabo.native.data.enums import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, DaqDataType,
@@ -65,6 +65,8 @@ from karabo.native.data.hash import (
     VectorUInt64, VectorUInt8
 )
 from karabo.native.data.ndarray import NDArray
+from karabo.native.data.image_data import Image
+
 from karabo.native.data.schema import (
     Configurable, Node, ChoiceOfNodes, ListOfNodes, Overwrite
 )

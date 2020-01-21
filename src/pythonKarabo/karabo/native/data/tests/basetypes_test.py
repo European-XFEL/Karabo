@@ -6,10 +6,10 @@ import pint
 import numpy
 
 from karabo.native import encodeBinary, unit
-from karabo.native.data.enums import Unit, MetricPrefix
+from karabo.native.data.enums import EncodingType, Unit, MetricPrefix
 from karabo.native.data.basetypes import (
     NoneValue, QuantityValue, isSet, StringValue, VectorCharValue, BoolValue,
-    EnumValue, TableValue, VectorStringValue, wrap)
+    EnumValue, ImageData, TableValue, VectorStringValue, wrap)
 from karabo.native.data.hash import Hash, Int32, Float, VectorFloat
 from karabo.native.timestamp import Timestamp
 
@@ -470,10 +470,79 @@ class Tests(TestCase):
 
     def test_timeout(self):
         time = QuantityValue(200, Unit.SECOND,
-                                  metricPrefix=MetricPrefix.MILLI)
+                             metricPrefix=MetricPrefix.MILLI)
         self.assertEqual(time, 200 * unit.millisecond)
         time /= unit.second
         self.assertEqual(time, 0.2)
+
+    def test_image_data(self):
+        # Initialize must take an array
+        with self.assertRaises(TypeError):
+            image = ImageData()
+
+        arrayEqual = numpy.testing.assert_equal
+
+        image = ImageData(numpy.zeros(shape=(1000, 1000), dtype=numpy.uint32))
+
+        arrayEqual(image.value, numpy.zeros(shape=(1000, 1000),
+                                            dtype=numpy.uint32))
+        self.assertEqual(image.dtype, numpy.uint32)
+
+        arrayEqual(image.shape, numpy.array([1000, 1000], dtype=numpy.uint64))
+        self.assertEqual(image.shape.dtype, numpy.uint64)
+
+        arrayEqual(image.dims, numpy.array([1000, 1000], dtype=numpy.uint64))
+        self.assertEqual(image.dims.dtype, numpy.uint64)
+
+        arrayEqual(image.binning, numpy.array([1, 1], dtype=numpy.uint64))
+        self.assertEqual(image.binning.dtype, numpy.uint64)
+
+        self.assertEqual(image.encoding, 0)
+        self.assertEqual(image.encoding.dtype, numpy.int32)
+        self.assertEqual(image.flipX, False)
+        self.assertEqual(image.flipY, False)
+        self.assertEqual(image.rotation, 0)
+        self.assertEqual(image.rotation.dtype, numpy.int32)
+
+        self.assertEqual(image.dimScales, "")
+        arrayEqual(image.dimTypes, numpy.array([], dtype=numpy.int32))
+        arrayEqual(image.roiOffsets, numpy.array([0, 0], dtype=numpy.uint64))
+        self.assertEqual(image.roiOffsets.dtype, numpy.uint64)
+        self.assertEqual(image.bitsPerPixel, 32)
+
+        image = ImageData(numpy.zeros(shape=(1000, 1000, 2),
+                                      dtype=numpy.uint64),
+                          encoding=EncodingType.RGB,
+                          flipX=True)
+
+        arrayEqual(image.value, numpy.zeros(shape=(1000, 1000, 2),
+                                            dtype=numpy.uint64))
+        self.assertEqual(image.dtype, numpy.uint64)
+
+        arrayEqual(image.shape, numpy.array([1000, 1000, 2],
+                                            dtype=numpy.uint64))
+        self.assertEqual(image.shape.dtype, numpy.uint64)
+
+        arrayEqual(image.dims, numpy.array([1000, 1000, 2],
+                                           dtype=numpy.uint64))
+        self.assertEqual(image.dims.dtype, numpy.uint64)
+
+        arrayEqual(image.binning, numpy.array([1, 1, 1], dtype=numpy.uint64))
+        self.assertEqual(image.binning.dtype, numpy.uint64)
+
+        self.assertEqual(image.encoding, EncodingType.RGB.value)
+        self.assertEqual(image.encoding.dtype, numpy.int32)
+        self.assertEqual(image.flipX, True)
+        self.assertEqual(image.flipY, False)
+        self.assertEqual(image.rotation, 0)
+        self.assertEqual(image.rotation.dtype, numpy.int32)
+
+        self.assertEqual(image.dimScales, "")
+        arrayEqual(image.dimTypes, numpy.array([], dtype=numpy.int32))
+        arrayEqual(image.roiOffsets, numpy.array([0, 0, 0],
+                                                 dtype=numpy.uint64))
+        self.assertEqual(image.roiOffsets.dtype, numpy.uint64)
+        self.assertEqual(image.bitsPerPixel, 128)
 
 
 if __name__ == "__main__":
