@@ -222,8 +222,7 @@ namespace karabo {
             if (allowNonAsync && m_socket.available() >= sizeofLength) {
                 m_syncCounter++;
                 boost::system::error_code ec;
-                size_t rsize = m_socket.read_some(buffer(m_inboundMessagePrefix), ec);
-                assert(ec || rsize == sizeofLength);
+                boost::asio::read(m_socket, buffer(m_inboundMessagePrefix), transfer_all(), ec);
                 lock.unlock();
                 onSizeInBytesAvailable(ec, handler);
             } else {
@@ -256,8 +255,7 @@ namespace karabo {
             if (m_socket.available() >= byteSize) {
                 m_syncCounter++;
                 boost::system::error_code ec;
-                size_t rsize = m_socket.read_some(buffer(m_inboundData->data(), byteSize), ec);
-                assert(ec || rsize == byteSize);
+                boost::asio::read(m_socket, buffer(m_inboundData->data(), byteSize), transfer_all(), ec);
                 lock.unlock();
                 bytesAvailableHandler(ec);
             } else {
@@ -294,8 +292,7 @@ namespace karabo {
             if (allowNonAsync && m_socket.available() >= size) {
                 m_syncCounter++;
                 boost::system::error_code ec;
-                size_t rsize = m_socket.read_some(buffer(data, size), ec);
-                assert(ec || rsize == size);
+                const size_t rsize = boost::asio::read(m_socket, buffer(data, size), transfer_all(), ec);
                 lock.unlock();
                 onBytesAvailable(ec, rsize, handler);
             } else {
@@ -384,18 +381,18 @@ namespace karabo {
         void TcpChannel::readAsyncVectorBufferSetPointerImpl(const std::vector<karabo::io::BufferSet::Pointer>& buffers,
                                                              const ReadVectorBufferSetPointerHandler& handler) {
             m_inboundMessagePrefix.clear();
-            m_inboundMessagePrefix.resize(sizeof (unsigned int));
+            m_inboundMessagePrefix.resize(m_connectionPointer->getSizeofLength());
             std::vector<boost::asio::mutable_buffer> boostBuffers;
             boostBuffers.push_back(buffer(m_inboundMessagePrefix));
             karabo::io::BufferSet::appendTo(boostBuffers, buffers);
 
-            size_t totalSize = sizeof (unsigned int);
+            size_t totalSize = m_inboundMessagePrefix.size();
             for (auto p : buffers) totalSize += p->totalSize();
             boost::mutex::scoped_lock lock(m_socketMutex);
             if (m_socket.available() >= totalSize) {
                 ++m_syncCounter;
                 boost::system::error_code ec;
-                const size_t rsize = m_socket.read_some(boostBuffers, ec);
+                const size_t rsize = boost::asio::read(m_socket, boostBuffers, transfer_all(), ec);
                 lock.unlock();
                 onVectorBufferSetPointerAvailable(ec, rsize, buffers, handler);
             } else {
