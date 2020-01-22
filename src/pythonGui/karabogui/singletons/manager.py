@@ -192,13 +192,17 @@ class Manager(QObject):
 
     def handle_configurationFromPast(self, **info):
         success = info.get('success', False)
+        # NOTE: Show a reasonable time format!
+        time = info['time']
+        time = Timestamp(time).toLocal()
+        deviceId = info['deviceId']
         if not success:
             reason = info.get('reason')
-            messagebox.show_error(reason)
+            msg = ("The configuration of `{}` requested at time point `{}` "
+                   "was not retrieved! {}".format(deviceId, time, reason))
+            messagebox.show_error(msg)
             return
-        deviceId = info.get('deviceId')
         config = info.get('config')
-        time = info.get('time')
         broadcast_event(KaraboEvent.ShowConfigurationFromPast,
                         {'deviceId': deviceId, 'configuration': config,
                          'time': time})
