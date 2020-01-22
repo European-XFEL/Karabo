@@ -419,6 +419,15 @@ namespace karabo {
 
 
         void FileLogReader::slotGetConfigurationFromPast(const std::string& deviceId, const std::string& timepoint) {
+            // Go directly to event loop to avoid blocking the slot
+            AsyncReply aReply(this);
+            karabo::net::EventLoop::getIOService().post(bind_weak(&FileLogReader::slotGetConfigurationFromPastImpl, this,
+                                                                  deviceId, timepoint, aReply));
+        }
+
+
+        void FileLogReader::slotGetConfigurationFromPastImpl(const std::string& deviceId, const std::string& timepoint,
+                                                             SignalSlotable::AsyncReply& aReply) {
             try {
 
                 Hash hash;
@@ -447,15 +456,15 @@ namespace karabo {
                     }
                     schemastream.close();
                     if (archived.empty()) {
-                        reply(Hash(), Schema(), configAtTimepoint, configTimepoint.toIso8601());
-                        KARABO_LOG_WARN
-                                << "Requested time point for device configuration is earlier than anything logged";
+                        KARABO_LOG_FRAMEWORK_WARN << "Requested time point for configuration of '" << deviceId
+                                << "' is earlier than anything logged";
+                        aReply.error("Requested time point for device configuration is earlier than anything logged.");
                         return;
                     }
                     m_schemaSerializer->load(schema, archived);
                 } else {
-                    KARABO_LOG_WARN << "Schema archive file does not exist: " << schemaPath;
-                    reply(Hash(), Schema(), configAtTimepoint, configTimepoint.toIso8601());
+                    KARABO_LOG_FRAMEWORK_WARN << "Schema archive file does not exist: " << schemaPath;
+                    aReply.error("Schema archive file does not exist.");
                     return;
                 }
 
@@ -464,15 +473,15 @@ namespace karabo {
                 FileLoggerIndex index = result.second;
 
                 if (index.m_fileindex == -1) {
-                    reply(Hash(), Schema(), configAtTimepoint, configTimepoint.toIso8601());
-                    KARABO_LOG_WARN << "Requested time point, "
+                    KARABO_LOG_FRAMEWORK_WARN << "Requested time point, "
                             << timepoint << ", precedes any logged data for device '" << deviceId << "'.";
+                    aReply.error("Requested time point precedes any logged data.");
                     return;
                 } else if (index.m_event != "+LOG") {
-                    reply(Hash(), Schema(), configAtTimepoint, configTimepoint.toIso8601());
-                    KARABO_LOG_WARN << "Unexpected event type '" << index.m_event
+                    KARABO_LOG_FRAMEWORK_WARN << "Unexpected event type '" << index.m_event
                             << "' found as for the initial sweeping of last known good configuration.\n"
                             "Event type should be '+LOG ";
+                    aReply.error("Unexpected event type '" + index.m_event + "' found - should be '+LOG'.");
                     return;
                 }
 
@@ -521,11 +530,14 @@ namespace karabo {
                 }
 
                 string configTimepointStr(configTimepoint.toIso8601());
-                reply(hash, schema, configAtTimepoint, configTimepointStr);
+                aReply(hash, schema, configAtTimepoint, configTimepointStr);
+                KARABO_LOG_FRAMEWORK_INFO << "sent result";
 
-            } catch (...) {
-                KARABO_RETHROW
+            } catch (const std::exception& e) {
+                aReply.error(e.what());
+                KARABO_LOG_FRAMEWORK_INFO << "caught exception";
             }
+            KARABO_LOG_FRAMEWORK_INFO << "end of slot";
         }
 
 
