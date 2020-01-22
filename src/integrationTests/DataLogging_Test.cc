@@ -453,9 +453,7 @@ void DataLogging_Test::testLastKnownConfiguration() {
     std::string configTimepoint;
 
     std::clog << "... before any logging activity (at " << beforeAnything.toIso8601() << ") ...";
-    // At the beforeAnything timepoint no known configuration existed, so an exception (for file log reader)
-    // or empty configuration (influx log reader) is expected.
-    // FIXME: Unify once influx log reader also throws.
+    // At the beforeAnything timepoint no known configuration existed, so an exception is expected.
     bool remoteExcept = false;
     try {
         m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
@@ -463,14 +461,16 @@ void DataLogging_Test::testLastKnownConfiguration() {
                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                 .receive(conf, schema, configAtTimepoint, configTimepoint);
     } catch (const RemoteException& re) {
-        CPPUNIT_ASSERT(re.detailedMsg().find("earlier than anything logged") != std::string::npos);
+        const string fileLoggerMsg("Requested time point for device configuration is earlier than anything logged");
+        const string influxLoggerMsg("Failed to query schema digest");
+        CPPUNIT_ASSERT_MESSAGE("Exception message: " + re.detailedMsg(),
+                               (re.detailedMsg().find(fileLoggerMsg) != string::npos
+                                || re.detailedMsg().find(influxLoggerMsg) != string::npos));
         remoteExcept = true;
+    } catch (const std::exception& e) {
+        CPPUNIT_ASSERT_MESSAGE(string("Unexpected exception: ") += e.what(), false);
     }
-    if (!remoteExcept) {
-        CPPUNIT_ASSERT_MESSAGE("At timepoint BeforeAnything no last known configuration is expected.", conf.empty());
-        CPPUNIT_ASSERT_EQUAL(false, configAtTimepoint);
-        CPPUNIT_ASSERT_EQUAL(beforeAnything.toIso8601(), configTimepoint);
-    }
+    CPPUNIT_ASSERT_MESSAGE("Expected exception, received " + toString(conf), remoteExcept);
 
     std::clog << "\n... Ok (no configuration retrieved)." << std::endl;
 
