@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (
     QAction, QHBoxLayout, QPushButton, QScrollArea, QStackedWidget,
     QVBoxLayout, QWidget)
 
-from karabo.native import AccessMode, Timestamp
+from karabo.native import AccessMode
 from karabogui import globals as krb_globals, icons, messagebox
 from karabogui.binding.api import (
     ChoiceOfNodesBinding, DeviceProxy, ListOfNodesBinding, ProjectDeviceProxy,
@@ -247,8 +247,6 @@ class ConfigurationPanel(BasePanelWidget):
 
         self._set_proxy_configuration(proxy, configuration)
 
-        # NOTE: Show a reasonable time format!
-        time = Timestamp(time).toLocal()
         messagebox.show_information("Configuration from '{}' has arrived "
                                     "for '{}'!".format(time, deviceId),
                                     parent=self)
