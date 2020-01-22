@@ -449,15 +449,24 @@ void DataLogging_Test::testLastKnownConfiguration() {
     string configTimepoint;
 
     std::clog << "... before any logging activity (at " << beforeAnything.toIso8601() << ") ...";
-    // At the beforeAnything timepoint no known configuration existed, so an
-    // empty configuration is expected.
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
-                                               m_deviceId, beforeAnything.toIso8601())
-                            .timeout(kRequestTimeoutMs).receive(conf, schema, configAtTimepoint, configTimepoint));
+    // At the beforeAnything timepoint no known configuration existed, so an exception (for file log reader)
+    // or empty configuration (influx log reader) is expected.
+    // FIXME: Unify once influx log reader also throws.
+    bool remoteExcept = false;
+    try {
+        m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
+                           m_deviceId, beforeAnything.toIso8601())
+                .timeout(kRequestTimeoutMs).receive(conf, schema, configAtTimepoint, configTimepoint);
+    } catch (const RemoteException& re) {
+        CPPUNIT_ASSERT(re.detailedMsg().find("earlier than anything logged") != std::string::npos);
+        remoteExcept = true;
+    }
+    if (!remoteExcept) {
+        CPPUNIT_ASSERT_MESSAGE("At timepoint BeforeAnything no last known configuration is expected.", conf.empty());
+        CPPUNIT_ASSERT_EQUAL(false, configAtTimepoint);
+        CPPUNIT_ASSERT_EQUAL(beforeAnything.toIso8601(), configTimepoint);
+    }
 
-    CPPUNIT_ASSERT_MESSAGE("At timepoint BeforeAnything no last known configuration is expected.", conf.empty());
-    CPPUNIT_ASSERT_EQUAL(false, configAtTimepoint);
-    CPPUNIT_ASSERT_EQUAL(beforeAnything.toIso8601(), configTimepoint);
     std::clog << "\n... Ok (no configuration retrieved)." << std::endl;
 
     karabo::util::Epochstamp rightBeforeDeviceGone;
