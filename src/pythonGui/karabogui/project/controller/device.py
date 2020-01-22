@@ -142,6 +142,8 @@ class DeviceInstanceController(BaseProjectGroupController):
     def create_ui_data(self):
         ui_data = ProjectControllerUiData()
         self._update_icon(ui_data)
+        self._update_alarm_type(ui_data)
+
         return ui_data
 
     def single_click(self, project_controller, parent=None):
@@ -256,7 +258,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         """ Whenever the object is modified it should be visible to the user
         """
         self._update_icon(self.ui_data)
-        self._update_alarm_type()
+        self._update_alarm_type(self.ui_data)
 
     @on_trait_change("model:active_config_ref")
     def _active_config_ref_change(self):
@@ -291,7 +293,7 @@ class DeviceInstanceController(BaseProjectGroupController):
 
     @on_trait_change("project_device:device_node.alarm_info.alarm_dict_items")
     def _alarm_info_change(self):
-        self._update_alarm_type()
+        self._update_alarm_type(self.ui_data)
 
     def _update_check_state(self):
         """Update the Qt.CheckState of the ``DeviceConfigurationController``
@@ -335,7 +337,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         ui_data.icon = get_project_device_status_icon(status_enum)
         ui_data.status = status_enum
 
-    def _update_alarm_type(self):
+    def _update_alarm_type(self, ui_data):
         # Get current status of device
         if not self.model.initialized:
             return
@@ -345,7 +347,7 @@ class DeviceInstanceController(BaseProjectGroupController):
             alarm_type = ''
         else:
             alarm_type = device_node.alarm_info.alarm_type
-        self.ui_data.alarm_type = alarm_type
+        ui_data.alarm_type = alarm_type
 
     def _update_configurator(self):
         broadcast_event(KaraboEvent.UpdateDeviceConfigurator,
